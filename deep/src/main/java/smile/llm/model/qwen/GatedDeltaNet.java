@@ -25,6 +25,8 @@ import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.parallel.TensorParallelGroup;
 import smile.llm.parallel.TensorShardSpec;
+import smile.llm.quant.DenseLinearRelease;
+import smile.llm.quant.LinearOp;
 import smile.torch.Native;
 import smile.util.AutoScope;
 
@@ -52,11 +54,11 @@ public class GatedDeltaNet {
     final int convDim;
     final int linearLayerId;
 
-    final LinearLayer inProjQkv;
-    final LinearLayer inProjZ;
-    final LinearLayer inProjB;
-    final LinearLayer inProjA;
-    final LinearLayer outProj;
+    LinearOp inProjQkv;
+    LinearOp inProjZ;
+    LinearOp inProjB;
+    LinearOp inProjA;
+    LinearOp outProj;
     /** Depthwise conv weights {@code [convDim, kernel]}. */
     final Tensor conv1dWeight;
     /** {@code log(A)} per value head. */
@@ -125,11 +127,11 @@ public class GatedDeltaNet {
 
         try (Arena arena = Arena.ofConfined()) {
             this.module = check(smile_module_create(MemorySegment.NULL));
-            smile_module_register_module(module, arena.allocateFrom("in_proj_qkv"), inProjQkv.module());
-            smile_module_register_module(module, arena.allocateFrom("in_proj_z"), inProjZ.module());
-            smile_module_register_module(module, arena.allocateFrom("in_proj_b"), inProjB.module());
-            smile_module_register_module(module, arena.allocateFrom("in_proj_a"), inProjA.module());
-            smile_module_register_module(module, arena.allocateFrom("out_proj"), outProj.module());
+            registerDense(module, arena, "in_proj_qkv", inProjQkv);
+            registerDense(module, arena, "in_proj_z", inProjZ);
+            registerDense(module, arena, "in_proj_b", inProjB);
+            registerDense(module, arena, "in_proj_a", inProjA);
+            registerDense(module, arena, "out_proj", outProj);
             smile_module_register_module(module, arena.allocateFrom("norm"), norm.module());
             // LibTorch forbids '.' in parameter names; mirror HF as submodule conv1d.weight.
             MemorySegment conv1d = check(smile_module_create(arena.allocateFrom("conv1d")));
@@ -141,6 +143,66 @@ public class GatedDeltaNet {
         }
         MemorySegment m = this.module;
         Native.CLEANER.register(this, () -> smile_module_free(m));
+    }
+
+    private static void registerDense(MemorySegment module, Arena arena, String name, LinearOp op) {
+        if (op instanceof LinearLayer ll) {
+            smile_module_register_module(module, arena.allocateFrom(name), ll.module());
+        }
+    }
+
+    /**
+     * Replaces the five DeltaNet projections with quantized ops (already sharded).
+     *
+     * @param qkv packed QKV projection
+     * @param z   z projection
+     * @param b   beta projection
+     * @param a   a projection
+     * @param out output projection
+     */
+    public void replaceProjections(LinearOp qkv, LinearOp z, LinearOp b, LinearOp a, LinearOp out) {
+        if (qkv == null || z == null || b == null || a == null || out == null) {
+            throw new IllegalArgumentException("all DeltaNet projections required");
+        }
+        LinearOp oldQkv = this.inProjQkv;
+        LinearOp oldZ = this.inProjZ;
+        LinearOp oldB = this.inProjB;
+        LinearOp oldA = this.inProjA;
+        LinearOp oldOut = this.outProj;
+        this.inProjQkv = qkv;
+        this.inProjZ = z;
+        this.inProjB = b;
+        this.inProjA = a;
+        this.outProj = out;
+        DenseLinearRelease.unregisterAndClose(module, "in_proj_qkv", oldQkv);
+        DenseLinearRelease.unregisterAndClose(module, "in_proj_z", oldZ);
+        if (oldB != b) {
+            DenseLinearRelease.unregisterAndClose(module, "in_proj_b", oldB);
+        }
+        if (oldA != a) {
+            DenseLinearRelease.unregisterAndClose(module, "in_proj_a", oldA);
+        }
+        DenseLinearRelease.unregisterAndClose(module, "out_proj", oldOut);
+    }
+
+    /**
+     * Replaces GEMM projections typically present as FP8 in Qwen checkpoints
+     * ({@code in_proj_qkv}, {@code in_proj_z}, {@code out_proj}), leaving
+     * dense {@code in_proj_a}/{@code in_proj_b} for the residual load path.
+     */
+    public void replaceGemmProjections(LinearOp qkv, LinearOp z, LinearOp out) {
+        if (qkv == null || z == null || out == null) {
+            throw new IllegalArgumentException("qkv, z, and out projections required");
+        }
+        LinearOp oldQkv = this.inProjQkv;
+        LinearOp oldZ = this.inProjZ;
+        LinearOp oldOut = this.outProj;
+        this.inProjQkv = qkv;
+        this.inProjZ = z;
+        this.outProj = out;
+        DenseLinearRelease.unregisterAndClose(module, "in_proj_qkv", oldQkv);
+        DenseLinearRelease.unregisterAndClose(module, "in_proj_z", oldZ);
+        DenseLinearRelease.unregisterAndClose(module, "out_proj", oldOut);
     }
 
     /**

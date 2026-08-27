@@ -25,7 +25,7 @@ import smile.llm.parallel.WeightSharding;
  *
  * @author Haifeng Li
  */
-final class QwenWeightShard {
+public final class QwenWeightShard {
     private QwenWeightShard() {
     }
 
@@ -33,7 +33,11 @@ final class QwenWeightShard {
      * Returns a tensor suitable for {@code loadStateDict} on one TP rank.
      * Caller owns any newly created view; may return {@code src} unchanged.
      */
-    static Tensor shard(String smileName, Tensor src, QwenModelArgs args, TensorShardSpec shard) {
+    /**
+     * Returns a tensor suitable for {@code loadStateDict} / FP8 install on one TP rank.
+     * Caller owns any newly created view; may return {@code src} unchanged.
+     */
+    public static Tensor shard(String smileName, Tensor src, QwenModelArgs args, TensorShardSpec shard) {
         if (shard == null || shard.tpSize() <= 1) {
             return src;
         }

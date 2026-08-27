@@ -109,6 +109,31 @@ public class QwenBlock {
         Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
+    /** @return stack layer index. */
+    public int layerId() {
+        return layerId;
+    }
+
+    /** @return {@code full_attention} or {@code linear_attention}. */
+    public String layerType() {
+        return layerType;
+    }
+
+    /** @return gated full attention, or {@code null} for DeltaNet layers. */
+    public GatedAttention selfAttn() {
+        return selfAttn;
+    }
+
+    /** @return DeltaNet mixer, or {@code null} for full-attention layers. */
+    public GatedDeltaNet linearAttn() {
+        return linearAttn;
+    }
+
+    /** @return SwiGLU feed-forward. */
+    public FeedForward feedForward() {
+        return feedForward;
+    }
+
     /**
      * Forward pass.
      * @param x        hidden states.

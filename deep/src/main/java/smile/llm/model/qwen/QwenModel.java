@@ -201,6 +201,16 @@ public class QwenModel extends LayerBlock {
         return params;
     }
 
+    /** @return number of hybrid decoder blocks. */
+    public int numLayers() {
+        return numLayers;
+    }
+
+    /** @return decoder blocks (owned by this model). */
+    public List<QwenBlock> layers() {
+        return layers;
+    }
+
     /**
      * @return vision tower, or {@code null} when text-only.
      */
