@@ -688,6 +688,10 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
             float vs = v_scale > 0.f ? v_scale : 1.f;
             dequant_fp8_kv_pages(k_pages, v_pages, ks, vs, query.scalar_type(),
                                  k_pages_compute, v_pages_compute);
+        } else if (k_pages.scalar_type() != query.scalar_type()) {
+            // e.g. FP16 KV pool + BF16 query (Marlin GEMM keeps activations in model dtype)
+            k_pages_compute = k_pages.to(query.scalar_type());
+            v_pages_compute = v_pages.to(query.scalar_type());
         }
         k_pages = k_pages_compute;
         v_pages = v_pages_compute;
