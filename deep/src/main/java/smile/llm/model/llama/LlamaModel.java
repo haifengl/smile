@@ -29,7 +29,6 @@ import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCachePool;
 import smile.llm.transformer.RotaryPositionalEncoding;
-import smile.llm.transformer.RotaryPositionalEncoding;
 import smile.util.AutoScope;
 
 import static smile.torch.smile_torch_h.smile_module_free;
@@ -240,6 +239,11 @@ public class LlamaModel extends LayerBlock {
                 Tensor next = layer.forward(h, positions, freqs, mask);
                 h.close();
                 h = next;
+            }
+
+            // Match QwenModel: drop the causal mask before the vocab-sized lm_head.
+            if (mask != null) {
+                mask.close();
             }
 
             Tensor normalized = norm.forward(h);

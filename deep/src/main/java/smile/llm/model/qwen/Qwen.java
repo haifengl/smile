@@ -1604,8 +1604,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                             }
                             return null;
                         }
-                        try (var last = Index.of(-1)) {
-                            Tensor out = logitsArr[0].get(Index.Colon, last).reshape(1, -1);
+                        try (var last = Index.of(-1);
+                             Tensor row = logitsArr[0].get(Index.Colon, last).reshape(1, -1)) {
+                            Tensor out = row.copy();
                             out.promoteToParent();
                             for (Tensor l : logitsArr) {
                                 if (l != null) {
@@ -1718,8 +1719,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                     }
                     return null;
                 }
-                try (var last = Index.of(-1)) {
-                    Tensor out = logits[0].get(Index.Colon, last).reshape(1, -1);
+                try (var last = Index.of(-1);
+                     Tensor row = logits[0].get(Index.Colon, last).reshape(1, -1)) {
+                    Tensor out = row.copy();
                     out.promoteToParent();
                     for (int r = 1; r < logits.length; r++) {
                         logits[r].close();
@@ -1902,8 +1904,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                             m.deltaNetStatePool().scatterActive();
                         }
                     }
-                    try (var last = Index.of(-1)) {
-                        Tensor out = logits[0].get(Index.Colon, last).reshape(b, -1);
+                    try (var last = Index.of(-1);
+                         Tensor row = logits[0].get(Index.Colon, last).reshape(b, -1)) {
+                        Tensor out = row.copy();
                         out.promoteToParent();
                         for (Tensor l : logits) {
                             l.close();
@@ -1955,8 +1958,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                         m.deltaNetStatePool().scatterActive();
                     }
                 }
-                try (var last = Index.of(-1)) {
-                    Tensor out = logits[0].get(Index.Colon, last).reshape(b, -1);
+                try (var last = Index.of(-1);
+                     Tensor row = logits[0].get(Index.Colon, last).reshape(b, -1)) {
+                    Tensor out = row.copy();
                     out.promoteToParent();
                     for (Tensor l : logits) {
                         l.close();
