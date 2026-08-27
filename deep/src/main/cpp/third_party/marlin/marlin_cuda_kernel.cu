@@ -719,11 +719,14 @@ const int SHARED_MEM = 96 * 1024; // max shared memory on compute capability 8.6
     thread_m_blocks == THREAD_M_BLOCKS && thread_n_blocks == THREAD_N_BLOCKS && thread_k_blocks == THREAD_K_BLOCKS && \
     group_blocks == GROUP_BLOCKS \
   ) { \
-    cudaFuncSetAttribute( \
+    cudaError_t attr_err = cudaFuncSetAttribute( \
       Marlin<THREADS, THREAD_M_BLOCKS, THREAD_N_BLOCKS, THREAD_K_BLOCKS, STAGES, GROUP_BLOCKS>, \
       cudaFuncAttributeMaxDynamicSharedMemorySize, \
       SHARED_MEM \
     ); \
+    if (attr_err != cudaSuccess) { \
+      return ERR_KERN_SHAPE; \
+    } \
     Marlin< \
       THREADS, THREAD_M_BLOCKS, THREAD_N_BLOCKS, THREAD_K_BLOCKS, STAGES, GROUP_BLOCKS \
     ><<<blocks, THREADS, SHARED_MEM, stream>>>( \

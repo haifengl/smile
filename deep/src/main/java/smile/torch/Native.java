@@ -414,7 +414,8 @@ public final class Native {
      */
     public static Tensor marlinMul(Tensor a, Tensor b, Tensor scales, Tensor workspace, int threadK) {
         if (Bindings.MARLIN_MUL == null) {
-            return null;
+            throw new IllegalStateException(
+                    "smile_marlin_mul symbol not found (rebuild libsmile_torch with -DUSE_MARLIN=ON)");
         }
         MemorySegment out;
         try {
@@ -424,17 +425,18 @@ public final class Native {
                     threadK);
         } catch (Throwable t) {
             String err = lastError();
-            if (err != null && !err.isEmpty()) {
-                throw new RuntimeException(err, t);
-            }
-            return null;
+            throw new RuntimeException(
+                    (err == null || err.isEmpty())
+                            ? ("smile_marlin_mul native call failed: " + t.getMessage())
+                            : err,
+                    t);
         }
         if (out == null || out.address() == 0) {
             String err = lastError();
-            if (err != null && !err.isEmpty()) {
-                throw new RuntimeException(err);
-            }
-            return null;
+            throw new RuntimeException(
+                    (err == null || err.isEmpty())
+                            ? "smile_marlin_mul returned null without an error message"
+                            : err);
         }
         return new Tensor(out);
     }

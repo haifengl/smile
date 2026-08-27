@@ -11,6 +11,7 @@ Files:
 
 SMILE wrapper: `../../smile_marlin.cpp` / `../../smile_marlin.h` (enabled with `-DUSE_MARLIN=ON`).
 
-SMILE patch in `marlin_cuda_kernel.cu`: use `if constexpr (group_blocks != -1)` for
-grouped-scale paths so NVCC does not emit division/modulo-by-zero
-warnings when instantiating the column-wise (`group_blocks=-1`) kernels.
+SMILE patch in `marlin_cuda_kernel.cu`:
+- use `if constexpr (group_blocks != -1)` for grouped-scale paths so NVCC does not
+  emit division/modulo-by-zero warnings when instantiating column-wise kernels;
+- check `cudaFuncSetAttribute` return for 96KB dynamic shared memory (A100/Ada).

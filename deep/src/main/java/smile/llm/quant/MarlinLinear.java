@@ -80,42 +80,37 @@ public final class MarlinLinear implements LinearOp, AutoCloseable {
         for (int i = 0; i < inShape.length - 1; i++) {
             m *= inShape[i];
         }
-        Tensor flat = input.reshape(m, k);
+        ScalarType inDtype = input.dtype();
+        Tensor flat = input.reshape(m, k).contiguous();
         Tensor aFp16 = flat.dtype() == ScalarType.Half
                 ? flat
                 : flat.to(ScalarType.Half);
+        // Marlin locks in workspace must be zero before each launch (C++ also zeros).
+        workspace.fill_(0);
         Tensor outFlat;
         try {
             outFlat = Native.marlinMul(aFp16, qweight, scales, workspace, -1);
         } catch (RuntimeException e) {
-            if (aFp16 != flat) {
-                aFp16.close();
-            }
             throw new IllegalStateException(
                     "smile_marlin_mul failed: " + e.getMessage()
                             + " (m=" + m + " k=" + k + " n=" + outFeatures
                             + " groupSize=" + groupSize
                             + " qweight=" + java.util.Arrays.toString(qweight.shape())
-                            + " scales=" + java.util.Arrays.toString(scales.shape()) + ")",
+                            + " scales=" + java.util.Arrays.toString(scales.shape())
+                            + " aDtype=" + aFp16.dtype()
+                            + " qwDtype=" + qweight.dtype()
+                            + " sDtype=" + scales.dtype() + ")",
                     e);
+        } finally {
+            if (aFp16 != flat) {
+                aFp16.close();
+            }
         }
-        if (aFp16 != flat) {
-            aFp16.close();
-        }
-        if (outFlat == null) {
-            String detail = Native.lastError();
-            throw new IllegalStateException(
-                    "smile_marlin_mul failed"
-                            + (detail == null || detail.isEmpty() ? "" : ": " + detail)
-                            + " (m=" + m + " k=" + k + " n=" + outFeatures
-                            + " groupSize=" + groupSize
-                            + " qweight=" + java.util.Arrays.toString(qweight.shape())
-                            + " scales=" + java.util.Arrays.toString(scales.shape()) + ")");
-        }
-        if (bias != null) {
-            Tensor withBias = outFlat.add(bias);
+        // Match the rest of the model (often BF16).
+        if (inDtype != ScalarType.Half && outFlat.dtype() != inDtype) {
+            Tensor cast = outFlat.to(inDtype);
             outFlat.close();
-            outFlat = withBias;
+            outFlat = cast;
         }
         long[] outShape = new long[inShape.length];
         System.arraycopy(inShape, 0, outShape, 0, inShape.length - 1);
