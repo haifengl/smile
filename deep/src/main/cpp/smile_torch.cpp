@@ -490,6 +490,30 @@ int smile_cuda_is_bf16_supported(void) {
     return 0;
 }
 
+int smile_cuda_compute_capability(int device_index, int *major, int *minor) {
+    if (!major || !minor) {
+        set_error("smile_cuda_compute_capability: null out-parameter");
+        return -1;
+    }
+#ifdef USE_CUDA
+    ST_TRY_BEGIN
+        cudaDeviceProp prop{};
+        cudaError_t err = cudaGetDeviceProperties(&prop, device_index);
+        if (err != cudaSuccess) {
+            set_error(cudaGetErrorString(err));
+            return -1;
+        }
+        *major = prop.major;
+        *minor = prop.minor;
+        return 0;
+    ST_TRY_END
+    return -1;
+#else
+    set_error_no_cuda_build();
+    return -1;
+#endif
+}
+
 int smile_mps_is_available(void) {
     ST_TRY_BEGIN
         return at::hasMPS() ? 1 : 0;
@@ -984,6 +1008,33 @@ void      smile_tensor_logical_or_ (ST_Tensor a, ST_Tensor b) { if (a&&b) a->t.l
 // =============================================================================
 
 ST_Tensor smile_tensor_matmul (ST_Tensor a, ST_Tensor b) { MAKE_TENSOR(a->t.matmul(b->t)); }
+
+ST_Tensor smile_scaled_mm(ST_Tensor a, ST_Tensor b,
+                          ST_Tensor scale_a, ST_Tensor scale_b,
+                          int out_dtype) {
+#ifdef USE_CUDA
+    ST_TRY_BEGIN
+        if (!a || !b || !scale_a || !scale_b) {
+            set_error("smile_scaled_mm: null tensor argument");
+            return nullptr;
+        }
+        c10::ScalarType out = to_scalar_type(static_cast<ST_DType>(out_dtype));
+        // at::_scaled_mm(a, b.t(), scale_a, scale_b, ..., out_dtype)
+        // LibTorch expects B as [N,K] (transposed weight) for linear-like GEMM.
+        auto out_t = at::_scaled_mm(
+                a->t, b->t,
+                scale_a->t, scale_b->t,
+                std::nullopt /*bias*/,
+                std::nullopt /*scale_result*/,
+                out);
+        return new ST_Tensor_{ out_t };
+    ST_TRY_END
+    return nullptr;
+#else
+    set_error_no_cuda_build();
+    return nullptr;
+#endif
+}
 ST_Tensor smile_tensor_outer  (ST_Tensor a, ST_Tensor b) { MAKE_TENSOR(at::outer(a->t, b->t)); }
 
 ST_Tensor smile_tensor_scatter_reduce(ST_Tensor t, int64_t dim, ST_Tensor index,
@@ -2194,6 +2245,8 @@ ST_Tensor smile_flashinfer_paged_attention(
         int head_dim,
         int cache_len,
         double scale,
+        float k_scale,
+        float v_scale,
         int is_causal,
         ST_Tensor attn_mask,
         ST_FlashInferWorkspace workspace) {
@@ -2227,7 +2280,7 @@ ST_Tensor smile_flashinfer_paged_attention(
                 q, k_cache->t, v_cache->t,
                 paged_kv_indptr->t, paged_kv_indices->t, paged_kv_last_page_len->t,
                 page_size, num_kv_heads, head_dim, cache_len,
-                sc, is_causal, mask_ptr,
+                sc, k_scale, v_scale, is_causal, mask_ptr,
                 float_ws, int_ws, pinned_ws,
                 out, err);
         if (rc != 0) {
@@ -2241,7 +2294,8 @@ ST_Tensor smile_flashinfer_paged_attention(
     (void)query; (void)k_cache; (void)v_cache;
     (void)paged_kv_indptr; (void)paged_kv_indices; (void)paged_kv_last_page_len;
     (void)page_size; (void)num_kv_heads; (void)head_dim; (void)cache_len;
-    (void)scale; (void)is_causal; (void)attn_mask; (void)workspace;
+    (void)scale; (void)k_scale; (void)v_scale;
+    (void)is_causal; (void)attn_mask; (void)workspace;
 #  ifdef USE_CUDA
     set_error("smile_torch built without USE_FLASHINFER");
 #  else

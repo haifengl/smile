@@ -344,8 +344,20 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
         logger.info("model.to({}) in {} ms", device, System.currentTimeMillis() - tTo);
 
         long tLoad = System.currentTimeMillis();
+        var quantPolicy = smile.llm.quant.QuantPolicy.resolve(
+                Path.of(checkpointDir), device, null);
         if (huggingFace) {
-            loadHuggingFaceWeights(model, modelArgs, dir, modelLoaderThreads);
+            if (quantPolicy.backend() != smile.llm.quant.WeightGemmBackend.DENSE) {
+                int groupSize = smile.llm.quant.QuantizedHfLoader.groupSizeFromConfig(
+                        Path.of(checkpointDir));
+                smile.llm.quant.QuantizedHfLoader.installLlamaLinears(
+                        model, Path.of(checkpointDir), quantPolicy.format(), quantPolicy.backend(),
+                        device, groupSize, 1, 0, computeDtype);
+                loadHuggingFaceWeights(model, modelArgs, dir, modelLoaderThreads,
+                        /*nonLinearOnly=*/true);
+            } else {
+                loadHuggingFaceWeights(model, modelArgs, dir, modelLoaderThreads, false);
+            }
         } else {
             List<String> checkpoints = getCheckpoints(dir);
             if (checkpoints.isEmpty()) {
@@ -518,18 +530,22 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
      * projection weights are reverse-permuted for Meta-style RoPE.
      */
     private static void loadHuggingFaceWeights(LlamaModel model, LlamaModelArgs args,
-                                               File dir, int modelLoaderThreads) throws IOException {
+                                               File dir, int modelLoaderThreads,
+                                               boolean nonLinearOnly) throws IOException {
         Map<String, String> weightMap = readWeightMap(dir);
         Map<String, List<String>> shardToKeys = new LinkedHashMap<>();
         for (var entry : weightMap.entrySet()) {
+            if (nonLinearOnly && isQuantizedProjectionKey(entry.getKey())) {
+                continue;
+            }
             shardToKeys.computeIfAbsent(entry.getValue(), k -> new ArrayList<>()).add(entry.getKey());
         }
         List<String> shardFiles = new ArrayList<>(shardToKeys.keySet());
         Collections.sort(shardFiles);
 
         int threads = SafeTensorsLoaderThreads.resolve(modelLoaderThreads, shardFiles.size());
-        logger.info("Safetensors loader threads={} (configured={}, shards={})",
-                threads, modelLoaderThreads, shardFiles.size());
+        logger.info("Safetensors loader threads={} (configured={}, shards={}, nonLinearOnly={})",
+                threads, modelLoaderThreads, shardFiles.size(), nonLinearOnly);
 
         int numHeads = args.numHeads();
         int numKvHeads = args.resolvedNumKvHeads();
@@ -569,6 +585,11 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
         }
 
         logger.info("Loaded {} parameters from HuggingFace safetensors", loaded.size());
+    }
+
+    /** Keys owned by {@link smile.llm.quant.QuantizedHfLoader} for quantized checkpoints. */
+    private static boolean isQuantizedProjectionKey(String hfName) {
+        return hfName.contains(".self_attn.") || hfName.contains(".mlp.");
     }
 
     private static void loadOneLlamaShard(LlamaModel model, File dir, Device loadDevice, Device target,

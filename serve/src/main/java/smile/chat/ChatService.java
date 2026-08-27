@@ -150,6 +150,7 @@ public class ChatService {
             }
             if (model != null) {
                 applyPrefixReuse(model, kvCache.prefixReuse(), kvCache.hybridPrefixReplay());
+                logQuantBackend(model, config, kvCache);
                 if (model instanceof smile.llm.engine.ModelExecutor exec) {
                     int maxInFlight = Math.max(1, config.maxBatchSize());
                     int maxDecode = config.maxDecodeBatch() > 0
@@ -221,6 +222,39 @@ public class ChatService {
                 qwen.setPrefixReuseEnabled(enabled);
             }
             default -> { }
+        }
+    }
+
+    /**
+     * Logs checkpoint quant format vs selected weight GEMM backend (primary vs failover).
+     */
+    static void logQuantBackend(LanguageModel model, ChatServiceConfig config, KvCacheConfig kvCache) {
+        try {
+            Path dir = Path.of(config.model());
+            if (!Files.isDirectory(dir)) {
+                logger.infof("Weight quant: backend config=%s (checkpoint path not local; "
+                                + "format detection at load)",
+                        config.quantBackend());
+                return;
+            }
+            var format = smile.llm.quant.QuantFormatDetector.detect(dir);
+            int deviceId = parallelConfig(config).devices()[0];
+            smile.deep.tensor.Device device = smile.deep.tensor.Device.CUDA((byte) deviceId);
+            String override = config.quantBackend() == null ? "auto" : config.quantBackend().trim();
+            smile.llm.quant.WeightGemmBackend backend;
+            if ("auto".equalsIgnoreCase(override) || override.isEmpty()) {
+                backend = smile.llm.quant.WeightGemmBackend.select(device, format);
+            } else {
+                backend = smile.llm.quant.WeightGemmBackend.valueOf(override.toUpperCase());
+            }
+            int[] cc = smile.llm.quant.WeightGemmBackend.computeCapability(device);
+            logger.infof("Weight quant: format=%s backend=%s (%s) sm_%d%d kvDtype=%s",
+                    format, backend,
+                    backend.isFailover() ? "failover" : (backend.isPrimary() ? "primary" : "dense"),
+                    cc[0], cc[1],
+                    kvCache.dtype().orElse("<default>"));
+        } catch (Exception e) {
+            logger.warnf(e, "Weight quant backend probe failed (model still usable if dense)");
         }
     }
 
@@ -532,14 +566,24 @@ public class ChatService {
             throws Exception {
         if (isQwenCheckpoint(localPath)) {
             var parallel = parallelConfig(config);
-            return Qwen.build(localPath.toString(),
-                    config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
-                    memFraction, kvDtype, pageSize, parallel, config.modelLoaderThreads());
+            try {
+                smile.llm.quant.QuantBackendOverride.set(config.quantBackend());
+                return Qwen.build(localPath.toString(),
+                        config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
+                        memFraction, kvDtype, pageSize, parallel, config.modelLoaderThreads());
+            } finally {
+                smile.llm.quant.QuantBackendOverride.clear();
+            }
         }
         String tokenizerPath = resolveLocalTokenizer(localPath);
-        return Llama.build(localPath.toString(), tokenizerPath,
-                config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
-                memFraction, kvDtype, pageSize, config.modelLoaderThreads());
+        try {
+            smile.llm.quant.QuantBackendOverride.set(config.quantBackend());
+            return Llama.build(localPath.toString(), tokenizerPath,
+                    config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
+                    memFraction, kvDtype, pageSize, config.modelLoaderThreads());
+        } finally {
+            smile.llm.quant.QuantBackendOverride.clear();
+        }
     }
 
     /**
@@ -668,16 +712,26 @@ public class ChatService {
         if (isQwenCheckpoint(checkpoint)) {
             resolveHuggingFaceQwenTokenizer(repoId);
             var parallel = parallelConfig(config);
-            return Qwen.build(checkpointDir,
-                    config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
-                    memFractionStatic, kvCacheDtype, pageSize, parallel,
-                    config.modelLoaderThreads());
+            try {
+                smile.llm.quant.QuantBackendOverride.set(config.quantBackend());
+                return Qwen.build(checkpointDir,
+                        config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
+                        memFractionStatic, kvCacheDtype, pageSize, parallel,
+                        config.modelLoaderThreads());
+            } finally {
+                smile.llm.quant.QuantBackendOverride.clear();
+            }
         }
 
         String tokenizerPath = resolveHuggingFaceTokenizer(repoId);
-        return Llama.build(checkpointDir, tokenizerPath,
-                config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
-                memFractionStatic, kvCacheDtype, pageSize, config.modelLoaderThreads());
+        try {
+            smile.llm.quant.QuantBackendOverride.set(config.quantBackend());
+            return Llama.build(checkpointDir, tokenizerPath,
+                    config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
+                    memFractionStatic, kvCacheDtype, pageSize, config.modelLoaderThreads());
+        } finally {
+            smile.llm.quant.QuantBackendOverride.clear();
+        }
     }
 
     /**

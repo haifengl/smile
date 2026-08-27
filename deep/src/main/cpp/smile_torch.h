@@ -219,6 +219,22 @@ SMILE_API int smile_cuda_allocator_stats(int device_index,
 /** Returns 1 if BF16 is supported on current CUDA device. */
 SMILE_API int smile_cuda_is_bf16_supported(void);
 
+/**
+ * Writes the CUDA compute capability of {@code device_index} into
+ * {@code major} and {@code minor}. Returns 0 on success, -1 on error.
+ */
+SMILE_API int smile_cuda_compute_capability(int device_index, int *major, int *minor);
+
+/**
+ * Scaled FP8 matrix multiply (LibTorch {@code at::_scaled_mm} / cuBLASLt).
+ * {@code a} and {@code b} must be Float8; {@code scale_a}/{@code scale_b} are
+ * float scales. Returns a new tensor owned by the caller, or NULL on error.
+ * Unavailable builds set an error and return NULL.
+ */
+SMILE_API ST_Tensor smile_scaled_mm(ST_Tensor a, ST_Tensor b,
+                                    ST_Tensor scale_a, ST_Tensor scale_b,
+                                    int out_dtype);
+
 /** Returns 1 if MPS (Apple Silicon GPU) is available. */
 SMILE_API int smile_mps_is_available(void);
 
@@ -1049,6 +1065,8 @@ SMILE_API int smile_flashinfer_workspace_device_index(ST_FlashInferWorkspace ws)
  * @param head_dim         D
  * @param cache_len        total sequence length (for CSR validation)
  * @param scale            attention scale (&le;0 → 1/sqrt(D))
+ * @param k_scale          FP8 KV key dequant scale (1.0 when KV is bf16/fp16)
+ * @param v_scale          FP8 KV value dequant scale (1.0 when KV is bf16/fp16)
  * @param is_causal        used only when {@code attn_mask} is null
  * @param attn_mask        optional additive mask (same as torch_native); nullable
  * @param workspace        from {@link smile_flashinfer_workspace_create}
@@ -1066,6 +1084,8 @@ SMILE_API ST_Tensor smile_flashinfer_paged_attention(
         int head_dim,
         int cache_len,
         double scale,
+        float k_scale,
+        float v_scale,
         int is_causal,
         ST_Tensor attn_mask,
         ST_FlashInferWorkspace workspace);

@@ -485,6 +485,19 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         // Phase B: each safetensors file once on CPU, fan-out to all ranks.
         long tLoad = System.currentTimeMillis();
+        Device policyDevice = cuda
+                ? Device.CUDA(parallelConfig.devices()[0])
+                : Device.CPU();
+        var quantPolicy = smile.llm.quant.QuantPolicy.resolve(
+                Path.of(checkpointDir), policyDevice, null);
+        if (quantPolicy.backend() != smile.llm.quant.WeightGemmBackend.DENSE) {
+            throw new IllegalStateException(
+                    "Quantized Qwen hybrid checkpoints (DeltaNet + full-attn) are not supported "
+                            + "for weight GEMM yet; detected format=" + quantPolicy.format()
+                            + " backend=" + quantPolicy.backend()
+                            + ". Use a dense BF16/FP16 Qwen checkpoint, or Llama with "
+                            + "native FP8 / GPTQ-AWQ (Marlin on Ampere).");
+        }
         loadHuggingFaceWeightsShared(models, dir, weightMap, modelLoaderThreads);
         logger.info("Shared safetensors load finished in {} ms",
                 System.currentTimeMillis() - tLoad);

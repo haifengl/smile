@@ -70,6 +70,31 @@ public final class Native {
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_cuda_allocator_stats"),
                 FunctionDescriptor.of(ValueLayout.JAVA_INT,
                         ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS));
+        static final java.util.Optional<MemorySegment> CUDA_COMPUTE_CAPABILITY_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_cuda_compute_capability");
+        static final MethodHandle CUDA_COMPUTE_CAPABILITY = CUDA_COMPUTE_CAPABILITY_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> SCALED_MM_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_scaled_mm");
+        static final MethodHandle SCALED_MM = SCALED_MM_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_MUL_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_mul");
+        static final MethodHandle MARLIN_MUL = MARLIN_MUL_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_AVAILABLE_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_available");
+        static final MethodHandle MARLIN_AVAILABLE = MARLIN_AVAILABLE_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT)))
+                .orElse(null);
         static final MethodHandle MODULE_SET_REQUIRES_GRAD = LINKER.downcallHandle(
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_module_set_requires_grad"),
                 FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
@@ -133,7 +158,9 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
-                        ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE,
+                        ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT,
+                        ValueLayout.JAVA_INT,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
                 .orElse(null);
         static final MethodHandle FLASHINFER_RAGGED = smile_torch_h.SYMBOL_LOOKUP
@@ -292,6 +319,124 @@ public final class Native {
                     allocated.get(ValueLayout.JAVA_LONG, 0),
                     reserved.get(ValueLayout.JAVA_LONG, 0)};
         }
+    }
+
+    /**
+     * Returns CUDA compute capability {@code {major, minor}} for a device.
+     *
+     * @param deviceIndex CUDA device index.
+     * @return {@code int[2]} of {@code {major, minor}}.
+     * @throws RuntimeException if the query fails or the symbol is missing
+     *                          (rebuild {@code libsmile_torch} with CUDA).
+     */
+    public static int[] cudaComputeCapability(int deviceIndex) {
+        if (Bindings.CUDA_COMPUTE_CAPABILITY == null) {
+            throw new RuntimeException(
+                    "smile_cuda_compute_capability unavailable; rebuild libsmile_torch");
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment major = arena.allocate(ValueLayout.JAVA_INT);
+            MemorySegment minor = arena.allocate(ValueLayout.JAVA_INT);
+            int rc;
+            try {
+                rc = (int) Bindings.CUDA_COMPUTE_CAPABILITY.invokeExact(
+                        deviceIndex, major, minor);
+            } catch (Throwable t) {
+                throw new RuntimeException("smile_cuda_compute_capability failed", t);
+            }
+            if (rc != 0) {
+                String msg = lastError();
+                throw new RuntimeException(msg.isEmpty()
+                        ? "smile_cuda_compute_capability failed" : msg);
+            }
+            return new int[]{
+                    major.get(ValueLayout.JAVA_INT, 0),
+                    minor.get(ValueLayout.JAVA_INT, 0)};
+        }
+    }
+
+    /**
+     * Scaled FP8 matrix multiply via LibTorch {@code at::_scaled_mm} (cuBLASLt).
+     *
+     * @param a        FP8 activation {@code [M,K]}.
+     * @param b        FP8 weight layout expected by {@code _scaled_mm} {@code [N,K]}.
+     * @param scaleA   float scale for {@code a}.
+     * @param scaleB   float scale for {@code b}.
+     * @param outDtype output {@link smile.deep.tensor.ScalarType} code
+     *                 ({@link smile.torch.smile_torch_h#ST_DTYPE_BFloat16()} etc.).
+     * @return output tensor, or {@code null} if the native path is unavailable.
+     */
+    public static Tensor scaledMm(Tensor a, Tensor b, Tensor scaleA, Tensor scaleB, int outDtype) {
+        if (Bindings.SCALED_MM == null) {
+            return null;
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.SCALED_MM.invokeExact(
+                    a.handle(), b.handle(), scaleA.handle(), scaleB.handle(), outDtype);
+        } catch (Throwable t) {
+            String err = lastError();
+            if (err != null && !err.isEmpty()) {
+                throw new RuntimeException(err, t);
+            }
+            return null;
+        }
+        if (out == null || out.address() == 0) {
+            String err = lastError();
+            if (err != null && !err.isEmpty()) {
+                throw new RuntimeException(err);
+            }
+            return null;
+        }
+        return new Tensor(out);
+    }
+
+    /** @return {@code true} when Marlin is compiled into {@code libsmile_torch}. */
+    public static boolean marlinAvailable() {
+        if (Bindings.MARLIN_AVAILABLE == null) {
+            return false;
+        }
+        try {
+            return ((int) Bindings.MARLIN_AVAILABLE.invokeExact()) != 0;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /**
+     * Marlin FP16×INT4 GEMM. Returns {@code null} when Marlin is not built.
+     *
+     * @param a      FP16 activations {@code [M,K]}.
+     * @param b      Marlin-packed INT4 weights.
+     * @param scales group scales.
+     * @param workspace scratch buffer (may be empty).
+     * @param threadK Marlin thread_k (-1 = auto).
+     */
+    public static Tensor marlinMul(Tensor a, Tensor b, Tensor scales, Tensor workspace, int threadK) {
+        if (Bindings.MARLIN_MUL == null) {
+            return null;
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.MARLIN_MUL.invokeExact(
+                    a.handle(), b.handle(), scales.handle(),
+                    workspace == null ? MemorySegment.NULL : workspace.handle(),
+                    threadK);
+        } catch (Throwable t) {
+            String err = lastError();
+            if (err != null && !err.isEmpty()) {
+                throw new RuntimeException(err, t);
+            }
+            return null;
+        }
+        if (out == null || out.address() == 0) {
+            String err = lastError();
+            if (err != null && !err.isEmpty()) {
+                throw new RuntimeException(err);
+            }
+            return null;
+        }
+        return new Tensor(out);
     }
 
     /**
@@ -621,6 +766,8 @@ public final class Native {
                         ctx.headDim(),
                         cacheLenArg,
                         ctx.scale(),
+                        pool.kScale(),
+                        pool.vScale(),
                         ctx.isCausal() ? 1 : 0,
                         maskHandle,
                         ws.handle());

@@ -28,7 +28,7 @@ import static smile.torch.smile_torch_h.*;
  *
  * @author Haifeng Li
  */
-public class LinearLayer extends ModuleLayer {
+public class LinearLayer extends ModuleLayer implements smile.llm.quant.LinearOp {
     /**
      * Constructor.
      * @param in the number of input features.

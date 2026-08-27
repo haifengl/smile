@@ -31,6 +31,7 @@ import smile.llm.cache.KvCachePool;
 import smile.llm.parallel.TensorParallelGroup;
 import smile.llm.parallel.TensorShardSpec;
 import smile.llm.attention.Attention;
+import smile.llm.quant.LinearOp;
 import smile.torch.Native;
 import smile.util.AutoScope;
 
@@ -57,10 +58,10 @@ public class GatedAttention implements Attention {
     final int numRep;
     final int headDim;
     final int rotaryDim;
-    final LinearLayer qProj;
-    final LinearLayer kProj;
-    final LinearLayer vProj;
-    final LinearLayer oProj;
+    LinearOp qProj;
+    LinearOp kProj;
+    LinearOp vProj;
+    LinearOp oProj;
     final QwenRMSNorm qNorm;
     final QwenRMSNorm kNorm;
     final Sigmoid sigmoid = new Sigmoid(false);
@@ -125,15 +126,32 @@ public class GatedAttention implements Attention {
 
         try (Arena arena = Arena.ofConfined()) {
             this.module = check(smile_module_create(MemorySegment.NULL));
-            smile_module_register_module(module, arena.allocateFrom("q_proj"), qProj.module());
-            smile_module_register_module(module, arena.allocateFrom("k_proj"), kProj.module());
-            smile_module_register_module(module, arena.allocateFrom("v_proj"), vProj.module());
-            smile_module_register_module(module, arena.allocateFrom("o_proj"), oProj.module());
+            registerDense(module, arena, "q_proj", qProj);
+            registerDense(module, arena, "k_proj", kProj);
+            registerDense(module, arena, "v_proj", vProj);
+            registerDense(module, arena, "o_proj", oProj);
             smile_module_register_module(module, arena.allocateFrom("q_norm"), qNorm.module());
             smile_module_register_module(module, arena.allocateFrom("k_norm"), kNorm.module());
         }
         MemorySegment m = this.module;
         Native.CLEANER.register(this, () -> smile_module_free(m));
+    }
+
+    private static void registerDense(MemorySegment module, Arena arena, String name, LinearOp op) {
+        if (op instanceof LinearLayer ll) {
+            smile_module_register_module(module, arena.allocateFrom(name), ll.module());
+        }
+    }
+
+    /** Replaces Q/K/V/O with quantized ops (already sharded/packed). */
+    public void replaceProjections(LinearOp q, LinearOp k, LinearOp v, LinearOp o) {
+        if (q == null || k == null || v == null || o == null) {
+            throw new IllegalArgumentException("all projections required");
+        }
+        this.qProj = q;
+        this.kProj = k;
+        this.vProj = v;
+        this.oProj = o;
     }
 
     /**
