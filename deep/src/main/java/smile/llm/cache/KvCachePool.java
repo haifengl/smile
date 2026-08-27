@@ -1001,6 +1001,22 @@ public class KvCachePool implements AutoCloseable {
              var layerV = vCache.get(layerIdx)) {
             Tensor kf = k.reshape(batch * (long) seqlen, numKvHeads, headDim);
             Tensor vf = v.reshape(batch * (long) seqlen, numKvHeads, headDim);
+            // Marlin (and other) backends may emit a different activation dtype than
+            // the pool (e.g. BF16 compute into FP16 KV). Cast before index_put.
+            if (kf.dtype() != dtype) {
+                Tensor cast = kf.to(dtype);
+                if (cast != kf) {
+                    kf.close();
+                }
+                kf = cast;
+            }
+            if (vf.dtype() != dtype) {
+                Tensor cast = vf.to(dtype);
+                if (cast != vf) {
+                    vf.close();
+                }
+                vf = cast;
+            }
             if (smile.llm.quant.Fp8KvCodec.isFp8(dtype)) {
                 float ks = smile.llm.quant.Fp8KvCodec.computeScale(kf, smile.llm.quant.Fp8KvCodec.E4M3_MAX);
                 float vs = smile.llm.quant.Fp8KvCodec.computeScale(vf, smile.llm.quant.Fp8KvCodec.E4M3_MAX);
@@ -1061,6 +1077,17 @@ public class KvCachePool implements AutoCloseable {
                 Tensor vd = smile.llm.quant.Fp8KvCodec.dequantize(values, vScale, computeDtype);
                 keys.close();
                 values.close();
+                return new Tuple2<>(kd, vd);
+            }
+            if (keys.dtype() != computeDtype) {
+                Tensor kd = keys.to(computeDtype);
+                Tensor vd = values.to(computeDtype);
+                if (kd != keys) {
+                    keys.close();
+                }
+                if (vd != values) {
+                    values.close();
+                }
                 return new Tuple2<>(kd, vd);
             }
             return new Tuple2<>(keys, values);
