@@ -419,10 +419,11 @@ public final class Native {
         }
         MemorySegment out;
         try {
+            // invokeExact requires an exact MemorySegment type; a ternary in the
+            // argument list is typed as Object and fails the call-site check.
+            MemorySegment wsHandle = workspace == null ? MemorySegment.NULL : workspace.handle();
             out = (MemorySegment) Bindings.MARLIN_MUL.invokeExact(
-                    a.handle(), b.handle(), scales.handle(),
-                    workspace == null ? MemorySegment.NULL : workspace.handle(),
-                    threadK);
+                    a.handle(), b.handle(), scales.handle(), wsHandle, threadK);
         } catch (Throwable t) {
             String err = lastError();
             throw new RuntimeException(
