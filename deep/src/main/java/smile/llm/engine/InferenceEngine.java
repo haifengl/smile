@@ -707,14 +707,14 @@ public final class InferenceEngine implements AutoCloseable {
     }
 
     private static void logCudaMemory(smile.deep.tensor.Device device, String when) {
-        if (device == null || !device.isCUDA() || !logger.isDebugEnabled()) {
+        if (device == null || !device.isCUDA() || !logger.isInfoEnabled()) {
             return;
         }
         try {
             int idx = device.index();
             long[] mem = smile.torch.Native.cudaMemGetInfo(idx);
             long[] alloc = smile.torch.Native.cudaAllocatorStats(idx);
-            logger.debug("InferenceEngine {}: freeMiB={} allocatedMiB={} reservedMiB={}",
+            logger.info("InferenceEngine {}: freeMiB={} allocatedMiB={} reservedMiB={}",
                     when,
                     mem[0] / (1024 * 1024),
                     alloc[0] / (1024 * 1024),
