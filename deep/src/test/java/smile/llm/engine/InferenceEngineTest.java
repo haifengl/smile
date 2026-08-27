@@ -126,14 +126,15 @@ public class InferenceEngineTest {
             stub.awaitDecode(2, TimeUnit.SECONDS);
             handle.abort();
             stub.releaseDecode();
+            stub.awaitEvict(1, 5, TimeUnit.SECONDS);
             try {
-                handle.future().get(5, TimeUnit.SECONDS);
+                handle.future().get(1, TimeUnit.SECONDS);
                 fail("expected cancellation");
             } catch (Exception e) {
                 Throwable c = e.getCause() != null ? e.getCause() : e;
                 assertTrue(c instanceof CancellationException, "got " + c);
             }
-            assertTrue(stub.evicted.get() >= 1);
+            assertTrue(stub.evicted.get() >= 1, "evicted=" + stub.evicted.get());
         }
     }
 
@@ -161,6 +162,18 @@ public class InferenceEngineTest {
                     }
                     decodeLock.wait(rem / 1_000_000L, (int) (rem % 1_000_000L));
                 }
+            }
+        }
+
+        void awaitEvict(int min, long timeout, TimeUnit unit) throws InterruptedException {
+            long deadline = System.nanoTime() + unit.toNanos(timeout);
+            while (evicted.get() < min) {
+                long rem = deadline - System.nanoTime();
+                if (rem <= 0) {
+                    throw new InterruptedException(
+                            "timeout waiting for evict (got " + evicted.get() + ")");
+                }
+                Thread.sleep(Math.min(20L, Math.max(1L, rem / 1_000_000L)));
             }
         }
 
