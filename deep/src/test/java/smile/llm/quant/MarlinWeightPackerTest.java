@@ -41,26 +41,26 @@ public class MarlinWeightPackerTest {
     }
 
     @Test
-    public void testGivenFp16WeightWhenPackThenShapesMatch() {
-        // Given – small [out=32, in=128] weight, groupSize=128
-        float[] data = new float[32 * 128];
+    public void testGivenFp16WeightWhenPackThenMarlinShapesMatch() {
+        // Given – Marlin requires out % 256 == 0 and in % 128 == 0
+        int outFeatures = 256;
+        int inFeatures = 128;
+        float[] data = new float[outFeatures * inFeatures];
         for (int i = 0; i < data.length; i++) {
             data[i] = (i % 17) * 0.01f - 0.08f;
         }
-        Tensor w = Tensor.of(data).reshape(32, 128).to(ScalarType.Half);
+        Tensor w = Tensor.of(data).reshape(outFeatures, inFeatures).to(ScalarType.Half);
 
         // When
         var packed = MarlinWeightPacker.packFromFp16(w, 128, Device.CPU());
         w.close();
 
-        // Then
-        assertEquals(32, packed.outFeatures());
-        assertEquals(128, packed.inFeatures());
+        // Then – upstream B is [k/16, n*16/8]
+        assertEquals(outFeatures, packed.outFeatures());
+        assertEquals(inFeatures, packed.inFeatures());
         assertEquals(128, packed.groupSize());
-        assertEquals(2, packed.qweight().shape().length);
-        assertEquals(2, packed.scales().shape().length);
-        assertEquals(1, packed.scales().shape()[0]); // one group
-        assertEquals(32, packed.scales().shape()[1]);
+        assertArrayEquals(new long[]{inFeatures / 16L, outFeatures * 16L / 8L}, packed.qweight().shape());
+        assertArrayEquals(new long[]{1L, outFeatures}, packed.scales().shape());
         packed.close();
     }
 
@@ -72,10 +72,9 @@ public class MarlinWeightPackerTest {
 
     @Test
     public void testGivenAwqLayoutWhenPackThenInFeaturesMatchHidden() {
-        // Given – AWQ shapes for Linear(in=128, out=32), groupSize=128
-        // qweight [in, out/8], scales [groups, out], qzeros [groups, out/8]
+        // Given – AWQ shapes for Linear(in=128, out=256), groupSize=128
         int inFeatures = 128;
-        int outFeatures = 32;
+        int outFeatures = 256;
         int groupSize = 128;
         int packedOut = outFeatures / 8;
         int numGroups = inFeatures / groupSize;
@@ -84,15 +83,14 @@ public class MarlinWeightPackerTest {
         int[] qzeros = new int[numGroups * packedOut];
         float[] scales = new float[numGroups * outFeatures];
         for (int o = 0; o < outFeatures; o++) {
-            scales[o] = 0.1f; // one group
+            scales[o] = 0.1f;
         }
-        // Pack unsigned nibbles 0..7 into each word with AWQ interleave; zeros = 0
         for (int k = 0; k < inFeatures; k++) {
             for (int po = 0; po < packedOut; po++) {
                 int word = 0;
                 for (int slot = 0; slot < 8; slot++) {
                     int logical = AWQ_ORDER[slot];
-                    int qi = (po * 8 + logical) % 8; // 0..7
+                    int qi = (po * 8 + logical) % 8;
                     word |= (qi & 0xF) << (4 * slot);
                 }
                 qweight[k * packedOut + po] = word;
@@ -103,16 +101,15 @@ public class MarlinWeightPackerTest {
         Tensor sc = Tensor.of(scales).reshape(numGroups, outFeatures);
         Tensor qz = Tensor.of(qzeros).reshape(numGroups, packedOut);
 
-        // When – must not treat AWQ as GPTQ ([in/8, out] → inFeatures*=8)
         var packed = MarlinWeightPacker.packAwq(qw, sc, qz, groupSize, Device.CPU());
         qw.close();
         sc.close();
         qz.close();
 
-        // Then
         assertEquals(inFeatures, packed.inFeatures(),
                 "AWQ dequant must keep inFeatures=K, not K*8 from GPTQ unpack");
         assertEquals(outFeatures, packed.outFeatures());
+        assertArrayEquals(new long[]{inFeatures / 16L, outFeatures * 16L / 8L}, packed.qweight().shape());
         packed.close();
     }
 }

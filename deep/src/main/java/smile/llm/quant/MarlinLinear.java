@@ -58,10 +58,10 @@ public final class MarlinLinear implements LinearOp, AutoCloseable {
         this.inFeatures = inFeatures;
         this.outFeatures = outFeatures;
         this.groupSize = groupSize;
-        // Small scratch; Marlin may ignore when unused.
+        // Small scratch; Marlin needs at least n/128 * max_par entries.
         this.workspace = Tensor.zeros(
                 new Tensor.Options().dtype(ScalarType.Int32).device(qweight.device()),
-                Math.max(1, outFeatures * 16L));
+                Math.max(outFeatures / 128L * 16L, 1L));
     }
 
     public int inFeatures() { return inFeatures; }
@@ -84,12 +84,33 @@ public final class MarlinLinear implements LinearOp, AutoCloseable {
         Tensor aFp16 = flat.dtype() == ScalarType.Half
                 ? flat
                 : flat.to(ScalarType.Half);
-        Tensor outFlat = Native.marlinMul(aFp16, qweight, scales, workspace, -1);
+        Tensor outFlat;
+        try {
+            outFlat = Native.marlinMul(aFp16, qweight, scales, workspace, -1);
+        } catch (RuntimeException e) {
+            if (aFp16 != flat) {
+                aFp16.close();
+            }
+            throw new IllegalStateException(
+                    "smile_marlin_mul failed: " + e.getMessage()
+                            + " (m=" + m + " k=" + k + " n=" + outFeatures
+                            + " groupSize=" + groupSize
+                            + " qweight=" + java.util.Arrays.toString(qweight.shape())
+                            + " scales=" + java.util.Arrays.toString(scales.shape()) + ")",
+                    e);
+        }
         if (aFp16 != flat) {
             aFp16.close();
         }
         if (outFlat == null) {
-            throw new IllegalStateException("smile_marlin_mul failed");
+            String detail = Native.lastError();
+            throw new IllegalStateException(
+                    "smile_marlin_mul failed"
+                            + (detail == null || detail.isEmpty() ? "" : ": " + detail)
+                            + " (m=" + m + " k=" + k + " n=" + outFeatures
+                            + " groupSize=" + groupSize
+                            + " qweight=" + java.util.Arrays.toString(qweight.shape())
+                            + " scales=" + java.util.Arrays.toString(scales.shape()) + ")");
         }
         if (bias != null) {
             Tensor withBias = outFlat.add(bias);

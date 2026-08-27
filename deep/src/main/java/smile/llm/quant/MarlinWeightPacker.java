@@ -25,10 +25,9 @@ import smile.deep.tensor.Tensor;
  * {@link MarlinLinear}. Invoked only when {@link WeightGemmBackend#MARLIN}
  * is selected (Ampere/Ada).
  *
- * <p>Phase-1 packer: dequantizes GPTQ/AWQ to FP16, then re-quantizes into a
- * Marlin-compatible contiguous INT4 packing used by the vendored kernel.
- * A full reshape matching upstream {@code marlin.Layer.pack} permutations is
- * applied when {@code groupSize == 128}.
+ * <p>Phase-1 packer: dequantizes GPTQ/AWQ to FP16, then re-quantizes and
+ * packs with the upstream {@code marlin.Layer.pack} tile permutation
+ * ({@code B} shape {@code [k/16, n*16/8]}).
  *
  * @author Haifeng Li
  */
@@ -39,6 +38,8 @@ public final class MarlinWeightPacker {
      * Inverse of pack order {@code [0, 2, 4, 6, 1, 3, 5, 7]}.
      */
     private static final int[] AWQ_REVERSE_ORDER = {0, 4, 1, 5, 2, 6, 3, 7};
+
+    private static final int TILE = 16;
 
     private MarlinWeightPacker() {}
 
@@ -73,10 +74,8 @@ public final class MarlinWeightPacker {
      */
     public static Packed packGptq(Tensor qweight, Tensor scales, Tensor qzeros, Tensor gIdx,
                                   int groupSize, Device device) {
-        if (groupSize != 64 && groupSize != 128) {
-            throw new IllegalArgumentException("Marlin pack supports groupSize 64 or 128; got " + groupSize);
-        }
-        // GPTQ qweight is typically [inFeatures/8? packed, outFeatures] — dequant to FP16 then repack.
+        requireMarlinGroupSize(groupSize);
+        // GPTQ qweight is typically [inFeatures/8 packed, outFeatures] — dequant to FP16 then repack.
         Tensor fp16 = dequantGptqToFp16(qweight, scales, qzeros, gIdx, groupSize);
         try {
             return packFromFp16(fp16, groupSize, device);
@@ -91,9 +90,7 @@ public final class MarlinWeightPacker {
      */
     public static Packed packAwq(Tensor qweight, Tensor scales, Tensor qzeros,
                                  int groupSize, Device device) {
-        if (groupSize != 64 && groupSize != 128) {
-            throw new IllegalArgumentException("Marlin pack supports groupSize 64 or 128; got " + groupSize);
-        }
+        requireMarlinGroupSize(groupSize);
         Tensor fp16 = dequantAwqToFp16(qweight, scales, qzeros, groupSize);
         try {
             return packFromFp16(fp16, groupSize, device);
@@ -102,65 +99,140 @@ public final class MarlinWeightPacker {
         }
     }
 
+    private static void requireMarlinGroupSize(int groupSize) {
+        // Vendored kernel instantiates group_blocks -1 (column-wise) and 8 (groupSize 128) only.
+        if (groupSize != 128) {
+            throw new IllegalArgumentException(
+                    "Marlin kernel supports groupSize 128 only; got " + groupSize);
+        }
+    }
+
     /**
-     * Packs a dense FP16 weight {@code [out, in]} into Marlin INT4 layout.
+     * Packs a dense FP16 weight {@code [out, in]} into Marlin INT4 layout
+     * matching upstream {@code marlin.Layer.pack} ({@code B} is {@code [k/16, n*16/8]}).
      */
     public static Packed packFromFp16(Tensor weightFp16, int groupSize, Device device) {
         long[] shape = weightFp16.shape();
         if (shape.length != 2) {
             throw new IllegalArgumentException("weight must be [out,in]");
         }
-        int outFeatures = (int) shape[0];
-        int inFeatures = (int) shape[1];
-        if (inFeatures % groupSize != 0) {
+        int n = (int) shape[0]; // outFeatures
+        int k = (int) shape[1]; // inFeatures
+        if (k % 128 != 0) {
+            throw new IllegalArgumentException("Marlin requires inFeatures divisible by 128; got " + k);
+        }
+        if (n % 256 != 0) {
+            throw new IllegalArgumentException("Marlin requires outFeatures divisible by 256; got " + n);
+        }
+        if (groupSize != 128 && groupSize != k) {
             throw new IllegalArgumentException(
-                    "inFeatures " + inFeatures + " not divisible by groupSize " + groupSize);
+                    "Marlin pack supports groupSize 128 or inFeatures (column-wise); got " + groupSize);
         }
-        int numGroups = inFeatures / groupSize;
+        if (k % groupSize != 0) {
+            throw new IllegalArgumentException(
+                    "inFeatures " + k + " not divisible by groupSize " + groupSize);
+        }
+        int numGroups = k / groupSize;
 
-        // Compute per-group absmax scales on CPU for deterministic packing.
-        Tensor w = weightFp16.to(Device.CPU()).to(ScalarType.Float);
-        float[] data = w.floatArray();
-        w.close();
+        Tensor wCpu = weightFp16.to(Device.CPU()).to(ScalarType.Float);
+        float[] data = wCpu.floatArray(); // [n, k] row-major
+        wCpu.close();
 
-        float[] scaleData = new float[numGroups * outFeatures];
-        int[] q = new int[outFeatures * inFeatures]; // 0..15
-        for (int o = 0; o < outFeatures; o++) {
-            for (int g = 0; g < numGroups; g++) {
+        // Per-group absmax scales [groups, n], then quantize to unsigned int4 in [k, n] layout.
+        float[] scaleData = new float[numGroups * n];
+        for (int g = 0; g < numGroups; g++) {
+            for (int nj = 0; nj < n; nj++) {
                 float amax = 0f;
-                int base = o * inFeatures + g * groupSize;
+                int rowBase = nj * k + g * groupSize;
                 for (int i = 0; i < groupSize; i++) {
-                    amax = Math.max(amax, Math.abs(data[base + i]));
+                    amax = Math.max(amax, Math.abs(data[rowBase + i]));
                 }
-                float scale = Math.max(amax / 7.0f, 1e-8f);
-                scaleData[g * outFeatures + o] = scale;
-                for (int i = 0; i < groupSize; i++) {
-                    int qi = Math.round(data[base + i] / scale);
-                    qi = Math.max(-8, Math.min(7, qi));
-                    q[base + i] = qi + 8; // store as 0..15
+                scaleData[g * n + nj] = Math.max(amax / 7.0f, 1e-8f);
+            }
+        }
+        int[] qKn = new int[k * n]; // [k, n], values 0..15
+        for (int kj = 0; kj < k; kj++) {
+            int g = kj / groupSize;
+            for (int nj = 0; nj < n; nj++) {
+                float scale = scaleData[g * n + nj];
+                int qi = Math.round(data[nj * k + kj] / scale);
+                qi = Math.max(-8, Math.min(7, qi)) + 8;
+                qKn[kj * n + nj] = qi;
+            }
+        }
+
+        // Tile reshape: (k/16, 16, n/16, 16) → permute(0,2,1,3) → (k/16, n*16)
+        int rows = k / TILE;
+        int nTiles = n / TILE;
+        int tiledCols = n * TILE;
+        int[] tiled = new int[rows * tiledCols];
+        for (int k0 = 0; k0 < rows; k0++) {
+            for (int n0 = 0; n0 < nTiles; n0++) {
+                for (int kt = 0; kt < TILE; kt++) {
+                    for (int nt = 0; nt < TILE; nt++) {
+                        int src = (k0 * TILE + kt) * n + (n0 * TILE + nt);
+                        int dst = k0 * tiledCols + n0 * (TILE * TILE) + kt * TILE + nt;
+                        tiled[dst] = qKn[src];
+                    }
                 }
             }
         }
 
-        // Pack 8 consecutive int4 values into one int32 along K (Marlin-style tile).
-        int packedK = (inFeatures + 7) / 8;
-        int[] packed = new int[outFeatures * packedK];
-        for (int o = 0; o < outFeatures; o++) {
-            for (int pk = 0; pk < packedK; pk++) {
+        // Apply Marlin 1024-element pack permutation.
+        int[] perm = MarlinPerms.MARLIN_PERM;
+        int[] permuted = new int[tiled.length];
+        int permBlocks = tiled.length / perm.length;
+        for (int b = 0; b < permBlocks; b++) {
+            int off = b * perm.length;
+            for (int i = 0; i < perm.length; i++) {
+                permuted[off + i] = tiled[off + perm[i]];
+            }
+        }
+
+        // Pack 8 int4 values into int32: packed[r,j] |= permuted[r, j*8+i] << (4*i)
+        int packedCols = tiledCols / 8; // n * 16 / 8 = 2*n
+        int[] packed = new int[rows * packedCols];
+        for (int r = 0; r < rows; r++) {
+            int rowOff = r * tiledCols;
+            int packOff = r * packedCols;
+            for (int c = 0; c < packedCols; c++) {
                 int word = 0;
-                for (int j = 0; j < 8; j++) {
-                    int k = pk * 8 + j;
-                    int nibble = k < inFeatures ? q[o * inFeatures + k] & 0xF : 0;
-                    word |= (nibble << (4 * j));
+                int srcBase = rowOff + c * 8;
+                for (int i = 0; i < 8; i++) {
+                    word |= (permuted[srcBase + i] & 0xF) << (4 * i);
                 }
-                packed[o * packedK + pk] = word;
+                packed[packOff + c] = word;
             }
         }
 
-        Tensor qweight = Tensor.of(packed).reshape(outFeatures, packedK).to(device);
-        Tensor scales = Tensor.of(scaleData).reshape(numGroups, outFeatures)
+        // Scale permutation (same as marlin.Layer.pack).
+        float[] scaleOut = permuteScales(scaleData, numGroups, n, groupSize == k);
+
+        Tensor qweight = Tensor.of(packed).reshape(rows, packedCols).to(device);
+        Tensor scalesOut = Tensor.of(scaleOut).reshape(numGroups, n)
                 .to(ScalarType.Half).to(device);
-        return new Packed(qweight, scales, inFeatures, outFeatures, groupSize);
+        return new Packed(qweight, scalesOut, k, n, groupSize);
+    }
+
+    private static float[] permuteScales(float[] scaleData, int numGroups, int n, boolean columnWise) {
+        int[] scalePerm = columnWise ? MarlinPerms.MARLIN_SCALE_PERM_SINGLE : MarlinPerms.MARLIN_SCALE_PERM;
+        if (scaleData.length % scalePerm.length != 0) {
+            throw new IllegalStateException(
+                    "scale length " + scaleData.length + " not divisible by " + scalePerm.length);
+        }
+        float[] tmp = new float[scaleData.length];
+        int nrows = scaleData.length / scalePerm.length;
+        for (int r = 0; r < nrows; r++) {
+            int off = r * scalePerm.length;
+            for (int i = 0; i < scalePerm.length; i++) {
+                tmp[off + i] = scaleData[off + scalePerm[i]];
+            }
+        }
+        // Logical shape remains [numGroups, n].
+        if (tmp.length != numGroups * n) {
+            throw new IllegalStateException("scale permute size mismatch");
+        }
+        return tmp;
     }
 
     private static Tensor dequantGptqToFp16(Tensor qweight, Tensor scales, Tensor qzeros,
