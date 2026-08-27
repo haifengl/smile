@@ -25,7 +25,8 @@ import io.smallrye.config.WithDefault;
  * All properties are prefixed with {@code smile.chat}.
  *
  * <p>The SentencePiece tokenizer is resolved next to the checkpoint
- * ({@code original/tokenizer.model} or {@code tokenizer.model}); there is no
+ * ({@code original/tokenizer.model}, {@code tokenizer.model}, or
+ * {@code tokenizer.json}); there is no
  * separate tokenizer path property.
  *
  * @author Haifeng Li

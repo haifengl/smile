@@ -152,6 +152,12 @@ public class ChatServiceTest {
             Files.writeString(rootTok, "dummy");
             resolved = ChatService.resolveLocalTokenizer(dir);
             assertTrue(resolved.endsWith("tokenizer.model"));
+
+            Files.delete(rootTok);
+            Path jsonTok = dir.resolve("tokenizer.json");
+            Files.writeString(jsonTok, "{}");
+            resolved = ChatService.resolveLocalTokenizer(dir);
+            assertTrue(resolved.endsWith("tokenizer.json"));
         } finally {
             // best-effort cleanup
             try (var walk = Files.walk(dir)) {

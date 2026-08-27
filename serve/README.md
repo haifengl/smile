@@ -161,7 +161,7 @@ the corresponding profiles.
 | `quarkus.rest.path` | `/api/v1` | Global REST path prefix |
 | `smile.serve.model` | `../model` | Path to a `.sml` file or directory of `.sml` files |
 | `smile.onnx.model` | `../model` | Path to a `.onnx` file or directory of `.onnx` files |
-| `smile.chat.model` | `../model/Llama3.1-8B-Instruct` | Local HF-layout checkpoint directory, or Hugging Face repo id (`owner/name`). Tokenizer is resolved next to the checkpoint (`original/tokenizer.model` or `tokenizer.model`) |
+| `smile.chat.model` | `../model/Llama3.1-8B-Instruct` | Local HF-layout checkpoint directory, or Hugging Face repo id (`owner/name`). Tokenizer is resolved next to the checkpoint (`original/tokenizer.model`, `tokenizer.model`, or HF `tokenizer.json` for AWQ/GPTQ cards) |
 | `smile.chat.max-seq-len` | `0` (auto) | Max context (prompt+output), like vLLM `--max-model-len` / SGLang `--context-length`. `<=0` uses `max_position_embeddings` from the model config; set explicitly (e.g. `8192`) to cap large-window models such as Qwen3.5 |
 | `smile.chat.max-batch-size` | `1` | Max in-flight chat generations (`InferenceEngine` Fluid Injection cap). Values `>1` enable continuous batching. A waiting request is admitted only when free KV can reserve its full `prompt + max_tokens` window (capped by `max-seq-len`); otherwise it stays queued. |
 | `smile.chat.max-decode-batch` | `0` (same as max-batch-size) | Cap on requests per GPU `decodeStep`; `0` means use `max-batch-size` |

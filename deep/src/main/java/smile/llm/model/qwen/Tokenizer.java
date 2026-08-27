@@ -245,37 +245,12 @@ public class Tokenizer extends Tiktoken {
      * @throws IOException if the file is missing or not a valid tokenizer.json.
      */
     public static Map<Bytes, Integer> loadTokenizerJson(Path tokenizerJson) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode root = mapper.readTree(tokenizerJson.toFile());
-        JsonNode vocab = root.path("model").path("vocab");
-        if (!vocab.isObject()) {
-            throw new IOException("tokenizer.json missing model.vocab: " + tokenizerJson);
-        }
-        Map<Bytes, Integer> ranks = new HashMap<>();
-        vocab.properties().forEach(e -> {
-            // HF vocab keys are GPT-2 unicode-mapped; Tiktoken BPE needs raw bytes.
-            ranks.put(Gpt2ByteMap.vocabTokenToBytes(e.getKey()), e.getValue().asInt());
-        });
-        mergeAddedTokens(ranks, root);
-        return ranks;
+        return smile.llm.tokenizer.HuggingFaceBpeVocab.loadTokenizerJson(tokenizerJson);
     }
 
     /** Merges {@code added_tokens} entries into {@code ranks} (content → id). */
     static void mergeAddedTokens(Map<Bytes, Integer> ranks, JsonNode root) {
-        JsonNode added = root.get("added_tokens");
-        if (added == null || !added.isArray()) {
-            return;
-        }
-        for (JsonNode token : added) {
-            if (!token.has("content") || !token.has("id")) {
-                continue;
-            }
-            String content = token.get("content").asString();
-            int id = token.get("id").asInt();
-            // Chat specials are literal strings; ASCII maps 1:1 through GPT-2.
-            ranks.put(Gpt2ByteMap.vocabTokenToBytes(content), id);
-            ranks.put(new Bytes(content), id);
-        }
+        smile.llm.tokenizer.HuggingFaceBpeVocab.mergeAddedTokens(ranks, root);
     }
 
     /**

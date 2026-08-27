@@ -17,6 +17,7 @@
 package smile.llm.model.llama;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -162,12 +163,22 @@ public class Tokenizer extends Tiktoken {
 
     /**
      * Loads a llama3 tokenizer model.
-     * @param path The llama3 model file path.
+     *
+     * <p>Supports Meta/OpenAI tiktoken text files ({@code tokenizer.model}) and
+     * HuggingFace {@code tokenizer.json} (common on AWQ/GPTQ repos).
+     *
+     * @param path The llama3 tiktoken file or HuggingFace {@code tokenizer.json}.
      * @return a llama3 tokenizer.
      * @throws IOException if fail to load the model.
      */
     public static Tokenizer of(String path) throws IOException {
-        Map<Bytes, Integer> encoder = Tiktoken.load(path);
+        Path p = Path.of(path);
+        Map<Bytes, Integer> encoder;
+        if (path.endsWith(".json") || p.getFileName().toString().equals("tokenizer.json")) {
+            encoder = smile.llm.tokenizer.HuggingFaceBpeVocab.loadTokenizerJson(p);
+        } else {
+            encoder = Tiktoken.load(path);
+        }
         return new Tokenizer(encoder);
     }
 }
