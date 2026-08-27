@@ -87,19 +87,11 @@ public final class MarlinLinear implements LinearOp, AutoCloseable {
                 : flat.to(ScalarType.Half);
         Tensor outFlat;
         try {
-            // Workspace locks are zeroed inside smile_marlin_mul (once per call).
+            // Workspace locks are zeroed inside smile_marlin_mul.
             outFlat = Native.marlinMul(aFp16, qweight, scales, workspace, -1);
         } catch (RuntimeException e) {
             throw new IllegalStateException(
-                    "smile_marlin_mul failed: " + e.getMessage()
-                            + " (m=" + m + " k=" + k + " n=" + outFeatures
-                            + " groupSize=" + groupSize
-                            + " qweight=" + java.util.Arrays.toString(qweight.shape())
-                            + " scales=" + java.util.Arrays.toString(scales.shape())
-                            + " aDtype=" + aFp16.dtype()
-                            + " qwDtype=" + qweight.dtype()
-                            + " sDtype=" + scales.dtype() + ")",
-                    e);
+                    "smile_marlin_mul failed (m=" + m + " k=" + k + " n=" + outFeatures + ")", e);
         } finally {
             if (aFp16 != flat) {
                 aFp16.close();
