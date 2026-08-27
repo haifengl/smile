@@ -63,4 +63,56 @@ public class MarlinWeightPackerTest {
         assertEquals(32, packed.scales().shape()[1]);
         packed.close();
     }
+
+    /**
+     * AutoAWQ pack order: nibble slot {@code i} stores logical column
+     * {@code AWQ_ORDER[i]}. Inverse is {@code AWQ_REVERSE_ORDER}.
+     */
+    private static final int[] AWQ_ORDER = {0, 2, 4, 6, 1, 3, 5, 7};
+
+    @Test
+    public void testGivenAwqLayoutWhenPackThenInFeaturesMatchHidden() {
+        // Given – AWQ shapes for Linear(in=128, out=32), groupSize=128
+        // qweight [in, out/8], scales [groups, out], qzeros [groups, out/8]
+        int inFeatures = 128;
+        int outFeatures = 32;
+        int groupSize = 128;
+        int packedOut = outFeatures / 8;
+        int numGroups = inFeatures / groupSize;
+
+        int[] qweight = new int[inFeatures * packedOut];
+        int[] qzeros = new int[numGroups * packedOut];
+        float[] scales = new float[numGroups * outFeatures];
+        for (int o = 0; o < outFeatures; o++) {
+            scales[o] = 0.1f; // one group
+        }
+        // Pack unsigned nibbles 0..7 into each word with AWQ interleave; zeros = 0
+        for (int k = 0; k < inFeatures; k++) {
+            for (int po = 0; po < packedOut; po++) {
+                int word = 0;
+                for (int slot = 0; slot < 8; slot++) {
+                    int logical = AWQ_ORDER[slot];
+                    int qi = (po * 8 + logical) % 8; // 0..7
+                    word |= (qi & 0xF) << (4 * slot);
+                }
+                qweight[k * packedOut + po] = word;
+            }
+        }
+
+        Tensor qw = Tensor.of(qweight).reshape(inFeatures, packedOut);
+        Tensor sc = Tensor.of(scales).reshape(numGroups, outFeatures);
+        Tensor qz = Tensor.of(qzeros).reshape(numGroups, packedOut);
+
+        // When – must not treat AWQ as GPTQ ([in/8, out] → inFeatures*=8)
+        var packed = MarlinWeightPacker.packAwq(qw, sc, qz, groupSize, Device.CPU());
+        qw.close();
+        sc.close();
+        qz.close();
+
+        // Then
+        assertEquals(inFeatures, packed.inFeatures(),
+                "AWQ dequant must keep inFeatures=K, not K*8 from GPTQ unpack");
+        assertEquals(outFeatures, packed.outFeatures());
+        packed.close();
+    }
 }
