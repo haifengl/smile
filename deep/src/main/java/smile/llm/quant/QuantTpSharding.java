@@ -129,4 +129,88 @@ public final class QuantTpSharding {
             return qweight.get(rows, Index.Colon).contiguous();
         }
     }
+
+    /**
+     * Column-parallel shard of AWQ {@code qweight} {@code [in, out/8]} along packed out.
+     */
+    public static Tensor shardAwqQweightColumn(Tensor qweight, int tpSize, int tpRank) {
+        if (tpSize <= 1) {
+            return qweight.copy();
+        }
+        long[] shape = qweight.shape();
+        if (shape.length != 2) {
+            throw new IllegalArgumentException("AWQ qweight must be 2D");
+        }
+        if (shape[1] % tpSize != 0) {
+            throw new IllegalArgumentException(
+                    "AWQ packedOut " + shape[1] + " not divisible by tpSize " + tpSize);
+        }
+        int localPacked = (int) (shape[1] / tpSize);
+        int start = tpRank * localPacked;
+        try (Index cols = Index.slice(start, start + localPacked)) {
+            return qweight.get(Index.Colon, cols).contiguous();
+        }
+    }
+
+    /**
+     * Row-parallel shard of AWQ {@code qweight} {@code [in, out/8]} along K.
+     */
+    public static Tensor shardAwqQweightRow(Tensor qweight, int tpSize, int tpRank) {
+        if (tpSize <= 1) {
+            return qweight.copy();
+        }
+        long[] shape = qweight.shape();
+        if (shape.length != 2) {
+            throw new IllegalArgumentException("AWQ qweight must be 2D");
+        }
+        if (shape[0] % tpSize != 0) {
+            throw new IllegalArgumentException(
+                    "AWQ inFeatures " + shape[0] + " not divisible by tpSize " + tpSize);
+        }
+        int localIn = (int) (shape[0] / tpSize);
+        int start = tpRank * localIn;
+        try (Index rows = Index.slice(start, start + localIn)) {
+            return qweight.get(rows, Index.Colon).contiguous();
+        }
+    }
+
+    /**
+     * Column-parallel shard of scales {@code [groups, out]} along out.
+     */
+    public static Tensor shardScalesColumn(Tensor scales, int tpSize, int tpRank) {
+        if (tpSize <= 1) {
+            return scales.copy();
+        }
+        long[] ss = scales.shape();
+        if (ss.length != 2) {
+            throw new IllegalArgumentException("scales must be 2D [groups, out]");
+        }
+        if (ss[1] % tpSize != 0) {
+            throw new IllegalArgumentException(
+                    "scales outFeatures " + ss[1] + " not divisible by tpSize " + tpSize);
+        }
+        return shardColumn(scales, tpSize, tpRank);
+    }
+
+    /**
+     * Row-parallel shard of scales {@code [groups, out]} along groups (K groups).
+     */
+    public static Tensor shardScalesRow(Tensor scales, int tpSize, int tpRank) {
+        if (tpSize <= 1) {
+            return scales.copy();
+        }
+        long[] ss = scales.shape();
+        if (ss.length != 2) {
+            throw new IllegalArgumentException("scales must be 2D [groups, out]");
+        }
+        if (ss[0] % tpSize != 0) {
+            throw new IllegalArgumentException(
+                    "scales groups " + ss[0] + " not divisible by tpSize " + tpSize);
+        }
+        int localG = (int) (ss[0] / tpSize);
+        int start = tpRank * localG;
+        try (Index rows = Index.slice(start, start + localG)) {
+            return scales.get(rows, Index.Colon).contiguous();
+        }
+    }
 }

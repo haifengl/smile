@@ -52,20 +52,21 @@ public final class QuantLinearFactory {
 
     /**
      * Packs GPTQ tensors and builds {@link MarlinLinear} (Ampere/Ada only).
+     * Uses direct GPTQ→Marlin pack (act-order checkpoints fail fast).
      */
     public static LinearOp marlinFromGptq(Tensor qweight, Tensor scales, Tensor qzeros, Tensor gIdx,
                                           int groupSize, Device device) {
-        var packed = MarlinWeightPacker.packGptq(qweight, scales, qzeros, gIdx, groupSize, device);
+        var packed = MarlinWeightPacker.packGptqDirect(qweight, scales, qzeros, gIdx, groupSize, device);
         return new MarlinLinear(packed.qweight(), packed.scales(), null,
                 packed.inFeatures(), packed.outFeatures(), packed.groupSize());
     }
 
     /**
-     * Packs AWQ tensors and builds {@link MarlinLinear}.
+     * Packs AWQ tensors and builds {@link MarlinLinear} via direct AWQ→Marlin pack.
      */
     public static LinearOp marlinFromAwq(Tensor qweight, Tensor scales, Tensor qzeros,
                                          int groupSize, Device device) {
-        var packed = MarlinWeightPacker.packAwq(qweight, scales, qzeros, groupSize, device);
+        var packed = MarlinWeightPacker.packAwqDirect(qweight, scales, qzeros, groupSize, device);
         return new MarlinLinear(packed.qweight(), packed.scales(), null,
                 packed.inFeatures(), packed.outFeatures(), packed.groupSize());
     }

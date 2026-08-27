@@ -25,9 +25,9 @@ import smile.deep.tensor.Tensor;
  * {@link MarlinLinear}. Invoked only when {@link WeightGemmBackend#MARLIN}
  * is selected (Ampere/Ada).
  *
- * <p>Phase-1 packer: dequantizes GPTQ/AWQ to FP16, then re-quantizes and
- * packs with the upstream {@code marlin.Layer.pack} tile permutation
- * ({@code B} shape {@code [k/16, n*16/8]}).
+ * <p>Default HF load path uses {@link #packAwqDirect} / {@link #packGptqDirect}
+ * (int4 unpack → Marlin tile permute; no FP16 round-trip). {@link #packFromFp16}
+ * remains for tests and unsupported layouts.
  *
  * @author Haifeng Li
  */
@@ -40,6 +40,9 @@ public final class MarlinWeightPacker {
     private static final int[] AWQ_REVERSE_ORDER = {0, 4, 1, 5, 2, 6, 3, 7};
 
     private static final int TILE = 16;
+
+    /** When {@code true}, {@link #packAwq}/{@link #packGptq} use FP16 round-trip. */
+    static final ThreadLocal<Boolean> FORCE_FP16_FALLBACK = ThreadLocal.withInitial(() -> false);
 
     private MarlinWeightPacker() {}
 
@@ -62,62 +65,154 @@ public final class MarlinWeightPacker {
     }
 
     /**
-     * Packs GPTQ tensors ({@code qweight} int32, {@code scales} float, optional
-     * {@code qzeros}/{@code g_idx}) into Marlin layout.
-     *
-     * @param qweight   GPTQ qweight.
-     * @param scales    GPTQ scales.
-     * @param qzeros    optional zeros (symmetric if null).
-     * @param gIdx      optional act-order indices (null = sequential).
-     * @param groupSize group size (64 or 128).
-     * @param device    target CUDA device.
+     * Packs GPTQ tensors into Marlin layout (direct int4 path unless fallback forced).
      */
     public static Packed packGptq(Tensor qweight, Tensor scales, Tensor qzeros, Tensor gIdx,
                                   int groupSize, Device device) {
+        if (Boolean.TRUE.equals(FORCE_FP16_FALLBACK.get())) {
+            requireMarlinGroupSize(groupSize);
+            Tensor fp16 = dequantGptqToFp16(qweight, scales, qzeros, gIdx, groupSize);
+            try {
+                return packFromFp16(fp16, groupSize, device);
+            } finally {
+                fp16.close();
+            }
+        }
+        return packGptqDirect(qweight, scales, qzeros, gIdx, groupSize, device);
+    }
+
+    /**
+     * Packs AutoAWQ GEMM tensors into Marlin layout (direct int4 path unless fallback forced).
+     */
+    public static Packed packAwq(Tensor qweight, Tensor scales, Tensor qzeros,
+                                 int groupSize, Device device) {
+        if (Boolean.TRUE.equals(FORCE_FP16_FALLBACK.get())) {
+            requireMarlinGroupSize(groupSize);
+            Tensor fp16 = dequantAwqToFp16(qweight, scales, qzeros, groupSize);
+            try {
+                return packFromFp16(fp16, groupSize, device);
+            } finally {
+                fp16.close();
+            }
+        }
+        return packAwqDirect(qweight, scales, qzeros, groupSize, device);
+    }
+
+    /**
+     * Direct AWQ→Marlin: unpack interleaved int4, fold zeros into Marlin zp=8,
+     * tile-permute; keeps checkpoint scales (no FP16 requant).
+     */
+    public static Packed packAwqDirect(Tensor qweight, Tensor scales, Tensor qzeros,
+                                       int groupSize, Device device) {
         requireMarlinGroupSize(groupSize);
-        // GPTQ qweight is typically [inFeatures/8 packed, outFeatures] — dequant to FP16 then repack.
-        Tensor fp16 = dequantGptqToFp16(qweight, scales, qzeros, gIdx, groupSize);
+        if (qweight.dtype() == ScalarType.Half || qweight.dtype() == ScalarType.BFloat16
+                || qweight.dtype() == ScalarType.Float) {
+            return packFromFp16(qweight.to(ScalarType.Half), groupSize, device);
+        }
+        Tensor qw = qweight.to(Device.CPU());
+        Tensor sc = scales.to(Device.CPU()).to(ScalarType.Float);
         try {
-            return packFromFp16(fp16, groupSize, device);
+            long[] qshape = qw.shape();
+            if (qshape.length != 2) {
+                throw new IllegalArgumentException("AWQ qweight must be 2D [in, out/8]");
+            }
+            int k = (int) qshape[0];
+            int packedOut = (int) qshape[1];
+            int n = packedOut * 8;
+            requireMarlinDims(k, n, groupSize);
+            int numGroups = k / groupSize;
+
+            float[] scaleArr = normalizeScales(sc, numGroups, n);
+            int[] packed = qw.intArray();
+            int[] zeroPacked = readAwqZeros(qzeros, numGroups, packedOut);
+
+            // Marlin: w = (q_m - 8) * s  ≡  AWQ (q - z) * s  ⇒  q_m = q - z + 8
+            int[] qKn = new int[k * n];
+            for (int kj = 0; kj < k; kj++) {
+                int g = kj / groupSize;
+                for (int po = 0; po < packedOut; po++) {
+                    int word = packed[kj * packedOut + po];
+                    int zword = zeroPacked != null ? zeroPacked[g * packedOut + po] : 0;
+                    for (int logical = 0; logical < 8; logical++) {
+                        int bitSlot = AWQ_REVERSE_ORDER[logical];
+                        int qi = (word >>> (4 * bitSlot)) & 0xF;
+                        int zi = zeroPacked != null ? (zword >>> (4 * bitSlot)) & 0xF : 0;
+                        int nj = po * 8 + logical;
+                        int qm = qi - zi + 8;
+                        qKn[kj * n + nj] = Math.max(0, Math.min(15, qm));
+                    }
+                }
+            }
+            return packInt4Marlin(qKn, scaleArr, k, n, groupSize, device);
         } finally {
-            fp16.close();
+            qw.close();
+            sc.close();
         }
     }
 
     /**
-     * Packs AutoAWQ GEMM tensors ({@code qweight} {@code [in, out/8]}, scales,
-     * qzeros) into Marlin layout. Does not use the GPTQ {@code [in/8, out]} unpack.
+     * Direct GPTQ→Marlin pack. Act-order ({@code g_idx} not sequential) fails fast.
      */
-    public static Packed packAwq(Tensor qweight, Tensor scales, Tensor qzeros,
-                                 int groupSize, Device device) {
+    public static Packed packGptqDirect(Tensor qweight, Tensor scales, Tensor qzeros, Tensor gIdx,
+                                        int groupSize, Device device) {
         requireMarlinGroupSize(groupSize);
-        Tensor fp16 = dequantAwqToFp16(qweight, scales, qzeros, groupSize);
+        if (qweight.dtype() == ScalarType.Half || qweight.dtype() == ScalarType.BFloat16
+                || qweight.dtype() == ScalarType.Float) {
+            return packFromFp16(qweight.to(ScalarType.Half), groupSize, device);
+        }
+        Tensor qw = qweight.to(Device.CPU());
+        Tensor sc = scales.to(Device.CPU()).to(ScalarType.Float);
         try {
-            return packFromFp16(fp16, groupSize, device);
+            long[] qshape = qw.shape();
+            if (qshape.length != 2) {
+                throw new IllegalArgumentException("GPTQ qweight must be 2D [in/8, out]");
+            }
+            int packedIn = (int) qshape[0];
+            int n = (int) qshape[1];
+            int k = packedIn * 8;
+            requireMarlinDims(k, n, groupSize);
+            requireNoActOrder(gIdx, k, groupSize);
+            int numGroups = k / groupSize;
+
+            float[] scaleArr = normalizeScales(sc, numGroups, n);
+            int[] packed = qw.intArray();
+            int[] zeroPacked = readGptqZeros(qzeros, numGroups, n);
+
+            int[] qKn = new int[k * n];
+            for (int p = 0; p < packedIn; p++) {
+                for (int nj = 0; nj < n; nj++) {
+                    int word = packed[p * n + nj];
+                    for (int j = 0; j < 8; j++) {
+                        int kj = p * 8 + j;
+                        int g = kj / groupSize;
+                        int qi = (word >>> (4 * j)) & 0xF;
+                        int zi = 8; // symmetric default (stored as zp-centered)
+                        if (zeroPacked != null) {
+                            // GPTQ qzeros typically packed along out: [groups, out/8]
+                            int packedOut = n / 8;
+                            int zword = zeroPacked[g * packedOut + nj / 8];
+                            zi = (zword >>> (4 * (nj % 8))) & 0xF;
+                        }
+                        int qm = qi - zi + 8;
+                        qKn[kj * n + nj] = Math.max(0, Math.min(15, qm));
+                    }
+                }
+            }
+            return packInt4Marlin(qKn, scaleArr, k, n, groupSize, device);
         } finally {
-            fp16.close();
+            qw.close();
+            sc.close();
         }
     }
 
     private static void requireMarlinGroupSize(int groupSize) {
-        // Vendored kernel instantiates group_blocks -1 (column-wise) and 8 (groupSize 128) only.
         if (groupSize != 128) {
             throw new IllegalArgumentException(
                     "Marlin kernel supports groupSize 128 only; got " + groupSize);
         }
     }
 
-    /**
-     * Packs a dense FP16 weight {@code [out, in]} into Marlin INT4 layout
-     * matching upstream {@code marlin.Layer.pack} ({@code B} is {@code [k/16, n*16/8]}).
-     */
-    public static Packed packFromFp16(Tensor weightFp16, int groupSize, Device device) {
-        long[] shape = weightFp16.shape();
-        if (shape.length != 2) {
-            throw new IllegalArgumentException("weight must be [out,in]");
-        }
-        int n = (int) shape[0]; // outFeatures
-        int k = (int) shape[1]; // inFeatures
+    private static void requireMarlinDims(int k, int n, int groupSize) {
         if (k % 128 != 0) {
             throw new IllegalArgumentException("Marlin requires inFeatures divisible by 128; got " + k);
         }
@@ -132,13 +227,143 @@ public final class MarlinWeightPacker {
             throw new IllegalArgumentException(
                     "inFeatures " + k + " not divisible by groupSize " + groupSize);
         }
+    }
+
+    /**
+     * Rejects GPTQ act-order checkpoints ({@code g_idx} not {@code i / groupSize}).
+     */
+    static void requireNoActOrder(Tensor gIdx, int k, int groupSize) {
+        if (gIdx == null) {
+            return;
+        }
+        Tensor idx = gIdx.to(Device.CPU());
+        try {
+            long[] shape = idx.shape();
+            long numel = 1;
+            for (long d : shape) {
+                numel *= d;
+            }
+            if (numel != k) {
+                throw new IllegalArgumentException(
+                        "GPTQ g_idx length " + numel + " != inFeatures " + k);
+            }
+            int[] data = idx.intArray();
+            for (int i = 0; i < data.length; i++) {
+                if (data[i] != i / groupSize) {
+                    throw new IllegalArgumentException(
+                            "GPTQ act-order (non-sequential g_idx) is not supported for Marlin pack; "
+                                    + "use a non-act-order GPTQ checkpoint or dense weights.");
+                }
+            }
+        } finally {
+            idx.close();
+        }
+    }
+
+    private static float[] normalizeScales(Tensor sc, int numGroups, int n) {
+        long[] sshape = sc.shape();
+        float[] scaleArr = sc.floatArray();
+        if (sshape.length == 2 && sshape[0] == numGroups && sshape[1] == n) {
+            return scaleArr;
+        }
+        if (sshape.length == 2 && sshape[0] == n && sshape[1] == numGroups) {
+            float[] transposed = new float[numGroups * n];
+            for (int g = 0; g < numGroups; g++) {
+                for (int nj = 0; nj < n; nj++) {
+                    transposed[g * n + nj] = scaleArr[nj * numGroups + g];
+                }
+            }
+            return transposed;
+        }
+        if (scaleArr.length == numGroups * n) {
+            return scaleArr;
+        }
+        throw new IllegalArgumentException(
+                "scales shape " + java.util.Arrays.toString(sshape)
+                        + " incompatible with groups=" + numGroups + " outFeatures=" + n);
+    }
+
+    private static int[] readAwqZeros(Tensor qzeros, int numGroups, int packedOut) {
+        if (qzeros == null) {
+            return null;
+        }
+        Tensor z = qzeros.to(Device.CPU());
+        try {
+            long[] zshape = z.shape();
+            if (zshape.length != 2 || zshape[0] != numGroups || zshape[1] != packedOut) {
+                throw new IllegalArgumentException(
+                        "AWQ qzeros shape " + java.util.Arrays.toString(zshape)
+                                + " expected [" + numGroups + ", " + packedOut + "]");
+            }
+            return z.intArray();
+        } finally {
+            z.close();
+        }
+    }
+
+    private static int[] readGptqZeros(Tensor qzeros, int numGroups, int n) {
+        if (qzeros == null) {
+            return null;
+        }
+        Tensor z = qzeros.to(Device.CPU());
+        try {
+            long[] zshape = z.shape();
+            int packedOut = n / 8;
+            if (zshape.length == 2 && zshape[0] == numGroups && zshape[1] == packedOut) {
+                return z.intArray();
+            }
+            if (zshape.length == 2 && zshape[0] == numGroups && zshape[1] == n) {
+                // Unpacked zeros — pack along out for a uniform path.
+                float[] asFloat = z.dtype() == ScalarType.Float || z.dtype() == ScalarType.Half
+                        || z.dtype() == ScalarType.BFloat16
+                        ? z.to(ScalarType.Float).floatArray()
+                        : null;
+                int[] unpacked = asFloat == null ? z.intArray() : null;
+                int[] packed = new int[numGroups * packedOut];
+                for (int g = 0; g < numGroups; g++) {
+                    for (int po = 0; po < packedOut; po++) {
+                        int word = 0;
+                        for (int j = 0; j < 8; j++) {
+                            int zi;
+                            if (asFloat != null) {
+                                zi = Math.round(asFloat[g * n + po * 8 + j]);
+                            } else {
+                                zi = unpacked[g * n + po * 8 + j];
+                            }
+                            word |= (zi & 0xF) << (4 * j);
+                        }
+                        packed[g * packedOut + po] = word;
+                    }
+                }
+                return packed;
+            }
+            throw new IllegalArgumentException(
+                    "GPTQ qzeros shape " + java.util.Arrays.toString(zshape)
+                            + " expected [" + numGroups + ", " + packedOut + "] or ["
+                            + numGroups + ", " + n + "]");
+        } finally {
+            z.close();
+        }
+    }
+
+    /**
+     * Packs a dense FP16 weight {@code [out, in]} into Marlin INT4 layout
+     * matching upstream {@code marlin.Layer.pack} ({@code B} is {@code [k/16, n*16/8]}).
+     */
+    public static Packed packFromFp16(Tensor weightFp16, int groupSize, Device device) {
+        long[] shape = weightFp16.shape();
+        if (shape.length != 2) {
+            throw new IllegalArgumentException("weight must be [out,in]");
+        }
+        int n = (int) shape[0];
+        int k = (int) shape[1];
+        requireMarlinDims(k, n, groupSize);
         int numGroups = k / groupSize;
 
         Tensor wCpu = weightFp16.to(Device.CPU()).to(ScalarType.Float);
-        float[] data = wCpu.floatArray(); // [n, k] row-major
+        float[] data = wCpu.floatArray();
         wCpu.close();
 
-        // Per-group absmax scales [groups, n], then quantize to unsigned int4 in [k, n] layout.
         float[] scaleData = new float[numGroups * n];
         for (int g = 0; g < numGroups; g++) {
             for (int nj = 0; nj < n; nj++) {
@@ -150,7 +375,7 @@ public final class MarlinWeightPacker {
                 scaleData[g * n + nj] = Math.max(amax / 7.0f, 1e-8f);
             }
         }
-        int[] qKn = new int[k * n]; // [k, n], values 0..15
+        int[] qKn = new int[k * n];
         for (int kj = 0; kj < k; kj++) {
             int g = kj / groupSize;
             for (int nj = 0; nj < n; nj++) {
@@ -160,8 +385,23 @@ public final class MarlinWeightPacker {
                 qKn[kj * n + nj] = qi;
             }
         }
+        return packInt4Marlin(qKn, scaleData, k, n, groupSize, device);
+    }
 
-        // Tile reshape: (k/16, 16, n/16, 16) → permute(0,2,1,3) → (k/16, n*16)
+    /**
+     * Marlin tile permute + int32 pack from unsigned int4 {@code qKn[k*n]} and
+     * scales {@code [groups, n]}.
+     */
+    static Packed packInt4Marlin(int[] qKn, float[] scaleData, int k, int n, int groupSize,
+                                 Device device) {
+        int numGroups = k / groupSize;
+        if (qKn.length != k * n) {
+            throw new IllegalArgumentException("qKn length mismatch");
+        }
+        if (scaleData.length != numGroups * n) {
+            throw new IllegalArgumentException("scaleData length mismatch");
+        }
+
         int rows = k / TILE;
         int nTiles = n / TILE;
         int tiledCols = n * TILE;
@@ -178,7 +418,6 @@ public final class MarlinWeightPacker {
             }
         }
 
-        // Apply Marlin 1024-element pack permutation.
         int[] perm = MarlinPerms.MARLIN_PERM;
         int[] permuted = new int[tiled.length];
         int permBlocks = tiled.length / perm.length;
@@ -189,8 +428,7 @@ public final class MarlinWeightPacker {
             }
         }
 
-        // Pack 8 int4 values into int32: packed[r,j] |= permuted[r, j*8+i] << (4*i)
-        int packedCols = tiledCols / 8; // n * 16 / 8 = 2*n
+        int packedCols = tiledCols / 8;
         int[] packed = new int[rows * packedCols];
         for (int r = 0; r < rows; r++) {
             int rowOff = r * tiledCols;
@@ -205,9 +443,7 @@ public final class MarlinWeightPacker {
             }
         }
 
-        // Scale permutation (same as marlin.Layer.pack).
         float[] scaleOut = permuteScales(scaleData, numGroups, n, groupSize == k);
-
         Tensor qweight = Tensor.of(packed).reshape(rows, packedCols).to(device);
         Tensor scalesOut = Tensor.of(scaleOut).reshape(numGroups, n)
                 .to(ScalarType.Half).to(device);
@@ -228,7 +464,6 @@ public final class MarlinWeightPacker {
                 tmp[off + i] = scaleData[off + scalePerm[i]];
             }
         }
-        // Logical shape remains [numGroups, n].
         if (tmp.length != numGroups * n) {
             throw new IllegalStateException("scale permute size mismatch");
         }
@@ -237,12 +472,11 @@ public final class MarlinWeightPacker {
 
     private static Tensor dequantGptqToFp16(Tensor qweight, Tensor scales, Tensor qzeros,
                                            Tensor gIdx, int groupSize) {
-        // Fallback path: if tensors are already float, treat as dense.
         if (qweight.dtype() == ScalarType.Half || qweight.dtype() == ScalarType.BFloat16
                 || qweight.dtype() == ScalarType.Float) {
             return qweight.to(ScalarType.Half);
         }
-        // Minimal GPTQ unpack: interpret int32 packed as 8×int4 along dim0.
+        requireNoActOrder(gIdx, (int) qweight.shape()[0] * 8, groupSize);
         Tensor qw = qweight.to(Device.CPU());
         Tensor sc = scales.to(Device.CPU()).to(ScalarType.Float);
         long[] qshape = qw.shape();
@@ -250,46 +484,30 @@ public final class MarlinWeightPacker {
         int packedIn = (int) qshape[0];
         int inFeatures = packedIn * 8;
         int[] packed = qw.intArray();
-        float[] scaleArr = sc.floatArray();
-        int numGroups = (int) (scaleArr.length / outFeatures);
-        if (numGroups < 1) {
-            numGroups = 1;
-        }
+        float[] scaleArr = normalizeScales(sc, inFeatures / groupSize, outFeatures);
+        int numGroups = inFeatures / groupSize;
         float[] out = new float[outFeatures * inFeatures];
         for (int o = 0; o < outFeatures; o++) {
             for (int p = 0; p < packedIn; p++) {
                 int word = packed[p * outFeatures + o];
                 for (int j = 0; j < 8; j++) {
-                    int k = p * 8 + j;
+                    int kk = p * 8 + j;
                     int nibble = (word >>> (4 * j)) & 0xF;
                     int qi = nibble - 8;
-                    int g = Math.min(numGroups - 1, k / Math.max(1, inFeatures / numGroups));
+                    int g = kk / groupSize;
                     float scale = scaleArr[g * outFeatures + o];
-                    out[o * inFeatures + k] = qi * scale;
+                    out[o * inFeatures + kk] = qi * scale;
                 }
             }
         }
         qw.close();
         sc.close();
-        Tensor t = Tensor.of(out).reshape(outFeatures, inFeatures).to(ScalarType.Half);
-        if (gIdx != null) {
-            // Act-order: leave sequential for phase-1; full g_idx permute is a follow-up.
-        }
         if (qzeros != null) {
-            // Asymmetric zeros omitted in phase-1 symmetric approximation.
+            // Asymmetric omitted in FP16 fallback (symmetric approx).
         }
-        return t;
+        return Tensor.of(out).reshape(outFeatures, inFeatures).to(ScalarType.Half);
     }
 
-    /**
-     * Dequantizes AutoAWQ GEMM tensors to dense FP16 {@code [out, in]}.
-     *
-     * <p>AWQ packs along the <em>output</em> dim: {@code qweight} is
-     * {@code [inFeatures, outFeatures/8]}, {@code scales} is
-     * {@code [inFeatures/groupSize, outFeatures]}, {@code qzeros} is
-     * {@code [inFeatures/groupSize, outFeatures/8]}. Formula:
-     * {@code (q - zero) * scale} (no GPTQ-style +1 on zeros).
-     */
     private static Tensor dequantAwqToFp16(Tensor qweight, Tensor scales, Tensor qzeros, int groupSize) {
         if (qweight.dtype() == ScalarType.Half || qweight.dtype() == ScalarType.BFloat16
                 || qweight.dtype() == ScalarType.Float) {
@@ -297,75 +515,34 @@ public final class MarlinWeightPacker {
         }
         Tensor qw = qweight.to(Device.CPU());
         Tensor sc = scales.to(Device.CPU()).to(ScalarType.Float);
-        long[] qshape = qw.shape();
-        if (qshape.length != 2) {
-            throw new IllegalArgumentException("AWQ qweight must be 2D [in, out/8]");
-        }
-        int inFeatures = (int) qshape[0];
-        int packedOut = (int) qshape[1];
-        int outFeatures = packedOut * 8;
-        if (inFeatures % groupSize != 0) {
-            qw.close();
-            sc.close();
-            throw new IllegalArgumentException(
-                    "AWQ inFeatures " + inFeatures + " not divisible by groupSize " + groupSize);
-        }
-        int numGroups = inFeatures / groupSize;
-
-        long[] sshape = sc.shape();
-        if (sshape.length != 2 || sshape[0] != numGroups || sshape[1] != outFeatures) {
-            // Some exporters store [out, groups]; accept transpose.
-            if (sshape.length == 2 && sshape[0] == outFeatures && sshape[1] == numGroups) {
-                Tensor transposed = sc.transpose(0, 1).contiguous();
-                sc.close();
-                sc = transposed.to(ScalarType.Float);
-            } else {
-                qw.close();
-                sc.close();
-                throw new IllegalArgumentException(
-                        "AWQ scales shape " + java.util.Arrays.toString(sshape)
-                                + " incompatible with groups=" + numGroups
-                                + " outFeatures=" + outFeatures);
-            }
-        }
-
-        int[] packed = qw.intArray();
-        float[] scaleArr = sc.floatArray();
-        int[] zeroPacked = null;
-        if (qzeros != null) {
-            Tensor z = qzeros.to(Device.CPU());
-            long[] zshape = z.shape();
-            if (zshape.length != 2 || zshape[0] != numGroups || zshape[1] != packedOut) {
-                z.close();
-                qw.close();
-                sc.close();
-                throw new IllegalArgumentException(
-                        "AWQ qzeros shape " + java.util.Arrays.toString(zshape)
-                                + " expected [" + numGroups + ", " + packedOut + "]");
-            }
-            zeroPacked = z.intArray();
-            z.close();
-        }
-
-        // Dense [out, in] for packFromFp16 / nn.Linear layout.
-        float[] out = new float[outFeatures * inFeatures];
-        for (int k = 0; k < inFeatures; k++) {
-            int g = k / groupSize;
-            for (int po = 0; po < packedOut; po++) {
-                int word = packed[k * packedOut + po];
-                int zword = zeroPacked != null ? zeroPacked[g * packedOut + po] : 0;
-                for (int logical = 0; logical < 8; logical++) {
-                    int bitSlot = AWQ_REVERSE_ORDER[logical];
-                    int qi = (word >>> (4 * bitSlot)) & 0xF;
-                    int zi = zeroPacked != null ? (zword >>> (4 * bitSlot)) & 0xF : 0;
-                    int o = po * 8 + logical;
-                    float scale = scaleArr[g * outFeatures + o];
-                    out[o * inFeatures + k] = (qi - zi) * scale;
+        try {
+            long[] qshape = qw.shape();
+            int inFeatures = (int) qshape[0];
+            int packedOut = (int) qshape[1];
+            int outFeatures = packedOut * 8;
+            int numGroups = inFeatures / groupSize;
+            float[] scaleArr = normalizeScales(sc, numGroups, outFeatures);
+            int[] packed = qw.intArray();
+            int[] zeroPacked = readAwqZeros(qzeros, numGroups, packedOut);
+            float[] out = new float[outFeatures * inFeatures];
+            for (int kk = 0; kk < inFeatures; kk++) {
+                int g = kk / groupSize;
+                for (int po = 0; po < packedOut; po++) {
+                    int word = packed[kk * packedOut + po];
+                    int zword = zeroPacked != null ? zeroPacked[g * packedOut + po] : 0;
+                    for (int logical = 0; logical < 8; logical++) {
+                        int bitSlot = AWQ_REVERSE_ORDER[logical];
+                        int qi = (word >>> (4 * bitSlot)) & 0xF;
+                        int zi = zeroPacked != null ? (zword >>> (4 * bitSlot)) & 0xF : 0;
+                        int o = po * 8 + logical;
+                        out[o * inFeatures + kk] = (qi - zi) * scaleArr[g * outFeatures + o];
+                    }
                 }
             }
+            return Tensor.of(out).reshape(outFeatures, inFeatures).to(ScalarType.Half);
+        } finally {
+            qw.close();
+            sc.close();
         }
-        qw.close();
-        sc.close();
-        return Tensor.of(out).reshape(outFeatures, inFeatures).to(ScalarType.Half);
     }
 }
