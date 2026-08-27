@@ -234,13 +234,13 @@ public class ChatService {
             if (!Files.isDirectory(dir)) {
                 logger.infof("Weight quant: backend config=%s (checkpoint path not local; "
                                 + "format detection at load)",
-                        config.quantBackend());
+                        config.quantization());
                 return;
             }
             var format = smile.llm.quant.QuantFormatDetector.detect(dir);
             int deviceId = parallelConfig(config).devices()[0];
             smile.deep.tensor.Device device = smile.deep.tensor.Device.CUDA((byte) deviceId);
-            String override = config.quantBackend() == null ? "auto" : config.quantBackend().trim();
+            String override = config.quantization() == null ? "auto" : config.quantization().trim();
             smile.llm.quant.WeightGemmBackend backend;
             if ("auto".equalsIgnoreCase(override) || override.isEmpty()) {
                 backend = smile.llm.quant.WeightGemmBackend.select(device, format);
@@ -567,7 +567,7 @@ public class ChatService {
         if (isQwenCheckpoint(localPath)) {
             var parallel = parallelConfig(config);
             try {
-                smile.llm.quant.QuantBackendOverride.set(config.quantBackend());
+                smile.llm.quant.QuantBackendOverride.set(config.quantization());
                 return Qwen.build(localPath.toString(),
                         config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
                         memFraction, kvDtype, pageSize, parallel, config.modelLoaderThreads());
@@ -577,7 +577,7 @@ public class ChatService {
         }
         String tokenizerPath = resolveLocalTokenizer(localPath);
         try {
-            smile.llm.quant.QuantBackendOverride.set(config.quantBackend());
+            smile.llm.quant.QuantBackendOverride.set(config.quantization());
             return Llama.build(localPath.toString(), tokenizerPath,
                     config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
                     memFraction, kvDtype, pageSize, config.modelLoaderThreads());
@@ -713,7 +713,7 @@ public class ChatService {
             resolveHuggingFaceQwenTokenizer(repoId);
             var parallel = parallelConfig(config);
             try {
-                smile.llm.quant.QuantBackendOverride.set(config.quantBackend());
+                smile.llm.quant.QuantBackendOverride.set(config.quantization());
                 return Qwen.build(checkpointDir,
                         config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
                         memFractionStatic, kvCacheDtype, pageSize, parallel,
@@ -725,7 +725,7 @@ public class ChatService {
 
         String tokenizerPath = resolveHuggingFaceTokenizer(repoId);
         try {
-            smile.llm.quant.QuantBackendOverride.set(config.quantBackend());
+            smile.llm.quant.QuantBackendOverride.set(config.quantization());
             return Llama.build(checkpointDir, tokenizerPath,
                     config.maxBatchSize(), config.maxSeqLen(), parallelConfig(config).devices()[0],
                     memFractionStatic, kvCacheDtype, pageSize, config.modelLoaderThreads());
