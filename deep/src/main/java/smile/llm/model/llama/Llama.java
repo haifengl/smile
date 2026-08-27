@@ -361,7 +361,7 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
                         Path.of(checkpointDir));
                 smile.llm.quant.QuantizedHfLoader.installLlamaLinears(
                         model, Path.of(checkpointDir), quantPolicy.format(), quantPolicy.backend(),
-                        device, groupSize, 1, 0, computeDtype);
+                        device, groupSize, 1, 0, computeDtype, modelLoaderThreads);
                 loadHuggingFaceWeights(model, modelArgs, dir, modelLoaderThreads,
                         /*nonLinearOnly=*/true);
             } else {
