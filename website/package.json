@@ -16,7 +16,7 @@
     "@fontsource/ibm-plex-mono": "^5.2.7",
     "@fontsource/ibm-plex-sans": "^5.2.8",
     "@tailwindcss/cli": "^4.1.18",
-    "prismjs": "^1.29.0",
+    "prismjs": "^1.30.0",
     "tailwindcss": "^4.1.18"
   }
 }
