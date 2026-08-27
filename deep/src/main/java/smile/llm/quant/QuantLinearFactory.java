@@ -37,10 +37,18 @@ public final class QuantLinearFactory {
     }
 
     /**
-     * Builds an FP8 linear from native FP8 weight + scale.
+     * Builds an FP8 linear from native FP8 weight + tensor scale.
      */
     public static LinearOp fp8(Tensor weightFp8, Tensor weightScale, Tensor bias, ScalarType outDtype) {
         return new Fp8Linear(weightFp8, weightScale, bias, outDtype);
+    }
+
+    /**
+     * Builds a block-scaled FP8 linear (DeepSeek / Qwen block-128 layout).
+     */
+    public static LinearOp fp8Block(Tensor weightFp8, Tensor weightScaleInv, Tensor bias,
+                                    ScalarType outDtype) {
+        return new Fp8BlockLinear(weightFp8, weightScaleInv, bias, outDtype);
     }
 
     /**

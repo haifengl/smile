@@ -98,6 +98,15 @@ public final class QwenWeightShard {
     }
 
     /**
+     * Shards a block-scale inverse tensor {@code [ceil(N/128), ceil(K/128)]} using
+     * the same TP rules as {@link #shard} for the matching weight name.
+     */
+    public static Tensor shardScaleInv(String smileWeightName, Tensor src,
+                                       QwenModelArgs args, TensorShardSpec shard) {
+        return shard(smileWeightName, src, args, shard);
+    }
+
+    /**
      * Slices packed QKV channels {@code [2*Hk*Dk + Hv*Dv, ...]} into the local
      * head bands for Q, K, and V, then concatenates along dim 0.
      */

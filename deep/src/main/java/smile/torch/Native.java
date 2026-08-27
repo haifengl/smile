@@ -83,6 +83,20 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
                 .orElse(null);
+        static final java.util.Optional<MemorySegment> SCALED_MM_V2_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_scaled_mm_v2");
+        static final MethodHandle SCALED_MM_V2 = SCALED_MM_V2_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> FP8_QUANT_1X128_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_fp8_quant_1x128");
+        static final MethodHandle FP8_QUANT_1X128 = FP8_QUANT_1X128_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
         static final java.util.Optional<MemorySegment> MARLIN_MUL_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_mul");
         static final MethodHandle MARLIN_MUL = MARLIN_MUL_SYM
@@ -395,6 +409,103 @@ public final class Native {
             return null;
         }
         return new Tensor(out);
+    }
+
+    /**
+     * {@code at::blas::ScalingType} ordinals for {@link #scaledMmV2}.
+     */
+    public static final int SCALING_TENSOR_WISE = 0;
+    public static final int SCALING_ROW_WISE = 1;
+    public static final int SCALING_BLOCK_WISE_1X128 = 4;
+    public static final int SCALING_BLOCK_WISE_128X128 = 5;
+
+    /**
+     * Block-scaled FP8 matrix multiply via LibTorch {@code at::_scaled_mm_v2}.
+     *
+     * @param a        FP8 activation {@code [M,K]}.
+     * @param b        FP8 weight {@code [N,K]}.
+     * @param scaleA   float32 scales for {@code a} (BlockWise1x128 layout).
+     * @param scaleB   float32 scales for {@code b} (BlockWise128x128 layout).
+     * @param recipeA  {@code ScalingType} ordinal for {@code a}.
+     * @param recipeB  {@code ScalingType} ordinal for {@code b}.
+     * @param outDtype output dtype code.
+     * @return output tensor, or {@code null} if unavailable.
+     */
+    public static Tensor scaledMmV2(Tensor a, Tensor b, Tensor scaleA, Tensor scaleB,
+                                    int recipeA, int recipeB, int outDtype) {
+        if (Bindings.SCALED_MM_V2 == null) {
+            return null;
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.SCALED_MM_V2.invokeExact(
+                    a.handle(), b.handle(), scaleA.handle(), scaleB.handle(),
+                    recipeA, recipeB, outDtype);
+        } catch (Throwable t) {
+            String err = lastError();
+            if (err != null && !err.isEmpty()) {
+                throw new RuntimeException(err, t);
+            }
+            return null;
+        }
+        if (out == null || out.address() == 0) {
+            String err = lastError();
+            if (err != null && !err.isEmpty()) {
+                throw new RuntimeException(err);
+            }
+            return null;
+        }
+        return new Tensor(out);
+    }
+
+    /** @return {@code true} when {@link #scaledMmV2} is compiled into {@code libsmile_torch}. */
+    public static boolean scaledMmV2Available() {
+        return Bindings.SCALED_MM_V2 != null;
+    }
+
+    /**
+     * Dynamic BlockWise1x128 activation quantize on CUDA.
+     *
+     * @param input {@code [M,K]} with {@code K % 128 == 0}.
+     * @return {@code {fp8 [M,K], scale [M, K/128]}} or {@code null} if unavailable.
+     */
+    public static Tensor[] fp8Quant1x128(Tensor input) {
+        if (Bindings.FP8_QUANT_1X128 == null) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment scaleOut = arena.allocate(ValueLayout.ADDRESS);
+            MemorySegment fp8;
+            try {
+                fp8 = (MemorySegment) Bindings.FP8_QUANT_1X128.invokeExact(
+                        input.handle(), scaleOut);
+            } catch (Throwable t) {
+                String err = lastError();
+                if (err != null && !err.isEmpty()) {
+                    throw new RuntimeException(err, t);
+                }
+                return null;
+            }
+            if (fp8 == null || fp8.address() == 0) {
+                String err = lastError();
+                if (err != null && !err.isEmpty()) {
+                    throw new RuntimeException(err);
+                }
+                return null;
+            }
+            MemorySegment scaleHandle = scaleOut.get(ValueLayout.ADDRESS, 0);
+            if (scaleHandle == null || scaleHandle.address() == 0) {
+                Tensor fp8Tensor = new Tensor(fp8);
+                fp8Tensor.close();
+                throw new RuntimeException("smile_fp8_quant_1x128: missing scale output");
+            }
+            return new Tensor[] { new Tensor(fp8), new Tensor(scaleHandle) };
+        }
+    }
+
+    /** @return {@code true} when {@link #fp8Quant1x128} is compiled into {@code libsmile_torch}. */
+    public static boolean fp8Quant1x128Available() {
+        return Bindings.FP8_QUANT_1X128 != null;
     }
 
     /** @return {@code true} when Marlin is compiled into {@code libsmile_torch}. */

@@ -235,6 +235,23 @@ SMILE_API ST_Tensor smile_scaled_mm(ST_Tensor a, ST_Tensor b,
                                     ST_Tensor scale_a, ST_Tensor scale_b,
                                     int out_dtype);
 
+/**
+ * Block-scaled FP8 matrix multiply via LibTorch {@code at::_scaled_mm_v2}.
+ * {@code recipe_a}/{@code recipe_b} are {@code at::blas::ScalingType} ordinals
+ * (e.g. BlockWise1x128=4, BlockWise128x128=5). Returns NULL on error.
+ */
+SMILE_API ST_Tensor smile_scaled_mm_v2(ST_Tensor a, ST_Tensor b,
+                                       ST_Tensor scale_a, ST_Tensor scale_b,
+                                       int recipe_a, int recipe_b,
+                                       int out_dtype);
+
+/**
+ * Dynamic BlockWise1x128 activation quantize: {@code input [M,K]} (K multiple of
+ * 128) → FP8 {@code [M,K]} and float32 scales {@code [M, K/128]}.
+ * {@code *scale_out} is owned by the caller. Returns NULL on error.
+ */
+SMILE_API ST_Tensor smile_fp8_quant_1x128(ST_Tensor input, ST_Tensor *scale_out);
+
 /** Returns 1 if MPS (Apple Silicon GPU) is available. */
 SMILE_API int smile_mps_is_available(void);
 
