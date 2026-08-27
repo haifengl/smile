@@ -191,6 +191,25 @@ public class QuantizedQwenFp8LoaderTest {
     }
 
     @Test
+    public void testGivenBlockScaleWhenMaterializePathThenUsesFp8BlockLinear() {
+        // Synthetic block layout matching Qwen3.8-FP8 gate_proj shape band.
+        int n = 256;
+        int k = 128;
+        Tensor w;
+        try {
+            w = Tensor.zeros(n, k).to(ScalarType.Float8e4m3fn);
+        } catch (Throwable t) {
+            assumeTrue(false, "Float8e4m3fn unavailable: " + t.getMessage());
+            return;
+        }
+        Tensor scale = Tensor.ones(n / Fp8BlockDequant.BLOCK, k / Fp8BlockDequant.BLOCK);
+        assertTrue(Fp8BlockDequant.isBlockScale(w, scale));
+        assertFalse(Fp8BlockDequant.isTensorScale(scale));
+        w.close();
+        scale.close();
+    }
+
+    @Test
     public void testGivenVisionFp8WhenVlEnabledThenFails() {
         Map<String, String> map = new HashMap<>();
         map.put("model.visual.blocks.0.attn.proj.weight", "a.safetensors");

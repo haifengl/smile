@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.deep.layer.LinearLayer;
-import smile.deep.layer.ParameterInit;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.SafeTensors;
 import smile.deep.tensor.ScalarType;
@@ -37,18 +35,16 @@ import smile.llm.model.qwen.QwenModel;
 import smile.llm.model.qwen.QwenModelArgs;
 import smile.llm.model.qwen.QwenWeightShard;
 import smile.llm.parallel.TensorShardSpec;
-import smile.torch.Native;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Installs native FP8 (or block-FP8 dequantized dense) linears into a Qwen
- * hybrid model from HuggingFace SafeTensors.
+ * Installs native FP8 linears into a Qwen hybrid model from HuggingFace SafeTensors.
  *
  * <p>Official Qwen3.8-FP8 uses fine-grained {@code weight_block_size=[128,128]}
- * with {@code weight_scale_inv}. Those weights are dequantized to BF16/FP16
- * {@link LinearLayer}s because {@link Fp8Linear} / {@code _scaled_mm} only
- * accepts tensor scales. Tensor-scale FP8 checkpoints still use {@link Fp8Linear}.
+ * with {@code weight_scale_inv}. Those weights are installed as
+ * {@link Fp8BlockLinear} (LibTorch {@code _scaled_mm_v2}). Tensor-scale FP8
+ * checkpoints still use {@link Fp8Linear}.
  *
  * <p>DeltaNet {@code in_proj_a}/{@code in_proj_b}, norms, conv, {@code A_log},
  * {@code dt_bias}, embeddings, {@code lm_head}, and the vision tower stay on the
@@ -106,7 +102,7 @@ public final class QuantizedQwenFp8Loader {
                 jobs.size(), tpRank, tpSize, outDtype);
         long t0 = System.currentTimeMillis();
         Map<String, Tensor> bank = QuantizedHfLoader.batchReadCpu(dir, weightMap, keys, modelLoaderThreads);
-        int blockDequant = 0;
+        int blockFp8 = 0;
         int tensorFp8 = 0;
         try {
             int fi = 0;
@@ -116,22 +112,22 @@ public final class QuantizedQwenFp8Loader {
                     LinearOp k = materialize(bank, jobs.get(fi++), model, device, outDtype);
                     LinearOp v = materialize(bank, jobs.get(fi++), model, device, outDtype);
                     LinearOp o = materialize(bank, jobs.get(fi++), model, device, outDtype);
-                    blockDequant += countBlock(q, k, v, o);
-                    tensorFp8 += countFp8(q, k, v, o);
+                    blockFp8 += countBlockFp8(q, k, v, o);
+                    tensorFp8 += countTensorFp8(q, k, v, o);
                     block.selfAttn().replaceProjections(q, k, v, o);
                 } else if (block.linearAttn() != null) {
                     LinearOp qkv = materialize(bank, jobs.get(fi++), model, device, outDtype);
                     LinearOp z = materialize(bank, jobs.get(fi++), model, device, outDtype);
                     LinearOp out = materialize(bank, jobs.get(fi++), model, device, outDtype);
-                    blockDequant += countBlock(qkv, z, out);
-                    tensorFp8 += countFp8(qkv, z, out);
+                    blockFp8 += countBlockFp8(qkv, z, out);
+                    tensorFp8 += countTensorFp8(qkv, z, out);
                     block.linearAttn().replaceGemmProjections(qkv, z, out);
                 }
                 LinearOp w1 = materialize(bank, jobs.get(fi++), model, device, outDtype);
                 LinearOp w3 = materialize(bank, jobs.get(fi++), model, device, outDtype);
                 LinearOp w2 = materialize(bank, jobs.get(fi++), model, device, outDtype);
-                blockDequant += countBlock(w1, w2, w3);
-                tensorFp8 += countFp8(w1, w2, w3);
+                blockFp8 += countBlockFp8(w1, w2, w3);
+                tensorFp8 += countTensorFp8(w1, w2, w3);
                 block.feedForward().replaceLinears(w1, w2, w3);
             }
             if (fi != jobs.size()) {
@@ -141,21 +137,21 @@ public final class QuantizedQwenFp8Loader {
         } finally {
             closeAll(bank);
         }
-        logger.info("Qwen FP8 linears installed in {} ms (blockDequant={} tensorFp8={})",
-                System.currentTimeMillis() - t0, blockDequant, tensorFp8);
+        logger.info("Qwen FP8 linears installed in {} ms (blockFp8={} tensorFp8={})",
+                System.currentTimeMillis() - t0, blockFp8, tensorFp8);
     }
 
-    private static int countBlock(LinearOp... ops) {
+    private static int countBlockFp8(LinearOp... ops) {
         int n = 0;
         for (LinearOp op : ops) {
-            if (!(op instanceof Fp8Linear)) {
+            if (op instanceof Fp8BlockLinear) {
                 n++;
             }
         }
         return n;
     }
 
-    private static int countFp8(LinearOp... ops) {
+    private static int countTensorFp8(LinearOp... ops) {
         int n = 0;
         for (LinearOp op : ops) {
             if (op instanceof Fp8Linear) {
@@ -228,19 +224,30 @@ public final class QuantizedQwenFp8Loader {
         }
 
         if (Fp8BlockDequant.isBlockScale(weight, scale)) {
-            Tensor dense = Fp8BlockDequant.dequant(weight, scale, outDtype);
+            Tensor localW = QwenWeightShard.shard(job.smileWeightName, weight, args, shard);
+            boolean ownedW = localW != weight;
+            Tensor localS = QwenWeightShard.shardScaleInv(job.smileWeightName, scale, args, shard);
+            boolean ownedS = localS != scale;
             try {
-                Tensor local = QwenWeightShard.shard(job.smileWeightName, dense, args, shard);
-                boolean ownedLocal = local != dense;
-                try {
-                    return denseLinear(local, device);
-                } finally {
-                    if (ownedLocal) {
-                        local.close();
-                    }
+                Tensor wDev = localW.device().equals(device) ? localW.copy() : localW.to(device);
+                Tensor sDev = localS.to(ScalarType.Float);
+                if (!sDev.device().equals(device)) {
+                    Tensor moved = sDev.to(device);
+                    sDev.close();
+                    sDev = moved;
                 }
+                if (!Fp8BlockDequant.isBlockScale(wDev, sDev)) {
+                    throw new IllegalStateException(
+                            "TP shard broke block scale layout for " + job.hfBase);
+                }
+                return QuantLinearFactory.fp8Block(wDev, sDev, null, outDtype);
             } finally {
-                dense.close();
+                if (ownedW) {
+                    localW.close();
+                }
+                if (ownedS) {
+                    localS.close();
+                }
             }
         }
 
@@ -262,24 +269,8 @@ public final class QuantizedQwenFp8Loader {
         return QuantLinearFactory.fp8(wDev, scaleDev, null, outDtype);
     }
 
-    private static LinearOp denseLinear(Tensor weightOnAnyDevice, Device device) {
-        long[] shape = weightOnAnyDevice.shape();
-        int outFeatures = (int) shape[0];
-        int inFeatures = (int) shape[1];
-        Tensor onDevice = weightOnAnyDevice.device().equals(device)
-                ? weightOnAnyDevice.copy()
-                : weightOnAnyDevice.to(device);
-        try (var ignored = ParameterInit.uninitialized(device)) {
-            LinearLayer ll = new LinearLayer(inFeatures, outFeatures, false);
-            Native.loadStateDict(ll.module(), Map.of("weight", onDevice), false);
-            return ll;
-        } finally {
-            onDevice.close();
-        }
-    }
-
     /**
-     * Validates vision / lm_head policy against the weight map.
+     * HF keys that the FP8 installer owns (must not be force-fed into dense shells).
      */
     static void validateCheckpointPolicy(Path dir, Map<String, String> weightMap, boolean visionEnabled)
             throws IOException {

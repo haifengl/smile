@@ -24,9 +24,9 @@ import smile.deep.tensor.Tensor;
  * Dequantizes DeepSeek / Qwen-style fine-grained FP8 weights
  * ({@code weight_block_size = [128, 128]} + {@code weight_scale_inv}).
  *
- * <p>{@link Fp8Linear} / {@code at::_scaled_mm} only accept tensor (or simple
- * channel) scales. Official Qwen3.8-FP8 checkpoints use block scales, so the
- * installer dequantizes those tensors to BF16/FP16 dense linears at load.
+ * <p>Official Qwen3.8-FP8 checkpoints use block scales; {@link Fp8BlockLinear}
+ * runs them via {@code at::_scaled_mm_v2}. This helper dequantizes for reference
+ * tests and debug only.
  *
  * @author Haifeng Li
  */

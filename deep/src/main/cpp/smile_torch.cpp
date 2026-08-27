@@ -57,6 +57,8 @@
 #  include <c10/cuda/CUDACachingAllocator.h>
 #  include <c10/cuda/CUDAGuard.h>
 #  include <ATen/cuda/CUDAContext.h>
+#  include <ATen/ops/_scaled_mm_v2.h>
+#  include <ATen/BlasBackend.h>
 #  include "smile_gated_delta.cuh"
 #  ifdef USE_FLASHINFER
 #    include "smile_flashinfer_cuda.h"
@@ -1028,6 +1030,76 @@ ST_Tensor smile_scaled_mm(ST_Tensor a, ST_Tensor b,
                 std::nullopt /*scale_result*/,
                 out);
         return new ST_Tensor_{ out_t };
+    ST_TRY_END
+    return nullptr;
+#else
+    set_error_no_cuda_build();
+    return nullptr;
+#endif
+}
+
+ST_Tensor smile_scaled_mm_v2(ST_Tensor a, ST_Tensor b,
+                             ST_Tensor scale_a, ST_Tensor scale_b,
+                             int recipe_a, int recipe_b,
+                             int out_dtype) {
+#ifdef USE_CUDA
+    ST_TRY_BEGIN
+        if (!a || !b || !scale_a || !scale_b) {
+            set_error("smile_scaled_mm_v2: null tensor argument");
+            return nullptr;
+        }
+        c10::ScalarType out = to_scalar_type(static_cast<ST_DType>(out_dtype));
+        std::vector<at::Tensor> scales_a = { scale_a->t };
+        std::vector<at::Tensor> scales_b = { scale_b->t };
+        auto out_t = at::_scaled_mm_v2(
+                a->t, b->t,
+                scales_a,
+                c10::IntArrayRef{ recipe_a },
+                c10::IntArrayRef{ 0 },
+                scales_b,
+                c10::IntArrayRef{ recipe_b },
+                c10::IntArrayRef{ 0 },
+                std::nullopt /*bias*/,
+                out,
+                c10::IntArrayRef{},
+                false /*use_fast_accum*/);
+        return new ST_Tensor_{ out_t };
+    ST_TRY_END
+    return nullptr;
+#else
+    set_error_no_cuda_build();
+    return nullptr;
+#endif
+}
+
+ST_Tensor smile_fp8_quant_1x128(ST_Tensor input, ST_Tensor *scale_out) {
+#ifdef USE_CUDA
+    ST_TRY_BEGIN
+        if (!input || !scale_out) {
+            set_error("smile_fp8_quant_1x128: null argument");
+            return nullptr;
+        }
+        const auto &x = input->t;
+        if (x.dim() != 2) {
+            set_error("smile_fp8_quant_1x128: input must be 2D [M,K]");
+            return nullptr;
+        }
+        const int64_t M = x.size(0);
+        const int64_t K = x.size(1);
+        if (K == 0 || (K % 128) != 0) {
+            set_error("smile_fp8_quant_1x128: K must be a positive multiple of 128");
+            return nullptr;
+        }
+        const int64_t kBlocks = K / 128;
+        auto x32 = x.to(c10::ScalarType::Float);
+        auto blocks = x32.view({M, kBlocks, 128});
+        auto amax = std::get<0>(blocks.abs().max(2)); // [M, kBlocks]
+        auto scale = amax.clamp_min(1e-12f).div(448.0f);
+        auto scaled = blocks.div(scale.unsqueeze(2));
+        auto flat = scaled.view({M, K});
+        auto fp8 = flat.to(c10::ScalarType::Float8_e4m3fn);
+        *scale_out = new ST_Tensor_{ scale.contiguous() };
+        return new ST_Tensor_{ fp8.contiguous() };
     ST_TRY_END
     return nullptr;
 #else
