@@ -564,7 +564,11 @@ public final class InferenceEngine implements AutoCloseable {
                     continue;
                 }
                 try (var row = Index.of(i);
-                     Tensor rowLogits = logits.get(row).unsqueeze(0)) {
+                     Tensor sliced = logits.get(row);
+                     Tensor rowLogits = sliced.unsqueeze(0)) {
+                    // Bind get() separately: unsqueeze returns a new Tensor, and
+                    // without an outer AutoScope the get() result would otherwise
+                    // keep the full [B,V] logits storage alive (~0.5 MiB × steps).
                     sampleAndAppend(a, rowLogits);
                 } catch (Throwable t) {
                     failActive(a, t);

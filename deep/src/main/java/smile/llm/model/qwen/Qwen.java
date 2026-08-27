@@ -1605,7 +1605,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                             return null;
                         }
                         try (var last = Index.of(-1);
-                             Tensor row = logitsArr[0].get(Index.Colon, last).reshape(1, -1)) {
+                             Tensor selected = logitsArr[0].get(Index.Colon, last);
+                             Tensor row = selected.reshape(1, -1)) {
                             Tensor out = row.copy();
                             out.promoteToParent();
                             for (Tensor l : logitsArr) {
@@ -1720,7 +1721,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                     return null;
                 }
                 try (var last = Index.of(-1);
-                     Tensor row = logits[0].get(Index.Colon, last).reshape(1, -1)) {
+                     Tensor selected = logits[0].get(Index.Colon, last);
+                     Tensor row = selected.reshape(1, -1)) {
                     Tensor out = row.copy();
                     out.promoteToParent();
                     for (int r = 1; r < logits.length; r++) {
@@ -1905,7 +1907,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                         }
                     }
                     try (var last = Index.of(-1);
-                         Tensor row = logits[0].get(Index.Colon, last).reshape(b, -1)) {
+                         Tensor selected = logits[0].get(Index.Colon, last);
+                         Tensor row = selected.reshape(b, -1)) {
                         Tensor out = row.copy();
                         out.promoteToParent();
                         for (Tensor l : logits) {
@@ -1959,7 +1962,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                     }
                 }
                 try (var last = Index.of(-1);
-                     Tensor row = logits[0].get(Index.Colon, last).reshape(b, -1)) {
+                     Tensor selected = logits[0].get(Index.Colon, last);
+                     Tensor row = selected.reshape(b, -1)) {
                     Tensor out = row.copy();
                     out.promoteToParent();
                     for (Tensor l : logits) {
