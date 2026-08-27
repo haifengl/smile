@@ -59,6 +59,8 @@ public final class InferenceEngine implements AutoCloseable {
     public static final int DEFAULT_PREFILL_TOKEN_BUDGET = 2048;
     /** Default max time a job may wait for admission before failing. */
     public static final long DEFAULT_ADMISSION_TIMEOUT_MS = 120_000L;
+    /** Min interval for repeated hot-path INFO (scheduler / pressure). */
+    private static final long HOT_PATH_LOG_INTERVAL_NS = TimeUnit.SECONDS.toNanos(5);
 
     private final ModelExecutor executor;
     private final int maxInFlight;
@@ -76,6 +78,9 @@ public final class InferenceEngine implements AutoCloseable {
     private final AtomicInteger decodeBatchSamples = new AtomicInteger();
     private final Thread worker;
     private volatile boolean running = true;
+    /** Nanotime of last emit per rate-limited INFO key (0 = never). */
+    private final java.util.concurrent.ConcurrentHashMap<String, Long> rateLimitedLogNanos =
+            new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
      * @param executor   model execution surface.
@@ -346,6 +351,36 @@ public final class InferenceEngine implements AutoCloseable {
         }
     }
 
+    /**
+     * INFO at most once per {@link #HOT_PATH_LOG_INTERVAL_NS} per {@code key};
+     * otherwise DEBUG. Use for scheduler / pressure lines that can fire every tick.
+     */
+    private void infoRateLimited(String key, String format, Object... args) {
+        long now = System.nanoTime();
+        Long prev = rateLimitedLogNanos.get(key);
+        if (prev == null || now - prev >= HOT_PATH_LOG_INTERVAL_NS) {
+            rateLimitedLogNanos.put(key, now);
+            logger.info(format, args);
+        } else if (logger.isDebugEnabled()) {
+            logger.debug(format, args);
+        }
+    }
+
+    /**
+     * Rate-limits repeated KV-pressure INFO lines (scheduler retries every tick).
+     */
+    private void logKvAdmissionDeferred(int promptLen, int maxGen, int desired, String detail) {
+        int free = kvFreeSlots();
+        // Full-window reserve: concurrency ≈ pool / (prompt+max_tokens), not maxInFlight.
+        infoRateLimited("kv-defer",
+                "KV full; deferring admission (inFlight={}/{} queued={} freeSlots={}): "
+                        + "request reserves {} slots (promptLen={} + maxGen={}). "
+                        + "Admission needs the full prompt+max_tokens window; "
+                        + "lower max_tokens to raise concurrency. ({})",
+                active.size(), maxInFlight, queuedCount.get(), free,
+                desired, promptLen, maxGen, detail);
+    }
+
     private void admitWaiting() {
         while (active.size() < maxInFlight) {
             Queued next = waiting.peek();
@@ -373,14 +408,12 @@ public final class InferenceEngine implements AutoCloseable {
             try {
                 kvId = executor.bind(prompt, desired);
             } catch (KvCacheExhaustedException ex) {
-                logger.info("KV full; deferring admission (inFlight={}/{} queued={} freeSlots={}): {}",
-                        active.size(), maxInFlight, queuedCount.get(), kvFreeSlots(), ex.getMessage());
+                logKvAdmissionDeferred(promptLen, maxGen, desired, ex.getMessage());
                 break;
             } catch (IllegalStateException | IllegalArgumentException ex) {
                 String msg = ex.getMessage() == null ? "" : ex.getMessage();
                 if (msg.contains("KV") || msg.contains("capacity") || msg.contains("exhausted")) {
-                    logger.info("KV admission deferred (inFlight={}/{} queued={} freeSlots={}): {}",
-                            active.size(), maxInFlight, queuedCount.get(), kvFreeSlots(), msg);
+                    logKvAdmissionDeferred(promptLen, maxGen, desired, msg);
                     break;
                 }
                 waiting.remove(next);
