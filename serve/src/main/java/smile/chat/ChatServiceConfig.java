@@ -181,12 +181,12 @@ public interface ChatServiceConfig {
      * Weight quantization GEMM backend: {@code auto} (detect from checkpoint + GPU),
      * {@code dense}, {@code fp8}, {@code nvfp4}, or {@code marlin}.
      *
-     * <p>{@code auto} selects FP8/NVFP4 on Hopper/Blackwell for native checkpoints,
-     * Marlin on Ampere/Ada for GPTQ/AWQ, and dense otherwise. GPTQ/AWQ on Hopper+
-     * fails fast (no silent Marlin).
+     * <p>Property: {@code smile.chat.quantization}. {@code auto} selects FP8/NVFP4
+     * on Hopper/Blackwell for native checkpoints, Marlin on Ampere/Ada for GPTQ/AWQ,
+     * and dense otherwise. GPTQ/AWQ on Hopper+ fails fast (no silent Marlin).
      */
     @WithDefault("auto")
-    String quantBackend();
+    String quantization();
 
     /**
      * When {@code true}, parse Qwen3 XML tool calls from assistant output when

@@ -69,15 +69,15 @@ public final class QuantPolicy {
             if (backend == WeightGemmBackend.MARLIN && format != QuantFormat.GPTQ
                     && format != QuantFormat.AWQ) {
                 throw new IllegalStateException(
-                        "quant.backend=marlin requires a GPTQ/AWQ checkpoint; got " + format);
+                        "smile.chat.quantization=marlin requires a GPTQ/AWQ checkpoint; got " + format);
             }
             if (backend == WeightGemmBackend.FP8 && format != QuantFormat.FP8) {
                 throw new IllegalStateException(
-                        "quant.backend=fp8 requires a native FP8 checkpoint; got " + format);
+                        "smile.chat.quantization=fp8 requires a native FP8 checkpoint; got " + format);
             }
             if (backend == WeightGemmBackend.NVFP4 && format != QuantFormat.NVFP4) {
                 throw new IllegalStateException(
-                        "quant.backend=nvfp4 requires a native NVFP4 checkpoint; got " + format);
+                        "smile.chat.quantization=nvfp4 requires a native NVFP4 checkpoint; got " + format);
             }
             // Validate GPU capability for the checkpoint format (fail-fast on Hopper+GPTQ).
             if (format != QuantFormat.DENSE) {

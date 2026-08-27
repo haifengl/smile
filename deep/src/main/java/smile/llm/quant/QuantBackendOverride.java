@@ -17,7 +17,7 @@
 package smile.llm.quant;
 
 /**
- * Thread-local override for {@code smile.chat.quant.backend} during model load.
+ * Thread-local override for {@code smile.chat.quantization} during model load.
  *
  * @author Haifeng Li
  */
