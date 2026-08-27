@@ -1138,7 +1138,8 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
                         return null;
                     }
                     try (var last = Index.of(-1);
-                         Tensor row = logits.get(Index.Colon, last).reshape(1, -1)) {
+                         Tensor selected = logits.get(Index.Colon, last);
+                         Tensor row = selected.reshape(1, -1)) {
                         // Own a compact [1,V] buffer; views would pin the full
                         // [1,S,V] forward logits (~S×512KiB) until this out closes.
                         Tensor out = row.copy();
@@ -1180,7 +1181,8 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
                     try (Tensor tok = Tensor.of(toks).reshape(b, 1).to(model.device());
                          Tensor logits = model.forward(tok, positions);
                          var last = Index.of(-1);
-                         Tensor row = logits.get(Index.Colon, last).reshape(b, -1)) {
+                         Tensor selected = logits.get(Index.Colon, last);
+                         Tensor row = selected.reshape(b, -1)) {
                         Tensor out = row.copy();
                         out.promoteToParent();
                         return out;
@@ -1230,16 +1232,17 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
                     try {
                         try (Tensor tok = Tensor.of(toks).reshape(cohort, 1).to(model.device());
                              Tensor logits = model.forward(tok, pos);
-                             var last = Index.of(-1)) {
-                            Tensor row = logits.get(Index.Colon, last).reshape(cohort, -1);
+                             var last = Index.of(-1);
+                             Tensor selected = logits.get(Index.Colon, last);
+                             Tensor row = selected.reshape(cohort, -1)) {
                             for (int k = 0; k < cohort; k++) {
-                        try (var rowIdx = Index.of(k)) {
-                            try (Tensor slice = row.get(rowIdx).unsqueeze(0)) {
-                                Tensor one = slice.copy();
-                                one.promoteToParent();
-                                parts[order[i + k]] = one;
-                            }
-                        }
+                                try (var rowIdx = Index.of(k);
+                                     Tensor sliced = row.get(rowIdx);
+                                     Tensor slice = sliced.unsqueeze(0)) {
+                                    Tensor one = slice.copy();
+                                    one.promoteToParent();
+                                    parts[order[i + k]] = one;
+                                }
                             }
                         }
                     } finally {
