@@ -172,7 +172,8 @@ the corresponding profiles.
 | `smile.chat.devices` | `0` | CUDA device index, or comma-separated TP list (`0,7`). `%dev` default: `7` |
 | `smile.chat.tensor-parallel-size` | `1` | TP world size; with a single `devices` entry expands to consecutive GPUs |
 | `smile.chat.pipeline-parallel-size` | `1` | Must stay `1` until multi-node PP |
-| `smile.chat.kv-cache.dtype` | _(unset)_ | KV-cache element dtype (`bfloat16`, `float16`, `float32`, `fp8_e4m3`, `fp8_e5m2`, …). When unset, uses `torch_dtype` from the model `config.json` |
+| `smile.chat.kv-cache.dtype` | _(unset)_ | KV-cache element dtype (`bfloat16`, `float16`, `float32`, `fp8_e4m3`, `fp8_e5m2`, …). When unset, uses `torch_dtype` from the model `config.json`. Set `fp8_e4m3` for ~2× KV capacity (longer context); attention dequants to BF16/FP16. Independent of weight quant. |
+| `smile.chat.quant.backend` | `auto` | Weight GEMM: `auto` / `dense` / `fp8` / `nvfp4` / `marlin`. `auto` selects FP8/NVFP4 on Hopper/Blackwell for native checkpoints, Marlin on Ampere/Ada for GPTQ/AWQ. GPTQ/AWQ on Hopper+ fails fast (no silent Marlin). |
 | `smile.chat.kv-cache.page-size` | `16` | Tokens per radix / KV pool page (prefix match and insert are page-aligned) |
 | `smile.chat.kv-cache.prefix-reuse` | `true` | Match/insert prompts in the radix KV tree (SGLang-style). Hybrid Qwen also needs `hybrid-prefix-replay` |
 | `smile.chat.kv-cache.hybrid-prefix-replay` | `true` | On a hybrid Qwen prefix hit, replay the matched prefix to restore DeltaNet state while sharing KV pages. Set `false` to force-disable hybrid prefix reuse |

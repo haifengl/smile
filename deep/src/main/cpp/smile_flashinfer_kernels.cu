@@ -619,6 +619,25 @@ int run_ragged_prefill(
 
 } // namespace
 
+namespace {
+
+bool is_fp8_dtype(at::ScalarType t) {
+    return t == at::kFloat8_e4m3fn || t == at::kFloat8_e5m2
+            || t == at::kFloat8_e4m3fnuz || t == at::kFloat8_e5m2fnuz;
+}
+
+/** Dequant FP8 KV pages to query dtype using per-pool scales (capacity path). */
+void dequant_fp8_kv_pages(const torch::Tensor &k_fp8, const torch::Tensor &v_fp8,
+                          float k_scale, float v_scale, at::ScalarType out_dtype,
+                          torch::Tensor &k_out, torch::Tensor &v_out) {
+    auto k_f = k_fp8.to(at::kFloat).mul(k_scale);
+    auto v_f = v_fp8.to(at::kFloat).mul(v_scale);
+    k_out = k_f.to(out_dtype);
+    v_out = v_f.to(out_dtype);
+}
+
+} // namespace
+
 extern "C" int smile_flashinfer_paged_attention_cuda(
         const torch::Tensor &query,
         const torch::Tensor &k_cache,
@@ -631,6 +650,8 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
         int head_dim,
         int cache_len,
         float scale,
+        float k_scale,
+        float v_scale,
         int is_causal,
         const torch::Tensor *attn_mask,
         torch::Tensor *float_workspace,
@@ -656,8 +677,20 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
         auto indptr = paged_kv_indptr.to(at::kInt).contiguous();
         auto indices = paged_kv_indices.to(at::kInt).contiguous();
         auto last = paged_kv_last_page_len.to(at::kInt).contiguous();
-        auto k_pages = as_page_major(k_cache.contiguous(), page_size);
-        auto v_pages = as_page_major(v_cache.contiguous(), page_size);
+        torch::Tensor k_pages = as_page_major(k_cache.contiguous(), page_size);
+        torch::Tensor v_pages = as_page_major(v_cache.contiguous(), page_size);
+        // FP8 KV: store stays FP8 in the pool; FlashInfer / SDPA compute in Q dtype
+        // via scaled dequant (Ampere-correct; Hopper can later use native FP8 KV kernels).
+        torch::Tensor k_pages_compute = k_pages;
+        torch::Tensor v_pages_compute = v_pages;
+        if (is_fp8_dtype(k_cache.scalar_type())) {
+            float ks = k_scale > 0.f ? k_scale : 1.f;
+            float vs = v_scale > 0.f ? v_scale : 1.f;
+            dequant_fp8_kv_pages(k_pages, v_pages, ks, vs, query.scalar_type(),
+                                 k_pages_compute, v_pages_compute);
+        }
+        k_pages = k_pages_compute;
+        v_pages = v_pages_compute;
 
         // Prefer caller-owned pooled workspace (KvCachePool). Fall back to
         // locals only when null — locals are 32+8 MiB per call and used to

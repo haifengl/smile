@@ -29,6 +29,7 @@ import smile.llm.cache.FlashInferKvMetadata;
 import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
 import smile.llm.attention.Attention;
+import smile.llm.quant.LinearOp;
 import smile.llm.transformer.RotaryPositionalEncoding;
 import smile.util.AutoScope;
 
@@ -65,8 +66,8 @@ public class GroupedQueryAttention implements Attention {
     final int numRep;
     /** The embedding dimension of each attention head. */
     final int headDim;
-    /** Linear transformation for queries, keys, values, and output. */
-    final LinearLayer wq, wk, wv, wo;
+    /** Linear transformation for queries, keys, values, and output (dense or quantized). */
+    LinearOp wq, wk, wv, wo;
     /** Shared KV cache pool owned by the inference engine; set after weight load. */
     KvCachePool cachePool;
     /** Index of this layer within the transformer stack. */
@@ -108,13 +109,33 @@ public class GroupedQueryAttention implements Attention {
 
         try (Arena arena = Arena.ofConfined()) {
             this.module = check(smile_module_create(MemorySegment.NULL));
-            smile_module_register_module(module, arena.allocateFrom("wq"), wq.module());
-            smile_module_register_module(module, arena.allocateFrom("wk"), wk.module());
-            smile_module_register_module(module, arena.allocateFrom("wv"), wv.module());
-            smile_module_register_module(module, arena.allocateFrom("wo"), wo.module());
+            registerDense(module, arena, "wq", wq);
+            registerDense(module, arena, "wk", wk);
+            registerDense(module, arena, "wv", wv);
+            registerDense(module, arena, "wo", wo);
         }
         MemorySegment m = this.module;
         Native.CLEANER.register(this, () -> smile_module_free(m));
+    }
+
+    private static void registerDense(MemorySegment module, Arena arena, String name, LinearOp op) {
+        if (op instanceof LinearLayer ll) {
+            smile_module_register_module(module, arena.allocateFrom(name), ll.module());
+        }
+    }
+
+    /**
+     * Replaces projection ops with quantized backends (shard-then-pack already applied).
+     * Dense {@link LinearLayer} module handles become unused for forward.
+     */
+    public void replaceProjections(LinearOp wq, LinearOp wk, LinearOp wv, LinearOp wo) {
+        if (wq == null || wk == null || wv == null || wo == null) {
+            throw new IllegalArgumentException("all projections required");
+        }
+        this.wq = wq;
+        this.wk = wk;
+        this.wv = wv;
+        this.wo = wo;
     }
 
     /**

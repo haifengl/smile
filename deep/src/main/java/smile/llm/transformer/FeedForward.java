@@ -25,6 +25,7 @@ import smile.llm.parallel.ColumnParallelLinear;
 import smile.llm.parallel.RowParallelLinear;
 import smile.llm.parallel.TensorParallelGroup;
 import smile.llm.parallel.TensorShardSpec;
+import smile.llm.quant.LinearOp;
 import smile.torch.Native;
 
 import static smile.torch.Native.check;
@@ -42,7 +43,7 @@ import static smile.torch.smile_torch_h.smile_module_register_module;
  * @author Haifeng Li
  */
 public class FeedForward {
-    final LinearLayer w1, w2, w3;
+    LinearOp w1, w2, w3;
     final SiLU silu;
     final MemorySegment module;
     final TensorParallelGroup tpGroup;
@@ -80,16 +81,16 @@ public class FeedForward {
             var col1 = new ColumnParallelLinear(dim, globalIntermediate, false, shard.tpSize(), shard.tpRank());
             var col3 = new ColumnParallelLinear(dim, globalIntermediate, false, shard.tpSize(), shard.tpRank());
             var row2 = new RowParallelLinear(globalIntermediate, dim, false, shard.tpSize(), shard.tpRank());
-            this.w1 = col1.linear();
-            this.w3 = col3.linear();
-            this.w2 = row2.linear();
+            this.w1 = col1.linearOp();
+            this.w3 = col3.linearOp();
+            this.w2 = row2.linearOp();
         }
 
         try (Arena arena = Arena.ofConfined()) {
             this.module = check(smile_module_create(MemorySegment.NULL));
-            smile_module_register_module(module, arena.allocateFrom("w1"), w1.module());
-            smile_module_register_module(module, arena.allocateFrom("w2"), w2.module());
-            smile_module_register_module(module, arena.allocateFrom("w3"), w3.module());
+            registerDense(module, arena, "w1", w1);
+            registerDense(module, arena, "w2", w2);
+            registerDense(module, arena, "w3", w3);
         }
         MemorySegment m = this.module;
         Native.CLEANER.register(this, () -> smile_module_free(m));
@@ -120,12 +121,30 @@ public class FeedForward {
 
         try (Arena arena = Arena.ofConfined()) {
             this.module = check(smile_module_create(MemorySegment.NULL));
-            smile_module_register_module(module, arena.allocateFrom("w1"), w1.module());
-            smile_module_register_module(module, arena.allocateFrom("w2"), w2.module());
-            smile_module_register_module(module, arena.allocateFrom("w3"), w3.module());
+            registerDense(module, arena, "w1", w1);
+            registerDense(module, arena, "w2", w2);
+            registerDense(module, arena, "w3", w3);
         }
         MemorySegment m = this.module;
         Native.CLEANER.register(this, () -> smile_module_free(m));
+    }
+
+    private static void registerDense(MemorySegment module, Arena arena, String name, LinearOp op) {
+        if (op instanceof LinearLayer ll) {
+            smile_module_register_module(module, arena.allocateFrom(name), ll.module());
+        }
+    }
+
+    /**
+     * Replaces FFN linears with quantized ops (already sharded/packed for TP).
+     */
+    public void replaceLinears(LinearOp w1, LinearOp w2, LinearOp w3) {
+        if (w1 == null || w2 == null || w3 == null) {
+            throw new IllegalArgumentException("w1/w2/w3 required");
+        }
+        this.w1 = w1;
+        this.w2 = w2;
+        this.w3 = w3;
     }
 
     /**

@@ -207,8 +207,10 @@ endif()
 # --------------------------------------------------------------------------
 # Optional FlashInfer-compatible paged attention (CUDA builds only).
 option(USE_FLASHINFER "Build paged attention backend (CSR / FlashInfer ABI)" ON)
+# Marlin FP16×INT4 weight GEMM failover for Ampere/Ada (sm_80–89).
+option(USE_MARLIN "Build Marlin INT4 GEMM (Ampere/Ada failover)" ON)
 
-set(SMILE_TORCH_SOURCES smile_torch.cpp smile_flashinfer.cpp)
+set(SMILE_TORCH_SOURCES smile_torch.cpp smile_flashinfer.cpp smile_marlin.cpp)
 if(SMILE_TORCH_CUDA_ENABLED)
     list(APPEND SMILE_TORCH_SOURCES smile_gated_delta.cu)
     if(USE_FLASHINFER)
@@ -216,6 +218,12 @@ if(SMILE_TORCH_CUDA_ENABLED)
         message(STATUS "FlashInfer-compatible paged attention: ON")
     else()
         message(STATUS "FlashInfer-compatible paged attention: OFF")
+    endif()
+    if(USE_MARLIN)
+        list(APPEND SMILE_TORCH_SOURCES third_party/marlin/marlin_cuda_kernel.cu)
+        message(STATUS "Marlin INT4 GEMM (Ampere/Ada failover): ON")
+    else()
+        message(STATUS "Marlin INT4 GEMM: OFF")
     endif()
 endif()
 
@@ -241,6 +249,13 @@ if(SMILE_TORCH_CUDA_ENABLED)
         target_compile_definitions(smile_torch PRIVATE USE_FLASHINFER)
         target_include_directories(smile_torch PRIVATE
             "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flashinfer/include")
+    endif()
+    if(USE_MARLIN)
+        target_compile_definitions(smile_torch PRIVATE USE_MARLIN)
+        target_include_directories(smile_torch PRIVATE
+            "${CMAKE_CURRENT_SOURCE_DIR}/third_party/marlin")
+        # Marlin targets Ampere/Ada; still compile the translation unit under the
+        # global 80;90;100 arch list (kernels are sm_80-oriented).
     endif()
     # Minimum sm_80 (A100); also Hopper (90) and Blackwell (100, native FP4).
     set_target_properties(smile_torch PROPERTIES

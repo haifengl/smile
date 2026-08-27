@@ -83,6 +83,17 @@ public class KvCachePool implements AutoCloseable {
     final ScalarType dtype;
     /** Device hosting the buffers. */
     final Device device;
+    /**
+     * When {@link #dtype} is FP8, per-pool scales for K/V (running absmax).
+     * BF16/FP16 pools leave these at {@code 1.0}.
+     */
+    private float kScale = 1.0f;
+    private float vScale = 1.0f;
+    /**
+     * Dtype used when dequantizing FP8 KV for torch_native / FlashInfer compute
+     * (BF16 on Ampere+, else FP16).
+     */
+    private final ScalarType computeDtype;
 
     /** Key buffer shaped {@code [numLayers, numSlots, numKvHeads, headDim]}. */
     final Tensor kCache;
@@ -217,6 +228,10 @@ public class KvCachePool implements AutoCloseable {
         this.pageSize = pageSize;
         this.device = device;
         this.dtype = dtype;
+        this.computeDtype = resolveComputeDtype(device);
+        if (smile.llm.quant.Fp8KvCodec.isFp8(dtype) && !device.isCUDA()) {
+            throw new IllegalArgumentException("FP8 KV cache requires a CUDA device");
+        }
         this.radix = new RadixCache(pageSize);
 
         // Allocate K/V directly on the target device (zeros have no content to copy).
@@ -246,9 +261,35 @@ public class KvCachePool implements AutoCloseable {
         long kBytes = smile.torch.Native.nbytes(kCache);
         long vBytes = smile.torch.Native.nbytes(vCache);
         logger.info("KvCachePool: layers={}, slots={}, kvHeads={}, headDim={}, pageSize={}, "
-                        + "dtype={}, device={}, kCache.device={}, footprintMiB={}",
-                numLayers, numSlots, numKvHeads, headDim, pageSize, dtype, device,
+                        + "dtype={}, computeDtype={}, device={}, kCache.device={}, footprintMiB={}",
+                numLayers, numSlots, numKvHeads, headDim, pageSize, dtype, computeDtype, device,
                 kCache.device(), (kBytes + vBytes) / (1024 * 1024));
+        if (smile.llm.quant.Fp8KvCodec.isFp8(dtype)) {
+            logger.info("KvCachePool: FP8 KV enabled (~2× capacity vs BF16 for same pool bytes); "
+                    + "attention dequants to {}", computeDtype);
+        }
+    }
+
+    private static ScalarType resolveComputeDtype(Device device) {
+        if (device != null && device.isCUDA() && Tensor.isBF16Supported()) {
+            return ScalarType.BFloat16;
+        }
+        return ScalarType.Half;
+    }
+
+    /** @return K-scale used for FP8 store (1.0 when not FP8). */
+    public float kScale() {
+        return kScale;
+    }
+
+    /** @return V-scale used for FP8 store (1.0 when not FP8). */
+    public float vScale() {
+        return vScale;
+    }
+
+    /** @return dtype used when dequantizing FP8 KV for attention. */
+    public ScalarType computeDtype() {
+        return computeDtype;
     }
 
     /**
@@ -955,13 +996,29 @@ public class KvCachePool implements AutoCloseable {
         }
 
         try (var idx = Tensor.of(indices);
-             var kf = k.reshape(batch * (long) seqlen, numKvHeads, headDim);
-             var vf = v.reshape(batch * (long) seqlen, numKvHeads, headDim);
              var layerIdx = Index.of(layer);
              var layerK = kCache.get(layerIdx);
              var layerV = vCache.get(layerIdx)) {
-            layerK.put_(kf, idx);
-            layerV.put_(vf, idx);
+            Tensor kf = k.reshape(batch * (long) seqlen, numKvHeads, headDim);
+            Tensor vf = v.reshape(batch * (long) seqlen, numKvHeads, headDim);
+            if (smile.llm.quant.Fp8KvCodec.isFp8(dtype)) {
+                float ks = smile.llm.quant.Fp8KvCodec.computeScale(kf, smile.llm.quant.Fp8KvCodec.E4M3_MAX);
+                float vs = smile.llm.quant.Fp8KvCodec.computeScale(vf, smile.llm.quant.Fp8KvCodec.E4M3_MAX);
+                // Running max scale so older tokens stay in range.
+                kScale = Math.max(kScale, ks);
+                vScale = Math.max(vScale, vs);
+                Tensor kq = smile.llm.quant.Fp8KvCodec.quantize(kf, kScale, dtype);
+                Tensor vq = smile.llm.quant.Fp8KvCodec.quantize(vf, vScale, dtype);
+                layerK.put_(kq, idx);
+                layerV.put_(vq, idx);
+                kq.close();
+                vq.close();
+            } else {
+                layerK.put_(kf, idx);
+                layerV.put_(vf, idx);
+            }
+            kf.close();
+            vf.close();
         }
     }
 
@@ -999,6 +1056,13 @@ public class KvCachePool implements AutoCloseable {
             // (not closed here) so LibTorch refcounting keeps storage alive.
             Tensor keys = layerK.get(idx).reshape(batch, length, numKvHeads, headDim);
             Tensor values = layerV.get(idx).reshape(batch, length, numKvHeads, headDim);
+            if (smile.llm.quant.Fp8KvCodec.isFp8(dtype)) {
+                Tensor kd = smile.llm.quant.Fp8KvCodec.dequantize(keys, kScale, computeDtype);
+                Tensor vd = smile.llm.quant.Fp8KvCodec.dequantize(values, vScale, computeDtype);
+                keys.close();
+                values.close();
+                return new Tuple2<>(kd, vd);
+            }
             return new Tuple2<>(keys, values);
         }
     }

@@ -119,6 +119,14 @@ public class LlamaBlock {
         }
     }
 
+    public Attention attention() {
+        return attention;
+    }
+
+    public FeedForward feedForward() {
+        return feedForward;
+    }
+
     /**
      * Forward pass through the block.
      * @param x the input tensor.

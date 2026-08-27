@@ -28,6 +28,8 @@ int smile_flashinfer_paged_attention_cuda(
         int head_dim,
         int cache_len,
         float scale,
+        float k_scale,
+        float v_scale,
         int is_causal,
         const torch::Tensor *attn_mask,
         torch::Tensor *float_workspace,       /* nullable → allocate locals */
