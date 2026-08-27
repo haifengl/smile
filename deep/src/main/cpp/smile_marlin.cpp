@@ -54,41 +54,6 @@ static void set_err(const std::string& msg) {
     smile_torch_set_error(msg.c_str());
 }
 
-/**
- * Run one Marlin GEMM. Prefer m <= 16 so the kernel uses the well-tested
- * thread_m_blocks=1 configs (128×128 tiles). Larger m is chunked by the caller.
- */
-static int run_marlin(
-        const at::Tensor& A,
-        const at::Tensor& B,
-        at::Tensor& C,
-        const at::Tensor& s,
-        at::Tensor& ws,
-        int groupsize,
-        int thread_k,
-        int thread_n) {
-    int prob_m = static_cast<int>(A.size(0));
-    int prob_k = static_cast<int>(A.size(1));
-    int prob_n = static_cast<int>(C.size(1));
-    int dev = A.get_device();
-    int max_par = 8;
-    ws.zero_();
-    return marlin_cuda(
-            A.data_ptr(),
-            B.data_ptr(),
-            C.data_ptr(),
-            s.data_ptr(),
-            prob_m, prob_n, prob_k,
-            ws.data_ptr(),
-            groupsize,
-            dev,
-            at::cuda::getCurrentCUDAStream(dev),
-            thread_k,
-            thread_n,
-            -1,
-            max_par);
-}
-
 #endif
 
 extern "C" int smile_marlin_available(void) {
@@ -108,9 +73,10 @@ extern "C" ST_Tensor smile_marlin_mul(ST_Tensor a, ST_Tensor b, ST_Tensor scales
             set_err("smile_marlin_mul: null tensor");
             return nullptr;
         }
-        auto A = a->t.contiguous();
-        auto B = b->t.contiguous();
-        auto s = scales->t.contiguous();
+        // Prefer views when already contiguous — decode is latency-sensitive.
+        auto A = a->t.is_contiguous() ? a->t : a->t.contiguous();
+        auto B = b->t.is_contiguous() ? b->t : b->t.contiguous();
+        auto s = scales->t.is_contiguous() ? scales->t : scales->t.contiguous();
 
         if (!A.is_cuda() || !B.is_cuda() || !s.is_cuda()) {
             set_err("smile_marlin_mul: A/B/scales must be CUDA tensors");
@@ -140,7 +106,7 @@ extern "C" ST_Tensor smile_marlin_mul(ST_Tensor a, ST_Tensor b, ST_Tensor scales
             return nullptr;
         }
 
-        int tot_m = static_cast<int>(A.size(0));
+        int prob_m = static_cast<int>(A.size(0));
         int prob_k = static_cast<int>(A.size(1));
         int prob_n = static_cast<int>(s.size(1));
         int groupsize = (s.size(0) == 1) ? -1 : prob_k / static_cast<int>(s.size(0));
@@ -162,9 +128,12 @@ extern "C" ST_Tensor smile_marlin_mul(ST_Tensor a, ST_Tensor b, ST_Tensor scales
             set_err("smile_marlin_mul: k must be divisible by 128; got " + std::to_string(prob_k));
             return nullptr;
         }
-        if (prob_n % 128 != 0) {
-            // tile_n=128 path; 256 is preferred for large-m but 128 works for m<=16 chunks
-            set_err("smile_marlin_mul: n must be divisible by 128; got " + std::to_string(prob_n));
+        // Auto tile: m<=16 → thread_n=128; m>16 → thread_n=256.
+        int n_align = (prob_m <= 16) ? 128 : 256;
+        if (prob_n % n_align != 0) {
+            set_err("smile_marlin_mul: n=" + std::to_string(prob_n)
+                    + " not divisible by " + std::to_string(n_align)
+                    + " (required for m=" + std::to_string(prob_m) + ")");
             return nullptr;
         }
 
@@ -172,7 +141,7 @@ extern "C" ST_Tensor smile_marlin_mul(ST_Tensor a, ST_Tensor b, ST_Tensor scales
         int64_t ws_need = std::max<int64_t>(1, (prob_n / 128) * max_par);
         torch::Tensor ws;
         if (workspace && workspace->t.defined() && workspace->t.numel() > 0) {
-            ws = workspace->t.contiguous();
+            ws = workspace->t.is_contiguous() ? workspace->t : workspace->t.contiguous();
             if (!ws.is_cuda() || ws.device() != A.device()) {
                 set_err("smile_marlin_mul: workspace must be on same CUDA device as A");
                 return nullptr;
@@ -189,77 +158,53 @@ extern "C" ST_Tensor smile_marlin_mul(ST_Tensor a, ST_Tensor b, ST_Tensor scales
                     + " got=" + std::to_string(ws.numel()));
             return nullptr;
         }
+        // Locks must start at 0; one zero per call (not per chunk).
+        ws.zero_();
 
-        auto C = torch::empty({tot_m, prob_n},
+        auto C = torch::empty({prob_m, prob_n},
                               torch::dtype(torch::kHalf).device(A.device()));
 
-        // Chunk M into strips of at most 16 so we only exercise THREAD_M_BLOCKS=1
-        // kernels (CALL_IF(1, 8, 8, *)). The m=17..64 path (thread_m_blocks=2..4
-        // with 64×256 tiles) has been a common source of launch/shape failures.
-        const int chunk = 16;
-        // Force 128×128 tiles (requires n%128==0, k%128==0 — already checked).
-        const int tk = (thread_k > 0) ? thread_k : 128;
-        const int tn = 128;
-
-        for (int row = 0; row < tot_m; row += chunk) {
-            int rows = std::min(chunk, tot_m - row);
-            at::Tensor A_chunk;
-            at::Tensor C_chunk;
-            if (rows == chunk) {
-                A_chunk = A.narrow(0, row, rows);
-                C_chunk = C.narrow(0, row, rows);
-            } else {
-                // Pad up to 16 rows (Marlin tile); unused pad rows are ignored on write-back.
-                A_chunk = torch::zeros({chunk, prob_k},
-                                       torch::dtype(torch::kHalf).device(A.device()));
-                A_chunk.narrow(0, 0, rows).copy_(A.narrow(0, row, rows));
-                C_chunk = torch::empty({chunk, prob_n},
-                                       torch::dtype(torch::kHalf).device(A.device()));
-            }
-
-            (void) cudaGetLastError(); // clear sticky
-            int err = run_marlin(A_chunk, B, C_chunk, s, ws, groupsize, tk, tn);
-            if (err == ERR_PROB_SHAPE) {
-                set_err("smile_marlin_mul: problem shape not supported m="
-                        + std::to_string(rows) + " (padded=" + std::to_string(chunk)
-                        + ") n=" + std::to_string(prob_n) + " k=" + std::to_string(prob_k)
-                        + " groupsize=" + std::to_string(groupsize)
-                        + " thread_k=" + std::to_string(tk)
-                        + " thread_n=" + std::to_string(tn));
-                return nullptr;
-            }
-            if (err == ERR_KERN_SHAPE) {
-                set_err("smile_marlin_mul: no Marlin kernel for m="
-                        + std::to_string(chunk) + " n=" + std::to_string(prob_n)
-                        + " k=" + std::to_string(prob_k) + " groupsize="
-                        + std::to_string(groupsize) + " thread_k=" + std::to_string(tk)
-                        + " thread_n=" + std::to_string(tn));
-                return nullptr;
-            }
-            if (err != 0) {
-                set_err("smile_marlin_mul: kernel error code=" + std::to_string(err));
-                return nullptr;
-            }
-
-            cudaError_t st = cudaGetLastError();
-            if (st != cudaSuccess) {
-                set_err(std::string("smile_marlin_mul: CUDA launch error: ")
-                        + cudaGetErrorString(st));
-                return nullptr;
-            }
-            // Ensure the chunk finished before we free padded temps / advance.
-            st = cudaStreamSynchronize(at::cuda::getCurrentCUDAStream(A.get_device()));
-            if (st != cudaSuccess) {
-                set_err(std::string("smile_marlin_mul: CUDA sync error: ")
-                        + cudaGetErrorString(st));
-                return nullptr;
-            }
-
-            if (rows != chunk) {
-                C.narrow(0, row, rows).copy_(C_chunk.narrow(0, 0, rows));
-            }
+        (void) cudaGetLastError();
+        // Single launch: marlin_cuda pads m to 16-tile internally. Do NOT
+        // chunk+synchronize — that was ~200 host syncs/token and killed decode.
+        int err = marlin_cuda(
+                A.data_ptr(),
+                B.data_ptr(),
+                C.data_ptr(),
+                s.data_ptr(),
+                prob_m, prob_n, prob_k,
+                ws.data_ptr(),
+                groupsize,
+                A.get_device(),
+                at::cuda::getCurrentCUDAStream(A.get_device()),
+                thread_k,  // -1 = auto (128×128 for m<=16, 64×256 otherwise)
+                -1,
+                -1,
+                max_par);
+        if (err == ERR_PROB_SHAPE) {
+            set_err("smile_marlin_mul: problem shape not supported m="
+                    + std::to_string(prob_m) + " n=" + std::to_string(prob_n)
+                    + " k=" + std::to_string(prob_k) + " groupsize="
+                    + std::to_string(groupsize));
+            return nullptr;
         }
-
+        if (err == ERR_KERN_SHAPE) {
+            set_err("smile_marlin_mul: no Marlin kernel for m="
+                    + std::to_string(prob_m) + " n=" + std::to_string(prob_n)
+                    + " k=" + std::to_string(prob_k) + " groupsize="
+                    + std::to_string(groupsize));
+            return nullptr;
+        }
+        if (err != 0) {
+            set_err("smile_marlin_mul: kernel error code=" + std::to_string(err));
+            return nullptr;
+        }
+        cudaError_t st = cudaGetLastError();
+        if (st != cudaSuccess) {
+            set_err(std::string("smile_marlin_mul: CUDA launch error: ")
+                    + cudaGetErrorString(st));
+            return nullptr;
+        }
         return new ST_Tensor_{ C };
     } catch (const std::exception& ex) {
         smile_torch_set_error(ex.what());
