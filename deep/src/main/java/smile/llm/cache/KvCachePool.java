@@ -1478,7 +1478,7 @@ public class KvCachePool implements AutoCloseable {
         long cumPrompt = prefixPromptTokens.get();
         long cumNew = cumPrompt - cumMatch;
         double cumHit = cumPrompt > 0 ? 100.0 * cumMatch / cumPrompt : 0.0;
-        logger.info(
+        logger.debug(
                 "KV prefix hit: #cached-token: {}, #new-token: {}, hitRate={} | cumulative #cached-token: {}, #new-token: {}, hitRate={}",
                 prefixLen, newTokens, String.format("%.1f%%", hitRate),
                 cumMatch, cumNew, String.format("%.1f%%", cumHit));
