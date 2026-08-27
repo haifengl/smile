@@ -140,7 +140,11 @@ extern "C" ST_Tensor smile_marlin_mul(ST_Tensor a, ST_Tensor b, ST_Tensor scales
         int max_par = 8;
         int64_t ws_need = std::max<int64_t>(1, (prob_n / 128) * max_par);
         torch::Tensor ws;
-        if (workspace && workspace->t.defined() && workspace->t.numel() > 0) {
+        // Locks start at 0 from Tensor.zeros / fresh alloc. Marlin's last
+        // barrier_release(reset=true) clears them; avoid a memset every GEMM.
+        if (!workspace || !workspace->t.defined() || workspace->t.numel() == 0) {
+            ws = torch::zeros({ws_need}, torch::dtype(torch::kInt).device(A.device()));
+        } else {
             ws = workspace->t.is_contiguous() ? workspace->t : workspace->t.contiguous();
             if (!ws.is_cuda() || ws.device() != A.device()) {
                 set_err("smile_marlin_mul: workspace must be on same CUDA device as A");
@@ -150,16 +154,12 @@ extern "C" ST_Tensor smile_marlin_mul(ST_Tensor a, ST_Tensor b, ST_Tensor scales
                 set_err("smile_marlin_mul: workspace must be int32");
                 return nullptr;
             }
-        } else {
-            ws = torch::zeros({ws_need}, torch::dtype(torch::kInt).device(A.device()));
+            if (ws.numel() < ws_need) {
+                set_err("smile_marlin_mul: workspace too small need=" + std::to_string(ws_need)
+                        + " got=" + std::to_string(ws.numel()));
+                return nullptr;
+            }
         }
-        if (ws.numel() < ws_need) {
-            set_err("smile_marlin_mul: workspace too small need=" + std::to_string(ws_need)
-                    + " got=" + std::to_string(ws.numel()));
-            return nullptr;
-        }
-        // Locks must start at 0; one zero per call (not per chunk).
-        ws.zero_();
 
         auto C = torch::empty({prob_m, prob_n},
                               torch::dtype(torch::kHalf).device(A.device()));
