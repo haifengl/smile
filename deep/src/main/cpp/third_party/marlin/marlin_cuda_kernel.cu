@@ -225,8 +225,10 @@ __global__ void Marlin(
   int iters = ceildiv(k_tiles * n_tiles * parallel, gridDim.x);
   // Ensure that the number of tiles in each stripe is a multiple of the groupsize; this avoids an annoying special case
   // where a stripe starts in the middle of group.
-  if (group_blocks != -1)
+  if constexpr (group_blocks != -1) {
+    static_assert(group_blocks >= thread_k_blocks);
     iters = (group_blocks / thread_k_blocks) * ceildiv(iters, (group_blocks / thread_k_blocks));
+  }
 
   int slice_row = (iters * blockIdx.x) % k_tiles;
   int slice_col_par = (iters * blockIdx.x) / k_tiles;
@@ -402,11 +404,16 @@ __global__ void Marlin(
         B_ptr[i] += b_gl_rd_delta_o;
       }
       // Only fetch scales if this tile starts a new group
-      if (group_blocks != -1 && pipe % (group_blocks / thread_k_blocks) == 0) {
-        int4* sh_s_stage = sh_s + s_sh_stage * pipe;
-        if (s_sh_wr_pred)
-          cp_async4_stream(&sh_s_stage[s_sh_wr], &s[s_gl_rd]);
-        s_gl_rd += s_gl_rd_delta;
+      // Smile/vLLM: if constexpr so NVCC does not warn on group_blocks==-1
+      // instantiations (modulo / division by zero in dead code).
+      if constexpr (group_blocks != -1) {
+        static_assert(group_blocks >= thread_k_blocks);
+        if (pipe % (group_blocks / thread_k_blocks) == 0) {
+          int4* sh_s_stage = sh_s + s_sh_stage * pipe;
+          if (s_sh_wr_pred)
+            cp_async4_stream(&sh_s_stage[s_sh_wr], &s[s_gl_rd]);
+          s_gl_rd += s_gl_rd_delta;
+        }
       }
     }
     // Insert a fence even when we are winding down the pipeline to ensure that waiting is also correct at this point.
@@ -426,7 +433,8 @@ __global__ void Marlin(
     // It may seem inefficient that we reload the groups for every sub-tile; however, this does not seem to be a
     // significant bottleneck, while some theoretically better attempts have lead to bad instruction ordering by the
     // compiler and correspondingly a noticable drop in performance.
-    if (group_blocks != -1) {
+    if constexpr (group_blocks != -1) {
+      static_assert(group_blocks >= thread_k_blocks);
       int4* sh_s_stage = sh_s + s_sh_stage * ((group_blocks / thread_k_blocks) * (pipe / (group_blocks / thread_k_blocks)));
       reinterpret_cast<int4*>(&frag_s[k % 2])[0] = sh_s_stage[s_sh_rd];
     }
@@ -777,7 +785,6 @@ int marlin_cuda(
   int4* C_ptr = (int4*) C;
   const int4* s_ptr = (const int4*) s;
 
-  int cols = prob_n / thread_n;
   int* locks = (int*) workspace;
 
   int ret = 0;
