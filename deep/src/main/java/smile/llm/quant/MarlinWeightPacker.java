@@ -33,6 +33,13 @@ import smile.deep.tensor.Tensor;
  * @author Haifeng Li
  */
 public final class MarlinWeightPacker {
+    /**
+     * AutoAWQ GEMM nibble interleave: logical column {@code j % 8} is stored at
+     * bit position {@code 4 * AWQ_REVERSE_ORDER[j % 8]} within each packed int32.
+     * Inverse of pack order {@code [0, 2, 4, 6, 1, 3, 5, 7]}.
+     */
+    private static final int[] AWQ_REVERSE_ORDER = {0, 4, 1, 5, 2, 6, 3, 7};
+
     private MarlinWeightPacker() {}
 
     /**
@@ -79,7 +86,8 @@ public final class MarlinWeightPacker {
     }
 
     /**
-     * Packs AWQ tensors into Marlin layout.
+     * Packs AutoAWQ GEMM tensors ({@code qweight} {@code [in, out/8]}, scales,
+     * qzeros) into Marlin layout. Does not use the GPTQ {@code [in/8, out]} unpack.
      */
     public static Packed packAwq(Tensor qweight, Tensor scales, Tensor qzeros,
                                  int groupSize, Device device) {
@@ -201,13 +209,91 @@ public final class MarlinWeightPacker {
         return t;
     }
 
+    /**
+     * Dequantizes AutoAWQ GEMM tensors to dense FP16 {@code [out, in]}.
+     *
+     * <p>AWQ packs along the <em>output</em> dim: {@code qweight} is
+     * {@code [inFeatures, outFeatures/8]}, {@code scales} is
+     * {@code [inFeatures/groupSize, outFeatures]}, {@code qzeros} is
+     * {@code [inFeatures/groupSize, outFeatures/8]}. Formula:
+     * {@code (q - zero) * scale} (no GPTQ-style +1 on zeros).
+     */
     private static Tensor dequantAwqToFp16(Tensor qweight, Tensor scales, Tensor qzeros, int groupSize) {
         if (qweight.dtype() == ScalarType.Half || qweight.dtype() == ScalarType.BFloat16
                 || qweight.dtype() == ScalarType.Float) {
             return qweight.to(ScalarType.Half);
         }
-        // AWQ packing differs (interleaved); reuse GPTQ-like unpack as approximation
-        // for smoke tests — production AWQ should use the official reverse-interleave.
-        return dequantGptqToFp16(qweight, scales, qzeros, null, groupSize);
+        Tensor qw = qweight.to(Device.CPU());
+        Tensor sc = scales.to(Device.CPU()).to(ScalarType.Float);
+        long[] qshape = qw.shape();
+        if (qshape.length != 2) {
+            throw new IllegalArgumentException("AWQ qweight must be 2D [in, out/8]");
+        }
+        int inFeatures = (int) qshape[0];
+        int packedOut = (int) qshape[1];
+        int outFeatures = packedOut * 8;
+        if (inFeatures % groupSize != 0) {
+            qw.close();
+            sc.close();
+            throw new IllegalArgumentException(
+                    "AWQ inFeatures " + inFeatures + " not divisible by groupSize " + groupSize);
+        }
+        int numGroups = inFeatures / groupSize;
+
+        long[] sshape = sc.shape();
+        if (sshape.length != 2 || sshape[0] != numGroups || sshape[1] != outFeatures) {
+            // Some exporters store [out, groups]; accept transpose.
+            if (sshape.length == 2 && sshape[0] == outFeatures && sshape[1] == numGroups) {
+                Tensor transposed = sc.transpose(0, 1).contiguous();
+                sc.close();
+                sc = transposed.to(ScalarType.Float);
+            } else {
+                qw.close();
+                sc.close();
+                throw new IllegalArgumentException(
+                        "AWQ scales shape " + java.util.Arrays.toString(sshape)
+                                + " incompatible with groups=" + numGroups
+                                + " outFeatures=" + outFeatures);
+            }
+        }
+
+        int[] packed = qw.intArray();
+        float[] scaleArr = sc.floatArray();
+        int[] zeroPacked = null;
+        if (qzeros != null) {
+            Tensor z = qzeros.to(Device.CPU());
+            long[] zshape = z.shape();
+            if (zshape.length != 2 || zshape[0] != numGroups || zshape[1] != packedOut) {
+                z.close();
+                qw.close();
+                sc.close();
+                throw new IllegalArgumentException(
+                        "AWQ qzeros shape " + java.util.Arrays.toString(zshape)
+                                + " expected [" + numGroups + ", " + packedOut + "]");
+            }
+            zeroPacked = z.intArray();
+            z.close();
+        }
+
+        // Dense [out, in] for packFromFp16 / nn.Linear layout.
+        float[] out = new float[outFeatures * inFeatures];
+        for (int k = 0; k < inFeatures; k++) {
+            int g = k / groupSize;
+            for (int po = 0; po < packedOut; po++) {
+                int word = packed[k * packedOut + po];
+                int zword = zeroPacked != null ? zeroPacked[g * packedOut + po] : 0;
+                for (int logical = 0; logical < 8; logical++) {
+                    int bitSlot = AWQ_REVERSE_ORDER[logical];
+                    int qi = (word >>> (4 * bitSlot)) & 0xF;
+                    int zi = zeroPacked != null ? (zword >>> (4 * bitSlot)) & 0xF : 0;
+                    int o = po * 8 + logical;
+                    float scale = scaleArr[g * outFeatures + o];
+                    out[o * inFeatures + k] = (qi - zi) * scale;
+                }
+            }
+        }
+        qw.close();
+        sc.close();
+        return Tensor.of(out).reshape(outFeatures, inFeatures).to(ScalarType.Half);
     }
 }
