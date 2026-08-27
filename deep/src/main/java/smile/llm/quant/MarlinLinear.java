@@ -82,12 +82,13 @@ public final class MarlinLinear implements LinearOp, AutoCloseable {
         }
         ScalarType inDtype = input.dtype();
         Tensor flat = input.reshape(m, k).contiguous();
+        // Prefer FP16 end-to-end when Marlin is selected (see Llama.build).
+        // Keep cast for callers that still pass BF16.
         Tensor aFp16 = flat.dtype() == ScalarType.Half
                 ? flat
                 : flat.to(ScalarType.Half);
         Tensor outFlat;
         try {
-            // Workspace locks are zeroed inside smile_marlin_mul.
             outFlat = Native.marlinMul(aFp16, qweight, scales, workspace, -1);
         } catch (RuntimeException e) {
             throw new IllegalStateException(
@@ -102,7 +103,6 @@ public final class MarlinLinear implements LinearOp, AutoCloseable {
             outFlat.close();
             outFlat = withBias;
         }
-        // Match the rest of the model (often BF16).
         if (inDtype != ScalarType.Half && outFlat.dtype() != inDtype) {
             Tensor cast = outFlat.to(inDtype);
             outFlat.close();

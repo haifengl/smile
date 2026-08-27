@@ -301,6 +301,20 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
                 && (Files.exists(Path.of(checkpointDir, "model.safetensors.index.json"))
                     || !getSafeTensorFiles(dir).isEmpty());
 
+        // Resolve weight GEMM early so Marlin can force FP16 compute before
+        // module construction (Marlin is FP16×INT4; BF16 activations cost two
+        // casts per linear × ~7 linears × layers every decode step).
+        var quantPolicy = smile.llm.quant.QuantPolicy.resolve(
+                Path.of(checkpointDir), device, null);
+        if (deviceId >= 0 && quantPolicy.backend() == smile.llm.quant.WeightGemmBackend.MARLIN
+                && computeDtype != ScalarType.Half) {
+            logger.info("Marlin FP16×INT4: compute dtype {} → Half (avoid per-linear casts)",
+                    computeDtype);
+            computeDtype = ScalarType.Half;
+            smile_torch_h.smile_set_default_dtype(computeDtype.code());
+            Tensor.setDefaultOptions(new Tensor.Options().device(device).requireGradients(false));
+        }
+
         LlamaModelArgs modelArgs;
         if (huggingFace) {
             modelArgs = LlamaModelArgs.fromHuggingFace(configJson.toString(), maxBatchSize, maxSeqLen);
@@ -321,6 +335,14 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
         }
 
         ScalarType cacheDtype = resolveKvCacheDtype(kvCacheDtype, configJson, computeDtype);
+        if (quantPolicy.backend() == smile.llm.quant.WeightGemmBackend.MARLIN
+                && (kvCacheDtype == null || kvCacheDtype.isBlank())
+                && cacheDtype != ScalarType.Half
+                && !smile.llm.quant.Fp8KvCodec.isFp8(cacheDtype)) {
+            logger.info("Marlin: KV cache dtype {} → Half (match compute / avoid attention casts)",
+                    cacheDtype);
+            cacheDtype = ScalarType.Half;
+        }
         logger.info("KV cache dtype: {} (override={}, compute={})",
                 cacheDtype, kvCacheDtype, computeDtype);
 
@@ -353,8 +375,6 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
         logger.info("model.to({}) in {} ms", device, System.currentTimeMillis() - tTo);
 
         long tLoad = System.currentTimeMillis();
-        var quantPolicy = smile.llm.quant.QuantPolicy.resolve(
-                Path.of(checkpointDir), device, null);
         if (huggingFace) {
             if (quantPolicy.backend() != smile.llm.quant.WeightGemmBackend.DENSE) {
                 int groupSize = smile.llm.quant.QuantizedHfLoader.groupSizeFromConfig(
