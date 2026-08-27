@@ -138,6 +138,16 @@ public class GroupedQueryAttention implements Attention {
         this.wo = wo;
     }
 
+    /** Query head count on this rank (equals global heads when TP size is 1). */
+    public int numQueryHeads() {
+        return numLocalHeads;
+    }
+
+    /** Key/value head count (global; local when TP is applied). */
+    public int numKeyValueHeads() {
+        return numKvHeads;
+    }
+
     /**
      * Convenience constructor that allocates a small test pool sized from
      * {@code layout}. Prefer installing a shared pool in production.

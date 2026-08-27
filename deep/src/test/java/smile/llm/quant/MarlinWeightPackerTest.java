@@ -64,7 +64,7 @@ public class MarlinWeightPackerTest {
     }
 
     @Test
-    public void testGivenAwqDirectWhenPackThenMarlinShapesAndNoFp16RoundTrip() {
+    public void testGivenAwqWhenPackThenMarlinShapesMatch() {
         int inFeatures = 128;
         int outFeatures = 256;
         int groupSize = 128;
@@ -112,6 +112,45 @@ public class MarlinWeightPackerTest {
         assertEquals(outFeatures, packed.outFeatures());
         assertArrayEquals(new long[]{inFeatures / 16L, outFeatures * 16L / 8L}, packed.qweight().shape());
         packed.close();
+    }
+
+    @Test
+    public void testGivenHfWeightWhenReversePermuteThenMetaLayout() {
+        // 2 heads, headDim=4 → out=8, in=4
+        // HF layout per head: [a0,a1, b0,b1] (pairs contiguous)
+        // Meta layout:         [a0,b0, a1,b1]
+        float[] data = {
+                // head0: a0,a1, b0,b1  then head1
+                1, 2, 3, 4,
+                10, 20, 30, 40,
+                5, 6, 7, 8,
+                50, 60, 70, 80,
+                9, 10, 11, 12,
+                90, 100, 110, 120,
+                13, 14, 15, 16,
+                130, 140, 150, 160
+        };
+        // shape [out=8, in=4] row-major
+        Tensor w = Tensor.of(data).reshape(8, 4);
+        Tensor perm = MarlinWeightPacker.reversePermuteHfToMeta(w, 2);
+        w.close();
+        float[] out = perm.to(ScalarType.Float).floatArray();
+        perm.close();
+        // head0 rows were indices 0-3: [1,2,3,4], [10,20,30,40], [5,6,7,8], [50,60,70,80]
+        // view [2, 2, 2, 4]: head h, pair p, d, in
+        // after transpose(1,2): head h, d, pair p, in
+        // head0 d0: rows that were (p0,d0)=(1,2,3,4) and (p1,d0)=(5,6,7,8) → [1,2,3,4],[5,6,7,8]
+        // head0 d1: (p0,d1)=(10..) and (p1,d1)=(50..) → [10,20,30,40],[50,60,70,80]
+        assertArrayEquals(new float[]{
+                1, 2, 3, 4,
+                5, 6, 7, 8,
+                10, 20, 30, 40,
+                50, 60, 70, 80,
+                9, 10, 11, 12,
+                13, 14, 15, 16,
+                90, 100, 110, 120,
+                130, 140, 150, 160
+        }, out, 1e-5f);
     }
 
     @Test
