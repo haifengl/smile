@@ -126,16 +126,25 @@ public class GroupedQueryAttention implements Attention {
 
     /**
      * Replaces projection ops with quantized backends (shard-then-pack already applied).
-     * Dense {@link LinearLayer} module handles become unused for forward.
+     * Unregisters and frees dense {@link LinearLayer} shells so their GPU storage
+     * is released before KV pool sizing.
      */
     public void replaceProjections(LinearOp wq, LinearOp wk, LinearOp wv, LinearOp wo) {
         if (wq == null || wk == null || wv == null || wo == null) {
             throw new IllegalArgumentException("all projections required");
         }
+        LinearOp oldQ = this.wq;
+        LinearOp oldK = this.wk;
+        LinearOp oldV = this.wv;
+        LinearOp oldO = this.wo;
         this.wq = wq;
         this.wk = wk;
         this.wv = wv;
         this.wo = wo;
+        smile.llm.quant.DenseLinearRelease.unregisterAndClose(module, "wq", oldQ);
+        smile.llm.quant.DenseLinearRelease.unregisterAndClose(module, "wk", oldK);
+        smile.llm.quant.DenseLinearRelease.unregisterAndClose(module, "wv", oldV);
+        smile.llm.quant.DenseLinearRelease.unregisterAndClose(module, "wo", oldO);
     }
 
     /** Query head count on this rank (equals global heads when TP size is 1). */

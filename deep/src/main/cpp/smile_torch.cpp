@@ -1316,6 +1316,11 @@ void smile_module_register_module(ST_Module m, const char *name, ST_Module child
         ST_TRY_BEGIN m->m->register_module(name, child->m); ST_TRY_END
     }
 }
+void smile_module_unregister_module(ST_Module m, const char *name) {
+    if (m && name) {
+        ST_TRY_BEGIN m->m->unregister_module(name); ST_TRY_END
+    }
+}
 void smile_module_register_buffer(ST_Module m, const char *name, ST_Tensor t) {
     if (m && t && name) {
         ST_TRY_BEGIN m->m->register_buffer(name, t->t); ST_TRY_END

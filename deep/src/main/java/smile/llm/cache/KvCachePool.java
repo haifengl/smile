@@ -228,7 +228,7 @@ public class KvCachePool implements AutoCloseable {
         this.pageSize = pageSize;
         this.device = device;
         this.dtype = dtype;
-        this.computeDtype = resolveComputeDtype(device);
+        this.computeDtype = resolveComputeDtype(device, dtype);
         if (smile.llm.quant.Fp8KvCodec.isFp8(dtype) && !device.isCUDA()) {
             throw new IllegalArgumentException("FP8 KV cache requires a CUDA device");
         }
@@ -270,7 +270,12 @@ public class KvCachePool implements AutoCloseable {
         }
     }
 
-    private static ScalarType resolveComputeDtype(Device device) {
+    private static ScalarType resolveComputeDtype(Device device, ScalarType cacheDtype) {
+        // Match KV store dtype when it is already a compute-capable float.
+        if (cacheDtype == ScalarType.Half || cacheDtype == ScalarType.BFloat16
+                || cacheDtype == ScalarType.Float) {
+            return cacheDtype;
+        }
         if (device != null && device.isCUDA() && Tensor.isBF16Supported()) {
             return ScalarType.BFloat16;
         }

@@ -362,21 +362,30 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
 
         var layout = modelArgs.kvCacheLayout();
         long tConstruct = System.currentTimeMillis();
+        // Quantized path: build empty dense shells on CPU so ~16GB of placeholder
+        // linears never touch the GPU; Marlin replace frees them before KV sizing.
+        boolean quantizedLoad = huggingFace
+                && quantPolicy.backend() != smile.llm.quant.WeightGemmBackend.DENSE;
+        Device constructDevice = quantizedLoad ? Device.CPU() : device;
         LlamaModel model;
-        try (var ignored = ParameterInit.uninitialized(device)) {
+        try (var ignored = ParameterInit.uninitialized(constructDevice)) {
             model = newModel(modelArgs);
         }
-        logger.info("LlamaModel construct in {} ms (layers={}, maxSeqLen={})",
-                System.currentTimeMillis() - tConstruct, modelArgs.numLayers(), modelArgs.maxSeqLen());
+        logger.info("LlamaModel construct in {} ms (layers={}, maxSeqLen={}, initDevice={})",
+                System.currentTimeMillis() - tConstruct, modelArgs.numLayers(), modelArgs.maxSeqLen(),
+                constructDevice);
         // Place empty module + cis before load so torch checkpoints land on device
         // and HF loadStateDict targets match model.device(); cis moves with to().
-        long tTo = System.currentTimeMillis();
-        model.to(device);
-        logger.info("model.to({}) in {} ms", device, System.currentTimeMillis() - tTo);
+        // For quantized loads, defer to(device) until after Marlin replace frees shells.
+        if (!quantizedLoad) {
+            long tTo = System.currentTimeMillis();
+            model.to(device);
+            logger.info("model.to({}) in {} ms", device, System.currentTimeMillis() - tTo);
+        }
 
         long tLoad = System.currentTimeMillis();
         if (huggingFace) {
-            if (quantPolicy.backend() != smile.llm.quant.WeightGemmBackend.DENSE) {
+            if (quantizedLoad) {
                 int groupSize = smile.llm.quant.QuantizedHfLoader.groupSizeFromConfig(
                         Path.of(checkpointDir));
                 smile.llm.quant.QuantizedHfLoader.installLlamaLinears(
@@ -384,6 +393,10 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
                         device, groupSize, 1, 0, computeDtype, modelLoaderThreads);
                 loadHuggingFaceWeights(model, modelArgs, dir, modelLoaderThreads,
                         /*nonLinearOnly=*/true);
+                long tTo = System.currentTimeMillis();
+                model.to(device);
+                logger.info("model.to({}) after quant install in {} ms",
+                        device, System.currentTimeMillis() - tTo);
             } else {
                 loadHuggingFaceWeights(model, modelArgs, dir, modelLoaderThreads, false);
             }

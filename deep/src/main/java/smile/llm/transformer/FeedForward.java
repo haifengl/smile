@@ -137,14 +137,21 @@ public class FeedForward {
 
     /**
      * Replaces FFN linears with quantized ops (already sharded/packed for TP).
+     * Frees dense {@link LinearLayer} shells so empty GPU weights are released.
      */
     public void replaceLinears(LinearOp w1, LinearOp w2, LinearOp w3) {
         if (w1 == null || w2 == null || w3 == null) {
             throw new IllegalArgumentException("w1/w2/w3 required");
         }
+        LinearOp old1 = this.w1;
+        LinearOp old2 = this.w2;
+        LinearOp old3 = this.w3;
         this.w1 = w1;
         this.w2 = w2;
         this.w3 = w3;
+        smile.llm.quant.DenseLinearRelease.unregisterAndClose(module, "w1", old1);
+        smile.llm.quant.DenseLinearRelease.unregisterAndClose(module, "w2", old2);
+        smile.llm.quant.DenseLinearRelease.unregisterAndClose(module, "w3", old3);
     }
 
     /**

@@ -31,7 +31,7 @@ import smile.torch.Native;
  *
  * @author Haifeng Li
  */
-public abstract class ModuleLayer implements Layer {
+public abstract class ModuleLayer implements Layer, AutoCloseable {
     /**
      * Bundles the two native handles for a layer with the action that frees
      * them. Built by each subclass's static factory before calling {@code super}.
@@ -48,6 +48,7 @@ public abstract class ModuleLayer implements Layer {
     final MemorySegment module;
     /** Releases the native handles once this layer becomes unreachable. */
     private final Cleaner.Cleanable cleanable;
+    private boolean closed;
 
     /**
      * Constructor.
@@ -62,6 +63,18 @@ public abstract class ModuleLayer implements Layer {
     @Override
     public MemorySegment module() {
         return module;
+    }
+
+    /**
+     * Releases native handles immediately (also runs on GC via Cleaner).
+     * Safe to call more than once.
+     */
+    @Override
+    public void close() {
+        if (!closed) {
+            closed = true;
+            cleanable.clean();
+        }
     }
 
     @Override

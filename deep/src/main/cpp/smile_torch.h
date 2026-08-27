@@ -704,6 +704,8 @@ SMILE_API const char *smile_module_name(ST_Module m);
 
 /** Registers a child module under name (non-owning view of child is returned). */
 SMILE_API void smile_module_register_module   (ST_Module m, const char *name, ST_Module child);
+/** Removes a previously registered child; drops the parent's shared_ptr (frees GPU if last ref). */
+SMILE_API void smile_module_unregister_module (ST_Module m, const char *name);
 SMILE_API void smile_module_register_parameter(ST_Module m, const char *name, ST_Tensor t);
 SMILE_API void smile_module_register_buffer   (ST_Module m, const char *name, ST_Tensor t);
 

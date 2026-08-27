@@ -148,10 +148,18 @@ public class GatedAttention implements Attention {
         if (q == null || k == null || v == null || o == null) {
             throw new IllegalArgumentException("all projections required");
         }
+        LinearOp oldQ = this.qProj;
+        LinearOp oldK = this.kProj;
+        LinearOp oldV = this.vProj;
+        LinearOp oldO = this.oProj;
         this.qProj = q;
         this.kProj = k;
         this.vProj = v;
         this.oProj = o;
+        smile.llm.quant.DenseLinearRelease.unregisterAndClose(module, "q_proj", oldQ);
+        smile.llm.quant.DenseLinearRelease.unregisterAndClose(module, "k_proj", oldK);
+        smile.llm.quant.DenseLinearRelease.unregisterAndClose(module, "v_proj", oldV);
+        smile.llm.quant.DenseLinearRelease.unregisterAndClose(module, "o_proj", oldO);
     }
 
     /**
