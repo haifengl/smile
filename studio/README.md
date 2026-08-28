@@ -561,6 +561,7 @@ Open via **File > Settings…**. Choose an AI service provider from the drop-dow
 | **Anthropic** | Claude models; set API key, optional base URL, model |
 | **Google Gemini** | Gemini models via native API; set API key, model |
 | **Google Vertex AI** | Gemini via Vertex; set API key, base URL, model |
+| **OrcaRouter** | OpenAI-compatible AI gateway; set API key, base URL (defaults to `https://api.orcarouter.ai/v1`), model |
 
 All fields (API key, base URL, model) are stored in Java `Preferences` (OS keychain / registry). API keys set in Settings take precedence over environment variables.
 
