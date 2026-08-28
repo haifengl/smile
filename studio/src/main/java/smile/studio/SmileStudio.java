@@ -280,6 +280,18 @@ public class SmileStudio extends JFrame implements SearchListener {
                         prefs.get("azureOpenAIBaseUrl", ""),
                         prefs.get("azureOpenAIModel", "gpt-5.5"));
 
+                // OrcaRouter is an OpenAI-compatible gateway, so we reuse the
+                // OpenAI client with the gateway's base URL and a routing model.
+                case "OrcaRouter" -> {
+                    var openai = new OpenAI(prefs.get("orcarouterModel", "orcarouter/fusion-mini"));
+                    var apiKey = prefs.get("orcarouterApiKey", "");
+                    if (!apiKey.isBlank()) {
+                        openai.withApiKey(apiKey);
+                    }
+                    openai.withBaseUrl(prefs.get("orcarouterBaseUrl", "https://api.orcarouter.ai/v1"));
+                    yield openai;
+                }
+
                 // Don't call withApiKey or withBaseUrl for Anthropic and Gemini client.
                 // As they read from system properties directly, calling withApiKey will
                 // cause errors.
