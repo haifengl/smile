@@ -6,11 +6,21 @@
   overflow: hidden;
 }
 
-.sidebar {
-  width: 280px;
-  flex-shrink: 0;
+.infer-model-sidebar.collapsible-panel--left {
   background: #1e1e2f;
   color: white;
+}
+
+.infer-model-sidebar .collapsible-panel__toggle {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.sidebar {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  color: inherit;
   padding: 16px;
   overflow-y: auto;
 }

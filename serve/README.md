@@ -812,20 +812,51 @@ curl -X POST http://localhost:8080/api/v1/chat/completions \
 Chat history is stored in a relational database (PostgreSQL in production,
 H2 in dev mode). The API base path is `/api/v1/conversations`.
 
+Conversations are **scoped to authenticated users**. Guests (no session) may
+still create conversations and chat, but those rows are tied to client IP and
+do not appear in the sidebar list until the user signs in (recent guest threads
+from the same IP within 24 hours are merged on login).
+
+On **`localhost` or `127.0.0.1`** (any port), the server auto-logs you in as
+the local **`me`** account so dev workflows work without OAuth.
+
+#### Authentication
+
+| Endpoint | Description |
+|---|---|
+| `GET /api/v1/auth/me` | Current user (`logged_in`, `user` profile) or guest |
+| `GET /api/v1/auth/login/google` | Redirect to Google OAuth (requires config below) |
+| `GET /api/v1/auth/callback/google` | OAuth callback (sets session cookie) |
+| `POST /api/v1/auth/logout` | Clear session |
+| `GET /api/v1/users/me` | Profile (authenticated) |
+| `PATCH /api/v1/users/me` | Update display name, avatar URL, personal instructions |
+
+Configure Google login in `application.properties` (or env):
+
+```properties
+smile.auth.google.client-id=${GOOGLE_CLIENT_ID}
+smile.auth.google.client-secret=${GOOGLE_CLIENT_SECRET}
+# Optional; default is {origin}/api/v1/auth/callback/google
+# smile.auth.google.redirect-uri=https://your-host/api/v1/auth/callback/google
+smile.auth.session-secret=${SMILE_SESSION_SECRET}
+```
+
+Register the redirect URI in Google Cloud Console. **Personal instructions**
+from the user profile are injected as the chat system prompt when logged in.
+
 Create, retrieve, update, and delete follow the
 [OpenAI Conversations](https://developers.openai.com/api/reference/resources/conversations)
-shapes. Conversation ids are strings of the form `conv_<n>`. List and
-`GET .../items` are smile extensions (OpenAI has no list endpoint; items use a
-separate OpenAI items API that smile does not implement yet).
+shapes. Conversation ids are strings of the form `conv_<n>`. List, `PATCH`
+(title/pin), and `GET .../items` are smile extensions.
 
-#### List conversations (smile extension)
+#### List conversations (smile extension, **requires login**)
 
 ```
-GET /api/v1/conversations?pageIndex=0&pageSize=25
+GET /api/v1/conversations?pageIndex=0&pageSize=25&q=search&pinned=true
 ```
 
-Returns OpenAI-shaped conversation objects in reverse-chronological order
-(newest first). Pagination defaults to page 0 with 25 records per page.
+Returns the signed-in user's conversations (title, pinned, updated_at).
+Search matches **title and message content**.
 
 ```shell
 curl "http://localhost:8080/api/v1/conversations?pageSize=10"
@@ -875,6 +906,15 @@ curl http://localhost:8080/api/v1/conversations/conv_1 \
   -d '{"metadata":{"topic":"project-x"}}'
 ```
 
+#### Patch sidebar fields (smile extension, **requires ownership**)
+
+```
+PATCH /api/v1/conversations/{conversation_id}
+Content-Type: application/json
+
+{"title": "My chat", "pinned": true}
+```
+
 #### Delete a conversation
 
 ```
@@ -916,13 +956,17 @@ curl http://localhost:8080/api/v1/conversations/conv_42/items
 A React-based web interface is bundled via [Quarkus Quinoa](https://quarkiverse.github.io/quarkiverse-docs/quarkus-quinoa/dev/).
 It is served from the root URL and provides:
 
-- **Inference UI** (`/infer`) — unified model shell: sidebar lists **chat**,
-  **SMILE** (`.sml`), and **ONNX** (`.onnx`) models. Selecting a chat model
-  embeds the shared chat module in the right pane; SMILE models get a
-  schema-driven form; ONNX models get a numeric form from tensor shapes, or
-  an image upload when a 4-D vision-like input is detected (overrideable).
-- **Chat UI** (`/chat`) — standalone entry for the same chat module (streaming
-  tokens, Markdown/math), without the infer sidebar.
+- **Inference UI** (`/infer`) — unified model shell: **collapsible** sidebar lists
+  **chat**, **SMILE** (`.sml`), and **ONNX** (`.onnx`) models. Selecting a chat
+  model embeds the chat module with a **collapsible right nav** (history, login,
+  settings). SMILE models get a schema-driven form; ONNX models get a numeric
+  form from tensor shapes, or an image upload when a 4-D vision-like input is
+  detected (overrideable).
+- **Chat UI** (`/chat`) — standalone chat with the same **right nav panel**
+  (New Chat always available; history/login/settings when signed in). Streaming
+  tokens, Markdown/math. On localhost, you are auto-signed-in as **`me`**.
+
+Full UI/auth design: [docs/chat-sidebar-plan.md](docs/chat-sidebar-plan.md).
 
 In dev mode the React development server runs on port **5173** and requests
 are proxied to the Quarkus backend. The production build (`dist/`) is served

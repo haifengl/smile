@@ -17,7 +17,8 @@
 import React, { useCallback, useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import InferenceForm from "./InferenceForm";
-import ChatApp from "../chat/ChatApp";
+import ChatShell from "../chat/ChatShell";
+import CollapsiblePanel from "../shared/CollapsiblePanel";
 import "./App.css";
 
 /** Maps API {@code kind} to UI panel type. */
@@ -64,11 +65,21 @@ function App() {
 
   return (
     <div className="app">
-      <Sidebar
-        models={models}
-        selectedModel={selectedModel}
-        onSelect={selectModel}
-      />
+      <CollapsiblePanel
+        side="left"
+        storageKey="smile.infer.model-sidebar.expanded"
+        defaultExpanded={true}
+        width={280}
+        collapsedWidth={44}
+        className="infer-model-sidebar"
+        ariaLabel="Models"
+      >
+        <Sidebar
+          models={models}
+          selectedModel={selectedModel}
+          onSelect={selectModel}
+        />
+      </CollapsiblePanel>
       <div className={isChat ? "content content-chat" : "content"}>
         {!selectedModel && (
           <p className="toast">Select a model for inference...</p>
@@ -78,7 +89,7 @@ function App() {
           if (model.type === "chat") {
             return (
               <div key={model.id} className="panel-session" hidden={!active}>
-                <ChatApp model={model.id} title={model.id} embedded />
+                <ChatShell embedded model={model.id} title={model.id} />
               </div>
             );
           }

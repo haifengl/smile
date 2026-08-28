@@ -34,7 +34,7 @@ body {
 
 #root {
   width: 100%;
-  max-width: 800px;
+  max-width: none;
   height: 100dvh;
   /* mobile viewport bug fix */
   min-height: -webkit-fill-available;

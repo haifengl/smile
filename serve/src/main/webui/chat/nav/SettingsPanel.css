@@ -1,0 +1,93 @@
+.settings-panel {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  background: inherit;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.settings-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.settings-panel__header h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.settings-panel__close {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.settings-panel__form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.settings-panel__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.settings-panel__field input,
+.settings-panel__field textarea {
+  font-weight: 400;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.settings-panel__hint {
+  font-weight: 400;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.settings-panel__error {
+  margin: 0;
+  color: #b00020;
+  font-size: 13px;
+}
+
+.settings-panel__save {
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #2fa4e7;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.settings-panel__save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (prefers-color-scheme: dark) {
+  .settings-panel__field input,
+  .settings-panel__field textarea {
+    background: #2a2a40;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: inherit;
+  }
+}

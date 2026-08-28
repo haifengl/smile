@@ -39,6 +39,9 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 public record ConversationObject(
         String id,
         long createdAt,
+        Long updatedAt,
+        String title,
+        Boolean pinned,
         Map<String, String> metadata,
         @JsonProperty("object") String object) {
 
@@ -52,9 +55,18 @@ public record ConversationObject(
         Map<String, String> metadata = conversation.metadata == null
                 ? Map.of()
                 : Map.copyOf(conversation.metadata);
+        Long updated = conversation.updatedAt != null
+                ? conversation.updatedAt.getEpochSecond()
+                : conversation.createdAt.getEpochSecond();
+        String title = conversation.title != null && !conversation.title.isBlank()
+                ? conversation.title
+                : "New chat";
         return new ConversationObject(
                 ConversationIds.toExternalId(conversation.id),
                 conversation.createdAt.getEpochSecond(),
+                updated,
+                title,
+                conversation.pinned,
                 metadata,
                 "conversation");
     }

@@ -31,9 +31,60 @@ import static org.hamcrest.Matchers.*;
 @QuarkusTest
 public class ConversationResourceTest {
 
+    private static final String LOCAL = "localhost:8081";
+    private static final String REMOTE = "example.com";
+
+    @Test
+    public void testGivenLocalHostWhenListThenRequiresAuthAndReturnsOwned() {
+        String id = given()
+            .header("Host", LOCAL)
+            .contentType(ContentType.JSON)
+            .body("{}")
+            .when().post("/api/v1/conversations")
+            .then()
+                .statusCode(200)
+                .extract().path("id");
+
+        given()
+            .header("Host", REMOTE)
+            .when().get("/api/v1/conversations")
+            .then()
+                .statusCode(401);
+
+        given()
+            .header("Host", LOCAL)
+            .when().get("/api/v1/conversations")
+            .then()
+                .statusCode(200)
+                .body("id", hasItem(id));
+    }
+
+    @Test
+    public void testGivenOwnedConversationWhenPatchThenTitleAndPinUpdated() {
+        String id = given()
+            .header("Host", LOCAL)
+            .contentType(ContentType.JSON)
+            .body("{}")
+            .when().post("/api/v1/conversations")
+            .then()
+                .statusCode(200)
+                .extract().path("id");
+
+        given()
+            .header("Host", LOCAL)
+            .contentType(ContentType.JSON)
+            .body("{\"title\":\"My chat\",\"pinned\":true}")
+            .when().patch("/api/v1/conversations/" + id)
+            .then()
+                .statusCode(200)
+                .body("title", equalTo("My chat"))
+                .body("pinned", equalTo(true));
+    }
+
     @Test
     public void testGivenEmptyBodyWhenCreateThenReturnsConversationObject() {
         given()
+            .header("Host", LOCAL)
             .contentType(ContentType.JSON)
             .body("{}")
             .when().post("/api/v1/conversations")
@@ -48,6 +99,7 @@ public class ConversationResourceTest {
     @Test
     public void testGivenMetadataAndItemsWhenCreateThenPersistsAndRetrieveWorks() {
         String id = given()
+            .header("Host", LOCAL)
             .contentType(ContentType.JSON)
             .body("""
                     {
@@ -65,6 +117,7 @@ public class ConversationResourceTest {
                 .extract().path("id");
 
         given()
+            .header("Host", LOCAL)
             .when().get("/api/v1/conversations/" + id)
             .then()
                 .statusCode(200)
@@ -73,6 +126,7 @@ public class ConversationResourceTest {
                 .body("metadata.topic", equalTo("demo"));
 
         given()
+            .header("Host", LOCAL)
             .when().get("/api/v1/conversations/" + id + "/items")
             .then()
                 .statusCode(200)
@@ -84,6 +138,7 @@ public class ConversationResourceTest {
     @Test
     public void testGivenExistingConversationWhenUpdateThenMetadataReplaced() {
         String id = given()
+            .header("Host", LOCAL)
             .contentType(ContentType.JSON)
             .body("{\"metadata\":{\"topic\":\"old\"}}")
             .when().post("/api/v1/conversations")
@@ -92,6 +147,7 @@ public class ConversationResourceTest {
                 .extract().path("id");
 
         given()
+            .header("Host", LOCAL)
             .contentType(ContentType.JSON)
             .body("{\"metadata\":{\"topic\":\"project-x\"}}")
             .when().post("/api/v1/conversations/" + id)
@@ -105,6 +161,7 @@ public class ConversationResourceTest {
     @Test
     public void testGivenExistingConversationWhenDeleteThenReturnsDeletedResource() {
         String id = given()
+            .header("Host", LOCAL)
             .contentType(ContentType.JSON)
             .body("{}")
             .when().post("/api/v1/conversations")
@@ -113,6 +170,7 @@ public class ConversationResourceTest {
                 .extract().path("id");
 
         given()
+            .header("Host", LOCAL)
             .when().delete("/api/v1/conversations/" + id)
             .then()
                 .statusCode(200)
@@ -121,6 +179,7 @@ public class ConversationResourceTest {
                 .body("object", equalTo("conversation.deleted"));
 
         given()
+            .header("Host", LOCAL)
             .when().get("/api/v1/conversations/" + id)
             .then()
                 .statusCode(404);

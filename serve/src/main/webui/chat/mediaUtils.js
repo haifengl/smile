@@ -291,3 +291,56 @@ export function partsFromAssistantText(text) {
   }
   return parts
 }
+
+function parseItemDate(item) {
+  const raw = item.created_at ?? item.createdAt
+  if (raw == null) return new Date()
+  if (typeof raw === 'number') return new Date(raw * 1000)
+  return new Date(raw)
+}
+
+/**
+ * Maps persisted conversation items to UI messages.
+ *
+ * @param {Array<object>} items
+ * @param {object} userPersona
+ * @param {object} botPersona
+ * @returns {Array<object>}
+ */
+export function itemsToUiMessages(items, userPersona, botPersona) {
+  const messages = []
+  for (const item of items ?? []) {
+    const createdAt = parseItemDate(item)
+    if (item.role === 'user') {
+      messages.push({
+        user: userPersona,
+        parts: [{ type: 'text', text: item.content ?? '' }],
+        createdAt,
+      })
+    } else if (item.role === 'assistant') {
+      let parts = partsFromAssistantText(item.content ?? '')
+      let toolCalls
+      const raw = item.content ?? ''
+      if (raw.startsWith('{') || raw.startsWith('[')) {
+        try {
+          const parsed = JSON.parse(raw)
+          if (parsed?.tool_calls?.length) {
+            toolCalls = parsed.tool_calls
+            if (parsed.content) {
+              parts = partsFromAssistantText(parsed.content)
+            }
+          }
+        } catch {
+          /* plain text */
+        }
+      }
+      messages.push({
+        user: botPersona,
+        parts,
+        toolCalls,
+        createdAt,
+      })
+    }
+  }
+  return messages
+}
