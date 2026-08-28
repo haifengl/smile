@@ -81,8 +81,12 @@ public class AuthResource {
         }
         String origin = origin(requestContext);
         String state = googleOAuth.newState();
-        NewCookie stateCookie = new NewCookie(
-                AuthFilter.OAUTH_STATE_COOKIE, state, "/", null, null, 600, false, true);
+        NewCookie stateCookie = new NewCookie.Builder(AuthFilter.OAUTH_STATE_COOKIE)
+                .value(state)
+                .path("/")
+                .maxAge(600)
+                .httpOnly(true)
+                .build();
         return Response.temporaryRedirect(googleOAuth.authorizationRedirect(origin, state))
                 .cookie(stateCookie)
                 .build();
@@ -123,8 +127,12 @@ public class AuthResource {
             userService.mergeGuestConversations(user.id,
                     ClientIdentity.resolveClientIp(routingContext, null));
             AuthFilter.queueSession(requestContext, user.id);
-            NewCookie cleared = new NewCookie(
-                    AuthFilter.OAUTH_STATE_COOKIE, "", "/", null, null, 0, false, true);
+            NewCookie cleared = new NewCookie.Builder(AuthFilter.OAUTH_STATE_COOKIE)
+                    .value("")
+                    .path("/")
+                    .maxAge(0)
+                    .httpOnly(true)
+                    .build();
             return Response.temporaryRedirect(URI.create("/chat"))
                     .cookie(cleared)
                     .build();
