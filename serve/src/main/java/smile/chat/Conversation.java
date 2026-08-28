@@ -25,6 +25,7 @@ import jakarta.ws.rs.core.HttpHeaders;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import io.vertx.ext.web.RoutingContext;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 /**
  * JPA entity representing a single chat session. Each conversation groups
@@ -46,6 +47,21 @@ public class Conversation extends PanacheEntityBase {
 
     @Column(name = "user_agent", length = 512)
     public String userAgent;
+
+    /** Owner when logged in; {@code null} for guest (IP-scoped) conversations. */
+    @Column(name = "user_id")
+    public Long userId;
+
+    /** Display title for sidebar (auto-set from first user message). */
+    @Column(length = 256)
+    public String title;
+
+    @Column(nullable = false)
+    public boolean pinned = false;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    public Instant updatedAt;
 
     @ElementCollection
     @CollectionTable(

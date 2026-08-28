@@ -23,8 +23,8 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
-        chat: resolve(__dirname, 'chat/index.html'),
+        main: resolve(import.meta.dirname, 'index.html'),
+        chat: resolve(import.meta.dirname, 'chat/index.html'),
       }
     }
   },

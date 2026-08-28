@@ -7,7 +7,7 @@
  * (at your option) any later version.
  *
  * SMILE Serve is distributed in the hope that it will be useful,
- * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
@@ -25,6 +25,7 @@ import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.PATCH;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
@@ -33,12 +34,12 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
-import io.quarkus.panache.common.Page;
-import io.quarkus.panache.common.Sort;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.vertx.ext.web.RoutingContext;
+import smile.chat.blob.ClientIdentity;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
+import smile.auth.AuthContext;
 
 /**
  * REST resource for conversations at {@code /api/v1/conversations}.
@@ -62,19 +63,31 @@ public class ConversationResource {
     @Inject
     MediaService mediaService;
 
+    @Inject
+    AuthContext authContext;
+
+    @Inject
+    ConversationService conversationService;
+
+    private String clientIp(HttpHeaders headers) {
+        return ClientIdentity.resolveClientIp(routingContext, headers);
+    }
+
     /**
-     * Lists conversations in reverse chronological order (smile extension).
+     * Lists the authenticated user's conversations (smile extension).
      *
      * @param pageIndex zero-based page index (default {@code 0}).
      * @param pageSize  number of records per page (default {@code 25}).
-     * @return a page of OpenAI-shaped conversation objects.
+     * @param q         optional search query (title + message content).
+     * @param pinned    when {@code true}, only pinned conversations.
+     * @return a page of conversation objects.
      */
     @GET
     public List<ConversationObject> list(@QueryParam("pageIndex") @DefaultValue("0") int pageIndex,
-                                         @QueryParam("pageSize") @DefaultValue("25") int pageSize) {
-        return Conversation.findAll(Sort.by("createdAt").descending())
-                .page(Page.of(pageIndex, pageSize))
-                .<Conversation>list()
+                                         @QueryParam("pageSize") @DefaultValue("25") int pageSize,
+                                         @QueryParam("q") String q,
+                                         @QueryParam("pinned") Boolean pinned) {
+        return conversationService.listForUser(pageIndex, pageSize, q, pinned)
                 .stream()
                 .map(ConversationObject::from)
                 .toList();
@@ -84,12 +97,16 @@ public class ConversationResource {
      * Retrieves a conversation ({@code GET /conversations/{conversation_id}}).
      *
      * @param conversationId external conversation id.
+     * @param requestContext request context for IP check.
      * @return the conversation object.
      */
     @GET
     @Path("/{conversation_id}")
-    public ConversationObject get(@PathParam("conversation_id") String conversationId) {
-        return ConversationObject.from(ConversationIds.findRequired(conversationId));
+    public ConversationObject get(@PathParam("conversation_id") String conversationId,
+                                  @Context HttpHeaders headers) {
+        Conversation conversation = ConversationIds.findRequired(conversationId);
+        conversationService.ensureAccess(conversation, clientIp(headers));
+        return ConversationObject.from(conversation);
     }
 
     /**
@@ -112,6 +129,9 @@ public class ConversationResource {
 
         Conversation conversation = new Conversation();
         conversation.setContext(routingContext, headers);
+        if (authContext.isLoggedIn()) {
+            conversation.userId = authContext.userId();
+        }
         if (request.metadata != null) {
             conversation.metadata = new HashMap<>(request.metadata);
         }
@@ -130,14 +150,17 @@ public class ConversationResource {
      *
      * @param conversationId external conversation id.
      * @param request        body containing replacement {@code metadata}.
+     * @param requestContext request context.
      * @return the updated conversation object.
      */
     @POST
     @Path("/{conversation_id}")
     @Transactional
     public ConversationObject update(@PathParam("conversation_id") String conversationId,
-                                     UpdateConversationRequest request) {
+                                     UpdateConversationRequest request,
+                                     @Context HttpHeaders headers) {
         Conversation conversation = ConversationIds.findRequired(conversationId);
+        conversationService.ensureAccess(conversation, clientIp(headers));
         if (request != null && request.metadata != null) {
             ConversationIds.validateMetadata(request.metadata);
             conversation.metadata = new HashMap<>(request.metadata);
@@ -146,19 +169,53 @@ public class ConversationResource {
     }
 
     /**
+     * Patches smile sidebar fields (title, pinned).
+     *
+     * @param conversationId external id.
+     * @param request        patch body.
+     * @param requestContext request context.
+     * @return updated conversation.
+     */
+    @PATCH
+    @Path("/{conversation_id}")
+    @Transactional
+    public ConversationObject patch(@PathParam("conversation_id") String conversationId,
+                                      PatchConversationRequest request,
+                                      @Context HttpHeaders headers) {
+        Conversation conversation = ConversationIds.findRequired(conversationId);
+        conversationService.ensureAccess(conversation, clientIp(headers));
+        if (authContext.userId() == null
+                || !authContext.userId().equals(conversation.userId)) {
+            throw new jakarta.ws.rs.ForbiddenException("Only owned conversations can be patched");
+        }
+        if (request != null) {
+            if (request.title != null) {
+                String title = request.title.trim();
+                conversation.title = title.isEmpty()
+                        ? "New chat"
+                        : (title.length() > 256 ? title.substring(0, 256) : title);
+            }
+            if (request.pinned != null) {
+                conversation.pinned = request.pinned;
+            }
+        }
+        return ConversationObject.from(conversation);
+    }
+
+    /**
      * Deletes a conversation ({@code DELETE /conversations/{conversation_id}}).
      *
-     * <p>Matching {@link ConversationItem} rows are removed as well so the
-     * local database stays consistent (OpenAI keeps remote items; smile does not).
-     *
      * @param conversationId external conversation id.
+     * @param requestContext request context.
      * @return OpenAI-compatible deleted resource acknowledgement.
      */
     @DELETE
     @Path("/{conversation_id}")
     @Transactional
-    public ConversationDeleted delete(@PathParam("conversation_id") String conversationId) {
+    public ConversationDeleted delete(@PathParam("conversation_id") String conversationId,
+                                      @Context HttpHeaders headers) {
         Conversation conversation = ConversationIds.findRequired(conversationId);
+        conversationService.ensureAccess(conversation, clientIp(headers));
         String externalId = ConversationIds.toExternalId(conversation.id);
         mediaService.deleteConversationMedia(conversation.id);
         ConversationItem.delete("conversationId", conversation.id);
@@ -167,16 +224,13 @@ public class ConversationResource {
     }
 
     /**
-     * Uploads a multimedia attachment for a conversation
-     * ({@code POST /conversations/{conversation_id}/content}).
-     *
-     * <p>Bytes are stored in blob storage; the response URL should be referenced
-     * from chat completion {@code image_url} / {@code video_url} parts.
+     * Uploads a multimedia attachment for a conversation.
      *
      * @param conversationId external conversation id.
-     * @param headers        HTTP headers (client IP hashing).
+     * @param headers        HTTP headers.
      * @param file           multipart file field named {@code file}.
      * @param role           optional role ({@code user} default).
+     * @param requestContext request context.
      * @return content metadata including {@code url}.
      */
     @POST
@@ -188,32 +242,33 @@ public class ConversationResource {
                                        @RestForm("file") FileUpload file,
                                        @RestForm("role") String role) {
         Conversation conversation = ConversationIds.findRequired(conversationId);
+        conversationService.ensureAccess(conversation, clientIp(headers));
         return mediaService.upload(conversation, file, role, routingContext, headers);
     }
 
     /**
-     * Returns message turns for a conversation (smile extension; not the OpenAI
-     * items API).
+     * Returns message turns for a conversation.
      *
      * @param conversationId external conversation id.
      * @param pageIndex      zero-based page index (default {@code 0}).
-     * @param pageSize       number of items per page (default {@code 25}).
-     * @return a page of conversation items in chronological order.
+     * @param pageSize       number of items per page (default {@code 100}).
+     * @param requestContext request context.
+     * @return conversation items in chronological order.
      */
     @GET
     @Path("/{conversation_id}/items")
     public List<ConversationItem> getItems(@PathParam("conversation_id") String conversationId,
                                            @QueryParam("pageIndex") @DefaultValue("0") int pageIndex,
-                                           @QueryParam("pageSize") @DefaultValue("25") int pageSize) {
+                                           @QueryParam("pageSize") @DefaultValue("100") int pageSize,
+                                           @Context HttpHeaders headers) {
         Conversation conversation = ConversationIds.findRequired(conversationId);
-        return ConversationItem.find("conversationId", Sort.by("createdAt"), conversation.id)
-                .page(Page.of(pageIndex, pageSize))
+        conversationService.ensureAccess(conversation, clientIp(headers));
+        return ConversationItem.find("conversationId", io.quarkus.panache.common.Sort.by("createdAt"),
+                        conversation.id)
+                .page(io.quarkus.panache.common.Page.of(pageIndex, pageSize))
                 .list();
     }
 
-    /**
-     * Persists a create-time input item when it has a role and extractable text.
-     */
     private static void persistInputItem(long conversationId, ConversationItemInput item) {
         if (item == null || item.role == null || item.role.isBlank()) {
             return;

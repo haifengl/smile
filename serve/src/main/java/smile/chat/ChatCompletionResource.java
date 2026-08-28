@@ -45,6 +45,8 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
 import smile.llm.Role;
+import smile.auth.AuthContext;
+import smile.chat.blob.ClientIdentity;
 
 /**
  * REST resource exposing the OpenAI-compatible chat completion API at
@@ -77,6 +79,12 @@ public class ChatCompletionResource {
     @Inject
     MediaService mediaService;
 
+    @Inject
+    AuthContext authContext;
+
+    @Inject
+    ConversationService conversationService;
+
     /**
      * Non-streaming chat completion ({@code stream: false} or omitted).
      *
@@ -97,7 +105,7 @@ public class ChatCompletionResource {
 
         ChatCompletion completion = service.complete(request, null);
         if (completion != null) {
-            saveConversation(conversation, request, completion);
+            saveConversation(conversation, headers, request, completion);
         }
         return ChatCompletionObject.of(id, created, modelName, completion);
     }
@@ -238,7 +246,7 @@ public class ChatCompletionResource {
                     var completion = handle.future().join();
                     resultFuture.complete(completion);
                     if (completion != null) {
-                        saveConversation(conversation, request, completion);
+                        saveConversation(conversation, headers, request, completion);
                     }
                     if (!publisher.isClosed()) {
                         publisher.close();
@@ -282,6 +290,9 @@ public class ChatCompletionResource {
     private Conversation newConversation(HttpHeaders headers) {
         Conversation conversation = new Conversation();
         conversation.setContext(routingContext, headers);
+        if (authContext.isLoggedIn()) {
+            conversation.userId = authContext.userId();
+        }
         return conversation;
     }
 
@@ -297,22 +308,34 @@ public class ChatCompletionResource {
      * @param completion   the generated completion returned by the model.
      */
     @Transactional
-    public void saveConversation(Conversation conversation,
+    public void saveConversation(Conversation scratch,
+                                  HttpHeaders headers,
                                   CompletionRequest request,
                                   ChatCompletion completion) {
         Long conversationId = ConversationIds.parseOptional(request.conversation);
-        if (conversationId == null) {
-            conversation.persist();
+        Conversation conversation;
+        String clientIp = ClientIdentity.resolveClientIp(routingContext, headers);
+        if (conversationId != null) {
+            conversation = Conversation.findById(conversationId);
+            if (conversation == null) {
+                throw new NotFoundException("Conversation not found: " + request.conversation);
+            }
+            conversationService.ensureAccess(conversation, clientIp);
+        } else {
+            scratch.persist();
+            conversation = scratch;
             conversationId = conversation.id;
         }
 
+        String userMessageText = null;
         for (int i = request.messages.length; i-- > 0;) {
             var message = request.messages[i];
             if (message.role() == Role.user) {
+                userMessageText = MessageContentCodec.toStoredContent(message);
                 ConversationItem item = new ConversationItem();
                 item.conversationId = conversationId;
                 item.role = message.role().toString();
-                item.content = MessageContentCodec.toStoredContent(message);
+                item.content = userMessageText;
                 item.persist();
                 mediaService.linkToMessage(
                         conversationId, item.id, MessageContentCodec.mediaContentIds(message));
@@ -334,6 +357,10 @@ public class ChatCompletionResource {
                 item.content = completion.content() != null ? completion.content() : "";
             }
             item.persist();
+        }
+
+        if (userMessageText != null) {
+            conversationService.touchAfterMessage(conversation, userMessageText);
         }
     }
 

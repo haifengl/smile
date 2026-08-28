@@ -57,7 +57,7 @@ public final class ClientIdentity {
      */
     public static String resolveClientIp(RoutingContext routingContext, HttpHeaders headers) {
         String clientIP = routingContext.request().remoteAddress().hostAddress();
-        String forwardedFor = headers.getHeaderString("X-Forwarded-For");
+        String forwardedFor = headers != null ? headers.getHeaderString("X-Forwarded-For") : null;
         if (forwardedFor != null && !forwardedFor.isBlank()) {
             clientIP = forwardedFor.split(",")[0].trim();
         }

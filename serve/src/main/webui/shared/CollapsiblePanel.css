@@ -1,0 +1,102 @@
+.collapsible-panel {
+  position: relative;
+  display: flex;
+  flex-shrink: 0;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  transition: width 0.2s ease, flex-basis 0.2s ease;
+  box-sizing: border-box;
+}
+
+.collapsible-panel--left {
+  flex-direction: row;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.collapsible-panel--right {
+  flex-direction: row-reverse;
+  border-left: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.collapsible-panel__toggle {
+  flex-shrink: 0;
+  width: 28px;
+  min-width: 28px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: rgba(0, 0, 0, 0.12);
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-self: stretch;
+  z-index: 2;
+}
+
+.collapsible-panel--left .collapsible-panel__toggle {
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.collapsible-panel--right .collapsible-panel__toggle {
+  border-right: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.collapsible-panel__toggle:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.collapsible-panel--right .collapsible-panel__toggle:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.collapsible-panel__chevron {
+  font-size: 18px;
+  line-height: 1;
+  user-select: none;
+}
+
+.collapsible-panel__body {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  opacity: 1;
+  transition: opacity 0.15s ease;
+}
+
+.collapsible-panel--collapsed .collapsible-panel__body {
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.collapsible-panel__rail {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  padding-top: 40px;
+}
+
+.collapsible-panel__rail-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  white-space: nowrap;
+}
