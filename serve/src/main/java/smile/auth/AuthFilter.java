@@ -67,15 +67,13 @@ public class AuthFilter implements ContainerRequestFilter, ContainerResponseFilt
         Object pending = requestContext.getProperty(PENDING_SESSION_USER);
         if (pending instanceof Long userId) {
             String token = SessionToken.create(userId, config.sessionSecret(), config.sessionMaxAgeSeconds());
-            NewCookie cookie = new NewCookie(
-                    SessionToken.COOKIE_NAME,
-                    token,
-                    "/",
-                    null,
-                    null,
-                    config.sessionMaxAgeSeconds(),
-                    isSecureRequest(requestContext),
-                    true);
+            NewCookie cookie = new NewCookie.Builder(SessionToken.COOKIE_NAME)
+                    .value(token)
+                    .path("/")
+                    .maxAge(config.sessionMaxAgeSeconds())
+                    .secure(isSecureRequest(requestContext))
+                    .httpOnly(true)
+                    .build();
             responseContext.getHeaders().add(HttpHeaders.SET_COOKIE, cookie);
         }
     }
@@ -96,7 +94,12 @@ public class AuthFilter implements ContainerRequestFilter, ContainerResponseFilt
      * @param responseContext current response.
      */
     public static void clearSession(ContainerResponseContext responseContext) {
-        NewCookie cookie = new NewCookie(SessionToken.COOKIE_NAME, "", "/", null, null, 0, false, true);
+        NewCookie cookie = new NewCookie.Builder(SessionToken.COOKIE_NAME)
+                .value("")
+                .path("/")
+                .maxAge(0)
+                .httpOnly(true)
+                .build();
         responseContext.getHeaders().add(HttpHeaders.SET_COOKIE, cookie);
     }
 
