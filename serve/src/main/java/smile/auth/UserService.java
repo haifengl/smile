@@ -25,6 +25,9 @@ public class UserService {
     @Inject
     AuthConfig config;
 
+    @Inject
+    UserCache userCache;
+
     /**
      * Returns the bootstrap local {@code me} account, creating it when missing.
      *
@@ -34,6 +37,7 @@ public class UserService {
     public User findOrCreateMe() {
         User existing = User.findByExternalId(LOCAL_ME_EXTERNAL_ID);
         if (existing != null) {
+            userCache.register(existing);
             return existing;
         }
         User user = new User();
@@ -41,6 +45,7 @@ public class UserService {
         user.displayName = "Me";
         user.authProvider = AuthProviderKind.LOCAL;
         user.persist();
+        userCache.register(user);
         return user;
     }
 
@@ -74,6 +79,7 @@ public class UserService {
             user.email = email;
             user.avatarUrl = picture;
             user.persist();
+            userCache.register(user);
             return user;
         }
         if (email != null && !email.isBlank()) {
@@ -85,6 +91,7 @@ public class UserService {
         if (picture != null && !picture.isBlank()) {
             user.avatarUrl = picture;
         }
+        userCache.register(user);
         return user;
     }
 

@@ -37,10 +37,10 @@ public class AuthFilter implements ContainerRequestFilter, ContainerResponseFilt
     AuthContext authContext;
 
     @Inject
-    UserService userService;
+    AuthConfig config;
 
     @Inject
-    AuthConfig config;
+    UserCache userCache;
 
     @Inject
     RoutingContext routingContext;
@@ -51,9 +51,11 @@ public class AuthFilter implements ContainerRequestFilter, ContainerResponseFilt
         User user = resolveFromCookie(requestContext);
         boolean localMe = false;
         if (user == null && isLocalHost(requestContext) && config.localMeEnabled()) {
-            user = userService.findOrCreateMe();
-            localMe = true;
-            queueSession(requestContext, user.id);
+            user = userCache.localMe();
+            if (user != null) {
+                localMe = true;
+                queueSession(requestContext, user.id);
+            }
         }
         if (user != null) {
             authContext.setUser(user, localMe);
@@ -107,7 +109,7 @@ public class AuthFilter implements ContainerRequestFilter, ContainerResponseFilt
         if (userId == null) {
             return null;
         }
-        return userService.findById(userId);
+        return userCache.getById(userId);
     }
 
     private boolean isLocalHost(ContainerRequestContext requestContext) {
