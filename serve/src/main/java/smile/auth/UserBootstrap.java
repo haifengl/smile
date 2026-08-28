@@ -23,8 +23,11 @@ public class UserBootstrap {
     @Inject
     UserService userService;
 
+    @Inject
+    UserCache userCache;
+
     @Transactional
     void onStart(@Observes StartupEvent event) {
-        userService.findOrCreateMe();
+        userCache.register(userService.findOrCreateMe());
     }
 }
