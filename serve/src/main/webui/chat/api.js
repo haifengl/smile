@@ -23,9 +23,29 @@ export async function fetchAuthMe() {
   return parseJson(response)
 }
 
-/** Redirects the browser to Google OAuth. */
-export function loginWithGoogle() {
-  window.location.href = '/api/v1/auth/login/google'
+/** Session key used to restore the selected infer model after OAuth on {@code /}. */
+export const INFER_RESUME_MODEL_KEY = 'smile.infer.resumeModel'
+
+function defaultOAuthReturnTo() {
+  const path = window.location.pathname
+  if (path === '/chat' || path.startsWith('/chat/')) {
+    return '/chat/'
+  }
+  return '/'
+}
+
+/**
+ * Redirects the browser to Google OAuth.
+ *
+ * @param {{ returnTo?: string, inferModelId?: string }} [options]
+ */
+export function loginWithGoogle(options = {}) {
+  const returnTo = options.returnTo ?? defaultOAuthReturnTo()
+  if (options.inferModelId) {
+    sessionStorage.setItem(INFER_RESUME_MODEL_KEY, options.inferModelId)
+  }
+  const params = new URLSearchParams({ return_to: returnTo })
+  window.location.href = `/api/v1/auth/login/google?${params}`
 }
 
 /** @returns {Promise<void>} */

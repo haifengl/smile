@@ -21,6 +21,8 @@ export default function ChatNavSidebar({
   onSelectConversation,
   onConversationMutated,
   sidebarRefreshKey = 0,
+  embedded = false,
+  model,
 }) {
   const { user, loggedIn, loading: authLoading, loginWithGoogle, logout, refresh: refreshAuth } = useAuth()
   const { pinned, recent, loading, search, setSearch, refresh } = useConversations(loggedIn)
@@ -50,6 +52,14 @@ export default function ChatNavSidebar({
     await deleteConversation(conv.id)
     refresh(search)
     onConversationMutated?.(conv.id)
+  }
+
+  function handleLogin() {
+    if (embedded) {
+      loginWithGoogle({ returnTo: '/', inferModelId: model })
+      return
+    }
+    loginWithGoogle({ returnTo: '/chat/' })
   }
 
   return (
@@ -162,7 +172,7 @@ export default function ChatNavSidebar({
                   <p className="chat-nav__hint">
                     Sign in to browse history, pin chats, and manage settings.
                   </p>
-                  <button type="button" className="chat-nav__login" onClick={loginWithGoogle}>
+                  <button type="button" className="chat-nav__login" onClick={handleLogin}>
                     <GoogleIcon className="chat-nav__login-icon" />
                     Login with Google
                   </button>

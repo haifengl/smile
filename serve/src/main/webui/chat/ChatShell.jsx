@@ -102,6 +102,8 @@ function ChatShellInner({ model, title, embedded = false, tools }) {
           onSelectConversation={handleSelectConversation}
           onConversationMutated={handleMutated}
           sidebarRefreshKey={sidebarRefreshKey}
+          embedded={embedded}
+          model={model}
         />
       </CollapsiblePanel>
     </div>
