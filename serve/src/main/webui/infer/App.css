@@ -6,13 +6,19 @@
   overflow: hidden;
 }
 
-.infer-model-sidebar.collapsible-panel--left {
+.infer-model-sidebar.collapsible-panel-host--left {
   background: #1e1e2f;
   color: white;
 }
 
 .infer-model-sidebar .collapsible-panel__toggle {
-  color: rgba(255, 255, 255, 0.75);
+  background: #2a2a3d;
+  color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.infer-model-sidebar .collapsible-panel__toggle:hover {
+  background: #363650;
 }
 
 .sidebar {

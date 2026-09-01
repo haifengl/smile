@@ -18,7 +18,7 @@ import { useCollapsibleSidebar } from './useCollapsibleSidebar'
 import './CollapsiblePanel.css'
 
 /**
- * Collapsible sidebar panel with a persistent expand/collapse toggle.
+ * Collapsible sidebar panel with a compact toggle overlaid on the content boundary.
  *
  * @param {'left'|'right'} side which edge of the main content the panel sits on
  */
@@ -27,21 +27,20 @@ export default function CollapsiblePanel({
   storageKey,
   defaultExpanded = true,
   width = 280,
-  collapsedWidth = 44,
   className = '',
   ariaLabel,
   children,
 }) {
   const [expanded, toggle] = useCollapsibleSidebar(storageKey, defaultExpanded)
-  const panelWidth = expanded ? width : collapsedWidth
+  const panelWidth = expanded ? width : 0
   const toggleLabel = expanded ? `Collapse ${ariaLabel}` : `Expand ${ariaLabel}`
 
   return (
-    <aside
+    <div
       className={[
-        'collapsible-panel',
-        `collapsible-panel--${side}`,
-        expanded ? 'collapsible-panel--expanded' : 'collapsible-panel--collapsed',
+        'collapsible-panel-host',
+        `collapsible-panel-host--${side}`,
+        expanded ? 'collapsible-panel-host--expanded' : 'collapsible-panel-host--collapsed',
         className,
       ]
         .filter(Boolean)
@@ -49,6 +48,9 @@ export default function CollapsiblePanel({
       style={{ width: panelWidth, flexBasis: panelWidth }}
       aria-label={ariaLabel}
     >
+      <div className="collapsible-panel__body" aria-hidden={!expanded}>
+        {children}
+      </div>
       <button
         type="button"
         className="collapsible-panel__toggle"
@@ -61,14 +63,6 @@ export default function CollapsiblePanel({
           {side === 'left' ? (expanded ? '‹' : '›') : expanded ? '›' : '‹'}
         </span>
       </button>
-      <div className="collapsible-panel__body" aria-hidden={!expanded}>
-        {children}
-      </div>
-      {!expanded && (
-        <div className="collapsible-panel__rail" aria-hidden="true">
-          <span className="collapsible-panel__rail-label">{ariaLabel}</span>
-        </div>
-      )}
-    </aside>
+    </div>
   )
 }

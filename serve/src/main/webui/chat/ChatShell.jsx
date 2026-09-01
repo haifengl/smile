@@ -16,7 +16,6 @@ import './ChatShell.css'
 
 const NAV_STORAGE_KEY = 'smile.chat.nav.expanded'
 const NAV_WIDTH = 300
-const NAV_COLLAPSED_WIDTH = 44
 
 /**
  * Chat layout: main transcript + collapsible right nav with auth and history.
@@ -101,7 +100,6 @@ function ChatShellInner({ model, title, embedded = false, tools }) {
         storageKey={NAV_STORAGE_KEY}
         defaultExpanded={!embedded}
         width={NAV_WIDTH}
-        collapsedWidth={NAV_COLLAPSED_WIDTH}
         className="chat-shell__nav"
         ariaLabel="Chat navigation"
       >
