@@ -131,6 +131,10 @@
 }
 
 .chat-nav__login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   width: 100%;
   padding: 8px 12px;
   font-size: 14px;
@@ -138,6 +142,12 @@
   border: 1px solid rgba(0, 0, 0, 0.15);
   background: #fff;
   cursor: pointer;
+}
+
+.chat-nav__login-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
 }
 
 .chat-nav__heading {

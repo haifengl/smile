@@ -11,6 +11,7 @@ import { useAuth } from '../auth/AuthProvider'
 import { useConversations } from '../hooks/useConversations'
 import { deleteConversation, patchConversation } from '../api'
 import ConversationRow from './ConversationRow'
+import GoogleIcon from './GoogleIcon'
 import SettingsPanel from './SettingsPanel'
 import './ChatNavSidebar.css'
 
@@ -162,6 +163,7 @@ export default function ChatNavSidebar({
                     Sign in to browse history, pin chats, and manage settings.
                   </p>
                   <button type="button" className="chat-nav__login" onClick={loginWithGoogle}>
+                    <GoogleIcon className="chat-nav__login-icon" />
                     Login with Google
                   </button>
                 </>
