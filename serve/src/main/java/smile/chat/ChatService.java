@@ -44,6 +44,9 @@ import smile.llm.attention.FlashInferArtifacts;
 import smile.llm.checkpoint.SafeTensorsLoaderThreads;
 import smile.llm.model.llama.*;
 import smile.llm.model.qwen.Qwen;
+import smile.serve.model.LlmModelDetails;
+import smile.serve.model.ModelObject;
+import smile.serve.model.OpenAiModelContributor;
 import smile.util.HuggingFaceHub;
 
 /**
@@ -69,7 +72,7 @@ import smile.util.HuggingFaceHub;
  */
 @Startup
 @ApplicationScoped
-public class ChatService {
+public class ChatService implements OpenAiModelContributor {
     private static final Logger logger = Logger.getLogger(ChatService.class);
 
     /** The loaded LLM; {@code null} when the model failed to load. */
@@ -136,12 +139,12 @@ public class ChatService {
             Path localPath = Path.of(modelSpec);
             if (Files.isDirectory(localPath)) {
                 model = loadFromLocal(localPath, config, memFraction, kvDtype, pageSize);
-                ownedBy = ownerFromFamily(model.family());
+                ownedBy = ModelObject.ownedByFromFamily(model.family());
                 source = "local";
                 createdAt = Instant.now().getEpochSecond();
             } else if (looksLikeHuggingFaceRepoId(modelSpec)) {
                 model = loadFromHuggingFace(config, memFraction, kvDtype, pageSize);
-                ownedBy = ownerFromHuggingFaceId(modelSpec);
+                ownedBy = ModelObject.ownedByFromHuggingFaceId(modelSpec);
                 source = "huggingface";
                 createdAt = Instant.now().getEpochSecond();
             } else {
@@ -338,7 +341,8 @@ public class ChatService {
      *
      * @return a singleton list when a model is loaded; otherwise empty.
      */
-    public List<ModelObject> listModels() {
+    @Override
+    public List<ModelObject> listOpenAiModels() {
         return findOpenAiModel(modelId, false).map(List::of).orElseGet(List::of);
     }
 
@@ -349,6 +353,7 @@ public class ChatService {
      * @param detailed when {@code true}, include {@link LlmModelDetails}.
      * @return the model object when loaded and ids match; otherwise empty.
      */
+    @Override
     public Optional<ModelObject> findOpenAiModel(String id, boolean detailed) {
         if (model == null || id == null || id.isBlank()) {
             return Optional.empty();
@@ -369,37 +374,6 @@ public class ChatService {
      */
     public Optional<ModelObject> findOpenAiModel(String id) {
         return findOpenAiModel(id, false);
-    }
-
-    /**
-     * Derives {@code owned_by} from a Hugging Face repo id ({@code owner/name}).
-     *
-     * @param repoId the Hugging Face repository id.
-     * @return the owner segment, or the whole id when no slash is present.
-     */
-    static String ownerFromHuggingFaceId(String repoId) {
-        if (repoId == null || repoId.isBlank()) {
-            return ModelObject.UNKNOWN_OWNER;
-        }
-        String id = repoId.trim();
-        int slash = id.indexOf('/');
-        return slash > 0 ? id.substring(0, slash) : id;
-    }
-
-    /**
-     * Derives {@code owned_by} from {@link Llama#family()} for locally loaded
-     * checkpoints (first path segment, e.g. {@code meta} from {@code meta/llama3}).
-     *
-     * @param family the model family label.
-     * @return the first segment of the family string.
-     */
-    static String ownerFromFamily(String family) {
-        if (family == null || family.isBlank()) {
-            return ModelObject.UNKNOWN_OWNER;
-        }
-        String f = family.trim();
-        int slash = f.indexOf('/');
-        return slash > 0 ? f.substring(0, slash) : f;
     }
 
     /**

@@ -5,16 +5,8 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * SMILE Serve is distributed in the hope that it will be useful,
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.chat;
+package smile.serve.model;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -99,6 +91,36 @@ public record ModelObject(
         String owner = (ownedBy == null || ownedBy.isBlank()) ? UNKNOWN_OWNER : ownedBy;
         String k = (kind == null || kind.isBlank()) ? UNKNOWN_OWNER : kind.trim();
         return new ModelObject(id, created, "model", owner, null, k, smile, onnx, llm);
+    }
+
+    /**
+     * Derives {@code owned_by} from a Hugging Face repo id ({@code owner/name}).
+     *
+     * @param repoId the Hugging Face repository id.
+     * @return the owner segment, or the whole id when no slash is present.
+     */
+    public static String ownedByFromHuggingFaceId(String repoId) {
+        if (repoId == null || repoId.isBlank()) {
+            return UNKNOWN_OWNER;
+        }
+        String id = repoId.trim();
+        int slash = id.indexOf('/');
+        return slash > 0 ? id.substring(0, slash) : id;
+    }
+
+    /**
+     * Derives {@code owned_by} from a model family label (first path segment).
+     *
+     * @param family the model family label.
+     * @return the first segment of the family string.
+     */
+    public static String ownedByFromFamily(String family) {
+        if (family == null || family.isBlank()) {
+            return UNKNOWN_OWNER;
+        }
+        String f = family.trim();
+        int slash = f.indexOf('/');
+        return slash > 0 ? f.substring(0, slash) : f;
     }
 
     /**

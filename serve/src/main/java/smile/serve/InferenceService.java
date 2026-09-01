@@ -33,10 +33,11 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import org.jboss.logging.Logger;
-import smile.chat.ModelObject;
-import smile.chat.SmileModelDetails;
 import smile.io.Read;
 import smile.model.Model;
+import smile.serve.model.ModelObject;
+import smile.serve.model.OpenAiModelContributor;
+import smile.serve.model.SmileModelDetails;
 
 /**
  * Application-scoped service that loads and manages serialized SMILE
@@ -51,7 +52,7 @@ import smile.model.Model;
  */
 @Startup
 @ApplicationScoped
-public class InferenceService {
+public class InferenceService implements OpenAiModelContributor {
     private static final Logger logger = Logger.getLogger(InferenceService.class);
     /** Loaded models, keyed by {@code <id>-<version>}. Sorted for stable list order. */
     private final Map<String, InferenceModel> models = Collections.synchronizedSortedMap(new TreeMap<>());
@@ -105,10 +106,11 @@ public class InferenceService {
      * Returns OpenAI-shaped descriptors for every loaded SMILE {@code .sml} model.
      *
      * <p>{@code owned_by} comes from the model tag {@code author} or {@code owner}
-     * when present; otherwise {@link smile.chat.ModelObject#UNKNOWN_OWNER}.
+     * when present; otherwise {@link ModelObject#UNKNOWN_OWNER}.
      *
      * @return OpenAI model objects in id order.
      */
+    @Override
     public List<ModelObject> listOpenAiModels() {
         List<ModelObject> result = new ArrayList<>();
         for (InferenceModel model : models.values()) {
@@ -126,9 +128,10 @@ public class InferenceService {
      * Looks up a loaded SMILE model as an OpenAI {@link ModelObject}.
      *
      * @param id       the model id.
-     * @param detailed when {@code true}, include {@link smile.chat.SmileModelDetails}.
+     * @param detailed when {@code true}, include {@link SmileModelDetails}.
      * @return the model object when loaded; otherwise empty.
      */
+    @Override
     public Optional<ModelObject> findOpenAiModel(String id, boolean detailed) {
         if (id == null || id.isBlank()) {
             return Optional.empty();
