@@ -43,7 +43,7 @@ public final class Sampling {
      */
     public static int sampleGreedyTokenId(Tensor logits) {
         try (Tensor arg = logits.argmax(-1, false);
-             Tensor flat = arg.reshape(-1)) {
+             Tensor flat = arg.reshape(-1).contiguous()) {
             return (int) flat.longArray()[0];
         }
     }
