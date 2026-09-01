@@ -2,7 +2,14 @@ const fs = require("fs");
 const path = require("path");
 const dedent = require("./scripts/dedent.js");
 
+/** Re-enable playground Edit / Binder when in-browser Java execution is ready. */
+const PLAYGROUND_EDIT_ENABLED = false;
+const DEFAULT_BINDER_URL =
+  "https://mybinder.org/v2/gh/haifengl/smile/notebook?urlpath=lab%2Ftree%2Fshell%2Fsrc%2Funiversal%2Fnotebooks%2Findex.ipynb";
+
 module.exports = function (config) {
+  config.addGlobalData("playgroundEditEnabled", PLAYGROUND_EDIT_ENABLED);
+  config.addGlobalData("defaultBinderUrl", DEFAULT_BINDER_URL);
   config.addPassthroughCopy("./src/favicon.ico");
   config.addPassthroughCopy("./src/images");
   config.addPassthroughCopy("./src/gallery");
@@ -12,17 +19,18 @@ module.exports = function (config) {
 
   config.addPairedShortcode("codePlayground", function (content, lang = "java", binder) {
     const safeLang = (lang || "java").replace(/[^a-z0-9+-]/gi, "") || "java";
-    const binderUrl =
-      binder ||
-      "https://mybinder.org/v2/gh/haifengl/smile/notebook?urlpath=lab%2Ftree%2Fshell%2Fsrc%2Funiversal%2Fnotebooks%2Findex.ipynb";
+    const binderUrl = binder || DEFAULT_BINDER_URL;
     const label = safeLang.charAt(0).toUpperCase() + safeLang.slice(1);
+    const extraActions = PLAYGROUND_EDIT_ENABLED
+      ? `<button type="button" class="btn btn-ghost btn-sm playground-edit">Edit</button>
+    <a class="btn btn-primary btn-sm" href="${binderUrl}" target="_blank" rel="noopener">Open in Binder</a>`
+      : "";
     return `<div class="code-playground glass" data-lang="${safeLang}">
   <div class="playground-toolbar">
     <span class="lang-tab is-active">${label}</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    <button type="button" class="btn btn-ghost btn-sm playground-edit">Edit</button>
-    <a class="btn btn-primary btn-sm" href="${binderUrl}" target="_blank" rel="noopener">Open in Binder</a>
+    ${extraActions}
   </div>
   <pre class="playground-source language-${safeLang}"><code class="language-${safeLang}">${dedent(content)}</code></pre>
   <div class="playground-editor" hidden></div>

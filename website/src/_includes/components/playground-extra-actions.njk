@@ -1,0 +1,5 @@
+{# Toggle playgroundEditEnabled in .eleventy.js when in-browser Java is ready. #}
+{% if playgroundEditEnabled %}
+<button type="button" class="btn btn-ghost btn-sm playground-edit">Edit</button>
+<a class="btn btn-primary btn-sm" href="{{ binderUrl or defaultBinderUrl }}" target="_blank" rel="noopener">Open in Binder</a>
+{% endif %}
