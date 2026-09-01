@@ -89,18 +89,26 @@ public class AuthFilter implements ContainerRequestFilter, ContainerResponseFilt
     }
 
     /**
-     * Clears the session cookie on the response.
+     * Builds a cookie that clears the signed session.
      *
-     * @param responseContext current response.
+     * @return expired session cookie for {@link jakarta.ws.rs.core.Response#cookie(NewCookie)}.
      */
-    public static void clearSession(ContainerResponseContext responseContext) {
-        NewCookie cookie = new NewCookie.Builder(SessionToken.COOKIE_NAME)
+    public static NewCookie clearedSessionCookie() {
+        return new NewCookie.Builder(SessionToken.COOKIE_NAME)
                 .value("")
                 .path("/")
                 .maxAge(0)
                 .httpOnly(true)
                 .build();
-        responseContext.getHeaders().add(HttpHeaders.SET_COOKIE, cookie);
+    }
+
+    /**
+     * Clears the session cookie on the response.
+     *
+     * @param responseContext current response.
+     */
+    public static void clearSession(ContainerResponseContext responseContext) {
+        responseContext.getHeaders().add(HttpHeaders.SET_COOKIE, clearedSessionCookie());
     }
 
     private User resolveFromCookie(ContainerRequestContext requestContext) {

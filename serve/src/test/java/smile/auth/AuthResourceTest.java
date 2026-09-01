@@ -41,4 +41,15 @@ public class AuthResourceTest {
                 .statusCode(200)
                 .body("logged_in", equalTo(false));
     }
+
+    @Test
+    public void testGivenGoogleCallbackWithoutStateCookieWhenCallbackThenBadRequest() {
+        given()
+            .header("Host", "example.com")
+            .queryParam("code", "unused")
+            .queryParam("state", "unused")
+            .when().get("/api/v1/auth/callback/google")
+            .then()
+                .statusCode(503);
+    }
 }
