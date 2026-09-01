@@ -170,6 +170,17 @@ public class KvCachePool implements AutoCloseable {
     /** Lazily allocated FlashInfer workspace for this pool's device. */
     private smile.llm.attention.FlashInferWorkspace flashInferWorkspace;
 
+    /**
+     * Step-scoped FlashInfer CSR metadata built once per {@link #activateStep}
+     * forward pass. Borrowers must not close; cleared on the next
+     * {@link #activateStep} or {@link #clearStepFlashInferMetadata}.
+     */
+    private FlashInferKvMetadata stepFlashInferMeta;
+    /** Uniform cache length when {@link #stepFlashInferMeta} is uniform; else {@code -1}. */
+    private int stepFlashInferUniformLen = -1;
+    /** Per-row cache lengths when ragged; {@code null} when uniform. */
+    private int[] stepFlashInferLengths;
+
     /** Cumulative prompt tokens seen by {@link #bindWithPrefix} (full length). */
     private final AtomicLong prefixPromptTokens = new AtomicLong();
     /** Cumulative matched prefix tokens from {@link #bindWithPrefix}. */
@@ -800,6 +811,7 @@ public class KvCachePool implements AutoCloseable {
      * @param requestIds bound request ids from {@link #bindRequest}.
      */
     public void activateStep(int... requestIds) {
+        clearStepFlashInferMetadata();
         if (requestIds == null || requestIds.length == 0) {
             throw new IllegalArgumentException("requestIds must be non-empty");
         }
@@ -1109,6 +1121,78 @@ public class KvCachePool implements AutoCloseable {
      * @param length number of cached positions (inclusive of the current step).
      * @return CSR metadata; caller owns and must close.
      */
+    /**
+     * Releases step-scoped FlashInfer metadata (if any). Called automatically
+     * at the start of each {@link #activateStep}.
+     */
+    public void clearStepFlashInferMetadata() {
+        if (stepFlashInferMeta != null) {
+            stepFlashInferMeta.close();
+            stepFlashInferMeta = null;
+        }
+        stepFlashInferUniformLen = -1;
+        stepFlashInferLengths = null;
+    }
+
+    /**
+     * Returns shared FlashInfer metadata for a uniform cache length within the
+     * current step. Do not close the returned value.
+     *
+     * @param length number of cached positions (inclusive of the current step).
+     * @return CSR metadata reused for all attention layers in this step.
+     */
+    public FlashInferKvMetadata sharedFlashInferMetadata(int length) {
+        if (stepFlashInferMeta != null && stepFlashInferLengths == null
+                && stepFlashInferUniformLen == length) {
+            return stepFlashInferMeta;
+        }
+        clearStepFlashInferMetadata();
+        stepFlashInferMeta = buildFlashInferMetadata(length);
+        stepFlashInferUniformLen = length;
+        return stepFlashInferMeta;
+    }
+
+    /**
+     * Returns shared FlashInfer metadata for ragged per-row cache lengths within
+     * the current step. Do not close the returned value.
+     *
+     * @param lengths cached length per active request.
+     * @return CSR metadata reused for all attention layers in this step.
+     */
+    public FlashInferKvMetadata sharedFlashInferMetadata(int[] lengths) {
+        if (stepFlashInferMeta != null && stepFlashInferLengths != null
+                && Arrays.equals(stepFlashInferLengths, lengths)) {
+            return stepFlashInferMeta;
+        }
+        if (stepFlashInferMeta != null && stepFlashInferLengths == null && lengths.length > 0) {
+            boolean uniform = true;
+            for (int b = 1; b < lengths.length; b++) {
+                if (lengths[b] != lengths[0]) {
+                    uniform = false;
+                    break;
+                }
+            }
+            if (uniform && stepFlashInferUniformLen == lengths[0]) {
+                return stepFlashInferMeta;
+            }
+        }
+        clearStepFlashInferMetadata();
+        stepFlashInferMeta = buildFlashInferMetadata(lengths);
+        boolean uniform = true;
+        for (int b = 1; b < lengths.length; b++) {
+            if (lengths[b] != lengths[0]) {
+                uniform = false;
+                break;
+            }
+        }
+        if (uniform) {
+            stepFlashInferUniformLen = lengths[0];
+        } else {
+            stepFlashInferLengths = lengths.clone();
+        }
+        return stepFlashInferMeta;
+    }
+
     public FlashInferKvMetadata buildFlashInferMetadata(int length) {
         ensureBound();
         if (length < 0) {

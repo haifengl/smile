@@ -475,4 +475,26 @@ public class KvCachePoolTest {
             pool.unbindRequest(id2);
         }
     }
+
+    @Test
+    public void testGivenActivateStepWhenSharedFlashInferMetadataThenReusesSameInstance() {
+        try (var pool = new KvCachePool(1, 128, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            pool.setPrefixReuseEnabled(false);
+            int id1 = pool.bindRequest(new int[]{1, 2, 3, 4}, 32);
+            int id2 = pool.bindRequest(new int[]{5, 6, 7, 8}, 48);
+            pool.activateStep(id1, id2);
+
+            int[] cacheLens = {10, 25};
+            var first = pool.sharedFlashInferMetadata(cacheLens);
+            var second = pool.sharedFlashInferMetadata(cacheLens);
+            assertSame(first, second);
+
+            pool.activateStep(id1, id2);
+            var afterReactivate = pool.sharedFlashInferMetadata(cacheLens);
+            assertNotSame(first, afterReactivate);
+
+            pool.unbindRequest(id1);
+            pool.unbindRequest(id2);
+        }
+    }
 }

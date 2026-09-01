@@ -96,6 +96,10 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     private volatile boolean prefixReplayEnabled;
     /** Per-request mRoPE decode offset ({@code rope_delta}); cleared on finish/evict. */
     private final ConcurrentHashMap<Integer, Integer> ropeDeltaByRequest = new ConcurrentHashMap<>();
+    /** Reused device tensor for batched decode token ids {@code [B, 1]}. */
+    private Tensor decodeTokenBuffer;
+    private int decodeTokenBufferBatch = -1;
+    private Device decodeTokenBufferDevice;
 
     /**
      * Constructor.
@@ -176,6 +180,12 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     @Override
     public void close() {
+        if (decodeTokenBuffer != null) {
+            decodeTokenBuffer.close();
+            decodeTokenBuffer = null;
+            decodeTokenBufferBatch = -1;
+            decodeTokenBufferDevice = null;
+        }
         if (tpExecutor != null) {
             tpExecutor.shutdownNow();
         }
@@ -1896,6 +1906,45 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         return logits;
     }
 
+    /**
+     * Reuses a device {@code [B, 1]} long tensor for decode forwards, copying
+     * token ids in place instead of reallocating each step.
+     */
+    private Tensor borrowDecodeTokenTensor(long[] toks, Device device) {
+        int b = toks.length;
+        if (decodeTokenBuffer == null || decodeTokenBufferBatch != b
+                || !device.equals(decodeTokenBufferDevice)) {
+            if (decodeTokenBuffer != null) {
+                decodeTokenBuffer.close();
+            }
+            var opts = new Tensor.Options().device(device).dtype(ScalarType.Long);
+            decodeTokenBuffer = Tensor.zeros(opts, b, 1);
+            decodeTokenBufferBatch = b;
+            decodeTokenBufferDevice = device;
+        }
+        try (Tensor src = Tensor.of(toks).reshape(b, 1).to(device)) {
+            smile.torch.Native.copy_(decodeTokenBuffer, src);
+        }
+        return decodeTokenBuffer;
+    }
+
+    /** Last-row logits {@code [B, V]} without an extra vocab-sized copy. */
+    private static Tensor logitsRowFromDecodeOutput(Tensor[] logits, int batch) {
+        Tensor logits0 = logits[0];
+        for (int i = 1; i < logits.length; i++) {
+            if (logits[i] != null) {
+                logits[i].close();
+            }
+        }
+        try (var last = Index.of(-1);
+             Tensor selected = logits0.get(Index.Colon, last)) {
+            Tensor row = selected.reshape(batch, -1);
+            row.promoteToParent();
+            logits0.promoteToParent();
+            return row;
+        }
+    }
+
     @Override
     public Tensor decodeStep(int[] requestIds, int[] lastTokens, int[] positions) {
         if (requestIds == null || lastTokens == null || positions == null) {
@@ -1933,27 +1982,15 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 Tensor.push(scope);
                 try {
                     for (int r = 0; r < models.length; r++) {
-                        tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
+                        tokenShards[r] = borrowDecodeTokenTensor(toks, models[r].device());
                     }
                     Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
-                    for (Tensor t : tokenShards) {
-                        t.close();
-                    }
                     for (QwenModel m : models) {
                         if (m.deltaNetStatePool() != null) {
                             m.deltaNetStatePool().scatterActive();
                         }
                     }
-                    try (var last = Index.of(-1);
-                         Tensor selected = logits[0].get(Index.Colon, last);
-                         Tensor row = selected.reshape(b, -1)) {
-                        Tensor out = row.copy();
-                        out.promoteToParent();
-                        for (Tensor l : logits) {
-                            l.close();
-                        }
-                        return out;
-                    }
+                    return logitsRowFromDecodeOutput(logits, b);
                 } finally {
                     Tensor.pop();
                 }
@@ -1988,27 +2025,15 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             Tensor.push(scope);
             try {
                 for (int r = 0; r < models.length; r++) {
-                    tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
+                    tokenShards[r] = borrowDecodeTokenTensor(toks, models[r].device());
                 }
                 Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
-                for (Tensor t : tokenShards) {
-                    t.close();
-                }
                 for (QwenModel m : models) {
                     if (m.deltaNetStatePool() != null) {
                         m.deltaNetStatePool().scatterActive();
                     }
                 }
-                try (var last = Index.of(-1);
-                     Tensor selected = logits[0].get(Index.Colon, last);
-                     Tensor row = selected.reshape(b, -1)) {
-                    Tensor out = row.copy();
-                    out.promoteToParent();
-                    for (Tensor l : logits) {
-                        l.close();
-                    }
-                    return out;
-                }
+                return logitsRowFromDecodeOutput(logits, b);
             } finally {
                 Tensor.pop();
             }
