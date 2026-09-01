@@ -306,14 +306,13 @@ public class GatedAttention implements Attention {
             Tensor qT = qRope.transpose(1, 2);
             Tensor attn;
             if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
-                try (FlashInferKvMetadata meta = cachePool.buildFlashInferMetadata(cacheLen)) {
-                    var ctx = AttentionContext.paged(
-                            scale, false,
-                            numHeads, numKvHeads, headDim,
-                            kvLayerId, startPos, seqlen, cacheLen,
-                            cachePool, meta, cachePool.flashInferWorkspace());
-                    attn = AttentionBackends.kernel().forward(qT, null, null, mask, ctx);
-                }
+                FlashInferKvMetadata meta = cachePool.sharedFlashInferMetadata(cacheLen);
+                var ctx = AttentionContext.paged(
+                        scale, false,
+                        numHeads, numKvHeads, headDim,
+                        kvLayerId, startPos, seqlen, cacheLen,
+                        cachePool, meta, cachePool.flashInferWorkspace());
+                attn = AttentionBackends.kernel().forward(qT, null, null, mask, ctx);
             } else {
                 var cached = cachePool.get(kvLayerId, cacheLen);
                 Tensor keys = cached._1();
@@ -402,20 +401,19 @@ public class GatedAttention implements Attention {
             Tensor qT = qRope.transpose(1, 2);
             Tensor attn;
             if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
-                try (FlashInferKvMetadata meta = cachePool.buildFlashInferMetadata(cacheLens)) {
-                    var ctx = uniform
-                            ? AttentionContext.paged(
-                                    scale, false,
-                                    numHeads, numKvHeads, headDim,
-                                    kvLayerId, positions[0], seqlen, cacheLens[0],
-                                    cachePool, meta, cachePool.flashInferWorkspace())
-                            : AttentionContext.pagedRagged(
-                                    scale, false,
-                                    numHeads, numKvHeads, headDim,
-                                    kvLayerId, seqlen, positions, cacheLens,
-                                    cachePool, meta, cachePool.flashInferWorkspace());
-                    attn = AttentionBackends.kernel().forward(qT, null, null, null, ctx);
-                }
+                FlashInferKvMetadata meta = cachePool.sharedFlashInferMetadata(cacheLens);
+                var ctx = uniform
+                        ? AttentionContext.paged(
+                                scale, false,
+                                numHeads, numKvHeads, headDim,
+                                kvLayerId, positions[0], seqlen, cacheLens[0],
+                                cachePool, meta, cachePool.flashInferWorkspace())
+                        : AttentionContext.pagedRagged(
+                                scale, false,
+                                numHeads, numKvHeads, headDim,
+                                kvLayerId, seqlen, positions, cacheLens,
+                                cachePool, meta, cachePool.flashInferWorkspace());
+                attn = AttentionBackends.kernel().forward(qT, null, null, null, ctx);
             } else {
                 if (!uniform) {
                     throw new IllegalStateException(

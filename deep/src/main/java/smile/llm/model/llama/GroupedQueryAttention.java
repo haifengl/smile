@@ -248,21 +248,19 @@ public class GroupedQueryAttention implements Attention {
             Tensor qT = qRope.transpose(1, 2);
             Tensor attn;
             if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
-                FlashInferKvMetadata meta = cachePool.buildFlashInferMetadata(cacheLens);
-                try (meta) {
-                    var ctx = uniform
-                            ? AttentionContext.paged(
-                                    0.0, false,
-                                    numLocalHeads, numLocalKvHeads, headDim,
-                                    layerId, positions[0], seqlen, cacheLens[0],
-                                    cachePool, meta, cachePool.flashInferWorkspace())
-                            : AttentionContext.pagedRagged(
-                                    0.0, false,
-                                    numLocalHeads, numLocalKvHeads, headDim,
-                                    layerId, seqlen, positions, cacheLens,
-                                    cachePool, meta, cachePool.flashInferWorkspace());
-                    attn = AttentionBackends.kernel().forward(qT, null, null, mask, ctx);
-                }
+                FlashInferKvMetadata meta = cachePool.sharedFlashInferMetadata(cacheLens);
+                var ctx = uniform
+                        ? AttentionContext.paged(
+                                0.0, false,
+                                numLocalHeads, numLocalKvHeads, headDim,
+                                layerId, positions[0], seqlen, cacheLens[0],
+                                cachePool, meta, cachePool.flashInferWorkspace())
+                        : AttentionContext.pagedRagged(
+                                0.0, false,
+                                numLocalHeads, numLocalKvHeads, headDim,
+                                layerId, seqlen, positions, cacheLens,
+                                cachePool, meta, cachePool.flashInferWorkspace());
+                attn = AttentionBackends.kernel().forward(qT, null, null, mask, ctx);
             } else {
                 if (!uniform) {
                     throw new IllegalStateException(

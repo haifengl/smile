@@ -252,7 +252,9 @@ public final class InferenceEngine implements AutoCloseable {
                     // in-flight request finishes.
                     continue;
                 }
-                runPrefills();
+                if (anyPrefilling()) {
+                    runPrefills();
+                }
                 runDecodeStep();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -582,8 +584,15 @@ public final class InferenceEngine implements AutoCloseable {
                 b, minPos, maxPos, active.size(), prefills, queuedCount.get(), kvFreeSlots());
         long t0 = System.nanoTime();
         try (Tensor logits = executor.decodeStep(ids, toks, positions)) {
-            decodeMsTotal.addAndGet((System.nanoTime() - t0) / 1_000_000L);
+            long decodeMs = (System.nanoTime() - t0) / 1_000_000L;
+            decodeMsTotal.addAndGet(decodeMs);
             decodeBatchSamples.incrementAndGet();
+            if (decodeMs > 0) {
+                infoRateLimited("decode-latency",
+                        "Decode step: batch={} ms={} msPerTok={} tokPerSec={}",
+                        b, decodeMs, String.format("%.2f", decodeMs / (double) b),
+                        String.format("%.1f", b * 1000.0 / decodeMs));
+            }
             for (int i = 0; i < b; i++) {
                 Active a = decoding.get(i);
                 if (a.phase != Phase.DECODING) {
@@ -618,30 +627,44 @@ public final class InferenceEngine implements AutoCloseable {
         maybeEmptyDeviceCache();
     }
 
+    private boolean anyPrefilling() {
+        for (Active a : active) {
+            if (a.phase == Phase.PREFILL && !a.handle.isAborted()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void sampleAndAppend(Active a, Tensor logitsRow) {
         if (a.seed != 0 && a.completion.isEmpty()) {
             smile.torch.smile_torch_h.smile_manual_seed(a.seed);
         }
-        try (Tensor next = Sampling.sampleNext(logitsRow, a.temperature, a.topp);
-             Tensor cpu = next.to(smile.deep.tensor.Device.CPU())) {
-            int token = (int) cpu.longArray()[0];
-            boolean stop = isStop(token);
-            if (stop) {
-                // Do not stream or keep stop specials (e.g. <|im_end|>) in completion text.
-                finishActive(a, FinishReason.stop);
-                return;
+        int token;
+        if (a.temperature <= 0) {
+            token = Sampling.sampleGreedyTokenId(logitsRow);
+        } else {
+            try (Tensor next = Sampling.sampleNext(logitsRow, a.temperature, a.topp);
+                 Tensor cpu = next.to(smile.deep.tensor.Device.CPU())) {
+                token = (int) cpu.longArray()[0];
             }
-            a.completion.add(token);
-            a.lastToken = token;
-            if (a.listener != null) {
-                a.listener.onGeneratedTokens(1);
-            }
-            a.streamer.accept(token);
-            a.streamer.maybeEmit(a.listener, false);
-            if (a.completion.size() >= a.maxGenLen
-                    || a.promptLen + a.completion.size() >= a.totalCapacity) {
-                finishActive(a, FinishReason.length);
-            }
+        }
+        boolean stop = isStop(token);
+        if (stop) {
+            // Do not stream or keep stop specials (e.g. <|im_end|>) in completion text.
+            finishActive(a, FinishReason.stop);
+            return;
+        }
+        a.completion.add(token);
+        a.lastToken = token;
+        if (a.listener != null) {
+            a.listener.onGeneratedTokens(1);
+        }
+        a.streamer.accept(token);
+        a.streamer.maybeEmit(a.listener, false);
+        if (a.completion.size() >= a.maxGenLen
+                || a.promptLen + a.completion.size() >= a.totalCapacity) {
+            finishActive(a, FinishReason.length);
         }
     }
 

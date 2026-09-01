@@ -35,6 +35,19 @@ public final class Sampling {
      * @param topp        nucleus threshold when {@code temperature > 0}.
      * @return owned token ids shaped {@code [batch]} (caller must close).
      */
+    /**
+     * Greedy argmax on device; synchronizes a single scalar to the host.
+     *
+     * @param logits last-step logits {@code [batch, vocab]} (or {@code [1, vocab]}).
+     * @return sampled token id for batch row 0.
+     */
+    public static int sampleGreedyTokenId(Tensor logits) {
+        try (Tensor arg = logits.argmax(-1, false);
+             Tensor flat = arg.reshape(-1)) {
+            return (int) flat.longArray()[0];
+        }
+    }
+
     public static Tensor sampleNext(Tensor logits, double temperature, double topp) {
         if (temperature > 0) {
             try (var scaled = logits.div(temperature);
