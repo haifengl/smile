@@ -1928,20 +1928,19 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         return decodeTokenBuffer;
     }
 
-    /** Last-row logits {@code [B, V]} without an extra vocab-sized copy. */
+    /** Last-row logits {@code [B, V]}; copies so the result outlives closed views. */
     private static Tensor logitsRowFromDecodeOutput(Tensor[] logits, int batch) {
-        Tensor logits0 = logits[0];
-        for (int i = 1; i < logits.length; i++) {
-            if (logits[i] != null) {
-                logits[i].close();
-            }
-        }
         try (var last = Index.of(-1);
-             Tensor selected = logits0.get(Index.Colon, last)) {
-            Tensor row = selected.reshape(batch, -1);
-            row.promoteToParent();
-            logits0.promoteToParent();
-            return row;
+             Tensor selected = logits[0].get(Index.Colon, last);
+             Tensor row = selected.reshape(batch, -1)) {
+            Tensor out = row.copy();
+            out.promoteToParent();
+            for (Tensor l : logits) {
+                if (l != null) {
+                    l.close();
+                }
+            }
+            return out;
         }
     }
 
