@@ -96,10 +96,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     private volatile boolean prefixReplayEnabled;
     /** Per-request mRoPE decode offset ({@code rope_delta}); cleared on finish/evict. */
     private final ConcurrentHashMap<Integer, Integer> ropeDeltaByRequest = new ConcurrentHashMap<>();
-    /** Reused device tensor for batched decode token ids {@code [B, 1]}. */
-    private Tensor decodeTokenBuffer;
+    /** Per-TP-rank reused device tensors for decode token ids {@code [B, 1]}. */
+    private Tensor[] decodeTokenBuffers;
     private int decodeTokenBufferBatch = -1;
-    private Device decodeTokenBufferDevice;
 
     /**
      * Constructor.
@@ -180,12 +179,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     @Override
     public void close() {
-        if (decodeTokenBuffer != null) {
-            decodeTokenBuffer.close();
-            decodeTokenBuffer = null;
-            decodeTokenBufferBatch = -1;
-            decodeTokenBufferDevice = null;
-        }
+        closeDecodeTokenBuffers();
         if (tpExecutor != null) {
             tpExecutor.shutdownNow();
         }
@@ -1906,26 +1900,41 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         return logits;
     }
 
-    /**
-     * Reuses a device {@code [B, 1]} long tensor for decode forwards, copying
-     * token ids in place instead of reallocating each step.
-     */
-    private Tensor borrowDecodeTokenTensor(long[] toks, Device device) {
-        int b = toks.length;
-        if (decodeTokenBuffer == null || decodeTokenBufferBatch != b
-                || !device.equals(decodeTokenBufferDevice)) {
-            if (decodeTokenBuffer != null) {
-                decodeTokenBuffer.close();
+    private void closeDecodeTokenBuffers() {
+        if (decodeTokenBuffers != null) {
+            for (Tensor buf : decodeTokenBuffers) {
+                if (buf != null) {
+                    buf.close();
+                }
             }
-            var opts = new Tensor.Options().device(device).dtype(ScalarType.Int64);
-            decodeTokenBuffer = Tensor.zeros(opts, b, 1);
+            decodeTokenBuffers = null;
+        }
+        decodeTokenBufferBatch = -1;
+    }
+
+    /**
+     * Reuses a per-rank device {@code [B, 1]} long tensor for decode forwards.
+     * Each TP rank gets its own buffer on its device (a single shared buffer
+     * would leave every rank pointing at the last device).
+     */
+    private Tensor borrowDecodeTokenTensor(long[] toks, int rank, Device device) {
+        int b = toks.length;
+        if (decodeTokenBuffers == null || decodeTokenBuffers.length != models.length
+                || decodeTokenBufferBatch != b) {
+            closeDecodeTokenBuffers();
+            decodeTokenBuffers = new Tensor[models.length];
             decodeTokenBufferBatch = b;
-            decodeTokenBufferDevice = device;
+        }
+        Tensor buf = decodeTokenBuffers[rank];
+        if (buf == null) {
+            var opts = new Tensor.Options().device(device).dtype(ScalarType.Int64);
+            buf = Tensor.zeros(opts, b, 1);
+            decodeTokenBuffers[rank] = buf;
         }
         try (Tensor src = Tensor.of(toks).reshape(b, 1).to(device)) {
-            smile.torch.Native.copy_(decodeTokenBuffer, src);
+            smile.torch.Native.copy_(buf, src);
         }
-        return decodeTokenBuffer;
+        return buf;
     }
 
     /** Last-row logits {@code [B, V]}; copies so the result outlives closed views. */
@@ -1981,7 +1990,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 Tensor.push(scope);
                 try {
                     for (int r = 0; r < models.length; r++) {
-                        tokenShards[r] = borrowDecodeTokenTensor(toks, models[r].device());
+                        tokenShards[r] = borrowDecodeTokenTensor(toks, r, models[r].device());
                     }
                     Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
                     for (QwenModel m : models) {
@@ -2024,7 +2033,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             Tensor.push(scope);
             try {
                 for (int r = 0; r < models.length; r++) {
-                    tokenShards[r] = borrowDecodeTokenTensor(toks, models[r].device());
+                    tokenShards[r] = borrowDecodeTokenTensor(toks, r, models[r].device());
                 }
                 Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
                 for (QwenModel m : models) {
