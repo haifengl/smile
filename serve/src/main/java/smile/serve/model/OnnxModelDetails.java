@@ -5,16 +5,8 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * SMILE Serve is distributed in the hope that it will be useful,
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.chat;
+package smile.serve.model;
 
 import java.util.List;
 import java.util.Map;
@@ -26,18 +18,6 @@ import smile.serve.OnnxModelInfo;
 
 /**
  * ONNX graph details returned by {@code GET /models/{id}}.
- *
- * @param producerName     tool/framework that produced the model.
- * @param domain           model domain (e.g. {@code ai.onnx}).
- * @param graphName        main graph name.
- * @param graphDescription graph description from the file.
- * @param description      model description from the file.
- * @param version          embedded model version integer.
- * @param inputs           input node descriptors.
- * @param outputs          output node descriptors.
- * @param customMetadata   user-defined string pairs from the ONNX file.
- *
- * @author Haifeng Li
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)

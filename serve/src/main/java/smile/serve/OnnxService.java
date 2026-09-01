@@ -33,10 +33,11 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
 import org.jboss.logging.Logger;
-import smile.chat.ModelObject;
-import smile.chat.OnnxModelDetails;
 import smile.onnx.InferenceSession;
 import smile.io.Paths;
+import smile.serve.model.ModelObject;
+import smile.serve.model.OnnxModelDetails;
+import smile.serve.model.OpenAiModelContributor;
 
 /**
  * Application-scoped service that discovers, loads, and manages ONNX models
@@ -53,7 +54,7 @@ import smile.io.Paths;
  */
 @Startup
 @ApplicationScoped
-public class OnnxService {
+public class OnnxService implements OpenAiModelContributor {
     private static final Logger logger = Logger.getLogger(OnnxService.class);
     /** Loaded models, keyed by model ID. Sorted for stable list order. */
     private final Map<String, OnnxModel> models = Collections.synchronizedSortedMap(new TreeMap<>());
@@ -111,10 +112,11 @@ public class OnnxService {
      * Returns OpenAI-shaped descriptors for every loaded ONNX model.
      *
      * <p>{@code owned_by} uses ONNX custom metadata {@code author}/{@code owner}
-     * when present; otherwise {@link smile.chat.ModelObject#UNKNOWN_OWNER}.
+     * when present; otherwise {@link ModelObject#UNKNOWN_OWNER}.
      *
      * @return OpenAI model objects in id order.
      */
+    @Override
     public List<ModelObject> listOpenAiModels() {
         List<ModelObject> result = new ArrayList<>();
         for (OnnxModel model : models.values()) {
@@ -131,9 +133,10 @@ public class OnnxService {
      * Looks up a loaded ONNX model as an OpenAI {@link ModelObject}.
      *
      * @param id       the model id.
-     * @param detailed when {@code true}, include {@link smile.chat.OnnxModelDetails}.
+     * @param detailed when {@code true}, include {@link OnnxModelDetails}.
      * @return the model object when loaded; otherwise empty.
      */
+    @Override
     public Optional<ModelObject> findOpenAiModel(String id, boolean detailed) {
         if (id == null || id.isBlank()) {
             return Optional.empty();

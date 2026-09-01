@@ -5,16 +5,8 @@
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
- * SMILE Serve is distributed in the hope that it will be useful,
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.chat;
+package smile.serve.model;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,15 +24,6 @@ import smile.validation.RegressionMetrics;
 
 /**
  * SMILE {@code .sml} details returned by {@code GET /models/{id}}.
- *
- * @param formula    model formula string, or {@code null}.
- * @param schema     input feature schema.
- * @param tags       model tags as a string map.
- * @param train      training metrics (finite values only), or {@code null}.
- * @param validation cross-validation metrics, or {@code null}.
- * @param test       held-out test metrics, or {@code null}.
- *
- * @author Haifeng Li
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)

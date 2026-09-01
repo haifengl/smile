@@ -23,7 +23,7 @@ import java.util.Map;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.BadRequestException;
-import smile.chat.OnnxModelDetails;
+import smile.serve.model.OnnxModelDetails;
 import smile.onnx.ElementType;
 import smile.onnx.InferenceSession;
 import smile.onnx.NodeInfo;
