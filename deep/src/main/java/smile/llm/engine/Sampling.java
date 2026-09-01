@@ -35,7 +35,7 @@ public final class Sampling {
      */
     public static int sampleGreedyTokenId(Tensor logits) {
         try (Tensor arg = logits.argmax(-1, false)) {
-            if (arg.ndim() == 0) {
+            if (arg.dim() == 0) {
                 return (int) arg.getLong();
             }
             return (int) arg.getLong(0);
