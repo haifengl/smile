@@ -323,6 +323,7 @@ public class ChatCompletionResource {
             conversationService.ensureAccess(conversation, clientIp);
         } else {
             scratch.persist();
+            ConversationService.ensureDefaultTitle(scratch);
             conversation = scratch;
             conversationId = conversation.id;
         }

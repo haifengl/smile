@@ -43,7 +43,8 @@ public record ConversationObject(
         String title,
         Boolean pinned,
         Map<String, String> metadata,
-        @JsonProperty("object") String object) {
+        @JsonProperty("object") String object,
+        Long messageCount) {
 
     /**
      * Maps a persisted entity to the OpenAI response shape.
@@ -52,6 +53,17 @@ public record ConversationObject(
      * @return the API object.
      */
     public static ConversationObject from(Conversation conversation) {
+        return from(conversation, null);
+    }
+
+    /**
+     * Maps a persisted entity to the OpenAI response shape with optional message count.
+     *
+     * @param conversation  the JPA entity.
+     * @param messageCount  number of stored turns, or {@code null} when omitted.
+     * @return the API object.
+     */
+    public static ConversationObject from(Conversation conversation, Long messageCount) {
         Map<String, String> metadata = conversation.metadata == null
                 ? Map.of()
                 : Map.copyOf(conversation.metadata);
@@ -60,7 +72,7 @@ public record ConversationObject(
                 : conversation.createdAt.getEpochSecond();
         String title = conversation.title != null && !conversation.title.isBlank()
                 ? conversation.title
-                : "New chat";
+                : ConversationService.defaultTitle(conversation.createdAt);
         return new ConversationObject(
                 ConversationIds.toExternalId(conversation.id),
                 conversation.createdAt.getEpochSecond(),
@@ -68,6 +80,7 @@ public record ConversationObject(
                 title,
                 conversation.pinned,
                 metadata,
-                "conversation");
+                "conversation",
+                messageCount);
     }
 }

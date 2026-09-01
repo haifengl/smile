@@ -15,8 +15,24 @@
 }
 
 .chat-nav__account {
-  padding: 8px 0 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.chat-nav__avatar-btn {
+  display: flex;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.chat-nav__avatar-btn:hover .chat-nav__avatar,
+.chat-nav__avatar-btn:focus-visible .chat-nav__avatar {
+  outline: 2px solid #2fa4e7;
+  outline-offset: 2px;
 }
 
 .chat-nav__user {
@@ -153,23 +169,6 @@
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.chat-nav__settings {
-  width: 100%;
-  padding: 8px 12px;
-  font-size: 14px;
-  text-align: left;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  color: inherit;
-}
-
-.chat-nav__settings:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
 }
 
 @media (prefers-color-scheme: dark) {

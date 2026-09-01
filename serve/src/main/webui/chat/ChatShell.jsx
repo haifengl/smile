@@ -30,6 +30,7 @@ const NAV_COLLAPSED_WIDTH = 44
 function ChatShellInner({ model, title, embedded = false, tools }) {
   const [conversationId, setConversationId] = useState(null)
   const [chatEpoch, setChatEpoch] = useState(0)
+  const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0)
   const [ready, setReady] = useState(false)
 
   const startNewChat = useCallback(async () => {
@@ -58,6 +59,7 @@ function ChatShellInner({ model, title, embedded = false, tools }) {
 
   const handleMutated = useCallback(
     (deletedId) => {
+      setSidebarRefreshKey((key) => key + 1)
       if (deletedId && deletedId === conversationId) {
         startNewChat()
       }
@@ -99,6 +101,7 @@ function ChatShellInner({ model, title, embedded = false, tools }) {
           onNewChat={startNewChat}
           onSelectConversation={handleSelectConversation}
           onConversationMutated={handleMutated}
+          sidebarRefreshKey={sidebarRefreshKey}
         />
       </CollapsiblePanel>
     </div>
