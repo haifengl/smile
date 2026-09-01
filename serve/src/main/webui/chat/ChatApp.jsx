@@ -178,9 +178,11 @@ export default function ChatApp({
         }
       })
       .catch((err) => {
-        console.error('Failed to load history', err)
         if (!cancelled) {
           setMessages([{ ...welcomeMessage, createdAt: new Date() }])
+        }
+        if (err?.message && !/not found/i.test(err.message)) {
+          console.error('Failed to load history', err)
         }
       })
       .finally(() => {
@@ -190,7 +192,14 @@ export default function ChatApp({
     return () => {
       cancelled = true
     }
-  }, [conversationId, userPersona, welcomeMessage])
+    // History is tied to the conversation id only; user profile changes must not refetch.
+  }, [conversationId, welcomeMessage])
+
+  useEffect(() => {
+    setMessages((prev) =>
+      prev.map((m) => (m.user?.id === 'user' ? { ...m, user: userPersona } : m)),
+    )
+  }, [userPersona])
 
   const sendMessage = useCallback(
     async ({ text, attachments }) => {
