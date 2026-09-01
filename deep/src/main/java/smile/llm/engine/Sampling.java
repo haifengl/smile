@@ -27,6 +27,22 @@ public final class Sampling {
     private Sampling() {}
 
     /**
+     * Greedy argmax on device; synchronizes a single scalar to the host via
+     * {@link Tensor#getLong(long...)} (works on views; avoids a full-vocab D2H).
+     *
+     * @param logits last-step logits {@code [batch, vocab]} (or {@code [1, vocab]}).
+     * @return sampled token id for batch row 0.
+     */
+    public static int sampleGreedyTokenId(Tensor logits) {
+        try (Tensor arg = logits.argmax(-1, false)) {
+            if (arg.ndim() == 0) {
+                return (int) arg.getLong();
+            }
+            return (int) arg.getLong(0);
+        }
+    }
+
+    /**
      * Samples the next token from last-position logits {@code [batch, vocab]}
      * (or {@code [batch, 1, vocab]} squeezed by the caller).
      *
@@ -35,19 +51,6 @@ public final class Sampling {
      * @param topp        nucleus threshold when {@code temperature > 0}.
      * @return owned token ids shaped {@code [batch]} (caller must close).
      */
-    /**
-     * Greedy argmax on device; synchronizes a single scalar to the host.
-     *
-     * @param logits last-step logits {@code [batch, vocab]} (or {@code [1, vocab]}).
-     * @return sampled token id for batch row 0.
-     */
-    public static int sampleGreedyTokenId(Tensor logits) {
-        try (Tensor arg = logits.argmax(-1, false);
-             Tensor flat = arg.reshape(-1).contiguous()) {
-            return (int) flat.longArray()[0];
-        }
-    }
-
     public static Tensor sampleNext(Tensor logits, double temperature, double topp) {
         if (temperature > 0) {
             try (var scaled = logits.div(temperature);
