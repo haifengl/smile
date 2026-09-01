@@ -81,41 +81,17 @@ title: Smile - Data Processing
         Columns in a DataFrame may have different data types. There are concrete subclasses of ValueVector
         for each primitive data type and generic object types. Creating a ValueVector by passing a list of values.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_0" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_0" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_0" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_0">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> import java.time._
-           import smile.data._
-           import smile.data.vector._
-
-    smile> ValueVector.of("A", 1.0, 2.0, 3.0)
-    $val res0: smile.data.vector.DoubleVector = A[1, 2, 3]
-
-    smile> ValueVector.of("B", Instant.now())
-    val res1: smile.data.vector.ObjectVector[java.time.Instant] = B[2025-01-19T01:58:06.813727400Z]
-
-    smile> ValueVector.nominal("C", "test", "train", "test", "train")
-    val res2: smile.data.vector.ValueVector = C[test, train, test, train]
-
-    smile> ValueVector.of("D",
-               "this is a string vector",
-               "Nominal/ordinal vectors store data as integers internally")
-    val res3: smile.data.vector.StringVector = D[this is a string vector, Nominal/ordinal vectors store data as integers internally]
-
-    smile> ObjectVector.of("E", Index.range(0, 4).toArray(), Array(3, 3, 3, 3))
-    val res4: smile.data.vector.ObjectVector[Array[Int]] = E[[0, 1, 2, 3], [3, 3, 3, 3]]
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_0">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-1-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> import java.time.*
            import smile.data.*
            import smile.data.vector.*
@@ -137,11 +113,33 @@ title: Smile - Data Processing
     smile> ObjectVector.of("E", Index.range(0, 4).toArray(), new int[]{3, 3, 3, 3})
     $6 ==> E[[0, 1, 2, 3], [3, 3, 3, 3]]
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_0">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> import java.time._
+           import smile.data._
+           import smile.data.vector._
+
+    smile> ValueVector.of("A", 1.0, 2.0, 3.0)
+    $val res0: smile.data.vector.DoubleVector = A[1, 2, 3]
+
+    smile> ValueVector.of("B", Instant.now())
+    val res1: smile.data.vector.ObjectVector[java.time.Instant] = B[2025-01-19T01:58:06.813727400Z]
+
+    smile> ValueVector.nominal("C", "test", "train", "test", "train")
+    val res2: smile.data.vector.ValueVector = C[test, train, test, train]
+
+    smile> ValueVector.of("D",
+               "this is a string vector",
+               "Nominal/ordinal vectors store data as integers internally")
+    val res3: smile.data.vector.StringVector = D[this is a string vector, Nominal/ordinal vectors store data as integers internally]
+
+    smile> ObjectVector.of("E", Index.range(0, 4).toArray(), Array(3, 3, 3, 3))
+    val res4: smile.data.vector.ObjectVector[Array[Int]] = E[[0, 1, 2, 3], [3, 3, 3, 3]]
+    </code></pre>
+    </div>
+    <div id="pg-1-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> import java.time.*
         import smile.data.*
         import smile.data.vector.*
@@ -164,9 +162,9 @@ title: Smile - Data Processing
     >>> ObjectVector.of("E", Index.range(0, 4).toArray(), intArrayOf(3, 3, 3, 3))
     res8: smile.data.vector.ObjectVector&lt;kotlin.IntArray?&gt; = E[[0, 1, 2, 3], [3, 3, 3, 3]]
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Note that the <code>nominal</code> and <code>ordinal</code> methods
         factorize string values and store them as integral values internally,
@@ -182,13 +180,14 @@ title: Smile - Data Processing
         columns. The columns of the second DataFrame have different data types.
         The method <code>schema()</code> will describe the column names,
         data types, whether they can be null.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_0.1" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_0.1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> var df = DataFrame.of(MathEx.randn(6, 4))
     df ==>
     +---+---------+---------+---------+---------+
@@ -225,18 +224,18 @@ title: Smile - Data Processing
       E: int[]
     }
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>We can create a DataFrame with a collection of records or beans.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_0.2" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_0.2">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> enum Gender {Male, Female}
            record Person(String name, Gender gender, String state, LocalDate birthday, int age, Double salary) { }
            List&lt;Person&gt; persons = new ArrayList<>();
@@ -255,19 +254,19 @@ title: Smile - Data Processing
     |  3| Amy|Female|   NY|2005-12-10| 13|  null|
     +---+----+------+-----+----------+---+------+
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>In above example, the column 'state' is of string type. Apparently, it is a categorical variable.
         We can factorize such string columns to categorical values:</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_0.3" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_0.3">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> var df2 = df.factorize("state");
     df2 ==>
     +---+----+------+-----+----------+---+------+
@@ -284,48 +283,25 @@ title: Smile - Data Processing
     smile> df2.get(0, 2)
     $27 ==> 2
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
     <p>On the surface, everything seems same. But the column 'state' is actually converted
     to integral values under the hood.</p>
 
     <p>Smile provides many parsers for popular data formats. In fact, the output of most Smile
         data parsers is a DataFrame.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_1" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val iris = read.arff("data/weka/iris.arff")
-    [main] INFO smile.io.Arff - Read ARFF relation iris
-    iris: DataFrame =
-    +---+-----------+----------+-----------+----------+-----------+
-    |   |sepallength|sepalwidth|petallength|petalwidth|      class|
-    +---+-----------+----------+-----------+----------+-----------+
-    |  0|        5.1|       3.5|        1.4|       0.2|Iris-setosa|
-    |  1|        4.9|         3|        1.4|       0.2|Iris-setosa|
-    |  2|        4.7|       3.2|        1.3|       0.2|Iris-setosa|
-    |  3|        4.6|       3.1|        1.5|       0.2|Iris-setosa|
-    |  4|          5|       3.6|        1.4|       0.2|Iris-setosa|
-    |  5|        5.4|       3.9|        1.7|       0.4|Iris-setosa|
-    |  6|        4.6|       3.4|        1.4|       0.3|Iris-setosa|
-    |  7|          5|       3.4|        1.5|       0.2|Iris-setosa|
-    |  8|        4.4|       2.9|        1.4|       0.2|Iris-setosa|
-    |  9|        4.9|       3.1|        1.5|       0.1|Iris-setosa|
-    +---+-----------+----------+-----------+----------+-----------+
-    140 more rows...
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-5-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> import smile.data.*
            import smile.datasets.*
            import smile.io.*
@@ -348,11 +324,31 @@ title: Smile - Data Processing
     +---+-----------+----------+-----------+----------+-----------+
     140 more rows...
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val iris = read.arff("data/weka/iris.arff")
+    [main] INFO smile.io.Arff - Read ARFF relation iris
+    iris: DataFrame =
+    +---+-----------+----------+-----------+----------+-----------+
+    |   |sepallength|sepalwidth|petallength|petalwidth|      class|
+    +---+-----------+----------+-----------+----------+-----------+
+    |  0|        5.1|       3.5|        1.4|       0.2|Iris-setosa|
+    |  1|        4.9|         3|        1.4|       0.2|Iris-setosa|
+    |  2|        4.7|       3.2|        1.3|       0.2|Iris-setosa|
+    |  3|        4.6|       3.1|        1.5|       0.2|Iris-setosa|
+    |  4|          5|       3.6|        1.4|       0.2|Iris-setosa|
+    |  5|        5.4|       3.9|        1.7|       0.4|Iris-setosa|
+    |  6|        4.6|       3.4|        1.4|       0.3|Iris-setosa|
+    |  7|          5|       3.4|        1.5|       0.2|Iris-setosa|
+    |  8|        4.4|       2.9|        1.4|       0.2|Iris-setosa|
+    |  9|        4.9|       3.1|        1.5|       0.1|Iris-setosa|
+    +---+-----------+----------+-----------+----------+-----------+
+    140 more rows...
+    </code></pre>
+    </div>
+    <div id="pg-5-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> import smile.*
         import smile.data.*
         import smile.io.*
@@ -376,18 +372,19 @@ title: Smile - Data Processing
     +---+-----------+----------+-----------+----------+-----------+
     140 more rows...
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The <code>smile.datasets</code> package also provide many public datasets.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1.1" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_1.1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
 
     smile> var iris = new Iris().data() // use built-in dataset object
     [main] INFO smile.io.Arff - Read ARFF relation iris
@@ -408,9 +405,8 @@ title: Smile - Data Processing
     +---+-----------+----------+-----------+----------+-----------+
     140 more rows...
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="DataFrame_Index">Indexing</h3>
     <p>We can set a row index to the data frames that must be of length the number
@@ -419,13 +415,14 @@ title: Smile - Data Processing
         rows efficiently with the <code>loc()</code> method. Compared with the normal
         ordinal index, the object-based row index often contains certain semantic
         meaning.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.1" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2.1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> var df = DataFrame.of(MathEx.randn(6, 4))
            var dates = Dates.range(LocalDate.of(2025,2,1), 6)
            df = df.setIndex(dates)
@@ -456,19 +453,19 @@ title: Smile - Data Processing
     |2025-02-03|  0.25248|-0.063054|-1.128157| 0.37634|
     +----------+---------+---------+---------+--------+
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The row index may be an existing column, which will be removed in the
         resulting data frame.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.2" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2.2">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> var df = new DataFrame(
                    ValueVector.of("A", 1.0),
                    ValueVector.of("B", LocalDate.parse("2013-01-02")),
@@ -484,22 +481,22 @@ title: Smile - Data Processing
     |2013-01-02|  1|foo|[0, 1, 2, 3]|[3, 3, 3, 3]|
     +----------+---+---+------------+------------+
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="DataFrame_Viewing">Viewing Data</h3>
     <p>By default, <code>DataFrame.toString()</code> returns a pretty print of
         top 10 rows. You may also use <code>DataFrame.head()</code> and
         <code>DataFrame.tail()</code> with a specified number to view the top
         and bottom rows of the frame respectively.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_0.4" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_0.4">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> println(df.head(3))
     +----------+---------+---------+---------+---------+
     |          |       V1|       V2|       V3|       V4|
@@ -519,18 +516,18 @@ title: Smile - Data Processing
     |2025-02-06| 1.091213|-0.190432| 1.963064|0.725228|
     +----------+---------+---------+---------+--------+
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The method <code>describe()</code> shows the data structure and statistic summary:</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_0.5" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_0.5">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> iris.describe()
     +---+-----------+-----+--------------------+-----+--------+--------+---+---+---+---+---+
     |   |     column| type|             measure|count|    mean|     std|min|25%|50%|75%|max|
@@ -542,52 +539,22 @@ title: Smile - Data Processing
     |  4|      class| byte|nominal[Iris-seto...|  150|     NaN|     NaN|  0|  0|  1|  2|  2|
     +---+-----------+-----+--------------------+-----+--------+--------+---+---+---+---+---+
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="DataFrame_Selection">Selection</h3>
     <p>We can get a row with the array syntax or slice a subset of rows.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_2" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_2">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> iris(0)
-    res5: Tuple = {
-      sepallength: 5.1,
-      sepalwidth: 3.5,
-      petallength: 1.4,
-      petalwidth: 0.2,
-      class: Iris-setosa
-    }
-
-    smile> iris(Index.range(10, 20))
-    res6: DataFrame =
-    +---+-----------+----------+-----------+----------+-----------+
-    |   |sepallength|sepalwidth|petallength|petalwidth|      class|
-    +---+-----------+----------+-----------+----------+-----------+
-    |  0|        5.4|       3.7|        1.5|       0.2|Iris-setosa|
-    |  1|        4.8|       3.4|        1.6|       0.2|Iris-setosa|
-    |  2|        4.8|         3|        1.4|       0.1|Iris-setosa|
-    |  3|        4.3|         3|        1.1|       0.1|Iris-setosa|
-    |  4|        5.8|         4|        1.2|       0.2|Iris-setosa|
-    |  5|        5.7|       4.4|        1.5|       0.4|Iris-setosa|
-    |  6|        5.4|       3.9|        1.3|       0.4|Iris-setosa|
-    |  7|        5.1|       3.5|        1.4|       0.3|Iris-setosa|
-    |  8|        5.7|       3.8|        1.7|       0.3|Iris-setosa|
-    |  9|        5.1|       3.8|        1.5|       0.3|Iris-setosa|
-    +---+-----------+----------+-----------+----------+-----------+
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-11-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-11-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> iris.get(0)
     $7 ==> {
       sepallength: 5.1,
@@ -614,11 +581,38 @@ title: Smile - Data Processing
     |  9|        5.1|       3.8|        1.5|       0.3|Iris-setosa|
     +---+-----------+----------+-----------+----------+-----------+
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_2">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-11-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> iris(0)
+    res5: Tuple = {
+      sepallength: 5.1,
+      sepalwidth: 3.5,
+      petallength: 1.4,
+      petalwidth: 0.2,
+      class: Iris-setosa
+    }
+
+    smile> iris(Index.range(10, 20))
+    res6: DataFrame =
+    +---+-----------+----------+-----------+----------+-----------+
+    |   |sepallength|sepalwidth|petallength|petalwidth|      class|
+    +---+-----------+----------+-----------+----------+-----------+
+    |  0|        5.4|       3.7|        1.5|       0.2|Iris-setosa|
+    |  1|        4.8|       3.4|        1.6|       0.2|Iris-setosa|
+    |  2|        4.8|         3|        1.4|       0.1|Iris-setosa|
+    |  3|        4.3|         3|        1.1|       0.1|Iris-setosa|
+    |  4|        5.8|         4|        1.2|       0.2|Iris-setosa|
+    |  5|        5.7|       4.4|        1.5|       0.4|Iris-setosa|
+    |  6|        5.4|       3.9|        1.3|       0.4|Iris-setosa|
+    |  7|        5.1|       3.5|        1.4|       0.3|Iris-setosa|
+    |  8|        5.7|       3.8|        1.7|       0.3|Iris-setosa|
+    |  9|        5.1|       3.8|        1.5|       0.3|Iris-setosa|
+    +---+-----------+----------+-----------+----------+-----------+
+    </code></pre>
+    </div>
+    <div id="pg-11-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> iris[0]
     res6: smile.data.Tuple! = {
       sepallength: 5.1,
@@ -646,45 +640,21 @@ title: Smile - Data Processing
     +---+-----------+----------+-----------+----------+-----------+
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Similarly, we can refer a column by its name or select a few columns to create a new data frame.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_3" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_3">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> iris("sepallength")
-    res6: vector.ValueVector = sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
-
-    smile> iris("sepallength", "sepalwidth")
-    res8: DataFrame =
-    +---+-----------+----------+
-    |   |sepallength|sepalwidth|
-    +---+-----------+----------+
-    |  0|        5.1|       3.5|
-    |  1|        4.9|         3|
-    |  2|        4.7|       3.2|
-    |  3|        4.6|       3.1|
-    |  4|          5|       3.6|
-    |  5|        5.4|       3.9|
-    |  6|        4.6|       3.4|
-    |  7|          5|       3.4|
-    |  8|        4.4|       2.9|
-    |  9|        4.9|       3.1|
-    +---+-----------+----------+
-    140 more rows...
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-12-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-12-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> iris.column("sepallength")
     $8 ==> sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
 
@@ -706,11 +676,33 @@ title: Smile - Data Processing
     +---+-----------+----------+
     140 more rows...
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_3">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-12-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> iris("sepallength")
+    res6: vector.ValueVector = sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
+
+    smile> iris("sepallength", "sepalwidth")
+    res8: DataFrame =
+    +---+-----------+----------+
+    |   |sepallength|sepalwidth|
+    +---+-----------+----------+
+    |  0|        5.1|       3.5|
+    |  1|        4.9|         3|
+    |  2|        4.7|       3.2|
+    |  3|        4.6|       3.1|
+    |  4|          5|       3.6|
+    |  5|        5.4|       3.9|
+    |  6|        4.6|       3.4|
+    |  7|          5|       3.4|
+    |  8|        4.4|       2.9|
+    |  9|        4.9|       3.1|
+    +---+-----------+----------+
+    140 more rows...
+    </code></pre>
+    </div>
+    <div id="pg-12-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> iris.column("sepallength")
     res7: smile.data.vector.ValueVecotr! = sepallength[5.1, 4.9, 4.7, 4.6, 5, 5.4, 4.6, 5, 4.4, 4.9, ..., 140 more]
 
@@ -733,18 +725,19 @@ title: Smile - Data Processing
     140 more rows...
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>We can also select rows with boolean indexing. The below example uses
         <code>isin()</code> method for filtering:</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.3" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2.3">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> iris.get(iris.column("class").isin("Iris-setosa", "Iris-virginica"))
     $10 ==>
     +---+-----------+----------+-----------+----------+-----------+
@@ -763,99 +756,98 @@ title: Smile - Data Processing
     +---+-----------+----------+-----------+----------+-----------+
     90 more rows...
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="DataFrame_Setting">Setting</h3>
     <p>Setting values by position:</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.4" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2.4">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> iris.set(0, 0, 1.5)
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Adding columns:</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.5" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2.5">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> var df = DataFrame.of(MathEx.randn(150, 3))
            iris.add(df.column("V1"), df.column("V3"))
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Setting a column:</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.6" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2.6">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> iris.set("V1", df.column("V3"))
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="DataFrame_Merge">Merge</h3>
     <p>The <code>merge()</code> method can combine data frames horizontally:</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.7" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2.7">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> var df3 = iris.merge(df)
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>To concatenate data frames vertically, use <code>concat()</code>:</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.8" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2.8">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> var iris2 = iris.concat(iris)
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>To join two data frames on their index:</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.9" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2.9">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     var dates = Dates.range(LocalDate.of(2025,2,1), 6);
     var df1 = DataFrame.of(MathEx.randn(6, 4)).setIndex(dates);
     var df2 = DataFrame.of(MathEx.randn(6, 4)).setIndex(dates);
     var df = df1.join(df2);
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="DataFrame_Missing">Missing Data</h3>
     <p>For object column, <code>null</code> indicates missing data. For primitive
@@ -865,13 +857,14 @@ title: Smile - Data Processing
         to check if a cell is null or NaN.</p>
 
     <p><code>DataFrame.dropna()</code> drops any rows that have null or missing value:</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.11" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2.11">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> var df = DataFrame.of(MathEx.randn(6, 4))
            df.set(0, 0, Double.NaN)
            df.set(1, 3, Double.NaN)
@@ -885,17 +878,17 @@ title: Smile - Data Processing
     |  3|  1.52529|-1.407597|  1.16758| -1.78291|
     +---+---------+---------+---------+---------+
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
     <p><code>DataFrame.fillna()</code> fills missing data in numeric columns:</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2.10" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2.10">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> df.fillna(100)
     +---+---------+---------+---------+---------+
     |   |       V1|       V2|       V3|       V4|
@@ -908,9 +901,8 @@ title: Smile - Data Processing
     |  5|  1.52529|-1.407597|  1.16758| -1.78291|
     +---+---------+---------+---------+---------+
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="DataFrame_Operations">Operations</h3>
     <p>Advanced operations such as <code>exists</code>, <code>forall</code>,
@@ -920,62 +912,17 @@ title: Smile - Data Processing
         and <code>filter</code>.
         The <code>predicate</code> of these functions expect a <code>Tuple</code></p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_4" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_4">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile&gt; iris.exists(_.getDouble(0) > 4.5)
-    res16: Boolean = true
-
-    smile&gt; iris.forall(_.getDouble(0) < 10)
-    res17: Boolean = true
-
-    smile&gt; iris.find(_("class") == 1)
-    res18: java.util.Optional[Tuple] = Optional[{
-      sepallength: 6.2,
-      sepalwidth: 2.9,
-      petallength: 4.3,
-      petalwidth: 1.3,
-      class: Iris-versicolor
-    }]
-
-    smile&gt; iris.find(_.getString("class").equals("Iris-versicolor"))
-    res19: java.util.Optional[Tuple] = Optional[{
-      sepallength: 6.2,
-      sepalwidth: 2.9,
-      petallength: 4.3,
-      petalwidth: 1.3,
-      class: Iris-versicolor
-    }]
-
-    smile&gt; iris.filter { row => row.getDouble(1) > 3 && row("class") != 0 }
-    res20: DataFrame =
-    +-----------+----------+-----------+----------+---------------+
-    |sepallength|sepalwidth|petallength|petalwidth|          class|
-    +-----------+----------+-----------+----------+---------------+
-    |          7|       3.2|        4.7|       1.4|Iris-versicolor|
-    |        6.4|       3.2|        4.5|       1.5|Iris-versicolor|
-    |        6.9|       3.1|        4.9|       1.5|Iris-versicolor|
-    |        6.3|       3.3|        4.7|       1.6|Iris-versicolor|
-    |        6.7|       3.1|        4.4|       1.4|Iris-versicolor|
-    |        5.9|       3.2|        4.8|       1.8|Iris-versicolor|
-    |          6|       3.4|        4.5|       1.6|Iris-versicolor|
-    |        6.7|       3.1|        4.7|       1.5|Iris-versicolor|
-    |        6.3|       3.3|          6|       2.5| Iris-virginica|
-    |        7.2|       3.6|        6.1|       2.5| Iris-virginica|
-    +-----------+----------+-----------+----------+---------------+
-    15 more rows...
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-22-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-22-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-22-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-22-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> iris.stream().anyMatch(row -> row.getDouble(0) > 4.5)
     $14 ==> true
 
@@ -1018,11 +965,54 @@ title: Smile - Data Processing
     +-----------+----------+-----------+----------+---------------+
     15 more rows...
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_4">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-22-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile&gt; iris.exists(_.getDouble(0) > 4.5)
+    res16: Boolean = true
+
+    smile&gt; iris.forall(_.getDouble(0) < 10)
+    res17: Boolean = true
+
+    smile&gt; iris.find(_("class") == 1)
+    res18: java.util.Optional[Tuple] = Optional[{
+      sepallength: 6.2,
+      sepalwidth: 2.9,
+      petallength: 4.3,
+      petalwidth: 1.3,
+      class: Iris-versicolor
+    }]
+
+    smile&gt; iris.find(_.getString("class").equals("Iris-versicolor"))
+    res19: java.util.Optional[Tuple] = Optional[{
+      sepallength: 6.2,
+      sepalwidth: 2.9,
+      petallength: 4.3,
+      petalwidth: 1.3,
+      class: Iris-versicolor
+    }]
+
+    smile&gt; iris.filter { row => row.getDouble(1) > 3 && row("class") != 0 }
+    res20: DataFrame =
+    +-----------+----------+-----------+----------+---------------+
+    |sepallength|sepalwidth|petallength|petalwidth|          class|
+    +-----------+----------+-----------+----------+---------------+
+    |          7|       3.2|        4.7|       1.4|Iris-versicolor|
+    |        6.4|       3.2|        4.5|       1.5|Iris-versicolor|
+    |        6.9|       3.1|        4.9|       1.5|Iris-versicolor|
+    |        6.3|       3.3|        4.7|       1.6|Iris-versicolor|
+    |        6.7|       3.1|        4.4|       1.4|Iris-versicolor|
+    |        5.9|       3.2|        4.8|       1.8|Iris-versicolor|
+    |          6|       3.4|        4.5|       1.6|Iris-versicolor|
+    |        6.7|       3.1|        4.7|       1.5|Iris-versicolor|
+    |        6.3|       3.3|          6|       2.5| Iris-virginica|
+    |        7.2|       3.6|        6.1|       2.5| Iris-virginica|
+    +-----------+----------+-----------+----------+---------------+
+    15 more rows...
+    </code></pre>
+    </div>
+    <div id="pg-22-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> iris.stream().anyMatch({row -> row.getDouble(0) > 4.5})
     res10: kotlin.Boolean = true
     >>> iris.stream().allMatch({row -> row.getDouble(0) < 10})
@@ -1062,60 +1052,23 @@ title: Smile - Data Processing
     15 more rows...
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>For data wrangling, the most important functions of <code>DataFrame</code>
         are <code>map</code> and <code>groupBy</code>.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_6" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_6">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile&gt; iris.map { row =>
-                    val x = new Array[Double](6)
-                    for (i <- 0 until 4) x(i) = row.getDouble(i)
-                    x(4) = x(0) * x(1)
-                    x(5) = x(2) * x(3)
-                    x
-                  }
-    res22: Iterable[Array[Double]] = ArrayBuffer(
-      Array(5.1, 3.5, 1.4, 0.2, 17.849999999999998, 0.27999999999999997),
-      Array(4.9, 3.0, 1.4, 0.2, 14.700000000000001, 0.27999999999999997),
-      Array(4.7, 3.2, 1.3, 0.2, 15.040000000000001, 0.26),
-      Array(4.6, 3.1, 1.5, 0.2, 14.26, 0.30000000000000004),
-      Array(5.0, 3.6, 1.4, 0.2, 18.0, 0.27999999999999997),
-      Array(5.4, 3.9, 1.7, 0.4, 21.060000000000002, 0.68),
-      Array(4.6, 3.4, 1.4, 0.3, 15.639999999999999, 0.42),
-      Array(5.0, 3.4, 1.5, 0.2, 17.0, 0.30000000000000004),
-      Array(4.4, 2.9, 1.4, 0.2, 12.76, 0.27999999999999997),
-      Array(4.9, 3.1, 1.5, 0.1, 15.190000000000001, 0.15000000000000002),
-      Array(5.4, 3.7, 1.5, 0.2, 19.980000000000004, 0.30000000000000004),
-      Array(4.8, 3.4, 1.6, 0.2, 16.32, 0.32000000000000006),
-      Array(4.8, 3.0, 1.4, 0.1, 14.399999999999999, 0.13999999999999999),
-      Array(4.3, 3.0, 1.1, 0.1, 12.899999999999999, 0.11000000000000001),
-      Array(5.8, 4.0, 1.2, 0.2, 23.2, 0.24),
-      Array(5.7, 4.4, 1.5, 0.4, 25.080000000000002, 0.6000000000000001),
-      Array(5.4, 3.9, 1.3, 0.4, 21.060000000000002, 0.52),
-      Array(5.1, 3.5, 1.4, 0.3, 17.849999999999998, 0.42),
-      Array(5.7, 3.8, 1.7, 0.3, 21.66, 0.51),
-      Array(5.1, 3.8, 1.5, 0.3, 19.38, 0.44999999999999996),
-      Array(5.4, 3.4, 1.7, 0.2, 18.36, 0.34),
-      Array(5.1, 3.7, 1.5, 0.4, 18.87, 0.6000000000000001),
-      Array(4.6, 3.6, 1.0, 0.2, 16.56, 0.2),
-      Array(5.1, 3.3, 1.7, 0.5, 16.83, 0.85),
-    ...
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-23-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-23-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-23-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-23-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var x6 = iris.stream().map(row -> {
                var x = new double[6];
                for (int i = 0; i < 4; i++) x[i] = row.getDouble(i);
@@ -1155,11 +1108,46 @@ title: Smile - Data Processing
     [5.599999904632568, 2.700000047683716, 4.199999809265137, 1.2999999523162842, 15.120000009536739, 5.45999955177308]
     ...
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_6">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-23-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile&gt; iris.map { row =>
+                    val x = new Array[Double](6)
+                    for (i <- 0 until 4) x(i) = row.getDouble(i)
+                    x(4) = x(0) * x(1)
+                    x(5) = x(2) * x(3)
+                    x
+                  }
+    res22: Iterable[Array[Double]] = ArrayBuffer(
+      Array(5.1, 3.5, 1.4, 0.2, 17.849999999999998, 0.27999999999999997),
+      Array(4.9, 3.0, 1.4, 0.2, 14.700000000000001, 0.27999999999999997),
+      Array(4.7, 3.2, 1.3, 0.2, 15.040000000000001, 0.26),
+      Array(4.6, 3.1, 1.5, 0.2, 14.26, 0.30000000000000004),
+      Array(5.0, 3.6, 1.4, 0.2, 18.0, 0.27999999999999997),
+      Array(5.4, 3.9, 1.7, 0.4, 21.060000000000002, 0.68),
+      Array(4.6, 3.4, 1.4, 0.3, 15.639999999999999, 0.42),
+      Array(5.0, 3.4, 1.5, 0.2, 17.0, 0.30000000000000004),
+      Array(4.4, 2.9, 1.4, 0.2, 12.76, 0.27999999999999997),
+      Array(4.9, 3.1, 1.5, 0.1, 15.190000000000001, 0.15000000000000002),
+      Array(5.4, 3.7, 1.5, 0.2, 19.980000000000004, 0.30000000000000004),
+      Array(4.8, 3.4, 1.6, 0.2, 16.32, 0.32000000000000006),
+      Array(4.8, 3.0, 1.4, 0.1, 14.399999999999999, 0.13999999999999999),
+      Array(4.3, 3.0, 1.1, 0.1, 12.899999999999999, 0.11000000000000001),
+      Array(5.8, 4.0, 1.2, 0.2, 23.2, 0.24),
+      Array(5.7, 4.4, 1.5, 0.4, 25.080000000000002, 0.6000000000000001),
+      Array(5.4, 3.9, 1.3, 0.4, 21.060000000000002, 0.52),
+      Array(5.1, 3.5, 1.4, 0.3, 17.849999999999998, 0.42),
+      Array(5.7, 3.8, 1.7, 0.3, 21.66, 0.51),
+      Array(5.1, 3.8, 1.5, 0.3, 19.38, 0.44999999999999996),
+      Array(5.4, 3.4, 1.7, 0.2, 18.36, 0.34),
+      Array(5.1, 3.7, 1.5, 0.4, 18.87, 0.6000000000000001),
+      Array(4.6, 3.6, 1.0, 0.2, 16.56, 0.2),
+      Array(5.1, 3.3, 1.7, 0.5, 16.83, 0.85),
+    ...
+    </code></pre>
+    </div>
+    <div id="pg-23-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>>  val x6 = iris.stream().map({row ->
     ...            val x = DoubleArray(6)
     ...            for (i in 0..3) x[i] = row.getDouble(i)
@@ -1203,8 +1191,8 @@ title: Smile - Data Processing
     ...
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The <code>groupBy</code> operation groups elements according to a classification
         function, and returning the results in a <code>Map</code>. The classification
@@ -1214,48 +1202,17 @@ title: Smile - Data Processing
         containing the input elements which map to the associated key under the
         classification function.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_7" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_7">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> iris.groupBy(row => row.getString("class"))
-    res23: Map[String, DataFrame] = Map(
-      "Iris-virginica" ->
-    +-----------+----------+-----------+----------+--------------+
-    |sepallength|sepalwidth|petallength|petalwidth|         class|
-    +-----------+----------+-----------+----------+--------------+
-    |        6.3|       3.3|          6|       2.5|Iris-virginica|
-    |        5.8|       2.7|        5.1|       1.9|Iris-virginica|
-    |        7.1|         3|        5.9|       2.1|Iris-virginica|
-    |        6.3|       2.9|        5.6|       1.8|Iris-virginica|
-    |        6.5|         3|        5.8|       2.2|Iris-virginica|
-    |        7.6|         3|        6.6|       2.1|Iris-virginica|
-    |        4.9|       2.5|        4.5|       1.7|Iris-virginica|
-    |        7.3|       2.9|        6.3|       1.8|Iris-virginica|
-    |        6.7|       2.5|        5.8|       1.8|Iris-virginica|
-    |        7.2|       3.6|        6.1|       2.5|Iris-virginica|
-    +-----------+----------+-----------+----------+--------------+
-    40 more rows...
-    ,
-      "Iris-versicolor" ->
-    +-----------+----------+-----------+----------+---------------+
-    |sepallength|sepalwidth|petallength|petalwidth|          class|
-    +-----------+----------+-----------+----------+---------------+
-    |          7|       3.2|        4.7|       1.4|Iris-versicolor|
-    |        6.4|       3.2|        4.5|       1.5|Iris-versicolor|
-    |        6.9|       3.1|        4.9|       1.5|Iris-versicolor|
-    ...
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-24-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-24-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-24-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-24-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> iris.stream().collect(java.util.stream.Collectors.groupingBy(row -> row.getString("class")))
     $24 ==> {Iris-versicolor=[{
       sepallength: 7,
@@ -1314,11 +1271,40 @@ title: Smile - Data Processing
       class: Iris-setosa
     }]}
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_7">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-24-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> iris.groupBy(row => row.getString("class"))
+    res23: Map[String, DataFrame] = Map(
+      "Iris-virginica" ->
+    +-----------+----------+-----------+----------+--------------+
+    |sepallength|sepalwidth|petallength|petalwidth|         class|
+    +-----------+----------+-----------+----------+--------------+
+    |        6.3|       3.3|          6|       2.5|Iris-virginica|
+    |        5.8|       2.7|        5.1|       1.9|Iris-virginica|
+    |        7.1|         3|        5.9|       2.1|Iris-virginica|
+    |        6.3|       2.9|        5.6|       1.8|Iris-virginica|
+    |        6.5|         3|        5.8|       2.2|Iris-virginica|
+    |        7.6|         3|        6.6|       2.1|Iris-virginica|
+    |        4.9|       2.5|        4.5|       1.7|Iris-virginica|
+    |        7.3|       2.9|        6.3|       1.8|Iris-virginica|
+    |        6.7|       2.5|        5.8|       1.8|Iris-virginica|
+    |        7.2|       3.6|        6.1|       2.5|Iris-virginica|
+    +-----------+----------+-----------+----------+--------------+
+    40 more rows...
+    ,
+      "Iris-versicolor" ->
+    +-----------+----------+-----------+----------+---------------+
+    |sepallength|sepalwidth|petallength|petalwidth|          class|
+    +-----------+----------+-----------+----------+---------------+
+    |          7|       3.2|        4.7|       1.4|Iris-versicolor|
+    |        6.4|       3.2|        4.5|       1.5|Iris-versicolor|
+    |        6.9|       3.1|        4.9|       1.5|Iris-versicolor|
+    ...
+    </code></pre>
+    </div>
+    <div id="pg-24-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> iris.stream().collect(java.util.stream.Collectors.groupingBy({row: Tuple -> row.getString("class")}))
     res98: kotlin.collections.(Mutable)Map&lt;kotlin.String!, kotlin.collections.(Mutable)List&lt;smile.data.Tuple!&gt;!&gt;! = {Iris-versicolor=[{
       sepallength: 7,
@@ -1372,21 +1358,22 @@ title: Smile - Data Processing
     ...
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="SQL">SQL</h2>
 
     <p>While Smile provides many imperative way to manipulate DataFrames as showned above, it is probably
         easier to do so with SQL.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_26" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_26">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     smile> SQL sql = new SQL();
            sql.parquet("user", "data/kylo/userdata1.parquet");
            sql.json("books", "data/kylo/books_array.json");
@@ -1422,21 +1409,21 @@ title: Smile - Data Processing
     +-----------------+---------+-----------+
     3 more rows...
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>In the above, we create a database and create four tables by loading parquet, json, and csv files.
         We also use the <code>describe</code> function to obtain the schema of the table user. With SQL,
         it is easy to filter data and the result is a DataFrame.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_27" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_27">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
 smile> var user = sql.query("SELECT * FROM user WHERE country = 'China'");
 [main] INFO smile.data.SQL - SELECT * FROM user WHERE country = 'China'
 user ==>
@@ -1456,20 +1443,20 @@ user ==>
 +-------------------+---+----------+----------+--------------------+------+---------------+-------------------+-------+---------+---------+--------------------+--------+
 179 more rows...
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Of course, join is very useful to prepare data from multiple sources. The result DataFrame
         may be feed to downstream machine learning algorithms.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_28" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_28">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
 smile> var gdp = sql.query("SELECT * FROM user LEFT JOIN gdp ON user.country = gdp.Country");
 [main] INFO smile.data.SQL - SELECT * FROM user LEFT JOIN gdp ON user.country = gdp.Country
 gdp ==>
@@ -1489,9 +1476,8 @@ gdp ==>
 +-------------------+---+----------+---------+--------------------+------+---------------+------------------+---------+----------+---------+--------------------+--------------------+---------+----------+-----+--------+
 990 more rows...
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="sparse">Sparse Dataset</h2>
 
@@ -1520,36 +1506,17 @@ gdp ==>
         is a columnar storage format that supports
         nested data structures. It uses the record shredding and
         assembly algorithm described in the Dremel paper.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_8" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_8">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val df = read.parquet("data/kylo/userdata1.parquet")
-    df: DataFrame =
-    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
-    |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
-    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
-    |2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
-    |2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
-    |2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
-    |2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
-    |2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
-    |2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
-    |2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
-    |2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
-    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
-    990 more rows...
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-28-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-28-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-28-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-28-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var df = Read.parquet("data/kylo/userdata1.parquet")
     df ==>
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
@@ -1566,11 +1533,28 @@ gdp ==>
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     990 more rows...
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_8">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-28-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val df = read.parquet("data/kylo/userdata1.parquet")
+    df: DataFrame =
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+    |2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+    |2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+    |2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+    |2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+    |2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+    |2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+    |2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    990 more rows...
+    </code></pre>
+    </div>
+    <div id="pg-28-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> val df = read.parquet("data/kylo/userdata1.parquet")
     >>> df
     res100: smile.data.DataFrame =
@@ -1591,8 +1575,8 @@ gdp ==>
     990 more rows...
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="read.avro">Apache Avro</h3>
     <p><a href="https://avro.apache.org/">Apache Avro</a>
@@ -1602,36 +1586,17 @@ gdp ==>
         Avro relies on schemas. When Avro data is stored in a file, its schema
         is stored with it. Avro schemas are defined with JSON.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_9" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_9">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val df = read.avro(Paths.getTestData("kylo/userdata1.avro"), Paths.getTestData("avro/userdata.avsc"))
-    df: DataFrame =
-    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
-    |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
-    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
-    |2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
-    |2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
-    |2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
-    |2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
-    |2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
-    |2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
-    |2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
-    |2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
-    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
-    990 more rows...
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-29-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-29-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-29-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-29-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var avrodf = Read.avro(smile.util.Paths.getTestData("kylo/userdata1.avro"), smile.util.Paths.getTestData("kylo/userdata.avsc"))
     avrodf ==>
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
@@ -1648,11 +1613,28 @@ gdp ==>
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     990 more rows...
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_9">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-29-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val df = read.avro(Paths.getTestData("kylo/userdata1.avro"), Paths.getTestData("avro/userdata.avsc"))
+    df: DataFrame =
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+    |2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+    |2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+    |2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+    |2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+    |2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+    |2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+    |2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    990 more rows...
+    </code></pre>
+    </div>
+    <div id="pg-29-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> val avrodf = read.avro(smile.util.Paths.getTestData("kylo/userdata1.avro"), smile.util.Paths.getTestData("kylo/userdata.avsc"))
     >>> avrodf
     res104: smile.data.DataFrame =
@@ -1673,8 +1655,8 @@ gdp ==>
     990 more rows...
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="read.arrow">Apache Arrow</h3>
     <p><a href="https://arrow.apache.org/">Apache Arrow</a>
@@ -1692,45 +1674,17 @@ gdp ==>
     <p>In the below example, we write a DataFrame into Feather
         file and then read it back.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_10" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_10">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val temp = java.io.File.createTempFile("chinook", "arrow")
-    temp: java.io.File = /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5413820941564790310arrow
-
-    smile> val path = temp.toPath()
-    path: java.nio.file.Path = /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5413820941564790310arrow
-
-    smile> write.arrow(df, path)
-    [main] INFO smile.io.Arrow - write 1000 rows
-
-    smile> val df = read.arrow(path)
-    df: DataFrame =
-    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
-    |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
-    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
-    |2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
-    |2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
-    |2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
-    |2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
-    |2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
-    |2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
-    |2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
-    |2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
-    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
-    990 more rows...
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-30-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-30-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-30-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-30-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var temp = java.io.File.createTempFile("chinook", "arrow")
     temp ==> /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5430879887643149276arrow
 
@@ -1757,11 +1711,37 @@ gdp ==>
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     990 more rows...
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_10">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-30-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val temp = java.io.File.createTempFile("chinook", "arrow")
+    temp: java.io.File = /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5413820941564790310arrow
+
+    smile> val path = temp.toPath()
+    path: java.nio.file.Path = /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5413820941564790310arrow
+
+    smile> write.arrow(df, path)
+    [main] INFO smile.io.Arrow - write 1000 rows
+
+    smile> val df = read.arrow(path)
+    df: DataFrame =
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+    |2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+    |2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+    |2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+    |2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+    |2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+    |2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+    |2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    990 more rows...
+    </code></pre>
+    </div>
+    <div id="pg-30-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> val temp = java.io.File.createTempFile("chinook", "arrow")
     >>> val path = temp.toPath()
     >>> write.arrow(df, path)
@@ -1787,45 +1767,24 @@ gdp ==>
     990 more rows...
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="read.sas">SAS7BDAT</h3>
     <p>SAS7BDAT is currently the main format
         used for storing SAS datasets across all platforms.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_11" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_11" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_11" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_11">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val df = read.sas(Paths.getTestData("sas/airline.sas7bdat"))
-    df: DataFrame =
-    +----+-----+-----+------+-----+-----+
-    |YEAR|    Y|    W|     R|    L|    K|
-    +----+-----+-----+------+-----+-----+
-    |1948|1.214|0.243|0.1454|1.415|0.612|
-    |1949|1.354| 0.26|0.2181|1.384|0.559|
-    |1950|1.569|0.278|0.3157|1.388|0.573|
-    |1951|1.948|0.297| 0.394| 1.55|0.564|
-    |1952|2.265| 0.31|0.3559|1.802|0.574|
-    |1953|2.731|0.322|0.3593|1.926|0.711|
-    |1954|3.025|0.335|0.4025|1.964|0.776|
-    |1955|3.562| 0.35|0.3961|2.116|0.827|
-    |1956|3.979|0.361|0.3822|2.435|  0.8|
-    |1957| 4.42|0.379|0.3045|2.707|0.921|
-    +----+-----+-----+------+-----+-----+
-    22 more rows...
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_11">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-31-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-31-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-31-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-31-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var sasdf = Read.sas("data/sas/airline.sas7bdat")
     sasdf ==>
     +----+-----+-----+------+-----+-----+
@@ -1844,11 +1803,30 @@ gdp ==>
     +----+-----+-----+------+-----+-----+
     22 more rows...
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_11">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-31-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val df = read.sas(Paths.getTestData("sas/airline.sas7bdat"))
+    df: DataFrame =
+    +----+-----+-----+------+-----+-----+
+    |YEAR|    Y|    W|     R|    L|    K|
+    +----+-----+-----+------+-----+-----+
+    |1948|1.214|0.243|0.1454|1.415|0.612|
+    |1949|1.354| 0.26|0.2181|1.384|0.559|
+    |1950|1.569|0.278|0.3157|1.388|0.573|
+    |1951|1.948|0.297| 0.394| 1.55|0.564|
+    |1952|2.265| 0.31|0.3559|1.802|0.574|
+    |1953|2.731|0.322|0.3593|1.926|0.711|
+    |1954|3.025|0.335|0.4025|1.964|0.776|
+    |1955|3.562| 0.35|0.3961|2.116|0.827|
+    |1956|3.979|0.361|0.3822|2.435|  0.8|
+    |1957| 4.42|0.379|0.3045|2.707|0.921|
+    +----+-----+-----+------+-----+-----+
+    22 more rows...
+    </code></pre>
+    </div>
+    <div id="pg-31-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> val df = read.sas("data/sas/airline.sas7bdat")
     >>> df
     res112: smile.data.DataFrame =
@@ -1869,20 +1847,65 @@ gdp ==>
     22 more rows...
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="read.jdbc">Relational Database</h3>
     <p>It is also easy to load data from relation databases through JDBC.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_12" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_12" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_12">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-32-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-32-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-32-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    smile> Class.forName("org.sqlite.JDBC")
+    $1 ==> class org.sqlite.JDBC
+
+    smile> var url = String.format("jdbc:sqlite:%s", smile.util.Paths.getTestData("sqlite/chinook.db").toAbsolutePath())
+    url ==> "jdbc:sqlite:/Users/hli/github/smile/shell/target ... ../data/sqlite/chinook.db"
+
+    smile> var sql = """
+              select e.firstname as 'Employee First', e.lastname as 'Employee Last', c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total
+              from employees as e
+              join customers as c on e.employeeid = c.supportrepid
+              join invoices as i on c.customerid = i.customerid"""
+    sql ==> "select e.firstname as 'Employee First', e.lastna ... ustomerid = i.customerid"
+
+    smile> var conn = java.sql.DriverManager.getConnection(url)
+    conn ==> org.sqlite.jdbc4.JDBC4Connection@1df82230
+
+    smile> var stmt = conn.createStatement()
+    stmt ==> org.sqlite.jdbc4.JDBC4Statement@75329a49
+
+    smile> var rs = stmt.executeQuery(sql)
+    rs ==> org.sqlite.jdbc4.JDBC4ResultSet@48aaecc3
+
+    smile> var sqldf = DataFrame.of(rs)
+    sqldf ==>
+    +--------------+-------------+--------------+-------------+-------+-----+
+    |Employee First|Employee Last|Customer First|Customer Last|Country|Total|
+    +--------------+-------------+--------------+-------------+-------+-----+
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 3.98|
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 3.96|
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 5.94|
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 0.99|
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 1.98|
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil|13.86|
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 8.91|
+    |         Steve|      Johnson|        Leonie|       Köhler|Germany| 1.98|
+    |         Steve|      Johnson|        Leonie|       Köhler|Germany|13.86|
+    |         Steve|      Johnson|        Leonie|       Köhler|Germany| 8.91|
+    +--------------+-------------+--------------+-------------+-------+-----+
+    402 more rows...
+          </code></pre>
+    </div>
+    <div id="pg-32-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     smile> import $ivy.`org.xerial:sqlite-jdbc:3.28.0`
     import $ivy.$
 
@@ -1929,54 +1952,9 @@ gdp ==>
     +--------------+-------------+--------------+-------------+-------+-----+
     402 more rows...
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_12">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    smile> Class.forName("org.sqlite.JDBC")
-    $1 ==> class org.sqlite.JDBC
-
-    smile> var url = String.format("jdbc:sqlite:%s", smile.util.Paths.getTestData("sqlite/chinook.db").toAbsolutePath())
-    url ==> "jdbc:sqlite:/Users/hli/github/smile/shell/target ... ../data/sqlite/chinook.db"
-
-    smile> var sql = """
-              select e.firstname as 'Employee First', e.lastname as 'Employee Last', c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total
-              from employees as e
-              join customers as c on e.employeeid = c.supportrepid
-              join invoices as i on c.customerid = i.customerid"""
-    sql ==> "select e.firstname as 'Employee First', e.lastna ... ustomerid = i.customerid"
-
-    smile> var conn = java.sql.DriverManager.getConnection(url)
-    conn ==> org.sqlite.jdbc4.JDBC4Connection@1df82230
-
-    smile> var stmt = conn.createStatement()
-    stmt ==> org.sqlite.jdbc4.JDBC4Statement@75329a49
-
-    smile> var rs = stmt.executeQuery(sql)
-    rs ==> org.sqlite.jdbc4.JDBC4ResultSet@48aaecc3
-
-    smile> var sqldf = DataFrame.of(rs)
-    sqldf ==>
-    +--------------+-------------+--------------+-------------+-------+-----+
-    |Employee First|Employee Last|Customer First|Customer Last|Country|Total|
-    +--------------+-------------+--------------+-------------+-------+-----+
-    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 3.98|
-    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 3.96|
-    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 5.94|
-    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 0.99|
-    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 1.98|
-    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil|13.86|
-    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 8.91|
-    |         Steve|      Johnson|        Leonie|       Köhler|Germany| 1.98|
-    |         Steve|      Johnson|        Leonie|       Köhler|Germany|13.86|
-    |         Steve|      Johnson|        Leonie|       Köhler|Germany| 8.91|
-    +--------------+-------------+--------------+-------------+-------+-----+
-    402 more rows...
-          </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="read.arff">Weka ARFF</h3>
     <p><a href="https://www.cs.waikato.ac.nz/ml/weka/arff.html">Weka ARFF (attribute relation file format)</a>
@@ -2000,39 +1978,17 @@ gdp ==>
         we have many sample ARFF files. We can also read data from remote servers
         by HTTP, FTP, etc.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_13" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_13" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_13" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_13">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val df = read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
-    [main] INFO smile.io.Arff - Read ARFF relation cpu
-    df: DataFrame =
-    +----+-----+-----+----+-----+-----+-----+
-    |MYCT| MMIN| MMAX|CACH|CHMIN|CHMAX|class|
-    +----+-----+-----+----+-----+-----+-----+
-    | 125|  256| 6000| 256|   16|  128|  199|
-    |  29| 8000|32000|  32|    8|   32|  253|
-    |  29| 8000|32000|  32|    8|   32|  253|
-    |  29| 8000|32000|  32|    8|   32|  253|
-    |  29| 8000|16000|  32|    8|   16|  132|
-    |  26| 8000|32000|  64|    8|   32|  290|
-    |  23|16000|32000|  64|   16|   32|  381|
-    |  23|16000|32000|  64|   16|   32|  381|
-    |  23|16000|64000|  64|   16|   32|  749|
-    |  23|32000|64000| 128|   32|   64| 1238|
-    +----+-----+-----+----+-----+-----+-----+
-    199 more rows...
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_13">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-33-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-33-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-33-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-33-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var cpu = Read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
     [main] INFO smile.io.Arff - Read ARFF relation cpu
     cpu ==>
@@ -2052,11 +2008,31 @@ gdp ==>
     +----+-----+-----+----+-----+-----+-----+
     199 more rows...
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_13">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-33-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val df = read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
+    [main] INFO smile.io.Arff - Read ARFF relation cpu
+    df: DataFrame =
+    +----+-----+-----+----+-----+-----+-----+
+    |MYCT| MMIN| MMAX|CACH|CHMIN|CHMAX|class|
+    +----+-----+-----+----+-----+-----+-----+
+    | 125|  256| 6000| 256|   16|  128|  199|
+    |  29| 8000|32000|  32|    8|   32|  253|
+    |  29| 8000|32000|  32|    8|   32|  253|
+    |  29| 8000|32000|  32|    8|   32|  253|
+    |  29| 8000|16000|  32|    8|   16|  132|
+    |  26| 8000|32000|  64|    8|   32|  290|
+    |  23|16000|32000|  64|   16|   32|  381|
+    |  23|16000|32000|  64|   16|   32|  381|
+    |  23|16000|64000|  64|   16|   32|  749|
+    |  23|32000|64000| 128|   32|   64| 1238|
+    +----+-----+-----+----+-----+-----+-----+
+    199 more rows...
+    </code></pre>
+    </div>
+    <div id="pg-33-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> val df = read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
     [main] INFO smile.io.Arff - Read ARFF relation cpu
     >>> df
@@ -2078,8 +2054,8 @@ gdp ==>
     199 more rows...
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="read.csv">Delimited Text and CSV</h3>
     <p>The delimited text files are widely used in machine learning research community.
@@ -2087,25 +2063,17 @@ gdp ==>
         parser for them based on
         <a href="https://commons.apache.org/proper/commons-csv/">Apache Commons CSV</a> library.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_14" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_14" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_14" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_14">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_14">
-            <p>In Java API, the user may provide a
-                <a href="https://javadoc.io/doc/org.apache.commons/commons-csv/latest/index.html">CSVFormat</a>
-                argument to specify the format of a CSV file.</p>
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-34-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-34-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-34-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-34-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public interface Read {
         /** Reads a CSV file. */
         static DataFrame csv(String path) throws IOException, URISyntaxException
@@ -2126,121 +2094,63 @@ gdp ==>
         static DataFrame csv(Path path, CSVFormat format, StructType schema) throws IOException
     }
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_14">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    </div>
+    <div id="pg-34-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame
+    </code></pre>
+    </div>
+    <div id="pg-34-2" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     fun csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType? = null): DataFrame
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The parser tries it best to infer the schema of data from the top rows.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_15" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_15" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_15" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_15">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
-                </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_15">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-35-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-35-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-35-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-35-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     import org.apache.commons.csv.CSVFormat
     var format = CSVFormat.DEFAULT.withDelimiter(' ')
     var zip = Read.csv("data/usps/zip.train", format)
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_15">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-35-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
+                </code></pre>
+    </div>
+    <div id="pg-35-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>In case that the parser fails to infer the schema, the user may provide a predefined schema.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_16" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_16" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_16">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-smile> val airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
-         "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN", "ALB", "ALO", "AMA", "ANC",
-         "APF", "ASE", "ATL", "ATW", "AUS", "AVL", "AVP", "AZO", "BDL", "BET", "BFL",
-         "BGM", "BGR", "BHM", "BIL", "BIS", "BJI", "BLI", "BMI", "BNA", "BOI", "BOS",
-         "BPT", "BQK", "BQN", "BRO", "BRW", "BTM", "BTR", "BTV", "BUF", "BUR", "BWI",
-         "BZN", "CAE", "CAK", "CDC", "CDV", "CEC", "CHA", "CHO", "CHS", "CIC", "CID",
-         "CKB", "CLD", "CLE", "CLL", "CLT", "CMH", "CMI", "CMX", "COD", "COS", "CPR",
-         "CRP", "CRW", "CSG", "CVG", "CWA", "CYS", "DAB", "DAL", "DAY", "DBQ", "DCA",
-         "DEN", "DFW", "DHN", "DLG", "DLH", "DRO", "DSM", "DTW", "EAU", "EGE", "EKO",
-         "ELM", "ELP", "ERI", "EUG", "EVV", "EWN", "EWR", "EYW", "FAI", "FAR", "FAT",
-         "FAY", "FCA", "FLG", "FLL", "FLO", "FMN", "FNT", "FSD", "FSM", "FWA", "GEG",
-         "GFK", "GGG", "GJT", "GNV", "GPT", "GRB", "GRK", "GRR", "GSO", "GSP", "GST",
-         "GTF", "GTR", "GUC", "HDN", "HHH", "HKY", "HLN", "HNL", "HOU", "HPN", "HRL",
-         "HSV", "HTS", "HVN", "IAD", "IAH", "ICT", "IDA", "ILG", "ILM", "IND", "INL",
-         "IPL", "ISO", "ISP", "ITO", "IYK", "JAC", "JAN", "JAX", "JFK", "JNU", "KOA",
-         "KTN", "LAN", "LAR", "LAS", "LAW", "LAX", "LBB", "LBF", "LCH", "LEX", "LFT",
-         "LGA", "LGB", "LIH", "LIT", "LNK", "LRD", "LSE", "LWB", "LWS", "LYH", "MAF",
-         "MBS", "MCI", "MCN", "MCO", "MDT", "MDW", "MEI", "MEM", "MFE", "MFR", "MGM",
-         "MHT", "MIA", "MKE", "MLB", "MLI", "MLU", "MOB", "MOD", "MOT", "MQT", "MRY",
-         "MSN", "MSO", "MSP", "MSY", "MTH", "MTJ", "MYR", "OAJ", "OAK", "OGD", "OGG",
-         "OKC", "OMA", "OME", "ONT", "ORD", "ORF", "OTZ", "OXR", "PBI", "PDX", "PFN",
-         "PHF", "PHL", "PHX", "PIA", "PIE", "PIH", "PIT", "PLN", "PMD", "PNS", "PSC",
-         "PSE", "PSG", "PSP", "PUB", "PVD", "PVU", "PWM", "RAP", "RCA", "RDD", "RDM",
-         "RDU", "RFD", "RHI", "RIC", "RNO", "ROA", "ROC", "ROW", "RST", "RSW", "SAN",
-         "SAT", "SAV", "SBA", "SBN", "SBP", "SCC", "SCE", "SDF", "SEA", "SFO", "SGF",
-         "SGU", "SHV", "SIT", "SJC", "SJT", "SJU", "SLC", "SLE", "SMF", "SMX", "SNA",
-         "SOP", "SPI", "SPS", "SRQ", "STL", "STT", "STX", "SUN", "SUX", "SWF", "SYR",
-         "TEX", "TLH", "TOL", "TPA", "TRI", "TTN", "TUL", "TUP", "TUS", "TVC", "TWF",
-         "TXK", "TYR", "TYS", "VCT", "VIS", "VLD", "VPS", "WRG", "WYS", "XNA", "YAK",
-         "YKM", "YUM")
-airport: NominalScale = nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM]
-
-smile> val schema = new StructType(
-         new StructField("Month", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
-           "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12")),
-         new StructField("DayofMonth", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
-           "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12", "c-13", "c-14", "c-15", "c-16", "c-17", "c-18",
-           "c-19", "c-20", "c-21", "c-22", "c-23", "c-24", "c-25", "c-26", "c-27", "c-28", "c-29", "c-30", "c-31")),
-         new StructField("DayOfWeek", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
-           "c-5", "c-6", "c-7")),
-         new StructField("DepTime", DataTypes.IntType),
-         new StructField("UniqueCarrier", DataTypes.ByteType, new NominalScale("9E", "AA", "AQ", "AS",
-           "B6", "CO", "DH", "DL", "EV", "F9", "FL", "HA", "HP", "MQ", "NW", "OH", "OO", "TZ", "UA", "US", "WN", "XE", "YV")),
-         new StructField("Origin", DataTypes.ShortType, airport),
-         new StructField("Dest", DataTypes.ShortType, airport),
-         new StructField("Distance", DataTypes.IntType),
-         new StructField("dep_delayed_15min", DataTypes.ByteType, new NominalScale("N", "Y"))
-       )
-schema: StructType = [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12], DayofMonth: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12, c-13, c-14, c-15, c-16, c-17, c-18, c-19, c-20, c-21, c-22, c-23, c-24, c-25, c-26, c-27, c-28, c-29, c-30, c-31], DayOfWeek: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7], DepTime: int, UniqueCarrier: byte nominal[9E, AA, AQ, AS, B6, CO, DH, DL, EV, F9, FL, HA, HP, MQ, NW, OH, OO, TZ, UA, US, WN, XE, YV], Origin: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Dest: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Distance: int, dep_delayed_15min: byte nominal[N, Y]]
-
-smile> val airline = read.csv("shell/src/universal/data/airline/train-1m.csv", schema = schema)
-airline: DataFrame = [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12], DayofMonth: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12, c-13, c-14, c-15, c-16, c-17, c-18, c-19, c-20, c-21, c-22, c-23, c-24, c-25, c-26, c-27, c-28, c-29, c-30, c-31], DayOfWeek: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7], DepTime: int, UniqueCarrier: byte nominal[9E, AA, AQ, AS, B6, CO, DH, DL, EV, F9, FL, HA, HP, MQ, NW, OH, OO, TZ, UA, US, WN, XE, YV], Origin: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Dest: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Distance: int, dep_delayed_15min: byte nominal[N, Y]]
-+-----+----------+---------+-------+-------------+------+----+--------+-----------------+
-|Month|DayofMonth|DayOfWeek|DepTime|UniqueCarrier|Origin|Dest|Distance|dep_delayed_15min|
-...
-                </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_16">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-36-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-36-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-36-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 smile> import smile.data.type.*
        import smile.data.measure.*
        var airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
@@ -2301,17 +2211,85 @@ smile> var airline = Read.csv("data/airline/train-1m.csv", format, schema);
 airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
 999990 more rows...
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-36-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+smile> val airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
+         "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN", "ALB", "ALO", "AMA", "ANC",
+         "APF", "ASE", "ATL", "ATW", "AUS", "AVL", "AVP", "AZO", "BDL", "BET", "BFL",
+         "BGM", "BGR", "BHM", "BIL", "BIS", "BJI", "BLI", "BMI", "BNA", "BOI", "BOS",
+         "BPT", "BQK", "BQN", "BRO", "BRW", "BTM", "BTR", "BTV", "BUF", "BUR", "BWI",
+         "BZN", "CAE", "CAK", "CDC", "CDV", "CEC", "CHA", "CHO", "CHS", "CIC", "CID",
+         "CKB", "CLD", "CLE", "CLL", "CLT", "CMH", "CMI", "CMX", "COD", "COS", "CPR",
+         "CRP", "CRW", "CSG", "CVG", "CWA", "CYS", "DAB", "DAL", "DAY", "DBQ", "DCA",
+         "DEN", "DFW", "DHN", "DLG", "DLH", "DRO", "DSM", "DTW", "EAU", "EGE", "EKO",
+         "ELM", "ELP", "ERI", "EUG", "EVV", "EWN", "EWR", "EYW", "FAI", "FAR", "FAT",
+         "FAY", "FCA", "FLG", "FLL", "FLO", "FMN", "FNT", "FSD", "FSM", "FWA", "GEG",
+         "GFK", "GGG", "GJT", "GNV", "GPT", "GRB", "GRK", "GRR", "GSO", "GSP", "GST",
+         "GTF", "GTR", "GUC", "HDN", "HHH", "HKY", "HLN", "HNL", "HOU", "HPN", "HRL",
+         "HSV", "HTS", "HVN", "IAD", "IAH", "ICT", "IDA", "ILG", "ILM", "IND", "INL",
+         "IPL", "ISO", "ISP", "ITO", "IYK", "JAC", "JAN", "JAX", "JFK", "JNU", "KOA",
+         "KTN", "LAN", "LAR", "LAS", "LAW", "LAX", "LBB", "LBF", "LCH", "LEX", "LFT",
+         "LGA", "LGB", "LIH", "LIT", "LNK", "LRD", "LSE", "LWB", "LWS", "LYH", "MAF",
+         "MBS", "MCI", "MCN", "MCO", "MDT", "MDW", "MEI", "MEM", "MFE", "MFR", "MGM",
+         "MHT", "MIA", "MKE", "MLB", "MLI", "MLU", "MOB", "MOD", "MOT", "MQT", "MRY",
+         "MSN", "MSO", "MSP", "MSY", "MTH", "MTJ", "MYR", "OAJ", "OAK", "OGD", "OGG",
+         "OKC", "OMA", "OME", "ONT", "ORD", "ORF", "OTZ", "OXR", "PBI", "PDX", "PFN",
+         "PHF", "PHL", "PHX", "PIA", "PIE", "PIH", "PIT", "PLN", "PMD", "PNS", "PSC",
+         "PSE", "PSG", "PSP", "PUB", "PVD", "PVU", "PWM", "RAP", "RCA", "RDD", "RDM",
+         "RDU", "RFD", "RHI", "RIC", "RNO", "ROA", "ROC", "ROW", "RST", "RSW", "SAN",
+         "SAT", "SAV", "SBA", "SBN", "SBP", "SCC", "SCE", "SDF", "SEA", "SFO", "SGF",
+         "SGU", "SHV", "SIT", "SJC", "SJT", "SJU", "SLC", "SLE", "SMF", "SMX", "SNA",
+         "SOP", "SPI", "SPS", "SRQ", "STL", "STT", "STX", "SUN", "SUX", "SWF", "SYR",
+         "TEX", "TLH", "TOL", "TPA", "TRI", "TTN", "TUL", "TUP", "TUS", "TVC", "TWF",
+         "TXK", "TYR", "TYS", "VCT", "VIS", "VLD", "VPS", "WRG", "WYS", "XNA", "YAK",
+         "YKM", "YUM")
+airport: NominalScale = nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM]
+
+smile> val schema = new StructType(
+         new StructField("Month", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+           "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12")),
+         new StructField("DayofMonth", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+           "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12", "c-13", "c-14", "c-15", "c-16", "c-17", "c-18",
+           "c-19", "c-20", "c-21", "c-22", "c-23", "c-24", "c-25", "c-26", "c-27", "c-28", "c-29", "c-30", "c-31")),
+         new StructField("DayOfWeek", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+           "c-5", "c-6", "c-7")),
+         new StructField("DepTime", DataTypes.IntType),
+         new StructField("UniqueCarrier", DataTypes.ByteType, new NominalScale("9E", "AA", "AQ", "AS",
+           "B6", "CO", "DH", "DL", "EV", "F9", "FL", "HA", "HP", "MQ", "NW", "OH", "OO", "TZ", "UA", "US", "WN", "XE", "YV")),
+         new StructField("Origin", DataTypes.ShortType, airport),
+         new StructField("Dest", DataTypes.ShortType, airport),
+         new StructField("Distance", DataTypes.IntType),
+         new StructField("dep_delayed_15min", DataTypes.ByteType, new NominalScale("N", "Y"))
+       )
+schema: StructType = [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12], DayofMonth: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12, c-13, c-14, c-15, c-16, c-17, c-18, c-19, c-20, c-21, c-22, c-23, c-24, c-25, c-26, c-27, c-28, c-29, c-30, c-31], DayOfWeek: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7], DepTime: int, UniqueCarrier: byte nominal[9E, AA, AQ, AS, B6, CO, DH, DL, EV, F9, FL, HA, HP, MQ, NW, OH, OO, TZ, UA, US, WN, XE, YV], Origin: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Dest: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Distance: int, dep_delayed_15min: byte nominal[N, Y]]
+
+smile> val airline = read.csv("shell/src/universal/data/airline/train-1m.csv", schema = schema)
+airline: DataFrame = [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12], DayofMonth: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12, c-13, c-14, c-15, c-16, c-17, c-18, c-19, c-20, c-21, c-22, c-23, c-24, c-25, c-26, c-27, c-28, c-29, c-30, c-31], DayOfWeek: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7], DepTime: int, UniqueCarrier: byte nominal[9E, AA, AQ, AS, B6, CO, DH, DL, EV, F9, FL, HA, HP, MQ, NW, OH, OO, TZ, UA, US, WN, XE, YV], Origin: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Dest: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Distance: int, dep_delayed_15min: byte nominal[N, Y]]
++-----+----------+---------+-------+-------------+------+----+--------+-----------------+
+|Month|DayofMonth|DayOfWeek|DepTime|UniqueCarrier|Origin|Dest|Distance|dep_delayed_15min|
+...
+                </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="read.libsvm">LibSVM</h3>
     <p>LibSVM is a very fast and popular library for support vector machines.
         LibSVM uses a sparse format where zero values do not need to be stored.
         Each line of a libsvm file is in the format:</p>
-    <pre><code>
+    <div class="code-playground glass" data-lang="text">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Format</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-text"><code class="language-text">
     &lt;label&gt; &lt;index1&gt;:&lt;value1&gt; &lt;index2&gt;:&lt;value2&gt; ...
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
     <p>where &lt;label&gt; is the target value of the training data.
         For classification, it should be an integer which identifies a class
         (multi-class classification is supported). For regression, it's any real
@@ -2327,75 +2305,71 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         Therefore, Smile also provides helper functions to convert
         it to dense arrays.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_17" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_17" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_17" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_17">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val glass = read.libsvm("data/libsvm/glass.txt")
-    glass: Dataset[Instance[SparseArray]] = smile.data.DatasetImpl@5611bba
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_17">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-37-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-37-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-37-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-37-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var glass = Read.libsvm("data/libsvm/glass.txt")
     glass ==> smile.data.DatasetImpl@524f3b3a
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_17">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-37-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val glass = read.libsvm("data/libsvm/glass.txt")
+    glass: Dataset[Instance[SparseArray]] = smile.data.DatasetImpl@5611bba
+    </code></pre>
+    </div>
+    <div id="pg-37-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> read.libsvm("data/libsvm/glass.txt")
     res118: smile.data.Dataset&lt;smile.data.SampleInstance&lt;smile.util.SparseArray&gt;&gt; = smile.data.DatasetImpl@50d667c3
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>In case of truly sparse libsvm data, we can convert it to <code>SparseMatrix</code>
         for more efficient matrix computation.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_18" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_18" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_18" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_18">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> SparseDataset.of(glass).toMatrix
-    res2: SparseMatrix = smile.math.matrix.SparseMatrix@290807e5
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_18">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-38-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-38-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-38-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-38-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var glass = Read.libsvm("data/libsvm/glass.txt")
     glass ==> smile.data.DatasetImpl@17baae6e
 
     smile> SparseDataset.of(glass).toMatrix()
     $4 ==> smile.math.matrix.SparseMatrix@6b53e23f
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_18">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-38-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> SparseDataset.of(glass).toMatrix
+    res2: SparseMatrix = smile.math.matrix.SparseMatrix@290807e5
+    </code></pre>
+    </div>
+    <div id="pg-38-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> SparseDataset.of(glass).toMatrix()
     res120: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@45db84b0
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Note that <code>read.libsvm</code> returns a <code>Dataset[Instance[SparseArray]]</code>
         object. The <code>Instance</code> class has both sample object and label. To convert the
@@ -2412,16 +2386,23 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         by other programming language such as Fortran.</p>
 
     <p>The coordinate file stores a list of (row, column, value) tuples:</p>
-    <pre>
-    instanceID attributeID value
+    <div class="code-playground glass" data-lang="text">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Format</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-text"><code class="language-text">instanceID attributeID value
     instanceID attributeID value
     instanceID attributeID value
     instanceID attributeID value
     ...
     instanceID attributeID value
     instanceID attributeID value
-    instanceID attributeID value
-    </pre>
+    instanceID attributeID value</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Ideally, the entries are sorted (by row index, then column index) to improve
         random access times. This format is good for incremental matrix
@@ -2429,53 +2410,65 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
 
     <p>Optionally, there may be 2 header lines</p>
 
-    <pre>
-    D    // The number of instances
-    W    // The number of attributes
-    </pre>
+    <div class="code-playground glass" data-lang="text">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Format</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-text"><code class="language-text">D    // The number of instances
+    W    // The number of attributes</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>or 3 header lines</p>
 
-    <pre>
-    D    // The number of instances
+    <div class="code-playground glass" data-lang="text">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Format</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-text"><code class="language-text">D    // The number of instances
     W    // The number of attributes
-    N    // The total number of nonzero items in the dataset.
-    </pre>
+    N    // The total number of nonzero items in the dataset.</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
     <p>These header lines will be ignored.</p>
 
     <p>The sample data <code>data/sparse/kos.txt</code> is in the coordinate format.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_19" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_19" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_19" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_19">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val kos = SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
-    kos: SparseDataset = smile.data.SparseDatasetImpl@4da602fc
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_19">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-39-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-39-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-39-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-39-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var kos = SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
     kos ==> smile.data.SparseDatasetImpl@4d826d77
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_19">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-39-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val kos = SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
+    kos: SparseDataset = smile.data.SparseDatasetImpl@4da602fc
+    </code></pre>
+    </div>
+    <div id="pg-39-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
     res123: smile.data.SparseDataset! = smile.data.SparseDatasetImpl@485b4fd0
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="Harwell-Boeing">Harwell-Boeing Column-Compressed Sparse Matrix</h3>
 
@@ -2498,40 +2491,38 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         format. In the directory <code>data/matrix</code>, there are several sample files in
         the Harwell-Boeing format.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_20" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_20" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_20" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_20">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val blocks = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
-    blocks: SparseMatrix = smile.math.matrix.SparseMatrix@4263b080
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_20">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-40-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-40-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-40-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-40-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> import smile.math.matrix.*;
 
     smile> var blocks = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
     blocks ==> smile.math.matrix.SparseMatrix@7ff95560
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_20">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-40-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val blocks = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
+    blocks: SparseMatrix = smile.math.matrix.SparseMatrix@4263b080
+    </code></pre>
+    </div>
+    <div id="pg-40-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> import smile.math.matrix.*
     >>> SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
     res126: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@1a479168
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The second format is more complicated and powerful, called Harwell-Boeing Exchange Format.
         For details, see <a href="https://people.sc.fsu.edu/~jburkardt/data/hb/hb.html">https://people.sc.fsu.edu/~jburkardt/data/hb/hb.html</a>.
@@ -2539,28 +2530,17 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
         the optional right hand side vectors. This format is supported by the function
         <code>SparseMatrix.harwell(Path path)</code>. </p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_21" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_21" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_21" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_21">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-smile> val five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
-[main] INFO smile.math.matrix.SparseMatrix - Reads sparse matrix file '/Users/hli/github/smile/shell/target/universal/stage/data/matrix/5by5_rua.hb'
-[main] INFO smile.math.matrix.SparseMatrix - Title                                                                   Key
-[main] INFO smile.math.matrix.SparseMatrix - 5             1             1             3             0
-[main] INFO smile.math.matrix.SparseMatrix - RUA                        5             5            13             0
-[main] INFO smile.math.matrix.SparseMatrix - (6I3)           (13I3)          (5E15.8)            (5E15.8)
-five: SparseMatrix = smile.math.matrix.SparseMatrix@1761de10
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_21">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-41-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-41-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-41-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-41-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 smile> var five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
 [main] INFO smile.math.matrix.SparseMatrix - Reads sparse matrix file '/Users/hli/github/smile/shell/target/universal/stage/data/matrix/5by5_rua.hb'
 [main] INFO smile.math.matrix.SparseMatrix - Title                                                                   Key
@@ -2569,11 +2549,20 @@ smile> var five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5
 [main] INFO smile.math.matrix.SparseMatrix - (6I3)           (13I3)          (5E15.8)            (5E15.8)
 five ==> smile.math.matrix.SparseMatrix@6b4a4e18
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_21">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-41-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+smile> val five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
+[main] INFO smile.math.matrix.SparseMatrix - Reads sparse matrix file '/Users/hli/github/smile/shell/target/universal/stage/data/matrix/5by5_rua.hb'
+[main] INFO smile.math.matrix.SparseMatrix - Title                                                                   Key
+[main] INFO smile.math.matrix.SparseMatrix - 5             1             1             3             0
+[main] INFO smile.math.matrix.SparseMatrix - RUA                        5             5            13             0
+[main] INFO smile.math.matrix.SparseMatrix - (6I3)           (13I3)          (5E15.8)            (5E15.8)
+five: SparseMatrix = smile.math.matrix.SparseMatrix@1761de10
+    </code></pre>
+    </div>
+    <div id="pg-41-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
 >>> SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
 [main] INFO smile.math.matrix.SparseMatrix - Reads sparse matrix file '/Users/hli/github/smile/shell/target/universal/stage/data/matrix/5by5_rua.hb'
 [main] INFO smile.math.matrix.SparseMatrix - Title                                                                   Key
@@ -2583,35 +2572,36 @@ five ==> smile.math.matrix.SparseMatrix@6b4a4e18
 res127: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@37672764
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="wireframe">Wireframe</h3>
     <p>Smile can parse 3D wireframe models in Wavefront OBJ files.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#scala_23" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="scala_23">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">
     def read.wavefront(file: String): (Array[Array[Double]], Array[Array[Int]])
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>In the directory <code>data/wireframe</code>, there is a teapot wireframe model. In the
         next section, we will learn how to visualize the 3D wireframe models.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#scala_24" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="scala_24">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">
     smile> val (vertices, edges) = read.wavefront("data/wavefront/teapot.obj")
     vertices: Array[Array[Double]] = Array(
       Array(40.6266, 28.3457, -1.10804),
@@ -2666,35 +2656,34 @@ res127: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@3767276
       Array(3, 9),
     ...
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="export">Export Data and Models</h2>
 
     <p>To serialize a model, you may use</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_25" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_25" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_25">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    import smile._
-    write(model, file)
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_25">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-44-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-44-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-44-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     import smile.io.Write;
     Write.object(model, file)
     </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-44-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    import smile._
+    write(model, file)
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>This method serializes the model in Java serialization format. This is handy
         if you want to use a model in Spark.</p>

@@ -66,13 +66,14 @@ title: Smile - Feature Engineering
         of each feature in the training set will be 1.0. It does not shift/center
         the data, and thus does not destroy any sparsity.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     import smile.base.mlp.Layer;
     var pendigits = Read.csv("data/classification/pendigits.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
     var df = pendigits.drop(16);
@@ -95,9 +96,8 @@ title: Smile - Feature Engineering
         return model;
     });
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The class <code>Standardizer</code> transforms numeric feature to 0 mean and unit variance.
         Standardization makes an assumption that the data follows
@@ -105,13 +105,14 @@ title: Smile - Feature Engineering
         A robust alternative is to subtract the median and divide by the IQR, which
         is implemented <code>RobustStandardizer</code>.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     var zip = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
     var df = zip.drop(0);
     var y = zip.column(0).toIntArray();
@@ -135,9 +136,8 @@ title: Smile - Feature Engineering
         }
     }
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
     <p>The class <code>Normalizer</code> transform samples to unit norm. This class
         is stateless and thus doesn't need to learn transformation parameters from data.
         Each sample (i.e. each row of the data matrix) with at least one non-zero
@@ -204,9 +204,18 @@ title: Smile - Feature Engineering
         which can be used as a feature selection criterion for binary classification
         problems. S2N is defined as</p>
 
-    <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">XML</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-markup"><code class="language-markup">
     |&mu;<sub>1</sub> - &mu;<sub>2</sub>| / (&sigma;<sub>1</sub> + &sigma;<sub>2</sub>)
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where &mu;<sub>1</sub> and &mu;<sub>2</sub> are the mean value of the variable
         in classes 1 and 2, respectively, and &sigma;<sub>1</sub> and &sigma;<sub>2</sub>
@@ -221,9 +230,18 @@ title: Smile - Feature Engineering
         feature ranking metric, which can be used as a feature selection criterion
         for multi-class classification problems. For each variable j, this ratio is</p>
 
-    <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">XML</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-markup"><code class="language-markup">
     BSS(j) / WSS(j) = &Sigma;I(y<sub>i</sub> = k)(x<sub>kj</sub> - x<sub>&middot;j</sub>)<sup>2</sup> / &Sigma;I(y<sub>i</sub> = k)(x<sub>ij</sub> - x<sub>kj</sub>)<sup>2</sup>
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where x<sub>&middot;j</sub> denotes the average of variable j across all
         samples, x<sub>kj</sub> denotes the average of variable j across samples
@@ -233,13 +251,14 @@ title: Smile - Feature Engineering
     <p>Applying it to Iris data, we can find that the last two variables have much higher
         sum squares ratios (about 16 and 13 in contrast to 1.6 and 0.6 of the first two variables).</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     var iris = Read.arff("data/weka/iris.arff");
     SumSquaresRatio.fit(iris, "class");
 
@@ -248,9 +267,8 @@ title: Smile - Feature Engineering
     canvas.setAxisLabels(iris.names()[2], iris.names()[3]);
     canvas.window();
           </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The scatter plot of the last two variables shows clearly that they capture the difference
         among classes.</p>
@@ -274,31 +292,31 @@ title: Smile - Feature Engineering
     <p>For these algorithms, there is a method <code>importance</code> returning
         the scores for feature selection (higher is better).</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_4">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val iris = read.arff("data/weka/iris.arff")
-    val model = smile.classification.randomForest("class" ~ ".", iris)
-    println(iris.names.slice(0, 4).zip(model.importance).mkString("\n"))
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var model = smile.classification.RandomForest.fit(Formula.lhs("class"), iris);
     for (int i = 0; i < 4; i++) {
         System.out.format("%s\t%.2f\n", iris.names()[i], model.importance()[i]);
     }
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val iris = read.arff("data/weka/iris.arff")
+    val model = smile.classification.randomForest("class" ~ ".", iris)
+    println(iris.names.slice(0, 4).zip(model.importance).mkString("\n"))
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>For Iris data, random forest also gives much higher importance scores for
         the last two variables.</p>
@@ -332,72 +350,16 @@ title: Smile - Feature Engineering
         tree models and ensembles of trees, under several different possible
         assumptions about feature dependence. </p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_14" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_14" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_14">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-smile&gt; val housing = read.arff("data/weka/regression/housing.arff")
-[main] INFO smile.io.Arff - Read ARFF relation housing
-housing: DataFrame = [CRIM: float, ZN: float, INDUS: float, CHAS: byte nominal[0, 1], NOX: float, RM: float, AGE: float, DIS: float, RAD: float, TAX: float, PTRATIO: float, B: float, LSTAT: float, class: float]
-+------+----+-----+----+-----+-----+----+------+---+---+-------+------+-----+-----+
-|  CRIM|  ZN|INDUS|CHAS|  NOX|   RM| AGE|   DIS|RAD|TAX|PTRATIO|     B|LSTAT|class|
-+------+----+-----+----+-----+-----+----+------+---+---+-------+------+-----+-----+
-|0.0063|  18| 2.31|   0|0.538|6.575|65.2|  4.09|  1|296|   15.3| 396.9| 4.98|   24|
-|0.0273|   0| 7.07|   0|0.469|6.421|78.9|4.9671|  2|242|   17.8| 396.9| 9.14| 21.6|
-|0.0273|   0| 7.07|   0|0.469|7.185|61.1|4.9671|  2|242|   17.8|392.83| 4.03| 34.7|
-|0.0324|   0| 2.18|   0|0.458|6.998|45.8|6.0622|  3|222|   18.7|394.63| 2.94| 33.4|
-| 0.069|   0| 2.18|   0|0.458|7.147|54.2|6.0622|  3|222|   18.7| 396.9| 5.33| 36.2|
-|0.0299|   0| 2.18|   0|0.458| 6.43|58.7|6.0622|  3|222|   18.7|394.12| 5.21| 28.7|
-|0.0883|12.5| 7.87|   0|0.524|6.012|66.6|5.5605|  5|311|   15.2| 395.6|12.43| 22.9|
-|0.1445|12.5| 7.87|   0|0.524|6.172|96.1|5.9505|  5|311|   15.2| 396.9|19.15| 27.1|
-|0.2112|12.5| 7.87|   0|0.524|5.631| 100|6.0821|  5|311|   15.2|386.63|29.93| 16.5|
-|  0.17|12.5| 7.87|   0|0.524|6.004|85.9|6.5921|  5|311|   15.2|386.71| 17.1| 18.9|
-+------+----+-----+----+-----+-----+----+------+---+---+-------+------+-----+-----+
-496 more rows...
-
-smile&gt; val model = smile.regression.randomForest("class" ~ ".", housing)
-[main] INFO smile.util.package$ - Random Forest runtime: 0:00:00.495102
-model: regression.RandomForest = smile.regression.RandomForest@52d63b7e
-
-smile&gt; println(housing.names.slice(0, 13).zip(model.importance).sortBy(_._2).map(t => "%-15s %12.4f".format(t._1, t._2)).mkString("\n"))
-CHAS              87390.1358
-ZN               139917.2980
-RAD              142194.2660
-B                290043.4817
-AGE              442444.4313
-TAX              466142.1004
-DIS             1006704.7537
-CRIM            1067521.2371
-INDUS           1255337.3748
-NOX             1265518.8700
-PTRATIO         1402827.4712
-LSTAT           6001941.3822
-RM              6182463.1457
-
-smile&gt; println(housing.names.slice(0, 13).zip(model.shap(housing.stream.parallel)).sortBy(_._2).map(t => "%-15s %12.4f".format(t._1, t._2)).mkString("\n"))
-CHAS                  0.0483
-ZN                    0.0514
-RAD                   0.0601
-B                     0.1647
-AGE                   0.2303
-TAX                   0.2530
-DIS                   0.3403
-CRIM                  0.5217
-INDUS                 0.5734
-NOX                   0.6423
-PTRATIO               0.7819
-RM                    2.3272
-LSTAT                 2.6838
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_14">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 smile&gt; import smile.io.*
 
 smile&gt; import smile.data.formula.*
@@ -462,9 +424,65 @@ PTRATIO               0.7861
 RM                    2.3312
 LSTAT                 2.6772
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+smile&gt; val housing = read.arff("data/weka/regression/housing.arff")
+[main] INFO smile.io.Arff - Read ARFF relation housing
+housing: DataFrame = [CRIM: float, ZN: float, INDUS: float, CHAS: byte nominal[0, 1], NOX: float, RM: float, AGE: float, DIS: float, RAD: float, TAX: float, PTRATIO: float, B: float, LSTAT: float, class: float]
++------+----+-----+----+-----+-----+----+------+---+---+-------+------+-----+-----+
+|  CRIM|  ZN|INDUS|CHAS|  NOX|   RM| AGE|   DIS|RAD|TAX|PTRATIO|     B|LSTAT|class|
++------+----+-----+----+-----+-----+----+------+---+---+-------+------+-----+-----+
+|0.0063|  18| 2.31|   0|0.538|6.575|65.2|  4.09|  1|296|   15.3| 396.9| 4.98|   24|
+|0.0273|   0| 7.07|   0|0.469|6.421|78.9|4.9671|  2|242|   17.8| 396.9| 9.14| 21.6|
+|0.0273|   0| 7.07|   0|0.469|7.185|61.1|4.9671|  2|242|   17.8|392.83| 4.03| 34.7|
+|0.0324|   0| 2.18|   0|0.458|6.998|45.8|6.0622|  3|222|   18.7|394.63| 2.94| 33.4|
+| 0.069|   0| 2.18|   0|0.458|7.147|54.2|6.0622|  3|222|   18.7| 396.9| 5.33| 36.2|
+|0.0299|   0| 2.18|   0|0.458| 6.43|58.7|6.0622|  3|222|   18.7|394.12| 5.21| 28.7|
+|0.0883|12.5| 7.87|   0|0.524|6.012|66.6|5.5605|  5|311|   15.2| 395.6|12.43| 22.9|
+|0.1445|12.5| 7.87|   0|0.524|6.172|96.1|5.9505|  5|311|   15.2| 396.9|19.15| 27.1|
+|0.2112|12.5| 7.87|   0|0.524|5.631| 100|6.0821|  5|311|   15.2|386.63|29.93| 16.5|
+|  0.17|12.5| 7.87|   0|0.524|6.004|85.9|6.5921|  5|311|   15.2|386.71| 17.1| 18.9|
++------+----+-----+----+-----+-----+----+------+---+---+-------+------+-----+-----+
+496 more rows...
+
+smile&gt; val model = smile.regression.randomForest("class" ~ ".", housing)
+[main] INFO smile.util.package$ - Random Forest runtime: 0:00:00.495102
+model: regression.RandomForest = smile.regression.RandomForest@52d63b7e
+
+smile&gt; println(housing.names.slice(0, 13).zip(model.importance).sortBy(_._2).map(t => "%-15s %12.4f".format(t._1, t._2)).mkString("\n"))
+CHAS              87390.1358
+ZN               139917.2980
+RAD              142194.2660
+B                290043.4817
+AGE              442444.4313
+TAX              466142.1004
+DIS             1006704.7537
+CRIM            1067521.2371
+INDUS           1255337.3748
+NOX             1265518.8700
+PTRATIO         1402827.4712
+LSTAT           6001941.3822
+RM              6182463.1457
+
+smile&gt; println(housing.names.slice(0, 13).zip(model.shap(housing.stream.parallel)).sortBy(_._2).map(t => "%-15s %12.4f".format(t._1, t._2)).mkString("\n"))
+CHAS                  0.0483
+ZN                    0.0514
+RAD                   0.0601
+B                     0.1647
+AGE                   0.2303
+TAX                   0.2530
+DIS                   0.3403
+CRIM                  0.5217
+INDUS                 0.5734
+NOX                   0.6423
+PTRATIO               0.7819
+RM                    2.3272
+LSTAT                 2.6838
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="genetic-algorithm-feature-selection">Genetic Algorithm Based Feature Selection</h3>
 
@@ -499,13 +517,14 @@ LSTAT                 2.6772
     <p>In the below example, we use gradient boosted trees (100 tress)
         as the classifier, the accuracy of 5-fold cross validation as the fitness measure.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     var train = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
     var test = Read.csv("data/usps/zip.test", CSVFormat.DEFAULT.withDelimiter(' '));
     var x = train.drop("V1").toArray();
@@ -522,18 +541,38 @@ LSTAT                 2.6772
         System.out.format("%.2f%% %s%n", 100*bits.fitness(), bits);
     }
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 <!-- GAFE deadlock on scala
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_5">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="java" data-pane="pg-7-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    var train = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
+    var test = Read.csv("data/usps/zip.test", CSVFormat.DEFAULT.withDelimiter(' '));
+    var x = train.drop("V1").toArray();
+    var y = train.column("V1").toIntArray();
+    var testx = test.drop("V1").toArray();
+    var testy = test.column("V1").toIntArray();
+
+    var selection = new GAFE();
+    var result = selection.apply(100, 20, 256,
+        GAFE.fitness(x, y, testx, testy, new Accuracy(),
+        (x, y) -> LDA.fit(x, y)));
+
+    for (BitString bits : result) {
+        System.out.format("%.2f%% %s%n", 100*bits.fitness(), bits);
+    }
+    </code></pre>
+    </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-java"><code class="language-java">
     val train = read.csv("data/usps/zip.train", header=false, delimiter=' ')
     val test = read.csv("data/usps/zip.test", header=false, delimiter=' ')
     val x = train.drop("V1").toArray
@@ -551,30 +590,9 @@ LSTAT                 2.6772
         println(bits.bits.mkString(" "))
     }
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
-    var train = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
-    var test = Read.csv("data/usps/zip.test", CSVFormat.DEFAULT.withDelimiter(' '));
-    var x = train.drop("V1").toArray();
-    var y = train.column("V1").toIntArray();
-    var testx = test.drop("V1").toArray();
-    var testy = test.column("V1").toIntArray();
-
-    var selection = new GAFE();
-    var result = selection.apply(100, 20, 256,
-        GAFE.fitness(x, y, testx, testy, new Accuracy(),
-        (x, y) -> LDA.fit(x, y)));
-
-    for (BitString bits : result) {
-        System.out.format("%.2f%% %s%n", 100*bits.fitness(), bits);
-    }
-    </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 -->
     <p>When many such subsets of variables are obtained, the one with the best
         performance may be used as selected features. Alternatively, the frequencies
@@ -606,29 +624,29 @@ LSTAT                 2.6772
         retaining the most important variance) to the space spanned by a few
         eigenvectors.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_6">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    def pca(data: Array[Array[Double]], cor: Boolean = false): PCA
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
-            <div class="code" style="text-align: left;">
-              <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-8-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class PCA {
         public static PCA fit(double[][] data);
         public static PCA cor(double[][] data);
     }
               </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-8-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    def pca(data: Array[Array[Double]], cor: Boolean = false): PCA
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>If the parameter <code>cor</code> is true, PCA uses correlation matrix instead of covariance matrix.
         The correlation matrix is simply the covariance matrix, standardized by setting all variances equal
@@ -636,31 +654,16 @@ LSTAT                 2.6772
         as the correlation matrix will lose information when standardizing the variance.
         The correlation matrix is recommended when variables are measured in different scales.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_7">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val pendigits = read.csv("data/classification/pendigits.txt", delimiter="\t", header = false)
-    val formula: Formula = "V17" ~ "."
-    val df = formula.x(pendigits)
-    val x = df.toArray()
-    val y = formula.y(pendigits).toIntArray()
-
-    val pc = pca(df)
-    show(screeplot(pc.varianceProportion()))
-
-    val x2 = pc.getProjection(3)(x)
-    show(plot(x2, y, '.'))
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
-            <div class="code" style="text-align: left;">
-                  <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-9-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var pendigits = Read.csv("data/classification/pendigits.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
     var formula = Formula.lhs("V17");
     var x = formula.x(pendigits).toArray();
@@ -674,9 +677,24 @@ LSTAT                 2.6772
     var x2 = p.apply(x);
     ScatterPlot.of(x2, y, '.').canvas().window();
                   </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-9-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val pendigits = read.csv("data/classification/pendigits.txt", delimiter="\t", header = false)
+    val formula: Formula = "V17" ~ "."
+    val df = formula.x(pendigits)
+    val x = df.toArray()
+    val y = formula.y(pendigits).toIntArray()
+
+    val pc = pca(df)
+    show(screeplot(pc.varianceProportion()))
+
+    val x2 = pc.getProjection(3)(x)
+    show(plot(x2, y, '.'))
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>In the above example, we apply PCA to the pen-digits data, which includes 16 variables.</p>
 
@@ -702,9 +720,18 @@ LSTAT                 2.6772
     <p>Probabilistic principal component analysis is a simplified factor analysis
         that employs a latent variable model with linear relationship:
 
-    <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">XML</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-markup"><code class="language-markup">
     y &sim; W * x + &mu; + &epsilon;
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where latent variables x &sim; N(0, I), error (or noise) &epsilon; &sim; N(0, &Psi;),
         and &mu; is the location term (mean). In probabilistic PCA, an isotropic noise model is used,
@@ -712,55 +739,55 @@ LSTAT                 2.6772
         A close form of estimation of above parameters can be obtained
         by maximum likelihood method.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_8">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    def ppca(data: Array[Array[Double]], k: Int): PPCA
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
-            <div class="code" style="text-align: left;">
-                  <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-10-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-10-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-10-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class PPCA {
         public static PPCA fit(double[][] data, int k);
     }
                   </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-10-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    def ppca(data: Array[Array[Double]], k: Int): PPCA
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Similar to PCA example, we apply probabilistic PCA to the pen-digits data.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_9">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val pc = ppca(df, 3)
-    val x2 = pc(x)
-    show(plot(x2, y, '.'))
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
-            <div class="code" style="text-align: left;">
-                  <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-11-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var pca = ProbabilisticPCA.fit(x, 3);
     var x2 = pca.apply(x);
     ScatterPlot.of(x2, y, '.').canvas().window();
                   </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-11-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val pc = ppca(df, 3)
+    val x2 = pc(x)
+    show(plot(x2, y, '.'))
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/ppca.png" class="enlarge" style="width: 480px;" />
@@ -785,55 +812,55 @@ LSTAT                 2.6772
         of those clusters. Since even this method may yield a relatively large K,
         it is common to compute only the top P eigenvalues and eigenvectors of <code>K</code>.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_10">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    def kpca[T](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T]
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
-            <div class="code" style="text-align: left;">
-                  <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-12-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class KPCA {
         public static KPCA&lt;T&gt; fit(T[] data, MercerKernel&lt;T&gt; kernel, int k, double threshold);
     }
                   </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-12-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    def kpca[T](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T]
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Here we apply kernel PCA to the pen-digits data.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_11" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_11" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_11">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val pc = kpca(df, new GaussianKernel(45), 3)
-    val x2 = pc(x)
-    show(plot(x2, y, '.'))
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_11">
-            <div class="code" style="text-align: left;">
-                  <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-13-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-13-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-13-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var pca = KernelPCA.fit(pendigits.drop("V17"), new GaussianKernel(45), 3);
     var x2 = pca.apply(x);
     ScatterPlot.of(x2, y, '.').canvas().window();
                   </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-13-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val pc = kpca(df, new GaussianKernel(45), 3)
+    val x2 = pc(x)
+    show(plot(x2, y, '.'))
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Because of its nonlinear nature, the projected data has very different structure from PCA.</p>
 
@@ -863,60 +890,60 @@ LSTAT                 2.6772
         shown that a larger learning rate &eta; leads to faster convergence
         and larger asymptotic mean-square error, which is intuitively satisfying.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_12" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_12" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_12">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    def gha(data: Array[Array[Double]], k: Int, r: Double): GHA
-
-    def gha(data: Array[Array[Double]], w: Array[Array[Double]], r: Double): GHA
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_12">
-            <div class="code" style="text-align: left;">
-                  <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-14-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-14-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-14-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class GHA {
         public GHA(int n, int p, double r);
         public double update(double[] x);
     }
                   </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-14-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    def gha(data: Array[Array[Double]], k: Int, r: Double): GHA
+
+    def gha(data: Array[Array[Double]], w: Array[Array[Double]], r: Double): GHA
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The first method starts with random initial projection matrix, while the second one
         starts with a given projection matrix.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_13" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_13" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_13">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val pc = gha(x, 3, TimeFunction.constant(0.00001))
-    val x2 = pc(x)
-    show(plot(x2, y, '.'))
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_13">
-            <div class="code" style="text-align: left;">
-                  <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-15-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-15-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-15-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var gha = new GHA(x[0].length, 3, TimeFunction.constant(0.00001));
     Arrays.stream(x).forEach(xi -> gha.update(xi));
     var x2 = gha.apply(x);
     ScatterPlot.of(x2, y, '.').canvas().window();
                   </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-15-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val pc = gha(x, 3, TimeFunction.constant(0.00001))
+    val x2 = pc(x)
+    show(plot(x2, y, '.'))
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The results look similar to PCA.</p>
 

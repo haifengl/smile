@@ -33,13 +33,14 @@ title: Smile - LLM
         path of checkpoint files, the path of tokenizer model file, maximum batch size, maximum
         sequence length, and optionally CUDA device id:</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     import smile.llm.llama.*;
 
     var model = Llama.build("model/Llama3-8B-Instruct",
@@ -49,21 +50,21 @@ title: Smile - LLM
               0      // CUDA device id
           );
           </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>For a pretrained model, one should call <code>generate()</code> method with a batch
         of prompots to generate the text. For fine-tuned chat models, we should instead
         call <code>chat()</code> method to generate conversation responses.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     // List of conversational dialogs, where each dialog is a list of messages.
     Message[][] dialogs = {
           {
@@ -100,9 +101,8 @@ These are just a few of the many attractions that Paris has to offer. With so mu
               null   // streaming publisher
           );
           </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="serving" class="title">Serving</h2>
 
@@ -116,13 +116,14 @@ These are just a few of the many attractions that Paris has to offer. With so mu
         lightweight LLM server. You should have Node.js and npm installed to build the
         frontend.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#bash_3" type="button" role="tab">Shell</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="bash_3">
-            <div class="code" style="text-align: left;">
-          <pre class="language-bash"><code class="language-bash">
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Shell</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 $ bin/serve.sh --help
 SmileServe - Large Language Model (LLM) Inference Server
 Usage: smile-serve [options]
@@ -136,9 +137,8 @@ Usage: smile-serve [options]
   --port &lt;value&gt;           The port number
   --help                   Display the usage information
           </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>By default, SmileServe binds at localhost:3801. If you prefer a different port and/or
         want to expose the server to other hosts, you may set the binding interface and port

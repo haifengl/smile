@@ -28,35 +28,16 @@ title: Smile - Interpolation
     <p><code>LinearInterpolation</code> is quick and easy, but it is not very precise. Another disadvantage
         is that the interpolant is not differentiable at the control points.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val x = Array(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
-    val y = Array(0.0, 0.8415, 0.9093, 0.1411, -0.7568, -0.9589, -0.2794)
-    val points = (0 until x.length).map(i => Array(x(i), y(i))).toArray
-
-    val linear = new LinearInterpolation(x, y)
-
-    val data = (0 to 60).map { i =>
-      val x = i * 0.1
-      val y = linear.interpolate(x)
-      Array(x, y)
-    }.toArray
-
-    val canvas = plot(points, '@', Color.BLACK)
-    canvas.add(LinePlot.of(data, Color.RED))
-    show(canvas)
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     import java.awt.Color;
     import smile.interpolation.*;
     import smile.math.rbf.*;
@@ -83,9 +64,28 @@ title: Smile - Interpolation
     figure.add(LinePlot.of(data, Color.RED));
     show(figure);
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val x = Array(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
+    val y = Array(0.0, 0.8415, 0.9093, 0.1411, -0.7568, -0.9589, -0.2794)
+    val points = (0 until x.length).map(i => Array(x(i), y(i))).toArray
+
+    val linear = new LinearInterpolation(x, y)
+
+    val data = (0 to 60).map { i =>
+      val x = i * 0.1
+      val y = linear.interpolate(x)
+      Array(x, y)
+    }.toArray
+
+    val canvas = plot(points, '@', Color.BLACK)
+    canvas.add(LinePlot.of(data, Color.RED))
+    show(canvas)
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/linear-interpolation.png" class="enlarge" style="width: 480px;" />
@@ -111,31 +111,16 @@ title: Smile - Interpolation
         used in polynomial interpolation. It also does not suffer from Runge's
         phenomenon.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_2">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    val cubic = new CubicSplineInterpolation1D(x, y)
-
-    val data = (0 to 60).map { i =>
-      val x = i * 0.1
-      val y = cubic.interpolate(x)
-      Array(x, y)
-    }.toArray
-
-    val canvas = plot(points, '@', Color.BLACK)
-    canvas.add(LinePlot.of(data, Color.BLUE))
-    show(canvas)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var cubic = new CubicSplineInterpolation1D(x, y);
 
     double[][] data = new double[61][2];
@@ -148,9 +133,24 @@ title: Smile - Interpolation
     figure.add(LinePlot.of(data, Color.BLUE));
     show(figure);
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val cubic = new CubicSplineInterpolation1D(x, y)
+
+    val data = (0 to 60).map { i =>
+      val x = i * 0.1
+      val y = cubic.interpolate(x)
+      Array(x, y)
+    }.toArray
+
+    val canvas = plot(points, '@', Color.BLACK)
+    canvas.add(LinePlot.of(data, Color.BLUE))
+    show(canvas)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/cubic-interpolation.png" class="enlarge" style="width: 480px;" />
@@ -173,52 +173,16 @@ title: Smile - Interpolation
         <img src="images/grid-interpolation2d.png" class="enlarge" style="width: 480px;" />
     </div>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_3">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    val x1 = Array(1950.0, 1960, 1970, 1980, 1990)
-    val x2 = Array(10.0, 20, 30)
-    val y = Array(
-            Array(150.697, 199.592, 187.625),
-            Array(179.323, 195.072, 250.287),
-            Array(203.212, 179.092, 322.767),
-            Array(226.505, 153.706, 426.730),
-            Array(249.633, 120.281, 598.243)
-        )
-
-    val canvas = heatmap(y, Palette.jet(256))
-    canvas.setTitle("Original")
-    show(canvas)
-
-    val cubic = new CubicSplineInterpolation2D(x1, x2, y)
-
-    val data = Array.ofDim[Double](101, 101)
-    for (i <- 0 to 100; j <- 0 to 100)
-      data(i)(j) = cubic.interpolate(1950 + i*0.4, 10 + j*0.2)
-
-    val cubicPlot = heatmap(data, Palette.jet(256))
-    cubicPlot.setTitle("Cubic")
-    show(cubicPlot)
-
-    val bicubic = new BicubicInterpolation(x1, x2, y)
-
-    for (i <- 0 to 100; j <- 0 to 100)
-      data(i)(j) = bicubic.interpolate(1950 + i*0.4, 10 + j*0.2)
-
-    val bicubicPlot = heatmap(data, Palette.jet(256))
-    bicubicPlot.setTitle("Bicubic")
-    show(bicubicPlot)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     double[] x1 = {1950.0, 1960, 1970, 1980, 1990};
     double[] x2 = {10.0, 20, 30};
     double[][] y = {
@@ -258,9 +222,45 @@ title: Smile - Interpolation
     bicubicPlot.setTitle("Bicubic");
     show(bicubicPlot);
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val x1 = Array(1950.0, 1960, 1970, 1980, 1990)
+    val x2 = Array(10.0, 20, 30)
+    val y = Array(
+            Array(150.697, 199.592, 187.625),
+            Array(179.323, 195.072, 250.287),
+            Array(203.212, 179.092, 322.767),
+            Array(226.505, 153.706, 426.730),
+            Array(249.633, 120.281, 598.243)
+        )
+
+    val canvas = heatmap(y, Palette.jet(256))
+    canvas.setTitle("Original")
+    show(canvas)
+
+    val cubic = new CubicSplineInterpolation2D(x1, x2, y)
+
+    val data = Array.ofDim[Double](101, 101)
+    for (i <- 0 to 100; j <- 0 to 100)
+      data(i)(j) = cubic.interpolate(1950 + i*0.4, 10 + j*0.2)
+
+    val cubicPlot = heatmap(data, Palette.jet(256))
+    cubicPlot.setTitle("Cubic")
+    show(cubicPlot)
+
+    val bicubic = new BicubicInterpolation(x1, x2, y)
+
+    for (i <- 0 to 100; j <- 0 to 100)
+      data(i)(j) = bicubic.interpolate(1950 + i*0.4, 10 + j*0.2)
+
+    val bicubicPlot = heatmap(data, Palette.jet(256))
+    bicubicPlot.setTitle("Bicubic")
+    show(bicubicPlot)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="kriging" class="title">Kriging Interpolation</h2>
 
@@ -269,31 +269,16 @@ title: Smile - Interpolation
         also known as Gauss-Markov estimation or Gaussian process regression.
         We implement ordinary kriging for interpolation with power variogram.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_4">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    val kriging = new KrigingInterpolation1D(x, y)
-
-    val data = Array.ofDim[Double](61, 2)
-    for (i <- 0 to 60) {
-      data(i)(0) = i * 0.1
-      data(i)(1) = kriging.interpolate(data(i)(0))
-    }
-
-    val canvas = plot(points, '@', Color.BLACK)
-    canvas.add(LinePlot.of(data, Color.CYAN))
-    show(canvas)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var kriging = new KrigingInterpolation1D(x, y);
 
     double[][] data = new double[61][2];
@@ -306,9 +291,24 @@ title: Smile - Interpolation
     figure.add(LinePlot.of(data, Color.CYAN));
     show(figure);
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val kriging = new KrigingInterpolation1D(x, y)
+
+    val data = Array.ofDim[Double](61, 2)
+    for (i <- 0 to 60) {
+      data(i)(0) = i * 0.1
+      data(i)(1) = kriging.interpolate(data(i)(0))
+    }
+
+    val canvas = plot(points, '@', Color.BLACK)
+    canvas.add(LinePlot.of(data, Color.CYAN))
+    show(canvas)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/kriging-interpolation.png" class="enlarge" style="width: 480px;" />
@@ -353,31 +353,16 @@ title: Smile - Interpolation
         there is no evidence that either the NRBF method is consistently superior
         to the RBF method, or vice versa.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_5">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    val rbf = new RBFInterpolation1D(x, y, new smile.math.rbf.GaussianRadialBasis())
-
-    val data = Array.ofDim[Double](61, 2)
-    for (i <- 0 to 60) {
-      data(i)(0) = i * 0.1
-      data(i)(1) = rbf.interpolate(data(i)(0))
-    }
-
-    val canvas = plot(points, '@', Color.BLACK)
-    canvas.add(LinePlot.of(data, Color.GREEN))
-    show(canvas)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var rbf = new RBFInterpolation1D(x, y, new smile.math.rbf.GaussianRadialBasis());
 
     double[][] data = new double[61][2];
@@ -390,9 +375,24 @@ title: Smile - Interpolation
     figure.add(LinePlot.of(data, Color.GREEN));
     show(figure);
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val rbf = new RBFInterpolation1D(x, y, new smile.math.rbf.GaussianRadialBasis())
+
+    val data = Array.ofDim[Double](61, 2)
+    for (i <- 0 to 60) {
+      data(i)(0) = i * 0.1
+      data(i)(1) = rbf.interpolate(data(i)(0))
+    }
+
+    val canvas = plot(points, '@', Color.BLACK)
+    canvas.add(LinePlot.of(data, Color.GREEN))
+    show(canvas)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/rbf-interpolation.png" class="enlarge" style="width: 480px;" />
@@ -406,31 +406,16 @@ title: Smile - Interpolation
         equations, and thus it works for very large N. An example of such &phi;
         is &phi;(r) = r<sup>-p</sup> with (typically) 1 &lt; p &le; 3.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_6">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    val shepard = new ShepardInterpolation1D(x, y, 3)
-
-    val data = Array.ofDim[Double](61, 2)
-    for (i <- 0 to 60) {
-      data(i)(0) = i * 0.1
-      data(i)(1) = shepard.interpolate(data(i)(0))
-    }
-
-    val canvas = plot(points, '@', Color.BLACK)
-    canvas.add(LinePlot.of(data, Color.PINK))
-    show(canvas)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var shepard = new ShepardInterpolation1D(x, y, 3);
 
     double[][] data = new double[61][2];
@@ -443,9 +428,24 @@ title: Smile - Interpolation
     figure.add(LinePlot.of(data, Color.PINK));
     show(figure);
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val shepard = new ShepardInterpolation1D(x, y, 3)
+
+    val data = Array.ofDim[Double](61, 2)
+    for (i <- 0 to 60) {
+      data(i)(0) = i * 0.1
+      data(i)(1) = shepard.interpolate(data(i)(0))
+    }
+
+    val canvas = plot(points, '@', Color.BLACK)
+    canvas.add(LinePlot.of(data, Color.PINK))
+    show(canvas)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/shepard-interpolation.png" class="enlarge" style="width: 480px;" />
@@ -466,35 +466,16 @@ title: Smile - Interpolation
         produces the smoothest possible interpolant, which are obtained by solving
         a very sparse linear equations with biconjugate gradient method.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_7">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    val zz = Array.ofDim[Double](101, 101)
-    val ww = Array.ofDim[Double](101, 101)
-    for (i <- 0 to 100; j <- 0 to 100) {
-      zz(i)(j) = if (java.lang.Math.random() < 0.2) Double.NaN else data(i)(j)
-      ww(i)(j) = zz(i)(j)
-    }
-
-    val canvas = heatmap(ww, Palette.jet(256))
-    canvas.setTitle("Missing Values")
-    show(canvas)
-
-    LaplaceInterpolation.interpolate(zz)
-    val canvas = heatmap(zz, Palette.jet(256))
-    canvas.setTitle("Laplace")
-    show(canvas)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     double[][] zz = new double[101][101];
     double[][] ww = new double[101][101];
     for (int i = 0; i <= 100; i++) {
@@ -513,9 +494,28 @@ title: Smile - Interpolation
     figure.setTitle("Laplace");
     show(figure);
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val zz = Array.ofDim[Double](101, 101)
+    val ww = Array.ofDim[Double](101, 101)
+    for (i <- 0 to 100; j <- 0 to 100) {
+      zz(i)(j) = if (java.lang.Math.random() < 0.2) Double.NaN else data(i)(j)
+      ww(i)(j) = zz(i)(j)
+    }
+
+    val canvas = heatmap(ww, Palette.jet(256))
+    canvas.setTitle("Missing Values")
+    show(canvas)
+
+    LaplaceInterpolation.interpolate(zz)
+    val canvas = heatmap(zz, Palette.jet(256))
+    canvas.setTitle("Laplace")
+    show(canvas)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/laplace-interpolation.png" class="enlarge" style="width: 480px;" />

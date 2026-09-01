@@ -40,46 +40,44 @@ title: Smile - Regression
         minimum-variance mean-unbiased estimation when the errors have finite
         variances.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_1" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    def lm(formula: Formula,
-           data: DataFrame,
-           method: String = "qr",
-           stderr: Boolean = true,
-           recursive: Boolean = true): LinearModel
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-1-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class OLS {
         public static LinearModel fit(Formula formula,
                                       DataFrame data,
                                       Options options);
     }
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    def lm(formula: Formula,
+           data: DataFrame,
+           method: String = "qr",
+           stderr: Boolean = true,
+           recursive: Boolean = true): LinearModel
+    </code></pre>
+    </div>
+    <div id="pg-1-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     fun lm(formula: Formula,
            data: DataFrame,
            method: String = "qr",
            stderr: Boolean = true,
            recursive: Boolean = true): LinearModel
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>There are several different frameworks in which the linear regression
         model can be cast in order to make the OLS technique applicable. Each
@@ -97,65 +95,51 @@ title: Smile - Regression
         data set by Breiman. The predictor
         attributes are generated independently using the following probabilities:</p>
 
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">
     P(X<sub>1</sub> = -1) = P(X<sub>1</sub> = 1) = 1/2
 
     P(X<sub>m</sub> = -1) = P(X<sub>m</sub> = 0) = P(X<sub>m</sub> = 1) = 1/3, m = 2,...,10
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The value of the response variable <code>Y</code> is:</p>
 
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">
     Y =  3 + 3X<sub>2</sub> + 2X<sub>3</sub> + X<sub>4</sub> + &sigma;(0,1)  if X_1 =  1
 
     Y = -3 + 3X<sub>5</sub> + 2X<sub>6</sub> + X<sub>7</sub> + &sigma;(0,1)  if X_1 = -1
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>It is straightforward to fit an OLS model.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_2" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_2">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val planes = read.arff("data/weka/regression/2dplanes.arff")
-           val model = lm("y" ~, planes)
-    [main] INFO smile.util.package$ - Least Squares runtime: 0:00:00.189432
-    model: regression.LinearModel = Linear Model:
-
-    Residuals:
-               Min	        1Q	    Median	        3Q	       Max
-           -8.5260	   -1.6514	   -0.0049	    1.6755	    7.8116
-
-    Coefficients:
-                      Estimate Std. Error    t value   Pr(>|t|)
-    Intercept          -0.0148     0.0118    -1.2503     0.2112
-    x1                  2.9730     0.0118   251.7998     0.0000 ***
-    x2                  1.5344     0.0145   105.8468     0.0000 ***
-    x3                  1.0357     0.0144    71.7815     0.0000 ***
-    x4                  0.5281     0.0145    36.4827     0.0000 ***
-    x5                  1.4766     0.0144   102.2472     0.0000 ***
-    x6                  1.0044     0.0144    69.5380     0.0000 ***
-    x7                  0.5238     0.0145    36.1696     0.0000 ***
-    x8                 -0.0011     0.0145    -0.0750     0.9402
-    x9                  0.0024     0.0145     0.1649     0.8690
-    x10                -0.0278     0.0145    -1.9239     0.0544 .
-    ---------------------------------------------------------------------
-    Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-    Residual standard error: 2.3838 on 40757 degrees of freedom
-    Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
-    F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-2-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var planes = Read.arff("data/weka/regression/2dplanes.arff")
            var model = OLS.fit(Formula.lhs("y"), planes)
            System.out.println(model)
@@ -185,11 +169,41 @@ title: Smile - Regression
     Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
     F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
           </code></pre>
-            </div>
-        </div>
-    <div class="tab-pane fade" role="tabpanel" id="kotlin_2">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val planes = read.arff("data/weka/regression/2dplanes.arff")
+           val model = lm("y" ~, planes)
+    [main] INFO smile.util.package$ - Least Squares runtime: 0:00:00.189432
+    model: regression.LinearModel = Linear Model:
+
+    Residuals:
+               Min	        1Q	    Median	        3Q	       Max
+           -8.5260	   -1.6514	   -0.0049	    1.6755	    7.8116
+
+    Coefficients:
+                      Estimate Std. Error    t value   Pr(>|t|)
+    Intercept          -0.0148     0.0118    -1.2503     0.2112
+    x1                  2.9730     0.0118   251.7998     0.0000 ***
+    x2                  1.5344     0.0145   105.8468     0.0000 ***
+    x3                  1.0357     0.0144    71.7815     0.0000 ***
+    x4                  0.5281     0.0145    36.4827     0.0000 ***
+    x5                  1.4766     0.0144   102.2472     0.0000 ***
+    x6                  1.0044     0.0144    69.5380     0.0000 ***
+    x7                  0.5238     0.0145    36.1696     0.0000 ***
+    x8                 -0.0011     0.0145    -0.0750     0.9402
+    x9                  0.0024     0.0145     0.1649     0.8690
+    x10                -0.0278     0.0145    -1.9239     0.0544 .
+    ---------------------------------------------------------------------
+    Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    Residual standard error: 2.3838 on 40757 degrees of freedom
+    Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
+    F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
+    </code></pre>
+    </div>
+    <div id="pg-2-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> import smile.*;
         import smile.regression.*
         import smile.data.formula.*;
@@ -222,42 +236,40 @@ title: Smile - Regression
     F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>We then can apply the regression model on a new data point.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_3" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_3">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> model.predict(planes(0))
-    res1: Double = 5.073347387304475
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="java" data-pane="pg-3-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> model.predict(planes.get(0))
     $238 ==> 5.073347388203141
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_3">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> model.predict(planes(0))
+    res1: Double = 5.073347387304475
+    </code></pre>
+    </div>
+    <div id="pg-3-2" class="hero-pane" hidden>
+      <pre class="playground-source language-java"><code class="language-java">
     >>> model.predict(planes[0])
     res166: kotlin.Double = 5.073347388203141
           </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Once a regression model has been constructed, it may be important to
         confirm the goodness of fit of the model and the statistical significance
@@ -302,36 +314,34 @@ title: Smile - Regression
         In this setting the belief that weight should be small is coded into a prior
         distribution.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_4" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_4">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    def ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-4-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class RidgeRegression {
         public static LinearModel fit(Formula formula, DataFrame data, double lambda);
     }
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_4">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    def ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel
+    </code></pre>
+    </div>
+    <div id="pg-4-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     fun ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
         <code>y</code> is the response values, and <code>lambda</code> is
@@ -342,41 +352,17 @@ title: Smile - Regression
         observed yearly from 1947 to 1962. It is a well-known example for a highly
         collinear regression.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_5" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_5">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val longley = read.arff("data/weka/regression/longley.arff")
-           val model = ridge("employed" ~, longley, 0.0057)
-    model: regression.LinearModel = Linear Model:
-
-    Residuals:
-               Min	        1Q	    Median	        3Q	       Max
-         -410.9399	  -97.3097	   23.8665	  126.4536	  567.7757
-
-    Coefficients:
-    Intercept       -2623118.1327
-    deflator           -4.3322
-    GNP                -0.0091
-    unemployed         -1.6211
-    armed_forces       -0.9161
-    population         -0.1425
-    year             1389.9691
-
-    Residual standard error: 320.2543 on 9 degrees of freedom
-    Multiple R-squared: 0.9950,    Adjusted R-squared: 0.9917
-    F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-5-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var longley = Read.arff("data/weka/regression/longley.arff")
            var model = RidgeRegression.fit(Formula.lhs("employed"), longley, 0.0057)
            System.out.println(model)
@@ -399,11 +385,33 @@ title: Smile - Regression
     Multiple R-squared: 0.9950,    Adjusted R-squared: 0.9917
     F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
           </code></pre>
-            </div>
-        </div>
-            <div class="tab-pane fade" role="tabpanel" id="kotlin_5">
-    <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val longley = read.arff("data/weka/regression/longley.arff")
+           val model = ridge("employed" ~, longley, 0.0057)
+    model: regression.LinearModel = Linear Model:
+
+    Residuals:
+               Min	        1Q	    Median	        3Q	       Max
+         -410.9399	  -97.3097	   23.8665	  126.4536	  567.7757
+
+    Coefficients:
+    Intercept       -2623118.1327
+    deflator           -4.3322
+    GNP                -0.0091
+    unemployed         -1.6211
+    armed_forces       -0.9161
+    population         -0.1425
+    year             1389.9691
+
+    Residual standard error: 320.2543 on 9 degrees of freedom
+    Multiple R-squared: 0.9950,    Adjusted R-squared: 0.9917
+    F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
+    </code></pre>
+    </div>
+    <div id="pg-5-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> val longley = read.arff("data/weka/regression/longley.arff")
         val model = ridge(Formula.lhs("employed"), longley, 0.0057)
     res169: smile.regression.LinearModel = Linear Model:
@@ -426,8 +434,8 @@ title: Smile - Regression
     F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
     </code></pre>
     </div>
-    </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>When including an intercept term in the regression, we usually leave
         this coefficient unpenalized. Otherwise, we could add some constant amount
@@ -470,46 +478,44 @@ title: Smile - Regression
         quadratic programming or more general convex optimization methods, as well
         as by specific algorithms such as the least angle regression algorithm.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_6" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_6">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    def lasso(formula: Formula,
-              data: DataFrame,
-              lambda: Double,
-              tol: Double = 1E-3,
-              maxIter: Int = 5000): LinearModel
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-6-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class LASSO {
         public static LinearModel fit(Formula formula,
                                       DataFrame data,
                                       Options options);
     }
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_6">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    def lasso(formula: Formula,
+              data: DataFrame,
+              lambda: Double,
+              tol: Double = 1E-3,
+              maxIter: Int = 5000): LinearModel
+    </code></pre>
+    </div>
+    <div id="pg-6-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     fun lasso(formula: Formula,
               data: DataFrame,
               lambda: Double,
               tol: Double = 1E-3,
               maxIter: Int = 5000): LinearModel
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
         <code>y</code> is the response values,
@@ -529,45 +535,43 @@ title: Smile - Regression
         standardized to have unit L2 norm in each column and zero mean.
         The data used in the below example has 64 columns that consists of basic
         data plus certain interactions.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_7" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_7">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val diabetes = read.csv("data/regression/diabetes.csv")
-    lasso("y" ~, diabetes, 10)
-    lasso("y" ~, diabetes, 100)
-    lasso("y" ~, diabetes, 500)
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="java" data-pane="pg-7-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var diabetes = Read.csv("data/regression/diabetes.csv", CSVFormat.DEFAULT.withFirstRecordAsHeader());
     var formula = Formula.lhs("y");
     LASSO.fit(formula, diabetes, new LASSO.Options(10));
     LASSO.fit(formula, diabetes, new LASSO.Options(100));
     LASSO.fit(formula, diabetes, new LASSO.Options(500));
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_7">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val diabetes = read.csv("data/regression/diabetes.csv")
+    lasso("y" ~, diabetes, 10)
+    lasso("y" ~, diabetes, 100)
+    lasso("y" ~, diabetes, 500)
+    </code></pre>
+    </div>
+    <div id="pg-7-2" class="hero-pane" hidden>
+      <pre class="playground-source language-java"><code class="language-java">
     val diabetes = read.csv("data/regression/diabetes.csv")
     val formula = Formula.lhs("y")
     lasso(formula, diabetes, 10)
     lasso(formula, diabetes, 100)
     lasso(formula, diabetes, 500)
           </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>With large <code>lambda</code> values, we can observe that more and more
         parameters are regularized towards to 0.</p>
@@ -581,9 +585,18 @@ title: Smile - Regression
 
     <p>In its basic form, radial basis function network is in the form</p>
 
-    <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">XML</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-markup"><code class="language-markup">
     y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where the approximating function y(x) is represented as a sum of N radial
         basis functions &phi;, each associated with a different center c<sub>i</sub>,
@@ -607,40 +620,38 @@ title: Smile - Regression
     <p>An optional third backpropagation step can be performed to fine-tune all the RBF
         network's parameters.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_8" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_8">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    def rbfnet[T](x: Array[T], y: Array[Double], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T]
-
-    def rbfnet(x: Array[Array[Double]], y: Array[Double], k: Int, normalized: Boolean = false): RBFNetwork[Array[Double]]
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-8-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-8-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class RBFNetwork {
         public static RBFNetwork&lt;T&gt; fit(T[] x, int[] y, RBF&lt;T&gt;[] rbf, boolean normalized);
     }
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_8">
-            <div class="code" style="text-align: left;">
-          <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-8-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    def rbfnet[T](x: Array[T], y: Array[Double], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T]
+
+    def rbfnet(x: Array[Array[Double]], y: Array[Double], k: Int, normalized: Boolean = false): RBFNetwork[Array[Double]]
+    </code></pre>
+    </div>
+    <div id="pg-8-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     fun &lt;T&gt; rbfnet(x: Array&lt;T&gt;, y: DoubleArray, neurons: Array&lt;RBF&lt;T&gt;&gt;, normalized: Boolean = false): RBFNetwork&lt;T&gt;
 
     fun rbfnet(x: Array&lt;DoubleArray&gt;, y: DoubleArray, k: Int, normalized: Boolean = false): RBFNetwork&lt;DoubleArray&gt;
           </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The popular choices for &phi; comprise the Gaussian function and the
         so-called thin plate splines. The advantage of the thin plate splines is that
@@ -653,43 +664,41 @@ title: Smile - Regression
         effect of better conditioning (the separation distance of the scaled points
         increases).</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_9" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_9">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val y = diabetes("y").toDoubleArray()
-    val x = diabetes.select((1 until 11).toArray: _*).toArray() // use only the primary attributes
-    cv.regression(10, x, y) { case (x, y) => smile.regression.rbfnet(x, y, 10) }
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-9-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-9-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var y = diabetes.column("y").toDoubleArray();
     var x = diabetes.select(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).toArray(); // use only the primary attributes
     CrossValidation.regression(10, x, y,
         (x, y) -> smile.regression.RBFNetwork.fit(x, y, RBF.fit(x, 10), false));
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_9">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-9-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val y = diabetes("y").toDoubleArray()
+    val x = diabetes.select((1 until 11).toArray: _*).toArray() // use only the primary attributes
+    cv.regression(10, x, y) { case (x, y) => smile.regression.rbfnet(x, y, 10) }
+    </code></pre>
+    </div>
+    <div id="pg-9-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     import smile.base.rbf.*;
     import smile.validation.*;
     val y = diabetes.column("y").toDoubleArray()
     val x = diabetes.select(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).toArray() // use only the primary attributes
     CrossValidation.regression(10, x, y, { x, y -> rbfnet(x, y, RBF.fit(x, 10), false) })
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Note that we use the fully qualified name <code>smile.regression.rbfnet</code>
         in above example.
@@ -720,27 +729,17 @@ title: Smile - Regression
         function ignores any training data close to the model prediction (within
         the &epsilon; threshold).</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_10" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_10">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    def svm[T](x: Array[T],
-               y: Array[Double],
-               kernel: MercerKernel[T],
-               eps: Double,
-               C: Double,
-               tol: Double = 1E-3): KernelMachine[T]
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-10-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-10-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-10-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-10-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class SVM {
         public static KernelMachine&lt;T&gt; fit(T[] x,
                                            double[] y,
@@ -748,11 +747,19 @@ title: Smile - Regression
                                            Options options);
     }
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_10">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-10-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    def svm[T](x: Array[T],
+               y: Array[Double],
+               kernel: MercerKernel[T],
+               eps: Double,
+               C: Double,
+               tol: Double = 1E-3): KernelMachine[T]
+    </code></pre>
+    </div>
+    <div id="pg-10-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     fun &lt;T&gt; svm(x: Array&lt;T&gt;,
                y: DoubleArray,
                kernel: MercerKernel&lt;T&gt;,
@@ -760,9 +767,9 @@ title: Smile - Regression
                C: Double,
                tol: Double = 1E-3): KernelMachine&lt;T&gt;
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
@@ -773,41 +780,39 @@ title: Smile - Regression
         parameter for instance <i>i</i> will be <code>weight(i) * C</code>,
         and <code>tol</code> the tolerance of convergence test.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_11" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_11" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_11" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_11">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-11-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-11-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    var options = new smile.regression.SVM.Options(20, 10);
+    CrossValidation.regression(10, x, y,
+        (x, y) -> smile.regression.SVM.fit(x, y, new GaussianKernel(0.06), options));
+          </code></pre>
+    </div>
+    <div id="pg-11-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     import smile.validation.*;
     import smile.math.kernel.*;
     cv.regression(10, x, y) { case (x, y) =>
         smile.regression.svm(x, y, new GaussianKernel(0.06), 20, 10)
     }
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_11">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    var options = new smile.regression.SVM.Options(20, 10);
-    CrossValidation.regression(10, x, y,
-        (x, y) -> smile.regression.SVM.fit(x, y, new GaussianKernel(0.06), options));
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_11">
-            <div class="code" style="text-align: left;">
-          <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-11-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     CrossValidation.regression(10, x, y,
         { x, y -> smile.regression.svm(x, y, GaussianKernel(0.06), 20.0, 10.0, 1E-3) })
           </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Applying SVR to the diabetes data, we observe a smaller RMSE by 10-fold cross validation
         compared to the RBF networks in previous section. Note that we have not optimized the hyperparameters in both cases.</p>
@@ -840,15 +845,26 @@ title: Smile - Regression
         Instead, one may employ the information gain ratio, which solves the drawback
         of information gain.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_12" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_12" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_12" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_12">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-12-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-12-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    public class RegressionTree {
+         public static RegressionTree fit(Formula formula,
+                                          DataFrame data,
+                                          Options options);
+    }
+          </code></pre>
+    </div>
+    <div id="pg-12-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     def cart(formula: Formula,
              data: DataFrame,
              splitRule: SplitRule = SplitRule.GINI,
@@ -856,22 +872,9 @@ title: Smile - Regression
              maxNodes: Int = 0,
              nodeSize: Int = 5): RegressionTree
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_12">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    public class RegressionTree {
-         public static RegressionTree fit(Formula formula,
-                                          DataFrame data,
-                                          Options options);
-    }
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_12">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-12-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     fun cart(formula: Formula,
              data: DataFrame,
              splitRule: SplitRule = SplitRule.GINI,
@@ -879,9 +882,9 @@ title: Smile - Regression
              maxNodes: Int = 0,
              nodeSize: Int = 5): RegressionTree
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
@@ -895,38 +898,36 @@ title: Smile - Regression
     <p>Applying to the diabetes data, we get RMSE 67.9 for 10-fold cross validation
         with regression trees of 200 nodes.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_13" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_13" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_13" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_13">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-13-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-13-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-13-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-13-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
+        (formula, data) -> RegressionTree.fit(formula, data));
+          </code></pre>
+    </div>
+    <div id="pg-13-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     cv.regression(10, "y"~, diabetes) { (formula, data) =>
         smile.regression.cart(formula, data, 200)
     }
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_13">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
-        (formula, data) -> RegressionTree.fit(formula, data));
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_13">
-            <div class="code" style="text-align: left;">
-          <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-13-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     CrossValidation.regression(10, Formula.lhs("y"), diabetes,
         { formula, data -> cart(formula, data) })
           </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Classification and Regression Tree techniques have a number of advantages
         over many of those alternative techniques.</p>
@@ -990,15 +991,26 @@ title: Smile - Regression
         <li>Each tree is grown to the largest extent possible. There is no pruning.</li>
     </ol>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_14" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_14" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_14" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_14">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-14-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-14-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-14-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-14-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    public class RandomForest {
+         public static RandomForest fit(Formula formula,
+                                        DataFrame data,
+                                        Options options);
+    }
+          </code></pre>
+    </div>
+    <div id="pg-14-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     def randomForest(formula: Formula,
                      data: DataFrame,
                      ntrees: Int = 500,
@@ -1008,22 +1020,9 @@ title: Smile - Regression
                      nodeSize: Int = 5,
                      subsample: Double = 1.0): RandomForest
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_14">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    public class RandomForest {
-         public static RandomForest fit(Formula formula,
-                                        DataFrame data,
-                                        Options options);
-    }
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_14">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-14-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     fun randomForest(formula: Formula,
                      data: DataFrame,
                      ntrees: Int = 500,
@@ -1033,9 +1032,9 @@ title: Smile - Regression
                      nodeSize: Int = 5,
                      subsample: Double = 1.0): RandomForest
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where <code>ntrees</code> is the number of trees,
         <code>nodeSize</code> is the number of instances in a node below which the tree will
@@ -1057,38 +1056,36 @@ title: Smile - Regression
         with 500 regression trees of 200 nodes, which significantly smaller than
         a single regression tree.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_15" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_15" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_15" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_15">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-15-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-15-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-15-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-15-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
+        (formula, data) -> smile.regression.RandomForest.fit(formula, data));
+          </code></pre>
+    </div>
+    <div id="pg-15-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     cv.regression(10, "y"~, diabetes) { (formula, data) =>
         smile.regression.randomForest(formula, data, maxNodes = 100)
     }
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_15">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
-        (formula, data) -> smile.regression.RandomForest.fit(formula, data));
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_15">
-            <div class="code" style="text-align: left;">
-          <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-15-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     CrossValidation.regression(10, Formula.lhs("y"), diabetes,
         { formula, data -> randomForest(formula, data) })
           </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The advantages of random forest are:</p>
         
@@ -1153,15 +1150,26 @@ title: Smile - Regression
         the price of increasing computational time both during training and
         prediction: lower learning rate requires more iterations.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_16" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_16" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_16" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_16">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-16-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-16-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-16-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-16-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    public class GradientTreeBoost {
+         public static GradientTreeBoost fit(Formula formula,
+                                             DataFrame data,
+                                             Options options);
+    }
+          </code></pre>
+    </div>
+    <div id="pg-16-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     def gbm(formula: Formula,
             data: DataFrame,
             loss: Loss = Loss.ls(),
@@ -1172,22 +1180,9 @@ title: Smile - Regression
             shrinkage: Double = 0.05,
             subsample: Double = 0.7): GradientTreeBoost
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_16">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    public class GradientTreeBoost {
-         public static GradientTreeBoost fit(Formula formula,
-                                             DataFrame data,
-                                             Options options);
-    }
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_16">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-16-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     fun gbm(formula: Formula,
             data: DataFrame,
             loss: Loss = Loss.ls(),
@@ -1198,9 +1193,9 @@ title: Smile - Regression
             shrinkage: Double = 0.05,
             subsample: Double = 0.7): GradientTreeBoost
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
@@ -1222,38 +1217,36 @@ title: Smile - Regression
         with 500 iterations. This is comparable to the result of random forest but
         uses only 6 nodes for each regression tree.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_17" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_17" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_17" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_17">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-17-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-17-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-17-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-17-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
+        (formula, data) -> smile.regression.GradientTreeBoost.fit(formula, data));
+          </code></pre>
+    </div>
+    <div id="pg-17-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     cv.regression(10, "y"~, diabetes) { (formula, data) =>
         smile.regression.gbm(formula, data)
     }
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_17">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
-        (formula, data) -> smile.regression.GradientTreeBoost.fit(formula, data));
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_17">
-            <div class="code" style="text-align: left;">
-          <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-17-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     CrossValidation.regression(10, Formula.lhs("y"), diabetes,
         { formula, data -> gbm(formula, data) })
           </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Soon after the introduction of gradient boosting Friedman proposed a
         minor modification to the algorithm, motivated by Breiman's bagging method.
@@ -1320,29 +1313,17 @@ title: Smile - Regression
 
     <p>This function fits a regular Gaussian process model.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_18" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_18" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_18" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_18">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    object gpr {
-        // regular Gaussian process model
-        def apply[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
-        // approximate Gaussian process model
-        def approx[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
-        // Nystrom approximation
-        def nystrom[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
-    }
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_18">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-18-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-18-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-18-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-18-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class GaussianProcessRegression {
         // regular Gaussian process model
          public static KernelMachine&lt;T&gt; fit(T[] x, double[] y, MercerKernel&lt;T&gt; kernel, double lambda);
@@ -1352,11 +1333,21 @@ title: Smile - Regression
         public static KernelMachine&lt;T&gt; nystrom(T[] x, double[] y, T[] t, MercerKernel&lt;T&gt; kernel, double lambda);
     }
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_18">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-18-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    object gpr {
+        // regular Gaussian process model
+        def apply[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
+        // approximate Gaussian process model
+        def approx[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
+        // Nystrom approximation
+        def nystrom[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
+    }
+    </code></pre>
+    </div>
+    <div id="pg-18-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     // regular Gaussian process model
     fun &lt;T&gt; gpr(x: Array&lt;T&gt;, y: DoubleArray, kernel: MercerKernel&lt;T&gt;, lambda: Double): KernelMachine&lt;T&gt;
 
@@ -1367,9 +1358,9 @@ title: Smile - Regression
         def &lt;T&gt; nystrom(x: Array&lt;T&gt;, y: DoubleArray, t: Array&lt;T&gt;, kernel: MercerKernel&lt;T&gt;, lambda: Double): KernelMachine&lt;T&gt;
     }
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
@@ -1381,44 +1372,42 @@ title: Smile - Regression
         acting as active set of regressors. In simple case, these can be chosen
         randomly from the training set or as the centers of k-means clustering.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_19" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_19" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_19" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_19">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    cv.regression(10, x, y) { (x, y) =>
-        val t = kmeans(x, 20).centers
-        gpr.approx(x, y, t, new GaussianKernel(0.06), 0.01)
-    }
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_19">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-19-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-19-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-19-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-19-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var options = new GaussianProcessRegression.Options(0.01);
     CrossValidation.regression(10, x, y, (x, y) -> {
         var t = KMeans.fit(x, 20, 5).centers();
         return GaussianProcessRegression.fit(x, y, t, new GaussianKernel(0.06), options);
     });
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_19">
-            <div class="code" style="text-align: left;">
-          <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-19-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    cv.regression(10, x, y) { (x, y) =>
+        val t = kmeans(x, 20).centers
+        gpr.approx(x, y, t, new GaussianKernel(0.06), 0.01)
+    }
+    </code></pre>
+    </div>
+    <div id="pg-19-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     CrossValidation.regression(10, x, y, { x, y ->
         val t = kmeans(x, 20).centers
         gpr.approx(x, y, t, GaussianKernel(0.06), 0.01)
     })
           </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>In the above example, we train the approximate Gaussian Process models
         with inducing samples by k-means clustering. The hyperparameters are not
