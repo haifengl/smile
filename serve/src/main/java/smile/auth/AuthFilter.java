@@ -29,6 +29,7 @@ import io.vertx.ext.web.RoutingContext;
 @Priority(1000)
 public class AuthFilter implements ContainerRequestFilter, ContainerResponseFilter {
     static final String OAUTH_STATE_COOKIE = "smile_oauth_state";
+    static final String OAUTH_RETURN_COOKIE = "smile_oauth_return";
     static final String PENDING_SESSION_USER = "smile.pendingSessionUserId";
 
     private static final Set<String> LOCAL_HOSTS = Set.of("localhost", "127.0.0.1");

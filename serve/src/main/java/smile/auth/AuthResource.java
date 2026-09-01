@@ -67,11 +67,13 @@ public class AuthResource {
      * Starts Google OAuth (redirects to Google). Requires OAuth credentials.
      *
      * @param requestContext request context.
+     * @param returnTo       optional post-login SPA path ({@code /} or {@code /chat/}).
      * @return redirect to Google.
      */
     @GET
     @Path("/login/google")
-    public Response loginGoogle(@Context ContainerRequestContext requestContext) {
+    public Response loginGoogle(@Context ContainerRequestContext requestContext,
+                                @QueryParam("return_to") String returnTo) {
         if (!googleOAuth.isEnabled()) {
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
                     .entity("{\"error\":\"Google login is not configured\"}")
@@ -80,19 +82,28 @@ public class AuthResource {
         }
         String origin = origin(requestContext);
         String state = googleOAuth.newState();
+        String returnPath = OAuthReturnPath.normalize(returnTo);
         NewCookie stateCookie = new NewCookie.Builder(AuthFilter.OAUTH_STATE_COOKIE)
                 .value(state)
                 .path("/")
                 .maxAge(600)
                 .httpOnly(true)
                 .build();
+        NewCookie returnCookie = new NewCookie.Builder(AuthFilter.OAUTH_RETURN_COOKIE)
+                .value(returnPath)
+                .path("/")
+                .maxAge(600)
+                .httpOnly(true)
+                .build();
         return Response.temporaryRedirect(googleOAuth.authorizationRedirect(origin, state))
                 .cookie(stateCookie)
+                .cookie(returnCookie)
                 .build();
     }
 
     /**
-     * Google OAuth callback — establishes a session and redirects to {@code /chat}.
+     * Google OAuth callback — establishes a session and redirects to the SPA route
+     * stored at login ({@code /} for the inference shell, {@code /chat/} for chat).
      *
      * @param requestContext request context.
      * @param code           authorization code.
@@ -124,14 +135,21 @@ public class AuthResource {
             userService.mergeGuestConversations(user.id,
                     ClientIdentity.resolveClientIp(routingContext, null));
             AuthFilter.queueSession(requestContext, user.id);
-            NewCookie cleared = new NewCookie.Builder(AuthFilter.OAUTH_STATE_COOKIE)
+            NewCookie clearedState = new NewCookie.Builder(AuthFilter.OAUTH_STATE_COOKIE)
                     .value("")
                     .path("/")
                     .maxAge(0)
                     .httpOnly(true)
                     .build();
-            return Response.temporaryRedirect(URI.create("/chat"))
-                    .cookie(cleared)
+            NewCookie clearedReturn = new NewCookie.Builder(AuthFilter.OAUTH_RETURN_COOKIE)
+                    .value("")
+                    .path("/")
+                    .maxAge(0)
+                    .httpOnly(true)
+                    .build();
+            return Response.temporaryRedirect(postLoginUri(requestContext))
+                    .cookie(clearedState)
+                    .cookie(clearedReturn)
                     .build();
         } catch (RuntimeException e) {
             LOG.warn("Google OAuth callback failed", e);
@@ -165,5 +183,14 @@ public class AuthResource {
             }
         }
         return scheme + "://" + host;
+    }
+
+    /**
+     * Absolute URI for the Quinoa-hosted SPA route chosen at login.
+     */
+    private static URI postLoginUri(ContainerRequestContext requestContext) {
+        var returnCookie = requestContext.getCookies().get(AuthFilter.OAUTH_RETURN_COOKIE);
+        String path = returnCookie != null ? returnCookie.getValue() : null;
+        return URI.create(origin(requestContext) + OAuthReturnPath.normalize(path));
     }
 }

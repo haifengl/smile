@@ -19,6 +19,7 @@ import Sidebar from "./Sidebar";
 import InferenceForm from "./InferenceForm";
 import ChatShell from "../chat/ChatShell";
 import CollapsiblePanel from "../shared/CollapsiblePanel";
+import { INFER_RESUME_MODEL_KEY } from "../chat/api";
 import "./App.css";
 
 /** Maps API {@code kind} to UI panel type. */
@@ -60,6 +61,17 @@ function App() {
       );
     }
   }, []);
+
+  useEffect(() => {
+    if (!models.length) return;
+    const resumeId = sessionStorage.getItem(INFER_RESUME_MODEL_KEY);
+    if (!resumeId) return;
+    sessionStorage.removeItem(INFER_RESUME_MODEL_KEY);
+    const model = models.find((m) => m.id === resumeId);
+    if (model) {
+      selectModel(model);
+    }
+  }, [models, selectModel]);
 
   const isChat = selectedModel?.type === "chat";
 
