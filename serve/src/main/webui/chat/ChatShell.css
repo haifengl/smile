@@ -27,24 +27,35 @@
   height: 100%;
 }
 
-.chat-shell__nav.collapsible-panel--right {
+.chat-shell__nav.collapsible-panel-host--right {
   background: #f7f8fa;
   color: #1a1a2e;
 }
 
 .chat-shell__nav .collapsible-panel__toggle {
+  background: #f0f2f5;
   color: #4a4a68;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.chat-shell__nav .collapsible-panel__toggle:hover {
+  background: #e4e7ec;
 }
 
 @media (prefers-color-scheme: dark) {
-  .chat-shell__nav.collapsible-panel--right {
+  .chat-shell__nav.collapsible-panel-host--right {
     background: #1e1e2f;
     color: rgba(255, 255, 255, 0.87);
     border-left-color: rgba(255, 255, 255, 0.08);
   }
 
   .chat-shell__nav .collapsible-panel__toggle {
-    color: rgba(255, 255, 255, 0.7);
-    border-right-color: rgba(255, 255, 255, 0.06);
+    background: #2a2a3d;
+    color: rgba(255, 255, 255, 0.75);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+
+  .chat-shell__nav .collapsible-panel__toggle:hover {
+    background: #363650;
   }
 }

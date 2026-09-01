@@ -82,7 +82,6 @@ function App() {
         storageKey="smile.infer.model-sidebar.expanded"
         defaultExpanded={true}
         width={280}
-        collapsedWidth={44}
         className="infer-model-sidebar"
         ariaLabel="Models"
       >
