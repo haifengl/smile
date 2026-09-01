@@ -6,9 +6,9 @@
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  */
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import CollapsiblePanel from '../shared/CollapsiblePanel'
-import { AuthProvider } from './auth/AuthProvider'
+import { AuthProvider, useAuth } from './auth/AuthProvider'
 import { createConversation } from './api'
 import ChatApp from './ChatApp'
 import ChatNavSidebar from './nav/ChatNavSidebar'
@@ -28,6 +28,8 @@ const NAV_COLLAPSED_WIDTH = 44
  * @param {Array<object>} [props.tools] optional tools
  */
 function ChatShellInner({ model, title, embedded = false, tools }) {
+  const { loggedIn } = useAuth()
+  const wasLoggedInRef = useRef(loggedIn)
   const [conversationId, setConversationId] = useState(null)
   const [chatEpoch, setChatEpoch] = useState(0)
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0)
@@ -51,6 +53,13 @@ function ChatShellInner({ model, title, embedded = false, tools }) {
       cancelled = true
     }
   }, [startNewChat])
+
+  useEffect(() => {
+    if (wasLoggedInRef.current && !loggedIn) {
+      startNewChat().catch((e) => console.error('Failed to start guest chat after logout', e))
+    }
+    wasLoggedInRef.current = loggedIn
+  }, [loggedIn, startNewChat])
 
   const handleSelectConversation = useCallback((conv) => {
     setConversationId(conv.id)
