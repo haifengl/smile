@@ -18,28 +18,16 @@ title: Smile - Statistics
         <code>median</code>, <code>q1</code>, <code>q3</code>,
         <code>variance</code>, <code>sd</code>, <code>mad</code> (median absolute deviation),
         <code>min</code>, <code>max</code>, <code>whichMin</code>, <code>whichMax</code>, etc.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val x = Array(1.0, 2.0, 3.0, 4.0)
-    x: Array[Double] = Array(1.0, 2.0, 3.0, 4.0)
-
-    smile> mean(x)
-    res1: Double = 2.5
-
-    smile> stdev(x)
-    res2: Double = 1.2909944487358054
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> import static smile.math.MathEx.*
 
     smile> import smile.stat.*
@@ -53,9 +41,21 @@ title: Smile - Statistics
     smile> stdev(x)
     $5 ==> 1.2909944487358054
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val x = Array(1.0, 2.0, 3.0, 4.0)
+    x: Array[Double] = Array(1.0, 2.0, 3.0, 4.0)
+
+    smile> mean(x)
+    res1: Double = 2.5
+
+    smile> stdev(x)
+    res2: Double = 1.2909944487358054
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="distribution" class="title">Distributions</h2>
 
@@ -77,55 +77,16 @@ title: Smile - Statistics
         The reverse function of <code>cdf</code> is <code>quantile</code>. We can also calculate the likelihood or
         log likelihood of a sample set.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_2">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile&gt; val e = new ExponentialDistribution(1.0)
-    e: smile.stat.distribution.ExponentialDistribution = Exponential Distribution(1.0000)
-
-    smile&gt; e.mean
-    res3: Double = 1.0
-
-    smile&gt; e.variance
-    res4: Double = 1.0
-
-    smile&gt; e.sd
-    res5: Double = 1.0
-
-    smile&gt; e.entropy
-    res6: Double = 1.0
-
-    // generate a random number
-    smile&gt; e.rand
-    res7: Double = 0.3155668608029686
-
-    // PDF
-    smile&gt; e.p(2.0)
-    res8: Double = 0.1353352832366127
-
-    smile&gt; e.cdf(2.0)
-    res9: Double = 0.8646647167633873
-
-    smile&gt; e.quantile(0.1)
-    res10: Double = 0.10536051565782628
-
-    smile&gt; e.logLikelihood(Array(1.0, 1.1, 0.9, 1.5))
-    res12: Double = -4.5
-
-    // estimate a distribution from data
-    smile&gt; val e = ExponentialDistribution.fit(Array(1.0, 1.1, 0.9, 1.5, 1.8, 1.9, 2.0, 0.5))
-    e: smile.stat.distribution.ExponentialDistribution = Exponential Distribution(0.7477)
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> import smile.stat.distribution.*
 
     smile> var e = new ExponentialDistribution(1.0)
@@ -167,41 +128,61 @@ title: Smile - Statistics
     smile> var d = ExponentialDistribution.fit(data)
     d ==> Exponential Distribution(0.7477)
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile&gt; val e = new ExponentialDistribution(1.0)
+    e: smile.stat.distribution.ExponentialDistribution = Exponential Distribution(1.0000)
+
+    smile&gt; e.mean
+    res3: Double = 1.0
+
+    smile&gt; e.variance
+    res4: Double = 1.0
+
+    smile&gt; e.sd
+    res5: Double = 1.0
+
+    smile&gt; e.entropy
+    res6: Double = 1.0
+
+    // generate a random number
+    smile&gt; e.rand
+    res7: Double = 0.3155668608029686
+
+    // PDF
+    smile&gt; e.p(2.0)
+    res8: Double = 0.1353352832366127
+
+    smile&gt; e.cdf(2.0)
+    res9: Double = 0.8646647167633873
+
+    smile&gt; e.quantile(0.1)
+    res10: Double = 0.10536051565782628
+
+    smile&gt; e.logLikelihood(Array(1.0, 1.1, 0.9, 1.5))
+    res12: Double = -4.5
+
+    // estimate a distribution from data
+    smile&gt; val e = ExponentialDistribution.fit(Array(1.0, 1.1, 0.9, 1.5, 1.8, 1.9, 2.0, 0.5))
+    e: smile.stat.distribution.ExponentialDistribution = Exponential Distribution(0.7477)
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The below is a more advanced example of estimating a mixture model of Gaussian, exponential and gamma distribution.
         The result is quite accurate for this complicated case.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_3">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile&gt; val gaussian = new GaussianDistribution(-2.0, 1.0)
-    smile&gt; val exp = new ExponentialDistribution(0.8)
-    smile&gt; val gamma = new GammaDistribution(2.0, 3.0)
-
-    // generate the samples
-    smile&gt; val data = Array.fill(500)(gaussian.rand()) ++ Array.fill(500)(exp.rand()) ++ Array.fill(1000)(gamma.rand())
-
-    // define the initial guess of the components in the mixture model
-    smile&gt; val a = new Mixture.Component(0.3, new GaussianDistribution(0.0, 1.0))
-    smile&gt; val b = new Mixture.Component(0.3, new ExponentialDistribution(1.0))
-    smile&gt; val c = new Mixture.Component(0.4, new GammaDistribution(1.0, 2.0))
-
-    // estimate the model
-    smile&gt; val mixture = ExponentialFamilyMixture.fit(data, a, b, c)
-    mixture: smile.stat.distribution.ExponentialFamilyMixture = Mixture[3]:{ (Gaussian Distribution(-2.0135, 0.9953):0.2478) (Exponential Distribution(0.7676):0.2882) (Gamma Distribution(2.7008, 2.4051):0.4640)}
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var gaussian = new GaussianDistribution(-2.0, 1.0)
     gaussian ==> Gaussian Distribution(-2.0000, 1.0000)
 
@@ -232,9 +213,28 @@ title: Smile - Statistics
     smile> var mixture = ExponentialFamilyMixture.fit(data, a, b, c)
     mixture ==> Mixture(3)[0.31 x Gaussian Distribution(-1.3630, 1.5056) + 0.17 x Exponential Distribution(0.5566) + 0.52 x Gamma Distribution(3.7170, 1.5014)]
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile&gt; val gaussian = new GaussianDistribution(-2.0, 1.0)
+    smile&gt; val exp = new ExponentialDistribution(0.8)
+    smile&gt; val gamma = new GammaDistribution(2.0, 3.0)
+
+    // generate the samples
+    smile&gt; val data = Array.fill(500)(gaussian.rand()) ++ Array.fill(500)(exp.rand()) ++ Array.fill(1000)(gamma.rand())
+
+    // define the initial guess of the components in the mixture model
+    smile&gt; val a = new Mixture.Component(0.3, new GaussianDistribution(0.0, 1.0))
+    smile&gt; val b = new Mixture.Component(0.3, new ExponentialDistribution(1.0))
+    smile&gt; val c = new Mixture.Component(0.4, new GammaDistribution(1.0, 2.0))
+
+    // estimate the model
+    smile&gt; val mixture = ExponentialFamilyMixture.fit(data, a, b, c)
+    mixture: smile.stat.distribution.ExponentialFamilyMixture = Mixture[3]:{ (Gaussian Distribution(-2.0135, 0.9953):0.2478) (Exponential Distribution(0.7676):0.2882) (Gamma Distribution(2.7008, 2.4051):0.4640)}
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>If the distribution family is not known, nonparametric methods such as
         kernel density estimation can be used. Kernel density estimation
@@ -242,28 +242,16 @@ title: Smile - Statistics
         are made, based on a finite data sample. It is also known as the
         Parzen window method.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_4">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile&gt; val k = new KernelDensity(data)
-    k: smile.stat.distribution.KernelDensity = smile.stat.distribution.KernelDensity@69724abb
-
-    smile&gt; k.p(1.0)
-    res2: Double = 0.11397721599552492
-
-    smile&gt; mixture.p(1.0)
-    res3: Double = 0.1272572973513569
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var k = new KernelDensity(data)
     k ==> smile.stat.distribution.KernelDensity@146044d7
 
@@ -273,9 +261,21 @@ title: Smile - Statistics
     smile> mixture.p(1)
     $33 ==> 0.14009430199392497
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile&gt; val k = new KernelDensity(data)
+    k: smile.stat.distribution.KernelDensity = smile.stat.distribution.KernelDensity@69724abb
+
+    smile&gt; k.p(1.0)
+    res2: Double = 0.11397721599552492
+
+    smile&gt; mixture.p(1.0)
+    res3: Double = 0.1272572973513569
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="test" class="title">Hypothesis Test</h2>
 
@@ -293,28 +293,16 @@ title: Smile - Statistics
         the number of constraints (normally one), a small value of p-value
         indicates a significant difference between the distributions.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_5">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val bins = Array(20, 22, 13, 22, 10, 13)
-    bins: Array[Int] = Array(20, 22, 13, 22, 10, 13)
-
-    smile> val prob = Array(1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6)
-    prob: Array[Double] = Array(0.16666666666666666, 0.16666666666666666, 0.16666666666666666, 0.16666666666666666, 0.16666666666666666, 0.16666666666666666)
-
-    smile> chisqtest(bins, prob)
-    res8: stat.hypothesis.ChiSqTest = One Sample Chi-squared Test(t = 8.3600, df = 5.000, p-value = 0.137480)
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> import smile.stat.hypothesis.*
 
     smile> int[] bins = {20, 22, 13, 22, 10, 13}
@@ -326,36 +314,36 @@ title: Smile - Statistics
     smile> ChiSqTest.test(bins, prob)
     $37 ==> One Sample Chi-squared Test(t = 8.3600, df = 5.000, p-value = 0.137480)
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val bins = Array(20, 22, 13, 22, 10, 13)
+    bins: Array[Int] = Array(20, 22, 13, 22, 10, 13)
+
+    smile> val prob = Array(1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6)
+    prob: Array[Double] = Array(0.16666666666666666, 0.16666666666666666, 0.16666666666666666, 0.16666666666666666, 0.16666666666666666, 0.16666666666666666)
+
+    smile> chisqtest(bins, prob)
+    res8: stat.hypothesis.ChiSqTest = One Sample Chi-squared Test(t = 8.3600, df = 5.000, p-value = 0.137480)
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h4 class="title">Two-Sample Test</h4>
     <p>Two-sample chisq test. Given the arrays x and y, containing two
         sets of binned data, and given one constraint, a small value of
         p-value indicates a significant difference between two distributions.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_6">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    smile> val bins1 = Array(8, 13, 16, 10, 3)
-    bins1: Array[Int] = Array(8, 13, 16, 10, 3)
-
-    smile> val bins2 = Array(4,  9, 14, 16, 7)
-    bins2: Array[Int] = Array(4, 9, 14, 16, 7)
-
-    smile> chisqtest2(bins1, bins2)
-    res11: stat.hypothesis.ChiSqTest = Two Sample Chi-squared Test(t = 5.1786, df = 4.000, p-value = 0.269462)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> int[] bins1 = {8, 13, 16, 10, 3}
     bins1 ==> int[5] { 8, 13, 16, 10, 3 }
 
@@ -365,9 +353,21 @@ title: Smile - Statistics
     smile> ChiSqTest.test(bins1, bins2)
     $40 ==> Two Sample Chi-squared Test(t = 5.1786, df = 4.000, p-value = 0.269462)
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val bins1 = Array(8, 13, 16, 10, 3)
+    bins1: Array[Int] = Array(8, 13, 16, 10, 3)
+
+    smile> val bins2 = Array(4,  9, 14, 16, 7)
+    bins2: Array[Int] = Array(4, 9, 14, 16, 7)
+
+    smile> chisqtest2(bins1, bins2)
+    res11: stat.hypothesis.ChiSqTest = Two Sample Chi-squared Test(t = 5.1786, df = 4.000, p-value = 0.269462)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h4 class="title">Independence Test</h4>
 
@@ -381,48 +381,75 @@ title: Smile - Statistics
         is subtracted from all |O-E| differences. The correlation coefficient is
         calculated as Cramer's V.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_7">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    smile> val count = Array(Array(12, 7), Array(5, 7))
-    count: Array[Array[Int]] = Array(Array(12, 7), Array(5, 7))
-
-    smile> chisqtest(count)
-    res13: stat.hypothesis.ChiSqTest = Pearson's Chi-squared Test(t = 0.6411, df = 1.000, p-value = 0.423305)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> int[][] count = { {12, 7}, {5, 7} }
     count ==> int[2][] { int[2] { 12, 7 }, int[2] { 5, 7 } }
 
     smile> ChiSqTest.test(count)
     $42 ==> Pearson's Chi-squared Test(t = 0.6411, df = 1.000, p-value = 0.423305)
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val count = Array(Array(12, 7), Array(5, 7))
+    count: Array[Array[Int]] = Array(Array(12, 7), Array(5, 7))
+
+    smile> chisqtest(count)
+    res13: stat.hypothesis.ChiSqTest = Pearson's Chi-squared Test(t = 0.6411, df = 1.000, p-value = 0.423305)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="f-test" class="title">F Test</h3>
 
     <p>Test if the arrays x and y have significantly different variances.
         Small values of p-value indicate that the two arrays have significantly
         different variances.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_8">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-8-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    smile> double[] x = {0.48074284, -0.52975023, 1.28590721, 0.63456079, -0.41761197, 2.76072411,
+                    1.30321095, -1.16454533, 2.27210509, 1.46394553, -0.31713164, 1.26247543,
+                    2.65886430, 0.40773450, 1.18055440, -0.39611251, 2.13557687, 0.40878860,
+                    1.28461394, -0.02906355}
+    x ==> double[20] { 0.48074284, -0.52975023, 1.28590721, ...  1.28461394, -0.02906355 }
+
+    smile> double[] y = {1.7495879, 1.9359727, 3.1294928, 0.0861894, 2.1643415, 0.1913219,
+                    -0.3947444, 1.6910837, 1.1548294, 0.2763955, 0.4794719, 3.1805501,
+                    1.5700497, 2.6860190, -0.4410879, 1.8900183, 1.3422381, -0.1701592}
+    y ==> double[18] { 1.7495879, 1.9359727, 3.1294928, 0.0 ... 3, 1.3422381, -0.1701592 }
+
+    smile> FTest.test(x, y)
+    $45 ==> F-test(f = 1.0958, df1 = 17, df2 = 19, p-value = 0.841464)
+
+    smile> double[] z = {0.6621329, 0.4688975, -0.1553013, 0.4564548, 2.2776146, 2.1543678,
+                    2.8555142, 1.5852899, 0.9091290, 1.6060025, 1.0111968, 1.2479493,
+                    0.9407034, 1.7167572, 0.5380608, 2.1290007, 1.8695506, 1.2139096}
+    z ==> double[18] { 0.6621329, 0.4688975, -0.1553013, 0. ... 07, 1.8695506, 1.2139096 }
+
+    smile> FTest.test(x, z)
+    $47 ==> F-test(f = 2.0460, df1 = 19, df2 = 17, p-value = 0.143778)
+          </code></pre>
+    </div>
+    <div id="pg-8-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     smile> val x = Array(0.48074284, -0.52975023, 1.28590721, 0.63456079, -0.41761197, 2.76072411,
                    1.30321095, -1.16454533, 2.27210509, 1.46394553, -0.31713164, 1.26247543,
                    2.65886430, 0.40773450, 1.18055440, -0.39611251, 2.13557687, 0.40878860,
@@ -504,36 +531,9 @@ title: Smile - Statistics
     smile> ftest(x, z)
     res18: stat.hypothesis.FTest = F-test(f = 2.0460, df1 = 19, df2 = 17, p-value = 0.143778)
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    smile> double[] x = {0.48074284, -0.52975023, 1.28590721, 0.63456079, -0.41761197, 2.76072411,
-                    1.30321095, -1.16454533, 2.27210509, 1.46394553, -0.31713164, 1.26247543,
-                    2.65886430, 0.40773450, 1.18055440, -0.39611251, 2.13557687, 0.40878860,
-                    1.28461394, -0.02906355}
-    x ==> double[20] { 0.48074284, -0.52975023, 1.28590721, ...  1.28461394, -0.02906355 }
-
-    smile> double[] y = {1.7495879, 1.9359727, 3.1294928, 0.0861894, 2.1643415, 0.1913219,
-                    -0.3947444, 1.6910837, 1.1548294, 0.2763955, 0.4794719, 3.1805501,
-                    1.5700497, 2.6860190, -0.4410879, 1.8900183, 1.3422381, -0.1701592}
-    y ==> double[18] { 1.7495879, 1.9359727, 3.1294928, 0.0 ... 3, 1.3422381, -0.1701592 }
-
-    smile> FTest.test(x, y)
-    $45 ==> F-test(f = 1.0958, df1 = 17, df2 = 19, p-value = 0.841464)
-
-    smile> double[] z = {0.6621329, 0.4688975, -0.1553013, 0.4564548, 2.2776146, 2.1543678,
-                    2.8555142, 1.5852899, 0.9091290, 1.6060025, 1.0111968, 1.2479493,
-                    0.9407034, 1.7167572, 0.5380608, 2.1290007, 1.8695506, 1.2139096}
-    z ==> double[18] { 0.6621329, 0.4688975, -0.1553013, 0. ... 07, 1.8695506, 1.2139096 }
-
-    smile> FTest.test(x, z)
-    $47 ==> F-test(f = 2.0460, df1 = 19, df2 = 17, p-value = 0.143778)
-          </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="t-test" class="title">t Test</h3>
 
@@ -541,61 +541,61 @@ title: Smile - Statistics
     <p>Independent one-sample t-test whether the mean of a normally distributed
         population has a value specified in a null hypothesis. Small values of
         p-value indicate that the array has significantly different mean.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_9">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    smile> ttest(x, 1.0)
-    res19: stat.hypothesis.TTest = One Sample t-test(t = -0.6641, df = 19.000, p-value = 0.514609)
-
-    smile> ttest(x, 1.1)
-    res20: stat.hypothesis.TTest = One Sample t-test(t = -1.0648, df = 19.000, p-value = 0.300300)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-9-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> TTest.test(x, 1.0)
     $48 ==> One Sample t-test(t = -0.6641, df = 19.000, p-value = 0.514609)
 
     smile> TTest.test(x, 1.1)
     $49 ==> One Sample t-test(t = -1.0648, df = 19.000, p-value = 0.300300)
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-9-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> ttest(x, 1.0)
+    res19: stat.hypothesis.TTest = One Sample t-test(t = -0.6641, df = 19.000, p-value = 0.514609)
+
+    smile> ttest(x, 1.1)
+    res20: stat.hypothesis.TTest = One Sample t-test(t = -1.0648, df = 19.000, p-value = 0.300300)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h4 class="title">Paired Two-Sample Test</h4>
     <p>Given the paired arrays x and y, test if they have significantly
         different means. Small values of p-value indicate that the two arrays
         have significantly different means.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_10">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    smile> ttest(y, z)
-    res21: stat.hypothesis.TTest = Paired t-test(t = -0.1502, df = 17.000, p-value = 0.882382)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-10-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-10-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-10-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> TTest.testPaired(y, z)
     $53 ==> Paired t-test(t = -0.1502, df = 17.000, p-value = 0.882382)
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-10-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> ttest(y, z)
+    res21: stat.hypothesis.TTest = Paired t-test(t = -0.1502, df = 17.000, p-value = 0.882382)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h4 class="title">Independent (Unpaired) Two-Sample Test</h4>
     <p>Test if the arrays x and y have significantly different means. Small
@@ -603,31 +603,16 @@ title: Smile - Statistics
       different means. If the parameter equalVariance is true, the data arrays are assumed to be
       drawn from populations with the same true variance. Otherwise, The data
       arrays are allowed to be drawn from populations with unequal variances.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_11" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_11" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_11">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    smile> ttest2(x, y)
-    res22: stat.hypothesis.TTest = Unequal Variance Two Sample t-test(t = -1.1219, df = 35.167, p-value = 0.269491)
-
-    smile> ttest2(x, y, true)
-    res23: stat.hypothesis.TTest = Equal Variance Two Sample t-test(t = -1.1247, df = 36.000, p-value = 0.268153)
-
-    smile> ttest2(x, z)
-    res24: stat.hypothesis.TTest = Unequal Variance Two Sample t-test(t = -1.5180, df = 34.025, p-value = 0.138243)
-
-    smile> ttest2(x, z, true)
-    res25: stat.hypothesis.TTest = Equal Variance Two Sample t-test(t = -1.4901, df = 36.000, p-value = 0.144906)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_11">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-11-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> TTest.test(x, y, false)
     $54 ==> Unequal Variance Two Sample t-test(t = -1.1219, df = 35.167, p-value = 0.269491)
 
@@ -640,9 +625,24 @@ title: Smile - Statistics
     smile> TTest.test(x, z, true)
     $57 ==> Equal Variance Two Sample t-test(t = -1.4901, df = 36.000, p-value = 0.144906)
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-11-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> ttest2(x, y)
+    res22: stat.hypothesis.TTest = Unequal Variance Two Sample t-test(t = -1.1219, df = 35.167, p-value = 0.269491)
+
+    smile> ttest2(x, y, true)
+    res23: stat.hypothesis.TTest = Equal Variance Two Sample t-test(t = -1.1247, df = 36.000, p-value = 0.268153)
+
+    smile> ttest2(x, z)
+    res24: stat.hypothesis.TTest = Unequal Variance Two Sample t-test(t = -1.5180, df = 34.025, p-value = 0.138243)
+
+    smile> ttest2(x, z, true)
+    res25: stat.hypothesis.TTest = Equal Variance Two Sample t-test(t = -1.4901, df = 36.000, p-value = 0.144906)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="ks-test" class="title">Kolmogorov–Smirnov Test</h3>
 
@@ -652,14 +652,33 @@ title: Smile - Statistics
         the cumulative distribution function of x is significantly different from
         the given distribution. The array x is modified by being sorted into
         ascending order.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_12" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_12" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_12">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-12-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    smile> double[] x = {0.53236606, -1.36750258, -1.47239199, -0.12517888, -1.24040594, 1.90357309,
+                    -0.54429527, 2.22084140, -1.17209146, -0.68824211, -1.75068914, 0.48505896,
+                    2.75342248, -0.90675303, -1.05971929, 0.49922388, -1.23214498, 0.79284888,
+                    0.85309580, 0.17903487, 0.39894754, -0.52744720, 0.08516943, -1.93817962,
+                    0.25042913, -0.56311389, -1.08608388, 0.11912253, 2.87961007, -0.72674865,
+                    1.11510699, 0.39970074, 0.50060532, -0.82531807, 0.14715616, -0.96133601,
+                    -0.95699473, -0.71471097, -0.50443258, 0.31690224, 0.04325009, 0.85316056,
+                    0.83602606, 1.46678847, 0.46891827, 0.69968175, 0.97864326, 0.66985742,
+                    -0.20922486, -0.15265994}
+    x ==> double[50] { 0.53236606, -1.36750258, -1.47239199 ... -0.20922486, -0.15265994 }
+
+    smile> KSTest.test(x, new GaussianDistribution(0, 1))
+    $59 ==> Gaussian Distribution(0.0000, 1.0000) Kolmogorov-Smirnov Test(d = 0.0930, p-value = 0.759824)
+          </code></pre>
+    </div>
+    <div id="pg-12-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     smile> val x = Array(
                    0.53236606, -1.36750258, -1.47239199, -0.12517888, -1.24040594, 1.90357309,
                    -0.54429527, 2.22084140, -1.17209146, -0.68824211, -1.75068914, 0.48505896,
@@ -700,28 +719,9 @@ title: Smile - Statistics
     smile> kstest(x, new GaussianDistribution(0, 1))
     res27: stat.hypothesis.KSTest = Gaussian Distribution(0.0000, 1.0000) Kolmogorov-Smirnov Test(d = 0.0930, p-value = 0.759824)
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_12">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    smile> double[] x = {0.53236606, -1.36750258, -1.47239199, -0.12517888, -1.24040594, 1.90357309,
-                    -0.54429527, 2.22084140, -1.17209146, -0.68824211, -1.75068914, 0.48505896,
-                    2.75342248, -0.90675303, -1.05971929, 0.49922388, -1.23214498, 0.79284888,
-                    0.85309580, 0.17903487, 0.39894754, -0.52744720, 0.08516943, -1.93817962,
-                    0.25042913, -0.56311389, -1.08608388, 0.11912253, 2.87961007, -0.72674865,
-                    1.11510699, 0.39970074, 0.50060532, -0.82531807, 0.14715616, -0.96133601,
-                    -0.95699473, -0.71471097, -0.50443258, 0.31690224, 0.04325009, 0.85316056,
-                    0.83602606, 1.46678847, 0.46891827, 0.69968175, 0.97864326, 0.66985742,
-                    -0.20922486, -0.15265994}
-    x ==> double[50] { 0.53236606, -1.36750258, -1.47239199 ... -0.20922486, -0.15265994 }
-
-    smile> KSTest.test(x, new GaussianDistribution(0, 1))
-    $59 ==> Gaussian Distribution(0.0000, 1.0000) Kolmogorov-Smirnov Test(d = 0.0930, p-value = 0.759824)
-          </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h4 class="title">Two-Sample Test</h4>
     <p>The two-sample K–S test for the null hypothesis that the data sets
@@ -730,14 +730,29 @@ title: Smile - Statistics
         that of y. The arrays x and y are modified by being sorted into
         ascending order.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_13" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_13" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_13">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-13-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-13-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-13-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    smile> double[] y = {0.95791391, 0.16203847, 0.56622013, 0.39252941, 0.99126354, 0.65639108,
+                      0.07903248, 0.84124582, 0.76718719, 0.80756577, 0.12263981, 0.84733360,
+                      0.85190907, 0.77896244, 0.84915723, 0.78225903, 0.95788055, 0.01849366,
+                      0.21000365, 0.97951772, 0.60078520, 0.80534223, 0.77144013, 0.28495121,
+                      0.41300867, 0.51547517, 0.78775718, 0.07564151, 0.82871088, 0.83988694}
+    y ==> double[30] { 0.95791391, 0.16203847, 0.56622013,  ... , 0.82871088, 0.83988694 }
+
+    smile> KSTest.test(x, y)
+    $61 ==> Two Sample Kolmogorov-Smirnov Test(d = 0.4600, p-value = 0.000416466)
+          </code></pre>
+    </div>
+    <div id="pg-13-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     smile> val y = Array(
                    0.95791391, 0.16203847, 0.56622013, 0.39252941, 0.99126354, 0.65639108,
                    0.07903248, 0.84124582, 0.76718719, 0.80756577, 0.12263981, 0.84733360,
@@ -774,24 +789,9 @@ title: Smile - Statistics
     smile> kstest(x, y)
     res29: stat.hypothesis.KSTest = Two Sample Kolmogorov-Smirnov Test(d = 0.4600, p-value = 0.000416466)
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_13">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    smile> double[] y = {0.95791391, 0.16203847, 0.56622013, 0.39252941, 0.99126354, 0.65639108,
-                      0.07903248, 0.84124582, 0.76718719, 0.80756577, 0.12263981, 0.84733360,
-                      0.85190907, 0.77896244, 0.84915723, 0.78225903, 0.95788055, 0.01849366,
-                      0.21000365, 0.97951772, 0.60078520, 0.80534223, 0.77144013, 0.28495121,
-                      0.41300867, 0.51547517, 0.78775718, 0.07564151, 0.82871088, 0.83988694}
-    y ==> double[30] { 0.95791391, 0.16203847, 0.56622013,  ... , 0.82871088, 0.83988694 }
-
-    smile> KSTest.test(x, y)
-    $61 ==> Two Sample Kolmogorov-Smirnov Test(d = 0.4600, p-value = 0.000416466)
-          </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="correlation-test" class="title">Correlation Test</h3>
 
@@ -803,28 +803,16 @@ title: Smile - Statistics
         underlying assumption that the data is from a normal distribution
         sampled randomly. If this is not true, then it is better to use
         Spearman's coefficient of rank correlation (for non-parametric variables).</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_14" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_14" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_14">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    smile> val x = Array(44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1)
-    x: Array[Double] = Array(44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1)
-
-    smile> val y  = Array(2.6,  3.1,  2.5,  5.0,  3.6,  4.0,  5.2,  2.8,  3.8)
-    y: Array[Double] = Array(2.6, 3.1, 2.5, 5.0, 3.6, 4.0, 5.2, 2.8, 3.8)
-
-    smile> pearsontest(x, y)
-    res32: stat.hypothesis.CorTest = Pearson Correlation Test(cor = 0.57, t = 1.8411, df = 7.000, p-value = 0.108173)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_14">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-14-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-14-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-14-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> double[] x = {44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1}
     x ==> double[9] { 44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1 }
 
@@ -834,9 +822,21 @@ title: Smile - Statistics
     smile> CorTest.pearson(x, y)
     $64 ==> Pearson Correlation Test(cor = 0.57, t = 1.8411, df = 7.000, p-value = 0.108173)
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-14-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val x = Array(44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1)
+    x: Array[Double] = Array(44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1)
+
+    smile> val y  = Array(2.6,  3.1,  2.5,  5.0,  3.6,  4.0,  5.2,  2.8,  3.8)
+    y: Array[Double] = Array(2.6, 3.1, 2.5, 5.0, 3.6, 4.0, 5.2, 2.8, 3.8)
+
+    smile> pearsontest(x, y)
+    res32: stat.hypothesis.CorTest = Pearson Correlation Test(cor = 0.57, t = 1.8411, df = 7.000, p-value = 0.108173)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h4 id="spearman-test" class="title">Spearman Rank Correlation</h4>
 
@@ -850,28 +850,28 @@ title: Smile - Statistics
 
     <p>The p-value is calculated by approximation, which is good for n &gt; 10.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_15" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_15" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_15">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    smile> spearmantest(x, y)
-    res33: stat.hypothesis.CorTest = Spearman Correlation Test(cor = 0.60, t = 1.9843, df = 7.000, p-value = 0.0876228)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_15">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-15-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-15-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-15-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> CorTest.spearman(x, y)
     $65 ==> Spearman Correlation Test(cor = 0.60, t = 1.9843, df = 7.000, p-value = 0.0876228)
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-15-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> spearmantest(x, y)
+    res33: stat.hypothesis.CorTest = Spearman Correlation Test(cor = 0.60, t = 1.9843, df = 7.000, p-value = 0.0876228)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h4 id="kendall-test" class="title">Kendall Rank Correlation</h4>
 
@@ -881,28 +881,28 @@ title: Smile - Statistics
         It is used with non-parametric data. The p-value is calculated by
         approximation, which is good for n &gt; 10.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_16" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_16" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_16">
-            <div class="code" style="text-align: left;">
-          <pre class="language-scala"><code class="language-scala">
-    smile> kendalltest(x, y)
-    res34: stat.hypothesis.CorTest = Kendall Correlation Test(cor = 0.44, t = 1.6681, df = 0.000, p-value = 0.0952928)
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_16">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-16-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-16-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-16-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> CorTest.kendall(x, y)
     $66 ==> Kendall Correlation Test(cor = 0.44, t = 1.6681, df = 0.000, p-value = 0.0952928)
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-16-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> kendalltest(x, y)
+    res34: stat.hypothesis.CorTest = Kendall Correlation Test(cor = 0.44, t = 1.6681, df = 0.000, p-value = 0.0952928)
+          </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>

@@ -29,33 +29,78 @@ title: Smile - Model Validation
         <li>The <b>sensitivity</b> or <b>true positive rate</b> (TPR) (also called <b>hit rate</b>, <b>recall</b>)
             is a statistical measures of the performance of a binary classification test.
             Sensitivity is the proportion of actual positives which are correctly identified as such.
-    <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">XML</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-markup"><code class="language-markup">
     TPR = TP / P = TP / (TP + FN)
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
         </li>
         <li>The <b>specificity</b> (SPC) or <b>true negative rate</b> is a statistical measures of the performance
             of a binary classification test. Specificity measures the proportion
             of negatives which are correctly identified.
-    <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">XML</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-markup"><code class="language-markup">
     SPC = TN / N = TN / (FP + TN) = 1 - FPR
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
         </li>
         <li>The <b>precision</b> or <b>positive predictive value</b> (PPV) is ratio of true positives
             to combined true and false positives, which is different from sensitivity.
-    <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">XML</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-markup"><code class="language-markup">
     PPV = TP / (TP + FP)
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
         </li>
         <li>The <b>false discovery rate</b> (FDR) is ratio of false positives
             to combined true and false positives, which is actually 1 - precision.
-    <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">XML</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-markup"><code class="language-markup">
     FDR = FP / (TP + FP)
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
         </li>
         <li><b>Fall-out, false alarm rate, or false positive rate</b> (FPR) is
-    <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">XML</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-markup"><code class="language-markup">
     FPR = FP / N = FP / (FP + TN)
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
             Fall-out is actually Type I error and closely related to specificity (1 - specificity).</li>
         <li><p>The <b>F-score</b> (or <b>F-score</b>) considers both the precision and the recall of the test
             to compute the score. The traditional or balanced F-score (F1 score) is the harmonic mean of
@@ -73,28 +118,16 @@ title: Smile - Model Validation
         only label 1 is regarded as positive and any other values are treated as negative class.</p>
 
     <p>The below example shows how to calculate the accuracy of a multi-class model.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val segTrain = read.arff("data/weka/segment-challenge.arff")
-    val segTest = read.arff("data/weka/segment-test.arff")
-
-    val model = randomForest("class" ~ ".", segTrain)
-    val pred = model.predict(segTest)
-
-    smile&gt; accuracy(segTest("class").toIntArray(), pred)
-    res5: Double = 0.9728395061728395
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var segTrain = Read.arff("data/weka/segment-challenge.arff");
     var segTest = Read.arff("data/weka/segment-test.arff");
 
@@ -104,9 +137,21 @@ title: Smile - Model Validation
     smile> Accuracy.of(segTest.column("class").toIntArray(), pred)
     $161 ==> 0.9617283950617284
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val segTrain = read.arff("data/weka/segment-challenge.arff")
+    val segTest = read.arff("data/weka/segment-test.arff")
+
+    val model = randomForest("class" ~ ".", segTrain)
+    val pred = model.predict(segTest)
+
+    smile&gt; accuracy(segTest("class").toIntArray(), pred)
+    res5: Double = 0.9728395061728395
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Sensitivity and specificity are closely related to the concepts of type I and type II errors.
         For any test, there is usually a trade-off between the metrics. This trade-off
@@ -117,61 +162,16 @@ title: Smile - Model Validation
 
     <p>The following example calculates various metrics for a binary classification problem.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_2">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val toyTrain = read.csv("data/classification/toy200.txt", delimiter="\t", header=false)
-    val toyTest = read.csv("data/classification/toy20000.txt", delimiter="\t", header=false)
-
-    val x = toyTrain.select(1, 2).toArray()
-    val y = toyTrain.column(0).toIntArray()
-    val model = logit(x, y, 0.1, 0.001)
-
-    val testx = toyTest.select(1, 2).toArray()
-    val testy = toyTest.column(0).toIntArray()
-    val pred = testx.map(model.predict(_))
-
-    smile&gt; accuracy(testy, pred)
-    res7: Double = 0.81435
-
-    smile&gt; recall(testy, pred)
-    res8: Double = 0.7828
-
-    smile&gt; sensitivity(testy, pred)
-    res9: Double = 0.7828
-
-    smile&gt; specificity(testy, pred)
-    res10: Double = 0.8459
-
-    smile&gt; fallout(testy, pred)
-    res11: Double = 0.15410000000000001
-
-    smile&gt; fdr(testy, pred)
-    res12: Double = 0.16447859963710107
-
-    smile&gt; f1(testy, pred)
-    res13: Double = 0.808301925757654
-
-    // Calculate posteriori probability for AUC computation.
-    val posteriori = new Array[Double](2)
-    val prob = testx.map { x =>
-            model.predict(x, posteriori)
-            posteriori(1)
-        }
-
-    smile&gt; auc(testy, prob)
-    res17: Double = 0.8650958
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var toyTrain = Read.csv("data/classification/toy200.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
     var toyTest = Read.csv("data/classification/toy20000.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
 
@@ -214,9 +214,54 @@ title: Smile - Model Validation
     smile> AUC.of(testy, prob)
     $180 ==> 0.8650958
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val toyTrain = read.csv("data/classification/toy200.txt", delimiter="\t", header=false)
+    val toyTest = read.csv("data/classification/toy20000.txt", delimiter="\t", header=false)
+
+    val x = toyTrain.select(1, 2).toArray()
+    val y = toyTrain.column(0).toIntArray()
+    val model = logit(x, y, 0.1, 0.001)
+
+    val testx = toyTest.select(1, 2).toArray()
+    val testy = toyTest.column(0).toIntArray()
+    val pred = testx.map(model.predict(_))
+
+    smile&gt; accuracy(testy, pred)
+    res7: Double = 0.81435
+
+    smile&gt; recall(testy, pred)
+    res8: Double = 0.7828
+
+    smile&gt; sensitivity(testy, pred)
+    res9: Double = 0.7828
+
+    smile&gt; specificity(testy, pred)
+    res10: Double = 0.8459
+
+    smile&gt; fallout(testy, pred)
+    res11: Double = 0.15410000000000001
+
+    smile&gt; fdr(testy, pred)
+    res12: Double = 0.16447859963710107
+
+    smile&gt; f1(testy, pred)
+    res13: Double = 0.808301925757654
+
+    // Calculate posteriori probability for AUC computation.
+    val posteriori = new Array[Double](2)
+    val prob = testx.map { x =>
+            model.predict(x, posteriori)
+            posteriori(1)
+        }
+
+    smile&gt; auc(testy, prob)
+    res17: Double = 0.8650958
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>For regression, Smile has the following evaluation metrics:</p>
 
@@ -249,37 +294,16 @@ title: Smile - Model Validation
         A part of the data is held out for testing. Many benchmark data
         contain a separate test dataset.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_3">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    object validate {
-        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]]
-            (x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])
-            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationValidation[M]
-
-        def classification[M &lt;: DataFrameClassifier]
-            (formula: Formula, train: DataFrame, test: DataFrame)
-            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationValidation[M]
-
-        def regression[T &lt;: AnyRef, M &lt;: Regression[T]]
-            (x: Array[T], y: Array[Double], testx: Array[T], testy: Array[Double])
-            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionValidation[M]
-
-        def regression[M &lt;: DataFrameRegression]
-            (formula: Formula, train: DataFrame, test: DataFrame)
-            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionValidation[M]
-    }
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class ClassificationValidation {
         public static &lt;T, M extends Classifier&lt;T&gt;&gt; ClassificationValidation&lt;M&gt;
             of(T[] x, int[] y, T[] testx, int[] testy,
@@ -300,42 +324,44 @@ title: Smile - Model Validation
                BiFunction&lt;Formula, DataFrame, M&gt; trainer);
     }
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    object validate {
+        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]]
+            (x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])
+            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationValidation[M]
+
+        def classification[M &lt;: DataFrameClassifier]
+            (formula: Formula, train: DataFrame, test: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationValidation[M]
+
+        def regression[T &lt;: AnyRef, M &lt;: Regression[T]]
+            (x: Array[T], y: Array[Double], testx: Array[T], testy: Array[Double])
+            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionValidation[M]
+
+        def regression[M &lt;: DataFrameRegression]
+            (formula: Formula, train: DataFrame, test: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionValidation[M]
+    }
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The above Scala methods takes a code block to train the model and apply it on the test data.
         These methods return the trained model and print out various metrics.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_4">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val segTrain = read.arff("data/weka/segment-challenge.arff")
-    val segTest = read.arff("data/weka/segment-test.arff")
-    val model = randomForest("class" ~ ".", segTrain)
-    val pred = model.predict(segTest)
-
-    smile&gt; ConfusionMatrix.of(segTest("class").toIntArray(), pred)
-    val res10: smile.validation.metric.ConfusionMatrix =
-    ROW=truth and COL=predicted
-    class  0 |     124 |       0 |       0 |       0 |       1 |       0 |       0 |
-    class  1 |       0 |     110 |       0 |       0 |       0 |       0 |       0 |
-    class  2 |       3 |       0 |     117 |       1 |       1 |       0 |       0 |
-    class  3 |       1 |       0 |       0 |     109 |       0 |       0 |       0 |
-    class  4 |       1 |       0 |       6 |       2 |     117 |       0 |       0 |
-    class  5 |       0 |       0 |       0 |       0 |       0 |      94 |       0 |
-    class  6 |       0 |       0 |       1 |       2 |       0 |       0 |     120 |
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var segTrain = Read.arff("data/weka/segment-challenge.arff");
     var segTest = Read.arff("data/weka/segment-test.arff");
     var formula = Formula.lhs("class");
@@ -352,17 +378,37 @@ title: Smile - Model Validation
     class  5 |       0 |       0 |       0 |       0 |       0 |      94 |       0 |
     class  6 |       2 |       0 |       1 |       0 |       0 |       0 |     120 |
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val segTrain = read.arff("data/weka/segment-challenge.arff")
+    val segTest = read.arff("data/weka/segment-test.arff")
+    val model = randomForest("class" ~ ".", segTrain)
+    val pred = model.predict(segTest)
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="scala_5">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    smile&gt; ConfusionMatrix.of(segTest("class").toIntArray(), pred)
+    val res10: smile.validation.metric.ConfusionMatrix =
+    ROW=truth and COL=predicted
+    class  0 |     124 |       0 |       0 |       0 |       1 |       0 |       0 |
+    class  1 |       0 |     110 |       0 |       0 |       0 |       0 |       0 |
+    class  2 |       3 |       0 |     117 |       1 |       1 |       0 |       0 |
+    class  3 |       1 |       0 |       0 |     109 |       0 |       0 |       0 |
+    class  4 |       1 |       0 |       6 |       2 |     117 |       0 |       0 |
+    class  5 |       0 |       0 |       0 |       0 |       0 |      94 |       0 |
+    class  6 |       0 |       0 |       1 |       2 |       0 |       0 |     120 |
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">
     val toyTrain = read.csv("data/classification/toy200.txt", delimiter="\t", header=false)
     val toyTest = read.csv("data/classification/toy20000.txt", delimiter="\t", header=false)
 
@@ -406,9 +452,8 @@ title: Smile - Model Validation
       log loss: 0.4907
     }
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="out-of-bag">Out-of-bag Error</h3>
 
@@ -418,30 +463,30 @@ title: Smile - Model Validation
         for training. OOB is the mean prediction error on each training sample <code>x<sub>i</sub></code>, using
         only the trees that did not have <code>x<sub>i</sub></code> in their bootstrap sample.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_6">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val iris = read.arff("data/weka/iris.arff");
-    val rf = smile.classification.randomForest("class" ~ ".", iris)
-    println(s"OOB metrics = ${rf.metrics}")
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var iris = Read.arff("data/weka/iris.arff");
     var rf = smile.classification.RandomForest.fit(Formula.lhs("class"), iris);
     System.out.println("OOB metrics = " + rf.metrics());
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val iris = read.arff("data/weka/iris.arff");
+    val rf = smile.classification.randomForest("class" ~ ".", iris)
+    println(s"OOB metrics = ${rf.metrics}")
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Subsampling allows one to define an out-of-bag estimate of the prediction performance
         improvement by evaluating predictions on those observations which were not used
@@ -457,33 +502,16 @@ title: Smile - Model Validation
         The overall performance is taken to be the average of the performance
         on all <code>k</code> partitions.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_7">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    object cv {
-        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]](k: Int, x: Array[T], y: Array[Int])
-            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationValidations[M]
-
-        def classification[M &lt;: DataFrameClassifier](k: Int, formula: Formula, data: DataFrame)
-            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationValidations[M]
-
-        def regression[T &lt;: AnyRef, M &lt;: Regression[T]](k: Int, x: Array[T], y: Array[Double])
-            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionValidations[M]
-
-        def regression[M &lt;: DataFrameRegression](k: Int, formula: Formula, data: DataFrame)
-            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionValidations[M]
-    }
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class CrossValidation {
         public static &lt;T, M extends Classifier&lt;T&gt;&gt; ClassificationValidations&lt;M&gt;
             classification(int k, T[] x, int[] y, BiFunction&lt;T[], int[], M&gt; trainer);
@@ -498,21 +526,53 @@ title: Smile - Model Validation
             regression(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
     }
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    object cv {
+        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]](k: Int, x: Array[T], y: Array[Int])
+            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationValidations[M]
+
+        def classification[M &lt;: DataFrameClassifier](k: Int, formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationValidations[M]
+
+        def regression[T &lt;: AnyRef, M &lt;: Regression[T]](k: Int, x: Array[T], y: Array[Double])
+            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionValidations[M]
+
+        def regression[M &lt;: DataFrameRegression](k: Int, formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionValidations[M]
+    }
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>When no metrics are provided, the methods use accuracy or R2 by default
         for classification or regression, respectively.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_8">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-8-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    smile> var cv = CrossValidation.classification(10, Formula.lhs("class"), iris, (formula, data) -> DecisionTree.fit(formula, data));
+    cv ==> {
+      fit time: 0.823 ms ± 0.471,
+      score time: 0.016 ms ± 0.015,
+      validation data size: 15 ± 0,
+      error: 1 ± 1,
+      accuracy: 94.00% ± 6.63,
+      cross entropy: 0.2473 ± 0.1981
+    }
+          </code></pre>
+    </div>
+    <div id="pg-8-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     smile> cv.classification(10, "class" ~ ".", iris) { case (formula, data) => smile.classification.cart(formula, data) }
     val res16: smile.validation.ClassificationValidations[smile.classification.DecisionTree] =
     {
@@ -524,24 +584,9 @@ title: Smile - Model Validation
       cross entropy: 0.1858 ± 0.0729
     }
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    smile> var cv = CrossValidation.classification(10, Formula.lhs("class"), iris, (formula, data) -> DecisionTree.fit(formula, data));
-    cv ==> {
-      fit time: 0.823 ms ± 0.471,
-      score time: 0.016 ms ± 0.015,
-      validation data size: 15 ± 0,
-      error: 1 ± 1,
-      accuracy: 94.00% ± 6.63,
-      cross entropy: 0.2473 ± 0.1981
-    }
-          </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>On the Iris data, the accuracy estimation of 10-fold cross validation
         is about 84.7%. You may get different number because of the random partitions.</p>
@@ -554,33 +599,16 @@ title: Smile - Model Validation
         usually very expensive from a computational point of view because of the
         large number of times the training process is repeated.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_9">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    object loocv {
-        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]](x: Array[T], y: Array[Int])
-            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationMetrics
-
-        def classification[M &lt;: DataFrameClassifier](formula: Formula, data: DataFrame)
-            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationMetrics
-
-        def regression[T &lt;: AnyRef, M &lt;: Regression[T]](x: Array[T], y: Array[Double])
-            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionMetrics
-
-        def regression[M &lt;: DataFrameRegression](formula: Formula, data: DataFrame)
-            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionMetrics
-    }
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-9-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class LOOCV {
         public static &lt;T, M extends Classifier&lt;T&gt;&gt; ClassificationMetrics
             classification(T[] x, int[] y, BiFunction&lt;T[], int[], M&gt; trainer);
@@ -595,22 +623,57 @@ title: Smile - Model Validation
             regression(Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
     }
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-9-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    object loocv {
+        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]](x: Array[T], y: Array[Int])
+            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationMetrics
+
+        def classification[M &lt;: DataFrameClassifier](formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationMetrics
+
+        def regression[T &lt;: AnyRef, M &lt;: Regression[T]](x: Array[T], y: Array[Double])
+            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionMetrics
+
+        def regression[M &lt;: DataFrameRegression](formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionMetrics
+    }
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>On the Iris data, the accuracy estimation of LOOCV is 85.33%,
         which is higher than that of 10-fold cross validation. This
         is because more data is used for training and less for testing.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_10">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-10-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-10-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-10-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    smile> var x = iris.drop("class").toArray();
+    x ==> double[150][] { double[4] { 5.099999904632568, 3. ... 68, 1.7999999523162842 } }
+
+    smile> var loocv = LOOCV.classification(x, y, (x, y) -> LDA.fit(x, y));
+    loocv ==> {
+      fit time: 1.967 ms,
+      score time: 0.014 ms,
+      validation data size: 150,
+      error: 22,
+      accuracy: 85.33%,
+      cross entropy: 0.4803
+    }
+          </code></pre>
+    </div>
+    <div id="pg-10-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     smile&gt; loocv.classification(x, y) { case (x, y) => lda(x, y) }
     val res17: smile.validation.ClassificationMetrics =
     {
@@ -628,27 +691,9 @@ title: Smile - Model Validation
       log loss: 0.4915
     }
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    smile> var x = iris.drop("class").toArray();
-    x ==> double[150][] { double[4] { 5.099999904632568, 3. ... 68, 1.7999999523162842 } }
-
-    smile> var loocv = LOOCV.classification(x, y, (x, y) -> LDA.fit(x, y));
-    loocv ==> {
-      fit time: 1.967 ms,
-      score time: 0.014 ms,
-      validation data size: 150,
-      error: 22,
-      accuracy: 85.33%,
-      cross entropy: 0.4803
-    }
-          </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="bootstrap">Bootstrap</h2>
 
@@ -661,33 +706,16 @@ title: Smile - Model Validation
         Then we fit the model to each of the bootstrap datasets and examine
         the behavior of the fits over the <code>k</code> replications.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_11" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_11" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_11">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    object bootstrap {
-        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]](k: Int, x: Array[T], y: Array[Int])
-            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationValidations[M]
-
-        def classification[M &lt;: DataFrameClassifier](k: Int, formula: Formula, data: DataFrame)
-            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationValidations[M]
-
-        def regression[T &lt;: AnyRef, M &lt;: Regression[T]](k: Int, x: Array[T], y: Array[Double])
-            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionValidations[M]
-
-        def regression[M &lt;: DataFrameRegression](k: Int, formula: Formula, data: DataFrame)
-            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionValidations[M]
-    }
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_11">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-11-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     public class Bootstrap {
         public static &lt;T, M extends Classifier&lt;T&gt;&gt; ClassificationValidations&lt;M&gt;
             classification(int k, T[] x, int[] y, BiFunction&lt;T[], int[], M&gt; trainer);
@@ -702,21 +730,53 @@ title: Smile - Model Validation
             regression(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
     }
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-11-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    object bootstrap {
+        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]](k: Int, x: Array[T], y: Array[Int])
+            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationValidations[M]
+
+        def classification[M &lt;: DataFrameClassifier](k: Int, formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationValidations[M]
+
+        def regression[T &lt;: AnyRef, M &lt;: Regression[T]](k: Int, x: Array[T], y: Array[Double])
+            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionValidations[M]
+
+        def regression[M &lt;: DataFrameRegression](k: Int, formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionValidations[M]
+    }
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>On the Iris data, the accuracy estimation of 100 bootstraps
         is about 83.7%, which is slightly lower than that of 10-fold cross validation.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_12" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_12" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_12">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-12-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    smile> Bootstrap.classification(100, x, y, (x, y) -> LDA.fit(x, y))
+    $43 ==> {
+      fit time: 0.057 ms ± 0.020,
+      score time: 0.163 ms ± 0.236,
+      validation data size: 55 ± 4,
+      error: 9 ± 3,
+      accuracy: 83.96% ± 4.68,
+      cross entropy: 0.4847 ± 0.0530
+    }
+          </code></pre>
+    </div>
+    <div id="pg-12-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     smile&gt; bootstrap.classification(100, x, y) { case (x, y) => lda(x, y) }
     val res18: smile.validation.ClassificationValidations[smile.classification.LDA] =
     {
@@ -734,24 +794,9 @@ title: Smile - Model Validation
       log loss: 0.5004 ± 0.0328
     }
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_12">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    smile> Bootstrap.classification(100, x, y, (x, y) -> LDA.fit(x, y))
-    $43 ==> {
-      fit time: 0.057 ms ± 0.020,
-      score time: 0.163 ms ± 0.236,
-      validation data size: 55 ± 4,
-      error: 9 ± 3,
-      accuracy: 83.96% ± 4.68,
-      cross entropy: 0.4847 ± 0.0530
-    }
-          </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The bootstrap distribution of a parameter-estimator has been used to
         calculate confidence intervals for its population-parameter.
@@ -787,13 +832,14 @@ title: Smile - Model Validation
         combinations, while <code>random()</code> generates a stream of
         random candidates.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_13" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_13">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     import smile.io.*;
     import smile.data.formula.Formula;
     import smile.validation.*;
@@ -818,9 +864,8 @@ title: Smile - Model Validation
         System.out.println(ConfusionMatrix.of(testy, pred));
     });
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>While grid search is popular, random search has the benefit to choose
         a budget independent of the number of parameters and possible values.
@@ -828,13 +873,14 @@ title: Smile - Model Validation
         Therefore, one should use the <code>limit()</code> method to decide
         how many configurations to test.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_14" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_14">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
     hp.random().limit(20).forEach(prop -&gt; {
         var model = RandomForest.fit(formula, train, prop);
         var pred = model.predict(test);
@@ -843,9 +889,8 @@ title: Smile - Model Validation
         System.out.println(ConfusionMatrix.of(testy, pred));
     });
     </code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>In the lambda of hyperparameter tuning, the user is free to train any
         model (or even multiple algorithms), to evaluate with one or more

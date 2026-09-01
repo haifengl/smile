@@ -50,12 +50,19 @@ title: SMILE - Serve
     <p>The fastest way to run SMILE Serve is via the pre-built Docker image.
         Mount a local directory containing your model files and map the port:</p>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">docker run -it \
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">docker run -it \
   -v /path/to/model/folder:/model \
   -p 8888:8080 \
   ghcr.io/haifengl/smile-serve:latest</code></pre>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The service listens on port 8080 inside the container (8888 on the host).
         Place <code>.sml</code> and <code>.onnx</code> model files in the mounted folder;
@@ -66,10 +73,17 @@ title: SMILE - Serve
     <p>From the project root, start Quarkus live-reload dev mode (HTTP port defaults to
         <strong>8888</strong> in the <code>%dev</code> profile):</p>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">./gradlew :serve:quarkusDev \
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">./gradlew :serve:quarkusDev \
   --jvm-args="--add-opens java.base/java.lang=ALL-UNNAMED"</code></pre>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The Quarkus Dev UI is available at <a href="http://localhost:8888/q/dev/">localhost:8888/q/dev/</a>.
         The React dev server runs on port 5173 and proxies API requests to the backend.</p>
@@ -78,15 +92,22 @@ title: SMILE - Serve
 
     <p>Build a layered Quarkus application:</p>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">./gradlew :serve:build
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">./gradlew :serve:build
 
 java \
   --add-opens java.base/java.lang=ALL-UNNAMED \
   --add-opens java.base/java.nio=ALL-UNNAMED \
   --enable-native-access ALL-UNNAMED \
   -jar serve/build/quarkus-app/quarkus-run.jar</code></pre>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>For a single uber-JAR or GraalVM native executable, see the
         <a href="https://github.com/haifengl/smile/blob/master/serve/README.md#2-building-and-running" target="_blank" rel="noopener">full user guide</a>.</p>
@@ -96,9 +117,16 @@ java \
     <p>Configuration lives in <code>serve/src/main/resources/application.properties</code>.
         Override at runtime with <code>-D</code> system properties, for example:</p>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">java ... -Dsmile.serve.model=/data/models -jar quarkus-run.jar</code></pre>
-    </div>
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">java ... -Dsmile.serve.model=/data/models -jar quarkus-run.jar</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <div class="table-responsive">
     <table>
@@ -156,9 +184,16 @@ java \
 
     <h3 id="ml-metadata">Model metadata</h3>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/ml/models/iris_random_forest-1</code></pre>
-    </div>
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/ml/models/iris_random_forest-1</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Returns the algorithm name, input schema (field names and types), and tags.
         Use <code>GET /api/v1/models</code> to list all loaded model IDs.</p>
@@ -167,8 +202,14 @@ java \
 
     <p>Send one sample as a flat JSON object whose keys match the model schema:</p>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/ml/models/iris_random_forest-1 \
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/ml/models/iris_random_forest-1 \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -176,27 +217,42 @@ java \
     "petallength": 1.4,
     "petalwidth":  0.2
   }'</code></pre>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Response:</p>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-json"><code class="language-json">{
+    <div class="code-playground glass" data-lang="json">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">JSON</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-json"><code class="language-json">{
   "prediction": 0,
   "probabilities": [0.960, 0.021, 0.019]
 }</code></pre>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="ml-streaming">Streaming inference</h3>
 
     <p>Process many samples via Server-Sent Events:</p>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">cat iris.csv | curl -X POST \
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">cat iris.csv | curl -X POST \
   -H "Content-Type: text/plain" \
   --data-binary @- \
   http://localhost:8080/api/v1/ml/models/iris_random_forest-1/stream</code></pre>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>CSV rows follow the column order shown in the model schema (alphabetical by field name).
         JSON-lines mode (<code>Content-Type: application/json</code>) accepts one JSON object per line.</p>
@@ -209,20 +265,34 @@ java \
 
     <h3 id="onnx-info">Model info</h3>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/onnx/resnet50</code></pre>
-    </div>
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/onnx/resnet50</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Returns input/output tensor names, element types, and shapes (a <code>-1</code> dimension
         is dynamic).</p>
 
     <h3 id="onnx-inference">Single inference</h3>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/onnx/my_classifier \
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/onnx/my_classifier \
   -H "Content-Type: application/json" \
   -d '{"input": [1.0, 2.0, 3.0, 4.0]}'</code></pre>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The request body maps each input name to a flat JSON array of numbers. Streaming endpoints
         mirror the classic ML API (<code>POST /api/v1/onnx/{id}/stream</code>).</p>
@@ -236,24 +306,38 @@ java \
 
     <h3 id="list-models">List models</h3>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/models</code></pre>
-    </div>
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/models</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Returns an OpenAI-compatible catalog of all loaded models — LLMs, ONNX graphs, and
         SMILE <code>.sml</code> models. Inference still uses type-specific paths.</p>
 
     <h3 id="chat-completions">Chat completions</h3>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/chat/completions \
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "meta-llama/Llama-3.1-8B-Instruct",
     "messages": [{"role": "user", "content": "What is SMILE?"}],
     "stream": true
   }'</code></pre>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Set <code>"stream": true</code> for token-by-token Server-Sent Events output.
         Conversation history can be persisted when a database is configured — see below.</p>
@@ -265,8 +349,14 @@ java \
         <code>message.tool_calls</code>. Clients execute tools locally and continue with
         <code>role: "tool"</code> messages.</p>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/chat/completions \
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "messages": [{"role": "user", "content": "Weather in SF?"}],
@@ -284,7 +374,8 @@ java \
     }],
     "tool_choice": "auto"
   }'</code></pre>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="web-ui">Web UI</h2>
 
@@ -337,11 +428,18 @@ java \
 
     <p>Enable ORM in production:</p>
 
-    <div class="code" style="text-align: left;">
-    <pre class="language-properties"><code class="language-properties">quarkus.hibernate-orm.active=true
+    <div class="code-playground glass" data-lang="properties">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Properties</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-properties"><code class="language-properties">quarkus.hibernate-orm.active=true
 quarkus.datasource.username=&lt;user&gt;
 quarkus.datasource.password=&lt;password&gt;</code></pre>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="further-reading">Further Reading</h2>
 

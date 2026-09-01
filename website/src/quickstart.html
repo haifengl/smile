@@ -54,14 +54,17 @@ println(rf.metrics())</code></pre>
     <p>Add the relevant artifact(s) to your build tool. All artifacts are published to
         <a href="https://central.sonatype.com/artifact/com.github.haifengl/smile-core">Maven Central</a>.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#dep_maven" type="button" role="tab">Maven</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#dep_gradle" type="button" role="tab">Gradle (Kotlin DSL)</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#dep_sbt" type="button" role="tab">SBT (Scala)</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="dep_maven">
-            <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="markup" data-pane="pg-1-0">Maven</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-1-1">Gradle (Kotlin DSL)</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-2">SBT (Scala)</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-markup"><code class="language-markup">
 &lt;!-- Core ML algorithms (classification, regression, clustering, …) --&gt;
 &lt;dependency&gt;
   &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
@@ -90,9 +93,9 @@ println(rf.metrics())</code></pre>
   &lt;version&gt;{{ version }}&lt;/version&gt;
 &lt;/dependency&gt;
             </code></pre>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="dep_gradle">
-            <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
 dependencies {
     // Core ML algorithms
     implementation("com.github.haifengl:smile-core:{{ version }}")
@@ -110,17 +113,18 @@ dependencies {
     implementation("com.github.haifengl:smile-plot:{{ version }}")
 }
             </code></pre>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="dep_sbt">
-            <pre class="language-scala"><code class="language-scala">
+    </div>
+    <div id="pg-1-2" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
 // Idiomatic Scala API (pulls in smile-core transitively)
 libraryDependencies += "com.github.haifengl" %% "smile-scala" % "{{ version }}"
 
 // Deep learning
 libraryDependencies += "com.github.haifengl" % "smile-deep" % "{{ version }}"
             </code></pre>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="native-blas">Native BLAS / LAPACK (optional)</h3>
     <p>Several algorithms (manifold learning, Gaussian Process, MLP) benefit significantly
@@ -133,17 +137,35 @@ libraryDependencies += "com.github.haifengl" % "smile-deep" % "{{ version }}"
     </ul>
     <div class="tab-content">
         <div class="tab-pane fade show active" role="tabpanel" id="blas_linux">
-            <pre class="language-bash"><code class="language-bash">
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 sudo apt update
 sudo apt install libopenblas-dev libarpack2
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
         </div>
         <div class="tab-pane fade" role="tabpanel" id="blas_mac">
-            <pre class="language-bash"><code class="language-bash">
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 brew install arpack
 # If macOS SIP strips DYLD_LIBRARY_PATH, copy the dylib to your working directory:
 cp /opt/homebrew/lib/libarpack.dylib .
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
         </div>
         <div class="tab-pane fade" role="tabpanel" id="blas_win">
             <p>Pre-built DLLs are included in the <code>bin/</code> directory of the
@@ -164,29 +186,56 @@ cp /opt/homebrew/lib/libarpack.dylib .
         <a href="https://github.com/haifengl/smile/releases">releases page</a>.
         It works on macOS, Linux, and Windows.</p>
 
-    <pre class="language-bash"><code class="language-bash">
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 # Extract and set up native dependencies
 cd bin
 ./setup        # installs required native libraries
 ./smile        # launches SMILE Studio (desktop notebook IDE)
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="build-from-source">Build from Source</h3>
 
     <p>Clone the repository and build with the Gradle wrapper (requires Java 25):</p>
 
-    <pre class="language-bash"><code class="language-bash">
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 git clone https://github.com/haifengl/smile.git
 cd smile
 ./gradlew build -x test        # build all modules, skip tests
 ./gradlew :core:build -x test  # build only the core module
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>To run the tests (requires LibTorch on the library path for <code>smile-deep</code>):</p>
-    <pre class="language-bash"><code class="language-bash">
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 ./gradlew :core:test
 ./gradlew :deep:test -DexcludeTags=integration
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="shell">Interactive Shell</h2>
 
@@ -200,19 +249,44 @@ cd smile
             <p>SMILE integrates with <strong>JShell</strong> (available since Java 9).
                In the home directory of the release package, run:</p>
 
-            <pre class="language-bash"><code class="language-bash">
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 $ ./smile shell
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
             <p>All SMILE classes are pre-imported. To pass more heap memory:</p>
 
-            <pre class="language-bash"><code class="language-bash">
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 $ ./smile shell -R-Xmx30G
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
             <p>When the shell starts you will see the SMILE banner followed by the JShell prompt:</p>
 
-            <pre class="language-java"><code class="language-java">
+            <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
 |  Welcome to Smile  -- Version  {{ version }}
 ===============================================================================
 |  Welcome to JShell -- Version 25
@@ -220,11 +294,20 @@ $ ./smile shell -R-Xmx30G
 
 smile>
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
             <p>All SMILE definitions are pre-imported. Type <code>/exit</code> to leave.
                You can run any valid Java expression:</p>
 
-            <pre class="language-java"><code class="language-java">
+            <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
 smile> 2 + 3
 $1 ==> 5
 
@@ -234,9 +317,18 @@ iris ==> [...]
 smile> var rf = RandomForest.fit(Formula.lhs("class"), iris)
 smile> System.out.println(rf.metrics())
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
             <h4>Running a Script</h4>
-            <pre class="language-java"><code class="language-java">
+            <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
 // examples/iris.jsh
 import smile.classification.RandomForest;
 import smile.data.formula.Formula;
@@ -247,20 +339,47 @@ var formula = Formula.lhs("class");
 var rf      = RandomForest.fit(formula, data);
 System.out.println(rf.metrics());
             </code></pre>
-            <pre class="language-bash"><code class="language-bash">
+  <div class="playground-editor" hidden></div>
+</div>
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 $ ./smile shell examples/iris.jsh
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
         </div>
 
         <div class="tab-pane fade" role="tabpanel" id="scala_1">
             <p>The Scala REPL has all high-level SMILE operators pre-imported:</p>
 
-            <pre class="language-bash"><code class="language-bash">
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 $ ./smile scala
 $ ./smile scala -J-Xmx30G   # with extra heap
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
-            <pre class="language-scala"><code class="language-scala">
+            <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">
 smile> val iris = read.arff("data/weka/iris.arff")
 smile> val rf   = randomForest("class" ~, iris)
 smile> println(rf.metrics)
@@ -269,30 +388,68 @@ smile> println(rf.metrics)
 smile> smile.classification.r
 randomForest   rbfnet   rda
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
             <h4>Running a Script</h4>
-            <pre class="language-scala"><code class="language-scala">
+            <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">
 // examples/iris.sc
 val data    = read.arff("data/weka/iris.arff")
 val formula = "class" ~ "."
 val rf      = smile.classification.randomForest(formula, data)
 println(s"OOB error = %.2f%%" format 100 * rf.error)
             </code></pre>
-            <pre class="language-bash"><code class="language-bash">
+  <div class="playground-editor" hidden></div>
+</div>
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 $ ./smile scala examples/iris.sc
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
         </div>
 
         <div class="tab-pane fade" role="tabpanel" id="kotlin_shell">
             <p>A Kotlin REPL is also available:</p>
-            <pre class="language-bash"><code class="language-bash">
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 $ ./smile kotlin
             </code></pre>
-            <pre class="language-kotlin"><code class="language-kotlin">
+  <div class="playground-editor" hidden></div>
+</div>
+            <div class="code-playground glass" data-lang="kotlin">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Kotlin</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-kotlin"><code class="language-kotlin">
 smile> val iris = read.arff("data/weka/iris.arff")
 smile> val rf   = randomForest(Formula.lhs("class"), iris)
 smile> println(rf.metrics())
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
         </div>
     </div>
 
@@ -310,7 +467,14 @@ smile> println(rf.metrics())
     <div class="tab-content">
         <div class="tab-pane fade show active" role="tabpanel" id="training_1">
             <p>Train a Random Forest on the Iris dataset and save the model:</p>
-            <pre class="language-bash"><code class="language-bash">
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 $ ./smile train \
     --data  data/weka/iris.arff \
     --formula "class ~ ." \
@@ -326,6 +490,8 @@ Training metrics: {
   cross entropy: 0.1316
 }
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
             <p>Run <code>./smile train -h</code> for a full list of supported algorithms
                (ada-boost, cart, gradient-boost, lasso, lda, logistic, mlp, ols, qda,
                random-forest, rbf, rda, ridge, svm, …) and
@@ -333,7 +499,14 @@ Training metrics: {
         </div>
         <div class="tab-pane fade" role="tabpanel" id="predict_1">
             <p>Run batch inference on a file using a saved model:</p>
-            <pre class="language-bash"><code class="language-bash">
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 $ ./smile predict \
     --model iris_rf.sml \
     --probability \
@@ -343,12 +516,21 @@ $ ./smile predict \
 0 0.9599 0.0206 0.0195
 ...
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
             <p>The optional <code>--probability</code> flag outputs posterior class probabilities
                alongside the predicted label.</p>
         </div>
         <div class="tab-pane fade" role="tabpanel" id="serve_1">
             <p>Start an HTTP inference server (powered by Quarkus):</p>
-            <pre class="language-bash"><code class="language-bash">
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 $ ./smile serve --model iris_rf.sml
 INFO  Listening on: http://0.0.0.0:8080
 
@@ -359,6 +541,8 @@ $ curl -X POST http://localhost:8080/api/v1/models/iris_rf-1 \
 
 {"class":0,"probability":[0.9599,0.0207,0.0194]}
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
             <p>If <code>--model</code> points to a directory, every <code>.sml</code> file is
                loaded automatically.  Discover available endpoints with
                <code>GET /api/v1/models</code>.</p>
@@ -367,7 +551,14 @@ $ curl -X POST http://localhost:8080/api/v1/models/iris_rf-1 \
             <p>The <code>/stream</code> endpoint processes a JSON-lines or CSV request body
                element-by-element with full back-pressure, making it safe to send very large
                payloads (multi-GB):</p>
-            <pre class="language-bash"><code class="language-bash">
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 # Generate 150,000 rows (iris × 1000) and stream them through the server
 $ for i in {1..1000}; do
     tail -n 153 data/weka/iris.arff | head -n 150
@@ -375,6 +566,8 @@ $ for i in {1..1000}; do
               -X POST --data-binary @- \
               http://localhost:8080/api/v1/models/iris_rf-1/stream
             </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
             <p>This completes end-to-end (including HTTP transfer and printing) in under 4 seconds
                for 150,000 samples.</p>
         </div>
@@ -387,11 +580,20 @@ $ for i in {1..1000}; do
        and a kernel explorer in a single window.
        Launch it from the release package:</p>
 
-    <pre class="language-bash"><code class="language-bash">
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
 cd bin
 ./setup    # first-time: installs native libraries
 ./smile    # launches SMILE Studio
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>SMILE Studio requires <strong>Java 25</strong> and a graphical (non-headless) environment.
        At least 4 GB RAM; 8 GB recommended for large datasets.</p>
@@ -463,10 +665,19 @@ cd bin
        <kbd>Enter</kbd> to have the AI generate code directly into the editor.
        The Java kernel also supports Maven dependency magic commands:</p>
 
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
 //!mvn org.apache.commons:commons-math3:3.6.1
 // ↑ resolves the artifact transitively and adds it to the JShell classpath
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>In the Agent Panel, use slash commands to drive the full ML workflow without writing code:</p>
 
@@ -501,14 +712,17 @@ cd bin
        All parsers return a <a href="api/java/smile/data/DataFrame.html">DataFrame</a>.
     </p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_2" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
-            <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-2-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 import smile.io.*;
 import org.apache.commons.csv.CSVFormat;
 
@@ -520,25 +734,26 @@ var format   = CSVFormat.DEFAULT.withDelimiter(' ');
 var zipTrain = Read.csv("data/usps/zip.train", format);
 var zipTest  = Read.csv("data/usps/zip.test",  format);
             </code></pre>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="scala_2">
-            <pre class="language-scala"><code class="language-scala">
+    </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
 import smile.io._
 
 val weather  = read.arff("data/weka/weather.nominal.arff")
 val zipTrain = read.csv("data/usps/zip.train", delimiter = " ", header = false)
 val zipTest  = read.csv("data/usps/zip.test",  delimiter = " ", header = false)
             </code></pre>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_2">
-            <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-2-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
 import smile.io.*
 
 val weather  = Read.arff("data/weka/weather.nominal.arff")
 val zipTrain = Read.csv("data/usps/zip.train")
             </code></pre>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Because the USPS data has no header, the parser names columns V1, V2, …  The first
        column (V1) is the class label.</p>
@@ -550,13 +765,16 @@ val zipTrain = Read.csv("data/usps/zip.train")
        the right-hand side (RHS) lists predictors.  When the RHS is omitted, all remaining
        columns are used.  Terms can also include functions and interaction terms.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_formula" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_formula" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_formula">
-            <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 import smile.data.formula.Formula;
 
 // Predict "V1" from all other columns
@@ -566,16 +784,17 @@ var formula = Formula.lhs("V1");
 var x = formula.x(zipTrain).toArray();
 var y = formula.y(zipTrain).toIntArray();
             </code></pre>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="scala_formula">
-            <pre class="language-scala"><code class="language-scala">
+    </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
 val formula: Formula = "V1" ~ "."
 
 val x = formula.x(zipTrain).toArray()
 val y = formula.y(zipTrain).toIntArray()
             </code></pre>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="random-forest">3. Random Forest</h3>
 
@@ -583,13 +802,16 @@ val y = formula.y(zipTrain).toIntArray()
        It estimates accuracy via out-of-bag (OOB) samples, so a separate validation set is
        not strictly required.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
-            <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 import smile.classification.*;
 import smile.data.formula.Formula;
 
@@ -602,15 +824,16 @@ var forest = RandomForest.fit(formula, zipTrain, prop);
 System.out.println(forest.metrics());
 // Training metrics: {accuracy: 97.28%, ...}
             </code></pre>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="scala_4">
-            <pre class="language-scala"><code class="language-scala">
+    </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
 val formula: Formula = "V1" ~ "."
 val forest = randomForest(formula, zipTrain, ntrees = 200)
 println(forest.metrics)
             </code></pre>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="svm">4. Support Vector Machine</h3>
 
@@ -618,13 +841,16 @@ println(forest.metrics)
        so we extract arrays from the formula first.  For multi-class problems, use one-vs-one
        or one-vs-rest strategies.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
-            <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 import smile.math.kernel.GaussianKernel;
 import smile.validation.*;
 
@@ -641,9 +867,9 @@ System.out.format("Accuracy = %.2f%%%n",
 System.out.format("Confusion Matrix:%n%s%n",
     ConfusionMatrix.of(testy, pred));
             </code></pre>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="scala_6">
-            <pre class="language-scala"><code class="language-scala">
+    </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
 val testx  = formula.x(zipTest).toArray()
 val testy  = formula.y(zipTest).toIntArray()
 val kernel = new GaussianKernel(8.0)
@@ -655,21 +881,25 @@ val svm = ovo(x, y) { (xi, yi) =>
 val pred = svm.predict(testx)
 println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, pred)))
             </code></pre>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="neural-network">5. Neural Network (MLP)</h3>
 
     <p>The classic SMILE MLP is a lightweight CPU-only network suitable for
        tabular data.  Always standardize features before training a neural network.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
-            <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 import smile.base.mlp.*;
 import smile.classification.MLP;
 import smile.math.MathEx;
@@ -699,9 +929,9 @@ for (int epoch = 0; epoch < 10; epoch++) {
         epoch, 100.0 * Accuracy.of(testy, pred));
 }
             </code></pre>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="scala_7">
-            <pre class="language-scala"><code class="language-scala">
+    </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
 import smile.base.mlp._
 import smile.math.TimeFunction
 
@@ -725,8 +955,9 @@ net.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001))
       (100.0 * Accuracy.of(testy, pred)))
 }
             </code></pre>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="prediction">6. Making Predictions</h3>
 
@@ -734,13 +965,16 @@ net.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001))
        Soft classifiers (neural networks, random forest, logistic regression)
        can also return posterior class probabilities.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
-            <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 // Hard prediction (class label only)
 int label = forest.predict(zipTest.get(0));
 int svmLabel = svm.predict(testx[0]);
@@ -750,9 +984,9 @@ var proba = new double[10];
 forest.predict(zipTest.get(0), proba);
 net.predict(testxn[0], proba);
             </code></pre>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="scala_8">
-            <pre class="language-scala"><code class="language-scala">
+    </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
 val label    = forest.predict(zipTest.get(0))
 val svmLabel = svm.predict(testx(0))
 
@@ -760,21 +994,25 @@ val proba = new Array[Double](10)
 forest.predict(zipTest.get(0), proba)
 net.predict(testxn(0), proba)
             </code></pre>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="serialization">7. Saving &amp; Loading Models</h3>
 
     <p>Most SMILE models implement <code>java.io.Serializable</code>.
        Serialize them to disk for production deployment or Spark scoring.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_ser" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_ser" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_ser">
-            <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-8-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 import java.io.*;
 
 // Save
@@ -790,9 +1028,9 @@ try (var in = new ObjectInputStream(
     System.out.println(loaded.predict(zipTest.get(0)));
 }
             </code></pre>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="scala_ser">
-            <pre class="language-scala"><code class="language-scala">
+    </div>
+    <div id="pg-8-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
 import java.io._
 
 // Save
@@ -804,8 +1042,9 @@ val in = new ObjectInputStream(new FileInputStream("forest.sml"))
 val loaded = in.readObject().asInstanceOf[RandomForest]
 in.close()
             </code></pre>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="deep-learning-quickstart">Deep Learning &amp; LLM Quickstart</h2>
 
@@ -817,7 +1056,14 @@ in.close()
 
     <h3 id="dl-image">Image Classification with EfficientNet-V2</h3>
 
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
 import smile.vision.EfficientNet;
 import smile.vision.ImageNet;
 import javax.imageio.ImageIO;
@@ -835,10 +1081,19 @@ try (var logits = model.forward(img)) {          // shape [1, 1000]
     System.out.println(ImageNet.INSTANCE.labelOf(classIdx));
 }
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="dl-train">Training a Custom MLP with LibTorch</h3>
 
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
 import smile.deep.*;
 import smile.deep.layer.*;
 import smile.deep.tensor.Tensor;
@@ -855,10 +1110,19 @@ var criterion = Loss.nll();
 mlp.train(10, trainDataset, criterion, optimizer,
           new smile.deep.metric.Accuracy(), testDataset);
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h3 id="llm-chat">LLaMA-3 Chat Completion</h3>
 
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
 import smile.llm.llama.Llama;
 import smile.llm.Message;
 
@@ -881,6 +1145,8 @@ var reply = llama.chat(
 
 System.out.println(reply.content());
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>For streaming output, pass a <code>SubmissionPublisher&lt;String&gt;</code> as the
        last argument.  See <a href="llm.html">Large Language Models</a> for full examples

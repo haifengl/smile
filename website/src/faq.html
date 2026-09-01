@@ -11,7 +11,14 @@ version: "6.3.0"
 
     <h2 class="question" id="cite">How should I cite Smile?</h2>
     <p class="answer">Please cite Smile in your publications if it helps your research. Here is an example BibTeX entry:</p>
-    <pre><code>
+    <div class="code-playground glass" data-lang="bibtex">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">BibTeX</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bibtex"><code class="language-bibtex">
     @misc{Li2014Smile,
       title={Smile},
       author={Haifeng Li},
@@ -19,98 +26,110 @@ version: "6.3.0"
       howpublished={\url{https://haifengl.github.io}},
     }
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 class="question" id="link-with-smile">Link with Smile</h2>
     <p class="answer">
         Smile artifacts are hosted in <a href="https://oss.sonatype.org/#nexus-search;quick~smile-core">Sonatype Nexus</a>.
         You can add the following dependency into your pom.xml:</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#maven_1" type="button" role="tab">Maven</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gradle_1" type="button" role="tab">Gradle (Kotlin)</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#sbt_1" type="button" role="tab">SBT</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="maven_1">
-            <div class="code" style="text-align: left;">
-                <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="markup" data-pane="pg-1-0">Maven</button>
+    <button type="button" class="lang-tab" data-lang="markup" data-pane="pg-1-1">Gradle (Kotlin)</button>
+    <button type="button" class="lang-tab" data-lang="markup" data-pane="pg-1-2">SBT</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-markup"><code class="language-markup">
     &lt;dependency&gt;
         &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
         &lt;artifactId&gt;smile-core&lt;/artifactId&gt;
         &lt;version&gt;{{ version }}&lt;/version&gt;
     &lt;/dependency&gt;
                 </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="gradle_1">
-            <div class="code" style="text-align: left;">
-            <pre class="language-markup"><code class="language-markup">
+    </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-markup"><code class="language-markup">
     implementation("com.github.haifengl:smile-core:{{ version }}")
             </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="sbt_1">
-            <div class="code" style="text-align: left;">
-            <pre class="language-markup"><code class="language-markup">
+    </div>
+    <div id="pg-1-2" class="hero-pane" hidden>
+      <pre class="playground-source language-markup"><code class="language-markup">
     libraryDependencies += "com.github.haifengl" % "smile-core" % "{{ version }}"
             </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>To leverage GPU and deep learning, add</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#maven_2" type="button" role="tab">Maven</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gradle_2" type="button" role="tab">Gradle (Kotlin)</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#sbt_2" type="button" role="tab">SBT</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="maven_2">
-            <div class="code" style="text-align: left;">
-                <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="markup" data-pane="pg-2-0">Maven</button>
+    <button type="button" class="lang-tab" data-lang="markup" data-pane="pg-2-1">Gradle (Kotlin)</button>
+    <button type="button" class="lang-tab" data-lang="markup" data-pane="pg-2-2">SBT</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-markup"><code class="language-markup">
     &lt;dependency&gt;
         &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
         &lt;artifactId&gt;smile-deep&lt;/artifactId&gt;
         &lt;version&gt;{{ version }}&lt;/version&gt;
     &lt;/dependency&gt;
                 </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="gradle_2">
-            <div class="code" style="text-align: left;">
-            <pre class="language-markup"><code class="language-markup">
+    </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-markup"><code class="language-markup">
     implementation("com.github.haifengl:smile-deep:{{ version }}")
             </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="sbt_2">
-            <div class="code" style="text-align: left;">
-            <pre class="language-markup"><code class="language-markup">
+    </div>
+    <div id="pg-2-2" class="hero-pane" hidden>
+      <pre class="playground-source language-markup"><code class="language-markup">
     libraryDependencies += "com.github.haifengl" %% "smile-deep" % "{{ version }}"
             </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>For Scala API, add</p>
-    <div class="code" style="text-align: left;">
-    <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">XML</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-markup"><code class="language-markup">
     libraryDependencies += "com.github.haifengl" %% "smile-scala" % "{{ version }}"
     </code></pre>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
         some clustering algorithms, Gaussian Process regression, MLP, etc.).
         By default, Smile includes OpenBLAS for macOS, Windows, and Linux:</p>
-    <div class="code" style="text-align: left;">
-    <pre class="language-markup"><code class="language-markup" style="white-space: preserve nowrap;">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">XML</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-markup"><code class="language-markup">
     libraryDependencies ++= Seq(
       "org.bytedeco" % "javacpp"   % "1.5.11"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
       "org.bytedeco" % "openblas"  % "0.3.28-1.5.11" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
       "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.11"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
     )
     </code></pre>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>For mobile platform, you may need add <code>classifier "android-arm64"</code>
         or <code>classifier "ios-arm64"</code>. In general, you should include only
@@ -125,15 +144,17 @@ version: "6.3.0"
     <p>For a default installation of MKL that would be `-Dorg.bytedeco.openblas.load=mkl_rt`.
         Or you may add the following dependencies to your project, which
         includes MKL binaries. Smile will automatically switch to MKL.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#maven_3" type="button" role="tab">Maven</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#gradle_3" type="button" role="tab">Gradle (Kotlin)</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#sbt_3" type="button" role="tab">SBT</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="maven_3">
-            <div class="code" style="text-align: left;">
-                <pre class="language-markup"><code class="language-markup">
+    <div class="code-playground glass" data-lang="markup">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="markup" data-pane="pg-3-0">Maven</button>
+    <button type="button" class="lang-tab" data-lang="markup" data-pane="pg-3-1">Gradle (Kotlin)</button>
+    <button type="button" class="lang-tab" data-lang="markup" data-pane="pg-3-2">SBT</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-markup"><code class="language-markup">
     &lt;dependency&gt;
         &lt;groupId&gt;org.bytedeco&lt;/groupId&gt;
         &lt;artifactId&gt;mkl-platform&lt;/artifactId&gt;
@@ -145,19 +166,15 @@ version: "6.3.0"
         &lt;version&gt;2024.0-1.5.10&lt;/version&gt;
     &lt;/dependency&gt;
                 </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="gradle_3">
-            <div class="code" style="text-align: left;">
-            <pre class="language-markup"><code class="language-markup">
+    </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-markup"><code class="language-markup">
     implementation("org.bytedeco:mkl-platform:2024.0-1.5.10")
     implementation("org.bytedeco:mkl-platform-redist:2024.0-1.5.10")
             </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="sbt_3">
-            <div class="code" style="text-align: left;">
-            <pre class="language-markup"><code class="language-markup">
+    </div>
+    <div id="pg-3-2" class="hero-pane" hidden>
+      <pre class="playground-source language-markup"><code class="language-markup">
     libraryDependencies ++= {
       val version = "2024.0-1.5.10"
       Seq(
@@ -166,34 +183,34 @@ version: "6.3.0"
       )
     }
             </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 class="question" id="model-serialization">Model serialization</h2>
     <p class="answer">To serialize a model, you may use</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_3">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    import smile._
-    write(model, file)
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     import smile.io.Write;
     Write.object(model, file)
     </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    import smile._
+    write(model, file)
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>This method serializes the model in Java serialization format. This is handy
         if you want to use a model in Spark.</p>
@@ -219,47 +236,39 @@ version: "6.3.0"
         a lot of plots without showing them on the screen, you may run Smile in headless model.
     </p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">
-    bin/smile -Djava.awt.headless=true
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-bash"><code class="language-bash">
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="bash" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="bash" data-pane="pg-5-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-bash"><code class="language-bash">
     bin/jshell.sh -R-Djava.awt.headless=true
     </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-bash"><code class="language-bash">
+    bin/smile -Djava.awt.headless=true
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The following example shows how to save a plot in the headless mode.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_2">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val toy = read.csv("data/classification/toy200.txt", delimiter="\t", header=false)
-    val canvas = plot(toy, "V2", "V3", "V1", '.')
-    val image = canvas.toBufferedImage(400, 400)
-    javax.imageio.ImageIO.write(image, "png", new java.io.File("headless.png"))
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     import java.awt.Color;
     import smile.io.*;
     import smile.plot.swing.*;
@@ -270,9 +279,17 @@ version: "6.3.0"
     var image = canvas.toBufferedImage(400, 400);
     javax.imageio.ImageIO.write(image, "png", new java.io.File("headless.png"));
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val toy = read.csv("data/classification/toy200.txt", delimiter="\t", header=false)
+    val canvas = plot(toy, "V2", "V3", "V1", '.')
+    val image = canvas.toBufferedImage(400, 400)
+    javax.imageio.ImageIO.write(image, "png", new java.io.File("headless.png"))
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 class="question" id="seed">How can I set the random number generator seed for random forest?</h2>
     <p class="answer">

@@ -11,29 +11,16 @@ title: Smile - Linear Algebra
 
     <p>Smile Shell provides an MATLAB like environment.
         In the simplest case, you can use it as a calculator.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
-    </ul>
-
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile&gt; "Hello, World"
-    res0: String = Hello, World
-
-    smile&gt; 2
-    res1: Int = 2
-
-    smile&gt; 2+3
-    res2: Int = 5
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> "Hello, World"
     $9 ==> "Hello, World"
 
@@ -43,9 +30,21 @@ title: Smile - Linear Algebra
     smile> 2+3
     $11 ==> 5
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile&gt; "Hello, World"
+    res0: String = Hello, World
+
+    smile&gt; 2
+    res1: Int = 2
+
+    smile&gt; 2+3
+    res2: Int = 5
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="functions" class="title">Math Functions</h2>
 
@@ -53,30 +52,30 @@ title: Smile - Linear Algebra
         provides many other important mathematical functions such as
         <code>factorial</code>, <code>choose</code>, etc.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_2">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile&gt; choose(10, 3)
-    res8: Double = 120.0
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> import static smile.math.MathEx.*
 
     smile> choose(10, 3)
     $14 ==> 120.0
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile&gt; choose(10, 3)
+    res8: Double = 120.0
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="special" class="title">Special Functions</h2>
 
@@ -94,25 +93,16 @@ title: Smile - Linear Algebra
         The error function and complementary error function are special cases of the
         incomplete gamma function.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_3">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile&gt; erf(1.0)
-    res0: Double = 0.8427007929497149
-
-    smile&gt; digamma(1.0)
-    res11: Double = -0.5772156649015328
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> import smile.math.special.*
 
     smile> Erf.erf(1.0)
@@ -121,21 +111,43 @@ title: Smile - Linear Algebra
     smile> Gamma.digamma(1.0)
     $17 ==> -0.5772156649015328
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile&gt; erf(1.0)
+    res0: Double = 0.8427007929497149
+
+    smile&gt; digamma(1.0)
+    res11: Double = -0.5772156649015328
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="vector" class="title">Vector Operations</h2>
 
     <p>Common arithmetic operations on vectors and scalars are similar as in R and Matlab.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_4">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    smile> double[] x = {1.0, 2.0, 3.0, 4.0}
+    x ==> double[4] { 1.0, 2.0, 3.0, 4.0 }
+
+    smile> double[] y = {4.0, 3.0, 2.0, 1.0}
+    y ==> double[4] { 4.0, 3.0, 2.0, 1.0 }
+
+    // vector expression is not supported in Java
+          </code></pre>
+    </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     smile&gt; val x = c(1.0, 2.0, 3.0, 4.0)
     smile&gt; val y = c(4.0, 3.0, 2.0, 1.0)
 
@@ -145,22 +157,9 @@ title: Smile - Linear Algebra
     smile&gt; 1.5 * x - 3.0 * y
     res24: smile.math.VectorSubVector = Array(-10.5, -6.0, -1.5, 3.0)
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    smile> double[] x = {1.0, 2.0, 3.0, 4.0}
-    x ==> double[4] { 1.0, 2.0, 3.0, 4.0 }
-
-    smile> double[] y = {4.0, 3.0, 2.0, 1.0}
-    y ==> double[4] { 4.0, 3.0, 2.0, 1.0 }
-
-    // vector expression is not supported in Java
-          </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Note that these operations are lazy. The computation is only performed when
         the results are needed, e.g. when the expression is used where a vector is expected.
@@ -173,26 +172,16 @@ title: Smile - Linear Algebra
         <code>unitize</code> it so that L2 norm be 1,
         or <code>unitize1</code> it so that L1 norm be 1.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_5">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile&gt; norm(x)
-    res13: Double = 5.477225575051661
-
-    smile&gt; unitize(y)
-    smile&gt; y
-    res14: Array[Double] = Array(0.7302967433402214, 0.5477225575051661, 0.3651483716701107, 0.18257418583505536)
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> norm(x)
     $20 ==> 5.477225575051661
 
@@ -201,42 +190,52 @@ title: Smile - Linear Algebra
     smile> y
     y ==> double[4] { 0.7302967433402214, 0.5477225575051661, 0.3651483716701107, 0.18257418583505536 }
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile&gt; norm(x)
+    res13: Double = 5.477225575051661
+
+    smile&gt; unitize(y)
+    smile&gt; y
+    res14: Array[Double] = Array(0.7302967433402214, 0.5477225575051661, 0.3651483716701107, 0.18257418583505536)
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>For a pair of vectors, we can calculate the dot product, distance, divergence, covariance,
         and correlations with <code>dot</code>, <code>distance</code>, <code>kld</code> (Kullback-Leibler Divergence),
         <code>jsd</code> (Jensen-Shannon Divergence), <code>cov</code>, <code>cor</code> (Pearson Correlation),
         <code>spearman</code> (Spearman Rank Correlation Coefficient), <code>kendall</code> (Kendall Tau Rank Correlation Coefficient).</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_6">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> dot(x, y)
-    res16: Double = 3.651483716701107
-
-    smile&gt; cov(x, y)
-    res17: Double = -0.30429030972509225
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> dot(x, y)
     res5: Double = 3.651483716701107
 
     smile> cov(x, y)
     res6: Double = -0.30429030972509225
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> dot(x, y)
+    res16: Double = 3.651483716701107
+
+    smile&gt; cov(x, y)
+    res17: Double = -0.30429030972509225
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="matrix" class="title">Matrix Operations</h2>
 
@@ -247,37 +246,16 @@ title: Smile - Linear Algebra
         The <code>~</code> operator can be applied to 1-dimensional array too, which creates
         a single column matrix.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_7">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val a = matrix(
-        c(0.7220180, 0.07121225, 0.6881997),
-        c(-0.2648886, -0.89044952, 0.3700456),
-        c(-0.6391588, 0.44947578, 0.6240573)
-    )
-    val b = matrix(
-        c(0.6881997, -0.07121225, 0.7220180),
-        c(0.3700456, 0.89044952, -0.2648886),
-        c(0.6240573, -0.44947578, -0.6391588)
-    )
-    val C = Array(
-        Array(0.9527204, -0.2973347, 0.06257778),
-        Array(-0.2808735, -0.9403636, -0.19190231),
-        Array(0.1159052, 0.1652528, -0.97941688)
-    )
-
-    val c = ~C // or val c = matrix(C)
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     import smile.math.matrix.*;
 
     double[][] A = {
@@ -299,33 +277,42 @@ title: Smile - Linear Algebra
     var b = Matrix.of(B);
     var c = Matrix.of(C);
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val a = matrix(
+        c(0.7220180, 0.07121225, 0.6881997),
+        c(-0.2648886, -0.89044952, 0.3700456),
+        c(-0.6391588, 0.44947578, 0.6240573)
+    )
+    val b = matrix(
+        c(0.6881997, -0.07121225, 0.7220180),
+        c(0.3700456, 0.89044952, -0.2648886),
+        c(0.6240573, -0.44947578, -0.6391588)
+    )
+    val C = Array(
+        Array(0.9527204, -0.2973347, 0.06257778),
+        Array(-0.2808735, -0.9403636, -0.19190231),
+        Array(0.1159052, 0.1652528, -0.97941688)
+    )
+
+    val c = ~C // or val c = matrix(C)
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>In Scala, matrix-vector operations are just like in math formula.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_8">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile> val x = c(1.0, 2.0, 3.0)
-    x: Array[Double] = Array(1.0, 2.0, 3.0)
-
-    smile> val y = c(3.0, 2.0, 1.0)
-    y: Array[Double] = Array(3.0, 2.0, 1.0)
-
-    smile> val res: Array[Double] = a * x + 1.5 * y
-    res: Array[Double] = Array(7.4290416, 2.06434916, 3.63196466)
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-8-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> double[] x = {1.0, 2.0, 3.0}
     x ==> double[3] { 1.0, 2.0, 3.0 }
 
@@ -335,79 +322,102 @@ title: Smile - Linear Algebra
     smile> a.mv(1.0, x, 1.5, y)
     $48 ==> double[3] { 7.4290416, 2.06434916, 3.63196466 }
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-8-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile> val x = c(1.0, 2.0, 3.0)
+    x: Array[Double] = Array(1.0, 2.0, 3.0)
+
+    smile> val y = c(3.0, 2.0, 1.0)
+    y: Array[Double] = Array(3.0, 2.0, 1.0)
+
+    smile> val res: Array[Double] = a * x + 1.5 * y
+    res: Array[Double] = Array(7.4290416, 2.06434916, 3.63196466)
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Similarly, for matrix-matrix operations:</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_9">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile&gt; a + b // returns a lazy expression of a + b
-    res27: smile.math.MatrixAddMatrix =
-        1.4102    0.0000    1.4102
-        0.1052    0.0000    0.1052
-       -0.0151    0.0000   -0.0151
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-9-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> a.add(b) // a = a + b
     $44 ==> 3 x 3
       1.4102    0.0000    1.4102
       0.1052    0.0000    0.1052
      -0.0151    0.0000   -0.0151
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-9-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile&gt; a + b // returns a lazy expression of a + b
+    res27: smile.math.MatrixAddMatrix =
+        1.4102    0.0000    1.4102
+        0.1052    0.0000    0.1052
+       -0.0151    0.0000   -0.0151
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Note that <code>a * b</code> are element-wise:</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_10">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile&gt; a * b // returns a lazy expression of a * b
-    res28: smile.math.MatrixMulMatrix =
-        0.4969   -0.0051    0.4969
-       -0.0980   -0.7929   -0.0980
-       -0.3989   -0.2020   -0.3989
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-10-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-10-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-10-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> a.mul(b) // a *= b
     $45 ==> 3 x 3
       0.4969   -0.0051    0.4969
      -0.0980   -0.7929   -0.0980
      -0.3989   -0.2020   -0.3989
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-10-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile&gt; a * b // returns a lazy expression of a * b
+    res28: smile.math.MatrixMulMatrix =
+        0.4969   -0.0051    0.4969
+       -0.0980   -0.7929   -0.0980
+       -0.3989   -0.2020   -0.3989
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>For matrix multiplication, the operator is <code>%*%</code>, same as in R</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_11" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_11" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_11">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-11-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    smile> a.mm(b).mm(c)
+    $49 ==> 3 x 3
+      0.9984    0.0067    0.0554
+     -0.0257    0.9361    0.3508
+     -0.0495   -0.3517    0.9348
+          </code></pre>
+    </div>
+    <div id="pg-11-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     smile&gt; a %*% b %*% c
     [main] INFO smile.math.MatrixOrderOptimization - The minimum cost of matrix multiplication chain: 54
     res29: smile.math.MatrixExpression =
@@ -415,33 +425,33 @@ title: Smile - Linear Algebra
        -0.0257    0.9361    0.3508
        -0.0495   -0.3517    0.9348
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_11">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    smile> a.mm(b).mm(c)
-    $49 ==> 3 x 3
-      0.9984    0.0067    0.0554
-     -0.0257    0.9361    0.3508
-     -0.0495   -0.3517    0.9348
-          </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The method <code>Matrix.transpose</code> returns the transpose of matrix,
         which executes immediately. However, the method <code>t</code> is preferred
         on <code>MatrixExpression</code> as it is lazy.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_12" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_12" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_12">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-12-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+    smile> a.mt(b).mm(c)
+    $50 ==> 3 x 3
+      0.8978   -0.4369    0.0543
+      0.4189    0.8856    0.2006
+     -0.1357   -0.1574    0.9782
+          </code></pre>
+    </div>
+    <div id="pg-12-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
     smile&gt; a %*% b.t %*% c
     [main] INFO smile.math.MatrixOrderOptimization - The minimum cost of matrix multiplication chain: 54
     res30: smile.math.MatrixExpression =
@@ -449,45 +459,24 @@ title: Smile - Linear Algebra
         0.4189    0.8856    0.2006
        -0.1357   -0.1574    0.9782
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_12">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-    smile> a.mt(b).mm(c)
-    $50 ==> 3 x 3
-      0.8978   -0.4369    0.0543
-      0.4189    0.8856    0.2006
-     -0.1357   -0.1574    0.9782
-          </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Smile has runtime optimization for matrix multiplication chain, which can greatly
         improve the performance. Note that this optimization is only available in Scala API.
         In the below we generate several random matrices and multiply them together.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_13" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_13" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_13">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val a = randn( 300,  900)
-    val b = randn( 900,  150)
-    val c = randn( 150, 1800)
-    val d = randn(1800,   30)
-
-    time("matrix multiplication") {(a %*% b %*% c %*% d).toMatrix}
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_13">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-13-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-13-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-13-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> var a = Matrix.randn( 300,  900)
     [main] INFO smile.math.MathEx - Set RNG seed 19650218 for thread main
     a ==> 300 x 900
@@ -520,9 +509,19 @@ title: Smile - Linear Algebra
     -7136.4159  3785.3912  -15033.8276  9799.7746  -16499.4337  16218.9645  13444.4842  ...
       ...
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-13-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val a = randn( 300,  900)
+    val b = randn( 900,  150)
+    val c = randn( 150, 1800)
+    val d = randn(1800,   30)
+
+    time("matrix multiplication") {(a %*% b %*% c %*% d).toMatrix}
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where <code>randn()</code> creates a matrix of normally distributed
         random numbers. The shell will try to load machine optimized
@@ -546,37 +545,16 @@ title: Smile - Linear Algebra
         <code>rank</code>, <code>inv</code> and operator <code>\</code>
         for these common computation.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_14" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_14" type="button" role="tab">Scala</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_14">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile&gt; val x = Array(1.0, 2.0, 3.0)
-    x: Array[Double] = Array(1.0, 2.0, 3.0)
-
-    smile&gt; a \ x
-    res14: Array[Double] = Array(2.9290414582113184, -0.9356509345036078, 2.131964578605774)
-
-    smile&gt; inv(a)
-    res19: smile.math.matrix.Matrix =
-      0.7220   -0.2649   -0.6392
-      0.0712   -0.8904    0.4495
-      0.6882    0.3700    0.6241
-
-    smile&gt; inv(a) %*% a
-    res21: smile.math.MatrixExpression =
-      1.0000    0.0000    0.0000
-     -0.0000    1.0000    0.0000
-     -0.0000    0.0000    1.0000
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_14">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-14-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-14-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-14-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     smile> double[] x = {1.0, 2.0, 3.0}
     x ==> double[3] { 1.0, 2.0, 3.0 }
 
@@ -598,9 +576,30 @@ title: Smile - Linear Algebra
     smile> lu.solve(x)
     $69 ==> double[3] { -1.7252356779053744, -0.3612592362819077, 3.3004624918302046 }
           </code></pre>
-            </div>
-        </div>
     </div>
+    <div id="pg-14-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile&gt; val x = Array(1.0, 2.0, 3.0)
+    x: Array[Double] = Array(1.0, 2.0, 3.0)
+
+    smile&gt; a \ x
+    res14: Array[Double] = Array(2.9290414582113184, -0.9356509345036078, 2.131964578605774)
+
+    smile&gt; inv(a)
+    res19: smile.math.matrix.Matrix =
+      0.7220   -0.2649   -0.6392
+      0.0712   -0.8904    0.4495
+      0.6882    0.3700    0.6241
+
+    smile&gt; inv(a) %*% a
+    res21: smile.math.MatrixExpression =
+      1.0000    0.0000    0.0000
+     -0.0000    1.0000    0.0000
+     -0.0000    0.0000    1.0000
+    </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>

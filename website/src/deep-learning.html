@@ -44,13 +44,14 @@ title: Smile - Deep Learning
         as we do on Line 14. On Line 15, we move the model to the preferred compute
         device.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">import smile.deep.layer.*;
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.layer.*;
     import smile.deep.metric.*;
     import smile.deep.tensor.*;
 
@@ -88,9 +89,8 @@ title: Smile - Deep Learning
             System.out.format("Training %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
         }
     }</code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>From line 17 to 19, we load a sample data of MNIST. This is same as we used to do with
         smile-core. The data are read in as plain <code>double[][]</code>. Then on line 20, we
@@ -122,13 +122,14 @@ title: Smile - Deep Learning
         from the working directory. You may download the weights from
         <a href="https://smile-ai.org/model/EfficientNet/efficientnet_v2_s.pt">smile-ai.org</a>.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
-            <div class="code" style="text-align: left;">
-    <pre class="language-java"><code class="language-java">var model = EfficientNet.V2S();
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">var model = EfficientNet.V2S();
     model.to(device);
     model.eval();
 
@@ -157,9 +158,8 @@ title: Smile - Deep Learning
                 System.out.println(ImageNet.labels[topk._2().getInt(i, j)]);
             }
         }</code></pre>
-            </div>
-        </div>
-    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Note that we run the inference twice for benchmarking.
         The first inference is typically slow due to multiple reasons.

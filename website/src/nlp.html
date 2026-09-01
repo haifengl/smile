@@ -38,36 +38,17 @@ title: Smile - NLP
         <li>Normalize dash, double and single quotes.</li>
     </ul>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_1" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_1" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_1" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-val unicode = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.
-
-“It was very strange to see the seal. I’ve seen a lot of things on runways, but never a seal,” Babcock told ABC News. His footage of the hefty mammal went viral after he posted it on Facebook.
-
-According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a “sled.”
-
-Normal air traffic soon resumed, the station said.
-
-Poking fun at the seal’s surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of  “low sealings” in the North Slope region — a pun on “low ceilings,” a term used to describe low clouds and poor visibility.
-
-Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.
-
-“Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,” department spokeswoman Meadow Bailey told the Associated Press. “Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare.”"""
-
-val text = unicode.normalize
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_1">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-1-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 import smile.math.MathEx;
 import smile.nlp.*;
 import smile.nlp.tokenizer.*;
@@ -88,11 +69,28 @@ var unicode = "When airport foreman Scott Babcock went out onto the runway at Wi
 
 var text = SimpleNormalizer.getInstance().normalize(unicode);
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_1">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+val unicode = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.
+
+“It was very strange to see the seal. I’ve seen a lot of things on runways, but never a seal,” Babcock told ABC News. His footage of the hefty mammal went viral after he posted it on Facebook.
+
+According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a “sled.”
+
+Normal air traffic soon resumed, the station said.
+
+Poking fun at the seal’s surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of  “low sealings” in the North Slope region — a pun on “low ceilings,” a term used to describe low clouds and poor visibility.
+
+Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.
+
+“Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,” department spokeswoman Meadow Bailey told the Associated Press. “Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare.”"""
+
+val text = unicode.normalize
+    </code></pre>
+    </div>
+    <div id="pg-1-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
 import smile.nlp.*;
 
 val unicode = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.
@@ -111,9 +109,9 @@ Though this was the first seal sighting on the runway at the airport, the depart
 
 val text = unicode.normalize()
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="sentence" class="title">Sentence Breaking</h2>
 
@@ -132,35 +130,17 @@ val text = unicode.normalize()
         In Smile shell, simply call <code>sentences</code> on a string
         to return an array of sentences. Any carriage returns
         in the text will be replaced by whitespace.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_2" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_2" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_2" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_2">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-smile&gt; val sentences = text.sentences
-sentences: Array[String] = Array(
-  "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.",
-  "\"It was very strange to see the seal.",
-  "I've seen a lot of things on runways, but never a seal,\" Babcock told ABC News.",
-  "His footage of the hefty mammal went viral after he posted it on Facebook.",
-  "According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a \"sled.\"",
-  "Normal air traffic soon resumed, the station said.",
-  "Poking fun at the seal's surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of \"low sealings\" in the North Slope region -- a pun on \"low ceilings,\" a term used to describe low clouds and poor visibility.",
-  "Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.",
-  "\"Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,\" department spokeswoman Meadow Bailey told the Associated Press.",
-  "\"Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare.\"",
-  ""
-)
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_2">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-2-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 smile> var sentences = SimpleSentenceSplitter.getInstance().split(text)
 sentences ==> String[10] { "When airport foreman Scott Babcock  ... mmal strikes are rare\"" }
 
@@ -185,16 +165,32 @@ Though this was the first seal sighting on the runway at the airport, the depart
 
 "Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare"
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_2">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+smile&gt; val sentences = text.sentences
+sentences: Array[String] = Array(
+  "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.",
+  "\"It was very strange to see the seal.",
+  "I've seen a lot of things on runways, but never a seal,\" Babcock told ABC News.",
+  "His footage of the hefty mammal went viral after he posted it on Facebook.",
+  "According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a \"sled.\"",
+  "Normal air traffic soon resumed, the station said.",
+  "Poking fun at the seal's surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of \"low sealings\" in the North Slope region -- a pun on \"low ceilings,\" a term used to describe low clouds and poor visibility.",
+  "Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.",
+  "\"Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,\" department spokeswoman Meadow Bailey told the Associated Press.",
+  "\"Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare.\"",
+  ""
+)
+    </code></pre>
+    </div>
+    <div id="pg-2-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     val sentences = text.sentences()
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="tokenizer" class="title">Word Segmentation</h2>
 
@@ -218,23 +214,17 @@ Though this was the first seal sighting on the runway at the airport, the depart
         and each morpheme is tagged separately. The below example
         splits a set of sentences and flat out the results into one
         array.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_3" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_3" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_3" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_3">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-smile&gt; sentences.flatMap(_.words())
-res6: Array[String] = Array(airport, foreman, Scott, Babcock, went, runway, Wiley, Post-Will, Rogers, Memorial, Airport, Utqiagvik, Alaska, Monday, clear, snow, surprised, visitor, waiting, asphalt, 450-pound, bearded, seal, chilling, milky, sunshine, strange, seal, seen, lot, things, runways, seal, Babcock, told, ABC, News, footage, hefty, mammal, went, viral, posted, Facebook, According, local, TV, station, KTVA, animal, control, called, eventually, moved, seal, help, sled., Normal, air, traffic, soon, resumed, station, said, Poking, fun, seal, surprise, appearance, Alaska, Department, Transportation, warned, pilots, Tuesday, low, sealings, North, Slope, region, pun, low, ceilings, term, used, low, clouds, poor, visibility, seal, sighting, runway, airport...
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_3">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-3-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 smile> var tokenizer = new SimpleTokenizer(true)
 tokenizer ==> smile.nlp.tokenizer.SimpleTokenizer@6b53e23f
 
@@ -244,17 +234,21 @@ smile> var words = Arrays.stream(sentences).
          toArray(String[]::new)
 words ==> String[133] { "airport", "foreman", "Scott", "Babcock", "went", "runway", "Wiley", "Post-Will", "Rogers", "Memorial", "Airport", "Utqiagvik", "Alaska", "Monday", "clear", "snow", "surprised", "visitor", "waiting", "asphalt", "450-pound", "bearded", "seal", "chilling", "milky", "sunshine", "strange", "seal", "seen", "lot", "things", "runways", "seal", "Babcock", "told", "ABC", "News", "footage", "hefty", "mammal", "went", "viral", "posted", "Facebook", "According", "local", "TV", "station", "KTVA", "animal", "control", "called", "eventually", "moved", "seal", "help", "sled.", "Normal", "air", "traffic", "soon", "resumed", "station", "said", "Poking", "fun ... spotted", "past", "Wildlife", "strikes", "aircraft", "pose", "significant", "safety", "hazard", "cost", "aviation", "industry", "hundreds", "millions", "dollars", "year", "department", "spokeswoman", "Meadow", "Bailey", "told", "Associated", "Press", "Birds", "make", "90", "percent", "strikes", "U.S.", "mammal", "strikes", "rare" }
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_3">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+smile&gt; sentences.flatMap(_.words())
+res6: Array[String] = Array(airport, foreman, Scott, Babcock, went, runway, Wiley, Post-Will, Rogers, Memorial, Airport, Utqiagvik, Alaska, Monday, clear, snow, surprised, visitor, waiting, asphalt, 450-pound, bearded, seal, chilling, milky, sunshine, strange, seal, seen, lot, things, runways, seal, Babcock, told, ABC, News, footage, hefty, mammal, went, viral, posted, Facebook, According, local, TV, station, KTVA, animal, control, called, eventually, moved, seal, help, sled., Normal, air, traffic, soon, resumed, station, said, Poking, fun, seal, surprise, appearance, Alaska, Department, Transportation, warned, pilots, Tuesday, low, sealings, North, Slope, region, pun, low, ceilings, term, used, low, clouds, poor, visibility, seal, sighting, runway, airport...
+    </code></pre>
+    </div>
+    <div id="pg-3-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
 >>> sentences.flatMap{ it.words().asIterable() }
 res6: kotlin.collections.List&lt;kotlin.String&gt; = [airport, foreman, Scott, Babcock, went, runway, Wiley, Post-Will, Rogers, Memorial, Airport, Utqiagvik, Alaska, Monday, clear, snow, surprised, visitor, waiting, asphalt, 450-pound, bearded, seal, chilling, milky, sunshine, strange, seal, seen, lot, things, runways, seal, Babcock, told, ABC, News, footage, hefty, mammal, went, viral, posted, Facebook, According, local, TV, station, KTVA, animal, control, called, eventually, moved, seal, help, sled., Normal, air, traffic, soon, resumed, station, said, Poking, fun, seal, surprise, appearance, Alaska, Department, Transportation, warned, pilots, Tuesday, low, sealings, North, Slope, region, pun, low, ceilings, term, used, low, clouds, poor, visibility, seal, sighting, runway, airport, department, said, animals, including, birds, caribou, polar, bears, spotted, past, Wildlife, strikes, aircraft, pose, significant, safety, hazard, cost, aviation, industry, hundreds, millions, dollars, year, department, spokeswoman, Meadow, Bailey, told, Associated, Press, Birds, make, 90, percent, strikes, U.S., mammal, strikes, rare.]
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>You may notice that some words like "the", "a", etc. are missing
         in the result. It is because that <code>words()</code> filters
@@ -310,25 +304,17 @@ res6: kotlin.collections.List&lt;kotlin.String&gt; = [airport, foreman, Scott, B
         the removal or replacement of an ending. The implementation
         <code>LancasterStemmer</code> allows the user to load customized rules.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_4" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_4" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_4" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_4">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    smile&gt; porter.stem("democratization")
-    res10: String = "democrat"
-    smile&gt; lancaster.stem("democratization")
-    res11: String = "democr"
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_4">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-4-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 smile> var porter = new PorterStemmer()
 porter ==> smile.nlp.stemmer.PorterStemmer@5ea434c8
 
@@ -341,19 +327,25 @@ $42 ==> "democrat"
 smile> lancaster.stem("democratization")
 $43 ==> "democr"
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_4">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    smile&gt; porter.stem("democratization")
+    res10: String = "democrat"
+    smile&gt; lancaster.stem("democratization")
+    res11: String = "democr"
+    </code></pre>
+    </div>
+    <div id="pg-4-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     >>> porter("democratization")
     res18: kotlin.String = democrat
     >>> lancaster("democratization")
     res19: kotlin.String = democr
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>Different from stemming that commonly collapses derivationally
         related words, lemmatization aims to remove inflectional endings
@@ -373,40 +365,38 @@ $43 ==> "democr"
         a binary bag of words (<code>Set[String]</code>). That is, presence/absence
         is used instead of frequencies.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_5" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_5" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_5" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_5">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-smile&gt; text.bag()
-res12: Map[String, Int] = Map(move -> 1, 90 -> 1, call -> 1, spokeswoman -> 1, snow -> 1, anim -> 2, post -> 1, footag -> 1, wait -> 1, carib -> 1, industri -> 1, sunshin -> 1, seen -> 1, abc -> 1, said -> 2, pun -> 1, polar -> 1, bear -> 1, soon -> 1, warn -> 1, sight -> 1, babcock -> 2, u.s. -> 1, clear -> 1, normal -> 1, appear -> 1, sled. -> 1, strike -> 3, foreman -> 1, milki -> 1, resum -> 1, meadow -> 1, bailei -> 1, bird -> 2, us -> 1, dollar -> 1, poke -> 1, mondai -> 1, local -> 1, term -> 1, thing -> 1, scott -> 1, year -> 1, associat -> 1, ktva -> 1, tv -> 1, told -> 2, visibl -> 1, eventu -> 1, seal -> 7, hundr -> 1, surpris -> 2, aircraft -> 1, runwai -> 3, ceil -> 1, includ -> 1, asphalt -> 1, visitor -> 1, help -> 1, hazard -> 1, transport -> ...
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_5">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-5-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
 smile> var map = Arrays.stream(words).
          map(porter::stem).
          map(String::toLowerCase).
          collect(Collectors.groupingBy(java.util.function.Function.identity(), Collectors.summingInt(e -> 1)))
 map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, sled.=1}
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_5">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+smile&gt; text.bag()
+res12: Map[String, Int] = Map(move -> 1, 90 -> 1, call -> 1, spokeswoman -> 1, snow -> 1, anim -> 2, post -> 1, footag -> 1, wait -> 1, carib -> 1, industri -> 1, sunshin -> 1, seen -> 1, abc -> 1, said -> 2, pun -> 1, polar -> 1, bear -> 1, soon -> 1, warn -> 1, sight -> 1, babcock -> 2, u.s. -> 1, clear -> 1, normal -> 1, appear -> 1, sled. -> 1, strike -> 3, foreman -> 1, milki -> 1, resum -> 1, meadow -> 1, bailei -> 1, bird -> 2, us -> 1, dollar -> 1, poke -> 1, mondai -> 1, local -> 1, term -> 1, thing -> 1, scott -> 1, year -> 1, associat -> 1, ktva -> 1, tv -> 1, told -> 2, visibl -> 1, eventu -> 1, seal -> 7, hundr -> 1, surpris -> 2, aircraft -> 1, runwai -> 3, ceil -> 1, includ -> 1, asphalt -> 1, visitor -> 1, help -> 1, hazard -> 1, transport -> ...
+    </code></pre>
+    </div>
+    <div id="pg-5-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
 >>> text.bag()
 res20: kotlin.collections.Map&lt;kotlin.String, kotlin.Int&gt; = {airport=3, foreman=1, scott=1, babcock=2, went=2, runwai=3, wilei=1, post-wil=1, roger=1, memori=1, utqiagvik=1, alaska=2, mondai=1, clear=1, snow=1, surpris=2, visitor=1, wait=1, asphalt=1, 450-pound=1, beard=1, seal=7, chill=1, milki=1, sunshin=1, strang=1, seen=1, lot=1, thing=1, told=2, abc=1, new=1, footag=1, hefti=1, mammal=2, viral=1, post=1, facebook=1, accord=1, local=1, tv=1, station=2, ktva=1, anim=2, control=1, call=1, eventu=1, move=1, help=1, sled.=1, normal=1, air=1, traffic=1, soon=1, resum=1, said=2, poke=1, fun=1, appear=1, depart=3, transport=1, warn=1, pilot=1, tuesdai=1, low=3, north=1, slope=1, region=1, pun=1, ceil=1, term=1, us=1, cloud=1, poor=1, visibl=1, sight=1, includ=1, bird=2, carib=1, polar=1, bear=1, spot=1, past=1, wildlif=1, strike=3, aircraft=1, pose=1, signific=1, safeti=1, hazard=1, cost=1, aviat=1, industri=1, hundr=1, million=1, dollar=1, year=1, spokeswoman=1, meadow=1, bailei=1, associat=1, press=1, make=1, 90=1, percent=1, u.s.=1, rare.=1}
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The function <code>vectorize(features, bag)</code> converts
         a bag of words to a feature vector. The parameter
@@ -432,27 +422,17 @@ res20: kotlin.collections.Map&lt;kotlin.String, kotlin.Int&gt; = {airport=3, for
         by the inverse of document frequency, i.e. tf-idf (term
         frequency-inverse document frequency).</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_6" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_6" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_6" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_6">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
-    val lines = scala.io.Source.fromFile("data/text/movie.txt").getLines().toSeq
-    val corpus = lines.map(_.bag())
-
-    val features = Array("like", "good", "perform", "littl", "love", "bad", "best")
-    val bags = corpus.map(vectorize(features, _))
-    val data = tfidf(bags)
-    </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_6">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-6-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
     var lines = Files.lines(java.nio.file.Paths.get("data/text/movie.txt"));
     var corpus = lines.map(line -> {
               var sentences = SimpleSentenceSplitter.getInstance().split(SimpleNormalizer.getInstance().normalize(line));
@@ -497,11 +477,19 @@ res20: kotlin.collections.Map&lt;kotlin.String, kotlin.Int&gt; = {airport=3, for
             return x;
     }).toArray(double[][]::new);
           </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_6">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+    val lines = scala.io.Source.fromFile("data/text/movie.txt").getLines().toSeq
+    val corpus = lines.map(_.bag())
+
+    val features = Array("like", "good", "perform", "littl", "love", "bad", "best")
+    val bags = corpus.map(vectorize(features, _))
+    val data = tfidf(bags)
+    </code></pre>
+    </div>
+    <div id="pg-6-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
     import java.io.File
     val lines = File("data/text/movie.txt").readLines()
     val corpus = lines.map{ it.bag() }
@@ -510,9 +498,9 @@ res20: kotlin.collections.Map&lt;kotlin.String, kotlin.Int&gt; = {airport=3, for
     val bags = corpus.map{ vectorize(features, it) }
     val data = tfidf(bags)
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>In the example, we load a file, of which each line is a document.
         We define a short list of terms as the features (only for demo
@@ -552,15 +540,30 @@ res20: kotlin.collections.Map&lt;kotlin.String, kotlin.Int&gt; = {airport=3, for
         to specify the p-value threshold. The parameter <code>minFreq</code> is the minimum
         frequency of collocation in the corpus.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_7" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_7" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_7" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_7">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-7-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+smile> var corpus = new SimpleCorpus()
+corpus ==> smile.nlp.SimpleCorpus@59309333
+
+smile> Files.lines(java.nio.file.Paths.get("data/text/movie.txt")).forEach(text -> corpus.add(new Text(text)));
+
+smile> import smile.nlp.collocation.Bigram;
+
+smile> Bigram.of(corpus, 10, 5);
+$119 ==> Bigram[10] { (special effects, 381, 4849.22), (new york, 248, 3038.85), (= =, 226, 2560.62), (star wars, 165, 2184.18), (high school, 173, 1911.50), (science fiction, 126, 1733.94), (ve seen, 191, 1669.02), (hong kong, 90, 1592.32), (star trek, 119, 1463.29), (pulp fiction, 93, 1419.28) }
+          </code></pre>
+    </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
 smile&gt; bigram(10, 5, lines: _*)
 [main] INFO smile.util.package$ - runtime: 255287.678705 ms
 res16: Array[collocation.BigramCollocation] = Array(
@@ -576,31 +579,14 @@ res16: Array[collocation.BigramCollocation] = Array(
   (hong kong, 61, 1088.61)
 )
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_7">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-smile> var corpus = new SimpleCorpus()
-corpus ==> smile.nlp.SimpleCorpus@59309333
-
-smile> Files.lines(java.nio.file.Paths.get("data/text/movie.txt")).forEach(text -> corpus.add(new Text(text)));
-
-smile> import smile.nlp.collocation.Bigram;
-
-smile> Bigram.of(corpus, 10, 5);
-$119 ==> Bigram[10] { (special effects, 381, 4849.22), (new york, 248, 3038.85), (= =, 226, 2560.62), (star wars, 165, 2184.18), (high school, 173, 1911.50), (science fiction, 126, 1733.94), (ve seen, 191, 1669.02), (hong kong, 90, 1592.32), (star trek, 119, 1463.29), (pulp fiction, 93, 1419.28) }
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_7">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-7-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
 >>> bigram(10, 5, lines)
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>In the output, the second column is the frequency of bigrams and
         the third is the statistical test score.</p>
@@ -611,15 +597,44 @@ $119 ==> Bigram[10] { (special effects, 381, 4849.22), (new york, 248, 3038.85),
         extract n-gram phrases. It takes a collection of texts and generates all n-grams of
         length at most maxNGramSize that occur at least minFreq times in the
         text.</p>
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_8" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_8" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_8" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_8">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-8-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-8-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+smile> var turing = Files.lines(java.nio.file.Paths.get("data/text/turing.txt")).collect(Collectors.joining(" "))
+turing ==> "COMPUTING MACHINERY AND INTELLIGENCE  1. The Imi ... e imitation game, the part
+
+smile> var sentences = SimpleSentenceSplitter.getInstance().split(SimpleNormalizer.getInstance().normalize(turing))
+sentences ==> String[571] { "COMPUTING MACHINERY AND INTELLIGEN ...  wish we can make this sup
+
+smile> var text = Arrays.stream(sentences).
+         map(s -> Arrays.stream(tokenizer.split(s)).
+         map(w -> porter.stripPluralParticiple(w).toLowerCase()).
+         toArray(String[]::new)).
+         collect(Collectors.toList())
+text ==> [[Ljava.lang.String;@71238fc2, [Ljava.lang.String ... ava.lang.String;@28cda624]
+
+smile> import smile.nlp.collocation.NGram
+
+smile> var phrase = NGram.of(text, 4, 4)
+phrase ==> NGram[5][] { NGram[0] {  }, NGram[335] { ([machin ... ew], 4) }, NGram[0] {  } }
+
+smile> phrase[2]
+$135 ==> NGram[16] { ([digital, computer], 34), ([discrete-state, machine], 17), ([imitation, game], 15), ([storage, capacity], 11), ([human, computer], 10), ([machine, think], 9), ([child, machine], 7), ([scientific, induction], 6), ([well-establish, fact], 5), ([learn, machine], 5), ([someth, like], 5), ([lady, lovelace], 5), ([analytical, engine], 5), ([manchester, machine], 4), ([differential, analyser], 4), ([subject, matter], 4) }
+
+smile> phrase[3]
+$136 ==> NGram[8] { ([number, of, state], 5), ([law, of, behaviour], 5), ([winter, 's, day], 5), ([rule, of, conduct], 5), ([argument, from, consciousness], 4), ([machine, in, question], 4), ([punishment, and, reward], 4), ([point, of, view], 4) }
+          </code></pre>
+    </div>
+    <div id="pg-8-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
 smile&gt; val turing = scala.io.Source.fromFile("data/text/turing.txt").getLines.mkString
 smile&gt; val phrase = ngram(4, 4, turing)
 smile&gt; phrase(2)
@@ -653,46 +668,15 @@ res20: Seq[NGram] = Buffer(
   ([machine, in, question], 4)
 )
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_8">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-smile> var turing = Files.lines(java.nio.file.Paths.get("data/text/turing.txt")).collect(Collectors.joining(" "))
-turing ==> "COMPUTING MACHINERY AND INTELLIGENCE  1. The Imi ... e imitation game, the part
-
-smile> var sentences = SimpleSentenceSplitter.getInstance().split(SimpleNormalizer.getInstance().normalize(turing))
-sentences ==> String[571] { "COMPUTING MACHINERY AND INTELLIGEN ...  wish we can make this sup
-
-smile> var text = Arrays.stream(sentences).
-         map(s -> Arrays.stream(tokenizer.split(s)).
-         map(w -> porter.stripPluralParticiple(w).toLowerCase()).
-         toArray(String[]::new)).
-         collect(Collectors.toList())
-text ==> [[Ljava.lang.String;@71238fc2, [Ljava.lang.String ... ava.lang.String;@28cda624]
-
-smile> import smile.nlp.collocation.NGram
-
-smile> var phrase = NGram.of(text, 4, 4)
-phrase ==> NGram[5][] { NGram[0] {  }, NGram[335] { ([machin ... ew], 4) }, NGram[0] {  } }
-
-smile> phrase[2]
-$135 ==> NGram[16] { ([digital, computer], 34), ([discrete-state, machine], 17), ([imitation, game], 15), ([storage, capacity], 11), ([human, computer], 10), ([machine, think], 9), ([child, machine], 7), ([scientific, induction], 6), ([well-establish, fact], 5), ([learn, machine], 5), ([someth, like], 5), ([lady, lovelace], 5), ([analytical, engine], 5), ([manchester, machine], 4), ([differential, analyser], 4), ([subject, matter], 4) }
-
-smile> phrase[3]
-$136 ==> NGram[8] { ([number, of, state], 5), ([law, of, behaviour], 5), ([winter, 's, day], 5), ([rule, of, conduct], 5), ([argument, from, consciousness], 4), ([machine, in, question], 4), ([punishment, and, reward], 4), ([point, of, view], 4) }
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_8">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-8-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
 >>> val turing = File("data/text/turing.txt").readLines()
 >>> val phrase = ngram(4, 4, turing)
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The result is an array list of sets of n-grams. The i-th entry is the set of i-grams.</p>
 
@@ -713,15 +697,23 @@ $136 ==> NGram[8] { ([number, of, state], 5), ([law, of, behaviour], 5), ([winte
         many important concepts in the paper such as "storage capacity", "machine",
         "digital computer", "discrete-state machine", etc.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_9" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_9" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_9" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_9">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-9-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-9-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+smile> smile.nlp.keyword.CooccurrenceKeywords.of(turing, 10)
+$137 ==> NGram[10] { ([storage, capacity], 11), ([machine], 198), ([think], 46), ([teach], 11), ([process], 17), ([digital, computer], 34), ([discrete-state, machine], 17), ([imitation, game], 15), ([child], 15), ([view], 20) }
+          </code></pre>
+    </div>
+    <div id="pg-9-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
 smile&gt; turing.keywords(10)
 res21: Seq[NGram] = Buffer(
   ([storage, capacity], 11),
@@ -736,24 +728,14 @@ res21: Seq[NGram] = Buffer(
   ([play], 15)
 )
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_9">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-smile> smile.nlp.keyword.CooccurrenceKeywords.of(turing, 10)
-$137 ==> NGram[10] { ([storage, capacity], 11), ([machine], 198), ([think], 46), ([teach], 11), ([process], 17), ([digital, computer], 34), ([discrete-state, machine], 17), ([imitation, game], 15), ([child], 15), ([view], 20) }
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_9">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-9-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
 >>> turing.joinToString("\n").keywords(10)
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>This algorithm relies on co-occurrence probability and information theory.
         Therefore, the article should be long enough to contain sufficient
@@ -784,15 +766,32 @@ $137 ==> NGram[10] { ([storage, capacity], 11), ([machine], 198), ([think], 46),
         already split into words. In this case, just call <code>postag(words)</code>
         on an array of words.</p>
 
-    <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#java_10" type="button" role="tab">Java</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#scala_10" type="button" role="tab">Scala</button></li>
-        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#kotlin_10" type="button" role="tab">Kotlin</button></li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade" role="tabpanel" id="scala_10">
-            <div class="code" style="text-align: left;">
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-10-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-10-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-10-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-10-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+smile> var sentence = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.";
+sentence ==> "When airport foreman Scott Babcock went out onto ... ng in the milky sunshine."
+
+smile> var words = Arrays.stream(tokenizer.split(sentence)).
+         map(w -> porter.stripPluralParticiple(w).toLowerCase()).
+         toArray(String[]::new)
+words ==> String[52] { "when", "airport", "foreman", "scott ... "milky", "sunshine", "." }
+|    update replaced variable map, reset to null
+
+smile> HMMPOSTagger.getDefault().tag(words)
+$141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, PRP, MD, VB, JJ, NN, IN, NNP, ,, NNP, ,, IN, NN, TO, VB, DT, NN, ,, PRP, VBD, NN, TO, VB, DT, NN, NN, IN, PRP, IN, DT, NN, :, DT, NN, NN, NN, NN, IN, DT, JJ, NN, . }
+          </code></pre>
+    </div>
+    <div id="pg-10-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
 smile&gt; val sentence = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."""
 sentence: String = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."
 
@@ -853,37 +852,18 @@ res2: Array[pos.PennTreebankPOS] = Array(
   TO,
 ...
     </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade show active" role="tabpanel" id="java_10">
-            <div class="code" style="text-align: left;">
-          <pre class="language-java"><code class="language-java">
-smile> var sentence = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.";
-sentence ==> "When airport foreman Scott Babcock went out onto ... ng in the milky sunshine."
-
-smile> var words = Arrays.stream(tokenizer.split(sentence)).
-         map(w -> porter.stripPluralParticiple(w).toLowerCase()).
-         toArray(String[]::new)
-words ==> String[52] { "when", "airport", "foreman", "scott ... "milky", "sunshine", "." }
-|    update replaced variable map, reset to null
-
-smile> HMMPOSTagger.getDefault().tag(words)
-$141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, PRP, MD, VB, JJ, NN, IN, NNP, ,, NNP, ,, IN, NN, TO, VB, DT, NN, ,, PRP, VBD, NN, TO, VB, DT, NN, NN, IN, PRP, IN, DT, NN, :, DT, NN, NN, NN, NN, IN, DT, JJ, NN, . }
-          </code></pre>
-            </div>
-        </div>
-        <div class="tab-pane fade" role="tabpanel" id="kotlin_10">
-            <div class="code" style="text-align: left;">
-    <pre class="language-kotlin"><code class="language-kotlin">
+    </div>
+    <div id="pg-10-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
 >>> val sentence = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."""
 
 >>> sentence.postag()
 
 >>> postag(sentence.words("none"))
     </code></pre>
-            </div>
-        </div>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="naive-bayes" class="title">Naive Bayes</h2>
 
@@ -909,9 +889,18 @@ $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, P
         the users are free to use any discrete distributions to model categorical or
         ordinal random variables.</p>
 
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">
     def naiveBayes(priori: Array[Double], condprob: Array[Array[Distribution]]): NaiveBayes
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>For document classification in NLP, there are two different ways we can set
         up a naive Bayes classifier: multinomial model and Bernoulli model. The
@@ -923,9 +912,18 @@ $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, P
         features. A Bernoulli naive Bayes classifier requires some form of feature
         selection or else its accuracy will be low.</p>
 
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">
     def naiveBayes(x: Array[Array[Int]], y: Array[Int], model: DiscreteNaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): DiscreteNaiveBayes
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>The different generation models imply different estimation strategies and
         different classification rules. The Bernoulli model estimates as the
@@ -960,9 +958,18 @@ $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, P
         which assumes that binary features are stored in a sparse array, of which
         entries are the indices of nonzero features.</p>
 
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">
     def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where <code>x</code> is the sparse training samples. Each sample is represented by a set of sparse
         binary features. The features are stored in an integer array, of which
@@ -1001,11 +1008,20 @@ $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, P
 
     <p>The below function trains a first-order hidden Markov model.</p>
 
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">
     def hmm(observations: Array[Array[Int]], labels: Array[Array[Int]]): HMM[Int]
 
     def hmm[T](observations: Array[Array[T]], labels: Array[Array[Int]], ordinal: ToIntFunction[T]): HMMLabeler[T]
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where <code>observations</code> is the observation sequences, of which symbols take
         values in [0, n), where n is the number of unique symbols.
@@ -1047,9 +1063,18 @@ $141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, P
         the order of the feature interactions, rather than exponentially as
         in previous algorithms based on iterative scaling and gradient descent.</p>
 
-    <pre class="language-scala"><code class="language-scala">
+    <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">
     def crf(sequences: Array[Array[Tuple]], labels: Array[Array[Int]], ntrees: Int = 100, maxDepth: Int = 20, maxNodes: Int = 100, nodeSize: Int = 5, shrinkage: Double = 1.0): CRF
     </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <p>where <code>sequences</code> is the observation attribute sequences,
         <code>labels</code> is sequence labels,
