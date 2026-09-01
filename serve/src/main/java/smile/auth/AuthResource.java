@@ -18,7 +18,6 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.container.ContainerRequestContext;
-import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
@@ -95,17 +94,15 @@ public class AuthResource {
     /**
      * Google OAuth callback — establishes a session and redirects to {@code /chat}.
      *
-     * @param requestContext  request context.
-     * @param responseContext response context.
-     * @param code            authorization code.
-     * @param state           CSRF state.
+     * @param requestContext request context.
+     * @param code           authorization code.
+     * @param state          CSRF state.
      * @return redirect to chat UI.
      */
     @GET
     @Path("/callback/google")
     @Transactional
     public Response callbackGoogle(@Context ContainerRequestContext requestContext,
-                                   @Context ContainerResponseContext responseContext,
                                    @QueryParam("code") String code,
                                    @QueryParam("state") String state) {
         if (!googleOAuth.isEnabled()) {
@@ -145,17 +142,15 @@ public class AuthResource {
     /**
      * Clears the session cookie.
      *
-     * @param responseContext response context.
      * @return empty ok.
      */
     @POST
     @Path("/logout")
-    public Response logout(@Context ContainerResponseContext responseContext) {
+    public Response logout() {
         if (!authContext.isLoggedIn()) {
             throw new NotAuthorizedException("Not logged in");
         }
-        AuthFilter.clearSession(responseContext);
-        return Response.noContent().build();
+        return Response.noContent().cookie(AuthFilter.clearedSessionCookie()).build();
     }
 
     private static String origin(ContainerRequestContext requestContext) {
