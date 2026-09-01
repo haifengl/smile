@@ -8,8 +8,14 @@
  */
 package smile.chat;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.ForbiddenException;
@@ -25,6 +31,10 @@ import smile.chat.blob.ClientIdentity;
  */
 @ApplicationScoped
 public class ConversationService {
+
+    private static final DateTimeFormatter DEFAULT_TITLE_FORMAT =
+            DateTimeFormatter.ofPattern("MMM d, yyyy, h:mm a", Locale.US);
+    private static final int TITLE_WORD_LIMIT = 6;
 
     @Inject
     AuthContext authContext;
@@ -102,14 +112,61 @@ public class ConversationService {
     }
 
     /**
+     * Builds a human-readable placeholder title for a new conversation.
+     *
+     * @param createdAt conversation creation time.
+     * @return formatted timestamp title.
+     */
+    public static String defaultTitle(Instant createdAt) {
+        Instant instant = createdAt != null ? createdAt : Instant.now();
+        return DEFAULT_TITLE_FORMAT.format(instant.atZone(ZoneId.systemDefault()));
+    }
+
+    /**
+     * Returns message counts keyed by conversation id.
+     *
+     * @param conversationIds conversation primary keys.
+     * @return counts (missing ids imply zero messages).
+     */
+    public Map<Long, Long> messageCounts(Collection<Long> conversationIds) {
+        if (conversationIds == null || conversationIds.isEmpty()) {
+            return Map.of();
+        }
+        @SuppressWarnings("unchecked")
+        List<Object[]> rows = ConversationItem.getEntityManager()
+                .createQuery(
+                        "SELECT i.conversationId, COUNT(i) FROM ConversationItem i"
+                                + " WHERE i.conversationId IN :ids GROUP BY i.conversationId",
+                        Object[].class)
+                .setParameter("ids", conversationIds)
+                .getResultList();
+        Map<Long, Long> counts = new HashMap<>();
+        for (Object[] row : rows) {
+            counts.put((Long) row[0], (Long) row[1]);
+        }
+        return counts;
+    }
+
+    /**
+     * Assigns the default timestamp title after persistence when none is set.
+     *
+     * @param conversation persisted conversation.
+     */
+    public static void ensureDefaultTitle(Conversation conversation) {
+        if (conversation.title == null || conversation.title.isBlank()) {
+            conversation.title = defaultTitle(conversation.createdAt);
+        }
+    }
+
+    /**
      * Derives a sidebar title from the first user message text.
      *
      * @param text raw message text or JSON content.
-     * @return truncated title or {@code "New chat"}.
+     * @return truncated title or {@code null} when no text is available.
      */
     public static String titleFromFirstMessage(String text) {
         if (text == null || text.isBlank()) {
-            return "New chat";
+            return null;
         }
         String plain = text.trim();
         if (plain.startsWith("[")) {
@@ -126,21 +183,30 @@ public class ConversationService {
         }
         plain = plain.replaceAll("\\s+", " ").trim();
         if (plain.isEmpty()) {
-            return "New chat";
+            return null;
         }
-        return plain.length() > 60 ? plain.substring(0, 57) + "..." : plain;
+        String[] words = plain.split(" ");
+        if (words.length <= TITLE_WORD_LIMIT) {
+            return plain;
+        }
+        return String.join(" ", java.util.Arrays.copyOf(words, TITLE_WORD_LIMIT));
     }
 
     /**
-     * Updates conversation activity timestamp and auto-title when missing.
+     * Updates conversation activity timestamp and auto-title on the first user message.
      *
      * @param conversation entity.
      * @param userMessage  latest user message text for title inference.
      */
     public void touchAfterMessage(Conversation conversation, String userMessage) {
-        if (conversation.title == null || conversation.title.isBlank()) {
-            conversation.title = titleFromFirstMessage(userMessage);
+        long userMessages = ConversationItem.count(
+                "conversationId = ?1 and role = ?2", conversation.id, "user");
+        if (userMessages != 1) {
+            return;
         }
-        // updatedAt handled by @UpdateTimestamp on flush
+        String title = titleFromFirstMessage(userMessage);
+        if (title != null) {
+            conversation.title = title;
+        }
     }
 }

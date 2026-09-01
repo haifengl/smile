@@ -9,6 +9,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { listConversations } from '../api'
 
+function hasMessageHistory(conversation) {
+  return (conversation.message_count ?? 0) > 0
+}
+
 /**
  * Loads and refreshes the user's conversation list (auth required).
  *
@@ -32,7 +36,7 @@ export function useConversations(enabled) {
       const seen = new Set()
       const merged = []
       for (const c of [...pinned, ...recent]) {
-        if (!seen.has(c.id)) {
+        if (!seen.has(c.id) && hasMessageHistory(c)) {
           seen.add(c.id)
           merged.push(c)
         }

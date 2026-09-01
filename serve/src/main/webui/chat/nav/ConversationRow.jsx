@@ -16,7 +16,7 @@ export default function ConversationRow({
   onRename,
   onDelete,
 }) {
-  const title = conversation.title || 'New chat'
+  const title = conversation.title || 'Chat'
 
   return (
     <div className={`conv-row ${active ? 'conv-row--active' : ''}`}>

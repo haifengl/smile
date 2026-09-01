@@ -18,6 +18,7 @@ package smile.chat;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
@@ -87,9 +88,11 @@ public class ConversationResource {
                                          @QueryParam("pageSize") @DefaultValue("25") int pageSize,
                                          @QueryParam("q") String q,
                                          @QueryParam("pinned") Boolean pinned) {
-        return conversationService.listForUser(pageIndex, pageSize, q, pinned)
-                .stream()
-                .map(ConversationObject::from)
+        List<Conversation> rows = conversationService.listForUser(pageIndex, pageSize, q, pinned);
+        Map<Long, Long> counts = conversationService.messageCounts(
+                rows.stream().map(c -> c.id).toList());
+        return rows.stream()
+                .map(c -> ConversationObject.from(c, counts.getOrDefault(c.id, 0L)))
                 .toList();
     }
 
@@ -136,10 +139,18 @@ public class ConversationResource {
             conversation.metadata = new HashMap<>(request.metadata);
         }
         conversation.persist();
+        ConversationService.ensureDefaultTitle(conversation);
 
         if (request.items != null) {
             for (ConversationItemInput item : request.items) {
                 persistInputItem(conversation.id, item);
+            }
+            String firstUser = firstUserMessageText(request.items);
+            if (firstUser != null) {
+                String title = ConversationService.titleFromFirstMessage(firstUser);
+                if (title != null) {
+                    conversation.title = title;
+                }
             }
         }
         return ConversationObject.from(conversation);
@@ -192,7 +203,7 @@ public class ConversationResource {
             if (request.title != null) {
                 String title = request.title.trim();
                 conversation.title = title.isEmpty()
-                        ? "New chat"
+                        ? ConversationService.defaultTitle(conversation.createdAt)
                         : (title.length() > 256 ? title.substring(0, 256) : title);
             }
             if (request.pinned != null) {
@@ -267,6 +278,22 @@ public class ConversationResource {
                         conversation.id)
                 .page(io.quarkus.panache.common.Page.of(pageIndex, pageSize))
                 .list();
+    }
+
+    private static String firstUserMessageText(List<ConversationItemInput> items) {
+        if (items == null) {
+            return null;
+        }
+        for (ConversationItemInput item : items) {
+            if (item == null || item.role == null || !"user".equalsIgnoreCase(item.role)) {
+                continue;
+            }
+            String text = item.toStoredContent();
+            if (text != null && !text.isBlank()) {
+                return text;
+            }
+        }
+        return null;
     }
 
     private static void persistInputItem(long conversationId, ConversationItemInput item) {
