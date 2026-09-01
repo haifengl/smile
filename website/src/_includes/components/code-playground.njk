@@ -3,8 +3,7 @@
     <span class="lang-tab is-active">{{ (lang or 'java') | capitalize }}</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    <button type="button" class="btn btn-ghost btn-sm playground-edit">Edit</button>
-    <a class="btn btn-primary btn-sm" href="{{ binder or 'https://mybinder.org/v2/gh/haifengl/smile/notebook?urlpath=lab%2Ftree%2Fshell%2Fsrc%2Funiversal%2Fnotebooks%2Findex.ipynb' }}" target="_blank" rel="noopener">Open in Binder</a>
+    {% include "components/playground-extra-actions.njk" %}
   </div>
   <pre class="playground-source language-{{ lang or 'java' }}"><code class="language-{{ lang or 'java' }}">{{ content | safe }}</code></pre>
   <div class="playground-editor" hidden></div>
