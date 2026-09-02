@@ -294,4 +294,107 @@ int smile_causal_conv1d_update_decode_cuda(
     return 0;
 }
 
+__global__ void causal_conv1d_update_split_qkv_kernel(
+        const float *__restrict__ x,
+        float *__restrict__ state,
+        const float *__restrict__ w,
+        float *__restrict__ q,
+        float *__restrict__ k,
+        float *__restrict__ v,
+        int64_t B, int64_t C, int64_t K,
+        int num_k_heads, int num_v_heads,
+        int head_k_dim, int head_v_dim) {
+    const int64_t idx = static_cast<int64_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+    const int64_t BC = B * C;
+    if (idx >= BC) return;
+    const int64_t b = idx / C;
+    const int64_t c = idx - b * C;
+    const int64_t state_len = K - 1;
+
+    const float *x_bc = x + (b * C + c);
+    float *st_bc = state + ((b * C + c) * state_len);
+    const float *w_c = w + c * K;
+
+    float acc = 0.f;
+    for (int64_t ki = 0; ki < state_len; ++ki) {
+        acc += st_bc[ki] * w_c[ki];
+    }
+    const float x_val = x_bc[0];
+    acc += x_val * w_c[state_len];
+    const float sig = 1.f / (1.f + expf(-acc));
+    const float val = acc * sig;
+
+    for (int64_t ki = 0; ki < state_len - 1; ++ki) {
+        st_bc[ki] = st_bc[ki + 1];
+    }
+    if (state_len > 0) {
+        st_bc[state_len - 1] = x_val;
+    }
+
+    const int key_dim = num_k_heads * head_k_dim;
+    const int rep = num_v_heads / num_k_heads;
+    const int64_t q_stride = static_cast<int64_t>(num_v_heads) * head_k_dim;
+    const int64_t v_stride = static_cast<int64_t>(num_v_heads) * head_v_dim;
+    const int64_t bq = b * q_stride;
+    const int64_t bv = b * v_stride;
+
+    if (c < key_dim) {
+        const int h = static_cast<int>(c / head_k_dim);
+        const int d = static_cast<int>(c % head_k_dim);
+        for (int r = 0; r < rep; ++r) {
+            q[bq + (h * rep + r) * head_k_dim + d] = val;
+        }
+    } else if (c < 2 * key_dim) {
+        const int64_t cc = c - key_dim;
+        const int h = static_cast<int>(cc / head_k_dim);
+        const int d = static_cast<int>(cc % head_k_dim);
+        for (int r = 0; r < rep; ++r) {
+            k[bq + (h * rep + r) * head_k_dim + d] = val;
+        }
+    } else {
+        const int64_t cc = c - 2 * key_dim;
+        const int h = static_cast<int>(cc / head_v_dim);
+        const int d = static_cast<int>(cc % head_v_dim);
+        v[bv + h * head_v_dim + d] = val;
+    }
+}
+
+int smile_causal_conv1d_update_split_qkv_cuda(
+        const float *x, float *state, const float *w,
+        float *q, float *k, float *v,
+        int64_t B, int64_t C, int64_t K,
+        int num_k_heads, int num_v_heads,
+        int head_k_dim, int head_v_dim,
+        void *cuda_stream) {
+    g_gated_delta_error.clear();
+    if (B < 1 || C < 1 || K < 1 || K > 16
+            || num_k_heads < 1 || num_v_heads < 1
+            || head_k_dim < 1 || head_v_dim < 1
+            || num_v_heads % num_k_heads != 0) {
+        g_gated_delta_error = "causal_conv1d_update_split_qkv: invalid shape";
+        return -1;
+    }
+    const int key_dim = num_k_heads * head_k_dim;
+    const int value_dim = num_v_heads * head_v_dim;
+    if (C != 2 * key_dim + value_dim) {
+        g_gated_delta_error = "causal_conv1d_update_split_qkv: channel mismatch";
+        return -1;
+    }
+    const int64_t n = B * C;
+    const int threads = 256;
+    const int blocks = static_cast<int>((n + threads - 1) / threads);
+    cudaStream_t stream = cuda_stream
+            ? static_cast<cudaStream_t>(cuda_stream)
+            : static_cast<cudaStream_t>(0);
+    causal_conv1d_update_split_qkv_kernel<<<blocks, threads, 0, stream>>>(
+            x, state, w, q, k, v, B, C, K,
+            num_k_heads, num_v_heads, head_k_dim, head_v_dim);
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        g_gated_delta_error = cudaGetErrorString(err);
+        return -1;
+    }
+    return 0;
+}
+
 #endif /* USE_CUDA */

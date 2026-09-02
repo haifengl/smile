@@ -1088,6 +1088,17 @@ SMILE_API ST_Tensor smile_causal_conv1d_update(
         ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor weight);
 
 /**
+ * Decode {@code S==1}: depthwise causal conv1d + QKV channel split + K/V head
+ * repeat in one path. {@code hidden} {@code [B,C,1]}, state {@code [B,C,K-1]},
+ * weight {@code [C,K]}. Returns query {@code [B,1,num_v_heads,head_k_dim]};
+ * writes key (same shape) and value {@code [B,1,num_v_heads,head_v_dim]}.
+ */
+SMILE_API ST_Tensor smile_causal_conv1d_update_split_qkv(
+        ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor weight,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim,
+        ST_Tensor *out_k, ST_Tensor *out_v);
+
+/**
  * HF {@code apply_rotary_pos_emb} / {@code rotate_half} on query and key.
  * {@code xq}/{@code xk} are {@code [B,S,H,D]}; {@code cos}/{@code sin} are
  * {@code [S,R]}, {@code [B,S,R]}, or {@code [R]} (R = rotary_dim). Returns

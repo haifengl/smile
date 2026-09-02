@@ -268,24 +268,47 @@ public class GatedDeltaNet {
             }
 
             Tensor convState = statePool != null ? statePool.activeConv(linearLayerId) : null;
-            Tensor mixedConvBase = decode && convState != null
-                    ? GatedDeltaRule.causalConv1dUpdate(mixed, convState, conv1dWeight)
-                    : GatedDeltaRule.causalConv1dPrefill(mixed, convState, conv1dWeight);
-            mixed.close();
-            mixedRaw.close();
-            Tensor mixedConv = decodeS1
-                    ? mixedConvBase.reshape(batch, 1, mixedConvBase.shape()[1])
-                    : mixedConvBase.transpose(1, 2); // [B, S, C]
+            Tensor query = null;
+            Tensor key = null;
+            Tensor value = null;
+            Tensor qSlice = null;
+            Tensor kSlice = null;
+            Tensor vSlice = null;
+            Tensor mixedConv = null;
+            Tensor mixedConvBase = null;
 
-            try (var qSpan = Index.slice(0, keyDim);
-                 var kSpan = Index.slice(keyDim, 2 * keyDim);
-                 var vSpan = Index.slice(2 * keyDim, 2 * keyDim + valueDim)) {
-                Tensor qSlice = mixedConv.get(Index.Ellipsis, qSpan);
-                Tensor query = qSlice.view(batch, seqLen, numKHeads, headKDim);
-                Tensor kSlice = mixedConv.get(Index.Ellipsis, kSpan);
-                Tensor key = kSlice.view(batch, seqLen, numKHeads, headKDim);
-                Tensor vSlice = mixedConv.get(Index.Ellipsis, vSpan);
-                Tensor value = vSlice.view(batch, seqLen, numVHeads, headVDim);
+            if (decodeS1 && convState != null) {
+                Tensor[] qkv = GatedDeltaRule.causalConv1dUpdateSplitQkv(
+                        mixed, convState, conv1dWeight,
+                        numKHeads, numVHeads, headKDim, headVDim);
+                if (qkv != null) {
+                    mixed.close();
+                    mixedRaw.close();
+                    query = qkv[0];
+                    key = qkv[1];
+                    value = qkv[2];
+                }
+            }
+            if (query == null) {
+                mixedConvBase = decode && convState != null
+                        ? GatedDeltaRule.causalConv1dUpdate(mixed, convState, conv1dWeight)
+                        : GatedDeltaRule.causalConv1dPrefill(mixed, convState, conv1dWeight);
+                mixed.close();
+                mixedRaw.close();
+                mixedConv = decodeS1
+                        ? mixedConvBase.reshape(batch, 1, mixedConvBase.shape()[1])
+                        : mixedConvBase.transpose(1, 2); // [B, S, C]
+
+                try (var qSpan = Index.slice(0, keyDim);
+                     var kSpan = Index.slice(keyDim, 2 * keyDim);
+                     var vSpan = Index.slice(2 * keyDim, 2 * keyDim + valueDim)) {
+                    qSlice = mixedConv.get(Index.Ellipsis, qSpan);
+                    query = qSlice.view(batch, seqLen, numKHeads, headKDim);
+                    kSlice = mixedConv.get(Index.Ellipsis, kSpan);
+                    key = kSlice.view(batch, seqLen, numKHeads, headKDim);
+                    vSlice = mixedConv.get(Index.Ellipsis, vSpan);
+                    value = vSlice.view(batch, seqLen, numVHeads, headVDim);
+                }
 
                 int rep = numVHeads / numKHeads;
                 if (rep > 1) {
@@ -300,66 +323,73 @@ public class GatedDeltaNet {
                     query = qRep;
                     key = kRep;
                 }
-                if (profile) {
-                    // Conv + QKV split + head-repeat share this bucket (all pre-gate).
-                    smile.llm.engine.DecodeForwardProfile.addDeltaConv(System.nanoTime() - tMark);
-                    tMark = System.nanoTime();
-                }
-
-                ensureFloatCaches();
-                Tensor[] gates = GatedDeltaRule.computeBetaAndDecayGate(a, b, aLogF, dtBiasF);
-                Tensor g = gates[0];
-                Tensor beta = gates[1];
-                a.close();
-                b.close();
-                if (profile) {
-                    smile.llm.engine.DecodeForwardProfile.addDeltaGate(System.nanoTime() - tMark);
-                    tMark = System.nanoTime();
-                }
-
-                // Prefill and decode both reuse the pool buffer (reset() zeros it).
-                Tensor initState = statePool != null ? statePool.activeRecurrent(linearLayerId) : null;
-
-                var result = GatedDeltaRule.recurrentGatedDeltaRule(
-                        query, key, value, g, beta, initState, statePool != null, true);
-                query.close();
-                key.close();
-                value.close();
-                qSlice.close();
-                kSlice.close();
-                vSlice.close();
-                g.close();
-                beta.close();
-                mixedConv.close();
-                mixedConvBase.close();
-                if (profile) {
-                    smile.llm.engine.DecodeForwardProfile.addDeltaRecurrent(System.nanoTime() - tMark);
-                    tMark = System.nanoTime();
-                }
-
-                Tensor core = result._1();
-                // Non-null only when the kernel allocated a fresh state (no pool).
-                if (statePool != null && result._2() != null) {
-                    Tensor dest = statePool.activeRecurrent(linearLayerId);
-                    dest.put_(result._2(), Index.Colon, Index.Colon, Index.Colon, Index.Colon);
-                    result._2().close();
-                }
-
-                core = core.reshape(batch * seqLen * numVHeads, headVDim);
-                Tensor zFlat = z.reshape(batch * seqLen * numVHeads, headVDim);
-                Tensor gated = norm.forward(core, zFlat);
-                gated = gated.view(batch, seqLen, valueDim);
-                Tensor out = outProj.forward(gated);
-                if (profile) {
-                    smile.llm.engine.DecodeForwardProfile.addDeltaOut(System.nanoTime() - tMark);
-                    smile.llm.engine.DecodeForwardProfile.addLinearAttn(System.nanoTime() - t0);
-                }
-                if (tpGroup != null && tpGroup.tpSize() > 1) {
-                    tpGroup.allReduceSumInPlace(tpRank, out);
-                }
-                out.promoteToParent();
-                return out;
             }
+            if (profile) {
+                // Conv + QKV split + head-repeat share this bucket (all pre-gate).
+                smile.llm.engine.DecodeForwardProfile.addDeltaConv(System.nanoTime() - tMark);
+                tMark = System.nanoTime();
+            }
+
+            ensureFloatCaches();
+            Tensor[] gates = GatedDeltaRule.computeBetaAndDecayGate(a, b, aLogF, dtBiasF);
+            Tensor g = gates[0];
+            Tensor beta = gates[1];
+            a.close();
+            b.close();
+            if (profile) {
+                smile.llm.engine.DecodeForwardProfile.addDeltaGate(System.nanoTime() - tMark);
+                tMark = System.nanoTime();
+            }
+
+            Tensor initState = statePool != null ? statePool.activeRecurrent(linearLayerId) : null;
+            var result = GatedDeltaRule.recurrentGatedDeltaRule(
+                    query, key, value, g, beta, initState, statePool != null, true);
+            query.close();
+            key.close();
+            value.close();
+            if (qSlice != null) {
+                qSlice.close();
+            }
+            if (kSlice != null) {
+                kSlice.close();
+            }
+            if (vSlice != null) {
+                vSlice.close();
+            }
+            g.close();
+            beta.close();
+            if (mixedConv != null) {
+                mixedConv.close();
+            }
+            if (mixedConvBase != null) {
+                mixedConvBase.close();
+            }
+            if (profile) {
+                smile.llm.engine.DecodeForwardProfile.addDeltaRecurrent(System.nanoTime() - tMark);
+                tMark = System.nanoTime();
+            }
+
+            Tensor core = result._1();
+            if (statePool != null && result._2() != null) {
+                Tensor dest = statePool.activeRecurrent(linearLayerId);
+                dest.put_(result._2(), Index.Colon, Index.Colon, Index.Colon, Index.Colon);
+                result._2().close();
+            }
+
+            core = core.reshape(batch * seqLen * numVHeads, headVDim);
+            Tensor zFlat = z.reshape(batch * seqLen * numVHeads, headVDim);
+            Tensor gated = norm.forward(core, zFlat);
+            gated = gated.view(batch, seqLen, valueDim);
+            Tensor out = outProj.forward(gated);
+            if (profile) {
+                smile.llm.engine.DecodeForwardProfile.addDeltaOut(System.nanoTime() - tMark);
+                smile.llm.engine.DecodeForwardProfile.addLinearAttn(System.nanoTime() - t0);
+            }
+            if (tpGroup != null && tpGroup.tpSize() > 1) {
+                tpGroup.allReduceSumInPlace(tpRank, out);
+            }
+            out.promoteToParent();
+            return out;
         } finally {
             Tensor.pop();
         }

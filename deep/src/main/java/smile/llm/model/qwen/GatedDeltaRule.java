@@ -247,6 +247,63 @@ final class GatedDeltaRule {
     }
 
     /**
+     * Decode {@code S==1}: fused causal conv + QKV channel split + K/V head repeat.
+     *
+     * @param hidden      {@code [B, C, 1]} mixed QKV projection.
+     * @param convState   {@code [B, C, K-1]} (updated in place).
+     * @param weight      {@code [C, K]} depthwise kernel.
+     * @return {@code [query, key, value]} with shapes
+     *         {@code [B,1,numVHeads,headKDim]} and {@code [B,1,numVHeads,headVDim]},
+     *         or {@code null} when the native path is unavailable.
+     */
+    static Tensor[] causalConv1dUpdateSplitQkv(
+            Tensor hidden, Tensor convState, Tensor weight,
+            int numKHeads, int numVHeads, int headKDim, int headVDim) {
+        Tensor[] fused = smile.torch.Native.causalConv1dUpdateSplitQkv(
+                hidden, convState, weight, numKHeads, numVHeads, headKDim, headVDim);
+        if (fused != null) {
+            convState.detachFromScopes();
+            return fused;
+        }
+        long batch = hidden.shape()[0];
+        long channels = hidden.shape()[1];
+        long kernel = weight.shape()[weight.dim() - 1];
+        long stateLen = convState.shape()[2];
+        Tensor mixedConvBase = causalConv1dUpdateDecode(
+                hidden, convState, weight, batch, channels, kernel, stateLen);
+        Tensor mixedConv = mixedConvBase.reshape(batch, 1, channels);
+        try (var qSpan = Index.slice(0, headKDim * numKHeads);
+             var kSpan = Index.slice(headKDim * numKHeads, 2 * headKDim * numKHeads);
+             var vSpan = Index.slice(2 * headKDim * numKHeads, 2 * headKDim * numKHeads + headVDim * numVHeads)) {
+            Tensor qSlice = mixedConv.get(Index.Ellipsis, qSpan);
+            Tensor query = qSlice.view(batch, 1, numKHeads, headKDim);
+            Tensor kSlice = mixedConv.get(Index.Ellipsis, kSpan);
+            Tensor key = kSlice.view(batch, 1, numKHeads, headKDim);
+            Tensor vSlice = mixedConv.get(Index.Ellipsis, vSpan);
+            Tensor value = vSlice.view(batch, 1, numVHeads, headVDim);
+            int rep = numVHeads / numKHeads;
+            if (rep > 1) {
+                Tensor qRep = repeatHeads(query, rep);
+                Tensor kRep = repeatHeads(key, rep);
+                if (qRep != query) {
+                    query.close();
+                }
+                if (kRep != key) {
+                    key.close();
+                }
+                query = qRep;
+                key = kRep;
+            }
+            qSlice.close();
+            kSlice.close();
+            vSlice.close();
+            mixedConv.close();
+            mixedConvBase.close();
+            return new Tensor[]{query, key, value};
+        }
+    }
+
+    /**
      * Causal depthwise conv for a full prefill (zero left context, then store state).
      */
     static Tensor causalConv1dPrefill(Tensor hidden, Tensor convState, Tensor weight) {
