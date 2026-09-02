@@ -81,6 +81,8 @@ public class QwenModel extends LayerBlock {
     Tensor decodeGraphSinBuf;
     /** Logits tensor captured inside the decode graph (do not close). */
     Tensor decodeGraphLogitsOut;
+    /** Pre-capture logits buffer (stable address outside the graph memory pool). */
+    Tensor decodeGraphLogitsBuf;
 
     /**
      * Constructs the module graph on CPU. Call {@link #to(Device)} after weight
@@ -657,24 +659,29 @@ public class QwenModel extends LayerBlock {
             if (decodeGraphSession.canReplay(numPages)) {
                 decodeGraphSession.replay();
                 DecodeCudaGraph.markPersistentLogits(true);
-                return decodeGraphLogitsOut;
+                return decodeGraphLogitsBuf;
             }
 
             boolean capture = decodeGraphSession.shouldCapture(numPages);
             if (capture) {
+                if (decodeGraphLogitsBuf == null) {
+                    throw new IllegalStateException(
+                            "decode graph logits buffer missing; warmup must run before capture");
+                }
                 int deviceIndex = Byte.toUnsignedInt(tokens.device().index());
                 try {
                     decodeGraphSession.beginCapture(deviceIndex);
                     try {
-                        decodeGraphLogitsOut = forwardRaggedDecodeCore(
+                        Tensor raw = forwardRaggedDecodeCore(
                                 tokens, cachePositions, decodeGraphCosBuf, decodeGraphSinBuf);
-                        decodeGraphLogitsOut.detachFromScopes();
+                        smile.torch.Native.copy_(decodeGraphLogitsBuf, raw);
+                        decodeGraphLogitsOut = decodeGraphLogitsBuf;
                     } finally {
                         decodeGraphSession.endCapture();
                     }
                     if (decodeGraphSession.canReplay(numPages)) {
                         DecodeCudaGraph.markPersistentLogits(true);
-                        return decodeGraphLogitsOut;
+                        return decodeGraphLogitsBuf;
                     }
                     logger.warn("tpRank={}: CUDA graph capture did not produce a replayable graph",
                             tpRank);
@@ -698,7 +705,11 @@ public class QwenModel extends LayerBlock {
                 }
             }
 
-            return forwardRaggedDecodeCore(tokens, cachePositions, decodeGraphCosBuf, decodeGraphSinBuf);
+            Tensor raw = forwardRaggedDecodeCore(
+                    tokens, cachePositions, decodeGraphCosBuf, decodeGraphSinBuf);
+            ensureDecodeGraphLogitsBuf(raw);
+            smile.torch.Native.copy_(decodeGraphLogitsBuf, raw);
+            return raw;
         } finally {
             kvCachePool.setDecodeGraphBuffers(false);
         }
@@ -718,6 +729,10 @@ public class QwenModel extends LayerBlock {
             decodeGraphSinBuf.close();
             decodeGraphSinBuf = null;
         }
+        if (decodeGraphLogitsBuf != null) {
+            decodeGraphLogitsBuf.close();
+            decodeGraphLogitsBuf = null;
+        }
         decodeGraphLogitsOut = null;
     }
 
@@ -731,6 +746,17 @@ public class QwenModel extends LayerBlock {
         decodeGraphSinBuf = Tensor.zeros(opts, 1, 1, rotaryDim);
         decodeGraphCosBuf.detachFromScopes();
         decodeGraphSinBuf.detachFromScopes();
+    }
+
+    /** Allocates a stable logits buffer before CUDA graph capture (warmup only). */
+    private void ensureDecodeGraphLogitsBuf(Tensor prototype) {
+        if (decodeGraphLogitsBuf != null) {
+            return;
+        }
+        decodeGraphLogitsBuf = Tensor.zeros(
+                new Tensor.Options().device(prototype.device()).dtype(prototype.dtype()),
+                prototype.shape());
+        decodeGraphLogitsBuf.detachFromScopes();
     }
 
     private void prepareDecodeGraphInputs(int[] cachePositions, int[] ropePositions, int cacheLen) {

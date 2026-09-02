@@ -12,6 +12,7 @@
 #  include <ATen/cuda/CUDAGraph.h>
 #  include <c10/cuda/CUDAGuard.h>
 #  include <c10/cuda/CUDAStream.h>
+#  include <c10/cuda/CUDAFunctions.h>
 #endif
 
 #include <memory>
@@ -104,10 +105,10 @@ int smile_cuda_graph_capture_end(ST_CudaGraph graph) {
         // keep_graph=false (default): capture_end() instantiates; do not call instantiate().
         graph->graph->capture_end();
         graph->instantiated = true;
-        if (graph->capture_stream.has_value()) {
-            graph->capture_stream->synchronize();
-        }
         graph->stream_guard.reset();
+        // NCCL (Relaxed capture) may complete on auxiliary streams — wait for the whole device
+        // before Java reads logits.
+        c10::cuda::device_synchronize();
         return 0;
     } catch (const std::exception &ex) {
         reset_capture_state(graph);
@@ -135,8 +136,8 @@ int smile_cuda_graph_replay(ST_CudaGraph graph) {
         at::cuda::getCurrentCUDAStream(graph->device_index).synchronize();
         at::cuda::CUDAStreamGuard stream_guard(*graph->capture_stream);
         graph->graph->replay();
-        // Host timings and logits reads must wait for GPU completion.
-        graph->capture_stream->synchronize();
+        // Wait for capture-stream work and NCCL collectives on side streams.
+        c10::cuda::device_synchronize();
         return 0;
     } catch (const std::exception &ex) {
         smile_torch_set_error(ex.what());
