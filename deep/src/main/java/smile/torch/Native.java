@@ -196,6 +196,14 @@ public final class Native {
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final MethodHandle CAUSAL_CONV1D_UPDATE_SPLIT_QKV = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_causal_conv1d_update_split_qkv")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
         static final MethodHandle APPLY_ROTARY_POS_EMB = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_apply_rotary_pos_emb")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -1066,6 +1074,49 @@ public final class Native {
             return null;
         }
         return new Tensor(out);
+    }
+
+    /**
+     * Fused decode conv + QKV split + head repeat. Returns {@code [query, key, value]}
+     * with shapes {@code [B,1,numVHeads,headKDim]} / {@code [B,1,numVHeads,headVDim]},
+     * or {@code null} when unavailable.
+     */
+    public static Tensor[] causalConv1dUpdateSplitQkv(
+            Tensor hidden, Tensor convState, Tensor weight,
+            int numKHeads, int numVHeads, int headKDim, int headVDim) {
+        if (Bindings.CAUSAL_CONV1D_UPDATE_SPLIT_QKV == null
+                || hidden == null || convState == null || weight == null
+                || numKHeads < 1 || numVHeads < 1 || headKDim < 1 || headVDim < 1) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment kPtr = arena.allocate(ValueLayout.ADDRESS);
+            MemorySegment vPtr = arena.allocate(ValueLayout.ADDRESS);
+            MemorySegment qOut;
+            try {
+                qOut = (MemorySegment) Bindings.CAUSAL_CONV1D_UPDATE_SPLIT_QKV.invokeExact(
+                        hidden.handle(), convState.handle(), weight.handle(),
+                        numKHeads, numVHeads, headKDim, headVDim, kPtr, vPtr);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (qOut == null || qOut.address() == 0) {
+                return null;
+            }
+            MemorySegment kHandle = kPtr.get(ValueLayout.ADDRESS, 0);
+            MemorySegment vHandle = vPtr.get(ValueLayout.ADDRESS, 0);
+            if (kHandle == null || kHandle.address() == 0
+                    || vHandle == null || vHandle.address() == 0) {
+                try {
+                    new Tensor(qOut).close();
+                } catch (Throwable ignored) {
+                    // ignore
+                }
+                return null;
+            }
+            return new Tensor[]{
+                    new Tensor(qOut), new Tensor(kHandle), new Tensor(vHandle)};
+        }
     }
 
     /**

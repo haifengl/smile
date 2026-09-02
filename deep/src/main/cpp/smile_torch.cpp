@@ -2461,6 +2461,24 @@ static torch::Tensor causal_conv1d_update_libtorch(
     return torch::silu(out);
 }
 
+static std::tuple<torch::Tensor, torch::Tensor, torch::Tensor>
+causal_conv1d_update_split_qkv_libtorch(
+        torch::Tensor hidden, torch::Tensor conv_state, torch::Tensor weight,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim) {
+    auto out = causal_conv1d_update_libtorch(hidden, conv_state, weight);
+    auto B = hidden.size(0);
+    const int64_t key_dim = static_cast<int64_t>(num_k_heads) * head_k_dim;
+    const int64_t value_dim = static_cast<int64_t>(num_v_heads) * head_v_dim;
+    auto q_raw = out.narrow(1, 0, key_dim).reshape({B, 1, num_k_heads, head_k_dim});
+    auto k_raw = out.narrow(1, key_dim, key_dim).reshape({B, 1, num_k_heads, head_k_dim});
+    auto v = out.narrow(1, 2 * key_dim, value_dim)
+            .reshape({B, 1, num_v_heads, head_v_dim});
+    const int rep = num_v_heads / num_k_heads;
+    auto q = q_raw.repeat_interleave(rep, /*dim=*/2);
+    auto k = k_raw.repeat_interleave(rep, /*dim=*/2);
+    return {q.contiguous(), k.contiguous(), v.contiguous()};
+}
+
 static torch::Tensor rotate_half_neox(const torch::Tensor& x) {
     const int64_t d = x.size(-1);
     const int64_t half = d / 2;
@@ -2614,6 +2632,105 @@ ST_Tensor smile_causal_conv1d_update(
 #endif
         auto out = causal_conv1d_update_libtorch(h, st, w);
         return new ST_Tensor_{ out };
+    ST_TRY_END
+    return nullptr;
+}
+
+ST_Tensor smile_causal_conv1d_update_split_qkv(
+        ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor weight,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim,
+        ST_Tensor *out_k, ST_Tensor *out_v) {
+    if (!hidden || !conv_state || !weight || !out_k || !out_v) {
+        set_error("smile_causal_conv1d_update_split_qkv: null tensor");
+        return nullptr;
+    }
+    *out_k = nullptr;
+    *out_v = nullptr;
+    if (num_k_heads < 1 || num_v_heads < 1 || head_k_dim < 1 || head_v_dim < 1
+            || num_v_heads % num_k_heads != 0) {
+        set_error("smile_causal_conv1d_update_split_qkv: invalid head layout");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto h = hidden->t;
+        auto st = conv_state->t;
+        auto w0 = weight->t;
+        if (h.dim() != 3 || st.dim() != 3) {
+            set_error("smile_causal_conv1d_update_split_qkv: hidden/state must be rank-3");
+            return nullptr;
+        }
+        auto B = h.size(0);
+        auto C = h.size(1);
+        auto L = h.size(2);
+        auto w = w0.dim() == 3 ? w0.reshape({C, w0.size(-1)}) : w0;
+        if (w.dim() != 2 || w.size(0) != C) {
+            set_error("smile_causal_conv1d_update_split_qkv: weight must be [C,K]");
+            return nullptr;
+        }
+        auto K = w.size(1);
+        auto state_len = st.size(2);
+        if (state_len != K - 1) {
+            set_error("smile_causal_conv1d_update_split_qkv: conv_state length must be K-1");
+            return nullptr;
+        }
+        if (st.size(0) != B || st.size(1) != C) {
+            set_error("smile_causal_conv1d_update_split_qkv: state batch/channel mismatch");
+            return nullptr;
+        }
+        const int64_t key_dim = static_cast<int64_t>(num_k_heads) * head_k_dim;
+        const int64_t value_dim = static_cast<int64_t>(num_v_heads) * head_v_dim;
+        if (C != 2 * key_dim + value_dim) {
+            set_error("smile_causal_conv1d_update_split_qkv: channel count mismatch");
+            return nullptr;
+        }
+        if (L != 1) {
+            set_error("smile_causal_conv1d_update_split_qkv: decode requires L==1");
+            return nullptr;
+        }
+
+#ifdef USE_CUDA
+        if (h.is_cuda() && K >= 1 && K <= 16) {
+            c10::cuda::CUDAGuard guard(h.device());
+            cudaStream_t stream = at::cuda::getCurrentCUDAStream(h.device().index()).stream();
+            auto dtype = h.scalar_type();
+            auto hf = h.contiguous().to(c10::ScalarType::Float);
+            auto wf = w.contiguous().to(c10::ScalarType::Float);
+            torch::Tensor stf;
+            const bool state_alias = st.scalar_type() == c10::ScalarType::Float
+                    && st.is_contiguous();
+            if (state_alias) {
+                stf = st;
+            } else {
+                stf = st.contiguous().to(c10::ScalarType::Float);
+            }
+            auto q_f = torch::empty({B, 1, num_v_heads, head_k_dim}, hf.options());
+            auto k_f = torch::empty({B, 1, num_v_heads, head_k_dim}, hf.options());
+            auto v_f = torch::empty({B, 1, num_v_heads, head_v_dim}, hf.options());
+            int rc = smile_causal_conv1d_update_split_qkv_cuda(
+                    hf.data_ptr<float>(),
+                    stf.data_ptr<float>(),
+                    wf.data_ptr<float>(),
+                    q_f.data_ptr<float>(),
+                    k_f.data_ptr<float>(),
+                    v_f.data_ptr<float>(),
+                    B, C, K,
+                    num_k_heads, num_v_heads, head_k_dim, head_v_dim,
+                    stream);
+            if (rc == 0) {
+                if (!state_alias) {
+                    st.copy_(stf.to(st.scalar_type()));
+                }
+                *out_k = new ST_Tensor_{ k_f.to(dtype) };
+                *out_v = new ST_Tensor_{ v_f.to(dtype) };
+                return new ST_Tensor_{ q_f.to(dtype) };
+            }
+        }
+#endif
+        auto split = causal_conv1d_update_split_qkv_libtorch(
+                h, st, w, num_k_heads, num_v_heads, head_k_dim, head_v_dim);
+        *out_k = new ST_Tensor_{ std::get<1>(split) };
+        *out_v = new ST_Tensor_{ std::get<2>(split) };
+        return new ST_Tensor_{ std::get<0>(split) };
     ST_TRY_END
     return nullptr;
 }
