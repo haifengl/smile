@@ -175,11 +175,21 @@ public final class Native {
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
                 .orElse(null);
+        static final MethodHandle RMS_NORM = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_rms_norm")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
         static final MethodHandle RMS_NORM_GATED = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_rms_norm_gated")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
+        static final MethodHandle MUL_SIGMOID = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_mul_sigmoid")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
                 .orElse(null);
         static final MethodHandle CAUSAL_CONV1D_UPDATE = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_causal_conv1d_update")
@@ -971,6 +981,26 @@ public final class Native {
     }
 
     /**
+     * Qwen RMSNorm {@code rms_norm(x)*(1+weight)}. Returns {@code null} when unavailable.
+     */
+    public static Tensor rmsNorm(Tensor x, Tensor weight, double eps) {
+        if (Bindings.RMS_NORM == null || x == null || weight == null) {
+            return null;
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.RMS_NORM.invokeExact(
+                    x.handle(), weight.handle(), eps);
+        } catch (Throwable t) {
+            return null;
+        }
+        if (out == null || out.address() == 0) {
+            return null;
+        }
+        return new Tensor(out);
+    }
+
+    /**
      * Fused gated RMSNorm. Returns {@code null} when unavailable.
      */
     public static Tensor rmsNormGated(Tensor x, Tensor gate, Tensor weight, double eps) {
@@ -981,6 +1011,25 @@ public final class Native {
         try {
             out = (MemorySegment) Bindings.RMS_NORM_GATED.invokeExact(
                     x.handle(), gate.handle(), weight.handle(), eps);
+        } catch (Throwable t) {
+            return null;
+        }
+        if (out == null || out.address() == 0) {
+            return null;
+        }
+        return new Tensor(out);
+    }
+
+    /**
+     * {@code x * sigmoid(gate)}. Returns {@code null} when unavailable.
+     */
+    public static Tensor mulSigmoid(Tensor x, Tensor gate) {
+        if (Bindings.MUL_SIGMOID == null || x == null || gate == null) {
+            return null;
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.MUL_SIGMOID.invokeExact(x.handle(), gate.handle());
         } catch (Throwable t) {
             return null;
         }

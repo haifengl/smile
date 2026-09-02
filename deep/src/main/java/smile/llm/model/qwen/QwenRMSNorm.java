@@ -56,6 +56,10 @@ public class QwenRMSNorm implements Layer {
 
     @Override
     public Tensor forward(Tensor input) {
+        Tensor fused = Native.rmsNorm(input, weight, eps);
+        if (fused != null) {
+            return fused;
+        }
         try (Tensor x = input.to(ScalarType.Float);
              Tensor x2 = x.pow(2);
              Tensor mean = x2.mean(-1, true);
