@@ -4,6 +4,7 @@
  * FlashInfer paged attention C ABI (workspace + availability + AOT dir).
  */
 
+#include "smile_flashinfer_cuda.h"
 #include "smile_torch.h"
 
 #include <cstdint>
@@ -20,6 +21,7 @@
 struct ST_FlashInferWorkspace_ {
     int device_index = 0;
     int64_t workspace_bytes = 0;
+    void *runtime_cache = nullptr;
 #ifdef USE_CUDA
     at::Tensor float_workspace;   // uint8
     at::Tensor int_workspace;     // uint8 device
@@ -106,11 +108,33 @@ ST_FlashInferWorkspace smile_flashinfer_workspace_create(
 }
 
 void smile_flashinfer_workspace_free(ST_FlashInferWorkspace ws) {
-    delete ws;
+    if (ws != nullptr) {
+#if defined(USE_CUDA) && defined(USE_FLASHINFER)
+        if (ws->runtime_cache != nullptr) {
+            smile_flashinfer_runtime_cache_free(ws->runtime_cache);
+            ws->runtime_cache = nullptr;
+        }
+#endif
+        delete ws;
+    }
+}
+
+void smile_flashinfer_workspace_invalidate_runtime_cache(ST_FlashInferWorkspace ws) {
+#if defined(USE_CUDA) && defined(USE_FLASHINFER)
+    if (ws != nullptr && ws->runtime_cache != nullptr) {
+        smile_flashinfer_runtime_cache_invalidate(ws->runtime_cache);
+    }
+#else
+    (void)ws;
+#endif
 }
 
 int smile_flashinfer_workspace_device_index(ST_FlashInferWorkspace ws) {
     return ws ? ws->device_index : -1;
+}
+
+void **smile_flashinfer_workspace_runtime_cache_slot(ST_FlashInferWorkspace ws) {
+    return ws == nullptr ? nullptr : &ws->runtime_cache;
 }
 
 } // extern "C"

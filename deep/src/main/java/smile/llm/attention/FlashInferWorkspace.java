@@ -58,4 +58,14 @@ public final class FlashInferWorkspace implements AutoCloseable {
             handle = MemorySegment.NULL;
         }
     }
+
+    /**
+     * Invalidates step-scoped decode-plan and prefill-gather caches on this workspace.
+     * Safe to call when FlashInfer is unavailable (no-op).
+     */
+    public void invalidateRuntimeCache() {
+        if (handle != null && handle.address() != 0) {
+            Native.flashInferWorkspaceInvalidateRuntimeCache(handle);
+        }
+    }
 }
