@@ -16,3 +16,6 @@ int smile_flashinfer_workspace_get_tensors(
         at::Tensor **float_ws,
         at::Tensor **int_ws,
         at::Tensor **pinned_ws);
+
+/** @return address of the workspace runtime-cache slot (may be null). */
+void **smile_flashinfer_workspace_runtime_cache_slot(ST_FlashInferWorkspace ws);

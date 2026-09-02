@@ -35,8 +35,15 @@ int smile_flashinfer_paged_attention_cuda(
         torch::Tensor *float_workspace,       /* nullable → allocate locals */
         torch::Tensor *int_workspace,         /* nullable */
         torch::Tensor *pinned_int_workspace,  /* nullable */
+        void **runtime_cache_slot,            /* nullable → no plan/gather reuse */
         torch::Tensor &out,
         std::string &err);
+
+/** Invalidates cached decode plans and prefill gather slots. */
+void smile_flashinfer_runtime_cache_invalidate(void *cache_slot);
+
+/** Frees a runtime cache allocated for a workspace. */
+void smile_flashinfer_runtime_cache_free(void *cache_slot);
 
 int smile_flashinfer_ragged_attention_cuda(
         const torch::Tensor &query,

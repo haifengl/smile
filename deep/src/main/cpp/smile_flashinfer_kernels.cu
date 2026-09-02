@@ -43,6 +43,105 @@ namespace {
 
 std::atomic<bool> g_flashinfer_sdpa_decode_warned{false};
 
+/** Per-workspace decode plan + prefill gather cache (one plan/slot table per step). */
+struct WorkspaceRuntimeCache {
+    DecodePlanInfo decode_plan;
+    bool decode_plan_valid = false;
+    uint32_t decode_batch = 0;
+    int decode_head_dim = 0;
+    int decode_page_size = 0;
+    int decode_num_qo_heads = 0;
+    int decode_gqa_group = 0;
+    std::vector<int32_t> decode_indptr;
+    std::vector<int32_t> decode_last_page_len;
+
+    torch::Tensor prefill_slots;
+    bool prefill_slots_valid = false;
+    int prefill_sl = 0;
+    int prefill_page_size = 0;
+    std::vector<int32_t> prefill_indptr;
+    std::vector<int32_t> prefill_indices;
+
+    void invalidate() {
+        decode_plan_valid = false;
+        prefill_slots_valid = false;
+        prefill_slots = torch::Tensor();
+    }
+};
+
+WorkspaceRuntimeCache *ensure_runtime_cache(void **slot) {
+    if (*slot == nullptr) {
+        *slot = new WorkspaceRuntimeCache();
+    }
+    return static_cast<WorkspaceRuntimeCache *>(*slot);
+}
+
+bool decode_plan_matches(
+        const WorkspaceRuntimeCache &cache,
+        uint32_t batch,
+        int head_dim,
+        int page_size,
+        int num_qo_heads,
+        int gqa_group,
+        const int32_t *indptr,
+        const int32_t *last_page_len) {
+    if (!cache.decode_plan_valid) {
+        return false;
+    }
+    if (cache.decode_batch != batch || cache.decode_head_dim != head_dim
+            || cache.decode_page_size != page_size
+            || cache.decode_num_qo_heads != num_qo_heads
+            || cache.decode_gqa_group != gqa_group) {
+        return false;
+    }
+    if (cache.decode_indptr.size() != batch + 1
+            || cache.decode_last_page_len.size() != batch) {
+        return false;
+    }
+    for (uint32_t i = 0; i <= batch; ++i) {
+        if (cache.decode_indptr[i] != indptr[i]) {
+            return false;
+        }
+    }
+    for (uint32_t i = 0; i < batch; ++i) {
+        if (cache.decode_last_page_len[i] != last_page_len[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool prefill_slots_match(
+        const WorkspaceRuntimeCache &cache,
+        int sl,
+        int page_size,
+        const int32_t *indptr,
+        int batch,
+        const int32_t *indices,
+        int num_indices) {
+    if (!cache.prefill_slots_valid || !cache.prefill_slots.defined()) {
+        return false;
+    }
+    if (cache.prefill_sl != sl || cache.prefill_page_size != page_size) {
+        return false;
+    }
+    if (cache.prefill_indptr.size() != static_cast<size_t>(batch + 1)
+            || cache.prefill_indices.size() != static_cast<size_t>(num_indices)) {
+        return false;
+    }
+    for (int i = 0; i <= batch; ++i) {
+        if (cache.prefill_indptr[static_cast<size_t>(i)] != indptr[i]) {
+            return false;
+        }
+    }
+    for (int i = 0; i < num_indices; ++i) {
+        if (cache.prefill_indices[static_cast<size_t>(i)] != indices[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 void warn_flashinfer_sdpa_decode_once(const char *reason) {
     if (!g_flashinfer_sdpa_decode_warned.exchange(true)) {
         fprintf(stderr,
@@ -94,6 +193,7 @@ int run_batch_decode(
         torch::Tensor &float_ws,
         torch::Tensor &int_ws,
         torch::Tensor &pinned_int_ws,
+        void **runtime_cache_slot,
         torch::Tensor &out, // [B,Hq,D]
         std::string &err) {
     using IdType = int32_t;
@@ -106,49 +206,75 @@ int run_batch_decode(
     out = torch::empty({q.size(0), q.size(1), q.size(2)}, q.options());
 
     auto indptr_h = indptr.to(at::kCPU).contiguous();
+    auto last_h = last_page_len.to(at::kCPU).contiguous();
+    auto *indptr_ptr = static_cast<IdType *>(indptr_h.data_ptr());
+    auto *last_ptr = static_cast<IdType *>(last_h.data_ptr());
     auto stream = at::cuda::getCurrentCUDAStream().stream();
 
+    WorkspaceRuntimeCache *cache = runtime_cache_slot != nullptr
+            ? ensure_runtime_cache(runtime_cache_slot)
+            : nullptr;
     DecodePlanInfo plan_info;
+    const int gqa_group = num_qo_heads / num_kv_heads;
+    const bool plan_hit = cache != nullptr && decode_plan_matches(
+            *cache, B, head_dim, page_size, num_qo_heads, gqa_group,
+            indptr_ptr, last_ptr);
+    if (plan_hit) {
+        plan_info = cache->decode_plan;
+    }
     cudaError_t status = cudaSuccess;
 
-    auto dispatch_plan = [&](auto head_dim_c) {
-        constexpr uint32_t HEAD_DIM = decltype(head_dim_c)::value;
-        DISPATCH_GQA_GROUP_SIZE(num_qo_heads / num_kv_heads, GROUP_SIZE, {
-            auto work_est = BatchDecodeWithPagedKVCacheWorkEstimationDispatched<
-                    GROUP_SIZE, HEAD_DIM, POS, AttentionVariant, Params>;
-            status = DecodePlan<HEAD_DIM, POS, AttentionVariant, Params>(
-                    float_ws.data_ptr(),
-                    float_ws.numel() * float_ws.element_size(),
-                    int_ws.data_ptr(),
-                    pinned_int_ws.data_ptr(),
-                    int_ws.numel() * int_ws.element_size(),
-                    plan_info,
-                    static_cast<IdType *>(indptr_h.data_ptr()),
-                    B,
-                    static_cast<uint32_t>(num_qo_heads),
-                    static_cast<uint32_t>(page_size),
-                    /*enable_cuda_graph=*/false,
-                    stream,
-                    work_est);
-            return true;
-        });
-    };
+    if (!plan_hit) {
+        auto dispatch_plan = [&](auto head_dim_c) {
+            constexpr uint32_t HEAD_DIM = decltype(head_dim_c)::value;
+            DISPATCH_GQA_GROUP_SIZE(num_qo_heads / num_kv_heads, GROUP_SIZE, {
+                auto work_est = BatchDecodeWithPagedKVCacheWorkEstimationDispatched<
+                        GROUP_SIZE, HEAD_DIM, POS, AttentionVariant, Params>;
+                status = DecodePlan<HEAD_DIM, POS, AttentionVariant, Params>(
+                        float_ws.data_ptr(),
+                        float_ws.numel() * float_ws.element_size(),
+                        int_ws.data_ptr(),
+                        pinned_int_ws.data_ptr(),
+                        int_ws.numel() * int_ws.element_size(),
+                        plan_info,
+                        indptr_ptr,
+                        B,
+                        static_cast<uint32_t>(num_qo_heads),
+                        static_cast<uint32_t>(page_size),
+                        /*enable_cuda_graph=*/false,
+                        stream,
+                        work_est);
+                return true;
+            });
+        };
 
-    if (head_dim == 64) {
-        dispatch_plan(std::integral_constant<uint32_t, 64>{});
-    } else if (head_dim == 128) {
-        dispatch_plan(std::integral_constant<uint32_t, 128>{});
-    } else if (head_dim == 256) {
-        dispatch_plan(std::integral_constant<uint32_t, 256>{});
-    } else if (head_dim == 512) {
-        dispatch_plan(std::integral_constant<uint32_t, 512>{});
-    } else {
-        err = "FlashInfer decode supports head_dim 64, 128, 256, or 512 only";
-        return -1;
-    }
-    if (status != cudaSuccess) {
-        err = std::string("DecodePlan failed: ") + cudaGetErrorString(status);
-        return -1;
+        if (head_dim == 64) {
+            dispatch_plan(std::integral_constant<uint32_t, 64>{});
+        } else if (head_dim == 128) {
+            dispatch_plan(std::integral_constant<uint32_t, 128>{});
+        } else if (head_dim == 256) {
+            dispatch_plan(std::integral_constant<uint32_t, 256>{});
+        } else if (head_dim == 512) {
+            dispatch_plan(std::integral_constant<uint32_t, 512>{});
+        } else {
+            err = "FlashInfer decode supports head_dim 64, 128, 256, or 512 only";
+            return -1;
+        }
+        if (status != cudaSuccess) {
+            err = std::string("DecodePlan failed: ") + cudaGetErrorString(status);
+            return -1;
+        }
+        if (cache != nullptr) {
+            cache->decode_plan = plan_info;
+            cache->decode_plan_valid = true;
+            cache->decode_batch = B;
+            cache->decode_head_dim = head_dim;
+            cache->decode_page_size = page_size;
+            cache->decode_num_qo_heads = num_qo_heads;
+            cache->decode_gqa_group = gqa_group;
+            cache->decode_indptr.assign(indptr_ptr, indptr_ptr + B + 1);
+            cache->decode_last_page_len.assign(last_ptr, last_ptr + B);
+        }
     }
 
     auto k_strides = k_pages.strides();
@@ -241,6 +367,7 @@ int run_batch_prefill_sdpa(
         float scale,
         int is_causal,
         const torch::Tensor *attn_mask,
+        void **runtime_cache_slot,
         torch::Tensor &out,
         std::string &err) {
     try {
@@ -273,17 +400,37 @@ int run_batch_prefill_sdpa(
         auto kc = k_pages.reshape({k_pages.size(0) * k_pages.size(1), k_pages.size(2), k_pages.size(3)});
         auto vc = v_pages.reshape({v_pages.size(0) * v_pages.size(1), v_pages.size(2), v_pages.size(3)});
 
+        WorkspaceRuntimeCache *cache = runtime_cache_slot != nullptr
+                ? ensure_runtime_cache(runtime_cache_slot)
+                : nullptr;
+        const int num_indices = static_cast<int>(indices_cpu.numel());
+
         auto gather_row = [&](int64_t b, int sl, torch::Tensor &k_out, torch::Tensor &v_out) {
-            int ps = ip[b];
-            std::vector<int64_t> slots;
-            slots.reserve(static_cast<size_t>(sl));
-            for (int t = 0; t < sl; ++t) {
-                int page = t / page_size;
-                int offs = t - page * page_size;
-                int phys = ix[ps + page];
-                slots.push_back(static_cast<int64_t>(phys) * page_size + offs);
+            torch::Tensor slot_t;
+            if (cache != nullptr && prefill_slots_match(
+                    *cache, sl, page_size, ip, static_cast<int>(B), ix, num_indices)) {
+                slot_t = cache->prefill_slots;
+            } else {
+                int ps = ip[b];
+                std::vector<int64_t> slots;
+                slots.reserve(static_cast<size_t>(sl));
+                for (int t = 0; t < sl; ++t) {
+                    int page = t / page_size;
+                    int offs = t - page * page_size;
+                    int phys = ix[ps + page];
+                    slots.push_back(static_cast<int64_t>(phys) * page_size + offs);
+                }
+                slot_t = torch::tensor(
+                        slots, torch::TensorOptions().dtype(torch::kLong).device(q.device()));
+                if (cache != nullptr) {
+                    cache->prefill_slots = slot_t;
+                    cache->prefill_slots_valid = true;
+                    cache->prefill_sl = sl;
+                    cache->prefill_page_size = page_size;
+                    cache->prefill_indptr.assign(ip, ip + B + 1);
+                    cache->prefill_indices.assign(ix, ix + num_indices);
+                }
             }
-            auto slot_t = torch::tensor(slots, torch::TensorOptions().dtype(torch::kLong).device(q.device()));
             auto k_flat = kc.index_select(0, slot_t);
             auto v_flat = vc.index_select(0, slot_t);
             k_out = k_flat.view({1, sl, num_kv_heads, head_dim}).transpose(1, 2).contiguous();
@@ -326,18 +473,34 @@ int run_batch_prefill_sdpa(
         }
 
         const int sl = seqlens[0];
-        std::vector<int64_t> slots;
-        slots.reserve(static_cast<size_t>(B * sl));
-        for (int64_t b = 0; b < B; ++b) {
-            int ps = ip[b];
-            for (int t = 0; t < sl; ++t) {
-                int page = t / page_size;
-                int offs = t - page * page_size;
-                int phys = ix[ps + page];
-                slots.push_back(static_cast<int64_t>(phys) * page_size + offs);
+        torch::Tensor slot_t;
+        if (cache != nullptr && prefill_slots_match(
+                *cache, sl, page_size, ip, static_cast<int>(B), ix, num_indices)
+                && cache->prefill_slots.defined()
+                && cache->prefill_slots.numel() == B * sl) {
+            slot_t = cache->prefill_slots;
+        } else {
+            std::vector<int64_t> slots;
+            slots.reserve(static_cast<size_t>(B * sl));
+            for (int64_t b = 0; b < B; ++b) {
+                int ps = ip[b];
+                for (int t = 0; t < sl; ++t) {
+                    int page = t / page_size;
+                    int offs = t - page * page_size;
+                    int phys = ix[ps + page];
+                    slots.push_back(static_cast<int64_t>(phys) * page_size + offs);
+                }
+            }
+            slot_t = torch::tensor(slots, torch::TensorOptions().dtype(torch::kLong).device(q.device()));
+            if (cache != nullptr) {
+                cache->prefill_slots = slot_t;
+                cache->prefill_slots_valid = true;
+                cache->prefill_sl = sl;
+                cache->prefill_page_size = page_size;
+                cache->prefill_indptr.assign(ip, ip + B + 1);
+                cache->prefill_indices.assign(ix, ix + num_indices);
             }
         }
-        auto slot_t = torch::tensor(slots, torch::TensorOptions().dtype(torch::kLong).device(q.device()));
         auto k_flat = kc.index_select(0, slot_t);
         auto v_flat = vc.index_select(0, slot_t);
         auto k = k_flat.view({B, sl, num_kv_heads, head_dim}).transpose(1, 2).contiguous();
@@ -657,6 +820,7 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
         torch::Tensor *float_workspace,
         torch::Tensor *int_workspace,
         torch::Tensor *pinned_int_workspace,
+        void **runtime_cache_slot,
         torch::Tensor &out,
         std::string &err) {
     try {
@@ -749,12 +913,12 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
                     rc = run_batch_decode<nv_bfloat16>(
                             query, k_pages, v_pages, indptr, indices, last, page_size,
                             static_cast<int>(Hq), num_kv_heads, head_dim, scale,
-                            float_ws, int_ws, pinned_int, o3, err);
+                            float_ws, int_ws, pinned_int, runtime_cache_slot, o3, err);
                 } else if (query.scalar_type() == at::kHalf) {
                     rc = run_batch_decode<__half>(
                             query, k_pages, v_pages, indptr, indices, last, page_size,
                             static_cast<int>(Hq), num_kv_heads, head_dim, scale,
-                            float_ws, int_ws, pinned_int, o3, err);
+                            float_ws, int_ws, pinned_int, runtime_cache_slot, o3, err);
                 } else {
                     // fp32 (and other) decode → gather + SDPA below
                     rc = -2;
@@ -777,7 +941,7 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
 
         return run_batch_prefill_sdpa(
                 query, k_pages, v_pages, indptr, indices, last, page_size, num_kv_heads,
-                head_dim, cache_len, scale, is_causal, attn_mask, out, err);
+                head_dim, cache_len, scale, is_causal, attn_mask, runtime_cache_slot, out, err);
     } catch (const std::exception &ex) {
         err = ex.what();
         return -1;
@@ -822,4 +986,14 @@ extern "C" int smile_flashinfer_ragged_attention_cuda(
         err = ex.what();
         return -1;
     }
+}
+
+extern "C" void smile_flashinfer_runtime_cache_invalidate(void *cache_slot) {
+    if (cache_slot != nullptr) {
+        static_cast<WorkspaceRuntimeCache *>(cache_slot)->invalidate();
+    }
+}
+
+extern "C" void smile_flashinfer_runtime_cache_free(void *cache_slot) {
+    delete static_cast<WorkspaceRuntimeCache *>(cache_slot);
 }

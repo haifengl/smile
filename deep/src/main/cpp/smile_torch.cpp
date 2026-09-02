@@ -2353,12 +2353,13 @@ ST_Tensor smile_flashinfer_paged_attention(
             set_error("smile_flashinfer_paged_attention: invalid workspace");
             return nullptr;
         }
+        void **runtime_cache = smile_flashinfer_workspace_runtime_cache_slot(workspace);
         int rc = smile_flashinfer_paged_attention_cuda(
                 q, k_cache->t, v_cache->t,
                 paged_kv_indptr->t, paged_kv_indices->t, paged_kv_last_page_len->t,
                 page_size, num_kv_heads, head_dim, cache_len,
                 sc, k_scale, v_scale, is_causal, mask_ptr,
-                float_ws, int_ws, pinned_ws,
+                float_ws, int_ws, pinned_ws, runtime_cache,
                 out, err);
         if (rc != 0) {
             set_error(err.empty() ? "flashinfer paged attention failed" : err);

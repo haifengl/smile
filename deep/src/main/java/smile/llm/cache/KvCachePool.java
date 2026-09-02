@@ -1126,6 +1126,9 @@ public class KvCachePool implements AutoCloseable {
      * at the start of each {@link #activateStep}.
      */
     public void clearStepFlashInferMetadata() {
+        if (flashInferWorkspace != null) {
+            flashInferWorkspace.invalidateRuntimeCache();
+        }
         if (stepFlashInferMeta != null) {
             stepFlashInferMeta.close();
             stepFlashInferMeta = null;
