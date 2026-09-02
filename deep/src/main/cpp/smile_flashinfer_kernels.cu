@@ -97,6 +97,29 @@ WorkspaceRuntimeCache *ensure_runtime_cache(void **slot) {
     return static_cast<WorkspaceRuntimeCache *>(*slot);
 }
 
+static bool cuda_stream_is_capturing(cudaStream_t stream) {
+    cudaStreamCaptureStatus status = cudaStreamCaptureStatusNone;
+    if (cudaStreamIsCapturing(stream, &status) != cudaSuccess) {
+        return false;
+    }
+    return status == cudaStreamCaptureStatusActive;
+}
+
+static bool decode_plan_shape_matches(
+        const WorkspaceRuntimeCache &cache,
+        uint32_t batch,
+        int head_dim,
+        int page_size,
+        int num_qo_heads,
+        int gqa_group) {
+    return cache.decode_plan_valid
+            && cache.decode_batch == batch
+            && cache.decode_head_dim == head_dim
+            && cache.decode_page_size == page_size
+            && cache.decode_num_qo_heads == num_qo_heads
+            && cache.decode_gqa_group == gqa_group;
+}
+
 bool decode_plan_matches(
         const WorkspaceRuntimeCache &cache,
         uint32_t batch,
@@ -105,18 +128,12 @@ bool decode_plan_matches(
         int num_qo_heads,
         int gqa_group,
         const int32_t *indptr,
-        const int32_t *last_page_len) {
-    if (!cache.decode_plan_valid) {
+        const int32_t *) {
+    if (!decode_plan_shape_matches(
+                cache, batch, head_dim, page_size, num_qo_heads, gqa_group)) {
         return false;
     }
-    if (cache.decode_batch != batch || cache.decode_head_dim != head_dim
-            || cache.decode_page_size != page_size
-            || cache.decode_num_qo_heads != num_qo_heads
-            || cache.decode_gqa_group != gqa_group) {
-        return false;
-    }
-    if (cache.decode_indptr.size() != batch + 1
-            || cache.decode_last_page_len.size() != batch) {
+    if (cache.decode_indptr.size() != batch + 1) {
         return false;
     }
     for (uint32_t i = 0; i <= batch; ++i) {
@@ -124,11 +141,8 @@ bool decode_plan_matches(
             return false;
         }
     }
-    for (uint32_t i = 0; i < batch; ++i) {
-        if (cache.decode_last_page_len[i] != last_page_len[i]) {
-            return false;
-        }
-    }
+    // last_page_len lives on the GPU CSR tensor and may change each decode step
+    // within the same page bucket without replanning.
     return true;
 }
 
@@ -210,75 +224,88 @@ int run_batch_decode(
     auto q = query.dim() == 4 ? query.squeeze(2).contiguous() : query.contiguous();
     out = torch::empty({q.size(0), q.size(1), q.size(2)}, q.options());
 
-    auto indptr_h = indptr.to(at::kCPU).contiguous();
-    auto last_h = last_page_len.to(at::kCPU).contiguous();
-    auto *indptr_ptr = static_cast<IdType *>(indptr_h.data_ptr());
-    auto *last_ptr = static_cast<IdType *>(last_h.data_ptr());
     auto stream = at::cuda::getCurrentCUDAStream().stream();
+    const bool graph_capture = cuda_stream_is_capturing(stream);
 
     WorkspaceRuntimeCache *cache = runtime_cache_slot != nullptr
             ? ensure_runtime_cache(runtime_cache_slot)
             : nullptr;
     DecodePlanInfo plan_info;
     const int gqa_group = num_qo_heads / num_kv_heads;
-    const bool plan_hit = cache != nullptr && decode_plan_matches(
-            *cache, B, head_dim, page_size, num_qo_heads, gqa_group,
-            indptr_ptr, last_ptr);
-    if (plan_hit) {
+    bool plan_hit = false;
+
+    if (graph_capture) {
+        if (cache == nullptr || !decode_plan_shape_matches(
+                    *cache, B, head_dim, page_size, num_qo_heads, gqa_group)) {
+            err = "FlashInfer decode plan not warmed for CUDA graph capture";
+            return -1;
+        }
         plan_info = cache->decode_plan;
-    }
-    cudaError_t status = cudaSuccess;
-
-    if (!plan_hit) {
-        auto dispatch_plan = [&](auto head_dim_c) {
-            constexpr uint32_t HEAD_DIM = decltype(head_dim_c)::value;
-            DISPATCH_GQA_GROUP_SIZE(num_qo_heads / num_kv_heads, GROUP_SIZE, {
-                auto work_est = BatchDecodeWithPagedKVCacheWorkEstimationDispatched<
-                        GROUP_SIZE, HEAD_DIM, POS, AttentionVariant, Params>;
-                status = DecodePlan<HEAD_DIM, POS, AttentionVariant, Params>(
-                        float_ws.data_ptr(),
-                        float_ws.numel() * float_ws.element_size(),
-                        int_ws.data_ptr(),
-                        pinned_int_ws.data_ptr(),
-                        int_ws.numel() * int_ws.element_size(),
-                        plan_info,
-                        indptr_ptr,
-                        B,
-                        static_cast<uint32_t>(num_qo_heads),
-                        static_cast<uint32_t>(page_size),
-                        /*enable_cuda_graph=*/false,
-                        stream,
-                        work_est);
-                return true;
-            });
-        };
-
-        if (head_dim == 64) {
-            dispatch_plan(std::integral_constant<uint32_t, 64>{});
-        } else if (head_dim == 128) {
-            dispatch_plan(std::integral_constant<uint32_t, 128>{});
-        } else if (head_dim == 256) {
-            dispatch_plan(std::integral_constant<uint32_t, 256>{});
-        } else if (head_dim == 512) {
-            dispatch_plan(std::integral_constant<uint32_t, 512>{});
-        } else {
-            err = "FlashInfer decode supports head_dim 64, 128, 256, or 512 only";
-            return -1;
+        plan_hit = true;
+    } else {
+        auto indptr_h = indptr.to(at::kCPU).contiguous();
+        auto last_h = last_page_len.to(at::kCPU).contiguous();
+        auto *indptr_ptr = static_cast<IdType *>(indptr_h.data_ptr());
+        auto *last_ptr = static_cast<IdType *>(last_h.data_ptr());
+        plan_hit = cache != nullptr && decode_plan_matches(
+                *cache, B, head_dim, page_size, num_qo_heads, gqa_group,
+                indptr_ptr, last_ptr);
+        if (plan_hit) {
+            plan_info = cache->decode_plan;
         }
-        if (status != cudaSuccess) {
-            err = std::string("DecodePlan failed: ") + cudaGetErrorString(status);
-            return -1;
-        }
-        if (cache != nullptr) {
-            cache->decode_plan = plan_info;
-            cache->decode_plan_valid = true;
-            cache->decode_batch = B;
-            cache->decode_head_dim = head_dim;
-            cache->decode_page_size = page_size;
-            cache->decode_num_qo_heads = num_qo_heads;
-            cache->decode_gqa_group = gqa_group;
-            cache->decode_indptr.assign(indptr_ptr, indptr_ptr + B + 1);
-            cache->decode_last_page_len.assign(last_ptr, last_ptr + B);
+        cudaError_t status = cudaSuccess;
+
+        if (!plan_hit) {
+            auto dispatch_plan = [&](auto head_dim_c) {
+                constexpr uint32_t HEAD_DIM = decltype(head_dim_c)::value;
+                DISPATCH_GQA_GROUP_SIZE(num_qo_heads / num_kv_heads, GROUP_SIZE, {
+                    auto work_est = BatchDecodeWithPagedKVCacheWorkEstimationDispatched<
+                            GROUP_SIZE, HEAD_DIM, POS, AttentionVariant, Params>;
+                    status = DecodePlan<HEAD_DIM, POS, AttentionVariant, Params>(
+                            float_ws.data_ptr(),
+                            float_ws.numel() * float_ws.element_size(),
+                            int_ws.data_ptr(),
+                            pinned_int_ws.data_ptr(),
+                            int_ws.numel() * int_ws.element_size(),
+                            plan_info,
+                            indptr_ptr,
+                            B,
+                            static_cast<uint32_t>(num_qo_heads),
+                            static_cast<uint32_t>(page_size),
+                            /*enable_cuda_graph=*/false,
+                            stream,
+                            work_est);
+                    return true;
+                });
+            };
+
+            if (head_dim == 64) {
+                dispatch_plan(std::integral_constant<uint32_t, 64>{});
+            } else if (head_dim == 128) {
+                dispatch_plan(std::integral_constant<uint32_t, 128>{});
+            } else if (head_dim == 256) {
+                dispatch_plan(std::integral_constant<uint32_t, 256>{});
+            } else if (head_dim == 512) {
+                dispatch_plan(std::integral_constant<uint32_t, 512>{});
+            } else {
+                err = "FlashInfer decode supports head_dim 64, 128, 256, or 512 only";
+                return -1;
+            }
+            if (status != cudaSuccess) {
+                err = std::string("DecodePlan failed: ") + cudaGetErrorString(status);
+                return -1;
+            }
+            if (cache != nullptr) {
+                cache->decode_plan = plan_info;
+                cache->decode_plan_valid = true;
+                cache->decode_batch = B;
+                cache->decode_head_dim = head_dim;
+                cache->decode_page_size = page_size;
+                cache->decode_num_qo_heads = num_qo_heads;
+                cache->decode_gqa_group = gqa_group;
+                cache->decode_indptr.assign(indptr_ptr, indptr_ptr + B + 1);
+                cache->decode_last_page_len.assign(last_ptr, last_ptr + B);
+            }
         }
     }
 
