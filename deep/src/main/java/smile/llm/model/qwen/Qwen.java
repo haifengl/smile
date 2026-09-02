@@ -1882,7 +1882,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                                       ExecutorService pool) {
         Tensor[] logits = new Tensor[models.length];
         long t0 = System.nanoTime();
-        boolean graph = DecodeCudaGraph.enabled() && cachePositions.length == 1;
+        boolean graph = DecodeCudaGraph.canGraphDecode(cachePositions);
         boolean profile = DecodeForwardProfile.enabled();
         DecodeForwardProfile.Snapshot merged = profile ? new DecodeForwardProfile.Snapshot() : null;
         if (models.length == 1) {
