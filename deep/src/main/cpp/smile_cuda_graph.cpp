@@ -59,11 +59,14 @@ int smile_cuda_graph_capture_begin(ST_CudaGraph graph, int device_index) {
     try {
         graph->device_index = device_index;
         c10::cuda::CUDAGuard guard(device_index);
-        graph->capture_stream = at::cuda::getStreamFromPool();
+        // Capture on the caller's current stream (not a pool stream). Prep
+        // (token / RoPE / KV index) and replay must share this stream so buffer
+        // updates are visible to the graph without cross-stream races.
+        graph->capture_stream = at::cuda::getCurrentCUDAStream(device_index);
         graph->stream_guard.emplace(*graph->capture_stream);
         graph->graph = std::make_unique<at::cuda::CUDAGraph>();
-        // Relaxed: NCCL all-reduce (TP) launches work on auxiliary streams; ThreadLocal
-        // capture invalidates immediately under tensor-parallel decode.
+        // Relaxed: NCCL all-reduce (TP) launches work on auxiliary streams;
+        // ThreadLocal capture invalidates under tensor-parallel decode.
         graph->graph->capture_begin(
                 at::cuda::graph_pool_handle(), cudaStreamCaptureModeRelaxed);
         graph->instantiated = false;
@@ -91,6 +94,10 @@ int smile_cuda_graph_capture_end(ST_CudaGraph graph) {
         // keep_graph=false (default): capture_end() instantiates; do not call instantiate().
         graph->graph->capture_end();
         graph->instantiated = true;
+        // Capture-step logits must be ready before Java reads them.
+        if (graph->capture_stream.has_value()) {
+            graph->capture_stream->synchronize();
+        }
         graph->stream_guard.reset();
         return 0;
     } catch (const std::exception &ex) {
@@ -113,8 +120,14 @@ int smile_cuda_graph_replay(ST_CudaGraph graph) {
     }
     try {
         c10::cuda::CUDAGuard guard(graph->device_index);
+        // Drain any prep that may have run on another stream (e.g. default)
+        // before we switched to the capture stream for replay.
+        at::cuda::getCurrentCUDAStream(graph->device_index).synchronize();
         at::cuda::CUDAStreamGuard stream_guard(*graph->capture_stream);
         graph->graph->replay();
+        // Host timings and logits reads must wait for the graph to finish;
+        // otherwise Java sees stale logits and ~1 ms fake decode latency.
+        graph->capture_stream->synchronize();
         return 0;
     } catch (const std::exception &ex) {
         smile_torch_set_error(ex.what());
