@@ -15,10 +15,12 @@
  * Layouts (all contiguous):
  *   q,k: [B, H, S, K]
  *   v:   [B, H, S, V]
- *   g,beta: [B, H, S]  (g already exponentiated decay factors)
+ *   g,beta: [B, H, S]  ({@code g} is decay <em>logits</em>; kernel applies {@code exp})
  *   state: [B, H, K, V]  (mutated in place)
  *   out:   [B, H, S, V]
  *
+ * @param scale     multiplied into Q ({@code 1/sqrt(K)}).
+ * @param qk_l2norm non-zero to L2-normalize Q/K in-kernel along the last dim.
  * @return 0 on success, non-zero on CUDA error (message via smile_last_error).
  */
 int smile_gated_delta_recurrent_cuda(
@@ -27,6 +29,7 @@ int smile_gated_delta_recurrent_cuda(
         float *state, float *out,
         int64_t B, int64_t H, int64_t S, int64_t K, int64_t V,
         float scale,
+        int qk_l2norm,
         void *cuda_stream /* cudaStream_t, may be null = default */);
 
 /** Last CUDA gated-delta error message (valid until next call). */

@@ -2238,29 +2238,41 @@ ST_Tensor smile_recurrent_gated_delta_rule(
             return nullptr;
         }
 
-        // [B,S,H,D] → [B,H,S,D] float contiguous
-        auto q = q0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
-        auto k = k0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
-        auto v = v0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
-        auto gf = g0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
-        auto bf = beta0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
-        if (qk_l2norm) {
-            q = l2norm_last(q);
-            k = l2norm_last(k);
+        const auto B = q0.size(0);
+        const auto S = q0.size(1);
+        const auto H = q0.size(2);
+        const auto Kdim = q0.size(3);
+        const auto Vdim = v0.size(3);
+        const float scale = 1.0f / std::sqrt(static_cast<float>(Kdim));
+
+        // Layout for kernel: [B,H,S,*]. For S==1, [B,1,H,D] → [B,H,1,D] is a
+        // free reshape (same contiguous order), avoiding a transpose kernel.
+        torch::Tensor q, k, v, gf, bf;
+        if (S == 1) {
+            q = q0.to(c10::ScalarType::Float).reshape({B, H, (int64_t)1, Kdim}).contiguous();
+            k = k0.to(c10::ScalarType::Float).reshape({B, H, (int64_t)1, Kdim}).contiguous();
+            v = v0.to(c10::ScalarType::Float).reshape({B, H, (int64_t)1, Vdim}).contiguous();
+            gf = g0.to(c10::ScalarType::Float).reshape({B, H, (int64_t)1}).contiguous();
+            bf = beta0.to(c10::ScalarType::Float).reshape({B, H, (int64_t)1}).contiguous();
+        } else {
+            q = q0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+            k = k0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+            v = v0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+            gf = g0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
+            bf = beta0.transpose(1, 2).contiguous().to(c10::ScalarType::Float);
         }
-        const float scale = 1.0f / std::sqrt(static_cast<float>(k.size(3)));
-        auto B = k.size(0), H = k.size(1), S = k.size(2), Vdim = v.size(3);
+
         auto out_f = torch::empty({B, H, S, Vdim}, q.options());
 
 #ifdef USE_CUDA
         if (q.is_cuda()) {
             c10::cuda::CUDAGuard guard(q.device());
             cudaStream_t stream = at::cuda::getCurrentCUDAStream(q.device().index()).stream();
-            int64_t K = k.size(3);
-            int64_t Vdim = v.size(3);
-            // Fused kernel keeps full [K,V] state in shared mem (see smile_gated_delta.cu).
+            // Fused kernel keeps full [K,V] state + L2 scratch in shared mem.
+            const int threads = 128;
             const size_t smem = static_cast<size_t>(
-                    (K * Vdim + K + K + Vdim + Vdim + Vdim + Vdim) * sizeof(float));
+                    (Kdim * Vdim + Kdim + Kdim + Vdim + Vdim + Vdim + Vdim + 2 * threads)
+                    * sizeof(float));
             int dev = q.device().index();
             int smem_limit = 0;
             cudaDeviceGetAttribute(&smem_limit, cudaDevAttrMaxSharedMemoryPerBlockOptin, dev);
@@ -2269,19 +2281,18 @@ ST_Tensor smile_recurrent_gated_delta_rule(
             }
             bool fused_ok = false;
             if (smem <= static_cast<size_t>(smem_limit)) {
-                // Kernel expects g already exponentiated; scale is folded into q.
-                auto g_exp = gf.exp();
-                auto q_scaled = q.mul(scale);
+                // Kernel applies exp(g), Q scale, and optional Q/K L2-norm.
                 int rc = smile_gated_delta_recurrent_cuda(
-                        q_scaled.data_ptr<float>(),
+                        q.data_ptr<float>(),
                         k.data_ptr<float>(),
                         v.data_ptr<float>(),
-                        g_exp.data_ptr<float>(),
+                        gf.data_ptr<float>(),
                         bf.data_ptr<float>(),
                         st.data_ptr<float>(),
                         out_f.data_ptr<float>(),
-                        B, H, S, K, Vdim,
-                        /*scale already applied*/ 1.0f,
+                        B, H, S, Kdim, Vdim,
+                        scale,
+                        qk_l2norm,
                         stream);
                 fused_ok = (rc == 0);
             }
@@ -2297,15 +2308,29 @@ ST_Tensor smile_recurrent_gated_delta_rule(
                              (err && err[0]) ? err : "fused kernel launch failed");
                 }
                 warn_gated_delta_libtorch_once(reason);
+                if (qk_l2norm) {
+                    q = l2norm_last(q);
+                    k = l2norm_last(k);
+                }
                 out_f = gated_delta_recurrent_libtorch(q, k, v, gf, bf, st, scale);
             }
         } else
 #endif
         {
+            if (qk_l2norm) {
+                q = l2norm_last(q);
+                k = l2norm_last(k);
+            }
             out_f = gated_delta_recurrent_libtorch(q, k, v, gf, bf, st, scale);
         }
 
-        auto out = out_f.transpose(1, 2).contiguous().to(q0.scalar_type());
+        // S==1: [B,H,1,V] → [B,1,H,V] via reshape (same order); else transpose.
+        torch::Tensor out;
+        if (S == 1) {
+            out = out_f.reshape({B, (int64_t)1, H, Vdim}).to(q0.scalar_type());
+        } else {
+            out = out_f.transpose(1, 2).contiguous().to(q0.scalar_type());
+        }
         return new ST_Tensor_{ out };
     ST_TRY_END
     return nullptr;
