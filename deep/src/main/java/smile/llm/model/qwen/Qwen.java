@@ -96,9 +96,6 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     private volatile boolean prefixReplayEnabled;
     /** Per-request mRoPE decode offset ({@code rope_delta}); cleared on finish/evict. */
     private final ConcurrentHashMap<Integer, Integer> ropeDeltaByRequest = new ConcurrentHashMap<>();
-    /** Per-TP-rank reused device tensors for decode token ids {@code [B, 1]}. */
-    private Tensor[] decodeTokenBuffers;
-    private int decodeTokenBufferBatch = -1;
 
     /**
      * Constructor.
@@ -179,7 +176,6 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     @Override
     public void close() {
-        closeDecodeTokenBuffers();
         if (tpExecutor != null) {
             tpExecutor.shutdownNow();
         }
@@ -1900,43 +1896,6 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         return logits;
     }
 
-    private void closeDecodeTokenBuffers() {
-        if (decodeTokenBuffers != null) {
-            for (Tensor buf : decodeTokenBuffers) {
-                if (buf != null) {
-                    buf.close();
-                }
-            }
-            decodeTokenBuffers = null;
-        }
-        decodeTokenBufferBatch = -1;
-    }
-
-    /**
-     * Reuses a per-rank device {@code [B, 1]} long tensor for decode forwards.
-     * Each TP rank gets its own buffer on its device (a single shared buffer
-     * would leave every rank pointing at the last device).
-     */
-    private Tensor borrowDecodeTokenTensor(long[] toks, int rank, Device device) {
-        int b = toks.length;
-        if (decodeTokenBuffers == null || decodeTokenBuffers.length != models.length
-                || decodeTokenBufferBatch != b) {
-            closeDecodeTokenBuffers();
-            decodeTokenBuffers = new Tensor[models.length];
-            decodeTokenBufferBatch = b;
-        }
-        Tensor buf = decodeTokenBuffers[rank];
-        if (buf == null) {
-            var opts = new Tensor.Options().device(device).dtype(ScalarType.Int64);
-            buf = Tensor.zeros(opts, b, 1);
-            decodeTokenBuffers[rank] = buf;
-        }
-        try (Tensor src = Tensor.of(toks).reshape(b, 1).to(device)) {
-            smile.torch.Native.copy_(buf, src);
-        }
-        return buf;
-    }
-
     /** Last-row logits {@code [B, V]}; copies so the result outlives closed views. */
     private static Tensor logitsRowFromDecodeOutput(Tensor[] logits, int batch) {
         try (var last = Index.of(-1);
@@ -1990,9 +1949,12 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 Tensor.push(scope);
                 try {
                     for (int r = 0; r < models.length; r++) {
-                        tokenShards[r] = borrowDecodeTokenTensor(toks, r, models[r].device());
+                        tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
                     }
                     Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
+                    for (Tensor t : tokenShards) {
+                        t.close();
+                    }
                     for (QwenModel m : models) {
                         if (m.deltaNetStatePool() != null) {
                             m.deltaNetStatePool().scatterActive();
@@ -2033,9 +1995,12 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             Tensor.push(scope);
             try {
                 for (int r = 0; r < models.length; r++) {
-                    tokenShards[r] = borrowDecodeTokenTensor(toks, r, models[r].device());
+                    tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
                 }
                 Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
+                for (Tensor t : tokenShards) {
+                    t.close();
+                }
                 for (QwenModel m : models) {
                     if (m.deltaNetStatePool() != null) {
                         m.deltaNetStatePool().scatterActive();
