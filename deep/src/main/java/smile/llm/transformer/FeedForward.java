@@ -170,10 +170,15 @@ public class FeedForward {
     public Tensor forward(Tensor x) {
         // SiLU may be in-place and return w1x; do not list it as a second
         // try-with resource (would double-close the same handle).
+        boolean profile = smile.llm.engine.DecodeForwardProfile.enabled();
+        long t0 = profile ? System.nanoTime() : 0L;
         try (var w3x = w3.forward(x);
              var w1x = w1.forward(x)) {
             Tensor siluOut = silu.forward(w1x);
             Tensor out = w2.forward(siluOut.mul_(w3x));
+            if (profile) {
+                smile.llm.engine.DecodeForwardProfile.addMlp(System.nanoTime() - t0);
+            }
             if (tpGroup != null) {
                 tpGroup.allReduceSumInPlace(tpRank, out);
             }

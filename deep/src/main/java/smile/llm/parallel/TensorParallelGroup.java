@@ -147,8 +147,13 @@ public final class TensorParallelGroup implements AutoCloseable {
         if (config.tpSize() <= 1) {
             return;
         }
+        boolean profile = smile.llm.engine.DecodeForwardProfile.enabled();
+        long t0 = profile ? System.nanoTime() : 0L;
         if (ncclComm != null) {
             Native.ncclAllReduceSum(ncclComm, tpRank, local);
+            if (profile) {
+                smile.llm.engine.DecodeForwardProfile.addNccl(System.nanoTime() - t0);
+            }
             return;
         }
         allReduceSlots[tpRank] = local;
@@ -162,6 +167,9 @@ public final class TensorParallelGroup implements AutoCloseable {
             throw new RuntimeException("TP all-reduce barrier failed", e);
         } finally {
             allReduceSlots[tpRank] = null;
+        }
+        if (profile) {
+            smile.llm.engine.DecodeForwardProfile.addNccl(System.nanoTime() - t0);
         }
         RuntimeException err = allReduceError.getAndSet(null);
         if (err != null) {

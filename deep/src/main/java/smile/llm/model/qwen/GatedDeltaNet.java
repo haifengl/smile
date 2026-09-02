@@ -248,6 +248,8 @@ public class GatedDeltaNet {
 
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
+        boolean profile = smile.llm.engine.DecodeForwardProfile.enabled();
+        long t0 = profile ? System.nanoTime() : 0L;
         try {
             Tensor mixedRaw = inProjQkv.forward(x);
             Tensor mixed = mixedRaw.transpose(1, 2); // [B, C, S]
@@ -329,6 +331,9 @@ public class GatedDeltaNet {
                 Tensor gated = norm.forward(core, zFlat);
                 gated = gated.view(batch, seqLen, valueDim);
                 Tensor out = outProj.forward(gated);
+                if (profile) {
+                    smile.llm.engine.DecodeForwardProfile.addLinearAttn(System.nanoTime() - t0);
+                }
                 if (tpGroup != null && tpGroup.tpSize() > 1) {
                     tpGroup.allReduceSumInPlace(tpRank, out);
                 }

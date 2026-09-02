@@ -37,6 +37,11 @@ public final class DecodeStepTiming {
     public long logitsNs;
     /** Greedy / sampled token selection after forward. */
     public long sampleNs;
+    /**
+     * Max-across-ranks phase breakdown when {@code SMILE_DECODE_PROFILE=1};
+     * otherwise {@code null}.
+     */
+    public DecodeForwardProfile.Snapshot profile;
 
     /** @return timing holder for the current decode worker thread. */
     public static DecodeStepTiming current() {

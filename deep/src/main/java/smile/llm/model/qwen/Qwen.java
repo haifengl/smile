@@ -53,6 +53,7 @@ import smile.llm.checkpoint.SafeTensorsLoaderThreads;
 import smile.llm.attention.AttentionBackend;
 import smile.llm.attention.AttentionBackends;
 import smile.llm.engine.DecodeCudaGraph;
+import smile.llm.engine.DecodeForwardProfile;
 import smile.llm.engine.DecodeStepTiming;
 import smile.llm.model.llama.Llama;
 import smile.llm.parallel.ParallelConfig;
@@ -1882,6 +1883,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         Tensor[] logits = new Tensor[models.length];
         long t0 = System.nanoTime();
         boolean graph = DecodeCudaGraph.enabled() && cachePositions.length == 1;
+        boolean profile = DecodeForwardProfile.enabled();
+        DecodeForwardProfile.Snapshot merged = profile ? new DecodeForwardProfile.Snapshot() : null;
         if (models.length == 1) {
             long rank0 = System.nanoTime();
             if (graph) {
@@ -1890,10 +1893,15 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 logits[0] = models[0].forward(tokens[0], cachePositions, ropePositions, false);
             }
             long rankNs = System.nanoTime() - rank0;
-            recordForwardTiming(System.nanoTime() - t0, rankNs);
+            if (merged != null) {
+                merged.maxWith(DecodeForwardProfile.snapshotAndReset());
+            }
+            recordForwardTiming(System.nanoTime() - t0, rankNs, merged);
             return logits;
         }
         long[] rankNs = new long[models.length];
+        DecodeForwardProfile.Snapshot[] rankProfiles =
+                profile ? new DecodeForwardProfile.Snapshot[models.length] : null;
         List<Future<Tensor>> futures = new ArrayList<>(models.length);
         for (int r = 0; r < models.length; r++) {
             final int rank = r;
@@ -1901,11 +1909,18 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 long rankStart = System.nanoTime();
                 ParallelState.setCurrent(tpGroup.state(rank));
                 try (var guard = Tensor.noGradGuard()) {
+                    Tensor out;
                     if (graph) {
-                        return models[rank].forwardDecodeGraph(
+                        out = models[rank].forwardDecodeGraph(
                                 tokens[rank], cachePositions, ropePositions);
+                    } else {
+                        out = models[rank].forward(
+                                tokens[rank], cachePositions, ropePositions, false);
                     }
-                    return models[rank].forward(tokens[rank], cachePositions, ropePositions, false);
+                    if (rankProfiles != null) {
+                        rankProfiles[rank] = DecodeForwardProfile.snapshotAndReset();
+                    }
+                    return out;
                 } finally {
                     rankNs[rank] = System.nanoTime() - rankStart;
                     ParallelState.clearCurrent();
@@ -1915,6 +1930,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         try {
             for (int r = 0; r < models.length; r++) {
                 logits[r] = futures.get(r).get();
+                if (merged != null) {
+                    merged.maxWith(rankProfiles[r]);
+                }
             }
         } catch (Exception e) {
             for (Tensor l : logits) {
@@ -1928,16 +1946,18 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         for (long ns : rankNs) {
             slowest = Math.max(slowest, ns);
         }
-        recordForwardTiming(System.nanoTime() - t0, slowest);
+        recordForwardTiming(System.nanoTime() - t0, slowest, merged);
         return logits;
     }
 
-    private static void recordForwardTiming(long wallNs, long slowestRankNs) {
+    private static void recordForwardTiming(long wallNs, long slowestRankNs,
+                                            DecodeForwardProfile.Snapshot profile) {
         DecodeStepTiming timing = DecodeStepTiming.current();
         if (timing != null) {
             timing.forwardNs = wallNs;
             timing.slowestRankNs = slowestRankNs;
             timing.tpBarrierNs = Math.max(0L, wallNs - slowestRankNs);
+            timing.profile = profile;
         }
     }
 

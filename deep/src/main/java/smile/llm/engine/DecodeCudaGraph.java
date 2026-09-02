@@ -27,6 +27,14 @@ import smile.torch.Native;
  *
  * <p>Enable with environment variable {@code SMILE_DECODE_CUDA_GRAPH=1}.
  *
+ * <p><b>Phase 2d (multi-batch) sketch:</b> extend sessions to bucket by
+ * {@code (paddedBatch, maxNumPages)} — capture graphs for B ∈ {1,2,4,8,16,…}
+ * up to {@code max-batch-size}, pad live decode rows to the next bucket, keep
+ * static buffers sized to the padded B (tokens, RoPE, logits, FlashInfer CSR
+ * with {@code enable_cuda_graph}), and recapture when any row's page count
+ * exceeds the captured max. Until then B&gt;1 stays on eager ragged forward;
+ * use {@code SMILE_DECODE_PROFILE=1} to attribute that path.
+ *
  * @author Haifeng Li
  */
 public final class DecodeCudaGraph {
