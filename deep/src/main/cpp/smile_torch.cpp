@@ -2334,7 +2334,7 @@ static torch::Tensor causal_conv1d_update_libtorch(
     auto B = hidden.size(0);
     auto C = hidden.size(1);
     auto L = hidden.size(2);
-    auto w = weight.dim() == 3 ? weight.reshape(C, weight.size(-1)) : weight;
+    auto w = weight.dim() == 3 ? weight.reshape({C, weight.size(-1)}) : weight;
     auto K = w.size(1);
     auto state_len = conv_state.size(2);
     auto cat = torch::cat({conv_state, hidden}, /*dim=*/2); // [B,C,state_len+L]
@@ -2368,7 +2368,7 @@ ST_Tensor smile_causal_conv1d_update(
         auto B = h.size(0);
         auto C = h.size(1);
         auto L = h.size(2);
-        auto w = w0.dim() == 3 ? w0.reshape(C, w0.size(-1)) : w0;
+        auto w = w0.dim() == 3 ? w0.reshape({C, w0.size(-1)}) : w0;
         if (w.dim() != 2 || w.size(0) != C) {
             set_error("smile_causal_conv1d_update: weight must be [C,K]");
             return nullptr;
