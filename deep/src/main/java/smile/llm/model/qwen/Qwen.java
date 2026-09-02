@@ -1939,7 +1939,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         for (int r = 0; r < models.length; r++) {
             Device device = models[r].device();
             if (decodeTokenBuf[r] == null) {
-                var opts = new Tensor.Options().device(device).dtype(ScalarType.Long);
+                var opts = new Tensor.Options().device(device).dtype(ScalarType.Int64);
                 decodeTokenBuf[r] = Tensor.zeros(opts, 1, 1);
                 decodeTokenBuf[r].detachFromScopes();
             }
