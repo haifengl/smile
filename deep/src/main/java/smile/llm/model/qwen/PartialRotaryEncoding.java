@@ -81,6 +81,11 @@ public final class PartialRotaryEncoding {
             throw new IllegalArgumentException("rotaryDim must be even");
         }
 
+        Tensor[] fused = Native.applyRotaryPosEmb(xq, xk, cos, sin, rotaryDim);
+        if (fused != null) {
+            return new Tuple2<>(fused[0], fused[1]);
+        }
+
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
         try (var rot = Index.slice(0, rotaryDim);

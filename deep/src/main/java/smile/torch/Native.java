@@ -196,6 +196,12 @@ public final class Native {
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final MethodHandle APPLY_ROTARY_POS_EMB = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_apply_rotary_pos_emb")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)))
+                .orElse(null);
         static final java.util.Optional<MemorySegment> FLASHINFER_AVAILABLE_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_flashinfer_is_available");
         static final MethodHandle FLASHINFER_AVAILABLE = FLASHINFER_AVAILABLE_SYM
@@ -1060,6 +1066,43 @@ public final class Native {
             return null;
         }
         return new Tensor(out);
+    }
+
+    /**
+     * HF {@code apply_rotary_pos_emb} / {@code rotate_half} on query and key.
+     * Returns {@code [q, k]} or {@code null} when unavailable.
+     */
+    public static Tensor[] applyRotaryPosEmb(
+            Tensor xq, Tensor xk, Tensor cos, Tensor sin, int rotaryDim) {
+        if (Bindings.APPLY_ROTARY_POS_EMB == null
+                || xq == null || xk == null || cos == null || sin == null
+                || rotaryDim <= 0) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment kPtr = arena.allocate(ValueLayout.ADDRESS);
+            MemorySegment qOut;
+            try {
+                qOut = (MemorySegment) Bindings.APPLY_ROTARY_POS_EMB.invokeExact(
+                        xq.handle(), xk.handle(), cos.handle(), sin.handle(),
+                        rotaryDim, kPtr);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (qOut == null || qOut.address() == 0) {
+                return null;
+            }
+            MemorySegment kHandle = kPtr.get(ValueLayout.ADDRESS, 0);
+            if (kHandle == null || kHandle.address() == 0) {
+                try {
+                    new Tensor(qOut).close();
+                } catch (Throwable ignored) {
+                    // ignore
+                }
+                return null;
+            }
+            return new Tensor[]{new Tensor(qOut), new Tensor(kHandle)};
+        }
     }
 
     /**

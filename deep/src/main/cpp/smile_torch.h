@@ -1087,6 +1087,16 @@ SMILE_API ST_Tensor smile_mul_sigmoid(ST_Tensor x, ST_Tensor gate);
 SMILE_API ST_Tensor smile_causal_conv1d_update(
         ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor weight);
 
+/**
+ * HF {@code apply_rotary_pos_emb} / {@code rotate_half} on query and key.
+ * {@code xq}/{@code xk} are {@code [B,S,H,D]}; {@code cos}/{@code sin} are
+ * {@code [S,R]}, {@code [B,S,R]}, or {@code [R]} (R = rotary_dim). Returns
+ * rotated query; writes rotated key to {@code out_k} (caller owns both).
+ */
+SMILE_API ST_Tensor smile_apply_rotary_pos_emb(
+        ST_Tensor xq, ST_Tensor xk, ST_Tensor cos, ST_Tensor sin,
+        int rotary_dim, ST_Tensor *out_k);
+
 /* =========================================================================
  * FlashInfer / paged attention backend
  * ========================================================================= */
