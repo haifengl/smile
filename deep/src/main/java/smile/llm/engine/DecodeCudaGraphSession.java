@@ -20,16 +20,18 @@ import java.lang.foreign.MemorySegment;
 import smile.torch.Native;
 
 /**
- * Per-device CUDA graph session for batch-1 decode.
+ * Per-device CUDA graph session for uniform decode (batch 1 or power-of-two B).
  *
- * <p>Graphs are bucketed by KV page count ({@code numPages}). Within a page bucket,
- * {@code last_page_len} is updated in place before {@link #replay()}.
+ * <p>Graphs are bucketed by {@code (batch, numPages)}. Within a bucket,
+ * {@code last_page_len} and per-row KV indices are updated in place before
+ * {@link #replay()}.
  *
  * @author Haifeng Li
  */
 public final class DecodeCudaGraphSession implements AutoCloseable {
     private MemorySegment handle;
     private int capturedNumPages = -1;
+    private int capturedBatch = -1;
     private int warmupRemaining = DecodeCudaGraph.warmupSteps();
     private boolean ready;
     private boolean capturing;
@@ -50,23 +52,24 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
         this.handle = handle;
     }
 
-    /** @return {@code true} when a graph for {@code numPages} can be replayed. */
-    public boolean canReplay(int numPages) {
-        return ready && !capturing && capturedNumPages == numPages;
+    /** @return {@code true} when a graph for {@code (batch, numPages)} can be replayed. */
+    public boolean canReplay(int batch, int numPages) {
+        return ready && !capturing && capturedBatch == batch && capturedNumPages == numPages;
     }
 
     /**
-     * Marks one eager warmup step for the current page bucket.
+     * Marks one eager warmup step for the current bucket.
      *
+     * @param batch    decode batch size.
      * @param numPages KV page count for this decode step.
      * @return {@code true} when the next forward should capture a new graph.
      */
-    public boolean shouldCapture(int numPages) {
-        if (ready && capturedNumPages == numPages) {
+    public boolean shouldCapture(int batch, int numPages) {
+        if (ready && capturedBatch == batch && capturedNumPages == numPages) {
             return false;
         }
-        if (capturedNumPages != numPages) {
-            resetForNewBucket(numPages);
+        if (capturedBatch != batch || capturedNumPages != numPages) {
+            resetForNewBucket(batch, numPages);
         }
         if (warmupRemaining > 0) {
             warmupRemaining--;
@@ -75,9 +78,10 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
         return true;
     }
 
-    private void resetForNewBucket(int numPages) {
+    private void resetForNewBucket(int batch, int numPages) {
         ready = false;
         capturing = false;
+        capturedBatch = batch;
         capturedNumPages = numPages;
         warmupRemaining = DecodeCudaGraph.warmupSteps();
     }
@@ -112,7 +116,7 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
 
     /** Replays the captured graph (inputs must already be on device). */
     public void replay() {
-        if (!canReplay(capturedNumPages)) {
+        if (!canReplay(capturedBatch, capturedNumPages)) {
             throw new IllegalStateException("CUDA graph not ready for replay");
         }
         Native.cudaGraphReplay(handle);

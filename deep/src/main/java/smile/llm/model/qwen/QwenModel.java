@@ -75,8 +75,10 @@ public class QwenModel extends LayerBlock {
     final int tpRank;
     KvCachePool kvCachePool;
     DeltaNetStatePool deltaNetStatePool;
-    /** Per-rank CUDA graph session for batch-1 decode (Phase 2c). */
+    /** Per-rank CUDA graph session for uniform decode (Phase 2c/2d). */
     DecodeCudaGraphSession decodeGraphSession;
+    /** Stable token buffer for graph capture / replay. */
+    Tensor decodeGraphTokenBuf;
     /** Stable RoPE gather buffers for graph capture / replay. */
     Tensor decodeGraphCosBuf;
     Tensor decodeGraphSinBuf;
@@ -630,15 +632,19 @@ public class QwenModel extends LayerBlock {
     }
 
     /**
-     * Batch-1 decode forward with optional CUDA graph capture / replay.
+     * Uniform decode forward with optional CUDA graph capture / replay.
      *
-     * @param tokens         token ids {@code [1, 1]}.
-     * @param cachePositions KV write positions ({@code length == 1}).
+     * @param tokens         token ids {@code [B, 1]}.
+     * @param cachePositions KV write positions (uniform length across rows).
      * @param ropePositions  RoPE table gather positions.
-     * @return logits in float32.
+     * @return logits in float32 {@code [B, 1, V]} (graph path returns persistent buffer).
      */
     public Tensor forwardDecodeGraph(Tensor tokens, int[] cachePositions, int[] ropePositions) {
         if (!DecodeCudaGraph.enabled() || kvCachePool == null) {
+            return forward(tokens, cachePositions, ropePositions, false);
+        }
+        int batch = (int) tokens.shape()[0];
+        if (!DecodeCudaGraph.canGraphDecode(cachePositions)) {
             return forward(tokens, cachePositions, ropePositions, false);
         }
         if (decodeGraphSession == null) {
@@ -652,16 +658,18 @@ public class QwenModel extends LayerBlock {
         int numPages = kvCachePool.numPagesForLength(cacheLen);
         kvCachePool.setDecodeGraphBuffers(true);
         try {
-            ensureDecodeGraphRoPEBuffers(tokens.device());
+            ensureDecodeGraphTokenBuf(tokens.device(), batch, tokens.dtype());
+            smile.torch.Native.copy_(decodeGraphTokenBuf, tokens);
+            ensureDecodeGraphRoPEBuffers(tokens.device(), batch);
             prepareDecodeGraphInputs(cachePositions, ropePositions, cacheLen);
 
-            if (decodeGraphSession.canReplay(numPages)) {
+            if (decodeGraphSession.canReplay(batch, numPages)) {
                 decodeGraphSession.replay();
                 DecodeCudaGraph.markPersistentLogits(true);
                 return decodeGraphLogitsBuf;
             }
 
-            boolean capture = decodeGraphSession.shouldCapture(numPages);
+            boolean capture = decodeGraphSession.shouldCapture(batch, numPages);
             if (capture) {
                 if (decodeGraphLogitsBuf == null) {
                     throw new IllegalStateException(
@@ -672,13 +680,14 @@ public class QwenModel extends LayerBlock {
                     decodeGraphSession.beginCapture(deviceIndex);
                     try {
                         Tensor raw = forwardRaggedDecodeCore(
-                                tokens, cachePositions, decodeGraphCosBuf, decodeGraphSinBuf);
+                                decodeGraphTokenBuf, cachePositions,
+                                decodeGraphCosBuf, decodeGraphSinBuf);
                         smile.torch.Native.copy_(decodeGraphLogitsBuf, raw);
                         decodeGraphLogitsOut = decodeGraphLogitsBuf;
                     } finally {
                         decodeGraphSession.endCapture();
                     }
-                    if (decodeGraphSession.canReplay(numPages)) {
+                    if (decodeGraphSession.canReplay(batch, numPages)) {
                         DecodeCudaGraph.markPersistentLogits(true);
                         return decodeGraphLogitsBuf;
                     }
@@ -705,7 +714,7 @@ public class QwenModel extends LayerBlock {
             }
 
             Tensor raw = forwardRaggedDecodeCore(
-                    tokens, cachePositions, decodeGraphCosBuf, decodeGraphSinBuf);
+                    decodeGraphTokenBuf, cachePositions, decodeGraphCosBuf, decodeGraphSinBuf);
             ensureDecodeGraphLogitsBuf(raw);
             smile.torch.Native.copy_(decodeGraphLogitsBuf, raw);
             return raw;
@@ -728,6 +737,10 @@ public class QwenModel extends LayerBlock {
             decodeGraphSinBuf.close();
             decodeGraphSinBuf = null;
         }
+        if (decodeGraphTokenBuf != null) {
+            decodeGraphTokenBuf.close();
+            decodeGraphTokenBuf = null;
+        }
         if (decodeGraphLogitsBuf != null) {
             decodeGraphLogitsBuf.close();
             decodeGraphLogitsBuf = null;
@@ -735,22 +748,50 @@ public class QwenModel extends LayerBlock {
         decodeGraphLogitsOut = null;
     }
 
-    private void ensureDecodeGraphRoPEBuffers(Device device) {
-        if (decodeGraphCosBuf != null) {
+    private void ensureDecodeGraphTokenBuf(Device device, int batch, ScalarType dtype) {
+        if (decodeGraphTokenBuf != null
+                && decodeGraphTokenBuf.shape()[0] == batch
+                && decodeGraphTokenBuf.dtype() == dtype) {
             return;
+        }
+        if (decodeGraphTokenBuf != null) {
+            decodeGraphTokenBuf.close();
+            decodeGraphTokenBuf = null;
+        }
+        decodeGraphTokenBuf = Tensor.zeros(
+                new Tensor.Options().device(device).dtype(dtype), batch, 1);
+        decodeGraphTokenBuf.detachFromScopes();
+    }
+
+    private void ensureDecodeGraphRoPEBuffers(Device device, int batch) {
+        if (decodeGraphCosBuf != null && decodeGraphCosBuf.shape()[0] == batch) {
+            return;
+        }
+        if (decodeGraphCosBuf != null) {
+            decodeGraphCosBuf.close();
+            decodeGraphCosBuf = null;
+        }
+        if (decodeGraphSinBuf != null) {
+            decodeGraphSinBuf.close();
+            decodeGraphSinBuf = null;
         }
         int rotaryDim = params.rotaryDim();
         var opts = new Tensor.Options().device(device).dtype(ScalarType.Float);
-        decodeGraphCosBuf = Tensor.zeros(opts, 1, 1, rotaryDim);
-        decodeGraphSinBuf = Tensor.zeros(opts, 1, 1, rotaryDim);
+        decodeGraphCosBuf = Tensor.zeros(opts, batch, 1, rotaryDim);
+        decodeGraphSinBuf = Tensor.zeros(opts, batch, 1, rotaryDim);
         decodeGraphCosBuf.detachFromScopes();
         decodeGraphSinBuf.detachFromScopes();
     }
 
     /** Allocates a stable logits buffer before CUDA graph capture (warmup only). */
     private void ensureDecodeGraphLogitsBuf(Tensor prototype) {
-        if (decodeGraphLogitsBuf != null) {
+        if (decodeGraphLogitsBuf != null
+                && java.util.Arrays.equals(decodeGraphLogitsBuf.shape(), prototype.shape())) {
             return;
+        }
+        if (decodeGraphLogitsBuf != null) {
+            decodeGraphLogitsBuf.close();
+            decodeGraphLogitsBuf = null;
         }
         decodeGraphLogitsBuf = Tensor.zeros(
                 new Tensor.Options().device(prototype.device()).dtype(prototype.dtype()),
@@ -761,7 +802,7 @@ public class QwenModel extends LayerBlock {
     private void prepareDecodeGraphInputs(int[] cachePositions, int[] ropePositions, int cacheLen) {
         PartialRotaryEncoding.gatherInto(rope.cos(), ropePositions, decodeGraphCosBuf);
         PartialRotaryEncoding.gatherInto(rope.sin(), ropePositions, decodeGraphSinBuf);
-        kvCachePool.prepareDecodeGraphStep(cacheLen, cachePositions[0]);
+        kvCachePool.prepareDecodeGraphStep(cacheLen, cachePositions);
     }
 
     private Tensor forwardRaggedDecodeCore(Tensor tokens, int[] cachePositions,

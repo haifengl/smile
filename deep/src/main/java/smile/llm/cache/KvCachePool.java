@@ -582,22 +582,43 @@ public class KvCachePool implements AutoCloseable {
     /**
      * Updates FlashInfer metadata and the static KV index before graph replay.
      *
-     * @param cacheLen inclusive cache length for the active request.
+     * @param cacheLen inclusive cache length for the active request(s).
      * @param startPos KV write position for this decode step.
      */
     public void prepareDecodeGraphStep(int cacheLen, int startPos) {
-        sharedFlashInferMetadata(cacheLen);
-        ensureDecodeKvIndex(startPos);
+        prepareDecodeGraphStep(cacheLen, new int[]{startPos});
     }
 
-    private void ensureDecodeKvIndex(int startPos) {
-        if (decodeKvIndexBuf == null) {
-            var opts = new Tensor.Options().device(device).dtype(ScalarType.Int64);
-            decodeKvIndexBuf = Tensor.zeros(opts, 1);
-            decodeKvIndexBuf.detachFromScopes();
+    /**
+     * Updates FlashInfer metadata and per-row KV indices before graph replay.
+     *
+     * @param cacheLen       inclusive cache length (uniform across the batch).
+     * @param cachePositions KV write position per batch row.
+     */
+    public void prepareDecodeGraphStep(int cacheLen, int[] cachePositions) {
+        if (cachePositions == null || cachePositions.length == 0) {
+            throw new IllegalArgumentException("cachePositions must be non-empty");
         }
-        long slot = requestSlots[0][startPos];
-        decodeKvIndexBuf.put_(slot, 0);
+        sharedFlashInferMetadata(cacheLen);
+        ensureDecodeKvIndexBuf(cachePositions.length);
+        for (int b = 0; b < cachePositions.length; b++) {
+            long slot = requestSlots[b][cachePositions[b]];
+            decodeKvIndexBuf.put_(slot, b);
+        }
+        bumpUniformFlashInferMetadata(cacheLen, cachePositions.length);
+    }
+
+    private void ensureDecodeKvIndexBuf(int batch) {
+        if (decodeKvIndexBuf != null && decodeKvIndexBuf.shape()[0] == batch) {
+            return;
+        }
+        if (decodeKvIndexBuf != null) {
+            decodeKvIndexBuf.close();
+            decodeKvIndexBuf = null;
+        }
+        var opts = new Tensor.Options().device(device).dtype(ScalarType.Int64);
+        decodeKvIndexBuf = Tensor.zeros(opts, batch);
+        decodeKvIndexBuf.detachFromScopes();
     }
 
     /**
@@ -1055,11 +1076,11 @@ public class KvCachePool implements AutoCloseable {
 
         Tensor idx;
         boolean closeIdx = false;
-        if (decodeGraphBuffers && batch == 1 && seqlen == 1) {
+        if (decodeGraphBuffers && seqlen == 1) {
             // Index updated in prepareDecodeGraphStep() before capture/replay; must not
             // scalar-put from CPU during CUDA graph capture.
-            if (decodeKvIndexBuf == null) {
-                throw new IllegalStateException("decode KV index buffer not prepared");
+            if (decodeKvIndexBuf == null || decodeKvIndexBuf.shape()[0] != batch) {
+                throw new IllegalStateException("decode KV index buffer not prepared for batch " + batch);
             }
             idx = decodeKvIndexBuf;
         } else {
@@ -1218,8 +1239,8 @@ public class KvCachePool implements AutoCloseable {
         if (stepFlashInferMeta != null && stepFlashInferLengths == null
                 && stepFlashInferUniformLen >= 0
                 && length == stepFlashInferUniformLen + 1
-                && requestSlots != null && requestSlots.length == 1
-                && bumpUniformFlashInferMetadata(length)) {
+                && requestSlots != null
+                && bumpUniformFlashInferMetadata(length, requestSlots.length)) {
             return stepFlashInferMeta;
         }
         clearStepFlashInferMetadata();
@@ -1229,15 +1250,19 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
-     * Updates uniform B=1 CSR metadata in place when cache length grows by one
+     * Updates uniform CSR metadata in place when cache length grows by one
      * within the same KV page (avoids realloc + H2D each decode step).
      *
      * @param newLength new inclusive cache length.
+     * @param batch     active batch size.
      * @return {@code true} when metadata was bumped in place.
      */
-    private boolean bumpUniformFlashInferMetadata(int newLength) {
+    private boolean bumpUniformFlashInferMetadata(int newLength, int batch) {
         int oldLen = stepFlashInferUniformLen;
         if (newLength != oldLen + 1 || stepFlashInferMeta == null) {
+            return false;
+        }
+        if (requestSlots == null || requestSlots.length != batch) {
             return false;
         }
         int oldPages = (oldLen + pageSize - 1) / pageSize;
@@ -1247,7 +1272,10 @@ public class KvCachePool implements AutoCloseable {
         }
         int rem = newLength % pageSize;
         int newLast = rem == 0 ? pageSize : rem;
-        stepFlashInferMeta.pagedKvLastPageLen().put_(newLast, 0);
+        Tensor last = stepFlashInferMeta.pagedKvLastPageLen();
+        for (int b = 0; b < batch; b++) {
+            last.put_(newLast, b);
+        }
         stepFlashInferUniformLen = newLength;
         return true;
     }

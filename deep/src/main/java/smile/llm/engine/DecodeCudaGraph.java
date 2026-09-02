@@ -27,19 +27,17 @@ import smile.torch.Native;
  *
  * <p>Enable with environment variable {@code SMILE_DECODE_CUDA_GRAPH=1}.
  *
- * <p><b>Phase 2d (multi-batch) sketch:</b> extend sessions to bucket by
- * {@code (paddedBatch, maxNumPages)} — capture graphs for B ∈ {1,2,4,8,16,…}
- * up to {@code max-batch-size}, pad live decode rows to the next bucket, keep
- * static buffers sized to the padded B (tokens, RoPE, logits, FlashInfer CSR
- * with {@code enable_cuda_graph}), and recapture when any row's page count
- * exceeds the captured max. Until then B&gt;1 stays on eager ragged forward;
- * use {@code SMILE_DECODE_PROFILE=1} to attribute that path.
+ * <p><b>Phase 2d (multi-batch):</b> graphs are bucketed by
+ * {@code (batch, numPages)} for uniform decode steps: batch must be a power of
+ * two in {@code [1, maxBatch]}, and every row must share the same KV cache
+ * length. RoPE, token, logits, and KV index buffers are sized to the live batch.
  *
  * @author Haifeng Li
  */
 public final class DecodeCudaGraph {
     private static final boolean ENABLED = "1".equals(System.getenv("SMILE_DECODE_CUDA_GRAPH"));
     private static final boolean AVAILABLE = Native.cudaGraphAvailable();
+    private static final int MAX_BATCH = parseMaxBatch();
     /** Set after a capture failure so we stop retrying every few decode steps. */
     private static volatile boolean captureDisabled;
     /**
@@ -53,6 +51,51 @@ public final class DecodeCudaGraph {
     /** @return {@code true} when env is set, native API is linked, and capture is not disabled. */
     public static boolean enabled() {
         return ENABLED && AVAILABLE && !captureDisabled;
+    }
+
+    /** Maximum batch size eligible for decode CUDA graphs (power-of-two buckets). */
+    public static int maxBatch() {
+        return MAX_BATCH;
+    }
+
+    /**
+     * @return {@code true} when {@code batch} is a supported graph bucket size.
+     */
+    public static boolean supportsBatch(int batch) {
+        return batch > 0 && batch <= MAX_BATCH && (batch & (batch - 1)) == 0;
+    }
+
+    /**
+     * @return {@code true} when every row shares the same KV write position and
+     *         the batch size is graph-eligible.
+     */
+    public static boolean canGraphDecode(int[] cachePositions) {
+        if (!enabled() || cachePositions == null || cachePositions.length == 0) {
+            return false;
+        }
+        if (!supportsBatch(cachePositions.length)) {
+            return false;
+        }
+        int pos = cachePositions[0];
+        for (int i = 1; i < cachePositions.length; i++) {
+            if (cachePositions[i] != pos) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static int parseMaxBatch() {
+        String raw = System.getenv("SMILE_DECODE_CUDA_GRAPH_MAX_BATCH");
+        if (raw == null || raw.isEmpty()) {
+            return 16;
+        }
+        try {
+            int v = Integer.parseInt(raw.trim());
+            return v >= 1 ? v : 16;
+        } catch (NumberFormatException e) {
+            return 16;
+        }
     }
 
     /** Permanently disable decode CUDA graphs for this process (after capture failure). */
