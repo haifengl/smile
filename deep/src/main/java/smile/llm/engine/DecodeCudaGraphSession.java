@@ -96,14 +96,18 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
         return true;
     }
 
-    /** Ends capture and instantiates the graph. */
+    /** Ends capture and instantiates the graph. No-op when not capturing. */
     public void endCapture() {
         if (!capturing || handle == null || handle.address() == 0) {
+            capturing = false;
             return;
         }
-        Native.cudaGraphCaptureEnd(handle);
-        capturing = false;
-        ready = Native.cudaGraphIsReady(handle);
+        try {
+            Native.cudaGraphCaptureEnd(handle);
+            ready = Native.cudaGraphIsReady(handle);
+        } finally {
+            capturing = false;
+        }
     }
 
     /** Replays the captured graph (inputs must already be on device). */
