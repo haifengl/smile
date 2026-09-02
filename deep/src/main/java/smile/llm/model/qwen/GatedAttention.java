@@ -336,8 +336,11 @@ public class GatedAttention implements Attention {
             Tensor attnT = attn.transpose(1, 2);
             Tensor attnC = attnT.contiguous();
             attn = attnC.view(batchSize, seqlen, -1);
-            Tensor gateSig = sigmoid.forward(gate);
-            Tensor gated = attn.mul(gateSig);
+            Tensor gated = smile.torch.Native.mulSigmoid(attn, gate);
+            if (gated == null) {
+                Tensor gateSig = sigmoid.forward(gate);
+                gated = attn.mul(gateSig);
+            }
             Tensor out = oProj.forward(gated);
             if (profile) {
                 smile.llm.engine.DecodeForwardProfile.addFullAttn(System.nanoTime() - t0);
@@ -447,8 +450,11 @@ public class GatedAttention implements Attention {
             Tensor attnT = attn.transpose(1, 2);
             Tensor attnC = attnT.contiguous();
             attn = attnC.view(batchSize, seqlen, -1);
-            Tensor gateSig = sigmoid.forward(gate);
-            Tensor gated = attn.mul(gateSig);
+            Tensor gated = smile.torch.Native.mulSigmoid(attn, gate);
+            if (gated == null) {
+                Tensor gateSig = sigmoid.forward(gate);
+                gated = attn.mul(gateSig);
+            }
             Tensor out = oProj.forward(gated);
             if (profile) {
                 smile.llm.engine.DecodeForwardProfile.addFullAttn(System.nanoTime() - t0);

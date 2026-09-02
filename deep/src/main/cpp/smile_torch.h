@@ -1061,11 +1061,22 @@ SMILE_API ST_Tensor smile_gated_delta_compute_gates(
 SMILE_API ST_Tensor smile_repeat_kv_heads(ST_Tensor x, int rep);
 
 /**
+ * Qwen RMSNorm: {@code rms_norm(x) * (1 + weight)} in {@code x}'s dtype.
+ * Prefers fused {@code at::rms_norm} when available.
+ */
+SMILE_API ST_Tensor smile_rms_norm(ST_Tensor x, ST_Tensor weight, double eps);
+
+/**
  * Gated RMSNorm: {@code weight * rms_norm(x) * silu(gate)} in {@code x}'s dtype.
  * {@code x} and {@code gate} are {@code [..., D]}; {@code weight} is {@code [D]}.
  */
 SMILE_API ST_Tensor smile_rms_norm_gated(
         ST_Tensor x, ST_Tensor gate, ST_Tensor weight, double eps);
+
+/**
+ * {@code x * sigmoid(gate)} elementwise (same dtype as {@code x}).
+ */
+SMILE_API ST_Tensor smile_mul_sigmoid(ST_Tensor x, ST_Tensor gate);
 
 /**
  * Depthwise causal conv1d update (decode-oriented). Mutates {@code conv_state}

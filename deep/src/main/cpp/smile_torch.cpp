@@ -2393,6 +2393,22 @@ ST_Tensor smile_repeat_kv_heads(ST_Tensor x, int rep) {
     return nullptr;
 }
 
+ST_Tensor smile_rms_norm(ST_Tensor x, ST_Tensor weight, double eps) {
+    if (!x || !weight) {
+        set_error("smile_rms_norm: null tensor");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto xt = x->t;
+        const int64_t D = xt.size(-1);
+        // Qwen: scale = 1 + weight (weight init zeros).
+        auto scale = weight->t.to(xt.scalar_type()) + 1;
+        auto out = at::rms_norm(xt, /*normalized_shape=*/c10::IntArrayRef({D}), scale, eps);
+        return new ST_Tensor_{ out.contiguous() };
+    ST_TRY_END
+    return nullptr;
+}
+
 ST_Tensor smile_rms_norm_gated(
         ST_Tensor x, ST_Tensor gate, ST_Tensor weight, double eps) {
     if (!x || !gate || !weight) {
@@ -2400,13 +2416,24 @@ ST_Tensor smile_rms_norm_gated(
         return nullptr;
     }
     ST_TRY_BEGIN
-        auto xf = x->t.to(c10::ScalarType::Float);
-        auto gf = gate->t.to(c10::ScalarType::Float);
-        auto w = weight->t.to(c10::ScalarType::Float);
-        auto var = xf.pow(2).mean(-1, /*keepdim=*/true);
-        auto x_norm = xf * (var + eps).rsqrt();
-        auto out = (x_norm * w) * torch::silu(gf);
-        return new ST_Tensor_{ out.to(x->t.scalar_type()).contiguous() };
+        auto xt = x->t;
+        const int64_t D = xt.size(-1);
+        auto w = weight->t.to(xt.scalar_type());
+        auto normed = at::rms_norm(xt, c10::IntArrayRef({D}), w, eps);
+        auto out = normed * torch::silu(gate->t.to(xt.scalar_type()));
+        return new ST_Tensor_{ out.contiguous() };
+    ST_TRY_END
+    return nullptr;
+}
+
+ST_Tensor smile_mul_sigmoid(ST_Tensor x, ST_Tensor gate) {
+    if (!x || !gate) {
+        set_error("smile_mul_sigmoid: null tensor");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto out = x->t * torch::sigmoid(gate->t.to(x->t.scalar_type()));
+        return new ST_Tensor_{ out.contiguous() };
     ST_TRY_END
     return nullptr;
 }
