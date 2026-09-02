@@ -679,6 +679,7 @@ public class QwenModel extends LayerBlock {
                     logger.warn("tpRank={}: CUDA graph capture did not produce a replayable graph",
                             tpRank);
                     DecodeCudaGraph.disableCapture("capture incomplete");
+                    DecodeCudaGraph.markPersistentLogits(false);
                     decodeGraphSession.close();
                     decodeGraphSession = null;
                     decodeGraphLogitsOut = null;
@@ -686,9 +687,14 @@ public class QwenModel extends LayerBlock {
                     logger.warn("tpRank={}: CUDA graph capture failed, falling back to eager: {}",
                             tpRank, e.getMessage());
                     DecodeCudaGraph.disableCapture(e.getMessage());
-                    decodeGraphSession.close();
-                    decodeGraphSession = null;
+                    DecodeCudaGraph.markPersistentLogits(false);
+                    if (decodeGraphSession != null) {
+                        decodeGraphSession.close();
+                        decodeGraphSession = null;
+                    }
                     decodeGraphLogitsOut = null;
+                    kvCachePool.setDecodeGraphBuffers(false);
+                    return forward(tokens, cachePositions, ropePositions, false);
                 }
             }
 

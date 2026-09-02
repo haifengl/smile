@@ -30,6 +30,15 @@ struct ST_CudaGraph_ {
 #endif
 };
 
+#ifdef USE_CUDA
+static void reset_capture_state(ST_CudaGraph_ *graph) {
+    graph->stream_guard.reset();
+    graph->graph.reset();
+    graph->capture_stream.reset();
+    graph->instantiated = false;
+}
+#endif
+
 extern "C" {
 
 ST_CudaGraph smile_cuda_graph_create(void) {
@@ -57,21 +66,22 @@ int smile_cuda_graph_capture_begin(ST_CudaGraph graph, int device_index) {
         return -1;
     }
     try {
+        reset_capture_state(graph);
         graph->device_index = device_index;
         c10::cuda::CUDAGuard guard(device_index);
-        // Capture on the caller's current stream (not a pool stream). Prep
-        // (token / RoPE / KV index) and replay must share this stream so buffer
-        // updates are visible to the graph without cross-stream races.
-        graph->capture_stream = at::cuda::getCurrentCUDAStream(device_index);
+        // PyTorch requires a non-default stream for capture. Drain the caller's
+        // current stream first so prior eager work is complete.
+        at::cuda::getCurrentCUDAStream(device_index).synchronize();
+        graph->capture_stream = at::cuda::getStreamFromPool(/*isHighPriority=*/false);
         graph->stream_guard.emplace(*graph->capture_stream);
         graph->graph = std::make_unique<at::cuda::CUDAGraph>();
-        // Relaxed: NCCL all-reduce (TP) launches work on auxiliary streams;
-        // ThreadLocal capture invalidates under tensor-parallel decode.
+        // Relaxed: NCCL all-reduce (TP) uses auxiliary streams.
         graph->graph->capture_begin(
                 at::cuda::graph_pool_handle(), cudaStreamCaptureModeRelaxed);
         graph->instantiated = false;
         return 0;
     } catch (const std::exception &ex) {
+        reset_capture_state(graph);
         smile_torch_set_error(ex.what());
         return -1;
     }
@@ -94,13 +104,13 @@ int smile_cuda_graph_capture_end(ST_CudaGraph graph) {
         // keep_graph=false (default): capture_end() instantiates; do not call instantiate().
         graph->graph->capture_end();
         graph->instantiated = true;
-        // Capture-step logits must be ready before Java reads them.
         if (graph->capture_stream.has_value()) {
             graph->capture_stream->synchronize();
         }
         graph->stream_guard.reset();
         return 0;
     } catch (const std::exception &ex) {
+        reset_capture_state(graph);
         smile_torch_set_error(ex.what());
         return -1;
     }
@@ -120,13 +130,12 @@ int smile_cuda_graph_replay(ST_CudaGraph graph) {
     }
     try {
         c10::cuda::CUDAGuard guard(graph->device_index);
-        // Drain any prep that may have run on another stream (e.g. default)
-        // before we switched to the capture stream for replay.
+        // Prep (token / RoPE / KV index / FlashInfer last_page_len) runs on the
+        // caller's current stream; wait for it before replaying on the capture stream.
         at::cuda::getCurrentCUDAStream(graph->device_index).synchronize();
         at::cuda::CUDAStreamGuard stream_guard(*graph->capture_stream);
         graph->graph->replay();
-        // Host timings and logits reads must wait for the graph to finish;
-        // otherwise Java sees stale logits and ~1 ms fake decode latency.
+        // Host timings and logits reads must wait for GPU completion.
         graph->capture_stream->synchronize();
         return 0;
     } catch (const std::exception &ex) {
