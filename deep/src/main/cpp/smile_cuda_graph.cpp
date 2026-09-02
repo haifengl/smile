@@ -86,8 +86,8 @@ int smile_cuda_graph_capture_end(ST_CudaGraph graph) {
     }
     try {
         c10::cuda::CUDAGuard guard(graph->device_index);
+        // keep_graph=false (default): capture_end() instantiates; do not call instantiate().
         graph->graph->capture_end();
-        graph->graph->instantiate();
         graph->instantiated = true;
         graph->stream_guard.reset();
         return 0;

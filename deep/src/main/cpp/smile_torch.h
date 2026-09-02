@@ -1060,7 +1060,7 @@ SMILE_API void smile_cuda_graph_destroy(ST_CudaGraph graph);
  */
 SMILE_API int smile_cuda_graph_capture_begin(ST_CudaGraph graph, int device_index);
 
-/** Ends capture and instantiates the graph. */
+/** Ends capture (graph is instantiated automatically when keep_graph=false). */
 SMILE_API int smile_cuda_graph_capture_end(ST_CudaGraph graph);
 
 /** Replays a captured graph (inputs must be updated in place first). */
