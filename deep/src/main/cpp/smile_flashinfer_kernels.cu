@@ -43,6 +43,22 @@ namespace {
 
 std::atomic<bool> g_flashinfer_sdpa_decode_warned{false};
 
+using flashinfer::BatchDecodeParams;
+using flashinfer::BatchDecodeWithPagedKVCacheDispatched;
+using flashinfer::BatchDecodeWithPagedKVCacheWorkEstimationDispatched;
+using flashinfer::BatchPrefillRaggedParams;
+using flashinfer::BatchPrefillWithRaggedKVCacheDispatched;
+using flashinfer::DecodePlan;
+using flashinfer::DecodePlanInfo;
+using flashinfer::DefaultAttention;
+using flashinfer::GetPtrFromBaseOffset;
+using flashinfer::MaskMode;
+using flashinfer::PosEncodingMode;
+using flashinfer::PrefillPlan;
+using flashinfer::PrefillPlanInfo;
+using flashinfer::QKVLayout;
+using flashinfer::paged_kv_t;
+
 /** Per-workspace decode plan + prefill gather cache (one plan/slot table per step). */
 struct WorkspaceRuntimeCache {
     DecodePlanInfo decode_plan;
@@ -151,22 +167,6 @@ void warn_flashinfer_sdpa_decode_once(const char *reason) {
         fflush(stderr);
     }
 }
-
-using flashinfer::BatchDecodeParams;
-using flashinfer::BatchDecodeWithPagedKVCacheDispatched;
-using flashinfer::BatchDecodeWithPagedKVCacheWorkEstimationDispatched;
-using flashinfer::BatchPrefillRaggedParams;
-using flashinfer::BatchPrefillWithRaggedKVCacheDispatched;
-using flashinfer::DecodePlan;
-using flashinfer::DecodePlanInfo;
-using flashinfer::DefaultAttention;
-using flashinfer::GetPtrFromBaseOffset;
-using flashinfer::MaskMode;
-using flashinfer::PosEncodingMode;
-using flashinfer::PrefillPlan;
-using flashinfer::PrefillPlanInfo;
-using flashinfer::QKVLayout;
-using flashinfer::paged_kv_t;
 
 /** View slot-major [numSlots,H,D] as page-major [maxPages,pageSize,H,D]. */
 at::Tensor as_page_major(const at::Tensor &cache, int page_size) {
