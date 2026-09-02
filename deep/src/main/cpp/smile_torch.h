@@ -1047,6 +1047,27 @@ SMILE_API ST_Tensor smile_gated_delta_compute_g(
         ST_Tensor a, ST_Tensor a_log, ST_Tensor dt_bias);
 
 /**
+ * Fused {@code beta = sigmoid(b)} and {@code g = -exp(A_log)*softplus(a+dt_bias)}.
+ * Returns {@code g} (float); writes newly allocated {@code beta} (float) to
+ * {@code out_beta} (caller owns both).
+ */
+SMILE_API ST_Tensor smile_gated_delta_compute_gates(
+        ST_Tensor a, ST_Tensor b, ST_Tensor a_log, ST_Tensor dt_bias,
+        ST_Tensor *out_beta);
+
+/**
+ * Repeat heads along dim 2: {@code [B,S,H,D] → [B,S,H*rep,D]} (one kernel).
+ */
+SMILE_API ST_Tensor smile_repeat_kv_heads(ST_Tensor x, int rep);
+
+/**
+ * Gated RMSNorm: {@code weight * rms_norm(x) * silu(gate)} in {@code x}'s dtype.
+ * {@code x} and {@code gate} are {@code [..., D]}; {@code weight} is {@code [D]}.
+ */
+SMILE_API ST_Tensor smile_rms_norm_gated(
+        ST_Tensor x, ST_Tensor gate, ST_Tensor weight, double eps);
+
+/**
  * Depthwise causal conv1d update (decode-oriented). Mutates {@code conv_state}
  * in place. {@code hidden} {@code [B,C,L]}, {@code conv_state} {@code [B,C,K-1]},
  * {@code weight} {@code [C,K]} (or {@code [1,C,K]}). Returns SiLU output

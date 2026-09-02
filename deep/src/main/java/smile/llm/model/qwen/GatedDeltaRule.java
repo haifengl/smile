@@ -94,6 +94,39 @@ final class GatedDeltaRule {
         }
     }
 
+    /**
+     * Fused {@code beta = sigmoid(b)} and decay gate {@code g}. Returns
+     * {@code [g, beta]}, both float when the native path is used.
+     */
+    static Tensor[] computeBetaAndDecayGate(Tensor a, Tensor b, Tensor aLogF, Tensor dtBiasF) {
+        Tensor[] fused = smile.torch.Native.gatedDeltaComputeGates(a, b, aLogF, dtBiasF);
+        if (fused != null) {
+            return fused;
+        }
+        Tensor beta = SIGMOID.forward(b);
+        Tensor g = computeDecayGate(a, aLogF, dtBiasF);
+        return new Tensor[]{g, beta};
+    }
+
+    /** Repeat K/V heads along the head axis ({@code [B,S,H,D] → [B,S,H*rep,D]}). */
+    static Tensor repeatHeads(Tensor x, int rep) {
+        if (rep <= 1) {
+            return x;
+        }
+        Tensor nativeRep = smile.torch.Native.repeatKvHeads(x, rep);
+        if (nativeRep != null) {
+            return nativeRep;
+        }
+        // x: [B, S, Hk, D] → [B, S, Hk*rep, D]
+        long[] s = x.shape();
+        try (Tensor u = x.unsqueeze(3);
+             Tensor e = u.expand(s[0], s[1], s[2], rep, s[3]);
+             Tensor viewed = e.reshape(s[0], s[1], s[2] * rep, s[3])) {
+            // Contiguous materializes the expand once (same cost as copy).
+            return viewed.contiguous();
+        }
+    }
+
     /** L2-normalize along the last dimension. */
     static Tensor l2norm(Tensor x) {
         try (Tensor x2 = x.mul(x);

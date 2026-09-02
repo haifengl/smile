@@ -18,7 +18,6 @@ package smile.llm.model.qwen;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
-import smile.deep.activation.Sigmoid;
 import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
@@ -69,7 +68,6 @@ public class GatedDeltaNet {
     private Tensor aLogF;
     private Tensor dtBiasF;
     final QwenRMSNormGated norm;
-    final Sigmoid sigmoid = new Sigmoid(false);
     final TensorParallelGroup tpGroup;
     final int tpRank;
 
@@ -270,10 +268,6 @@ public class GatedDeltaNet {
             mixed.close();
             mixedRaw.close();
             Tensor mixedConv = mixedConvBase.transpose(1, 2); // [B, S, C]
-            if (profile) {
-                smile.llm.engine.DecodeForwardProfile.addDeltaConv(System.nanoTime() - tMark);
-                tMark = System.nanoTime();
-            }
 
             try (var qSpan = Index.slice(0, keyDim);
                  var kSpan = Index.slice(keyDim, 2 * keyDim);
@@ -287,19 +281,29 @@ public class GatedDeltaNet {
 
                 int rep = numVHeads / numKHeads;
                 if (rep > 1) {
-                    Tensor qRep = repeatHeads(query, rep);
-                    Tensor kRep = repeatHeads(key, rep);
-                    query.close();
-                    key.close();
+                    Tensor qRep = GatedDeltaRule.repeatHeads(query, rep);
+                    Tensor kRep = GatedDeltaRule.repeatHeads(key, rep);
+                    if (qRep != query) {
+                        query.close();
+                    }
+                    if (kRep != key) {
+                        key.close();
+                    }
                     query = qRep;
                     key = kRep;
                 }
+                if (profile) {
+                    // Conv + QKV split + head-repeat share this bucket (all pre-gate).
+                    smile.llm.engine.DecodeForwardProfile.addDeltaConv(System.nanoTime() - tMark);
+                    tMark = System.nanoTime();
+                }
 
-                Tensor beta = sigmoid.forward(b);
-                b.close();
                 ensureFloatCaches();
-                Tensor g = GatedDeltaRule.computeDecayGate(a, aLogF, dtBiasF);
+                Tensor[] gates = GatedDeltaRule.computeBetaAndDecayGate(a, b, aLogF, dtBiasF);
+                Tensor g = gates[0];
+                Tensor beta = gates[1];
                 a.close();
+                b.close();
                 if (profile) {
                     smile.llm.engine.DecodeForwardProfile.addDeltaGate(System.nanoTime() - tMark);
                     tMark = System.nanoTime();
@@ -350,18 +354,6 @@ public class GatedDeltaNet {
             }
         } finally {
             Tensor.pop();
-        }
-    }
-
-    /** Repeats K heads along the head axis to match V head count. */
-    private static Tensor repeatHeads(Tensor x, int rep) {
-        // x: [B, S, Hk, D] → [B, S, Hk*rep, D]
-        long[] s = x.shape();
-        try (Tensor u = x.unsqueeze(3);
-             Tensor e = u.expand(s[0], s[1], s[2], rep, s[3]);
-             Tensor viewed = e.reshape(s[0], s[1], s[2] * rep, s[3])) {
-            // Must copy: expand/reshape are views closed by try-with.
-            return viewed.copy();
         }
     }
 }

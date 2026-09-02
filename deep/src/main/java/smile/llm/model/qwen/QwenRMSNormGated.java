@@ -64,6 +64,10 @@ public class QwenRMSNormGated implements Layer {
      * @return gated normalized tensor.
      */
     public Tensor forward(Tensor input, Tensor gate) {
+        Tensor fused = Native.rmsNormGated(input, gate, weight, eps);
+        if (fused != null) {
+            return fused;
+        }
         try (Tensor x = input.to(ScalarType.Float);
              Tensor x2 = x.pow(2);
              Tensor mean = x2.mean(-1, true);
