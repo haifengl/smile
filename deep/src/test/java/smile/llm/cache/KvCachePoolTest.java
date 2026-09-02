@@ -477,6 +477,24 @@ public class KvCachePoolTest {
     }
 
     @Test
+    public void testGivenBatchOneDecodeWhenLengthIncrementsWithinPageThenReusesMetadata() {
+        try (var pool = new KvCachePool(1, 128, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            pool.setPrefixReuseEnabled(false);
+            int id = pool.bindRequest(new int[]{1, 2, 3, 4}, 64);
+            pool.activateStep(id);
+            var len10 = pool.sharedFlashInferMetadata(10);
+            var len10Again = pool.sharedFlashInferMetadata(10);
+            assertSame(len10, len10Again);
+
+            pool.activateStep(id);
+            var len11 = pool.sharedFlashInferMetadata(11);
+            assertSame(len10, len11, "within-page bump reuses CSR tensors");
+
+            pool.unbindRequest(id);
+        }
+    }
+
+    @Test
     public void testGivenActivateStepWhenSharedFlashInferMetadataThenReusesSameInstance() {
         try (var pool = new KvCachePool(1, 128, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
             pool.setPrefixReuseEnabled(false);
@@ -491,7 +509,11 @@ public class KvCachePoolTest {
 
             pool.activateStep(id1, id2);
             var afterReactivate = pool.sharedFlashInferMetadata(cacheLens);
-            assertNotSame(first, afterReactivate);
+            assertSame(first, afterReactivate, "same cohort activateStep preserves CSR metadata");
+
+            pool.activateStep(id1);
+            var singleBatch = pool.sharedFlashInferMetadata(10);
+            assertNotSame(first, singleBatch, "cohort change rebuilds metadata");
 
             pool.unbindRequest(id1);
             pool.unbindRequest(id2);

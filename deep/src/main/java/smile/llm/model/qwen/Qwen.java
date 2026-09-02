@@ -52,6 +52,7 @@ import smile.llm.cache.KvCachePool;
 import smile.llm.checkpoint.SafeTensorsLoaderThreads;
 import smile.llm.attention.AttentionBackend;
 import smile.llm.attention.AttentionBackends;
+import smile.llm.engine.DecodeStepTiming;
 import smile.llm.model.llama.Llama;
 import smile.llm.parallel.ParallelConfig;
 import smile.llm.parallel.ParallelState;
@@ -96,6 +97,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     private volatile boolean prefixReplayEnabled;
     /** Per-request mRoPE decode offset ({@code rope_delta}); cleared on finish/evict. */
     private final ConcurrentHashMap<Integer, Integer> ropeDeltaByRequest = new ConcurrentHashMap<>();
+    /** Reused {@code [1,1]} token buffers per TP rank for batch-1 decode (outside scopes). */
+    private Tensor[] decodeTokenBuf;
 
     /**
      * Constructor.
@@ -176,6 +179,14 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     @Override
     public void close() {
+        if (decodeTokenBuf != null) {
+            for (Tensor t : decodeTokenBuf) {
+                if (t != null) {
+                    t.close();
+                }
+            }
+            decodeTokenBuf = null;
+        }
         if (tpExecutor != null) {
             tpExecutor.shutdownNow();
         }
@@ -1865,18 +1876,25 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     private Tensor[] forwardAllDecode(Tensor[] tokens, int[] cachePositions, int[] ropePositions,
                                       ExecutorService pool) {
         Tensor[] logits = new Tensor[models.length];
+        long t0 = System.nanoTime();
         if (models.length == 1) {
+            long rank0 = System.nanoTime();
             logits[0] = models[0].forward(tokens[0], cachePositions, ropePositions, false);
+            long rankNs = System.nanoTime() - rank0;
+            recordForwardTiming(System.nanoTime() - t0, rankNs);
             return logits;
         }
+        long[] rankNs = new long[models.length];
         List<Future<Tensor>> futures = new ArrayList<>(models.length);
         for (int r = 0; r < models.length; r++) {
             final int rank = r;
             futures.add(pool.submit(() -> {
+                long rankStart = System.nanoTime();
                 ParallelState.setCurrent(tpGroup.state(rank));
                 try (var guard = Tensor.noGradGuard()) {
                     return models[rank].forward(tokens[rank], cachePositions, ropePositions, false);
                 } finally {
+                    rankNs[rank] = System.nanoTime() - rankStart;
                     ParallelState.clearCurrent();
                 }
             }));
@@ -1893,7 +1911,42 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
             throw new RuntimeException("TP ragged decode forward failed", e);
         }
+        long slowest = 0L;
+        for (long ns : rankNs) {
+            slowest = Math.max(slowest, ns);
+        }
+        recordForwardTiming(System.nanoTime() - t0, slowest);
         return logits;
+    }
+
+    private static void recordForwardTiming(long wallNs, long slowestRankNs) {
+        DecodeStepTiming timing = DecodeStepTiming.current();
+        if (timing != null) {
+            timing.forwardNs = wallNs;
+            timing.slowestRankNs = slowestRankNs;
+            timing.tpBarrierNs = Math.max(0L, wallNs - slowestRankNs);
+        }
+    }
+
+    /**
+     * Fills or allocates per-rank {@code [1,1]} int64 token tensors for batch-1 decode.
+     */
+    private Tensor[] decodeTokenShards(long token) {
+        if (decodeTokenBuf == null) {
+            decodeTokenBuf = new Tensor[models.length];
+        }
+        Tensor[] shards = new Tensor[models.length];
+        for (int r = 0; r < models.length; r++) {
+            Device device = models[r].device();
+            if (decodeTokenBuf[r] == null) {
+                var opts = new Tensor.Options().device(device).dtype(ScalarType.Long);
+                decodeTokenBuf[r] = Tensor.zeros(opts, 1, 1);
+                decodeTokenBuf[r].detachFromScopes();
+            }
+            decodeTokenBuf[r].put_(token, 0, 0);
+            shards[r] = decodeTokenBuf[r];
+        }
+        return shards;
     }
 
     /** Last-row logits {@code [B, V]}; copies so the result outlives closed views. */
@@ -1931,40 +1984,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         // FlashInfer: one forward over mixed positions (ragged CSR + per-row RoPE).
         if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
-            long[] toks = new long[b];
-            for (int i = 0; i < b; i++) {
-                toks[i] = lastTokens[i];
-            }
-            for (QwenModel m : models) {
-                if (m.kvCachePool() != null) {
-                    m.kvCachePool().activateStep(requestIds);
-                }
-                if (m.deltaNetStatePool() != null) {
-                    m.deltaNetStatePool().activateStep(requestIds);
-                }
-            }
-            Tensor[] tokenShards = new Tensor[models.length];
-            try (var guard = Tensor.noGradGuard();
-                 var scope = new AutoScope()) {
-                Tensor.push(scope);
-                try {
-                    for (int r = 0; r < models.length; r++) {
-                        tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
-                    }
-                    Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
-                    for (Tensor t : tokenShards) {
-                        t.close();
-                    }
-                    for (QwenModel m : models) {
-                        if (m.deltaNetStatePool() != null) {
-                            m.deltaNetStatePool().scatterActive();
-                        }
-                    }
-                    return logitsRowFromDecodeOutput(logits, b);
-                } finally {
-                    Tensor.pop();
-                }
-            }
+            return runDecodeStep(requestIds, lastTokens, positions, ropePos);
         }
 
         // torch_native: cohort by cache position (existing path below uses forwardAllDecode with equal planes)
@@ -1972,15 +1992,10 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         return decodeStepTorchNative(requestIds, lastTokens, positions, ropePos);
     }
 
-    private Tensor decodeStepTorchNative(int[] requestIds, int[] lastTokens, int[] positions,
-                                         int[] ropePos) {
-        // Delegate to original cohorting by grouping equal cache positions.
-        // Simplified: one forward if all positions equal; else sequential per-row.
+    private Tensor runDecodeStep(int[] requestIds, int[] lastTokens, int[] positions,
+                                   int[] ropePos) {
         int b = requestIds.length;
-        long[] toks = new long[b];
-        for (int i = 0; i < b; i++) {
-            toks[i] = lastTokens[i];
-        }
+        long tPrep = System.nanoTime();
         for (QwenModel m : models) {
             if (m.kvCachePool() != null) {
                 m.kvCachePool().activateStep(requestIds);
@@ -1989,28 +2004,53 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 m.deltaNetStatePool().activateStep(requestIds);
             }
         }
-        Tensor[] tokenShards = new Tensor[models.length];
+        DecodeStepTiming timing = DecodeStepTiming.current();
+        if (timing != null) {
+            timing.prepNs = System.nanoTime() - tPrep;
+        }
         try (var guard = Tensor.noGradGuard();
              var scope = new AutoScope()) {
             Tensor.push(scope);
             try {
-                for (int r = 0; r < models.length; r++) {
-                    tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
+                Tensor[] tokenShards;
+                if (b == 1) {
+                    tokenShards = decodeTokenShards(lastTokens[0]);
+                } else {
+                    long[] toks = new long[b];
+                    for (int i = 0; i < b; i++) {
+                        toks[i] = lastTokens[i];
+                    }
+                    tokenShards = new Tensor[models.length];
+                    for (int r = 0; r < models.length; r++) {
+                        tokenShards[r] = Tensor.of(toks).reshape(b, 1).to(models[r].device());
+                    }
                 }
                 Tensor[] logits = forwardAllDecode(tokenShards, positions, ropePos, tpExecutor);
-                for (Tensor t : tokenShards) {
-                    t.close();
+                if (b != 1) {
+                    for (Tensor t : tokenShards) {
+                        t.close();
+                    }
                 }
                 for (QwenModel m : models) {
                     if (m.deltaNetStatePool() != null) {
                         m.deltaNetStatePool().scatterActive();
                     }
                 }
-                return logitsRowFromDecodeOutput(logits, b);
+                long tLogits = System.nanoTime();
+                Tensor out = logitsRowFromDecodeOutput(logits, b);
+                if (timing != null) {
+                    timing.logitsNs = System.nanoTime() - tLogits;
+                }
+                return out;
             } finally {
                 Tensor.pop();
             }
         }
+    }
+
+    private Tensor decodeStepTorchNative(int[] requestIds, int[] lastTokens, int[] positions,
+                                         int[] ropePos) {
+        return runDecodeStep(requestIds, lastTokens, positions, ropePos);
     }
 
     @Override

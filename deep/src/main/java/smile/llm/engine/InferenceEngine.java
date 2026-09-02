@@ -582,17 +582,10 @@ public final class InferenceEngine implements AutoCloseable {
         }
         logger.debug("Decode step: batch={} positions=[{}..{}] inFlight={} prefilling={} queued={} kvFree={}",
                 b, minPos, maxPos, active.size(), prefills, queuedCount.get(), kvFreeSlots());
-        long t0 = System.nanoTime();
+        DecodeStepTiming.begin();
+        long tStep = System.nanoTime();
         try (Tensor logits = executor.decodeStep(ids, toks, positions)) {
-            long decodeMs = (System.nanoTime() - t0) / 1_000_000L;
-            decodeMsTotal.addAndGet(decodeMs);
-            decodeBatchSamples.incrementAndGet();
-            if (decodeMs > 0) {
-                infoRateLimited("decode-latency",
-                        "Decode step: batch={} ms={} msPerTok={} tokPerSec={}",
-                        b, decodeMs, String.format("%.2f", decodeMs / (double) b),
-                        String.format("%.1f", b * 1000.0 / decodeMs));
-            }
+            long tSample = System.nanoTime();
             for (int i = 0; i < b; i++) {
                 Active a = decoding.get(i);
                 if (a.phase != Phase.DECODING) {
@@ -619,12 +612,38 @@ public final class InferenceEngine implements AutoCloseable {
                     failActive(a, t);
                 }
             }
+            long sampleEnd = System.nanoTime();
+            DecodeStepTiming timing = DecodeStepTiming.current();
+            if (timing != null) {
+                timing.sampleNs = sampleEnd - tSample;
+            }
+            long decodeMs = (sampleEnd - tStep) / 1_000_000L;
+            decodeMsTotal.addAndGet(decodeMs);
+            decodeBatchSamples.incrementAndGet();
+            if (decodeMs > 0) {
+                if (timing != null) {
+                    infoRateLimited("decode-latency",
+                            "Decode step: batch={} ms={} msPerTok={} tokPerSec={} "
+                                    + "(prep={} forward={} tpBarrier={} slowestRank={} logits={} sample={})",
+                            b, decodeMs, String.format("%.2f", decodeMs / (double) b),
+                            String.format("%.1f", b * 1000.0 / decodeMs),
+                            timing.prepMs(), timing.forwardMs(), timing.tpBarrierMs(),
+                            timing.slowestRankMs(), timing.logitsMs(), timing.sampleMs());
+                } else {
+                    infoRateLimited("decode-latency",
+                            "Decode step: batch={} ms={} msPerTok={} tokPerSec={}",
+                            b, decodeMs, String.format("%.2f", decodeMs / (double) b),
+                            String.format("%.1f", b * 1000.0 / decodeMs));
+                }
+            }
         } catch (Throwable t) {
             for (Active a : decoding) {
                 if (a.phase != Phase.DONE) {
                     failActive(a, t);
                 }
             }
+        } finally {
+            DecodeStepTiming.clear();
         }
         active.removeIf(a -> a.phase == Phase.DONE);
         maybeEmptyDeviceCache();

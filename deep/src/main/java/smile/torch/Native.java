@@ -172,6 +172,10 @@ public final class Native {
                 .find("smile_flashinfer_workspace_invalidate_runtime_cache")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final MethodHandle FLASHINFER_WS_INVALIDATE_PREFILL = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_workspace_invalidate_prefill_runtime_cache")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)))
+                .orElse(null);
         static final MethodHandle FLASHINFER_SET_AOT = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_flashinfer_set_aot_dir")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)))
@@ -880,6 +884,19 @@ public final class Native {
         }
         try {
             Bindings.FLASHINFER_WS_INVALIDATE.invokeExact(handle);
+        } catch (Throwable ignored) {
+            // best-effort
+        }
+    }
+
+    /** Clears only prefill gather caches on the workspace. */
+    public static void flashInferWorkspaceInvalidatePrefillRuntimeCache(MemorySegment handle) {
+        if (handle == null || handle.address() == 0
+                || Bindings.FLASHINFER_WS_INVALIDATE_PREFILL == null) {
+            return;
+        }
+        try {
+            Bindings.FLASHINFER_WS_INVALIDATE_PREFILL.invokeExact(handle);
         } catch (Throwable ignored) {
             // best-effort
         }
