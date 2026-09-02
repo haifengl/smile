@@ -678,9 +678,14 @@ public class QwenModel extends LayerBlock {
                     }
                     logger.warn("tpRank={}: CUDA graph capture did not produce a replayable graph",
                             tpRank);
+                    DecodeCudaGraph.disableCapture("capture incomplete");
+                    decodeGraphSession.close();
+                    decodeGraphSession = null;
+                    decodeGraphLogitsOut = null;
                 } catch (RuntimeException e) {
                     logger.warn("tpRank={}: CUDA graph capture failed, falling back to eager: {}",
                             tpRank, e.getMessage());
+                    DecodeCudaGraph.disableCapture(e.getMessage());
                     decodeGraphSession.close();
                     decodeGraphSession = null;
                     decodeGraphLogitsOut = null;

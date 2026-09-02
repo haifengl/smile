@@ -31,12 +31,22 @@ import smile.torch.Native;
 public final class DecodeCudaGraph {
     private static final boolean ENABLED = "1".equals(System.getenv("SMILE_DECODE_CUDA_GRAPH"));
     private static final boolean AVAILABLE = Native.cudaGraphAvailable();
+    /** Set after a capture failure so we stop retrying every few decode steps. */
+    private static volatile boolean captureDisabled;
 
     private DecodeCudaGraph() {}
 
-    /** @return {@code true} when env is set and native CUDA graph API is linked. */
+    /** @return {@code true} when env is set, native API is linked, and capture is not disabled. */
     public static boolean enabled() {
-        return ENABLED && AVAILABLE;
+        return ENABLED && AVAILABLE && !captureDisabled;
+    }
+
+    /** Permanently disable decode CUDA graphs for this process (after capture failure). */
+    public static void disableCapture(String reason) {
+        if (!captureDisabled) {
+            captureDisabled = true;
+            // Logged by caller; keep process-wide so all TP ranks stop retrying.
+        }
     }
 
     /** Number of eager warmup decode steps before graph capture per KV-page bucket. */
