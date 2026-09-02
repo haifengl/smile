@@ -34,7 +34,8 @@ __global__ void gated_delta_recurrent_kernel(
         float *__restrict__ state,
         float *__restrict__ out,
         int64_t B, int64_t H, int64_t S, int64_t K, int64_t V,
-        float scale) {
+        float scale,
+        int qk_l2norm) {
     const int64_t bh = blockIdx.x;
     if (bh >= B * H) return;
     const int64_t b = bh / H;
@@ -49,6 +50,7 @@ __global__ void gated_delta_recurrent_kernel(
     float *s_kv = s_v + V;                 // [V]
     float *s_y = s_kv + V;                 // [V]
     float *s_delta = s_y + V;              // [V]
+    float *s_blk = s_delta + V;            // [2 * nthreads] block-reduce scratch
 
     const int tid = threadIdx.x;
     const int nthreads = blockDim.x;
@@ -64,12 +66,12 @@ __global__ void gated_delta_recurrent_kernel(
         const int64_t qk_off = ((b * H + h) * S + t) * K;
         const int64_t v_off = ((b * H + h) * S + t) * V;
         const int64_t gb_off = (b * H + h) * S + t;
-        const float g_t = g[gb_off];
+        const float g_t = expf(g[gb_off]);
         const float beta_t = beta[gb_off];
 
         for (int64_t i = tid; i < K; i += nthreads) {
             s_k[i] = k[qk_off + i];
-            s_q[i] = q[qk_off + i] * scale;
+            s_q[i] = q[qk_off + i];
         }
         for (int64_t i = tid; i < V; i += nthreads) {
             s_v[i] = v[v_off + i];
@@ -78,7 +80,38 @@ __global__ void gated_delta_recurrent_kernel(
         }
         __syncthreads();
 
-        // Decay: state *= g
+        if (qk_l2norm) {
+            float q_acc = 0.f;
+            float k_acc = 0.f;
+            for (int64_t i = tid; i < K; i += nthreads) {
+                q_acc += s_q[i] * s_q[i];
+                k_acc += s_k[i] * s_k[i];
+            }
+            s_blk[tid] = q_acc;
+            s_blk[nthreads + tid] = k_acc;
+            __syncthreads();
+            for (int offset = nthreads / 2; offset > 0; offset >>= 1) {
+                if (tid < offset) {
+                    s_blk[tid] += s_blk[tid + offset];
+                    s_blk[nthreads + tid] += s_blk[nthreads + tid + offset];
+                }
+                __syncthreads();
+            }
+            const float q_inv = rsqrtf(s_blk[0] + 1e-6f);
+            const float k_inv = rsqrtf(s_blk[nthreads] + 1e-6f);
+            for (int64_t i = tid; i < K; i += nthreads) {
+                s_q[i] *= q_inv;
+                s_k[i] *= k_inv;
+            }
+            __syncthreads();
+        }
+
+        for (int64_t i = tid; i < K; i += nthreads) {
+            s_q[i] *= scale;
+        }
+        __syncthreads();
+
+        // Decay: state *= exp(g)
         for (int64_t i = tid; i < K * V; i += nthreads) {
             s_state[i] *= g_t;
         }
@@ -139,6 +172,7 @@ int smile_gated_delta_recurrent_cuda(
         float *state, float *out,
         int64_t B, int64_t H, int64_t S, int64_t K, int64_t V,
         float scale,
+        int qk_l2norm,
         void *cuda_stream) {
     g_gated_delta_error.clear();
     if (K > kMaxKV || V > kMaxKV) {
@@ -152,7 +186,8 @@ int smile_gated_delta_recurrent_cuda(
 
     const int64_t blocks = B * H;
     const int threads = 128;
-    const size_t smem = static_cast<size_t>((K * V) + K + K + V + V + V + V) * sizeof(float);
+    const size_t smem = static_cast<size_t>(
+            (K * V) + K + K + V + V + V + V + 2 * threads) * sizeof(float);
     cudaStream_t stream = cuda_stream
             ? static_cast<cudaStream_t>(cuda_stream)
             : static_cast<cudaStream_t>(0);
@@ -182,7 +217,7 @@ int smile_gated_delta_recurrent_cuda(
     }
 
     gated_delta_recurrent_kernel<<<static_cast<unsigned>(blocks), threads, smem, stream>>>(
-            q, k, v, g, beta, state, out, B, H, S, K, V, scale);
+            q, k, v, g, beta, state, out, B, H, S, K, V, scale, qk_l2norm);
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         g_gated_delta_error = cudaGetErrorString(err);
