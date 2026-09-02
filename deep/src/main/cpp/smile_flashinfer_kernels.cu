@@ -233,6 +233,7 @@ int run_batch_decode(
     DecodePlanInfo plan_info;
     const int gqa_group = num_qo_heads / num_kv_heads;
     bool plan_hit = false;
+    cudaError_t status = cudaSuccess;
 
     if (graph_capture) {
         if (cache == nullptr || !decode_plan_shape_matches(
@@ -253,7 +254,6 @@ int run_batch_decode(
         if (plan_hit) {
             plan_info = cache->decode_plan;
         }
-        cudaError_t status = cudaSuccess;
 
         if (!plan_hit) {
             auto dispatch_plan = [&](auto head_dim_c) {
