@@ -18,6 +18,7 @@ package smile.llm.model.qwen;
 
 import java.lang.foreign.MemorySegment;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,7 @@ import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCachePool;
 import smile.llm.engine.DecodeCudaGraph;
+import smile.llm.engine.DecodeCudaGraphLog;
 import smile.llm.engine.DecodeCudaGraphSession;
 import smile.llm.engine.DecodeForwardProfile;
 import smile.llm.parallel.TensorParallelGroup;
@@ -77,6 +79,16 @@ public class QwenModel extends LayerBlock {
     DeltaNetStatePool deltaNetStatePool;
     /** Per-rank CUDA graph session for uniform decode (Phase 2c/2d). */
     DecodeCudaGraphSession decodeGraphSession;
+    /** Prefetched graph for the next {@code numPages} bucket (Phase 2e). */
+    DecodeCudaGraphSession decodeGraphPrefetchSession;
+    int prefetchTargetBatch = -1;
+    int prefetchTargetNumPages = -1;
+    /** Last uniform decode step (for idle prefetch continuation). */
+    int lastDecodeGraphBatch = -1;
+    int lastDecodeGraphNumPages = -1;
+    int lastDecodeGraphCacheLen = -1;
+    int lastDecodeGraphCachePos = -1;
+    int[] lastDecodeGraphRopePos;
     /** Stable token buffer for graph capture / replay. */
     Tensor decodeGraphTokenBuf;
     /** Stable RoPE gather buffers for graph capture / replay. */
@@ -656,6 +668,8 @@ public class QwenModel extends LayerBlock {
 
         int cacheLen = cachePositions[0] + 1;
         int numPages = kvCachePool.numPagesForLength(cacheLen);
+        promotePrefetchIfReady(batch, numPages);
+
         kvCachePool.setDecodeGraphBuffers(true);
         try {
             ensureDecodeGraphTokenBuf(tokens.device(), batch, tokens.dtype());
@@ -664,12 +678,15 @@ public class QwenModel extends LayerBlock {
             prepareDecodeGraphInputs(cachePositions, ropePositions, cacheLen);
 
             if (decodeGraphSession.canReplay(batch, numPages)) {
-                decodeGraphSession.replay();
+                decodeGraphSession.replay(tpRank);
                 DecodeCudaGraph.markPersistentLogits(true);
+                recordDecodeGraphContext(batch, numPages, cacheLen, cachePositions, ropePositions);
+                maybePrefetchNextBucket(batch, numPages, cacheLen, cachePositions, ropePositions,
+                        tokens.device());
                 return decodeGraphLogitsBuf;
             }
 
-            boolean capture = decodeGraphSession.shouldCapture(batch, numPages);
+            boolean capture = decodeGraphSession.shouldCapture(batch, numPages, tpRank);
             if (capture) {
                 if (decodeGraphLogitsBuf == null) {
                     throw new IllegalStateException(
@@ -688,7 +705,11 @@ public class QwenModel extends LayerBlock {
                         decodeGraphSession.endCapture();
                     }
                     if (decodeGraphSession.canReplay(batch, numPages)) {
+                        DecodeCudaGraphLog.bucketCapture(tpRank, batch, numPages,
+                                decodeGraphSession.lastCaptureMs(), false);
                         DecodeCudaGraph.markPersistentLogits(true);
+                        maybePrefetchNextBucket(batch, numPages, cacheLen, cachePositions,
+                                ropePositions, tokens.device());
                         return decodeGraphLogitsBuf;
                     }
                     logger.warn("tpRank={}: CUDA graph capture did not produce a replayable graph",
@@ -723,8 +744,158 @@ public class QwenModel extends LayerBlock {
         }
     }
 
+    private void recordDecodeGraphContext(int batch, int numPages, int cacheLen,
+                                          int[] cachePositions, int[] ropePositions) {
+        lastDecodeGraphBatch = batch;
+        lastDecodeGraphNumPages = numPages;
+        lastDecodeGraphCacheLen = cacheLen;
+        lastDecodeGraphCachePos = cachePositions[0];
+        lastDecodeGraphRopePos = ropePositions.clone();
+    }
+
+    /** Continues next-bucket prefetch when the scheduler is idle but KV remains bound. */
+    void idleAdvancePrefetch() {
+        if (!DecodeCudaGraph.preCaptureEnabled() || kvCachePool == null
+                || lastDecodeGraphBatch <= 0 || lastDecodeGraphRopePos == null) {
+            return;
+        }
+        if (kvCachePool.boundRequestCount() == 0) {
+            return;
+        }
+        Device device = kvCachePool.device();
+        maybePrefetchNextBucket(lastDecodeGraphBatch, lastDecodeGraphNumPages,
+                lastDecodeGraphCacheLen,
+                new int[]{lastDecodeGraphCachePos},
+                lastDecodeGraphRopePos,
+                device);
+    }
+
+    private void promotePrefetchIfReady(int batch, int numPages) {
+        if (decodeGraphPrefetchSession == null
+                || !decodeGraphPrefetchSession.canReplay(batch, numPages)) {
+            return;
+        }
+        DecodeCudaGraphLog.prefetchHit(tpRank, batch, numPages);
+        if (decodeGraphSession != null) {
+            decodeGraphSession.close();
+        }
+        decodeGraphSession = decodeGraphPrefetchSession;
+        decodeGraphPrefetchSession = null;
+        prefetchTargetBatch = -1;
+        prefetchTargetNumPages = -1;
+    }
+
+    private void maybePrefetchNextBucket(int batch, int numPages, int cacheLen,
+                                           int[] cachePositions, int[] ropePositions,
+                                           Device device) {
+        if (!DecodeCudaGraph.preCaptureEnabled()) {
+            return;
+        }
+        int stepsUntil = kvCachePool.stepsUntilPageBoundary(cacheLen);
+        int lead = DecodeCudaGraph.prefetchLeadSteps();
+        if (stepsUntil <= 0 || stepsUntil > lead) {
+            return;
+        }
+        int nextPages = numPages + 1;
+        int nextCacheLen = kvCachePool.firstCacheLenInNextPageBucket(numPages);
+        if (nextCacheLen > kvCachePool.requestCapacity()) {
+            return;
+        }
+        if (decodeGraphPrefetchSession != null
+                && decodeGraphPrefetchSession.canReplay(batch, nextPages)) {
+            return;
+        }
+        if (prefetchTargetNumPages != nextPages || prefetchTargetBatch != batch) {
+            resetPrefetchSession(batch, nextPages);
+        }
+        if (decodeGraphPrefetchSession == null) {
+            return;
+        }
+        int nextCachePos = nextCacheLen - 1;
+        int posDelta = nextCachePos - cachePositions[0];
+        int[] prefetchCachePos = new int[batch];
+        int[] prefetchRopePos = new int[batch];
+        Arrays.fill(prefetchCachePos, nextCachePos);
+        for (int i = 0; i < batch; i++) {
+            prefetchRopePos[i] = ropePositions[i] + posDelta;
+        }
+        runPrefetchStep(batch, nextPages, nextCacheLen, prefetchCachePos, prefetchRopePos, device);
+    }
+
+    private void resetPrefetchSession(int batch, int numPages) {
+        if (decodeGraphPrefetchSession != null) {
+            decodeGraphPrefetchSession.close();
+        }
+        decodeGraphPrefetchSession = DecodeCudaGraphSession.tryCreate();
+        prefetchTargetBatch = batch;
+        prefetchTargetNumPages = numPages;
+        DecodeCudaGraphLog.prefetchStart(tpRank, batch, numPages);
+    }
+
+    private void runPrefetchStep(int batch, int nextPages, int nextCacheLen,
+                                   int[] prefetchCachePos, int[] prefetchRopePos,
+                                   Device device) {
+        Runnable work = () -> runPrefetchStepInner(batch, nextPages, nextCacheLen,
+                prefetchCachePos, prefetchRopePos, device);
+        if (deltaNetStatePool != null) {
+            deltaNetStatePool.withPreservedActive(work);
+        } else {
+            work.run();
+        }
+    }
+
+    private void runPrefetchStepInner(int batch, int nextPages, int nextCacheLen,
+                                      int[] prefetchCachePos, int[] prefetchRopePos,
+                                      Device device) {
+        kvCachePool.setDecodeGraphBuffers(true);
+        try {
+            ensureDecodeGraphRoPEBuffers(device, batch);
+            kvCachePool.beginPrefetchDecodeGraphStep(nextCacheLen, prefetchCachePos[0], batch);
+            try {
+                PartialRotaryEncoding.gatherInto(rope.cos(), prefetchRopePos, decodeGraphCosBuf);
+                PartialRotaryEncoding.gatherInto(rope.sin(), prefetchRopePos, decodeGraphSinBuf);
+                boolean capture = decodeGraphPrefetchSession.shouldCapture(batch, nextPages, tpRank);
+                if (capture) {
+                    if (decodeGraphLogitsBuf == null) {
+                        return;
+                    }
+                    int deviceIndex = Byte.toUnsignedInt(device.index());
+                    decodeGraphPrefetchSession.beginCapture(deviceIndex);
+                    try {
+                        Tensor raw = forwardRaggedDecodeCore(
+                                decodeGraphTokenBuf, prefetchCachePos,
+                                decodeGraphCosBuf, decodeGraphSinBuf);
+                        smile.torch.Native.copy_(decodeGraphLogitsBuf, raw);
+                    } finally {
+                        decodeGraphPrefetchSession.endCapture();
+                    }
+                    if (decodeGraphPrefetchSession.canReplay(batch, nextPages)) {
+                        DecodeCudaGraphLog.prefetchReady(tpRank, batch, nextPages,
+                                decodeGraphPrefetchSession.lastCaptureMs());
+                    }
+                } else {
+                    Tensor raw = forwardRaggedDecodeCore(
+                            decodeGraphTokenBuf, prefetchCachePos,
+                            decodeGraphCosBuf, decodeGraphSinBuf);
+                    ensureDecodeGraphLogitsBuf(raw);
+                    smile.torch.Native.copy_(decodeGraphLogitsBuf, raw);
+                }
+            } finally {
+                kvCachePool.endPrefetchDecodeGraphStep();
+            }
+        } finally {
+            kvCachePool.setDecodeGraphBuffers(false);
+        }
+    }
+
     /** Releases CUDA graph resources for this rank. */
     public void closeDecodeGraph() {
+        if (decodeGraphPrefetchSession != null) {
+            decodeGraphPrefetchSession.close();
+            decodeGraphPrefetchSession = null;
+        }
+        prefetchTargetBatch = -1;
+        prefetchTargetNumPages = -1;
         if (decodeGraphSession != null) {
             decodeGraphSession.close();
             decodeGraphSession = null;

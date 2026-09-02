@@ -477,6 +477,17 @@ public class KvCachePoolTest {
     }
 
     @Test
+    public void testGivenCacheLenWhenStepsUntilPageBoundaryThenMatchesPageSize() {
+        try (var pool = new KvCachePool(1, 128, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            assertEquals(15, pool.stepsUntilPageBoundary(481));
+            assertEquals(1, pool.stepsUntilPageBoundary(495));
+            assertEquals(0, pool.stepsUntilPageBoundary(496));
+            assertEquals(15, pool.stepsUntilPageBoundary(497));
+            assertEquals(497, pool.firstCacheLenInNextPageBucket(31));
+        }
+    }
+
+    @Test
     public void testGivenBatchOneDecodeWhenLengthIncrementsWithinPageThenReusesMetadata() {
         try (var pool = new KvCachePool(1, 128, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
             pool.setPrefixReuseEnabled(false);

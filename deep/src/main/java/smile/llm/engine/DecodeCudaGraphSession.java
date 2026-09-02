@@ -35,6 +35,8 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
     private int warmupRemaining = DecodeCudaGraph.warmupSteps();
     private boolean ready;
     private boolean capturing;
+    private long captureBeginNs;
+    private long lastCaptureMs;
 
     /** @return native graph handle, or null when unavailable. */
     public static DecodeCudaGraphSession tryCreate() {
@@ -62,9 +64,10 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
      *
      * @param batch    decode batch size.
      * @param numPages KV page count for this decode step.
+     * @param tpRank   tensor-parallel rank for logging ({@code >= 0}).
      * @return {@code true} when the next forward should capture a new graph.
      */
-    public boolean shouldCapture(int batch, int numPages) {
+    public boolean shouldCapture(int batch, int numPages, int tpRank) {
         if (ready && capturedBatch == batch && capturedNumPages == numPages) {
             return false;
         }
@@ -72,6 +75,9 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
             resetForNewBucket(batch, numPages);
         }
         if (warmupRemaining > 0) {
+            int step = DecodeCudaGraph.warmupSteps() - warmupRemaining + 1;
+            DecodeCudaGraphLog.bucketWarmup(tpRank, batch, numPages, step,
+                    DecodeCudaGraph.warmupSteps());
             warmupRemaining--;
             return false;
         }
@@ -97,7 +103,13 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
         }
         Native.cudaGraphCaptureBegin(handle, deviceIndex);
         capturing = true;
+        captureBeginNs = System.nanoTime();
         return true;
+    }
+
+    /** @return wall time in milliseconds for the last successful capture. */
+    public long lastCaptureMs() {
+        return lastCaptureMs;
     }
 
     /** Ends capture and instantiates the graph. No-op when not capturing. */
@@ -109,17 +121,36 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
         try {
             Native.cudaGraphCaptureEnd(handle);
             ready = Native.cudaGraphIsReady(handle);
+            if (ready && captureBeginNs > 0L) {
+                lastCaptureMs = (System.nanoTime() - captureBeginNs) / 1_000_000L;
+            }
         } finally {
             capturing = false;
+            captureBeginNs = 0L;
         }
     }
 
-    /** Replays the captured graph (inputs must already be on device). */
-    public void replay() {
+    /**
+     * Replays the captured graph (inputs must already be on device).
+     *
+     * @param tpRank tensor-parallel rank for one-shot bucket logging.
+     */
+    public void replay(int tpRank) {
         if (!canReplay(capturedBatch, capturedNumPages)) {
             throw new IllegalStateException("CUDA graph not ready for replay");
         }
+        DecodeCudaGraphLog.bucketReplay(tpRank, capturedBatch, capturedNumPages);
         Native.cudaGraphReplay(handle);
+    }
+
+    /** @return batch size of the captured bucket, or {@code -1}. */
+    public int capturedBatch() {
+        return capturedBatch;
+    }
+
+    /** @return {@code numPages} of the captured bucket, or {@code -1}. */
+    public int capturedNumPages() {
+        return capturedNumPages;
     }
 
     @Override
