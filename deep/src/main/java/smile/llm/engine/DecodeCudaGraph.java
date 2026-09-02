@@ -16,6 +16,7 @@
  */
 package smile.llm.engine;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import smile.torch.Native;
 
 /**
@@ -33,6 +34,11 @@ public final class DecodeCudaGraph {
     private static final boolean AVAILABLE = Native.cudaGraphAvailable();
     /** Set after a capture failure so we stop retrying every few decode steps. */
     private static volatile boolean captureDisabled;
+    /**
+     * Set by TP worker threads when decode returns a graph-owned logits buffer;
+     * read by the inference-engine thread after {@code Future.get()} (not ThreadLocal).
+     */
+    private static final AtomicBoolean PERSISTENT_LOGITS = new AtomicBoolean(false);
 
     private DecodeCudaGraph() {}
 
@@ -45,7 +51,6 @@ public final class DecodeCudaGraph {
     public static void disableCapture(String reason) {
         if (!captureDisabled) {
             captureDisabled = true;
-            // Logged by caller; keep process-wide so all TP ranks stop retrying.
         }
     }
 
@@ -53,9 +58,6 @@ public final class DecodeCudaGraph {
     public static int warmupSteps() {
         return 2;
     }
-
-    private static final ThreadLocal<Boolean> PERSISTENT_LOGITS =
-            ThreadLocal.withInitial(() -> false);
 
     /**
      * Marks that the current decode step returned logits backed by a captured CUDA
