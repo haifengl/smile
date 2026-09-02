@@ -62,8 +62,10 @@ int smile_cuda_graph_capture_begin(ST_CudaGraph graph, int device_index) {
         graph->capture_stream = at::cuda::getStreamFromPool();
         graph->stream_guard.emplace(*graph->capture_stream);
         graph->graph = std::make_unique<at::cuda::CUDAGraph>();
+        // Relaxed: NCCL all-reduce (TP) launches work on auxiliary streams; ThreadLocal
+        // capture invalidates immediately under tensor-parallel decode.
         graph->graph->capture_begin(
-                at::cuda::graph_pool_handle(), cudaStreamCaptureModeThreadLocal);
+                at::cuda::graph_pool_handle(), cudaStreamCaptureModeRelaxed);
         graph->instantiated = false;
         return 0;
     } catch (const std::exception &ex) {
