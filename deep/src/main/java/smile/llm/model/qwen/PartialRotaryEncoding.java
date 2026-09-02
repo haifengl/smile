@@ -20,6 +20,7 @@ import java.util.Arrays;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
+import smile.torch.Native;
 import smile.util.AutoScope;
 import smile.util.Tuple2;
 
@@ -170,6 +171,24 @@ public final class PartialRotaryEncoding {
              Tensor unsqueezed = rows.unsqueeze(1)) { // [B, 1, R]
             // Stay on caller's AutoScope — see RotaryPositionalEncoding.gather.
             return unsqueezed.copy();
+        }
+    }
+
+    /**
+     * Gathers RoPE rows into a pre-allocated {@code [B, 1, R]} buffer (CUDA graph).
+     *
+     * @param table     {@code [maxPos, rotaryDim]} table.
+     * @param positions absolute positions, one per batch row.
+     * @param out       destination {@code [B, 1, rotaryDim]} (caller-owned, stable address).
+     */
+    public static void gatherInto(Tensor table, int[] positions, Tensor out) {
+        if (positions == null || positions.length == 0) {
+            throw new IllegalArgumentException("positions must be non-empty");
+        }
+        try (var idx = Index.of(positions);
+             Tensor rows = table.get(idx);
+             Tensor shaped = rows.unsqueeze(1)) {
+            Native.copy_(out, shaped);
         }
     }
 

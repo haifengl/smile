@@ -181,6 +181,11 @@ public class KvCachePool implements AutoCloseable {
     /** Per-row cache lengths when ragged; {@code null} when uniform. */
     private int[] stepFlashInferLengths;
 
+    /** When true, B=1 decode uses a stable GPU KV index buffer for CUDA graph capture. */
+    private boolean decodeGraphBuffers;
+    /** Reused KV slot index {@code [1]} for graph decode {@link #put}. */
+    private Tensor decodeKvIndexBuf;
+
     /** Cumulative prompt tokens seen by {@link #bindWithPrefix} (full length). */
     private final AtomicLong prefixPromptTokens = new AtomicLong();
     /** Cumulative matched prefix tokens from {@link #bindWithPrefix}. */
@@ -553,6 +558,46 @@ public class KvCachePool implements AutoCloseable {
      */
     public int pageSize() {
         return pageSize;
+    }
+
+    /**
+     * Enables stable-address KV index tensors for batch-1 CUDA graph decode.
+     *
+     * @param enabled {@code true} during graph capture / replay forwards.
+     */
+    public void setDecodeGraphBuffers(boolean enabled) {
+        decodeGraphBuffers = enabled;
+    }
+
+    /**
+     * KV page count for a uniform cache length (CUDA graph bucket key).
+     *
+     * @param length inclusive cached token count.
+     * @return number of KV pages spanned by {@code length}.
+     */
+    public int numPagesForLength(int length) {
+        return (length + pageSize - 1) / pageSize;
+    }
+
+    /**
+     * Updates FlashInfer metadata and the static KV index before graph replay.
+     *
+     * @param cacheLen inclusive cache length for the active request.
+     * @param startPos KV write position for this decode step.
+     */
+    public void prepareDecodeGraphStep(int cacheLen, int startPos) {
+        sharedFlashInferMetadata(cacheLen);
+        ensureDecodeKvIndex(startPos);
+    }
+
+    private void ensureDecodeKvIndex(int startPos) {
+        if (decodeKvIndexBuf == null) {
+            var opts = new Tensor.Options().device(device).dtype(ScalarType.Int64);
+            decodeKvIndexBuf = Tensor.zeros(opts, 1);
+            decodeKvIndexBuf.detachFromScopes();
+        }
+        long slot = requestSlots[0][startPos];
+        decodeKvIndexBuf.put_(slot, 0);
     }
 
     /**
@@ -1008,17 +1053,25 @@ public class KvCachePool implements AutoCloseable {
             ensureRequestRow(b, startPos[b] + seqlen);
         }
 
-        long[] indices = new long[batch * seqlen];
-        for (int b = 0; b < batch; b++) {
-            long[] slots = requestSlots[b];
-            int start = startPos[b];
-            for (int t = 0; t < seqlen; t++) {
-                indices[b * seqlen + t] = slots[start + t];
+        Tensor idx;
+        boolean closeIdx = false;
+        if (decodeGraphBuffers && batch == 1 && seqlen == 1) {
+            ensureDecodeKvIndex(startPos[0]);
+            idx = decodeKvIndexBuf;
+        } else {
+            long[] indices = new long[batch * seqlen];
+            for (int b = 0; b < batch; b++) {
+                long[] slots = requestSlots[b];
+                int start = startPos[b];
+                for (int t = 0; t < seqlen; t++) {
+                    indices[b * seqlen + t] = slots[start + t];
+                }
             }
+            idx = Tensor.of(indices);
+            closeIdx = true;
         }
 
-        try (var idx = Tensor.of(indices);
-             var layerIdx = Index.of(layer);
+        try (var layerIdx = Index.of(layer);
              var layerK = kCache.get(layerIdx);
              var layerV = vCache.get(layerIdx)) {
             Tensor kf = k.reshape(batch * (long) seqlen, numKvHeads, headDim);
@@ -1057,6 +1110,10 @@ public class KvCachePool implements AutoCloseable {
             }
             kf.close();
             vf.close();
+        } finally {
+            if (closeIdx) {
+                idx.close();
+            }
         }
     }
 

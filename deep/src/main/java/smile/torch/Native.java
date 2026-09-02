@@ -198,6 +198,34 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
                         ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final MethodHandle CUDA_GRAPH_CREATE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_cuda_graph_create")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle CUDA_GRAPH_DESTROY = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_cuda_graph_destroy")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle CUDA_GRAPH_CAPTURE_BEGIN = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_cuda_graph_capture_begin")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle CUDA_GRAPH_CAPTURE_END = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_cuda_graph_capture_end")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle CUDA_GRAPH_REPLAY = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_cuda_graph_replay")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle CUDA_GRAPH_IS_READY = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_cuda_graph_is_ready")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
     }
 
     /**
@@ -993,6 +1021,98 @@ public final class Native {
                 throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
             }
             return new Tensor(check(out));
+        }
+    }
+
+    /** @return {@code true} when {@code smile_cuda_graph_create} is exported. */
+    public static boolean cudaGraphAvailable() {
+        return Bindings.CUDA_GRAPH_CREATE != null;
+    }
+
+    /** @return opaque graph handle, or null when unavailable. */
+    public static MemorySegment cudaGraphCreate() {
+        if (Bindings.CUDA_GRAPH_CREATE == null) {
+            return MemorySegment.NULL;
+        }
+        try {
+            return (MemorySegment) Bindings.CUDA_GRAPH_CREATE.invokeExact();
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_cuda_graph_create failed", t);
+        }
+    }
+
+    /** @param handle graph from {@link #cudaGraphCreate()}. */
+    public static void cudaGraphDestroy(MemorySegment handle) {
+        if (handle == null || handle.address() == 0 || Bindings.CUDA_GRAPH_DESTROY == null) {
+            return;
+        }
+        try {
+            Bindings.CUDA_GRAPH_DESTROY.invokeExact(handle);
+        } catch (Throwable ignored) {
+            // best-effort
+        }
+    }
+
+    /** @param handle graph handle. @param deviceIndex CUDA device ordinal. */
+    public static void cudaGraphCaptureBegin(MemorySegment handle, int deviceIndex) {
+        if (Bindings.CUDA_GRAPH_CAPTURE_BEGIN == null) {
+            throw new IllegalStateException("smile_cuda_graph_capture_begin not in libsmile_torch");
+        }
+        try {
+            int rc = (int) Bindings.CUDA_GRAPH_CAPTURE_BEGIN.invokeExact(handle, deviceIndex);
+            if (rc != 0) {
+                throw new RuntimeException(lastError());
+            }
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_cuda_graph_capture_begin failed", t);
+        }
+    }
+
+    /** @param handle graph handle after {@link #cudaGraphCaptureBegin}. */
+    public static void cudaGraphCaptureEnd(MemorySegment handle) {
+        if (Bindings.CUDA_GRAPH_CAPTURE_END == null) {
+            throw new IllegalStateException("smile_cuda_graph_capture_end not in libsmile_torch");
+        }
+        try {
+            int rc = (int) Bindings.CUDA_GRAPH_CAPTURE_END.invokeExact(handle);
+            if (rc != 0) {
+                throw new RuntimeException(lastError());
+            }
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_cuda_graph_capture_end failed", t);
+        }
+    }
+
+    /** @param handle instantiated graph handle. */
+    public static void cudaGraphReplay(MemorySegment handle) {
+        if (Bindings.CUDA_GRAPH_REPLAY == null) {
+            throw new IllegalStateException("smile_cuda_graph_replay not in libsmile_torch");
+        }
+        try {
+            int rc = (int) Bindings.CUDA_GRAPH_REPLAY.invokeExact(handle);
+            if (rc != 0) {
+                throw new RuntimeException(lastError());
+            }
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_cuda_graph_replay failed", t);
+        }
+    }
+
+    /** @param handle graph handle. */
+    public static boolean cudaGraphIsReady(MemorySegment handle) {
+        if (handle == null || handle.address() == 0 || Bindings.CUDA_GRAPH_IS_READY == null) {
+            return false;
+        }
+        try {
+            return (int) Bindings.CUDA_GRAPH_IS_READY.invokeExact(handle) != 0;
+        } catch (Throwable t) {
+            return false;
         }
     }
 
