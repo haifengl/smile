@@ -663,16 +663,28 @@ public class QwenModel extends LayerBlock {
             boolean capture = decodeGraphSession.shouldCapture(numPages);
             if (capture) {
                 int deviceIndex = Byte.toUnsignedInt(tokens.device().index());
-                decodeGraphSession.beginCapture(deviceIndex);
                 try {
-                    decodeGraphLogitsOut = forwardRaggedDecodeCore(
-                            tokens, cachePositions, decodeGraphCosBuf, decodeGraphSinBuf);
-                    decodeGraphLogitsOut.detachFromScopes();
-                } finally {
-                    decodeGraphSession.endCapture();
+                    decodeGraphSession.beginCapture(deviceIndex);
+                    try {
+                        decodeGraphLogitsOut = forwardRaggedDecodeCore(
+                                tokens, cachePositions, decodeGraphCosBuf, decodeGraphSinBuf);
+                        decodeGraphLogitsOut.detachFromScopes();
+                    } finally {
+                        decodeGraphSession.endCapture();
+                    }
+                    if (decodeGraphSession.canReplay(numPages)) {
+                        DecodeCudaGraph.markPersistentLogits(true);
+                        return decodeGraphLogitsOut;
+                    }
+                    logger.warn("tpRank={}: CUDA graph capture did not produce a replayable graph",
+                            tpRank);
+                } catch (RuntimeException e) {
+                    logger.warn("tpRank={}: CUDA graph capture failed, falling back to eager: {}",
+                            tpRank, e.getMessage());
+                    decodeGraphSession.close();
+                    decodeGraphSession = null;
+                    decodeGraphLogitsOut = null;
                 }
-                DecodeCudaGraph.markPersistentLogits(true);
-                return decodeGraphLogitsOut;
             }
 
             return forwardRaggedDecodeCore(tokens, cachePositions, decodeGraphCosBuf, decodeGraphSinBuf);
