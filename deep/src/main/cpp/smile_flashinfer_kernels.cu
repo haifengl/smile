@@ -43,15 +43,6 @@ namespace {
 
 std::atomic<bool> g_flashinfer_sdpa_decode_warned{false};
 
-bool decode_cuda_graph_enabled() {
-    static int cached = -1;
-    if (cached < 0) {
-        const char *env = std::getenv("SMILE_FLASHINFER_DECODE_CUDA_GRAPH");
-        cached = (env != nullptr && env[0] == '1' && env[1] == '\0') ? 1 : 0;
-    }
-    return cached != 0;
-}
-
 using flashinfer::BatchDecodeParams;
 using flashinfer::BatchDecodeWithPagedKVCacheDispatched;
 using flashinfer::BatchDecodeWithPagedKVCacheWorkEstimationDispatched;
@@ -238,8 +229,6 @@ int run_batch_decode(
     }
     cudaError_t status = cudaSuccess;
 
-    const bool use_cuda_graph = decode_cuda_graph_enabled() && B == 1;
-
     if (!plan_hit) {
         auto dispatch_plan = [&](auto head_dim_c) {
             constexpr uint32_t HEAD_DIM = decltype(head_dim_c)::value;
@@ -257,7 +246,7 @@ int run_batch_decode(
                         B,
                         static_cast<uint32_t>(num_qo_heads),
                         static_cast<uint32_t>(page_size),
-                        /*enable_cuda_graph=*/use_cuda_graph,
+                        /*enable_cuda_graph=*/false,
                         stream,
                         work_est);
                 return true;

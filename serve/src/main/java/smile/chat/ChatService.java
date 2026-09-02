@@ -127,8 +127,6 @@ public class ChatService implements OpenAiModelContributor {
                     config.flashinferCudaTag());
             AttentionBackend requested = AttentionBackend.parse(config.attentionBackend());
             AttentionBackends.install(requested);
-            logger.infof("FlashInfer decode cuda-graph plan mode: %s",
-                    FlashInferArtifacts.decodeCudaGraphPlanModeEnabled() ? "enabled" : "disabled");
             if (requested == AttentionBackend.FLASHINFER
                     && AttentionBackends.current() != AttentionBackend.FLASHINFER
                     && !config.flashinferAllowTorchFallback()) {

@@ -56,19 +56,6 @@ public final class FlashInferArtifacts {
     private FlashInferArtifacts() {}
 
     /**
-     * Whether batch-1 FlashInfer decode builds cuda-graph-tuned plans.
-     *
-     * <p>Controlled by environment variable {@code SMILE_FLASHINFER_DECODE_CUDA_GRAPH}
-     * (must be exactly {@code "1"}). This tunes FlashInfer {@code DecodePlan} scheduling;
-     * it does not capture a full-model CUDA graph.
-     *
-     * @return {@code true} when the env var is set to {@code 1}.
-     */
-    public static boolean decodeCudaGraphPlanModeEnabled() {
-        return "1".equals(System.getenv("SMILE_FLASHINFER_DECODE_CUDA_GRAPH"));
-    }
-
-    /**
      * Resolves and installs the AOT directory into the native library.
      *
      * @param aotDir        explicit config path (may be blank).
