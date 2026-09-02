@@ -2013,6 +2013,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     private Tensor runDecodeStep(int[] requestIds, int[] lastTokens, int[] positions,
                                    int[] ropePos) {
         int b = requestIds.length;
+        DecodeCudaGraph.markPersistentLogits(false);
         long tPrep = System.nanoTime();
         for (QwenModel m : models) {
             if (m.kvCachePool() != null) {
