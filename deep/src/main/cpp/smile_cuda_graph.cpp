@@ -23,7 +23,7 @@ extern "C" void smile_torch_set_error(const char *msg);
 struct ST_CudaGraph_ {
 #ifdef USE_CUDA
     std::unique_ptr<at::cuda::CUDAGraph> graph;
-    at::cuda::CUDAStream capture_stream = at::cuda::CUDAStream();
+    std::optional<at::cuda::CUDAStream> capture_stream;
     std::optional<at::cuda::CUDAStreamGuard> stream_guard;
     int device_index = -1;
     bool instantiated = false;
@@ -60,7 +60,7 @@ int smile_cuda_graph_capture_begin(ST_CudaGraph graph, int device_index) {
         graph->device_index = device_index;
         c10::cuda::CUDAGuard guard(device_index);
         graph->capture_stream = at::cuda::getStreamFromPool();
-        graph->stream_guard.emplace(graph->capture_stream);
+        graph->stream_guard.emplace(*graph->capture_stream);
         graph->graph = std::make_unique<at::cuda::CUDAGraph>();
         graph->graph->capture_begin(
                 at::cuda::graph_pool_handle(), cudaStreamCaptureModeThreadLocal);
@@ -104,13 +104,14 @@ int smile_cuda_graph_capture_end(ST_CudaGraph graph) {
 
 int smile_cuda_graph_replay(ST_CudaGraph graph) {
 #ifdef USE_CUDA
-    if (graph == nullptr || !graph->instantiated || graph->graph == nullptr) {
+    if (graph == nullptr || !graph->instantiated || graph->graph == nullptr
+        || !graph->capture_stream.has_value()) {
         smile_torch_set_error("smile_cuda_graph_replay: graph not ready");
         return -1;
     }
     try {
         c10::cuda::CUDAGuard guard(graph->device_index);
-        at::cuda::CUDAStreamGuard stream_guard(graph->capture_stream);
+        at::cuda::CUDAStreamGuard stream_guard(*graph->capture_stream);
         graph->graph->replay();
         return 0;
     } catch (const std::exception &ex) {
