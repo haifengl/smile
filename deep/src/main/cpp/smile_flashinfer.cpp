@@ -133,13 +133,13 @@ int smile_flashinfer_workspace_device_index(ST_FlashInferWorkspace ws) {
     return ws ? ws->device_index : -1;
 }
 
+} // extern "C"
+
+#if defined(USE_CUDA) && defined(USE_FLASHINFER)
 void **smile_flashinfer_workspace_runtime_cache_slot(ST_FlashInferWorkspace ws) {
     return ws == nullptr ? nullptr : &ws->runtime_cache;
 }
 
-} // extern "C"
-
-#if defined(USE_CUDA) && defined(USE_FLASHINFER)
 int smile_flashinfer_workspace_get_tensors(
         ST_FlashInferWorkspace ws,
         at::Tensor **float_ws,
