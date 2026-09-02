@@ -2353,6 +2353,64 @@ ST_Tensor smile_gated_delta_compute_g(
     return nullptr;
 }
 
+ST_Tensor smile_gated_delta_compute_gates(
+        ST_Tensor a, ST_Tensor b, ST_Tensor a_log, ST_Tensor dt_bias,
+        ST_Tensor *out_beta) {
+    if (!a || !b || !a_log || !dt_bias || !out_beta) {
+        set_error("smile_gated_delta_compute_gates: null tensor");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto af = a->t.to(c10::ScalarType::Float);
+        auto bf = b->t.to(c10::ScalarType::Float);
+        auto alog = a_log->t.to(c10::ScalarType::Float);
+        auto dt = dt_bias->t.to(c10::ScalarType::Float);
+        auto beta = torch::sigmoid(bf).contiguous();
+        auto g = ((-alog.exp()) * torch::softplus(af + dt)).contiguous();
+        *out_beta = new ST_Tensor_{ beta };
+        return new ST_Tensor_{ g };
+    ST_TRY_END
+    return nullptr;
+}
+
+ST_Tensor smile_repeat_kv_heads(ST_Tensor x, int rep) {
+    if (!x) {
+        set_error("smile_repeat_kv_heads: null tensor");
+        return nullptr;
+    }
+    if (rep < 1) {
+        set_error("smile_repeat_kv_heads: rep must be >= 1");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        if (rep == 1) {
+            return new ST_Tensor_{ x->t };
+        }
+        // [B,S,H,D] → [B,S,H*rep,D]
+        auto out = x->t.repeat_interleave(rep, /*dim=*/2);
+        return new ST_Tensor_{ out };
+    ST_TRY_END
+    return nullptr;
+}
+
+ST_Tensor smile_rms_norm_gated(
+        ST_Tensor x, ST_Tensor gate, ST_Tensor weight, double eps) {
+    if (!x || !gate || !weight) {
+        set_error("smile_rms_norm_gated: null tensor");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto xf = x->t.to(c10::ScalarType::Float);
+        auto gf = gate->t.to(c10::ScalarType::Float);
+        auto w = weight->t.to(c10::ScalarType::Float);
+        auto var = xf.pow(2).mean(-1, /*keepdim=*/true);
+        auto x_norm = xf * (var + eps).rsqrt();
+        auto out = (x_norm * w) * torch::silu(gf);
+        return new ST_Tensor_{ out.to(x->t.scalar_type()).contiguous() };
+    ST_TRY_END
+    return nullptr;
+}
+
 static torch::Tensor causal_conv1d_update_libtorch(
         torch::Tensor hidden, torch::Tensor conv_state, torch::Tensor weight) {
     // hidden [B,C,L], state [B,C,K-1], weight [C,K]

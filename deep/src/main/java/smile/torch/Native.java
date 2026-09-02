@@ -164,6 +164,23 @@ public final class Native {
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final MethodHandle GATED_DELTA_COMPUTE_GATES = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_gated_delta_compute_gates")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle REPEAT_KV_HEADS = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_repeat_kv_heads")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle RMS_NORM_GATED = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_rms_norm_gated")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
         static final MethodHandle CAUSAL_CONV1D_UPDATE = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_causal_conv1d_update")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -886,6 +903,84 @@ public final class Native {
         try {
             out = (MemorySegment) Bindings.GATED_DELTA_COMPUTE_G.invokeExact(
                     a.handle(), aLog.handle(), dtBias.handle());
+        } catch (Throwable t) {
+            return null;
+        }
+        if (out == null || out.address() == 0) {
+            return null;
+        }
+        return new Tensor(out);
+    }
+
+    /**
+     * Fused {@code beta = sigmoid(b)} and decay gate {@code g}. Returns
+     * {@code [g, beta]} or {@code null} when unavailable.
+     */
+    public static Tensor[] gatedDeltaComputeGates(Tensor a, Tensor b, Tensor aLog, Tensor dtBias) {
+        if (Bindings.GATED_DELTA_COMPUTE_GATES == null
+                || a == null || b == null || aLog == null || dtBias == null) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment betaPtr = arena.allocate(ValueLayout.ADDRESS);
+            MemorySegment gOut;
+            try {
+                gOut = (MemorySegment) Bindings.GATED_DELTA_COMPUTE_GATES.invokeExact(
+                        a.handle(), b.handle(), aLog.handle(), dtBias.handle(), betaPtr);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (gOut == null || gOut.address() == 0) {
+                return null;
+            }
+            MemorySegment betaHandle = betaPtr.get(ValueLayout.ADDRESS, 0);
+            if (betaHandle == null || betaHandle.address() == 0) {
+                // Best-effort free g if beta missing.
+                try {
+                    new Tensor(gOut).close();
+                } catch (Throwable ignored) {
+                    // ignore
+                }
+                return null;
+            }
+            return new Tensor[]{new Tensor(gOut), new Tensor(betaHandle)};
+        }
+    }
+
+    /**
+     * Repeat heads on dim 2 ({@code [B,S,H,D] → [B,S,H*rep,D]}). Returns
+     * {@code null} when unavailable.
+     */
+    public static Tensor repeatKvHeads(Tensor x, int rep) {
+        if (Bindings.REPEAT_KV_HEADS == null || x == null || rep < 1) {
+            return null;
+        }
+        if (rep == 1) {
+            return x;
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.REPEAT_KV_HEADS.invokeExact(x.handle(), rep);
+        } catch (Throwable t) {
+            return null;
+        }
+        if (out == null || out.address() == 0) {
+            return null;
+        }
+        return new Tensor(out);
+    }
+
+    /**
+     * Fused gated RMSNorm. Returns {@code null} when unavailable.
+     */
+    public static Tensor rmsNormGated(Tensor x, Tensor gate, Tensor weight, double eps) {
+        if (Bindings.RMS_NORM_GATED == null || x == null || gate == null || weight == null) {
+            return null;
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.RMS_NORM_GATED.invokeExact(
+                    x.handle(), gate.handle(), weight.handle(), eps);
         } catch (Throwable t) {
             return null;
         }
