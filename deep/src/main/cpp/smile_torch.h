@@ -1073,6 +1073,9 @@ SMILE_API int smile_flashinfer_workspace_device_index(ST_FlashInferWorkspace ws)
 /** Invalidates cached decode plans and prefill gather slots for the next step. */
 SMILE_API void smile_flashinfer_workspace_invalidate_runtime_cache(ST_FlashInferWorkspace ws);
 
+/** Clears only prefill gather caches; retains decode-plan cache when still valid. */
+SMILE_API void smile_flashinfer_workspace_invalidate_prefill_runtime_cache(ST_FlashInferWorkspace ws);
+
 /**
  * Paged attention over KvCachePool storage.
  *

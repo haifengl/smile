@@ -811,9 +811,14 @@ public class KvCachePool implements AutoCloseable {
      * @param requestIds bound request ids from {@link #bindRequest}.
      */
     public void activateStep(int... requestIds) {
-        clearStepFlashInferMetadata();
         if (requestIds == null || requestIds.length == 0) {
             throw new IllegalArgumentException("requestIds must be non-empty");
+        }
+        boolean sameCohort = activeRequestIds != null && Arrays.equals(activeRequestIds, requestIds);
+        if (!sameCohort) {
+            clearStepFlashInferMetadata();
+        } else if (flashInferWorkspace != null) {
+            flashInferWorkspace.invalidatePrefillRuntimeCache();
         }
         long[][] slots = new long[requestIds.length][];
         int minCap = Integer.MAX_VALUE;
@@ -1149,10 +1154,41 @@ public class KvCachePool implements AutoCloseable {
                 && stepFlashInferUniformLen == length) {
             return stepFlashInferMeta;
         }
+        if (stepFlashInferMeta != null && stepFlashInferLengths == null
+                && stepFlashInferUniformLen >= 0
+                && length == stepFlashInferUniformLen + 1
+                && requestSlots != null && requestSlots.length == 1
+                && bumpUniformFlashInferMetadata(length)) {
+            return stepFlashInferMeta;
+        }
         clearStepFlashInferMetadata();
         stepFlashInferMeta = buildFlashInferMetadata(length);
         stepFlashInferUniformLen = length;
         return stepFlashInferMeta;
+    }
+
+    /**
+     * Updates uniform B=1 CSR metadata in place when cache length grows by one
+     * within the same KV page (avoids realloc + H2D each decode step).
+     *
+     * @param newLength new inclusive cache length.
+     * @return {@code true} when metadata was bumped in place.
+     */
+    private boolean bumpUniformFlashInferMetadata(int newLength) {
+        int oldLen = stepFlashInferUniformLen;
+        if (newLength != oldLen + 1 || stepFlashInferMeta == null) {
+            return false;
+        }
+        int oldPages = (oldLen + pageSize - 1) / pageSize;
+        int newPages = (newLength + pageSize - 1) / pageSize;
+        if (newPages != oldPages) {
+            return false;
+        }
+        int rem = newLength % pageSize;
+        int newLast = rem == 0 ? pageSize : rem;
+        stepFlashInferMeta.pagedKvLastPageLen().put_(newLast, 0);
+        stepFlashInferUniformLen = newLength;
+        return true;
     }
 
     /**
@@ -1163,6 +1199,9 @@ public class KvCachePool implements AutoCloseable {
      * @return CSR metadata reused for all attention layers in this step.
      */
     public FlashInferKvMetadata sharedFlashInferMetadata(int[] lengths) {
+        if (lengths.length == 1) {
+            return sharedFlashInferMetadata(lengths[0]);
+        }
         if (stepFlashInferMeta != null && stepFlashInferLengths != null
                 && Arrays.equals(stepFlashInferLengths, lengths)) {
             return stepFlashInferMeta;

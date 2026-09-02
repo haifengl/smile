@@ -41,6 +41,7 @@ int smile_flashinfer_paged_attention_cuda(
 
 /** Invalidates cached decode plans and prefill gather slots. */
 void smile_flashinfer_runtime_cache_invalidate(void *cache_slot);
+void smile_flashinfer_runtime_cache_invalidate_prefill(void *cache_slot);
 
 /** Frees a runtime cache allocated for a workspace. */
 void smile_flashinfer_runtime_cache_free(void *cache_slot);

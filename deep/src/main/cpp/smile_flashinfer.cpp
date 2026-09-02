@@ -129,6 +129,16 @@ void smile_flashinfer_workspace_invalidate_runtime_cache(ST_FlashInferWorkspace 
 #endif
 }
 
+void smile_flashinfer_workspace_invalidate_prefill_runtime_cache(ST_FlashInferWorkspace ws) {
+#if defined(USE_CUDA) && defined(USE_FLASHINFER)
+    if (ws != nullptr && ws->runtime_cache != nullptr) {
+        smile_flashinfer_runtime_cache_invalidate_prefill(ws->runtime_cache);
+    }
+#else
+    (void)ws;
+#endif
+}
+
 int smile_flashinfer_workspace_device_index(ST_FlashInferWorkspace ws) {
     return ws ? ws->device_index : -1;
 }

@@ -68,4 +68,13 @@ public final class FlashInferWorkspace implements AutoCloseable {
             Native.flashInferWorkspaceInvalidateRuntimeCache(handle);
         }
     }
+
+    /**
+     * Clears prefill gather caches only; decode-plan cache may remain when still valid.
+     */
+    public void invalidatePrefillRuntimeCache() {
+        if (handle != null && handle.address() != 0) {
+            Native.flashInferWorkspaceInvalidatePrefillRuntimeCache(handle);
+        }
+    }
 }
