@@ -605,21 +605,19 @@ public class QwenModel extends LayerBlock {
         if (tokens.shape()[1] != 1) {
             throw new IllegalArgumentException("ragged forward requires seqLen == 1");
         }
-        AutoScope scope = new AutoScope();
-        Tensor.push(scope);
+        // Do not wrap an AutoScope here: forwardRaggedDecodeCore already scopes
+        // intermediates and promoteToParent()s logits to the caller. An outer
+        // push/pop would free those logits before the engine can read them
+        // (SIGSEGV in logitsRowFromDecodeOutput under B>1 / multi-request).
         Device device = tokens.device();
         long freeBefore = cudaFreeBytes(device);
+        Tensor cos = PartialRotaryEncoding.gather(rope.cos(), ropePositions);
+        Tensor sin = PartialRotaryEncoding.gather(rope.sin(), ropePositions);
         try {
-            Tensor cos = PartialRotaryEncoding.gather(rope.cos(), ropePositions);
-            Tensor sin = PartialRotaryEncoding.gather(rope.sin(), ropePositions);
-            try {
-                return forwardRaggedDecodeCore(tokens, cachePositions, cos, sin);
-            } finally {
-                cos.close();
-                sin.close();
-            }
+            return forwardRaggedDecodeCore(tokens, cachePositions, cos, sin);
         } finally {
-            Tensor.pop();
+            cos.close();
+            sin.close();
             long freeAfter = cudaFreeBytes(device);
             if (freeBefore >= 0 && freeAfter >= 0 && logger.isDebugEnabled()) {
                 logger.debug("tpRank={}: ragged forward freeMiB {} -> {}",
