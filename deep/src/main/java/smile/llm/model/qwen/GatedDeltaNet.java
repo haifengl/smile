@@ -251,7 +251,13 @@ public class GatedDeltaNet {
         try {
             long tMark = t0;
             Tensor mixedRaw = inProjQkv.forward(x);
-            Tensor mixed = mixedRaw.transpose(1, 2); // [B, C, S]
+            // Decode S=1: [B,1,C] and [B,C,1] share the same contiguous layout —
+            // reshape avoids two transpose kernels per linear layer.
+            final boolean decodeS1 = decode && seqLen == 1;
+            long channels = mixedRaw.shape()[mixedRaw.dim() - 1];
+            Tensor mixed = decodeS1
+                    ? mixedRaw.reshape(batch, channels, 1)
+                    : mixedRaw.transpose(1, 2); // [B, C, S]
             Tensor zRaw = inProjZ.forward(x);
             Tensor z = zRaw.view(batch, seqLen, numVHeads, headVDim);
             Tensor b = inProjB.forward(x);
@@ -267,7 +273,9 @@ public class GatedDeltaNet {
                     : GatedDeltaRule.causalConv1dPrefill(mixed, convState, conv1dWeight);
             mixed.close();
             mixedRaw.close();
-            Tensor mixedConv = mixedConvBase.transpose(1, 2); // [B, S, C]
+            Tensor mixedConv = decodeS1
+                    ? mixedConvBase.reshape(batch, 1, mixedConvBase.shape()[1])
+                    : mixedConvBase.transpose(1, 2); // [B, S, C]
 
             try (var qSpan = Index.slice(0, keyDim);
                  var kSpan = Index.slice(keyDim, 2 * keyDim);

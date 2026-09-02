@@ -2461,6 +2461,90 @@ static torch::Tensor causal_conv1d_update_libtorch(
     return torch::silu(out);
 }
 
+static torch::Tensor rotate_half_neox(const torch::Tensor& x) {
+    const int64_t d = x.size(-1);
+    const int64_t half = d / 2;
+    auto x1 = x.narrow(/*dim=*/-1, /*start=*/0, /*length=*/half);
+    auto x2 = x.narrow(/*dim=*/-1, /*start=*/half, /*length=*/half);
+    return torch::cat({-x2, x1}, /*dim=*/-1);
+}
+
+/** Broadcast cos/sin to {@code [B,S,1,R]} for {@code [B,S,H,D]} Q/K. */
+static torch::Tensor broadcast_cos_sin(torch::Tensor table, const torch::Tensor& xq) {
+    const int64_t batch = xq.size(0);
+    const int64_t x_seq = xq.size(1);
+    if (table.dim() == 1) {
+        table = table.view({1, table.size(0)});
+    }
+    if (table.dim() == 3) {
+        const int64_t b = table.size(0);
+        const int64_t seq = table.size(1);
+        const int64_t rot = table.size(2);
+        if (b == batch && seq == x_seq && batch > 1) {
+            return table.contiguous().view({batch, seq, 1, rot});
+        }
+        table = table.reshape({seq, rot});
+    }
+    if (table.dim() != 2) {
+        throw std::runtime_error("smile_apply_rotary_pos_emb: cos/sin must be [S,R], [B,S,R], or [R]");
+    }
+    const int64_t seq = table.size(0);
+    const int64_t rot = table.size(1);
+    if (seq != x_seq) {
+        throw std::runtime_error("smile_apply_rotary_pos_emb: cos/sin seqLen mismatch");
+    }
+    return table.contiguous().view({1, seq, 1, rot});
+}
+
+static torch::Tensor apply_rotate_half_rope(
+        const torch::Tensor& x, const torch::Tensor& cos_b, const torch::Tensor& sin_b,
+        int64_t rotary_dim) {
+    const int64_t head_dim = x.size(-1);
+    auto dtype = x.scalar_type();
+    auto x_rot = x.narrow(-1, 0, rotary_dim).to(c10::ScalarType::Float);
+    auto emb = x_rot * cos_b + rotate_half_neox(x_rot) * sin_b;
+    emb = emb.to(dtype);
+    if (rotary_dim == head_dim) {
+        return emb;
+    }
+    auto x_pass = x.narrow(-1, rotary_dim, head_dim - rotary_dim);
+    return torch::cat({emb, x_pass}, /*dim=*/-1);
+}
+
+ST_Tensor smile_apply_rotary_pos_emb(
+        ST_Tensor xq, ST_Tensor xk, ST_Tensor cos, ST_Tensor sin,
+        int rotary_dim, ST_Tensor *out_k) {
+    if (!xq || !xk || !cos || !sin || !out_k) {
+        set_error("smile_apply_rotary_pos_emb: null tensor");
+        return nullptr;
+    }
+    if (rotary_dim <= 0 || (rotary_dim & 1) != 0) {
+        set_error("smile_apply_rotary_pos_emb: rotary_dim must be positive and even");
+        return nullptr;
+    }
+    *out_k = nullptr;
+    ST_TRY_BEGIN
+        auto q = xq->t;
+        auto k = xk->t;
+        if (q.dim() != 4 || k.dim() != 4) {
+            set_error("smile_apply_rotary_pos_emb: xq/xk must be rank-4 [B,S,H,D]");
+            return nullptr;
+        }
+        const int64_t head_dim = q.size(-1);
+        if (rotary_dim > head_dim) {
+            set_error("smile_apply_rotary_pos_emb: rotary_dim > head_dim");
+            return nullptr;
+        }
+        auto cos_b = broadcast_cos_sin(cos->t.to(c10::ScalarType::Float), q);
+        auto sin_b = broadcast_cos_sin(sin->t.to(c10::ScalarType::Float), q);
+        auto q_out = apply_rotate_half_rope(q, cos_b, sin_b, rotary_dim);
+        auto k_out = apply_rotate_half_rope(k, cos_b, sin_b, rotary_dim);
+        *out_k = new ST_Tensor_{ k_out.contiguous() };
+        return new ST_Tensor_{ q_out.contiguous() };
+    ST_TRY_END
+    return nullptr;
+}
+
 ST_Tensor smile_causal_conv1d_update(
         ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor weight) {
     if (!hidden || !conv_state || !weight) {
