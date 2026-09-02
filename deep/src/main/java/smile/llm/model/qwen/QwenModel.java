@@ -31,6 +31,7 @@ import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCachePool;
 import smile.llm.engine.DecodeCudaGraph;
 import smile.llm.engine.DecodeCudaGraphSession;
+import smile.llm.engine.DecodeForwardProfile;
 import smile.llm.parallel.TensorParallelGroup;
 import smile.llm.parallel.TensorShardSpec;
 import smile.util.AutoScope;
@@ -768,12 +769,18 @@ public class QwenModel extends LayerBlock {
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
         try {
+            boolean profile = DecodeForwardProfile.enabled();
+            long tEmbed = profile ? System.nanoTime() : 0L;
             Tensor h = tokEmbeddings.forward(tokens);
+            if (profile) {
+                DecodeForwardProfile.addEmbed(System.nanoTime() - tEmbed);
+            }
             for (int i = 0; i < layers.size(); i++) {
                 Tensor next = layers.get(i).forward(h, cachePositions, cos, sin, null);
                 h.close();
                 h = next;
             }
+            long tHead = profile ? System.nanoTime() : 0L;
             Tensor normalized = norm.forward(h);
             h.close();
             Tensor logitsF = lmHead.forward(normalized);
@@ -781,6 +788,9 @@ public class QwenModel extends LayerBlock {
             Tensor logits = logitsF.to(ScalarType.Float);
             if (logits != logitsF) {
                 logitsF.close();
+            }
+            if (profile) {
+                DecodeForwardProfile.addLmHead(System.nanoTime() - tHead);
             }
             logits.promoteToParent();
             return logits;

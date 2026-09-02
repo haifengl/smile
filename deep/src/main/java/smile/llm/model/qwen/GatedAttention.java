@@ -269,6 +269,8 @@ public class GatedAttention implements Attention {
 
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
+        boolean profile = smile.llm.engine.DecodeForwardProfile.enabled();
+        long t0 = profile ? System.nanoTime() : 0L;
         try {
             Tensor qRaw = qProj.forward(x);
             Tensor qFull = qRaw.view(batchSize, seqlen, numHeads, headDim * 2);
@@ -337,6 +339,9 @@ public class GatedAttention implements Attention {
             Tensor gateSig = sigmoid.forward(gate);
             Tensor gated = attn.mul(gateSig);
             Tensor out = oProj.forward(gated);
+            if (profile) {
+                smile.llm.engine.DecodeForwardProfile.addFullAttn(System.nanoTime() - t0);
+            }
             if (tpGroup != null && tpGroup.tpSize() > 1) {
                 tpGroup.allReduceSumInPlace(tpRank, out);
             }
@@ -354,6 +359,8 @@ public class GatedAttention implements Attention {
 
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
+        boolean profile = smile.llm.engine.DecodeForwardProfile.enabled();
+        long t0 = profile ? System.nanoTime() : 0L;
         try {
             Tensor qRaw = qProj.forward(x);
             Tensor qFull = qRaw.view(batchSize, seqlen, numHeads, headDim * 2);
@@ -443,6 +450,9 @@ public class GatedAttention implements Attention {
             Tensor gateSig = sigmoid.forward(gate);
             Tensor gated = attn.mul(gateSig);
             Tensor out = oProj.forward(gated);
+            if (profile) {
+                smile.llm.engine.DecodeForwardProfile.addFullAttn(System.nanoTime() - t0);
+            }
             if (tpGroup != null && tpGroup.tpSize() > 1) {
                 tpGroup.allReduceSumInPlace(tpRank, out);
             }
