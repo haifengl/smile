@@ -29,6 +29,8 @@ import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCachePool;
+import smile.llm.engine.DecodeCudaGraph;
+import smile.llm.engine.DecodeCudaGraphSession;
 import smile.llm.parallel.TensorParallelGroup;
 import smile.llm.parallel.TensorShardSpec;
 import smile.util.AutoScope;
@@ -72,6 +74,13 @@ public class QwenModel extends LayerBlock {
     final int tpRank;
     KvCachePool kvCachePool;
     DeltaNetStatePool deltaNetStatePool;
+    /** Per-rank CUDA graph session for batch-1 decode (Phase 2c). */
+    DecodeCudaGraphSession decodeGraphSession;
+    /** Stable RoPE gather buffers for graph capture / replay. */
+    Tensor decodeGraphCosBuf;
+    Tensor decodeGraphSinBuf;
+    /** Logits tensor captured inside the decode graph (do not close). */
+    Tensor decodeGraphLogitsOut;
 
     /**
      * Constructs the module graph on CPU. Call {@link #to(Device)} after weight
@@ -599,16 +608,125 @@ public class QwenModel extends LayerBlock {
         Device device = tokens.device();
         long freeBefore = cudaFreeBytes(device);
         try {
-            Tensor h = tokEmbeddings.forward(tokens);
             Tensor cos = PartialRotaryEncoding.gather(rope.cos(), ropePositions);
             Tensor sin = PartialRotaryEncoding.gather(rope.sin(), ropePositions);
+            try {
+                return forwardRaggedDecodeCore(tokens, cachePositions, cos, sin);
+            } finally {
+                cos.close();
+                sin.close();
+            }
+        } finally {
+            Tensor.pop();
+            long freeAfter = cudaFreeBytes(device);
+            if (freeBefore >= 0 && freeAfter >= 0 && logger.isDebugEnabled()) {
+                logger.debug("tpRank={}: ragged forward freeMiB {} -> {}",
+                        tpRank,
+                        freeBefore / (1024 * 1024),
+                        freeAfter / (1024 * 1024));
+            }
+        }
+    }
 
+    /**
+     * Batch-1 decode forward with optional CUDA graph capture / replay.
+     *
+     * @param tokens         token ids {@code [1, 1]}.
+     * @param cachePositions KV write positions ({@code length == 1}).
+     * @param ropePositions  RoPE table gather positions.
+     * @return logits in float32.
+     */
+    public Tensor forwardDecodeGraph(Tensor tokens, int[] cachePositions, int[] ropePositions) {
+        if (!DecodeCudaGraph.enabled() || kvCachePool == null) {
+            return forward(tokens, cachePositions, ropePositions, false);
+        }
+        if (decodeGraphSession == null) {
+            decodeGraphSession = DecodeCudaGraphSession.tryCreate();
+        }
+        if (decodeGraphSession == null) {
+            return forward(tokens, cachePositions, ropePositions, false);
+        }
+
+        int cacheLen = cachePositions[0] + 1;
+        int numPages = kvCachePool.numPagesForLength(cacheLen);
+        kvCachePool.setDecodeGraphBuffers(true);
+        try {
+            ensureDecodeGraphRoPEBuffers(tokens.device());
+            prepareDecodeGraphInputs(cachePositions, ropePositions, cacheLen);
+
+            if (decodeGraphSession.canReplay(numPages)) {
+                decodeGraphSession.replay();
+                DecodeCudaGraph.markPersistentLogits(true);
+                return decodeGraphLogitsOut;
+            }
+
+            boolean capture = decodeGraphSession.shouldCapture(numPages);
+            if (capture) {
+                int deviceIndex = Byte.toUnsignedInt(tokens.device().index());
+                decodeGraphSession.beginCapture(deviceIndex);
+                try {
+                    decodeGraphLogitsOut = forwardRaggedDecodeCore(
+                            tokens, cachePositions, decodeGraphCosBuf, decodeGraphSinBuf);
+                    decodeGraphLogitsOut.detachFromScopes();
+                } finally {
+                    decodeGraphSession.endCapture();
+                }
+                DecodeCudaGraph.markPersistentLogits(true);
+                return decodeGraphLogitsOut;
+            }
+
+            return forwardRaggedDecodeCore(tokens, cachePositions, decodeGraphCosBuf, decodeGraphSinBuf);
+        } finally {
+            kvCachePool.setDecodeGraphBuffers(false);
+        }
+    }
+
+    /** Releases CUDA graph resources for this rank. */
+    public void closeDecodeGraph() {
+        if (decodeGraphSession != null) {
+            decodeGraphSession.close();
+            decodeGraphSession = null;
+        }
+        if (decodeGraphCosBuf != null) {
+            decodeGraphCosBuf.close();
+            decodeGraphCosBuf = null;
+        }
+        if (decodeGraphSinBuf != null) {
+            decodeGraphSinBuf.close();
+            decodeGraphSinBuf = null;
+        }
+        decodeGraphLogitsOut = null;
+    }
+
+    private void ensureDecodeGraphRoPEBuffers(Device device) {
+        if (decodeGraphCosBuf != null) {
+            return;
+        }
+        int rotaryDim = params.rotaryDim();
+        var opts = new Tensor.Options().device(device).dtype(ScalarType.Float);
+        decodeGraphCosBuf = Tensor.zeros(opts, 1, 1, rotaryDim);
+        decodeGraphSinBuf = Tensor.zeros(opts, 1, 1, rotaryDim);
+        decodeGraphCosBuf.detachFromScopes();
+        decodeGraphSinBuf.detachFromScopes();
+    }
+
+    private void prepareDecodeGraphInputs(int[] cachePositions, int[] ropePositions, int cacheLen) {
+        PartialRotaryEncoding.gatherInto(rope.cos(), ropePositions, decodeGraphCosBuf);
+        PartialRotaryEncoding.gatherInto(rope.sin(), ropePositions, decodeGraphSinBuf);
+        kvCachePool.prepareDecodeGraphStep(cacheLen, cachePositions[0]);
+    }
+
+    private Tensor forwardRaggedDecodeCore(Tensor tokens, int[] cachePositions,
+                                           Tensor cos, Tensor sin) {
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            Tensor h = tokEmbeddings.forward(tokens);
             for (int i = 0; i < layers.size(); i++) {
                 Tensor next = layers.get(i).forward(h, cachePositions, cos, sin, null);
                 h.close();
                 h = next;
             }
-
             Tensor normalized = norm.forward(h);
             h.close();
             Tensor logitsF = lmHead.forward(normalized);
@@ -621,13 +739,6 @@ public class QwenModel extends LayerBlock {
             return logits;
         } finally {
             Tensor.pop();
-            long freeAfter = cudaFreeBytes(device);
-            if (freeBefore >= 0 && freeAfter >= 0 && logger.isDebugEnabled()) {
-                logger.debug("tpRank={}: ragged forward freeMiB {} -> {}",
-                        tpRank,
-                        freeBefore / (1024 * 1024),
-                        freeAfter / (1024 * 1024));
-            }
         }
     }
 

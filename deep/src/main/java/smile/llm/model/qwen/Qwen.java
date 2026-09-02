@@ -52,6 +52,7 @@ import smile.llm.cache.KvCachePool;
 import smile.llm.checkpoint.SafeTensorsLoaderThreads;
 import smile.llm.attention.AttentionBackend;
 import smile.llm.attention.AttentionBackends;
+import smile.llm.engine.DecodeCudaGraph;
 import smile.llm.engine.DecodeStepTiming;
 import smile.llm.model.llama.Llama;
 import smile.llm.parallel.ParallelConfig;
@@ -186,6 +187,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 }
             }
             decodeTokenBuf = null;
+        }
+        for (QwenModel m : models) {
+            m.closeDecodeGraph();
         }
         if (tpExecutor != null) {
             tpExecutor.shutdownNow();
@@ -1877,9 +1881,14 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                                       ExecutorService pool) {
         Tensor[] logits = new Tensor[models.length];
         long t0 = System.nanoTime();
+        boolean graph = DecodeCudaGraph.enabled() && cachePositions.length == 1;
         if (models.length == 1) {
             long rank0 = System.nanoTime();
-            logits[0] = models[0].forward(tokens[0], cachePositions, ropePositions, false);
+            if (graph) {
+                logits[0] = models[0].forwardDecodeGraph(tokens[0], cachePositions, ropePositions);
+            } else {
+                logits[0] = models[0].forward(tokens[0], cachePositions, ropePositions, false);
+            }
             long rankNs = System.nanoTime() - rank0;
             recordForwardTiming(System.nanoTime() - t0, rankNs);
             return logits;
@@ -1892,6 +1901,10 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 long rankStart = System.nanoTime();
                 ParallelState.setCurrent(tpGroup.state(rank));
                 try (var guard = Tensor.noGradGuard()) {
+                    if (graph) {
+                        return models[rank].forwardDecodeGraph(
+                                tokens[rank], cachePositions, ropePositions);
+                    }
                     return models[rank].forward(tokens[rank], cachePositions, ropePositions, false);
                 } finally {
                     rankNs[rank] = System.nanoTime() - rankStart;
@@ -1951,17 +1964,22 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     /** Last-row logits {@code [B, V]}; copies so the result outlives closed views. */
     private static Tensor logitsRowFromDecodeOutput(Tensor[] logits, int batch) {
+        boolean persistent = DecodeCudaGraph.persistentLogits();
         try (var last = Index.of(-1);
              Tensor selected = logits[0].get(Index.Colon, last);
              Tensor row = selected.reshape(batch, -1)) {
             Tensor out = row.copy();
             out.promoteToParent();
-            for (Tensor l : logits) {
-                if (l != null) {
-                    l.close();
+            if (!persistent) {
+                for (Tensor l : logits) {
+                    if (l != null) {
+                        l.close();
+                    }
                 }
             }
             return out;
+        } finally {
+            DecodeCudaGraph.markPersistentLogits(false);
         }
     }
 

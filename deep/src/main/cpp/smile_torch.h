@@ -1043,6 +1043,32 @@ SMILE_API ST_Tensor smile_recurrent_gated_delta_rule(
  * ========================================================================= */
 
 /** Opaque workspace for FlashInfer-style paged attention. */
+typedef struct ST_CudaGraph_ *ST_CudaGraph;
+
+/** Creates an empty CUDA graph session (CUDA builds only). */
+SMILE_API ST_CudaGraph smile_cuda_graph_create(void);
+
+/** Destroys a graph session. */
+SMILE_API void smile_cuda_graph_destroy(ST_CudaGraph graph);
+
+/**
+ * Begins graph capture on {@code device_index}'s dedicated stream.
+ * All GPU work until {@link smile_cuda_graph_capture_end} must run on the
+ * calling thread with the same device current.
+ *
+ * @return 0 on success, -1 on error.
+ */
+SMILE_API int smile_cuda_graph_capture_begin(ST_CudaGraph graph, int device_index);
+
+/** Ends capture and instantiates the graph. */
+SMILE_API int smile_cuda_graph_capture_end(ST_CudaGraph graph);
+
+/** Replays a captured graph (inputs must be updated in place first). */
+SMILE_API int smile_cuda_graph_replay(ST_CudaGraph graph);
+
+/** @return 1 when capture has completed and the graph is replayable. */
+SMILE_API int smile_cuda_graph_is_ready(ST_CudaGraph graph);
+
 typedef struct ST_FlashInferWorkspace_ *ST_FlashInferWorkspace;
 
 /** Non-zero when paged attention was compiled into this library (CUDA). */

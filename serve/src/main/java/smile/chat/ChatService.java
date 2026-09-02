@@ -41,6 +41,7 @@ import smile.llm.*;
 import smile.llm.attention.AttentionBackend;
 import smile.llm.attention.AttentionBackends;
 import smile.llm.attention.FlashInferArtifacts;
+import smile.llm.engine.DecodeCudaGraph;
 import smile.llm.checkpoint.SafeTensorsLoaderThreads;
 import smile.llm.model.llama.*;
 import smile.llm.model.qwen.Qwen;
@@ -133,6 +134,8 @@ public class ChatService implements OpenAiModelContributor {
                 throw new IllegalStateException(
                         "FlashInfer requested but unavailable and flashinfer-allow-torch-fallback=false");
             }
+            logger.infof("Decode CUDA graph: %s",
+                    DecodeCudaGraph.enabled() ? "enabled" : "disabled");
             double memFraction = config.memFractionStatic();
             String kvDtype = kvCache.dtype().orElse(null);
             int pageSize = kvCache.pageSize();
