@@ -1056,7 +1056,11 @@ public class KvCachePool implements AutoCloseable {
         Tensor idx;
         boolean closeIdx = false;
         if (decodeGraphBuffers && batch == 1 && seqlen == 1) {
-            ensureDecodeKvIndex(startPos[0]);
+            // Index updated in prepareDecodeGraphStep() before capture/replay; must not
+            // scalar-put from CPU during CUDA graph capture.
+            if (decodeKvIndexBuf == null) {
+                throw new IllegalStateException("decode KV index buffer not prepared");
+            }
             idx = decodeKvIndexBuf;
         } else {
             long[] indices = new long[batch * seqlen];
