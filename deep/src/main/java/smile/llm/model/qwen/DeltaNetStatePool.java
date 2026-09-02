@@ -252,6 +252,78 @@ public class DeltaNetStatePool implements AutoCloseable {
         }
     }
 
+    /** Lazily allocated backups for {@link #withPreservedActive}. */
+    private Tensor[] recurrentBackup;
+    private Tensor[] convBackup;
+
+    /**
+     * Runs {@code action} without permanently mutating the active DeltaNet working rows.
+     *
+     * <p>Used for CUDA graph prefetch forwards that share the current
+     * {@link #activateStep} packing.
+     */
+    public void withPreservedActive(Runnable action) {
+        int b = boundBatch;
+        if (b <= 0) {
+            action.run();
+            return;
+        }
+        ensureActiveBackup();
+        try (var span = Index.slice(0, b)) {
+            for (int i = 0; i < numLinearLayers; i++) {
+                try (Tensor src = recurrent[i].get(span);
+                     Tensor dst = recurrentBackup[i].get(span)) {
+                    smile.torch.Native.copy_(dst, src);
+                }
+                if (conv[i] != null && convBackup[i] != null) {
+                    try (Tensor src = conv[i].get(span);
+                         Tensor dst = convBackup[i].get(span)) {
+                        smile.torch.Native.copy_(dst, src);
+                    }
+                }
+            }
+        }
+        try {
+            action.run();
+        } finally {
+            try (var span = Index.slice(0, b)) {
+                for (int i = 0; i < numLinearLayers; i++) {
+                    try (Tensor src = recurrentBackup[i].get(span);
+                         Tensor dst = recurrent[i].get(span)) {
+                        smile.torch.Native.copy_(dst, src);
+                    }
+                    if (conv[i] != null && convBackup[i] != null) {
+                        try (Tensor src = convBackup[i].get(span);
+                             Tensor dst = conv[i].get(span)) {
+                            smile.torch.Native.copy_(dst, src);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void ensureActiveBackup() {
+        if (recurrentBackup != null) {
+            return;
+        }
+        recurrentBackup = new Tensor[numLinearLayers];
+        convBackup = new Tensor[numLinearLayers];
+        var recurrentOpts = new Tensor.Options()
+                .device(device).dtype(recurrentDtype).requireGradients(false);
+        var convOpts = new Tensor.Options()
+                .device(device).dtype(convDtype).requireGradients(false);
+        for (int i = 0; i < numLinearLayers; i++) {
+            recurrentBackup[i] = Tensor.zeros(recurrentOpts, maxBatchSize, numVHeads,
+                    keyHeadDim, valueHeadDim);
+            recurrentBackup[i].detachFromScopes();
+            if (convStateLen > 0) {
+                convBackup[i] = Tensor.zeros(convOpts, maxBatchSize, convDim, convStateLen);
+                convBackup[i].detachFromScopes();
+            }
+        }
+    }
+
     /**
      * Clears the active-request binding after exclusive generate finishes.
      */

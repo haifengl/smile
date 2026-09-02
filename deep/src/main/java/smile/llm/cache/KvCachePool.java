@@ -186,6 +186,13 @@ public class KvCachePool implements AutoCloseable {
     /** Reused KV slot index {@code [1]} for graph decode {@link #put}. */
     private Tensor decodeKvIndexBuf;
 
+    /** Scratch slot indices for next-bucket graph prefetch (isolated from live requests). */
+    private long[] prefetchSlots;
+    /** Saved step metadata while a prefetch forward runs. */
+    private FlashInferKvMetadata prefetchSavedMeta;
+    private int prefetchSavedUniformLen = -1;
+    private int[] prefetchSavedLengths;
+
     /** Cumulative prompt tokens seen by {@link #bindWithPrefix} (full length). */
     private final AtomicLong prefixPromptTokens = new AtomicLong();
     /** Cumulative matched prefix tokens from {@link #bindWithPrefix}. */
@@ -577,6 +584,60 @@ public class KvCachePool implements AutoCloseable {
      */
     public int numPagesForLength(int length) {
         return (length + pageSize - 1) / pageSize;
+    }
+
+    /**
+     * Decode steps remaining before the next KV page boundary (uniform cache length).
+     *
+     * @param cacheLen inclusive cached token count for the current step.
+     * @return {@code 0} when the next decode step crosses into a new page bucket.
+     */
+    public int stepsUntilPageBoundary(int cacheLen) {
+        int rem = cacheLen % pageSize;
+        return rem == 0 ? 0 : pageSize - rem;
+    }
+
+    /**
+     * First inclusive cache length in the page bucket after {@code numPages}.
+     *
+     * @param numPages current KV page count.
+     * @return cache length for the first step in bucket {@code numPages + 1}.
+     */
+    public int firstCacheLenInNextPageBucket(int numPages) {
+        return numPages * pageSize + 1;
+    }
+
+    /**
+     * Swaps FlashInfer metadata to scratch slots for an isolated prefetch forward.
+     *
+     * @param cacheLen inclusive cache length for the prefetched bucket.
+     * @param cachePos KV write position for the prefetch forward.
+     * @param batch    decode batch size.
+     */
+    public void beginPrefetchDecodeGraphStep(int cacheLen, int cachePos, int batch) {
+        ensureBound();
+        prefetchSavedMeta = stepFlashInferMeta;
+        prefetchSavedUniformLen = stepFlashInferUniformLen;
+        prefetchSavedLengths = stepFlashInferLengths;
+        ensurePrefetchSlots(cacheLen);
+        stepFlashInferMeta = buildPrefetchFlashInferMetadata(cacheLen, batch);
+        stepFlashInferUniformLen = cacheLen;
+        stepFlashInferLengths = null;
+        ensureDecodeKvIndexBuf(batch);
+        long slot = prefetchSlots[cachePos];
+        for (int b = 0; b < batch; b++) {
+            decodeKvIndexBuf.put_(slot, b);
+        }
+    }
+
+    /** Restores live step metadata after {@link #beginPrefetchDecodeGraphStep}. */
+    public void endPrefetchDecodeGraphStep() {
+        stepFlashInferMeta = prefetchSavedMeta;
+        stepFlashInferUniformLen = prefetchSavedUniformLen;
+        stepFlashInferLengths = prefetchSavedLengths;
+        prefetchSavedMeta = null;
+        prefetchSavedUniformLen = -1;
+        prefetchSavedLengths = null;
     }
 
     /**
@@ -1576,6 +1637,10 @@ public class KvCachePool implements AutoCloseable {
         }
         kCache.close();
         vCache.close();
+        if (prefetchSlots != null) {
+            free(prefetchSlots);
+            prefetchSlots = null;
+        }
         freePages.clear();
     }
 
@@ -1790,6 +1855,71 @@ public class KvCachePool implements AutoCloseable {
             radix.decLockRef(lockedNode);
             lockedNode = null;
         }
+    }
+
+    private void ensurePrefetchSlots(int cacheLen) {
+        int aligned = pageAlignUp(cacheLen);
+        if (prefetchSlots != null && prefetchSlots.length >= aligned) {
+            return;
+        }
+        if (prefetchSlots != null) {
+            free(prefetchSlots);
+            prefetchSlots = null;
+        }
+        prefetchSlots = alloc(aligned);
+    }
+
+    private FlashInferKvMetadata buildPrefetchFlashInferMetadata(int length, int batch) {
+        if (length < 0) {
+            throw new IllegalArgumentException("KV FlashInfer length out of range: " + length);
+        }
+        if (length == 0) {
+            Tensor indptr = Tensor.of(new int[batch + 1]);
+            Tensor indices = Tensor.of(new int[0]);
+            Tensor last = Tensor.of(new int[batch]);
+            indptr.detachFromScopes();
+            indices.detachFromScopes();
+            last.detachFromScopes();
+            return new FlashInferKvMetadata(indptr, indices, last, pageSize);
+        }
+        int nPages = (length + pageSize - 1) / pageSize;
+        int rem = length % pageSize;
+        int lastPageLen = rem == 0 ? pageSize : rem;
+        int[] indptrArr = new int[batch + 1];
+        int totalPages = nPages * batch;
+        for (int b = 0; b <= batch; b++) {
+            indptrArr[b] = b * nPages;
+        }
+        int[] flatIndices = new int[totalPages];
+        for (int b = 0; b < batch; b++) {
+            int cursor = b * nPages;
+            for (int p = 0; p < nPages; p++) {
+                int pos = p * pageSize;
+                flatIndices[cursor + p] = (int) (prefetchSlots[pos] / pageSize);
+            }
+        }
+        int[] lastPageLenArr = new int[batch];
+        Arrays.fill(lastPageLenArr, lastPageLen);
+        Tensor indptrT;
+        Tensor indicesT;
+        Tensor lastT;
+        if (device.isCUDA()) {
+            try (Tensor iCpu = Tensor.of(indptrArr);
+                 Tensor nCpu = Tensor.of(flatIndices);
+                 Tensor lCpu = Tensor.of(lastPageLenArr)) {
+                indptrT = iCpu.to(device);
+                indicesT = nCpu.to(device);
+                lastT = lCpu.to(device);
+            }
+        } else {
+            indptrT = Tensor.of(indptrArr);
+            indicesT = Tensor.of(flatIndices);
+            lastT = Tensor.of(lastPageLenArr);
+        }
+        indptrT.detachFromScopes();
+        indicesT.detachFromScopes();
+        lastT.detachFromScopes();
+        return new FlashInferKvMetadata(indptrT, indicesT, lastT, pageSize);
     }
 
     private int pageAlignUp(int tokens) {

@@ -246,6 +246,8 @@ public final class InferenceEngine implements AutoCloseable {
                         queuedCount.decrementAndGet();
                         waiting.add(peek);
                         queuedCount.incrementAndGet();
+                    } else {
+                        executor.idleDecodeGraphPrefetch();
                     }
                     // Idle: no emptyCache — keep caching-allocator HWM reserved
                     // (see maybeEmptyDeviceCache). Scope drain runs when the last

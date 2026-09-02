@@ -155,6 +155,12 @@ public interface ModelExecutor {
     Tensor decodeStep(int[] requestIds, int[] lastTokens, int[] positions);
 
     /**
+     * Advances pending decode-graph prefetch when the scheduler is idle but KV
+     * remains bound (e.g. between continuous-batching waves).
+     */
+    default void idleDecodeGraphPrefetch() {}
+
+    /**
      * Inserts into the radix tree (when enabled) and unbinds the request.
      *
      * @param requestId      request id.

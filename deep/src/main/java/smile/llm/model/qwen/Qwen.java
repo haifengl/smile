@@ -2117,4 +2117,18 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
     }
+
+    @Override
+    public void idleDecodeGraphPrefetch() {
+        if (!DecodeCudaGraph.preCaptureEnabled()) {
+            return;
+        }
+        KvCachePool pool = models[0].kvCachePool();
+        if (pool == null || pool.boundRequestCount() == 0) {
+            return;
+        }
+        for (QwenModel m : models) {
+            m.idleAdvancePrefetch();
+        }
+    }
 }
