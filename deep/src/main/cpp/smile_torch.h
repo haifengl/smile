@@ -662,6 +662,7 @@ SMILE_API void      smile_torch_gelu_       (ST_Tensor x);
 SMILE_API ST_Tensor smile_torch_glu         (ST_Tensor x);
 SMILE_API ST_Tensor smile_torch_silu        (ST_Tensor x);
 SMILE_API void      smile_torch_silu_       (ST_Tensor x);
+SMILE_API ST_Tensor smile_torch_softplus    (ST_Tensor x);
 SMILE_API ST_Tensor smile_torch_sigmoid     (ST_Tensor x);
 SMILE_API void      smile_torch_sigmoid_    (ST_Tensor x);
 SMILE_API ST_Tensor smile_torch_tanh        (ST_Tensor x);
@@ -1037,6 +1038,22 @@ SMILE_API ST_Tensor smile_recurrent_gated_delta_rule(
         ST_Tensor query, ST_Tensor key, ST_Tensor value,
         ST_Tensor g, ST_Tensor beta, ST_Tensor state,
         int qk_l2norm);
+
+/**
+ * Fused decay gate {@code g = -exp(A_log) * softplus(a + dt_bias)}.
+ * Returns float {@code [B,S,H]} (or broadcast-compatible shape of {@code a}).
+ */
+SMILE_API ST_Tensor smile_gated_delta_compute_g(
+        ST_Tensor a, ST_Tensor a_log, ST_Tensor dt_bias);
+
+/**
+ * Depthwise causal conv1d update (decode-oriented). Mutates {@code conv_state}
+ * in place. {@code hidden} {@code [B,C,L]}, {@code conv_state} {@code [B,C,K-1]},
+ * {@code weight} {@code [C,K]} (or {@code [1,C,K]}). Returns SiLU output
+ * {@code [B,C,L]} in {@code hidden}'s dtype.
+ */
+SMILE_API ST_Tensor smile_causal_conv1d_update(
+        ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor weight);
 
 /* =========================================================================
  * FlashInfer / paged attention backend

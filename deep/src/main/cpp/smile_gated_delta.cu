@@ -192,4 +192,71 @@ int smile_gated_delta_recurrent_cuda(
     return 0;
 }
 
+namespace {
+
+/** One thread per (b,c): weighted sum over K + SiLU + roll state. */
+__global__ void causal_conv1d_update_decode_kernel(
+        const float *__restrict__ x,
+        float *__restrict__ state,
+        const float *__restrict__ w,
+        float *__restrict__ out,
+        int64_t B, int64_t C, int64_t K) {
+    const int64_t idx = static_cast<int64_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+    const int64_t BC = B * C;
+    if (idx >= BC) return;
+    const int64_t b = idx / C;
+    const int64_t c = idx - b * C;
+    const int64_t state_len = K - 1;
+
+    const float *x_bc = x + (b * C + c);
+    float *st_bc = state + ((b * C + c) * state_len);
+    const float *w_c = w + c * K;
+
+    float acc = 0.f;
+    for (int64_t k = 0; k < state_len; ++k) {
+        acc += st_bc[k] * w_c[k];
+    }
+    const float x_val = x_bc[0];
+    acc += x_val * w_c[state_len];
+
+    // SiLU(x) = x * sigmoid(x)
+    const float sig = 1.f / (1.f + expf(-acc));
+    out[b * C + c] = acc * sig;
+
+    // Roll state left and append x.
+    for (int64_t k = 0; k < state_len - 1; ++k) {
+        st_bc[k] = st_bc[k + 1];
+    }
+    if (state_len > 0) {
+        st_bc[state_len - 1] = x_val;
+    }
+}
+
+} // namespace
+
+int smile_causal_conv1d_update_decode_cuda(
+        const float *x, float *state, const float *w, float *out,
+        int64_t B, int64_t C, int64_t K,
+        void *cuda_stream) {
+    g_gated_delta_error.clear();
+    if (B < 1 || C < 1 || K < 1 || K > 16) {
+        g_gated_delta_error = "causal_conv1d_update: invalid shape";
+        return -1;
+    }
+    const int64_t n = B * C;
+    const int threads = 256;
+    const int blocks = static_cast<int>((n + threads - 1) / threads);
+    cudaStream_t stream = cuda_stream
+            ? static_cast<cudaStream_t>(cuda_stream)
+            : static_cast<cudaStream_t>(0);
+    causal_conv1d_update_decode_kernel<<<blocks, threads, 0, stream>>>(
+            x, state, w, out, B, C, K);
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        g_gated_delta_error = cudaGetErrorString(err);
+        return -1;
+    }
+    return 0;
+}
+
 #endif /* USE_CUDA */

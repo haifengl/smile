@@ -1282,6 +1282,7 @@ void      smile_torch_gelu_      (ST_Tensor x) { if (x) x->t = torch::gelu(x->t)
 ST_Tensor smile_torch_glu        (ST_Tensor x) { MAKE_TENSOR(torch::glu(x->t)); }
 ST_Tensor smile_torch_silu       (ST_Tensor x) { MAKE_TENSOR(torch::silu(x->t)); }
 void      smile_torch_silu_      (ST_Tensor x) { if (x) torch::silu_(x->t); }
+ST_Tensor smile_torch_softplus   (ST_Tensor x) { MAKE_TENSOR(torch::softplus(x->t)); }
 ST_Tensor smile_torch_sigmoid    (ST_Tensor x) { MAKE_TENSOR(torch::sigmoid(x->t)); }
 void      smile_torch_sigmoid_   (ST_Tensor x) { if (x) torch::sigmoid_(x->t); }
 ST_Tensor smile_torch_tanh       (ST_Tensor x) { MAKE_TENSOR(torch::tanh(x->t)); }
@@ -2305,6 +2306,119 @@ ST_Tensor smile_recurrent_gated_delta_rule(
         }
 
         auto out = out_f.transpose(1, 2).contiguous().to(q0.scalar_type());
+        return new ST_Tensor_{ out };
+    ST_TRY_END
+    return nullptr;
+}
+
+ST_Tensor smile_gated_delta_compute_g(
+        ST_Tensor a, ST_Tensor a_log, ST_Tensor dt_bias) {
+    if (!a || !a_log || !dt_bias) {
+        set_error("smile_gated_delta_compute_g: null tensor");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto af = a->t.to(c10::ScalarType::Float);
+        auto alog = a_log->t.to(c10::ScalarType::Float);
+        auto dt = dt_bias->t.to(c10::ScalarType::Float);
+        // g = -exp(A_log) * softplus(a + dt_bias)
+        auto g = (-alog.exp()) * torch::softplus(af + dt);
+        return new ST_Tensor_{ g.contiguous() };
+    ST_TRY_END
+    return nullptr;
+}
+
+static torch::Tensor causal_conv1d_update_libtorch(
+        torch::Tensor hidden, torch::Tensor conv_state, torch::Tensor weight) {
+    // hidden [B,C,L], state [B,C,K-1], weight [C,K]
+    auto B = hidden.size(0);
+    auto C = hidden.size(1);
+    auto L = hidden.size(2);
+    auto w = weight.dim() == 3 ? weight.reshape(C, weight.size(-1)) : weight;
+    auto K = w.size(1);
+    auto state_len = conv_state.size(2);
+    auto cat = torch::cat({conv_state, hidden}, /*dim=*/2); // [B,C,state_len+L]
+    auto out = torch::zeros({B, C, L}, hidden.options());
+    for (int64_t k = 0; k < K; ++k) {
+        auto slice = cat.narrow(/*dim=*/2, k, L);
+        auto wk = w.select(1, k).view({1, C, 1});
+        out.add_(slice * wk);
+    }
+    // Roll state: last state_len columns of cat
+    if (state_len > 0) {
+        conv_state.copy_(cat.narrow(/*dim=*/2, cat.size(2) - state_len, state_len));
+    }
+    return torch::silu(out);
+}
+
+ST_Tensor smile_causal_conv1d_update(
+        ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor weight) {
+    if (!hidden || !conv_state || !weight) {
+        set_error("smile_causal_conv1d_update: null tensor");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto h = hidden->t;
+        auto st = conv_state->t;
+        auto w0 = weight->t;
+        if (h.dim() != 3 || st.dim() != 3) {
+            set_error("smile_causal_conv1d_update: hidden/state must be rank-3");
+            return nullptr;
+        }
+        auto B = h.size(0);
+        auto C = h.size(1);
+        auto L = h.size(2);
+        auto w = w0.dim() == 3 ? w0.reshape(C, w0.size(-1)) : w0;
+        if (w.dim() != 2 || w.size(0) != C) {
+            set_error("smile_causal_conv1d_update: weight must be [C,K]");
+            return nullptr;
+        }
+        auto K = w.size(1);
+        auto state_len = st.size(2);
+        if (state_len != K - 1) {
+            set_error("smile_causal_conv1d_update: conv_state length must be K-1");
+            return nullptr;
+        }
+        if (st.size(0) != B || st.size(1) != C) {
+            set_error("smile_causal_conv1d_update: state batch/channel mismatch");
+            return nullptr;
+        }
+
+#ifdef USE_CUDA
+        // Fast path: decode S=1 fused CUDA kernel.
+        if (h.is_cuda() && L == 1 && K >= 1 && K <= 16) {
+            c10::cuda::CUDAGuard guard(h.device());
+            cudaStream_t stream = at::cuda::getCurrentCUDAStream(h.device().index()).stream();
+            auto dtype = h.scalar_type();
+            auto hf = h.contiguous().to(c10::ScalarType::Float);
+            auto wf = w.contiguous().to(c10::ScalarType::Float);
+            torch::Tensor stf;
+            const bool state_alias = st.scalar_type() == c10::ScalarType::Float
+                    && st.is_contiguous();
+            if (state_alias) {
+                stf = st;
+            } else {
+                stf = st.contiguous().to(c10::ScalarType::Float);
+            }
+            auto out_f = torch::empty({B, C, 1}, hf.options());
+            int rc = smile_causal_conv1d_update_decode_cuda(
+                    hf.data_ptr<float>(),
+                    stf.data_ptr<float>(),
+                    wf.data_ptr<float>(),
+                    out_f.data_ptr<float>(),
+                    B, C, K,
+                    stream);
+            if (rc == 0) {
+                if (!state_alias) {
+                    st.copy_(stf.to(st.scalar_type()));
+                }
+                auto out = out_f.to(dtype);
+                return new ST_Tensor_{ out };
+            }
+            // Fall through to libtorch on kernel failure.
+        }
+#endif
+        auto out = causal_conv1d_update_libtorch(h, st, w);
         return new ST_Tensor_{ out };
     ST_TRY_END
     return nullptr;

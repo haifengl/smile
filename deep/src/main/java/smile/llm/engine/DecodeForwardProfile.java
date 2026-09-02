@@ -44,6 +44,12 @@ public final class DecodeForwardProfile {
         public long mlpNs;
         public long ncclNs;
         public long lmHeadNs;
+        /** DeltaNet sub-phases (sum ≈ {@link #linearAttnNs} when profiled). */
+        public long deltaProjNs;
+        public long deltaConvNs;
+        public long deltaGateNs;
+        public long deltaRecurrentNs;
+        public long deltaOutNs;
 
         /** Element-wise max into {@code this}. */
         public void maxWith(Snapshot other) {
@@ -56,6 +62,11 @@ public final class DecodeForwardProfile {
             mlpNs = Math.max(mlpNs, other.mlpNs);
             ncclNs = Math.max(ncclNs, other.ncclNs);
             lmHeadNs = Math.max(lmHeadNs, other.lmHeadNs);
+            deltaProjNs = Math.max(deltaProjNs, other.deltaProjNs);
+            deltaConvNs = Math.max(deltaConvNs, other.deltaConvNs);
+            deltaGateNs = Math.max(deltaGateNs, other.deltaGateNs);
+            deltaRecurrentNs = Math.max(deltaRecurrentNs, other.deltaRecurrentNs);
+            deltaOutNs = Math.max(deltaOutNs, other.deltaOutNs);
         }
 
         long embedMs() {
@@ -80,6 +91,26 @@ public final class DecodeForwardProfile {
 
         long lmHeadMs() {
             return lmHeadNs / 1_000_000L;
+        }
+
+        long deltaProjMs() {
+            return deltaProjNs / 1_000_000L;
+        }
+
+        long deltaConvMs() {
+            return deltaConvNs / 1_000_000L;
+        }
+
+        long deltaGateMs() {
+            return deltaGateNs / 1_000_000L;
+        }
+
+        long deltaRecurrentMs() {
+            return deltaRecurrentNs / 1_000_000L;
+        }
+
+        long deltaOutMs() {
+            return deltaOutNs / 1_000_000L;
         }
     }
 
@@ -124,6 +155,41 @@ public final class DecodeForwardProfile {
     public static void addLmHead(long ns) {
         if (ENABLED && ns > 0) {
             LOCAL.get().lmHeadNs += ns;
+        }
+    }
+
+    /** DeltaNet: input projections (qkv/z/b/a). */
+    public static void addDeltaProj(long ns) {
+        if (ENABLED && ns > 0) {
+            LOCAL.get().deltaProjNs += ns;
+        }
+    }
+
+    /** DeltaNet: causal conv1d update / prefill. */
+    public static void addDeltaConv(long ns) {
+        if (ENABLED && ns > 0) {
+            LOCAL.get().deltaConvNs += ns;
+        }
+    }
+
+    /** DeltaNet: beta/sigmoid + softplus gate {@code g}. */
+    public static void addDeltaGate(long ns) {
+        if (ENABLED && ns > 0) {
+            LOCAL.get().deltaGateNs += ns;
+        }
+    }
+
+    /** DeltaNet: recurrent gated-delta rule (native or Java). */
+    public static void addDeltaRecurrent(long ns) {
+        if (ENABLED && ns > 0) {
+            LOCAL.get().deltaRecurrentNs += ns;
+        }
+    }
+
+    /** DeltaNet: RMSNorm-gated + out projection. */
+    public static void addDeltaOut(long ns) {
+        if (ENABLED && ns > 0) {
+            LOCAL.get().deltaOutNs += ns;
         }
     }
 

@@ -251,12 +251,17 @@ public class GatedDeltaNet {
         boolean profile = smile.llm.engine.DecodeForwardProfile.enabled();
         long t0 = profile ? System.nanoTime() : 0L;
         try {
+            long tMark = t0;
             Tensor mixedRaw = inProjQkv.forward(x);
             Tensor mixed = mixedRaw.transpose(1, 2); // [B, C, S]
             Tensor zRaw = inProjZ.forward(x);
             Tensor z = zRaw.view(batch, seqLen, numVHeads, headVDim);
             Tensor b = inProjB.forward(x);
             Tensor a = inProjA.forward(x);
+            if (profile) {
+                smile.llm.engine.DecodeForwardProfile.addDeltaProj(System.nanoTime() - tMark);
+                tMark = System.nanoTime();
+            }
 
             Tensor convState = statePool != null ? statePool.activeConv(linearLayerId) : null;
             Tensor mixedConvBase = decode && convState != null
@@ -265,6 +270,10 @@ public class GatedDeltaNet {
             mixed.close();
             mixedRaw.close();
             Tensor mixedConv = mixedConvBase.transpose(1, 2); // [B, S, C]
+            if (profile) {
+                smile.llm.engine.DecodeForwardProfile.addDeltaConv(System.nanoTime() - tMark);
+                tMark = System.nanoTime();
+            }
 
             try (var qSpan = Index.slice(0, keyDim);
                  var kSpan = Index.slice(keyDim, 2 * keyDim);
@@ -289,18 +298,12 @@ public class GatedDeltaNet {
                 Tensor beta = sigmoid.forward(b);
                 b.close();
                 ensureFloatCaches();
-                Tensor aF = a.to(ScalarType.Float);
+                Tensor g = GatedDeltaRule.computeDecayGate(a, aLogF, dtBiasF);
                 a.close();
-                Tensor aPlusDt = aF.add(dtBiasF);
-                Tensor soft = GatedDeltaRule.softplus(aPlusDt);
-                Tensor aExp = aLogF.exp();
-                Tensor aNeg = aExp.neg();
-                Tensor g = aNeg.mul(soft);
-                aF.close();
-                aPlusDt.close();
-                soft.close();
-                aExp.close();
-                aNeg.close();
+                if (profile) {
+                    smile.llm.engine.DecodeForwardProfile.addDeltaGate(System.nanoTime() - tMark);
+                    tMark = System.nanoTime();
+                }
 
                 // Prefill and decode both reuse the pool buffer (reset() zeros it).
                 Tensor initState = statePool != null ? statePool.activeRecurrent(linearLayerId) : null;
@@ -317,6 +320,10 @@ public class GatedDeltaNet {
                 beta.close();
                 mixedConv.close();
                 mixedConvBase.close();
+                if (profile) {
+                    smile.llm.engine.DecodeForwardProfile.addDeltaRecurrent(System.nanoTime() - tMark);
+                    tMark = System.nanoTime();
+                }
 
                 Tensor core = result._1();
                 // Non-null only when the kernel allocated a fresh state (no pool).
@@ -332,6 +339,7 @@ public class GatedDeltaNet {
                 gated = gated.view(batch, seqLen, valueDim);
                 Tensor out = outProj.forward(gated);
                 if (profile) {
+                    smile.llm.engine.DecodeForwardProfile.addDeltaOut(System.nanoTime() - tMark);
                     smile.llm.engine.DecodeForwardProfile.addLinearAttn(System.nanoTime() - t0);
                 }
                 if (tpGroup != null && tpGroup.tpSize() > 1) {
