@@ -32,4 +32,23 @@ int smile_gated_delta_recurrent_cuda(
 /** Last CUDA gated-delta error message (valid until next call). */
 extern "C" const char *smile_gated_delta_last_error(void);
 
+/**
+ * Decode {@code L==1} depthwise causal conv1d update.
+ *
+ * Layouts (float contiguous):
+ *   x:     [B, C, 1]
+ *   state: [B, C, K-1]  (mutated in place: roll left, append x)
+ *   w:     [C, K]
+ *   out:   [B, C, 1]    (SiLU of weighted sum)
+ *
+ * @return 0 on success.
+ */
+int smile_causal_conv1d_update_decode_cuda(
+        const float *x,
+        float *state,
+        const float *w,
+        float *out,
+        int64_t B, int64_t C, int64_t K,
+        void *cuda_stream);
+
 #endif /* USE_CUDA */

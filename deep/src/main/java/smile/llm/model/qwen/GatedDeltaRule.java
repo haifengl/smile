@@ -56,14 +56,41 @@ final class GatedDeltaRule {
     /**
      * Softplus matching PyTorch {@code F.softplus}: {@code x} when {@code x > 20},
      * otherwise {@code log(1 + exp(clamp(x, -20, 20)))}.
+     *
+     * <p>Prefers native {@code torch::softplus} when available.
      */
     static Tensor softplus(Tensor x) {
+        Tensor nativeSp = smile.torch.Native.softplus(x);
+        if (nativeSp != null) {
+            return nativeSp;
+        }
         try (Tensor clamped = x.clamp(-20, 20);
              Tensor e = clamped.exp();
              Tensor p = e.add(1.0);
              Tensor sp = p.log();
              Tensor over = x.gt(20.0)) {
             return Tensor.where(over, x, sp);
+        }
+    }
+
+    /**
+     * Decay gate {@code g = -exp(A_log) * softplus(a + dt_bias)} (float output).
+     *
+     * @param a       projected {@code a} {@code [B,S,H]}
+     * @param aLogF   float {@code A_log} {@code [H]}
+     * @param dtBiasF float {@code dt_bias} {@code [H]}
+     */
+    static Tensor computeDecayGate(Tensor a, Tensor aLogF, Tensor dtBiasF) {
+        Tensor fused = smile.torch.Native.gatedDeltaComputeG(a, aLogF, dtBiasF);
+        if (fused != null) {
+            return fused;
+        }
+        try (Tensor aF = a.to(ScalarType.Float);
+             Tensor aPlusDt = aF.add(dtBiasF);
+             Tensor soft = softplus(aPlusDt);
+             Tensor aExp = aLogF.exp();
+             Tensor aNeg = aExp.neg()) {
+            return aNeg.mul(soft);
         }
     }
 
@@ -159,6 +186,11 @@ final class GatedDeltaRule {
     private static Tensor causalConv1dUpdateDecode(
             Tensor hidden, Tensor convState, Tensor weight,
             long batch, long channels, long kernel, long stateLen) {
+        // Prefer fused native update (one kernel + in-place state roll).
+        Tensor nativeOut = smile.torch.Native.causalConv1dUpdate(hidden, convState, weight);
+        if (nativeOut != null) {
+            return nativeOut;
+        }
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
         try {

@@ -154,6 +154,21 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.JAVA_INT));
+        static final MethodHandle SOFTPLUS = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_torch_softplus")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle GATED_DELTA_COMPUTE_G = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_gated_delta_compute_g")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle CAUSAL_CONV1D_UPDATE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_causal_conv1d_update")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
         static final java.util.Optional<MemorySegment> FLASHINFER_AVAILABLE_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_flashinfer_is_available");
         static final MethodHandle FLASHINFER_AVAILABLE = FLASHINFER_AVAILABLE_SYM
@@ -834,6 +849,70 @@ public final class Native {
             if (err != null && !err.isEmpty()) {
                 throw new RuntimeException(err);
             }
+            return null;
+        }
+        return new Tensor(out);
+    }
+
+    /**
+     * Native {@code torch::softplus}. Returns {@code null} when the symbol is
+     * missing (older {@code libsmile_torch}).
+     */
+    public static Tensor softplus(Tensor x) {
+        if (Bindings.SOFTPLUS == null || x == null) {
+            return null;
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.SOFTPLUS.invokeExact(x.handle());
+        } catch (Throwable t) {
+            return null;
+        }
+        if (out == null || out.address() == 0) {
+            return null;
+        }
+        return new Tensor(out);
+    }
+
+    /**
+     * Fused {@code g = -exp(A_log) * softplus(a + dt_bias)} (float). Returns
+     * {@code null} when unavailable.
+     */
+    public static Tensor gatedDeltaComputeG(Tensor a, Tensor aLog, Tensor dtBias) {
+        if (Bindings.GATED_DELTA_COMPUTE_G == null || a == null || aLog == null || dtBias == null) {
+            return null;
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.GATED_DELTA_COMPUTE_G.invokeExact(
+                    a.handle(), aLog.handle(), dtBias.handle());
+        } catch (Throwable t) {
+            return null;
+        }
+        if (out == null || out.address() == 0) {
+            return null;
+        }
+        return new Tensor(out);
+    }
+
+    /**
+     * Fused causal depthwise conv1d update for decode ({@code S==1}): writes
+     * SiLU output and rolls {@code convState} in place. Returns {@code null}
+     * when unavailable.
+     */
+    public static Tensor causalConv1dUpdate(Tensor hidden, Tensor convState, Tensor weight) {
+        if (Bindings.CAUSAL_CONV1D_UPDATE == null
+                || hidden == null || convState == null || weight == null) {
+            return null;
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.CAUSAL_CONV1D_UPDATE.invokeExact(
+                    hidden.handle(), convState.handle(), weight.handle());
+        } catch (Throwable t) {
+            return null;
+        }
+        if (out == null || out.address() == 0) {
             return null;
         }
         return new Tensor(out);

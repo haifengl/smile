@@ -626,13 +626,16 @@ public final class InferenceEngine implements AutoCloseable {
                     infoRateLimited("decode-latency",
                             "Decode step: batch={} ms={} msPerTok={} tokPerSec={} "
                                     + "(prep={} forward={} tpBarrier={} slowestRank={} logits={} sample={}) "
-                                    + "profile(embed={} fullAttn={} linearAttn={} mlp={} nccl={} lmHead={})",
+                                    + "profile(embed={} fullAttn={} linearAttn={} mlp={} nccl={} lmHead={}) "
+                                    + "delta(proj={} conv={} gate={} recurrent={} out={})",
                             b, decodeMs, String.format("%.2f", decodeMs / (double) b),
                             String.format("%.1f", b * 1000.0 / decodeMs),
                             timing.prepMs(), timing.forwardMs(), timing.tpBarrierMs(),
                             timing.slowestRankMs(), timing.logitsMs(), timing.sampleMs(),
                             p.embedMs(), p.fullAttnMs(), p.linearAttnMs(),
-                            p.mlpMs(), p.ncclMs(), p.lmHeadMs());
+                            p.mlpMs(), p.ncclMs(), p.lmHeadMs(),
+                            p.deltaProjMs(), p.deltaConvMs(), p.deltaGateMs(),
+                            p.deltaRecurrentMs(), p.deltaOutMs());
                 } else if (timing != null) {
                     infoRateLimited("decode-latency",
                             "Decode step: batch={} ms={} msPerTok={} tokPerSec={} "
