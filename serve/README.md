@@ -20,32 +20,33 @@ A React-based web UI is bundled and served from the same process.
 ## Table of Contents
 
 1. [Quick Start with Docker](#1-quick-start-with-docker)
-2. [Building and Running](#2-building-and-running)
-   - [Dev Mode](#21-dev-mode)
-   - [Packaging as a JAR](#22-packaging-as-a-jar)
-   - [Uber-JAR](#23-uber-jar)
-   - [Native Executable](#24-native-executable)
-3. [Configuration Reference](#3-configuration-reference)
-4. [Classic ML Inference API](#4-classic-ml-inference-api)
-   - [Model Format](#41-model-format)
-   - [Get Model Metadata](#42-get-model-metadata)
-   - [Single Inference (JSON)](#43-single-inference-json)
-   - [Streaming Inference (CSV / JSON-lines)](#44-streaming-inference-csv--json-lines)
-   - [Model IDs](#45-model-ids)
-5. [ONNX Inference API](#5-onnx-inference-api)
+2. [LLM Decode Benchmarks](#2-llm-decode-benchmarks)
+3. [Building and Running](#3-building-and-running)
+   - [Dev Mode](#31-dev-mode)
+   - [Packaging as a JAR](#32-packaging-as-a-jar)
+   - [Uber-JAR](#33-uber-jar)
+   - [Native Executable](#34-native-executable)
+4. [Configuration Reference](#4-configuration-reference)
+5. [Classic ML Inference API](#5-classic-ml-inference-api)
    - [Model Format](#51-model-format)
-   - [Get ONNX Model Info](#52-get-onnx-model-info)
+   - [Get Model Metadata](#52-get-model-metadata)
    - [Single Inference (JSON)](#53-single-inference-json)
-   - [Streaming Inference](#54-streaming-inference)
-   - [Tensor Types and Shape Resolution](#55-tensor-types-and-shape-resolution)
-6. [LLM Chat API](#6-llm-chat-api)
-   - [List models](#61-list-models)
-   - [Retrieve model](#62-retrieve-model)
-   - [Chat Completions](#63-chat-completions)
-   - [Conversation History API](#64-conversation-history-api)
-7. [Web UI](#7-web-ui)
-8. [Database](#8-database)
-9. [Testing](#9-testing)
+   - [Streaming Inference (CSV / JSON-lines)](#54-streaming-inference-csv--json-lines)
+   - [Model IDs](#55-model-ids)
+6. [ONNX Inference API](#6-onnx-inference-api)
+   - [Model Format](#61-model-format)
+   - [Get ONNX Model Info](#62-get-onnx-model-info)
+   - [Single Inference (JSON)](#63-single-inference-json)
+   - [Streaming Inference](#64-streaming-inference)
+   - [Tensor Types and Shape Resolution](#65-tensor-types-and-shape-resolution)
+7. [LLM Chat API](#7-llm-chat-api)
+   - [List models](#71-list-models)
+   - [Retrieve model](#72-retrieve-model)
+   - [Chat Completions](#73-chat-completions)
+   - [Conversation History API](#74-conversation-history-api)
+8. [Web UI](#8-web-ui)
+9. [Database](#9-database)
+10. [Testing](#10-testing)
 
 ---
 
@@ -67,11 +68,45 @@ discovered automatically at startup.
 
 ---
 
-## 2. Building and Running
+## 2. LLM Decode Benchmarks
+
+Steady-state continuous-batching decode on NVIDIA A100 with FlashInfer,
+`smile.chat.max-batch-size=48`, `max_tokens: 512`, greedy sampling
+(`temperature: 0`), and a uniform decode cohort
+(`smile.chat.admit-coalesce-ms=50` for parallel load tests). **Step** is
+engine decode-step throughput (`batch / step_ms`); **aggregate** is
+`AggregateTokenThroughput` over a ~3 s window (includes streaming / logging
+overhead).
+
+### Llama 3.1 8B Instruct
+
+| Checkpoint | Weight path | Step | Aggregate | Step time | Forward / sample |
+|---|---|---|---|---|---|
+| [meta-llama/Llama-3.1-8B-Instruct](https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct) | BF16 dense | **2087 tok/s** | ~2036 tok/s | 23 ms | 22 / 1 ms |
+| [hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4](https://huggingface.co/hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4) | AWQ INT4 (Marlin) | **2667 tok/s** | ~2543 tok/s | 18 ms | 17 / 0 ms |
+
+Both runs used a full batch of 48 active requests at locked positions
+(e.g. `positions=[417..417]`). AWQ is ~28% faster at the same concurrency;
+lighter weights also leave more free KV slots for longer context.
+
+### Qwen3.8 27B
+
+| Checkpoint | Setup | Step | Per-request | Step time | Forward / sample |
+|---|---|---|---|---|---|
+| [Qwen/Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B) | BF16, TP=4 | **906 tok/s** | ~17 tok/s | 53 ms | 51 / 1 ms |
+
+Hybrid Qwen3.5 stack (Gated DeltaNet + full attention) at the same concurrency
+and locked positions (e.g. `positions=[466..466]`). Absolute throughput is
+lower than 8B Llama as expected for a ~27B hybrid model across four GPUs;
+per-request generation stays ~17 tok/s with the batch saturated.
+
+---
+
+## 3. Building and Running
 
 All commands use the Gradle wrapper from the project root.
 
-### 2.1 Dev Mode
+### 3.1 Dev Mode
 
 Live-reload development mode — changes to Java sources are reflected without
 restarting. The Quarkus Dev UI is available at <http://localhost:8888/q/dev/>.
@@ -84,7 +119,7 @@ restarting. The Quarkus Dev UI is available at <http://localhost:8888/q/dev/>.
 > The `--add-opens` flags are required by ONNX Runtime's Foreign Function Interface.
 > The dev-mode HTTP port defaults to **8888** (configured via `%dev.quarkus.http.port`).
 
-### 2.2 Packaging as a JAR
+### 3.2 Packaging as a JAR
 
 ```shell
 ./gradlew :serve:build
@@ -115,7 +150,7 @@ java \
   -jar build/quarkus-app/quarkus-run.jar
 ```
 
-### 2.3 Uber-JAR
+### 3.3 Uber-JAR
 
 A single self-contained JAR (slower to start, simpler to deploy):
 
@@ -128,7 +163,7 @@ java \
   -jar build/smile-serve-runner.jar
 ```
 
-### 2.4 Native Executable
+### 3.4 Native Executable
 
 Compile to a native binary with GraalVM (sub-millisecond startup, lower memory):
 
@@ -149,7 +184,7 @@ See the [Quarkus native build guide](https://quarkus.io/guides/gradle-tooling) f
 
 ---
 
-## 3. Configuration Reference
+## 4. Configuration Reference
 
 Configuration is managed in `src/main/resources/application.properties`.
 Quarkus profile prefixes (`%dev.`, `%test.`) override the base values in
@@ -191,9 +226,9 @@ java ... -Dsmile.serve.model=/data/models/rf_classifier.sml -jar quarkus-run.jar
 
 ---
 
-## 4. Classic ML Inference API
+## 5. Classic ML Inference API
 
-### 4.1 Model Format
+### 5.1 Model Format
 
 Classic ML models are serialized Java objects saved in `.sml` files by the
 SMILE `smile.model.Model` framework. They carry:
@@ -207,7 +242,7 @@ At startup, `InferenceService` scans the path specified by the property
 `smile.serve.model`. If the path is a regular `.sml` file only that model
 is loaded; if it is a directory every `.sml` file in the directory is loaded.
 
-### 4.2 Get Model Metadata
+### 5.2 Get Model Metadata
 
 Returns the algorithm name, input schema, and tags for a model.
 Use `GET /api/v1/models` to discover loaded model IDs.
@@ -241,7 +276,7 @@ curl http://localhost:8080/api/v1/ml/models/iris_random_forest-1
 The `schema` object lists every input feature in alphabetical order — this
 is the **column order** used by the CSV streaming endpoint.
 
-### 4.3 Single Inference (JSON)
+### 5.3 Single Inference (JSON)
 
 Send one sample as a JSON object and receive the prediction synchronously.
 
@@ -285,7 +320,7 @@ curl -X POST http://localhost:8080/api/v1/ml/models/iris_random_forest-1 \
 | `400 Bad Request` | Missing required field, or malformed JSON |
 | `404 Not Found` | Unknown model ID |
 
-### 4.4 Streaming Inference (CSV / JSON-lines)
+### 5.4 Streaming Inference (CSV / JSON-lines)
 
 Process many samples in a single request. The server returns results as a
 [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events)
@@ -347,7 +382,7 @@ Where `iris.jsonl` contains:
 {"sepallength":6.7,"sepalwidth":3.0,"petallength":5.2,"petalwidth":2.3}
 ```
 
-### 4.5 Model IDs
+### 5.5 Model IDs
 
 A model's ID is constructed as `<name>-<version>` from the model's embedded
 metadata tags (`smile.model.Model.ID` and `smile.model.Model.VERSION`).
@@ -357,14 +392,14 @@ tag gets the ID `iris_random_forest-1`.
 
 ---
 
-## 5. ONNX Inference API
+## 6. ONNX Inference API
 
 The ONNX endpoint exposes any model in the
 [ONNX open format](https://onnx.ai/) through SMILE's native ONNX Runtime
 binding (`smile.onnx`). This covers models exported from PyTorch, TensorFlow,
 scikit-learn (via `sklearn-onnx`), and many other frameworks.
 
-### 5.1 Model Format
+### 6.1 Model Format
 
 At startup, `OnnxService` scans the folder specified by the property
 `smile.onnx.model`. Every `.onnx` file found is loaded into an
@@ -379,7 +414,7 @@ startup continues without ONNX models (endpoints return 404) rather than
 aborting the whole serve process. Download pre-built binaries from the
 [ORT releases](https://github.com/microsoft/onnxruntime/releases) page.
 
-### 5.2 Get ONNX Model Info
+### 6.2 Get ONNX Model Info
 
 Returns graph metadata and the typed, shaped input/output node descriptors.
 Use `GET /api/v1/models` to discover loaded model IDs.
@@ -421,7 +456,7 @@ curl http://localhost:8080/api/v1/onnx/resnet50
 A shape value of `-1` means that dimension is **dynamic** (determined at
 inference time from the input data).
 
-### 5.3 Single Inference (JSON)
+### 6.3 Single Inference (JSON)
 
 ```
 POST /api/v1/onnx/{id}
@@ -486,7 +521,7 @@ curl -X POST http://localhost:8080/api/v1/onnx/bert_classifier \
 | `400 Bad Request` | Missing input, wrong element count, non-numeric values |
 | `404 Not Found` | Unknown model ID |
 
-### 5.4 Streaming Inference
+### 6.4 Streaming Inference
 
 Identical in structure to the classic ML streaming endpoint but returns
 JSON objects:
@@ -523,7 +558,7 @@ cat samples.jsonl | curl -X POST \
   http://localhost:8080/api/v1/onnx/bert_classifier/stream
 ```
 
-### 5.5 Tensor Types and Shape Resolution
+### 6.5 Tensor Types and Shape Resolution
 
 The server automatically resolves the ORT tensor shape from the model's
 declared input shape and the actual array length:
@@ -538,7 +573,7 @@ declared input shape and the actual array length:
 
 ---
 
-## 6. LLM Chat API
+## 7. LLM Chat API
 
 SMILE Serve includes a Java implementation of
 [Llama 3](https://github.com/haifengl/smile/tree/master/deep/src/main/java/smile/llm/llama)
@@ -549,7 +584,7 @@ The LLM is optional: if the path specified by the property `smile.chat.model`
 does not exist on the file system, `ChatService` starts in an *unavailable*
 state and every request to the chat endpoints returns **HTTP 503 Service Unavailable**.
 
-### 6.1 List models
+### 7.1 List models
 
 ```
 GET /api/v1/models
@@ -611,7 +646,7 @@ curl http://localhost:8080/api/v1/models
 - **SMILE `.sml`:** tag `author`, else `owner`; otherwise `Unknown`
 - **ONNX:** custom metadata `author`/`owner` when present; otherwise `Unknown`
 
-### 6.2 Retrieve model
+### 7.2 Retrieve model
 
 ```
 GET /api/v1/models/{id}
@@ -661,7 +696,7 @@ curl http://localhost:8080/api/v1/models/iris_random_forest-1
 }
 ```
 
-### 6.3 Chat Completions
+### 7.3 Chat Completions
 
 ```
 POST /api/v1/chat/completions
@@ -809,7 +844,7 @@ curl -X POST http://localhost:8080/api/v1/chat/completions \
   }'
 ```
 
-### 6.4 Conversation History API
+### 7.4 Conversation History API
 
 Chat history is stored in a relational database (PostgreSQL in production,
 H2 in dev mode). The API base path is `/api/v1/conversations`.
@@ -953,7 +988,7 @@ curl http://localhost:8080/api/v1/conversations/conv_42/items
 
 ---
 
-## 7. Web UI
+## 8. Web UI
 
 A React-based web interface is bundled via [Quarkus Quinoa](https://quarkiverse.github.io/quarkiverse-docs/quarkus-quinoa/dev/).
 It is served from the root URL and provides:
@@ -976,7 +1011,7 @@ statically by the Quarkus process.
 
 ---
 
-## 8. Database
+## 9. Database
 
 Chat conversation history requires a relational database.
 
@@ -1006,7 +1041,7 @@ for chat conversation persistence.
 
 ---
 
-## 9. Testing
+## 10. Testing
 
 ```shell
 ./gradlew :serve:test
