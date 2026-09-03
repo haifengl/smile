@@ -1,7 +1,7 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: Smile - LLM
+title: SMILE - LLM
 ---
 {% include "toc.njk" %}
 
@@ -23,15 +23,13 @@ title: Smile - LLM
         is significantly more capable than the previous, due to increased model size
         (number of trainable parameters) and larger training data.</p>
 
-    <h2 id="llama" class="title">Llama 3</h2>
+    <h2 id="llama" class="title">Llama 3.1</h2>
 
-    <p>Smile provides an inference implementation of Llama 3 from Meta AI,
-        the latest version of Llama that is accessible to individuals, organizations,
-        and businesses of all sizes.</p>
-
-    <p>To build a model instance, call <code>Llama.build()</code> with the directory
-        path of checkpoint files, the path of tokenizer model file, maximum batch size, maximum
-        sequence length, and optionally CUDA device id:</p>
+    <p>SMILE provides an inference implementation of
+        <a href="https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct">Llama 3.1</a>
+        from Meta AI. To build a model instance, call <code>Llama.build()</code> with the
+        Hugging Face checkpoint directory, the tokenizer model file path, maximum batch size,
+        maximum sequence length, and CUDA device id:</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -41,21 +39,23 @@ title: Smile - LLM
     {% include "components/playground-extra-actions.njk" %}
   </div>
   <pre class="playground-source language-java"><code class="language-java">
-    import smile.llm.llama.*;
+import smile.llm.model.llama.Llama;
+import smile.llm.Message;
 
-    var model = Llama.build("model/Llama3-8B-Instruct",
-              "model/Llama3-8B-Instruct/tokenizer.model",
-              4,     // maximum batch size
-              8192,  // maximum sequence length for input text
-              0      // CUDA device id
-          );
+var llama = Llama.build(
+    "model/Llama-3.1-8B-Instruct",
+    "model/Llama-3.1-8B-Instruct/original/tokenizer.model",
+    /*maxBatchSize=*/ 4,
+    /*maxSeqLen=*/    8192,
+    /*deviceId=*/     (byte) 0    // CUDA:0
+);
           </code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>For a pretrained model, one should call <code>generate()</code> method with a batch
-        of prompots to generate the text. For fine-tuned chat models, we should instead
-        call <code>chat()</code> method to generate conversation responses.</p>
+    <p>For a pretrained model, call <code>generate()</code> with a batch of prompts to
+        generate text. For fine-tuned chat models, call <code>chat()</code> to generate
+        conversation responses.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -65,85 +65,84 @@ title: Smile - LLM
     {% include "components/playground-extra-actions.njk" %}
   </div>
   <pre class="playground-source language-java"><code class="language-java">
-    // List of conversational dialogs, where each dialog is a list of messages.
-    Message[][] dialogs = {
-          {
-              new Message(Role.user, "what is the recipe of mayonnaise?"),
-          },
-          {
-              new Message(Role.user, "I am going to Paris, what should I see?"),
-              new Message(Role.assistant, """
-Paris, the capital of France, is known for its stunning architecture, art museums, historical landmarks, and romantic atmosphere. Here are some of the top attractions to see in Paris:
+var reply = llama.chat(
+    new Message[]{
+        Message.system("You are a helpful assistant."),
+        Message.user("Explain gradient descent in one paragraph.")
+    },
+    /*maxGenLen=*/ 256,
+    /*temperature=*/ 0.7,
+    /*topp=*/ 0.9,
+    /*logprobs=*/ false,
+    /*seed=*/ 0L,
+    /*listener=*/ null,
+    /*cancelRequested=*/ null
+);
 
-1. The Eiffel Tower: The iconic Eiffel Tower is one of the most recognizable landmarks in the world and offers breathtaking views of the city.
-2. The Louvre Museum: The Louvre is one of the world's largest and most famous museums, housing an impressive collection of art and artifacts, including the Mona Lisa.
-3. Notre-Dame Cathedral: This beautiful cathedral is one of the most famous landmarks in Paris and is known for its Gothic architecture and stunning stained glass windows.
-
-These are just a few of the many attractions that Paris has to offer. With so much to see and do, it's no wonder that Paris is one of the most popular tourist destinations in the world."""),
-              new Message(Role.user, "What is so great about #1?"),
-          },
-          {
-              new Message(Role.system, "Always answer with Haiku"),
-              new Message(Role.user, "I am going to Paris, what should I see?"),
-          },
-          {
-              new Message(Role.system, "Always answer with emojis"),
-              new Message(Role.user, "How to go from Beijing to NY?"),
-          },
-    };
-
-    model.chat(dialogs,
-              2048,  // maximum length of the generated text sequence
-              0.6,   // temperature for controlling randomness in sampling
-              0.9,   // top_p probability threshold for nucleus sampling
-              false, // true to compute token log probabilities
-              null,  // the optional random number generation seed
-              null   // streaming publisher
-          );
+System.out.println(reply.content());
           </code></pre>
   <div class="playground-editor" hidden></div>
 </div>
+
+    <p>For streaming output, pass a <code>GenerationListener</code> that receives tokens
+       as they are generated. The <code>cancelRequested</code> supplier can signal
+       early termination.</p>
+
+    <h2 id="qwen" class="title">Qwen3</h2>
+
+    <p>SMILE also supports <a href="https://huggingface.co/Qwen/Qwen3.8-27B">Qwen3</a>
+        models, including the hybrid Qwen3.5 architecture (Gated DeltaNet + full attention).
+        Qwen checkpoints use a Hugging Face <code>tokenizer.json</code> instead of a
+        SentencePiece <code>tokenizer.model</code>, so <code>Qwen.build()</code> takes
+        only the checkpoint directory (the tokenizer is resolved automatically).</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
+import smile.llm.model.qwen.Qwen;
+import smile.llm.Message;
+
+var qwen = Qwen.build(
+    "model/Qwen3.8-27B",
+    /*maxBatchSize=*/ 4,
+    /*maxSeqLen=*/    8192,
+    /*deviceId=*/     (byte) 0    // CUDA:0
+);
+
+var reply = qwen.chat(
+    new Message[]{
+        Message.system("You are a helpful assistant."),
+        Message.user("What are the key differences between Java and Kotlin?")
+    },
+    /*maxGenLen=*/ 512,
+    /*temperature=*/ 0.7,
+    /*topp=*/ 0.9,
+    /*logprobs=*/ false,
+    /*seed=*/ 0L,
+    /*listener=*/ null,
+    /*cancelRequested=*/ null
+);
+
+System.out.println(reply.content());
+          </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>For multi-GPU tensor parallelism, use the overloads that accept a
+       <code>ParallelConfig</code>. Native FP8 quantization
+       (e.g. <code>Qwen/Qwen3.8-27B-FP8</code>) is supported on Hopper+ GPUs (sm_90+).</p>
 
     <h2 id="serving" class="title">Serving</h2>
 
     <p>SMILE Serve is a production Quarkus inference server for classic ML, ONNX, and
         OpenAI-compatible LLM chat — with a bundled React web UI. See the
         <a href="serve.html">SMILE Serve</a> page for Docker quick start, configuration,
-        OpenAI-compatible chat completions (including Qwen3+ tool calling), and the web UI.
-        REST API reference, and web UI details.</p>
-
-    <p>For library-only usage, the script <code>bin/serve.sh</code> builds and starts a
-        lightweight LLM server. You should have Node.js and npm installed to build the
-        frontend.</p>
-
-    <div class="code-playground glass" data-lang="bash">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">Shell</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-bash"><code class="language-bash">
-$ bin/serve.sh --help
-SmileServe - Large Language Model (LLM) Inference Server
-Usage: smile-serve [options]
-
-  --model &lt;value&gt;          The model checkpoint directory path
-  --tokenizer &lt;value&gt;      The tokenizer model file path
-  --max-seq-len &lt;value&gt;    The maximum sequence length
-  --max-batch-size &lt;value&gt; The maximum batch size
-  --device &lt;value&gt;         The CUDA device ID
-  --host &lt;value&gt;           The IP address to listen on (0.0.0.0 for all available addresses)
-  --port &lt;value&gt;           The port number
-  --help                   Display the usage information
-          </code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
-
-    <p>By default, SmileServe binds at localhost:3801. If you prefer a different port and/or
-        want to expose the server to other hosts, you may set the binding interface and port
-        with <code>--host=0.0.0.0</code> and <code>--port=8000</code>, for example. The service
-        exposes the API <code>/v1/chat/completions</code> that is compatible with OpenAI API.</p>
+        OpenAI-compatible chat completions (including Qwen3+ tool calling), and the web UI.</p>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
