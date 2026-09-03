@@ -36,22 +36,83 @@ cd bin
     <h2 id="studio-first">Your First Session</h2>
 
     <ol>
-        <li>Download the latest <code>smile-&lt;version&gt;.zip</code> from the
-            <a href="https://github.com/haifengl/smile/releases/latest">releases page</a>
-            and unzip it.</li>
-        <li>Run first-time setup (BLAS/LAPACK, Python venv — see
-            <a href="quickstart.html#gpu-libtorch">Quick Start</a>):
-            <code>/path/to/smile/bin/setup</code></li>
-        <li>Create a project folder and put datasets in <code>input/</code>:
-            <code>mkdir -p myproject/input</code></li>
-        <li>Launch Studio <em>from that folder</em>:
-            <code>cd myproject &amp;&amp; /path/to/smile/bin/smile</code></li>
-        <li>Configure an AI provider under <strong>File &gt; Settings…</strong>
-            (needed for agents, cell prompts, and Tab completion).</li>
-        <li>In Clair’s tab, run <code>/init</code> to profile the project and write
-            <code>SMILE.md</code>. Then use natural language, <code>/automl</code>,
-            or open a notebook and work through the
-            <a href="tutorial.html">Tutorial</a> examples cell by cell.</li>
+        <li>
+            <p>Download the latest <code>smile-&lt;version&gt;.zip</code> from the
+               <a href="https://github.com/haifengl/smile/releases/latest">releases page</a>
+               and unzip it.</p>
+        </li>
+        <li>
+            <p>Run first-time setup once (BLAS/LAPACK, Python venv — see
+               <a href="quickstart.html#gpu-libtorch">Quick Start</a>):</p>
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
+/path/to/smile/bin/setup
+    </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+        </li>
+        <li>
+            <p>Create a project folder and put datasets in <code>input/</code>:</p>
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
+mkdir -p myproject/input
+# copy your CSV / Parquet / … files into myproject/input/
+    </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+        </li>
+        <li>
+            <p>Launch Studio from the project directory (so the file tree and
+               <code>SMILE.md</code> sit next to your data):</p>
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
+cd myproject
+/path/to/smile/bin/smile
+    </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+        </li>
+        <li>
+            <p>Configure an AI provider under <strong>File &gt; Settings…</strong>
+               (needed for agents, cell prompts, and Tab completion).</p>
+        </li>
+        <li>
+            <p>In Clair’s tab, initialize the project, then explore with natural
+               language, AutoML, or a notebook:</p>
+            <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Agent</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">
+/init
+/automl
+    </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+            <p>Or open a notebook and work through the
+               <a href="tutorial.html">Tutorial</a> examples cell by cell.</p>
+        </li>
     </ol>
 
     <h2 id="studio-layout">Application Layout</h2>
