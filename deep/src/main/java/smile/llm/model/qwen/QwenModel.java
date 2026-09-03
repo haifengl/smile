@@ -878,7 +878,8 @@ public class QwenModel extends LayerBlock {
             try {
                 PartialRotaryEncoding.gatherInto(rope.cos(), prefetchRopePos, decodeGraphCosBuf);
                 PartialRotaryEncoding.gatherInto(rope.sin(), prefetchRopePos, decodeGraphSinBuf);
-                boolean capture = decodeGraphPrefetchSession.shouldCapture(batch, nextPages, tpRank);
+                boolean capture = decodeGraphPrefetchSession.shouldCapture(
+                        batch, nextPages, tpRank, true);
                 if (capture) {
                     if (decodeGraphLogitsBuf == null) {
                         return;

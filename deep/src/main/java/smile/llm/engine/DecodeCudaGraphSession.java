@@ -68,6 +68,15 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
      * @return {@code true} when the next forward should capture a new graph.
      */
     public boolean shouldCapture(int batch, int numPages, int tpRank) {
+        return shouldCapture(batch, numPages, tpRank, false);
+    }
+
+    /**
+     * Marks one eager warmup step for the current bucket.
+     *
+     * @param prefetch {@code true} for next-bucket prefetch capture logging.
+     */
+    public boolean shouldCapture(int batch, int numPages, int tpRank, boolean prefetch) {
         if (ready && capturedBatch == batch && capturedNumPages == numPages) {
             return false;
         }
@@ -76,8 +85,12 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
         }
         if (warmupRemaining > 0) {
             int step = DecodeCudaGraph.warmupSteps() - warmupRemaining + 1;
-            DecodeCudaGraphLog.bucketWarmup(tpRank, batch, numPages, step,
-                    DecodeCudaGraph.warmupSteps());
+            int total = DecodeCudaGraph.warmupSteps();
+            if (prefetch) {
+                DecodeCudaGraphLog.prefetchWarmup(tpRank, batch, numPages, step, total);
+            } else {
+                DecodeCudaGraphLog.bucketWarmup(tpRank, batch, numPages, step, total);
+            }
             warmupRemaining--;
             return false;
         }
