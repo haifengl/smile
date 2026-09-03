@@ -43,6 +43,24 @@ public final class Sampling {
     }
 
     /**
+     * Batched greedy argmax; one kernel and one host copy for the whole batch.
+     *
+     * @param logits last-step logits {@code [batch, vocab]}.
+     * @return token id per batch row.
+     */
+    public static int[] sampleGreedyTokenIds(Tensor logits) {
+        try (Tensor arg = logits.argmax(-1, false);
+             Tensor cpu = arg.to(smile.deep.tensor.Device.CPU())) {
+            long[] ids = cpu.longArray();
+            int[] out = new int[ids.length];
+            for (int i = 0; i < ids.length; i++) {
+                out[i] = (int) ids[i];
+            }
+            return out;
+        }
+    }
+
+    /**
      * Samples the next token from last-position logits {@code [batch, vocab]}
      * (or {@code [batch, 1, vocab]} squeezed by the caller).
      *

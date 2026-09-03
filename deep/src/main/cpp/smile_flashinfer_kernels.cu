@@ -15,6 +15,7 @@
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <type_traits>
@@ -70,6 +71,8 @@ struct WorkspaceRuntimeCache {
     int decode_gqa_group = 0;
     std::vector<int32_t> decode_indptr;
     std::vector<int32_t> decode_last_page_len;
+    const void *decode_indptr_dev = nullptr;
+    const void *decode_last_page_len_dev = nullptr;
 
     torch::Tensor prefill_slots;
     bool prefill_slots_valid = false;
@@ -80,6 +83,8 @@ struct WorkspaceRuntimeCache {
 
     void invalidate() {
         decode_plan_valid = false;
+        decode_indptr_dev = nullptr;
+        decode_last_page_len_dev = nullptr;
         prefill_slots_valid = false;
         prefill_slots = torch::Tensor();
     }
@@ -97,7 +102,19 @@ WorkspaceRuntimeCache *ensure_runtime_cache(void **slot) {
     return static_cast<WorkspaceRuntimeCache *>(*slot);
 }
 
+static bool decode_cuda_graph_env() {
+    static int cached = -1;
+    if (cached < 0) {
+        const char *env = std::getenv("SMILE_DECODE_CUDA_GRAPH");
+        cached = (env != nullptr && env[0] == '1' && env[1] == '\0') ? 1 : 0;
+    }
+    return cached != 0;
+}
+
 static bool cuda_stream_is_capturing(cudaStream_t stream) {
+    if (!decode_cuda_graph_env()) {
+        return false;
+    }
     cudaStreamCaptureStatus status = cudaStreamCaptureStatusNone;
     if (cudaStreamIsCapturing(stream, &status) != cudaSuccess) {
         return false;
@@ -243,6 +260,14 @@ int run_batch_decode(
         }
         plan_info = cache->decode_plan;
         plan_hit = true;
+    } else if (cache != nullptr && decode_plan_shape_matches(
+                       *cache, B, head_dim, page_size, num_qo_heads, gqa_group)
+            && cache->decode_indptr_dev == indptr.data_ptr()
+            && cache->decode_last_page_len_dev == last_page_len.data_ptr()) {
+        // Same CSR tensors as the warmed plan (in-place last_page_len bump).
+        // Skip D2H — a host copy here device-synchronizes every attention layer.
+        plan_info = cache->decode_plan;
+        plan_hit = true;
     } else {
         auto indptr_h = indptr.to(at::kCPU).contiguous();
         auto last_h = last_page_len.to(at::kCPU).contiguous();
@@ -305,7 +330,12 @@ int run_batch_decode(
                 cache->decode_gqa_group = gqa_group;
                 cache->decode_indptr.assign(indptr_ptr, indptr_ptr + B + 1);
                 cache->decode_last_page_len.assign(last_ptr, last_ptr + B);
+                cache->decode_indptr_dev = indptr.data_ptr();
+                cache->decode_last_page_len_dev = last_page_len.data_ptr();
             }
+        } else if (cache != nullptr) {
+            cache->decode_indptr_dev = indptr.data_ptr();
+            cache->decode_last_page_len_dev = last_page_len.data_ptr();
         }
     }
 

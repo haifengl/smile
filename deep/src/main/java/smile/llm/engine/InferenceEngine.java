@@ -588,30 +588,59 @@ public final class InferenceEngine implements AutoCloseable {
         long tStep = System.nanoTime();
         try (Tensor logits = executor.decodeStep(ids, toks, positions)) {
             long tSample = System.nanoTime();
+            boolean allGreedy = true;
             for (int i = 0; i < b; i++) {
-                Active a = decoding.get(i);
-                if (a.phase != Phase.DECODING) {
-                    continue;
+                if (decoding.get(i).temperature > 0) {
+                    allGreedy = false;
+                    break;
                 }
-                if (a.handle.isAborted()) {
-                    safeEvict(a);
-                    a.phase = Phase.DONE;
-                    completeCancel(a);
-                    inFlight.decrementAndGet();
-                    continue;
-                }
-                try {
-                    if (b == 1) {
-                        sampleAndAppend(a, logits);
-                    } else {
-                        try (var row = Index.of(i);
-                             Tensor sliced = logits.get(row);
-                             Tensor rowLogits = sliced.unsqueeze(0)) {
-                            sampleAndAppend(a, rowLogits);
-                        }
+            }
+            if (b > 1 && allGreedy) {
+                int[] sampled = Sampling.sampleGreedyTokenIds(logits);
+                for (int i = 0; i < b; i++) {
+                    Active a = decoding.get(i);
+                    if (a.phase != Phase.DECODING) {
+                        continue;
                     }
-                } catch (Throwable t) {
-                    failActive(a, t);
+                    if (a.handle.isAborted()) {
+                        safeEvict(a);
+                        a.phase = Phase.DONE;
+                        completeCancel(a);
+                        inFlight.decrementAndGet();
+                        continue;
+                    }
+                    try {
+                        appendToken(a, sampled[i]);
+                    } catch (Throwable t) {
+                        failActive(a, t);
+                    }
+                }
+            } else {
+                for (int i = 0; i < b; i++) {
+                    Active a = decoding.get(i);
+                    if (a.phase != Phase.DECODING) {
+                        continue;
+                    }
+                    if (a.handle.isAborted()) {
+                        safeEvict(a);
+                        a.phase = Phase.DONE;
+                        completeCancel(a);
+                        inFlight.decrementAndGet();
+                        continue;
+                    }
+                    try {
+                        if (b == 1) {
+                            sampleAndAppend(a, logits);
+                        } else {
+                            try (var row = Index.of(i);
+                                 Tensor sliced = logits.get(row);
+                                 Tensor rowLogits = sliced.unsqueeze(0)) {
+                                sampleAndAppend(a, rowLogits);
+                            }
+                        }
+                    } catch (Throwable t) {
+                        failActive(a, t);
+                    }
                 }
             }
             long sampleEnd = System.nanoTime();
@@ -688,8 +717,11 @@ public final class InferenceEngine implements AutoCloseable {
                 token = (int) cpu.longArray()[0];
             }
         }
-        boolean stop = isStop(token);
-        if (stop) {
+        appendToken(a, token);
+    }
+
+    private void appendToken(Active a, int token) {
+        if (isStop(token)) {
             // Do not stream or keep stop specials (e.g. <|im_end|>) in completion text.
             finishActive(a, FinishReason.stop);
             return;
