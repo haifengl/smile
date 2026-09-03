@@ -44,6 +44,7 @@ import smile.llm.cache.KvCachePool;
 import smile.llm.checkpoint.SafeTensorsLoaderThreads;
 import smile.llm.attention.AttentionBackend;
 import smile.llm.attention.AttentionBackends;
+import smile.llm.engine.DecodeStepTiming;
 import smile.torch.smile_torch_h;
 import smile.util.AutoScope;
 
@@ -1239,6 +1240,7 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
                 toks[i] = lastTokens[i];
             }
             model.kvCachePool().activateStep(requestIds);
+            long tForward = System.nanoTime();
             try (var guard = Tensor.noGradGuard();
                  var scope = new AutoScope()) {
                 Tensor.push(scope);
@@ -1250,6 +1252,10 @@ public class Llama implements LanguageModel, smile.llm.engine.ModelExecutor {
                          Tensor row = selected.reshape(b, -1)) {
                         Tensor out = row.copy();
                         out.promoteToParent();
+                        DecodeStepTiming timing = DecodeStepTiming.current();
+                        if (timing != null) {
+                            timing.forwardNs = System.nanoTime() - tForward;
+                        }
                         return out;
                     }
                 } finally {
