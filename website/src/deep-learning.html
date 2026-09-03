@@ -174,6 +174,38 @@ title: Smile - Deep Learning
         could of course still happen during the training, e.g. if your input
         size increases etc.</p>
 
+    <h2 id="dl-train">Training a Custom MLP with LibTorch</h2>
+
+    <p>Beyond pretrained models, <code>smile-deep</code> provides a high-level training loop
+       for custom architectures built from <code>SequentialBlock</code> layers.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">
+import smile.deep.*;
+import smile.deep.layer.*;
+import smile.deep.tensor.Tensor;
+
+var mlp = new SequentialBlock(
+    Layer.relu(784, 256),
+    Layer.relu(256, 128),
+    Layer.logSoftmax(128, 10)
+);
+
+var optimizer = Optimizer.adam(mlp.asTorch().parameters(), 1e-3);
+var criterion = Loss.nll();
+
+mlp.train(10, trainDataset, criterion, optimizer,
+          new smile.deep.metric.Accuracy(), testDataset);
+    </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
         <a class="btn-prev-text" href="regression.html" title="Previous Section: Regression"><span>Regression</span></a>

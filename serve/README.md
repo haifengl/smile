@@ -94,14 +94,13 @@ lighter weights also leave more free KV slots for longer context.
 | Checkpoint | Setup | Step | Aggregate | Step time | Forward / sample |
 |---|---|---|---|---|---|
 | [Qwen/Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B) | BF16, TP=4 | **906 tok/s** | ~896 tok/s | 53 ms | 51 / 1 ms |
-| [cyankiwi/Qwen3.8-27B-AWQ-INT4](https://huggingface.co/cyankiwi/Qwen3.8-27B-AWQ-INT4) | AWQ INT4 (Marlin), TP=4 | **889 tok/s** | ~883 tok/s | 54 ms | 51 / 2 ms |
 
 Hybrid Qwen3.5 stack (Gated DeltaNet + full attention) at the same concurrency
 and locked positions (e.g. `positions=[466..466]`). Absolute throughput is
 lower than 8B Llama as expected for a ~27B hybrid model across four GPUs;
-per-request generation stays ~17–18 tok/s with the batch saturated. Unlike
-Llama-8B, AWQ does not improve decode throughput here — forward time stays
-~51 ms (attention / DeltaNet dominate over GEMM at this batch).
+per-request generation stays ~17 tok/s with the batch saturated. Qwen AWQ via
+`compressed-tensors` / Marlin is not supported yet (detector currently treats
+cards such as `cyankiwi/Qwen3.8-27B-AWQ-INT4` as dense).
 
 ---
 
