@@ -47,6 +47,10 @@ import smile.llm.cache.KvCachePool;
  * a batched {@link ModelExecutor#decodeStep} over all decoding requests.
  * {@link GenerationHandle#abort()} Instant-Evicts queued and in-flight KV.
  *
+ * <p>Optional idle admit coalesce ({@code admitCoalesceMs}) delays the first
+ * admission after idle so a burst can form a uniform decode cohort; admission
+ * proceeds early once {@code queued >= maxInFlight}.
+ *
  * <p>When {@link ModelExecutor#supportsStepApi()} is {@code false} (test stubs),
  * the engine falls back to serial {@link LanguageModel#generate}.
  *
@@ -67,6 +71,8 @@ public final class InferenceEngine implements AutoCloseable {
     private final int maxDecodeBatch;
     private final int prefillTokenBudget;
     private final long admissionTimeoutMs;
+    /** Idle-wave admit delay ms; {@code 0} = disabled (default). */
+    private final long admitCoalesceMs;
     private final LinkedBlockingQueue<Queued> waiting = new LinkedBlockingQueue<>();
     private final List<Active> active = new ArrayList<>();
     private final AtomicInteger inFlight = new AtomicInteger();
@@ -88,7 +94,7 @@ public final class InferenceEngine implements AutoCloseable {
      */
     public InferenceEngine(ModelExecutor executor, int maxInFlight) {
         this(executor, maxInFlight, maxInFlight, DEFAULT_PREFILL_TOKEN_BUDGET,
-                DEFAULT_ADMISSION_TIMEOUT_MS);
+                DEFAULT_ADMISSION_TIMEOUT_MS, 0L);
     }
 
     /**
@@ -100,6 +106,22 @@ public final class InferenceEngine implements AutoCloseable {
      */
     public InferenceEngine(ModelExecutor executor, int maxInFlight, int maxDecodeBatch,
                            int prefillTokenBudget, long admissionTimeoutMs) {
+        this(executor, maxInFlight, maxDecodeBatch, prefillTokenBudget, admissionTimeoutMs, 0L);
+    }
+
+    /**
+     * @param executor            model execution surface.
+     * @param maxInFlight         Fluid Injection cap.
+     * @param maxDecodeBatch      max requests in one {@code decodeStep} ({@code <= maxInFlight}).
+     * @param prefillTokenBudget  max prompt tokens prefilled per tick.
+     * @param admissionTimeoutMs  fail waiting jobs after this many ms ({@code <= 0} = never).
+     * @param admitCoalesceMs     when idle, wait up to this many ms for a fuller queue before
+     *                            the first admit ({@code 0} = off). Stops early if
+     *                            {@code queued >= maxInFlight}.
+     */
+    public InferenceEngine(ModelExecutor executor, int maxInFlight, int maxDecodeBatch,
+                           int prefillTokenBudget, long admissionTimeoutMs,
+                           long admitCoalesceMs) {
         this.executor = Objects.requireNonNull(executor, "executor");
         if (maxInFlight < 1) {
             throw new IllegalArgumentException("maxInFlight must be >= 1");
@@ -110,18 +132,23 @@ public final class InferenceEngine implements AutoCloseable {
         if (prefillTokenBudget < 1) {
             throw new IllegalArgumentException("prefillTokenBudget must be >= 1");
         }
+        if (admitCoalesceMs < 0) {
+            throw new IllegalArgumentException("admitCoalesceMs must be >= 0");
+        }
         this.maxInFlight = maxInFlight;
         this.maxDecodeBatch = Math.min(maxDecodeBatch, maxInFlight);
         this.prefillTokenBudget = prefillTokenBudget;
         this.admissionTimeoutMs = admissionTimeoutMs;
+        this.admitCoalesceMs = admitCoalesceMs;
         this.worker = new Thread(this::loop, "smile-inference-engine");
         this.worker.setDaemon(true);
         this.worker.start();
         KvCachePool pool = executor.kvCachePool();
         logger.info("Continuous batching enabled: stepApi={} maxInFlight={} maxDecodeBatch={} "
-                        + "prefillTokenBudget={} admissionTimeoutMs={} kvSlots={} kvFree={}",
+                        + "prefillTokenBudget={} admissionTimeoutMs={} admitCoalesceMs={} "
+                        + "kvSlots={} kvFree={}",
                 executor.supportsStepApi(), this.maxInFlight, this.maxDecodeBatch,
-                this.prefillTokenBudget, this.admissionTimeoutMs,
+                this.prefillTokenBudget, this.admissionTimeoutMs, this.admitCoalesceMs,
                 pool == null ? -1 : pool.numSlots(),
                 pool == null ? -1 : pool.freeSlots());
     }
@@ -139,6 +166,14 @@ public final class InferenceEngine implements AutoCloseable {
     /** Max decode batch size per step. */
     public int maxDecodeBatch() {
         return maxDecodeBatch;
+    }
+
+    /**
+     * Idle admit-coalesce window in milliseconds ({@code 0} = disabled).
+     * Property: {@code smile.chat.admit-coalesce-ms}.
+     */
+    public long admitCoalesceMs() {
+        return admitCoalesceMs;
     }
 
     /** Jobs waiting for admission. */
@@ -239,6 +274,7 @@ public final class InferenceEngine implements AutoCloseable {
             try {
                 drainAborted();
                 failTimedOutWaiting();
+                coalesceIdleAdmission();
                 admitWaiting();
                 if (active.isEmpty()) {
                     Queued peek = waiting.poll(50, TimeUnit.MILLISECONDS);
@@ -383,6 +419,37 @@ public final class InferenceEngine implements AutoCloseable {
                         + "lower max_tokens to raise concurrency. ({})",
                 active.size(), maxInFlight, queuedCount.get(), free,
                 desired, promptLen, maxGen, detail);
+    }
+
+    /**
+     * When idle with a non-empty queue, optionally wait so a parallel burst can
+     * land before Fluid Injection starts prefilling the first arrivals.
+     * Stops early once {@code queued >= maxInFlight}. No-op when coalesce is off
+     * or work is already in flight.
+     */
+    private void coalesceIdleAdmission() throws InterruptedException {
+        if (admitCoalesceMs <= 0 || !active.isEmpty()) {
+            return;
+        }
+        int queued = queuedCount.get();
+        if (queued <= 0 || queued >= maxInFlight) {
+            return;
+        }
+        long deadlineNs = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(admitCoalesceMs);
+        long startedNs = System.nanoTime();
+        logger.info("Admit coalesce: wait up to {}ms for cohort (queued={}/{})",
+                admitCoalesceMs, queued, maxInFlight);
+        while (running && queuedCount.get() < maxInFlight) {
+            long remNs = deadlineNs - System.nanoTime();
+            if (remNs <= 0) {
+                break;
+            }
+            // 1 ms slices: notice full cohort quickly without a condition var.
+            Thread.sleep(Math.min(1L, Math.max(1L, remNs / 1_000_000L)));
+        }
+        logger.info("Admit coalesce done: queued={}/{} waitedMs={}",
+                queuedCount.get(), maxInFlight,
+                (System.nanoTime() - startedNs) / 1_000_000L);
     }
 
     private void admitWaiting() {

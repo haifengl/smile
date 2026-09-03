@@ -19,6 +19,7 @@ package smile.llm.engine;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
 import org.junit.jupiter.api.Test;
 import smile.llm.ChatCompletion;
@@ -95,6 +96,33 @@ public class InferenceEngineTest {
     public void testGivenMaxInFlightWhenConfiguredThenExposed() {
         try (var engine = new InferenceEngine(new StubExecutor(), 4)) {
             assertEquals(4, engine.maxInFlight());
+            assertEquals(0L, engine.admitCoalesceMs());
+        }
+    }
+
+    @Test
+    public void testGivenIdleAdmitCoalesceWhenStaggeredSubmitThenFirstBindAfterSecond()
+            throws Exception {
+        // Given – idle coalesce 200ms, maxInFlight=2
+        StepStub stub = new StepStub();
+        stub.blockDecode = true;
+        try (var engine = new InferenceEngine(stub, 2, 2, 64, 5_000, 200L)) {
+            assertEquals(200L, engine.admitCoalesceMs());
+            // When – first request, then second after a short stagger
+            engine.submit(GenerationRequest.ofTokens(
+                    new int[]{1, 2}, 3, 0.0, 0.9, false, 0, null));
+            Thread.sleep(30);
+            long secondSubmitNs = System.nanoTime();
+            engine.submit(GenerationRequest.ofTokens(
+                    new int[]{3, 4}, 3, 0.0, 0.9, false, 0, null));
+            stub.awaitDecode(2, TimeUnit.SECONDS);
+            // Then – first bind waited for the second arrival (cohort form)
+            assertTrue(stub.firstBindNs.get() > 0, "expected bind");
+            assertTrue(stub.firstBindNs.get() >= secondSubmitNs,
+                    "first bind should be after second submit under coalesce");
+            assertTrue(stub.maxConcurrentBound.get() >= 2,
+                    "expected both bound before decode, got " + stub.maxConcurrentBound.get());
+            stub.releaseDecode();
         }
     }
 
@@ -147,6 +175,7 @@ public class InferenceEngineTest {
         final AtomicInteger maxConcurrentBound = new AtomicInteger();
         final AtomicInteger decodeCalls = new AtomicInteger();
         final AtomicInteger evicted = new AtomicInteger();
+        final AtomicLong firstBindNs = new AtomicLong();
         volatile boolean blockDecode;
         private final Object decodeLock = new Object();
         private boolean decodeStarted;
@@ -221,6 +250,7 @@ public class InferenceEngineTest {
         @Override public String decode(int[] tokens) { return "ok"; }
         @Override public String tryDecode(int[] tokens, boolean skipSpecial) { return "ok"; }
         @Override public int bind(int[] prompt, int totalCapacity) {
+            firstBindNs.compareAndSet(0L, System.nanoTime());
             int n = bound.incrementAndGet();
             maxConcurrentBound.updateAndGet(m -> Math.max(m, n));
             return nextId.getAndIncrement();
