@@ -6,50 +6,138 @@ title: SMILE - Tutorial
 {% include "toc.njk" %}
 
 <div class="col-md-9 order-md-first">
-    <h1 id="tutorial-top" class="title">A Gentle Tutorial</h1>
+    <h1 id="tutorial-top" class="title">Tutorial</h1>
 
-    <p>This example demonstrates the end-to-end machine learning workflow in SMILE:
-       loading data, training multiple models, evaluating performance, and making predictions.</p>
+    <p>Machine learning builds a model from example data so a computer can make
+       predictions or decisions on <em>new</em> inputs — without being programmed
+       for every case. The goal is <em>generalization</em>: accurate results on
+       samples the model has never seen.</p>
 
-    <h2 id="loading-data">1. Loading Data</h2>
+    <p>This page walks the main ideas of machine learning and shows each one in
+       SMILE. Paste the snippets into
+       <a href="studio.html">SMILE Studio</a> (or the shell) as you go.
+       When a topic needs more depth, follow the <em>See</em> link to the
+       dedicated page.</p>
 
-    <p>SMILE supports many data formats: Parquet, Avro, Arrow, CSV, ARFF, LibSVM, JSON, and more.
-       All parsers return a <a href="api/java/smile/data/DataFrame.html">DataFrame</a>.
-    </p>
+    <h2 id="how-to-follow">How to Follow This Tutorial</h2>
+
+    <ul>
+        <li>Launch Studio from a project directory that can see the release
+            <code>data/</code> tree (or copy those files into your project).</li>
+        <li>Use a Java notebook for the Java tabs, or <code>./smile scala</code>
+            for Scala. Kotlin is shown only for loading data.</li>
+        <li>Later cells reuse names from earlier ones (<code>zipTrain</code>,
+            <code>formula</code>, <code>forest</code>, …). Run the sections
+            in order, or paste the few setup lines you need.</li>
+    </ul>
+
+    <h2 id="learning-paradigms">Learning Paradigms</h2>
+
+    <p>Tasks differ by the feedback available to the learner.</p>
+
+    <div class="table-responsive">
+    <table class="table table-striped table-bordered">
+      <thead><tr><th>Paradigm</th><th>Feedback</th><th>Typical Problems</th><th>SMILE Pages</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Supervised</strong></td>
+          <td>Labelled input–output pairs</td>
+          <td>Classification, regression, sequence labelling</td>
+          <td><a href="classification.html">Classification</a>,
+              <a href="regression.html">Regression</a>,
+              <a href="deep-learning.html">Deep Learning</a></td>
+        </tr>
+        <tr>
+          <td><strong>Unsupervised</strong></td>
+          <td>No labels — find structure</td>
+          <td>Clustering, dimensionality reduction, association rules</td>
+          <td><a href="clustering.html">Clustering</a>,
+              <a href="manifold.html">Manifold Learning</a>,
+              <a href="association-rule.html">Association Rules</a></td>
+        </tr>
+        <tr>
+          <td><strong>Semi-supervised</strong></td>
+          <td>A few labels + many unlabelled samples</td>
+          <td>Label propagation, self-training</td>
+          <td><a href="classification.html">Classification</a></td>
+        </tr>
+        <tr>
+          <td><strong>Self-supervised</strong></td>
+          <td>Pseudo-labels derived from the data itself</td>
+          <td>Language modelling, contrastive learning</td>
+          <td><a href="llm.html">LLM</a>,
+              <a href="deep-learning.html">Deep Learning</a></td>
+        </tr>
+        <tr>
+          <td><strong>Reinforcement</strong></td>
+          <td>Scalar reward from an environment</td>
+          <td>Games, robotics, control</td>
+          <td>Not implemented in SMILE</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h2 id="ml-workflow">Typical ML Workflow</h2>
+
+    <p>Most projects follow the same lifecycle. The rest of this tutorial
+       walks it with code.</p>
+
+    <ol>
+        <li><strong>Problem definition</strong> — classification, regression, clustering, …</li>
+        <li><strong>Data collection &amp; exploration</strong> —
+            <a href="data.html">Data Processing</a>,
+            <a href="visualization.html">Data Visualization</a>.</li>
+        <li><strong>Data preparation</strong> — clean, encode, scale, impute, split.
+            <a href="missing-value-imputation.html">Missing Value Imputation</a>.</li>
+        <li><strong>Feature engineering</strong> —
+            <a href="feature.html">Feature Engineering</a>.</li>
+        <li><strong>Model selection &amp; training</strong> — fit candidate algorithms.</li>
+        <li><strong>Evaluation</strong> —
+            <a href="validation.html">Model Validation</a>.</li>
+        <li><strong>Deployment</strong> — serialize a <code>.sml</code> model or serve it
+            with <a href="serve.html">SMILE Serve</a>.</li>
+    </ol>
+
+    <h2 id="loading-data">Loading Data</h2>
+
+    <p>SMILE reads Parquet, Avro, Arrow, CSV, ARFF, LibSVM, JSON, and more.
+       Parsers return a <a href="api/java/smile/data/DataFrame.html">DataFrame</a>.
+       See <a href="data.html">Data Processing</a>.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-2-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-load-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-load-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-load-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-2-0" class="hero-pane">
+    <div id="pg-load-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">
 import smile.io.*;
 import org.apache.commons.csv.CSVFormat;
 
-// ARFF file (e.g. Weka datasets)
 var weather  = Read.arff("data/weka/weather.nominal.arff");
+var iris     = Read.arff("data/weka/iris.arff");
 
-// CSV with a space delimiter and no header row
 var format   = CSVFormat.DEFAULT.withDelimiter(' ');
 var zipTrain = Read.csv("data/usps/zip.train", format);
 var zipTest  = Read.csv("data/usps/zip.test",  format);
             </code></pre>
     </div>
-    <div id="pg-2-1" class="hero-pane" hidden>
+    <div id="pg-load-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">
 import smile.io._
 
 val weather  = read.arff("data/weka/weather.nominal.arff")
+val iris     = read.arff("data/weka/iris.arff")
 val zipTrain = read.csv("data/usps/zip.train", delimiter = " ", header = false)
 val zipTest  = read.csv("data/usps/zip.test",  delimiter = " ", header = false)
             </code></pre>
     </div>
-    <div id="pg-2-2" class="hero-pane" hidden>
+    <div id="pg-load-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">
 import smile.io.*
 
@@ -60,40 +148,35 @@ val zipTrain = Read.csv("data/usps/zip.train")
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Because the USPS data has no header, the parser names columns V1, V2, …  The first
-       column (V1) is the class label.</p>
+    <p>USPS files have no header, so columns are named V1, V2, …  V1 is the
+       digit label (0–9); the rest are 256 pixel intensities.</p>
 
-    <h2 id="formula">2. The Formula API</h2>
+    <h2 id="formula">The Formula API</h2>
 
-    <p>A <a href="api/java/smile/data/formula/Formula.html">Formula</a> specifies the model in
-       a symbolic, R-style way.  The left-hand side (LHS) names the response variable;
-       the right-hand side (RHS) lists predictors.  When the RHS is omitted, all remaining
-       columns are used.  Terms can also include functions and interaction terms.</p>
+    <p>A <a href="api/java/smile/data/formula/Formula.html">Formula</a> names the
+       response (left-hand side) and predictors (right-hand side), in an R-style
+       way. Omit the RHS to use every remaining column.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-formula-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-formula-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-3-0" class="hero-pane">
+    <div id="pg-formula-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">
 import smile.data.formula.Formula;
 
-// Predict "V1" from all other columns
 var formula = Formula.lhs("V1");
-
-// Extract feature matrix and label array
 var x = formula.x(zipTrain).toArray();
 var y = formula.y(zipTrain).toIntArray();
             </code></pre>
     </div>
-    <div id="pg-3-1" class="hero-pane" hidden>
+    <div id="pg-formula-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">
 val formula: Formula = "V1" ~ "."
-
 val x = formula.x(zipTrain).toArray()
 val y = formula.y(zipTrain).toIntArray()
             </code></pre>
@@ -101,38 +184,73 @@ val y = formula.y(zipTrain).toIntArray()
   <div class="playground-editor" hidden></div>
 </div>
 
-    <h2 id="random-forest">3. Random Forest</h2>
+    <h2 id="features">Features</h2>
 
-    <p>Random Forest is an ensemble of decision trees trained on bootstrap samples of the data.
-       It estimates accuracy via out-of-bag (OOB) samples, so a separate validation set is
-       not strictly required.</p>
+    <p>A <em>feature</em> is a measurable property of each example. Algorithms
+       work better when numeric columns are on comparable scales and categoricals
+       are encoded. Standardization subtracts the mean and divides by the
+       standard deviation — important before neural nets and many distance-based
+       methods. See <a href="feature.html">Feature Engineering</a>.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-feat-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-feat-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-4-0" class="hero-pane">
+    <div id="pg-feat-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+import smile.feature.transform.Standardizer;
+
+var pixels = zipTrain.drop("V1");
+var scaler = Standardizer.fit(pixels);
+var xn     = scaler.apply(pixels).toArray();
+            </code></pre>
+    </div>
+    <div id="pg-feat-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+import smile.feature.transform.Standardizer
+
+val pixels = zipTrain.drop("V1")
+val scaler = Standardizer.fit(pixels)
+val xn     = scaler.apply(pixels).toArray()
+            </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h2 id="classification">Supervised Classification</h2>
+
+    <p>Supervised learning maps features to a known target. For classification
+       the target is a class label. A model that merely memorizes the training
+       set <em>overfits</em> and fails on new data. Ensembles such as Random
+       Forest average many trees and estimate error from out-of-bag (OOB)
+       samples, so a hold-out set is optional for a first look.
+       See <a href="classification.html">Classification</a>.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-rf-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-rf-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-rf-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">
 import smile.classification.*;
-import smile.data.formula.Formula;
-
-var formula = Formula.lhs("V1");
 
 var prop = new java.util.Properties();
 prop.setProperty("smile.random.forest.trees", "200");
 
 var forest = RandomForest.fit(formula, zipTrain, prop);
 System.out.println(forest.metrics());
-// Training metrics: {accuracy: 97.28%, ...}
             </code></pre>
     </div>
-    <div id="pg-4-1" class="hero-pane" hidden>
+    <div id="pg-rf-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">
-val formula: Formula = "V1" ~ "."
 val forest = randomForest(formula, zipTrain, ntrees = 200)
 println(forest.metrics)
             </code></pre>
@@ -140,70 +258,193 @@ println(forest.metrics)
   <div class="playground-editor" hidden></div>
 </div>
 
-    <h2 id="svm">4. Support Vector Machine</h2>
+    <h3 id="svm">Kernel methods (SVM)</h3>
 
-    <p>SVM is a kernel-based classifier.  It operates on raw arrays rather than DataFrames,
-       so we extract arrays from the formula first.  For multi-class problems, use one-vs-one
-       or one-vs-rest strategies.</p>
+    <p>Support vector machines work on arrays and a kernel (here Gaussian).
+       For more than two classes, one-versus-one wraps binary SVMs.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-svm-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-svm-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-5-0" class="hero-pane">
+    <div id="pg-svm-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">
 import smile.math.kernel.GaussianKernel;
-import smile.validation.*;
+import smile.validation.metric.Accuracy;
 
-var testx  = formula.x(zipTest).toArray();
-var testy  = formula.y(zipTest).toIntArray();
+var testx = formula.x(zipTest).toArray();
+var testy = formula.y(zipTest).toIntArray();
 
-var kernel = new GaussianKernel(8.0);
-var svm    = OneVersusOne.fit(x, y,
-                 (xi, yi) -> SVM.fit(xi, yi, kernel, 5, 1E-3));
-
-var pred = svm.predict(testx);
+var svm = OneVersusOne.fit(x, y,
+    (xi, yi) -> SVM.fit(xi, yi, new GaussianKernel(8.0), 5, 1E-3));
 System.out.format("Accuracy = %.2f%%%n",
-    100.0 * Accuracy.of(testy, pred));
-System.out.format("Confusion Matrix:%n%s%n",
-    ConfusionMatrix.of(testy, pred));
+    100.0 * Accuracy.of(testy, svm.predict(testx)));
             </code></pre>
     </div>
-    <div id="pg-5-1" class="hero-pane" hidden>
+    <div id="pg-svm-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">
-val testx  = formula.x(zipTest).toArray()
-val testy  = formula.y(zipTest).toIntArray()
-val kernel = new GaussianKernel(8.0)
-
+val testx = formula.x(zipTest).toArray()
+val testy = formula.y(zipTest).toIntArray()
 val svm = ovo(x, y) { (xi, yi) =>
-  SVM.fit(xi, yi, kernel, 5, 1E-3)
+  SVM.fit(xi, yi, new GaussianKernel(8.0), 5, 1E-3)
 }
-
-val pred = svm.predict(testx)
-println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, pred)))
+println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, svm.predict(testx))))
             </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <h2 id="neural-network">5. Neural Network (MLP)</h2>
+    <h2 id="regression">Regression</h2>
 
-    <p>The classic SMILE MLP is a lightweight CPU-only network suitable for
-       tabular data.  Always standardize features before training a neural network.</p>
+    <p>Regression predicts a continuous response. Ordinary least squares (OLS)
+       fits a linear model and reports coefficients and residual diagnostics.
+       See <a href="regression.html">Regression</a>.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-ols-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-ols-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-6-0" class="hero-pane">
+    <div id="pg-ols-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+import smile.regression.OLS;
+import smile.data.formula.Formula;
+
+var planes = Read.arff("data/weka/regression/2dplanes.arff");
+var lm = OLS.fit(Formula.lhs("y"), planes);
+System.out.println(lm);
+            </code></pre>
+    </div>
+    <div id="pg-ols-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+val planes = read.arff("data/weka/regression/2dplanes.arff")
+val lm = lm("y" ~ ".", planes)
+println(lm)
+            </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h2 id="validation">Validation</h2>
+
+    <p>Training metrics are optimistic. Cross-validation repeatedly holds out
+       folds so you estimate error on data the model did not train on.
+       See <a href="validation.html">Model Validation</a>.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-cv-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-cv-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-cv-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+import smile.classification.DecisionTree;
+import smile.validation.CrossValidation;
+
+var cv = CrossValidation.classification(10, Formula.lhs("class"), iris,
+    (f, data) -> DecisionTree.fit(f, data));
+System.out.println(cv);
+            </code></pre>
+    </div>
+    <div id="pg-cv-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+val cv = CrossValidation.classification(10, Formula.lhs("class"), iris,
+    (f, data) => DecisionTree.fit(f, data))
+println(cv)
+            </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h2 id="unsupervised">Unsupervised Learning</h2>
+
+    <p>Without labels, clustering groups similar rows. K-Means partitions
+       vectors into <em>k</em> spherical clusters. See
+       <a href="clustering.html">Clustering</a>.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-km-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-km-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-km-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+import smile.clustering.KMeans;
+
+var clusters = KMeans.fit(x, 10, 100);
+System.out.println(clusters);
+            </code></pre>
+    </div>
+    <div id="pg-km-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+val clusters = kmeans(x, k = 10, maxIter = 100)
+println(clusters)
+            </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Principal component analysis (PCA) finds linear directions of maximum
+       variance — a first step in dimensionality reduction and visualization.
+       Nonlinear methods (t-SNE, UMAP, IsoMap) live on
+       <a href="manifold.html">Manifold Learning</a>.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-pca-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-pca-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-pca-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+import smile.feature.extraction.PCA;
+
+var pca = PCA.fit(x).getProjection(20);
+var z   = pca.apply(x);
+            </code></pre>
+    </div>
+    <div id="pg-pca-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+import smile.feature.extraction.PCA
+
+val pca = PCA.fit(x).getProjection(20)
+val z   = pca.apply(x)
+            </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h2 id="neural-network">Neural Nets and Deep Learning</h2>
+
+    <p>The classic SMILE MLP is a small CPU network for tabular data.
+       Standardize first. For GPU tensors, EfficientNet, and LibTorch training,
+       see <a href="deep-learning.html">Deep Learning</a>. SMILE does not
+       implement GANs, diffusion models, or reinforcement learning.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-mlp-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-mlp-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-mlp-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">
 import smile.base.mlp.*;
 import smile.classification.MLP;
@@ -211,10 +452,7 @@ import smile.math.MathEx;
 import smile.math.TimeFunction;
 import smile.validation.metric.Accuracy;
 
-// Standardize features
-var scaler = smile.feature.Standardizer.fit(x);
-var xn     = scaler.transform(x);
-var testxn = scaler.transform(testx);
+var testxn = scaler.apply(zipTest.drop("V1")).toArray();
 
 var net = new MLP(
     Layer.input(256),
@@ -229,21 +467,17 @@ for (int epoch = 0; epoch < 10; epoch++) {
     for (int i : MathEx.permutate(xn.length)) {
         net.update(xn[i], y[i]);
     }
-    var pred = net.predict(testxn);
     System.out.format("Epoch %d  Accuracy = %.2f%%%n",
-        epoch, 100.0 * Accuracy.of(testy, pred));
+        epoch, 100.0 * Accuracy.of(testy, net.predict(testxn)));
 }
             </code></pre>
     </div>
-    <div id="pg-6-1" class="hero-pane" hidden>
+    <div id="pg-mlp-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">
 import smile.base.mlp._
 import smile.math.TimeFunction
 
-val scaler = smile.feature.Standardizer.fit(x)
-val xn     = scaler.transform(x)
-val testxn = scaler.transform(testx)
-
+val testxn = scaler.apply(zipTest.drop("V1")).toArray()
 val net = new MLP(
   Layer.input(256),
   Layer.sigmoid(768),
@@ -255,42 +489,47 @@ net.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001))
 
 (0 until 10).foreach { epoch =>
   MathEx.permutate(xn.length).foreach(i => net.update(xn(i), y(i)))
-  val pred = net.predict(testxn)
   println(s"Epoch $epoch  Accuracy = %.2f%%" format
-      (100.0 * Accuracy.of(testy, pred)))
+      (100.0 * Accuracy.of(testy, net.predict(testxn))))
 }
             </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <h2 id="prediction">6. Making Predictions</h2>
+    <h2 id="llm">Large Language Models</h2>
 
-    <p>Call <code>predict</code> on a single sample or an array.
-       Soft classifiers (neural networks, random forest, logistic regression)
-       can also return posterior class probabilities.</p>
+    <p>Transformer LLMs generate text by attending over tokens in a context
+       window. SMILE can run Llama and Qwen checkpoints locally and serve an
+       OpenAI-compatible chat API. Library usage and chat examples are on
+       <a href="llm.html">Large Language Model</a>; production serving is on
+       <a href="serve.html">SMILE Serve</a>.</p>
+
+    <h2 id="prediction">Making Predictions</h2>
+
+    <p>Call <code>predict</code> on one sample or an array. Soft classifiers
+       (random forest, neural nets, logistic regression) can also fill a
+       probability vector.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-pred-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-pred-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-7-0" class="hero-pane">
+    <div id="pg-pred-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">
-// Hard prediction (class label only)
 int label = forest.predict(zipTest.get(0));
 int svmLabel = svm.predict(testx[0]);
 
-// Soft prediction (class label + posterior probabilities)
 var proba = new double[10];
 forest.predict(zipTest.get(0), proba);
 net.predict(testxn[0], proba);
             </code></pre>
     </div>
-    <div id="pg-7-1" class="hero-pane" hidden>
+    <div id="pg-pred-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">
 val label    = forest.predict(zipTest.get(0))
 val svmLabel = svm.predict(testx(0))
@@ -303,30 +542,30 @@ net.predict(testxn(0), proba)
   <div class="playground-editor" hidden></div>
 </div>
 
-    <h2 id="serialization">7. Saving &amp; Loading Models</h2>
+    <h2 id="serialization">Saving and Loading Models</h2>
 
-    <p>Most SMILE models implement <code>java.io.Serializable</code>.
-       Serialize them to disk for production deployment or Spark scoring.</p>
+    <p>Most SMILE algorithms implement <code>java.io.Serializable</code>. In your
+       own application you can write a fitted model with a standard
+       <code>ObjectOutputStream</code> (or <code>smile.io.Write.object</code>)
+       and load it later for scoring — no SMILE Serve service required.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-ser-raw-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-ser-raw-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-8-0" class="hero-pane">
+    <div id="pg-ser-raw-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">
 import java.io.*;
 
-// Save
 try (var out = new ObjectOutputStream(
         new FileOutputStream("forest.sml"))) {
     out.writeObject(forest);
 }
 
-// Load
 try (var in = new ObjectInputStream(
         new FileInputStream("forest.sml"))) {
     var loaded = (RandomForest) in.readObject();
@@ -334,15 +573,13 @@ try (var in = new ObjectInputStream(
 }
             </code></pre>
     </div>
-    <div id="pg-8-1" class="hero-pane" hidden>
+    <div id="pg-ser-raw-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">
 import java.io._
 
-// Save
 val out = new ObjectOutputStream(new FileOutputStream("forest.sml"))
 out.writeObject(forest); out.close()
 
-// Load
 val in = new ObjectInputStream(new FileInputStream("forest.sml"))
 val loaded = in.readObject().asInstanceOf[RandomForest]
 in.close()
@@ -351,10 +588,62 @@ in.close()
   <div class="playground-editor" hidden></div>
 </div>
 
+    <p><a href="serve.html">SMILE Serve</a> is stricter: each <code>.sml</code>
+       file must contain a <a href="api/java/smile/model/Model.html"><code>smile.model.Model</code></a>
+       — typically a <code>ClassificationModel</code> or <code>RegressionModel</code>.
+       That wrapper carries the formula, input schema, train/validation/test
+       metrics, and tags (<code>id</code>, <code>version</code>, …) that the HTTP
+       API exposes. A bare algorithm object is skipped at Serve startup.
+       <code>smile train</code> and Studio’s Kernel Explorer already save this
+       boxed form.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-ser-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-ser-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-ser-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+import java.nio.file.Path;
+import smile.io.Read;
+import smile.io.Write;
+import smile.model.ClassificationModel;
+import smile.model.Model;
+
+var boxed = Model.classification("random-forest", formula, zipTrain, zipTest, prop);
+boxed.setTag(Model.ID, "usps-rf");
+boxed.setTag(Model.VERSION, "1");
+Write.object(boxed, Path.of("forest.sml"));
+
+var loaded = (ClassificationModel) Read.object(Path.of("forest.sml"));
+System.out.println(loaded.predict(zipTest.get(0)));
+            </code></pre>
+    </div>
+    <div id="pg-ser-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+import java.nio.file.Path
+import smile.io.{Read, Write}
+import smile.model.{ClassificationModel, Model}
+
+val boxed = Model.classification("random-forest", formula, zipTrain, zipTest, prop)
+boxed.setTag(Model.ID, "usps-rf")
+boxed.setTag(Model.VERSION, "1")
+Write.object(boxed, Path.of("forest.sml"))
+
+val loaded = Read.object(Path.of("forest.sml")).asInstanceOf[ClassificationModel]
+println(loaded.predict(zipTest.get(0)))
+            </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
         <a class="btn-prev-text" href="studio.html" title="Previous Section: SMILE Studio"><span>SMILE Studio</span></a>
-        <a class="btn-next-text" href="overview.html" title="Next Section: What's Machine Learning"><span>What's Machine Learning</span></a>
+        <a class="btn-next-text" href="data.html" title="Next Section: Data Processing"><span>Data Processing</span></a>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
