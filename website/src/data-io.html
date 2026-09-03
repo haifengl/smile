@@ -1,0 +1,1189 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: Smile - Data Import and Export
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 order-md-first">
+    <h1 id="data-io-top" class="title">Data Import and Export</h1>
+
+    <p>SMILE loads and saves tabular and sparse data through
+        <a href="api/java/smile/io/Read.html"><code>smile.io.Read</code></a> and
+        <a href="api/java/smile/io/Write.html"><code>smile.io.Write</code></a>
+        (Scala: <code>smile.read</code> / <code>smile.write</code>). Prefer the typed
+        helpers (<code>Read.csv</code>, <code>Read.parquet</code>, …);
+        <code>Read.data(path)</code> also auto-dispatches by file extension.
+        For DataFrame manipulation, see
+        <a href="data.html">Data Processing</a>.</p>
+
+    <h2 id="import">Importing Data</h2>
+
+    <p>Examples below use sample files under the <code>data</code> directory.
+        Covered formats include Parquet, Avro, Arrow, SAS7BDAT, JDBC, ARFF, CSV,
+        JSON, LibSVM, and sparse matrices.</p>
+
+    <h3 id="read.parquet">Apache Parquet</h3>
+    <p><a href="https://parquet.apache.org/">Apache Parquet</a>
+        is a columnar storage format that supports
+        nested data structures. It uses the record shredding and
+        assembly algorithm described in the Dremel paper.</p>
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-28-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-28-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-28-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-28-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">var df = Read.parquet("data/kylo/userdata1.parquet")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+|2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+|2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+|2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+|2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+|2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+|2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+|2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+990 more rows...
+      </code></pre>
+    </div>
+    <div id="pg-28-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">val df = read.parquet("data/kylo/userdata1.parquet")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+|2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+|2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+|2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+|2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+|2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+|2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+|2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+990 more rows...
+      </code></pre>
+    </div>
+    <div id="pg-28-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">val df = read.parquet("data/kylo/userdata1.parquet")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+|2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+|2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+|2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+|2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+|2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+|2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+|2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
+|2016-02-03T03:52:53|  9|      Jose|   Foster|   jfoster8@yelp.com|  Male|  132.31.53.61|                |         South Korea| 3/27/1992|231067.84|Software Test Eng...|   1E+02|
+|2016-02-03T18:29:47| 10|     Emily|  Stewart|estewart9@opensou...|Female|143.28.251.245|3574254110301671|             Nigeria| 1/28/1997| 27234.28|     Health Coach IV|        |
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+990 more rows...
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h3 id="read.avro">Apache Avro</h3>
+    <p><a href="https://avro.apache.org/">Apache Avro</a>
+        is a data serialization system.
+        Avro provides rich data structures, a compact, fast, binary data format,
+        a container file, to store persistent data, and remote procedure call (RPC).
+        Avro relies on schemas. When Avro data is stored in a file, its schema
+        is stored with it. Avro schemas are defined with JSON.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-29-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-29-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-29-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-29-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">var avrodf = Read.avro(smile.util.Paths.getTestData("kylo/userdata1.avro"), smile.util.Paths.getTestData("kylo/userdata.avsc"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+|2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+|2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+|2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+|2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+|2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+|2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+|2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+990 more rows...
+      </code></pre>
+    </div>
+    <div id="pg-29-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">val df = read.avro(Paths.getTestData("kylo/userdata1.avro"), Paths.getTestData("avro/userdata.avsc"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+|2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+|2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+|2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+|2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+|2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+|2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+|2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+990 more rows...
+      </code></pre>
+    </div>
+    <div id="pg-29-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">val avrodf = read.avro(smile.util.Paths.getTestData("kylo/userdata1.avro"), smile.util.Paths.getTestData("kylo/userdata.avsc"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++--------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|   registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
++--------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|2016-02-03T07:55:29Z|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+|2016-02-03T17:04:03Z|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|            null|              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+|2016-02-03T01:09:31Z|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+|2016-02-03T12:36:21Z|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+|2016-02-03T05:05:31Z|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+|2016-02-03T07:22:34Z|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+|2016-02-03T08:33:08Z|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+|2016-02-03T06:47:06Z|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|            null|Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
+|2016-02-03T03:52:53Z|  9|      Jose|   Foster|   jfoster8@yelp.com|  Male|  132.31.53.61|            null|         South Korea| 3/27/1992|231067.84|Software Test Eng...|   1E+02|
+|2016-02-03T18:29:47Z| 10|     Emily|  Stewart|estewart9@opensou...|Female|143.28.251.245|3574254110301671|             Nigeria| 1/28/1997| 27234.28|     Health Coach IV|        |
++--------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+990 more rows...
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h3 id="read.arrow">Apache Arrow</h3>
+    <p><a href="https://arrow.apache.org/">Apache Arrow</a>
+        is a cross-language development platform for in-memory data.
+        It specifies a standardized language-independent columnar memory format
+        for flat and hierarchical data, organized for efficient analytic
+        operations on modern hardware.</p>
+
+    <p>Feather uses the Apache Arrow columnar memory specification to represent binary
+        data on disk. This makes read and write operations very fast. This is particularly
+        important for encoding null/NA values and variable-length types like UTF8 strings.
+        Feather is a part of the broader Apache Arrow project. Feather defines its own
+        simplified schemas and metadata for on-disk representation.</p>
+
+    <p>In the below example, we write a DataFrame into Feather
+        file and then read it back.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-30-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-30-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-30-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-30-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">var temp = java.io.File.createTempFile("chinook", "arrow")
+var path = temp.toPath()
+Write.arrow(df, path)
+var arrowdf = Read.arrow(path)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+/var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5430879887643149276arrow
+
+/var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5430879887643149276arrow
+
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+|2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+|2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+|2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+|2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+|2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+|2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+|2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+990 more rows...
+      </code></pre>
+    </div>
+    <div id="pg-30-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">val temp = java.io.File.createTempFile("chinook", "arrow")
+temp: java.io.File = /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5413820941564790310arrow
+
+val path = temp.toPath()
+path: java.nio.file.Path = /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5413820941564790310arrow
+
+write.arrow(df, path)
+val df = read.arrow(path)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+|2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+|2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+|2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+|2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+|2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+|2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+|2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
++-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+990 more rows...
+      </code></pre>
+    </div>
+    <div id="pg-30-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">val temp = java.io.File.createTempFile("chinook", "arrow")
+val path = temp.toPath()
+write.arrow(df, path)
+val df = read.arrow(path)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++-----------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
++-----------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+|             null|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+|             null|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+|             null|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+|             null|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+|             null|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+|             null|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+|             null|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+|             null|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
+|             null|  9|      Jose|   Foster|   jfoster8@yelp.com|  Male|  132.31.53.61|                |         South Korea| 3/27/1992|231067.84|Software Test Eng...|   1E+02|
+|             null| 10|     Emily|  Stewart|estewart9@opensou...|Female|143.28.251.245|3574254110301671|             Nigeria| 1/28/1997| 27234.28|     Health Coach IV|        |
++-----------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+990 more rows...
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h3 id="read.sas">SAS7BDAT</h3>
+    <p>SAS7BDAT is currently the main format
+        used for storing SAS datasets across all platforms.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-31-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-31-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-31-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-31-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">var sasdf = Read.sas("data/sas/airline.sas7bdat")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++----+-----+-----+------+-----+-----+
+|YEAR|    Y|    W|     R|    L|    K|
++----+-----+-----+------+-----+-----+
+|1948|1.214|0.243|0.1454|1.415|0.612|
+|1949|1.354| 0.26|0.2181|1.384|0.559|
+|1950|1.569|0.278|0.3157|1.388|0.573|
+|1951|1.948|0.297| 0.394| 1.55|0.564|
+|1952|2.265| 0.31|0.3559|1.802|0.574|
+|1953|2.731|0.322|0.3593|1.926|0.711|
+|1954|3.025|0.335|0.4025|1.964|0.776|
+|1955|3.562| 0.35|0.3961|2.116|0.827|
+|1956|3.979|0.361|0.3822|2.435|  0.8|
+|1957| 4.42|0.379|0.3045|2.707|0.921|
++----+-----+-----+------+-----+-----+
+22 more rows...
+      </code></pre>
+    </div>
+    <div id="pg-31-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">val df = read.sas(Paths.getTestData("sas/airline.sas7bdat"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++----+-----+-----+------+-----+-----+
+|YEAR|    Y|    W|     R|    L|    K|
++----+-----+-----+------+-----+-----+
+|1948|1.214|0.243|0.1454|1.415|0.612|
+|1949|1.354| 0.26|0.2181|1.384|0.559|
+|1950|1.569|0.278|0.3157|1.388|0.573|
+|1951|1.948|0.297| 0.394| 1.55|0.564|
+|1952|2.265| 0.31|0.3559|1.802|0.574|
+|1953|2.731|0.322|0.3593|1.926|0.711|
+|1954|3.025|0.335|0.4025|1.964|0.776|
+|1955|3.562| 0.35|0.3961|2.116|0.827|
+|1956|3.979|0.361|0.3822|2.435|  0.8|
+|1957| 4.42|0.379|0.3045|2.707|0.921|
++----+-----+-----+------+-----+-----+
+22 more rows...
+      </code></pre>
+    </div>
+    <div id="pg-31-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">val df = read.sas("data/sas/airline.sas7bdat")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++----+-----+-----+------+-----+-----+
+|YEAR|    Y|    W|     R|    L|    K|
++----+-----+-----+------+-----+-----+
+|1948|1.214|0.243|0.1454|1.415|0.612|
+|1949|1.354| 0.26|0.2181|1.384|0.559|
+|1950|1.569|0.278|0.3157|1.388|0.573|
+|1951|1.948|0.297| 0.394| 1.55|0.564|
+|1952|2.265| 0.31|0.3559|1.802|0.574|
+|1953|2.731|0.322|0.3593|1.926|0.711|
+|1954|3.025|0.335|0.4025|1.964|0.776|
+|1955|3.562| 0.35|0.3961|2.116|0.827|
+|1956|3.979|0.361|0.3822|2.435|  0.8|
+|1957| 4.42|0.379|0.3045|2.707|0.921|
++----+-----+-----+------+-----+-----+
+22 more rows...
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h3 id="read.jdbc">Relational Database</h3>
+    <p>It is also easy to load data from relation databases through JDBC.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-32-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-32-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-32-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">Class.forName("org.sqlite.JDBC")
+var url = String.format("jdbc:sqlite:%s", smile.util.Paths.getTestData("sqlite/chinook.db").toAbsolutePath())
+var sql = """
+   select e.firstname as 'Employee First', e.lastname as 'Employee Last', c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total
+   from employees as e
+   join customers as c on e.employeeid = c.supportrepid
+   join invoices as i on c.customerid = i.customerid"""
+var conn = java.sql.DriverManager.getConnection(url)
+var stmt = conn.createStatement()
+var rs = stmt.executeQuery(sql)
+var sqldf = DataFrame.of(rs)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+class org.sqlite.JDBC
+
+"jdbc:sqlite:/Users/hli/github/smile/shell/target ... ../data/sqlite/chinook.db"
+
+"select e.firstname as 'Employee First', e.lastna ... ustomerid = i.customerid"
+
+org.sqlite.jdbc4.JDBC4Connection@1df82230
+
+org.sqlite.jdbc4.JDBC4Statement@75329a49
+
+org.sqlite.jdbc4.JDBC4ResultSet@48aaecc3
+
++--------------+-------------+--------------+-------------+-------+-----+
+|Employee First|Employee Last|Customer First|Customer Last|Country|Total|
++--------------+-------------+--------------+-------------+-------+-----+
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 3.98|
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 3.96|
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 5.94|
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 0.99|
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 1.98|
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil|13.86|
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 8.91|
+|         Steve|      Johnson|        Leonie|       Köhler|Germany| 1.98|
+|         Steve|      Johnson|        Leonie|       Köhler|Germany|13.86|
+|         Steve|      Johnson|        Leonie|       Köhler|Germany| 8.91|
++--------------+-------------+--------------+-------------+-------+-----+
+402 more rows...
+      </code></pre>
+    </div>
+    <div id="pg-32-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import $ivy.`org.xerial:sqlite-jdbc:3.28.0`
+import $ivy.$
+
+Class.forName("org.sqlite.JDBC")
+val url = String.format("jdbc:sqlite:%s", Paths.getTestData("sqlite/chinook.db").toAbsolutePath())
+url: String = "jdbc:sqlite:data/sqlite/chinook.db"
+val sql = """select e.firstname as 'Employee First', e.lastname as 'Employee Last', c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total
+          from employees as e
+          join customers as c on e.employeeid = c.supportrepid
+          join invoices as i on c.customerid = i.customerid
+         """
+sql: String = """select e.firstname as 'Employee First', e.lastname as 'Employee Last', c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total
+          from employees as e
+          join customers as c on e.employeeid = c.supportrepid
+          join invoices as i on c.customerid = i.customerid
+         """
+
+val conn = java.sql.DriverManager.getConnection(url)
+conn: java.sql.Connection = org.sqlite.jdbc4.JDBC4Connection@782cd00
+
+val stmt = conn.createStatement()
+stmt: java.sql.Statement = org.sqlite.jdbc4.JDBC4Statement@40df1311
+
+val rs = stmt.executeQuery(sql)
+rs: java.sql.ResultSet = org.sqlite.jdbc4.JDBC4ResultSet@5a524a19
+
+val df = DataFrame.of(rs)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+class org.sqlite.JDBC
+
++--------------+-------------+--------------+-------------+-------+-----+
+|Employee First|Employee Last|Customer First|Customer Last|Country|Total|
++--------------+-------------+--------------+-------------+-------+-----+
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 3.98|
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 3.96|
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 5.94|
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 0.99|
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 1.98|
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil|13.86|
+|          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 8.91|
+|         Steve|      Johnson|        Leonie|       Köhler|Germany| 1.98|
+|         Steve|      Johnson|        Leonie|       Köhler|Germany|13.86|
+|         Steve|      Johnson|        Leonie|       Köhler|Germany| 8.91|
++--------------+-------------+--------------+-------------+-------+-----+
+402 more rows...
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h3 id="read.arff">Weka ARFF</h3>
+    <p><a href="https://www.cs.waikato.ac.nz/ml/weka/arff.html">Weka ARFF (attribute relation file format)</a>
+        is an ASCII text file format that is essentially a CSV file with a header that describes the metadata.
+        ARFF was developed for use in the <a href="https://www.cs.waikato.ac.nz/ml/weka/">Weka</a> machine learning software.</p>
+
+    <p>A dataset is firstly described, beginning with the name of the dataset (or the relation in ARFF terminology).
+        Each of the variables (or attribute in ARFF terminology) used to describe the observations is then identified,
+        together with their data type, each definition on a single line. The actual observations are then listed,
+        each on a single line, with fields separated by commas, much like a CSV file.</p>
+
+    <p>Missing values in an ARFF dataset are identified using the question mark '?'.
+        Comments can be included in the file, introduced at the beginning of a line with a '%',
+        whereby the remainder of the line is ignored.</p>
+
+    <p>A significant advantage of the ARFF data file over the CSV data file is the metadata information.
+        Also, the ability to include comments ensure we can record extra information about the data set,
+        including how it was derived, where it came from, and how it might be cited.</p>
+
+    <p>In the directory <code>data/weka</code>,
+        we have many sample ARFF files. We can also read data from remote servers
+        by HTTP, FTP, etc.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-33-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-33-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-33-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-33-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">var cpu = Read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++----+-----+-----+----+-----+-----+-----+
+|MYCT| MMIN| MMAX|CACH|CHMIN|CHMAX|class|
++----+-----+-----+----+-----+-----+-----+
+| 125|  256| 6000| 256|   16|  128|  199|
+|  29| 8000|32000|  32|    8|   32|  253|
+|  29| 8000|32000|  32|    8|   32|  253|
+|  29| 8000|32000|  32|    8|   32|  253|
+|  29| 8000|16000|  32|    8|   16|  132|
+|  26| 8000|32000|  64|    8|   32|  290|
+|  23|16000|32000|  64|   16|   32|  381|
+|  23|16000|32000|  64|   16|   32|  381|
+|  23|16000|64000|  64|   16|   32|  749|
+|  23|32000|64000| 128|   32|   64| 1238|
++----+-----+-----+----+-----+-----+-----+
+199 more rows...
+      </code></pre>
+    </div>
+    <div id="pg-33-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">val df = read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+df: DataFrame =
++----+-----+-----+----+-----+-----+-----+
+|MYCT| MMIN| MMAX|CACH|CHMIN|CHMAX|class|
++----+-----+-----+----+-----+-----+-----+
+| 125|  256| 6000| 256|   16|  128|  199|
+|  29| 8000|32000|  32|    8|   32|  253|
+|  29| 8000|32000|  32|    8|   32|  253|
+|  29| 8000|32000|  32|    8|   32|  253|
+|  29| 8000|16000|  32|    8|   16|  132|
+|  26| 8000|32000|  64|    8|   32|  290|
+|  23|16000|32000|  64|   16|   32|  381|
+|  23|16000|32000|  64|   16|   32|  381|
+|  23|16000|64000|  64|   16|   32|  749|
+|  23|32000|64000| 128|   32|   64| 1238|
++----+-----+-----+----+-----+-----+-----+
+199 more rows...
+      </code></pre>
+    </div>
+    <div id="pg-33-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">val df = read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++----+-----+-----+----+-----+-----+-----+
+|MYCT| MMIN| MMAX|CACH|CHMIN|CHMAX|class|
++----+-----+-----+----+-----+-----+-----+
+| 125|  256| 6000| 256|   16|  128|  199|
+|  29| 8000|32000|  32|    8|   32|  253|
+|  29| 8000|32000|  32|    8|   32|  253|
+|  29| 8000|32000|  32|    8|   32|  253|
+|  29| 8000|16000|  32|    8|   16|  132|
+|  26| 8000|32000|  64|    8|   32|  290|
+|  23|16000|32000|  64|   16|   32|  381|
+|  23|16000|32000|  64|   16|   32|  381|
+|  23|16000|64000|  64|   16|   32|  749|
+|  23|32000|64000| 128|   32|   64| 1238|
++----+-----+-----+----+-----+-----+-----+
+199 more rows...
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h3 id="read.csv">Delimited Text and CSV</h3>
+    <p>The delimited text files are widely used in machine learning research community.
+        The comma-separated values (CSV) file is a special case. Smile provides flexible
+        parser for them based on
+        <a href="https://commons.apache.org/proper/commons-csv/">Apache Commons CSV</a> library.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-34-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-34-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-34-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-34-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">    public interface Read {
+        /** Reads a CSV file. */
+        static DataFrame csv(String path) throws IOException, URISyntaxException
+
+        /** Reads a CSV file. */
+        static DataFrame csv(String path, CSVFormat format) throws IOException, URISyntaxException
+
+        /** Reads a CSV file. */
+        static DataFrame csv(String path, CSVFormat format, StructType schema) throws IOException, URISyntaxException
+
+        /** Reads a CSV file. */
+        static DataFrame csv(Path path) throws IOException
+
+        /** Reads a CSV file. */
+        static DataFrame csv(Path path, CSVFormat format) throws IOException
+
+        /** Reads a CSV file. */
+        static DataFrame csv(Path path, CSVFormat format, StructType schema) throws IOException
+    }</code></pre>
+    </div>
+    <div id="pg-34-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">    def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame</code></pre>
+    </div>
+    <div id="pg-34-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">    fun csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType? = null): DataFrame</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>The parser tries it best to infer the schema of data from the top rows.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-35-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-35-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-35-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-35-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">    import org.apache.commons.csv.CSVFormat
+    var format = CSVFormat.DEFAULT.withDelimiter(' ')
+    var zip = Read.csv("data/usps/zip.train", format)</code></pre>
+    </div>
+    <div id="pg-35-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">    val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)</code></pre>
+    </div>
+    <div id="pg-35-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">    val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>In case that the parser fails to infer the schema, the user may provide a predefined schema.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-36-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-36-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-36-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.data.type.*
+import smile.data.measure.*
+var airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
+   "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN", "ALB", "ALO", "AMA", "ANC",
+   "APF", "ASE", "ATL", "ATW", "AUS", "AVL", "AVP", "AZO", "BDL", "BET", "BFL",
+   "BGM", "BGR", "BHM", "BIL", "BIS", "BJI", "BLI", "BMI", "BNA", "BOI", "BOS",
+   "BPT", "BQK", "BQN", "BRO", "BRW", "BTM", "BTR", "BTV", "BUF", "BUR", "BWI",
+   "BZN", "CAE", "CAK", "CDC", "CDV", "CEC", "CHA", "CHO", "CHS", "CIC", "CID",
+   "CKB", "CLD", "CLE", "CLL", "CLT", "CMH", "CMI", "CMX", "COD", "COS", "CPR",
+   "CRP", "CRW", "CSG", "CVG", "CWA", "CYS", "DAB", "DAL", "DAY", "DBQ", "DCA",
+   "DEN", "DFW", "DHN", "DLG", "DLH", "DRO", "DSM", "DTW", "EAU", "EGE", "EKO",
+   "ELM", "ELP", "ERI", "EUG", "EVV", "EWN", "EWR", "EYW", "FAI", "FAR", "FAT",
+   "FAY", "FCA", "FLG", "FLL", "FLO", "FMN", "FNT", "FSD", "FSM", "FWA", "GEG",
+   "GFK", "GGG", "GJT", "GNV", "GPT", "GRB", "GRK", "GRR", "GSO", "GSP", "GST",
+   "GTF", "GTR", "GUC", "HDN", "HHH", "HKY", "HLN", "HNL", "HOU", "HPN", "HRL",
+   "HSV", "HTS", "HVN", "IAD", "IAH", "ICT", "IDA", "ILG", "ILM", "IND", "INL",
+   "IPL", "ISO", "ISP", "ITO", "IYK", "JAC", "JAN", "JAX", "JFK", "JNU", "KOA",
+   "KTN", "LAN", "LAR", "LAS", "LAW", "LAX", "LBB", "LBF", "LCH", "LEX", "LFT",
+   "LGA", "LGB", "LIH", "LIT", "LNK", "LRD", "LSE", "LWB", "LWS", "LYH", "MAF",
+   "MBS", "MCI", "MCN", "MCO", "MDT", "MDW", "MEI", "MEM", "MFE", "MFR", "MGM",
+   "MHT", "MIA", "MKE", "MLB", "MLI", "MLU", "MOB", "MOD", "MOT", "MQT", "MRY",
+   "MSN", "MSO", "MSP", "MSY", "MTH", "MTJ", "MYR", "OAJ", "OAK", "OGD", "OGG",
+   "OKC", "OMA", "OME", "ONT", "ORD", "ORF", "OTZ", "OXR", "PBI", "PDX", "PFN",
+   "PHF", "PHL", "PHX", "PIA", "PIE", "PIH", "PIT", "PLN", "PMD", "PNS", "PSC",
+   "PSE", "PSG", "PSP", "PUB", "PVD", "PVU", "PWM", "RAP", "RCA", "RDD", "RDM",
+   "RDU", "RFD", "RHI", "RIC", "RNO", "ROA", "ROC", "ROW", "RST", "RSW", "SAN",
+   "SAT", "SAV", "SBA", "SBN", "SBP", "SCC", "SCE", "SDF", "SEA", "SFO", "SGF",
+   "SGU", "SHV", "SIT", "SJC", "SJT", "SJU", "SLC", "SLE", "SMF", "SMX", "SNA",
+   "SOP", "SPI", "SPS", "SRQ", "STL", "STT", "STX", "SUN", "SUX", "SWF", "SYR",
+   "TEX", "TLH", "TOL", "TPA", "TRI", "TTN", "TUL", "TUP", "TUS", "TVC", "TWF",
+   "TXK", "TYR", "TYS", "VCT", "VIS", "VLD", "VPS", "WRG", "WYS", "XNA", "YAK",
+   "YKM", "YUM")
+var schema = new StructType(
+   new StructField("Month", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+     "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12")),
+   new StructField("DayofMonth", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+     "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12", "c-13", "c-14", "c-15", "c-16", "c-17", "c-18",
+     "c-19", "c-20", "c-21", "c-22", "c-23", "c-24", "c-25", "c-26", "c-27", "c-28", "c-29", "c-30", "c-31")),
+   new StructField("DayOfWeek", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+     "c-5", "c-6", "c-7")),
+   new StructField("DepTime", DataTypes.IntType),
+   new StructField("UniqueCarrier", DataTypes.ByteType, new NominalScale("9E", "AA", "AQ", "AS",
+     "B6", "CO", "DH", "DL", "EV", "F9", "FL", "HA", "HP", "MQ", "NW", "OH", "OO", "TZ", "UA", "US", "WN", "XE", "YV")),
+   new StructField("Origin", DataTypes.ShortType, airport),
+   new StructField("Dest", DataTypes.ShortType, airport),
+   new StructField("Distance", DataTypes.IntType),
+   new StructField("dep_delayed_15min", DataTypes.ByteType, new NominalScale("N", "Y"))
+)
+var format = CSVFormat.DEFAULT.withFirstRecordAsHeader();
+var airline = Read.csv("data/airline/train-1m.csv", format, schema);</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, A ... , WYS, XNA, YAK, YKM, YUM]
+
+[Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... 15min: byte nominal[N, Y]]
+
+Delimiter=<,> QuoteChar=<"> RecordSeparator=<
+>  ... eaderRecord:true Header:[]
+
+[Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
+999990 more rows...
+      </code></pre>
+    </div>
+    <div id="pg-36-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">val airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
+  "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN", "ALB", "ALO", "AMA", "ANC",
+  "APF", "ASE", "ATL", "ATW", "AUS", "AVL", "AVP", "AZO", "BDL", "BET", "BFL",
+  "BGM", "BGR", "BHM", "BIL", "BIS", "BJI", "BLI", "BMI", "BNA", "BOI", "BOS",
+  "BPT", "BQK", "BQN", "BRO", "BRW", "BTM", "BTR", "BTV", "BUF", "BUR", "BWI",
+  "BZN", "CAE", "CAK", "CDC", "CDV", "CEC", "CHA", "CHO", "CHS", "CIC", "CID",
+  "CKB", "CLD", "CLE", "CLL", "CLT", "CMH", "CMI", "CMX", "COD", "COS", "CPR",
+  "CRP", "CRW", "CSG", "CVG", "CWA", "CYS", "DAB", "DAL", "DAY", "DBQ", "DCA",
+  "DEN", "DFW", "DHN", "DLG", "DLH", "DRO", "DSM", "DTW", "EAU", "EGE", "EKO",
+  "ELM", "ELP", "ERI", "EUG", "EVV", "EWN", "EWR", "EYW", "FAI", "FAR", "FAT",
+  "FAY", "FCA", "FLG", "FLL", "FLO", "FMN", "FNT", "FSD", "FSM", "FWA", "GEG",
+  "GFK", "GGG", "GJT", "GNV", "GPT", "GRB", "GRK", "GRR", "GSO", "GSP", "GST",
+  "GTF", "GTR", "GUC", "HDN", "HHH", "HKY", "HLN", "HNL", "HOU", "HPN", "HRL",
+  "HSV", "HTS", "HVN", "IAD", "IAH", "ICT", "IDA", "ILG", "ILM", "IND", "INL",
+  "IPL", "ISO", "ISP", "ITO", "IYK", "JAC", "JAN", "JAX", "JFK", "JNU", "KOA",
+  "KTN", "LAN", "LAR", "LAS", "LAW", "LAX", "LBB", "LBF", "LCH", "LEX", "LFT",
+  "LGA", "LGB", "LIH", "LIT", "LNK", "LRD", "LSE", "LWB", "LWS", "LYH", "MAF",
+  "MBS", "MCI", "MCN", "MCO", "MDT", "MDW", "MEI", "MEM", "MFE", "MFR", "MGM",
+  "MHT", "MIA", "MKE", "MLB", "MLI", "MLU", "MOB", "MOD", "MOT", "MQT", "MRY",
+  "MSN", "MSO", "MSP", "MSY", "MTH", "MTJ", "MYR", "OAJ", "OAK", "OGD", "OGG",
+  "OKC", "OMA", "OME", "ONT", "ORD", "ORF", "OTZ", "OXR", "PBI", "PDX", "PFN",
+  "PHF", "PHL", "PHX", "PIA", "PIE", "PIH", "PIT", "PLN", "PMD", "PNS", "PSC",
+  "PSE", "PSG", "PSP", "PUB", "PVD", "PVU", "PWM", "RAP", "RCA", "RDD", "RDM",
+  "RDU", "RFD", "RHI", "RIC", "RNO", "ROA", "ROC", "ROW", "RST", "RSW", "SAN",
+  "SAT", "SAV", "SBA", "SBN", "SBP", "SCC", "SCE", "SDF", "SEA", "SFO", "SGF",
+  "SGU", "SHV", "SIT", "SJC", "SJT", "SJU", "SLC", "SLE", "SMF", "SMX", "SNA",
+  "SOP", "SPI", "SPS", "SRQ", "STL", "STT", "STX", "SUN", "SUX", "SWF", "SYR",
+  "TEX", "TLH", "TOL", "TPA", "TRI", "TTN", "TUL", "TUP", "TUS", "TVC", "TWF",
+  "TXK", "TYR", "TYS", "VCT", "VIS", "VLD", "VPS", "WRG", "WYS", "XNA", "YAK",
+  "YKM", "YUM")
+airport: NominalScale = nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM]
+
+val schema = new StructType(
+  new StructField("Month", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+    "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12")),
+  new StructField("DayofMonth", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+    "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12", "c-13", "c-14", "c-15", "c-16", "c-17", "c-18",
+    "c-19", "c-20", "c-21", "c-22", "c-23", "c-24", "c-25", "c-26", "c-27", "c-28", "c-29", "c-30", "c-31")),
+  new StructField("DayOfWeek", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+    "c-5", "c-6", "c-7")),
+  new StructField("DepTime", DataTypes.IntType),
+  new StructField("UniqueCarrier", DataTypes.ByteType, new NominalScale("9E", "AA", "AQ", "AS",
+    "B6", "CO", "DH", "DL", "EV", "F9", "FL", "HA", "HP", "MQ", "NW", "OH", "OO", "TZ", "UA", "US", "WN", "XE", "YV")),
+  new StructField("Origin", DataTypes.ShortType, airport),
+  new StructField("Dest", DataTypes.ShortType, airport),
+  new StructField("Distance", DataTypes.IntType),
+  new StructField("dep_delayed_15min", DataTypes.ByteType, new NominalScale("N", "Y"))
+)
+schema: StructType = [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12], DayofMonth: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12, c-13, c-14, c-15, c-16, c-17, c-18, c-19, c-20, c-21, c-22, c-23, c-24, c-25, c-26, c-27, c-28, c-29, c-30, c-31], DayOfWeek: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7], DepTime: int, UniqueCarrier: byte nominal[9E, AA, AQ, AS, B6, CO, DH, DL, EV, F9, FL, HA, HP, MQ, NW, OH, OO, TZ, UA, US, WN, XE, YV], Origin: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Dest: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Distance: int, dep_delayed_15min: byte nominal[N, Y]]
+
+val airline = read.csv("shell/src/universal/data/airline/train-1m.csv", schema = schema)
+airline: DataFrame = [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12], DayofMonth: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12, c-13, c-14, c-15, c-16, c-17, c-18, c-19, c-20, c-21, c-22, c-23, c-24, c-25, c-26, c-27, c-28, c-29, c-30, c-31], DayOfWeek: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7], DepTime: int, UniqueCarrier: byte nominal[9E, AA, AQ, AS, B6, CO, DH, DL, EV, F9, FL, HA, HP, MQ, NW, OH, OO, TZ, UA, US, WN, XE, YV], Origin: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Dest: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Distance: int, dep_delayed_15min: byte nominal[N, Y]]</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
++-----+----------+---------+-------+-------------+------+----+--------+-----------------+
+|Month|DayofMonth|DayOfWeek|DepTime|UniqueCarrier|Origin|Dest|Distance|dep_delayed_15min|
+...
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h3 id="read.json">JSON</h3>
+    <p>SMILE reads <em>flat</em> JSON (nested objects are not supported). The default
+        is single-line / NDJSON — one object per line. Use
+        <code>JSON.Mode.MULTI_LINE</code> when the file is a JSON array of objects.
+        An optional <code>StructType</code> overrides inferred schema.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-json-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-json-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-json-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.io.JSON;
+import smile.io.Read;
+
+// One JSON object per line (NDJSON)
+var books = Read.json("data/kylo/books.json");
+
+// Entire file is a JSON array
+var array = Read.json("data/kylo/books_array.json", JSON.Mode.MULTI_LINE, null);</code></pre>
+    </div>
+    <div id="pg-json-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.io.JSON
+import smile.read
+
+val books = read.json("data/kylo/books.json")
+val array = read.json("data/kylo/books_array.json", JSON.Mode.MULTI_LINE, null)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h3 id="read.libsvm">LibSVM</h3>
+    <p>LibSVM is a very fast and popular library for support vector machines.
+        LibSVM uses a sparse format where zero values do not need to be stored.
+        Each line of a libsvm file is in the format:</p>
+    <div class="code-playground glass" data-lang="text">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Format</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-text"><code class="language-text">    &lt;label&gt; &lt;index1&gt;:&lt;value1&gt; &lt;index2&gt;:&lt;value2&gt; ...</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+    <p>where &lt;label&gt; is the target value of the training data.
+        For classification, it should be an integer which identifies a class
+        (multi-class classification is supported). For regression, it's any real
+        number. For one-class SVM, it's not used so can be any number.
+        &lt;index&gt; is an integer starting from 1, and &lt;value&gt;
+        is a real number. The indices must be in ascending order. The labels in
+        the testing data file are only used to calculate accuracy or error. If they
+        are unknown, just fill this column with a number.</p>
+
+    <p>To read a libsvm file, <code>smile.io</code> has the function</p>
+
+    <p>Although libsvm employs a sparse format, most libsvm files contain dense data.
+        Therefore, Smile also provides helper functions to convert
+        it to dense arrays.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-37-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-37-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-37-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-37-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">var glass = Read.libsvm("data/libsvm/glass.txt")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+smile.data.DatasetImpl@524f3b3a
+      </code></pre>
+    </div>
+    <div id="pg-37-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">val glass = read.libsvm("data/libsvm/glass.txt")
+glass: Dataset[Instance[SparseArray]] = smile.data.DatasetImpl@5611bba</code></pre>
+    </div>
+    <div id="pg-37-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">read.libsvm("data/libsvm/glass.txt")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+smile.data.DatasetImpl@50d667c3
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>In case of truly sparse libsvm data, we can convert it to <code>SparseMatrix</code>
+        for more efficient matrix computation.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-38-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-38-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-38-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-38-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">var glass = Read.libsvm("data/libsvm/glass.txt")
+SparseDataset.of(glass).toMatrix()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+smile.data.DatasetImpl@17baae6e
+
+smile.math.matrix.SparseMatrix@6b53e23f
+      </code></pre>
+    </div>
+    <div id="pg-38-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">SparseDataset.of(glass).toMatrix</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+smile.math.matrix.SparseMatrix@290807e5
+      </code></pre>
+    </div>
+    <div id="pg-38-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">SparseDataset.of(glass).toMatrix()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+smile.math.matrix.SparseMatrix@45db84b0
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Note that <code>read.libsvm</code> returns a <code>Dataset[Instance[SparseArray]]</code>
+        object. The <code>Instance</code> class has both sample object and label. To convert the
+        sample set to a sparse matrix, we firstly convert the <code>Dataset</code> object to
+        <code>SparseDataset</code>, which doesn't have the label. We discuss the details of
+        <code>SparseDataset</code> in next section.</p>
+
+    <h3 id="sparse-format">Coordinate Triple Tuple List</h3>
+
+    <p>The function <code>SparseDataset.from(Path path, int arrayIndexOrigin)</code>
+        can read sparse data in coordinate triple tuple list format. The parameter
+        <code>arrayIndexOrigin</code> is the starting index of array. By default, it is
+        0 as in C/C++ and Java. But it could be 1 to parse data produced
+        by other programming language such as Fortran.</p>
+
+    <p>The coordinate file stores a list of (row, column, value) tuples:</p>
+    <div class="code-playground glass" data-lang="text">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Format</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-text"><code class="language-text">instanceID attributeID value
+    instanceID attributeID value
+    instanceID attributeID value
+    instanceID attributeID value
+    ...
+    instanceID attributeID value
+    instanceID attributeID value
+    instanceID attributeID value</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Ideally, the entries are sorted (by row index, then column index) to improve
+        random access times. This format is good for incremental matrix
+        construction.</p>
+
+    <p>Optionally, there may be 2 header lines</p>
+
+    <div class="code-playground glass" data-lang="text">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Format</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-text"><code class="language-text">D    // The number of instances
+    W    // The number of attributes</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>or 3 header lines</p>
+
+    <div class="code-playground glass" data-lang="text">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Format</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-text"><code class="language-text">D    // The number of instances
+    W    // The number of attributes
+    N    // The total number of nonzero items in the dataset.</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+    <p>These header lines will be ignored.</p>
+
+    <p>The sample data <code>data/sparse/kos.txt</code> is in the coordinate format.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-39-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-39-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-39-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-39-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">var kos = SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+smile.data.SparseDatasetImpl@4d826d77
+      </code></pre>
+    </div>
+    <div id="pg-39-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">val kos = SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)
+kos: SparseDataset = smile.data.SparseDatasetImpl@4da602fc</code></pre>
+    </div>
+    <div id="pg-39-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">SparseDataset.from(java.nio.file.Paths.get("data/sparse/kos.txt"), 1)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+smile.data.SparseDatasetImpl@485b4fd0
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h3 id="Harwell-Boeing">Harwell-Boeing Column-Compressed Sparse Matrix</h3>
+
+    <p>In Harwell-Boeing column-compressed sparse matrix file, nonzero values are stored in an array
+        (top-to-bottom, then left-to-right-bottom). The row indices corresponding to
+        the values are also stored. Besides, a list of pointers are indexes where
+        each column starts. The class SparseMatrix supports two formats for Harwell-Boeing files.
+        The simple one is organized as follows:</p>
+
+    <p>The first line contains three integers, which are the number of rows,
+        the number of columns, and the number of nonzero entries in the matrix.</p>
+
+    <p>Following the first line, there are m + 1 integers that are the indices of
+        columns, where m is the number of columns. Then there are n integers that
+        are the row indices of nonzero entries, where n is the number of nonzero
+        entries. Finally, there are n float numbers that are the values of nonzero
+        entries.</p>
+
+    <p>The function <code>SparseMatrix.text(Path path)</code> can read this simple
+        format. In the directory <code>data/matrix</code>, there are several sample files in
+        the Harwell-Boeing format.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-40-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-40-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-40-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-40-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.math.matrix.*;
+
+var blocks = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+smile.math.matrix.SparseMatrix@7ff95560
+      </code></pre>
+    </div>
+    <div id="pg-40-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">val blocks = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
+blocks: SparseMatrix = smile.math.matrix.SparseMatrix@4263b080</code></pre>
+    </div>
+    <div id="pg-40-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.math.matrix.*
+SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+smile.math.matrix.SparseMatrix@1a479168
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>The second format is more complicated and powerful, called Harwell-Boeing Exchange Format.
+        For details, see <a href="https://people.sc.fsu.edu/~jburkardt/data/hb/hb.html">https://people.sc.fsu.edu/~jburkardt/data/hb/hb.html</a>.
+        Note that our implementation supports only real-valued matrix, and we ignore
+        the optional right hand side vectors. This format is supported by the function
+        <code>SparseMatrix.harwell(Path path)</code>. </p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-41-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-41-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-41-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-41-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">var five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+smile.math.matrix.SparseMatrix@6b4a4e18
+      </code></pre>
+    </div>
+    <div id="pg-41-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">val five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+five: SparseMatrix = smile.math.matrix.SparseMatrix@1761de10
+      </code></pre>
+    </div>
+    <div id="pg-41-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+smile.math.matrix.SparseMatrix@37672764
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h3 id="wireframe">Wireframe</h3>
+    <p>Smile can parse 3D wireframe models in Wavefront OBJ files.</p>
+
+    <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">    def read.wavefront(file: String): (Array[Array[Double]], Array[Array[Int]])</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>In the directory <code>data/wireframe</code>, there is a teapot wireframe model. In the
+        next section, we will learn how to visualize the 3D wireframe models.</p>
+
+    <div class="code-playground glass" data-lang="scala">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Scala</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-scala"><code class="language-scala">val (vertices, edges) = read.wavefront("data/wavefront/teapot.obj")
+vertices: Array[Array[Double]] = Array(
+  Array(40.6266, 28.3457, -1.10804),
+  Array(40.0714, 30.4443, -1.10804),
+  Array(40.7155, 31.1438, -1.10804),
+  Array(42.0257, 30.4443, -1.10804),
+  Array(43.4692, 28.3457, -1.10804),
+  Array(37.5425, 28.3457, 14.5117),
+  Array(37.0303, 30.4443, 14.2938),
+  Array(37.6244, 31.1438, 14.5466),
+  Array(38.8331, 30.4443, 15.0609),
+  Array(40.1647, 28.3457, 15.6274),
+  Array(29.0859, 28.3457, 27.1468),
+  Array(28.6917, 30.4443, 26.7527),
+  Array(29.149, 31.1438, 27.2099),
+  Array(30.0792, 30.4443, 28.1402),
+  Array(31.1041, 28.3457, 29.165),
+  Array(16.4508, 28.3457, 35.6034),
+  Array(16.2329, 30.4443, 35.0912),
+  Array(16.4857, 31.1438, 35.6853),
+  Array(16.9999, 30.4443, 36.894),
+  Array(17.5665, 28.3457, 38.2256),
+  Array(0.831025, 28.3457, 38.6876),
+  Array(0.831025, 30.4443, 38.1324),
+  Array(0.831025, 31.1438, 38.7764),
+  Array(0.831025, 30.4443, 40.0866),
+...
+edges: Array[Array[Int]] = Array(
+  Array(6, 5),
+  Array(5, 0),
+  Array(6, 0),
+  Array(0, 1),
+  Array(1, 6),
+  Array(0, 6),
+  Array(7, 6),
+  Array(6, 1),
+  Array(7, 1),
+  Array(1, 2),
+  Array(2, 7),
+  Array(1, 7),
+  Array(8, 7),
+  Array(7, 2),
+  Array(8, 2),
+  Array(2, 3),
+  Array(3, 8),
+  Array(2, 8),
+  Array(9, 8),
+  Array(8, 3),
+  Array(9, 3),
+  Array(3, 4),
+  Array(4, 9),
+  Array(3, 9),
+...</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h2 id="export">Exporting Data</h2>
+
+    <p>Model serialization (<code>.sml</code> / <code>Write.object</code>) is covered in the
+        <a href="tutorial.html#serialization">Tutorial</a>. This section is about writing
+        tabular data only.</p>
+
+    <p>DataFrames can be written with <code>Write.csv</code>, <code>Write.arff</code>,
+        or <code>Write.arrow</code>. ARFF preserves schema and measures; CSV is the
+        portable text option.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-45-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-45-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-45-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.nio.file.Path;
+import smile.io.Write;
+
+Write.csv(iris, Path.of("iris-out.csv"));
+Write.arff(iris, Path.of("iris-out.arff"), "iris");</code></pre>
+    </div>
+    <div id="pg-45-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.nio.file.Path
+import smile.write
+
+write.csv(iris, "iris-out.csv")
+write.arff(iris, "iris-out.arff", "iris")</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="data.html" title="Previous Section: Data Processing"><span>Data Processing</span></a>
+        <a class="btn-next-text" href="visualization.html" title="Next Section: Data Visualization"><span>Visualization</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
