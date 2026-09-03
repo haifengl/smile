@@ -335,6 +335,40 @@
   .playground-source,
   .playground-editor { min-height: 10rem; margin: 0; }
   .playground-editor { min-height: 12rem; }
+  .playground-output {
+    position: relative;
+    margin: 0;
+    min-height: 0;
+    padding: 1.65rem 1rem 1rem;
+    border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--bg-elevated) 55%, transparent);
+    color: var(--text-muted);
+    font-size: 0.85em;
+  }
+  .playground-output::before {
+    content: "Output";
+    position: absolute;
+    top: 0;
+    left: 0.85rem;
+    transform: translateY(-50%);
+    padding: 0.1rem 0.45rem;
+    border: 1px solid var(--border);
+    border-radius: 0.3rem;
+    background: var(--bg-elevated);
+    color: var(--text-muted);
+    font-family: system-ui, sans-serif;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .playground-output code {
+    color: inherit;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    white-space: pre;
+  }
 
   .quote-card { padding: 1rem 1.15rem; min-height: 8.5rem; }
   .quote-card p { font-size: 0.95rem; }

@@ -33,9 +33,13 @@
   }
 
   function sourceText(playground) {
-    var visible = playground.querySelector('.hero-pane:not([hidden]) .playground-source');
+    var visiblePane = playground.querySelector('.hero-pane:not([hidden])');
+    var visible = visiblePane
+      ? visiblePane.querySelector('.playground-source')
+      : null;
     var source = visible || playground.querySelector('.playground-source');
     if (!source) return '';
+    // Never copy expected-output panes into clipboard / Monaco.
     var code = source.querySelector('code');
     var text = (code ? code.textContent : source.textContent) || '';
     return window.smileDedent ? window.smileDedent(text) : text;
@@ -122,6 +126,9 @@
     playground.querySelectorAll('.playground-source').forEach(function (source) {
       source.hidden = true;
     });
+    playground.querySelectorAll('.playground-output').forEach(function (output) {
+      output.hidden = true;
+    });
   }
 
   function showSources(playground) {
@@ -139,6 +146,9 @@
     }
     playground.querySelectorAll('.playground-source').forEach(function (source) {
       source.hidden = false;
+    });
+    playground.querySelectorAll('.playground-output').forEach(function (output) {
+      output.hidden = false;
     });
   }
 
