@@ -1357,6 +1357,45 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * Updates ragged CSR {@code last_page_len} in place when every row grows by
+     * one token within the same KV page (no new page indices).
+     */
+    private boolean bumpRaggedFlashInferMetadata(int[] newLengths) {
+        if (stepFlashInferMeta == null || stepFlashInferLengths == null
+                || stepFlashInferLengths.length != newLengths.length) {
+            return false;
+        }
+        int batch = newLengths.length;
+        int[] lastVals = new int[batch];
+        for (int b = 0; b < batch; b++) {
+            int oldLen = stepFlashInferLengths[b];
+            int newLen = newLengths[b];
+            if (newLen != oldLen + 1) {
+                return false;
+            }
+            int oldPages = (oldLen + pageSize - 1) / pageSize;
+            int newPages = (newLen + pageSize - 1) / pageSize;
+            if (newPages != oldPages) {
+                return false;
+            }
+            int rem = newLen % pageSize;
+            lastVals[b] = rem == 0 ? pageSize : rem;
+        }
+        Tensor last = stepFlashInferMeta.pagedKvLastPageLen();
+        try (Tensor cpu = Tensor.of(lastVals)) {
+            if (device.isCUDA()) {
+                try (Tensor gpu = cpu.to(device)) {
+                    smile.torch.Native.copy_(last, gpu);
+                }
+            } else {
+                smile.torch.Native.copy_(last, cpu);
+            }
+        }
+        stepFlashInferLengths = newLengths.clone();
+        return true;
+    }
+
+    /**
      * Returns shared FlashInfer metadata for ragged per-row cache lengths within
      * the current step. Do not close the returned value.
      *
@@ -1379,6 +1418,9 @@ public class KvCachePool implements AutoCloseable {
         }
         if (stepFlashInferMeta != null && stepFlashInferLengths != null
                 && Arrays.equals(stepFlashInferLengths, lengths)) {
+            return stepFlashInferMeta;
+        }
+        if (bumpRaggedFlashInferMetadata(lengths)) {
             return stepFlashInferMeta;
         }
         clearStepFlashInferMetadata();

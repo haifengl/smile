@@ -588,15 +588,10 @@ public final class InferenceEngine implements AutoCloseable {
         long tStep = System.nanoTime();
         try (Tensor logits = executor.decodeStep(ids, toks, positions)) {
             long tSample = System.nanoTime();
-            boolean allGreedy = true;
-            for (int i = 0; i < b; i++) {
-                if (decoding.get(i).temperature > 0) {
-                    allGreedy = false;
-                    break;
-                }
-            }
-            if (b > 1 && allGreedy) {
-                int[] sampled = Sampling.sampleGreedyTokenIds(logits);
+            boolean batchSample = b > 1 && uniformSampling(decoding);
+            if (batchSample) {
+                Active first = decoding.get(0);
+                int[] sampled = Sampling.sampleTokenIds(logits, first.temperature, first.topp);
                 for (int i = 0; i < b; i++) {
                     Active a = decoding.get(i);
                     if (a.phase != Phase.DECODING) {
@@ -693,6 +688,16 @@ public final class InferenceEngine implements AutoCloseable {
         }
         active.removeIf(a -> a.phase == Phase.DONE);
         maybeEmptyDeviceCache();
+    }
+
+    private static boolean uniformSampling(List<Active> decoding) {
+        Active first = decoding.get(0);
+        for (Active a : decoding) {
+            if (a.temperature != first.temperature || a.topp != first.topp || a.seed != 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private boolean anyPrefilling() {

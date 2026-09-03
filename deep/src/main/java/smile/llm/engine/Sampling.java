@@ -51,13 +51,30 @@ public final class Sampling {
     public static int[] sampleGreedyTokenIds(Tensor logits) {
         try (Tensor arg = logits.argmax(-1, false);
              Tensor cpu = arg.to(smile.deep.tensor.Device.CPU())) {
-            long[] ids = cpu.longArray();
-            int[] out = new int[ids.length];
-            for (int i = 0; i < ids.length; i++) {
-                out[i] = (int) ids[i];
-            }
-            return out;
+            return toIntIds(cpu.longArray());
         }
+    }
+
+    /**
+     * Batched sample: greedy when {@code temperature <= 0}, otherwise one
+     * temperature + nucleus draw for every row of {@code [batch, vocab]}.
+     */
+    public static int[] sampleTokenIds(Tensor logits, double temperature, double topp) {
+        if (temperature <= 0) {
+            return sampleGreedyTokenIds(logits);
+        }
+        try (Tensor next = sampleNext(logits, temperature, topp);
+             Tensor cpu = next.to(smile.deep.tensor.Device.CPU())) {
+            return toIntIds(cpu.longArray());
+        }
+    }
+
+    private static int[] toIntIds(long[] ids) {
+        int[] out = new int[ids.length];
+        for (int i = 0; i < ids.length; i++) {
+            out[i] = (int) ids[i];
+        }
+        return out;
     }
 
     /**
