@@ -1351,10 +1351,7 @@ public class KvCachePool implements AutoCloseable {
         }
         int rem = newLength % pageSize;
         int newLast = rem == 0 ? pageSize : rem;
-        Tensor last = stepFlashInferMeta.pagedKvLastPageLen();
-        for (int b = 0; b < batch; b++) {
-            last.put_(newLast, b);
-        }
+        stepFlashInferMeta.pagedKvLastPageLen().fill_(newLast);
         stepFlashInferUniformLen = newLength;
         return true;
     }
@@ -1367,27 +1364,9 @@ public class KvCachePool implements AutoCloseable {
      * @return CSR metadata reused for all attention layers in this step.
      */
     public FlashInferKvMetadata sharedFlashInferMetadata(int[] lengths) {
-        if (lengths.length == 1) {
-            return sharedFlashInferMetadata(lengths[0]);
+        if (lengths == null || lengths.length == 0) {
+            throw new IllegalArgumentException("lengths must be non-empty");
         }
-        if (stepFlashInferMeta != null && stepFlashInferLengths != null
-                && Arrays.equals(stepFlashInferLengths, lengths)) {
-            return stepFlashInferMeta;
-        }
-        if (stepFlashInferMeta != null && stepFlashInferLengths == null && lengths.length > 0) {
-            boolean uniform = true;
-            for (int b = 1; b < lengths.length; b++) {
-                if (lengths[b] != lengths[0]) {
-                    uniform = false;
-                    break;
-                }
-            }
-            if (uniform && stepFlashInferUniformLen == lengths[0]) {
-                return stepFlashInferMeta;
-            }
-        }
-        clearStepFlashInferMetadata();
-        stepFlashInferMeta = buildFlashInferMetadata(lengths);
         boolean uniform = true;
         for (int b = 1; b < lengths.length; b++) {
             if (lengths[b] != lengths[0]) {
@@ -1396,10 +1375,15 @@ public class KvCachePool implements AutoCloseable {
             }
         }
         if (uniform) {
-            stepFlashInferUniformLen = lengths[0];
-        } else {
-            stepFlashInferLengths = lengths.clone();
+            return sharedFlashInferMetadata(lengths[0]);
         }
+        if (stepFlashInferMeta != null && stepFlashInferLengths != null
+                && Arrays.equals(stepFlashInferLengths, lengths)) {
+            return stepFlashInferMeta;
+        }
+        clearStepFlashInferMetadata();
+        stepFlashInferMeta = buildFlashInferMetadata(lengths);
+        stepFlashInferLengths = lengths.clone();
         return stepFlashInferMeta;
     }
 

@@ -506,6 +506,25 @@ public class KvCachePoolTest {
     }
 
     @Test
+    public void testGivenUniformBatchWhenLengthIncrementsWithinPageThenReusesMetadata() {
+        try (var pool = new KvCachePool(1, 256, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            pool.setPrefixReuseEnabled(false);
+            int id1 = pool.bindRequest(new int[]{1, 2, 3, 4}, 64);
+            int id2 = pool.bindRequest(new int[]{5, 6, 7, 8}, 64);
+            pool.activateStep(id1, id2);
+            var len10 = pool.sharedFlashInferMetadata(new int[]{10, 10});
+            pool.activateStep(id1, id2);
+            var len11 = pool.sharedFlashInferMetadata(new int[]{11, 11});
+            assertSame(len10, len11, "uniform B>1 within-page bump reuses CSR tensors");
+            int[] last = len11.pagedKvLastPageLen().intArray();
+            assertEquals(11, last[0]);
+            assertEquals(11, last[1]);
+            pool.unbindRequest(id1);
+            pool.unbindRequest(id2);
+        }
+    }
+
+    @Test
     public void testGivenActivateStepWhenSharedFlashInferMetadataThenReusesSameInstance() {
         try (var pool = new KvCachePool(1, 128, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
             pool.setPrefixReuseEnabled(false);
