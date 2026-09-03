@@ -32,6 +32,7 @@ public final class DecodeCudaGraphLog {
     private static final Set<Long> WARMUP_LOGGED = ConcurrentHashMap.newKeySet();
     private static final Set<Long> CAPTURE_LOGGED = ConcurrentHashMap.newKeySet();
     private static final Set<Long> PREFETCH_START_LOGGED = ConcurrentHashMap.newKeySet();
+    private static final Set<Long> PREFETCH_WARMUP_LOGGED = ConcurrentHashMap.newKeySet();
     private static final Set<Long> PREFETCH_READY_LOGGED = ConcurrentHashMap.newKeySet();
     private static final Set<Long> PREFETCH_HIT_LOGGED = ConcurrentHashMap.newKeySet();
 
@@ -75,6 +76,18 @@ public final class DecodeCudaGraphLog {
         if (REPLAY_LOGGED.add(bucketKey(batch, numPages))) {
             logger.info("tpRank={}: decode CUDA graph bucket replay batch={} numPages={}",
                     tpRank, batch, numPages);
+        }
+    }
+
+    /** Logs the first eager warmup step during next-bucket prefetch capture. */
+    public static void prefetchWarmup(int tpRank, int batch, int numPages, int step, int total) {
+        if (!logger.isInfoEnabled()) {
+            return;
+        }
+        long key = bucketKey(batch, numPages);
+        if (step == 1 && PREFETCH_WARMUP_LOGGED.add(key)) {
+            logger.info("tpRank={}: decode CUDA graph prefetch warmup batch={} numPages={} "
+                    + "({} eager steps before capture)", tpRank, batch, numPages, total);
         }
     }
 
