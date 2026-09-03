@@ -84,6 +84,19 @@ public interface ChatServiceConfig {
     long admissionTimeoutMs();
 
     /**
+     * When the engine is idle ({@code inFlight == 0}) and the wait queue is
+     * non-empty, delay the first admission by up to this many milliseconds so a
+     * parallel client burst can form a uniform decode cohort. Admission proceeds
+     * early once {@code queued >= maxBatchSize}. {@code 0} (default) disables
+     * coalesce — preferred for interactive latency; set e.g. {@code 50} for
+     * parallel load-test waves.
+     *
+     * <p>Property: {@code smile.chat.admit-coalesce-ms}.
+     */
+    @WithDefault("0")
+    long admitCoalesceMs();
+
+    /**
      * SGLang {@code --mem-fraction-static}: fraction {@code y} of <em>total</em>
      * GPU memory reserved for the static region (model weights, DeltaNet state
      * pools, and KV cache). The remainder {@code (1 − y) × total} stays free for
