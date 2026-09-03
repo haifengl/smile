@@ -38,8 +38,10 @@ public final class DecodeCudaGraph {
     private static final boolean ENABLED = "1".equals(System.getenv("SMILE_DECODE_CUDA_GRAPH"));
     private static final boolean AVAILABLE = Native.cudaGraphAvailable();
     private static final int MAX_BATCH = parseMaxBatch();
-    /** When false, disables next-bucket prefetch ({@code SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE=0}). */
+    /** When false, disables next-bucket prefetch ({@code SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE=1} to enable). */
     private static final boolean PRE_CAPTURE = preCaptureEnabledByEnv();
+    /** Set after prefetch failure so inline pre-capture is skipped. */
+    private static volatile boolean preCaptureDisabled;
     /** Set after a capture failure so we stop retrying every few decode steps. */
     private static volatile boolean captureDisabled;
     /**
@@ -117,7 +119,14 @@ public final class DecodeCudaGraph {
      *         ahead of the page boundary (default on when graphs are enabled).
      */
     public static boolean preCaptureEnabled() {
-        return enabled() && PRE_CAPTURE;
+        return enabled() && PRE_CAPTURE && !preCaptureDisabled;
+    }
+
+    /** Permanently disable next-bucket prefetch after a capture / replay failure. */
+    public static void disablePreCapture(String reason) {
+        if (!preCaptureDisabled) {
+            preCaptureDisabled = true;
+        }
     }
 
     /** Decode steps before a KV page boundary used to spread prefetch work. */
@@ -127,7 +136,7 @@ public final class DecodeCudaGraph {
 
     private static boolean preCaptureEnabledByEnv() {
         String raw = System.getenv("SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE");
-        return raw == null || raw.isEmpty() || !"0".equals(raw.trim());
+        return "1".equals(raw != null ? raw.trim() : "");
     }
 
     /**

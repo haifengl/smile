@@ -608,26 +608,44 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
-     * Swaps FlashInfer metadata to scratch slots for an isolated prefetch forward.
-     *
-     * @param cacheLen inclusive cache length for the prefetched bucket.
-     * @param cachePos KV write position for the prefetch forward.
-     * @param batch    decode batch size.
+     * Uses live request page-table layout for attention and scratch slots for KV
+     * writes so prefetch capture sees the same CSR tensors replay will use.
      */
     public void beginPrefetchDecodeGraphStep(int cacheLen, int cachePos, int batch) {
         ensureBound();
         prefetchSavedMeta = stepFlashInferMeta;
         prefetchSavedUniformLen = stepFlashInferUniformLen;
         prefetchSavedLengths = stepFlashInferLengths;
-        ensurePrefetchSlots(cacheLen);
-        stepFlashInferMeta = buildPrefetchFlashInferMetadata(cacheLen, batch);
+        stepFlashInferMeta = buildFlashInferMetadata(cacheLen);
         stepFlashInferUniformLen = cacheLen;
         stepFlashInferLengths = null;
+        ensurePrefetchSlots(cacheLen);
         ensureDecodeKvIndexBuf(batch);
         long slot = prefetchSlots[cachePos];
         for (int b = 0; b < batch; b++) {
             decodeKvIndexBuf.put_(slot, b);
         }
+    }
+
+    /** @return shared step metadata (do not close). */
+    public FlashInferKvMetadata currentStepFlashInferMetadata() {
+        return stepFlashInferMeta;
+    }
+
+    /**
+     * Installs CSR metadata captured during prefetch so graph replay reuses the
+     * same tensor addresses as capture.
+     */
+    public void installPrefetchedStepMetadata(FlashInferKvMetadata meta, int uniformLen) {
+        if (meta == null) {
+            throw new IllegalArgumentException("meta must not be null");
+        }
+        if (stepFlashInferMeta != null && stepFlashInferMeta != meta) {
+            clearStepFlashInferMetadata();
+        }
+        stepFlashInferMeta = meta;
+        stepFlashInferUniformLen = uniformLen;
+        stepFlashInferLengths = null;
     }
 
     /** Restores live step metadata after {@link #beginPrefetchDecodeGraphStep}. */
@@ -1867,59 +1885,6 @@ public class KvCachePool implements AutoCloseable {
             prefetchSlots = null;
         }
         prefetchSlots = alloc(aligned);
-    }
-
-    private FlashInferKvMetadata buildPrefetchFlashInferMetadata(int length, int batch) {
-        if (length < 0) {
-            throw new IllegalArgumentException("KV FlashInfer length out of range: " + length);
-        }
-        if (length == 0) {
-            Tensor indptr = Tensor.of(new int[batch + 1]);
-            Tensor indices = Tensor.of(new int[0]);
-            Tensor last = Tensor.of(new int[batch]);
-            indptr.detachFromScopes();
-            indices.detachFromScopes();
-            last.detachFromScopes();
-            return new FlashInferKvMetadata(indptr, indices, last, pageSize);
-        }
-        int nPages = (length + pageSize - 1) / pageSize;
-        int rem = length % pageSize;
-        int lastPageLen = rem == 0 ? pageSize : rem;
-        int[] indptrArr = new int[batch + 1];
-        int totalPages = nPages * batch;
-        for (int b = 0; b <= batch; b++) {
-            indptrArr[b] = b * nPages;
-        }
-        int[] flatIndices = new int[totalPages];
-        for (int b = 0; b < batch; b++) {
-            int cursor = b * nPages;
-            for (int p = 0; p < nPages; p++) {
-                int pos = p * pageSize;
-                flatIndices[cursor + p] = (int) (prefetchSlots[pos] / pageSize);
-            }
-        }
-        int[] lastPageLenArr = new int[batch];
-        Arrays.fill(lastPageLenArr, lastPageLen);
-        Tensor indptrT;
-        Tensor indicesT;
-        Tensor lastT;
-        if (device.isCUDA()) {
-            try (Tensor iCpu = Tensor.of(indptrArr);
-                 Tensor nCpu = Tensor.of(flatIndices);
-                 Tensor lCpu = Tensor.of(lastPageLenArr)) {
-                indptrT = iCpu.to(device);
-                indicesT = nCpu.to(device);
-                lastT = lCpu.to(device);
-            }
-        } else {
-            indptrT = Tensor.of(indptrArr);
-            indicesT = Tensor.of(flatIndices);
-            lastT = Tensor.of(lastPageLenArr);
-        }
-        indptrT.detachFromScopes();
-        indicesT.detachFromScopes();
-        lastT.detachFromScopes();
-        return new FlashInferKvMetadata(indptrT, indicesT, lastT, pageSize);
     }
 
     private int pageAlignUp(int tokens) {
