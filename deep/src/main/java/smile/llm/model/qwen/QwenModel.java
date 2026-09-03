@@ -29,6 +29,7 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
+import smile.llm.cache.FlashInferKvMetadata;
 import smile.llm.cache.KvCachePool;
 import smile.llm.engine.DecodeCudaGraph;
 import smile.llm.engine.DecodeCudaGraphLog;
@@ -89,6 +90,9 @@ public class QwenModel extends LayerBlock {
     int lastDecodeGraphCacheLen = -1;
     int lastDecodeGraphCachePos = -1;
     int[] lastDecodeGraphRopePos;
+    /** FlashInfer CSR kept alive for a prefetched graph (same tensors capture/replay must share). */
+    FlashInferKvMetadata prefetchedStepMeta;
+    int prefetchedStepMetaLen = -1;
     /** Stable token buffer for graph capture / replay. */
     Tensor decodeGraphTokenBuf;
     /** Stable RoPE gather buffers for graph capture / replay. */
@@ -776,6 +780,9 @@ public class QwenModel extends LayerBlock {
             return;
         }
         DecodeCudaGraphLog.prefetchHit(tpRank, batch, numPages);
+        if (prefetchedStepMeta != null && prefetchedStepMetaLen > 0) {
+            kvCachePool.installPrefetchedStepMetadata(prefetchedStepMeta, prefetchedStepMetaLen);
+        }
         if (decodeGraphSession != null) {
             decodeGraphSession.close();
         }
@@ -783,6 +790,8 @@ public class QwenModel extends LayerBlock {
         decodeGraphPrefetchSession = null;
         prefetchTargetBatch = -1;
         prefetchTargetNumPages = -1;
+        prefetchedStepMeta = null;
+        prefetchedStepMetaLen = -1;
     }
 
     private void maybePrefetchNextBucket(int batch, int numPages, int cacheLen,
@@ -835,12 +844,26 @@ public class QwenModel extends LayerBlock {
     private void runPrefetchStep(int batch, int nextPages, int nextCacheLen,
                                    int[] prefetchCachePos, int[] prefetchRopePos,
                                    Device device) {
-        Runnable work = () -> runPrefetchStepInner(batch, nextPages, nextCacheLen,
-                prefetchCachePos, prefetchRopePos, device);
-        if (deltaNetStatePool != null) {
-            deltaNetStatePool.withPreservedActive(work);
-        } else {
-            work.run();
+        try {
+            Runnable work = () -> runPrefetchStepInner(batch, nextPages, nextCacheLen,
+                    prefetchCachePos, prefetchRopePos, device);
+            if (deltaNetStatePool != null) {
+                deltaNetStatePool.withPreservedActive(work);
+            } else {
+                work.run();
+            }
+        } catch (RuntimeException e) {
+            logger.warn("tpRank={}: decode CUDA graph prefetch failed, disabling pre-capture: {}",
+                    tpRank, e.getMessage());
+            DecodeCudaGraph.disablePreCapture(e.getMessage());
+            if (decodeGraphPrefetchSession != null) {
+                decodeGraphPrefetchSession.close();
+                decodeGraphPrefetchSession = null;
+            }
+            prefetchTargetBatch = -1;
+            prefetchTargetNumPages = -1;
+            prefetchedStepMeta = null;
+            prefetchedStepMetaLen = -1;
         }
     }
 
@@ -851,6 +874,7 @@ public class QwenModel extends LayerBlock {
         try {
             ensureDecodeGraphRoPEBuffers(device, batch);
             kvCachePool.beginPrefetchDecodeGraphStep(nextCacheLen, prefetchCachePos[0], batch);
+            FlashInferKvMetadata capturedMeta = null;
             try {
                 PartialRotaryEncoding.gatherInto(rope.cos(), prefetchRopePos, decodeGraphCosBuf);
                 PartialRotaryEncoding.gatherInto(rope.sin(), prefetchRopePos, decodeGraphSinBuf);
@@ -859,6 +883,7 @@ public class QwenModel extends LayerBlock {
                     if (decodeGraphLogitsBuf == null) {
                         return;
                     }
+                    capturedMeta = kvCachePool.currentStepFlashInferMetadata();
                     int deviceIndex = Byte.toUnsignedInt(device.index());
                     decodeGraphPrefetchSession.beginCapture(deviceIndex);
                     try {
@@ -872,6 +897,10 @@ public class QwenModel extends LayerBlock {
                     if (decodeGraphPrefetchSession.canReplay(batch, nextPages)) {
                         DecodeCudaGraphLog.prefetchReady(tpRank, batch, nextPages,
                                 decodeGraphPrefetchSession.lastCaptureMs());
+                        if (capturedMeta != null) {
+                            prefetchedStepMeta = capturedMeta;
+                            prefetchedStepMetaLen = nextCacheLen;
+                        }
                     }
                 } else {
                     Tensor raw = forwardRaggedDecodeCore(
@@ -896,6 +925,8 @@ public class QwenModel extends LayerBlock {
         }
         prefetchTargetBatch = -1;
         prefetchTargetNumPages = -1;
+        prefetchedStepMeta = null;
+        prefetchedStepMetaLen = -1;
         if (decodeGraphSession != null) {
             decodeGraphSession.close();
             decodeGraphSession = null;
