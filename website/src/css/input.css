@@ -299,7 +299,10 @@
   .algo-panel dd a { color: var(--text-muted); }
   .algo-panel dd a:hover { color: var(--accent); }
 
-  .code-playground { overflow: hidden; }
+  .code-playground {
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
   .bento-playground {
     padding: 0;
     overflow: hidden;
