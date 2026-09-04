@@ -322,8 +322,8 @@ smile>
   <div class="playground-editor" hidden></div>
 </div>
 
-            <p>All SMILE definitions are pre-imported. Type <code>/exit</code> to leave.
-               You can run any valid Java expression:</p>
+            <p>All SMILE definitions are pre-imported. You can run any valid Java
+               expression. Type <code>/exit</code> to leave:</p>
 
             <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -341,40 +341,6 @@ iris ==> [...]
 
 smile> var rf = RandomForest.fit(Formula.lhs("class"), iris)
 smile> System.out.println(rf.metrics())
-            </code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
-
-            <h4>Running a Script</h4>
-            <div class="code-playground glass" data-lang="java">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-java"><code class="language-java">
-// examples/iris.jsh
-import smile.classification.RandomForest;
-import smile.data.formula.Formula;
-import smile.io.Read;
-
-var data    = Read.arff("data/weka/iris.arff");
-var formula = Formula.lhs("class");
-var rf      = RandomForest.fit(formula, data);
-System.out.println(rf.metrics());
-            </code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
-            <div class="code-playground glass" data-lang="bash">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">Bash</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-bash"><code class="language-bash">
-$ ./smile shell examples/iris.jsh
             </code></pre>
   <div class="playground-editor" hidden></div>
 </div>
@@ -415,36 +381,6 @@ randomForest   rbfnet   rda
             </code></pre>
   <div class="playground-editor" hidden></div>
 </div>
-
-            <h4>Running a Script</h4>
-            <div class="code-playground glass" data-lang="scala">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">Scala</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-scala"><code class="language-scala">
-// examples/iris.sc
-val data    = read.arff("data/weka/iris.arff")
-val formula = "class" ~ "."
-val rf      = smile.classification.randomForest(formula, data)
-println(s"OOB error = %.2f%%" format 100 * rf.error)
-            </code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
-            <div class="code-playground glass" data-lang="bash">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">Bash</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-bash"><code class="language-bash">
-$ ./smile scala examples/iris.sc
-            </code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
         </div>
 
         <div class="tab-pane fade" role="tabpanel" id="kotlin_shell">
@@ -477,6 +413,63 @@ smile> println(rf.metrics())
 </div>
         </div>
     </div>
+
+    <h3 id="running-a-script">Running a Script</h3>
+    <p>Save a snippet and run it non-interactively with the matching shell:</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-script-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-script-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-script-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">
+// examples/iris.jsh
+import smile.classification.RandomForest;
+import smile.data.formula.Formula;
+import smile.io.Read;
+
+var data    = Read.arff("data/weka/iris.arff");
+var formula = Formula.lhs("class");
+var rf      = RandomForest.fit(formula, data);
+System.out.println(rf.metrics());
+            </code></pre>
+    </div>
+    <div id="pg-script-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">
+// examples/iris.sc
+val data    = read.arff("data/weka/iris.arff")
+val formula = "class" ~ "."
+val rf      = smile.classification.randomForest(formula, data)
+println(s"OOB error = %.2f%%" format 100 * rf.error)
+            </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="bash" data-pane="pg-script-run-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="bash" data-pane="pg-script-run-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-script-run-0" class="hero-pane">
+      <pre class="playground-source language-bash"><code class="language-bash">
+$ ./smile shell examples/iris.jsh
+            </code></pre>
+    </div>
+    <div id="pg-script-run-1" class="hero-pane" hidden>
+      <pre class="playground-source language-bash"><code class="language-bash">
+$ ./smile scala examples/iris.sc
+            </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
 
     <h2 id="cli">Training &amp; Inference CLI</h2>
 
