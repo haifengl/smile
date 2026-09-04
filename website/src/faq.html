@@ -1,7 +1,7 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: Smile - FAQ
+title: SMILE - FAQ
 version: "6.3.0"
 ---
 {% include "toc.njk" %}
@@ -9,8 +9,8 @@ version: "6.3.0"
 <div class="col-md-9 order-md-first">
     <h1 id="faq-top" class="title">FAQ</h1>
 
-    <h2 class="question" id="cite">How should I cite Smile?</h2>
-    <p class="answer">Please cite Smile in your publications if it helps your research. Here is an example BibTeX entry:</p>
+    <h2 class="question" id="cite">How should I cite SMILE?</h2>
+    <p class="answer">Please cite SMILE in your publications if it helps your research. Here is an example BibTeX entry:</p>
     <div class="code-playground glass" data-lang="bibtex">
   <div class="playground-toolbar">
     <span class="lang-tab is-active">BibTeX</span>
@@ -20,7 +20,7 @@ version: "6.3.0"
   </div>
   <pre class="playground-source language-bibtex"><code class="language-bibtex">
     @misc{Li2014Smile,
-      title={Smile},
+      title={SMILE: Statistical Machine Intelligence and Learning Engine},
       author={Haifeng Li},
       year={2014},
       howpublished={\url{https://haifengl.github.io}},
@@ -29,166 +29,151 @@ version: "6.3.0"
   <div class="playground-editor" hidden></div>
 </div>
 
-    <h2 class="question" id="link-with-smile">Link with Smile</h2>
+    <h2 class="question" id="java-version">Which Java version do I need?</h2>
     <p class="answer">
-        Smile artifacts are hosted in <a href="https://oss.sonatype.org/#nexus-search;quick~smile-core">Sonatype Nexus</a>.
-        You can add the following dependency into your pom.xml:</p>
+        SMILE v5 and v6 require <strong>Java 25</strong>.
+        See <a href="quickstart.html">Quick Start</a> for install and build steps.
+    </p>
+
+    <h2 class="question" id="link-with-smile">How do I add SMILE to my project?</h2>
+    <p class="answer">
+        Artifacts are published to
+        <a href="https://central.sonatype.com/artifact/com.github.haifengl/smile-core">Maven Central</a>.
+        Start with <code>smile-core</code>; add other modules as needed
+        (<code>smile-deep</code>, <code>smile-nlp</code>, <code>smile-plot</code>,
+        <code>smile-kotlin</code>, <code>smile-scala</code>).
+    </p>
 
     <div class="code-playground glass" data-lang="markup">
   <div class="playground-toolbar">
     <button type="button" class="lang-tab is-active" data-lang="markup" data-pane="pg-1-0">Maven</button>
-    <button type="button" class="lang-tab" data-lang="markup" data-pane="pg-1-1">Gradle (Kotlin)</button>
-    <button type="button" class="lang-tab" data-lang="markup" data-pane="pg-1-2">SBT</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-1-1">Gradle (Kotlin)</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-2">SBT</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-1-0" class="hero-pane">
       <pre class="playground-source language-markup"><code class="language-markup">
-    &lt;dependency&gt;
-        &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
-        &lt;artifactId&gt;smile-core&lt;/artifactId&gt;
-        &lt;version&gt;{{ version }}&lt;/version&gt;
-    &lt;/dependency&gt;
-                </code></pre>
+&lt;dependency&gt;
+  &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
+  &lt;artifactId&gt;smile-core&lt;/artifactId&gt;
+  &lt;version&gt;{{ version }}&lt;/version&gt;
+&lt;/dependency&gt;
+
+&lt;!-- Deep learning + LLMs (requires LibTorch; see FAQ below) --&gt;
+&lt;dependency&gt;
+  &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
+  &lt;artifactId&gt;smile-deep&lt;/artifactId&gt;
+  &lt;version&gt;{{ version }}&lt;/version&gt;
+&lt;/dependency&gt;
+
+&lt;dependency&gt;
+  &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
+  &lt;artifactId&gt;smile-nlp&lt;/artifactId&gt;
+  &lt;version&gt;{{ version }}&lt;/version&gt;
+&lt;/dependency&gt;
+
+&lt;dependency&gt;
+  &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
+  &lt;artifactId&gt;smile-plot&lt;/artifactId&gt;
+  &lt;version&gt;{{ version }}&lt;/version&gt;
+&lt;/dependency&gt;
+            </code></pre>
     </div>
     <div id="pg-1-1" class="hero-pane" hidden>
-      <pre class="playground-source language-markup"><code class="language-markup">
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">
+dependencies {
     implementation("com.github.haifengl:smile-core:{{ version }}")
+    implementation("com.github.haifengl:smile-kotlin:{{ version }}")
+    implementation("com.github.haifengl:smile-deep:{{ version }}")
+    implementation("com.github.haifengl:smile-nlp:{{ version }}")
+    implementation("com.github.haifengl:smile-plot:{{ version }}")
+}
             </code></pre>
     </div>
     <div id="pg-1-2" class="hero-pane" hidden>
-      <pre class="playground-source language-markup"><code class="language-markup">
-    libraryDependencies += "com.github.haifengl" % "smile-core" % "{{ version }}"
+      <pre class="playground-source language-scala"><code class="language-scala">
+// Idiomatic Scala API (pulls in smile-core transitively)
+libraryDependencies += "com.github.haifengl" %% "smile-scala" % "{{ version }}"
+
+// Java modules use a single %
+libraryDependencies += "com.github.haifengl" % "smile-deep" % "{{ version }}"
+libraryDependencies += "com.github.haifengl" % "smile-plot" % "{{ version }}"
             </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>To leverage GPU and deep learning, add</p>
-    <div class="code-playground glass" data-lang="markup">
-  <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="markup" data-pane="pg-2-0">Maven</button>
-    <button type="button" class="lang-tab" data-lang="markup" data-pane="pg-2-1">Gradle (Kotlin)</button>
-    <button type="button" class="lang-tab" data-lang="markup" data-pane="pg-2-2">SBT</button>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-    <div id="pg-2-0" class="hero-pane">
-      <pre class="playground-source language-markup"><code class="language-markup">
-    &lt;dependency&gt;
-        &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
-        &lt;artifactId&gt;smile-deep&lt;/artifactId&gt;
-        &lt;version&gt;{{ version }}&lt;/version&gt;
-    &lt;/dependency&gt;
-                </code></pre>
-    </div>
-    <div id="pg-2-1" class="hero-pane" hidden>
-      <pre class="playground-source language-markup"><code class="language-markup">
-    implementation("com.github.haifengl:smile-deep:{{ version }}")
-            </code></pre>
-    </div>
-    <div id="pg-2-2" class="hero-pane" hidden>
-      <pre class="playground-source language-markup"><code class="language-markup">
-    libraryDependencies += "com.github.haifengl" %% "smile-deep" % "{{ version }}"
-            </code></pre>
-    </div>
-  <div class="playground-editor" hidden></div>
-</div>
+    <p>Some algorithms (manifold learning, Gaussian Process, MLP, …) use native BLAS/LAPACK
+        through Java FFM. Install system libraries such as OpenBLAS and ARPACK
+        (Linux packages, Homebrew <code>arpack</code>, or the release package
+        <code>bin/</code> on <code>PATH</code> for Windows). Details are in
+        <a href="quickstart.html#native-blas">Quick Start</a>.</p>
 
-    <p>For Scala API, add</p>
-    <div class="code-playground glass" data-lang="markup">
+    <p>To pick a specific BLAS shared library name, set
+        <code>-Dsmile.lib.blas=...</code> (for example <code>mkl_rt</code> for Intel MKL,
+        or <code>blas</code> for Accelerate on macOS). Deep learning native loading is
+        separate — see <a href="#libtorch-ffm">LibTorch / FFM</a> below.</p>
+
+    <h2 class="question" id="pom">Building from source</h2>
+    <p class="answer">
+        The multi-module build uses <strong>Gradle</strong> (Java 25 required):
+    </p>
+    <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">XML</span>
+    <span class="lang-tab is-active">Bash</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-markup"><code class="language-markup">
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "{{ version }}"
+  <pre class="playground-source language-bash"><code class="language-bash">
+./gradlew build -x test
     </code></pre>
   <div class="playground-editor" hidden></div>
 </div>
+    <p>SBT remains available for some Scala packaging workflows, but the documented
+        path for contributors is Gradle. See
+        <a href="quickstart.html#build-from-source">Build from Source</a>.</p>
 
-    <p>Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
-        some clustering algorithms, Gaussian Process regression, MLP, etc.).
-        By default, Smile includes OpenBLAS for macOS, Windows, and Linux:</p>
-    <div class="code-playground glass" data-lang="markup">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">XML</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-markup"><code class="language-markup">
-    libraryDependencies ++= Seq(
-      "org.bytedeco" % "javacpp"   % "1.5.11"        classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-      "org.bytedeco" % "openblas"  % "0.3.28-1.5.11" classifier "macosx-arm64" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-      "org.bytedeco" % "arpack-ng" % "3.9.1-1.5.11"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier ""
-    )
-    </code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
+    <h2 class="question" id="studio">What is SMILE Studio?</h2>
+    <p class="answer">
+        SMILE Studio is the desktop notebook IDE (agents, explorers, magics) that ships
+        in the release package. Launch with <code>./smile</code> after
+        <code>bin/setup</code>. See <a href="studio.html">SMILE Studio</a>.
+    </p>
 
-    <p>For mobile platform, you may need add <code>classifier "android-arm64"</code>
-        or <code>classifier "ios-arm64"</code>. In general, you should include only
-        the needed platforms to save spaces.</p>
+    <h2 class="question" id="serve">What is SMILE Serve?</h2>
+    <p class="answer">
+        SMILE Serve is the Quarkus inference service for classic ML models, ONNX, and
+        OpenAI-compatible LLM HTTP APIs. See <a href="serve.html">SMILE Serve</a>.
+    </p>
 
-    <p>If you prefer other BLAS implementations, you can use any library found
-        on the "java.library.path" or on the class path, by specifying it with
-        the "org.bytedeco.openblas.load" system property. For example, to use
-        the BLAS library from the Accelerate framework on Mac OS X, we can pass
-        options such as `-Djava.library.path=/usr/lib/ -Dorg.bytedeco.openblas.load=blas`.</p>
+    <h2 class="question" id="libtorch-ffm">LibTorch, GPU, and <code>java.library.path</code></h2>
+    <p class="answer">
+        <code>smile-deep</code> calls LibTorch through Java’s Foreign Function &amp; Memory
+        (FFM) API — not JNI. Native libraries are resolved by the
+        <strong>platform loader</strong> (<code>LD_LIBRARY_PATH</code> on Linux,
+        <code>PATH</code> on Windows), not <code>java.library.path</code>.
+        On macOS, SIP often strips <code>DYLD_LIBRARY_PATH</code>; prefer copying or
+        symlinking required <code>.dylib</code> files as described in
+        <a href="quickstart.html#gpu-libtorch">Quick Start — GPU / LibTorch</a>.
+        The release package bundles <code>libsmile_torch</code> and LibTorch under
+        <code>bin/</code> and <code>libtorch/</code>.
+    </p>
 
-    <p>For a default installation of MKL that would be `-Dorg.bytedeco.openblas.load=mkl_rt`.
-        Or you may add the following dependencies to your project, which
-        includes MKL binaries. Smile will automatically switch to MKL.</p>
-    <div class="code-playground glass" data-lang="markup">
-  <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="markup" data-pane="pg-3-0">Maven</button>
-    <button type="button" class="lang-tab" data-lang="markup" data-pane="pg-3-1">Gradle (Kotlin)</button>
-    <button type="button" class="lang-tab" data-lang="markup" data-pane="pg-3-2">SBT</button>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-    <div id="pg-3-0" class="hero-pane">
-      <pre class="playground-source language-markup"><code class="language-markup">
-    &lt;dependency&gt;
-        &lt;groupId&gt;org.bytedeco&lt;/groupId&gt;
-        &lt;artifactId&gt;mkl-platform&lt;/artifactId&gt;
-        &lt;version&gt;2024.0-1.5.10&lt;/version&gt;
-    &lt;/dependency&gt;
-    &lt;dependency&gt;
-        &lt;groupId&gt;org.bytedeco&lt;/groupId&gt;
-        &lt;artifactId&gt;mkl-platform-redist&lt;/artifactId&gt;
-        &lt;version&gt;2024.0-1.5.10&lt;/version&gt;
-    &lt;/dependency&gt;
-                </code></pre>
-    </div>
-    <div id="pg-3-1" class="hero-pane" hidden>
-      <pre class="playground-source language-markup"><code class="language-markup">
-    implementation("org.bytedeco:mkl-platform:2024.0-1.5.10")
-    implementation("org.bytedeco:mkl-platform-redist:2024.0-1.5.10")
-            </code></pre>
-    </div>
-    <div id="pg-3-2" class="hero-pane" hidden>
-      <pre class="playground-source language-markup"><code class="language-markup">
-    libraryDependencies ++= {
-      val version = "2024.0-1.5.10"
-      Seq(
-        "org.bytedeco" % "mkl-platform"        % version,
-        "org.bytedeco" % "mkl-platform-redist" % version
-      )
-    }
-            </code></pre>
-    </div>
-  <div class="playground-editor" hidden></div>
-</div>
+    <h2 class="question" id="data-format">Data format</h2>
+    <p class="answer">
+        Most algorithms take <code>double[]</code> / <code>double[][]</code> or a
+        <a href="api/java/smile/data/DataFrame.html"><code>DataFrame</code></a>.
+        Read and write CSV, Parquet, Arrow, ARFF, JSON, LibSVM, and more with
+        <code>smile.io.Read</code> / <code>Write</code>. See
+        <a href="data.html">Data Processing</a> and
+        <a href="data-io.html">Data Import and Export</a>.
+    </p>
 
     <h2 class="question" id="model-serialization">Model serialization</h2>
-    <p class="answer">To serialize a model, you may use</p>
+    <p class="answer">To save and load a serializable model object:</p>
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
     <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
@@ -199,65 +184,51 @@ version: "6.3.0"
   </div>
     <div id="pg-4-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">
-    import smile.io.Write;
-    Write.object(model, file)
-    </code></pre>
+import java.nio.file.Path;
+import smile.io.Read;
+import smile.io.Write;
+
+Write.object(model, Path.of("model.sml"));
+var loaded = Read.object(Path.of("model.sml"));
+            </code></pre>
     </div>
     <div id="pg-4-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">
-    import smile._
-    write(model, file)
-    </code></pre>
+import java.nio.file.Path
+import smile.{read, write}
+
+write(model, Path.of("model.sml"))
+val loaded = read(Path.of("model.sml"))
+            </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>This method serializes the model in Java serialization format. This is handy
-        if you want to use a model in Spark.</p>
+    <p>This uses Java serialization. For SMILE Serve, prefer a boxed
+        <code>smile.model.Model</code> as shown in the
+        <a href="tutorial.html#serialization">Tutorial</a>.
+        ONNX export is covered in the core ONNX docs and Serve.</p>
 
-    <h2 class="question" id="data-format">Data Format</h2>
+    <h2 class="question" id="headless-plot">Headless plot</h2>
     <p class="answer">
-        Most Smile algorithms take simple <code>double[]</code> or <code>DataFrame</code>as input.
-        <code>DataFrame</code> can be easily constructed from <code>double[][]</code> too.
-        So you can use your favorite methods
-        or library to import the data as long as the samples are in double arrays. Meanwhile, Smile provides
-        a couple of parsers in <code>smile.io</code> for popular data formats, such as CSV, Weka's ARFF files,
-        LibSVM's file format, delimited text files, SAS, Parquet, Avro, Arrow, JSON, and binary sparse data.
-    </p>
-
-    <h2 class="question" id="pom">Cannot build Smile with maven</h2>
-    <p class="answer">
-        We have moved to SBT to build packages. The maven pom.xml files were deprecated and were removed in v1.2.0.
-    </p>
-
-    <h2 class="question" id="headless-plot">Headless Plot</h2>
-    <p class="answer">
-        In case that your environment does not have a display, or you need to generate and save
-        a lot of plots without showing them on the screen, you may run Smile in headless model.
+        To generate plots without a display, enable AWT headless mode. With the release
+        shell:
     </p>
 
     <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="bash" data-pane="pg-5-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="bash" data-pane="pg-5-1">Scala</button>
+    <span class="lang-tab is-active">Bash</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-5-0" class="hero-pane">
-      <pre class="playground-source language-bash"><code class="language-bash">
-    bin/jshell.sh -R-Djava.awt.headless=true
+  <pre class="playground-source language-bash"><code class="language-bash">
+smile shell -R-Djava.awt.headless=true
     </code></pre>
-    </div>
-    <div id="pg-5-1" class="hero-pane" hidden>
-      <pre class="playground-source language-bash"><code class="language-bash">
-    bin/smile -Djava.awt.headless=true
-    </code></pre>
-    </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The following example shows how to save a plot in the headless mode.</p>
+    <p>Save a Swing figure to PNG without showing a window:</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -269,54 +240,51 @@ version: "6.3.0"
   </div>
     <div id="pg-6-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">
-    import java.awt.Color;
-    import smile.io.*;
-    import smile.plot.swing.*;
-    import org.apache.commons.csv.CSVFormat;
+import java.nio.file.Path;
+import javax.imageio.ImageIO;
+import org.apache.commons.csv.CSVFormat;
+import smile.io.Read;
+import smile.plot.swing.ScatterPlot;
 
-    var toy = Read.csv("data/classification/toy200.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
-    var canvas = ScatterPlot.of(toy, "V2", "V3", "V1", '.').canvas();
-    var image = canvas.toBufferedImage(400, 400);
-    javax.imageio.ImageIO.write(image, "png", new java.io.File("headless.png"));
-          </code></pre>
+var format = CSVFormat.Builder.create().setDelimiter('\t').get();
+var toy = Read.csv("data/classification/toy200.txt", format);
+var figure = ScatterPlot.of(toy, "V2", "V3", "V1", '.').figure();
+var image = figure.toBufferedImage(400, 400);
+ImageIO.write(image, "png", Path.of("headless.png").toFile());
+            </code></pre>
     </div>
     <div id="pg-6-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">
-    val toy = read.csv("data/classification/toy200.txt", delimiter="\t", header=false)
-    val canvas = plot(toy, "V2", "V3", "V1", '.')
-    val image = canvas.toBufferedImage(400, 400)
-    javax.imageio.ImageIO.write(image, "png", new java.io.File("headless.png"))
-    </code></pre>
+import java.nio.file.Path
+import javax.imageio.ImageIO
+import smile.plot.swing.*
+import smile.read
+
+val toy = read.csv("data/classification/toy200.txt", delimiter = "\t", header = false)
+val canvas = plot(toy, "V2", "V3", "V1", '.')
+val image = canvas.figure().toBufferedImage(400, 400)
+ImageIO.write(image, "png", Path.of("headless.png").toFile())
+            </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
+    <p>See <a href="visualization.html">Data Visualization</a>. For declarative charts without
+        Swing, use <a href="vegalite.html">Vega-Lite</a>.</p>
+
     <h2 class="question" id="seed">How can I set the random number generator seed for random forest?</h2>
     <p class="answer">
         This is a common question for stochastic algorithms like random forest.
-        In general, this is discouraged because people often choose bad seed due to the lack
-        of sufficient knowledge of random number generation. However, one may want the repeatable
-        result for testing purpose. In this case, call <code>smile.math.MathEx.setSeed</code> before
-        training the model.
+        In general, setting a seed is discouraged because people often choose a bad
+        seed without enough knowledge of random number generation. For repeatable
+        tests, call <code>smile.math.MathEx.setSeed</code> before training.
     </p>
 
     <p>
-        Note that we don't provide a method to set the seed for a particular algorithm.
-        Many algorithms are multithreaded and each thread has their own random number
-        generator. We choose this design because each random number generator maintains
-        an internal state so that it is not multithread-safe. If multithreads share a
-        random number generator, we have to use locks, which significant reduce the
-        performance.
-    </p>
-
-    <p>
-        A method <code>setSeed()</code> in the algorithm is also troublesome.
-        For algorithms like random forest, it is not right to initialize every thread
-        with the same seed. Otherwise, same decision trees will be created,
-        and we lose the randomness of "random" forest. It is also complicated
-        to pass a sequence of random numbers because it is not clear
-        how many random number generators are needed for many algorithms. Even worse, it breaks
-        the encapsulation as the caller has to know the details of algorithms.
+        There is no per-algorithm <code>setSeed()</code>. Many algorithms are
+        multithreaded and each thread has its own generator. Sharing one generator
+        would require locks and hurt performance. Seeding every thread identically
+        (for example in a random forest) would also destroy the intended randomness.
     </p>
 
 </div>
