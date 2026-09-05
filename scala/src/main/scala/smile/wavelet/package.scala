@@ -128,8 +128,4 @@ package object wavelet {
   def wsdenoise(t: Array[Double], filter: String, soft: Boolean = false): Unit = {
     WaveletShrinkage.denoise(t, wavelet(filter), soft)
   }
-
-  /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
-    * The user should ignore this object. */
-  object $dummy
 }

@@ -383,8 +383,4 @@ package nlp {
       Text.of(text).keywords(k).asScala.toSeq
     }
   }
-
-  /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
-    * The user should ignore this object. */
-  object $dummy
 }

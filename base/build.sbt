@@ -14,6 +14,6 @@ libraryDependencies ++= {
     "org.xerial.snappy"  % "snappy-java" % "1.1.10.8" % Provided, // for avro
     "com.epam"           % "parso" % "2.0.14" % Provided, // SAS7BDAT
     "org.eclipse.lsp4j"  % "org.eclipse.lsp4j" % "1.0.0" % Provided,
-    "org.xerial"         % "sqlite-jdbc" % "3.53.2.1" % Test
+    "org.xerial"         % "sqlite-jdbc" % "3.53.4.0" % Test
   )
 }

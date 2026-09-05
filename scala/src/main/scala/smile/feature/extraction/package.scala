@@ -229,8 +229,4 @@ package object extraction {
     data.foreach(model.update)
     model
   }
-
-  /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
-    * The user should ignore this object. */
-  object $dummy
 }

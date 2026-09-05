@@ -317,8 +317,4 @@ package object manifold {
   def sammon(proximity: Array[Array[Double]], d: Int = 2, step: Double = 0.2, maxIter: Int = 100, tol: Double = 0.0001, stepTol: Double = 0.001): SammonMapping = time("Sammon's Mapping") {
     SammonMapping.fit(proximity, new SammonMapping.Options(d, step, maxIter, tol, stepTol, null))
   }
-
-  /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
-    * The user should ignore this object. */
-  object $dummy
 }
