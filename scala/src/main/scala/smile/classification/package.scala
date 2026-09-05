@@ -982,8 +982,4 @@ package object classification {
   def ovr[T <: AnyRef](x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): OneVersusRest[T] = time("One vs. Rest") {
     OneVersusRest.fit(x, y, trainer)
   }
-
-  /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
-    * The user should ignore this object. */
-  object $dummy
 }

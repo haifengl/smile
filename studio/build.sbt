@@ -15,7 +15,7 @@ packageDescription :=
     |for the JVM. SMILE Studio is an agentic IDE for data science.
     |""".stripMargin
 
-import com.typesafe.sbt.packager.MappingsHelper._
+import com.typesafe.sbt.packager.MappingsHelper.*
 
 Universal / mappings ++= Seq(
   fileConverter.value.toVirtualFile((baseDirectory.value / "README.md").toPath) -> "README.md",
@@ -89,11 +89,11 @@ batScriptExtraDefines ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "org.scala-lang"   %% "scala3-compiler"    % scalaVersion.value,
+  "org.scala-lang"   %% "scala3-repl"        % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
   "ch.qos.logback"    % "logback-classic"    % "1.6.3",
-  "com.openai"        % "openai-java"        % "4.49.0",
-  "com.anthropic"     % "anthropic-java"     % "2.52.0",
+  "com.openai"        % "openai-java"        % "4.58.0",
+  "com.anthropic"     % "anthropic-java"     % "2.61.0",
   "com.google.genai"  % "google-genai"       % "1.53.0",
   "org.commonmark"    % "commonmark"         % "0.30.0",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.5.0",
@@ -104,10 +104,10 @@ libraryDependencies ++= Seq(
   "com.formdev"       % "flatlaf"            % "3.7.2",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.9.16",
-  "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.21",
+  "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.22",
   "io.modelcontextprotocol.sdk" % "mcp"          % "2.0.1",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
-  "org.jsoup"                   % "jsoup"        % "1.23.1",
+  "org.jsoup"                   % "jsoup"        % "1.23.2",
   "com.github.serpapi"          % "serpapi-java" % "1.2.0",
   "com.google.code.gson"        % "gson"         % "2.14.0" // evict older version used by serpapi
 )

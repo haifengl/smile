@@ -95,8 +95,8 @@ import java.util.stream.Stream
   * @author Haifeng Li
   */
 package object association {
-  /** Builds a FP-tree.
-    * @param supplier the lambda to retrun a stream of item set database. Each item set
+  /** Builds an FP-tree.
+    * @param supplier the lambda to return a stream of item set database. Each item set
     *                 may have different length. The item identifiers have to be in [0, n),
     *                 where n is the number of items. Item set should NOT contain duplicated
     *                 items. Note that it is reordered after the call.
@@ -235,9 +235,4 @@ package object association {
   def arm(confidence: Double, tree: FPTree): Stream[AssociationRule] = {
     ARM.apply(confidence, tree)
   }
-
-  /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
-    * The user should ignore this object.
-    */
-  object $dummy
 }

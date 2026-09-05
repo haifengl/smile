@@ -524,8 +524,4 @@ package object clustering {
   def specc(data: Array[Array[Double]], k: Int, sigma: Double, l: Int = 0, maxIter: Int = 100): CentroidClustering[Array[Double], Array[Double]] = time("Spectral clustering") {
     SpectralClustering.fit(data, new SpectralClustering.Options(k, l, sigma, maxIter))
   }
-
-  /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
-    * The user should ignore this object. */
-  object $dummy
 }
