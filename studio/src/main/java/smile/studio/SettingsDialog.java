@@ -45,13 +45,27 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private static final String[] openaiModels = {"gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.4-mini"};
     private static final String[] anthropicModels = {"claude-fable-5", "claude-opus-4-8", "claude-sonnet-5", "claude-haiku-4-5"};
     private static final String[] geminiModels = {"gemini-3.5-flash", "gemini-3.1-pro-preview", "gemini-3.1-flash-lite"};
-    private static final String[] otherModels = {"llama3.2", "qwen3.5", "minimax-m2.7", "kimi-k2.6", "deepseek-r1"};
+
+    private static final String[] openaiBaseUrls = { "https://api.openai.com/v1" };
+    private static final String[] anthropicBaseUrls = { "https://api.anthropic.com" };
+    private static final String[] geminiBaseUrls = { "https://generativelanguage.googleapis.com" };
+    private static final String[] otherBaseUrls = {
+            "http://localhost:8888/api/v1", // SMILE Serve
+            "http://localhost:11434/v1",    // Ollama
+            "http://localhost:8080/v1",     // Llama.cpp or LocalAI
+            "http://localhost:1234/v1",     // LM Studio
+            "http://localhost:8000/v1",     // vLLM or SGLang
+            "http://localhost:11434/v1",    // Ollama
+            "https://api.orcarouter.ai/v1", // OrcaRouter
+            "https://openrouter.ai/api/v1"  // OpenRouter
+    };
+    private static final String[] otherModels = {"llama3.1", "qwen3.8", "minimax-m2.7", "kimi-k3", "deepseek-v4-flash"};
     private final JComboBox<String> themeCombo = new JComboBox<>(UI_THEMES);
     private final JComboBox<String> aiServiceCombo = new JComboBox<>(aiServiceOptions);;
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cardPane = new JPanel(cardLayout);
     private final Map<String, JTextField> apiKeyFields = new TreeMap<>();
-    private final Map<String, JTextField> baseUrlFields = new TreeMap<>();
+    private final Map<String, JComboBox<String>> baseUrlFields = new TreeMap<>();
     private final Map<String, JComboBox<String>> modelFields = new TreeMap<>();
     private final Preferences prefs;
 
@@ -155,8 +169,15 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridx = 1; // Column 1
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
-        JTextField baseUrlField = new JTextField(25);
-        baseUrlField.setText(prefs.get(service + "BaseUrl", ""));
+        JComboBox<String> baseUrlField = switch (service) {
+            case "openai" -> new JComboBox<>(openaiBaseUrls);
+            case "anthropic" -> new JComboBox<>(anthropicBaseUrls);
+            case "googleGemini" -> new JComboBox<>(geminiBaseUrls);
+            case "chatCompletions" -> new JComboBox<>(otherBaseUrls);
+            default -> new JComboBox<>();
+        };
+        baseUrlField.setEditable(true);
+        baseUrlField.setSelectedItem(prefs.get(service + "BaseUrl", ""));
         baseUrlFields.put(service, baseUrlField);
         card.add(baseUrlField, gbc);
 
@@ -200,7 +221,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
             prefs.put(AI_SERVICE_KEY, aiServiceOptions[aiServiceCombo.getSelectedIndex()]);
             for (String service : aiServiceKeys) {
                 prefs.put(service + API_KEY, apiKeyFields.get(service).getText());
-                prefs.put(service + BASE_URL, baseUrlFields.get(service).getText());
+                prefs.put(service + BASE_URL, (String) baseUrlFields.get(service).getSelectedItem());
                 prefs.put(service + MODEL, (String) modelFields.get(service).getSelectedItem());
             }
             SmileStudio.updateLLM();
