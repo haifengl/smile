@@ -268,7 +268,7 @@ trait VegaLite extends LazyLogging {
 
 object VegaLite {
   /** The schema of Vega-Lite. */
-  val $schema = "https://vega.github.io/schema/vega-lite/v5.json"
+  val schema = "https://vega.github.io/schema/vega-lite/v6.json"
   /** The MIME type of Vega-Lite. */
   val mime: String = "application/vnd.vegalite.v5+json"
 
@@ -396,7 +396,7 @@ object VegaLite {
     */
   private def spec(properties: (String, JsValue)*): JsObject = {
     val vega = JsObject(
-      "$schema" -> $schema,
+      "$schema" -> schema,
       "config" -> JsObject(
         "view" -> JsObject(
           "continuousWidth" -> 400,
