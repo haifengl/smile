@@ -15,35 +15,48 @@ packageDescription :=
     |for the JVM. SMILE Studio is an agentic IDE for data science.
     |""".stripMargin
 
+import com.typesafe.sbt.packager.PluginCompat
 import com.typesafe.sbt.packager.MappingsHelper.*
 
-Universal / mappings ++= Seq(
-  fileConverter.value.toVirtualFile((baseDirectory.value / "README.md").toPath) -> "README.md",
-  fileConverter.value.toVirtualFile((baseDirectory.value / "CLI.md").toPath) -> "CLI.md",
-  fileConverter.value.toVirtualFile((baseDirectory.value / "../COPYING").toPath) -> "COPYING",
-  fileConverter.value.toVirtualFile((baseDirectory.value / "../LICENSE").toPath) -> "LICENSE"
-)
-Universal / mappings ++= contentOf(baseDirectory.value / "serve" / "build" / "quarkus-app")
-  .map { case (file, path) =>
-    fileConverter.value.toVirtualFile(file.toPath) -> s"serve/$path"
+Universal / mappings ++= {
+  implicit val converter: FileConverter = fileConverter.value
+  val rootDir = (LocalRootProject / baseDirectory).value
+
+  // 1. Convert specific files using PluginCompat.toFileRef
+  val rootFiles = Seq(
+    (rootDir / "studio" / "README.md") -> "README.md",
+    (rootDir / "studio" / "CLI.md") -> "CLI.md",
+    (rootDir / "COPYING") -> "COPYING",
+    (rootDir / "LICENSE") -> "LICENSE"
+  ).map { case (file, target) =>
+    PluginCompat.toFileRef(file) -> target
   }
-Universal / mappings ++= contentOf(baseDirectory.value / "base" / "src" / "test" / "resources" / "data")
-  .filter { case (file, path) =>
-      path.startsWith("mnist") ||
-      path.startsWith("usps") ||
-      path.startsWith("sqlite") ||
-      path.startsWith("kylo") ||
-      path.startsWith("weka") ||
-      path.startsWith("libsvm") ||
-      path.startsWith("regression") ||
-      path.startsWith("sas") ||
-      path.startsWith("stat") ||
-      path.startsWith("sparse") ||
-      path.startsWith("matrix")
-  }
-  .map { case (file, path) =>
-    fileConverter.value.toVirtualFile(file.toPath) -> s"data/$path"
-  }
+
+  // 2. Convert directories using PluginCompat.toFileRefsMapping
+  val serveAppDir = rootDir / "serve" / "build" / "quarkus-app"
+  val serveAppMappings = PluginCompat.toFileRefsMapping(directory(serveAppDir))
+    .map { case (fileRef, path) =>
+      // Normalize native Windows backslashes to universal forward slashes
+      val universalPath = path.replace('\\', '/')
+      // directory() includes "quarkus-app/" in the path, strip it for clean mappings
+      val cleanPath = universalPath.stripPrefix("quarkus-app/")
+      fileRef -> s"serve/$cleanPath"
+    }
+
+  // 3. Filter and map resources using PluginCompat.toFileRefsMapping
+  val dataDir = rootDir / "base" / "src" / "test" / "resources" / "data"
+  val dataPrefixes = Set("mnist", "usps", "sqlite", "kylo", "weka", "libsvm", "regression", "sas", "stat", "sparse", "matrix")
+
+  val dataMappings = PluginCompat.toFileRefsMapping(directory(dataDir))
+    .map { case (fileRef, path) =>
+      val universalPath = path.replace('\\', '/')
+      fileRef -> universalPath.stripPrefix("data/")
+    }
+    .filter { case (_, cleanPath) => dataPrefixes.exists(cleanPath.startsWith) }
+    .map { case (fileRef, cleanPath) => fileRef -> s"data/$cleanPath" }
+
+  rootFiles ++ serveAppMappings ++ dataMappings
+}
 
 // dealing with long classpaths
 scriptClasspath := Seq("*")
