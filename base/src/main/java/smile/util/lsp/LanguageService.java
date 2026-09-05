@@ -178,7 +178,7 @@ public class LanguageService implements AutoCloseable {
      */
     public void start()
             throws IOException, InterruptedException, ExecutionException, TimeoutException {
-        start(new NoOpLanguageClientStub());
+        start(new NoOpLanguageClientStub(), null);
     }
 
     /**
@@ -191,6 +191,7 @@ public class LanguageService implements AutoCloseable {
      *
      * @param client an implementation of LSP4J's {@code LanguageClient} interface
      *               to receive server notifications.
+     * @param initOptions initialization options for language server.
      * @throws IOException          if the server process cannot be started.
      * @throws InterruptedException if the thread is interrupted while waiting
      *                              for the initialize response.
@@ -198,7 +199,7 @@ public class LanguageService implements AutoCloseable {
      * @throws TimeoutException     if the server does not respond within the
      *                              configured timeout.
      */
-    public synchronized void start(LanguageClient client)
+    public synchronized void start(LanguageClient client, Map<String, Object> initOptions)
             throws IOException, InterruptedException, ExecutionException, TimeoutException {
         if (initialized.get()) {
             logger.warn("LanguageService is already started; ignoring duplicate start().");
@@ -253,7 +254,7 @@ public class LanguageService implements AutoCloseable {
         server = launcher.getRemoteProxy();
 
         // Send the LSP initialize request.
-        var serverInfo = sendInitialize();
+        var serverInfo = sendInitialize(initOptions);
 
         initialized.set(true);
         if (serverInfo != null) {
@@ -267,13 +268,16 @@ public class LanguageService implements AutoCloseable {
     /**
      * Sends the LSP {@code initialize} + {@code initialized} handshake.
      */
-    private ServerInfo sendInitialize()
+    private ServerInfo sendInitialize(Map<String, Object> initOptions)
             throws InterruptedException, ExecutionException, TimeoutException {
         var params = new InitializeParams();
         params.setRootUri(workspaceRoot.toUri().toString());
         params.setRootPath(workspaceRoot.toString());
         params.setProcessId((int) ProcessHandle.current().pid());
         params.setClientInfo(new ClientInfo("smile-lsp-client", "1.0"));
+        if (initOptions != null) {
+            params.setInitializationOptions(initOptions);
+        }
 
         // Declare the client capabilities we rely on.
         var textDocCaps   = new TextDocumentClientCapabilities();

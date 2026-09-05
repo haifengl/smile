@@ -113,7 +113,7 @@ public class SmileStudio extends JFrame implements SearchListener {
             try {
                 var handler = new LspServerNotificationHandler("Ty", statusBar);
                 var ty = LanguageService.of(cwd, "ty server");
-                ty.start(handler);
+                ty.start(handler, null);
                 if (ty.isInitialized()) {
                     LanguageService.put("python", ty);
                     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -133,7 +133,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                 var command = (SystemInfo.isWindows ? "cmd.exe /c " : "bash -c ")
                         + System.getProperty("smile.home") + "/jdtls/bin/jdtls";
                 var jdtls = LanguageService.of(cwd, command);
-                jdtls.start(handler);
+                jdtls.start(handler, getJtdInitOptions());
                 if (jdtls.isInitialized()) {
                     LanguageService.put("java", jdtls);
                     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -197,6 +197,19 @@ public class SmileStudio extends JFrame implements SearchListener {
                 SwingUtilities.invokeLater(() -> workspace.project().setDividerLocation(0.2));
             }
         });
+    }
+
+    private Map<String, Object> getJtdInitOptions() {
+        // 1. Construct the absolute glob pattern for your app's lib directory
+        // Using forward slashes works consistently across JDTLS target platforms
+        var smileHome = System.getProperty("smile.home");
+        String libGlobPattern = smileHome.replace("\\", "/") + "/lib/**/*.jar";
+        // 2. Build the settings structure
+        var referencedLibraries = List.of(libGlobPattern);
+        var projectSettings = Map.of("referencedLibraries", referencedLibraries);
+        var javaSettings = Map.of("project", projectSettings);
+        var settings = Map.of("java", javaSettings);
+        return Map.of("settings", settings);
     }
 
     /**
