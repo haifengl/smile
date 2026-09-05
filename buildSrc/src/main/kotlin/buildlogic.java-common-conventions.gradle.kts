@@ -6,12 +6,12 @@ plugins {
 }
 
 dependencies {
-    implementation("org.slf4j:slf4j-api:2.0.18")
+    implementation("org.slf4j:slf4j-api:2.0.19")
 
     // Use JUnit Jupiter for testing.
     testImplementation("org.junit.jupiter:junit-jupiter:6.1.3")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testRuntimeOnly("org.slf4j:slf4j-simple:2.0.18")
+    testRuntimeOnly("org.slf4j:slf4j-simple:2.0.19")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
