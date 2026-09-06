@@ -203,7 +203,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         // 1. Construct the absolute glob pattern for your app's lib directory
         // Using forward slashes works consistently across JDTLS target platforms
         var smileHome = System.getProperty("smile.home");
-        String libGlobPattern = smileHome.replace("\\", "/") + "/lib/**/*.jar";
+        String libGlobPattern = smileHome.replace("\\", "/") + "/lib/*.jar";
         // 2. Build the settings structure
         var referencedLibraries = List.of(libGlobPattern);
         var projectSettings = Map.of("referencedLibraries", referencedLibraries);
