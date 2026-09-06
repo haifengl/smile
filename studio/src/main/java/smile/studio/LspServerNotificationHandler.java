@@ -23,6 +23,7 @@ import org.eclipse.lsp4j.MessageParams;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.ShowMessageRequestParams;
 import org.eclipse.lsp4j.services.LanguageClient;
+import org.eclipse.lsp4j.jsonrpc.services.JsonNotification;
 
 /**
  * An implementation of the LSP4J client interface for read-only
@@ -80,5 +81,15 @@ public class LspServerNotificationHandler implements LanguageClient {
     public void logMessage(MessageParams message) {
         SwingUtilities.invokeLater(() -> statusBar.setStatus(String.format("[LSP %s] %s: %s",
                 message.getType(), server, message.getMessage())));
+    }
+
+    @JsonNotification("language/status")
+    public void onLanguageStatus(Object report) {
+        logger.debug("[LSP status] {}: {}", server, report);
+    }
+
+    @JsonNotification("language/eventNotification")
+    public void onLanguageEventNotification(Object report) {
+        logger.debug("[LSP event] {}: {}", server, report);
     }
 }
