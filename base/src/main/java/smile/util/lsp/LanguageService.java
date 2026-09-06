@@ -308,6 +308,15 @@ public class LanguageService implements AutoCloseable {
         var symCap    = new SymbolCapabilities();
         wsCaps.setSymbol(symCap);
 
+        // JDTLS strictly requires that LSP client explicitly state
+        // that it supports completion and snippets.
+        var completionCapabilities = new CompletionCapabilities();
+        var completionItemCapabilities = new CompletionItemCapabilities();
+        // CRITICAL: Explicitly set snippet support to true
+        completionItemCapabilities.setSnippetSupport(true);
+        completionCapabilities.setCompletionItem(completionItemCapabilities);
+        textDocCaps.setCompletion(completionCapabilities);
+
         var caps = new ClientCapabilities();
         caps.setTextDocument(textDocCaps);
         caps.setWorkspace(wsCaps);
