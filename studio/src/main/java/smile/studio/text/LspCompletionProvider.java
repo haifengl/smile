@@ -238,7 +238,8 @@ public class LspCompletionProvider extends AbstractCompletionProvider implements
             }
 
         } catch (Exception e) {
-            logger.warn("Completion failed: {}", e.getMessage());
+            // LSP exception getMessage often returns null
+            logger.debug("Completion failed: {}", e.toString());
         }
 
         return completions;
