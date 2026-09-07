@@ -448,7 +448,8 @@ public class Notebook extends JPanel implements DocumentListener {
         // is to ensure language servers ready.
         int delay = isShowing() ? 100 : 10000;
         Timer timer = new Timer(delay, e -> {
-            var fileUrl = "untitled:/" + file.getFileName() + "/" + UUID.randomUUID();
+            var path = file.toAbsolutePath().toString().replace("\\", "/");
+            var fileUrl = "untitled://" + path;
             editor.setAutoComplete(fileUrl, editor.getSyntaxEditingStyle());
         });
 
