@@ -206,8 +206,15 @@ public class SmileStudio extends JFrame implements SearchListener {
         String libGlobPattern = smileHome.replace("\\", "/") + "/lib/*.jar";
         // 2. Build the settings structure
         var referencedLibraries = List.of(libGlobPattern);
+        // Disable automatic build file generation and supply local Jars
         var projectSettings = Map.of("referencedLibraries", referencedLibraries);
-        var javaSettings = Map.of("project", projectSettings);
+        // Optional settings for standalone script optimization
+        Map<String, Object> formatSettings = new HashMap<>();
+        formatSettings.put("enabled", true);
+
+        var javaSettings = Map.of(
+                "project", projectSettings,
+                "format", formatSettings);
         var settings = Map.of("java", javaSettings);
         return Map.of("settings", settings);
     }
