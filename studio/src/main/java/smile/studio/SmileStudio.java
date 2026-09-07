@@ -127,24 +127,26 @@ public class SmileStudio extends JFrame implements SearchListener {
         });
 
         // Starts the JDT LS server in a background thread.
-        Thread.ofPlatform().name("jdt-server-starter").daemon(true).start(() -> {
-            try {
-                var handler = new LspServerNotificationHandler("JDT", statusBar);
-                var command = (SystemInfo.isWindows ? "cmd.exe /c " : "bash -c ")
-                        + System.getProperty("smile.home") + "/jdtls/bin/jdtls";
-                var jdtls = LanguageService.of(cwd, command);
-                jdtls.start(handler, getJtdInitOptions());
-                if (jdtls.isInitialized()) {
-                    LanguageService.put("java", jdtls);
-                    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                        logger.info("Shutting down JDT LS server...");
-                        jdtls.close();
-                    }));
+        if (Files.exists(Path.of(System.getProperty("smile.home"), "jdtls"))) {
+            Thread.ofPlatform().name("jdt-server-starter").daemon(true).start(() -> {
+                try {
+                    var handler = new LspServerNotificationHandler("JDT", statusBar);
+                    var command = (SystemInfo.isWindows ? "cmd.exe /c " : "bash -c ")
+                            + System.getProperty("smile.home") + "/jdtls/bin/jdtls";
+                    var jdtls = LanguageService.of(cwd, command);
+                    jdtls.start(handler, getJtdInitOptions());
+                    if (jdtls.isInitialized()) {
+                        LanguageService.put("java", jdtls);
+                        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                            logger.info("Shutting down JDT LS server...");
+                            jdtls.close();
+                        }));
+                    }
+                } catch (Exception ex) {
+                    logger.error("Failed to start JDT LS server: {}", ex.getMessage());
                 }
-            } catch (Exception ex) {
-                logger.error("Failed to start JDT LS server: {}", ex.getMessage());
-            }
-        });
+            });
+        }
 
         // Starts MCP services in background
         Thread.ofPlatform().name("mcp-service-starter").daemon(true).start(() -> {
