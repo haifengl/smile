@@ -44,7 +44,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private static final String[] aiServiceKeys = {"openai", "azureOpenAI", "anthropic", "googleGemini", "googleEnterprise", "chatCompletions"};
     private static final String[] openaiModels = {"gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.4-mini"};
     private static final String[] anthropicModels = {"claude-fable-5", "claude-opus-4-8", "claude-sonnet-5", "claude-haiku-4-5"};
-    private static final String[] geminiModels = {"gemini-3.5-flash", "gemini-3.1-pro-preview", "gemini-3.1-flash-lite"};
+    private static final String[] geminiModels = {"gemini-3.8-flash", "gemini-3.1-pro-preview", "gemini-3.1-flash-lite"};
 
     private static final String[] openaiBaseUrls = { "https://api.openai.com/v1" };
     private static final String[] anthropicBaseUrls = { "https://api.anthropic.com" };
