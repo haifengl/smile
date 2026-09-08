@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.IntConsumer;
 import com.formdev.flatlaf.util.SystemFileChooser;
+import ioa.agent.Agent;
 import ioa.agent.Analyst;
 import ioa.agent.Coder;
 import smile.io.Paths;
@@ -121,6 +122,7 @@ public class Workspace extends JSplitPane {
         fileChooser.setCurrentDirectory(cwd.toFile());
 
         Analyst analyst = initAnalyst(cwd);
+        Agent productManager = initProductManager(cwd);
         coders.put("Java", initJavaCoder(cwd));
         coders.put("Python", initPythonCoder(cwd));
         fileExplorer = new FileExplorer(cwd);
@@ -147,6 +149,7 @@ public class Workspace extends JSplitPane {
         }
 
         agentTabs.addTab("📊 Clair the Analyst", analystCLI(analyst));
+        agentTabs.addTab("\uD83C\uDFAF Steve the Product Manager", productManagerCLI(productManager));
         agentTabs.addTab("☕ James the Java Guru", javaCoderCLI(coders.get("Java")));
         agentTabs.addTab("\uD83D\uDC0D Guido the Pythonista", pythonCoderCLI(coders.get("Python")));
 
@@ -216,6 +219,18 @@ public class Workspace extends JSplitPane {
     }
 
     /**
+     * Initializes the product manager agent.
+     */
+    private Agent initProductManager(Path cwd) {
+        try {
+            return new Agent(Agent.Spec.of("product-manager"), SmileStudio::llm, cwd);
+        } catch (Exception ex) {
+            logger.error("Failed to initialize Product Manager agent: {}", ex.getMessage());
+        }
+        return null;
+    }
+
+    /**
      * Initializes the Java coding agent.
      */
     private Coder initJavaCoder(Path cwd) {
@@ -249,6 +264,19 @@ public class Workspace extends JSplitPane {
                         bundle.getString("WelcomeSeparator") + '\n' +
                         MessageFormat.format(bundle.getString("AnalystWelcome"), System.getProperty("user.dir")),
                 bundle.getString("AnalystTips"));
+        return cli;
+    }
+
+    /**
+     * Creates a product manager agent cli.
+     */
+    private AgentCLI productManagerCLI(Agent productManager) {
+        var cli = new AgentCLI(productManager);
+
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+                        bundle.getString("WelcomeSeparator") + '\n' +
+                        MessageFormat.format(bundle.getString("ProductManagerWelcome"), System.getProperty("user.dir")),
+                bundle.getString("ProductManagerTips"));
         return cli;
     }
 
