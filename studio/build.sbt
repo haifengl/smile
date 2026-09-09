@@ -107,7 +107,7 @@ libraryDependencies ++= Seq(
   "ch.qos.logback"    % "logback-classic"    % "1.6.3",
   "com.openai"        % "openai-java"        % "4.58.0",
   "com.anthropic"     % "anthropic-java"     % "2.61.0",
-  "com.google.genai"  % "google-genai"       % "1.53.0",
+  "com.google.genai"  % "google-genai"       % "1.70.0",
   "org.commonmark"    % "commonmark"         % "0.30.0",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.5.0",
   "org.eclipse.lsp4j" % "org.eclipse.lsp4j"  % "1.0.0",
@@ -120,7 +120,6 @@ libraryDependencies ++= Seq(
   "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.22",
   "io.modelcontextprotocol.sdk" % "mcp"          % "2.0.1",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
-  "org.jsoup"                   % "jsoup"        % "1.23.2",
   "com.github.serpapi"          % "serpapi-java" % "1.2.0",
   "com.google.code.gson"        % "gson"         % "2.14.0" // evict older version used by serpapi
 )
