@@ -971,7 +971,6 @@ public class SmileStudio extends JFrame implements SearchListener {
             JDialog.setDefaultLookAndFeelDecorated(true);
         }
 
-
         // Install font
         FlatJetBrainsMonoFont.install();
         // Application specific UI defaults
