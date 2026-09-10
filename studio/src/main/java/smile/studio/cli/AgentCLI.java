@@ -339,7 +339,7 @@ public class AgentCLI extends JPanel {
             }
         }
 
-        output.setText(sb.toString());
+        SwingUtilities.invokeLater(() -> output.setText(sb.toString()));
     }
 
     /** Enters the plan mode. */

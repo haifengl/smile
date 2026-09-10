@@ -18,12 +18,14 @@ package smile.studio.text;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
 import javax.swing.*;
 import com.formdev.flatlaf.FlatLaf;
 import org.fife.ui.rsyntaxtextarea.*;
+import org.fife.ui.rtextarea.ConfigurableCaret;
 
 
 /**
@@ -79,15 +81,6 @@ public class ThemedTextArea extends RSyntaxTextArea {
     private void initTheme() {
         putClientProperty("FlatLaf.styleClass", "monospaced");
 
-        var caret = new org.fife.ui.rtextarea.ConfigurableCaret() {
-            @Override
-            public void setVisible(boolean visible) {
-                super.setVisible(visible && isEditable());
-            }
-        };
-        caret.setBlinkRate(getCaret().getBlinkRate());
-        setCaret(caret);
-
         applyTheme();
         // Listen for global Look and Feel changes
         UIManager.addPropertyChangeListener(evt -> {
@@ -117,6 +110,25 @@ public class ThemedTextArea extends RSyntaxTextArea {
                 Markdown.adjustFontSize(-0.1f);
             }
         });
+
+        // Theme.apply() updates properties like caret color and style by creating
+        // a standard ConfigurableCaret instance under the hood.
+        // Re-attach standard caret behavior with FlatLaf patch.
+        var caret = new ConfigurableCaret() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                super.focusGained(e);
+                setVisible(ThemedTextArea.this.isEditable());
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                super.focusLost(e);
+                setVisible(false);
+            }
+        };
+        caret.setBlinkRate(getCaret().getBlinkRate());
+        setCaret(caret);
     }
 
     /**
