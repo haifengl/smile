@@ -17,12 +17,11 @@
 package smile.studio.text;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.FocusEvent;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.io.IOException;
 import javax.swing.*;
+import javax.swing.text.Caret;
+
 import com.formdev.flatlaf.FlatLaf;
 import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.ConfigurableCaret;
@@ -111,24 +110,37 @@ public class ThemedTextArea extends RSyntaxTextArea {
             }
         });
 
-        // Theme.apply() updates properties like caret color and style by creating
-        // a standard ConfigurableCaret instance under the hood.
-        // Re-attach standard caret behavior with FlatLaf patch.
-        var caret = new ConfigurableCaret() {
+        // Safe localized caret visibility fix without setBlinkRate(),
+        // which alters shared states globally.
+        addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                super.focusGained(e);
-                setVisible(ThemedTextArea.this.isEditable());
+                Caret caret = getCaret();
+                if (caret != null) {
+                    caret.setVisible(isEditable());
+                    caret.setSelectionVisible(isEditable());
+                }
             }
 
             @Override
             public void focusLost(FocusEvent e) {
-                super.focusLost(e);
-                setVisible(false);
+                Caret caret = getCaret();
+                if (caret != null) {
+                    caret.setVisible(false);
+                    caret.setSelectionVisible(false);
+                }
             }
-        };
-        caret.setBlinkRate(getCaret().getBlinkRate());
-        setCaret(caret);
+        });
+
+        // Set caret invisible when text area becomes showing
+        addHierarchyListener(e -> {
+            if ((e.getChangeFlags() & HierarchyEvent.SHOWING_CHANGED) != 0) {
+                Caret caret = getCaret();
+                if (caret != null && isShowing()) {
+                    caret.setVisible(false);
+                }
+            }
+        });
     }
 
     /**
