@@ -1,0 +1,36 @@
+name: "CLA Assistant"
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_target:
+    types: [opened, closed, synchronize]
+
+# Permissions required by CLA Assistant to comment on PRs, update commit status,
+# and store signatures in the repository.
+permissions:
+  actions: write
+  contents: write
+  pull-requests: write
+  statuses: write
+
+jobs:
+  CLAAssistant:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "CLA Assistant"
+        if: (github.event.comment.body == 'recheck' || contains(github.event.comment.body, 'I have read the CLA Document and I hereby sign the CLA')) || github.event_name == 'pull_request_target'
+        uses: contributor-assistant/github-action@v2.6.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # If master is protected and GITHUB_TOKEN cannot push directly,
+          # supply a PAT with repo scope or use an unprotected branch:
+          # PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        with:
+          path-to-signatures: 'signatures/version1/cla.json'
+          path-to-document: 'https://github.com/${{ github.repository }}/blob/master/CLA.md'
+          # Branch where the signatures JSON file will be stored
+          branch: 'master'
+          allowlist: haifengl,bot*,dependabot[bot],*[bot]
+          # Do not lock PRs after merge so discussions can continue
+          lock-pullrequest-aftermerge: false
