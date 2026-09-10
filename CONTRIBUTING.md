@@ -1,4 +1,4 @@
-# How to contribute to SMILE #
+# How to contribute to SMILE
 Welcome! If you are interested in contributing to SMILE, reporting issues,
 or just getting in touch with the folks who work on SMILE, this guide is
 for you.
@@ -7,9 +7,9 @@ One of the easiest ways to contribute is to participate in discussions
 and discuss issues. You can also contribute by opening an issue and
 submitting a pull request with code changes.
 
-## Build ##
+## Build
 To build SMILE from source, please first install Java 25, Scala 3
-and SBT 1.0+. Then clone the repo and build the package:
+and SBT 2.0+. Then clone the repo and build the package:
 
 ```bash
 git clone https://github.com/haifengl/smile.git
@@ -20,8 +20,7 @@ sbt package
 sbt test
 ```
 
-To build SMILE Serve, we need to use Gradle as Quarkus doesn't
-support SBT.
+To build SMILE Serve, use Gradle (Quarkus runtime):
 ```bash
 # Build SMILE Serve
 ./gradlew :serve:build
@@ -34,93 +33,52 @@ To build with Scala 2.13, run
 sbt ++2.13.18 scala/package
 ```
 
-For a software to pick up your changes, you should
-first publish SMILE packages locally.
+To publish SMILE packages locally:
 ```bash
 sbt publishM2
 ```
 
-To play with the latest code, run the following
+To play with the latest SMILE Studio or REPL:
 ```bash
 git pull
 bin/smile.sh
-```
-which will build the system and start SMILE Studio.
-If you prefer REPL, you may run
-```bash
+
+# Or run the shell directly:
 sbt studio/stage
-cd studio/target/universal/stage/bin
-./smile shell
+cd target/out/jvm/scala-3.9.0/smile-studio/universal/stage
+./bin/smile shell
 ```
 
-## Open an issue ##
-For bugs, issues, or other discussion, please log a new issue in the GitHub repo.
+## Open an issue
+For bugs, issues, or feature suggestions, please log a new issue in the GitHub repo.
+GitHub supports [Markdown](https://help.github.com/categories/writing-on-github/), so please check your formatting before submitting.
 
-GitHub supports [markdown](https://help.github.com/categories/writing-on-github/),
-so when filing bugs make sure you check the formatting before clicking submit.
+## Other discussions
+For general "how-to" questions and guidance on building applications with SMILE, please ask on [Stack Overflow](https://stackoverflow.com/questions/tagged/smile-ai) tagged with `smile-ai`.
 
-## Other discussions ##
-For general "how-to" and guidance questions about using SMILE to build
-and run applications, please use [Stack Overflow](http://stackoverflow.com/questions/tagged/smile-ai)
-tagged with `smile-ai`.
+## Contributing code and content
+We welcome contributions from the community. Please follow these guidelines to ensure your PR can be reviewed and merged efficiently.
 
-## Contributing code and content ##
-We welcome all forms of contributions from the community. Please read the
-following guidelines to maximize the chances of your PR being merged.
+### Communication
+- **Feature work:** Before starting significant new features, please open an issue describing the proposed change so we can coordinate design and ensure it aligns with the project roadmap.
+- **Bug fixes and small patches:** Open an issue for tracking, or link an existing issue directly in your pull request.
 
-### Communication ##
- - Before starting work on a feature, please open an issue on GitHub
-   describing the proposed feature. We want to make sure any feature
-   work goes smoothly. We're happy to work with you to determine if
-   it fits the current project direction and make sure no one else
-   is already working on it.
+### Development process
+- Fork the repository.
+- Create a feature or fix branch.
+- Ensure test suites pass before submitting.
+- Submit a pull request with a descriptive title and reference the related issue.
 
- - For any work related to setting up build, test, and CI for SMILE
-   on GitHub, or for small patches or bug fixes, please open an issue
-   for tracking purposes, but we generally don't need a discussion
-   prior to opening a PR.
+We reserve the right to close pull requests that have become stale or inactive; they can be reopened whenever work resumes.
 
-### Development process ##
-Please be sure to follow the usual process for submitting PRs:
+### Contributor License Agreement (CLA)
+To ensure that SMILE remains freely available as open-source software while enabling commercial licensing, ongoing maintenance, and enterprise distribution, all contributors must agree to the SMILE Contributor License Agreement.
 
- - Fork the repo
- - Create a pull request
- - Make sure your PR title is descriptive
- - Include a link back to an open issue in the PR description
+By submitting a pull request, patch, or other contribution to the SMILE project, you confirm that:
+- Your contribution complies with and is licensed under the terms of the **[SMILE Contributor License Agreement (CLA)](./CLA.md)**.
+- You have the legal authority and any necessary employer approvals to grant these rights.
 
-We reserve the right to close PRs that are not making progress. Closed PRs can be reopened again later and work can resume.
+Please review **[CLA.md](./CLA.md)** for full terms, including copyright and patent grants.
 
-### Contributor License Agreement ##
-By contributing your code to SMILE you grant us a non-exclusive,
-irrevocable, worldwide, royalty-free, sublicenseable, transferable
-license under all of Your relevant intellectual property rights
-(including copyright, patent, and any other rights), to use, copy,
-prepare derivative works of, distribute and publicly perform and
-display the Contributions on any licensing terms, including without limitation:
-(a) open source licenses like the GNU General Public License; and (b) binary,
-proprietary, or commercial licenses. Except for the licenses granted herein,
-You reserve all right, title, and interest in and to the Contribution.
-
-You confirm that you are able to grant us these rights. You represent
-that You are legally entitled to grant the above license. If Your employer
-has rights to intellectual property that You create, You represent that
-You have received permission to make the Contributions on behalf of that
-employer, or that Your employer has waived such rights for the Contributions.
-
-You represent that the Contributions are Your original works of
-authorship, and to Your knowledge, no other person claims, or
-has the right to claim, any right in any invention or patent
-related to the Contributions. You also represent that You are
-not legally obligated, whether by entering into an agreement
-or otherwise, in any way that conflicts with the terms of this license.
-
-We acknowledge that, except as explicitly described in this
-Agreement, any Contribution which you provide is on an
-"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
-EITHER EXPRESS OR IMPLIED, INCLUDING, WITHOUT LIMITATION,
-ANY WARRANTIES OR CONDITIONS OF TITLE, NON-INFRINGEMENT,
-MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.
-
-## Code of Conduct ##
-To ensure an inclusive community, contributors and users in the SMILE
-community should follow the [code of conduct](./CODE_OF_CONDUCT.md).
+## Code of Conduct
+To ensure a welcoming and productive environment, all contributors and participants are expected to uphold the [Code of Conduct](./CODE_OF_CONDUCT.md).
