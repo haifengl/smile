@@ -10,6 +10,6 @@ unmanagedSources / excludeFilter := (unmanagedSources / excludeFilter).value || 
 enablePlugins(KotlinPlugin)
 kotlinLib("stdlib")
 
-kotlinVersion := "2.4.10"
+kotlinVersion := "2.4.20"
 kotlincJvmTarget := "25"
 
