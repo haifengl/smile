@@ -1,6 +1,6 @@
 # SMILE Base Module
 
-`smile-base` is the foundation module of the [SMILE](https://haifengl.github.io)
+`smile-base` is the foundation module of the [SMILE](https://www.aihalo.dev/)
 (Statistical Machine Intelligence and Learning Engine) library.
 It provides all the data structures, mathematical primitives,
 statistical utilities, and I/O facilities that the rest of SMILE

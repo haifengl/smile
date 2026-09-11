@@ -1,6 +1,6 @@
 (defproject org.clojars.haifengl/smile "6.3.0"
   :description "Smile - Statistical Machine Intelligence and Learning Engine"
-  :url "https://haifengl.github.io"
+  :url "https://www.aihalo.dev/"
   :scm {:name "git"
         :url "https://github.com/haifengl/smile"}
   :license {:name "GNU General Public License, Version 3"

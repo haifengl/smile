@@ -301,7 +301,7 @@ For visualization examples, see [plot/README.md](plot/README.md).
 
 ## SMILE Studio
 
-SMILE Studio is an agentic IDE for data science using Python or [SMILE](https://haifengl.github.io/) on JVM.
+SMILE Studio is an agentic IDE for data science using Python or [SMILE](https://www.aihalo.dev/) on JVM.
 See [studio/README.md](studio/README.md) for full documentation.
 
 Download a pre-packaged release from the
@@ -382,10 +382,10 @@ To acquire a commercial license, contact **smile.sales@outlook.com**.
 | Channel | Purpose |
 |---|---|
 | [GitHub Discussions](https://github.com/haifengl/smile/discussions) | Questions, ideas, show-and-tell |
-| [Stack Overflow `[smile]`](http://stackoverflow.com/questions/tagged/smile) | Technical Q&A |
+| [Stack Overflow `[smile]`](https://stackoverflow.com/questions/tagged/smile) | Technical Q&A |
 | [Issue Tracker](https://github.com/haifengl/smile/issues/new) | Bug reports and feature requests |
-| [Online Docs](https://haifengl.github.io/) | Tutorials and programming guides |
-| [Java API](https://haifengl.github.io/api/java/index.html) · [Scala API](https://haifengl.github.io/api/scala/index.html) · [Kotlin API](https://haifengl.github.io/api/kotlin/index.html) · [Clojure API](https://haifengl.github.io/api/clojure/index.html) | API Javadoc |
+| [Online Docs](https://www.aihalo.dev/) | Tutorials and programming guides |
+| [Java API](https://www.aihalo.dev/api/java/index.html) · [Scala API](https://www.aihalo.dev/api/scala/index.html) · [Kotlin API](https://www.aihalo.dev/api/kotlin/index.html) · [Clojure API](https://www.aihalo.dev/api/clojure/index.html) | API Javadoc |
 
 ---
 

@@ -790,7 +790,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            browse(SmileStudio.this, "https://haifengl.github.io/quickstart.html",
+            browse(SmileStudio.this, "https://www.aihalo.dev//quickstart.html",
                     bundle.getString("Tutorials"));
         }
     }
@@ -802,7 +802,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            browse(SmileStudio.this, "https://haifengl.github.io/api/java/index.html",
+            browse(SmileStudio.this, "https://www.aihalo.dev//api/java/index.html",
                     bundle.getString("JavaDocs"));
         }
     }
