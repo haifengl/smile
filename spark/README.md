@@ -1,6 +1,6 @@
 # SMILE Spark
 
-`smile-spark` is the integration layer between [SMILE](https://haifengl.github.io/)
+`smile-spark` is the integration layer between [SMILE](https://www.aihalo.dev//)
 machine learning and [Apache Spark](https://spark.apache.org/).  It provides
 four tightly related capabilities:
 

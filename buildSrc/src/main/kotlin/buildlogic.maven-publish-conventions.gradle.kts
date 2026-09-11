@@ -26,7 +26,7 @@ publishing {
             pom {
                 name = "${rootProject.name}-${project.name}"
                 description = "Statistical Machine Intelligence and Learning Engine"
-                url = "https://haifengl.github.io//"
+                url = "https://www.aihalo.dev///"
                 licenses {
                     license {
                         name = "GNU General Public License, Version 3"
@@ -37,7 +37,7 @@ publishing {
                     developer {
                         id = "haifengl"
                         name = "Haifeng Li"
-                        url = "https://haifengl.github.io/"
+                        url = "https://www.aihalo.dev//"
                     }
                     developer {
                         id = "kklioss"

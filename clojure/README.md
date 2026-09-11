@@ -3,12 +3,12 @@
 The Clojure API is deprecated due to limited usage.
 Please use SMILE's Java API directly.
 
-[SMILE (Statistical Machine Intelligence and Learning Engine)](https://haifengl.github.io/)
+[SMILE (Statistical Machine Intelligence and Learning Engine)](https://www.aihalo.dev//)
 is a fast and comprehensive machine learning, NLP, linear algebra,
 graph, interpolation, and visualization system in Java and Scala.
 With advanced data structures and algorithms, SMILE delivers
 state-of-art performance. SMILE is well documented and please
-check out the project [website](https://haifengl.github.io/)
+check out the project [website](https://www.aihalo.dev//)
 for programming guides and more information.
 
 For Clojure API, add the following dependency to your project or build file:

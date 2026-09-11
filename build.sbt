@@ -14,7 +14,7 @@ lazy val commonSettings = Seq(
   description := "Statistical Machine Intelligence and Learning Engine",
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
-  organizationHomepage := Some(uri("https://haifengl.github.io/")),
+  organizationHomepage := Some(uri("https://www.aihalo.dev//")),
   version := "6.3.0",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
@@ -61,7 +61,7 @@ lazy val commonSettings = Seq(
   },
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
-  homepage := Some(uri("https://haifengl.github.io/")),
+  homepage := Some(uri("https://www.aihalo.dev//")),
   scmInfo := Some(
     ScmInfo(
       uri("https://github.com/haifengl/smile"),

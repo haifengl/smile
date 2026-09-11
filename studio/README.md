@@ -1,6 +1,6 @@
 # SMILE Studio User Guide
 
-> **SMILE Studio** is an agentic IDE for data science using Python or [SMILE](https://haifengl.github.io/) on JVM. It combines agentic AI, interactive notebooks, and workspace explorers in a modern desktop application. The launcher (`smile` / `smile.bat`) also exposes several command-line entry points. For the User Guide for CLI, see [CLI.md](CLI.md).
+> **SMILE Studio** is an agentic IDE for data science using Python or [SMILE](https://www.aihalo.dev//) on JVM. It combines agentic AI, interactive notebooks, and workspace explorers in a modern desktop application. The launcher (`smile` / `smile.bat`) also exposes several command-line entry points. For the User Guide for CLI, see [CLI.md](CLI.md).
 
 ---
 
