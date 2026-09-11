@@ -1,41 +1,82 @@
-                   SMILE LICENSE INFORMATION
+Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
 
-    Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+SMILE employs a modern multi-product licensing model designed to support
+free academic and open-source collaboration while offering commercial licensing
+and enterprise support for proprietary and mission-critical deployments.
 
-  SMILE employs a dual license model designed to meet the development
-  and distribution needs of both commercial distributors (such as OEMs,
-  ISVs and VARs) and open source projects.
+SMILE is organized into distinct components governed by the following terms:
 
+==============================================================================
+1. SMILE Libraries & Core Algorithms (Dual License: AGPLv3 / Commercial)
+==============================================================================
 
-GNU General Public License Usage
+The core mathematical and machine learning libraries (including `base`, `core`,
+`nlp`, `deep`, `plot`, `kotlin`, and related modules) are dual-licensed under:
 
-  SMILE may be used under the terms of the GNU General Public License
-  version 3 as published by the Free Software Foundation and appearing
-  in the file COPYING included in the Software. In order to preserve
-  the true meaning of open development and uphold the spirit of free
-  software, it is imperative that the rules and regulations of open
-  source licenses required by the Free Software Foundation are followed.
-  Learn more: http://www.gnu.org/licenses.
+  a) GNU Affero General Public License version 3 (AGPLv3):
+     You may use, copy, modify, and distribute the software under the terms
+     of the AGPLv3 as published by the Free Software Foundation. In accordance
+     with Section 13 of the AGPLv3, if you modify the software or incorporate
+     it into a service accessible over a computer network (e.g., SaaS, cloud APIs,
+     or internal microservices), you must make the complete corresponding source
+     code available to all network users under the AGPLv3.
+     Learn more: https://www.gnu.org/licenses/agpl-3.0.html
 
-  The SMILE open source licensing is ideal for use cases such as
-  Free Open Source Software ("FOSS") applications under the GPL
-  that want to combine and distribute those FOSS applications with
-  SMILE software, student/academic purposes, hobby projects,
-  internal research projects without external distribution,
-  or other projects where all GPL obligations can be met.
+  b) Commercial / OEM License:
+     If you use SMILE libraries in proprietary applications, internal enterprise
+     services, SaaS backends, or commercial products without disclosing your
+     source code under AGPLv3, you must obtain a commercial license from
+     HALO.AI, LLC.
 
+==============================================================================
+2. SMILE Serve (Dual License: AGPLv3 / Commercial Enterprise)
+==============================================================================
 
+SMILE Serve (`serve`) is the high-throughput, low-latency JVM inference platform
+and model serving runtime, dual-licensed under:
 
-Commercial License Usage
+  a) GNU Affero General Public License version 3 (AGPLv3):
+     Free for open-source systems and applications where the surrounding network
+     service and infrastructure are disclosed under AGPLv3.
 
-  OEMs (Original Equipment Manufacturers), ISVs (Independent Software
-  Vendors), VARs (Value Added Resellers) and other distributors that
-  combine and distribute commercially licensed software with SMILE
-  must enter into a commercial license agreement with SMILE.AI, LLC.
+  b) Commercial Enterprise Runtime License:
+     Enterprises deploying SMILE Serve in production microservices, high-volume
+     streaming architectures (Kafka/Flink), or cloud clusters without AGPLv3
+     disclosure requirements must obtain an Enterprise Runtime License.
+     Enterprise licenses include high-availability clustering, zero-GC optimizations,
+     dedicated SLAs, CVE hotfix guarantees, and legal indemnification.
 
-  The commercial SMILE license gives you the full rights to create
-  and distribute software on your own terms without any open source
-  license obligations. With the commercial license you also have
-  access to the official SMILE Support and close strategic relationship
-  with SMILE.AI, LLC to make sure your development goals are met.
-  To acquire a commercial license, please contact smile.sales@outlook.com.
+==============================================================================
+3. SMILE Studio (Business Source License 1.1 / Commercial)
+==============================================================================
+
+SMILE Studio (`studio`) is an agentic data science desktop IDE and model-packaging
+environment licensed under the Business Source License 1.1 (BSL 1.1).
+
+  - Use Grant: You may use SMILE Studio free of charge for non-commercial
+    evaluation, personal learning, academic research, data exploration, and
+    exporting serialized model packages.
+  - Commercial & Production Use: Use of SMILE Studio within commercial
+    organizations beyond evaluation, or redistribution as part of a commercial
+    product, requires a paid commercial license from HALO.AI, LLC.
+  - Change License: After four (4) years from the release date of each respective
+    version, that version automatically converts to the GNU Affero General Public
+    License version 3.0 (AGPLv3) or later.
+
+==============================================================================
+Commercial Licensing, Procurement, and Support
+==============================================================================
+
+A commercial license from HALO.AI, LLC grants you:
+  - Complete freedom from AGPLv3 network-copyleft and BSL restrictions.
+  - Full legal rights to embed SMILE in proprietary products and cloud services
+    without any obligation to publish your source code or model weights.
+  - Comprehensive Intellectual Property (IP) warranty and indemnification.
+  - Professional support, guaranteed CVE resolution windows, and architecture advisory.
+
+To obtain commercial licensing terms, OEM agreements, or an enterprise quote,
+please contact:
+
+    HALO.AI, LLC
+    Email: sales@aihalo.dev
+    Web:   https://www.aihalo.dev
