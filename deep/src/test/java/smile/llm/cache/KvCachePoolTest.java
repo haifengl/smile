@@ -549,4 +549,55 @@ public class KvCachePoolTest {
             pool.unbindRequest(id2);
         }
     }
+
+    @Test
+    public void testGivenSpeculativeWindowWhenTruncateToThenSealsLengthAndZerosTail() {
+        // Given – pageSize 16 so a mid-page reject must shrink last_page_len
+        try (var pool = new KvCachePool(2, 64, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            pool.setPrefixReuseEnabled(false);
+            pool.bindRequests(1, 32);
+
+            Tensor k = Tensor.ones(1, 20, 2, 16);
+            Tensor v = Tensor.full(3.0f, 1, 20, 2, 16);
+            pool.put(0, 0, k, v);
+            pool.put(1, 0, k, v);
+            var metaFull = pool.sharedFlashInferMetadata(20);
+            assertEquals(4, metaFull.pagedKvLastPageLen().intArray()[0]); // 20 % 16 == 4
+
+            // When – accept through position 17; reject 17..20
+            pool.truncateTo(17, 20);
+
+            // Then – FlashInfer CSR sealed to 17 (last_page_len = 1)
+            var meta = pool.sharedFlashInferMetadata(17);
+            assertEquals(1, meta.pagedKvLastPageLen().intArray()[0]);
+            assertSame(meta, pool.sharedFlashInferMetadata(17));
+
+            var cached = pool.get(0, 20);
+            assertEquals(1.0f, cached._1().getFloat(0, 16, 0, 0), 1e-5);
+            assertEquals(0.0f, cached._1().getFloat(0, 17, 0, 0), 1e-5);
+            assertEquals(0.0f, cached._1().getFloat(0, 19, 0, 0), 1e-5);
+            assertEquals(0.0f, cached._2().getFloat(0, 18, 0, 0), 1e-5);
+            cached._1().close();
+            cached._2().close();
+            k.close();
+            v.close();
+        }
+    }
+
+    @Test
+    public void testGivenTruncateToWhenWrittenEqualsSealedThenNoOpInvalidate() {
+        try (var pool = KvCachePool.forTesting(tinyLayout(1, 1, 16), Device.CPU())) {
+            pool.bindRequests(1, 8);
+            Tensor k = Tensor.ones(1, 4, 2, 16);
+            Tensor v = Tensor.ones(1, 4, 2, 16);
+            pool.put(0, 0, k, v);
+            assertDoesNotThrow(() -> pool.truncateTo(4, 4));
+            var cached = pool.get(0, 4);
+            assertEquals(1.0f, cached._1().getFloat(0, 0, 0, 0), 1e-5);
+            cached._1().close();
+            cached._2().close();
+            k.close();
+            v.close();
+        }
+    }
 }

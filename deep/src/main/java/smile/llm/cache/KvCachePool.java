@@ -1309,6 +1309,92 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * Seals the readable KV length for the active step without freeing pages.
+     * Rebuilds FlashInfer CSR for {@code sealedLen} so attention cannot see
+     * positions {@code >= sealedLen} (required after speculative reject).
+     *
+     * @param sealedLen inclusive committed token count ({@code [0, sealedLen)}).
+     */
+    public void sealLength(int sealedLen) {
+        ensureBound();
+        if (sealedLen < 0) {
+            throw new IllegalArgumentException("sealedLen must be >= 0");
+        }
+        for (int b = 0; b < requestSlots.length; b++) {
+            if (sealedLen > requestSlots[b].length) {
+                throw new IllegalArgumentException(String.format(
+                        "sealedLen %d exceeds bound capacity %d",
+                        sealedLen, requestSlots[b].length));
+            }
+        }
+        clearStepFlashInferMetadata();
+        if (sealedLen > 0) {
+            stepFlashInferMeta = buildFlashInferMetadata(sealedLen);
+            stepFlashInferUniformLen = sealedLen;
+        }
+    }
+
+    /**
+     * Zeros K/V for positions {@code [fromPos, endPos)} on every layer of the
+     * active batch (defense-in-depth for rejected speculative tails that share
+     * a KV page with committed tokens).
+     *
+     * @param fromPos inclusive start position.
+     * @param endPos  exclusive end position.
+     */
+    public void invalidateRange(int fromPos, int endPos) {
+        ensureBound();
+        if (fromPos < 0 || endPos < fromPos) {
+            throw new IllegalArgumentException(
+                    "invalidateRange requires 0 <= fromPos <= endPos");
+        }
+        if (fromPos == endPos) {
+            return;
+        }
+        int batch = requestSlots.length;
+        for (int b = 0; b < batch; b++) {
+            if (endPos > requestSlots[b].length) {
+                throw new IllegalArgumentException(String.format(
+                        "invalidate endPos %d exceeds bound capacity %d",
+                        endPos, requestSlots[b].length));
+            }
+        }
+        int seqlen = endPos - fromPos;
+        boolean prevGraph = decodeGraphBuffers;
+        decodeGraphBuffers = false;
+        try {
+            var opts = new Tensor.Options()
+                    .device(device).dtype(dtype).requireGradients(false);
+            try (Tensor zeros = Tensor.zeros(opts, batch, seqlen, numKvHeads, headDim)) {
+                for (int layer = 0; layer < numLayers; layer++) {
+                    put(layer, fromPos, zeros, zeros);
+                }
+            }
+        } finally {
+            decodeGraphBuffers = prevGraph;
+        }
+    }
+
+    /**
+     * After a speculative window write of length {@code writtenEnd}, seal
+     * attention to {@code sealedLen} and zero the rejected tail
+     * {@code [sealedLen, writtenEnd)}. Does not free pages or shrink capacity.
+     *
+     * @param sealedLen  committed inclusive length after accept/reject.
+     * @param writtenEnd exclusive end of the speculative window write.
+     */
+    public void truncateTo(int sealedLen, int writtenEnd) {
+        if (writtenEnd < sealedLen) {
+            throw new IllegalArgumentException(
+                    "writtenEnd must be >= sealedLen");
+        }
+        if (writtenEnd > sealedLen) {
+            invalidateRange(sealedLen, writtenEnd);
+        }
+        sealLength(sealedLen);
+    }
+
+    /**
      * Returns shared FlashInfer metadata for a uniform cache length within the
      * current step. Do not close the returned value.
      *
