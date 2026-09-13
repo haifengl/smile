@@ -155,6 +155,24 @@ public interface ModelExecutor {
     Tensor decodeStep(int[] requestIds, int[] lastTokens, int[] positions);
 
     /**
+     * One speculative MTP round for a uniform draft depth.
+     *
+     * <p>Default throws; Qwen overrides when MTP weights are loaded.
+     *
+     * @param requestIds   active KV request ids (order = batch).
+     * @param lastTokens   last committed token per request.
+     * @param positions    absolute position of {@code lastTokens[i]} (write of next is {@code +1}).
+     * @param numDrafts    draft depth (same for every request in this call).
+     * @param temperature  sampling temperature (verify).
+     * @param topp         nucleus top-p (verify).
+     * @return accepted token ids per request (each length {@code >= 1}; caller owns arrays).
+     */
+    default int[][] speculateStep(int[] requestIds, int[] lastTokens, int[] positions,
+                                  int numDrafts, double temperature, double topp) {
+        throw new UnsupportedOperationException("speculative decoding not supported");
+    }
+
+    /**
      * Advances pending decode-graph prefetch when the scheduler is idle but KV
      * remains bound (e.g. between continuous-batching waves).
      */

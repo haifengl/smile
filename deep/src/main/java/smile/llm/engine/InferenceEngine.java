@@ -293,6 +293,7 @@ public final class InferenceEngine implements AutoCloseable {
                 if (anyPrefilling()) {
                     runPrefills();
                 }
+                runSpeculateStep();
                 runDecodeStep();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -615,10 +616,97 @@ public final class InferenceEngine implements AutoCloseable {
         maybeEmptyDeviceCache();
     }
 
+    private void runSpeculateStep() {
+        List<Active> speculative = new ArrayList<>();
+        for (Active a : active) {
+            if (a.phase == Phase.DECODING && !a.handle.isAborted() && a.request.speculative()) {
+                speculative.add(a);
+                if (speculative.size() >= maxDecodeBatch) {
+                    break;
+                }
+            }
+        }
+        if (speculative.isEmpty()) {
+            return;
+        }
+        // Uniform draft depth for this phase (plan: separate speculative phase).
+        int n = speculative.get(0).request.numSpeculativeTokens();
+        for (Active a : speculative) {
+            if (a.request.numSpeculativeTokens() != n) {
+                // Mixed depths: process only the first cohort with matching N.
+                speculative.removeIf(x -> x.request.numSpeculativeTokens() != n);
+                break;
+            }
+        }
+        for (Active a : speculative) {
+            if (a.phase != Phase.DECODING || a.handle.isAborted()) {
+                continue;
+            }
+            int remaining = Math.min(a.maxGenLen - a.completion.size(),
+                    a.totalCapacity - a.promptLen - a.completion.size());
+            if (remaining < 1) {
+                continue;
+            }
+            int maxDrafts = Math.min(
+                    Math.max(1, n > 0 ? n : 3),
+                    Math.max(0, remaining - 1));
+            int pos = a.promptLen + a.completion.size() - 1;
+            long t0 = System.nanoTime();
+            try {
+                if (maxDrafts < 1) {
+                    // No room for draft+bonus; one plain decode (speculative jobs are
+                    // excluded from runDecodeStep).
+                    try (Tensor logits = executor.decodeStep(
+                            new int[]{a.kvRequestId},
+                            new int[]{a.lastToken},
+                            new int[]{pos})) {
+                        sampleAndAppend(a, logits);
+                    }
+                    continue;
+                }
+                int[][] accepted = executor.speculateStep(
+                        new int[]{a.kvRequestId},
+                        new int[]{a.lastToken},
+                        new int[]{pos},
+                        maxDrafts,
+                        a.temperature,
+                        a.topp);
+                long decodeMs = (System.nanoTime() - t0) / 1_000_000L;
+                decodeMsTotal.addAndGet(decodeMs);
+                if (accepted == null || accepted.length == 0 || accepted[0] == null) {
+                    continue;
+                }
+                for (int tok : accepted[0]) {
+                    if (a.phase != Phase.DECODING) {
+                        break;
+                    }
+                    appendToken(a, tok);
+                }
+            } catch (UnsupportedOperationException unsupported) {
+                // No MTP head — one plain decode step for this request.
+                logger.debug("speculateStep unsupported; plain decode: {}",
+                        unsupported.toString());
+                int fallbackPos = a.promptLen + a.completion.size() - 1;
+                try (Tensor logits = executor.decodeStep(
+                        new int[]{a.kvRequestId},
+                        new int[]{a.lastToken},
+                        new int[]{fallbackPos})) {
+                    sampleAndAppend(a, logits);
+                } catch (Throwable t) {
+                    failActive(a, t);
+                }
+            } catch (Throwable t) {
+                failActive(a, t);
+            }
+        }
+        active.removeIf(a -> a.phase == Phase.DONE);
+        maybeEmptyDeviceCache();
+    }
+
     private void runDecodeStep() {
         List<Active> decoding = new ArrayList<>();
         for (Active a : active) {
-            if (a.phase == Phase.DECODING && !a.handle.isAborted()) {
+            if (a.phase == Phase.DECODING && !a.handle.isAborted() && !a.request.speculative()) {
                 decoding.add(a);
                 if (decoding.size() >= maxDecodeBatch) {
                     break;

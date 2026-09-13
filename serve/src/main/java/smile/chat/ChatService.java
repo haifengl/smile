@@ -95,6 +95,10 @@ public class ChatService implements OpenAiModelContributor {
     private String source;
     /** Resolves internal media URLs to data URLs for VL inference. */
     private final MediaService mediaService;
+    /** Native MTP speculation (from {@code smile.chat.speculative}). */
+    private final boolean speculative;
+    /** Draft depth override ({@code 0} = model default). */
+    private final int speculativeTokens;
 
     /**
      * Loads the LLM upon application start.
@@ -114,6 +118,8 @@ public class ChatService implements OpenAiModelContributor {
     @Inject
     public ChatService(ChatServiceConfig config, KvCacheConfig kvCache, MediaService mediaService) {
         this.mediaService = mediaService;
+        this.speculative = config.speculative();
+        this.speculativeTokens = config.speculativeTokens();
         String modelSpec = config.model();
         this.modelId = publicModelId(modelSpec);
         try {
@@ -156,6 +162,7 @@ public class ChatService implements OpenAiModelContributor {
             }
             if (model != null) {
                 applyPrefixReuse(model, kvCache.prefixReuse(), kvCache.hybridPrefixReplay());
+                applySpeculative(model, config.speculative(), config.speculativeTokens());
                 logQuantBackend(model, config, kvCache);
                 if (model instanceof smile.llm.engine.ModelExecutor exec) {
                     int maxInFlight = Math.max(1, config.maxBatchSize());
@@ -230,6 +237,22 @@ public class ChatService implements OpenAiModelContributor {
                 qwen.setPrefixReuseEnabled(enabled);
             }
             default -> { }
+        }
+    }
+
+    /**
+     * Applies MTP speculative decoding knobs to Qwen when present.
+     */
+    static void applySpeculative(LanguageModel model, boolean enabled, int numTokens) {
+        if (model instanceof Qwen qwen) {
+            qwen.setSpeculativeEnabled(enabled);
+            qwen.setNumSpeculativeTokens(numTokens);
+            if (enabled && qwen.isSpeculativeEnabled()) {
+                logger.infof("MTP speculative decoding enabled (drafts=%d)",
+                        qwen.numSpeculativeTokens());
+            } else if (enabled) {
+                logger.warnf("smile.chat.speculative=true but checkpoint has no MTP weights");
+            }
         }
     }
 
@@ -480,14 +503,16 @@ public class ChatService implements OpenAiModelContributor {
                 promptLen = mm.inputIds().length;
                 genReq = smile.llm.engine.GenerationRequest.ofMultimodal(
                         mm, maxGenLen, request.temperature, request.topP,
-                        request.logprobs, request.seed, listener, chatOptions);
+                        request.logprobs, request.seed, listener, chatOptions,
+                        speculative, speculativeTokens);
             } else {
                 int[] prompt = model.encodeChat(messages, chatOptions);
                 int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
                 promptLen = prompt.length;
                 genReq = smile.llm.engine.GenerationRequest.ofTokens(
                         prompt, maxGenLen, request.temperature, request.topP,
-                        request.logprobs, request.seed, listener, chatOptions);
+                        request.logprobs, request.seed, listener, chatOptions,
+                        speculative, speculativeTokens);
             }
         } catch (java.io.IOException e) {
             throw new IllegalArgumentException("Failed to process multimodal request", e);

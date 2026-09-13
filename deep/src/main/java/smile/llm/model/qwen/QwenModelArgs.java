@@ -42,9 +42,11 @@ import smile.llm.cache.KvCacheLayout;
  * @param linearValueHeadDim     DeltaNet value head dimension.
  * @param linearNumKeyHeads      DeltaNet key head count.
  * @param linearNumValueHeads    DeltaNet value head count.
- * @param layerTypes             per-layer mixer type ({@code linear_attention} or {@code full_attention}).
- * @param maxBatchSize           maximum inference batch size.
- * @param maxSeqLen              maximum sequence length.
+ * @param layerTypes                   per-layer mixer type ({@code linear_attention} or {@code full_attention}).
+ * @param maxBatchSize                 maximum inference batch size.
+ * @param maxSeqLen                    maximum sequence length.
+ * @param mtpNumHiddenLayers           native MTP draft layers ({@code 0} = none).
+ * @param defaultNumSpeculativeTokens  default draft depth when speculation is enabled.
  *
  * @author Haifeng Li
  */
@@ -66,19 +68,73 @@ public record QwenModelArgs(
         int linearNumValueHeads,
         String[] layerTypes,
         int maxBatchSize,
-        int maxSeqLen) {
+        int maxSeqLen,
+        int mtpNumHiddenLayers,
+        int defaultNumSpeculativeTokens) {
 
     /** Layer type for Gated DeltaNet (linear attention). */
     public static final String LINEAR_ATTENTION = "linear_attention";
     /** Layer type for gated full softmax attention. */
     public static final String FULL_ATTENTION = "full_attention";
+    /** Maximum draft tokens per speculative round (block size 8). */
+    public static final int MAX_SPECULATIVE_TOKENS = 7;
 
     /**
      * Tiny defaults suitable for unit tests.
      */
     public QwenModelArgs() {
         this(64, 4, 4, 2, 16, 100, 128, 1e-6, 10000.0, 0.25,
-                4, 16, 16, 2, 4, defaultLayerTypes(4, 4), 1, 32);
+                4, 16, 16, 2, 4, defaultLayerTypes(4, 4), 1, 32, 0, 0);
+    }
+
+    /**
+     * Constructor without MTP fields ({@code mtpNumHiddenLayers = 0}).
+     */
+    public QwenModelArgs(
+            int dim,
+            int numLayers,
+            int numHeads,
+            int numKvHeads,
+            int headDim,
+            int vocabSize,
+            int intermediateSize,
+            double normEps,
+            double ropeTheta,
+            double partialRotaryFactor,
+            int linearConvKernelDim,
+            int linearKeyHeadDim,
+            int linearValueHeadDim,
+            int linearNumKeyHeads,
+            int linearNumValueHeads,
+            String[] layerTypes,
+            int maxBatchSize,
+            int maxSeqLen) {
+        this(dim, numLayers, numHeads, numKvHeads, headDim, vocabSize, intermediateSize,
+                normEps, ropeTheta, partialRotaryFactor, linearConvKernelDim, linearKeyHeadDim,
+                linearValueHeadDim, linearNumKeyHeads, linearNumValueHeads, layerTypes,
+                maxBatchSize, maxSeqLen, 0, 0);
+    }
+
+    /** @return {@code true} when a native MTP head is configured. */
+    public boolean hasMtp() {
+        return mtpNumHiddenLayers > 0;
+    }
+
+    /**
+     * Resolves draft depth for a request, capped at {@link #MAX_SPECULATIVE_TOKENS}.
+     *
+     * @param requested {@code <= 0} uses {@link #defaultNumSpeculativeTokens()}.
+     * @return draft count in {@code [0, MAX_SPECULATIVE_TOKENS]}.
+     */
+    public int resolveNumSpeculativeTokens(int requested) {
+        if (!hasMtp()) {
+            return 0;
+        }
+        int n = requested > 0 ? requested : defaultNumSpeculativeTokens;
+        if (n <= 0) {
+            n = 3;
+        }
+        return Math.min(n, MAX_SPECULATIVE_TOKENS);
     }
 
     /**
@@ -274,6 +330,20 @@ public record QwenModelArgs(
                     "layer_types length " + layerTypes.length + " != num_hidden_layers " + numLayers);
         }
 
+        int mtpLayers = text.has("mtp_num_hidden_layers")
+                ? text.get("mtp_num_hidden_layers").asInt() : 0;
+        int defaultSpec = 0;
+        if (mtpLayers > 0) {
+            defaultSpec = 3;
+            if (text.has("speculative_config") && text.get("speculative_config").isObject()) {
+                var spec = text.get("speculative_config");
+                if (spec.has("num_speculative_tokens")) {
+                    defaultSpec = spec.get("num_speculative_tokens").asInt();
+                }
+            }
+            defaultSpec = Math.min(Math.max(defaultSpec, 1), MAX_SPECULATIVE_TOKENS);
+        }
+
         return new QwenModelArgs(
                 hidden,
                 numLayers,
@@ -292,7 +362,9 @@ public record QwenModelArgs(
                 text.has("linear_num_value_heads") ? text.get("linear_num_value_heads").asInt() : 32,
                 layerTypes,
                 maxBatchSize,
-                resolvedMaxSeqLen
+                resolvedMaxSeqLen,
+                mtpLayers,
+                defaultSpec
         );
     }
 

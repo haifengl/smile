@@ -82,13 +82,27 @@ public class QwenRemapTest {
     }
 
     @Test
-    public void testGivenVisionOrMtpWhenRemappedThenVisionMapsAndMtpNull() {
+    public void testGivenVisionOrMtpWhenRemappedThenVisionMapsAndMtpLoads() {
         assertEquals("visual.patch_embed.proj.weight",
                 Qwen.remapHuggingFaceName("model.visual.patch_embed.proj.weight"));
         assertEquals("visual.blocks.0.attn.qkv.weight",
                 Qwen.remapHuggingFaceName("model.visual.blocks.0.attn.qkv.weight"));
         assertEquals("visual.merger.linear_fc2.weight",
                 Qwen.remapHuggingFaceName("visual.merger.linear_fc2.weight"));
+        assertEquals("mtp.fc.weight", Qwen.remapHuggingFaceName("mtp.fc.weight"));
+        assertEquals("mtp.pre_fc_norm_hidden.weight",
+                Qwen.remapHuggingFaceName("mtp.pre_fc_norm_hidden.weight"));
+        assertEquals("mtp.pre_fc_norm_embedding.weight",
+                Qwen.remapHuggingFaceName("mtp.pre_fc_norm_embedding.weight"));
+        assertEquals("mtp.norm.weight", Qwen.remapHuggingFaceName("mtp.norm.weight"));
+        assertEquals("mtp.layers.0.self_attn.q_proj.weight",
+                Qwen.remapHuggingFaceName("mtp.layers.0.self_attn.q_proj.weight"));
+        assertEquals("mtp.layers.0.mlp.w1.weight",
+                Qwen.remapHuggingFaceName("mtp.layers.0.mlp.gate_proj.weight"));
+        assertEquals("mtp.layers.0.mlp.w2.weight",
+                Qwen.remapHuggingFaceName("mtp.layers.0.mlp.down_proj.weight"));
+        assertEquals("mtp.layers.0.mlp.w3.weight",
+                Qwen.remapHuggingFaceName("mtp.layers.0.mlp.up_proj.weight"));
         assertNull(Qwen.remapHuggingFaceName("mtp.layers.0.weight"));
         assertNull(Qwen.remapHuggingFaceName("vision_tower.foo"));
     }
