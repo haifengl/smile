@@ -70,7 +70,11 @@ public class QwenModel extends LayerBlock {
     final LinearLayer lmHead;
     /** Optional native MTP draft head; null when {@code mtp_num_hidden_layers == 0}. */
     final QwenMtp mtp;
-    /** Last backbone pre-norm hidden (detached) for MTP anchoring; null when unused. */
+    /**
+     * Last backbone post-final-norm hidden (detached) for MTP anchoring; null when
+     * unused. Named historically; matches vLLM/SGLang which pass {@code model.norm}
+     * output into the MTP {@code pre_fc_norm_*} fusion.
+     */
     Tensor lastPreNormHidden;
     /** HF-style partial RoPE cos/sin tables (moved with {@link #to}). */
     PartialRotaryEncoding.CosSin rope;
@@ -307,19 +311,20 @@ public class QwenModel extends LayerBlock {
     }
 
     /**
-     * @return last captured pre-norm hidden for MTP, or {@code null}.
+     * @return last captured post-final-norm hidden for MTP, or {@code null}.
      */
     public Tensor lastPreNormHidden() {
         return lastPreNormHidden;
     }
 
     /**
-     * Stores the last-token pre-norm hidden as the MTP draft anchor.
+     * Stores the last-token post-final-norm hidden as the MTP draft anchor.
      * Uses an in-place copy into a durable buffer (safe across AutoScope pops).
      * Skips allocation while CUDA-graph buffers are active (copy-only when the
      * buffer already exists from an eager forward).
      *
-     * @param hidden pre-norm hidden {@code [B, S, D]}, {@code [B, 1, D]}, or {@code [B, D]}.
+     * @param hidden post-final-norm hidden {@code [B, S, D]}, {@code [B, 1, D]},
+     *               or {@code [B, D]}.
      */
     void capturePreNormHidden(Tensor hidden) {
         if (mtp == null || hidden == null) {
@@ -483,10 +488,12 @@ public class QwenModel extends LayerBlock {
             }
 
             Tensor normalized = norm.forward(h);
-            if (mtp != null) {
-                capturePreNormHidden(h);
-            }
             h.close();
+            if (mtp != null) {
+                // MTP expects the backbone hidden that feeds the LM head (post-final-norm),
+                // matching vLLM/SGLang Qwen3.5 MTP.
+                capturePreNormHidden(normalized);
+            }
             // mask is independently allocated; free before the vocab-sized lm_head.
             if (mask != null) {
                 mask.close();
@@ -594,10 +601,10 @@ public class QwenModel extends LayerBlock {
             }
 
             Tensor normalized = norm.forward(h);
-            if (mtp != null) {
-                capturePreNormHidden(h);
-            }
             h.close();
+            if (mtp != null) {
+                capturePreNormHidden(normalized);
+            }
             if (mask != null) {
                 mask.close();
             }
@@ -1122,10 +1129,10 @@ public class QwenModel extends LayerBlock {
             }
             long tHead = profile ? System.nanoTime() : 0L;
             Tensor normalized = norm.forward(h);
-            if (mtp != null) {
-                capturePreNormHidden(h);
-            }
             h.close();
+            if (mtp != null) {
+                capturePreNormHidden(normalized);
+            }
             Tensor logitsF = lmHead.forward(normalized);
             normalized.close();
             Tensor logits = logitsF.to(ScalarType.Float);
