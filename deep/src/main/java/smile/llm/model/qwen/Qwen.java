@@ -2356,19 +2356,79 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
 
-        // Token-by-token verify cannot beat baseline (≈1 target forward / output
-        // token + MTP cost). Window verify: one target forward of length N+1.
-        int n = Math.max(1, numDrafts);
+        // Window verify with low accept rate is slower than plain decode (pay for
+        // S=N+1 target forward + recompute on almost every miss).
+        if (speculativeRounds.get() >= 12 && speculativeMeanAcceptedDepth() < 0.85) {
+            try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
+                    new int[]{lastPos})) {
+                int tok = sampleTargetId(logits, temperature, topp);
+                return new int[]{tok};
+            }
+        }
 
+        int n = Math.max(1, numDrafts);
         for (QwenModel m : models) {
             if (m.mtp() != null) {
                 m.mtp().beginRound(n);
             }
         }
+        Tensor[] hiddens = new Tensor[models.length];
+        boolean[] own = new boolean[models.length];
+        for (int i = 0; i < models.length; i++) {
+            hiddens[i] = models[i].lastPreNormHidden();
+            own[i] = false;
+        }
         try {
-            int[] drafts = draftGreedy(lastToken, lastPos, n);
-            return verifyWindow(requestId, lastToken, lastPos, drafts, temperature, topp);
+            // Phase 1: commit lastToken with a normal S=1 decode (CUDA-graph friendly).
+            // If the first MTP draft misses, cost ≈ baseline + one cheap MTP step.
+            activatePools(requestId);
+            int t0;
+            try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
+                    new int[]{lastPos})) {
+                t0 = sampleTargetId(logits, temperature, topp);
+            }
+            activatePools(requestId);
+            for (QwenModel m : models) {
+                DeltaNetStatePool d = m.deltaNetStatePool();
+                if (d != null) {
+                    d.ensureSpeculativeCheckpoints(1);
+                    d.saveCheckpoint(0);
+                }
+            }
+
+            int d0 = draftOne(lastToken, lastPos + 1, 0, hiddens, own);
+            if (d0 != t0) {
+                recordSpeculativeRound(n, 0);
+                logVerify(n, 0, t0);
+                return new int[]{t0};
+            }
+
+            if (n == 1) {
+                int bonus;
+                try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{d0},
+                        new int[]{lastPos + 1})) {
+                    bonus = sampleTargetId(logits, temperature, topp);
+                }
+                recordSpeculativeRound(n, 1);
+                logVerify(n, 1, bonus);
+                return new int[]{d0, bonus};
+            }
+
+            // Phase 2: draft the rest, verify [d0..dN) in one window at lastPos+1.
+            int[] drafts = new int[n];
+            drafts[0] = d0;
+            int token = d0;
+            for (int i = 1; i < n; i++) {
+                drafts[i] = draftOne(token, lastPos + 1 + i, i, hiddens, own);
+                token = drafts[i];
+            }
+            return verifyDraftWindow(requestId, lastPos + 1, drafts, temperature, topp);
         } finally {
+            for (int i = 0; i < models.length; i++) {
+                if (own[i] && hiddens[i] != null) {
+                    hiddens[i].close();
+                }
+            }
             for (QwenModel m : models) {
                 if (m.mtp() != null) {
                     m.mtp().endRound();
@@ -2378,37 +2438,26 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     }
 
     /**
-     * Target verify: one forward over {@code [lastToken, d0..dN)} with per-position
-     * logits. On partial accept, rewind DeltaNet to the pre-window checkpoint and
-     * re-forward only the kept prefix so hybrid state matches accepted tokens.
-     * The bonus token is returned but not committed (same invariant as decode).
+     * After {@code lastToken} is committed and {@code drafts[0]} matched the target,
+     * verify {@code drafts[0..N)} with one forward starting at {@code startPos}.
+     * Checkpoint 0 must be the DeltaNet state after {@code lastToken} only.
      */
-    private int[] verifyWindow(int requestId, int lastToken, int lastPos, int[] drafts,
-                               double temperature, double topp) {
+    private int[] verifyDraftWindow(int requestId, int startPos, int[] drafts,
+                                    double temperature, double topp) {
         int n = drafts.length;
-        int win = n + 1;
-        long[] window = new long[win];
-        window[0] = lastToken;
-        for (int i = 0; i < n; i++) {
-            window[i + 1] = drafts[i];
-        }
-
         activatePools(requestId);
-        for (QwenModel m : models) {
-            DeltaNetStatePool d = m.deltaNetStatePool();
-            if (d != null) {
-                d.ensureSpeculativeCheckpoints(1);
-                d.saveCheckpoint(0);
-            }
-        }
 
         Tensor[] shards = new Tensor[models.length];
         for (int r = 0; r < models.length; r++) {
-            shards[r] = Tensor.of(window).reshape(1, win).to(models[r].device());
+            long[] window = new long[n];
+            for (int i = 0; i < n; i++) {
+                window[i] = drafts[i];
+            }
+            shards[r] = Tensor.of(window).reshape(1, n).to(models[r].device());
         }
         Tensor[] logitsAll;
         try {
-            logitsAll = forwardWindow(shards, lastPos, tpExecutor, true);
+            logitsAll = forwardWindow(shards, startPos, tpExecutor, true);
         } finally {
             for (Tensor s : shards) {
                 if (s != null) {
@@ -2419,7 +2468,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         int[] targetSamples;
         try {
-            targetSamples = sampleWindowTargets(logitsAll[0], win, temperature, topp);
+            targetSamples = sampleWindowTargets(logitsAll[0], n, temperature, topp);
         } finally {
             for (Tensor l : logitsAll) {
                 if (l != null) {
@@ -2428,26 +2477,32 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
 
-        var result = smile.llm.engine.SpeculativeDecoding.acceptGreedy(drafts, targetSamples);
-        int r = result.numDraftAccepted();
+        // logits[i] predicts the token after drafts[i]; compare to drafts[i+1],
+        // with logits[n-1] as the bonus after a full draft accept.
+        int[] tail = Arrays.copyOfRange(drafts, 1, n);
+        var result = smile.llm.engine.SpeculativeDecoding.acceptGreedy(tail, targetSamples);
+        int r = result.numDraftAccepted(); // accepted among drafts[1..]
+        int totalAccepted = 1 + r; // include drafts[0]
 
-        if (r < n) {
-            // Undo rejected draft suffix in DeltaNet; rewrite accepted prefix.
+        if (r < n - 1) {
             for (QwenModel m : models) {
                 DeltaNetStatePool d = m.deltaNetStatePool();
                 if (d != null) {
                     d.restoreCheckpoint(0);
                 }
             }
-            int prefixLen = r + 1; // lastToken + accepted drafts
-            long[] prefix = Arrays.copyOf(window, prefixLen);
+            int prefixLen = r + 1; // drafts[0..r]
+            long[] prefix = new long[prefixLen];
+            for (int i = 0; i < prefixLen; i++) {
+                prefix[i] = drafts[i];
+            }
             Tensor[] prefixShards = new Tensor[models.length];
             for (int i = 0; i < models.length; i++) {
                 prefixShards[i] = Tensor.of(prefix).reshape(1, prefixLen).to(models[i].device());
             }
             Tensor[] prefixLogits;
             try {
-                prefixLogits = forwardWindow(prefixShards, lastPos, tpExecutor, false);
+                prefixLogits = forwardWindow(prefixShards, startPos, tpExecutor, false);
             } finally {
                 for (Tensor s : prefixShards) {
                     if (s != null) {
@@ -2468,14 +2523,21 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
 
-        recordSpeculativeRound(n, r);
+        int[] out = new int[totalAccepted + 1];
+        out[0] = drafts[0];
+        System.arraycopy(result.acceptedTokens(), 0, out, 1, result.acceptedTokens().length);
+        recordSpeculativeRound(n, totalAccepted);
+        logVerify(n, totalAccepted, result.bonusToken());
+        return out;
+    }
+
+    private void logVerify(int drafts, int accepted, int bonus) {
         if (logger.isDebugEnabled() || speculativeRounds.get() % 32 == 1) {
             logger.info("MTP verify: drafts={} accepted={} bonus={} acceptRate={} meanDepth={}",
-                    n, r, result.bonusToken(),
+                    drafts, accepted, bonus,
                     String.format("%.3f", speculativeAcceptRate()),
                     String.format("%.2f", speculativeMeanAcceptedDepth()));
         }
-        return result.acceptedTokens();
     }
 
     /** Greedy / sampled token id at each sequence position of {@code [B, S, V]} logits. */
