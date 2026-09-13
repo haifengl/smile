@@ -316,6 +316,8 @@ public class QwenModel extends LayerBlock {
     /**
      * Stores the last-token pre-norm hidden as the MTP draft anchor.
      * Uses an in-place copy into a durable buffer (safe across AutoScope pops).
+     * Skips allocation while CUDA-graph buffers are active (copy-only when the
+     * buffer already exists from an eager forward).
      *
      * @param hidden pre-norm hidden {@code [B, S, D]}, {@code [B, 1, D]}, or {@code [B, D]}.
      */
@@ -332,7 +334,6 @@ public class QwenModel extends LayerBlock {
                     sliced = true;
                 }
             }
-            // Squeeze [B, 1, D] → [B, D] for a stable anchor shape.
             if (row.dim() == 3 && row.shape()[1] == 1) {
                 long[] sh = row.shape();
                 Tensor squeezed = row.reshape(sh[0], sh[2]);
@@ -343,10 +344,20 @@ public class QwenModel extends LayerBlock {
                 sliced = true;
             }
         }
-        if (lastPreNormHidden == null
+        boolean graphMode = kvCachePool != null && kvCachePool.decodeGraphBuffers();
+        boolean needAlloc = lastPreNormHidden == null
                 || !java.util.Arrays.equals(lastPreNormHidden.shape(), row.shape())
                 || lastPreNormHidden.device().index() != row.device().index()
-                || lastPreNormHidden.dtype() != row.dtype()) {
+                || lastPreNormHidden.dtype() != row.dtype();
+        if (needAlloc) {
+            if (graphMode) {
+                // Allocating during CUDA graph capture/replay is illegal; keep
+                // the previous anchor until the next eager forward.
+                if (sliced) {
+                    row.close();
+                }
+                return;
+            }
             if (lastPreNormHidden != null) {
                 lastPreNormHidden.close();
             }
@@ -741,9 +752,7 @@ public class QwenModel extends LayerBlock {
      * @return logits in float32 {@code [B, 1, V]} (graph path returns persistent buffer).
      */
     public Tensor forwardDecodeGraph(Tensor tokens, int[] cachePositions, int[] ropePositions) {
-        // MTP anchor capture allocates tensors; illegal / hangs under CUDA graph
-        // capture-replay. Plan also keeps verify windows off graphs.
-        if (mtp != null || !DecodeCudaGraph.enabled() || kvCachePool == null) {
+        if (!DecodeCudaGraph.enabled() || kvCachePool == null) {
             return forward(tokens, cachePositions, ropePositions, false);
         }
         int batch = (int) tokens.shape()[0];
@@ -846,9 +855,6 @@ public class QwenModel extends LayerBlock {
 
     /** Continues next-bucket prefetch when the scheduler is idle but KV remains bound. */
     void idleAdvancePrefetch() {
-        if (mtp != null) {
-            return;
-        }
         if (!DecodeCudaGraph.preCaptureEnabled() || kvCachePool == null
                 || lastDecodeGraphBatch <= 0 || lastDecodeGraphRopePos == null) {
             return;

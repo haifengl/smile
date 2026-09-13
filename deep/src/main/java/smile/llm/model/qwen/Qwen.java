@@ -2349,7 +2349,6 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     private int[] speculateOneRequest(int requestId, int lastToken, int lastPos, int numDrafts,
                                       double temperature, double topp) {
         if (models[0].mtp() == null || models[0].lastPreNormHidden() == null) {
-            // No anchor yet (first decode after prefill should have captured it).
             try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
                     new int[]{lastPos})) {
                 int tok = sampleTargetId(logits, temperature, topp);
@@ -2357,44 +2356,82 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
 
-        for (QwenModel m : models) {
-            if (m.mtp() != null) {
-                m.mtp().beginRound(numDrafts);
+        // Low accept rate → plain decode (N MTP drafts would just add latency).
+        long rounds = speculativeRounds.get();
+        if (rounds >= 8 && speculativeAcceptRate() < 0.08) {
+            try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
+                    new int[]{lastPos})) {
+                int tok = sampleTargetId(logits, temperature, topp);
+                return new int[]{tok};
             }
         }
 
-        int[] drafts = draftGreedy(lastToken, lastPos, numDrafts);
+        // Cap depth when accept rate is modest (8 drafts with ~0 accept is pure loss).
+        int n = numDrafts;
+        double rate = rounds > 0 ? speculativeAcceptRate() : 1.0;
+        if (rate < 0.35) {
+            n = Math.min(n, 3);
+        }
+        if (rate < 0.2) {
+            n = Math.min(n, 2);
+        }
 
-        // Verify without rewind: commit lastToken (not yet in KV), then only
-        // forward accepted drafts. Sample the bonus from the last logits but do
-        // not commit it — same invariant as plain decodeStep (lastToken is the
-        // next write). Restoring DeltaNet after lastToken was the corruption bug.
-        activatePools(requestId);
+        for (QwenModel m : models) {
+            if (m.mtp() != null) {
+                m.mtp().beginRound(n);
+            }
+        }
         try {
-            int[] targetSamples = new int[numDrafts + 1];
+            // Snapshot MTP anchors before committing lastToken (NEXTN uses
+            // pre-commit hidden + embed(lastToken)).
+            Tensor[] hiddens = new Tensor[models.length];
+            boolean[] own = new boolean[models.length];
+            for (int i = 0; i < models.length; i++) {
+                hiddens[i] = models[i].lastPreNormHidden();
+                own[i] = false;
+            }
+
+            // Lazy draft/verify: only MTP-draft the next token after the previous
+            // draft was accepted. A first-token miss costs 1 MTP step, not N.
+            activatePools(requestId);
+            int[] acceptedDrafts = new int[n];
+            int[] targetSamples = new int[n + 1];
             try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
                     new int[]{lastPos})) {
                 targetSamples[0] = sampleTargetId(logits, temperature, topp);
             }
 
+            int token = lastToken;
             int r = 0;
-            while (r < numDrafts && targetSamples[r] == drafts[r]) {
-                int writePos = lastPos + 1 + r;
-                try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{drafts[r]},
-                        new int[]{writePos})) {
-                    targetSamples[r + 1] = sampleTargetId(logits, temperature, topp);
+            try {
+                while (r < n) {
+                    int draft = draftOne(token, lastPos + 1 + r, r, hiddens, own);
+                    if (draft != targetSamples[r]) {
+                        break;
+                    }
+                    acceptedDrafts[r] = draft;
+                    try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{draft},
+                            new int[]{lastPos + 1 + r})) {
+                        targetSamples[r + 1] = sampleTargetId(logits, temperature, topp);
+                    }
+                    token = draft;
+                    r++;
                 }
-                r++;
+            } finally {
+                for (int i = 0; i < models.length; i++) {
+                    if (own[i] && hiddens[i] != null) {
+                        hiddens[i].close();
+                    }
+                }
             }
 
             int bonus = targetSamples[r];
             int[] accepted = new int[r + 1];
-            System.arraycopy(drafts, 0, accepted, 0, r);
+            System.arraycopy(acceptedDrafts, 0, accepted, 0, r);
             accepted[r] = bonus;
-
-            recordSpeculativeRound(numDrafts, r);
+            recordSpeculativeRound(n, r);
             logger.debug("MTP speculateStep: drafts={} accepted={} bonus={} acceptRate={}",
-                    numDrafts, r, bonus, speculativeAcceptRate());
+                    n, r, bonus, speculativeAcceptRate());
             return accepted;
         } finally {
             for (QwenModel m : models) {
@@ -2403,6 +2440,76 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 }
             }
         }
+    }
+
+    /**
+     * One MTP draft step on all TP ranks; updates {@code hiddens} to the next
+     * MTP hidden (caller owns / closes when {@code own[i]}).
+     */
+    private int draftOne(int token, int position, int draftStep,
+                         Tensor[] hiddens, boolean[] own) {
+        Tensor[] logits = new Tensor[models.length];
+        if (models.length == 1) {
+            try (Tensor tokT = Tensor.of(new long[]{token})) {
+                Tensor deviceTok = tokT.to(models[0].device());
+                logits[0] = models[0].mtp().draftStep(
+                        deviceTok, hiddens[0], position, draftStep);
+                deviceTok.close();
+            }
+        } else {
+            List<Future<Tensor>> futures = new ArrayList<>(models.length);
+            for (int rank = 0; rank < models.length; rank++) {
+                final int r = rank;
+                final Tensor hidden = hiddens[r];
+                futures.add(tpExecutor.submit(() -> {
+                    ParallelState.setCurrent(tpGroup.state(r));
+                    try (var guard = Tensor.noGradGuard();
+                         Tensor tokT = Tensor.of(new long[]{token})) {
+                        Tensor deviceTok = tokT.to(models[r].device());
+                        try {
+                            return models[r].mtp().draftStep(
+                                    deviceTok, hidden, position, draftStep);
+                        } finally {
+                            deviceTok.close();
+                        }
+                    } finally {
+                        ParallelState.clearCurrent();
+                    }
+                }));
+            }
+            try {
+                for (int r = 0; r < models.length; r++) {
+                    logits[r] = futures.get(r).get();
+                }
+            } catch (Exception e) {
+                for (Tensor l : logits) {
+                    if (l != null) {
+                        l.close();
+                    }
+                }
+                throw new RuntimeException("TP MTP draft failed", e);
+            }
+        }
+        int draft = smile.llm.engine.Sampling.sampleGreedyTokenId(logits[0]);
+        for (Tensor l : logits) {
+            if (l != null) {
+                l.close();
+            }
+        }
+        for (int r = 0; r < models.length; r++) {
+            if (own[r] && hiddens[r] != null) {
+                hiddens[r].close();
+            }
+            Tensor next = models[r].mtp().lastDraftHidden();
+            if (next == null) {
+                throw new IllegalStateException(
+                        "MTP draft hidden missing after step " + draftStep + " rank " + r);
+            }
+            hiddens[r] = next.detach();
+            hiddens[r].detachFromScopes();
+            own[r] = true;
+        }
+        return draft;
     }
 
     /**
@@ -2420,70 +2527,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         int token = lastToken;
         try {
             for (int d = 0; d < numDrafts; d++) {
-                final int draftStep = d;
-                final int position = lastPos + 1 + d;
-                final int tok = token;
-                Tensor[] logits = new Tensor[models.length];
-                if (models.length == 1) {
-                    try (Tensor tokT = Tensor.of(new long[]{tok})) {
-                        Tensor deviceTok = tokT.to(models[0].device());
-                        logits[0] = models[0].mtp().draftStep(
-                                deviceTok, hiddens[0], position, draftStep);
-                        deviceTok.close();
-                    }
-                } else {
-                    List<Future<Tensor>> futures = new ArrayList<>(models.length);
-                    for (int r = 0; r < models.length; r++) {
-                        final int rank = r;
-                        final Tensor hidden = hiddens[rank];
-                        futures.add(tpExecutor.submit(() -> {
-                            ParallelState.setCurrent(tpGroup.state(rank));
-                            try (var guard = Tensor.noGradGuard();
-                                 Tensor tokT = Tensor.of(new long[]{tok})) {
-                                Tensor deviceTok = tokT.to(models[rank].device());
-                                try {
-                                    return models[rank].mtp().draftStep(
-                                            deviceTok, hidden, position, draftStep);
-                                } finally {
-                                    deviceTok.close();
-                                }
-                            } finally {
-                                ParallelState.clearCurrent();
-                            }
-                        }));
-                    }
-                    try {
-                        for (int r = 0; r < models.length; r++) {
-                            logits[r] = futures.get(r).get();
-                        }
-                    } catch (Exception e) {
-                        for (Tensor l : logits) {
-                            if (l != null) {
-                                l.close();
-                            }
-                        }
-                        throw new RuntimeException("TP MTP draft failed", e);
-                    }
-                }
-                drafts[d] = smile.llm.engine.Sampling.sampleGreedyTokenId(logits[0]);
-                for (Tensor l : logits) {
-                    if (l != null) {
-                        l.close();
-                    }
-                }
-                for (int r = 0; r < models.length; r++) {
-                    if (own[r] && hiddens[r] != null) {
-                        hiddens[r].close();
-                    }
-                    Tensor next = models[r].mtp().lastDraftHidden();
-                    if (next == null) {
-                        throw new IllegalStateException(
-                                "MTP draft hidden missing after step " + d + " rank " + r);
-                    }
-                    hiddens[r] = next.detach();
-                    hiddens[r].detachFromScopes();
-                    own[r] = true;
-                }
+                drafts[d] = draftOne(token, lastPos + 1 + d, d, hiddens, own);
                 token = drafts[d];
             }
         } finally {
