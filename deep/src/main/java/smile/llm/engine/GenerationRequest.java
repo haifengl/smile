@@ -24,18 +24,20 @@ import smile.llm.model.qwen.QwenVlProcessor;
 /**
  * One generation job submitted to {@link InferenceEngine}.
  *
- * @param promptTokens token ids (required unless {@code dialog} is set).
- * @param dialog       optional chat turns; encoded by the engine when
- *                     {@code promptTokens} is {@code null}.
- * @param multimodal   optional Qwen VL preprocess result (images/video); when
- *                     set, {@code promptTokens} should match {@code multimodal.inputIds()}.
- * @param maxGenLen    max new tokens.
- * @param temperature  sampling temperature.
- * @param topp         nucleus top-p.
- * @param logprobs     whether to return log-probabilities.
- * @param seed         RNG seed; {@code 0} = non-deterministic.
- * @param listener     optional per-request listener.
- * @param chatOptions  optional tool-calling options.
+ * @param promptTokens           token ids (required unless {@code dialog} is set).
+ * @param dialog                 optional chat turns; encoded by the engine when
+ *                               {@code promptTokens} is {@code null}.
+ * @param multimodal             optional Qwen VL preprocess result (images/video); when
+ *                               set, {@code promptTokens} should match {@code multimodal.inputIds()}.
+ * @param maxGenLen              max new tokens.
+ * @param temperature            sampling temperature.
+ * @param topp                   nucleus top-p.
+ * @param logprobs               whether to return log-probabilities.
+ * @param seed                   RNG seed; {@code 0} = non-deterministic.
+ * @param listener               optional per-request listener.
+ * @param chatOptions            optional tool-calling options.
+ * @param speculative            when {@code true}, use native MTP draft/verify if available.
+ * @param numSpeculativeTokens   draft depth; {@code <= 0} uses the model default.
  *
  * @author Haifeng Li
  */
@@ -49,7 +51,9 @@ public record GenerationRequest(
         boolean logprobs,
         long seed,
         GenerationListener listener,
-        ChatOptions chatOptions) {
+        ChatOptions chatOptions,
+        boolean speculative,
+        int numSpeculativeTokens) {
 
     /**
      * Builds a request from already-tokenized prompt ids.
@@ -69,11 +73,25 @@ public record GenerationRequest(
                                              boolean logprobs, long seed,
                                              GenerationListener listener,
                                              ChatOptions chatOptions) {
+        return ofTokens(promptTokens, maxGenLen, temperature, topp, logprobs, seed,
+                listener, chatOptions, false, 0);
+    }
+
+    /**
+     * Builds a request from already-tokenized prompt ids with speculation flags.
+     */
+    public static GenerationRequest ofTokens(int[] promptTokens, int maxGenLen,
+                                             double temperature, double topp,
+                                             boolean logprobs, long seed,
+                                             GenerationListener listener,
+                                             ChatOptions chatOptions,
+                                             boolean speculative,
+                                             int numSpeculativeTokens) {
         if (promptTokens == null) {
             throw new IllegalArgumentException("promptTokens must not be null");
         }
         return new GenerationRequest(promptTokens, null, null, maxGenLen, temperature, topp,
-                logprobs, seed, listener, chatOptions);
+                logprobs, seed, listener, chatOptions, speculative, numSpeculativeTokens);
     }
 
     /**
@@ -94,11 +112,26 @@ public record GenerationRequest(
                                                  boolean logprobs, long seed,
                                                  GenerationListener listener,
                                                  ChatOptions chatOptions) {
+        return ofMultimodal(multimodal, maxGenLen, temperature, topp, logprobs, seed,
+                listener, chatOptions, false, 0);
+    }
+
+    /**
+     * Builds a multimodal request with speculation flags.
+     */
+    public static GenerationRequest ofMultimodal(QwenVlProcessor.ProcessedMultimodal multimodal,
+                                                 int maxGenLen, double temperature, double topp,
+                                                 boolean logprobs, long seed,
+                                                 GenerationListener listener,
+                                                 ChatOptions chatOptions,
+                                                 boolean speculative,
+                                                 int numSpeculativeTokens) {
         if (multimodal == null) {
             throw new IllegalArgumentException("multimodal must not be null");
         }
         return new GenerationRequest(multimodal.inputIds(), null, multimodal, maxGenLen,
-                temperature, topp, logprobs, seed, listener, chatOptions);
+                temperature, topp, logprobs, seed, listener, chatOptions,
+                speculative, numSpeculativeTokens);
     }
 
     /**
@@ -118,11 +151,24 @@ public record GenerationRequest(
                                              int maxGenLen, double temperature, double topp,
                                              boolean logprobs, long seed,
                                              GenerationListener listener) {
+        return ofDialog(dialog, chatOptions, maxGenLen, temperature, topp, logprobs, seed,
+                listener, false, 0);
+    }
+
+    /**
+     * Builds a request from a chat dialog with speculation flags.
+     */
+    public static GenerationRequest ofDialog(Message[] dialog, ChatOptions chatOptions,
+                                             int maxGenLen, double temperature, double topp,
+                                             boolean logprobs, long seed,
+                                             GenerationListener listener,
+                                             boolean speculative,
+                                             int numSpeculativeTokens) {
         if (dialog == null) {
             throw new IllegalArgumentException("dialog must not be null");
         }
         return new GenerationRequest(null, dialog, null, maxGenLen, temperature, topp,
-                logprobs, seed, listener, chatOptions);
+                logprobs, seed, listener, chatOptions, speculative, numSpeculativeTokens);
     }
 
     /** @return {@code true} when vision prefill is required. */

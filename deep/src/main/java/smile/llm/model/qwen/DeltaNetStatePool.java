@@ -324,6 +324,118 @@ public class DeltaNetStatePool implements AutoCloseable {
         }
     }
 
+    /** Speculative-verify checkpoints: {@code [slot][layer]} over active working rows. */
+    private Tensor[][] speculativeRecurrent;
+    private Tensor[][] speculativeConv;
+    private int speculativeSlots;
+
+    /**
+     * Ensures {@code numSlots} mid-verify checkpoint buffers for the active batch.
+     *
+     * @param numSlots checkpoint slots ({@code N+1} for {@code N} draft tokens).
+     */
+    public void ensureSpeculativeCheckpoints(int numSlots) {
+        if (numSlots < 1) {
+            throw new IllegalArgumentException("numSlots must be >= 1");
+        }
+        if (speculativeRecurrent != null && speculativeSlots >= numSlots) {
+            return;
+        }
+        closeSpeculativeCheckpoints();
+        speculativeSlots = numSlots;
+        speculativeRecurrent = new Tensor[numSlots][numLinearLayers];
+        speculativeConv = new Tensor[numSlots][numLinearLayers];
+        var recurrentOpts = new Tensor.Options()
+                .device(device).dtype(recurrentDtype).requireGradients(false);
+        var convOpts = new Tensor.Options()
+                .device(device).dtype(convDtype).requireGradients(false);
+        for (int s = 0; s < numSlots; s++) {
+            for (int i = 0; i < numLinearLayers; i++) {
+                speculativeRecurrent[s][i] = Tensor.zeros(recurrentOpts, maxBatchSize, numVHeads,
+                        keyHeadDim, valueHeadDim);
+                speculativeRecurrent[s][i].detachFromScopes();
+                if (convStateLen > 0) {
+                    speculativeConv[s][i] = Tensor.zeros(convOpts, maxBatchSize, convDim, convStateLen);
+                    speculativeConv[s][i].detachFromScopes();
+                }
+            }
+        }
+    }
+
+    /**
+     * Copies active working rows {@code [0, boundBatch)} into checkpoint {@code slot}.
+     *
+     * @param slot checkpoint index ({@code 0 .. numSlots-1}).
+     */
+    public void saveCheckpoint(int slot) {
+        copyActiveToSlot(slot, true);
+    }
+
+    /**
+     * Restores active working rows from checkpoint {@code slot}.
+     *
+     * @param slot checkpoint index ({@code 0 .. numSlots-1}).
+     */
+    public void restoreCheckpoint(int slot) {
+        copyActiveToSlot(slot, false);
+    }
+
+    private void copyActiveToSlot(int slot, boolean save) {
+        if (speculativeRecurrent == null || slot < 0 || slot >= speculativeSlots) {
+            throw new IllegalStateException("speculative checkpoint slot out of range: " + slot);
+        }
+        int b = boundBatch;
+        if (b <= 0) {
+            return;
+        }
+        try (var span = Index.slice(0, b)) {
+            for (int i = 0; i < numLinearLayers; i++) {
+                if (save) {
+                    try (Tensor src = recurrent[i].get(span);
+                         Tensor dst = speculativeRecurrent[slot][i].get(span)) {
+                        smile.torch.Native.copy_(dst, src);
+                    }
+                    if (conv[i] != null && speculativeConv[slot][i] != null) {
+                        try (Tensor src = conv[i].get(span);
+                             Tensor dst = speculativeConv[slot][i].get(span)) {
+                            smile.torch.Native.copy_(dst, src);
+                        }
+                    }
+                } else {
+                    try (Tensor src = speculativeRecurrent[slot][i].get(span);
+                         Tensor dst = recurrent[i].get(span)) {
+                        smile.torch.Native.copy_(dst, src);
+                    }
+                    if (conv[i] != null && speculativeConv[slot][i] != null) {
+                        try (Tensor src = speculativeConv[slot][i].get(span);
+                             Tensor dst = conv[i].get(span)) {
+                            smile.torch.Native.copy_(dst, src);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void closeSpeculativeCheckpoints() {
+        if (speculativeRecurrent == null) {
+            return;
+        }
+        for (int s = 0; s < speculativeSlots; s++) {
+            for (int i = 0; i < numLinearLayers; i++) {
+                if (speculativeRecurrent[s][i] != null) {
+                    speculativeRecurrent[s][i].close();
+                }
+                if (speculativeConv[s][i] != null) {
+                    speculativeConv[s][i].close();
+                }
+            }
+        }
+        speculativeRecurrent = null;
+        speculativeConv = null;
+        speculativeSlots = 0;
+    }
+
     /**
      * Clears the active-request binding after exclusive generate finishes.
      */
@@ -420,6 +532,19 @@ public class DeltaNetStatePool implements AutoCloseable {
     public void close() {
         requestRows.clear();
         freeRows.clear();
+        closeSpeculativeCheckpoints();
+        if (recurrentBackup != null) {
+            for (int i = 0; i < numLinearLayers; i++) {
+                if (recurrentBackup[i] != null) {
+                    recurrentBackup[i].close();
+                }
+                if (convBackup != null && convBackup[i] != null) {
+                    convBackup[i].close();
+                }
+            }
+            recurrentBackup = null;
+            convBackup = null;
+        }
         for (int i = 0; i < numLinearLayers; i++) {
             if (recurrent[i] != null) {
                 recurrent[i].close();

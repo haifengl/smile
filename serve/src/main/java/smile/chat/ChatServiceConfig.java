@@ -208,4 +208,22 @@ public interface ChatServiceConfig {
      */
     @WithDefault("true")
     boolean toolCallingEnabled();
+
+    /**
+     * Enable native MTP speculative decoding for Qwen3.5/3.8 when MTP weights
+     * are present. Off by default (OpenAI-compatible path unchanged).
+     *
+     * <p>Property: {@code smile.chat.speculative}.
+     */
+    @WithDefault("false")
+    boolean speculative();
+
+    /**
+     * Draft depth for MTP speculation. {@code 0} uses the model default
+     * (typically 2–3 from HF config). Capped at 7.
+     *
+     * <p>Property: {@code smile.chat.speculative-tokens}.
+     */
+    @WithDefault("0")
+    int speculativeTokens();
 }

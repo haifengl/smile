@@ -68,6 +68,10 @@ public class QwenModel extends LayerBlock {
     final List<QwenBlock> layers;
     final QwenRMSNorm norm;
     final LinearLayer lmHead;
+    /** Optional native MTP draft head; null when {@code mtp_num_hidden_layers == 0}. */
+    final QwenMtp mtp;
+    /** Last backbone pre-norm hidden (detached) for MTP anchoring; null when unused. */
+    Tensor lastPreNormHidden;
     /** HF-style partial RoPE cos/sin tables (moved with {@link #to}). */
     PartialRotaryEncoding.CosSin rope;
     /** Optional native vision tower (Qwen3.8); null for text-only. */
@@ -172,6 +176,17 @@ public class QwenModel extends LayerBlock {
         logger.info("tpRank={}: RoPE cos/sin (rotaryDim={}, end={}) in {} ms",
                 tpRank, args.rotaryDim(), args.maxSeqLen() * 2, System.currentTimeMillis() - tRope);
 
+        if (args.hasMtp()) {
+            long tMtp = System.currentTimeMillis();
+            this.mtp = new QwenMtp(args, shard, tpGroup);
+            this.mtp.bindShared(tokEmbeddings, lmHead, rope);
+            add("mtp", mtp);
+            logger.info("tpRank={}: MTP head (layers={}) in {} ms",
+                    tpRank, args.mtpNumHiddenLayers(), System.currentTimeMillis() - tMtp);
+        } else {
+            this.mtp = null;
+        }
+
         if (visionArgs != null) {
             long tVis = System.currentTimeMillis();
             this.visual = new QwenVisionTower(visionArgs);
@@ -220,6 +235,9 @@ public class QwenModel extends LayerBlock {
             sin.detachFromScopes();
             rope.close();
             rope = new PartialRotaryEncoding.CosSin(cos, sin);
+            if (mtp != null) {
+                mtp.bindShared(tokEmbeddings, lmHead, rope);
+            }
         }
     }
 
@@ -279,6 +297,48 @@ public class QwenModel extends LayerBlock {
      */
     public DeltaNetStatePool deltaNetStatePool() {
         return deltaNetStatePool;
+    }
+
+    /**
+     * @return native MTP draft head, or {@code null} when not configured.
+     */
+    public QwenMtp mtp() {
+        return mtp;
+    }
+
+    /**
+     * @return last captured pre-norm hidden for MTP, or {@code null}.
+     */
+    public Tensor lastPreNormHidden() {
+        return lastPreNormHidden;
+    }
+
+    /**
+     * Stores a detached copy of {@code hidden} (last token row) as the MTP anchor.
+     *
+     * @param hidden pre-norm hidden {@code [B, S, D]} or {@code [B, D]}.
+     */
+    void capturePreNormHidden(Tensor hidden) {
+        if (mtp == null || hidden == null) {
+            return;
+        }
+        Tensor row = hidden;
+        boolean sliced = false;
+        if (hidden.dim() == 3 && hidden.shape()[1] > 1) {
+            try (var last = Index.of(-1)) {
+                row = hidden.get(Index.Colon, last);
+                sliced = true;
+            }
+        }
+        Tensor copy = row.detach();
+        copy.detachFromScopes();
+        if (sliced) {
+            row.close();
+        }
+        if (lastPreNormHidden != null) {
+            lastPreNormHidden.close();
+        }
+        lastPreNormHidden = copy;
     }
 
     /**
@@ -393,6 +453,9 @@ public class QwenModel extends LayerBlock {
             }
 
             Tensor normalized = norm.forward(h);
+            if (mtp != null) {
+                capturePreNormHidden(h);
+            }
             h.close();
             // mask is independently allocated; free before the vocab-sized lm_head.
             if (mask != null) {
@@ -501,6 +564,9 @@ public class QwenModel extends LayerBlock {
             }
 
             Tensor normalized = norm.forward(h);
+            if (mtp != null) {
+                capturePreNormHidden(h);
+            }
             h.close();
             if (mask != null) {
                 mask.close();
@@ -1026,6 +1092,9 @@ public class QwenModel extends LayerBlock {
             }
             long tHead = profile ? System.nanoTime() : 0L;
             Tensor normalized = norm.forward(h);
+            if (mtp != null) {
+                capturePreNormHidden(h);
+            }
             h.close();
             Tensor logitsF = lmHead.forward(normalized);
             normalized.close();
