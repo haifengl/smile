@@ -2356,25 +2356,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
 
-        // Low accept rate → plain decode (N MTP drafts would just add latency).
-        long rounds = speculativeRounds.get();
-        if (rounds >= 8 && speculativeAcceptRate() < 0.08) {
-            try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
-                    new int[]{lastPos})) {
-                int tok = sampleTargetId(logits, temperature, topp);
-                return new int[]{tok};
-            }
-        }
-
-        // Cap depth when accept rate is modest (8 drafts with ~0 accept is pure loss).
-        int n = numDrafts;
-        double rate = rounds > 0 ? speculativeAcceptRate() : 1.0;
-        if (rate < 0.35) {
-            n = Math.min(n, 3);
-        }
-        if (rate < 0.2) {
-            n = Math.min(n, 2);
-        }
+        // Token-by-token verify cannot beat baseline (≈1 target forward / output
+        // token + MTP cost). Window verify: one target forward of length N+1.
+        int n = Math.max(1, numDrafts);
 
         for (QwenModel m : models) {
             if (m.mtp() != null) {
@@ -2382,57 +2366,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
         try {
-            // Snapshot MTP anchors before committing lastToken (NEXTN uses
-            // pre-commit hidden + embed(lastToken)).
-            Tensor[] hiddens = new Tensor[models.length];
-            boolean[] own = new boolean[models.length];
-            for (int i = 0; i < models.length; i++) {
-                hiddens[i] = models[i].lastPreNormHidden();
-                own[i] = false;
-            }
-
-            // Lazy draft/verify: only MTP-draft the next token after the previous
-            // draft was accepted. A first-token miss costs 1 MTP step, not N.
-            activatePools(requestId);
-            int[] acceptedDrafts = new int[n];
-            int[] targetSamples = new int[n + 1];
-            try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
-                    new int[]{lastPos})) {
-                targetSamples[0] = sampleTargetId(logits, temperature, topp);
-            }
-
-            int token = lastToken;
-            int r = 0;
-            try {
-                while (r < n) {
-                    int draft = draftOne(token, lastPos + 1 + r, r, hiddens, own);
-                    if (draft != targetSamples[r]) {
-                        break;
-                    }
-                    acceptedDrafts[r] = draft;
-                    try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{draft},
-                            new int[]{lastPos + 1 + r})) {
-                        targetSamples[r + 1] = sampleTargetId(logits, temperature, topp);
-                    }
-                    token = draft;
-                    r++;
-                }
-            } finally {
-                for (int i = 0; i < models.length; i++) {
-                    if (own[i] && hiddens[i] != null) {
-                        hiddens[i].close();
-                    }
-                }
-            }
-
-            int bonus = targetSamples[r];
-            int[] accepted = new int[r + 1];
-            System.arraycopy(acceptedDrafts, 0, accepted, 0, r);
-            accepted[r] = bonus;
-            recordSpeculativeRound(n, r);
-            logger.debug("MTP speculateStep: drafts={} accepted={} bonus={} acceptRate={}",
-                    n, r, bonus, speculativeAcceptRate());
-            return accepted;
+            int[] drafts = draftGreedy(lastToken, lastPos, n);
+            return verifyWindow(requestId, lastToken, lastPos, drafts, temperature, topp);
         } finally {
             for (QwenModel m : models) {
                 if (m.mtp() != null) {
@@ -2440,6 +2375,119 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 }
             }
         }
+    }
+
+    /**
+     * Target verify: one forward over {@code [lastToken, d0..dN)} with per-position
+     * logits. On partial accept, rewind DeltaNet to the pre-window checkpoint and
+     * re-forward only the kept prefix so hybrid state matches accepted tokens.
+     * The bonus token is returned but not committed (same invariant as decode).
+     */
+    private int[] verifyWindow(int requestId, int lastToken, int lastPos, int[] drafts,
+                               double temperature, double topp) {
+        int n = drafts.length;
+        int win = n + 1;
+        long[] window = new long[win];
+        window[0] = lastToken;
+        for (int i = 0; i < n; i++) {
+            window[i + 1] = drafts[i];
+        }
+
+        activatePools(requestId);
+        for (QwenModel m : models) {
+            DeltaNetStatePool d = m.deltaNetStatePool();
+            if (d != null) {
+                d.ensureSpeculativeCheckpoints(1);
+                d.saveCheckpoint(0);
+            }
+        }
+
+        Tensor[] shards = new Tensor[models.length];
+        for (int r = 0; r < models.length; r++) {
+            shards[r] = Tensor.of(window).reshape(1, win).to(models[r].device());
+        }
+        Tensor[] logitsAll;
+        try {
+            logitsAll = forwardWindow(shards, lastPos, tpExecutor, true);
+        } finally {
+            for (Tensor s : shards) {
+                if (s != null) {
+                    s.close();
+                }
+            }
+        }
+
+        int[] targetSamples;
+        try {
+            targetSamples = sampleWindowTargets(logitsAll[0], win, temperature, topp);
+        } finally {
+            for (Tensor l : logitsAll) {
+                if (l != null) {
+                    l.close();
+                }
+            }
+        }
+
+        var result = smile.llm.engine.SpeculativeDecoding.acceptGreedy(drafts, targetSamples);
+        int r = result.numDraftAccepted();
+
+        if (r < n) {
+            // Undo rejected draft suffix in DeltaNet; rewrite accepted prefix.
+            for (QwenModel m : models) {
+                DeltaNetStatePool d = m.deltaNetStatePool();
+                if (d != null) {
+                    d.restoreCheckpoint(0);
+                }
+            }
+            int prefixLen = r + 1; // lastToken + accepted drafts
+            long[] prefix = Arrays.copyOf(window, prefixLen);
+            Tensor[] prefixShards = new Tensor[models.length];
+            for (int i = 0; i < models.length; i++) {
+                prefixShards[i] = Tensor.of(prefix).reshape(1, prefixLen).to(models[i].device());
+            }
+            Tensor[] prefixLogits;
+            try {
+                prefixLogits = forwardWindow(prefixShards, lastPos, tpExecutor, false);
+            } finally {
+                for (Tensor s : prefixShards) {
+                    if (s != null) {
+                        s.close();
+                    }
+                }
+            }
+            for (Tensor l : prefixLogits) {
+                if (l != null) {
+                    l.close();
+                }
+            }
+        }
+
+        for (QwenModel m : models) {
+            if (m.deltaNetStatePool() != null) {
+                m.deltaNetStatePool().scatterActive();
+            }
+        }
+
+        recordSpeculativeRound(n, r);
+        if (logger.isDebugEnabled() || speculativeRounds.get() % 32 == 1) {
+            logger.info("MTP verify: drafts={} accepted={} bonus={} acceptRate={} meanDepth={}",
+                    n, r, result.bonusToken(),
+                    String.format("%.3f", speculativeAcceptRate()),
+                    String.format("%.2f", speculativeMeanAcceptedDepth()));
+        }
+        return result.acceptedTokens();
+    }
+
+    /** Greedy / sampled token id at each sequence position of {@code [B, S, V]} logits. */
+    private int[] sampleWindowTargets(Tensor logits, int seqLen, double temperature, double topp) {
+        int[] out = new int[seqLen];
+        for (int i = 0; i < seqLen; i++) {
+            try (var idx = Index.of(i);
+                 Tensor step = logits.get(Index.Colon, idx)) {
+                out[i] = sampleTargetId(step, temperature, topp);
+            }
+        }
+        return out;
     }
 
     /**
