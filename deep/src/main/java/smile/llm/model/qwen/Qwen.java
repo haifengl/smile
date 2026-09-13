@@ -2400,6 +2400,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
             return verifyDraftWindow(requestId, lastPos + 1, drafts, temperature, topp);
         } finally {
+            // Window / truncate rebuild FlashInfer CSR; drop any graphs captured
+            // during phase-1 decode in this round.
+            invalidateDecodeCudaGraphs();
             for (QwenModel m : models) {
                 if (m.mtp() != null) {
                     m.mtp().endRound();
@@ -2543,6 +2546,15 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             if (m.kvCachePool() != null) {
                 m.kvCachePool().truncateTo(sealedLen, writtenEnd);
             }
+        }
+        // truncateTo rebuilds FlashInfer CSR; any captured decode graph still
+        // points at the old device tensors.
+        invalidateDecodeCudaGraphs();
+    }
+
+    private void invalidateDecodeCudaGraphs() {
+        for (QwenModel m : models) {
+            m.invalidateDecodeCudaGraphs();
         }
     }
 
