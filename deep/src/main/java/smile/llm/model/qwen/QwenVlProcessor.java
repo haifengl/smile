@@ -66,6 +66,8 @@ public class QwenVlProcessor {
     private final int videoMaxPixels;
 
     /**
+     * Creates a VL processor for chat tokenization and vision preprocessing.
+     *
      * @param visionArgs vision / token id config.
      * @param tokenizer  chat tokenizer.
      * @param patchSize  spatial patch size.
@@ -525,7 +527,11 @@ public class QwenVlProcessor {
             int[][] videoGridThw,
             InterleavedMRope.MropePositions mrope) {
 
-        /** @return {@code true} when vision tensors are present. */
+        /**
+         * Returns whether vision tensors are present.
+         *
+         * @return {@code true} when vision tensors are present.
+         */
         public boolean hasVision() {
             return pixelValues != null;
         }

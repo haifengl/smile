@@ -89,6 +89,14 @@ public interface LanguageModel {
     /**
      * Generates a completion from an already-tokenized prompt (no cancel).
      *
+     * @param prompt      prompt token id sequence.
+     * @param maxGenLen   maximum number of new tokens to generate.
+     * @param temperature sampling temperature.
+     * @param topp        nucleus-sampling top-p threshold.
+     * @param logprobs    whether to include per-token log-probabilities.
+     * @param seed        RNG seed; {@code 0} means non-deterministic.
+     * @param listener    optional progress callback; may be {@code null}.
+     * @return the completion for {@code prompt}.
      * @see #generate(int[], int, double, double, boolean, long, GenerationListener, BooleanSupplier)
      */
     default ChatCompletion generate(int[] prompt, int maxGenLen, double temperature,
@@ -123,6 +131,14 @@ public interface LanguageModel {
     /**
      * Generates an assistant reply for a dialog (no cancel).
      *
+     * @param dialog      chat messages.
+     * @param maxGenLen   maximum number of new tokens to generate.
+     * @param temperature sampling temperature.
+     * @param topp        nucleus-sampling top-p threshold.
+     * @param logprobs    whether to include per-token log-probabilities.
+     * @param seed        RNG seed; {@code 0} means non-deterministic.
+     * @param listener    optional progress callback; may be {@code null}.
+     * @return the chat completion.
      * @see #chat(Message[], int, double, double, boolean, long, GenerationListener, BooleanSupplier)
      */
     default ChatCompletion chat(Message[] dialog, int maxGenLen, double temperature,

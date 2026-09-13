@@ -187,6 +187,10 @@ public class GatedDeltaNet {
      * Replaces GEMM projections typically present as FP8 in Qwen checkpoints
      * ({@code in_proj_qkv}, {@code in_proj_z}, {@code out_proj}), leaving
      * dense {@code in_proj_a}/{@code in_proj_b} for the residual load path.
+     *
+     * @param qkv combined QKV projection op.
+     * @param z   z-gate projection op.
+     * @param out output projection op.
      */
     public void replaceGemmProjections(LinearOp qkv, LinearOp z, LinearOp out) {
         if (qkv == null || z == null || out == null) {

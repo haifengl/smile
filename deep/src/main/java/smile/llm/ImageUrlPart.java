@@ -24,6 +24,8 @@ package smile.llm;
  */
 public record ImageUrlPart(String url) implements ContentPart {
     /**
+     * Validates the image URL.
+     *
      * @param url image URL — must not be null or blank.
      */
     public ImageUrlPart {

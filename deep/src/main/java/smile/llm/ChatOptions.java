@@ -48,6 +48,8 @@ public record ChatOptions(
     }
 
     /**
+     * Returns whether tools should be injected into the chat template.
+     *
      * @return {@code true} when tools should be injected into the chat template.
      */
     public boolean hasTools() {
@@ -72,6 +74,8 @@ public record ChatOptions(
     }
 
     /**
+     * Returns whether the tool-call output parser should run.
+     *
      * @return {@code true} when the tool-call output parser should run.
      */
     public boolean parseToolCalls() {

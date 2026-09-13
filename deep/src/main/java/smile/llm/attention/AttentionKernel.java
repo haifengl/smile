@@ -44,6 +44,10 @@ public interface AttentionKernel {
      */
     Tensor forward(Tensor query, Tensor key, Tensor value, Tensor mask, AttentionContext ctx);
 
-    /** @return backend this kernel implements. */
+    /**
+     * Returns the backend this kernel implements.
+     *
+     * @return backend this kernel implements.
+     */
     AttentionBackend backend();
 }

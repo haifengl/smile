@@ -159,12 +159,20 @@ public class LlamaModel extends LayerBlock {
         return kvCachePool;
     }
 
-    /** @return number of transformer blocks. */
+    /**
+     * Returns the number of transformer blocks.
+     *
+     * @return number of transformer blocks.
+     */
     public int numLayers() {
         return numLayers;
     }
 
-    /** @return decoder blocks (mutable list owned by this model). */
+    /**
+     * Returns the decoder blocks.
+     *
+     * @return decoder blocks (mutable list owned by this model).
+     */
     public List<LlamaBlock> layers() {
         return layers;
     }

@@ -27,6 +27,9 @@ import static smile.torch.smile_torch_h.smile_torch_scaled_dot_product_attention
  * @author Haifeng Li
  */
 public final class TorchNativeAttentionKernel implements AttentionKernel {
+    /** Creates a LibTorch SDPA attention kernel. */
+    public TorchNativeAttentionKernel() {}
+
     @Override
     public Tensor forward(Tensor query, Tensor key, Tensor value, Tensor mask, AttentionContext ctx) {
         if (query == null || key == null || value == null) {

@@ -188,6 +188,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     }
 
     /**
+     * Returns whether a vision tower is loaded.
+     *
      * @return {@code true} when a vision tower is loaded.
      */
     public boolean isMultimodal() {
@@ -195,6 +197,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     }
 
     /**
+     * Returns the VL processor.
+     *
      * @return VL processor, or {@code null} for text-only.
      */
     public QwenVlProcessor vlProcessor() {
@@ -202,6 +206,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     }
 
     /**
+     * Returns the vision args.
+     *
      * @return vision args, or {@code null}.
      */
     public QwenVisionArgs visionArgs() {
@@ -249,7 +255,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         this.prefixReplayEnabled = enabled;
     }
 
-    /** @return whether hybrid DeltaNet warm-prefix replay is enabled. */
+    /**
+     * Returns whether hybrid DeltaNet warm-prefix replay is enabled.
+     *
+     * @return whether hybrid DeltaNet warm-prefix replay is enabled.
+     */
     public boolean isPrefixReplayEnabled() {
         return prefixReplayEnabled;
     }
@@ -266,7 +276,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         }
     }
 
-    /** @return whether MTP speculation is enabled. */
+    /**
+     * Returns whether MTP speculation is enabled.
+     *
+     * @return whether MTP speculation is enabled.
+     */
     public boolean isSpeculativeEnabled() {
         return speculativeEnabled && model.mtp() != null;
     }
@@ -298,7 +312,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         this.numSpeculativeTokensOverride = n;
     }
 
-    /** @return resolved draft depth when speculation is active, else {@code 0}. */
+    /**
+     * Returns the resolved draft depth when speculation is active.
+     *
+     * @return resolved draft depth when speculation is active, else {@code 0}.
+     */
     public int numSpeculativeTokens() {
         if (!isSpeculativeEnabled()) {
             return 0;
@@ -309,6 +327,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     /**
      * Draft-token accept rate over completed speculative rounds
      * ({@code accepted / proposed}), or {@code 0} when none yet.
+     *
+     * @return speculative accept rate.
      */
     public double speculativeAcceptRate() {
         long proposed = speculativeDraftsProposed.get();
@@ -316,7 +336,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 : (double) speculativeDraftsAccepted.get() / (double) proposed;
     }
 
-    /** Mean accepted draft depth per speculative round ({@code 0} when none). */
+    /**
+     * Mean accepted draft depth per speculative round ({@code 0} when none).
+     *
+     * @return mean accepted draft depth.
+     */
     public double speculativeMeanAcceptedDepth() {
         long rounds = speculativeRounds.get();
         return rounds == 0 ? 0.0

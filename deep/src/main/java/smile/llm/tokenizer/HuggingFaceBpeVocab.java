@@ -55,7 +55,12 @@ public final class HuggingFaceBpeVocab {
         return ranks;
     }
 
-    /** Merges {@code added_tokens} entries into {@code ranks} (content → id). */
+    /**
+     * Merges {@code added_tokens} entries into {@code ranks} (content → id).
+     *
+     * @param ranks mutable BPE rank map.
+     * @param root  tokenizer JSON root containing {@code added_tokens}.
+     */
     public static void mergeAddedTokens(Map<Bytes, Integer> ranks, JsonNode root) {
         JsonNode added = root.get("added_tokens");
         if (added == null || !added.isArray()) {

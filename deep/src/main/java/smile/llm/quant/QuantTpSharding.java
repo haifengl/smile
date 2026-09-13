@@ -88,6 +88,11 @@ public final class QuantTpSharding {
     /**
      * Column-parallel shard of GPTQ {@code qweight} packed along input dim0
      * ({@code [in/8, out]}). Shards along {@code out}.
+     *
+     * @param qweight GPTQ packed weights.
+     * @param tpSize  tensor-parallel world size.
+     * @param tpRank  this rank.
+     * @return sharded qweight (caller owns).
      */
     public static Tensor shardGptqQweightColumn(Tensor qweight, int tpSize, int tpRank) {
         if (tpSize <= 1) {
@@ -110,6 +115,11 @@ public final class QuantTpSharding {
 
     /**
      * Row-parallel shard of GPTQ {@code qweight} {@code [in/8, out]} along packed K.
+     *
+     * @param qweight GPTQ packed weights.
+     * @param tpSize  tensor-parallel world size.
+     * @param tpRank  this rank.
+     * @return sharded qweight (caller owns).
      */
     public static Tensor shardGptqQweightRow(Tensor qweight, int tpSize, int tpRank) {
         if (tpSize <= 1) {
@@ -132,6 +142,11 @@ public final class QuantTpSharding {
 
     /**
      * Column-parallel shard of AWQ {@code qweight} {@code [in, out/8]} along packed out.
+     *
+     * @param qweight AWQ packed weights.
+     * @param tpSize  tensor-parallel world size.
+     * @param tpRank  this rank.
+     * @return sharded qweight (caller owns).
      */
     public static Tensor shardAwqQweightColumn(Tensor qweight, int tpSize, int tpRank) {
         if (tpSize <= 1) {
@@ -154,6 +169,11 @@ public final class QuantTpSharding {
 
     /**
      * Row-parallel shard of AWQ {@code qweight} {@code [in, out/8]} along K.
+     *
+     * @param qweight AWQ packed weights.
+     * @param tpSize  tensor-parallel world size.
+     * @param tpRank  this rank.
+     * @return sharded qweight (caller owns).
      */
     public static Tensor shardAwqQweightRow(Tensor qweight, int tpSize, int tpRank) {
         if (tpSize <= 1) {
@@ -176,6 +196,11 @@ public final class QuantTpSharding {
 
     /**
      * Column-parallel shard of scales {@code [groups, out]} along out.
+     *
+     * @param scales  group scales.
+     * @param tpSize  tensor-parallel world size.
+     * @param tpRank  this rank.
+     * @return sharded scales (caller owns).
      */
     public static Tensor shardScalesColumn(Tensor scales, int tpSize, int tpRank) {
         if (tpSize <= 1) {
@@ -194,6 +219,11 @@ public final class QuantTpSharding {
 
     /**
      * Row-parallel shard of scales {@code [groups, out]} along groups (K groups).
+     *
+     * @param scales  group scales.
+     * @param tpSize  tensor-parallel world size.
+     * @param tpRank  this rank.
+     * @return sharded scales (caller owns).
      */
     public static Tensor shardScalesRow(Tensor scales, int tpSize, int tpRank) {
         if (tpSize <= 1) {

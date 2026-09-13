@@ -305,17 +305,29 @@ public class KvCachePool implements AutoCloseable {
         return ScalarType.Half;
     }
 
-    /** @return K-scale used for FP8 store (1.0 when not FP8). */
+    /**
+     * Returns the K-scale used for FP8 store.
+     *
+     * @return K-scale used for FP8 store (1.0 when not FP8).
+     */
     public float kScale() {
         return kScale;
     }
 
-    /** @return V-scale used for FP8 store (1.0 when not FP8). */
+    /**
+     * Returns the V-scale used for FP8 store.
+     *
+     * @return V-scale used for FP8 store (1.0 when not FP8).
+     */
     public float vScale() {
         return vScale;
     }
 
-    /** @return dtype used when dequantizing FP8 KV for attention. */
+    /**
+     * Returns the dtype used when dequantizing FP8 KV for attention.
+     *
+     * @return dtype used when dequantizing FP8 KV for attention.
+     */
     public ScalarType computeDtype() {
         return computeDtype;
     }
@@ -576,7 +588,11 @@ public class KvCachePool implements AutoCloseable {
         decodeGraphBuffers = enabled;
     }
 
-    /** @return whether decode CUDA-graph fixed buffers are active for this step. */
+    /**
+     * Returns whether decode CUDA-graph fixed buffers are active for this step.
+     *
+     * @return whether decode CUDA-graph fixed buffers are active for this step.
+     */
     public boolean decodeGraphBuffers() {
         return decodeGraphBuffers;
     }
@@ -615,6 +631,10 @@ public class KvCachePool implements AutoCloseable {
     /**
      * Uses live request page-table layout for attention and scratch slots for KV
      * writes so prefetch capture sees the same CSR tensors replay will use.
+     *
+     * @param cacheLen inclusive cached token count for the prefetch step.
+     * @param cachePos write position within the cache length.
+     * @param batch    decode batch size.
      */
     public void beginPrefetchDecodeGraphStep(int cacheLen, int cachePos, int batch) {
         ensureBound();
@@ -632,7 +652,11 @@ public class KvCachePool implements AutoCloseable {
         }
     }
 
-    /** @return shared step metadata (do not close). */
+    /**
+     * Returns the shared step FlashInfer metadata.
+     *
+     * @return shared step metadata (do not close).
+     */
     public FlashInferKvMetadata currentStepFlashInferMetadata() {
         return stepFlashInferMeta;
     }
@@ -640,6 +664,9 @@ public class KvCachePool implements AutoCloseable {
     /**
      * Installs CSR metadata captured during prefetch so graph replay reuses the
      * same tensor addresses as capture.
+     *
+     * @param meta       prefetched FlashInfer CSR metadata.
+     * @param uniformLen uniform inclusive cache length for the step.
      */
     public void installPrefetchedStepMetadata(FlashInferKvMetadata meta, int uniformLen) {
         if (meta == null) {
@@ -1520,6 +1547,12 @@ public class KvCachePool implements AutoCloseable {
         return stepFlashInferMeta;
     }
 
+    /**
+     * Builds FlashInfer CSR metadata for a uniform cache length.
+     *
+     * @param length inclusive cached token count.
+     * @return FlashInfer KV metadata for the bound batch.
+     */
     public FlashInferKvMetadata buildFlashInferMetadata(int length) {
         ensureBound();
         if (length < 0) {
@@ -1689,17 +1722,29 @@ public class KvCachePool implements AutoCloseable {
         return vCache;
     }
 
-    /** @return number of KV heads stored in the pool. */
+    /**
+     * Returns the number of KV heads stored in the pool.
+     *
+     * @return number of KV heads stored in the pool.
+     */
     public int numKvHeads() {
         return numKvHeads;
     }
 
-    /** @return head dimension. */
+    /**
+     * Returns the head dimension.
+     *
+     * @return head dimension.
+     */
     public int headDim() {
         return headDim;
     }
 
-    /** @return hosting device. */
+    /**
+     * Returns the hosting device.
+     *
+     * @return hosting device.
+     */
     public Device device() {
         return device;
     }

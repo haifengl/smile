@@ -64,6 +64,11 @@ public record AttentionContext(
 
     /**
      * Contiguous SDPA context (gather path).
+     *
+     * @param scale    attention scale; {@code <= 0} means kernel default.
+     * @param dropout  dropout probability (usually 0 at inference).
+     * @param isCausal whether to apply causal masking when mask is null.
+     * @return contiguous attention context.
      */
     public static AttentionContext contiguous(double scale, double dropout, boolean isCausal) {
         return new AttentionContext(scale, dropout, isCausal,
@@ -73,7 +78,13 @@ public record AttentionContext(
     /**
      * Ragged contiguous prefill (vision tower / varlen self-attention).
      *
-     * @param indptr cumulative segment lengths {@code [B+1]} (CPU array; copied to device at call time).
+     * @param scale      attention scale; {@code <= 0} means kernel default.
+     * @param isCausal   whether to apply causal masking when mask is null.
+     * @param numQoHeads query / output head count (GQA).
+     * @param numKvHeads key / value head count.
+     * @param headDim    per-head dimension.
+     * @param indptr     cumulative segment lengths {@code [B+1]} (CPU array; copied to device at call time).
+     * @return ragged contiguous attention context.
      */
     public static AttentionContext ragged(
             double scale, boolean isCausal,
@@ -86,6 +97,20 @@ public record AttentionContext(
 
     /**
      * FlashInfer / paged context (uniform length).
+     *
+     * @param scale      attention scale; {@code <= 0} means kernel default.
+     * @param isCausal   whether to apply causal masking when mask is null.
+     * @param numQoHeads query / output head count (GQA).
+     * @param numKvHeads key / value head count.
+     * @param headDim    per-head dimension.
+     * @param layerId    KV pool layer index.
+     * @param startPos   write position in the request.
+     * @param seqLen     query sequence length this step.
+     * @param cacheLen   total cached length after this step.
+     * @param kvPool     shared KV cache pool.
+     * @param kvMetadata CSR page table for FlashInfer.
+     * @param workspace  FlashInfer workspace.
+     * @return paged attention context.
      */
     public static AttentionContext paged(
             double scale, boolean isCausal,
@@ -101,6 +126,20 @@ public record AttentionContext(
 
     /**
      * FlashInfer / paged context with per-row decode lengths / positions.
+     *
+     * @param scale          attention scale; {@code <= 0} means kernel default.
+     * @param isCausal       whether to apply causal masking when mask is null.
+     * @param numQoHeads     query / output head count (GQA).
+     * @param numKvHeads     key / value head count.
+     * @param headDim        per-head dimension.
+     * @param layerId        KV pool layer index.
+     * @param seqLen         query sequence length this step.
+     * @param startPositions optional per-row write positions; {@code null} = uniform.
+     * @param cacheLens      optional per-row cache lengths; {@code null} = uniform.
+     * @param kvPool         shared KV cache pool.
+     * @param kvMetadata     CSR page table for FlashInfer.
+     * @param workspace      FlashInfer workspace.
+     * @return paged ragged attention context.
      */
     public static AttentionContext pagedRagged(
             double scale, boolean isCausal,
@@ -116,17 +155,29 @@ public record AttentionContext(
                 kvPool, kvMetadata, workspace, startPositions, cacheLens, null);
     }
 
-    /** @return {@code true} when this call carries paged-KV metadata. */
+    /**
+     * Returns whether this call carries paged-KV metadata.
+     *
+     * @return {@code true} when this call carries paged-KV metadata.
+     */
     public boolean isPaged() {
         return kvPool != null && kvMetadata != null;
     }
 
-    /** @return {@code true} when per-row cache lengths are set. */
+    /**
+     * Returns whether per-row cache lengths are set.
+     *
+     * @return {@code true} when per-row cache lengths are set.
+     */
     public boolean isRagged() {
         return cacheLens != null && cacheLens.length > 0;
     }
 
-    /** @return {@code true} for FlashInfer ragged contiguous Q/K/V (non-paged). */
+    /**
+     * Returns whether this is FlashInfer ragged contiguous Q/K/V (non-paged).
+     *
+     * @return {@code true} for FlashInfer ragged contiguous Q/K/V (non-paged).
+     */
     public boolean isRaggedContiguous() {
         return raggedIndptr != null && raggedIndptr.length > 1 && !isPaged();
     }

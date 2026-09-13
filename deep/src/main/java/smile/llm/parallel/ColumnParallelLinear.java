@@ -39,6 +39,12 @@ public final class ColumnParallelLinear {
 
     /**
      * Creates a dense column-parallel linear layer for the given TP rank.
+     *
+     * @param inFeatures        input feature count.
+     * @param globalOutFeatures global output feature count (must be divisible by {@code tpSize}).
+     * @param bias              whether to include a bias term.
+     * @param tpSize            tensor-parallel world size.
+     * @param tpRank            this rank in {@code [0, tpSize)}.
      */
     public ColumnParallelLinear(int inFeatures, int globalOutFeatures, boolean bias,
                                 int tpSize, int tpRank) {
@@ -54,6 +60,11 @@ public final class ColumnParallelLinear {
 
     /**
      * Wraps an already-sharded (and packed, if quantized) local linear op.
+     *
+     * @param local             already-sharded local linear op.
+     * @param globalOutFeatures global output feature count (must be divisible by {@code tpSize}).
+     * @param tpSize            tensor-parallel world size.
+     * @param tpRank            this rank in {@code [0, tpSize)}.
      */
     public ColumnParallelLinear(LinearOp local, int globalOutFeatures, int tpSize, int tpRank) {
         if (local == null) {
@@ -69,13 +80,19 @@ public final class ColumnParallelLinear {
         this.tpRank = tpRank;
     }
 
-    /** @return local {@link LinearOp} (dense or quantized). */
+    /**
+     * Returns the local {@link LinearOp} (dense or quantized).
+     *
+     * @return local {@link LinearOp} (dense or quantized).
+     */
     public LinearOp linearOp() {
         return linear;
     }
 
     /**
      * Returns the underlying dense linear layer.
+     *
+     * @return dense {@link LinearLayer}.
      * @throws IllegalStateException if this wrapper holds a quantized op.
      */
     public LinearLayer linear() {
@@ -87,23 +104,46 @@ public final class ColumnParallelLinear {
 
     /**
      * Returns the native module handle for weight registration (dense only).
+     *
+     * @return native module handle.
      */
     public MemorySegment module() {
         return linear().module();
     }
 
+    /**
+     * Returns the local output feature count for this TP rank.
+     *
+     * @return {@code globalOutFeatures / tpSize}.
+     */
     public int localOutFeatures() {
         return globalOutFeatures / tpSize;
     }
 
+    /**
+     * Returns this tensor-parallel rank.
+     *
+     * @return rank in {@code [0, tpSize)}.
+     */
     public int tpRank() {
         return tpRank;
     }
 
+    /**
+     * Returns the tensor-parallel world size.
+     *
+     * @return TP world size.
+     */
     public int tpSize() {
         return tpSize;
     }
 
+    /**
+     * Applies the local linear transform to {@code input}.
+     *
+     * @param input input tensor.
+     * @return local output shard.
+     */
     public Tensor forward(Tensor input) {
         return linear.forward(input);
     }

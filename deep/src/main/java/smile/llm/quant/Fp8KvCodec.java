@@ -35,6 +35,12 @@ public final class Fp8KvCodec {
 
     private Fp8KvCodec() {}
 
+    /**
+     * Returns {@code true} when {@code dtype} is an FP8 scalar type.
+     *
+     * @param dtype scalar type to test.
+     * @return {@code true} when {@code dtype} is FP8.
+     */
     public static boolean isFp8(ScalarType dtype) {
         return dtype == ScalarType.Float8e4m3fn
                 || dtype == ScalarType.Float8e5m2
@@ -44,6 +50,10 @@ public final class Fp8KvCodec {
 
     /**
      * Computes a positive float scale so {@code abs(x)/scale <= fp8Max}.
+     *
+     * @param x      tensor to measure.
+     * @param fp8Max max finite FP8 magnitude.
+     * @return positive scale for quantization.
      */
     public static float computeScale(Tensor x, float fp8Max) {
         Tensor x32 = x.to(ScalarType.Float);
@@ -58,6 +68,11 @@ public final class Fp8KvCodec {
 
     /**
      * Quantizes {@code x} to FP8 using {@code scale} (x_fp8 ≈ x / scale).
+     *
+     * @param x        source tensor.
+     * @param scale    positive float scale.
+     * @param fp8Dtype target FP8 dtype.
+     * @return quantized FP8 tensor (caller owns).
      */
     public static Tensor quantize(Tensor x, float scale, ScalarType fp8Dtype) {
         Tensor x32 = x.to(ScalarType.Float);
@@ -70,6 +85,11 @@ public final class Fp8KvCodec {
 
     /**
      * Dequantizes FP8 {@code q} with {@code scale} to {@code outDtype}.
+     *
+     * @param q        FP8 tensor.
+     * @param scale    positive float scale.
+     * @param outDtype output compute dtype.
+     * @return dequantized tensor (caller owns).
      */
     public static Tensor dequantize(Tensor q, float scale, ScalarType outDtype) {
         Tensor q32 = q.to(ScalarType.Float);

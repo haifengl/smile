@@ -30,27 +30,49 @@ import smile.llm.cache.KvCachePool;
  * @author Haifeng Li
  */
 public interface ModelExecutor {
-    /** Underlying language-model façade. */
+    /**
+     * Returns the underlying language-model façade.
+     *
+     * @return language model.
+     */
     LanguageModel model();
 
     /**
      * Primary KV cache pool (rank 0 for TP). May be {@code null} only for
      * models without full-attention layers.
+     *
+     * @return KV cache pool, or {@code null}.
      */
     KvCachePool kvCachePool();
 
-    /** Pad token id. */
+    /**
+     * Returns the pad token id.
+     *
+     * @return pad token id.
+     */
     int padToken();
 
-    /** Stop / EOS token ids. */
+    /**
+     * Returns stop / EOS token ids.
+     *
+     * @return stop token ids.
+     */
     int[] stopTokens();
 
-    /** Decodes token ids to UTF-8 text. */
+    /**
+     * Decodes token ids to UTF-8 text.
+     *
+     * @param tokens token ids.
+     * @return decoded text.
+     */
     String decode(int[] tokens);
 
     /**
      * Attempts a streaming decode; returns empty on incomplete UTF-8.
      *
+     * @param tokens      token ids.
+     * @param skipSpecial whether to skip special tokens.
+     * @return decoded text, or empty on incomplete UTF-8.
      * @throws java.nio.charset.CharacterCodingException when the sequence is incomplete.
      */
     String tryDecode(int[] tokens, boolean skipSpecial)
@@ -59,6 +81,8 @@ public interface ModelExecutor {
     /**
      * When {@code false}, {@link InferenceEngine} uses serial
      * {@link LanguageModel#generate} (test stubs without tensors / KV).
+     *
+     * @return {@code true} when bind/prefill/decodeStep are supported.
      */
     default boolean supportsStepApi() {
         return true;

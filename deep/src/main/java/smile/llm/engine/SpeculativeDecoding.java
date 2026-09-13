@@ -37,12 +37,20 @@ public final class SpeculativeDecoding {
      * @param acceptedTokens   accepted drafts plus the bonus token (length {@code r+1}).
      */
     public record AcceptResult(int numDraftAccepted, int[] acceptedTokens) {
-        /** @return total tokens to emit this round ({@code numDraftAccepted + 1}). */
+        /**
+         * Returns total tokens to emit this round.
+         *
+         * @return total tokens to emit this round ({@code numDraftAccepted + 1}).
+         */
         public int numTokens() {
             return acceptedTokens.length;
         }
 
-        /** @return the bonus (target) token always kept at the end. */
+        /**
+         * Returns the bonus (target) token always kept at the end.
+         *
+         * @return the bonus (target) token always kept at the end.
+         */
         public int bonusToken() {
             return acceptedTokens[acceptedTokens.length - 1];
         }

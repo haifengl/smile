@@ -24,6 +24,8 @@ package smile.llm;
  */
 public record AudioUrlPart(String url) implements ContentPart {
     /**
+     * Compact canonical constructor that rejects blank URLs.
+     *
      * @param url audio URL — must not be null or blank.
      */
     public AudioUrlPart {

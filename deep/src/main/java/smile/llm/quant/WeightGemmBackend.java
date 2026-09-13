@@ -34,9 +34,13 @@ import smile.torch.Native;
  * @author Haifeng Li
  */
 public enum WeightGemmBackend {
+    /** Dense BF16/FP16 GEMM. */
     DENSE,
+    /** Native FP8 weight GEMM (Hopper+). */
     FP8,
+    /** Native NVFP4 weight GEMM (Blackwell+). */
     NVFP4,
+    /** Marlin INT4 failover (Ampere/Ada). */
     MARLIN;
 
     /**
@@ -97,6 +101,9 @@ public enum WeightGemmBackend {
 
     /**
      * Returns {@code {major, minor}} for {@code device}, or {@code {0,0}} on CPU.
+     *
+     * @param device compute device.
+     * @return CUDA compute capability major/minor.
      */
     public static int[] computeCapability(Device device) {
         if (device == null || !device.isCUDA()) {
@@ -106,12 +113,20 @@ public enum WeightGemmBackend {
         return Native.cudaComputeCapability(index);
     }
 
-    /** @return {@code true} when this backend is the Ampere/Ada INT4 failover. */
+    /**
+     * Returns whether this backend is the Ampere/Ada INT4 failover.
+     *
+     * @return {@code true} when this backend is the Ampere/Ada INT4 failover.
+     */
     public boolean isFailover() {
         return this == MARLIN;
     }
 
-    /** @return {@code true} when this is a primary native low-precision path. */
+    /**
+     * Returns whether this is a primary native low-precision path.
+     *
+     * @return {@code true} when this is a primary native low-precision path.
+     */
     public boolean isPrimary() {
         return this == FP8 || this == NVFP4;
     }

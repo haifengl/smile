@@ -39,6 +39,11 @@ public sealed interface ToolChoice
      * @param name function name.
      */
     record Named(String name) implements ToolChoice {
+        /**
+         * Validates the forced function name.
+         *
+         * @param name function name.
+         */
         public Named {
             if (name == null || name.isBlank()) {
                 throw new IllegalArgumentException("named tool choice requires a function name");

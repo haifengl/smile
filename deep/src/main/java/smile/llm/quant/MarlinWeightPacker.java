@@ -63,6 +63,14 @@ public final class MarlinWeightPacker {
 
     /**
      * Packs GPTQ tensors into Marlin layout (FP16 dequant→requant; act-order rejected).
+     *
+     * @param qweight   GPTQ packed weights.
+     * @param scales    group scales.
+     * @param qzeros    packed zeros, or {@code null}.
+     * @param gIdx      GPTQ {@code g_idx}, or {@code null}.
+     * @param groupSize quantization group size.
+     * @param device    destination device.
+     * @return Marlin-packed tensors.
      */
     public static Packed packGptq(Tensor qweight, Tensor scales, Tensor qzeros, Tensor gIdx,
                                   int groupSize, Device device) {
@@ -75,6 +83,13 @@ public final class MarlinWeightPacker {
      * <p>Dequantizes with AWQ zeros (exact), then requants into Marlin's
      * symmetric int4 (zp=8). Folding zeros into int4 with clamp is unsafe when
      * {@code |q - z| > 7}.
+     *
+     * @param qweight   AWQ packed weights.
+     * @param scales    group scales.
+     * @param qzeros    packed zeros, or {@code null}.
+     * @param groupSize quantization group size.
+     * @param device    destination device.
+     * @return Marlin-packed tensors.
      */
     public static Packed packAwq(Tensor qweight, Tensor scales, Tensor qzeros,
                                  int groupSize, Device device) {
@@ -84,8 +99,14 @@ public final class MarlinWeightPacker {
     /**
      * AWQ→Marlin pack with optional HF→Meta RoPE rearrange on out-features.
      *
+     * @param qweight   AWQ packed weights.
+     * @param scales    group scales.
+     * @param qzeros    packed zeros, or {@code null}.
+     * @param groupSize quantization group size.
+     * @param device    destination device.
      * @param ropeHeads if non-null, permute {@code [out,in]} for Meta-style RoPE
      *                  ({@code num_attention_heads} or {@code num_kv_heads}).
+     * @return Marlin-packed tensors.
      */
     public static Packed packAwqDirect(Tensor qweight, Tensor scales, Tensor qzeros,
                                        int groupSize, Device device, Integer ropeHeads) {
@@ -109,7 +130,17 @@ public final class MarlinWeightPacker {
         }
     }
 
-    /** @see #packAwqDirect(Tensor, Tensor, Tensor, int, Device, Integer) */
+    /**
+     * AWQ→Marlin pack without RoPE rearrange.
+     *
+     * @param qweight   AWQ packed weights.
+     * @param scales    group scales.
+     * @param qzeros    packed zeros, or {@code null}.
+     * @param groupSize quantization group size.
+     * @param device    destination device.
+     * @return Marlin-packed tensors.
+     * @see #packAwqDirect(Tensor, Tensor, Tensor, int, Device, Integer)
+     */
     public static Packed packAwqDirect(Tensor qweight, Tensor scales, Tensor qzeros,
                                        int groupSize, Device device) {
         return packAwqDirect(qweight, scales, qzeros, groupSize, device, null);
@@ -118,6 +149,10 @@ public final class MarlinWeightPacker {
     /**
      * HuggingFace interleaved Q/K layout → Meta / GPT-NeoX layout used by Smile RoPE.
      * Same transform as dense {@code Llama.reversePermute} on {@code [out, in]} weights.
+     *
+     * @param w      weight {@code [out, in]}.
+     * @param nHeads attention or KV head count.
+     * @return permuted weight (caller owns).
      */
     public static Tensor reversePermuteHfToMeta(Tensor w, int nHeads) {
         if (nHeads < 1) {
@@ -152,7 +187,14 @@ public final class MarlinWeightPacker {
      * <p>Dequantizes (with zeros when present), optionally applies HF→Meta RoPE
      * rearrange, then requants into Marlin symmetric int4.
      *
+     * @param qweight   GPTQ packed weights.
+     * @param scales    group scales.
+     * @param qzeros    packed zeros, or {@code null}.
+     * @param gIdx      GPTQ {@code g_idx}, or {@code null}.
+     * @param groupSize quantization group size.
+     * @param device    destination device.
      * @param ropeHeads if non-null, permute out-features for Meta-style RoPE.
+     * @return Marlin-packed tensors.
      */
     public static Packed packGptqDirect(Tensor qweight, Tensor scales, Tensor qzeros, Tensor gIdx,
                                         int groupSize, Device device, Integer ropeHeads) {
@@ -179,7 +221,18 @@ public final class MarlinWeightPacker {
         }
     }
 
-    /** @see #packGptqDirect(Tensor, Tensor, Tensor, Tensor, int, Device, Integer) */
+    /**
+     * Direct GPTQ→Marlin pack without RoPE rearrange.
+     *
+     * @param qweight   GPTQ packed weights.
+     * @param scales    group scales.
+     * @param qzeros    packed zeros, or {@code null}.
+     * @param gIdx      GPTQ {@code g_idx}, or {@code null}.
+     * @param groupSize quantization group size.
+     * @param device    destination device.
+     * @return Marlin-packed tensors.
+     * @see #packGptqDirect(Tensor, Tensor, Tensor, Tensor, int, Device, Integer)
+     */
     public static Packed packGptqDirect(Tensor qweight, Tensor scales, Tensor qzeros, Tensor gIdx,
                                         int groupSize, Device device) {
         return packGptqDirect(qweight, scales, qzeros, gIdx, groupSize, device, null);
@@ -329,6 +382,11 @@ public final class MarlinWeightPacker {
     /**
      * Packs a dense FP16 weight {@code [out, in]} into Marlin INT4 layout
      * matching upstream {@code marlin.Layer.pack} ({@code B} is {@code [k/16, n*16/8]}).
+     *
+     * @param weightFp16 dense FP16 weight {@code [out, in]}.
+     * @param groupSize  quantization group size.
+     * @param device     destination device.
+     * @return Marlin-packed tensors.
      */
     public static Packed packFromFp16(Tensor weightFp16, int groupSize, Device device) {
         long[] shape = weightFp16.shape();

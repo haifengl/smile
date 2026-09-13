@@ -143,7 +143,14 @@ public class GatedAttention implements Attention {
         }
     }
 
-    /** Replaces Q/K/V/O with quantized ops (already sharded/packed). */
+    /**
+     * Replaces Q/K/V/O with quantized ops (already sharded/packed).
+     *
+     * @param q query projection op.
+     * @param k key projection op.
+     * @param v value projection op.
+     * @param o output projection op.
+     */
     public void replaceProjections(LinearOp q, LinearOp k, LinearOp v, LinearOp o) {
         if (q == null || k == null || v == null || o == null) {
             throw new IllegalArgumentException("all projections required");

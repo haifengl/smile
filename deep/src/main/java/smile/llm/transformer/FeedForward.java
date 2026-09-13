@@ -138,6 +138,10 @@ public class FeedForward {
     /**
      * Replaces FFN linears with quantized ops (already sharded/packed for TP).
      * Frees dense {@link LinearLayer} shells so empty GPU weights are released.
+     *
+     * @param w1 gate / up projection op.
+     * @param w2 down projection op.
+     * @param w3 up / parallel projection op.
      */
     public void replaceLinears(LinearOp w1, LinearOp w2, LinearOp w3) {
         if (w1 == null || w2 == null || w3 == null) {

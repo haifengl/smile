@@ -47,6 +47,8 @@ public final class QuantPolicy {
      * @param device        target device.
      * @param backendOverride {@code auto}/{@code dense}/{@code fp8}/{@code nvfp4}/{@code marlin},
      *                        or {@code null} to use {@link QuantBackendOverride} / {@code auto}.
+     * @return resolved format and backend.
+     * @throws java.io.IOException if checkpoint IO fails.
      */
     public static Resolved resolve(Path checkpointDir, Device device, String backendOverride)
             throws IOException {

@@ -57,6 +57,15 @@ public record GenerationRequest(
 
     /**
      * Builds a request from already-tokenized prompt ids.
+     *
+     * @param promptTokens prompt token ids.
+     * @param maxGenLen    maximum generated tokens.
+     * @param temperature  sampling temperature.
+     * @param topp         nucleus sampling threshold.
+     * @param logprobs     whether to return log probabilities.
+     * @param seed         RNG seed.
+     * @param listener     optional generation listener, or {@code null}.
+     * @return new generation request.
      */
     public static GenerationRequest ofTokens(int[] promptTokens, int maxGenLen,
                                              double temperature, double topp,
@@ -67,6 +76,16 @@ public record GenerationRequest(
 
     /**
      * Builds a request from already-tokenized prompt ids with chat options.
+     *
+     * @param promptTokens prompt token ids.
+     * @param maxGenLen    maximum generated tokens.
+     * @param temperature  sampling temperature.
+     * @param topp         nucleus sampling threshold.
+     * @param logprobs     whether to return log probabilities.
+     * @param seed         RNG seed.
+     * @param listener     optional generation listener, or {@code null}.
+     * @param chatOptions  optional chat options, or {@code null}.
+     * @return new generation request.
      */
     public static GenerationRequest ofTokens(int[] promptTokens, int maxGenLen,
                                              double temperature, double topp,
@@ -79,6 +98,18 @@ public record GenerationRequest(
 
     /**
      * Builds a request from already-tokenized prompt ids with speculation flags.
+     *
+     * @param promptTokens          prompt token ids.
+     * @param maxGenLen             maximum generated tokens.
+     * @param temperature           sampling temperature.
+     * @param topp                  nucleus sampling threshold.
+     * @param logprobs              whether to return log probabilities.
+     * @param seed                  RNG seed.
+     * @param listener              optional generation listener, or {@code null}.
+     * @param chatOptions           optional chat options, or {@code null}.
+     * @param speculative           whether speculative decoding is requested.
+     * @param numSpeculativeTokens  draft tokens when speculative.
+     * @return new generation request.
      */
     public static GenerationRequest ofTokens(int[] promptTokens, int maxGenLen,
                                              double temperature, double topp,
@@ -96,6 +127,15 @@ public record GenerationRequest(
 
     /**
      * Builds a multimodal request (vision embeds spliced during prefill).
+     *
+     * @param multimodal  processed multimodal inputs.
+     * @param maxGenLen   maximum generated tokens.
+     * @param temperature sampling temperature.
+     * @param topp        nucleus sampling threshold.
+     * @param logprobs    whether to return log probabilities.
+     * @param seed        RNG seed.
+     * @param listener    optional generation listener, or {@code null}.
+     * @return new generation request.
      */
     public static GenerationRequest ofMultimodal(QwenVlProcessor.ProcessedMultimodal multimodal,
                                                  int maxGenLen, double temperature, double topp,
@@ -106,6 +146,16 @@ public record GenerationRequest(
 
     /**
      * Builds a multimodal request with chat options.
+     *
+     * @param multimodal  processed multimodal inputs.
+     * @param maxGenLen   maximum generated tokens.
+     * @param temperature sampling temperature.
+     * @param topp        nucleus sampling threshold.
+     * @param logprobs    whether to return log probabilities.
+     * @param seed        RNG seed.
+     * @param listener    optional generation listener, or {@code null}.
+     * @param chatOptions optional chat options, or {@code null}.
+     * @return new generation request.
      */
     public static GenerationRequest ofMultimodal(QwenVlProcessor.ProcessedMultimodal multimodal,
                                                  int maxGenLen, double temperature, double topp,
@@ -118,6 +168,18 @@ public record GenerationRequest(
 
     /**
      * Builds a multimodal request with speculation flags.
+     *
+     * @param multimodal            processed multimodal inputs.
+     * @param maxGenLen             maximum generated tokens.
+     * @param temperature           sampling temperature.
+     * @param topp                  nucleus sampling threshold.
+     * @param logprobs              whether to return log probabilities.
+     * @param seed                  RNG seed.
+     * @param listener              optional generation listener, or {@code null}.
+     * @param chatOptions           optional chat options, or {@code null}.
+     * @param speculative           whether speculative decoding is requested.
+     * @param numSpeculativeTokens  draft tokens when speculative.
+     * @return new generation request.
      */
     public static GenerationRequest ofMultimodal(QwenVlProcessor.ProcessedMultimodal multimodal,
                                                  int maxGenLen, double temperature, double topp,
@@ -136,6 +198,15 @@ public record GenerationRequest(
 
     /**
      * Builds a request from a chat dialog (encoded at execution time).
+     *
+     * @param dialog      chat messages.
+     * @param maxGenLen   maximum generated tokens.
+     * @param temperature sampling temperature.
+     * @param topp        nucleus sampling threshold.
+     * @param logprobs    whether to return log probabilities.
+     * @param seed        RNG seed.
+     * @param listener    optional generation listener, or {@code null}.
+     * @return new generation request.
      */
     public static GenerationRequest ofDialog(Message[] dialog, int maxGenLen,
                                              double temperature, double topp,
@@ -146,6 +217,16 @@ public record GenerationRequest(
 
     /**
      * Builds a request from a chat dialog with chat options.
+     *
+     * @param dialog      chat messages.
+     * @param chatOptions chat options, or {@code null}.
+     * @param maxGenLen   maximum generated tokens.
+     * @param temperature sampling temperature.
+     * @param topp        nucleus sampling threshold.
+     * @param logprobs    whether to return log probabilities.
+     * @param seed        RNG seed.
+     * @param listener    optional generation listener, or {@code null}.
+     * @return new generation request.
      */
     public static GenerationRequest ofDialog(Message[] dialog, ChatOptions chatOptions,
                                              int maxGenLen, double temperature, double topp,
@@ -157,6 +238,18 @@ public record GenerationRequest(
 
     /**
      * Builds a request from a chat dialog with speculation flags.
+     *
+     * @param dialog                chat messages.
+     * @param chatOptions           chat options, or {@code null}.
+     * @param maxGenLen             maximum generated tokens.
+     * @param temperature           sampling temperature.
+     * @param topp                  nucleus sampling threshold.
+     * @param logprobs              whether to return log probabilities.
+     * @param seed                  RNG seed.
+     * @param listener              optional generation listener, or {@code null}.
+     * @param speculative           whether speculative decoding is requested.
+     * @param numSpeculativeTokens  draft tokens when speculative.
+     * @return new generation request.
      */
     public static GenerationRequest ofDialog(Message[] dialog, ChatOptions chatOptions,
                                              int maxGenLen, double temperature, double topp,
@@ -171,7 +264,11 @@ public record GenerationRequest(
                 logprobs, seed, listener, chatOptions, speculative, numSpeculativeTokens);
     }
 
-    /** @return {@code true} when vision prefill is required. */
+    /**
+     * Returns whether vision prefill is required.
+     *
+     * @return {@code true} when vision prefill is required.
+     */
     public boolean hasMultimodal() {
         return multimodal != null && multimodal.hasVision();
     }

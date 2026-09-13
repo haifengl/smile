@@ -40,6 +40,8 @@ public final class Fp8Linear implements LinearOp, AutoCloseable {
     private final int outFeatures;
 
     /**
+     * Creates a weight-only FP8 linear layer.
+     *
      * @param weight      FP8 weight {@code [outFeatures, inFeatures]}.
      * @param weightScale float scale for {@code weight}.
      * @param bias        optional bias (same compute dtype), or {@code null}.
@@ -61,9 +63,32 @@ public final class Fp8Linear implements LinearOp, AutoCloseable {
         this.outDtype = outDtype == null ? ScalarType.BFloat16 : outDtype;
     }
 
+    /**
+     * Returns the input feature count.
+     *
+     * @return input feature count.
+     */
     public int inFeatures() { return inFeatures; }
+
+    /**
+     * Returns the output feature count.
+     *
+     * @return output feature count.
+     */
     public int outFeatures() { return outFeatures; }
+
+    /**
+     * Returns the FP8 weight tensor.
+     *
+     * @return FP8 weight {@code [outFeatures, inFeatures]}.
+     */
     public Tensor weight() { return weight; }
+
+    /**
+     * Returns the float weight scale tensor.
+     *
+     * @return float weight scale.
+     */
     public Tensor weightScale() { return weightScale; }
 
     @Override

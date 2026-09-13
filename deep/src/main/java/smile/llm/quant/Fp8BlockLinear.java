@@ -39,6 +39,8 @@ public final class Fp8BlockLinear implements LinearOp, AutoCloseable {
     private final int outFeatures;
 
     /**
+     * Creates a block-scaled FP8 linear layer.
+     *
      * @param weight          FP8 weight {@code [outFeatures, inFeatures]}.
      * @param weightScaleInv  float32 block inverse scales
      *                        {@code [ceil(out/128), ceil(in/128)]}.
@@ -84,9 +86,32 @@ public final class Fp8BlockLinear implements LinearOp, AutoCloseable {
         this.outDtype = outDtype == null ? ScalarType.BFloat16 : outDtype;
     }
 
+    /**
+     * Returns the input feature count.
+     *
+     * @return input feature count.
+     */
     public int inFeatures() { return inFeatures; }
+
+    /**
+     * Returns the output feature count.
+     *
+     * @return output feature count.
+     */
     public int outFeatures() { return outFeatures; }
+
+    /**
+     * Returns the FP8 weight tensor.
+     *
+     * @return FP8 weight {@code [outFeatures, inFeatures]}.
+     */
     public Tensor weight() { return weight; }
+
+    /**
+     * Returns the block inverse scale tensor.
+     *
+     * @return block inverse scales.
+     */
     public Tensor weightScaleInv() { return weightScaleInv; }
 
     @Override
