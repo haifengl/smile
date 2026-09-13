@@ -2244,28 +2244,29 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         }
         int[] drafts = draftGreedy(lastToken, lastPos, numDrafts);
 
-        // --- Verify ---
-        DeltaNetStatePool delta = models[0].deltaNetStatePool();
+        // --- Verify (commit lastToken + accepted drafts only; leave bonus uncommitted) ---
         try {
-            if (delta != null) {
-                for (QwenModel m : models) {
-                    DeltaNetStatePool d = m.deltaNetStatePool();
-                    if (d != null) {
-                        d.ensureSpeculativeCheckpoints(numDrafts + 1);
-                        d.saveCheckpoint(0);
+            int[] targetSamples = new int[numDrafts + 1];
+            // lastToken is already in the token buffer but not yet forwarded.
+            Tensor[] logits = forwardAll(tokens, lastPos, lastPos + 1, pool, false);
+            try {
+                try (var last = Index.of(-1);
+                     var tail = logits[0].get(Index.Colon, last)) {
+                    targetSamples[0] = sampleTargetId(tail, temperature, topp);
+                }
+            } finally {
+                for (Tensor l : logits) {
+                    if (l != null) {
+                        l.close();
                     }
                 }
             }
-
-            int[] targetSamples = new int[numDrafts + 1];
-            targetSamples[0] = sampleTargetAfterLastToken(
-                    tokens, lastPos, temperature, topp, pool, delta);
 
             int r = 0;
             while (r < numDrafts && targetSamples[r] == drafts[r]) {
                 int pos = writePos + r;
                 putToken(tokens, pos, drafts[r]);
-                Tensor[] logits = forwardAll(tokens, pos, pos + 1, pool, false);
+                logits = forwardAll(tokens, pos, pos + 1, pool, false);
                 try {
                     try (var last = Index.of(-1);
                          var tail = logits[0].get(Index.Colon, last)) {
@@ -2279,48 +2280,20 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                     }
                 }
                 r++;
-                if (delta != null) {
-                    for (QwenModel m : models) {
-                        DeltaNetStatePool d = m.deltaNetStatePool();
-                        if (d != null) {
-                            d.saveCheckpoint(r);
-                        }
-                    }
-                }
             }
 
-            var result = smile.llm.engine.SpeculativeDecoding.acceptGreedy(drafts, targetSamples);
-            r = result.numDraftAccepted();
-            if (delta != null) {
-                for (QwenModel m : models) {
-                    DeltaNetStatePool d = m.deltaNetStatePool();
-                    if (d != null) {
-                        d.restoreCheckpoint(r);
-                    }
-                }
-            }
-
-            int[] accepted = result.acceptedTokens();
-            for (int i = 0; i < accepted.length; i++) {
-                putToken(tokens, writePos + i, accepted[i]);
-            }
-
-            // Commit bonus into target KV / DeltaNet.
-            int bonusPos = writePos + r;
-            Tensor[] bonusLogits = forwardAll(tokens, bonusPos, bonusPos + 1, pool, false);
-            for (Tensor l : bonusLogits) {
-                if (l != null) {
-                    l.close();
-                }
-            }
-
+            putToken(tokens, writePos + r, targetSamples[r]);
             recordSpeculativeRound(numDrafts, r);
             logger.debug("MTP speculate: drafts={} accepted={} bonus={} acceptRate={} meanDepth={}",
-                    numDrafts, r, result.bonusToken(),
+                    numDrafts, r, targetSamples[r],
                     speculativeAcceptRate(), speculativeMeanAcceptedDepth());
-            return accepted.length;
+            return r + 1;
         } finally {
-            releaseDeltaCheckpoints();
+            for (QwenModel m : models) {
+                if (m.mtp() != null) {
+                    m.mtp().endRound();
+                }
+            }
         }
     }
 
@@ -2346,45 +2319,6 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
              Tensor cpu = sampled.to(Device.CPU())) {
             return (int) cpu.longArray()[0];
         }
-    }
-
-    /**
-     * Samples the target token after {@code lastToken} without permanently mutating
-     * DeltaNet beyond checkpoint 0.
-     */
-    private int sampleTargetAfterLastToken(Tensor[] tokens, int lastPos,
-                                           double temperature, double topp,
-                                           ExecutorService pool, DeltaNetStatePool delta) {
-        int[] holder = new int[1];
-        Runnable sample = () -> {
-            Tensor[] logits = forwardAll(tokens, lastPos, lastPos + 1, pool, false);
-            try {
-                try (var last = Index.of(-1);
-                     var tail = logits[0].get(Index.Colon, last)) {
-                    holder[0] = sampleTargetId(tail, temperature, topp);
-                }
-            } finally {
-                for (Tensor l : logits) {
-                    if (l != null) {
-                        l.close();
-                    }
-                }
-            }
-        };
-        if (delta != null) {
-            delta.withPreservedActive(sample);
-            delta.restoreCheckpoint(0);
-            for (int rank = 1; rank < models.length; rank++) {
-                DeltaNetStatePool d = models[rank].deltaNetStatePool();
-                if (d != null) {
-                    d.withPreservedActive(() -> { });
-                    d.restoreCheckpoint(0);
-                }
-            }
-        } else {
-            sample.run();
-        }
-        return holder[0];
     }
 
     @Override
@@ -2431,22 +2365,17 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         int[] drafts = draftGreedy(lastToken, lastPos, numDrafts);
 
+        // Verify without rewind: commit lastToken (not yet in KV), then only
+        // forward accepted drafts. Sample the bonus from the last logits but do
+        // not commit it — same invariant as plain decodeStep (lastToken is the
+        // next write). Restoring DeltaNet after lastToken was the corruption bug.
         activatePools(requestId);
-        for (QwenModel m : models) {
-            DeltaNetStatePool d = m.deltaNetStatePool();
-            if (d != null) {
-                d.ensureSpeculativeCheckpoints(numDrafts + 1);
-            }
-        }
         try {
             int[] targetSamples = new int[numDrafts + 1];
-            saveDeltaCheckpoints(0);
             try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
                     new int[]{lastPos})) {
                 targetSamples[0] = sampleTargetId(logits, temperature, topp);
             }
-            restoreDeltaCheckpoints(0);
-            scatterDeltaPools();
 
             int r = 0;
             while (r < numDrafts && targetSamples[r] == drafts[r]) {
@@ -2456,28 +2385,23 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                     targetSamples[r + 1] = sampleTargetId(logits, temperature, topp);
                 }
                 r++;
-                saveDeltaCheckpoints(r);
-                scatterDeltaPools();
             }
 
-            var result = smile.llm.engine.SpeculativeDecoding.acceptGreedy(drafts, targetSamples);
-            r = result.numDraftAccepted();
-            activatePools(requestId);
-            restoreDeltaCheckpoints(r);
-            scatterDeltaPools();
+            int bonus = targetSamples[r];
+            int[] accepted = new int[r + 1];
+            System.arraycopy(drafts, 0, accepted, 0, r);
+            accepted[r] = bonus;
 
-            int bonus = result.bonusToken();
-            int bonusPos = lastPos + 1 + r;
-            try (Tensor ignored = decodeStep(new int[]{requestId}, new int[]{bonus},
-                    new int[]{bonusPos})) {
-                // logits discarded; state updated
-            }
             recordSpeculativeRound(numDrafts, r);
             logger.debug("MTP speculateStep: drafts={} accepted={} bonus={} acceptRate={}",
                     numDrafts, r, bonus, speculativeAcceptRate());
-            return result.acceptedTokens();
+            return accepted;
         } finally {
-            releaseDeltaCheckpoints();
+            for (QwenModel m : models) {
+                if (m.mtp() != null) {
+                    m.mtp().endRound();
+                }
+            }
         }
     }
 
@@ -2579,44 +2503,6 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
             if (m.deltaNetStatePool() != null) {
                 m.deltaNetStatePool().activateStep(requestId);
-            }
-        }
-    }
-
-    private void saveDeltaCheckpoints(int slot) {
-        for (QwenModel m : models) {
-            DeltaNetStatePool d = m.deltaNetStatePool();
-            if (d != null) {
-                d.saveCheckpoint(slot);
-            }
-        }
-    }
-
-    private void restoreDeltaCheckpoints(int slot) {
-        for (QwenModel m : models) {
-            DeltaNetStatePool d = m.deltaNetStatePool();
-            if (d != null) {
-                d.restoreCheckpoint(slot);
-            }
-        }
-    }
-
-    private void scatterDeltaPools() {
-        for (QwenModel m : models) {
-            if (m.deltaNetStatePool() != null) {
-                m.deltaNetStatePool().scatterActive();
-            }
-        }
-    }
-
-    private void releaseDeltaCheckpoints() {
-        for (QwenModel m : models) {
-            DeltaNetStatePool d = m.deltaNetStatePool();
-            if (d != null) {
-                d.releaseSpeculativeCheckpoints();
-            }
-            if (m.mtp() != null) {
-                m.mtp().endRound();
             }
         }
     }
