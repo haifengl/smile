@@ -37,6 +37,7 @@ import io.quarkus.runtime.Startup;
 import org.jboss.logging.Logger;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import smile.deep.CUDA;
 import smile.llm.*;
 import smile.llm.attention.AttentionBackend;
 import smile.llm.attention.AttentionBackends;
@@ -53,6 +54,10 @@ import smile.util.HuggingFaceHub;
 /**
  * Application-scoped service that loads a Llama LLM and handles chat
  * completion requests.
+ *
+ * <p>On startup the service first checks that at least one CUDA device is
+ * available. If not, it stays unavailable (HTTP 503 for chat) and does not
+ * download or load model weights.
  *
  * <p>The model is loaded once at application startup from the location
  * configured by {@code smile.chat.model}:
@@ -123,6 +128,15 @@ public class ChatService implements OpenAiModelContributor {
         String modelSpec = config.model();
         this.modelId = publicModelId(modelSpec);
         try {
+            long cudaDevices = CUDA.isAvailable() ? CUDA.deviceCount() : 0L;
+            if (cudaDevices < 1L) {
+                logger.warnf("No CUDA device available; skipping chat model load for '%s' "
+                                + "(chat completions will return HTTP 503)",
+                        modelSpec);
+                return;
+            }
+            logger.infof("CUDA devices detected: %d", cudaDevices);
+
             String cacheDir = config.flashinferCacheDir()
                     .filter(s -> !s.isBlank())
                     .orElseGet(() -> Path.of(System.getProperty("user.home"),
