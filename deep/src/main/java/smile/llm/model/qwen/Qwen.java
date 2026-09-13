@@ -2236,43 +2236,19 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         }
         int lastToken = (int) lastTokLong;
 
-        // --- Draft (greedy) ---
-        mtp.beginRound(numDrafts);
-        int[] drafts = new int[numDrafts];
-        Tensor hidden = anchor;
-        boolean ownHidden = false;
-        int token = lastToken;
-        for (int i = 0; i < numDrafts; i++) {
-            try (Tensor tok = Tensor.of(new long[]{token})) {
-                Tensor deviceTok = tok.to(models[0].device());
-                Tensor logits = mtp.draftStep(deviceTok, hidden, lastPos + 1 + i, i);
-                deviceTok.close();
-                drafts[i] = smile.llm.engine.Sampling.sampleGreedyTokenId(logits);
-                logits.close();
+        // --- Draft (greedy, all TP ranks) ---
+        for (QwenModel m : models) {
+            if (m.mtp() != null) {
+                m.mtp().beginRound(numDrafts);
             }
-            if (ownHidden) {
-                hidden.close();
-            }
-            Tensor nextH = mtp.lastDraftHidden();
-            if (nextH == null) {
-                throw new IllegalStateException("MTP draft hidden missing after step " + i);
-            }
-            hidden = nextH.detach();
-            hidden.detachFromScopes();
-            ownHidden = true;
-            token = drafts[i];
         }
-        if (ownHidden) {
-            hidden.close();
-        }
+        int[] drafts = draftGreedy(lastToken, lastPos, numDrafts);
 
         // --- Verify ---
         DeltaNetStatePool delta = models[0].deltaNetStatePool();
         if (delta != null) {
-            delta.ensureSpeculativeCheckpoints(numDrafts + 1);
-            delta.saveCheckpoint(0);
-            for (int rank = 1; rank < models.length; rank++) {
-                DeltaNetStatePool d = models[rank].deltaNetStatePool();
+            for (QwenModel m : models) {
+                DeltaNetStatePool d = m.deltaNetStatePool();
                 if (d != null) {
                     d.ensureSpeculativeCheckpoints(numDrafts + 1);
                     d.saveCheckpoint(0);
@@ -2303,9 +2279,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
             r++;
             if (delta != null) {
-                delta.saveCheckpoint(r);
-                for (int rank = 1; rank < models.length; rank++) {
-                    DeltaNetStatePool d = models[rank].deltaNetStatePool();
+                for (QwenModel m : models) {
+                    DeltaNetStatePool d = m.deltaNetStatePool();
                     if (d != null) {
                         d.saveCheckpoint(r);
                     }
@@ -2316,9 +2291,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         var result = smile.llm.engine.SpeculativeDecoding.acceptGreedy(drafts, targetSamples);
         r = result.numDraftAccepted();
         if (delta != null) {
-            delta.restoreCheckpoint(r);
-            for (int rank = 1; rank < models.length; rank++) {
-                DeltaNetStatePool d = models[rank].deltaNetStatePool();
+            for (QwenModel m : models) {
+                DeltaNetStatePool d = m.deltaNetStatePool();
                 if (d != null) {
                     d.restoreCheckpoint(r);
                 }
@@ -2436,11 +2410,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     private int[] speculateOneRequest(int requestId, int lastToken, int lastPos, int numDrafts,
                                       double temperature, double topp) {
-        QwenMtp mtp = models[0].mtp();
-        Tensor anchor = models[0].lastPreNormHidden();
-        if (mtp == null || anchor == null) {
+        if (models[0].mtp() == null || models[0].lastPreNormHidden() == null) {
             // No anchor yet (first decode after prefill should have captured it).
-            // Fall back: one plain decode sample.
             try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
                     new int[]{lastPos})) {
                 int tok = sampleTargetId(logits, temperature, topp);
@@ -2448,54 +2419,30 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
 
-        mtp.beginRound(numDrafts);
-        int[] drafts = new int[numDrafts];
-        Tensor hidden = anchor;
-        boolean ownHidden = false;
-        int token = lastToken;
-        for (int d = 0; d < numDrafts; d++) {
-            try (Tensor tokT = Tensor.of(new long[]{token})) {
-                Tensor deviceTok = tokT.to(models[0].device());
-                Tensor logits = mtp.draftStep(deviceTok, hidden, lastPos + 1 + d, d);
-                deviceTok.close();
-                drafts[d] = smile.llm.engine.Sampling.sampleGreedyTokenId(logits);
-                logits.close();
+        for (QwenModel m : models) {
+            if (m.mtp() != null) {
+                m.mtp().beginRound(numDrafts);
             }
-            if (ownHidden) {
-                hidden.close();
-            }
-            Tensor nextH = mtp.lastDraftHidden();
-            hidden = nextH.detach();
-            hidden.detachFromScopes();
-            ownHidden = true;
-            token = drafts[d];
-        }
-        if (ownHidden) {
-            hidden.close();
         }
 
-        DeltaNetStatePool delta = models[0].deltaNetStatePool();
-        if (delta != null) {
-            delta.ensureSpeculativeCheckpoints(numDrafts + 1);
+        int[] drafts = draftGreedy(lastToken, lastPos, numDrafts);
+
+        for (QwenModel m : models) {
+            DeltaNetStatePool d = m.deltaNetStatePool();
+            if (d != null) {
+                d.ensureSpeculativeCheckpoints(numDrafts + 1);
+            }
         }
 
         int[] targetSamples = new int[numDrafts + 1];
-        // Sample after lastToken, then rewind DeltaNet to pre-verify.
-        if (delta != null) {
-            if (model.kvCachePool() != null) {
-                model.kvCachePool().activateStep(requestId);
-            }
-            delta.activateStep(requestId);
-            delta.saveCheckpoint(0);
-        }
+        activatePools(requestId);
+        saveDeltaCheckpoints(0);
         try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
                 new int[]{lastPos})) {
             targetSamples[0] = sampleTargetId(logits, temperature, topp);
         }
-        if (delta != null) {
-            delta.restoreCheckpoint(0);
-            delta.scatterActive();
-        }
+        restoreDeltaCheckpoints(0);
+        scatterDeltaPools();
 
         int r = 0;
         while (r < numDrafts && targetSamples[r] == drafts[r]) {
@@ -2505,24 +2452,16 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 targetSamples[r + 1] = sampleTargetId(logits, temperature, topp);
             }
             r++;
-            if (delta != null) {
-                delta.saveCheckpoint(r);
-                delta.scatterActive();
-            }
+            saveDeltaCheckpoints(r);
+            scatterDeltaPools();
         }
 
         var result = smile.llm.engine.SpeculativeDecoding.acceptGreedy(drafts, targetSamples);
         r = result.numDraftAccepted();
-        if (delta != null) {
-            if (model.kvCachePool() != null) {
-                model.kvCachePool().activateStep(requestId);
-            }
-            delta.activateStep(requestId);
-            delta.restoreCheckpoint(r);
-            delta.scatterActive();
-        }
+        activatePools(requestId);
+        restoreDeltaCheckpoints(r);
+        scatterDeltaPools();
 
-        // Commit bonus into state.
         int bonus = result.bonusToken();
         int bonusPos = lastPos + 1 + r;
         try (Tensor ignored = decodeStep(new int[]{requestId}, new int[]{bonus},
@@ -2533,6 +2472,134 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         logger.debug("MTP speculateStep: drafts={} accepted={} bonus={} acceptRate={}",
                 numDrafts, r, bonus, speculativeAcceptRate());
         return result.acceptedTokens();
+    }
+
+    /**
+     * Greedy MTP drafts. Runs the sharded MTP head on every TP rank together so
+     * attention all-reduces do not deadlock.
+     */
+    private int[] draftGreedy(int lastToken, int lastPos, int numDrafts) {
+        int[] drafts = new int[numDrafts];
+        Tensor[] hiddens = new Tensor[models.length];
+        boolean[] own = new boolean[models.length];
+        for (int r = 0; r < models.length; r++) {
+            hiddens[r] = models[r].lastPreNormHidden();
+            own[r] = false;
+        }
+        int token = lastToken;
+        try {
+            for (int d = 0; d < numDrafts; d++) {
+                final int draftStep = d;
+                final int position = lastPos + 1 + d;
+                final int tok = token;
+                Tensor[] logits = new Tensor[models.length];
+                if (models.length == 1) {
+                    try (Tensor tokT = Tensor.of(new long[]{tok})) {
+                        Tensor deviceTok = tokT.to(models[0].device());
+                        logits[0] = models[0].mtp().draftStep(
+                                deviceTok, hiddens[0], position, draftStep);
+                        deviceTok.close();
+                    }
+                } else {
+                    List<Future<Tensor>> futures = new ArrayList<>(models.length);
+                    for (int r = 0; r < models.length; r++) {
+                        final int rank = r;
+                        final Tensor hidden = hiddens[rank];
+                        futures.add(tpExecutor.submit(() -> {
+                            ParallelState.setCurrent(tpGroup.state(rank));
+                            try (var guard = Tensor.noGradGuard();
+                                 Tensor tokT = Tensor.of(new long[]{tok})) {
+                                Tensor deviceTok = tokT.to(models[rank].device());
+                                try {
+                                    return models[rank].mtp().draftStep(
+                                            deviceTok, hidden, position, draftStep);
+                                } finally {
+                                    deviceTok.close();
+                                }
+                            } finally {
+                                ParallelState.clearCurrent();
+                            }
+                        }));
+                    }
+                    try {
+                        for (int r = 0; r < models.length; r++) {
+                            logits[r] = futures.get(r).get();
+                        }
+                    } catch (Exception e) {
+                        for (Tensor l : logits) {
+                            if (l != null) {
+                                l.close();
+                            }
+                        }
+                        throw new RuntimeException("TP MTP draft failed", e);
+                    }
+                }
+                drafts[d] = smile.llm.engine.Sampling.sampleGreedyTokenId(logits[0]);
+                for (Tensor l : logits) {
+                    if (l != null) {
+                        l.close();
+                    }
+                }
+                for (int r = 0; r < models.length; r++) {
+                    if (own[r] && hiddens[r] != null) {
+                        hiddens[r].close();
+                    }
+                    Tensor next = models[r].mtp().lastDraftHidden();
+                    if (next == null) {
+                        throw new IllegalStateException(
+                                "MTP draft hidden missing after step " + d + " rank " + r);
+                    }
+                    hiddens[r] = next.detach();
+                    hiddens[r].detachFromScopes();
+                    own[r] = true;
+                }
+                token = drafts[d];
+            }
+        } finally {
+            for (int r = 0; r < models.length; r++) {
+                if (own[r] && hiddens[r] != null) {
+                    hiddens[r].close();
+                }
+            }
+        }
+        return drafts;
+    }
+
+    private void activatePools(int requestId) {
+        for (QwenModel m : models) {
+            if (m.kvCachePool() != null) {
+                m.kvCachePool().activateStep(requestId);
+            }
+            if (m.deltaNetStatePool() != null) {
+                m.deltaNetStatePool().activateStep(requestId);
+            }
+        }
+    }
+
+    private void saveDeltaCheckpoints(int slot) {
+        for (QwenModel m : models) {
+            DeltaNetStatePool d = m.deltaNetStatePool();
+            if (d != null) {
+                d.saveCheckpoint(slot);
+            }
+        }
+    }
+
+    private void restoreDeltaCheckpoints(int slot) {
+        for (QwenModel m : models) {
+            DeltaNetStatePool d = m.deltaNetStatePool();
+            if (d != null) {
+                d.restoreCheckpoint(slot);
+            }
+        }
+    }
+
+    private void scatterDeltaPools() {
+        for (QwenModel m : models) {
+            if (m.deltaNetStatePool() != null) {
+                m.deltaNetStatePool().scatterActive();
+            }
+        }
     }
 
     @Override

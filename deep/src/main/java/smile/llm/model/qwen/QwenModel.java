@@ -314,9 +314,10 @@ public class QwenModel extends LayerBlock {
     }
 
     /**
-     * Stores a detached copy of {@code hidden} (last token row) as the MTP anchor.
+     * Stores the last-token pre-norm hidden as the MTP draft anchor.
+     * Uses an in-place copy into a durable buffer (safe across AutoScope pops).
      *
-     * @param hidden pre-norm hidden {@code [B, S, D]} or {@code [B, D]}.
+     * @param hidden pre-norm hidden {@code [B, S, D]}, {@code [B, 1, D]}, or {@code [B, D]}.
      */
     void capturePreNormHidden(Tensor hidden) {
         if (mtp == null || hidden == null) {
@@ -324,21 +325,39 @@ public class QwenModel extends LayerBlock {
         }
         Tensor row = hidden;
         boolean sliced = false;
-        if (hidden.dim() == 3 && hidden.shape()[1] > 1) {
-            try (var last = Index.of(-1)) {
-                row = hidden.get(Index.Colon, last);
+        if (hidden.dim() == 3) {
+            if (hidden.shape()[1] > 1) {
+                try (var last = Index.of(-1)) {
+                    row = hidden.get(Index.Colon, last);
+                    sliced = true;
+                }
+            }
+            // Squeeze [B, 1, D] → [B, D] for a stable anchor shape.
+            if (row.dim() == 3 && row.shape()[1] == 1) {
+                long[] sh = row.shape();
+                Tensor squeezed = row.reshape(sh[0], sh[2]);
+                if (sliced) {
+                    row.close();
+                }
+                row = squeezed;
                 sliced = true;
             }
         }
-        Tensor copy = row.detach();
-        copy.detachFromScopes();
+        if (lastPreNormHidden == null
+                || !java.util.Arrays.equals(lastPreNormHidden.shape(), row.shape())
+                || lastPreNormHidden.device().index() != row.device().index()
+                || lastPreNormHidden.dtype() != row.dtype()) {
+            if (lastPreNormHidden != null) {
+                lastPreNormHidden.close();
+            }
+            lastPreNormHidden = row.copy();
+            lastPreNormHidden.detachFromScopes();
+        } else {
+            smile.torch.Native.copy_(lastPreNormHidden, row);
+        }
         if (sliced) {
             row.close();
         }
-        if (lastPreNormHidden != null) {
-            lastPreNormHidden.close();
-        }
-        lastPreNormHidden = copy;
     }
 
     /**
@@ -722,7 +741,9 @@ public class QwenModel extends LayerBlock {
      * @return logits in float32 {@code [B, 1, V]} (graph path returns persistent buffer).
      */
     public Tensor forwardDecodeGraph(Tensor tokens, int[] cachePositions, int[] ropePositions) {
-        if (!DecodeCudaGraph.enabled() || kvCachePool == null) {
+        // MTP anchor capture allocates tensors; illegal / hangs under CUDA graph
+        // capture-replay. Plan also keeps verify windows off graphs.
+        if (mtp != null || !DecodeCudaGraph.enabled() || kvCachePool == null) {
             return forward(tokens, cachePositions, ropePositions, false);
         }
         int batch = (int) tokens.shape()[0];
@@ -825,6 +846,9 @@ public class QwenModel extends LayerBlock {
 
     /** Continues next-bucket prefetch when the scheduler is idle but KV remains bound. */
     void idleAdvancePrefetch() {
+        if (mtp != null) {
+            return;
+        }
         if (!DecodeCudaGraph.preCaptureEnabled() || kvCachePool == null
                 || lastDecodeGraphBatch <= 0 || lastDecodeGraphRopePos == null) {
             return;
