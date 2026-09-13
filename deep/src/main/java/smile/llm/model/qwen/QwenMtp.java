@@ -261,6 +261,17 @@ public class QwenMtp extends LayerBlock {
         kvCachePool.bindRequests(1, cap);
     }
 
+    /** Releases MTP draft KV after a speculative round. */
+    public void endRound() {
+        if (kvCachePool != null) {
+            kvCachePool.unbindRequests();
+        }
+        if (lastDraftHidden != null) {
+            lastDraftHidden.close();
+            lastDraftHidden = null;
+        }
+    }
+
     @Override
     public QwenMtp to(Device device) {
         super.to(device);

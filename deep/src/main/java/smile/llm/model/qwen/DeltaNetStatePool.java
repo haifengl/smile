@@ -328,9 +328,13 @@ public class DeltaNetStatePool implements AutoCloseable {
     private Tensor[][] speculativeRecurrent;
     private Tensor[][] speculativeConv;
     private int speculativeSlots;
+    /** Row capacity of speculative checkpoint tensors (not {@link #maxBatchSize}). */
+    private int speculativeBatchCapacity;
 
     /**
-     * Ensures {@code numSlots} mid-verify checkpoint buffers for the active batch.
+     * Ensures {@code numSlots} mid-verify checkpoint buffers sized for the
+     * currently activated batch ({@link #boundBatch}), not the full pool
+     * {@code maxBatchSize}. Full-pool sizing OOMs under serving configs.
      *
      * @param numSlots checkpoint slots ({@code N+1} for {@code N} draft tokens).
      */
@@ -338,11 +342,15 @@ public class DeltaNetStatePool implements AutoCloseable {
         if (numSlots < 1) {
             throw new IllegalArgumentException("numSlots must be >= 1");
         }
-        if (speculativeRecurrent != null && speculativeSlots >= numSlots) {
+        int rows = Math.max(1, boundBatch);
+        if (speculativeRecurrent != null
+                && speculativeSlots >= numSlots
+                && speculativeBatchCapacity >= rows) {
             return;
         }
         closeSpeculativeCheckpoints();
         speculativeSlots = numSlots;
+        speculativeBatchCapacity = rows;
         speculativeRecurrent = new Tensor[numSlots][numLinearLayers];
         speculativeConv = new Tensor[numSlots][numLinearLayers];
         var recurrentOpts = new Tensor.Options()
@@ -351,15 +359,23 @@ public class DeltaNetStatePool implements AutoCloseable {
                 .device(device).dtype(convDtype).requireGradients(false);
         for (int s = 0; s < numSlots; s++) {
             for (int i = 0; i < numLinearLayers; i++) {
-                speculativeRecurrent[s][i] = Tensor.zeros(recurrentOpts, maxBatchSize, numVHeads,
+                speculativeRecurrent[s][i] = Tensor.zeros(recurrentOpts, rows, numVHeads,
                         keyHeadDim, valueHeadDim);
                 speculativeRecurrent[s][i].detachFromScopes();
                 if (convStateLen > 0) {
-                    speculativeConv[s][i] = Tensor.zeros(convOpts, maxBatchSize, convDim, convStateLen);
+                    speculativeConv[s][i] = Tensor.zeros(convOpts, rows, convDim, convStateLen);
                     speculativeConv[s][i].detachFromScopes();
                 }
             }
         }
+    }
+
+    /**
+     * Releases speculative checkpoint buffers (call after a verify round when
+     * GPU headroom is tight).
+     */
+    public void releaseSpeculativeCheckpoints() {
+        closeSpeculativeCheckpoints();
     }
 
     /**
@@ -387,6 +403,11 @@ public class DeltaNetStatePool implements AutoCloseable {
         int b = boundBatch;
         if (b <= 0) {
             return;
+        }
+        if (b > speculativeBatchCapacity) {
+            throw new IllegalStateException(
+                    "active batch " + b + " exceeds speculative checkpoint capacity "
+                            + speculativeBatchCapacity + "; call ensureSpeculativeCheckpoints after activateStep");
         }
         try (var span = Index.slice(0, b)) {
             for (int i = 0; i < numLinearLayers; i++) {
@@ -426,7 +447,7 @@ public class DeltaNetStatePool implements AutoCloseable {
                 if (speculativeRecurrent[s][i] != null) {
                     speculativeRecurrent[s][i].close();
                 }
-                if (speculativeConv[s][i] != null) {
+                if (speculativeConv != null && speculativeConv[s][i] != null) {
                     speculativeConv[s][i].close();
                 }
             }
@@ -434,6 +455,7 @@ public class DeltaNetStatePool implements AutoCloseable {
         speculativeRecurrent = null;
         speculativeConv = null;
         speculativeSlots = 0;
+        speculativeBatchCapacity = 0;
     }
 
     /**
