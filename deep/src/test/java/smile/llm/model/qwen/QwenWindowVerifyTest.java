@@ -86,6 +86,8 @@ public class QwenWindowVerifyTest {
         int[][] both = qwen.windowVsSequentialArgmax(requestId, window, startPos);
         assertArrayEquals(both[1], both[0],
                 "window allTokenLogits argmax must match sequential decodeStep");
+        assertTrue(qwen.lastWindowVsSequentialMaxAbs < 1e-3f,
+                "window vs sequential logits maxAbs=" + qwen.lastWindowVsSequentialMaxAbs);
 
         qwen.evict(requestId);
     }

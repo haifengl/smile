@@ -2603,15 +2603,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     }
 
     /**
-     * Package-visible hybrid parity helper: window vs sequential greedy argmax.
+     * Package-visible hybrid parity helper: window vs sequential greedy argmax
+     * and max abs logit difference at each position.
      *
-     * <p>Runs one {@code allTokenLogits} window forward, rolls KV/DeltaNet back,
-     * then sequential {@link #decodeStep} at each position. Used by unit tests.
-     *
-     * @param requestId    bound request id.
-     * @param windowTokens tokens to score {@code [S]} at {@code startPos..}.
-     * @param startPos     KV write start for {@code windowTokens[0]}.
-     * @return {@code int[2][S]} where row 0 is window argmax and row 1 is sequential.
+     * @return {@code {windowArgmax[S], seqArgmax[S]}} plus side-channel via
+     *         {@link #lastWindowVsSequentialMaxAbs}.
      */
     int[][] windowVsSequentialArgmax(int requestId, int[] windowTokens, int startPos) {
         if (windowTokens == null || windowTokens.length < 1) {
@@ -2621,22 +2617,77 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         activatePools(requestId);
         saveDeltaNetCheckpoint();
 
+        float[][] windowLogits;
         int[] windowArgmax;
         try (Tensor logits = forwardVerifyWindow(requestId, windowTokens, startPos, false)) {
+            windowLogits = logitsRowsToFloat(logits);
             windowArgmax = sampleTargetWindow(logits, 0.0, 1.0);
         }
         truncateKv(requestId, startPos, startPos + s);
         restoreDeltaNetCheckpoint();
         scatterDeltaNet();
 
+        float[][] seqLogits = new float[s][];
         int[] seqArgmax = new int[s];
         for (int i = 0; i < s; i++) {
             try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{windowTokens[i]},
                     new int[]{startPos + i})) {
+                seqLogits[i] = logitsRow0ToFloat(logits);
                 seqArgmax[i] = Sampling.sampleGreedyTokenId(logits);
             }
         }
+        float maxAbs = 0f;
+        for (int i = 0; i < s; i++) {
+            float[] w = windowLogits[i];
+            float[] q = seqLogits[i];
+            int n = Math.min(w.length, q.length);
+            for (int j = 0; j < n; j++) {
+                maxAbs = Math.max(maxAbs, Math.abs(w[j] - q[j]));
+            }
+        }
+        lastWindowVsSequentialMaxAbs = maxAbs;
         return new int[][]{windowArgmax, seqArgmax};
+    }
+
+    /** Max abs logit delta from the last {@link #windowVsSequentialArgmax} call. */
+    volatile float lastWindowVsSequentialMaxAbs;
+
+    private static float[][] logitsRowsToFloat(Tensor logits) {
+        Tensor flat = logits;
+        boolean close = false;
+        if (logits.dim() == 3) {
+            long[] sh = logits.shape();
+            flat = logits.reshape(sh[0] * sh[1], sh[2]);
+            close = true;
+        }
+        try (Tensor cpu = flat.to(Device.CPU())) {
+            long[] sh = cpu.shape();
+            int rows = (int) sh[0];
+            int cols = (int) sh[1];
+            float[] all = cpu.floatArray();
+            float[][] out = new float[rows][cols];
+            for (int i = 0; i < rows; i++) {
+                System.arraycopy(all, i * cols, out[i], 0, cols);
+            }
+            return out;
+        } finally {
+            if (close) {
+                flat.close();
+            }
+        }
+    }
+
+    private static float[] logitsRow0ToFloat(Tensor logits) {
+        try (Tensor cpu = logits.to(Device.CPU())) {
+            float[] all = cpu.floatArray();
+            if (logits.dim() == 1) {
+                return all;
+            }
+            int cols = (int) logits.shape()[logits.dim() - 1];
+            float[] row = new float[cols];
+            System.arraycopy(all, 0, row, 0, cols);
+            return row;
+        }
     }
 
     /**
