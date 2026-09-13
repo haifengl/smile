@@ -46,7 +46,11 @@ public final class FlashInferWorkspace implements AutoCloseable {
         return new FlashInferWorkspace(h);
     }
 
-    /** @return native handle for downcalls. */
+    /**
+     * Returns the native workspace handle for downcalls.
+     *
+     * @return native handle for downcalls.
+     */
     public MemorySegment handle() {
         return handle;
     }

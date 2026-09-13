@@ -30,12 +30,14 @@ public final class QwenWeightShard {
     }
 
     /**
-     * Returns a tensor suitable for {@code loadStateDict} on one TP rank.
-     * Caller owns any newly created view; may return {@code src} unchanged.
-     */
-    /**
      * Returns a tensor suitable for {@code loadStateDict} / FP8 install on one TP rank.
      * Caller owns any newly created view; may return {@code src} unchanged.
+     *
+     * @param smileName Smile weight name.
+     * @param src       full-rank source tensor.
+     * @param args      model hyperparameters.
+     * @param shard     TP shard spec, or {@code null} for no sharding.
+     * @return sharded or original tensor.
      */
     public static Tensor shard(String smileName, Tensor src, QwenModelArgs args, TensorShardSpec shard) {
         if (shard == null || shard.tpSize() <= 1) {
@@ -100,6 +102,12 @@ public final class QwenWeightShard {
     /**
      * Shards a block-scale inverse tensor {@code [ceil(N/128), ceil(K/128)]} using
      * the same TP rules as {@link #shard} for the matching weight name.
+     *
+     * @param smileWeightName Smile weight name for the matching linear.
+     * @param src             full-rank scale-inv tensor.
+     * @param args            model hyperparameters.
+     * @param shard           TP shard spec, or {@code null} for no sharding.
+     * @return sharded or original tensor.
      */
     public static Tensor shardScaleInv(String smileWeightName, Tensor src,
                                        QwenModelArgs args, TensorShardSpec shard) {

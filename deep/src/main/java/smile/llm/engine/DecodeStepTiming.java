@@ -25,6 +25,9 @@ package smile.llm.engine;
 public final class DecodeStepTiming {
     private static final ThreadLocal<DecodeStepTiming> CURRENT = new ThreadLocal<>();
 
+    /** Creates an empty timing/snapshot holder. */
+    public DecodeStepTiming() {}
+
     /** KV activate + host tensor prep before TP forward. */
     public long prepNs;
     /** Wall time for TP forward ({@code max(rank)} when tensor-parallel). */
@@ -43,7 +46,11 @@ public final class DecodeStepTiming {
      */
     public DecodeForwardProfile.Snapshot profile;
 
-    /** @return timing holder for the current decode worker thread. */
+    /**
+     * Returns the timing holder for the current decode worker thread.
+     *
+     * @return timing holder for the current decode worker thread.
+     */
     public static DecodeStepTiming current() {
         return CURRENT.get();
     }

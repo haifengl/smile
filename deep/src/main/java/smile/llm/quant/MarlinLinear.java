@@ -35,6 +35,8 @@ public final class MarlinLinear implements LinearOp, AutoCloseable {
     private final int groupSize;
 
     /**
+     * Creates a Marlin FP16×INT4 linear layer.
+     *
      * @param qweight     Marlin-packed weights.
      * @param scales      group scales.
      * @param bias        optional bias, or {@code null}.
@@ -64,8 +66,25 @@ public final class MarlinLinear implements LinearOp, AutoCloseable {
                 Math.max(outFeatures / 128L * 16L, 1L));
     }
 
+    /**
+     * Returns the input feature count.
+     *
+     * @return input features (K).
+     */
     public int inFeatures() { return inFeatures; }
+
+    /**
+     * Returns the output feature count.
+     *
+     * @return output features (N).
+     */
     public int outFeatures() { return outFeatures; }
+
+    /**
+     * Returns the quantization group size.
+     *
+     * @return group size.
+     */
     public int groupSize() { return groupSize; }
 
     @Override

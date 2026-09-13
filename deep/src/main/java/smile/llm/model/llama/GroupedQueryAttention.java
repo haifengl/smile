@@ -128,6 +128,11 @@ public class GroupedQueryAttention implements Attention {
      * Replaces projection ops with quantized backends (shard-then-pack already applied).
      * Unregisters and frees dense {@link LinearLayer} shells so their GPU storage
      * is released before KV pool sizing.
+     *
+     * @param wq query projection op.
+     * @param wk key projection op.
+     * @param wv value projection op.
+     * @param wo output projection op.
      */
     public void replaceProjections(LinearOp wq, LinearOp wk, LinearOp wv, LinearOp wo) {
         if (wq == null || wk == null || wv == null || wo == null) {
@@ -147,12 +152,20 @@ public class GroupedQueryAttention implements Attention {
         smile.llm.quant.DenseLinearRelease.unregisterAndClose(module, "wo", oldO);
     }
 
-    /** Query head count on this rank (equals global heads when TP size is 1). */
+    /**
+     * Returns the query head count on this rank.
+     *
+     * @return query head count (equals global heads when TP size is 1).
+     */
     public int numQueryHeads() {
         return numLocalHeads;
     }
 
-    /** Key/value head count (global; local when TP is applied). */
+    /**
+     * Returns the key/value head count.
+     *
+     * @return key/value head count (global; local when TP is applied).
+     */
     public int numKeyValueHeads() {
         return numKvHeads;
     }

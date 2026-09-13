@@ -65,6 +65,16 @@ public class DeltaNetStatePool implements AutoCloseable {
 
     /**
      * Constructor using the same dtype for recurrent and conv buffers (tests).
+     *
+     * @param numLinearLayers number of linear-attention layers.
+     * @param numVHeads       number of value heads.
+     * @param keyHeadDim      key head dimension.
+     * @param valueHeadDim    value head dimension.
+     * @param convDim         causal conv channel dimension.
+     * @param convKernel      causal conv kernel size.
+     * @param maxBatchSize    maximum concurrent home rows.
+     * @param device          storage device.
+     * @param dtype           dtype for both recurrent and conv buffers.
      */
     public DeltaNetStatePool(int numLinearLayers, int numVHeads, int keyHeadDim, int valueHeadDim,
                              int convDim, int convKernel, int maxBatchSize,
@@ -75,6 +85,17 @@ public class DeltaNetStatePool implements AutoCloseable {
 
     /**
      * Constructor with separate recurrent / conv dtypes.
+     *
+     * @param numLinearLayers number of linear-attention layers.
+     * @param numVHeads       number of value heads.
+     * @param keyHeadDim      key head dimension.
+     * @param valueHeadDim    value head dimension.
+     * @param convDim         causal conv channel dimension.
+     * @param convKernel      causal conv kernel size.
+     * @param maxBatchSize    maximum concurrent home rows.
+     * @param device          storage device.
+     * @param recurrentDtype  dtype for recurrent state buffers.
+     * @param convDtype       dtype for conv state buffers.
      */
     public DeltaNetStatePool(int numLinearLayers, int numVHeads, int keyHeadDim, int valueHeadDim,
                              int convDim, int convKernel, int maxBatchSize,
@@ -261,6 +282,8 @@ public class DeltaNetStatePool implements AutoCloseable {
      *
      * <p>Used for CUDA graph prefetch forwards that share the current
      * {@link #activateStep} packing.
+     *
+     * @param action work to run while active rows are preserved.
      */
     public void withPreservedActive(Runnable action) {
         int b = boundBatch;
@@ -469,17 +492,27 @@ public class DeltaNetStatePool implements AutoCloseable {
         freeRows.set(0, maxBatchSize);
     }
 
-    /** @return bound batch size, or {@code 0} if unbound. */
+    /**
+     * Returns the bound batch size.
+     *
+     * @return bound batch size, or {@code 0} if unbound.
+     */
     public int boundBatch() {
         return boundBatch;
     }
 
-    /** @return number of multi-request bindings. */
+    /**
+     * Returns the number of multi-request bindings.
+     *
+     * @return number of multi-request bindings.
+     */
     public int boundRequestCount() {
         return requestRows.size();
     }
 
     /**
+     * Returns the recurrent state buffer for a linear-attention layer.
+     *
      * @param linearLayerId ordinal among linear-attention layers.
      * @return recurrent state {@code [maxBatch, V, Kdim, Vdim]} (first {@link #boundBatch} rows active).
      */
@@ -538,6 +571,8 @@ public class DeltaNetStatePool implements AutoCloseable {
     }
 
     /**
+     * Returns the conv state buffer for a linear-attention layer.
+     *
      * @param linearLayerId ordinal among linear-attention layers.
      * @return conv state {@code [maxBatch, C, K-1]}, or {@code null} if unused.
      */
@@ -545,7 +580,11 @@ public class DeltaNetStatePool implements AutoCloseable {
         return conv[linearLayerId];
     }
 
-    /** @return linear layer count. */
+    /**
+     * Returns the linear-attention layer count.
+     *
+     * @return linear layer count.
+     */
     public int numLinearLayers() {
         return numLinearLayers;
     }

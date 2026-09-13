@@ -38,6 +38,9 @@ import smile.torch.Native;
  * @author Haifeng Li
  */
 public final class FlashInferAttentionKernel implements AttentionKernel {
+    /** Creates a FlashInfer attention kernel. */
+    public FlashInferAttentionKernel() {}
+
     @Override
     public Tensor forward(Tensor query, Tensor key, Tensor value, Tensor mask, AttentionContext ctx) {
         if (ctx != null && ctx.isRaggedContiguous()) {

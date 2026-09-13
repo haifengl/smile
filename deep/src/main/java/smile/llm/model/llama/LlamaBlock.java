@@ -119,10 +119,20 @@ public class LlamaBlock {
         }
     }
 
+    /**
+     * Returns the attention submodule.
+     *
+     * @return attention submodule.
+     */
     public Attention attention() {
         return attention;
     }
 
+    /**
+     * Returns the feed-forward submodule.
+     *
+     * @return feed-forward submodule.
+     */
     public FeedForward feedForward() {
         return feedForward;
     }

@@ -77,6 +77,8 @@ public final class Qwen3ChatTemplate implements ChatTemplate {
     }
 
     /**
+     * Creates a chat template with generation-prompt and thinking options.
+     *
      * @param addGenerationPrompt when {@code true}, append open assistant header.
      * @param enableThinking      when {@code true}, open with {@code <think>\\n}.
      */

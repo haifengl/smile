@@ -35,6 +35,13 @@ public final class Nvfp4Linear implements LinearOp, AutoCloseable {
     private final int inFeatures;
     private final int outFeatures;
 
+    /**
+     * Creates an NVFP4 weight-only linear layer.
+     *
+     * @param weight      NVFP4 weight tensor.
+     * @param weightScale weight scale tensor.
+     * @param bias        optional bias, or {@code null}.
+     */
     public Nvfp4Linear(Tensor weight, Tensor weightScale, Tensor bias) {
         if (weight == null || weightScale == null) {
             throw new IllegalArgumentException("weight and weightScale required");
@@ -50,7 +57,18 @@ public final class Nvfp4Linear implements LinearOp, AutoCloseable {
         this.bias = bias;
     }
 
+    /**
+     * Returns the input feature count.
+     *
+     * @return input features.
+     */
     public int inFeatures() { return inFeatures; }
+
+    /**
+     * Returns the output feature count.
+     *
+     * @return output features.
+     */
     public int outFeatures() { return outFeatures; }
 
     @Override

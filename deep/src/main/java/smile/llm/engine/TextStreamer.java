@@ -37,6 +37,8 @@ public final class TextStreamer {
     private int length;
 
     /**
+     * Creates a text streamer with {@link #DEFAULT_CHUNK_TOKENS}.
+     *
      * @param maxTokens capacity of the completion token buffer.
      * @param tryDecode {@code (tokens, skipSpecial) -> text}; may throw
      *                  {@link CharacterCodingException} as unchecked via wrapper.
@@ -45,6 +47,13 @@ public final class TextStreamer {
         this(maxTokens, DEFAULT_CHUNK_TOKENS, tryDecode);
     }
 
+    /**
+     * Creates a text streamer with an explicit coalesce length.
+     *
+     * @param maxTokens   capacity of the completion token buffer.
+     * @param chunkTokens coalesce length before attempting a decode flush.
+     * @param tryDecode   {@code (tokens, skipSpecial) -> text}.
+     */
     public TextStreamer(int maxTokens, int chunkTokens,
                         BiFunction<int[], Boolean, String> tryDecode) {
         if (maxTokens < 1) {
@@ -57,7 +66,11 @@ public final class TextStreamer {
         this.length = 0;
     }
 
-    /** Appends one generated token id. */
+    /**
+     * Appends one generated token id.
+     *
+     * @param tokenId generated token id.
+     */
     public void accept(int tokenId) {
         if (length >= buffer.length) {
             return;

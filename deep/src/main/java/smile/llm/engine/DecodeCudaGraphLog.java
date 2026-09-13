@@ -38,7 +38,15 @@ public final class DecodeCudaGraphLog {
 
     private DecodeCudaGraphLog() {}
 
-    /** Logs the first eager warmup step for a bucket. */
+    /**
+     * Logs the first eager warmup step for a bucket.
+     *
+     * @param tpRank   tensor-parallel rank for logging.
+     * @param batch    decode batch size.
+     * @param numPages KV page count for this bucket.
+     * @param step     current warmup step (1-based).
+     * @param total    total warmup steps before capture.
+     */
     public static void bucketWarmup(int tpRank, int batch, int numPages, int step, int total) {
         if (!logger.isInfoEnabled()) {
             return;
@@ -50,7 +58,15 @@ public final class DecodeCudaGraphLog {
         }
     }
 
-    /** Logs successful graph capture for a bucket. */
+    /**
+     * Logs successful graph capture for a bucket.
+     *
+     * @param tpRank     tensor-parallel rank for logging.
+     * @param batch      decode batch size.
+     * @param numPages   KV page count for this bucket.
+     * @param captureMs  capture duration in milliseconds.
+     * @param prefetched {@code true} when capture was a next-bucket prefetch.
+     */
     public static void bucketCapture(int tpRank, int batch, int numPages, long captureMs,
                                      boolean prefetched) {
         if (!logger.isInfoEnabled()) {
@@ -68,7 +84,13 @@ public final class DecodeCudaGraphLog {
         }
     }
 
-    /** Logs the first replay for a bucket in this process. */
+    /**
+     * Logs the first replay for a bucket in this process.
+     *
+     * @param tpRank   tensor-parallel rank for logging.
+     * @param batch    decode batch size.
+     * @param numPages KV page count for this bucket.
+     */
     public static void bucketReplay(int tpRank, int batch, int numPages) {
         if (!logger.isInfoEnabled()) {
             return;
@@ -79,7 +101,15 @@ public final class DecodeCudaGraphLog {
         }
     }
 
-    /** Logs the first eager warmup step during next-bucket prefetch capture. */
+    /**
+     * Logs the first eager warmup step during next-bucket prefetch capture.
+     *
+     * @param tpRank   tensor-parallel rank for logging.
+     * @param batch    decode batch size.
+     * @param numPages KV page count for this bucket.
+     * @param step     current warmup step (1-based).
+     * @param total    total warmup steps before capture.
+     */
     public static void prefetchWarmup(int tpRank, int batch, int numPages, int step, int total) {
         if (!logger.isInfoEnabled()) {
             return;
@@ -91,7 +121,13 @@ public final class DecodeCudaGraphLog {
         }
     }
 
-    /** Logs when background prefetch starts for the next page bucket. */
+    /**
+     * Logs when background prefetch starts for the next page bucket.
+     *
+     * @param tpRank   tensor-parallel rank for logging.
+     * @param batch    decode batch size.
+     * @param numPages KV page count for this bucket.
+     */
     public static void prefetchStart(int tpRank, int batch, int numPages) {
         if (!logger.isInfoEnabled()) {
             return;
@@ -102,7 +138,14 @@ public final class DecodeCudaGraphLog {
         }
     }
 
-    /** Logs when a prefetched bucket becomes replay-ready. */
+    /**
+     * Logs when a prefetched bucket becomes replay-ready.
+     *
+     * @param tpRank    tensor-parallel rank for logging.
+     * @param batch     decode batch size.
+     * @param numPages  KV page count for this bucket.
+     * @param captureMs capture duration in milliseconds.
+     */
     public static void prefetchReady(int tpRank, int batch, int numPages, long captureMs) {
         if (!logger.isInfoEnabled()) {
             return;
@@ -113,7 +156,13 @@ public final class DecodeCudaGraphLog {
         }
     }
 
-    /** Logs promotion of a prefetched graph at a page boundary (no capture hitch). */
+    /**
+     * Logs promotion of a prefetched graph at a page boundary (no capture hitch).
+     *
+     * @param tpRank   tensor-parallel rank for logging.
+     * @param batch    decode batch size.
+     * @param numPages KV page count for this bucket.
+     */
     public static void prefetchHit(int tpRank, int batch, int numPages) {
         if (!logger.isInfoEnabled()) {
             return;

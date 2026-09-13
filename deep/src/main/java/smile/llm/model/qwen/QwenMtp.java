@@ -151,19 +151,31 @@ public class QwenMtp extends LayerBlock {
         }
     }
 
-    /** @return MTP KV layout for a short draft window. */
+    /**
+     * Returns the MTP KV layout for a short draft window.
+     *
+     * @return MTP KV layout for a short draft window.
+     */
     public KvCacheLayout kvCacheLayout() {
         int kvHeads = shard != null && shard.tpSize() > 1 ? shard.numKvHeads() : params.numKvHeads();
         return new KvCacheLayout(numLayers, kvHeads, params.headDim(),
                 params.maxBatchSize(), QwenModelArgs.MAX_SPECULATIVE_TOKENS + 2);
     }
 
-    /** @return MTP KV pool, or {@code null} before install. */
+    /**
+     * Returns the MTP KV pool.
+     *
+     * @return MTP KV pool, or {@code null} before install.
+     */
     public KvCachePool kvCachePool() {
         return kvCachePool;
     }
 
-    /** @return number of MTP transformer layers. */
+    /**
+     * Returns the number of MTP transformer layers.
+     *
+     * @return number of MTP transformer layers.
+     */
     public int numLayers() {
         return numLayers;
     }
@@ -240,8 +252,9 @@ public class QwenMtp extends LayerBlock {
     Tensor lastDraftHidden;
 
     /**
-     * @return last draft hidden {@code [B, 1, D]} or {@code [B, D]} from the most
-     *         recent {@link #draftStep}, or {@code null}.
+     * Returns the last draft hidden from the most recent {@link #draftStep}.
+     *
+     * @return last draft hidden {@code [B, 1, D]} or {@code [B, D]}, or {@code null}.
      */
     public Tensor lastDraftHidden() {
         return lastDraftHidden;

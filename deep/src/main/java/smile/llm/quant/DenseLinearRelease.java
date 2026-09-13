@@ -30,6 +30,10 @@ public final class DenseLinearRelease {
     /**
      * Unregisters {@code name} from {@code parentModule} (if present) and closes
      * the dense layer so LibTorch can free its parameter storage.
+     *
+     * @param parentModule parent PyTorch module handle, or {@code null}.
+     * @param name         registered submodule name, or {@code null}.
+     * @param op           linear op to close when it is a {@link LinearLayer}.
      */
     public static void unregisterAndClose(MemorySegment parentModule, String name, LinearOp op) {
         if (!(op instanceof LinearLayer ll)) {

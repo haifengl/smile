@@ -62,6 +62,13 @@ public record ChatCompletion(
 
     /**
      * Backward-compatible constructor without tool calls.
+     *
+     * @param model            the model used for the chat completion.
+     * @param content          the generated text completion.
+     * @param promptTokens     the list of prompt tokens.
+     * @param completionTokens the list of generated tokens.
+     * @param reason           the finish reason.
+     * @param logprobs         the optional list of log probabilities of generated tokens.
      */
     public ChatCompletion(String model, String content, int[] promptTokens,
                           int[] completionTokens, FinishReason reason, float[] logprobs) {
@@ -69,6 +76,8 @@ public record ChatCompletion(
     }
 
     /**
+     * Returns whether this completion includes tool calls.
+     *
      * @return {@code true} when this completion includes tool calls.
      */
     public boolean hasToolCalls() {

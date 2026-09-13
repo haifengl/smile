@@ -89,6 +89,25 @@ public record QwenModelArgs(
 
     /**
      * Constructor without MTP fields ({@code mtpNumHiddenLayers = 0}).
+     *
+     * @param dim                  model hidden size.
+     * @param numLayers            decoder layer count.
+     * @param numHeads             query head count.
+     * @param numKvHeads           key/value head count.
+     * @param headDim              per-head dimension.
+     * @param vocabSize            vocabulary size.
+     * @param intermediateSize     FFN intermediate size.
+     * @param normEps              RMSNorm epsilon.
+     * @param ropeTheta            RoPE base theta.
+     * @param partialRotaryFactor  partial RoPE fraction.
+     * @param linearConvKernelDim  DeltaNet conv kernel size.
+     * @param linearKeyHeadDim     DeltaNet key head dim.
+     * @param linearValueHeadDim   DeltaNet value head dim.
+     * @param linearNumKeyHeads    DeltaNet key head count.
+     * @param linearNumValueHeads  DeltaNet value head count.
+     * @param layerTypes           per-layer attention type strings.
+     * @param maxBatchSize         max concurrent batch size.
+     * @param maxSeqLen            max sequence length.
      */
     public QwenModelArgs(
             int dim,
@@ -115,7 +134,11 @@ public record QwenModelArgs(
                 maxBatchSize, maxSeqLen, 0, 0);
     }
 
-    /** @return {@code true} when a native MTP head is configured. */
+    /**
+     * Returns whether a native MTP head is configured.
+     *
+     * @return {@code true} when a native MTP head is configured.
+     */
     public boolean hasMtp() {
         return mtpNumHiddenLayers > 0;
     }

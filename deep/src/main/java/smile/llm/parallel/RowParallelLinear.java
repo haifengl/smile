@@ -37,6 +37,15 @@ public final class RowParallelLinear {
     private final int tpSize;
     private final int globalInFeatures;
 
+    /**
+     * Creates a dense row-parallel linear layer.
+     *
+     * @param globalInFeatures global input features (must be divisible by {@code tpSize}).
+     * @param outFeatures      output features.
+     * @param bias             whether to include bias.
+     * @param tpSize           tensor-parallel world size.
+     * @param tpRank           this rank.
+     */
     public RowParallelLinear(int globalInFeatures, int outFeatures, boolean bias,
                              int tpSize, int tpRank) {
         if (globalInFeatures % tpSize != 0) {
@@ -49,7 +58,14 @@ public final class RowParallelLinear {
         this.linear = new LinearLayer(globalInFeatures / tpSize, outFeatures, bias);
     }
 
-    /** Wraps an already-sharded (and packed, if quantized) local linear op. */
+    /**
+     * Wraps an already-sharded (and packed, if quantized) local linear op.
+     *
+     * @param local            local linear op.
+     * @param globalInFeatures global input features.
+     * @param tpSize           tensor-parallel world size.
+     * @param tpRank           this rank.
+     */
     public RowParallelLinear(LinearOp local, int globalInFeatures, int tpSize, int tpRank) {
         if (local == null) {
             throw new IllegalArgumentException("local linear required");
@@ -64,10 +80,20 @@ public final class RowParallelLinear {
         this.tpRank = tpRank;
     }
 
+    /**
+     * Returns the underlying linear op.
+     *
+     * @return linear op.
+     */
     public LinearOp linearOp() {
         return linear;
     }
 
+    /**
+     * Returns the dense linear layer when present.
+     *
+     * @return dense {@link LinearLayer}.
+     */
     public LinearLayer linear() {
         if (linear instanceof LinearLayer ll) {
             return ll;
@@ -75,22 +101,48 @@ public final class RowParallelLinear {
         throw new IllegalStateException("RowParallelLinear holds quantized LinearOp, not LinearLayer");
     }
 
+    /**
+     * Returns the dense module handle.
+     *
+     * @return module handle.
+     */
     public MemorySegment module() {
         return linear().module();
     }
 
+    /**
+     * Returns local input features ({@code globalInFeatures / tpSize}).
+     *
+     * @return local input features.
+     */
     public int localInFeatures() {
         return globalInFeatures / tpSize;
     }
 
+    /**
+     * Returns this TP rank.
+     *
+     * @return TP rank.
+     */
     public int tpRank() {
         return tpRank;
     }
 
+    /**
+     * Returns the TP world size.
+     *
+     * @return TP world size.
+     */
     public int tpSize() {
         return tpSize;
     }
 
+    /**
+     * Local matmul; caller must all-reduce for replicated outputs.
+     *
+     * @param input activation tensor.
+     * @return local output.
+     */
     public Tensor forward(Tensor input) {
         return linear.forward(input);
     }

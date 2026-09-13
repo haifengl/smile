@@ -44,6 +44,8 @@ public record ParseResult(String content, List<ToolCall> toolCalls, FinishReason
     }
 
     /**
+     * Returns whether one or more tool calls were parsed.
+     *
      * @return {@code true} when one or more tool calls were parsed.
      */
     public boolean hasToolCalls() {

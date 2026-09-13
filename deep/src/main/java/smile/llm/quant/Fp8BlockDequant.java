@@ -37,6 +37,10 @@ public final class Fp8BlockDequant {
     private Fp8BlockDequant() {}
 
     /**
+     * Returns {@code true} when {@code scale} is a block layout for {@code weight}.
+     *
+     * @param weight FP8 weight {@code [N, K]}.
+     * @param scale  candidate scale tensor.
      * @return {@code true} when {@code scale} is a {@code [ceil(N/128), ceil(K/128)]}
      *         block layout for {@code weight} shaped {@code [N, K]}.
      */
@@ -55,6 +59,9 @@ public final class Fp8BlockDequant {
     }
 
     /**
+     * Returns {@code true} when {@code scale} is a scalar / length-1 tensor scale.
+     *
+     * @param scale candidate scale tensor.
      * @return {@code true} when {@code scale} is a scalar / length-1 tensor scale.
      */
     public static boolean isTensorScale(Tensor scale) {

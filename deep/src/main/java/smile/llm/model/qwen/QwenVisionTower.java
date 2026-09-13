@@ -60,6 +60,8 @@ public class QwenVisionTower extends LayerBlock {
     private final int numGridPerSide;
 
     /**
+     * Creates a vision tower for the given hyperparameters.
+     *
      * @param args vision hyperparameters.
      */
     public QwenVisionTower(QwenVisionArgs args) {
@@ -98,7 +100,11 @@ public class QwenVisionTower extends LayerBlock {
         return parent;
     }
 
-    /** @return vision hyperparameters. */
+    /**
+     * Returns the vision hyperparameters.
+     *
+     * @return vision hyperparameters.
+     */
     public QwenVisionArgs args() {
         return args;
     }

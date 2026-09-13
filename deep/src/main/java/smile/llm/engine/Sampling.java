@@ -58,6 +58,11 @@ public final class Sampling {
     /**
      * Batched sample: greedy when {@code temperature <= 0}, otherwise one
      * temperature + nucleus draw for every row of {@code [batch, vocab]}.
+     *
+     * @param logits      logits {@code [batch, vocab]}.
+     * @param temperature sampling temperature ({@code <= 0} → greedy).
+     * @param topp        nucleus sampling threshold.
+     * @return sampled token ids {@code [batch]}.
      */
     public static int[] sampleTokenIds(Tensor logits, double temperature, double topp) {
         if (temperature <= 0) {

@@ -39,17 +39,29 @@ public final class GenerationHandle {
     /**
      * Creates a handle for a future owned outside {@link InferenceEngine}
      * (e.g. serve fallback when no engine is present).
+     *
+     * @param requestId engine-assigned request id.
+     * @param future    completion future for the generation.
+     * @return new handle wrapping {@code future}.
      */
     public static GenerationHandle of(long requestId, CompletableFuture<ChatCompletion> future) {
         return new GenerationHandle(requestId, Objects.requireNonNull(future, "future"));
     }
 
-    /** Engine-assigned request id. */
+    /**
+     * Returns the engine-assigned request id.
+     *
+     * @return request id.
+     */
     public long requestId() {
         return requestId;
     }
 
-    /** Completion of the generation (exceptionally if aborted or failed). */
+    /**
+     * Returns the completion future for this generation.
+     *
+     * @return completion of the generation (exceptionally if aborted or failed).
+     */
     public CompletableFuture<ChatCompletion> future() {
         return future;
     }
@@ -65,7 +77,11 @@ public final class GenerationHandle {
         }
     }
 
-    /** {@code true} after {@link #abort()}. */
+    /**
+     * Returns whether this handle was aborted.
+     *
+     * @return {@code true} after {@link #abort()}.
+     */
     public boolean isAborted() {
         return aborted.get();
     }

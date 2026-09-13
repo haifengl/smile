@@ -89,6 +89,8 @@ public final class InferenceEngine implements AutoCloseable {
             new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
+     * Creates an inference engine with default prefill budget and admission timeout.
+     *
      * @param executor   model execution surface.
      * @param maxInFlight max concurrent admitted jobs ({@code smile.chat.max-batch-size}).
      */
@@ -98,6 +100,8 @@ public final class InferenceEngine implements AutoCloseable {
     }
 
     /**
+     * Creates an inference engine with explicit batching budgets.
+     *
      * @param executor            model execution surface.
      * @param maxInFlight         Fluid Injection cap.
      * @param maxDecodeBatch      max requests in one {@code decodeStep} ({@code <= maxInFlight}).
@@ -110,6 +114,8 @@ public final class InferenceEngine implements AutoCloseable {
     }
 
     /**
+     * Creates an inference engine with explicit batching and admit-coalesce settings.
+     *
      * @param executor            model execution surface.
      * @param maxInFlight         Fluid Injection cap.
      * @param maxDecodeBatch      max requests in one {@code decodeStep} ({@code <= maxInFlight}).
@@ -153,17 +159,29 @@ public final class InferenceEngine implements AutoCloseable {
                 pool == null ? -1 : pool.freeSlots());
     }
 
-    /** Underlying language model. */
+    /**
+     * Returns the underlying language model.
+     *
+     * @return underlying language model.
+     */
     public LanguageModel model() {
         return executor.model();
     }
 
-    /** Max in-flight generations (Fluid Injection cap). */
+    /**
+     * Returns the max in-flight generations.
+     *
+     * @return Fluid Injection cap.
+     */
     public int maxInFlight() {
         return maxInFlight;
     }
 
-    /** Max decode batch size per step. */
+    /**
+     * Returns the max decode batch size per step.
+     *
+     * @return max decode batch size.
+     */
     public int maxDecodeBatch() {
         return maxDecodeBatch;
     }
@@ -171,34 +189,56 @@ public final class InferenceEngine implements AutoCloseable {
     /**
      * Idle admit-coalesce window in milliseconds ({@code 0} = disabled).
      * Property: {@code smile.chat.admit-coalesce-ms}.
+     *
+     * @return admit coalesce window in milliseconds.
      */
     public long admitCoalesceMs() {
         return admitCoalesceMs;
     }
 
-    /** Jobs waiting for admission. */
+    /**
+     * Returns the number of jobs waiting for admission.
+     *
+     * @return queued job count.
+     */
     public int queueSize() {
         return queuedCount.get();
     }
 
-    /** Jobs admitted / running on the worker. */
+    /**
+     * Returns the number of jobs admitted / running on the worker.
+     *
+     * @return in-flight job count.
+     */
     public int inFlight() {
         return inFlight.get();
     }
 
-    /** Free KV slots when a pool is present; {@code -1} if none. */
+    /**
+     * Returns free KV slots when a pool is present.
+     *
+     * @return free KV slots, or {@code -1} if none.
+     */
     public int kvFreeSlots() {
         KvCachePool pool = executor.kvCachePool();
         return pool == null ? -1 : pool.freeSlots();
     }
 
-    /** Free KV pages when a pool is present; {@code -1} if none. */
+    /**
+     * Returns free KV pages when a pool is present.
+     *
+     * @return free KV pages, or {@code -1} if none.
+     */
     public int kvFreePages() {
         KvCachePool pool = executor.kvCachePool();
         return pool == null ? -1 : pool.freePages();
     }
 
-    /** Active decode requests on the last tick (approx). */
+    /**
+     * Returns active decode requests on the last tick (approx).
+     *
+     * @return approximate active decode count.
+     */
     public int activeDecodeCount() {
         int n = 0;
         synchronized (active) {
@@ -211,17 +251,29 @@ public final class InferenceEngine implements AutoCloseable {
         return n;
     }
 
-    /** Cumulative queue wait milliseconds. */
+    /**
+     * Returns cumulative queue wait milliseconds.
+     *
+     * @return total queue wait milliseconds.
+     */
     public long queueWaitMsTotal() {
         return queueWaitMsTotal.get();
     }
 
-    /** Cumulative prefill milliseconds. */
+    /**
+     * Returns cumulative prefill milliseconds.
+     *
+     * @return total prefill milliseconds.
+     */
     public long prefillMsTotal() {
         return prefillMsTotal.get();
     }
 
-    /** Cumulative decode-step milliseconds. */
+    /**
+     * Returns cumulative decode-step milliseconds.
+     *
+     * @return total decode-step milliseconds.
+     */
     public long decodeMsTotal() {
         return decodeMsTotal.get();
     }

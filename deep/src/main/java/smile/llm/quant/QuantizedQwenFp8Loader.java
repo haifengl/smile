@@ -75,6 +75,7 @@ public final class QuantizedQwenFp8Loader {
      * @param tpRank             this rank.
      * @param outDtype           compute dtype for dequant / Fp8Linear output.
      * @param modelLoaderThreads shard-read concurrency ({@code 0} = auto).
+     * @throws java.io.IOException if checkpoint IO fails.
      */
     public static void install(QwenModel model, Path dir, Device device,
                                int tpSize, int tpRank, ScalarType outDtype,
@@ -318,7 +319,11 @@ public final class QuantizedQwenFp8Loader {
     }
 
     /**
-     * HF keys that the FP8 installer owns (must not be force-fed into dense shells).
+     * Returns whether {@code hfName} is owned by the FP8 installer (must not be
+     * force-fed into dense shells).
+     *
+     * @param hfName HuggingFace weight key.
+     * @return {@code true} when the FP8 installer owns this key.
      */
     public static boolean isInstalledProjectionKey(String hfName) {
         if (hfName == null) {

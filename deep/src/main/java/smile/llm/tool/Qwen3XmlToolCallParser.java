@@ -44,6 +44,9 @@ import smile.llm.ToolCall;
  * @author Haifeng Li
  */
 public final class Qwen3XmlToolCallParser implements ToolCallParser {
+    /** Creates a Qwen3 XML tool-call parser. */
+    public Qwen3XmlToolCallParser() {}
+
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final Pattern TOOL_CALL_BLOCK = Pattern.compile(
             "<tool_call>\\s*(.*?)\\s*</tool_call>", Pattern.DOTALL);

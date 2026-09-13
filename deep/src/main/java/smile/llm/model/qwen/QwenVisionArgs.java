@@ -91,6 +91,8 @@ public record QwenVisionArgs(
     }
 
     /**
+     * Returns whether DeepStack fusion is configured.
+     *
      * @return {@code true} when DeepStack fusion is configured.
      */
     public boolean hasDeepStack() {

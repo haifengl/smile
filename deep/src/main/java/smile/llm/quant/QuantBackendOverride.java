@@ -26,12 +26,20 @@ public final class QuantBackendOverride {
 
     private QuantBackendOverride() {}
 
-    /** Sets the override for the current thread ({@code auto}/{@code dense}/…). */
+    /**
+     * Sets the override for the current thread ({@code auto}/{@code dense}/…).
+     *
+     * @param backend backend override string.
+     */
     public static void set(String backend) {
         OVERRIDE.set(backend);
     }
 
-    /** @return current override, or {@code null}. */
+    /**
+     * Returns the current override.
+     *
+     * @return current override, or {@code null}.
+     */
     public static String get() {
         return OVERRIDE.get();
     }

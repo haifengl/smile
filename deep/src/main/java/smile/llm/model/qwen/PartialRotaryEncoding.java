@@ -314,6 +314,12 @@ public final class PartialRotaryEncoding {
     }
 
     /**
+     * Legacy complex frequency table (unsupported).
+     *
+     * @param rotaryDim partial RoPE dimension.
+     * @param end       exclusive position end.
+     * @param theta     RoPE base theta.
+     * @return never returns.
      * @deprecated use {@link #computeCosSin(int, int, double)}; kept only if
      *             callers still expect a single complex table.
      */

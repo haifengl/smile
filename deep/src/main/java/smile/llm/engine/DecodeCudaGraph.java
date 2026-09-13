@@ -65,17 +65,28 @@ public final class DecodeCudaGraph {
 
     private DecodeCudaGraph() {}
 
-    /** @return {@code true} when env is set, native API is linked, and capture is not disabled. */
+    /**
+     * Returns whether decode CUDA graphs are enabled for this process.
+     *
+     * @return {@code true} when env is set, native API is linked, and capture is not disabled.
+     */
     public static boolean enabled() {
         return ENABLED && AVAILABLE && !captureDisabled;
     }
 
-    /** Maximum batch size eligible for decode CUDA graphs (power-of-two buckets). */
+    /**
+     * Returns the maximum batch size eligible for decode CUDA graphs.
+     *
+     * @return maximum power-of-two batch size for graph buckets.
+     */
     public static int maxBatch() {
         return MAX_BATCH;
     }
 
     /**
+     * Returns whether {@code batch} is a supported graph bucket size.
+     *
+     * @param batch decode batch size.
      * @return {@code true} when {@code batch} is a supported graph bucket size.
      */
     public static boolean supportsBatch(int batch) {
@@ -83,6 +94,9 @@ public final class DecodeCudaGraph {
     }
 
     /**
+     * Returns whether this decode step is eligible for CUDA graph capture/replay.
+     *
+     * @param cachePositions per-row KV write positions.
      * @return {@code true} when every row shares the same KV write position and
      *         the batch size is graph-eligible.
      */
@@ -115,19 +129,29 @@ public final class DecodeCudaGraph {
         }
     }
 
-    /** Permanently disable decode CUDA graphs for this process (after capture failure). */
+    /**
+     * Permanently disable decode CUDA graphs for this process (after capture failure).
+     *
+     * @param reason human-readable failure reason (for callers; not logged here).
+     */
     public static void disableCapture(String reason) {
         if (!captureDisabled) {
             captureDisabled = true;
         }
     }
 
-    /** Number of eager warmup decode steps before graph capture per KV-page bucket. */
+    /**
+     * Returns the number of eager warmup decode steps before graph capture.
+     *
+     * @return warmup steps per KV-page bucket.
+     */
     public static int warmupSteps() {
         return 2;
     }
 
     /**
+     * Returns whether next-bucket prefetch capture is enabled.
+     *
      * @return {@code true} when the next {@code numPages} bucket may be captured
      *         ahead of the page boundary ({@code SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE=1}).
      */
@@ -135,7 +159,11 @@ public final class DecodeCudaGraph {
         return enabled() && PRE_CAPTURE && !preCaptureDisabled;
     }
 
-    /** Permanently disable next-bucket prefetch after a capture / replay failure. */
+    /**
+     * Permanently disable next-bucket prefetch after a capture / replay failure.
+     *
+     * @param reason human-readable failure reason (for callers; not logged here).
+     */
     public static void disablePreCapture(String reason) {
         if (!preCaptureDisabled) {
             preCaptureDisabled = true;
@@ -143,6 +171,9 @@ public final class DecodeCudaGraph {
     }
 
     /**
+     * Returns whether free device memory is sufficient for prefetch capture.
+     *
+     * @param freeBytes free device memory in bytes; negative skips the check.
      * @return {@code true} when the device has enough free memory for a safe
      *         next-bucket prefetch capture attempt.
      */
@@ -150,12 +181,21 @@ public final class DecodeCudaGraph {
         return freeBytes < 0 || freeBytes >= PREFETCH_MIN_FREE_BYTES;
     }
 
-    /** @return configured prefetch free-memory floor in bytes. */
+    /**
+     * Returns the configured prefetch free-memory floor.
+     *
+     * @return configured prefetch free-memory floor in bytes.
+     */
     public static long prefetchMinFreeBytes() {
         return PREFETCH_MIN_FREE_BYTES;
     }
 
-    /** Logs once when prefetch is skipped due to low free memory. */
+    /**
+     * Logs once when prefetch is skipped due to low free memory.
+     *
+     * @param tpRank    tensor-parallel rank for logging.
+     * @param freeBytes free device memory in bytes.
+     */
     public static void logPrefetchSkippedLowMemory(int tpRank, long freeBytes) {
         if (PREFETCH_LOW_MEM_LOGGED.compareAndSet(false, true)) {
             logger.info(
@@ -167,7 +207,11 @@ public final class DecodeCudaGraph {
         }
     }
 
-    /** Decode steps before a KV page boundary used to spread prefetch work. */
+    /**
+     * Returns decode steps before a KV page boundary used to spread prefetch work.
+     *
+     * @return prefetch lead steps ({@code warmupSteps() + 1}).
+     */
     public static int prefetchLeadSteps() {
         return warmupSteps() + 1;
     }
@@ -193,12 +237,18 @@ public final class DecodeCudaGraph {
     /**
      * Marks that the current decode step returned logits backed by a captured CUDA
      * graph output buffer (must not be closed by the caller).
+     *
+     * @param persistent {@code true} when logits outlive the logits-row copy step.
      */
     public static void markPersistentLogits(boolean persistent) {
         PERSISTENT_LOGITS.set(persistent);
     }
 
-    /** @return {@code true} when decode logits outlive the logits-row copy step. */
+    /**
+     * Returns whether decode logits outlive the logits-row copy step.
+     *
+     * @return {@code true} when decode logits outlive the logits-row copy step.
+     */
     public static boolean persistentLogits() {
         return PERSISTENT_LOGITS.get();
     }

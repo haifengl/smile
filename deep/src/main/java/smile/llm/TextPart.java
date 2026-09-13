@@ -24,6 +24,8 @@ package smile.llm;
  */
 public record TextPart(String text) implements ContentPart {
     /**
+     * Validates the text content.
+     *
      * @param text message text — must not be null.
      */
     public TextPart {

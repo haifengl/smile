@@ -119,6 +119,8 @@ public record Message(
     }
 
     /**
+     * Returns whether any part is an image, video, or audio.
+     *
      * @return {@code true} when any part is an image, video, or audio.
      */
     public boolean hasMedia() {
@@ -132,6 +134,8 @@ public record Message(
     }
 
     /**
+     * Returns whether any part is audio.
+     *
      * @return {@code true} when any part is audio.
      */
     public boolean hasAudio() {
@@ -144,6 +148,8 @@ public record Message(
     }
 
     /**
+     * Returns whether this assistant message includes tool calls.
+     *
      * @return {@code true} when this assistant message includes tool calls.
      */
     public boolean hasToolCalls() {

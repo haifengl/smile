@@ -79,17 +79,27 @@ public final class AttentionBackends {
         }
     }
 
-    /** @return currently installed backend. */
+    /**
+     * Returns the currently installed backend.
+     *
+     * @return currently installed backend.
+     */
     public static AttentionBackend current() {
         return backend;
     }
 
-    /** @return kernel for {@link #current()}. */
+    /**
+     * Returns the kernel for {@link #current()}.
+     *
+     * @return kernel for {@link #current()}.
+     */
     public static AttentionKernel kernel() {
         return kernel;
     }
 
     /**
+     * Reports whether FlashInfer support is present in the native library.
+     *
      * @return {@code true} when FlashInfer was compiled into {@code libsmile_torch}.
      */
     public static boolean flashInferAvailable() {

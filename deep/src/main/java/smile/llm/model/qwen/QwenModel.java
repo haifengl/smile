@@ -253,17 +253,27 @@ public class QwenModel extends LayerBlock {
         return params;
     }
 
-    /** @return number of hybrid decoder blocks. */
+    /**
+     * Returns the number of hybrid decoder blocks.
+     *
+     * @return number of hybrid decoder blocks.
+     */
     public int numLayers() {
         return numLayers;
     }
 
-    /** @return decoder blocks (owned by this model). */
+    /**
+     * Returns the decoder blocks.
+     *
+     * @return decoder blocks (owned by this model).
+     */
     public List<QwenBlock> layers() {
         return layers;
     }
 
     /**
+     * Returns the vision tower.
+     *
      * @return vision tower, or {@code null} when text-only.
      */
     public QwenVisionTower visual() {
@@ -271,6 +281,8 @@ public class QwenModel extends LayerBlock {
     }
 
     /**
+     * Returns the vision args.
+     *
      * @return vision args, or {@code null} when text-only.
      */
     public QwenVisionArgs visionArgs() {
@@ -304,6 +316,8 @@ public class QwenModel extends LayerBlock {
     }
 
     /**
+     * Returns the native MTP draft head.
+     *
      * @return native MTP draft head, or {@code null} when not configured.
      */
     public QwenMtp mtp() {
@@ -311,7 +325,9 @@ public class QwenModel extends LayerBlock {
     }
 
     /**
-     * @return last captured post-final-norm hidden for MTP, or {@code null}.
+     * Returns the last captured post-final-norm hidden for MTP.
+     *
+     * @return last pre-norm hidden, or {@code null}.
      */
     public Tensor lastPreNormHidden() {
         return lastPreNormHidden;

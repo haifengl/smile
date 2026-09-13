@@ -24,7 +24,7 @@ import smile.torch.Native;
  *
  * <p>Graphs are bucketed by {@code (batch, numPages)}. Within a bucket,
  * {@code last_page_len} and per-row KV indices are updated in place before
- * {@link #replay()}.
+ * {@link #replay(int)}.
  *
  * @author Haifeng Li
  */
@@ -38,7 +38,11 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
     private long captureBeginNs;
     private long lastCaptureMs;
 
-    /** @return native graph handle, or null when unavailable. */
+    /**
+     * Creates a session when decode CUDA graphs are enabled.
+     *
+     * @return new session, or {@code null} when unavailable.
+     */
     public static DecodeCudaGraphSession tryCreate() {
         if (!DecodeCudaGraph.enabled()) {
             return null;
@@ -54,7 +58,13 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
         this.handle = handle;
     }
 
-    /** @return {@code true} when a graph for {@code (batch, numPages)} can be replayed. */
+    /**
+     * Returns whether a graph for {@code (batch, numPages)} can be replayed.
+     *
+     * @param batch    decode batch size.
+     * @param numPages KV page count for this decode step.
+     * @return {@code true} when a graph for {@code (batch, numPages)} can be replayed.
+     */
     public boolean canReplay(int batch, int numPages) {
         return ready && !capturing && capturedBatch == batch && capturedNumPages == numPages;
     }
@@ -74,7 +84,11 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
     /**
      * Marks one eager warmup step for the current bucket.
      *
+     * @param batch    decode batch size.
+     * @param numPages KV page count for this decode step.
+     * @param tpRank   tensor-parallel rank for logging ({@code >= 0}).
      * @param prefetch {@code true} for next-bucket prefetch capture logging.
+     * @return {@code true} when the next forward should capture a new graph.
      */
     public boolean shouldCapture(int batch, int numPages, int tpRank, boolean prefetch) {
         if (ready && capturedBatch == batch && capturedNumPages == numPages) {
@@ -108,6 +122,7 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
     /**
      * Begins CUDA graph capture on {@code deviceIndex} (call from TP worker thread).
      *
+     * @param deviceIndex CUDA device ordinal for capture.
      * @return {@code true} when capture started.
      */
     public boolean beginCapture(int deviceIndex) {
@@ -120,7 +135,11 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
         return true;
     }
 
-    /** @return wall time in milliseconds for the last successful capture. */
+    /**
+     * Returns wall time in milliseconds for the last successful capture.
+     *
+     * @return capture duration in milliseconds.
+     */
     public long lastCaptureMs() {
         return lastCaptureMs;
     }
@@ -156,12 +175,20 @@ public final class DecodeCudaGraphSession implements AutoCloseable {
         Native.cudaGraphReplay(handle);
     }
 
-    /** @return batch size of the captured bucket, or {@code -1}. */
+    /**
+     * Returns the batch size of the captured bucket.
+     *
+     * @return batch size, or {@code -1} when none captured.
+     */
     public int capturedBatch() {
         return capturedBatch;
     }
 
-    /** @return {@code numPages} of the captured bucket, or {@code -1}. */
+    /**
+     * Returns the {@code numPages} of the captured bucket.
+     *
+     * @return page count, or {@code -1} when none captured.
+     */
     public int capturedNumPages() {
         return capturedNumPages;
     }

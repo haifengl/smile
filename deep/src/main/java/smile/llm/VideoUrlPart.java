@@ -25,6 +25,8 @@ package smile.llm;
  */
 public record VideoUrlPart(String url, Double fps) implements ContentPart {
     /**
+     * Validates the video URL and optional fps.
+     *
      * @param url video URL — must not be null or blank.
      * @param fps sampling fps, or {@code null} for default.
      */

@@ -71,6 +71,16 @@ public final class QuantizedHfLoader {
     /**
      * Installs quantized projections for every Llama block.
      *
+     * @param model     target model.
+     * @param dir       checkpoint directory.
+     * @param format    detected quantization format.
+     * @param backend   GEMM backend to install.
+     * @param device    target device.
+     * @param groupSize quantization group size.
+     * @param tpSize    tensor-parallel world size.
+     * @param tpRank    this rank.
+     * @param outDtype  compute dtype for FP8 / NVFP4 output.
+     * @throws java.io.IOException if checkpoint IO fails.
      * @see #installLlamaLinears(LlamaModel, Path, QuantFormat, WeightGemmBackend, Device, int, int, int, ScalarType, int)
      */
     public static void installLlamaLinears(LlamaModel model, Path dir, QuantFormat format,
@@ -84,7 +94,17 @@ public final class QuantizedHfLoader {
     /**
      * Installs quantized projections for every Llama block.
      *
+     * @param model              target model.
+     * @param dir                checkpoint directory.
+     * @param format             detected quantization format.
+     * @param backend            GEMM backend to install.
+     * @param device             target device.
+     * @param groupSize          quantization group size.
+     * @param tpSize             tensor-parallel world size.
+     * @param tpRank             this rank.
+     * @param outDtype           compute dtype for FP8 / NVFP4 output.
      * @param modelLoaderThreads pack/read concurrency hint ({@code 0} = auto).
+     * @throws java.io.IOException if checkpoint IO fails.
      */
     public static void installLlamaLinears(LlamaModel model, Path dir, QuantFormat format,
                                            WeightGemmBackend backend, Device device,
@@ -487,6 +507,13 @@ public final class QuantizedHfLoader {
         bank.clear();
     }
 
+    /**
+     * Reads {@code group_size} from {@code config.json}, defaulting to {@code 128}.
+     *
+     * @param checkpointDir model directory.
+     * @return group size.
+     * @throws java.io.IOException if config IO fails.
+     */
     public static int groupSizeFromConfig(Path checkpointDir) throws IOException {
         Path config = checkpointDir.resolve("config.json");
         if (!Files.exists(config)) {
