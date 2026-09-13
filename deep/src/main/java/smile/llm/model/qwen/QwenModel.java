@@ -903,6 +903,11 @@ public class QwenModel extends LayerBlock {
         if (!DecodeCudaGraph.preCaptureEnabled()) {
             return;
         }
+        long freeBytes = cudaFreeBytes(device);
+        if (!DecodeCudaGraph.hasPrefetchHeadroom(freeBytes)) {
+            DecodeCudaGraph.logPrefetchSkippedLowMemory(tpRank, freeBytes);
+            return;
+        }
         int stepsUntil = kvCachePool.stepsUntilPageBoundary(cacheLen);
         int lead = DecodeCudaGraph.prefetchLeadSteps();
         if (stepsUntil <= 0 || stepsUntil > lead) {
@@ -967,6 +972,13 @@ public class QwenModel extends LayerBlock {
             prefetchTargetNumPages = -1;
             prefetchedStepMeta = null;
             prefetchedStepMetaLen = -1;
+            // OOM during prefetch often leaves the caching allocator fragmented;
+            // return cached blocks so the live decode path can continue.
+            try {
+                device.emptyCache();
+            } catch (RuntimeException ignored) {
+                // best-effort
+            }
         }
     }
 

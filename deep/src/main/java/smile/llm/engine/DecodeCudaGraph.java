@@ -17,6 +17,8 @@
 package smile.llm.engine;
 
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import smile.torch.Native;
 
 /**
@@ -35,6 +37,8 @@ import smile.torch.Native;
  * @author Haifeng Li
  */
 public final class DecodeCudaGraph {
+    private static final Logger logger = LoggerFactory.getLogger(DecodeCudaGraph.class);
+
     private static final boolean ENABLED = "1".equals(System.getenv("SMILE_DECODE_CUDA_GRAPH"));
     private static final boolean AVAILABLE = Native.cudaGraphAvailable();
     private static final int MAX_BATCH = parseMaxBatch();
@@ -44,6 +48,15 @@ public final class DecodeCudaGraph {
     private static volatile boolean preCaptureDisabled;
     /** Set after a capture failure so we stop retrying every few decode steps. */
     private static volatile boolean captureDisabled;
+    /**
+     * Minimum free device memory required before attempting next-bucket prefetch
+     * capture. Prefetch allocates a second CUDA graph on top of the live decode
+     * graph; with large {@code max_tokens} KV reservations this often OOMs.
+     * Override with {@code SMILE_DECODE_CUDA_GRAPH_PREFETCH_MIN_FREE_MIB} (default 512).
+     */
+    private static final long PREFETCH_MIN_FREE_BYTES = parsePrefetchMinFreeBytes();
+    /** Rate-limit low-memory prefetch skip logs. */
+    private static final AtomicBoolean PREFETCH_LOW_MEM_LOGGED = new AtomicBoolean();
     /**
      * Set by TP worker threads when decode returns a graph-owned logits buffer;
      * read by the inference-engine thread after {@code Future.get()} (not ThreadLocal).
@@ -116,7 +129,7 @@ public final class DecodeCudaGraph {
 
     /**
      * @return {@code true} when the next {@code numPages} bucket may be captured
-     *         ahead of the page boundary (default on when graphs are enabled).
+     *         ahead of the page boundary ({@code SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE=1}).
      */
     public static boolean preCaptureEnabled() {
         return enabled() && PRE_CAPTURE && !preCaptureDisabled;
@@ -129,6 +142,31 @@ public final class DecodeCudaGraph {
         }
     }
 
+    /**
+     * @return {@code true} when the device has enough free memory for a safe
+     *         next-bucket prefetch capture attempt.
+     */
+    public static boolean hasPrefetchHeadroom(long freeBytes) {
+        return freeBytes < 0 || freeBytes >= PREFETCH_MIN_FREE_BYTES;
+    }
+
+    /** @return configured prefetch free-memory floor in bytes. */
+    public static long prefetchMinFreeBytes() {
+        return PREFETCH_MIN_FREE_BYTES;
+    }
+
+    /** Logs once when prefetch is skipped due to low free memory. */
+    public static void logPrefetchSkippedLowMemory(int tpRank, long freeBytes) {
+        if (PREFETCH_LOW_MEM_LOGGED.compareAndSet(false, true)) {
+            logger.info(
+                    "tpRank={}: skipping decode CUDA graph prefetch (freeMiB={} < minFreeMiB={}); "
+                            + "inline capture still used at page boundaries",
+                    tpRank,
+                    freeBytes / (1024 * 1024),
+                    PREFETCH_MIN_FREE_BYTES / (1024 * 1024));
+        }
+    }
+
     /** Decode steps before a KV page boundary used to spread prefetch work. */
     public static int prefetchLeadSteps() {
         return warmupSteps() + 1;
@@ -137,6 +175,19 @@ public final class DecodeCudaGraph {
     private static boolean preCaptureEnabledByEnv() {
         String raw = System.getenv("SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE");
         return "1".equals(raw != null ? raw.trim() : "");
+    }
+
+    private static long parsePrefetchMinFreeBytes() {
+        String raw = System.getenv("SMILE_DECODE_CUDA_GRAPH_PREFETCH_MIN_FREE_MIB");
+        int mib = 512;
+        if (raw != null && !raw.isBlank()) {
+            try {
+                mib = Math.max(64, Integer.parseInt(raw.trim()));
+            } catch (NumberFormatException ignored) {
+                mib = 512;
+            }
+        }
+        return mib * 1024L * 1024L;
     }
 
     /**
