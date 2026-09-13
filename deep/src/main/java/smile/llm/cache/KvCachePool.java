@@ -576,6 +576,11 @@ public class KvCachePool implements AutoCloseable {
         decodeGraphBuffers = enabled;
     }
 
+    /** @return whether decode CUDA-graph fixed buffers are active for this step. */
+    public boolean decodeGraphBuffers() {
+        return decodeGraphBuffers;
+    }
+
     /**
      * KV page count for a uniform cache length (CUDA graph bucket key).
      *
