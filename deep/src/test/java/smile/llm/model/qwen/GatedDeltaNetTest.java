@@ -18,6 +18,7 @@ package smile.llm.model.qwen;
 
 import org.junit.jupiter.api.*;
 import smile.deep.tensor.Device;
+import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import static org.junit.jupiter.api.Assertions.*;
@@ -46,6 +47,68 @@ public class GatedDeltaNetTest {
         result._1().close();
         result._2().close();
         q.close(); k.close(); v.close(); g.close(); beta.close();
+    }
+
+    @Test
+    public void testGivenWarmConvStateWhenMultiTokenUpdateThenMatchesSequentialS1() {
+        // Given – warm conv state, then a 3-token continuation
+        int batch = 1, channels = 4, kernel = 4, stateLen = kernel - 1;
+        Tensor weight = Tensor.randn(channels, kernel);
+        Tensor stateWindow = Tensor.randn(batch, channels, stateLen);
+        Tensor stateSeq = stateWindow.copy();
+        Tensor hidden = Tensor.randn(batch, channels, 3);
+
+        // When – one multi-token Update vs three S=1 Updates
+        Tensor outWindow = GatedDeltaRule.causalConv1dUpdate(hidden, stateWindow, weight);
+        Tensor step0;
+        Tensor step1;
+        Tensor step2;
+        try (var s0 = Index.slice(0, 1);
+             var s1 = Index.slice(1, 2);
+             var s2 = Index.slice(2, 3);
+             Tensor h0 = hidden.get(Index.Colon, Index.Colon, s0);
+             Tensor h1 = hidden.get(Index.Colon, Index.Colon, s1);
+             Tensor h2 = hidden.get(Index.Colon, Index.Colon, s2)) {
+            step0 = GatedDeltaRule.causalConv1dUpdate(h0, stateSeq, weight);
+            step1 = GatedDeltaRule.causalConv1dUpdate(h1, stateSeq, weight);
+            step2 = GatedDeltaRule.causalConv1dUpdate(h2, stateSeq, weight);
+        }
+        try (Tensor cat01 = GatedDeltaRule.concatLast3(step0, step1);
+             Tensor cat = GatedDeltaRule.concatLast3(cat01, step2);
+             Tensor diff = outWindow.sub(cat).abs();
+             Tensor total = diff.sum()) {
+            double mae = total.doubleValue() / outWindow.length();
+            assertTrue(mae < 1e-5, "multi-token Update vs S=1 Update MAE=" + mae);
+        }
+        try (Tensor stateDiff = stateWindow.sub(stateSeq).abs();
+             Tensor stateTotal = stateDiff.sum()) {
+            assertTrue(stateTotal.doubleValue() < 1e-5,
+                    "conv state after multi-token Update must match sequential S=1");
+        }
+
+        // Prefill zeros left context and must diverge from Update on warm state
+        Tensor stateForPrefill = Tensor.randn(batch, channels, stateLen);
+        Tensor stateForUpdate = stateForPrefill.copy();
+        Tensor outPrefill = GatedDeltaRule.causalConv1dPrefill(hidden, stateForPrefill, weight);
+        Tensor outUpdate = GatedDeltaRule.causalConv1dUpdate(hidden, stateForUpdate, weight);
+        try (Tensor diff = outPrefill.sub(outUpdate).abs();
+             Tensor total = diff.sum()) {
+            assertTrue(total.doubleValue() > 1e-3,
+                    "Prefill ignores warm conv left context; must differ from Update");
+        }
+
+        outWindow.close();
+        step0.close();
+        step1.close();
+        step2.close();
+        outPrefill.close();
+        outUpdate.close();
+        hidden.close();
+        weight.close();
+        stateWindow.close();
+        stateSeq.close();
+        stateForPrefill.close();
+        stateForUpdate.close();
     }
 
     @Test

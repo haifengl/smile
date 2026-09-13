@@ -242,7 +242,12 @@ public class GatedDeltaNet {
         long[] shape = x.shape();
         int batch = (int) shape[0];
         int seqLen = (int) shape[1];
-        boolean decode = seqLen == 1 && statePool != null && statePool.boundBatch() > 0;
+        // Active pool ⇒ continue existing conv/recurrent state. This covers S=1
+        // decode and S>1 speculative verify windows. Prefill that zeros the
+        // left context is wrong mid-sequence (drops prior conv history and
+        // disagrees with token-by-token decode — garbes MTP window verify).
+        boolean hasActiveState = statePool != null && statePool.boundBatch() > 0;
+        boolean decodeS1 = hasActiveState && seqLen == 1;
 
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
@@ -253,7 +258,6 @@ public class GatedDeltaNet {
             Tensor mixedRaw = inProjQkv.forward(x);
             // Decode S=1: [B,1,C] and [B,C,1] share the same contiguous layout —
             // reshape avoids two transpose kernels per linear layer.
-            final boolean decodeS1 = decode && seqLen == 1;
             long channels = mixedRaw.shape()[mixedRaw.dim() - 1];
             Tensor mixed = decodeS1
                     ? mixedRaw.reshape(batch, channels, 1)
@@ -290,7 +294,9 @@ public class GatedDeltaNet {
                 }
             }
             if (query == null) {
-                mixedConvBase = decode && convState != null
+                // S>1 with an active pool (MTP verify) must use Update so the
+                // prior K-1 conv context is applied; Prefill pads with zeros.
+                mixedConvBase = hasActiveState && convState != null
                         ? GatedDeltaRule.causalConv1dUpdate(mixed, convState, conv1dWeight)
                         : GatedDeltaRule.causalConv1dPrefill(mixed, convState, conv1dWeight);
                 mixed.close();
