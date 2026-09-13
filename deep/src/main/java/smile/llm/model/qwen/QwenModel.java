@@ -1023,18 +1023,7 @@ public class QwenModel extends LayerBlock {
 
     /** Releases CUDA graph resources for this rank. */
     public void closeDecodeGraph() {
-        if (decodeGraphPrefetchSession != null) {
-            decodeGraphPrefetchSession.close();
-            decodeGraphPrefetchSession = null;
-        }
-        prefetchTargetBatch = -1;
-        prefetchTargetNumPages = -1;
-        prefetchedStepMeta = null;
-        prefetchedStepMetaLen = -1;
-        if (decodeGraphSession != null) {
-            decodeGraphSession.close();
-            decodeGraphSession = null;
-        }
+        invalidateDecodeCudaGraphs();
         if (decodeGraphCosBuf != null) {
             decodeGraphCosBuf.close();
             decodeGraphCosBuf = null;
@@ -1052,6 +1041,32 @@ public class QwenModel extends LayerBlock {
             decodeGraphLogitsBuf = null;
         }
         decodeGraphLogitsOut = null;
+    }
+
+    /**
+     * Drops captured decode / prefetch CUDA graphs while keeping durable
+     * token/RoPE/logits buffers. Required after MTP window verify or
+     * {@link KvCachePool#truncateTo}, which rebuild FlashInfer CSR tensors that
+     * a captured graph may still reference (replay → illegal memory access).
+     */
+    public void invalidateDecodeCudaGraphs() {
+        if (decodeGraphPrefetchSession != null) {
+            decodeGraphPrefetchSession.close();
+            decodeGraphPrefetchSession = null;
+        }
+        prefetchTargetBatch = -1;
+        prefetchTargetNumPages = -1;
+        prefetchedStepMeta = null;
+        prefetchedStepMetaLen = -1;
+        if (decodeGraphSession != null) {
+            decodeGraphSession.close();
+            decodeGraphSession = null;
+        }
+        lastDecodeGraphBatch = -1;
+        lastDecodeGraphNumPages = -1;
+        lastDecodeGraphCacheLen = -1;
+        lastDecodeGraphCachePos = -1;
+        lastDecodeGraphRopePos = null;
     }
 
     private void ensureDecodeGraphTokenBuf(Device device, int batch, ScalarType dtype) {
