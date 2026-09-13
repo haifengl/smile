@@ -2356,9 +2356,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
 
-        // Window verify: one target forward over drafts, then truncate rejected KV.
-        // Phase 1 commits lastToken with S=1 (CUDA-graph friendly); miss on d0
-        // costs ≈ baseline + MTP. Phase 2 verifies the draft window at once.
+        // Token-by-token verify: only forward tokens we keep (no rejected KV).
+        // Multi-token window verify on hybrid DeltaNet disagrees with S=1 logits,
+        // which caused wrong accepts, garbled/short visible text at max_tokens,
+        // and (with graph invalidate) permanent CUDA-graph warmup thrash (~15 tok/s).
+        // Window+truncate remains on KvCachePool for a future graph-safe path.
         int n = Math.max(1, numDrafts);
         for (QwenModel m : models) {
             if (m.mtp() != null) {
@@ -2367,194 +2369,34 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         }
         try {
             int[] drafts = draftGreedy(lastToken, lastPos, n);
-
             activatePools(requestId);
-            int t0;
+            int[] targetSamples = new int[n + 1];
             try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
                     new int[]{lastPos})) {
-                t0 = sampleTargetId(logits, temperature, topp);
-            }
-            if (drafts[0] != t0) {
-                recordSpeculativeRound(n, 0);
-                logVerify(n, 0, t0);
-                return new int[]{t0};
+                targetSamples[0] = sampleTargetId(logits, temperature, topp);
             }
 
-            if (n == 1) {
-                int bonus;
-                try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{drafts[0]},
-                        new int[]{lastPos + 1})) {
-                    bonus = sampleTargetId(logits, temperature, topp);
+            int r = 0;
+            while (r < n && drafts[r] == targetSamples[r]) {
+                try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{drafts[r]},
+                        new int[]{lastPos + 1 + r})) {
+                    targetSamples[r + 1] = sampleTargetId(logits, temperature, topp);
                 }
-                recordSpeculativeRound(n, 1);
-                logVerify(n, 1, bonus);
-                return new int[]{drafts[0], bonus};
+                r++;
             }
 
-            for (QwenModel m : models) {
-                DeltaNetStatePool d = m.deltaNetStatePool();
-                if (d != null) {
-                    d.ensureSpeculativeCheckpoints(1);
-                    d.saveCheckpoint(0);
-                }
-            }
-            return verifyDraftWindow(requestId, lastPos + 1, drafts, temperature, topp);
+            int[] accepted = new int[r + 1];
+            System.arraycopy(drafts, 0, accepted, 0, r);
+            accepted[r] = targetSamples[r];
+            recordSpeculativeRound(n, r);
+            logVerify(n, r, targetSamples[r]);
+            return accepted;
         } finally {
-            // Window / truncate rebuild FlashInfer CSR; drop any graphs captured
-            // during phase-1 decode in this round.
-            invalidateDecodeCudaGraphs();
             for (QwenModel m : models) {
                 if (m.mtp() != null) {
                     m.mtp().endRound();
                 }
-                if (m.deltaNetStatePool() != null) {
-                    m.deltaNetStatePool().releaseSpeculativeCheckpoints();
-                }
             }
-        }
-    }
-
-    /**
-     * After {@code lastToken} is committed and {@code drafts[0]} matched the
-     * target sample, verify {@code drafts[0..N)} with one multi-token forward
-     * at {@code startPos}. On partial accept, restores DeltaNet to the
-     * post-{@code lastToken} checkpoint, seals rejected full-attn KV, re-forwards
-     * the accepted draft prefix, and samples the bonus from that clean forward
-     * (not from the full-window logits, which can disagree on hybrid DeltaNet).
-     */
-    private int[] verifyDraftWindow(int requestId, int startPos, int[] drafts,
-                                    double temperature, double topp) {
-        int n = drafts.length;
-        activatePools(requestId);
-
-        Tensor[] shards = new Tensor[models.length];
-        for (int r = 0; r < models.length; r++) {
-            long[] window = new long[n];
-            for (int i = 0; i < n; i++) {
-                window[i] = drafts[i];
-            }
-            shards[r] = Tensor.of(window).reshape(1, n).to(models[r].device());
-        }
-        Tensor[] logitsAll;
-        try {
-            logitsAll = forwardWindow(shards, startPos, tpExecutor, true);
-        } finally {
-            for (Tensor s : shards) {
-                if (s != null) {
-                    s.close();
-                }
-            }
-        }
-
-        int[] afterDraft;
-        try {
-            afterDraft = sampleWindowTargets(logitsAll[0], n, temperature, topp);
-            scatterDeltaNet();
-        } finally {
-            for (Tensor l : logitsAll) {
-                if (l != null) {
-                    l.close();
-                }
-            }
-        }
-
-        // logits[i] predicts the token after drafts[i]; compare to drafts[i+1].
-        int[] tail = Arrays.copyOfRange(drafts, 1, n);
-        var result = smile.llm.engine.SpeculativeDecoding.acceptGreedy(tail, afterDraft);
-        int rTail = result.numDraftAccepted();
-        int totalAccepted = 1 + rTail; // include drafts[0]
-
-        int sealedLen = startPos + totalAccepted;
-        int writtenEnd = startPos + n;
-        int bonus;
-
-        if (totalAccepted < n) {
-            for (QwenModel m : models) {
-                DeltaNetStatePool d = m.deltaNetStatePool();
-                if (d != null) {
-                    d.restoreCheckpoint(0);
-                }
-            }
-            // Seal rejected KV before the clean prefix forward so attention
-            // cannot see draft tails (FlashInfer CSR + zeroed slots).
-            truncateKv(sealedLen, writtenEnd);
-
-            long[] prefix = new long[totalAccepted];
-            for (int i = 0; i < totalAccepted; i++) {
-                prefix[i] = drafts[i];
-            }
-            Tensor[] prefixShards = new Tensor[models.length];
-            for (int i = 0; i < models.length; i++) {
-                prefixShards[i] = Tensor.of(prefix).reshape(1, totalAccepted).to(models[i].device());
-            }
-            Tensor[] prefixLogits;
-            try {
-                // Need last-position logits for the bonus after the accepted prefix.
-                prefixLogits = forwardWindow(prefixShards, startPos, tpExecutor, false);
-                scatterDeltaNet();
-            } finally {
-                for (Tensor s : prefixShards) {
-                    if (s != null) {
-                        s.close();
-                    }
-                }
-            }
-            try {
-                bonus = sampleTargetId(prefixLogits[0], temperature, topp);
-            } finally {
-                for (Tensor l : prefixLogits) {
-                    if (l != null) {
-                        l.close();
-                    }
-                }
-            }
-        } else {
-            truncateKv(sealedLen, writtenEnd);
-            bonus = afterDraft[n - 1];
-        }
-
-        int[] out = new int[totalAccepted + 1];
-        System.arraycopy(drafts, 0, out, 0, totalAccepted);
-        out[totalAccepted] = bonus;
-        recordSpeculativeRound(n, totalAccepted);
-        logVerify(n, totalAccepted, bonus);
-        return out;
-    }
-
-    /** Sample one target token id per sequence position of {@code [B, S, V]} logits. */
-    private int[] sampleWindowTargets(Tensor logits, int seqLen, double temperature, double topp) {
-        int[] out = new int[seqLen];
-        for (int i = 0; i < seqLen; i++) {
-            try (var idx = Index.of(i);
-                 Tensor step = logits.get(Index.Colon, idx)) {
-                out[i] = sampleTargetId(step, temperature, topp);
-            }
-        }
-        return out;
-    }
-
-    private void scatterDeltaNet() {
-        for (QwenModel m : models) {
-            if (m.deltaNetStatePool() != null) {
-                m.deltaNetStatePool().scatterActive();
-            }
-        }
-    }
-
-    private void truncateKv(int sealedLen, int writtenEnd) {
-        for (QwenModel m : models) {
-            if (m.kvCachePool() != null) {
-                m.kvCachePool().truncateTo(sealedLen, writtenEnd);
-            }
-        }
-        // truncateTo rebuilds FlashInfer CSR; any captured decode graph still
-        // points at the old device tensors.
-        invalidateDecodeCudaGraphs();
-    }
-
-    private void invalidateDecodeCudaGraphs() {
-        for (QwenModel m : models) {
-            m.invalidateDecodeCudaGraphs();
         }
     }
 
