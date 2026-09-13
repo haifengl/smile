@@ -2415,8 +2415,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      * After {@code lastToken} is committed and {@code drafts[0]} matched the
      * target sample, verify {@code drafts[0..N)} with one multi-token forward
      * at {@code startPos}. On partial accept, restores DeltaNet to the
-     * post-{@code lastToken} checkpoint, re-forwards the accepted draft prefix,
-     * and {@linkplain KvCachePool#truncateTo seals} rejected full-attn KV.
+     * post-{@code lastToken} checkpoint, seals rejected full-attn KV, re-forwards
+     * the accepted draft prefix, and samples the bonus from that clean forward
+     * (not from the full-window logits, which can disagree on hybrid DeltaNet).
      */
     private int[] verifyDraftWindow(int requestId, int startPos, int[] drafts,
                                     double temperature, double topp) {
@@ -2454,8 +2455,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
 
-        // logits[i] predicts the token after drafts[i]; compare to drafts[i+1],
-        // with logits[n-1] as the bonus after a full draft accept.
+        // logits[i] predicts the token after drafts[i]; compare to drafts[i+1].
         int[] tail = Arrays.copyOfRange(drafts, 1, n);
         var result = smile.llm.engine.SpeculativeDecoding.acceptGreedy(tail, afterDraft);
         int rTail = result.numDraftAccepted();
@@ -2463,6 +2463,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         int sealedLen = startPos + totalAccepted;
         int writtenEnd = startPos + n;
+        int bonus;
 
         if (totalAccepted < n) {
             for (QwenModel m : models) {
@@ -2471,6 +2472,10 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                     d.restoreCheckpoint(0);
                 }
             }
+            // Seal rejected KV before the clean prefix forward so attention
+            // cannot see draft tails (FlashInfer CSR + zeroed slots).
+            truncateKv(sealedLen, writtenEnd);
+
             long[] prefix = new long[totalAccepted];
             for (int i = 0; i < totalAccepted; i++) {
                 prefix[i] = drafts[i];
@@ -2481,6 +2486,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
             Tensor[] prefixLogits;
             try {
+                // Need last-position logits for the bonus after the accepted prefix.
                 prefixLogits = forwardWindow(prefixShards, startPos, tpExecutor, false);
                 scatterDeltaNet();
             } finally {
@@ -2490,20 +2496,25 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                     }
                 }
             }
-            for (Tensor l : prefixLogits) {
-                if (l != null) {
-                    l.close();
+            try {
+                bonus = sampleTargetId(prefixLogits[0], temperature, topp);
+            } finally {
+                for (Tensor l : prefixLogits) {
+                    if (l != null) {
+                        l.close();
+                    }
                 }
             }
+        } else {
+            truncateKv(sealedLen, writtenEnd);
+            bonus = afterDraft[n - 1];
         }
 
-        truncateKv(sealedLen, writtenEnd);
-
         int[] out = new int[totalAccepted + 1];
-        out[0] = drafts[0];
-        System.arraycopy(result.acceptedTokens(), 0, out, 1, result.acceptedTokens().length);
+        System.arraycopy(drafts, 0, out, 0, totalAccepted);
+        out[totalAccepted] = bonus;
         recordSpeculativeRound(n, totalAccepted);
-        logVerify(n, totalAccepted, result.bonusToken());
+        logVerify(n, totalAccepted, bonus);
         return out;
     }
 
