@@ -19,5 +19,6 @@ swingx = { module = "org.swinglabs:swingx", version = "1.6.1" }
 
 [bundles]
 arrow = ["arrow-dataset", "arrow-memory-netty"]
-jackson = ["jackson-databind", "jackson-yaml", "jsonschema-generator", "jsonschema-jackson"]
+jackson = ["jackson-databind", "jackson-yaml"]
+jsonschema = ["jsonschema-generator", "jsonschema-jackson"]
 fastxml = ["fastxml-databind", "fastxml-datatype"]
