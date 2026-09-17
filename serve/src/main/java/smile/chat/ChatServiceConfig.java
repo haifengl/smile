@@ -226,4 +226,21 @@ public interface ChatServiceConfig {
      */
     @WithDefault("0")
     int speculativeTokens();
+
+    /**
+     * Max concurrently-decoding requests at which MTP speculation still runs.
+     * Native speculation drafts/verifies one request at a time (eager, no
+     * decode CUDA graph), so {@code N} concurrent speculative requests cost
+     * {@code N} sequential forwards that tick versus one batched forward for
+     * plain decode. Above this limit, speculative-flagged requests fall back
+     * to plain batched decode for that tick so peak throughput under load
+     * cannot regress below the non-speculative baseline. Default {@code 1}
+     * (speculation only when there is a single decoding stream); raise this
+     * only after confirming with your own throughput measurements that
+     * speculation still wins at higher concurrency on your hardware.
+     *
+     * <p>Property: {@code smile.chat.speculative-max-concurrency}.
+     */
+    @WithDefault("1")
+    int speculativeMaxConcurrency();
 }

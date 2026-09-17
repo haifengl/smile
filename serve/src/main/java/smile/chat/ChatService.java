@@ -189,16 +189,18 @@ public class ChatService implements OpenAiModelContributor {
                             Math.max(1, config.prefillTokenBudget()),
                             config.admissionTimeoutMs(),
                             Math.max(0L, config.admitCoalesceMs()));
+                    engine.setMaxSpeculativeConcurrency(Math.max(1, config.speculativeMaxConcurrency()));
                     String sysProp = System.getProperty("smile.chat.max-batch-size");
                     logger.infof("Chat continuous batching: model=%s family=%s maxSeqLen=%d "
                                     + "maxInFlight=%d maxDecodeBatch=%d prefillTokenBudget=%d "
-                                    + "admissionTimeoutMs=%d admitCoalesceMs=%d "
+                                    + "admissionTimeoutMs=%d admitCoalesceMs=%d speculativeMaxConcurrency=%d "
                                     + "(config.maxBatchSize=%d, -Dsmile.chat.max-batch-size=%s)",
                             modelId, model.family(), model.maxSeqLen(),
                             engine.maxInFlight(), engine.maxDecodeBatch(),
                             Math.max(1, config.prefillTokenBudget()),
                             config.admissionTimeoutMs(),
                             engine.admitCoalesceMs(),
+                            engine.maxSpeculativeConcurrency(),
                             config.maxBatchSize(),
                             sysProp == null ? "<unset>" : sysProp);
                     if (engine.maxInFlight() <= 1) {

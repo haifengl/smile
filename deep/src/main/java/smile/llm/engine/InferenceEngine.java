@@ -73,6 +73,20 @@ public final class InferenceEngine implements AutoCloseable {
     private final long admissionTimeoutMs;
     /** Idle-wave admit delay ms; {@code 0} = disabled (default). */
     private final long admitCoalesceMs;
+    /**
+     * Max concurrently-decoding speculative requests before a tick falls back
+     * to plain batched decode for all of them. Native MTP speculation (draft +
+     * eager window verify) runs one request at a time: {@code N} concurrent
+     * speculative requests cost {@code N} sequential eager forwards that tick,
+     * while plain decode batches all {@code N} into one forward. Speculation
+     * only wins when that per-request serialization is cheap relative to the
+     * batching it gives up — i.e. at low concurrency. Above this limit,
+     * speculative-flagged requests decode through the ordinary batched path
+     * instead for that tick, so peak (high-concurrency) throughput never
+     * regresses below the non-speculative baseline. Default {@code 1}
+     * (single-stream only); see {@link #setMaxSpeculativeConcurrency}.
+     */
+    private volatile int maxSpeculativeConcurrency = 1;
     private final LinkedBlockingQueue<Queued> waiting = new LinkedBlockingQueue<>();
     private final List<Active> active = new ArrayList<>();
     private final AtomicInteger inFlight = new AtomicInteger();
@@ -194,6 +208,34 @@ public final class InferenceEngine implements AutoCloseable {
      */
     public long admitCoalesceMs() {
         return admitCoalesceMs;
+    }
+
+    /**
+     * Returns the max concurrently-decoding speculative requests before a
+     * tick falls back to plain batched decode. Property:
+     * {@code smile.chat.speculative-max-concurrency}.
+     *
+     * @return max speculative concurrency.
+     */
+    public int maxSpeculativeConcurrency() {
+        return maxSpeculativeConcurrency;
+    }
+
+    /**
+     * Sets the max concurrently-decoding speculative requests before a tick
+     * falls back to plain batched decode for all speculative-flagged
+     * requests. Lower this if per-request eager draft/verify rounds cost more
+     * than the batching they give up at your measured concurrency; raise it
+     * if your workload shows speculative decoding still wins at higher
+     * concurrency.
+     *
+     * @param maxSpeculativeConcurrency max speculative concurrency ({@code >= 1}).
+     */
+    public void setMaxSpeculativeConcurrency(int maxSpeculativeConcurrency) {
+        if (maxSpeculativeConcurrency < 1) {
+            throw new IllegalArgumentException("maxSpeculativeConcurrency must be >= 1");
+        }
+        this.maxSpeculativeConcurrency = maxSpeculativeConcurrency;
     }
 
     /**
@@ -669,6 +711,13 @@ public final class InferenceEngine implements AutoCloseable {
     }
 
     private void runSpeculateStep() {
+        if (speculativeEligibleCount() > maxSpeculativeConcurrency) {
+            // Above the concurrency limit, per-request eager draft/verify rounds
+            // would serialize what runDecodeStep's single batched forward can
+            // process together; defer every speculative-flagged request to plain
+            // decode this tick instead (see maxSpeculativeConcurrency).
+            return;
+        }
         List<Active> speculative = new ArrayList<>();
         for (Active a : active) {
             if (a.phase == Phase.DECODING && !a.handle.isAborted() && a.request.speculative()) {
@@ -756,9 +805,16 @@ public final class InferenceEngine implements AutoCloseable {
     }
 
     private void runDecodeStep() {
+        // Mirrors the same threshold check runSpeculateStep just made: when
+        // speculative concurrency exceeded the limit this tick, runSpeculateStep
+        // skipped every speculative-flagged request untouched, so pick them up
+        // here instead (batched with everyone else) rather than stalling a tick.
+        boolean speculativeDemoted = speculativeEligibleCount() > maxSpeculativeConcurrency;
         List<Active> decoding = new ArrayList<>();
         for (Active a : active) {
-            if (a.phase == Phase.DECODING && !a.handle.isAborted() && !a.request.speculative()) {
+            boolean eligible = a.phase == Phase.DECODING && !a.handle.isAborted()
+                    && (!a.request.speculative() || speculativeDemoted);
+            if (eligible) {
                 decoding.add(a);
                 if (decoding.size() >= maxDecodeBatch) {
                     break;
@@ -914,6 +970,25 @@ public final class InferenceEngine implements AutoCloseable {
             }
         }
         return false;
+    }
+
+    /**
+     * Counts currently-decoding, non-aborted, speculative-flagged requests.
+     * Computed independently (not cached) by both {@link #runSpeculateStep}
+     * and {@link #runDecodeStep} in the same tick: {@code runSpeculateStep}
+     * only ever removes/finishes requests when it actually runs the
+     * speculative cohort (count {@code <= maxSpeculativeConcurrency}), in
+     * which case a fresh count afterward can only be {@code <=} the limit
+     * too, so both methods agree on whether this tick demoted speculation.
+     */
+    private int speculativeEligibleCount() {
+        int n = 0;
+        for (Active a : active) {
+            if (a.phase == Phase.DECODING && !a.handle.isAborted() && a.request.speculative()) {
+                n++;
+            }
+        }
+        return n;
     }
 
     private void sampleAndAppend(Active a, Tensor logitsRow) {
