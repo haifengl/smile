@@ -2808,6 +2808,74 @@ ST_Tensor smile_flashinfer_paged_attention(
 #endif
 }
 
+ST_Tensor smile_flashinfer_paged_attention_verify(
+        ST_Tensor query,
+        ST_Tensor k_cache,
+        ST_Tensor v_cache,
+        ST_Tensor qo_indptr,
+        ST_Tensor kv_indptr,
+        ST_Tensor kv_indices,
+        ST_Tensor kv_last_page_len,
+        int page_size,
+        int num_kv_heads,
+        int head_dim,
+        int qo_len,
+        double scale,
+        float k_scale,
+        float v_scale,
+        ST_FlashInferWorkspace workspace) {
+#if defined(USE_CUDA) && defined(USE_FLASHINFER)
+    if (!query || !k_cache || !v_cache || !qo_indptr || !kv_indptr
+            || !kv_indices || !kv_last_page_len || !workspace) {
+        set_error("smile_flashinfer_paged_attention_verify: null argument");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        int dev = smile_flashinfer_workspace_device_index(workspace);
+        c10::cuda::CUDAGuard guard(dev);
+        auto q = query->t;
+        float sc = scale > 0
+                ? static_cast<float>(scale)
+                : (1.0f / std::sqrt(static_cast<float>(head_dim > 0 ? head_dim : 1)));
+        torch::Tensor out = torch::empty_like(q);
+        std::string err;
+        at::Tensor *float_ws = nullptr;
+        at::Tensor *int_ws = nullptr;
+        at::Tensor *pinned_ws = nullptr;
+        if (smile_flashinfer_workspace_get_tensors(
+                workspace, &float_ws, &int_ws, &pinned_ws) != 0) {
+            set_error("smile_flashinfer_paged_attention_verify: invalid workspace");
+            return nullptr;
+        }
+        void **runtime_cache = smile_flashinfer_workspace_runtime_cache_slot(workspace);
+        int rc = smile_flashinfer_paged_attention_verify_cuda(
+                q, k_cache->t, v_cache->t,
+                qo_indptr->t, kv_indptr->t, kv_indices->t, kv_last_page_len->t,
+                page_size, num_kv_heads, head_dim, qo_len,
+                sc, k_scale, v_scale,
+                float_ws, int_ws, pinned_ws, runtime_cache,
+                out, err);
+        if (rc != 0) {
+            set_error(err.empty() ? "flashinfer capturable verify attention failed" : err);
+            return nullptr;
+        }
+        return new ST_Tensor_{ out };
+    ST_TRY_END
+    return nullptr;
+#else
+    (void)query; (void)k_cache; (void)v_cache;
+    (void)qo_indptr; (void)kv_indptr; (void)kv_indices; (void)kv_last_page_len;
+    (void)page_size; (void)num_kv_heads; (void)head_dim; (void)qo_len;
+    (void)scale; (void)k_scale; (void)v_scale; (void)workspace;
+#  ifdef USE_CUDA
+    set_error("smile_torch built without USE_FLASHINFER");
+#  else
+    set_error_no_cuda_build();
+#  endif
+    return nullptr;
+#endif
+}
+
 ST_Tensor smile_flashinfer_ragged_attention(
         ST_Tensor query,
         ST_Tensor key,

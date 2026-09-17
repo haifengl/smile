@@ -1211,6 +1211,52 @@ SMILE_API ST_Tensor smile_flashinfer_paged_attention(
         ST_Tensor attn_mask,
         ST_FlashInferWorkspace workspace);
 
+/** Clears only the cached verify-graph plan (SMILE_VERIFY_CUDA_GRAPH); independent
+ * of {@link smile_flashinfer_workspace_invalidate_runtime_cache}. */
+SMILE_API void smile_flashinfer_workspace_invalidate_verify_runtime_cache(ST_FlashInferWorkspace ws);
+
+/**
+ * Stage 1 (SMILE_VERIFY_CUDA_GRAPH): graph-capturable multi-token (S&gt;1) causal
+ * paged attention for MTP window verify. Always causal (no attn_mask param —
+ * FlashInfer's causal masking here is compile-time, unlike the additive-mask
+ * SDPA path {@link smile_flashinfer_paged_attention} uses). Isolated sibling:
+ * every other caller keeps using {@link smile_flashinfer_paged_attention}
+ * unchanged.
+ *
+ * @param query            {@code [B, Hq, S, D]}
+ * @param k_cache          {@code [numSlots, Hkv, D]} (one layer slice)
+ * @param v_cache          {@code [numSlots, Hkv, D]}
+ * @param qo_indptr        int32 {@code [B+1]}, values {@code {0,S,2S,...}}
+ * @param kv_indptr        int32 {@code [B+1]}
+ * @param kv_indices       int32 {@code [num_pages]}
+ * @param kv_last_page_len int32 {@code [B]}
+ * @param page_size        tokens per page
+ * @param num_kv_heads     Hkv
+ * @param head_dim         D
+ * @param qo_len           S (must equal query's 3rd dim)
+ * @param scale            attention scale (&le;0 &rarr; 1/sqrt(D))
+ * @param k_scale          FP8 KV key dequant scale (1.0 when KV is bf16/fp16)
+ * @param v_scale          FP8 KV value dequant scale (1.0 when KV is bf16/fp16)
+ * @param workspace        from {@link smile_flashinfer_workspace_create}
+ * @return output {@code [B, Hq, S, D]}, or null on error
+ */
+SMILE_API ST_Tensor smile_flashinfer_paged_attention_verify(
+        ST_Tensor query,
+        ST_Tensor k_cache,
+        ST_Tensor v_cache,
+        ST_Tensor qo_indptr,
+        ST_Tensor kv_indptr,
+        ST_Tensor kv_indices,
+        ST_Tensor kv_last_page_len,
+        int page_size,
+        int num_kv_heads,
+        int head_dim,
+        int qo_len,
+        double scale,
+        float k_scale,
+        float v_scale,
+        ST_FlashInferWorkspace workspace);
+
 /**
  * Ragged contiguous self-attention (vision tower / varlen prefill).
  *

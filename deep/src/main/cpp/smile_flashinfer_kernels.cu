@@ -47,7 +47,9 @@ std::atomic<bool> g_flashinfer_sdpa_decode_warned{false};
 using flashinfer::BatchDecodeParams;
 using flashinfer::BatchDecodeWithPagedKVCacheDispatched;
 using flashinfer::BatchDecodeWithPagedKVCacheWorkEstimationDispatched;
+using flashinfer::BatchPrefillPagedParams;
 using flashinfer::BatchPrefillRaggedParams;
+using flashinfer::BatchPrefillWithPagedKVCacheDispatched;
 using flashinfer::BatchPrefillWithRaggedKVCacheDispatched;
 using flashinfer::DecodePlan;
 using flashinfer::DecodePlanInfo;
@@ -81,6 +83,33 @@ struct WorkspaceRuntimeCache {
     std::vector<int32_t> prefill_indptr;
     std::vector<int32_t> prefill_indices;
 
+    // Graph-capturable multi-token (S>1) paged-prefill plan cache — separate from
+    // decode_plan (different Params/plan type) and from prefill_slots (that's the
+    // eager SDPA-gather cache, unrelated to a real FlashInfer plan). Keyed by S
+    // (unlike decode, whose query length is implicitly 1) in addition to the usual
+    // batch/head_dim/page_size/heads shape fields. See Qwen speculative-decoding
+    // window verify (SMILE_VERIFY_CUDA_GRAPH).
+    PrefillPlanInfo verify_plan;
+    bool verify_plan_valid = false;
+    uint32_t verify_batch = 0;
+    uint32_t verify_qo_len = 0; // S = window length (n+1 for MTP verify)
+    int verify_head_dim = 0;
+    int verify_page_size = 0;
+    int verify_num_qo_heads = 0;
+    int verify_gqa_group = 0;
+    std::vector<int32_t> verify_qo_indptr;
+    std::vector<int32_t> verify_kv_indptr;
+    std::vector<int32_t> verify_last_page_len;
+    const void *verify_qo_indptr_dev = nullptr;
+    const void *verify_kv_indptr_dev = nullptr;
+    const void *verify_last_page_len_dev = nullptr;
+
+    // Deliberately does NOT touch verify_plan_* — decode's cohort/CSR-rebuild
+    // invalidation events (this method) are unrelated to verify-graph validity,
+    // and the two features must stay independently invalidated (SMILE_VERIFY_
+    // CUDA_GRAPH vs SMILE_DECODE_CUDA_GRAPH are separate opt-ins). Only
+    // invalidate_verify() below, called from its own targeted Java call site,
+    // ever clears the verify plan.
     void invalidate() {
         decode_plan_valid = false;
         decode_indptr_dev = nullptr;
@@ -92,6 +121,13 @@ struct WorkspaceRuntimeCache {
     void invalidate_prefill() {
         prefill_slots_valid = false;
         prefill_slots = torch::Tensor();
+    }
+
+    void invalidate_verify() {
+        verify_plan_valid = false;
+        verify_qo_indptr_dev = nullptr;
+        verify_kv_indptr_dev = nullptr;
+        verify_last_page_len_dev = nullptr;
     }
 };
 
@@ -160,6 +196,73 @@ bool decode_plan_matches(
     }
     // last_page_len lives on the GPU CSR tensor and may change each decode step
     // within the same page bucket without replanning.
+    return true;
+}
+
+static bool verify_cuda_graph_env() {
+    static int cached = -1;
+    if (cached < 0) {
+        const char *env = std::getenv("SMILE_VERIFY_CUDA_GRAPH");
+        cached = (env != nullptr && env[0] == '1' && env[1] == '\0') ? 1 : 0;
+    }
+    return cached != 0;
+}
+
+// Independent of decode_cuda_graph_env()/SMILE_DECODE_CUDA_GRAPH: the two graph
+// features (single-token decode, multi-token verify) are separately opt-in.
+static bool verify_stream_is_capturing(cudaStream_t stream) {
+    if (!verify_cuda_graph_env()) {
+        return false;
+    }
+    cudaStreamCaptureStatus status = cudaStreamCaptureStatusNone;
+    if (cudaStreamIsCapturing(stream, &status) != cudaSuccess) {
+        return false;
+    }
+    return status == cudaStreamCaptureStatusActive;
+}
+
+static bool verify_plan_shape_matches(
+        const WorkspaceRuntimeCache &cache,
+        uint32_t batch,
+        uint32_t qo_len,
+        int head_dim,
+        int page_size,
+        int num_qo_heads,
+        int gqa_group) {
+    return cache.verify_plan_valid
+            && cache.verify_batch == batch
+            && cache.verify_qo_len == qo_len
+            && cache.verify_head_dim == head_dim
+            && cache.verify_page_size == page_size
+            && cache.verify_num_qo_heads == num_qo_heads
+            && cache.verify_gqa_group == gqa_group;
+}
+
+bool verify_plan_matches(
+        const WorkspaceRuntimeCache &cache,
+        uint32_t batch,
+        uint32_t qo_len,
+        int head_dim,
+        int page_size,
+        int num_qo_heads,
+        int gqa_group,
+        const int32_t *qo_indptr,
+        const int32_t *kv_indptr) {
+    if (!verify_plan_shape_matches(
+                cache, batch, qo_len, head_dim, page_size, num_qo_heads, gqa_group)) {
+        return false;
+    }
+    if (cache.verify_qo_indptr.size() != batch + 1 || cache.verify_kv_indptr.size() != batch + 1) {
+        return false;
+    }
+    for (uint32_t i = 0; i <= batch; ++i) {
+        if (cache.verify_qo_indptr[i] != qo_indptr[i] || cache.verify_kv_indptr[i] != kv_indptr[i]) {
+            return false;
+        }
+    }
+    // last_page_len lives on the GPU CSR tensor and may change every round within
+    // the same page bucket (grow by S then shrink to the accepted length) without
+    // replanning — mirrors decode_plan_matches.
     return true;
 }
 
@@ -586,6 +689,255 @@ int run_batch_prefill_sdpa(
     }
 }
 
+/**
+ * Stage 1 (SMILE_VERIFY_CUDA_GRAPH): graph-capturable multi-token (S>1) paged
+ * prefill via real FlashInfer BatchPrefillWithPagedKVCache, mirroring
+ * run_batch_decode's capture-awareness (warmed-plan reuse, skip D2H when CSR
+ * tensors are pointer-identical to the warmed plan) instead of
+ * run_batch_prefill_sdpa's unconditional per-call D2H + gather+SDPA.
+ *
+ * Deliberately a new, isolated entry point (see
+ * smile_flashinfer_paged_attention_verify_cuda) rather than a change to
+ * run_batch_prefill_sdpa or its dispatch in smile_flashinfer_paged_attention_cuda:
+ * every existing S>1 caller (ordinary prefill, non-graphed verify/replay) must
+ * keep using the proven eager path unless a caller explicitly opts into this one.
+ */
+template <typename DType, MaskMode MASK_MODE, uint32_t HEAD_DIM>
+int run_batch_prefill_capturable(
+        const torch::Tensor &query, // [B,Hq,S,D]
+        const torch::Tensor &k_pages, // [maxPages,pageSize,Hkv,D]
+        const torch::Tensor &v_pages,
+        const torch::Tensor &qo_indptr, // int32 device [B+1], values {0,S,2S,...}
+        const torch::Tensor &kv_indptr, // int32 device [B+1]
+        const torch::Tensor &kv_indices,
+        const torch::Tensor &kv_last_page_len,
+        int page_size,
+        int num_qo_heads,
+        int num_kv_heads,
+        int head_dim,
+        int qo_len, // S; caller-known, avoids a host readback of qo_indptr just for this
+        float sm_scale,
+        torch::Tensor &float_ws,
+        torch::Tensor &int_ws,
+        torch::Tensor &pinned_int_ws,
+        void **runtime_cache_slot,
+        torch::Tensor &out, // [B,Hq,S,D]
+        std::string &err) {
+    using IdType = int32_t;
+    using AttentionVariant = DefaultAttention<false, false, false, false>;
+    using Params = BatchPrefillPagedParams<DType, DType, DType, IdType>;
+    constexpr PosEncodingMode POS = PosEncodingMode::kNone;
+    constexpr uint32_t HEAD_DIM_QK = HEAD_DIM;
+    constexpr uint32_t HEAD_DIM_VO = HEAD_DIM;
+    constexpr bool USE_FP16_QK_REDUCTION = false;
+
+    const auto B = static_cast<uint32_t>(query.size(0));
+    const auto Hq = query.size(1);
+    const auto S = query.size(2);
+    const auto D = query.size(3);
+    // FlashInfer prefill's Params model indexes q/o as flattened ragged rows
+    // (q_indptr[b] * q_stride_n + ...), NOT the [B,Hq,S,D] box SDPA/decode use —
+    // see BatchPrefillPagedParams::get_qo_len and the q_indptr-offset load in
+    // prefill.cuh. Reshape [B,Hq,S,D] -> [B*S,Hq,D] (NHD, batch-major/seq-minor,
+    // matching qo_indptr's {0,S,2S,...} row blocks) before building Params, and
+    // reshape the [B*S,Hq,D] result back to [B,Hq,S,D] on the way out.
+    auto q_nhd = query.transpose(1, 2).contiguous().reshape({B * S, Hq, D});
+    torch::Tensor out_nhd = torch::empty_like(q_nhd);
+
+    auto stream = at::cuda::getCurrentCUDAStream().stream();
+    const bool graph_capture = verify_stream_is_capturing(stream);
+
+    WorkspaceRuntimeCache *cache = runtime_cache_slot != nullptr
+            ? ensure_runtime_cache(runtime_cache_slot)
+            : nullptr;
+    PrefillPlanInfo plan_info;
+    const int gqa_group = num_qo_heads / num_kv_heads;
+    bool plan_hit = false;
+    cudaError_t status = cudaSuccess;
+
+    if (graph_capture) {
+        if (cache == nullptr || !verify_plan_shape_matches(
+                    *cache, B, static_cast<uint32_t>(qo_len), head_dim, page_size,
+                    num_qo_heads, gqa_group)) {
+            err = "FlashInfer prefill plan not warmed for CUDA graph capture";
+            return -1;
+        }
+        plan_info = cache->verify_plan;
+        plan_hit = true;
+    } else if (cache != nullptr && verify_plan_shape_matches(
+                       *cache, B, static_cast<uint32_t>(qo_len), head_dim, page_size,
+                       num_qo_heads, gqa_group)
+            && cache->verify_qo_indptr_dev == qo_indptr.data_ptr()
+            && cache->verify_kv_indptr_dev == kv_indptr.data_ptr()
+            && cache->verify_last_page_len_dev == kv_last_page_len.data_ptr()) {
+        // Same CSR tensors as the warmed plan (in-place last_page_len bump).
+        // Skip D2H — a host copy here device-synchronizes every attention layer,
+        // exactly the cost this feature exists to remove.
+        plan_info = cache->verify_plan;
+        plan_hit = true;
+    } else {
+        auto qo_indptr_h = qo_indptr.to(at::kCPU).contiguous();
+        auto kv_indptr_h = kv_indptr.to(at::kCPU).contiguous();
+        auto *qo_ptr = static_cast<IdType *>(qo_indptr_h.data_ptr());
+        auto *kv_ptr = static_cast<IdType *>(kv_indptr_h.data_ptr());
+        plan_hit = cache != nullptr && verify_plan_matches(
+                *cache, B, static_cast<uint32_t>(qo_len), head_dim, page_size, num_qo_heads,
+                gqa_group, qo_ptr, kv_ptr);
+        if (plan_hit) {
+            plan_info = cache->verify_plan;
+        }
+
+        if (!plan_hit) {
+            const uint32_t total_num_rows = qo_ptr[B];
+            status = PrefillPlan<IdType>(
+                    float_ws.data_ptr(),
+                    float_ws.numel() * float_ws.element_size(),
+                    int_ws.data_ptr(),
+                    pinned_int_ws.data_ptr(),
+                    int_ws.numel() * int_ws.element_size(),
+                    plan_info,
+                    qo_ptr,
+                    kv_ptr,
+                    total_num_rows,
+                    B,
+                    static_cast<uint32_t>(num_qo_heads),
+                    static_cast<uint32_t>(num_kv_heads),
+                    HEAD_DIM_QK,
+                    HEAD_DIM_VO,
+                    static_cast<uint32_t>(page_size),
+                    /*enable_cuda_graph=*/false, // see run_batch_decode: graph-safety comes
+                                                  // from reusing this cached plan_info +
+                                                  // pointer-identity D2H-skip above, not
+                                                  // from this flag (matches the existing
+                                                  // proven decode/ragged-prefill pattern).
+                    sizeof(DType),
+                    /*window_left=*/-1,
+                    /*fixed_split_size=*/-1,
+                    /*disable_split_kv=*/false,
+                    /*num_colocated_ctas=*/0,
+                    /*uniform_q_len=*/qo_len,
+                    stream,
+                    sizeof(DType));
+            if (status != cudaSuccess) {
+                err = std::string("PrefillPlan failed: ") + cudaGetErrorString(status);
+                return -1;
+            }
+            if (cache != nullptr) {
+                cache->verify_plan = plan_info;
+                cache->verify_plan_valid = true;
+                cache->verify_batch = B;
+                cache->verify_qo_len = static_cast<uint32_t>(qo_len);
+                cache->verify_head_dim = head_dim;
+                cache->verify_page_size = page_size;
+                cache->verify_num_qo_heads = num_qo_heads;
+                cache->verify_gqa_group = gqa_group;
+                cache->verify_qo_indptr.assign(qo_ptr, qo_ptr + B + 1);
+                cache->verify_kv_indptr.assign(kv_ptr, kv_ptr + B + 1);
+                cache->verify_qo_indptr_dev = qo_indptr.data_ptr();
+                cache->verify_kv_indptr_dev = kv_indptr.data_ptr();
+                cache->verify_last_page_len_dev = kv_last_page_len.data_ptr();
+            }
+        } else if (cache != nullptr) {
+            cache->verify_qo_indptr_dev = qo_indptr.data_ptr();
+            cache->verify_kv_indptr_dev = kv_indptr.data_ptr();
+            cache->verify_last_page_len_dev = kv_last_page_len.data_ptr();
+        }
+    }
+
+    auto k_strides = k_pages.strides();
+    auto v_strides = v_pages.strides();
+    std::vector<int64_t> ks(k_strides.begin(), k_strides.end());
+    std::vector<int64_t> vs(v_strides.begin(), v_strides.end());
+
+    paged_kv_t<DType, IdType> paged_kv(
+            static_cast<uint32_t>(num_kv_heads),
+            static_cast<uint32_t>(page_size),
+            static_cast<uint32_t>(head_dim),
+            B,
+            QKVLayout::kNHD,
+            static_cast<DType *>(k_pages.data_ptr()),
+            static_cast<DType *>(v_pages.data_ptr()),
+            ks.data(),
+            vs.data(),
+            static_cast<IdType *>(kv_indices.data_ptr()),
+            static_cast<IdType *>(kv_indptr.data_ptr()),
+            static_cast<IdType *>(kv_last_page_len.data_ptr()));
+
+    Params params;
+    params.q = static_cast<DType *>(q_nhd.data_ptr());
+    params.paged_kv = paged_kv;
+    params.maybe_custom_mask = nullptr;
+    params.q_indptr = static_cast<IdType *>(qo_indptr.data_ptr());
+    params.maybe_mask_indptr = nullptr;
+    params.maybe_q_rope_offset = nullptr;
+    params.o = static_cast<DType *>(out_nhd.data_ptr());
+    params.lse = nullptr;
+    params.maybe_alibi_slopes = nullptr;
+    params.group_size = num_qo_heads / num_kv_heads;
+    params.num_qo_heads = static_cast<uint32_t>(num_qo_heads);
+    params.q_stride_n = q_nhd.stride(0);
+    params.q_stride_h = q_nhd.stride(1);
+    params.window_left = -1;
+    params.logits_soft_cap = 0.f;
+    params.sm_scale = sm_scale;
+    params.rope_rcp_scale = 1.f;
+    params.rope_rcp_theta = 1.f;
+
+    void *int_buffer = int_ws.data_ptr();
+    void *float_buffer = float_ws.data_ptr();
+    params.request_indices =
+            GetPtrFromBaseOffset<IdType>(int_buffer, plan_info.request_indices_offset);
+    params.qo_tile_indices =
+            GetPtrFromBaseOffset<IdType>(int_buffer, plan_info.qo_tile_indices_offset);
+    params.kv_tile_indices =
+            GetPtrFromBaseOffset<IdType>(int_buffer, plan_info.kv_tile_indices_offset);
+    params.o_indptr = GetPtrFromBaseOffset<IdType>(int_buffer, plan_info.o_indptr_offset);
+    params.kv_chunk_size_ptr =
+            GetPtrFromBaseOffset<IdType>(int_buffer, plan_info.kv_chunk_size_ptr_offset);
+    DType *tmp_v = nullptr;
+    float *tmp_s = nullptr;
+    if (plan_info.split_kv) {
+        params.merge_indptr =
+                GetPtrFromBaseOffset<IdType>(int_buffer, plan_info.merge_indptr_offset);
+        tmp_v = GetPtrFromBaseOffset<DType>(float_buffer, plan_info.v_offset);
+        tmp_s = GetPtrFromBaseOffset<float>(float_buffer, plan_info.s_offset);
+    }
+    params.padded_batch_size = static_cast<uint32_t>(plan_info.padded_batch_size);
+    params.max_total_num_rows = static_cast<uint32_t>(plan_info.total_num_rows);
+    params.total_num_rows = nullptr;
+    params.partition_kv = plan_info.split_kv;
+    params.block_valid_mask = nullptr;
+
+    const uint32_t cta_tile_q = static_cast<uint32_t>(plan_info.cta_tile_q);
+    auto dispatch_run = [&](auto cta_tile_c) {
+        constexpr uint32_t CTA_TILE_Q = decltype(cta_tile_c)::value;
+        status = BatchPrefillWithPagedKVCacheDispatched<
+                CTA_TILE_Q, HEAD_DIM_QK, HEAD_DIM_VO, POS, USE_FP16_QK_REDUCTION, MASK_MODE,
+                AttentionVariant, Params>(params, tmp_v, tmp_s, /*enable_pdl=*/false, stream);
+    };
+
+    if (cta_tile_q == 128) {
+        dispatch_run(std::integral_constant<uint32_t, 128>{});
+    } else if (cta_tile_q == 64) {
+        dispatch_run(std::integral_constant<uint32_t, 64>{});
+    } else if (cta_tile_q == 32) {
+        dispatch_run(std::integral_constant<uint32_t, 32>{});
+    } else if (cta_tile_q == 16) {
+        dispatch_run(std::integral_constant<uint32_t, 16>{});
+    } else {
+        err = "unsupported cta_tile_q from PrefillPlan";
+        return -1;
+    }
+    if (status != cudaSuccess) {
+        err = std::string("BatchPrefillWithPagedKVCache failed: ") + cudaGetErrorString(status);
+        return -1;
+    }
+    // [B*S,Hq,D] NHD -> [B,S,Hq,D] -> [B,Hq,S,D] (matches this function's documented
+    // out shape and every other caller's [B,Hq,S,D] convention).
+    out = out_nhd.reshape({static_cast<int64_t>(B), S, Hq, D}).transpose(1, 2).contiguous();
+    return 0;
+}
+
 /** Ragged contiguous self-attention via LibTorch SDPA (one launch per segment). */
 int run_ragged_sdpa(
         const torch::Tensor &q, // [N,H,D] NHD
@@ -1010,6 +1362,169 @@ extern "C" int smile_flashinfer_paged_attention_cuda(
     }
 }
 
+/**
+ * Stage 1 (SMILE_VERIFY_CUDA_GRAPH) isolated sibling entry point: graph-capturable
+ * multi-token (S>1) causal paged attention for MTP window verify.
+ *
+ * Deliberately NOT merged into smile_flashinfer_paged_attention_cuda's S==1/S>1
+ * dispatch — every existing caller of that function (ordinary prefill, and any
+ * non-graphed verify/replay call) must keep hitting the proven
+ * run_batch_prefill_sdpa path unchanged. Only a caller that explicitly invokes
+ * this new entry point (i.e. Qwen's verify-graph path once wired in a later
+ * stage) exercises run_batch_prefill_capturable at all.
+ *
+ * Always causal (window verify never needs a non-causal or externally-masked
+ * variant); unlike run_batch_prefill_sdpa's additive-mask path, FlashInfer's
+ * causal masking here is a compile-time MaskMode, no [S,S] mask tensor needed.
+ *
+ * Falls back to run_batch_prefill_sdpa (existing eager path, always correct)
+ * whenever this path can't apply: unsupported dtype/head_dim, or a genuine
+ * capture-time plan-miss. It never falls back silently on a real capture
+ * failure — that returns -1 with `err` set, matching run_batch_decode's
+ * contract, so the Java caller can catch and disable just this feature.
+ */
+extern "C" int smile_flashinfer_paged_attention_verify_cuda(
+        const torch::Tensor &query, // [B,Hq,S,D]
+        const torch::Tensor &k_cache, // [numSlots,Hkv,D] slot-major
+        const torch::Tensor &v_cache,
+        const torch::Tensor &qo_indptr, // int32 [B+1], values {0,S,2S,...}
+        const torch::Tensor &kv_indptr, // int32 [B+1]
+        const torch::Tensor &kv_indices,
+        const torch::Tensor &kv_last_page_len,
+        int page_size,
+        int num_kv_heads,
+        int head_dim,
+        int qo_len, // S
+        float scale,
+        float k_scale,
+        float v_scale,
+        torch::Tensor *float_workspace,
+        torch::Tensor *int_workspace,
+        torch::Tensor *pinned_int_workspace,
+        void **runtime_cache_slot,
+        torch::Tensor &out,
+        std::string &err) {
+    try {
+        TORCH_CHECK(query.is_cuda(), "query must be CUDA");
+        TORCH_CHECK(query.dim() == 4, "query must be [B,H,S,D]");
+        const auto Hq = query.size(1);
+        const auto S = query.size(2);
+        const auto D = query.size(3);
+        TORCH_CHECK(D == head_dim, "head_dim mismatch");
+        TORCH_CHECK(S == qo_len, "qo_len must equal query.size(2)");
+        TORCH_CHECK(num_kv_heads > 0 && Hq % num_kv_heads == 0, "invalid GQA heads");
+        TORCH_CHECK(page_size > 0, "page_size must be > 0");
+
+        auto qo_ip = qo_indptr.to(at::kInt).contiguous();
+        auto kv_ip = kv_indptr.to(at::kInt).contiguous();
+        auto kv_ix = kv_indices.to(at::kInt).contiguous();
+        auto kv_last = kv_last_page_len.to(at::kInt).contiguous();
+        torch::Tensor k_pages = as_page_major(k_cache.contiguous(), page_size);
+        torch::Tensor v_pages = as_page_major(v_cache.contiguous(), page_size);
+        torch::Tensor k_pages_compute = k_pages;
+        torch::Tensor v_pages_compute = v_pages;
+        if (is_fp8_dtype(k_cache.scalar_type())) {
+            float ks = k_scale > 0.f ? k_scale : 1.f;
+            float vs = v_scale > 0.f ? v_scale : 1.f;
+            dequant_fp8_kv_pages(k_pages, v_pages, ks, vs, query.scalar_type(),
+                                 k_pages_compute, v_pages_compute);
+        } else if (k_pages.scalar_type() != query.scalar_type()) {
+            k_pages_compute = k_pages.to(query.scalar_type());
+            v_pages_compute = v_pages.to(query.scalar_type());
+        }
+        k_pages = k_pages_compute;
+        v_pages = v_pages_compute;
+
+        torch::Tensor float_ws_local, int_ws_local, pinned_local;
+        torch::Tensor *float_ws_ptr, *int_ws_ptr, *pinned_ptr;
+        const bool use_pooled = float_workspace != nullptr && float_workspace->defined()
+                && int_workspace != nullptr && int_workspace->defined()
+                && pinned_int_workspace != nullptr && pinned_int_workspace->defined();
+        if (use_pooled) {
+            float_ws_ptr = float_workspace;
+            int_ws_ptr = int_workspace;
+            pinned_ptr = pinned_int_workspace;
+        } else {
+            float_ws_local = torch::empty(
+                    {32LL << 20},
+                    torch::TensorOptions().dtype(torch::kUInt8).device(query.device()));
+            float_ws_ptr = &float_ws_local;
+            int_ws_local = torch::empty(
+                    {8LL << 20},
+                    torch::TensorOptions().dtype(torch::kUInt8).device(query.device()));
+            int_ws_ptr = &int_ws_local;
+            pinned_local = torch::empty(
+                    {8LL << 20},
+                    torch::TensorOptions().dtype(torch::kUInt8).pinned_memory(true));
+            pinned_ptr = &pinned_local;
+        }
+        torch::Tensor &float_ws = *float_ws_ptr;
+        torch::Tensor &int_ws = *int_ws_ptr;
+        torch::Tensor &pinned_int = *pinned_ptr;
+
+        if (head_dim == 64 || head_dim == 128 || head_dim == 256 || head_dim == 512) {
+            int rc = -1;
+            if (query.scalar_type() == at::kBFloat16) {
+                auto dispatch_hd = [&](auto head_dim_c) {
+                    constexpr uint32_t HEAD_DIM = decltype(head_dim_c)::value;
+                    rc = run_batch_prefill_capturable<nv_bfloat16, MaskMode::kCausal, HEAD_DIM>(
+                            query, k_pages, v_pages, qo_ip, kv_ip, kv_ix, kv_last, page_size,
+                            static_cast<int>(Hq), num_kv_heads, head_dim, qo_len, scale,
+                            float_ws, int_ws, pinned_int, runtime_cache_slot, out, err);
+                };
+                if (head_dim == 64) {
+                    dispatch_hd(std::integral_constant<uint32_t, 64>{});
+                } else if (head_dim == 128) {
+                    dispatch_hd(std::integral_constant<uint32_t, 128>{});
+                } else if (head_dim == 256) {
+                    dispatch_hd(std::integral_constant<uint32_t, 256>{});
+                } else {
+                    dispatch_hd(std::integral_constant<uint32_t, 512>{});
+                }
+            } else if (query.scalar_type() == at::kHalf) {
+                auto dispatch_hd = [&](auto head_dim_c) {
+                    constexpr uint32_t HEAD_DIM = decltype(head_dim_c)::value;
+                    rc = run_batch_prefill_capturable<__half, MaskMode::kCausal, HEAD_DIM>(
+                            query, k_pages, v_pages, qo_ip, kv_ip, kv_ix, kv_last, page_size,
+                            static_cast<int>(Hq), num_kv_heads, head_dim, qo_len, scale,
+                            float_ws, int_ws, pinned_int, runtime_cache_slot, out, err);
+                };
+                if (head_dim == 64) {
+                    dispatch_hd(std::integral_constant<uint32_t, 64>{});
+                } else if (head_dim == 128) {
+                    dispatch_hd(std::integral_constant<uint32_t, 128>{});
+                } else if (head_dim == 256) {
+                    dispatch_hd(std::integral_constant<uint32_t, 256>{});
+                } else {
+                    dispatch_hd(std::integral_constant<uint32_t, 512>{});
+                }
+            } else {
+                err = "FlashInfer capturable prefill requires bf16 or fp16 query dtype";
+                return -1;
+            }
+            if (rc == 0) {
+                return 0;
+            }
+            // A genuine capture-time plan-miss must surface, not silently fall back
+            // eager (that would defeat capture inside a region the caller already
+            // believes is being captured — see run_batch_decode's identical contract).
+            if (verify_stream_is_capturing(at::cuda::getCurrentCUDAStream().stream())) {
+                return rc;
+            }
+        } else {
+            err = "FlashInfer capturable prefill supports head_dim 64, 128, 256, or 512 only";
+        }
+
+        return run_batch_prefill_sdpa(
+                query, k_pages, v_pages, kv_ip, kv_ix, kv_last, page_size, num_kv_heads,
+                head_dim, /*cache_len=*/0, scale, /*is_causal=*/1, /*attn_mask=*/nullptr,
+                runtime_cache_slot, out, err);
+    } catch (const std::exception &ex) {
+        err = ex.what();
+        return -1;
+    }
+}
+
 extern "C" int smile_flashinfer_ragged_attention_cuda(
         const torch::Tensor &query,
         const torch::Tensor &key,
@@ -1059,6 +1574,19 @@ extern "C" void smile_flashinfer_runtime_cache_invalidate(void *cache_slot) {
 extern "C" void smile_flashinfer_runtime_cache_invalidate_prefill(void *cache_slot) {
     if (cache_slot != nullptr) {
         static_cast<WorkspaceRuntimeCache *>(cache_slot)->invalidate_prefill();
+    }
+}
+
+/**
+ * Targeted invalidation for the verify-graph plan only (SMILE_VERIFY_CUDA_GRAPH).
+ * Deliberately separate from smile_flashinfer_runtime_cache_invalidate: that one
+ * fires on ordinary decode cohort/CSR-rebuild events and must not clear a still-
+ * valid verify plan, and vice versa — see WorkspaceRuntimeCache::invalidate()'s
+ * comment.
+ */
+extern "C" void smile_flashinfer_runtime_cache_invalidate_verify(void *cache_slot) {
+    if (cache_slot != nullptr) {
+        static_cast<WorkspaceRuntimeCache *>(cache_slot)->invalidate_verify();
     }
 }
 
