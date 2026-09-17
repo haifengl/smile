@@ -2540,10 +2540,14 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     }
 
     /**
-     * Eager multi-token target forward for window verify ({@code allTokenLogits=true}).
+     * Eager multi-token target forward for window verify.
      * Never uses decode CUDA graphs ({@code S > 1}).
      *
      * @param scatter when {@code true}, write DeltaNet working rows back to home rows.
+     *                {@code scatter} calls are DeltaNet-state-replay only (drafts
+     *                already rejected past the sealed prefix): the caller never reads
+     *                per-position logits, so {@code lm_head} runs on the last position
+     *                only instead of the whole window.
      */
     Tensor forwardVerifyWindow(int requestId, int[] windowTokens, int startPos) {
         return forwardVerifyWindow(requestId, windowTokens, startPos, true);
@@ -2561,7 +2565,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             shards[r] = Tensor.of(toks).reshape(1, toks.length).to(models[r].device());
         }
         try {
-            Tensor[] logits = forwardWindow(shards, startPos, tpExecutor, true);
+            // scatter=true (DeltaNet replay) discards logits; skip the vocab-sized
+            // lm_head projection on every replayed position and only score the last.
+            Tensor[] logits = forwardWindow(shards, startPos, tpExecutor, !scatter);
             if (scatter) {
                 scatterDeltaNet();
             }
