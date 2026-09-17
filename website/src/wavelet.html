@@ -1,7 +1,7 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: Smile - Wavelet
+title: SMILE - Wavelet
 ---
 {% include "toc.njk" %}
 
@@ -9,63 +9,41 @@ title: Smile - Wavelet
 
     <h1 id="wavelet-top" class="title">Wavelet</h1>
 
-    <p>A wavelet is a wave-like oscillation with an amplitude that begins
-        at zero, increases, and then decreases back to zero. Generally,
-        wavelets are intentionally crafted to have specific properties
-        that make them useful for signal processing. Wavelets can be combined,
-        with portions of a known signal by convolution to extract
-        information from the unknown signal.</p>
+    <p>A wavelet is a localized oscillation that starts at zero, rises, and
+        returns to zero. Convolving wavelets with a signal extracts
+        time–frequency structure that a global Fourier basis cannot localize
+        in time.</p>
 
-    <p>In continuous wavelet transforms, a given signal of finite energy
-        is projected on a continuous family of frequency bands (or similar
-        subspaces of the <code>L<sup>p</sup></code> function space
-        <code>L<sup>2</sup>(R)</code>). For instance the signal may be
-        represented on every frequency band of the form <code>[f, 2f]</code>
-        for all positive frequencies <code>f > 0</code>. Then, the original
-        signal can be reconstructed by a suitable integration over all
-        the resulting frequency components.</p>
-
-    <p>It is computationally impossible to analyze a signal using all
-        wavelet coefficients. Instead, one may pick a discrete subset of
-        the upper halfplane to be able to reconstruct a signal from the
-        corresponding wavelet coefficients. That is, a discrete wavelet transform
-        (DWT) is any wavelet transform for which the wavelets are
-        discretely sampled.</p>
-
-    <p>Like the fast Fourier transform (FFT), the discrete wavelet transform
-        is a fast, linear operation that operates on a data vector whose
-        length is an integer power of 2, transforming it into a numerically
-        different vector of the same length. The wavelet transform is
-        invertible and in fact orthogonal. Both FFT and DWT can be viewed as
-        a rotation in function space. A key advantage it has over Fourier
-        transforms is temporal resolution: it captures both frequency
-        and location information (location in time).</p>
+    <p>The <em>discrete wavelet transform</em> (DWT) samples that idea on a
+        dyadic grid. Like the FFT, it is a fast orthogonal transform on vectors
+        whose length is a power of two (pad with zeros if needed), and it is
+        invertible. SMILE’s implementation lives in
+        <a href="api/java/smile/wavelet/package-summary.html"><code>smile.wavelet</code></a>.</p>
 
     <h2 id="filter" class="title">Wavelet Filters</h2>
 
-    <p>In Java, Smile provides classes for well known wavelets such as
-        Haar, Daubechies, Least Asymetric, Best Localized and Coiflet.
-        One may also define new filters by provide coefficients.
-        In Scala/Kotlin, The below function returns a wavelet filter.
-        The filter name is derived from one of four classes of wavelet
-        transform filters: Daubechies, Least Asymetric, Best Localized and Coiflet.
-        The prefixes for filters of these classes are <code>d</code>, <code>la</code>,
-        <code>bl</code> and <code>c</code>, respectively. Following the
-        prefix, the filter name consists of an integer indicating length.
-        Supported lengths are as follows:</p>
+    <p>Java exposes concrete filters:
+        <code>HaarWavelet</code>, <code>D4Wavelet</code>,
+        <code>DaubechiesWavelet</code>, <code>SymletWavelet</code>
+        (least asymmetric), <code>BestLocalizedWavelet</code>, and
+        <code>CoifletWavelet</code>. You can also build a custom filter with
+        <code>new Wavelet(coefficients)</code>.</p>
+
+    <p>Scala and Kotlin add a string factory <code>wavelet(filter)</code>.
+        Names use a class prefix plus length:</p>
     <dl>
-        <dt>Daubechies</dt>
-        <dd>4,6,8,10,12,14,16,18,20.</dd>
-        <dt>Least Asymetric</dt>
-        <dd>8,10,12,14,16,18,20.</dd>
-        <dt>Best Localized</dt>
-        <dd>14,18,20.</dd>
-        <dt>Coiflet</dt>
-        <dd>6,12,18,24,30.</dd>
+        <dt><code>d</code> — Daubechies</dt>
+        <dd>4, 6, 8, 10, 12, 14, 16, 18, 20 (<code>d4</code> is special-cased
+            via <code>D4Wavelet</code> with a different centering)</dd>
+        <dt><code>la</code> — least asymmetric (symlets)</dt>
+        <dd>8, 10, 12, 14, 16, 18, 20</dd>
+        <dt><code>bl</code> — best localized</dt>
+        <dd>14, 18, 20</dd>
+        <dt><code>c</code> — Coiflet</dt>
+        <dd>6, 12, 18, 24, 30</dd>
+        <dt><code>haar</code></dt>
+        <dd>Haar wavelet (also known as D2)</dd>
     </dl>
-    <p>Additionally, "haar" is supported for Haar wavelet. Besides, "d4", the
-        simplest and most localized wavelet, uses a different centering method
-        from other Daubechies wavelet.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -77,29 +55,52 @@ title: Smile - Wavelet
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-1-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public Wavelet(double[] coefficients)
-    </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.wavelet.*
+
+new HaarWavelet()
+new D4Wavelet()
+new DaubechiesWavelet(8)
+new SymletWavelet(8)          // same family as filter "la8"
+new BestLocalizedWavelet(14)
+new CoifletWavelet(12)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+HaarWavelet / D4Wavelet / DaubechiesWavelet / …
+      </code></pre>
     </div>
     <div id="pg-1-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def wavelet(filter: String): Wavelet
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.wavelet.*
+
+wavelet("haar")
+wavelet("d4")
+wavelet("d8")
+wavelet("la8")
+wavelet("bl14")
+wavelet("c12")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+HaarWavelet / D4Wavelet / DaubechiesWavelet / …
+      </code></pre>
     </div>
     <div id="pg-1-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun wavelet(filter: String): Wavelet
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.wavelet.*
+
+wavelet("haar")
+wavelet("d4")
+wavelet("d8")
+wavelet("la8")
+wavelet("bl14")
+wavelet("c12")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+HaarWavelet / D4Wavelet / DaubechiesWavelet / …
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
     <h2 id="dwt" class="title">Discrete Wavelet Transform</h2>
 
-    <p>With a wavelet object, we can compute the discrete wavelet transform
-        coefficients for a univariate time series. The size of time series
-        array should be a power of 2. For time series of size no power of 2,
-        0 padding can be applied.</p>
+    <p><code>transform</code> replaces the input array with wavelet coefficients
+        in place; <code>inverse</code> reconstructs the signal. Length must be
+        a power of two.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -111,150 +112,65 @@ title: Smile - Wavelet
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-2-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    double[] sp500 = {
-        1103.96, 1107.84, 1114.11, 1108.61, 1106.36, 1097.86, 1105.31,
-        1114.51, 1118.84, 1121.08, 1127.53, 1128.55, 1125.53, 1126.60,
-        1116.56, 1132.66, 1135.71, 1136.27, 1140.52, 1145.96, 1143.81,
-        1137.31, 1145.68, 1147.72, 1136.03, 1147.95, 1138.68, 1115.49,
-        1092.40, 1095.80, 1091.94, 1096.93, 1087.61, 1073.89, 1090.05,
-        1100.67, 1097.25, 1064.12, 1065.51, 1060.06, 1069.68, 1067.10,
-        1075.95, 1079.13, 1096.14, 1099.03, 1105.49, 1110.00, 1107.49,
-        1095.89, 1101.24, 1103.10, 1105.36, 1117.01, 1119.36, 1119.12,
-        1125.12, 1138.40, 1137.56, 1140.22, 1143.96, 1151.71, 1148.53,
-        1150.83, 1159.94, 1166.13, 1166.68, 1157.25, 1166.47, 1172.70,
-        1170.03, 1167.58, 1167.71, 1173.75, 1171.75, 1171.23, 1178.71,
-        1186.01, 1188.23, 1181.75, 1187.47, 1194.94, 1195.94, 1198.69,
-        1210.77, 1210.17, 1192.06, 1199.04, 1207.16, 1202.52, 1207.87,
-        1217.07, 1209.92, 1184.59, 1193.30, 1206.77, 1188.58, 1197.50,
-        1169.24, 1164.38, 1127.04, 1122.27, 1156.39, 1155.43, 1170.04,
-        1157.19, 1136.52, 1138.78, 1119.57, 1107.34, 1067.26, 1084.78,
-        1067.42, 1075.51, 1074.27, 1102.59, 1087.30, 1073.01, 1098.82,
-        1098.43, 1065.84, 1050.81, 1062.75, 1058.77, 1082.65, 1095.00,
-        1091.21, 1114.02, 1115.98, 1116.16, 1122.79, 1113.90, 1095.57,
-        1090.93, 1075.10, 1077.50, 1071.10, 1040.56, 1031.10, 1027.65,
-        1028.09, 1028.54, 1062.92, 1070.50, 1077.23, 1080.65, 1095.61,
-        1094.46, 1093.85, 1066.85, 1064.53, 1086.67, 1072.14, 1092.17,
-        1102.89, 1117.36, 1112.84, 1108.07, 1098.44, 1107.53, 1125.34,
-        1121.06, 1125.78, 1122.07, 1122.80, 1122.92, 1116.89, 1081.48,
-        1082.22, 1077.49, 1081.16, 1092.08, 1092.44, 1075.63, 1073.36,
-        1063.20, 1048.98, 1056.28, 1049.27, 1062.90, 1046.88, 1049.72,
-        1080.66, 1093.61, 1102.60, 1092.36, 1101.15, 1104.57, 1113.38,
-        1121.16, 1119.43, 1123.89, 1126.39, 1126.57, 1142.82, 1139.49,
-        1131.10, 1131.69, 1148.64, 1142.31, 1146.75, 1145.97, 1143.49,
-        1144.96, 1140.68, 1159.81, 1161.57, 1158.36, 1165.32, 1164.28,
-        1171.32, 1177.82, 1177.47, 1176.83, 1178.64, 1166.74, 1179.82,
-        1180.52, 1184.74, 1184.88, 1183.84, 1184.47, 1183.87, 1185.71,
-        1187.86, 1193.79, 1198.34, 1221.20, 1223.24, 1223.59, 1213.14,
-        1213.04, 1209.07, 1200.44, 1194.79, 1178.33, 1183.75, 1196.12,
-        1198.07, 1192.51, 1183.70, 1194.16, 1189.08, 1182.96, 1186.60,
-        1206.81, 1219.93, 1223.87, 1227.25, 1225.02, 1230.14, 1233.85,
-        1242.52, 1241.84, 1241.58, 1236.34
-    };
+      <pre class="playground-source language-java"><code class="language-java">import smile.wavelet.HaarWavelet
+import java.util.Arrays
 
-    var haar = new HaarWavelet();
-    haar.transform(sp500);
-          </code></pre>
+double[] x = {0.2, -0.4, -0.6, -0.5, -0.8, -0.4, -0.9, 0.0,
+              -0.2, 0.1, -0.1, 0.1, 0.7, 0.9, 0.0, 0.3}
+double[] original = x.clone()
+
+var haar = new HaarWavelet()
+haar.transform(x)
+Arrays.toString(x)
+
+haar.inverse(x)
+// round-trip recovers the signal (up to ~1e-15)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[-0.4, -1.3, 0.2828, -0.7071, 0.45, -0.15, -0.05, 0.65,
+  0.4243, -0.0707, -0.2828, -0.6364, -0.2121, -0.1414, -0.1414, -0.2121]
+      </code></pre>
     </div>
     <div id="pg-2-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val sp500 = Array(
-        1103.96, 1107.84, 1114.11, 1108.61, 1106.36, 1097.86, 1105.31,
-        1114.51, 1118.84, 1121.08, 1127.53, 1128.55, 1125.53, 1126.60,
-        1116.56, 1132.66, 1135.71, 1136.27, 1140.52, 1145.96, 1143.81,
-        1137.31, 1145.68, 1147.72, 1136.03, 1147.95, 1138.68, 1115.49,
-        1092.40, 1095.80, 1091.94, 1096.93, 1087.61, 1073.89, 1090.05,
-        1100.67, 1097.25, 1064.12, 1065.51, 1060.06, 1069.68, 1067.10,
-        1075.95, 1079.13, 1096.14, 1099.03, 1105.49, 1110.00, 1107.49,
-        1095.89, 1101.24, 1103.10, 1105.36, 1117.01, 1119.36, 1119.12,
-        1125.12, 1138.40, 1137.56, 1140.22, 1143.96, 1151.71, 1148.53,
-        1150.83, 1159.94, 1166.13, 1166.68, 1157.25, 1166.47, 1172.70,
-        1170.03, 1167.58, 1167.71, 1173.75, 1171.75, 1171.23, 1178.71,
-        1186.01, 1188.23, 1181.75, 1187.47, 1194.94, 1195.94, 1198.69,
-        1210.77, 1210.17, 1192.06, 1199.04, 1207.16, 1202.52, 1207.87,
-        1217.07, 1209.92, 1184.59, 1193.30, 1206.77, 1188.58, 1197.50,
-        1169.24, 1164.38, 1127.04, 1122.27, 1156.39, 1155.43, 1170.04,
-        1157.19, 1136.52, 1138.78, 1119.57, 1107.34, 1067.26, 1084.78,
-        1067.42, 1075.51, 1074.27, 1102.59, 1087.30, 1073.01, 1098.82,
-        1098.43, 1065.84, 1050.81, 1062.75, 1058.77, 1082.65, 1095.00,
-        1091.21, 1114.02, 1115.98, 1116.16, 1122.79, 1113.90, 1095.57,
-        1090.93, 1075.10, 1077.50, 1071.10, 1040.56, 1031.10, 1027.65,
-        1028.09, 1028.54, 1062.92, 1070.50, 1077.23, 1080.65, 1095.61,
-        1094.46, 1093.85, 1066.85, 1064.53, 1086.67, 1072.14, 1092.17,
-        1102.89, 1117.36, 1112.84, 1108.07, 1098.44, 1107.53, 1125.34,
-        1121.06, 1125.78, 1122.07, 1122.80, 1122.92, 1116.89, 1081.48,
-        1082.22, 1077.49, 1081.16, 1092.08, 1092.44, 1075.63, 1073.36,
-        1063.20, 1048.98, 1056.28, 1049.27, 1062.90, 1046.88, 1049.72,
-        1080.66, 1093.61, 1102.60, 1092.36, 1101.15, 1104.57, 1113.38,
-        1121.16, 1119.43, 1123.89, 1126.39, 1126.57, 1142.82, 1139.49,
-        1131.10, 1131.69, 1148.64, 1142.31, 1146.75, 1145.97, 1143.49,
-        1144.96, 1140.68, 1159.81, 1161.57, 1158.36, 1165.32, 1164.28,
-        1171.32, 1177.82, 1177.47, 1176.83, 1178.64, 1166.74, 1179.82,
-        1180.52, 1184.74, 1184.88, 1183.84, 1184.47, 1183.87, 1185.71,
-        1187.86, 1193.79, 1198.34, 1221.20, 1223.24, 1223.59, 1213.14,
-        1213.04, 1209.07, 1200.44, 1194.79, 1178.33, 1183.75, 1196.12,
-        1198.07, 1192.51, 1183.70, 1194.16, 1189.08, 1182.96, 1186.60,
-        1206.81, 1219.93, 1223.87, 1227.25, 1225.02, 1230.14, 1233.85,
-        1242.52, 1241.84, 1241.58, 1236.34
-    )
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.wavelet.*
 
-    val haar = wavelet("haar")
-    haar.transform(sp500)
-    </code></pre>
+val x = Array(0.2, -0.4, -0.6, -0.5, -0.8, -0.4, -0.9, 0.0,
+              -0.2, 0.1, -0.1, 0.1, 0.7, 0.9, 0.0, 0.3)
+val original = x.clone()
+
+val haar = wavelet("haar")
+haar.transform(x)
+x.mkString("[", ", ", "]")
+
+haar.inverse(x)
+// original ≈ x</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[-0.4, -1.3, 0.2828, -0.7071, 0.45, -0.15, -0.05, 0.65,
+  0.4243, -0.0707, -0.2828, -0.6364, -0.2121, -0.1414, -0.1414, -0.2121]
+      </code></pre>
     </div>
     <div id="pg-2-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    import smile.wavelet.*;
-    val sp500 = doubleArrayOf(
-        1103.96, 1107.84, 1114.11, 1108.61, 1106.36, 1097.86, 1105.31,
-        1114.51, 1118.84, 1121.08, 1127.53, 1128.55, 1125.53, 1126.60,
-        1116.56, 1132.66, 1135.71, 1136.27, 1140.52, 1145.96, 1143.81,
-        1137.31, 1145.68, 1147.72, 1136.03, 1147.95, 1138.68, 1115.49,
-        1092.40, 1095.80, 1091.94, 1096.93, 1087.61, 1073.89, 1090.05,
-        1100.67, 1097.25, 1064.12, 1065.51, 1060.06, 1069.68, 1067.10,
-        1075.95, 1079.13, 1096.14, 1099.03, 1105.49, 1110.00, 1107.49,
-        1095.89, 1101.24, 1103.10, 1105.36, 1117.01, 1119.36, 1119.12,
-        1125.12, 1138.40, 1137.56, 1140.22, 1143.96, 1151.71, 1148.53,
-        1150.83, 1159.94, 1166.13, 1166.68, 1157.25, 1166.47, 1172.70,
-        1170.03, 1167.58, 1167.71, 1173.75, 1171.75, 1171.23, 1178.71,
-        1186.01, 1188.23, 1181.75, 1187.47, 1194.94, 1195.94, 1198.69,
-        1210.77, 1210.17, 1192.06, 1199.04, 1207.16, 1202.52, 1207.87,
-        1217.07, 1209.92, 1184.59, 1193.30, 1206.77, 1188.58, 1197.50,
-        1169.24, 1164.38, 1127.04, 1122.27, 1156.39, 1155.43, 1170.04,
-        1157.19, 1136.52, 1138.78, 1119.57, 1107.34, 1067.26, 1084.78,
-        1067.42, 1075.51, 1074.27, 1102.59, 1087.30, 1073.01, 1098.82,
-        1098.43, 1065.84, 1050.81, 1062.75, 1058.77, 1082.65, 1095.00,
-        1091.21, 1114.02, 1115.98, 1116.16, 1122.79, 1113.90, 1095.57,
-        1090.93, 1075.10, 1077.50, 1071.10, 1040.56, 1031.10, 1027.65,
-        1028.09, 1028.54, 1062.92, 1070.50, 1077.23, 1080.65, 1095.61,
-        1094.46, 1093.85, 1066.85, 1064.53, 1086.67, 1072.14, 1092.17,
-        1102.89, 1117.36, 1112.84, 1108.07, 1098.44, 1107.53, 1125.34,
-        1121.06, 1125.78, 1122.07, 1122.80, 1122.92, 1116.89, 1081.48,
-        1082.22, 1077.49, 1081.16, 1092.08, 1092.44, 1075.63, 1073.36,
-        1063.20, 1048.98, 1056.28, 1049.27, 1062.90, 1046.88, 1049.72,
-        1080.66, 1093.61, 1102.60, 1092.36, 1101.15, 1104.57, 1113.38,
-        1121.16, 1119.43, 1123.89, 1126.39, 1126.57, 1142.82, 1139.49,
-        1131.10, 1131.69, 1148.64, 1142.31, 1146.75, 1145.97, 1143.49,
-        1144.96, 1140.68, 1159.81, 1161.57, 1158.36, 1165.32, 1164.28,
-        1171.32, 1177.82, 1177.47, 1176.83, 1178.64, 1166.74, 1179.82,
-        1180.52, 1184.74, 1184.88, 1183.84, 1184.47, 1183.87, 1185.71,
-        1187.86, 1193.79, 1198.34, 1221.20, 1223.24, 1223.59, 1213.14,
-        1213.04, 1209.07, 1200.44, 1194.79, 1178.33, 1183.75, 1196.12,
-        1198.07, 1192.51, 1183.70, 1194.16, 1189.08, 1182.96, 1186.60,
-        1206.81, 1219.93, 1223.87, 1227.25, 1225.02, 1230.14, 1233.85,
-        1242.52, 1241.84, 1241.58, 1236.34
-    )
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.wavelet.*
 
-    val haar = wavelet("haar")
-    haar.transform(sp500)
-    </code></pre>
+val x = doubleArrayOf(0.2, -0.4, -0.6, -0.5, -0.8, -0.4, -0.9, 0.0,
+                      -0.2, 0.1, -0.1, 0.1, 0.7, 0.9, 0.0, 0.3)
+val original = x.copyOf()
+
+val haar = wavelet("haar")
+haar.transform(x)
+x.contentToString()
+
+haar.inverse(x)
+// original ≈ x</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[-0.4, -1.3, 0.2828, -0.7071, 0.45, -0.15, -0.05, 0.65,
+  0.4243, -0.0707, -0.2828, -0.6364, -0.2121, -0.1414, -0.1414, -0.2121]
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The above example transform a S&amp;P 500 time series with Haar
-        wavelet. The result is stored in the input array. To transform
-        it back, the method <code>inverse</code> can be applied.</p>
+    <p>A constant signal has a single nonzero coefficient (the scaled global
+        mean); all detail coefficients are zero:</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -266,158 +182,144 @@ title: Smile - Wavelet
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-3-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    smile&gt; haar.inverse(sp500)
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.wavelet.HaarWavelet
+import java.util.Arrays
+
+double[] c = {1, 1, 1, 1, 1, 1, 1, 1}
+new HaarWavelet().transform(c)
+Arrays.toString(c)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[2.8284271247461894, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      </code></pre>
     </div>
     <div id="pg-3-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    smile&gt; haar.inverse(sp500)
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.wavelet.*
+
+val c = Array.fill(8)(1.0)
+dwt(c, "haar")
+c.mkString("[", ", ", "]")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[2.8284271247461894, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      </code></pre>
     </div>
     <div id="pg-3-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    >>> haar.inverse(sp500)
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.wavelet.*
+
+val c = DoubleArray(8) { 1.0 }
+dwt(c, "haar")
+c.contentToString()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[2.8284271247461894, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>In case that you don't want to create the wavelet object
-        explicitly or prefer functional APIs, the methods <code>dwt</code> and <code>idwt</code>
-        can be used in Scala and Kotlin.</p>
+    <p>Scala/Kotlin also expose functional helpers that construct the filter
+        for you: <code>dwt(t, filter)</code> and <code>idwt(wt, filter)</code>.</p>
 
-    <div class="code-playground glass" data-lang="scala">
+    <h2 id="shrinkage" class="title">Wavelet Shrinkage</h2>
+
+    <p>Wavelet shrinkage denoises by thresholding coefficients:</p>
+    <ol>
+        <li>Apply the wavelet transform.</li>
+        <li>Estimate a threshold.</li>
+        <li>Hard thresholding zeros coefficients below the threshold; soft
+            thresholding also shrinks the survivors toward zero.</li>
+        <li>Invert the transform.</li>
+    </ol>
+    <p><a href="api/java/smile/wavelet/WaveletShrinkage.html"><code>WaveletShrinkage</code></a>
+        uses the universal threshold
+        <code>T = &sigma; √(2 log N)</code>, with noise scale &sigma; from the
+        scaled MAD of the finest-level detail coefficients. The scaling
+        coefficient at index 0 (global mean) is never thresholded.</p>
+
+    <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="scala" data-pane="pg-4-0">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-4-1">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-4-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-4-0" class="hero-pane">
-      <pre class="playground-source language-scala"><code class="language-scala">
-    // Discrete wavelet transform.
-    def dwt(t: Array[Double], filter: String): Unit
+      <pre class="playground-source language-java"><code class="language-java">import java.awt.Color
+import smile.math.MathEx
+import smile.plot.swing.LinePlot
+import smile.wavelet.*
 
-    // Inverse discrete wavelet transform.
-    def idwt(wt: Array[Double], filter: String): Unit
-    </code></pre>
+MathEx.setSeed(19650218)
+int n = 256
+double[] noisy = new double[n]
+for (int i = 0; i < n; i++) {
+    noisy[i] = Math.sin(2 * Math.PI * i / 64.0) + 0.25 * MathEx.random()
+}
+double[] smooth = noisy.clone()
+WaveletShrinkage.denoise(smooth, new D4Wavelet())
+
+var figure = LinePlot.of(noisy).figure()
+figure.add(LinePlot.of(smooth, Color.BLUE))
+figure.show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens a plot: noisy series + D4 hard-thresholded reconstruction in blue)
+      </code></pre>
     </div>
     <div id="pg-4-1" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    // Discrete wavelet transform.
-    fun dwt(t: DoubleArray, filter: String): Unit
+      <pre class="playground-source language-scala"><code class="language-scala">import java.awt.Color
+import smile.math.MathEx
+import smile.plot.swing.LinePlot
+import smile.wavelet.*
 
-    // Inverse discrete wavelet transform.
-    fun idwt(wt: DoubleArray, filter: String): Unit
-    </code></pre>
+MathEx.setSeed(19650218)
+val n = 256
+val noisy = Array.tabulate(n) { i =>
+  Math.sin(2 * Math.PI * i / 64.0) + 0.25 * MathEx.random()
+}
+val smooth = noisy.clone()
+wsdenoise(smooth, "d4")   // or WaveletShrinkage.denoise(smooth, wavelet("d4"))
+
+val figure = LinePlot.of(noisy).figure()
+figure.add(LinePlot.of(smooth, Color.BLUE))
+figure.show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens a plot: noisy series + D4 hard-thresholded reconstruction in blue)
+      </code></pre>
     </div>
-  <div class="playground-editor" hidden></div>
-</div>
+    <div id="pg-4-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.awt.Color
+import smile.math.MathEx
+import smile.plot.swing.LinePlot
+import smile.wavelet.*
 
-    <h2 id="shrinkage" class="title">Wavelet Shrinkage</h2>
+MathEx.setSeed(19650218)
+val n = 256
+val noisy = DoubleArray(n) { i ->
+    Math.sin(2 * Math.PI * i / 64.0) + 0.25 * MathEx.random()
+}
+val smooth = noisy.copyOf()
+wsdenoise(smooth, "d4")
 
-    <p>The wavelet shrinkage is a signal denoising technique based on the idea of
-        thresholding the wavelet coefficients. Wavelet coefficients having small
-        absolute value are considered to encode mostly noise and very fine details
-        of the signal. In contrast, the important information is encoded by the
-        coefficients having large absolute value. Removing the small absolute value
-        coefficients and then reconstructing the signal should produce signal with
-        lesser amount of noise. The wavelet shrinkage approach can be summarized as
-        follows:</p>
-        <ul>
-            <li>Apply the wavelet transform to the signal.</li>
-            <li>Estimate a threshold value.</li>
-            <li>The so-called hard thresholding method zeros the coefficients that are
-                smaller than the threshold and leaves the other ones unchanged. In contrast,
-                the soft thresholding scales the remaining coefficients in order to form a
-                continuous distribution of the coefficients centered on zero.</li>
-        <li>Reconstruct the signal (apply the inverse wavelet transform).</li>
-        </ul>
-    <p>The biggest challenge in the wavelet shrinkage approach is finding an
-        appropriate threshold value. In this method, we use the universal threshold
-        <code>T = &sigma; sqrt(2*log(N))</code>, where <code>N</code> is the length
-        of time series and &sigma; is the estimate of standard deviation of the noise by the
-        so-called scaled median absolute deviation (MAD) computed from the high-pass
-        wavelet coefficients of the first level of the transform.</p>
-
-    <p>The class <code>WaveletShrinkage</code> implements this process.</p>
-
-    <div class="code-playground glass" data-lang="java">
-  <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-5-2">Kotlin</button>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-    <div id="pg-5-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var d4 = new D4Wavelet();
-    var smooth = sp500.clone();
-    WaveletShrinkage.denoise(smooth, d4);
-
-    var figure = LinePlot.of(sp500).figure();
-    figure.add(LinePlot.of(smooth, Color.BLUE));
-    show(figure);
-          </code></pre>
-    </div>
-    <div id="pg-5-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val d4 = wavelet("d4")
-    val smooth = sp500.clone()
-    WaveletShrinkage.denoise(smooth, d4)
-    val canvas = plot(sp500)
-    canvas.line(smooth, BLUE)
-    show(canvas)
-    </code></pre>
-    </div>
-    <div id="pg-5-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    import java.awt.Color;
-    import smile.plot.swing.*;
-    val d4 = wavelet("d4");
-    val smooth = sp500.clone();
-    WaveletShrinkage.denoise(smooth, d4);
-    val canvas = LinePlot.of(sp500).canvas();
-    canvas.add(LinePlot.of(smooth, Color.BLUE));
-    canvas.window();
-    </code></pre>
+val figure = LinePlot.of(noisy).figure()
+figure.add(LinePlot.of(smooth, Color.BLUE))
+figure.show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens a plot: noisy series + D4 hard-thresholded reconstruction in blue)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/wavelet-denoise.png" class="enlarge" style="width: 480px;" />
+        <img src="images/wavelet-denoise.png" class="enlarge" style="width: 480px;" alt="Wavelet shrinkage on S&amp;P 500" />
+        <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Example: D4 shrinkage on an S&amp;P 500 series (raw vs denoised).
+        </p>
     </div>
 
-    <p>Similar to <code>dwt</code> method, <code>wsdenoise</code> is
-        a function for wavelet shrinkage if you don't want to
-        create the wavelet object explicitly.</p>
-    <div class="code-playground glass" data-lang="scala">
-  <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="scala" data-pane="pg-6-0">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-6-1">Kotlin</button>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-    <div id="pg-6-0" class="hero-pane">
-      <pre class="playground-source language-scala"><code class="language-scala">
-    // If the parameter soft is true, apply soft thresholding.
-    def wsdenoise(t: Array[Double], filter: String, soft: Boolean = false): Unit
-    </code></pre>
-    </div>
-    <div id="pg-6-1" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    // If the parameter soft is true, apply soft thresholding.
-    fun wsdenoise(t: DoubleArray, filter: String, soft: Boolean = false): Unit
-    </code></pre>
-    </div>
-  <div class="playground-editor" hidden></div>
-</div>
+    <p>Pass <code>soft = true</code> to
+        <code>WaveletShrinkage.denoise(t, wavelet, true)</code> or
+        <code>wsdenoise(t, filter, soft = true)</code> for soft thresholding.</p>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>

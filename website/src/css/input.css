@@ -36,6 +36,15 @@
   h4 { font-size: 1.05rem; margin: 1.25rem 0 0.5rem; }
   p { margin: 0 0 1rem; }
   code, kbd { font-family: var(--font-mono); font-size: 0.9em; }
+  /* Tailwind preflight clears list markers; restore them in article content. */
+  .col-md-9 ol,
+  .col-md-9 ul {
+    margin: 0 0 1rem;
+    padding-left: 1.5rem;
+  }
+  .col-md-9 ol { list-style: decimal; }
+  .col-md-9 ul { list-style: disc; }
+  .col-md-9 li { margin: 0.25rem 0; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
 
