@@ -232,6 +232,11 @@ public final class Native {
                 .find("smile_flashinfer_workspace_invalidate_prefill_runtime_cache")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)))
                 .orElse(null);
+        /** SMILE_VERIFY_CUDA_GRAPH Stage 1: independent of FLASHINFER_WS_INVALIDATE(_PREFILL). */
+        static final MethodHandle FLASHINFER_WS_INVALIDATE_VERIFY = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_workspace_invalidate_verify_runtime_cache")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)))
+                .orElse(null);
         static final MethodHandle FLASHINFER_SET_AOT = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_flashinfer_set_aot_dir")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(ValueLayout.ADDRESS)))
@@ -246,6 +251,22 @@ public final class Native {
                         ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT,
                         ValueLayout.JAVA_INT,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        /**
+         * SMILE_VERIFY_CUDA_GRAPH Stage 1: graph-capturable multi-token (S&gt;1)
+         * causal paged attention (see smile_flashinfer_paged_attention_verify_cuda).
+         * Isolated sibling of FLASHINFER_PAGED; not on the live verify path yet.
+         */
+        static final MethodHandle FLASHINFER_PAGED_VERIFY = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_paged_attention_verify")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE,
+                        ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT,
+                        ValueLayout.ADDRESS)))
                 .orElse(null);
         static final MethodHandle FLASHINFER_RAGGED = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_flashinfer_ragged_attention")
@@ -1248,6 +1269,84 @@ public final class Native {
     }
 
     /**
+     * Clears only the cached verify-graph (SMILE_VERIFY_CUDA_GRAPH) plan.
+     * Independent of {@link #flashInferWorkspaceInvalidateRuntimeCache} /
+     * {@link #flashInferWorkspaceInvalidatePrefillRuntimeCache} — decode's
+     * routine cohort/CSR-rebuild invalidation must not clear a still-valid
+     * verify plan, and vice versa.
+     */
+    public static void flashInferWorkspaceInvalidateVerifyRuntimeCache(MemorySegment handle) {
+        if (handle == null || handle.address() == 0
+                || Bindings.FLASHINFER_WS_INVALIDATE_VERIFY == null) {
+            return;
+        }
+        try {
+            Bindings.FLASHINFER_WS_INVALIDATE_VERIFY.invokeExact(handle);
+        } catch (Throwable ignored) {
+            // best-effort
+        }
+    }
+
+    /**
+     * Raw-tensor paged attention (existing eager S==1/S&gt;1 dispatch), bypassing
+     * {@link smile.llm.attention.AttentionContext}/{@code KvCachePool}.
+     *
+     * <p>Exists so a Stage 1 (SMILE_VERIFY_CUDA_GRAPH) smoke test can compare
+     * {@link #flashInferAttentionVerifyCapturable}'s output against this
+     * existing, proven path on identical raw tensors, without needing to stand
+     * up the full production KV-pool machinery. {@link #flashInferAttention} is
+     * the production entry point built on the same underlying call; this is a
+     * thin sibling at the same tensor-level boundary.
+     *
+     * @param query    query {@code [B, Hq, S, D]}
+     * @param kCache   key cache {@code [numSlots, Hkv, D]} (one layer slice)
+     * @param vCache   value cache {@code [numSlots, Hkv, D]}
+     * @param kvIndptr int32 {@code [B+1]}
+     * @param kvIndices int32 {@code [numPages]}
+     * @param kvLastPageLen int32 {@code [B]}
+     * @param pageSize tokens per page
+     * @param numKvHeads Hkv
+     * @param headDim  D
+     * @param cacheLen total sequence length (for CSR validation; {@code 0} to skip)
+     * @param scale    attention scale ({@code <= 0} &rarr; {@code 1/sqrt(D)})
+     * @param isCausal whether to apply causal masking
+     * @param workspace FlashInfer workspace handle
+     * @return output {@code [B, Hq, S, D]}
+     */
+    public static Tensor flashInferAttentionPagedRaw(
+            Tensor query, Tensor kCache, Tensor vCache,
+            Tensor kvIndptr, Tensor kvIndices, Tensor kvLastPageLen,
+            int pageSize, int numKvHeads, int headDim, int cacheLen,
+            double scale, boolean isCausal, MemorySegment workspace) {
+        if (Bindings.FLASHINFER_PAGED == null) {
+            throw new IllegalStateException("smile_flashinfer_paged_attention not in libsmile_torch");
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.FLASHINFER_PAGED.invokeExact(
+                    query.handle(),
+                    kCache.handle(),
+                    vCache.handle(),
+                    kvIndptr.handle(),
+                    kvIndices.handle(),
+                    kvLastPageLen.handle(),
+                    pageSize,
+                    numKvHeads,
+                    headDim,
+                    cacheLen,
+                    scale,
+                    1.0f,
+                    1.0f,
+                    isCausal ? 1 : 0,
+                    MemorySegment.NULL,
+                    workspace);
+        } catch (Throwable t) {
+            throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+        }
+        return new Tensor(check(out));
+    }
+
+    /**
      * Runs paged attention using {@link smile.llm.attention.AttentionContext}.
      *
      * @param query query {@code [B, Hq, S, D]}
@@ -1298,6 +1397,68 @@ public final class Native {
             }
             return new Tensor(check(out));
         }
+    }
+
+    /**
+     * Stage 1 (SMILE_VERIFY_CUDA_GRAPH): graph-capturable multi-token (S&gt;1)
+     * causal paged attention for MTP window verify (see
+     * {@code smile_flashinfer_paged_attention_verify_cuda}). Isolated sibling of
+     * {@link #flashInferAttention} — not wired into the live verify path yet;
+     * this exists so Stage 1's eager-mode correctness can be validated directly
+     * against {@link #flashInferAttention}'s existing SDPA path before any
+     * later stage touches {@code Qwen}/{@code QwenModel}.
+     *
+     * <p>Always causal; no mask parameter (FlashInfer's causal masking here is
+     * compile-time, unlike the additive-mask SDPA path).
+     *
+     * @param query      query {@code [B, Hq, S, D]}
+     * @param kCache     key cache {@code [numSlots, Hkv, D]} (one layer slice)
+     * @param vCache     value cache {@code [numSlots, Hkv, D]}
+     * @param qoIndptr   int32 {@code [B+1]}, values {@code {0,S,2S,...}}
+     * @param kvIndptr   int32 {@code [B+1]}
+     * @param kvIndices  int32 {@code [numPages]}
+     * @param kvLastPageLen int32 {@code [B]}
+     * @param pageSize   tokens per page
+     * @param numKvHeads Hkv
+     * @param headDim    D
+     * @param qoLen      S (must equal {@code query}'s 3rd dim)
+     * @param scale      attention scale ({@code <= 0} &rarr; {@code 1/sqrt(D)})
+     * @param kScale     FP8 KV key dequant scale (1.0 when KV is bf16/fp16)
+     * @param vScale     FP8 KV value dequant scale (1.0 when KV is bf16/fp16)
+     * @param workspace  FlashInfer workspace handle
+     * @return output {@code [B, Hq, S, D]}
+     */
+    public static Tensor flashInferAttentionVerifyCapturable(
+            Tensor query, Tensor kCache, Tensor vCache,
+            Tensor qoIndptr, Tensor kvIndptr, Tensor kvIndices, Tensor kvLastPageLen,
+            int pageSize, int numKvHeads, int headDim, int qoLen,
+            double scale, float kScale, float vScale, MemorySegment workspace) {
+        if (Bindings.FLASHINFER_PAGED_VERIFY == null) {
+            throw new IllegalStateException(
+                    "smile_flashinfer_paged_attention_verify not in libsmile_torch");
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) Bindings.FLASHINFER_PAGED_VERIFY.invokeExact(
+                    query.handle(),
+                    kCache.handle(),
+                    vCache.handle(),
+                    qoIndptr.handle(),
+                    kvIndptr.handle(),
+                    kvIndices.handle(),
+                    kvLastPageLen.handle(),
+                    pageSize,
+                    numKvHeads,
+                    headDim,
+                    qoLen,
+                    scale,
+                    kScale,
+                    vScale,
+                    workspace);
+        } catch (Throwable t) {
+            throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+        }
+        return new Tensor(check(out));
     }
 
     /**
