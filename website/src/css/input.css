@@ -484,6 +484,42 @@
   .lead { font-size: 1.1rem; color: var(--text-muted); }
   .caption { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem; }
 
+  img.enlarge {
+    cursor: zoom-in;
+  }
+  .lightbox-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    background: rgba(15, 23, 42, 0.78);
+    overflow: hidden;
+    cursor: zoom-out;
+    padding: 0;
+  }
+  .lightbox-backdrop.is-open { display: block; }
+  .lightbox-stage {
+    box-sizing: border-box;
+    min-width: 100%;
+    min-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .lightbox-stage img {
+    display: block;
+    width: auto;
+    height: auto;
+    max-width: calc(100vw - 3rem);
+    max-height: calc(100vh - 3rem);
+    object-fit: contain;
+    cursor: default;
+    border-radius: 0.35rem;
+    box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.45);
+  }
+  body.lightbox-open { overflow: hidden; }
+
   .nav-tabs,
   .nav.nav-tabs {
     display: flex;

@@ -1,7 +1,7 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: Smile - Graph Data Structure
+title: SMILE - Graph Data Structure
 ---
 {% include "toc.njk" %}
 
@@ -9,372 +9,637 @@ title: Smile - Graph Data Structure
 
     <h1 id="graph-top" class="title">Graph Data Structure</h1>
 
-    <p>Many machine learning algorithms (e.g. Isomap, UMAP, etc.) employ graph data structures internally.
-        Graphs are mathematical structures used to model pairwise relations between
-        objects from a certain collection. A graph is an abstract representation of
-        a set of objects where some pairs of the objects are connected by links.
-        The interconnected objects are represented by mathematical abstractions
-        called vertices (also called nodes or points), and the links that connect
-        some pairs of vertices are called edges (also called lines).
-        The edges may be directed (asymmetric) or undirected (symmetric).</p>
+    <p>Many SMILE algorithms (Isomap, UMAP, spectral clustering, …) build
+        graphs internally. The
+        <a href="api/java/smile/graph/package-summary.html"><code>smile.graph</code></a>
+        package exposes them as first-class structures: vertices linked by
+        directed or undirected edges, optionally weighted.</p>
 
-    <p>There are different ways to store graphs in a computer system. The data
-        structure used depends on both the graph structure and the algorithm
-        used for manipulating the graph. Theoretically one can distinguish between
-        list and matrix structures but in concrete applications the best structure
-        is often a combination of both. List structures are often preferred for
-        sparse graphs as they have smaller memory requirements. Matrix structures
-        on the other hand provide faster access for some applications but can
-        consume huge amounts of memory. In Smile, we support both adjacency list
-        (class <code>AdjacencyList</code>) and adjacency matrix
-        (class <code>AdjacencyMatrix</code>).</p>
+    <p>Storage is either an
+        <a href="api/java/smile/graph/AdjacencyList.html"><code>AdjacencyList</code></a>
+        (good for sparse graphs) or an
+        <a href="api/java/smile/graph/AdjacencyMatrix.html"><code>AdjacencyMatrix</code></a>
+        (fast random edge access). Both implement
+        <a href="api/java/smile/graph/Graph.html"><code>Graph</code></a>.
+        For k-NN graphs used by manifold methods, see also
+        <code>NearestNeighborGraph</code>.</p>
 
-    <p>In adjacency list, each vertex has a list
-      of which vertices it is adjacent to. This causes redundancy in an undirected
-      graph. Adjacency queries are faster, at the cost of extra storage space.</p>
+    <p><code>Graph.dot()</code> returns Graphviz DOT; paste it into
+        <a target="_blank" href="https://viz-js.com/">viz-js.com</a> to draw the graph.
+        Optional name and per-vertex labels apply to the first labels; remaining
+        vertices keep their integer IDs.</p>
 
-    <p>An adjacency matrix is an n by n matrix A, where n is the number
-      of vertices in the graph. If there is an edge from a vertex x to a vertex y,
-      then the element A(x,y) is 1 (or in general the number of edges or a weight), otherwise
-      it is 0. In computing, this matrix makes it easy to find subgraphs, and to
-      reverse a directed graph.</p>
-
-    <p>Both <code>AdjacencyList</code> and <code>AdjacencyMatrix</code> implement
-        the abstract interface <code>Graph</code>. The method <code>dot()</code>
-        returns the graphic representation in Graphviz dot format. You may try
-        <a target="_blank" href="http://viz-js.com/">http://viz-js.com/</a> to visualize the returned string.
-    </p>
-    
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">
-    import smile.graph.*;
-            
-    var graph = new AdjacencyList(8);
-    graph.addEdge(0, 2);
-    graph.addEdge(1, 7);
-    graph.addEdge(2, 6);
-    graph.addEdge(7, 4);
-    graph.addEdge(3, 4);
-    graph.addEdge(3, 5);
-    graph.addEdge(5, 4);
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.graph.*
 
-    String[] label = {"a", "b", "c", "d"}
-    graph.dot("SmileGraph", label);
-                </code></pre>
+var graph = new AdjacencyList(8)
+graph.addEdge(0, 2)
+graph.addEdge(1, 7)
+graph.addEdge(2, 6)
+graph.addEdge(7, 4)
+graph.addEdge(3, 4)
+graph.addEdge(3, 5)
+graph.addEdge(5, 4)
+
+String[] label = {"a", "b", "c", "d"}
+graph.dot("SMILEGraph", label)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+graph SMILEGraph {
+  node [shape=box, style="rounded", color="black", fontname=helvetica];
+  edge [fontname=helvetica];
+  0 [label="a"];
+  1 [label="b"];
+  2 [label="c"];
+  3 [label="d"];
+  0 -- 2 [label="1"];
+  1 -- 7 [label="1"];
+  2 -- 6 [label="1"];
+  3 -- 4 [label="1"];
+  3 -- 5 [label="1"];
+  4 -- 7 [label="1"];
+  4 -- 5 [label="1"];
+}
+      </code></pre>
+    </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.graph.*
+
+val graph = new AdjacencyList(8)
+graph.addEdge(0, 2)
+graph.addEdge(1, 7)
+graph.addEdge(2, 6)
+graph.addEdge(7, 4)
+graph.addEdge(3, 4)
+graph.addEdge(3, 5)
+graph.addEdge(5, 4)
+
+val label = Array("a", "b", "c", "d")
+graph.dot("SMILEGraph", label)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+graph SMILEGraph {
+  node [shape=box, style="rounded", color="black", fontname=helvetica];
+  edge [fontname=helvetica];
+  0 [label="a"];
+  1 [label="b"];
+  2 [label="c"];
+  3 [label="d"];
+  0 -- 2 [label="1"];
+  1 -- 7 [label="1"];
+  2 -- 6 [label="1"];
+  3 -- 4 [label="1"];
+  3 -- 5 [label="1"];
+  4 -- 7 [label="1"];
+  4 -- 5 [label="1"];
+}
+      </code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
-    
-    <p>In this example, we create a DOT graph with name 'SmileGraph' with 4 node labels.
-        Since we have 8 nodes, the rest of nodes will use their integer ID as label.
-    </p>
 
     <h2 id="traversal" class="title">Graph Traversal</h2>
-    <p>The basic operation on graph is traversal, i.e. to visit the vertices in some
-        systematic order. Typically, we have breadth first search (BFS) and depth first
-        search (DFS). Both of these construct spanning trees with certain properties
-        useful in other graph algorithms. The generic methods <code>bfs(VertexVisitor)</code>
-        and <code>dfs(VertexVisitor)</code> take a user-define <code>VertexVisitor</code>
-        functor to perform specific operations when visiting a vertex.
-    </p>
+
+    <p>Breadth-first and depth-first search visit every vertex systematically and
+        build spanning trees used by later algorithms.
+        <code>bfs(VertexVisitor)</code> and <code>dfs(VertexVisitor)</code>
+        call your visitor at each vertex.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">
-    graph.dfs(i -> println("Visiting vertex " + i));
-          </code></pre>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.graph.*
+
+var graph = new AdjacencyList(8)
+graph.addEdge(0, 2)
+graph.addEdge(1, 7)
+graph.addEdge(2, 6)
+graph.addEdge(7, 4)
+graph.addEdge(3, 4)
+graph.addEdge(3, 5)
+graph.addEdge(5, 4)
+
+graph.dfs(i -> println("Visiting vertex " + i))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Visiting vertex 0
+Visiting vertex 2
+Visiting vertex 6
+Visiting vertex 1
+Visiting vertex 7
+Visiting vertex 4
+Visiting vertex 3
+Visiting vertex 5
+      </code></pre>
+    </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.graph.*
+
+val graph = new AdjacencyList(8)
+graph.addEdge(0, 2)
+graph.addEdge(1, 7)
+graph.addEdge(2, 6)
+graph.addEdge(7, 4)
+graph.addEdge(3, 4)
+graph.addEdge(3, 5)
+graph.addEdge(5, 4)
+
+graph.dfs(i => println(s"Visiting vertex $i"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Visiting vertex 0
+Visiting vertex 2
+Visiting vertex 6
+Visiting vertex 1
+Visiting vertex 7
+Visiting vertex 4
+Visiting vertex 3
+Visiting vertex 5
+      </code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
 
     <h2 id="connected_components" class="title">Connected Components</h2>
-    <p>An application of graph traversal is to compute connected components.
-        A connected component of an undirected graph is a connected subgraph
-        that is not part of any larger connected subgraph. The components of
-        any graph partition its vertices into disjoint sets, and are the
-        induced subgraphs of those sets. In <code>Graph</code> class, the methods
-        <code>bfcc()</code> and <code>dfcc()</code> compute the connected
-        components with BFS and DFS algorithms, respectively. These methods
-        return a two-dimensional array of which each row is the vertex IDs
-        in the same connected component.
-    </p>
 
-        <div class="code-playground glass" data-lang="java">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-java"><code class="language-java">
-    // compute connected components with BFS
-    graph.bfcc();
-    // compute connected components with DFS
-    graph.dfcc();
-              </code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
-
-    <p>A strongly connected component of a directed graph is a maximal subgraph
-       where every pair of vertices is mutually reachable. Note that a conventional
-       DFS method cannot be used to find the strongly connected components. Instead,
-       one may leverage Kosaraju's algorithm or Tarjan's algorithm to compute strongly
-       connected components.</p>
-
-       <h2 id="topological_sort" class="title">Topological Sort</h2>
-       <p>With DFS or BFS, we can also obtain the topological ordering of a directed graph, which
-        is a linear ordering of its vertices such that for every directed edge uv from vertex
-        u to vertex v, u comes before v in the ordering. For instance, the vertices of the
-        graph may represent tasks to be performed, and the edges may represent constraints
-        that one task must be performed before another; in this application, a topological
-        ordering is just a valid sequence for the tasks. A topological ordering is possible
-        if and only if the graph has no directed cycles, that is, if it is a directed acyclic
-        graph (DAG).
-    </p>
+    <p>A connected component of an undirected graph is a maximal connected
+        subgraph. <code>bfcc()</code> and <code>dfcc()</code> return a
+        2-D array whose rows are the vertex IDs of each component.
+        (Directed strongly connected components need Kosaraju or Tarjan;
+        ordinary DFS/BFS is not enough.)</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">
-    var graph = new AdjacencyList(13, true);
-    graph.addEdge(8, 7);
-    graph.addEdge(7, 6);
-    graph.addEdge(0, 1);
-    graph.addEdge(0, 2);
-    graph.addEdge(0, 3);
-    graph.addEdge(0, 5);
-    graph.addEdge(0, 6);
-    graph.addEdge(2, 3);
-    graph.addEdge(3, 4);
-    graph.addEdge(3, 5);
-    graph.addEdge(6, 4);
-    graph.addEdge(6, 9);
-    graph.addEdge(4, 9);
-    graph.addEdge(9, 10);
-    graph.addEdge(9, 11);
-    graph.addEdge(9, 12);
-    graph.addEdge(11, 12);
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays
+import smile.graph.*
 
-    graph.dfsort(); // topological sort with DFS
-    graph.bfsort(); // topological sort with BFS
-          </code></pre>
+var graph = new AdjacencyList(8)
+graph.addEdge(0, 2)
+graph.addEdge(1, 7)
+graph.addEdge(2, 6)
+graph.addEdge(7, 4)
+graph.addEdge(3, 4)
+graph.addEdge(3, 5)
+graph.addEdge(5, 4)
+
+Arrays.deepToString(graph.bfcc())
+Arrays.deepToString(graph.dfcc())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[[0, 2, 6], [1, 3, 4, 5, 7]]
+[[0, 2, 6], [1, 3, 4, 5, 7]]
+      </code></pre>
+    </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.graph.*
+
+val graph = new AdjacencyList(8)
+graph.addEdge(0, 2)
+graph.addEdge(1, 7)
+graph.addEdge(2, 6)
+graph.addEdge(7, 4)
+graph.addEdge(3, 4)
+graph.addEdge(3, 5)
+graph.addEdge(5, 4)
+
+graph.bfcc().map(_.mkString("[", ", ", "]")).mkString("[", ", ", "]")
+graph.dfcc().map(_.mkString("[", ", ", "]")).mkString("[", ", ", "]")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[[0, 2, 6], [1, 3, 4, 5, 7]]
+[[0, 2, 6], [1, 3, 4, 5, 7]]
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h2 id="topological_sort" class="title">Topological Sort</h2>
+
+    <p>On a directed acyclic graph (DAG), a topological order lists vertices so
+        every edge <em>u → v</em> has <em>u</em> before <em>v</em>—the classic
+        “tasks with prerequisites” schedule.
+        <code>dfsort()</code> and <code>bfsort()</code> return such an order
+        (they throw on undirected graphs).</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays
+import smile.graph.*
+
+var graph = new AdjacencyList(13, true)
+graph.addEdge(8, 7)
+graph.addEdge(7, 6)
+graph.addEdge(0, 1)
+graph.addEdge(0, 2)
+graph.addEdge(0, 3)
+graph.addEdge(0, 5)
+graph.addEdge(0, 6)
+graph.addEdge(2, 3)
+graph.addEdge(3, 4)
+graph.addEdge(3, 5)
+graph.addEdge(6, 4)
+graph.addEdge(6, 9)
+graph.addEdge(4, 9)
+graph.addEdge(9, 10)
+graph.addEdge(9, 11)
+graph.addEdge(9, 12)
+graph.addEdge(11, 12)
+
+Arrays.toString(graph.dfsort())
+Arrays.toString(graph.bfsort())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[1, 10, 12, 11, 9, 4, 5, 3, 2, 6, 0, 7, 8]
+[0, 8, 1, 2, 7, 3, 6, 5, 4, 9, 10, 11, 12]
+      </code></pre>
+    </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.graph.*
+
+val graph = new AdjacencyList(13, true)
+graph.addEdge(8, 7)
+graph.addEdge(7, 6)
+graph.addEdge(0, 1)
+graph.addEdge(0, 2)
+graph.addEdge(0, 3)
+graph.addEdge(0, 5)
+graph.addEdge(0, 6)
+graph.addEdge(2, 3)
+graph.addEdge(3, 4)
+graph.addEdge(3, 5)
+graph.addEdge(6, 4)
+graph.addEdge(6, 9)
+graph.addEdge(4, 9)
+graph.addEdge(9, 10)
+graph.addEdge(9, 11)
+graph.addEdge(9, 12)
+graph.addEdge(11, 12)
+
+graph.dfsort().mkString("[", ", ", "]")
+graph.bfsort().mkString("[", ", ", "]")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[1, 10, 12, 11, 9, 4, 5, 3, 2, 6, 0, 7, 8]
+[0, 8, 1, 2, 7, 3, 6, 5, 4, 9, 10, 11, 12]
+      </code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
 
     <h2 id="mst" class="title">Minimum Spanning Tree</h2>
-    <p>A minimum spanning tree (MST) is a subset of the edges of a connected,
-        edge-weighted undirected graph that connects all the vertices together,
-        without any cycles and with the minimum possible total edge weight.
-        That is, it is a spanning tree whose sum of edge weights is as small as
-        possible. There are many use cases for minimum spanning trees.
-        With the method <code>prim</code>, we can calculate an MST by Prim's algorithm.
-    </p>
+
+    <p>An MST connects all vertices of a weighted undirected graph with no
+        cycles and minimum total weight. <code>prim(List&lt;Edge&gt;)</code>
+        runs Prim’s algorithm, fills the edge list, and returns the cost.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">
-    var graph = new AdjacencyMatrix(6);
-    graph.addEdge(0, 1, 0.41);
-    graph.addEdge(1, 2, 0.51);
-    graph.addEdge(2, 3, 0.50);
-    graph.addEdge(4, 3, 0.36);
-    graph.addEdge(3, 5, 0.38);
-    graph.addEdge(3, 0, 0.45);
-    graph.addEdge(0, 5, 0.29);
-    graph.addEdge(5, 4, 0.21);
-    graph.addEdge(1, 4, 0.32);
-    graph.addEdge(4, 2, 0.32);
-    graph.addEdge(5, 1, 0.29);
-    
-    List&lt;Graph.Edge&gt; mst = new ArrayList<>();
-    double cost = graph.prim(mst);
-    mst.forEach(edge -> println(edge))
-            </code></pre>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.ArrayList
+import smile.graph.*
+
+var graph = new AdjacencyMatrix(6)
+graph.addEdge(0, 1, 0.41)
+graph.addEdge(1, 2, 0.51)
+graph.addEdge(2, 3, 0.50)
+graph.addEdge(4, 3, 0.36)
+graph.addEdge(3, 5, 0.38)
+graph.addEdge(3, 0, 0.45)
+graph.addEdge(0, 5, 0.29)
+graph.addEdge(5, 4, 0.21)
+graph.addEdge(1, 4, 0.32)
+graph.addEdge(4, 2, 0.32)
+graph.addEdge(5, 1, 0.29)
+
+var mst = new ArrayList&lt;Graph.Edge&gt;()
+graph.prim(mst)
+mst</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+1.47
+[Edge[u=1, v=5, weight=0.29], Edge[u=2, v=4, weight=0.32], Edge[u=3, v=4, weight=0.36], Edge[u=4, v=5, weight=0.21], Edge[u=5, v=0, weight=0.29]]
+      </code></pre>
+    </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.ArrayList
+import smile.graph.*
+
+val graph = new AdjacencyMatrix(6)
+graph.addEdge(0, 1, 0.41)
+graph.addEdge(1, 2, 0.51)
+graph.addEdge(2, 3, 0.50)
+graph.addEdge(4, 3, 0.36)
+graph.addEdge(3, 5, 0.38)
+graph.addEdge(3, 0, 0.45)
+graph.addEdge(0, 5, 0.29)
+graph.addEdge(5, 4, 0.21)
+graph.addEdge(1, 4, 0.32)
+graph.addEdge(4, 2, 0.32)
+graph.addEdge(5, 1, 0.29)
+
+val mst = new ArrayList[Graph.Edge]()
+graph.prim(mst)
+mst</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+1.47
+[Edge[u=1, v=5, weight=0.29], Edge[u=2, v=4, weight=0.32], Edge[u=3, v=4, weight=0.36], Edge[u=4, v=5, weight=0.21], Edge[u=5, v=0, weight=0.29]]
+      </code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
-    
+
     <h2 id="Dijkstra" class="title">Shortest Path</h2>
-    <p>With the method <code>dijkstra()</code>, we can calculate the shortest path
-        from a source to all other vertices in the graph by Dijkstra algorithm.
-        If no parameter is provided, Smile will calculate all pairwise shortest
-        path between all vertecies.
-        Many manifold algorithms employ the shortest path among the samples as
-        a similarity measure instead of pairwise distance.
-    </p>
+
+    <p><code>dijkstra()</code> returns all-pairs shortest-path distances;
+        <code>dijkstra(source)</code> is the single-source case. Manifold
+        learners often use these geodesic distances instead of raw pairwise
+        Euclidean distance.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">
-    var graph = new AdjacencyMatrix(6, true);
-    graph.addEdge(0, 1, 0.41);
-    graph.addEdge(1, 2, 0.51);
-    graph.addEdge(2, 3, 0.50);
-    graph.addEdge(4, 3, 0.36);
-    graph.addEdge(3, 5, 0.38);
-    graph.addEdge(3, 0, 0.45);
-    graph.addEdge(0, 5, 0.29);
-    graph.addEdge(5, 4, 0.21);
-    graph.addEdge(1, 4, 0.32);
-    graph.addEdge(4, 2, 0.32);
-    graph.addEdge(5, 1, 0.29);
+    <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays
+import smile.graph.*
 
-    double[][] distances = graph.dijkstra();
-          </code></pre>
+var graph = new AdjacencyMatrix(6, true)
+graph.addEdge(0, 1, 0.41)
+graph.addEdge(1, 2, 0.51)
+graph.addEdge(2, 3, 0.50)
+graph.addEdge(4, 3, 0.36)
+graph.addEdge(3, 5, 0.38)
+graph.addEdge(3, 0, 0.45)
+graph.addEdge(0, 5, 0.29)
+graph.addEdge(5, 4, 0.21)
+graph.addEdge(1, 4, 0.32)
+graph.addEdge(4, 2, 0.32)
+graph.addEdge(5, 1, 0.29)
+
+double[][] distances = graph.dijkstra()
+Arrays.toString(distances[0])</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[0.0, 0.41, 0.82, 0.86, 0.5, 0.29]
+      </code></pre>
+    </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.graph.*
+
+val graph = new AdjacencyMatrix(6, true)
+graph.addEdge(0, 1, 0.41)
+graph.addEdge(1, 2, 0.51)
+graph.addEdge(2, 3, 0.50)
+graph.addEdge(4, 3, 0.36)
+graph.addEdge(3, 5, 0.38)
+graph.addEdge(3, 0, 0.45)
+graph.addEdge(0, 5, 0.29)
+graph.addEdge(5, 4, 0.21)
+graph.addEdge(1, 4, 0.32)
+graph.addEdge(4, 2, 0.32)
+graph.addEdge(5, 1, 0.29)
+
+val distances = graph.dijkstra()
+distances(0).mkString("[", ", ", "]")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[0.0, 0.41, 0.82, 0.86, 0.5, 0.29]
+      </code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
 
     <h2 id="TSP" class="title">Travelling Salesman Problem</h2>
-    <p>The travelling salesman problem (TSP) is another important task in graph
-        theory, combinatorial optimization, and operations research.
-        It asks the following question: "Given a list of cities and the distances
-        between each pair of cities, what is the shortest possible route that visits
-        each city exactly once and returns to the origin city?"  It is an NP-hard problem.
-        Smile provides the Held-Karp algorithm to compute the optimal solution of TSP.
-        It is an efficient dynamic programming algorithm, significantly better than
-        the superexponential performance {\displaystyle \Theta (n!)} of a brute-force algorithm.
-    </p>
+
+    <p>TSP asks for the shortest tour that visits every vertex once and returns
+        to the start—an NP-hard classic. SMILE’s Held–Karp dynamic program
+        finds the optimum in &Theta;(n<sup>2</sup> 2<sup>n</sup>) time, far better
+        than brute-force &Theta;(n!), and <code>tsp()</code> is a branch-and-bound
+        exact solver for moderate sizes.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">
-    var graph = new AdjacencyMatrix(6);
-    graph.addEdge(0, 1, 0.41);
-    graph.addEdge(1, 2, 0.51);
-    graph.addEdge(2, 3, 0.50);
-    graph.addEdge(4, 3, 0.36);
-    graph.addEdge(3, 5, 0.38);
-    graph.addEdge(3, 0, 0.45);
-    graph.addEdge(0, 5, 0.29);
-    graph.addEdge(5, 4, 0.21);
-    graph.addEdge(1, 4, 0.32);
-    graph.addEdge(4, 2, 0.32);
-    graph.addEdge(5, 1, 0.29);
-    
-    int[] tour = graph.heldKarp();
-            </code></pre>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays
+import smile.graph.*
+
+var graph = new AdjacencyMatrix(6)
+graph.addEdge(0, 1, 0.41)
+graph.addEdge(1, 2, 0.51)
+graph.addEdge(2, 3, 0.50)
+graph.addEdge(4, 3, 0.36)
+graph.addEdge(3, 5, 0.38)
+graph.addEdge(3, 0, 0.45)
+graph.addEdge(0, 5, 0.29)
+graph.addEdge(5, 4, 0.21)
+graph.addEdge(1, 4, 0.32)
+graph.addEdge(4, 2, 0.32)
+graph.addEdge(5, 1, 0.29)
+
+int[] tour = graph.heldKarp()
+Arrays.toString(tour)
+graph.getPathDistance(tour)
+
+Arrays.toString(graph.tsp())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[0, 5, 1, 4, 2, 3, 0]
+2.17
+[0, 5, 1, 4, 2, 3, 0]
+      </code></pre>
+    </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.graph.*
+
+val graph = new AdjacencyMatrix(6)
+graph.addEdge(0, 1, 0.41)
+graph.addEdge(1, 2, 0.51)
+graph.addEdge(2, 3, 0.50)
+graph.addEdge(4, 3, 0.36)
+graph.addEdge(3, 5, 0.38)
+graph.addEdge(3, 0, 0.45)
+graph.addEdge(0, 5, 0.29)
+graph.addEdge(5, 4, 0.21)
+graph.addEdge(1, 4, 0.32)
+graph.addEdge(4, 2, 0.32)
+graph.addEdge(5, 1, 0.29)
+
+val tour = graph.heldKarp()
+tour.mkString("[", ", ", "]")
+graph.getPathDistance(tour)
+
+graph.tsp().mkString("[", ", ", "]")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[0, 5, 1, 4, 2, 3, 0]
+2.17
+[0, 5, 1, 4, 2, 3, 0]
+      </code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Although the Held-Karp algorithm is significantly better than a brute-force algorithm,
-        it is still too slow to apply to large graphs. To process TSPs containing thousands
-        of cities, Smile provides a branch-and-bound algorithm.
-    </p>
+    <p>For larger instances, use quadratic insertion heuristics
+        (<code>nearestInsertion</code>, <code>farthestInsertion</code>,
+        <code>arbitraryInsertion</code>) and polish with
+        <code>opt2</code>. Nearest insertion is at most 2× optimal in the worst
+        case. Christofides–Serdyukov (<code>christofides</code>) tightens the
+        bound to 1.5× at cubic cost.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">
-    // Branch-and-bound algorithm
-    int[] tour = graph.tsp();
-            </code></pre>
+    <div id="pg-8-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays
+import smile.graph.*
+
+var graph = new AdjacencyMatrix(6)
+graph.addEdge(0, 1, 0.41)
+graph.addEdge(1, 2, 0.51)
+graph.addEdge(2, 3, 0.50)
+graph.addEdge(4, 3, 0.36)
+graph.addEdge(3, 5, 0.38)
+graph.addEdge(3, 0, 0.45)
+graph.addEdge(0, 5, 0.29)
+graph.addEdge(5, 4, 0.21)
+graph.addEdge(1, 4, 0.32)
+graph.addEdge(4, 2, 0.32)
+graph.addEdge(5, 1, 0.29)
+
+int[] tour = graph.nearestInsertion()
+Arrays.toString(tour)
+graph.opt2(tour, 3)
+Arrays.toString(tour)
+
+Arrays.toString(graph.christofides())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[0, 1, 2, 4, 3, 5, 0]
+2.17
+[0, 3, 2, 4, 1, 5, 0]
+[0, 5, 4, 3, 2, 1, 0]
+      </code></pre>
+    </div>
+    <div id="pg-8-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.graph.*
+
+val graph = new AdjacencyMatrix(6)
+graph.addEdge(0, 1, 0.41)
+graph.addEdge(1, 2, 0.51)
+graph.addEdge(2, 3, 0.50)
+graph.addEdge(4, 3, 0.36)
+graph.addEdge(3, 5, 0.38)
+graph.addEdge(3, 0, 0.45)
+graph.addEdge(0, 5, 0.29)
+graph.addEdge(5, 4, 0.21)
+graph.addEdge(1, 4, 0.32)
+graph.addEdge(4, 2, 0.32)
+graph.addEdge(5, 1, 0.29)
+
+val tour = graph.nearestInsertion()
+tour.mkString("[", ", ", "]")
+graph.opt2(tour, 3)
+tour.mkString("[", ", ", "]")
+
+graph.christofides().mkString("[", ", ", "]")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[0, 1, 2, 4, 3, 5, 0]
+2.17
+[0, 3, 2, 4, 1, 5, 0]
+[0, 5, 4, 3, 2, 1, 0]
+      </code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>For even large TSP problems, Smile provides several heuristic and approximate algorithms,
-        which quickly yield good solutions. For example, nearest, furthest, and arbitrary insertion
-        algorithms are implemented. These methods have a quadratic time complexity. Nearest insertion
-        algorithm yields at most 2 times longer than the optimal solution in the worest case.
-        Furthest insertion and arbitrary insertion have higher bound in the worest case. We can improve
-        the result further with the 2-Opt algorithm, which is a simple local search algorithm.
-        The main idea behind it is to take a route that crosses over itself and reorder it so that
-        it does not.
-    </p>
+    <h2 id="max_flow" class="title">Maximum Flow</h2>
+
+    <p><code>AdjacencyMatrix.pushRelabel</code> implements the push–relabel
+        max-flow algorithm: it maintains a preflow and converts it into a
+        maximum feasible flow from source to sink by local push and relabel
+        steps. The method fills a flow matrix and returns the max-flow value.</p>
+
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">
-    // Heuristic algorithm
-    var tour = graph.nearestInsertion();
-    // 2-Opt algorithm
-    double cost = graph.opt2(tour, 3);
-            </code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
+    <div id="pg-9-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.graph.*
 
-    <p>For tighter bound, Smile also implements the Christofides-Serdyukov algorithm to yield a solution
-        that is at most 1.5 times longer than the optimal solution in the worst case. However, it has
-        a cubic time complexity.
-    </p>
-    <div class="code-playground glass" data-lang="java">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-java"><code class="language-java">
-    var tour = graph.christofides();
-            </code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
+var graph = new AdjacencyMatrix(6, true)
+graph.addEdge(0, 1, 2)
+graph.addEdge(0, 2, 9)
+graph.addEdge(1, 2, 1)
+graph.addEdge(1, 3, 0)
+graph.addEdge(1, 4, 0)
+graph.addEdge(2, 4, 7)
+graph.addEdge(3, 5, 7)
+graph.addEdge(4, 5, 4)
 
-    <h2 id="max_flow" class="title">Maximum Flow Problem</h2>
-    <p>Another important graph task is the maximum flow problem that involves finding
-        a feasible flow through a flow network that obtains the maximum possible flow
-        rate. AdjacencyMatrix implements the push-relabel algorithm that is considered
-        one of the most efficient maximum flow algorithms. The name "push-relabel" comes
-        from the two basic operations used in the algorithm. Throughout its execution,
-        the algorithm maintains a "preflow" and gradually converts it into a maximum
-        flow by moving flow locally between neighboring nodes using push operations
-        under the guidance of an admissible network maintained by relabel operations.
-    </p>
-    <div class="code-playground glass" data-lang="java">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-java"><code class="language-java">
-    AdjacencyMatrix graph = new AdjacencyMatrix(6, true);
-    graph.addEdge(0, 1, 2);
-    graph.addEdge(0, 2, 9);
-    graph.addEdge(1, 2, 1);
-    graph.addEdge(1, 3, 0);
-    graph.addEdge(1, 4, 0);
-    graph.addEdge(2, 4, 7);
-    graph.addEdge(3, 5, 7);
-    graph.addEdge(4, 5, 4);
+double[][] flow = new double[6][6]
+graph.pushRelabel(flow, 0, 5)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+4.0
+      </code></pre>
+    </div>
+    <div id="pg-9-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.graph.*
 
-    double[][] flow = new double[6][6];
-    double maxFlow = graph.pushRelabel(flow, 0, 5);
-            </code></pre>
+val graph = new AdjacencyMatrix(6, true)
+graph.addEdge(0, 1, 2)
+graph.addEdge(0, 2, 9)
+graph.addEdge(1, 2, 1)
+graph.addEdge(1, 3, 0)
+graph.addEdge(1, 4, 0)
+graph.addEdge(2, 4, 7)
+graph.addEdge(3, 5, 7)
+graph.addEdge(4, 5, 4)
+
+val flow = Array.ofDim[Double](6, 6)
+graph.pushRelabel(flow, 0, 5)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+4.0
+      </code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
 

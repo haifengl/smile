@@ -211,6 +211,76 @@
       });
   }
 
+  function initImageLightbox() {
+    var images = document.querySelectorAll('img.enlarge');
+    if (!images.length) return;
+
+    var backdrop = document.createElement('div');
+    backdrop.className = 'lightbox-backdrop';
+    backdrop.setAttribute('role', 'dialog');
+    backdrop.setAttribute('aria-modal', 'true');
+    backdrop.setAttribute('aria-label', 'Enlarged image');
+    backdrop.hidden = true;
+
+    var stage = document.createElement('div');
+    stage.className = 'lightbox-stage';
+    var full = document.createElement('img');
+    full.alt = '';
+    stage.appendChild(full);
+    backdrop.appendChild(stage);
+    document.body.appendChild(backdrop);
+
+    var lastFocus = null;
+
+    function open(src, alt) {
+      lastFocus = document.activeElement;
+      full.src = src;
+      full.alt = alt || '';
+      backdrop.hidden = false;
+      backdrop.classList.add('is-open');
+      document.body.classList.add('lightbox-open');
+      backdrop.focus();
+    }
+
+    function close() {
+      if (!backdrop.classList.contains('is-open')) return;
+      backdrop.classList.remove('is-open');
+      backdrop.hidden = true;
+      document.body.classList.remove('lightbox-open');
+      full.removeAttribute('src');
+      if (lastFocus && typeof lastFocus.focus === 'function') {
+        lastFocus.focus();
+      }
+    }
+
+    images.forEach(function (img) {
+      if (!img.hasAttribute('tabindex')) img.tabIndex = 0;
+      if (!img.getAttribute('role')) img.setAttribute('role', 'button');
+      img.setAttribute('aria-label', (img.alt || 'Image') + ' (click to enlarge)');
+
+      img.addEventListener('click', function () {
+        open(img.currentSrc || img.src, img.alt);
+      });
+      img.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          open(img.currentSrc || img.src, img.alt);
+        }
+      });
+    });
+
+    backdrop.tabIndex = -1;
+    backdrop.addEventListener('click', function (event) {
+      if (event.target !== full) close();
+    });
+    full.addEventListener('click', function (event) {
+      event.stopPropagation();
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') close();
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     normalizeCodeBlocks();
 
@@ -232,5 +302,6 @@
     initStickyHeader();
     initPrefetch();
     initCopyButtons();
+    initImageLightbox();
   });
 })();
