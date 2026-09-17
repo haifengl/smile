@@ -70,6 +70,43 @@ RUN test -d /src/smile_torch/third_party/flashinfer/include/flashinfer \
     && cmake --build /build/cpp --config Release --parallel "$(nproc)" \
     && test -f /build/cpp/libsmile_torch.so
 
+# Bundle flashinfer-jit-cache AOT modules (open attention kernels; not cubin) —
+# copied from Dockerfile.jvm-gpu's smile-torch-builder stage. The runtime
+# entry point (smile_flashinfer_paged_attention_verify_cuda's PrefillPlan/
+# BatchPrefillWithPagedKVCacheDispatched call) needs these present at
+# FLASHINFER_AOT_DIR just like the production S==1 decode path does.
+ARG FLASHINFER_JIT_CACHE_VERSION=0.6.6
+ARG FLASHINFER_JIT_CACHE_CU=cu130
+RUN mkdir -p /opt/flashinfer/aot \
+    && (curl -fsSL --retry 5 --retry-delay 10 -o /tmp/fi_jit.whl \
+        "https://github.com/flashinfer-ai/flashinfer/releases/download/v${FLASHINFER_JIT_CACHE_VERSION}/flashinfer_jit_cache-${FLASHINFER_JIT_CACHE_VERSION}%2B${FLASHINFER_JIT_CACHE_CU}-cp39-abi3-manylinux_2_28_x86_64.whl" \
+        || curl -fsSL --retry 5 --retry-delay 10 -o /tmp/fi_jit.whl \
+        "https://flashinfer.ai/whl/${FLASHINFER_JIT_CACHE_CU}/flashinfer_jit_cache-${FLASHINFER_JIT_CACHE_VERSION}%2B${FLASHINFER_JIT_CACHE_CU}-cp39-abi3-manylinux_2_28_x86_64.whl") \
+    && printf '%s\n' \
+        'import zipfile, pathlib, sys' \
+        'root = pathlib.Path("/opt/flashinfer/aot")' \
+        'root.mkdir(parents=True, exist_ok=True)' \
+        'count = 0' \
+        'with zipfile.ZipFile("/tmp/fi_jit.whl") as z:' \
+        '    for name in z.namelist():' \
+        '        if not name.endswith(".so"):' \
+        '            continue' \
+        '        parts = name.strip("/").split("/")' \
+        '        if len(parts) >= 2:' \
+        '            dest = root / parts[-2] / parts[-1]' \
+        '        else:' \
+        '            dest = root / parts[-1]' \
+        '        dest.parent.mkdir(parents=True, exist_ok=True)' \
+        '        dest.write_bytes(z.read(name))' \
+        '        count += 1' \
+        'print(f"extracted {count} AOT .so modules", file=sys.stderr)' \
+        'if count < 1:' \
+        '    raise SystemExit("no .so in flashinfer-jit-cache wheel")' \
+        > /tmp/extract_fi_aot.py \
+    && python3 /tmp/extract_fi_aot.py \
+    && rm -f /tmp/fi_jit.whl /tmp/extract_fi_aot.py \
+    && find /opt/flashinfer/aot -name '*.so' | head -5
+
 # -----------------------------------------------------------------------------
 # Stage 2: gpu-test image — JDK + full repo + the CUDA .so from stage 1,
 # compiled and ready to test. GPU access is supplied at `docker run` time.
