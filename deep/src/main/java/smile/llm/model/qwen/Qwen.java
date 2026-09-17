@@ -128,8 +128,6 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      */
     private final java.util.concurrent.atomic.AtomicLong speculativeTargetForwards =
             new java.util.concurrent.atomic.AtomicLong();
-    /** One-time CUDA-graph disable for MTP window verify + {@code truncateTo}. */
-    private volatile boolean speculativeGraphPolicyApplied;
 
     /**
      * Constructor.
@@ -271,9 +269,6 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      */
     public void setSpeculativeEnabled(boolean enabled) {
         this.speculativeEnabled = enabled;
-        if (enabled && model.mtp() != null) {
-            applySpeculativeGraphPolicy();
-        }
     }
 
     /**
@@ -283,24 +278,6 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      */
     public boolean isSpeculativeEnabled() {
         return speculativeEnabled && model.mtp() != null;
-    }
-
-    /**
-     * Disables decode CUDA-graph capture while MTP window verify is active.
-     * {@link KvCachePool#truncateTo} rebuilds FlashInfer CSR; per-round graph
-     * invalidate caused permanent warmup thrash. Window verify itself stays eager.
-     */
-    private void applySpeculativeGraphPolicy() {
-        if (speculativeGraphPolicyApplied) {
-            return;
-        }
-        speculativeGraphPolicyApplied = true;
-        if (DecodeCudaGraph.enabled()) {
-            DecodeCudaGraph.disableCapture("MTP window verify uses truncateTo");
-        }
-        for (QwenModel m : models) {
-            m.invalidateDecodeCudaGraphs();
-        }
     }
 
     /**
@@ -2303,7 +2280,6 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         }
         int lastToken = (int) lastTokLong;
 
-        applySpeculativeGraphPolicy();
         for (QwenModel m : models) {
             if (m.mtp() != null) {
                 m.mtp().beginRound(numDrafts);
@@ -2394,7 +2370,6 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         if (n < 1) {
             throw new IllegalArgumentException("numDrafts must be >= 1");
         }
-        applySpeculativeGraphPolicy();
         int[][] out = new int[b][];
         for (int i = 0; i < b; i++) {
             out[i] = speculateOneRequest(requestIds[i], lastTokens[i], positions[i], n,
@@ -2613,12 +2588,21 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         }
     }
 
+    /**
+     * {@link KvCachePool#truncateTo} rebuilds the FlashInfer CSR (never an
+     * in-place bump, unlike ordinary +1 decode growth), so any CUDA graph
+     * captured against the old CSR buffer would replay against freed/rebuilt
+     * memory. Drop it here, on every round, rather than disabling capture for
+     * the process: plain (non-speculative) decode steps recapture lazily and
+     * keep the graph fast path once no further truncate invalidates it.
+     */
     private void truncateKv(int requestId, int sealedLen, int writtenEnd) {
         for (QwenModel m : models) {
             KvCachePool pool = m.kvCachePool();
             if (pool != null) {
                 pool.activateStep(requestId);
                 pool.truncateTo(sealedLen, writtenEnd);
+                m.invalidateDecodeCudaGraphs();
             }
         }
     }
@@ -2628,6 +2612,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             KvCachePool pool = m.kvCachePool();
             if (pool != null) {
                 pool.truncateTo(sealedLen, writtenEnd);
+                m.invalidateDecodeCudaGraphs();
             }
         }
     }
