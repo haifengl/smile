@@ -128,6 +128,23 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      */
     private final java.util.concurrent.atomic.AtomicLong speculativeTargetForwards =
             new java.util.concurrent.atomic.AtomicLong();
+    /** Wall-clock nanos spent in {@link #draftGreedy} across online speculative rounds. */
+    private final java.util.concurrent.atomic.AtomicLong speculativeDraftNanos =
+            new java.util.concurrent.atomic.AtomicLong();
+    /** Wall-clock nanos spent in the primary verify forward + sampling. */
+    private final java.util.concurrent.atomic.AtomicLong speculativeVerifyNanos =
+            new java.util.concurrent.atomic.AtomicLong();
+    /** Wall-clock nanos spent in the DeltaNet-replay forward (partial accept only). */
+    private final java.util.concurrent.atomic.AtomicLong speculativeReplayNanos =
+            new java.util.concurrent.atomic.AtomicLong();
+    /**
+     * Wall-clock nanos spent in per-round bookkeeping outside the forwards
+     * themselves: {@code activatePools}, DeltaNet checkpoint save/restore,
+     * {@code truncateKv} (FlashInfer CSR rebuild + decode-graph invalidate),
+     * and MTP KV pool {@code beginRound}/{@code endRound} bind/unbind.
+     */
+    private final java.util.concurrent.atomic.AtomicLong speculativeBookkeepingNanos =
+            new java.util.concurrent.atomic.AtomicLong();
 
     /**
      * Constructor.
@@ -335,12 +352,37 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 : (double) speculativeTargetForwards.get() / (double) rounds;
     }
 
-    /** Resets speculative accept-rate counters. */
+    /**
+     * Mean online-round wall-clock breakdown in milliseconds:
+     * {@code {draftMs, verifyMs, replayMs, bookkeepingMs}}, or all zero
+     * before any online round.
+     *
+     * @return mean per-round timing breakdown in milliseconds.
+     */
+    public double[] speculativeMeanRoundTimingMs() {
+        long rounds = speculativeRounds.get();
+        if (rounds == 0) {
+            return new double[]{0.0, 0.0, 0.0, 0.0};
+        }
+        double toMs = 1.0 / (1_000_000.0 * rounds);
+        return new double[]{
+                speculativeDraftNanos.get() * toMs,
+                speculativeVerifyNanos.get() * toMs,
+                speculativeReplayNanos.get() * toMs,
+                speculativeBookkeepingNanos.get() * toMs,
+        };
+    }
+
+    /** Resets speculative accept-rate and round-timing counters. */
     public void resetSpeculativeMetrics() {
         speculativeRounds.set(0);
         speculativeDraftsProposed.set(0);
         speculativeDraftsAccepted.set(0);
         speculativeTargetForwards.set(0);
+        speculativeDraftNanos.set(0);
+        speculativeVerifyNanos.set(0);
+        speculativeReplayNanos.set(0);
+        speculativeBookkeepingNanos.set(0);
     }
 
     private void recordSpeculativeRound(int drafts, int acceptedDrafts) {
@@ -2390,34 +2432,44 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         // Window verify: one target forward over [lastToken] + drafts (vLLM-style).
         int n = Math.max(1, numDrafts);
+        long tBookkeeping = System.nanoTime();
         for (QwenModel m : models) {
             if (m.mtp() != null) {
                 m.mtp().beginRound(n);
             }
         }
+        speculativeBookkeepingNanos.addAndGet(System.nanoTime() - tBookkeeping);
         try {
+            long tDraft = System.nanoTime();
             int[] drafts = draftGreedy(lastToken, lastPos, n);
+            speculativeDraftNanos.addAndGet(System.nanoTime() - tDraft);
             SpeculativeDecoding.AcceptResult accept = verifyWindowOnline(
                     requestId, lastToken, lastPos, drafts, temperature, topp);
             recordSpeculativeRound(n, accept.numDraftAccepted());
             logVerify(n, accept.numDraftAccepted(), accept.bonusToken());
             return accept.acceptedTokens();
         } finally {
+            long tEndRound = System.nanoTime();
             for (QwenModel m : models) {
                 if (m.mtp() != null) {
                     m.mtp().endRound();
                 }
             }
+            speculativeBookkeepingNanos.addAndGet(System.nanoTime() - tEndRound);
         }
     }
 
     private void logVerify(int drafts, int accepted, int bonus) {
         if (logger.isDebugEnabled() || speculativeRounds.get() % 32 == 1) {
-            logger.info("MTP verify: drafts={} accepted={} bonus={} acceptRate={} meanDepth={} targetFwd/round={}",
+            double[] timing = speculativeMeanRoundTimingMs();
+            logger.info("MTP verify: drafts={} accepted={} bonus={} acceptRate={} meanDepth={} targetFwd/round={} "
+                            + "meanRoundMs(draft={} verify={} replay={} bookkeeping={})",
                     drafts, accepted, bonus,
                     String.format("%.3f", speculativeAcceptRate()),
                     String.format("%.2f", speculativeMeanAcceptedDepth()),
-                    String.format("%.2f", speculativeMeanTargetForwardsPerRound()));
+                    String.format("%.2f", speculativeMeanTargetForwardsPerRound()),
+                    String.format("%.2f", timing[0]), String.format("%.2f", timing[1]),
+                    String.format("%.2f", timing[2]), String.format("%.2f", timing[3]));
         }
     }
 
@@ -2433,14 +2485,18 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         window[0] = lastToken;
         System.arraycopy(drafts, 0, window, 1, n);
 
+        long tBookkeeping = System.nanoTime();
         activatePools(requestId);
         saveDeltaNetCheckpoint();
+        speculativeBookkeepingNanos.addAndGet(System.nanoTime() - tBookkeeping);
 
+        long tVerify = System.nanoTime();
         int[] targetSamples;
         try (Tensor logits = forwardVerifyWindow(requestId, window, lastPos, false)) {
             speculativeTargetForwards.incrementAndGet();
             targetSamples = sampleTargetWindow(logits, temperature, topp);
         }
+        speculativeVerifyNanos.addAndGet(System.nanoTime() - tVerify);
         if (targetSamples.length != n + 1) {
             throw new IllegalStateException(
                     "window logits produced " + targetSamples.length + " samples, expected " + (n + 1));
@@ -2450,9 +2506,12 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         int r = accept.numDraftAccepted();
         int writtenEnd = lastPos + n + 1;
         int sealedLen = lastPos + 1 + r;
+        tBookkeeping = System.nanoTime();
         truncateKv(requestId, sealedLen, writtenEnd);
+        speculativeBookkeepingNanos.addAndGet(System.nanoTime() - tBookkeeping);
 
         if (r < n) {
+            long tReplay = System.nanoTime();
             // Working rows hold end-of-window state; home still pre-window (no scatter yet).
             restoreDeltaNetCheckpoint();
             scatterDeltaNet();
@@ -2460,8 +2519,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             try (Tensor ignored = forwardVerifyWindow(requestId, committed, lastPos, true)) {
                 // Replay restores DeltaNet through the sealed prefix and scatters home rows.
             }
+            speculativeReplayNanos.addAndGet(System.nanoTime() - tReplay);
         } else {
+            tBookkeeping = System.nanoTime();
             scatterDeltaNet();
+            speculativeBookkeepingNanos.addAndGet(System.nanoTime() - tBookkeeping);
         }
         return accept;
     }
