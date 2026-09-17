@@ -1,0 +1,128 @@
+####
+# This Dockerfile builds an image that runs the deep module's GPU-only tests
+# (SMILE_VERIFY_CUDA_GRAPH Stage 1/2: VerifyCudaGraphStage1KernelTest,
+# VerifyCudaGraphStage2CaptureReplayTest) against a freshly-compiled, real
+# CUDA libsmile_torch.so — the exact same native build Dockerfile.jvm-gpu
+# produces.
+#
+# WHY A SEPARATE IMAGE/STEP: `docker build` has no GPU access in the normal
+# case (only `docker run --gpus ...` does). So this Dockerfile only COMPILES
+# everything (native lib + Java + test classes) during `docker build` —
+# that needs no GPU, only network access for dependencies. The actual test
+# RUN (which does need the GPU) happens when you `docker run --gpus all` the
+# resulting image; see bin/gpu-test-and-build.sh for the one-command flow
+# that also chains into the existing Dockerfile.jvm-gpu build afterward.
+#
+# IMPORTANT: build context must be the repository root (same as
+# Dockerfile.jvm-gpu) — this Dockerfile COPIES the whole repo to compile the
+# multi-module Gradle build (deep depends on base; buildSrc supplies the
+# shared conventions).
+#
+#   docker build -f serve/src/main/docker/Dockerfile.gpu-test -t smile-gpu-test .
+#   docker run --rm --gpus all smile-gpu-test
+#
+# Runs only the two Stage 1/2 test classes by default (fast, focused go/no-go
+# gate). Override the Gradle test filter to run the full deep module suite:
+#   docker run --rm --gpus all smile-gpu-test ./gradlew :deep:test --no-daemon
+###
+ARG CUDA_VERSION=13.2.0
+ARG TORCH_VERSION=2.13.0
+ARG CU_VERSION=132
+
+# -----------------------------------------------------------------------------
+# Stage 1: build libsmile_torch against CUDA LibTorch — identical to
+# Dockerfile.jvm-gpu's smile-torch-builder stage (kept in sync manually; there
+# is no cross-Dockerfile stage sharing in classic `docker build`).
+# -----------------------------------------------------------------------------
+FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu24.04 AS smile-torch-builder
+
+ARG TORCH_VERSION
+ARG CU_VERSION
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        cmake \
+        curl \
+        g++ \
+        make \
+        unzip \
+        libnccl2 \
+        libnccl-dev \
+        python3 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /tmp
+RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/libtorch.zip \
+        "https://download.pytorch.org/libtorch/cu${CU_VERSION}/libtorch-shared-with-deps-${TORCH_VERSION}%2Bcu${CU_VERSION}.zip" \
+    && unzip -q -o /tmp/libtorch.zip -d /usr/local \
+    && rm -f /tmp/libtorch.zip
+
+COPY deep/src/main/cpp /src/smile_torch
+WORKDIR /src/smile_torch
+ENV TORCH_CUDA_ARCH_LIST="8.0 9.0 10.0"
+RUN test -d /src/smile_torch/third_party/flashinfer/include/flashinfer \
+    && cmake -S . -B /build/cpp \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DLIBTORCH_ROOT=/usr/local/libtorch \
+        -DTORCH_CUDA_ARCH_LIST="8.0;9.0;10.0" \
+        -DBUILD_TESTING=OFF \
+    && cmake --build /build/cpp --config Release --parallel "$(nproc)" \
+    && test -f /build/cpp/libsmile_torch.so
+
+# -----------------------------------------------------------------------------
+# Stage 2: gpu-test image — JDK + full repo + the CUDA .so from stage 1,
+# compiled and ready to test. GPU access is supplied at `docker run` time.
+# -----------------------------------------------------------------------------
+FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu24.04 AS gpu-test
+
+ARG TORCH_VERSION
+ARG CU_VERSION
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Same runtime CUDA extras as Dockerfile.jvm-gpu's final stage, plus a full
+# JDK (not just a JRE) so Gradle can compile the test sources.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        libnccl2 \
+        libnccl-dev \
+        libcusparselt0 \
+        libcudnn9-cuda-13 \
+        libnvshmem3-cuda-13 \
+        cuda-cupti-13-2 \
+        openjdk-25-jdk-headless \
+        unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
+# Reuse the CUDA LibTorch already downloaded in stage 1 (avoid a second
+# ~2GB network fetch); Gradle's test tasks (buildlogic.common-conventions)
+# expect it at deep/libtorch/lib.
+COPY --from=smile-torch-builder /usr/local/libtorch /usr/local/libtorch
+ENV LD_LIBRARY_PATH="/usr/local/libtorch/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+
+WORKDIR /src
+COPY . /src
+RUN ln -sfn /usr/local/libtorch /src/deep/libtorch
+
+# Replace the checked-in CPU stub with the real CUDA build from stage 1 —
+# same location Gradle's test tasks already put on the native library path
+# (buildlogic.common-conventions.gradle.kts: studio/src/universal/bin).
+COPY --from=smile-torch-builder /build/cpp/libsmile_torch.so \
+    /src/studio/src/universal/bin/libsmile_torch.so
+COPY --from=smile-torch-builder /opt/flashinfer/aot /opt/flashinfer/aot
+ENV FLASHINFER_AOT_DIR="/opt/flashinfer/aot"
+ENV SMILE_FLASHINFER_AOT_DIR="/opt/flashinfer/aot"
+
+# Compile-only during the (GPU-less) docker build: resolves dependencies and
+# compiles main+test sources so `docker run` below only pays for the actual
+# (GPU-dependent) test execution, not compilation/download time.
+RUN ./gradlew :deep:testClasses --no-daemon
+
+ENTRYPOINT []
+CMD ["./gradlew", ":deep:test", "--no-daemon", "--rerun", \
+     "--tests", "smile.llm.engine.VerifyCudaGraphStage1KernelTest", \
+     "--tests", "smile.llm.engine.VerifyCudaGraphStage2CaptureReplayTest"]
