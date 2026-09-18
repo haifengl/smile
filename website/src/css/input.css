@@ -310,12 +310,12 @@
 
   .code-playground {
     overflow: hidden;
-    margin-bottom: 1.5rem;
+    margin: 1.5rem 0;
   }
   .bento-playground {
     padding: 0;
     overflow: hidden;
-    margin-bottom: 1.5rem;
+    margin: 1.5rem 0;
   }
   .bento-playground .code-playground {
     background: transparent;
@@ -440,6 +440,57 @@
   }
   .palette-empty { color: var(--text-muted); padding: 0.75rem; font-size: 0.9rem; }
 
+  /* Doc Options / parameter description lists (Bootstrap col-sm-* not ported) */
+  .options-dl {
+    display: grid;
+    grid-template-columns: minmax(9.5rem, 13.5rem) minmax(0, 1fr);
+    column-gap: 1.25rem;
+    row-gap: 0.85rem;
+    align-items: start;
+    margin: 0 0 1.5rem;
+    padding: 0.9rem 1.1rem;
+    border: 1px solid var(--border);
+    border-radius: 0.65rem;
+    background: color-mix(in srgb, var(--accent-soft) 55%, transparent);
+    list-style: none;
+  }
+  .options-dl > dt {
+    margin: 0;
+    padding-top: 0.1rem;
+    font-weight: 600;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+  .options-dl > dt code {
+    display: inline-block;
+    font-size: 0.78rem;
+  }
+  .options-dl > dt code + br + code {
+    margin-top: 0.2rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .options-dl > dd {
+    margin: 0;
+    padding: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+  @media (max-width: 575.98px) {
+    .options-dl {
+      grid-template-columns: 1fr;
+      row-gap: 0.35rem;
+    }
+    .options-dl > dd {
+      margin-bottom: 0.65rem;
+    }
+    .options-dl > dd:last-child {
+      margin-bottom: 0;
+    }
+  }
+
   /* Bootstrap-compat helpers for existing doc HTML */
   .row { display: flex; flex-wrap: wrap; gap: 1rem; }
   .row.g-4 { gap: 1.25rem; }
@@ -483,6 +534,28 @@
   .list-unstyled { list-style: none; padding: 0; margin: 0; }
   .lead { font-size: 1.1rem; color: var(--text-muted); }
   .caption { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem; }
+
+  /* Centered plot + caption as one unit (img is display:block via preflight) */
+  .plot-figure {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1.5rem auto;
+    max-width: 100%;
+  }
+  .plot-figure img {
+    width: 480px;
+    max-width: 100%;
+    height: auto;
+  }
+  .plot-figure figcaption {
+    width: 480px;
+    max-width: 100%;
+    margin-top: 0.5rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
 
   .dot-figure {
     margin: 1rem auto 1.5rem;
