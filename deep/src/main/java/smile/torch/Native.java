@@ -1475,6 +1475,65 @@ public final class Native {
     }
 
     /**
+     * Production entry point for the graph-capturable MTP window-verify
+     * kernel, built on {@link smile.llm.attention.AttentionContext} (KV pool
+     * layer slice + CSR + workspace) — the verify-graph sibling of
+     * {@link #flashInferAttention}, targeting
+     * {@code smile_flashinfer_paged_attention_verify} instead of
+     * {@code smile_flashinfer_paged_attention}. {@code ctx.isCausal()} must be
+     * {@code true} (this kernel has no additive-mask parameter; causal
+     * masking is the compile-time, bottom-right-aligned
+     * {@code MaskMode::kCausal} validated in Stage 1/2).
+     *
+     * @param query    query {@code [B, Hq, S, D]}
+     * @param ctx      paged context with pool + CSR + workspace ({@code seqLen} is the query window length)
+     * @param qoIndptr int32 {@code [B+1]}, values {@code {0,S,2S,...}}
+     *                 ({@link smile.llm.cache.KvCachePool#verifyQoIndptrBuf})
+     * @return output {@code [B, Hq, S, D]}
+     */
+    public static Tensor flashInferAttentionVerifyGraph(Tensor query,
+                                                         smile.llm.attention.AttentionContext ctx,
+                                                         Tensor qoIndptr) {
+        if (Bindings.FLASHINFER_PAGED_VERIFY == null) {
+            throw new IllegalStateException(
+                    "smile_flashinfer_paged_attention_verify not in libsmile_torch");
+        }
+        var meta = ctx.kvMetadata();
+        var pool = ctx.kvPool();
+        var ws = ctx.workspace();
+        if (meta == null || pool == null || ws == null) {
+            throw new IllegalArgumentException("FlashInfer verify-graph context incomplete");
+        }
+        try (var layerIdx = smile.deep.tensor.Index.of(ctx.layerId());
+             Tensor layerK = pool.keyCache().get(layerIdx);
+             Tensor layerV = pool.valueCache().get(layerIdx)) {
+            MemorySegment out;
+            try {
+                out = (MemorySegment) Bindings.FLASHINFER_PAGED_VERIFY.invokeExact(
+                        query.handle(),
+                        layerK.handle(),
+                        layerV.handle(),
+                        qoIndptr.handle(),
+                        meta.pagedKvIndptr().handle(),
+                        meta.pagedKvIndices().handle(),
+                        meta.pagedKvLastPageLen().handle(),
+                        meta.pageSize(),
+                        ctx.numKvHeads(),
+                        ctx.headDim(),
+                        ctx.seqLen(),
+                        ctx.scale(),
+                        pool.kScale(),
+                        pool.vScale(),
+                        ctx.isCausal() ? 1 : 0,
+                        ws.handle());
+            } catch (Throwable t) {
+                throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
+            }
+            return new Tensor(check(out));
+        }
+    }
+
+    /**
      * Runs ragged contiguous self-attention ({@code BatchPrefillWithRaggedKVCache} or SDPA fallback).
      *
      * @param query {@code [N, H, D]} NHD

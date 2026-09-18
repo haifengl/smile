@@ -241,6 +241,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         }
         for (QwenModel m : models) {
             m.closeDecodeGraph();
+            m.closeVerifyGraph();
         }
         if (tpExecutor != null) {
             tpExecutor.shutdownNow();
@@ -2163,6 +2164,47 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     }
 
     /**
+     * Runs {@link QwenModel#forwardVerifyGraph(Tensor, int)} on every TP rank
+     * for the primary MTP window-verify forward (the {@code scatter == false}
+     * / online-accept branch of {@link #forwardVerifyWindow} only — the
+     * {@code scatter == true} DeltaNet-replay-only branch stays on the plain
+     * eager {@link #forwardWindow} path; see
+     * {@code VerifyCudaGraph}'s class javadoc for why).
+     */
+    private Tensor[] forwardWindowVerify(Tensor[] tokenShards, int startPos, ExecutorService pool) {
+        Tensor[] logits = new Tensor[models.length];
+        if (models.length == 1) {
+            logits[0] = models[0].forwardVerifyGraph(tokenShards[0], startPos);
+            return logits;
+        }
+        List<Future<Tensor>> futures = new ArrayList<>(models.length);
+        for (int r = 0; r < models.length; r++) {
+            final int rank = r;
+            futures.add(pool.submit(() -> {
+                ParallelState.setCurrent(tpGroup.state(rank));
+                try (var guard = Tensor.noGradGuard()) {
+                    return models[rank].forwardVerifyGraph(tokenShards[rank], startPos);
+                } finally {
+                    ParallelState.clearCurrent();
+                }
+            }));
+        }
+        try {
+            for (int r = 0; r < models.length; r++) {
+                logits[r] = futures.get(r).get();
+            }
+        } catch (Exception e) {
+            for (Tensor l : logits) {
+                if (l != null) {
+                    l.close();
+                }
+            }
+            throw new RuntimeException("TP verify-graph forward failed", e);
+        }
+        return logits;
+    }
+
+    /**
      * Runs {@link QwenModel#forward(Tensor, int[])} on every TP rank for a
      * decode batch that already holds shape {@code [B, 1]} tokens.
      */
@@ -2604,7 +2646,10 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         try {
             // scatter=true (DeltaNet replay) discards logits; skip the vocab-sized
             // lm_head projection on every replayed position and only score the last.
-            Tensor[] logits = forwardWindow(shards, startPos, tpExecutor, !scatter);
+            // scatter=false (the primary online-accept verify) is graph-eligible.
+            Tensor[] logits = scatter
+                    ? forwardWindow(shards, startPos, tpExecutor, false)
+                    : forwardWindowVerify(shards, startPos, tpExecutor);
             if (scatter) {
                 scatterDeltaNet();
             }

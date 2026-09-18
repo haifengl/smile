@@ -198,6 +198,34 @@ public final class PartialRotaryEncoding {
     }
 
     /**
+     * Gathers a contiguous window of RoPE rows into a pre-allocated
+     * {@code [S, R]} buffer (CUDA graph), for a verify step where every batch
+     * row shares the same absolute start position (broadcasts across batch
+     * like an ordinary {@code [S, R]} table slice — see {@code broadcastCosSin}).
+     * Uses an {@code index_select} gather rather than a table slice-view so a
+     * captured graph replay reads the buffer's stable address, not a
+     * capture-time storage offset baked into a view.
+     *
+     * @param table     {@code [maxPos, rotaryDim]} table.
+     * @param startPos  absolute position of the window's first token.
+     * @param windowLen number of contiguous positions to gather.
+     * @param out       destination {@code [windowLen, rotaryDim]} (caller-owned, stable address).
+     */
+    public static void gatherWindowInto(Tensor table, int startPos, int windowLen, Tensor out) {
+        if (windowLen < 1) {
+            throw new IllegalArgumentException("windowLen must be >= 1");
+        }
+        int[] positions = new int[windowLen];
+        for (int i = 0; i < windowLen; i++) {
+            positions[i] = startPos + i;
+        }
+        try (var idx = Index.of(positions);
+             Tensor rows = table.get(idx)) { // [S, R]
+            Native.copy_(out, rows);
+        }
+    }
+
+    /**
      * Reshapes {@code [S, R]}, {@code [B, S, R]}, or {@code [R]} cos/sin for
      * {@code [B, S, H, D]} query/key broadcast.
      */
