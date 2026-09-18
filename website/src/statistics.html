@@ -238,6 +238,91 @@ mixture.p(1) ≈ 0.12–0.14
         <a href="api/java/smile/stat/distribution/KernelDensity.html"><code>KernelDensity</code></a>
         (Parzen window) estimates the density nonparametrically from the sample.</p>
 
+    <p>Plot the fitted mixture against the sample: a probability histogram with the
+        density curve overlaid (scaled by bin width), and a one-sample Q-Q plot.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-mix-plot-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-mix-plot-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-mix-plot-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.awt.Color
+import java.util.Arrays
+import smile.math.MathEx
+import smile.plot.swing.*
+import smile.stat.distribution.*
+
+// assumes `data` and `mixture` from the fit above
+int nbins = 50
+double lo = MathEx.min(data), hi = MathEx.max(data)
+double binWidth = (hi - lo) / nbins
+
+// Histogram (probability scale) + mixture density × bin width
+var hist = Histogram.of(data, nbins, true).figure()
+hist.setTitle("Mixture of Gaussian, Exponential, and Gamma")
+double[][] curve = new double[201][2]
+for (int i = 0; i &lt;= 200; i++) {
+    double x = lo + i * (hi - lo) / 200.0
+    curve[i][0] = x
+    curve[i][1] = mixture.p(x) * binWidth
+}
+hist.add(LinePlot.of(curve, Color.RED))
+
+// Q-Q plot vs the fitted mixture (copy — QQPlot sorts in place)
+var qq = QQPlot.of(Arrays.copyOf(data, data.length), mixture).figure()
+qq.setTitle("Q-Q Plot")
+
+var pane = new MultiFigurePane(1, 2)
+pane.content().add(new Canvas(hist))
+pane.content().add(new Canvas(qq))
+pane.window()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: histogram + density | Q-Q)
+      </code></pre>
+    </div>
+    <div id="pg-mix-plot-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.awt.Color
+import smile.math.MathEx
+import smile.plot.swing._
+import smile.stat.distribution._
+
+// assumes `data` and `mixture` from the fit above
+val nbins = 50
+val lo = MathEx.min(data)
+val hi = MathEx.max(data)
+val binWidth = (hi - lo) / nbins
+
+val histCanvas = hist(data, nbins, prob = true)
+histCanvas.figure.setTitle("Mixture of Gaussian, Exponential, and Gamma")
+val curve = Array.tabulate(201) { i =>
+  val x = lo + i * (hi - lo) / 200.0
+  Array(x, mixture.p(x) * binWidth)
+}
+histCanvas.figure.add(LinePlot.of(curve, Color.RED))
+
+val qqCanvas = qqplot(data.clone(), mixture)
+qqCanvas.figure.setTitle("Q-Q Plot")
+
+val pane = new MultiFigurePane(1, 2)
+pane.content.add(histCanvas)
+pane.content.add(qqCanvas)
+show(pane)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: histogram + density | Q-Q)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <figure class="plot-figure">
+        <img src="images/mixture-model.png" class="enlarge" alt="Mixture model histogram with fitted density and Q-Q plot" style="width: 720px;" />
+        <figcaption>Sample histogram with the fitted mixture density (left) and Q-Q plot of the estimated distribution (right).</figcaption>
+    </figure>
+
     <h2 id="test" class="title">Hypothesis Tests</h2>
 
     <p>A test asks whether an observed effect is plausibly due to chance under

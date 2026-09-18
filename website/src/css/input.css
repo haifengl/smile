@@ -535,35 +535,49 @@
   .lead { font-size: 1.1rem; color: var(--text-muted); }
   .caption { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem; }
 
-  /* Centered plot + caption as one unit (img is display:block via preflight) */
-  .plot-figure {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 1.5rem auto;
+  /*
+   * Shrink-wrap figure to the diagram; wrap captions to that width
+   * (display:table + table-caption — caption intrinsic width must not widen the figure).
+   */
+  .plot-figure,
+  .dot-figure {
+    display: table;
+    margin-left: auto;
+    margin-right: auto;
     max-width: 100%;
   }
-  .plot-figure img {
+  .plot-figure {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .dot-figure {
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+    min-width: 0;
+  }
+  .plot-figure > img {
+    display: block;
     width: 480px;
     max-width: 100%;
     height: auto;
   }
-  .plot-figure figcaption {
-    width: 480px;
+  .plot-figure > figcaption,
+  .dot-figure > figcaption,
+  .dot-figure > .caption {
+    display: table-caption;
+    caption-side: bottom;
+    box-sizing: border-box;
+    width: auto;
     max-width: 100%;
     margin-top: 0.5rem;
+    padding-inline: 0.25rem;
     text-align: center;
     color: var(--text-muted);
     font-size: 0.85rem;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
   }
 
-  .dot-figure {
-    margin: 1rem auto 1.5rem;
-    min-width: 0;
-    width: fit-content;
-    max-width: 100%;
-  }
-  .dot-figure .caption { margin-top: 0.5rem; }
   .dot-preview {
     position: relative;
     overflow: auto;
@@ -606,7 +620,6 @@
   .dot-row > .dot-figure {
     flex: 0 1 auto;
     margin: 0;
-    width: fit-content;
     max-width: 100%;
   }
   .dot-row .dot-preview {
