@@ -139,7 +139,13 @@ ENV PATH="${JAVA_HOME}/bin:${PATH}"
 # ~2GB network fetch); Gradle's test tasks (buildlogic.common-conventions)
 # expect it at deep/libtorch/lib.
 COPY --from=smile-torch-builder /usr/local/libtorch /usr/local/libtorch
-ENV LD_LIBRARY_PATH="/usr/local/libtorch/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+# /usr/lib/x86_64-linux-gnu/nvshmem/13 holds libnvshmem_host.so.3 (from the
+# libnvshmem3-cuda-13 package installed above) — a versioned, non-standard
+# subdirectory the dynamic linker never searches by default. Confirmed via
+# `ldd libsmile_torch.so` => "libnvshmem_host.so.3 => not found" without this;
+# matches Dockerfile.jvm-gpu's runtime stage exactly (minus onnxruntime, which
+# this test image doesn't need).
+ENV LD_LIBRARY_PATH="/usr/local/libtorch/lib:/usr/lib/x86_64-linux-gnu/nvshmem/13${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 WORKDIR /src
 COPY . /src
