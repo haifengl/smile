@@ -484,6 +484,76 @@
   .lead { font-size: 1.1rem; color: var(--text-muted); }
   .caption { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem; }
 
+  .dot-figure {
+    margin: 1rem auto 1.5rem;
+    min-width: 0;
+    width: fit-content;
+    max-width: 100%;
+  }
+  .dot-figure .caption { margin-top: 0.5rem; }
+  .dot-preview {
+    position: relative;
+    overflow: auto;
+    padding: 0.85rem 1rem;
+    text-align: center;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 0.65rem;
+    min-height: 4rem;
+    width: fit-content;
+    max-width: 100%;
+  }
+  .dot-preview .dot-source { display: none; }
+  .dot-preview:not(.is-ready):not(.is-error)::after {
+    content: "Rendering graph…";
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+  .dot-preview.is-error {
+    color: #b91c1c;
+    font-size: 0.85rem;
+    text-align: left;
+    white-space: pre-wrap;
+  }
+  .dot-preview svg {
+    display: block;
+    margin: 0 auto;
+    width: auto;
+    height: auto;
+    max-width: 100%;
+  }
+  .dot-row {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 1rem;
+    justify-content: center;
+    align-items: flex-start;
+    margin: 1rem 0 1.5rem;
+  }
+  .dot-row > .dot-figure {
+    flex: 0 1 auto;
+    margin: 0;
+    width: fit-content;
+    max-width: 100%;
+  }
+  .dot-row .dot-preview {
+    width: fit-content;
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+  .dot-row .dot-preview svg {
+    width: auto;
+    height: auto;
+    max-width: none;
+  }
+  [data-theme="dark"] .dot-preview {
+    background: #f8fafc;
+    border-color: rgba(226, 232, 240, 0.2);
+  }
+
   img.enlarge {
     cursor: zoom-in;
   }
