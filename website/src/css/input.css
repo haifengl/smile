@@ -491,6 +491,58 @@
     }
   }
 
+  /* Bootstrap-compat tables (Tailwind preflight zeros cell padding) */
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 0 1.5rem;
+  }
+  .table {
+    width: 100%;
+    margin: 0;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.92rem;
+    line-height: 1.45;
+  }
+  .table > :not(caption) > * > * {
+    padding: 0.7rem 1.15rem;
+    vertical-align: top;
+  }
+  .table > thead > tr > th {
+    font-weight: 600;
+    text-align: left;
+    color: var(--text);
+    border-bottom: 2px solid var(--border);
+    background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+  }
+  .table > tbody > tr > td {
+    color: var(--text);
+    border-top: 1px solid var(--border);
+  }
+  .table > tbody > tr > td + td,
+  .table > thead > tr > th + th {
+    border-left: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  }
+  .table-bordered {
+    border: 1px solid var(--border);
+    border-radius: 0.65rem;
+    overflow: hidden;
+  }
+  .table-bordered > :not(caption) > * > * {
+    border-right: 1px solid var(--border);
+  }
+  .table-bordered > :not(caption) > * > *:last-child {
+    border-right: none;
+  }
+  .table-striped > tbody > tr:nth-child(odd) > * {
+    background: color-mix(in srgb, var(--accent-soft) 28%, transparent);
+  }
+  .table code {
+    font-size: 0.85em;
+  }
+
   /* Bootstrap-compat helpers for existing doc HTML */
   .row { display: flex; flex-wrap: wrap; gap: 1rem; }
   .row.g-4 { gap: 1.25rem; }
