@@ -1615,6 +1615,12 @@ public class KvCachePool implements AutoCloseable {
      */
     private boolean bumpUniformFlashInferMetadata(int newLength, int batch) {
         int oldLen = stepFlashInferUniformLen;
+        // Diagnostic probe (reinstating "+1 only") ruled this generalization OUT as
+        // the cause of a reproducible ncclAllReduce/illegal-address crash under
+        // SMILE_VERIFY_CUDA_GRAPH=1 + SMILE_DECODE_CUDA_GRAPH=1 — the crash
+        // reproduced identically with the probe in place. See the verify-CUDA-graph
+        // plan's debugging notes for the investigation; leading hypothesis has moved
+        // to the native verify-capturable kernel's plan-cache scratch buffers.
         if (newLength < 1 || oldLen < 0 || stepFlashInferMeta == null) {
             return false;
         }

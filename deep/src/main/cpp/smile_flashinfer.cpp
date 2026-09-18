@@ -23,9 +23,17 @@ struct ST_FlashInferWorkspace_ {
     int64_t workspace_bytes = 0;
     void *runtime_cache = nullptr;
 #ifdef USE_CUDA
-    at::Tensor float_workspace;   // uint8
+    at::Tensor float_workspace;   // uint8 — shared by decode DecodePlan + ordinary prefill
     at::Tensor int_workspace;     // uint8 device
     at::Tensor pinned_int_workspace; // uint8 pinned
+    // Dedicated scratch for verify's PrefillPlan (SMILE_VERIFY_CUDA_GRAPH) — must
+    // never alias the tensors above: DecodePlan's PlanInfo bakes in offsets into
+    // float_workspace/int_workspace that a captured SMILE_DECODE_CUDA_GRAPH replay
+    // reads back on every replay, and verify's own PrefillPlan calls run eagerly
+    // interleaved with those replays.
+    at::Tensor verify_float_workspace;
+    at::Tensor verify_int_workspace;
+    at::Tensor verify_pinned_int_workspace;
 #endif
 };
 
@@ -92,6 +100,13 @@ ST_FlashInferWorkspace smile_flashinfer_workspace_create(
         ws->float_workspace = at::empty({float_bytes}, opts);
         ws->int_workspace = at::empty({int_bytes}, opts);
         ws->pinned_int_workspace = at::empty(
+                {int_bytes},
+                at::TensorOptions().dtype(at::kByte).pinned_memory(true));
+        // Separate scratch region for verify's PrefillPlan — see the struct
+        // comment above; must never alias float_workspace/int_workspace.
+        ws->verify_float_workspace = at::empty({float_bytes}, opts);
+        ws->verify_int_workspace = at::empty({int_bytes}, opts);
+        ws->verify_pinned_int_workspace = at::empty(
                 {int_bytes},
                 at::TensorOptions().dtype(at::kByte).pinned_memory(true));
         return ws;
@@ -171,6 +186,20 @@ int smile_flashinfer_workspace_get_tensors(
     *float_ws = &ws->float_workspace;
     *int_ws = &ws->int_workspace;
     *pinned_ws = &ws->pinned_int_workspace;
+    return 0;
+}
+
+int smile_flashinfer_workspace_get_verify_tensors(
+        ST_FlashInferWorkspace ws,
+        at::Tensor **float_ws,
+        at::Tensor **int_ws,
+        at::Tensor **pinned_ws) {
+    if (ws == nullptr || float_ws == nullptr || int_ws == nullptr || pinned_ws == nullptr) {
+        return -1;
+    }
+    *float_ws = &ws->verify_float_workspace;
+    *int_ws = &ws->verify_int_workspace;
+    *pinned_ws = &ws->verify_pinned_int_workspace;
     return 0;
 }
 #endif
