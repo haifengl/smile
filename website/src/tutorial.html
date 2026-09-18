@@ -88,10 +88,10 @@ title: SMILE - Tutorial
         <li><strong>Data collection &amp; exploration</strong> —
             <a href="data.html">Data Processing</a>,
             <a href="visualization.html">Data Visualization</a>.</li>
-        <li><strong>Data preparation</strong> — clean, encode, scale, impute, split.
-            <a href="missing-value-imputation.html">Missing Value Imputation</a>.</li>
-        <li><strong>Feature engineering</strong> —
-            <a href="feature.html">Feature Engineering</a>.</li>
+        <li><strong>Data preparation &amp; feature engineering</strong> — clean,
+            encode, scale, impute, select, split.
+            <a href="feature-engineering.html">Feature Engineering</a>
+            (including missing-value imputation).</li>
         <li><strong>Model selection &amp; training</strong> — fit candidate algorithms.</li>
         <li><strong>Evaluation</strong> —
             <a href="validation.html">Model Validation</a>.</li>
@@ -190,7 +190,7 @@ val y = formula.y(zipTrain).toIntArray()
        work better when numeric columns are on comparable scales and categoricals
        are encoded. Standardization subtracts the mean and divides by the
        standard deviation — important before neural nets and many distance-based
-       methods. See <a href="feature.html">Feature Engineering</a>.</p>
+       methods. See <a href="feature-engineering.html">Feature Engineering</a>.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
