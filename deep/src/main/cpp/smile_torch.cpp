@@ -2843,7 +2843,11 @@ ST_Tensor smile_flashinfer_paged_attention_verify(
         at::Tensor *float_ws = nullptr;
         at::Tensor *int_ws = nullptr;
         at::Tensor *pinned_ws = nullptr;
-        if (smile_flashinfer_workspace_get_tensors(
+        // Dedicated verify scratch (never the shared decode/prefill workspace) —
+        // see smile_flashinfer_workspace_get_verify_tensors's doc comment: sharing
+        // scratch with decode's DecodePlan let verify's eager PrefillPlan calls
+        // clobber a live SMILE_DECODE_CUDA_GRAPH-captured graph's plan data.
+        if (smile_flashinfer_workspace_get_verify_tensors(
                 workspace, &float_ws, &int_ws, &pinned_ws) != 0) {
             set_error("smile_flashinfer_paged_attention_verify: invalid workspace");
             return nullptr;
