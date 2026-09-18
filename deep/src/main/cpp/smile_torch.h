@@ -1237,6 +1237,8 @@ SMILE_API void smile_flashinfer_workspace_invalidate_verify_runtime_cache(ST_Fla
  * @param scale            attention scale (&le;0 &rarr; 1/sqrt(D))
  * @param k_scale          FP8 KV key dequant scale (1.0 when KV is bf16/fp16)
  * @param v_scale          FP8 KV value dequant scale (1.0 when KV is bf16/fp16)
+ * @param is_causal        diagnostic-only toggle (MaskMode::kCausal vs kNone);
+ *                         production callers always pass 1
  * @param workspace        from {@link smile_flashinfer_workspace_create}
  * @return output {@code [B, Hq, S, D]}, or null on error
  */
@@ -1255,6 +1257,7 @@ SMILE_API ST_Tensor smile_flashinfer_paged_attention_verify(
         double scale,
         float k_scale,
         float v_scale,
+        int is_causal,
         ST_FlashInferWorkspace workspace);
 
 /**

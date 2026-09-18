@@ -2823,6 +2823,7 @@ ST_Tensor smile_flashinfer_paged_attention_verify(
         double scale,
         float k_scale,
         float v_scale,
+        int is_causal,
         ST_FlashInferWorkspace workspace) {
 #if defined(USE_CUDA) && defined(USE_FLASHINFER)
     if (!query || !k_cache || !v_cache || !qo_indptr || !kv_indptr
@@ -2852,7 +2853,7 @@ ST_Tensor smile_flashinfer_paged_attention_verify(
                 q, k_cache->t, v_cache->t,
                 qo_indptr->t, kv_indptr->t, kv_indices->t, kv_last_page_len->t,
                 page_size, num_kv_heads, head_dim, qo_len,
-                sc, k_scale, v_scale,
+                sc, k_scale, v_scale, is_causal,
                 float_ws, int_ws, pinned_ws, runtime_cache,
                 out, err);
         if (rc != 0) {
@@ -2866,7 +2867,7 @@ ST_Tensor smile_flashinfer_paged_attention_verify(
     (void)query; (void)k_cache; (void)v_cache;
     (void)qo_indptr; (void)kv_indptr; (void)kv_indices; (void)kv_last_page_len;
     (void)page_size; (void)num_kv_heads; (void)head_dim; (void)qo_len;
-    (void)scale; (void)k_scale; (void)v_scale; (void)workspace;
+    (void)scale; (void)k_scale; (void)v_scale; (void)is_causal; (void)workspace;
 #  ifdef USE_CUDA
     set_error("smile_torch built without USE_FLASHINFER");
 #  else
