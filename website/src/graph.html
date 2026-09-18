@@ -24,8 +24,11 @@ title: SMILE - Graph Data Structure
         For k-NN graphs used by manifold methods, see also
         <code>NearestNeighborGraph</code>.</p>
 
-    <p><code>Graph.dot()</code> returns Graphviz DOT; paste it into
-        <a target="_blank" href="https://viz-js.com/">viz-js.com</a> to draw the graph.
+    <p><code>Graph.dot()</code> returns Graphviz DOT. Diagrams below are rendered
+        in the browser with
+        <a target="_blank" href="https://github.com/mdaines/viz-js">@viz-js/viz</a>
+        (the same Graphviz WASM used by
+        <a target="_blank" href="https://viz-js.com/">viz-js.com</a>).
         Optional name and per-vertex labels apply to the first labels; remaining
         vertices keep their integer IDs.</p>
 
@@ -103,6 +106,29 @@ graph SMILEGraph {
     </div>
   <div class="playground-editor" hidden></div>
 </div>
+
+    <figure class="dot-figure">
+      <div class="dot-preview" role="img" aria-label="Undirected example graph">
+        <script type="text/plain" class="dot-source">
+graph SMILEGraph {
+  node [shape=box, style="rounded", width=0.55, height=0.4, fixedsize=true, fontsize=11, fontname=helvetica];
+  edge [fontname=helvetica, fontsize=10];
+  0 [label="a"];
+  1 [label="b"];
+  2 [label="c"];
+  3 [label="d"];
+  0 -- 2 [label="1"];
+  1 -- 7 [label="1"];
+  2 -- 6 [label="1"];
+  3 -- 4 [label="1"];
+  3 -- 5 [label="1"];
+  4 -- 7 [label="1"];
+  4 -- 5 [label="1"];
+}
+        </script>
+      </div>
+      <figcaption class="caption">The example undirected graph (two connected components).</figcaption>
+    </figure>
 
     <h2 id="traversal" class="title">Graph Traversal</h2>
 
@@ -228,6 +254,33 @@ graph.dfcc().map(_.mkString("[", ", ", "]")).mkString("[", ", ", "]")</code></pr
   <div class="playground-editor" hidden></div>
 </div>
 
+    <figure class="dot-figure">
+      <div class="dot-preview" role="img" aria-label="Connected components colored">
+        <script type="text/plain" class="dot-source">
+graph Components {
+  node [shape=box, style="rounded,filled", width=0.55, height=0.4, fixedsize=true, fontsize=11, fontname=helvetica];
+  edge [fontname=helvetica, fontsize=10];
+  0 [label="0", fillcolor="#93c5fd"];
+  2 [label="2", fillcolor="#93c5fd"];
+  6 [label="6", fillcolor="#93c5fd"];
+  1 [label="1", fillcolor="#fdba74"];
+  3 [label="3", fillcolor="#fdba74"];
+  4 [label="4", fillcolor="#fdba74"];
+  5 [label="5", fillcolor="#fdba74"];
+  7 [label="7", fillcolor="#fdba74"];
+  0 -- 2;
+  2 -- 6;
+  1 -- 7;
+  7 -- 4;
+  3 -- 4;
+  3 -- 5;
+  5 -- 4;
+}
+        </script>
+      </div>
+      <figcaption class="caption">Connected components: blue {0, 2, 6} and orange {1, 3, 4, 5, 7}.</figcaption>
+    </figure>
+
     <h2 id="topological_sort" class="title">Topological Sort</h2>
 
     <p>On a directed acyclic graph (DAG), a topological order lists vertices so
@@ -306,6 +359,31 @@ graph.bfsort().mkString("[", ", ", "]")</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
+    <figure class="dot-figure">
+      <div class="dot-preview" role="img" aria-label="Directed acyclic graph for topological sort">
+        <script type="text/plain" class="dot-source">
+digraph DAG {
+  rankdir=LR;
+  node [shape=box, style="rounded", width=0.55, height=0.4, fixedsize=true, fontsize=11, fontname=helvetica];
+  edge [fontname=helvetica, fontsize=10];
+  8 -> 7 -> 6;
+  0 -> 1;
+  0 -> 2 -> 3 -> 4 -> 9;
+  0 -> 3;
+  0 -> 5;
+  0 -> 6;
+  3 -> 5;
+  6 -> 4;
+  6 -> 9;
+  9 -> 10;
+  9 -> 11 -> 12;
+  9 -> 12;
+}
+        </script>
+      </div>
+      <figcaption class="caption">Directed acyclic graph used for topological sort.</figcaption>
+    </figure>
+
     <h2 id="mst" class="title">Minimum Spanning Tree</h2>
 
     <p>An MST connects all vertices of a weighted undirected graph with no
@@ -373,6 +451,47 @@ mst</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
+    <div class="dot-row">
+      <figure class="dot-figure">
+        <div class="dot-preview" role="img" aria-label="Weighted undirected input graph">
+          <script type="text/plain" class="dot-source">
+graph Input {
+  node [shape=circle, width=0.45, height=0.45, fixedsize=true, fontsize=11, fontname=helvetica];
+  edge [fontname=helvetica, fontsize=10];
+  0 -- 1 [label="0.41"];
+  1 -- 2 [label="0.51"];
+  2 -- 3 [label="0.50"];
+  4 -- 3 [label="0.36"];
+  3 -- 5 [label="0.38"];
+  3 -- 0 [label="0.45"];
+  0 -- 5 [label="0.29"];
+  5 -- 4 [label="0.21"];
+  1 -- 4 [label="0.32"];
+  4 -- 2 [label="0.32"];
+  5 -- 1 [label="0.29"];
+}
+          </script>
+        </div>
+        <figcaption class="caption">Input weighted graph.</figcaption>
+      </figure>
+      <figure class="dot-figure">
+        <div class="dot-preview" role="img" aria-label="Minimum spanning tree">
+          <script type="text/plain" class="dot-source">
+graph MST {
+  node [shape=circle, width=0.45, height=0.45, fixedsize=true, fontsize=11, fontname=helvetica];
+  edge [fontname=helvetica, fontsize=10, color="#2fa4e7", penwidth=2.2];
+  1 -- 5 [label="0.29"];
+  2 -- 4 [label="0.32"];
+  3 -- 4 [label="0.36"];
+  4 -- 5 [label="0.21"];
+  5 -- 0 [label="0.29"];
+}
+          </script>
+        </div>
+        <figcaption class="caption">Prim MST (cost 1.47).</figcaption>
+      </figure>
+    </div>
+
     <h2 id="Dijkstra" class="title">Shortest Path</h2>
 
     <p><code>dijkstra()</code> returns all-pairs shortest-path distances;
@@ -435,6 +554,30 @@ distances(0).mkString("[", ", ", "]")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
+
+    <figure class="dot-figure">
+      <div class="dot-preview" role="img" aria-label="Directed weighted graph for Dijkstra">
+        <script type="text/plain" class="dot-source">
+digraph Dijkstra {
+  rankdir=LR;
+  node [shape=circle, width=0.45, height=0.45, fixedsize=true, fontsize=11, fontname=helvetica];
+  edge [fontname=helvetica, fontsize=10];
+  0 -> 1 [label="0.41"];
+  1 -> 2 [label="0.51"];
+  2 -> 3 [label="0.50"];
+  4 -> 3 [label="0.36"];
+  3 -> 5 [label="0.38"];
+  3 -> 0 [label="0.45"];
+  0 -> 5 [label="0.29"];
+  5 -> 4 [label="0.21"];
+  1 -> 4 [label="0.32"];
+  4 -> 2 [label="0.32"];
+  5 -> 1 [label="0.29"];
+}
+        </script>
+      </div>
+      <figcaption class="caption">Directed weighted graph; distances above are from vertex 0.</figcaption>
+    </figure>
 
     <h2 id="TSP" class="title">Travelling Salesman Problem</h2>
 
@@ -509,6 +652,24 @@ graph.tsp().mkString("[", ", ", "]")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
+
+    <figure class="dot-figure">
+      <div class="dot-preview" data-engine="neato" role="img" aria-label="Optimal TSP tour">
+        <script type="text/plain" class="dot-source">
+graph Tour {
+  node [shape=circle, style=filled, fillcolor="#dbeafe", width=0.45, height=0.45, fixedsize=true, fontsize=11, fontname=helvetica];
+  edge [fontname=helvetica, fontsize=10, color="#2fa4e7", penwidth=2.2];
+  0 -- 5 [label="0.29"];
+  5 -- 1 [label="0.29"];
+  1 -- 4 [label="0.32"];
+  4 -- 2 [label="0.32"];
+  2 -- 3 [label="0.50"];
+  3 -- 0 [label="0.45"];
+}
+        </script>
+      </div>
+      <figcaption class="caption">Optimal Held–Karp / branch-and-bound tour (length 2.17).</figcaption>
+    </figure>
 
     <p>For larger instances, use quadratic insertion heuristics
         (<code>nearestInsertion</code>, <code>farthestInsertion</code>,
@@ -643,6 +804,50 @@ graph.pushRelabel(flow, 0, 5)</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
+    <div class="dot-row">
+      <figure class="dot-figure">
+        <div class="dot-preview" role="img" aria-label="Flow network capacities">
+          <script type="text/plain" class="dot-source">
+digraph Capacities {
+  rankdir=LR;
+  node [shape=circle, width=0.45, height=0.45, fixedsize=true, fontsize=11, fontname=helvetica];
+  edge [fontname=helvetica, fontsize=10];
+  0 [label="s", style=filled, fillcolor="#bbf7d0"];
+  5 [label="t", style=filled, fillcolor="#fecaca"];
+  0 -> 1 [label="2"];
+  0 -> 2 [label="9"];
+  1 -> 2 [label="1"];
+  1 -> 3 [label="0"];
+  1 -> 4 [label="0"];
+  2 -> 4 [label="7"];
+  3 -> 5 [label="7"];
+  4 -> 5 [label="4"];
+}
+          </script>
+        </div>
+        <figcaption class="caption">Capacities (source s, sink t).</figcaption>
+      </figure>
+      <figure class="dot-figure">
+        <div class="dot-preview" role="img" aria-label="Maximum flow of 4">
+          <script type="text/plain" class="dot-source">
+digraph Flow {
+  rankdir=LR;
+  node [shape=circle, width=0.45, height=0.45, fixedsize=true, fontsize=11, fontname=helvetica];
+  edge [fontname=helvetica, fontsize=10, color="#2fa4e7", penwidth=2];
+  0 [label="s", style=filled, fillcolor="#bbf7d0"];
+  5 [label="t", style=filled, fillcolor="#fecaca"];
+  0 -> 1 [label="1"];
+  0 -> 2 [label="3"];
+  1 -> 2 [label="1"];
+  2 -> 4 [label="4"];
+  4 -> 5 [label="4"];
+}
+          </script>
+        </div>
+        <figcaption class="caption">Push–relabel max flow = 4.</figcaption>
+      </figure>
+    </div>
+
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
         <a class="btn-prev-text" href="interpolation.html" title="Previous Section: Interpolation"><span>Interpolation</span></a>
@@ -650,3 +855,5 @@ graph.pushRelabel(flow, 0, 5)</code></pre>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
+
+<script type="module" src="js/graphviz.js"></script>
