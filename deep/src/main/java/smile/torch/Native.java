@@ -1310,7 +1310,15 @@ public final class Native {
      * @param headDim  D
      * @param cacheLen total sequence length (for CSR validation; {@code 0} to skip)
      * @param scale    attention scale ({@code <= 0} &rarr; {@code 1/sqrt(D)})
-     * @param isCausal whether to apply causal masking
+     * @param isCausal whether to apply causal masking; ignored (SDPA requires
+     *                 the caller not set both) when {@code mask != null}
+     * @param mask     optional explicit additive mask, e.g. {@code [S, cacheLen]}
+     *                 (broadcastable); pass non-null for "continuation window"
+     *                 causal semantics (bottom-right-aligned: column j valid
+     *                 for row i iff {@code j <= i + (cacheLen - S)}) — plain
+     *                 {@code isCausal=true} with no mask uses PyTorch SDPA's
+     *                 own is_causal, which is top-left-aligned for S != cacheLen
+     *                 and therefore wrong for this use case. May be {@code null}.
      * @param workspace FlashInfer workspace handle
      * @return output {@code [B, Hq, S, D]}
      */
@@ -1318,12 +1326,13 @@ public final class Native {
             Tensor query, Tensor kCache, Tensor vCache,
             Tensor kvIndptr, Tensor kvIndices, Tensor kvLastPageLen,
             int pageSize, int numKvHeads, int headDim, int cacheLen,
-            double scale, boolean isCausal, MemorySegment workspace) {
+            double scale, boolean isCausal, Tensor mask, MemorySegment workspace) {
         if (Bindings.FLASHINFER_PAGED == null) {
             throw new IllegalStateException("smile_flashinfer_paged_attention not in libsmile_torch");
         }
         MemorySegment out;
         try {
+            MemorySegment maskHandle = mask == null ? MemorySegment.NULL : mask.handle();
             out = (MemorySegment) Bindings.FLASHINFER_PAGED.invokeExact(
                     query.handle(),
                     kCache.handle(),
@@ -1339,7 +1348,7 @@ public final class Native {
                     1.0f,
                     1.0f,
                     isCausal ? 1 : 0,
-                    MemorySegment.NULL,
+                    maskHandle,
                     workspace);
         } catch (Throwable t) {
             throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
