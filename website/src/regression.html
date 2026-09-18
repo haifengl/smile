@@ -1,44 +1,22 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: Smile - Regression
+title: SMILE - Regression
 ---
 {% include "toc.njk" %}
 
 <div class="col-md-9 order-md-first">
+
     <h1 id="regression-top" class="title">Regression</h1>
 
-    <p>Different from classification, the output variable takes continuous values in regression analysis.
-        Smile's regression algorithms are in the package
-        <a href="api/java/smile/regression/package-summary.html"><code>smile.regression</code></a>
-        and all algorithms implement the interface
-        <a href="api/java/smile/regression/Regression.html"><code>Regression</code></a>
-        that has a single method <code>predict</code> to apply the model
-        to an instance. For all algorithms, the model can be trained through
-        the constructor. Meanwhile, each algorithm has a <code>Trainer</code> companion
-        class that can hold model hyperparameters and be applied to multiple training
-        datasets.</p>
+    <p>The <a href="api/java/smile/regression/package-summary.html"><code>smile.regression</code></a> package is a complete suite of supervised regressors for predicting a continuous response. Every algorithm exposes static <code>fit(…)</code> factories, implements <a href="api/java/smile/regression/Regression.html"><code>Regression&lt;T&gt;</code></a>, and is serializable.</p>
+    <p>This page covers the core abstractions (including nested <code>Options</code> / <code>Properties</code>), synthetic 1-D / 2-D helpers plus Abalone, an algorithm selection guide, then each family with runnable Java / Scala / Kotlin playgrounds. Expected outputs cite unit-test metrics where available; plot demos open a Swing window.</p>
 
-    <p>The high-level operators are defined in Scala trait
-        <a href="api/scala/index.html#smile.regression.Operators"><code>smile.regression.Operators</code></a>
-        and also in the package object of <a href="api/scala/index.html#smile.regression.package"><code>smile.regression</code></a>.
-        In what follows, we will discuss each algorithm, their high-level
-        Scala API, and examples.</p>
 
-    <h2 id="ols">Ordinary Least Squares</h2>
+    <h2 id="intro" class="title">Core Abstractions</h2>
 
-    <p>In linear regression, the model specification is that the dependent variable is a linear
-        combination of the parameters. The residual is the difference between the value of the
-        dependent variable predicted by the model, and the true value of the
-        dependent variable. Ordinary least squares obtains parameter estimates
-        that minimize the sum of squared residuals, SSE (also denoted RSS).</p>
-        
-    <p>The ordinary least squares (OLS) estimator is consistent when the independent variables are
-        exogenous and there is no multicollinearity, and optimal in the class
-        of linear unbiased estimators when the errors are homoscedastic and
-        serially uncorrelated. Under these conditions, the method of OLS provides
-        minimum-variance mean-unbiased estimation when the errors have finite
-        variances.</p>
+    <p><code>Regression&lt;T&gt;</code> extends <code>ToDoubleFunction&lt;T&gt;</code>: <code>predict(x)</code> returns a scalar, with batch overloads for arrays, lists, and datasets. Optional online learning uses <code>update(x, y)</code>. Probe that capability with <code>online()</code> (not <code>isOnline()</code>) before calling <code>update</code> — the default implementation reports <code>false</code> for batch-only models.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -50,84 +28,44 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-1-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class OLS {
-        public static LinearModel fit(Formula formula,
-                                      DataFrame data,
-                                      Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">// Works for any smile.regression.Regression&lt;T&gt;
+double yhat = model.predict(sample);
+
+if (model.online()) {
+    model.update(newSample, newTarget); // incremental learning
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+prediction / optional online update
+      </code></pre>
     </div>
     <div id="pg-1-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def lm(formula: Formula,
-           data: DataFrame,
-           method: String = "qr",
-           stderr: Boolean = true,
-           recursive: Boolean = true): LinearModel
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">val yhat = model.predict(sample)
+
+if (model.online()) {
+  model.update(newSample, newTarget)
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+prediction / optional online update
+      </code></pre>
     </div>
     <div id="pg-1-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun lm(formula: Formula,
-           data: DataFrame,
-           method: String = "qr",
-           stderr: Boolean = true,
-           recursive: Boolean = true): LinearModel
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">val yhat = model.predict(sample)
+
+if (model.online()) {
+    model.update(newSample, newTarget)
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+prediction / optional online update
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>There are several different frameworks in which the linear regression
-        model can be cast in order to make the OLS technique applicable. Each
-        of these settings produces the same formulas and same results, the only
-        difference is the interpretation and the assumptions which have to be
-        imposed in order for the method to give meaningful results. The choice
-        of the applicable framework depends mostly on the nature of data at hand,
-        and on the inference task which has to be performed.</p>
-        
-    <p>Least squares corresponds to the maximum likelihood criterion if the
-        experimental errors have a normal distribution and can also be derived
-        as a method of moments estimator.</p>
-        
-    <p>In what follows, we apply the ordinary least squares to an artificial
-        data set by Breiman. The predictor
-        attributes are generated independently using the following probabilities:</p>
 
-    <div class="code-playground glass" data-lang="scala">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">Scala</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-scala"><code class="language-scala">
-    P(X<sub>1</sub> = -1) = P(X<sub>1</sub> = 1) = 1/2
+    <h3 id="dataframe-regression">DataFrameRegression</h3>
 
-    P(X<sub>m</sub> = -1) = P(X<sub>m</sub> = 0) = P(X<sub>m</sub> = 1) = 1/3, m = 2,...,10
-    </code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
+    <p>Tree ensembles and linear Formula fits implement <a href="api/java/smile/regression/DataFrameRegression.html"><code>DataFrameRegression</code></a> (extends <code>Regression&lt;Tuple&gt;</code>). Train with a <a href="api/java/smile/data/formula/Formula.html"><code>Formula</code></a> plus a <code>DataFrame</code>, then predict named-column rows. <code>DataFrameRegression.of(…)</code> wraps any <code>Regression&lt;double[]&gt;</code> so formula feature extraction is applied automatically.</p>
 
-    <p>The value of the response variable <code>Y</code> is:</p>
-
-    <div class="code-playground glass" data-lang="scala">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">Scala</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-scala"><code class="language-scala">
-    Y =  3 + 3X<sub>2</sub> + 2X<sub>3</sub> + X<sub>4</sub> + &sigma;(0,1)  if X_1 =  1
-
-    Y = -3 + 3X<sub>5</sub> + 2X<sub>6</sub> + X<sub>7</sub> + &sigma;(0,1)  if X_1 = -1
-    </code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
-
-    <p>It is straightforward to fit an OLS model.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -139,180 +77,93 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-2-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    smile> var planes = Read.arff("data/weka/regression/2dplanes.arff")
-           var model = OLS.fit(Formula.lhs("y"), planes)
-           System.out.println(model)
-    Linear Model:
+      <pre class="playground-source language-java"><code class="language-java">import smile.data.formula.Formula
+import smile.regression.RandomForest
 
-    Residuals:
-               Min	        1Q	    Median	        3Q	       Max
-           -8.5260	   -1.6514	   -0.0049	    1.6755	    7.8116
-
-    Coefficients:
-                      Estimate Std. Error    t value   Pr(>|t|)
-    Intercept          -0.0148     0.0118    -1.2503     0.2112
-    x1                  2.9730     0.0118   251.7998     0.0000 ***
-    x2                  1.5344     0.0145   105.8468     0.0000 ***
-    x3                  1.0357     0.0144    71.7815     0.0000 ***
-    x4                  0.5281     0.0145    36.4827     0.0000 ***
-    x5                  1.4766     0.0144   102.2472     0.0000 ***
-    x6                  1.0044     0.0144    69.5380     0.0000 ***
-    x7                  0.5238     0.0145    36.1696     0.0000 ***
-    x8                 -0.0011     0.0145    -0.0750     0.9402
-    x9                  0.0024     0.0145     0.1649     0.8690
-    x10                -0.0278     0.0145    -1.9239     0.0544 .
-    ---------------------------------------------------------------------
-    Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-    Residual standard error: 2.3838 on 40757 degrees of freedom
-    Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
-    F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
-          </code></pre>
+Formula formula = Formula.lhs("rings");
+RandomForest model = RandomForest.fit(formula, train);
+double[] yhat = model.predict(test);</code></pre>
     </div>
     <div id="pg-2-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    smile> val planes = read.arff("data/weka/regression/2dplanes.arff")
-           val model = lm("y" ~, planes)
-    [main] INFO smile.util.package$ - Least Squares runtime: 0:00:00.189432
-    model: regression.LinearModel = Linear Model:
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.data.formula.Formula
+import smile.regression._
 
-    Residuals:
-               Min	        1Q	    Median	        3Q	       Max
-           -8.5260	   -1.6514	   -0.0049	    1.6755	    7.8116
-
-    Coefficients:
-                      Estimate Std. Error    t value   Pr(>|t|)
-    Intercept          -0.0148     0.0118    -1.2503     0.2112
-    x1                  2.9730     0.0118   251.7998     0.0000 ***
-    x2                  1.5344     0.0145   105.8468     0.0000 ***
-    x3                  1.0357     0.0144    71.7815     0.0000 ***
-    x4                  0.5281     0.0145    36.4827     0.0000 ***
-    x5                  1.4766     0.0144   102.2472     0.0000 ***
-    x6                  1.0044     0.0144    69.5380     0.0000 ***
-    x7                  0.5238     0.0145    36.1696     0.0000 ***
-    x8                 -0.0011     0.0145    -0.0750     0.9402
-    x9                  0.0024     0.0145     0.1649     0.8690
-    x10                -0.0278     0.0145    -1.9239     0.0544 .
-    ---------------------------------------------------------------------
-    Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-    Residual standard error: 2.3838 on 40757 degrees of freedom
-    Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
-    F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
-    </code></pre>
+val formula = Formula.lhs("rings")
+val model = randomForest(formula, train)
+val yhat = model.predict(test)</code></pre>
     </div>
     <div id="pg-2-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    >>> import smile.*;
-        import smile.regression.*
-        import smile.data.formula.*;
-        val planes = read.arff("data/weka/regression/2dplanes.arff")
-        val model = lm(Formula.lhs("y"), planes)
-    res165: smile.regression.LinearModel = Linear Model:
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.data.formula.Formula
+import smile.regression.*
 
-    Residuals:
-    	       Min	        1Q	    Median	        3Q	       Max
-    	   -8.5260	   -1.6514	   -0.0049	    1.6755	    7.8116
-
-    Coefficients:
-                      Estimate Std. Error    t value   Pr(>|t|)
-    Intercept          -0.0148     0.0118    -1.2503     0.2112 
-    x1                  2.9730     0.0118   251.7998     0.0000 ***
-    x2                  1.5344     0.0145   105.8468     0.0000 ***
-    x3                  1.0357     0.0144    71.7815     0.0000 ***
-    x4                  0.5281     0.0145    36.4827     0.0000 ***
-    x5                  1.4766     0.0144   102.2472     0.0000 ***
-    x6                  1.0044     0.0144    69.5380     0.0000 ***
-    x7                  0.5238     0.0145    36.1696     0.0000 ***
-    x8                 -0.0011     0.0145    -0.0750     0.9402 
-    x9                  0.0024     0.0145     0.1649     0.8690 
-    x10                -0.0278     0.0145    -1.9239     0.0544 .
-    ---------------------------------------------------------------------
-    Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-    Residual standard error: 2.3838 on 40757 degrees of freedom
-    Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
-    F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
-    </code></pre>
+val formula = Formula.lhs("rings")
+val model = randomForest(formula, train)
+val yhat = model.predict(test)</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>We then can apply the regression model on a new data point.</p>
+
+    <h3 id="linear-model">LinearModel</h3>
+
+    <p>OLS, Ridge, LASSO, and ElasticNet return <a href="api/java/smile/regression/LinearModel.html"><code>LinearModel</code></a>: coefficients (with optional standard errors / t-tests), residual error, <code>RSquared()</code> / <code>adjustedRSquared()</code>, and — when fitted with <code>recursive = true</code> — Sherman–Morrison–Woodbury <code>update</code> for recursive least squares (RLS).</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
     <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
     <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="java" data-pane="pg-3-2">Kotlin</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-3-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-3-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    smile> model.predict(planes.get(0))
-    $238 ==> 5.073347388203141
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.regression.OLS
+import smile.datasets.Longley
+
+var longley = new Longley()
+var model = OLS.fit(longley.formula(), longley.data())
+model.coefficients()
+model.RSquared()          // ≈ 0.9926 on Longley
+if (model.online())
+    model.update(newRow)  // RLS when recursive=true</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+R² ≈ 0.9926  (Longley OLS)
+      </code></pre>
     </div>
     <div id="pg-3-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    smile> model.predict(planes(0))
-    res1: Double = 5.073347387304475
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.regression._
+import smile.datasets.Longley
+
+val longley = new Longley()
+val model = lm(longley.formula, longley.data)
+model.coefficients
+model.RSquared()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+R² ≈ 0.9926  (Longley OLS)
+      </code></pre>
     </div>
     <div id="pg-3-2" class="hero-pane" hidden>
-      <pre class="playground-source language-java"><code class="language-java">
-    >>> model.predict(planes[0])
-    res166: kotlin.Double = 5.073347388203141
-          </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.regression.*
+import smile.datasets.Longley
+
+val longley = Longley()
+val model = lm(longley.formula(), longley.data())
+model.coefficients()
+model.RSquared()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+R² ≈ 0.9926  (Longley OLS)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Once a regression model has been constructed, it may be important to
-        confirm the goodness of fit of the model and the statistical significance
-        of the estimated parameters. Commonly used checks of goodness of fit
-        include the R-squared, analysis of the pattern of residuals and hypothesis
-        testing. Statistical significance can be checked by an F-test of the overall
-        fit, followed by t-tests of individual parameters.</p>
 
-    <p>Simply print out the model, we can inspect R-squared, the statistics and p-values of
-        the t-test of parameter significance, and the F-test of goodness-of-fit.
-        Interpretations of these diagnostic tests rest heavily on the model
-        assumptions. Although examination of the residuals can be used to
-        invalidate a model, the results of a t-test or F-test are sometimes more
-        difficult to interpret if the model's assumptions are violated.
-        For example, if the error term does not have a normal distribution,
-        in small samples the estimated parameters will not follow normal
-        distributions and complicate inference. With relatively large samples,
-        however, a central limit theorem can be invoked such that hypothesis
-        testing may proceed using asymptotic approximations.</p>
+    <h2 id="options" class="title">Options and Properties</h2>
 
-    <h2 id="ridge">Ridge Regression</h2>
+    <p>Most algorithms expose a nested <code>Options</code> record for strongly typed hyperparameters (for example <code>RandomForest.Options</code>, <code>SVM.Options</code>, <code>OLS.Options</code>). Construct an <code>Options</code> instance and pass it to <code>fit</code>, or load the same knobs from a configuration file via <code>java.util.Properties</code>. Each <code>Options</code> type supports <code>toProperties()</code> and <code>Options.of(props)</code> for round-trips. Property keys use underscores (e.g. <code>smile.random_forest.trees</code>); algorithm sections below list the field name and the corresponding full property key in a description list.</p>
 
-    <p>Coefficient estimates for multiple linear regression models rely on
-        the independence of the model terms. When terms are correlated and
-        the columns of the design matrix X have an approximate linear dependence,
-        the matrix <code>X'X</code> becomes close to singular. As a result, the least-squares estimate
-        becomes highly sensitive to random errors in the observed response <code>Y</code>,
-        producing a large variance.</p>
-
-    <p>Ridge regression is one method to address these issues. In ridge regression,
-        the matrix <code>X'X</code> is perturbed to make its determinant appreciably
-        different from 0.</p>
-
-    <p>Ridge regression is a kind of Tikhonov regularization, which is the most
-        commonly used method of regularization of ill-posed problems.
-        Ridge regression shrinks the regression coefficients by imposing a penalty
-        on their size. By allowing a small amount of bias in the estimates, more
-        reasonable coefficients may often be obtained. Often, small amounts of bias lead to
-        dramatic reductions in the variance of the estimated model coefficients.</p>
-
-    <p>Another interpretation of ridge regression is available through Bayesian estimation.
-        In this setting the belief that weight should be small is coded into a prior
-        distribution.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -324,33 +175,67 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-4-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class RidgeRegression {
-        public static LinearModel fit(Formula formula, DataFrame data, double lambda);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Properties
+import smile.regression.RandomForest
+import smile.data.formula.Formula
+
+// Strongly typed Options
+var options = new RandomForest.Options(200)
+RandomForest model = RandomForest.fit(formula, data, options)
+
+// Or configuration-file style Properties
+Properties params = new Properties()
+params.setProperty("smile.random_forest.trees", "200")
+params.setProperty("smile.random_forest.max_depth", "10")
+model = RandomForest.fit(formula, data, params)
+
+// Round-trip
+Properties props = options.toProperties()
+var again = RandomForest.Options.of(props)</code></pre>
     </div>
     <div id="pg-4-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Properties
+import smile.regression._
+
+val options = new RandomForest.Options(200)
+val model = RandomForest.fit(formula, data, options)
+
+val params = new Properties()
+params.setProperty("smile.random_forest.trees", "200")
+params.setProperty("smile.random_forest.max_depth", "10")
+val model2 = RandomForest.fit(formula, data, params)
+
+val props = options.toProperties
+val again = RandomForest.Options.of(props)</code></pre>
     </div>
     <div id="pg-4-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.regression.*
+
+val options = RandomForest.Options(200)
+var model = RandomForest.fit(formula, data, options)
+
+val params = Properties()
+params.setProperty("smile.random_forest.trees", "200")
+params.setProperty("smile.random_forest.max_depth", "10")
+model = RandomForest.fit(formula, data, params)
+
+val props = options.toProperties()
+val again = RandomForest.Options.of(props)</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
-        <code>y</code> is the response values, and <code>lambda</code> is
-        the shrinkage/regularization parameter. Large <code>lambda</code> means more shrinkage.
-        Choosing an appropriate value of <code>lambda</code> is important, and also difficult.</p>
 
-    <p>Longley's macroeconomic regression data has 7 economical variables,
-        observed yearly from 1947 to 1962. It is a well-known example for a highly
-        collinear regression.</p>
+    <h2 id="datasets" class="title">Datasets and Visualization</h2>
+
+    <p>Examples reuse seeded synthetic generators for 1-D / 2-D function plots and <strong>Abalone</strong> for high-dimensional Formula metrics. Call <code>MathEx.setSeed(19650218)</code> once so plots and RMSE figures match the unit tests. Helpers below are defined once; later demos call them (do not paste helper bodies again). Use <code>compare1d</code> to overlay OLS with several hyperparameter settings on the same 1-D sinusoid.</p>
+
+
+    <h3 id="synthetic">Synthetic generators</h3>
+
+    <p><code>generate1d(n)</code> places <code>x</code> on <code>[0, 1]</code> with <code>y = sin(2πx) + 0.1·noise</code>. <code>generate2d(n)</code> samples <code>x</code> on <code>[-1, 1]²</code> with <code>y = x₀ − x₁² + 0.1·noise</code>. Wrap arrays into a <code>DataFrame</code> with <code>DataFrame.of</code> + <code>DoubleVector</code> and <code>Formula.lhs("y")</code> for tree / OLS demos.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -362,121 +247,108 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-5-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    smile> var longley = Read.arff("data/weka/regression/longley.arff")
-           var model = RidgeRegression.fit(Formula.lhs("employed"), longley, 0.0057)
-           System.out.println(model)
-    Linear Model:
+      <pre class="playground-source language-java"><code class="language-java">import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.data.vector.DoubleVector;
+import smile.math.MathEx;
 
-    Residuals:
-    	       Min	        1Q	    Median	        3Q	       Max
-    	 -410.9399	  -97.3097	   23.8665	  126.4536	  567.7757
+MathEx.setSeed(19650218);
 
-    Coefficients:
-    Intercept       -2623118.1327
-    deflator           -4.3322
-    GNP                -0.0091
-    unemployed         -1.6211
-    armed_forces       -0.9161
-    population         -0.1425
-    year             1389.9691
+/** 1-D: x on [0,1], y = sin(2πx) + 0.1·noise. */
+double[][] generate1d(int n) {
+    double[][] x = new double[n][1];
+    for (int i = 0; i &lt; n; i++) x[i][0] = i / (n - 1.0);
+    return x;
+}
+double[] response1d(double[][] x) {
+    double[] y = new double[x.length];
+    for (int i = 0; i &lt; x.length; i++)
+        y[i] = Math.sin(2 * Math.PI * x[i][0]) + 0.1 * MathEx.random();
+    return y;
+}
 
-    Residual standard error: 320.2543 on 9 degrees of freedom
-    Multiple R-squared: 0.9950,    Adjusted R-squared: 0.9917
-    F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
-          </code></pre>
+/** 2-D: x on [-1,1]², y = x0 − x1² + 0.1·noise. */
+double[][] generate2d(int n) {
+    double[][] x = new double[n][2];
+    for (int i = 0; i &lt; n; i++) {
+        x[i][0] = 2 * MathEx.random() - 1;
+        x[i][1] = 2 * MathEx.random() - 1;
+    }
+    return x;
+}
+double[] response2d(double[][] x) {
+    double[] y = new double[x.length];
+    for (int i = 0; i &lt; x.length; i++)
+        y[i] = x[i][0] - x[i][1] * x[i][1] + 0.1 * MathEx.random();
+    return y;
+}
+
+DataFrame toFrame1d(double[][] x, double[] y) {
+    return DataFrame.of(x, "x").add(new DoubleVector("y", y));
+}
+DataFrame toFrame2d(double[][] x, double[] y) {
+    return DataFrame.of(x, "x1", "x2").add(new DoubleVector("y", y));
+}
+Formula formula = Formula.lhs("y");</code></pre>
     </div>
     <div id="pg-5-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    smile> val longley = read.arff("data/weka/regression/longley.arff")
-           val model = ridge("employed" ~, longley, 0.0057)
-    model: regression.LinearModel = Linear Model:
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.data.DataFrame
+import smile.data.formula.Formula
+import smile.data.vector.DoubleVector
+import smile.math.MathEx
 
-    Residuals:
-               Min	        1Q	    Median	        3Q	       Max
-         -410.9399	  -97.3097	   23.8665	  126.4536	  567.7757
+MathEx.setSeed(19650218)
 
-    Coefficients:
-    Intercept       -2623118.1327
-    deflator           -4.3322
-    GNP                -0.0091
-    unemployed         -1.6211
-    armed_forces       -0.9161
-    population         -0.1425
-    year             1389.9691
+def generate1d(n: Int): Array[Array[Double]] =
+  Array.tabulate(n)(i =&gt; Array(i / (n - 1.0)))
+def response1d(x: Array[Array[Double]]): Array[Double] =
+  x.map(xi =&gt; Math.sin(2 * Math.PI * xi(0)) + 0.1 * MathEx.random())
 
-    Residual standard error: 320.2543 on 9 degrees of freedom
-    Multiple R-squared: 0.9950,    Adjusted R-squared: 0.9917
-    F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
-    </code></pre>
+def generate2d(n: Int): Array[Array[Double]] =
+  Array.fill(n)(Array(2 * MathEx.random() - 1, 2 * MathEx.random() - 1))
+def response2d(x: Array[Array[Double]]): Array[Double] =
+  x.map(xi =&gt; xi(0) - xi(1) * xi(1) + 0.1 * MathEx.random())
+
+def toFrame1d(x: Array[Array[Double]], y: Array[Double]) =
+  DataFrame.of(x, "x").add(new DoubleVector("y", y))
+def toFrame2d(x: Array[Array[Double]], y: Array[Double]) =
+  DataFrame.of(x, "x1", "x2").add(new DoubleVector("y", y))
+val formula = Formula.lhs("y")</code></pre>
     </div>
     <div id="pg-5-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    >>> val longley = read.arff("data/weka/regression/longley.arff")
-        val model = ridge(Formula.lhs("employed"), longley, 0.0057)
-    res169: smile.regression.LinearModel = Linear Model:
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.data.DataFrame
+import smile.data.formula.Formula
+import smile.data.vector.DoubleVector
+import smile.math.MathEx
+import kotlin.math.PI
+import kotlin.math.sin
 
-    Residuals:
-    	       Min	        1Q	    Median	        3Q	       Max
-    	 -410.9399	  -97.3097	   23.8665	  126.4536	  567.7757
+MathEx.setSeed(19650218)
 
-    Coefficients:
-    Intercept       -2623118.1327
-    deflator           -4.3322
-    GNP                -0.0091
-    unemployed         -1.6211
-    armed_forces       -0.9161
-    population         -0.1425
-    year             1389.9691
+fun generate1d(n: Int): Array&lt;DoubleArray&gt; =
+    Array(n) { i -&gt; doubleArrayOf(i / (n - 1.0)) }
+fun response1d(x: Array&lt;DoubleArray&gt;): DoubleArray =
+    DoubleArray(x.size) { i -&gt; sin(2 * PI * x[i][0]) + 0.1 * MathEx.random() }
 
-    Residual standard error: 320.2543 on 9 degrees of freedom
-    Multiple R-squared: 0.9950,    Adjusted R-squared: 0.9917
-    F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
-    </code></pre>
+fun generate2d(n: Int): Array&lt;DoubleArray&gt; =
+    Array(n) { doubleArrayOf(2 * MathEx.random() - 1, 2 * MathEx.random() - 1) }
+fun response2d(x: Array&lt;DoubleArray&gt;): DoubleArray =
+    DoubleArray(x.size) { i -&gt; x[i][0] - x[i][1] * x[i][1] + 0.1 * MathEx.random() }
+
+fun toFrame1d(x: Array&lt;DoubleArray&gt;, y: DoubleArray) =
+    DataFrame.of(x, "x").add(DoubleVector("y", y))
+fun toFrame2d(x: Array&lt;DoubleArray&gt;, y: DoubleArray) =
+    DataFrame.of(x, "x1", "x2").add(DoubleVector("y", y))
+val formula = Formula.lhs("y")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>When including an intercept term in the regression, we usually leave
-        this coefficient unpenalized. Otherwise, we could add some constant amount
-        to the vector <code>y</code>, and this would not result in the same solution.
-        If we center the columns of <code>X</code>, then the intercept estimate
-        ends up just being the mean of <code>y</code>.</p>
 
-    <p>The penalty term is unfair is the predictor variables are not on the
-        same scale. Therefore, if we know that the variables are not measured
-        in the same units, we typically scale the columns of X (to have sample
-        variance 1), and then we perform ridge regression.</p>
+    <h3 id="visualize1d">visualize1d</h3>
 
-    <p>It can be shown that ridge regression doesn’t set coefficients exactly to zero
-        unless <code>&lambda; = &infin;</code>, in which case they’re all zero.
-        Hence, ridge regression cannot perform variable selection, and even though
-        it performs well in terms of prediction accuracy, it does poorly in terms
-        of offering a clear interpretation.</p>
+    <p>Two overloads: <code>Regression&lt;double[]&gt;</code> (scatter + dense <code>LinePlot</code>), and <code>DataFrameRegression</code> + training frame + x-column name (builds a grid <code>DataFrame</code> for the curve).</p>
 
-    <h2 id="lasso">Lasso Regression</h2>
-
-    <p>Lasso (least absolute shrinkage and selection operator) regression
-        is a shrinkage and selection method for linear regression.
-        It minimizes the usual sum of squared errors, with a bound on the sum
-        of the absolute values of the coefficients (i.e. L<sub>1</sub>-regularized).
-        It has connections to soft-thresholding of wavelet coefficients, forward
-        stage-wise regression, and boosting methods.</p>
-        
-    <p>The Lasso typically yields a sparse solution, of which the parameter
-        vector &beta; has relatively few nonzero coefficients. In contrast, the
-        solution of L<sub>2</sub>-regularized least squares (i.e. ridge regression)
-        typically has all coefficients nonzero. Because it effectively
-        reduces the number of variables, the Lasso is useful in some contexts.</p>
-
-    <p>There is no analytic formula or expression for the optimal solution to the
-        L<sub>1</sub>-regularized least squares problems. Therefore, its solution
-        must be computed numerically. The objective function in the
-        L<sub>1</sub>-regularized least squares is convex but not differentiable,
-        so solving it is more of a computational challenge than solving the
-        L<sub>2</sub>-regularized least squares. The Lasso may be solved using
-        quadratic programming or more general convex optimization methods, as well
-        as by specific algorithms such as the least angle regression algorithm.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -488,137 +360,344 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-6-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class LASSO {
-        public static LinearModel fit(Formula formula,
-                                      DataFrame data,
-                                      Options options);
+      <pre class="playground-source language-java"><code class="language-java">import smile.data.DataFrame;
+import smile.math.MathEx;
+import smile.plot.swing.*;
+import smile.regression.DataFrameRegression;
+import smile.regression.Regression;
+
+/** Scatter of training points + line of dense predictions (array model). */
+Figure visualize1d(Regression&lt;double[]&gt; model, double[][] x, double[] y) {
+    int n = x.length;
+    double[][] points = new double[n][2];
+    for (int i = 0; i &lt; n; i++) {
+        points[i][0] = x[i][0];
+        points[i][1] = y[i];
     }
-          </code></pre>
+    double lo = MathEx.colMin(x)[0], hi = MathEx.colMax(x)[0];
+    int m = 100;
+    double step = (hi - lo) / (m - 1);
+    double[][] curve = new double[m][2];
+    double[][] grid = new double[m][1];
+    for (int i = 0; i &lt; m; i++) {
+        grid[i][0] = lo + i * step;
+        curve[i][0] = grid[i][0];
+        curve[i][1] = model.predict(grid[i]);
+    }
+    var figure = ScatterPlot.of(points, 'o').figure();
+    figure.add(LinePlot.of(curve));
+    return figure;
+}
+
+/** Same for Formula / DataFrameRegression models (grid built as a DataFrame). */
+Figure visualize1d(DataFrameRegression model, DataFrame train, String xCol) {
+    double[] xv = train.column(xCol).toDoubleArray();
+    double[] yv = model.formula().y(train).toDoubleArray();
+    int n = xv.length;
+    double[][] points = new double[n][2];
+    for (int i = 0; i &lt; n; i++) {
+        points[i][0] = xv[i];
+        points[i][1] = yv[i];
+    }
+    double lo = MathEx.min(xv), hi = MathEx.max(xv);
+    int m = 100;
+    double step = (hi - lo) / (m - 1);
+    double[][] gridX = new double[m][1];
+    for (int i = 0; i &lt; m; i++) gridX[i][0] = lo + i * step;
+    double[] pred = model.predict(DataFrame.of(gridX, xCol));
+    double[][] curve = new double[m][2];
+    for (int i = 0; i &lt; m; i++) {
+        curve[i][0] = gridX[i][0];
+        curve[i][1] = pred[i];
+    }
+    var figure = ScatterPlot.of(points, 'o').figure();
+    figure.add(LinePlot.of(curve));
+    return figure;
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Figure (call .show() to open)
+      </code></pre>
     </div>
     <div id="pg-6-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def lasso(formula: Formula,
-              data: DataFrame,
-              lambda: Double,
-              tol: Double = 1E-3,
-              maxIter: Int = 5000): LinearModel
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.data.DataFrame
+import smile.math.MathEx
+import smile.plot.swing._
+import smile.regression.{DataFrameRegression, Regression}
+
+def visualize1d(model: Regression[Array[Double]], x: Array[Array[Double]], y: Array[Double]): Figure = {
+  val points = x.zip(y).map { case (xi, yi) =&gt; Array(xi(0), yi) }
+  val lo = MathEx.colMin(x)(0); val hi = MathEx.colMax(x)(0)
+  val m = 100; val step = (hi - lo) / (m - 1)
+  val grid = Array.tabulate(m)(i =&gt; Array(lo + i * step))
+  val curve = grid.map(g =&gt; Array(g(0), model.predict(g)))
+  val figure = ScatterPlot.of(points, 'o').figure()
+  figure.add(LinePlot.of(curve))
+  figure
+}
+
+def visualize1d(model: DataFrameRegression, train: DataFrame, xCol: String): Figure = {
+  val xv = train.column(xCol).toDoubleArray
+  val yv = model.formula.y(train).toDoubleArray
+  val points = xv.zip(yv).map { case (a, b) =&gt; Array(a, b) }
+  val lo = MathEx.min(xv); val hi = MathEx.max(xv)
+  val m = 100; val step = (hi - lo) / (m - 1)
+  val gridX = Array.tabulate(m)(i =&gt; Array(lo + i * step))
+  val pred = model.predict(DataFrame.of(gridX, xCol))
+  val curve = gridX.zip(pred).map { case (g, p) =&gt; Array(g(0), p) }
+  val figure = ScatterPlot.of(points, 'o').figure()
+  figure.add(LinePlot.of(curve))
+  figure
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Figure (call .show() to open)
+      </code></pre>
     </div>
     <div id="pg-6-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun lasso(formula: Formula,
-              data: DataFrame,
-              lambda: Double,
-              tol: Double = 1E-3,
-              maxIter: Int = 5000): LinearModel
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.data.DataFrame
+import smile.math.MathEx
+import smile.plot.swing.*
+import smile.regression.DataFrameRegression
+import smile.regression.Regression
+
+fun visualize1d(model: Regression&lt;DoubleArray&gt;, x: Array&lt;DoubleArray&gt;, y: DoubleArray): Figure {
+    val points = Array(x.size) { i -&gt; doubleArrayOf(x[i][0], y[i]) }
+    val lo = MathEx.colMin(x)[0]; val hi = MathEx.colMax(x)[0]
+    val m = 100; val step = (hi - lo) / (m - 1)
+    val grid = Array(m) { i -&gt; doubleArrayOf(lo + i * step) }
+    val curve = Array(m) { i -&gt; doubleArrayOf(grid[i][0], model.predict(grid[i])) }
+    val figure = ScatterPlot.of(points, 'o').figure()
+    figure.add(LinePlot.of(curve))
+    return figure
+}
+
+fun visualize1d(model: DataFrameRegression, train: DataFrame, xCol: String): Figure {
+    val xv = train.column(xCol).toDoubleArray()
+    val yv = model.formula().y(train).toDoubleArray()
+    val points = Array(xv.size) { i -&gt; doubleArrayOf(xv[i], yv[i]) }
+    val lo = MathEx.min(xv); val hi = MathEx.max(xv)
+    val m = 100; val step = (hi - lo) / (m - 1)
+    val gridX = Array(m) { i -&gt; doubleArrayOf(lo + i * step) }
+    val pred = model.predict(DataFrame.of(gridX, xCol))
+    val curve = Array(m) { i -&gt; doubleArrayOf(gridX[i][0], pred[i]) }
+    val figure = ScatterPlot.of(points, 'o').figure()
+    figure.add(LinePlot.of(curve))
+    return figure
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Figure (call .show() to open)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
-        <code>y</code> is the response values,
-        <code>lambda</code> is the shrinkage/regularization parameter,
-        <code>tol</code> is the tolerance for stopping iterations (relative target duality gap),
-        and <code>maxIter</code> is the maximum number of iterations.</p>
 
-    <p>For over-determined systems (more instances than variables, commonly in
-        machine learning), we normalize variables with mean 0 and standard deviation
-        1. For under-determined systems (fewer instances than variables, e.g.
-        compressed sensing), we assume white noise (i.e. no intercept in the linear
-        model) and do not perform normalization. Note that the solution
-        is not unique in this case.</p>
+    <h3 id="compare1d">compare1d</h3>
 
-    <p>In what follows, we will apply Lasso to the diabetes data
-        used in the "Least Angle Regression" paper. The basic data has 10 columns
-        standardized to have unit L2 norm in each column and zero mean.
-        The data used in the below example has 64 columns that consists of basic
-        data plus certain interactions.</p>
+    <p>Overlay a dashed OLS baseline with several solid curves for different hyperparameter settings on the same scatter (same <code>generate1d</code> / <code>response1d</code> sinusoid as OLS). Pass parallel <code>models</code> and <code>labels</code> arrays; <code>LinePlot</code> legends map each colour to its hyperparameter (via <code>Palette.get(k)</code>). Dual overloads match <code>visualize1d</code> (Formula vs array models).</p>
+
+
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
     <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
     <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="java" data-pane="pg-7-2">Kotlin</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-7-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-7-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var diabetes = Read.csv("data/regression/diabetes.csv", CSVFormat.DEFAULT.withFirstRecordAsHeader());
-    var formula = Formula.lhs("y");
-    LASSO.fit(formula, diabetes, new LASSO.Options(10));
-    LASSO.fit(formula, diabetes, new LASSO.Options(100));
-    LASSO.fit(formula, diabetes, new LASSO.Options(500));
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import java.awt.Color;
+import smile.data.DataFrame;
+import smile.math.MathEx;
+import smile.plot.swing.*;
+import smile.regression.DataFrameRegression;
+import smile.regression.Regression;
+
+/** Scatter + dashed OLS + solid curves for several hyperparameter settings. */
+Figure compare1d(DataFrameRegression ols, DataFrameRegression[] models, String[] labels,
+        DataFrame train, String xCol) {
+    double[] xv = train.column(xCol).toDoubleArray();
+    double[] yv = ols.formula().y(train).toDoubleArray();
+    int n = xv.length;
+    double[][] points = new double[n][2];
+    for (int i = 0; i &lt; n; i++) {
+        points[i][0] = xv[i];
+        points[i][1] = yv[i];
+    }
+    double lo = MathEx.min(xv), hi = MathEx.max(xv);
+    int m = 100;
+    double step = (hi - lo) / (m - 1);
+    double[][] gridX = new double[m][1];
+    for (int i = 0; i &lt; m; i++) gridX[i][0] = lo + i * step;
+    DataFrame grid = DataFrame.of(gridX, xCol);
+
+    double[] olsPred = ols.predict(grid);
+    double[][] olsCurve = new double[m][2];
+    for (int i = 0; i &lt; m; i++) {
+        olsCurve[i][0] = gridX[i][0];
+        olsCurve[i][1] = olsPred[i];
+    }
+    var figure = ScatterPlot.of(points, 'o').figure();
+    figure.setLegendVisible(true);
+    figure.add(LinePlot.of(olsCurve, Line.Style.DASH, Color.DARK_GRAY, "OLS"));
+    for (int k = 0; k &lt; models.length; k++) {
+        double[] pred = models[k].predict(grid);
+        double[][] curve = new double[m][2];
+        for (int i = 0; i &lt; m; i++) {
+            curve[i][0] = gridX[i][0];
+            curve[i][1] = pred[i];
+        }
+        figure.add(LinePlot.of(curve, Line.Style.SOLID, Palette.get(k), labels[k]));
+    }
+    return figure;
+}
+
+/** Same for array models (e.g. several LinearSVM fits vs OLS). */
+Figure compare1d(Regression&lt;double[]&gt; ols, Regression&lt;double[]&gt;[] models, String[] labels,
+        double[][] x, double[] y) {
+    int n = x.length;
+    double[][] points = new double[n][2];
+    for (int i = 0; i &lt; n; i++) {
+        points[i][0] = x[i][0];
+        points[i][1] = y[i];
+    }
+    double lo = MathEx.colMin(x)[0], hi = MathEx.colMax(x)[0];
+    int m = 100;
+    double step = (hi - lo) / (m - 1);
+    double[][] olsCurve = new double[m][2];
+    for (int i = 0; i &lt; m; i++) {
+        double[] g = { lo + i * step };
+        olsCurve[i][0] = g[0];
+        olsCurve[i][1] = ols.predict(g);
+    }
+    var figure = ScatterPlot.of(points, 'o').figure();
+    figure.setLegendVisible(true);
+    figure.add(LinePlot.of(olsCurve, Line.Style.DASH, Color.DARK_GRAY, "OLS"));
+    for (int k = 0; k &lt; models.length; k++) {
+        double[][] curve = new double[m][2];
+        for (int i = 0; i &lt; m; i++) {
+            double[] g = { lo + i * step };
+            curve[i][0] = g[0];
+            curve[i][1] = models[k].predict(g);
+        }
+        figure.add(LinePlot.of(curve, Line.Style.SOLID, Palette.get(k), labels[k]));
+    }
+    return figure;
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Figure (call .show() to open)
+      </code></pre>
     </div>
     <div id="pg-7-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val diabetes = read.csv("data/regression/diabetes.csv")
-    lasso("y" ~, diabetes, 10)
-    lasso("y" ~, diabetes, 100)
-    lasso("y" ~, diabetes, 500)
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.awt.Color
+import smile.data.DataFrame
+import smile.math.MathEx
+import smile.plot.swing._
+import smile.regression.{DataFrameRegression, Regression}
+
+def compare1d(ols: DataFrameRegression, models: Array[DataFrameRegression], labels: Array[String],
+              train: DataFrame, xCol: String): Figure = {
+  val xv = train.column(xCol).toDoubleArray
+  val yv = ols.formula.y(train).toDoubleArray
+  val points = xv.zip(yv).map { case (a, b) =&gt; Array(a, b) }
+  val lo = MathEx.min(xv); val hi = MathEx.max(xv)
+  val m = 100; val step = (hi - lo) / (m - 1)
+  val gridX = Array.tabulate(m)(i =&gt; Array(lo + i * step))
+  val grid = DataFrame.of(gridX, xCol)
+  val olsCurve = gridX.zip(ols.predict(grid)).map { case (g, p) =&gt; Array(g(0), p) }
+  val figure = ScatterPlot.of(points, 'o').figure()
+  figure.setLegendVisible(true)
+  figure.add(LinePlot.of(olsCurve, Line.Style.DASH, Color.DARK_GRAY, "OLS"))
+  models.zip(labels).zipWithIndex.foreach { case ((model, label), k) =&gt;
+    val curve = gridX.zip(model.predict(grid)).map { case (g, p) =&gt; Array(g(0), p) }
+    figure.add(LinePlot.of(curve, Line.Style.SOLID, Palette.get(k), label))
+  }
+  figure
+}
+
+def compare1d(ols: Regression[Array[Double]], models: Array[Regression[Array[Double]]],
+              labels: Array[String], x: Array[Array[Double]], y: Array[Double]): Figure = {
+  val points = x.zip(y).map { case (xi, yi) =&gt; Array(xi(0), yi) }
+  val lo = MathEx.colMin(x)(0); val hi = MathEx.colMax(x)(0)
+  val m = 100; val step = (hi - lo) / (m - 1)
+  val grid = Array.tabulate(m)(i =&gt; Array(lo + i * step))
+  val olsCurve = grid.map(g =&gt; Array(g(0), ols.predict(g)))
+  val figure = ScatterPlot.of(points, 'o').figure()
+  figure.setLegendVisible(true)
+  figure.add(LinePlot.of(olsCurve, Line.Style.DASH, Color.DARK_GRAY, "OLS"))
+  models.zip(labels).zipWithIndex.foreach { case ((model, label), k) =&gt;
+    val curve = grid.map(g =&gt; Array(g(0), model.predict(g)))
+    figure.add(LinePlot.of(curve, Line.Style.SOLID, Palette.get(k), label))
+  }
+  figure
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Figure (call .show() to open)
+      </code></pre>
     </div>
     <div id="pg-7-2" class="hero-pane" hidden>
-      <pre class="playground-source language-java"><code class="language-java">
-    val diabetes = read.csv("data/regression/diabetes.csv")
-    val formula = Formula.lhs("y")
-    lasso(formula, diabetes, 10)
-    lasso(formula, diabetes, 100)
-    lasso(formula, diabetes, 500)
-          </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.awt.Color
+import smile.data.DataFrame
+import smile.math.MathEx
+import smile.plot.swing.*
+import smile.regression.DataFrameRegression
+import smile.regression.Regression
+
+fun compare1d(ols: DataFrameRegression, models: Array&lt;DataFrameRegression&gt;, labels: Array&lt;String&gt;,
+              train: DataFrame, xCol: String): Figure {
+    val xv = train.column(xCol).toDoubleArray()
+    val yv = ols.formula().y(train).toDoubleArray()
+    val points = Array(xv.size) { i -&gt; doubleArrayOf(xv[i], yv[i]) }
+    val lo = MathEx.min(xv); val hi = MathEx.max(xv)
+    val m = 100; val step = (hi - lo) / (m - 1)
+    val gridX = Array(m) { i -&gt; doubleArrayOf(lo + i * step) }
+    val grid = DataFrame.of(gridX, xCol)
+    val olsPred = ols.predict(grid)
+    val olsCurve = Array(m) { i -&gt; doubleArrayOf(gridX[i][0], olsPred[i]) }
+    val figure = ScatterPlot.of(points, 'o').figure()
+    figure.setLegendVisible(true)
+    figure.add(LinePlot.of(olsCurve, Line.Style.DASH, Color.DARK_GRAY, "OLS"))
+    for (k in models.indices) {
+        val pred = models[k].predict(grid)
+        val curve = Array(m) { i -&gt; doubleArrayOf(gridX[i][0], pred[i]) }
+        figure.add(LinePlot.of(curve, Line.Style.SOLID, Palette.get(k), labels[k]))
+    }
+    return figure
+}
+
+fun compare1d(ols: Regression&lt;DoubleArray&gt;, models: Array&lt;Regression&lt;DoubleArray&gt;&gt;,
+              labels: Array&lt;String&gt;, x: Array&lt;DoubleArray&gt;, y: DoubleArray): Figure {
+    val points = Array(x.size) { i -&gt; doubleArrayOf(x[i][0], y[i]) }
+    val lo = MathEx.colMin(x)[0]; val hi = MathEx.colMax(x)[0]
+    val m = 100; val step = (hi - lo) / (m - 1)
+    val olsCurve = Array(m) { i -&gt;
+        val g = doubleArrayOf(lo + i * step)
+        doubleArrayOf(g[0], ols.predict(g))
+    }
+    val figure = ScatterPlot.of(points, 'o').figure()
+    figure.setLegendVisible(true)
+    figure.add(LinePlot.of(olsCurve, Line.Style.DASH, Color.DARK_GRAY, "OLS"))
+    for (k in models.indices) {
+        val curve = Array(m) { i -&gt;
+            val g = doubleArrayOf(lo + i * step)
+            doubleArrayOf(g[0], models[k].predict(g))
+        }
+        figure.add(LinePlot.of(curve, Line.Style.SOLID, Palette.get(k), labels[k]))
+    }
+    return figure
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Figure (call .show() to open)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>With large <code>lambda</code> values, we can observe that more and more
-        parameters are regularized towards to 0.</p>
 
-    <h2 id="rbf">Radial Basis Function Networks</h2>
+    <h3 id="visualize2d">visualize2d</h3>
 
-    <p>A radial basis function network is an
-        artificial neural network that uses radial basis functions as activation
-        functions. It is a linear combination of radial basis functions. They are
-        used in function approximation, time series prediction, and control.</p>
+    <p>Mesh predictions as <code>Heatmap</code> + <code>Contour</code>, with a subsampled scatter overlay. Same dual overloads as 1-D (<code>x1</code>/<code>x2</code> column names for Formula models).</p>
 
-    <p>In its basic form, radial basis function network is in the form</p>
-
-    <div class="code-playground glass" data-lang="markup">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">XML</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-markup"><code class="language-markup">
-    y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
-    </code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
-
-    <p>where the approximating function y(x) is represented as a sum of N radial
-        basis functions &phi;, each associated with a different center c<sub>i</sub>,
-        and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
-        one usually chooses Euclidean distance. The weights w<sub>i</sub> can
-        be estimated using the matrix methods of linear least squares, because
-        the approximating function is linear in the weights.</p>
-
-    <p>RBF networks are typically trained by a two-step algorithm.
-        In the first step, the center vectors <code>c<sub>i</sub></code>
-        of the RBF functions in the hidden layer are chosen.
-        This step can be performed in several ways; centers can be randomly
-        sampled from some set of examples, or they can be determined
-        using k-means clustering. Note that this step is unsupervised.</p>
-
-    <p>The second step simply fits a linear model with coefficients <code>w<sub>i</sub></code> to
-        the hidden layer's outputs with respect to some objective function.
-        A common objective function, at least for regression/function estimation,
-        is the least squares function.</p>
-
-    <p>An optional third backpropagation step can be performed to fine-tune all the RBF
-        network's parameters.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -630,39 +709,172 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-8-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class RBFNetwork {
-        public static RBFNetwork&lt;T&gt; fit(T[] x, int[] y, RBF&lt;T&gt;[] rbf, boolean normalized);
+      <pre class="playground-source language-java"><code class="language-java">import smile.data.DataFrame;
+import smile.math.MathEx;
+import smile.plot.swing.*;
+import smile.regression.DataFrameRegression;
+import smile.regression.Regression;
+
+/** Heatmap + contour of mesh predictions with scatter overlay (subsampled). */
+Figure visualize2d(Regression&lt;double[]&gt; model, double[][] x, double[] y) {
+    double[] lower = MathEx.colMin(x);
+    double[] upper = MathEx.colMax(x);
+    double[] step = { (upper[0]-lower[0])/40, (upper[1]-lower[1])/40 };
+    lower[0] -= 2*step[0]; lower[1] -= 2*step[1];
+    upper[0] += 2*step[0]; upper[1] += 2*step[1];
+
+    int nx = (int) Math.round((upper[0]-lower[0])/step[0]) + 1;
+    int ny = (int) Math.round((upper[1]-lower[1])/step[1]) + 1;
+    double[] gx = new double[nx];
+    double[] gy = new double[ny];
+    for (int i = 0; i &lt; nx; i++) gx[i] = lower[0] + i * step[0];
+    for (int j = 0; j &lt; ny; j++) gy[j] = lower[1] + j * step[1];
+
+    double[][] z = new double[ny][nx];
+    for (int i = 0; i &lt; nx; i++)
+        for (int j = 0; j &lt; ny; j++)
+            z[j][i] = model.predict(new double[]{ gx[i], gy[j] });
+
+    int n = Math.min(x.length, 500);
+    double[][] pts = new double[n][2];
+    for (int i = 0; i &lt; n; i++) {
+        pts[i][0] = x[i][0];
+        pts[i][1] = x[i][1];
     }
-          </code></pre>
+
+    var figure = Heatmap.of(gx, gy, z).figure();
+    figure.add(new Contour(gx, gy, z, 8, false));
+    figure.add(ScatterPlot.of(pts, 'o'));
+    return figure;
+}
+
+Figure visualize2d(DataFrameRegression model, DataFrame train, String x1, String x2) {
+    double[][] x = train.select(x1, x2).toArray();
+    double[] y = model.formula().y(train).toDoubleArray();
+    double[] lower = MathEx.colMin(x);
+    double[] upper = MathEx.colMax(x);
+    double[] step = { (upper[0]-lower[0])/40, (upper[1]-lower[1])/40 };
+    lower[0] -= 2*step[0]; lower[1] -= 2*step[1];
+    upper[0] += 2*step[0]; upper[1] += 2*step[1];
+
+    int nx = (int) Math.round((upper[0]-lower[0])/step[0]) + 1;
+    int ny = (int) Math.round((upper[1]-lower[1])/step[1]) + 1;
+    double[] gx = new double[nx];
+    double[] gy = new double[ny];
+    for (int i = 0; i &lt; nx; i++) gx[i] = lower[0] + i * step[0];
+    for (int j = 0; j &lt; ny; j++) gy[j] = lower[1] + j * step[1];
+
+    double[][] grid = new double[nx * ny][2];
+    for (int i = 0, k = 0; i &lt; nx; i++)
+        for (int j = 0; j &lt; ny; j++, k++) {
+            grid[k][0] = gx[i];
+            grid[k][1] = gy[j];
+        }
+    double[] pred = model.predict(DataFrame.of(grid, x1, x2));
+    double[][] z = new double[ny][nx];
+    for (int i = 0, k = 0; i &lt; nx; i++)
+        for (int j = 0; j &lt; ny; j++, k++)
+            z[j][i] = pred[k];
+
+    int n = Math.min(x.length, 500);
+    double[][] pts = java.util.Arrays.copyOf(x, n);
+
+    var figure = Heatmap.of(gx, gy, z).figure();
+    figure.add(new Contour(gx, gy, z, 8, false));
+    figure.add(ScatterPlot.of(pts, 'o'));
+    return figure;
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Figure (call .show() to open)
+      </code></pre>
     </div>
     <div id="pg-8-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def rbfnet[T](x: Array[T], y: Array[Double], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T]
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.data.DataFrame
+import smile.math.MathEx
+import smile.plot.swing._
+import smile.regression.{DataFrameRegression, Regression}
 
-    def rbfnet(x: Array[Array[Double]], y: Array[Double], k: Int, normalized: Boolean = false): RBFNetwork[Array[Double]]
-    </code></pre>
+def visualize2d(model: Regression[Array[Double]], x: Array[Array[Double]], y: Array[Double]): Figure = {
+  val lower = MathEx.colMin(x); val upper = MathEx.colMax(x)
+  val step = Array((upper(0) - lower(0)) / 40, (upper(1) - lower(1)) / 40)
+  lower(0) -= 2 * step(0); lower(1) -= 2 * step(1)
+  upper(0) += 2 * step(0); upper(1) += 2 * step(1)
+  val nx = Math.round((upper(0) - lower(0)) / step(0)).toInt + 1
+  val ny = Math.round((upper(1) - lower(1)) / step(1)).toInt + 1
+  val gx = Array.tabulate(nx)(i =&gt; lower(0) + i * step(0))
+  val gy = Array.tabulate(ny)(j =&gt; lower(1) + j * step(1))
+  val z = Array.ofDim[Double](ny, nx)
+  for (i &lt;- 0 until nx; j &lt;- 0 until ny)
+    z(j)(i) = model.predict(Array(gx(i), gy(j)))
+  val pts = x.take(math.min(x.length, 500)).map(r =&gt; Array(r(0), r(1)))
+  val figure = Heatmap.of(gx, gy, z).figure()
+  figure.add(new Contour(gx, gy, z, 8, false))
+  figure.add(ScatterPlot.of(pts, 'o'))
+  figure
+}
+
+def visualize2d(model: DataFrameRegression, train: DataFrame, x1: String, x2: String): Figure = {
+  val x = train.select(x1, x2).toArray()
+  visualize2d(
+    new Regression[Array[Double]] {
+      def predict(xi: Array[Double]): Double =
+        model.predict(DataFrame.of(Array(xi), x1, x2)).head
+    },
+    x,
+    model.formula.y(train).toDoubleArray
+  )
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Figure (call .show() to open)
+      </code></pre>
     </div>
     <div id="pg-8-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun &lt;T&gt; rbfnet(x: Array&lt;T&gt;, y: DoubleArray, neurons: Array&lt;RBF&lt;T&gt;&gt;, normalized: Boolean = false): RBFNetwork&lt;T&gt;
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.data.DataFrame
+import smile.math.MathEx
+import smile.plot.swing.*
+import smile.regression.DataFrameRegression
+import smile.regression.Regression
 
-    fun rbfnet(x: Array&lt;DoubleArray&gt;, y: DoubleArray, k: Int, normalized: Boolean = false): RBFNetwork&lt;DoubleArray&gt;
-          </code></pre>
+fun visualize2d(model: Regression&lt;DoubleArray&gt;, x: Array&lt;DoubleArray&gt;, y: DoubleArray): Figure {
+    val lower = MathEx.colMin(x); val upper = MathEx.colMax(x)
+    val step = doubleArrayOf((upper[0] - lower[0]) / 40, (upper[1] - lower[1]) / 40)
+    lower[0] -= 2 * step[0]; lower[1] -= 2 * step[1]
+    upper[0] += 2 * step[0]; upper[1] += 2 * step[1]
+    val nx = Math.round((upper[0] - lower[0]) / step[0]).toInt() + 1
+    val ny = Math.round((upper[1] - lower[1]) / step[1]).toInt() + 1
+    val gx = DoubleArray(nx) { i -&gt; lower[0] + i * step[0] }
+    val gy = DoubleArray(ny) { j -&gt; lower[1] + j * step[1] }
+    val z = Array(ny) { DoubleArray(nx) }
+    for (i in 0 until nx) for (j in 0 until ny)
+        z[j][i] = model.predict(doubleArrayOf(gx[i], gy[j]))
+    val pts = Array(minOf(x.size, 500)) { i -&gt; doubleArrayOf(x[i][0], x[i][1]) }
+    val figure = Heatmap.of(gx, gy, z).figure()
+    figure.add(Contour(gx, gy, z, 8, false))
+    figure.add(ScatterPlot.of(pts, 'o'))
+    return figure
+}
+
+fun visualize2d(model: DataFrameRegression, train: DataFrame, x1: String, x2: String): Figure {
+    val x = train.select(x1, x2).toArray()
+    val y = model.formula().y(train).toDoubleArray()
+    val adapter = object : Regression&lt;DoubleArray&gt; {
+        override fun predict(xi: DoubleArray): Double =
+            model.predict(DataFrame.of(arrayOf(xi), x1, x2))[0]
+    }
+    return visualize2d(adapter, x, y)
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Figure (call .show() to open)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The popular choices for &phi; comprise the Gaussian function and the
-        so-called thin plate splines. The advantage of the thin plate splines is that
-        their conditioning is invariant under scalings. Gaussian, multi-quadric
-        and inverse multi-quadric are infinitely smooth and involve a scale
-        or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
-        r<sub><small>0</small></sub> tends to flatten the basis function. For a
-        given function, the quality of approximation may strongly depend on this
-        parameter. In particular, increasing r<sub><small>0</small></sub> has the
-        effect of better conditioning (the separation distance of the scaled points
-        increases).</p>
+
+    <h3 id="abalone">Abalone</h3>
+
+    <p><a href="api/java/smile/datasets/Abalone.html"><code>Abalone</code></a> predicts shell rings from physical measurements. Formula is <code>rings ~ .</code>; use <code>train()</code> / <code>test()</code> frames and <code>testy()</code> for hold-out RMSE.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -674,60 +886,85 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-9-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var y = diabetes.column("y").toDoubleArray();
-    var x = diabetes.select(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).toArray(); // use only the primary attributes
-    CrossValidation.regression(10, x, y,
-        (x, y) -> smile.regression.RBFNetwork.fit(x, y, RBF.fit(x, 10), false));
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Abalone
+import smile.regression.RandomForest
+import smile.validation.metric.RMSE
+
+var abalone = new Abalone()
+var model = RandomForest.fit(abalone.formula(), abalone.train(),
+    new RandomForest.Options(100))
+RMSE.of(abalone.testy(), model.predict(abalone.test()))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+test RMSE ≈ 2.07–2.18 depending on trees / seed
+      </code></pre>
     </div>
     <div id="pg-9-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val y = diabetes("y").toDoubleArray()
-    val x = diabetes.select((1 until 11).toArray: _*).toArray() // use only the primary attributes
-    cv.regression(10, x, y) { case (x, y) => smile.regression.rbfnet(x, y, 10) }
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Abalone
+import smile.regression._
+import smile.validation.metric.RMSE
+
+val abalone = new Abalone()
+val model = randomForest(abalone.formula, abalone.train, ntrees = 100)
+RMSE.of(abalone.testy, model.predict(abalone.test))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+test RMSE ≈ 2.07–2.18 depending on trees / seed
+      </code></pre>
     </div>
     <div id="pg-9-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    import smile.base.rbf.*;
-    import smile.validation.*;
-    val y = diabetes.column("y").toDoubleArray()
-    val x = diabetes.select(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).toArray() // use only the primary attributes
-    CrossValidation.regression(10, x, y, { x, y -> rbfnet(x, y, RBF.fit(x, 10), false) })
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Abalone
+import smile.regression.*
+import smile.validation.metric.RMSE
+
+val abalone = Abalone()
+val model = randomForest(abalone.formula(), abalone.train(), ntrees = 100)
+RMSE.of(abalone.testy(), model.predict(abalone.test()))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+test RMSE ≈ 2.07–2.18 depending on trees / seed
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Note that we use the fully qualified name <code>smile.regression.rbfnet</code>
-        in above example.
-        The reason is that we import both <code>smile.regression._</code> and
-        <code>smile.classification._</code> in the shell. And by Scala's scope rule,
-        the latter imported names shadow the same ones in earlier imported packages.
-        If you work only on regression problems in a shell session, just import
-        <code>smile.regression._</code> again to avoid using the fully qualified names.</p>
 
-    <p>A variant on RBF networks is normalized radial basis function (NRBF)
-        networks, in which we require the sum of the basis functions to be unity.
-        NRBF arises more naturally from a Bayesian statistical perspective. However,
-        there is no evidence that either the NRBF method is consistently superior
-        to the RBF method, or vice versa.</p>
+    <h2 id="algorithm-selection" class="title">Algorithm Selection Guide</h2>
 
-    <h2 id="svr">Support Vector Regression</h2>
+    <p>There is no universally best regressor. Use this table as a starting point.</p>
 
-    <p>Support vector machine can be used as a regression method, maintaining
-        all the main features of the algorithm. In the case of regression, a margin
-        of tolerance &epsilon; is set in approximation. The goal of SVR is to find
-        a function that has at most &epsilon; deviation from the response variable
-        for all the training data, and at the same time is as flat as possible.
-        In other words, we do not care about errors as long as they are less than &epsilon;,
-        but will not accept any deviation larger than this.</p>
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+        <tr><th>Situation</th><th>Recommended</th><th>Notes</th></tr>
+        </thead>
+        <tbody>
+        <tr><td>Strong default baseline</td><td><code>RandomForest</code></td><td>Robust mixed tabular features; free OOB error.</td></tr>
+        <tr><td>Highest tuned tabular accuracy</td><td><code>GradientTreeBoost</code></td><td>Usually strongest after tuning shrinkage / trees / loss.</td></tr>
+        <tr><td>Fast, interpretable linear</td><td><code>OLS</code>, <code>Ridge</code></td><td>Diagnostics (R², t-tests); Ridge under multicollinearity.</td></tr>
+        <tr><td>Sparse linear / selection</td><td><code>LASSO</code>, <code>ElasticNet</code></td><td>L1 (and L1+L2) shrinkage zeros coefficients.</td></tr>
+        <tr><td>Non-Gaussian response</td><td><code>GLM</code>, <code>GAM</code></td><td>Families / smooths; keep GLM short unless you need links.</td></tr>
+        <tr><td>Nonlinear, moderate <code>n</code></td><td><code>SVM</code> (ε-SVR), <code>RBFNetwork</code>, <code>GPR</code>, <code>MLP</code></td><td>Scale features first; GPR is O(n³).</td></tr>
+        <tr><td>Streaming / online</td><td>RLS (<code>OLS</code> recursive), <code>MLP</code></td><td>Check <code>online()</code> before <code>update</code>.</td></tr>
+        <tr><td>Large <code>n</code></td><td>Tree ensembles; approximate GPR</td><td>Prefer forests / GBM; use sparse or Nystrom GPR if needed.</td></tr>
+        </tbody>
+    </table>
+</div>
 
-    <p>Like SVM for classification, nonlinear SVR employs kernel trick for implict mapping.
-        And the model produced by SVR depends only on a subset of the training data, because the cost
-        function ignores any training data close to the model prediction (within
-        the &epsilon; threshold).</p>
+
+    <h2 id="ols" class="title">Ordinary Least Squares</h2>
+
+    <p>OLS fits a linear model by minimizing residual sum of squares. Prefer it when relationships are roughly linear, <code>n &gt; p</code>, and you want interpretable coefficients with R² / t-tests. Enable <code>recursive</code> (default) for RLS online updates; turn it off if you only need a batch fit.</p>
+    <p>On Longley, unit tests report R² ≈ <strong>0.9926</strong>. For 1-D curves, fit on a synthetic DataFrame and call the <code>DataFrameRegression</code> overload of <code>visualize1d</code>.</p>
+
+    <p>Hyperparameters are fields of the nested <code>OLS.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip).</p>
+
+    <dl class="options-dl">
+        <dt><code>method</code><br><code>smile.ols.method</code></dt>
+        <dd>Fitting method: <code>QR</code> (default) or <code>SVD</code>.</dd>
+        <dt><code>stderr</code><br><code>smile.ols.standard_error</code></dt>
+        <dd>If true, compute coefficient standard errors / t-tests (default <code>true</code>).</dd>
+        <dt><code>recursive</code><br><code>smile.ols.recursive</code></dt>
+        <dd>If true, enable recursive least squares <code>update</code> (default <code>true</code>).</dd>
+    </dl>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -739,46 +976,41 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-10-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class SVM {
-        public static KernelMachine&lt;T&gt; fit(T[] x,
-                                           double[] y,
-                                           MercerKernel&lt;T&gt; kernel,
-                                           Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Longley
+import smile.regression.OLS
+
+var longley = new Longley()
+var model = OLS.fit(longley.formula(), longley.data())
+model.RSquared()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+R² ≈ 0.9926
+      </code></pre>
     </div>
     <div id="pg-10-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def svm[T](x: Array[T],
-               y: Array[Double],
-               kernel: MercerKernel[T],
-               eps: Double,
-               C: Double,
-               tol: Double = 1E-3): KernelMachine[T]
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Longley
+import smile.regression._
+
+val longley = new Longley()
+val model = lm(longley.formula, longley.data)
+model.RSquared()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+R² ≈ 0.9926
+      </code></pre>
     </div>
     <div id="pg-10-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun &lt;T&gt; svm(x: Array&lt;T&gt;,
-               y: DoubleArray,
-               kernel: MercerKernel&lt;T&gt;,
-               eps: Double,
-               C: Double,
-               tol: Double = 1E-3): KernelMachine&lt;T&gt;
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Longley
+import smile.regression.*
+
+val longley = Longley()
+val model = lm(longley.formula(), longley.data())
+model.RSquared()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+R² ≈ 0.9926
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where the parameter <code>x</code> is the training data,
-        <code>y</code> is the response variable,
-        <code>kernel</code> is the kernel function,
-        <code>eps</code> is the loss function error threshold,
-        <code>C</code> is the soft margin penalty parameter,
-        <code>weight</code> is the optional positive instance weight so that the soft margin penalty
-        parameter for instance <i>i</i> will be <code>weight(i) * C</code>,
-        and <code>tol</code> the tolerance of convergence test.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -790,60 +1022,69 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-11-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var options = new smile.regression.SVM.Options(20, 10);
-    CrossValidation.regression(10, x, y,
-        (x, y) -> smile.regression.SVM.fit(x, y, new GaussianKernel(0.06), options));
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">// assumes generate1d / toFrame1d / visualize1d from Datasets
+import smile.data.formula.Formula
+import smile.regression.OLS
+
+double[][] x = generate1d(80);
+double[] y = response1d(x);
+var df = toFrame1d(x, y);
+var model = OLS.fit(Formula.lhs("y"), df);
+visualize1d(model, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: OLS fit curve)
+      </code></pre>
     </div>
     <div id="pg-11-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    import smile.validation.*;
-    import smile.math.kernel.*;
-    cv.regression(10, x, y) { case (x, y) =>
-        smile.regression.svm(x, y, new GaussianKernel(0.06), 20, 10)
-    }
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.data.formula.Formula
+import smile.regression._
+
+val x = generate1d(80); val y = response1d(x)
+val df = toFrame1d(x, y)
+val model = lm(Formula.lhs("y"), df)
+visualize1d(model, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: OLS fit curve)
+      </code></pre>
     </div>
     <div id="pg-11-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    CrossValidation.regression(10, x, y,
-        { x, y -> smile.regression.svm(x, y, GaussianKernel(0.06), 20.0, 10.0, 1E-3) })
-          </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.data.formula.Formula
+import smile.regression.*
+
+val x = generate1d(80); val y = response1d(x)
+val df = toFrame1d(x, y)
+val model = lm(Formula.lhs("y"), df)
+visualize1d(model, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: OLS fit curve)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Applying SVR to the diabetes data, we observe a smaller RMSE by 10-fold cross validation
-        compared to the RBF networks in previous section. Note that we have not optimized the hyperparameters in both cases.</p>
 
-    <h2 id="tree">Regression Tree</h2>
+    <figure class="plot-figure">
+        <img src="images/regression-ols-1d.png" class="enlarge" alt="OLS fit on synthetic 1-D data" />
+        <figcaption>OLS on noisy <code>sin(2πx)</code> — a linear model underfits the sinusoid; compare with RBF / GPR / SVR below.</figcaption>
+    </figure>
 
-    <p>Similar to decision trees, regression trees can be learned by
-        splitting the training set into subsets based on an attribute value
-        test. This process is repeated on each derived subset in a recursive
-        manner called recursive partitioning. The recursion is completed when
-        the subset at a node all has the same value of the target variable,
-        or when splitting no longer adds value to the predictions.</p>
-        
-    <p>The algorithms that are used for constructing decision trees usually
-        work top-down by choosing a variable at each step that is the next best
-        variable to use in splitting the set of items. "Best" is defined by how
-        well the variable splits the set into homogeneous subsets that have
-        the same value of the target variable. Different algorithms use different
-        formulae for measuring "best". Used by the CART algorithm, Gini impurity
-        is a measure of how often a randomly chosen element from the set would
-        be incorrectly labeled if it were randomly labeled according to the
-        distribution of labels in the subset. Gini impurity can be computed by
-        summing the probability of each item being chosen times the probability
-        of a mistake in categorizing that item. It reaches its minimum (zero) when
-        all cases in the node fall into a single target category. Information gain
-        is another popular measure, used by the ID3, C4.5 and C5.0 algorithms.
-        Information gain is based on the concept of entropy used in information
-        theory. For categorical variables with different number of levels, however,
-        information gain are biased in favor of those attributes with more levels.
-        Instead, one may employ the information gain ratio, which solves the drawback
-        of information gain.</p>
+    <p><strong>RLS tip.</strong> After <code>OLS.fit(…, new OLS.Options(…, true))</code>, stream new rows with <code>model.update(tuple)</code> or <code>model.update(features, target)</code> instead of refitting from scratch.</p>
+
+
+    <h2 id="ridge" class="title">Ridge Regression</h2>
+
+    <p>Ridge adds an L2 penalty <code>λ‖β‖²</code>, shrinking coefficients toward zero (or a target <code>beta0</code> in the generalized form). Use it under multicollinearity or when <code>p</code> approaches <code>n</code>. Fit with <code>RidgeRegression.fit(formula, data, lambda)</code> or <code>Options(lambda)</code> / <code>Options(lambda, beta0)</code>.</p>
+    <p>Longley LOOCV RMSE with <code>λ = 0.1</code> is about <strong>1.732</strong> in the unit tests. On the shared 1-D sinusoid, several <code>λ</code> values are plotted with OLS via <code>compare1d</code> — stronger shrinkage pulls the line toward a constant.</p>
+
+    <p>Hyperparameters are fields of the nested <code>RidgeRegression.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip).</p>
+
+    <dl class="options-dl">
+        <dt><code>lambda</code><br><code>smile.ridge.lambda</code></dt>
+        <dd>Shrinkage strength (scalar or per-coefficient array). Larger = more shrinkage.</dd>
+        <dt><code>beta0</code><br><code>smile.ridge.beta0</code></dt>
+        <dd>Generalized ridge target (default <code>0</code>); length 1 or <code>p</code>.</dd>
+    </dl>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -855,48 +1096,45 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-12-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class RegressionTree {
-         public static RegressionTree fit(Formula formula,
-                                          DataFrame data,
-                                          Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Longley
+import smile.regression.RidgeRegression
+import smile.validation.LOOCV
+
+var longley = new Longley()
+LOOCV.regression(longley.formula(), longley.data(),
+    (f, data) -&gt; RidgeRegression.fit(f, data, 0.1))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+LOOCV RMSE ≈ 1.732  (Longley, λ=0.1)
+      </code></pre>
     </div>
     <div id="pg-12-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def cart(formula: Formula,
-             data: DataFrame,
-             splitRule: SplitRule = SplitRule.GINI,
-             maxDepth: Int = 20,
-             maxNodes: Int = 0,
-             nodeSize: Int = 5): RegressionTree
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Longley
+import smile.regression._
+import smile.validation.LOOCV
+
+val longley = new Longley()
+LOOCV.regression(longley.formula, longley.data,
+  (f, data) =&gt; ridge(f, data, 0.1))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+LOOCV RMSE ≈ 1.732  (Longley, λ=0.1)
+      </code></pre>
     </div>
     <div id="pg-12-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun cart(formula: Formula,
-             data: DataFrame,
-             splitRule: SplitRule = SplitRule.GINI,
-             maxDepth: Int = 20,
-             maxNodes: Int = 0,
-             nodeSize: Int = 5): RegressionTree
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Longley
+import smile.regression.*
+import smile.validation.LOOCV
+
+val longley = Longley()
+LOOCV.regression(longley.formula(), longley.data()) { f, data -&gt;
+    ridge(f, data, 0.1)
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+LOOCV RMSE ≈ 1.732  (Longley, λ=0.1)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where the parameter <code>x</code> is the training data,
-        <code>y</code> is the response variable,
-        <code>maxNodes</code> is the maximum number of leaf nodes in the tree as a regularization,
-        and The optional <code>attributes</code> is the attribute properties. If not provided, all attributes
-        are treated as numeric values.</p>
-
-    <p>Similar to <code>rbfnet</code>, we have to use the fully qualified name
-        <code>smile.regression.randomForest</code> in the shell for regression.</p>
-
-    <p>Applying to the diabetes data, we get RMSE 67.9 for 10-fold cross validation
-        with regression trees of 200 nodes.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -908,88 +1146,99 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-13-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
-        (formula, data) -> RegressionTree.fit(formula, data));
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">// assumes generate1d / response1d / toFrame1d / compare1d from Datasets
+import smile.data.formula.Formula
+import smile.regression.DataFrameRegression
+import smile.regression.OLS
+import smile.regression.RidgeRegression
+
+double[][] x = generate1d(80);
+double[] y = response1d(x);
+var df = toFrame1d(x, y);
+var formula = Formula.lhs("y");
+var ols = OLS.fit(formula, df);
+double[] lambdas = {0.1, 1.0, 10.0, 100.0};
+DataFrameRegression[] models = new DataFrameRegression[lambdas.length];
+String[] labels = new String[lambdas.length];
+for (int i = 0; i &lt; lambdas.length; i++) {
+    models[i] = RidgeRegression.fit(formula, df, lambdas[i]);
+    labels[i] = "λ=" + lambdas[i];
+}
+compare1d(ols, models, labels, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: Ridge λ grid vs OLS)
+      </code></pre>
     </div>
     <div id="pg-13-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    cv.regression(10, "y"~, diabetes) { (formula, data) =>
-        smile.regression.cart(formula, data, 200)
-    }
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.data.formula.Formula
+import smile.regression._
+
+val x = generate1d(80); val y = response1d(x)
+val df = toFrame1d(x, y)
+val formula = Formula.lhs("y")
+val ols = lm(formula, df)
+val lambdas = Array(0.1, 1.0, 10.0, 100.0)
+val models = lambdas.map(l =&gt; ridge(formula, df, l): DataFrameRegression)
+val labels = lambdas.map(l =&gt; s"λ=$l")
+compare1d(ols, models, labels, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: Ridge λ grid vs OLS)
+      </code></pre>
     </div>
     <div id="pg-13-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
-        { formula, data -> cart(formula, data) })
-          </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.data.formula.Formula
+import smile.regression.*
+
+val x = generate1d(80); val y = response1d(x)
+val df = toFrame1d(x, y)
+val formula = Formula.lhs("y")
+val ols = lm(formula, df)
+val lambdas = doubleArrayOf(0.1, 1.0, 10.0, 100.0)
+val models = Array(lambdas.size) { i -&gt;
+    ridge(formula, df, lambdas[i]) as DataFrameRegression
+}
+val labels = Array(lambdas.size) { i -&gt; "λ=${lambdas[i]}" }
+compare1d(ols, models, labels, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: Ridge λ grid vs OLS)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Classification and Regression Tree techniques have a number of advantages
-        over many of those alternative techniques.</p>
 
-    <dl>
-        <dt>Simple to understand and interpret:</dt>
-        <dd><p>In most cases, the interpretation of results summarized in a tree is
-            very simple. This simplicity is useful not only for purposes of rapid
-            classification of new observations, but can also often yield a much simpler
-            "model" for explaining why observations are classified or predicted in a
-            particular manner.</p></dd>
+    <figure class="plot-figure">
+        <img src="images/regression-ridge-1d.png" class="enlarge" alt="Ridge vs OLS on the shared 1-D sinusoid" />
+        <figcaption>Larger <code>λ</code> shrinks the slope toward zero relative to OLS.</figcaption>
+    </figure>
 
-        <dt>Able to handle both numerical and categorical data:</dt>
-        <dd><p>Other techniques are usually specialized in analyzing datasets that
-            have only one type of variable.</p></dd>
 
-        <dt>Nonparametric and nonlinear:</dt>
-        <dd><p>The final results of using tree methods for classification or regression
-            can be summarized in a series of (usually few) logical if-then conditions
-            (tree nodes). Therefore, there is no implicit assumption that the underlying
-            relationships between the predictor variables and the dependent variable
-            are linear, follow some specific non-linear link function, or that they
-            are even monotonic in nature. Thus, tree methods are particularly well
-            suited for data mining tasks, where there is often little a priori
-            knowledge nor any coherent set of theories or predictions regarding which
-            variables are related and how. In those types of data analytics, tree
-            methods can often reveal simple relationships between just a few variables
-            that could have easily gone unnoticed using other analytic techniques.</p></dd>
+    <h2 id="lasso" class="title">LASSO</h2>
+
+    <p>LASSO adds an L1 penalty and yields sparse solutions (exact zeros). Solved by an interior-point / PCG method on the standardised design. Main knobs: <code>lambda</code>, <code>tol</code>, <code>maxIter</code>; advanced line-search / PCG fields are available for hard problems.</p>
+    <p>On one feature, larger <code>λ</code> shrinks the slope like Ridge; with many predictors it also zeros coefficients. The plot below sweeps several <code>λ</code> values on the same sinusoid used for OLS.</p>
+
+    <p>Hyperparameters are fields of the nested <code>LASSO.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). Focus on <code>lambda</code>, <code>tol</code>, and <code>maxIter</code> first.</p>
+
+    <dl class="options-dl">
+        <dt><code>lambda</code><br><code>smile.lasso.lambda</code></dt>
+        <dd>L1 shrinkage (default <code>1</code>).</dd>
+        <dt><code>tol</code><br><code>smile.lasso.tolerance</code></dt>
+        <dd>Relative duality-gap tolerance (default <code>1E-4</code>).</dd>
+        <dt><code>maxIter</code><br><code>smile.lasso.iterations</code></dt>
+        <dd>Maximum IPM iterations (default <code>1000</code>).</dd>
+        <dt><code>alpha</code><br><code>smile.lasso.alpha</code></dt>
+        <dd>Line-search parameter (advanced).</dd>
+        <dt><code>beta</code><br><code>smile.lasso.beta</code></dt>
+        <dd>Line-search decrease factor (advanced).</dd>
+        <dt><code>eta</code><br><code>smile.lasso.eta</code></dt>
+        <dd>PCG termination tolerance (advanced).</dd>
+        <dt><code>lsMaxIter</code><br><code>smile.lasso.line_search_iterations</code></dt>
+        <dd>Max line-search iters.</dd>
+        <dt><code>pcgMaxIter</code><br><code>smile.lasso.pcg_iterations</code></dt>
+        <dd>Max PCG iters.</dd>
     </dl>
 
-    <p>One major problem with classification and regression trees is their high
-        variance. Often a small change in the data can result in a very different
-        series of splits, making interpretation somewhat precarious. Besides,
-        decision-tree learners can create over-complex trees that cause over-fitting.
-        Mechanisms such as pruning are necessary to avoid this problem.
-        Another limitation of trees is the lack of smoothness of the prediction
-        surface.</p>
-        
-    <p>Some techniques such as bagging, boosting, and random forest use more than
-        one decision tree for their analysis.</p>
-
-    <h2 id="forest">Random Forest</h2>
-
-    <p>Random forest is an ensemble classifier
-        that consists of many decision trees and outputs the majority vote of
-        individual trees. The method combines bagging idea and the random
-        selection of features.</p>
-        
-    <p>Each tree is constructed using the following algorithm:</p>
-        
-    <ol>
-        <li>If the number of cases in the training set is N, randomly sample N cases
-        with replacement from the original data. This sample will
-        be the training set for growing the tree.</li>
-
-        <li> If there are M input variables, a number m &lt;&lt; M is specified such
-        that at each node, m variables are selected at random out of the M and
-        the best split on these m is used to split the node. The value of m is
-        held constant during the forest growing.</li>
-
-        <li>Each tree is grown to the largest extent possible. There is no pruning.</li>
-    </ol>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -1001,60 +1250,45 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-14-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class RandomForest {
-         public static RandomForest fit(Formula formula,
-                                        DataFrame data,
-                                        Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Longley
+import smile.regression.LASSO
+import smile.validation.LOOCV
+
+var longley = new Longley()
+LOOCV.regression(longley.formula(), longley.data(),
+    (f, data) -&gt; LASSO.fit(f, data, new LASSO.Options(0.1)))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+LOOCV RMSE ≈ 1.4149  (Longley, λ=0.1)
+      </code></pre>
     </div>
     <div id="pg-14-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def randomForest(formula: Formula,
-                     data: DataFrame,
-                     ntrees: Int = 500,
-                     mtry: Int = 0,
-                     maxDepth: Int = 20,
-                     maxNodes: Int = 0,
-                     nodeSize: Int = 5,
-                     subsample: Double = 1.0): RandomForest
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Longley
+import smile.regression._
+import smile.validation.LOOCV
+
+val longley = new Longley()
+LOOCV.regression(longley.formula, longley.data,
+  (f, data) =&gt; lasso(f, data, 0.1))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+LOOCV RMSE ≈ 1.4149  (Longley, λ=0.1)
+      </code></pre>
     </div>
     <div id="pg-14-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun randomForest(formula: Formula,
-                     data: DataFrame,
-                     ntrees: Int = 500,
-                     mtry: Int = 0,
-                     maxDepth: Int = 20,
-                     maxNodes: Int = 0,
-                     nodeSize: Int = 5,
-                     subsample: Double = 1.0): RandomForest
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Longley
+import smile.regression.*
+import smile.validation.LOOCV
+
+val longley = Longley()
+LOOCV.regression(longley.formula(), longley.data()) { f, data -&gt;
+    lasso(f, data, 0.1)
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+LOOCV RMSE ≈ 1.4149  (Longley, λ=0.1)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where <code>ntrees</code> is the number of trees,
-        <code>nodeSize</code> is the number of instances in a node below which the tree will
-        not split, setting nodeSize = 5 generally gives good results,
-        and <code>maxNodes</code> is the maximum number of leaf nodes.
-        The parameter <code>mtry</code> is the number of input variables to be used to determine the decision
-        at a node of the tree. The default value p/3 seems to give generally good performance,
-        where p is the number of variables.
-        Besides, <code>subsample</code> is the sampling rate for training tree. The default value
-        1.0 means sampling with replacement. Otherwise, the value &lt; 1.0 means
-        sampling without replacement.
-        The optional <code>attributes</code> is the attribute properties. If not provided, all attributes
-        are treated as numeric values.</p>
-
-    <p>Similar to <code>rbfnet</code>, we have to use the fully qualified name
-        <code>smile.regression.randomForest</code> in the shell for regression.</p>
-
-    <p>Applying to the diabetes data, we get RMSE 56.4 for 10-fold cross validation
-        with 500 regression trees of 200 nodes, which significantly smaller than
-        a single regression tree.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -1066,89 +1300,91 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-15-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
-        (formula, data) -> smile.regression.RandomForest.fit(formula, data));
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">// assumes generate1d / response1d / toFrame1d / compare1d from Datasets
+import smile.data.formula.Formula
+import smile.regression.DataFrameRegression
+import smile.regression.LASSO
+import smile.regression.OLS
+
+double[][] x = generate1d(80);
+double[] y = response1d(x);
+var df = toFrame1d(x, y);
+var formula = Formula.lhs("y");
+var ols = OLS.fit(formula, df);
+double[] lambdas = {0.01, 0.1, 0.5, 1.0};
+DataFrameRegression[] models = new DataFrameRegression[lambdas.length];
+String[] labels = new String[lambdas.length];
+for (int i = 0; i &lt; lambdas.length; i++) {
+    models[i] = LASSO.fit(formula, df, new LASSO.Options(lambdas[i]));
+    labels[i] = "λ=" + lambdas[i];
+}
+compare1d(ols, models, labels, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: LASSO λ grid vs OLS)
+      </code></pre>
     </div>
     <div id="pg-15-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    cv.regression(10, "y"~, diabetes) { (formula, data) =>
-        smile.regression.randomForest(formula, data, maxNodes = 100)
-    }
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.data.formula.Formula
+import smile.regression._
+
+val x = generate1d(80); val y = response1d(x)
+val df = toFrame1d(x, y)
+val formula = Formula.lhs("y")
+val ols = lm(formula, df)
+val lambdas = Array(0.01, 0.1, 0.5, 1.0)
+val models = lambdas.map(l =&gt; lasso(formula, df, l): DataFrameRegression)
+val labels = lambdas.map(l =&gt; s"λ=$l")
+compare1d(ols, models, labels, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: LASSO λ grid vs OLS)
+      </code></pre>
     </div>
     <div id="pg-15-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
-        { formula, data -> randomForest(formula, data) })
-          </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.data.formula.Formula
+import smile.regression.*
+
+val x = generate1d(80); val y = response1d(x)
+val df = toFrame1d(x, y)
+val formula = Formula.lhs("y")
+val ols = lm(formula, df)
+val lambdas = doubleArrayOf(0.01, 0.1, 0.5, 1.0)
+val models = Array(lambdas.size) { i -&gt;
+    lasso(formula, df, lambdas[i]) as DataFrameRegression
+}
+val labels = Array(lambdas.size) { i -&gt; "λ=${lambdas[i]}" }
+compare1d(ols, models, labels, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: LASSO λ grid vs OLS)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The advantages of random forest are:</p>
-        
-    <ul>
-        <li>For many data sets, it produces a highly accurate classifier.</li>
-        <li>It runs efficiently on large data sets.</li>
-        <li>It can handle thousands of input variables without variable deletion.</li>
-        <li>It gives estimates of what variables are important in the classification.</li>
-        <li>It generates an internal unbiased estimate of the generalization error
-        as the forest building progresses.</li>
-        <li>It has an effective method for estimating missing data and maintains
-        accuracy when a large proportion of the data are missing.</li>
-    </ul>
-        
-    <p>The disadvantages are</p>
-        
-    <ul>
-        <li>Random forests are prone to over-fitting for some datasets. This is
-        even more pronounced on noisy data.</li>
 
-        <li>For data including categorical variables with different number of
-        levels, random forests are biased in favor of those attributes with more
-        levels. Therefore, the variable importance scores from random forest are
-        not reliable for this type of data.</li>
-    </ul>
+    <figure class="plot-figure">
+        <img src="images/regression-lasso-1d.png" class="enlarge" alt="LASSO vs OLS on the shared 1-D sinusoid" />
+        <figcaption>Larger <code>λ</code> flattens the line; strong L1 can drive the slope to (near) zero.</figcaption>
+    </figure>
 
-    <h2 id="gbm">Gradient Boosting</h2>
 
-    <p>Gradient boosting is typically used
-        with decision trees (especially CART regression trees) of a fixed size as
-        base learners. For this special case Friedman proposes a modification to
-        gradient boosting method which improves the quality of fit of each base
-        learner.</p>
-        
-    <p>Generic gradient boosting at the <i>t</i>-th step would fit a regression tree to
-        pseudo-residuals. Let J be the number of its leaves. The tree partitions
-        the input space into J disjoint regions and predicts a constant value in
-        each region. The parameter J controls the maximum allowed
-        level of interaction between variables in the model. With J = 2 (decision
-        stumps), no interaction between variables is allowed. With J = 3 the model
-        may include effects of the interaction between up to two variables, and
-        so on. Hastie et al. comment that typically 4 &le; J &le; 8 work well
-        for boosting and results are fairly insensitive to the choice of in
-        this range, J = 2 is insufficient for many applications, and J &gt; 10 is
-        unlikely to be required.</p>
-        
-    <p>Fitting the training set too closely can lead to degradation of the model's
-        generalization ability. Several so-called regularization techniques reduce
-        this over-fitting effect by constraining the fitting procedure.
-        One natural regularization parameter is the number of gradient boosting
-        iterations T (i.e. the number of trees in the model when the base learner
-        is a decision tree). Increasing T reduces the error on training set,
-        but setting it too high may lead to over-fitting. An optimal value of T
-        is often selected by monitoring prediction error on a separate validation
-        data set.</p>
-        
-    <p>Another regularization approach is the shrinkage which times a parameter
-        &eta; (called the "learning rate") to update term.
-        Empirically it has been found that using small learning rates (such as
-        &eta; &lt; 0.1) yields dramatic improvements in model's generalization ability
-        over gradient boosting without shrinking (&eta; = 1). However, it comes at
-        the price of increasing computational time both during training and
-        prediction: lower learning rate requires more iterations.</p>
+    <h2 id="elastic-net" class="title">Elastic Net</h2>
+
+    <p>Elastic Net combines L1 and L2 penalties (<code>lambda1</code>, <code>lambda2</code>), bridging LASSO and Ridge. Use it when predictors are correlated and you still want some sparsity. Same IPM solver family as LASSO.</p>
+    <p>The one-feature plot below sweeps several <code>(λ₁, λ₂)</code> pairs on the same sinusoid used for OLS.</p>
+
+    <p>Hyperparameters are fields of the nested <code>ElasticNet.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). Advanced fields mirror LASSO (<code>alpha</code>, <code>beta</code>, <code>eta</code>, line-search / PCG caps).</p>
+
+    <dl class="options-dl">
+        <dt><code>lambda1</code><br><code>smile.elastic_net.lambda1</code></dt>
+        <dd>L1 shrinkage (must be &gt; 0).</dd>
+        <dt><code>lambda2</code><br><code>smile.elastic_net.lambda2</code></dt>
+        <dd>L2 shrinkage (must be &gt; 0).</dd>
+        <dt><code>tol</code><br><code>smile.elastic_net.tolerance</code></dt>
+        <dd>Duality-gap tolerance (default <code>1E-4</code>).</dd>
+        <dt><code>maxIter</code><br><code>smile.elastic_net.iterations</code></dt>
+        <dd>Max IPM iterations (default <code>1000</code>).</dd>
+    </dl>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -1160,62 +1396,45 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-16-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class GradientTreeBoost {
-         public static GradientTreeBoost fit(Formula formula,
-                                             DataFrame data,
-                                             Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Longley
+import smile.regression.ElasticNet
+import smile.validation.LOOCV
+
+var longley = new Longley()
+LOOCV.regression(longley.formula(), longley.data(),
+    (f, data) -&gt; ElasticNet.fit(f, data, 0.1, 0.1))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+LOOCV RMSE ≈ 1.7401  (Longley, λ1=λ2=0.1)
+      </code></pre>
     </div>
     <div id="pg-16-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def gbm(formula: Formula,
-            data: DataFrame,
-            loss: Loss = Loss.ls(),
-            ntrees: Int = 500,
-            maxDepth: Int = 20,
-            maxNodes: Int = 6,
-            nodeSize: Int = 5,
-            shrinkage: Double = 0.05,
-            subsample: Double = 0.7): GradientTreeBoost
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Longley
+import smile.regression.ElasticNet
+import smile.validation.LOOCV
+
+val longley = new Longley()
+LOOCV.regression(longley.formula, longley.data,
+  (f, data) =&gt; ElasticNet.fit(f, data, 0.1, 0.1))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+LOOCV RMSE ≈ 1.7401  (Longley, λ1=λ2=0.1)
+      </code></pre>
     </div>
     <div id="pg-16-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun gbm(formula: Formula,
-            data: DataFrame,
-            loss: Loss = Loss.ls(),
-            ntrees: Int = 500,
-            maxDepth: Int = 20,
-            maxNodes: Int = 6,
-            nodeSize: Int = 5,
-            shrinkage: Double = 0.05,
-            subsample: Double = 0.7): GradientTreeBoost
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Longley
+import smile.regression.ElasticNet
+import smile.validation.LOOCV
+
+val longley = Longley()
+LOOCV.regression(longley.formula(), longley.data()) { f, data -&gt;
+    ElasticNet.fit(f, data, 0.1, 0.1)
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+LOOCV RMSE ≈ 1.7401  (Longley, λ1=λ2=0.1)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where the parameter <code>x</code> is the training data,
-        <code>y</code> is the response variable,
-        <code>ntrees</code> is the number of trees,
-        and <code>maxNodes</code> is the maximum number of leaf nodes.
-        The parameter <code>loss</code> is the loss function for regression. By default, least absolute
-        deviation is employed for robust regression.
-        The parameter <code>shrinkage</code> is the shrinkage parameter in (0, 1] controls the learning rate of procedure.
-        Besides, <code>subsample</code> is the sampling rate for training tree. The default value
-        1.0 means sampling with replacement. Otherwise, the value &lt; 1.0 means
-        sampling without replacement.
-        The optional <code>attributes</code> is the attribute properties. If not provided, all attributes
-        are treated as numeric values.</p>
-
-    <p>Similar to <code>rbfnet</code>, we have to use the fully qualified name
-        <code>smile.regression.gbm</code> in the shell for regression.</p>
-
-    <p>Applying to the diabetes data, we get RMSE 58.8 for 10-fold cross validation
-        with 500 iterations. This is comparable to the result of random forest but
-        uses only 6 nodes for each regression tree.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -1227,91 +1446,109 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-17-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
-        (formula, data) -> smile.regression.GradientTreeBoost.fit(formula, data));
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">// assumes generate1d / response1d / toFrame1d / compare1d from Datasets
+import smile.data.formula.Formula
+import smile.regression.DataFrameRegression
+import smile.regression.ElasticNet
+import smile.regression.OLS
+
+double[][] x = generate1d(80);
+double[] y = response1d(x);
+var df = toFrame1d(x, y);
+var formula = Formula.lhs("y");
+var ols = OLS.fit(formula, df);
+double[] l1 = {0.1, 0.3, 1.0, 0.1};
+double[] l2 = {0.1, 0.3, 0.1, 1.0};
+DataFrameRegression[] models = new DataFrameRegression[l1.length];
+String[] labels = new String[l1.length];
+for (int i = 0; i &lt; l1.length; i++) {
+    models[i] = ElasticNet.fit(formula, df, l1[i], l2[i]);
+    labels[i] = "λ1=" + l1[i] + ", λ2=" + l2[i];
+}
+compare1d(ols, models, labels, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: Elastic Net grid vs OLS)
+      </code></pre>
     </div>
     <div id="pg-17-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    cv.regression(10, "y"~, diabetes) { (formula, data) =>
-        smile.regression.gbm(formula, data)
-    }
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.data.formula.Formula
+import smile.regression.{DataFrameRegression, ElasticNet, OLS}
+
+val x = generate1d(80); val y = response1d(x)
+val df = toFrame1d(x, y)
+val formula = Formula.lhs("y")
+val ols = OLS.fit(formula, df)
+val lambdas = Array((0.1, 0.1), (0.3, 0.3), (1.0, 0.1), (0.1, 1.0))
+val models = lambdas.map { case (l1, l2) =&gt;
+  ElasticNet.fit(formula, df, l1, l2): DataFrameRegression
+}
+val labels = lambdas.map { case (l1, l2) =&gt; s"λ1=$l1, λ2=$l2" }
+compare1d(ols, models, labels, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: Elastic Net grid vs OLS)
+      </code></pre>
     </div>
     <div id="pg-17-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    CrossValidation.regression(10, Formula.lhs("y"), diabetes,
-        { formula, data -> gbm(formula, data) })
-          </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.data.formula.Formula
+import smile.regression.DataFrameRegression
+import smile.regression.ElasticNet
+import smile.regression.OLS
+
+val x = generate1d(80); val y = response1d(x)
+val df = toFrame1d(x, y)
+val formula = Formula.lhs("y")
+val ols = OLS.fit(formula, df)
+val lambdas = arrayOf(0.1 to 0.1, 0.3 to 0.3, 1.0 to 0.1, 0.1 to 1.0)
+val models = Array(lambdas.size) { i -&gt;
+    val (l1, l2) = lambdas[i]
+    ElasticNet.fit(formula, df, l1, l2) as DataFrameRegression
+}
+val labels = Array(lambdas.size) { i -&gt;
+    val (l1, l2) = lambdas[i]
+    "λ1=$l1, λ2=$l2"
+}
+compare1d(ols, models, labels, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: Elastic Net grid vs OLS)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Soon after the introduction of gradient boosting Friedman proposed a
-        minor modification to the algorithm, motivated by Breiman's bagging method.
-        Specifically, he proposed that at each iteration of the algorithm, a base
-        learner should be fit on a subsample of the training set drawn at random
-        without replacement. Friedman observed a substantial improvement in
-        gradient boosting's accuracy with this modification.</p>
-        
-    <p>Subsample size is some constant fraction f of the size of the training set.
-        When f = 1, the algorithm is deterministic and identical to the one
-        described above. Smaller values of f introduce randomness into the
-        algorithm and help prevent over-fitting, acting as a kind of regularization.
-        The algorithm also becomes faster, because regression trees have to be fit
-        to smaller datasets at each iteration. Typically, f is set to 0.5, meaning
-        that one half of the training set is used to build each base learner.</p>
-        
-    <p>Also, like in bagging, sub-sampling allows one to define an out-of-bag
-        estimate of the prediction performance improvement by evaluating predictions
-        on those observations which were not used in the building of the next
-        base learner. Out-of-bag estimates help avoid the need for an independent
-        validation dataset, but often underestimate actual performance improvement
-        and the optimal number of iterations.</p>
-        
-    <p>Gradient tree boosting implementations often also use regularization by
-        limiting the minimum number of observations in trees' terminal nodes.
-        It's used in the tree building process by ignoring any splits that lead
-        to nodes containing fewer than this number of training set instances.
-        Imposing this limit helps to reduce variance in predictions at leaves.</p>
 
-    <h2 id="gp">Gaussian Process</h2>
+    <figure class="plot-figure">
+        <img src="images/regression-elasticnet-1d.png" class="enlarge" alt="Elastic Net vs OLS on the shared 1-D sinusoid" />
+        <figcaption>Raising <code>λ₁</code> / <code>λ₂</code> shrinks the slope; the mix sits between pure L1 and L2 effects.</figcaption>
+    </figure>
 
-    <p>A Gaussian process is a stochastic process
-        whose realizations consist of random values associated with every point in
-        a range of times (or of space) such that each such random variable has
-        a normal distribution. Moreover, every finite collection of those random
-        variables has a multivariate normal distribution.</p>
-        
-    <p>A Gaussian process can be used as a prior probability distribution over
-        functions in Bayesian inference. Given any set of N points in the desired
-        domain of your functions, take a multivariate Gaussian whose covariance
-        matrix parameter is the Gram matrix of N points with some desired kernel,
-        and sample from that Gaussian. Inference of continuous values with a
-        Gaussian process prior is known as Gaussian process regression.</p>
-        
-    <p>The fitting is performed in the reproducing kernel Hilbert space with
-        the "kernel trick". The loss function is squared-error. This also arises
-        as the kriging estimate of a Gaussian random field in spatial statistics.</p>
 
-    <p>A significant problem with Gaussian process prediction is that it typically
-        scales as O(n<sup>3</sup>). For large problems (e.g. n &gt; 10,000) both
-        storing the Gram matrix and solving the associated linear systems are
-        prohibitive on modern workstations. An extensive range of proposals have
-        been suggested to deal with this problem. A popular approach is the
-        reduced-rank Approximations of the Gram Matrix, known as Nystrom approximation.
-        Greedy approximation is another popular approach that uses an active set of
-        training points of size m selected from the training set of size n &gt; m.
-        We assume that it is impossible to search for the optimal subset of size m
-        due to combinatorics. The points in the active set could be selected
-        randomly, but in general we might expect better performance if the points
-        are selected greedily w.r.t. some criterion. Recently, researchers had
-        proposed relaxing the constraint that the inducing variables must be a
-        subset of training/test cases, turning the discrete selection problem
-        into one of continuous optimization.</p>
+    <h2 id="glm" class="title">Generalized Linear Models</h2>
 
-    <p>This function fits a regular Gaussian process model.</p>
+    <p>GLM extends linear models with exponential-family responses and link functions (package <code>smile.regression.glm</code>). Fit with <code>GLM.fit(formula, data, family)</code>. Keep the model family explicit — Gaussian identity recovers OLS-like regression; Bernoulli logit is for binary outcomes.</p>
+
+    <p>Hyperparameters are fields of the nested <code>GLM.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip).</p>
+
+    <dl class="options-dl">
+        <dt><code>tol</code><br><code>smile.glm.tolerance</code></dt>
+        <dd>Convergence tolerance (default <code>1E-5</code>).</dd>
+        <dt><code>maxIter</code><br><code>smile.glm.iterations</code></dt>
+        <dd>Maximum IRLS iterations (default <code>50</code>).</dd>
+    </dl>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+        <tr><th>Family</th><th>Typical link</th><th>Use</th></tr>
+        </thead>
+        <tbody>
+        <tr><td><code>Gaussian.identity()</code></td><td>identity</td><td>Continuous response (classical linear model).</td></tr>
+        <tr><td><code>Bernoulli.logit()</code></td><td>logit</td><td>Binary 0/1 outcomes (e.g. Default).</td></tr>
+        <tr><td><code>Binomial.logit(n)</code></td><td>logit</td><td>Grouped binary counts.</td></tr>
+        <tr><td><code>Poisson.log()</code></td><td>log</td><td>Count data.</td></tr>
+        </tbody>
+    </table>
+</div>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -1323,54 +1560,59 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-18-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class GaussianProcessRegression {
-        // regular Gaussian process model
-         public static KernelMachine&lt;T&gt; fit(T[] x, double[] y, MercerKernel&lt;T&gt; kernel, double lambda);
-        // approximate Gaussian process model
-        public static KernelMachine&lt;T&gt; fit(T[] x, double[] y, T[] t, MercerKernel&lt;T&gt; kernel, double lambda);
-        // Nystrom approximation
-        public static KernelMachine&lt;T&gt; nystrom(T[] x, double[] y, T[] t, MercerKernel&lt;T&gt; kernel, double lambda);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Default
+import smile.regression.GLM
+import smile.regression.glm.Bernoulli
+
+var credit = new Default()
+GLM model = GLM.fit(credit.formula(), credit.data(), Bernoulli.logit())
+model.deviance()</code></pre>
     </div>
     <div id="pg-18-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    object gpr {
-        // regular Gaussian process model
-        def apply[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
-        // approximate Gaussian process model
-        def approx[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
-        // Nystrom approximation
-        def nystrom[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
-    }
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Default
+import smile.regression.GLM
+import smile.regression.glm.Bernoulli
+
+val credit = new Default()
+val model = GLM.fit(credit.formula, credit.data, Bernoulli.logit())
+model.deviance</code></pre>
     </div>
     <div id="pg-18-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    // regular Gaussian process model
-    fun &lt;T&gt; gpr(x: Array&lt;T&gt;, y: DoubleArray, kernel: MercerKernel&lt;T&gt;, lambda: Double): KernelMachine&lt;T&gt;
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Default
+import smile.regression.GLM
+import smile.regression.glm.Bernoulli
 
-    object gpr {
-        // approximate Gaussian process model
-        def &lt;T&gt; approx(x: Array&lt;T&gt;, y: DoubleArray, t: Array&lt;T&gt;, kernel: MercerKernel&lt;T&gt;, lambda: Double): KernelMachine&lt;T&gt;
-        // Nystrom approximation
-        def &lt;T&gt; nystrom(x: Array&lt;T&gt;, y: DoubleArray, t: Array&lt;T&gt;, kernel: MercerKernel&lt;T&gt;, lambda: Double): KernelMachine&lt;T&gt;
-    }
-    </code></pre>
+val credit = Default()
+val model = GLM.fit(credit.formula(), credit.data(), Bernoulli.logit())
+model.deviance()</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where the parameter <code>x</code> is the training data,
-        <code>y</code> is the response variable,
-        <code>kernel</code> is the Mercer kernel function,
-        and <code>lambda</code> is the shrinkage/regularization parameter.
-        The last two methods fit approximate models.
-        For approximation models, the parameter <code>t</code> is the inducing input,
-        which are pre-selected or inducing samples
-        acting as active set of regressors. In simple case, these can be chosen
-        randomly from the training set or as the centers of k-means clustering.</p>
+
+    <h2 id="gam" class="title">Generalized Additive Models</h2>
+
+    <p>GAM fits smooth functions of predictors (smoothing / B-splines) inside a GLM-style framework. Pass family + <code>GAM.Options</code>; numeric predictors become smooths automatically under the formula.</p>
+
+    <p>Hyperparameters are fields of the nested <code>GAM.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip).</p>
+
+    <dl class="options-dl">
+        <dt><code>lambda</code><br><code>smile.gam.lambda</code></dt>
+        <dd>Global smoothing parameter (default <code>0.6</code>).</dd>
+        <dt><code>df</code><br><code>smile.gam.df</code></dt>
+        <dd>Target degrees of freedom per smooth (default <code>10</code>).</dd>
+        <dt><code>degree</code><br><code>smile.gam.degree</code></dt>
+        <dd>Spline degree (default <code>3</code>).</dd>
+        <dt><code>tol</code><br><code>smile.gam.tolerance</code></dt>
+        <dd>Outer-loop tolerance.</dd>
+        <dt><code>maxIter</code><br><code>smile.gam.iterations</code></dt>
+        <dd>Outer iterations.</dd>
+        <dt><code>backfitIter</code><br><code>smile.gam.backfit.iterations</code></dt>
+        <dd>Backfitting iterations.</dd>
+        <dt><code>backfitTol</code><br><code>smile.gam.backfit.tolerance</code></dt>
+        <dd>Backfitting tolerance.</dd>
+    </dl>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -1382,36 +1624,878 @@ title: Smile - Regression
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-19-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var options = new GaussianProcessRegression.Options(0.01);
-    CrossValidation.regression(10, x, y, (x, y) -> {
-        var t = KMeans.fit(x, 20, 5).centers();
-        return GaussianProcessRegression.fit(x, y, t, new GaussianKernel(0.06), options);
-    });
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.ProstateCancer
+import smile.regression.GAM
+import smile.regression.glm.Gaussian
+
+var prostate = new ProstateCancer()
+GAM.Options options = new GAM.Options(0.6, null, 10, 3, 1E-6, 50, 30, 1E-7)
+GAM model = GAM.fit(prostate.formula(), prostate.train(),
+    Gaussian.identity(), options)
+model.totalEdf()</code></pre>
     </div>
     <div id="pg-19-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    cv.regression(10, x, y) { (x, y) =>
-        val t = kmeans(x, 20).centers
-        gpr.approx(x, y, t, new GaussianKernel(0.06), 0.01)
-    }
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.ProstateCancer
+import smile.regression.GAM
+import smile.regression.glm.Gaussian
+
+val prostate = new ProstateCancer()
+val options = new GAM.Options(0.6, null, 10, 3, 1E-6, 50, 30, 1E-7)
+val model = GAM.fit(prostate.formula, prostate.train,
+  Gaussian.identity(), options)
+model.totalEdf</code></pre>
     </div>
     <div id="pg-19-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    CrossValidation.regression(10, x, y, { x, y ->
-        val t = kmeans(x, 20).centers
-        gpr.approx(x, y, t, GaussianKernel(0.06), 0.01)
-    })
-          </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.ProstateCancer
+import smile.regression.GAM
+import smile.regression.glm.Gaussian
+
+val prostate = ProstateCancer()
+val options = GAM.Options(0.6, null, 10, 3, 1E-6, 50, 30, 1E-7)
+val model = GAM.fit(prostate.formula(), prostate.train(),
+    Gaussian.identity(), options)
+model.totalEdf()</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>In the above example, we train the approximate Gaussian Process models
-        with inducing samples by k-means clustering. The hyperparameters are not
-        optimized yet though.</p>
+
+    <h2 id="rbf" class="title">RBF Network</h2>
+
+    <p>Radial basis function networks approximate the response as a linear combination of RBFs (often Gaussians centred by k-means). Fit with <code>RBFNetwork.fit(x, y, RBF.fit(x, k))</code> or the Kotlin/Scala <code>rbfnet(x, y, k)</code> helper. Scale features; Longley LOOCV RMSE with 10 centres is about <strong>5.09</strong>.</p>
+
+    <p><code>RBFNetwork</code> is configured primarily through <code>java.util.Properties</code> (or setters on the trained network). Keys used by <code>fit(…, Properties)</code> / <code>setParameters</code>: Or pass an explicit <code>RBF[]</code> from <code>RBF.fit</code>.</p>
+
+    <dl class="options-dl">
+        <dt><code>neurons</code><br><code>smile.rbf.neurons</code></dt>
+        <dd>Number of RBF centres when fitting via Properties (default <code>30</code>).</dd>
+        <dt><code>normalize</code><br><code>smile.rbf.normalize</code></dt>
+        <dd>Normalized RBF network if <code>true</code>.</dd>
+    </dl>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-20-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-20-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-20-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-20-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">// assumes generate1d / response1d / visualize1d
+import smile.model.rbf.RBF
+import smile.regression.RBFNetwork
+
+double[][] x = generate1d(80);
+double[] y = response1d(x);
+var model = RBFNetwork.fit(x, y, RBF.fit(x, 10));
+visualize1d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: RBF 1-D fit)
+      </code></pre>
+    </div>
+    <div id="pg-20-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.regression._
+
+val x = generate1d(80); val y = response1d(x)
+val model = rbfnet(x, y, 10)
+visualize1d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: RBF 1-D fit)
+      </code></pre>
+    </div>
+    <div id="pg-20-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.regression.*
+
+val x = generate1d(80); val y = response1d(x)
+val model = rbfnet(x, y, 10)
+visualize1d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: RBF 1-D fit)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <figure class="plot-figure">
+        <img src="images/regression-rbf-1d.png" class="enlarge" alt="RBF network on synthetic 1-D data" />
+        <figcaption>RBF network (10 centres) tracking <code>sin(2πx)</code>.</figcaption>
+    </figure>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-21-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-21-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-21-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-21-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">double[][] x = generate2d(400);
+double[] y = response2d(x);
+var model = RBFNetwork.fit(x, y, RBF.fit(x, 20));
+visualize2d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: RBF 2-D heatmap)
+      </code></pre>
+    </div>
+    <div id="pg-21-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">val x = generate2d(400); val y = response2d(x)
+val model = rbfnet(x, y, 20)
+visualize2d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: RBF 2-D heatmap)
+      </code></pre>
+    </div>
+    <div id="pg-21-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">val x = generate2d(400); val y = response2d(x)
+val model = rbfnet(x, y, 20)
+visualize2d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: RBF 2-D heatmap)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="svm" class="title">Support Vector Regression (ε-SVR)</h2>
+
+    <p>ε-SVR ignores residuals inside an ε-tube and penalises outliers with soft-margin parameter <code>C</code>. Kernel fits return <code>KernelMachine</code>; linear fits return <code>LinearSVM</code> (see next section). Scale inputs before using RBF / Gaussian kernels.</p>
+
+    <p>Hyperparameters are fields of the nested <code>SVM.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip).</p>
+
+    <dl class="options-dl">
+        <dt><code>eps</code><br><code>smile.svm.epsilon</code></dt>
+        <dd>ε-insensitive tube width (default <code>1.0</code>).</dd>
+        <dt><code>C</code><br><code>smile.svm.C</code></dt>
+        <dd>Soft-margin penalty (default <code>1.0</code>).</dd>
+        <dt><code>tol</code><br><code>smile.svm.tolerance</code></dt>
+        <dd>Convergence tolerance (default <code>1E-3</code>).</dd>
+    </dl>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-22-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-22-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-22-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-22-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.math.kernel.GaussianKernel
+import smile.regression.SVM
+
+double[][] x = generate1d(80);
+double[] y = response1d(x);
+var model = SVM.fit(x, y, new GaussianKernel(0.5),
+    new SVM.Options(0.1, 5.0, 1E-3));
+visualize1d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: ε-SVR 1-D fit)
+      </code></pre>
+    </div>
+    <div id="pg-22-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.math.kernel.GaussianKernel
+import smile.regression._
+
+val x = generate1d(80); val y = response1d(x)
+val model = svm(x, y, new GaussianKernel(0.5), 0.1, 5.0)
+visualize1d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: ε-SVR 1-D fit)
+      </code></pre>
+    </div>
+    <div id="pg-22-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.math.kernel.GaussianKernel
+import smile.regression.*
+
+val x = generate1d(80); val y = response1d(x)
+val model = svm(x, y, GaussianKernel(0.5), 0.1, 5.0)
+visualize1d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: ε-SVR 1-D fit)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-23-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-23-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-23-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-23-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">double[][] x = generate2d(300);
+double[] y = response2d(x);
+var model = SVM.fit(x, y, new GaussianKernel(0.5),
+    new SVM.Options(0.1, 5.0));
+visualize2d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: SVR 2-D heatmap)
+      </code></pre>
+    </div>
+    <div id="pg-23-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">val x = generate2d(300); val y = response2d(x)
+val model = svm(x, y, new GaussianKernel(0.5), 0.1, 5.0)
+visualize2d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: SVR 2-D heatmap)
+      </code></pre>
+    </div>
+    <div id="pg-23-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">val x = generate2d(300); val y = response2d(x)
+val model = svm(x, y, GaussianKernel(0.5), 0.1, 5.0)
+visualize2d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: SVR 2-D heatmap)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <figure class="plot-figure">
+        <img src="images/regression-svr-2d.png" class="enlarge" alt="ε-SVR on synthetic 2-D surface" />
+        <figcaption>Gaussian-kernel ε-SVR heatmap on <code>y = x₀ − x₁²</code>.</figcaption>
+    </figure>
+
+
+    <h2 id="linear-svm" class="title">Linear SVM</h2>
+
+    <p><code>SVM.fit(x, y, options)</code> (no kernel) returns a <code>LinearSVM</code> — efficient for high-dimensional linear problems. Sparse counterparts <code>SparseLinearSVM</code> and <code>BinarySparseLinearSVM</code> accept <code>SparseArray[]</code> / <code>int[][]</code> inputs.</p>
+    <p>Smaller soft-margin <code>C</code> regularises more strongly. The plot below sweeps several <code>C</code> values (fixed <code>ε</code>) against OLS on the shared sinusoid.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-24-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-24-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-24-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-24-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.regression.LinearSVM
+import smile.regression.SVM
+
+LinearSVM model = (LinearSVM) SVM.fit(x, y, new SVM.Options(0.1, 1.0));
+double[] w = model.weights();
+double b = model.intercept();
+double yhat = model.predict(sample);
+
+// SparseLinearSVM.fit(sparseX, y, p, options)
+// BinarySparseLinearSVM.fit(intX, y, p, options)</code></pre>
+    </div>
+    <div id="pg-24-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.regression.{LinearSVM, SVM}
+
+val model = SVM.fit(x, y, new SVM.Options(0.1, 1.0)).asInstanceOf[LinearSVM]
+val w = model.weights
+val b = model.intercept
+val yhat = model.predict(sample)</code></pre>
+    </div>
+    <div id="pg-24-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.regression.LinearSVM
+import smile.regression.SVM
+
+val model = SVM.fit(x, y, SVM.Options(0.1, 1.0)) as LinearSVM
+val w = model.weights()
+val b = model.intercept()
+val yhat = model.predict(sample)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-25-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-25-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-25-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-25-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">// assumes generate1d / response1d / toFrame1d / compare1d from Datasets
+import smile.data.DataFrame
+import smile.data.formula.Formula
+import smile.regression.OLS
+import smile.regression.Regression
+import smile.regression.SVM
+
+double[][] x = generate1d(80);
+double[] y = response1d(x);
+var ols = OLS.fit(Formula.lhs("y"), toFrame1d(x, y));
+Regression&lt;double[]&gt; olsArr = v -&gt; ols.predict(DataFrame.of(new double[][]{v}, "x"))[0];
+double[] Cs = {0.1, 1.0, 10.0, 100.0};
+@SuppressWarnings("unchecked")
+Regression&lt;double[]&gt;[] models = new Regression[Cs.length];
+String[] labels = new String[Cs.length];
+for (int i = 0; i &lt; Cs.length; i++) {
+    models[i] = SVM.fit(x, y, new SVM.Options(0.1, Cs[i]));
+    labels[i] = "C=" + Cs[i];
+}
+compare1d(olsArr, models, labels, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: Linear SVM C grid vs OLS)
+      </code></pre>
+    </div>
+    <div id="pg-25-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.data.DataFrame
+import smile.data.formula.Formula
+import smile.regression.{OLS, Regression, SVM}
+
+val x = generate1d(80); val y = response1d(x)
+val ols = OLS.fit(Formula.lhs("y"), toFrame1d(x, y))
+val olsArr = new Regression[Array[Double]] {
+  def predict(v: Array[Double]): Double =
+    ols.predict(DataFrame.of(Array(v), "x")).head
+}
+val Cs = Array(0.1, 1.0, 10.0, 100.0)
+val models = Cs.map(c =&gt; SVM.fit(x, y, new SVM.Options(0.1, c)))
+val labels = Cs.map(c =&gt; s"C=$c")
+compare1d(olsArr, models, labels, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: Linear SVM C grid vs OLS)
+      </code></pre>
+    </div>
+    <div id="pg-25-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.data.DataFrame
+import smile.data.formula.Formula
+import smile.regression.OLS
+import smile.regression.Regression
+import smile.regression.SVM
+
+val x = generate1d(80); val y = response1d(x)
+val ols = OLS.fit(Formula.lhs("y"), toFrame1d(x, y))
+val olsArr = object : Regression&lt;DoubleArray&gt; {
+    override fun predict(v: DoubleArray): Double =
+        ols.predict(DataFrame.of(arrayOf(v), "x"))[0]
+}
+val Cs = doubleArrayOf(0.1, 1.0, 10.0, 100.0)
+@Suppress("UNCHECKED_CAST")
+val models = Array(Cs.size) { i -&gt;
+    SVM.fit(x, y, SVM.Options(0.1, Cs[i]))
+} as Array&lt;Regression&lt;DoubleArray&gt;&gt;
+val labels = Array(Cs.size) { i -&gt; "C=${Cs[i]}" }
+compare1d(olsArr, models, labels, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: Linear SVM C grid vs OLS)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <figure class="plot-figure">
+        <img src="images/regression-linearsvm-1d.png" class="enlarge" alt="Linear SVM vs OLS on the shared 1-D sinusoid" />
+        <figcaption>Smaller soft-margin <code>C</code> regularizes more, pulling the fit flatter than OLS.</figcaption>
+    </figure>
+
+
+    <h2 id="gpr" class="title">Gaussian Process Regression</h2>
+
+    <p>GPR places a Gaussian-process prior over functions and returns mean predictions (with optional predictive variance on the model object). Exact inference is O(n³) — fine for hundreds of points; for large <code>n</code> use subset-of-regressors or Nystrom approximations (<code>GaussianProcessRegression.fit(x, y, inducing, …)</code> / <code>nystrom</code>, Scala/Kotlin <code>gpr.approx</code> / <code>gpr.nystrom</code>).</p>
+
+    <p>Hyperparameters are fields of the nested <code>GaussianProcessRegression.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip).</p>
+
+    <dl class="options-dl">
+        <dt><code>noise</code><br><code>smile.gaussian_process.noise</code></dt>
+        <dd>Noise variance / regulariser (default very small).</dd>
+        <dt><code>normalize</code><br><code>smile.gaussian_process.normalize</code></dt>
+        <dd>Normalize the response (default <code>true</code>).</dd>
+        <dt><code>tol</code><br><code>smile.gaussian_process.tolerance</code></dt>
+        <dd>HPO tolerance.</dd>
+        <dt><code>maxIter</code><br><code>smile.gaussian_process.iterations</code></dt>
+        <dd>HPO iterations; <code>≤ 0</code> disables hyperparameter optimization.</dd>
+    </dl>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-26-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-26-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-26-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-26-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.math.kernel.GaussianKernel
+import smile.regression.GaussianProcessRegression
+
+double[][] x = generate1d(40);
+double[] y = response1d(x);
+var model = GaussianProcessRegression.fit(x, y,
+    new GaussianKernel(0.2), new GaussianProcessRegression.Options(0.01));
+visualize1d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: GPR 1-D fit)
+      </code></pre>
+    </div>
+    <div id="pg-26-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.math.kernel.GaussianKernel
+import smile.regression._
+
+val x = generate1d(40); val y = response1d(x)
+val model = gpr(x, y, new GaussianKernel(0.2), 0.01)
+visualize1d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: GPR 1-D fit)
+      </code></pre>
+    </div>
+    <div id="pg-26-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.math.kernel.GaussianKernel
+import smile.regression.*
+
+val x = generate1d(40); val y = response1d(x)
+val model = gpr(x, y, GaussianKernel(0.2), 0.01)
+visualize1d(model, x, y).show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: GPR 1-D fit)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <figure class="plot-figure">
+        <img src="images/regression-gpr-1d.png" class="enlarge" alt="Gaussian process on synthetic 1-D data" />
+        <figcaption>Exact GPR with a Gaussian kernel on noisy sinusoid data.</figcaption>
+    </figure>
+
+
+    <h2 id="mlp" class="title">Multilayer Perceptron</h2>
+
+    <p>A fully connected feed-forward net for regression, trained by mini-batch SGD. Build layers with <code>Layer.input</code> / hidden activations / <code>Layer.mse(1, OutputFunction.LINEAR)</code>, then <code>update</code> for epochs — or use <code>MLP.fit(x, y, Properties)</code> with <code>smile.mlp.layers</code> like <code>"ReLU(100)"</code>. Scale inputs; <code>online()</code> is true.</p>
+
+    <p><code>MLP</code> is configured primarily through <code>java.util.Properties</code> (or setters on the trained network). Keys used by <code>fit(…, Properties)</code> / <code>setParameters</code>:</p>
+
+    <dl class="options-dl">
+        <dt><code>layers</code><br><code>smile.mlp.layers</code></dt>
+        <dd>Hidden-layer spec string (default <code>"ReLU(100)"</code>).</dd>
+        <dt><code>epochs</code><br><code>smile.mlp.epochs</code></dt>
+        <dd>Training epochs (default <code>100</code>).</dd>
+        <dt><code>mini_batch</code><br><code>smile.mlp.mini_batch</code></dt>
+        <dd>Mini-batch size (default <code>32</code>).</dd>
+        <dt><code>learning_rate</code><br><code>smile.mlp.learning_rate</code></dt>
+        <dd>SGD learning-rate schedule string for <code>setParameters</code>.</dd>
+        <dt><code>momentum</code><br><code>smile.mlp.momentum</code></dt>
+        <dd>Momentum schedule string.</dd>
+        <dt><code>weight_decay</code><br><code>smile.mlp.weight_decay</code></dt>
+        <dd>L2 weight decay.</dd>
+    </dl>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-27-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-27-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-27-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-27-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Properties
+import smile.regression.MLP
+
+Properties props = new Properties()
+props.setProperty("smile.mlp.layers", "ReLU(50)")
+props.setProperty("smile.mlp.epochs", "50")
+props.setProperty("smile.mlp.learning_rate", "0.01")
+MLP model = MLP.fit(x, y, props)</code></pre>
+    </div>
+    <div id="pg-27-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Properties
+import smile.regression.MLP
+
+val props = new Properties()
+props.setProperty("smile.mlp.layers", "ReLU(50)")
+props.setProperty("smile.mlp.epochs", "50")
+props.setProperty("smile.mlp.learning_rate", "0.01")
+val model = MLP.fit(x, y, props)</code></pre>
+    </div>
+    <div id="pg-27-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.regression.MLP
+
+val props = Properties()
+props.setProperty("smile.mlp.layers", "ReLU(50)")
+props.setProperty("smile.mlp.epochs", "50")
+props.setProperty("smile.mlp.learning_rate", "0.01")
+val model = MLP.fit(x, y, props)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="regression-tree" class="title">Regression Tree</h2>
+
+    <p>CART-style regression trees partition the feature space and predict a constant in each leaf. Fast and interpretable, but high variance — prefer forests or boosting for accuracy. Fit with a Formula on mixed tabular data.</p>
+
+    <p>Hyperparameters are fields of the nested <code>RegressionTree.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip).</p>
+
+    <dl class="options-dl">
+        <dt><code>maxDepth</code><br><code>smile.cart.max_depth</code></dt>
+        <dd>Maximum tree depth (default <code>20</code>).</dd>
+        <dt><code>maxNodes</code><br><code>smile.cart.max_nodes</code></dt>
+        <dd>Max leaf nodes; <code>0</code> means unlimited (default).</dd>
+        <dt><code>nodeSize</code><br><code>smile.cart.node_size</code></dt>
+        <dd>Minimum leaf size (default <code>5</code>).</dd>
+    </dl>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-28-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-28-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-28-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-28-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.regression.RegressionTree
+
+double[][] x = generate2d(400);
+double[] y = response2d(x);
+var df = toFrame2d(x, y);
+RegressionTree model = RegressionTree.fit(Formula.lhs("y"), df,
+    new RegressionTree.Options(6, 0, 5));
+visualize2d(model, df, "x1", "x2").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: tree 2-D partition)
+      </code></pre>
+    </div>
+    <div id="pg-28-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.regression._
+
+val x = generate2d(400); val y = response2d(x)
+val df = toFrame2d(x, y)
+val model = cart(Formula.lhs("y"), df, maxDepth = 6)
+visualize2d(model, df, "x1", "x2").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: tree 2-D partition)
+      </code></pre>
+    </div>
+    <div id="pg-28-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.regression.*
+
+val x = generate2d(400); val y = response2d(x)
+val df = toFrame2d(x, y)
+val model = cart(Formula.lhs("y"), df, maxDepth = 6)
+visualize2d(model, df, "x1", "x2").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: tree 2-D partition)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <figure class="plot-figure">
+        <img src="images/regression-tree-2d.png" class="enlarge" alt="Regression tree on synthetic 2-D surface" />
+        <figcaption>Shallow regression tree approximating <code>y = x₀ − x₁²</code>.</figcaption>
+    </figure>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-29-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-29-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-29-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-29-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Abalone
+import smile.regression.RegressionTree
+import smile.validation.metric.RMSE
+
+var abalone = new Abalone()
+var model = RegressionTree.fit(abalone.formula(), abalone.train())
+RMSE.of(abalone.testy(), model.predict(abalone.test()))</code></pre>
+    </div>
+    <div id="pg-29-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Abalone
+import smile.regression._
+import smile.validation.metric.RMSE
+
+val abalone = new Abalone()
+val model = cart(abalone.formula, abalone.train)
+RMSE.of(abalone.testy, model.predict(abalone.test))</code></pre>
+    </div>
+    <div id="pg-29-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Abalone
+import smile.regression.*
+import smile.validation.metric.RMSE
+
+val abalone = Abalone()
+val model = cart(abalone.formula(), abalone.train())
+RMSE.of(abalone.testy(), model.predict(abalone.test()))</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="random-forest" class="title">Random Forest</h2>
+
+    <p>Bagged regression trees with random feature subsets at each split. Strong default for mixed tabular data with free OOB error estimates. Abalone training RMSE via the OOB-style test helper is about <strong>2.18</strong>; hold-out test RMSE with 100 trees is about <strong>2.07</strong> in the unit tests.</p>
+
+    <p>Hyperparameters are fields of the nested <code>RandomForest.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip).</p>
+
+    <dl class="options-dl">
+        <dt><code>ntrees</code><br><code>smile.random_forest.trees</code></dt>
+        <dd>Number of trees (default <code>500</code>).</dd>
+        <dt><code>mtry</code><br><code>smile.random_forest.mtry</code></dt>
+        <dd>Features considered per split; <code>0</code> → <code>p/3</code>.</dd>
+        <dt><code>maxDepth</code><br><code>smile.random_forest.max_depth</code></dt>
+        <dd>Max tree depth (default <code>20</code>).</dd>
+        <dt><code>maxNodes</code><br><code>smile.random_forest.max_nodes</code></dt>
+        <dd>Max leaves; <code>0</code> unlimited.</dd>
+        <dt><code>nodeSize</code><br><code>smile.random_forest.node_size</code></dt>
+        <dd>Min leaf size (default <code>5</code>).</dd>
+        <dt><code>subsample</code><br><code>smile.random_forest.sampling_rate</code></dt>
+        <dd>Row sampling rate (default <code>1.0</code> = with replacement).</dd>
+    </dl>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-30-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-30-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-30-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-30-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Abalone
+import smile.math.MathEx
+import smile.regression.RandomForest
+import smile.validation.metric.RMSE
+
+MathEx.setSeed(19650218)
+var abalone = new Abalone()
+var model = RandomForest.fit(abalone.formula(), abalone.train(),
+    new RandomForest.Options(100))
+RMSE.of(abalone.testy(), model.predict(abalone.test()))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+test RMSE ≈ 2.0749  (100 trees, seeded)
+      </code></pre>
+    </div>
+    <div id="pg-30-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Abalone
+import smile.math.MathEx
+import smile.regression._
+import smile.validation.metric.RMSE
+
+MathEx.setSeed(19650218)
+val abalone = new Abalone()
+val model = randomForest(abalone.formula, abalone.train, ntrees = 100)
+RMSE.of(abalone.testy, model.predict(abalone.test))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+test RMSE ≈ 2.0749  (100 trees, seeded)
+      </code></pre>
+    </div>
+    <div id="pg-30-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Abalone
+import smile.math.MathEx
+import smile.regression.*
+import smile.validation.metric.RMSE
+
+MathEx.setSeed(19650218)
+val abalone = Abalone()
+val model = randomForest(abalone.formula(), abalone.train(), ntrees = 100)
+RMSE.of(abalone.testy(), model.predict(abalone.test()))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+test RMSE ≈ 2.0749  (100 trees, seeded)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-31-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-31-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-31-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-31-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">double[][] x = generate1d(80);
+double[] y = response1d(x);
+var df = toFrame1d(x, y);
+var model = RandomForest.fit(Formula.lhs("y"), df,
+    new RandomForest.Options(100));
+visualize1d(model, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: RF 1-D fit)
+      </code></pre>
+    </div>
+    <div id="pg-31-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">val x = generate1d(80); val y = response1d(x)
+val df = toFrame1d(x, y)
+val model = randomForest(Formula.lhs("y"), df, ntrees = 100)
+visualize1d(model, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: RF 1-D fit)
+      </code></pre>
+    </div>
+    <div id="pg-31-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">val x = generate1d(80); val y = response1d(x)
+val df = toFrame1d(x, y)
+val model = randomForest(Formula.lhs("y"), df, ntrees = 100)
+visualize1d(model, df, "x").show()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: RF 1-D fit)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <figure class="plot-figure">
+        <img src="images/regression-rf-1d.png" class="enlarge" alt="Random forest on synthetic 1-D data" />
+        <figcaption>Random forest approximating the noisy sinusoid (piecewise-constant leaves).</figcaption>
+    </figure>
+
+
+    <h2 id="gbt" class="title">Gradient Tree Boost</h2>
+
+    <p>Gradient boosting fits regression trees to pseudo-residuals under a chosen loss (LAD by default for robustness; also least squares, Huber, quantile). Shrinkage trades off against tree count. Often the strongest tabular accuracy after tuning. Abalone test RMSE is typically around <strong>2.2–2.3</strong> depending on loss.</p>
+
+    <p>Hyperparameters are fields of the nested <code>GradientTreeBoost.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip).</p>
+
+    <dl class="options-dl">
+        <dt><code>loss</code><br><code>smile.gradient_boost.loss</code></dt>
+        <dd>Loss name (e.g. <code>LeastAbsoluteDeviation</code>, <code>LeastSquares</code>).</dd>
+        <dt><code>ntrees</code><br><code>smile.gradient_boost.trees</code></dt>
+        <dd>Boosting rounds (default <code>500</code>).</dd>
+        <dt><code>maxDepth</code><br><code>smile.gradient_boost.max_depth</code></dt>
+        <dd>Max tree depth (default <code>20</code>).</dd>
+        <dt><code>maxNodes</code><br><code>smile.gradient_boost.max_nodes</code></dt>
+        <dd>Max leaves (default <code>6</code>).</dd>
+        <dt><code>nodeSize</code><br><code>smile.gradient_boost.node_size</code></dt>
+        <dd>Min leaf size (default <code>5</code>).</dd>
+        <dt><code>shrinkage</code><br><code>smile.gradient_boost.shrinkage</code></dt>
+        <dd>Learning rate in (0, 1] (default <code>0.05</code>).</dd>
+        <dt><code>subsample</code><br><code>smile.gradient_boost.sampling_rate</code></dt>
+        <dd>Row subsample fraction (default <code>0.7</code>).</dd>
+    </dl>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-32-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-32-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-32-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-32-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Abalone
+import smile.math.MathEx
+import smile.model.cart.Loss
+import smile.regression.GradientTreeBoost
+import smile.validation.metric.RMSE
+
+MathEx.setSeed(19650218)
+var abalone = new Abalone()
+var options = new GradientTreeBoost.Options(Loss.ls(), 100)
+GradientTreeBoost model = GradientTreeBoost.fit(
+    abalone.formula(), abalone.train(), options)
+RMSE.of(abalone.testy(), model.predict(abalone.test()))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+test RMSE ≈ 2.20  (Abalone, LS loss, 100 trees)
+      </code></pre>
+    </div>
+    <div id="pg-32-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Abalone
+import smile.math.MathEx
+import smile.model.cart.Loss
+import smile.regression._
+import smile.validation.metric.RMSE
+
+MathEx.setSeed(19650218)
+val abalone = new Abalone()
+val model = gbm(abalone.formula, abalone.train,
+  loss = Loss.ls(), ntrees = 100)
+RMSE.of(abalone.testy, model.predict(abalone.test))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+test RMSE ≈ 2.20  (Abalone, LS loss, 100 trees)
+      </code></pre>
+    </div>
+    <div id="pg-32-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Abalone
+import smile.math.MathEx
+import smile.model.cart.Loss
+import smile.regression.*
+import smile.validation.metric.RMSE
+
+MathEx.setSeed(19650218)
+val abalone = Abalone()
+val model = gbm(abalone.formula(), abalone.train(),
+    loss = Loss.ls(), ntrees = 100)
+RMSE.of(abalone.testy(), model.predict(abalone.test()))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+test RMSE ≈ 2.20  (Abalone, LS loss, 100 trees)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="tips" class="title">Practical Tips</h2>
+
+<ul>
+    <li><strong>Probe online learning.</strong> Call <code>online()</code>
+        (not <code>isOnline()</code>) before <code>update</code>.</li>
+    <li><strong>Scale-sensitive models.</strong> Normalize for Ridge / LASSO /
+        ElasticNet diagnostics fairness, SVR, RBF, GPR, and MLP. Trees are
+        scale-invariant.</li>
+    <li><strong>Formula vs arrays.</strong> Use <code>Formula</code> +
+        <code>DataFrame</code> for mixed / categorical tabular data (trees,
+        ensembles, OLS family); use <code>double[][]</code> for numeric
+        matrices and kernel / neural methods.</li>
+    <li><strong>Validation.</strong> Prefer
+        <code>CrossValidation.regression</code> or <code>LOOCV.regression</code>
+        with <code>RMSE</code> / <code>R2</code>; seed with
+        <code>MathEx.setSeed(…)</code> for reproducible ensembles and folds.</li>
+    <li><strong>Serialize.</strong>
+        <code>Write.object(model, path)</code> /
+        <code>Read.object(path)</code>.</li>
+    <li><strong>Properties configs.</strong> Prefer nested <code>Options</code>
+        when coding; use the property keys listed under each algorithm
+        (underscores, e.g. <code>smile.random_forest.trees</code>) for
+        configuration files. Round-trip with
+        <code>toProperties()</code> / <code>Options.of(props)</code>.</li>
+    <li><strong>Large <code>n</code>.</strong> Prefer tree ensembles; exact GPR
+        and kernel SVR scale poorly — use approximations or linear SVR.</li>
+    <li><strong>RLS.</strong> Keep <code>OLS.Options.recursive</code> enabled
+        when you need streaming coefficient updates.</li>
+</ul>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
