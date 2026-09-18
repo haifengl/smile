@@ -54,6 +54,31 @@ public class VerifyCudaGraphStage1KernelTest {
     }
 
     /**
+     * Max absolute difference between two same-shape tensors, computed by
+     * reading both back to Java arrays rather than {@code Tensor.max()} +
+     * {@code doubleValue()}. {@code smile_tensor_max} is not a true global
+     * reduction in the current native binary — it returns a same-shape (not
+     * scalar) result, and the native {@code item_*} call behind
+     * {@code doubleValue()} does not catch its own exception on a non-scalar
+     * tensor, so it aborts the whole JVM (SIGABRT) instead of throwing a
+     * catchable Java exception. Reading arrays and reducing in Java sidesteps
+     * this entirely, regardless of {@code Tensor.max()}'s actual semantics.
+     */
+    private static double maxAbsDiff(Tensor a, Tensor b) {
+        try (Tensor diff = a.to(ScalarType.Float).sub(b.to(ScalarType.Float)).abs();
+             Tensor cpu = diff.to(Device.CPU())) {
+            double max = 0.0;
+            for (float v : cpu.floatArray()) {
+                double av = Math.abs((double) v);
+                if (av > max) {
+                    max = av;
+                }
+            }
+            return max;
+        }
+    }
+
+    /**
      * @param pageSize      tokens per KV page.
      * @param numSlots      total slots allocated (must be a multiple of pageSize).
      * @param existingLen   cached length before the verify window (row 0 only, B=1).
@@ -122,10 +147,8 @@ public class VerifyCudaGraphStage1KernelTest {
                     throw e;
                 }
 
-                try (eager; capturable;
-                     Tensor diff = eager.to(ScalarType.Float).sub(capturable.to(ScalarType.Float)).abs();
-                     Tensor maxDiff = diff.max()) {
-                    double d = maxDiff.doubleValue();
+                try (eager; capturable) {
+                    double d = maxAbsDiff(eager, capturable);
                     assertTrue(d < TOLERANCE,
                             "capturable-kernel vs eager-SDPA max abs diff=" + d
                                     + " (cfg=" + cfg + ")");
