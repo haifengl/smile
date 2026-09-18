@@ -94,7 +94,8 @@ title: SMILE - Tutorial
             (including missing-value imputation).</li>
         <li><strong>Model selection &amp; training</strong> — fit candidate algorithms.</li>
         <li><strong>Evaluation</strong> —
-            <a href="validation.html">Model Validation</a>.</li>
+            <a href="model-validation.html">Model Validation</a>
+            (and <a href="hpo.html">Hyperparameter Optimization</a>).</li>
         <li><strong>Deployment</strong> — serialize a <code>.sml</code> model or serve it
             with <a href="serve.html">SMILE Serve</a>.</li>
     </ol>
@@ -336,7 +337,7 @@ println(lm)
 
     <p>Training metrics are optimistic. Cross-validation repeatedly holds out
        folds so you estimate error on data the model did not train on.
-       See <a href="validation.html">Model Validation</a>.</p>
+       See <a href="model-validation.html">Model Validation</a>.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
