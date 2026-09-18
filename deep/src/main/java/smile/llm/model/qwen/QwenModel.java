@@ -29,12 +29,16 @@ import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
+import smile.llm.attention.AttentionBackend;
+import smile.llm.attention.AttentionBackends;
 import smile.llm.cache.FlashInferKvMetadata;
 import smile.llm.cache.KvCachePool;
 import smile.llm.engine.DecodeCudaGraph;
 import smile.llm.engine.DecodeCudaGraphLog;
 import smile.llm.engine.DecodeCudaGraphSession;
 import smile.llm.engine.DecodeForwardProfile;
+import smile.llm.engine.VerifyCudaGraph;
+import smile.llm.engine.VerifyCudaGraphSession;
 import smile.llm.parallel.TensorParallelGroup;
 import smile.llm.parallel.TensorShardSpec;
 import smile.util.AutoScope;
@@ -110,6 +114,18 @@ public class QwenModel extends LayerBlock {
     Tensor decodeGraphLogitsOut;
     /** Pre-capture logits buffer (stable address outside the graph memory pool). */
     Tensor decodeGraphLogitsBuf;
+
+    /** Per-rank CUDA graph session for the uniform MTP window-verify forward. */
+    VerifyCudaGraphSession verifyGraphSession;
+    /** Stable token buffer {@code [B, windowLen]} for verify graph capture / replay. */
+    Tensor verifyGraphTokenBuf;
+    /** Stable RoPE gather buffers {@code [windowLen, rotaryDim]} for verify graph capture / replay. */
+    Tensor verifyGraphCosBuf;
+    Tensor verifyGraphSinBuf;
+    /** Logits tensor captured inside the verify graph (do not close). */
+    Tensor verifyGraphLogitsOut;
+    /** Pre-capture logits buffer (stable address outside the graph memory pool). */
+    Tensor verifyGraphLogitsBuf;
 
     /**
      * Constructs the module graph on CPU. Call {@link #to(Device)} after weight
@@ -365,7 +381,8 @@ public class QwenModel extends LayerBlock {
                 sliced = true;
             }
         }
-        boolean graphMode = kvCachePool != null && kvCachePool.decodeGraphBuffers();
+        boolean graphMode = kvCachePool != null
+                && (kvCachePool.decodeGraphBuffers() || kvCachePool.verifyGraphBuffers());
         boolean needAlloc = lastPreNormHidden == null
                 || !java.util.Arrays.equals(lastPreNormHidden.shape(), row.shape())
                 || lastPreNormHidden.device().index() != row.device().index()
@@ -1184,6 +1201,250 @@ public class QwenModel extends LayerBlock {
             }
             if (profile) {
                 DecodeForwardProfile.addLmHead(System.nanoTime() - tHead);
+            }
+            logits.promoteToParent();
+            return logits;
+        } finally {
+            Tensor.pop();
+        }
+    }
+
+    /**
+     * Uniform MTP window-verify forward (query length {@code S = numDrafts + 1},
+     * every batch row sharing the same start position) with optional CUDA
+     * graph capture / replay.
+     *
+     * <p>Stage 4 shadow-run: whenever {@link VerifyCudaGraph#enabled()}, every
+     * call runs eager through the new stable-buffer / graph-capturable kernel
+     * path (see {@link smile.llm.attention.AttentionContext} dispatch in
+     * {@code GatedAttention.forwardUniform}), and bucket/warmup bookkeeping in
+     * {@link #verifyGraphSession} runs for real against live traffic shapes —
+     * but {@link VerifyCudaGraph#captureEnabled()} is {@code false} until
+     * Stage 5, so {@code beginCapture} is never reached. This lets the
+     * existing eager {@link #forward(Tensor, int, boolean)} path serve as the
+     * numeric go/no-go reference for the new kernel/buffer plumbing before
+     * Stage 5 adds the (separate) capture/replay risk.
+     *
+     * @param tokens   token ids {@code [B, S]}.
+     * @param startPos cache start position (uniform across the batch).
+     * @return logits in float32 {@code [B, S, V]} (graph path returns persistent buffer).
+     */
+    public Tensor forwardVerifyGraph(Tensor tokens, int startPos) {
+        // The device check matters beyond the obvious: SMILE_VERIFY_CUDA_GRAPH=1 is set
+        // for the whole :deep test module (Stage 1/2's GPU-only tests self-skip via
+        // assumeTrue(cudaAvailable())), so VerifyCudaGraph.enabled() alone (native
+        // symbol linked + env var) is not sufficient to keep this dormant on the
+        // CPU-only QwenWindowVerifyTest suite — this must never reach
+        // VerifyCudaGraphSession.tryCreate() -> Native.cudaGraphCreate() without an
+        // actual CUDA device.
+        if (!VerifyCudaGraph.enabled() || kvCachePool == null || !tokens.device().isCUDA()
+                || AttentionBackends.current() != AttentionBackend.FLASHINFER) {
+            return forward(tokens, startPos, true);
+        }
+        int batch = (int) tokens.shape()[0];
+        int windowLen = (int) tokens.shape()[1];
+        int[] startPositions = new int[batch];
+        Arrays.fill(startPositions, startPos);
+        if (!VerifyCudaGraph.canGraphVerify(startPositions)) {
+            return forward(tokens, startPos, true);
+        }
+        if (verifyGraphSession == null) {
+            verifyGraphSession = VerifyCudaGraphSession.tryCreate();
+        }
+        if (verifyGraphSession == null) {
+            return forward(tokens, startPos, true);
+        }
+
+        int cacheLen = startPos + windowLen;
+        int numPages = kvCachePool.numPagesForLength(cacheLen);
+
+        kvCachePool.setVerifyGraphBuffers(true);
+        try {
+            ensureVerifyGraphTokenBuf(tokens.device(), batch, windowLen, tokens.dtype());
+            smile.torch.Native.copy_(verifyGraphTokenBuf, tokens);
+            ensureVerifyGraphRoPEBuffers(tokens.device(), windowLen);
+            prepareVerifyGraphInputs(startPos, windowLen, cacheLen, batch);
+
+            if (verifyGraphSession.canReplay(batch, windowLen, numPages)) {
+                verifyGraphSession.replay(tpRank);
+                return verifyGraphLogitsBuf;
+            }
+
+            boolean shouldCaptureNow =
+                    verifyGraphSession.shouldCapture(batch, windowLen, numPages, tpRank);
+            if (VerifyCudaGraph.captureEnabled() && shouldCaptureNow) {
+                if (verifyGraphLogitsBuf == null) {
+                    throw new IllegalStateException(
+                            "verify graph logits buffer missing; warmup must run before capture");
+                }
+                int deviceIndex = Byte.toUnsignedInt(tokens.device().index());
+                try {
+                    verifyGraphSession.beginCapture(deviceIndex);
+                    try {
+                        Tensor raw = forwardVerifyGraphCore(
+                                verifyGraphTokenBuf, startPositions,
+                                verifyGraphCosBuf, verifyGraphSinBuf);
+                        smile.torch.Native.copy_(verifyGraphLogitsBuf, raw);
+                        verifyGraphLogitsOut = verifyGraphLogitsBuf;
+                    } finally {
+                        verifyGraphSession.endCapture();
+                    }
+                    if (verifyGraphSession.canReplay(batch, windowLen, numPages)) {
+                        verifyGraphSession.logCapture(tpRank);
+                        return verifyGraphLogitsBuf;
+                    }
+                    logger.warn("tpRank={}: verify CUDA graph capture did not produce a "
+                            + "replayable graph", tpRank);
+                    VerifyCudaGraph.disableCapture("capture incomplete");
+                    verifyGraphSession.close();
+                    verifyGraphSession = null;
+                    verifyGraphLogitsOut = null;
+                } catch (RuntimeException e) {
+                    logger.warn("tpRank={}: verify CUDA graph capture failed, falling back "
+                            + "to eager: {}", tpRank, e.getMessage());
+                    VerifyCudaGraph.disableCapture(e.getMessage());
+                    if (verifyGraphSession != null) {
+                        verifyGraphSession.close();
+                        verifyGraphSession = null;
+                    }
+                    verifyGraphLogitsOut = null;
+                    kvCachePool.setVerifyGraphBuffers(false);
+                    return forward(tokens, startPos, true);
+                }
+            }
+
+            Tensor raw = forwardVerifyGraphCore(
+                    verifyGraphTokenBuf, startPositions, verifyGraphCosBuf, verifyGraphSinBuf);
+            ensureVerifyGraphLogitsBuf(raw);
+            smile.torch.Native.copy_(verifyGraphLogitsBuf, raw);
+            return raw;
+        } finally {
+            kvCachePool.setVerifyGraphBuffers(false);
+        }
+    }
+
+    /** Releases verify CUDA graph resources for this rank. */
+    public void closeVerifyGraph() {
+        invalidateVerifyCudaGraphs();
+        if (verifyGraphCosBuf != null) {
+            verifyGraphCosBuf.close();
+            verifyGraphCosBuf = null;
+        }
+        if (verifyGraphSinBuf != null) {
+            verifyGraphSinBuf.close();
+            verifyGraphSinBuf = null;
+        }
+        if (verifyGraphTokenBuf != null) {
+            verifyGraphTokenBuf.close();
+            verifyGraphTokenBuf = null;
+        }
+        if (verifyGraphLogitsBuf != null) {
+            verifyGraphLogitsBuf.close();
+            verifyGraphLogitsBuf = null;
+        }
+        verifyGraphLogitsOut = null;
+    }
+
+    /**
+     * Drops a captured verify CUDA graph while keeping durable token/RoPE/
+     * logits buffers. Required after {@link KvCachePool#truncateTo} rebuilds
+     * (not bumps-in-place) the FlashInfer CSR tensors a captured graph may
+     * still reference (replay &rarr; illegal memory access).
+     */
+    public void invalidateVerifyCudaGraphs() {
+        if (verifyGraphSession != null) {
+            verifyGraphSession.close();
+            verifyGraphSession = null;
+        }
+    }
+
+    private void ensureVerifyGraphTokenBuf(Device device, int batch, int windowLen, ScalarType dtype) {
+        if (verifyGraphTokenBuf != null
+                && verifyGraphTokenBuf.shape()[0] == batch
+                && verifyGraphTokenBuf.shape()[1] == windowLen
+                && verifyGraphTokenBuf.dtype() == dtype) {
+            return;
+        }
+        if (verifyGraphTokenBuf != null) {
+            verifyGraphTokenBuf.close();
+            verifyGraphTokenBuf = null;
+        }
+        verifyGraphTokenBuf = Tensor.zeros(
+                new Tensor.Options().device(device).dtype(dtype), batch, windowLen);
+        verifyGraphTokenBuf.detachFromScopes();
+    }
+
+    private void ensureVerifyGraphRoPEBuffers(Device device, int windowLen) {
+        if (verifyGraphCosBuf != null && verifyGraphCosBuf.shape()[0] == windowLen) {
+            return;
+        }
+        if (verifyGraphCosBuf != null) {
+            verifyGraphCosBuf.close();
+            verifyGraphCosBuf = null;
+        }
+        if (verifyGraphSinBuf != null) {
+            verifyGraphSinBuf.close();
+            verifyGraphSinBuf = null;
+        }
+        int rotaryDim = params.rotaryDim();
+        var opts = new Tensor.Options().device(device).dtype(ScalarType.Float);
+        verifyGraphCosBuf = Tensor.zeros(opts, windowLen, rotaryDim);
+        verifyGraphSinBuf = Tensor.zeros(opts, windowLen, rotaryDim);
+        verifyGraphCosBuf.detachFromScopes();
+        verifyGraphSinBuf.detachFromScopes();
+    }
+
+    /** Allocates a stable logits buffer before CUDA graph capture (warmup only). */
+    private void ensureVerifyGraphLogitsBuf(Tensor prototype) {
+        if (verifyGraphLogitsBuf != null
+                && java.util.Arrays.equals(verifyGraphLogitsBuf.shape(), prototype.shape())) {
+            return;
+        }
+        if (verifyGraphLogitsBuf != null) {
+            verifyGraphLogitsBuf.close();
+            verifyGraphLogitsBuf = null;
+        }
+        verifyGraphLogitsBuf = Tensor.zeros(
+                new Tensor.Options().device(prototype.device()).dtype(prototype.dtype()),
+                prototype.shape());
+        verifyGraphLogitsBuf.detachFromScopes();
+    }
+
+    private void prepareVerifyGraphInputs(int startPos, int windowLen, int cacheLen, int batch) {
+        PartialRotaryEncoding.gatherWindowInto(rope.cos(), startPos, windowLen, verifyGraphCosBuf);
+        PartialRotaryEncoding.gatherWindowInto(rope.sin(), startPos, windowLen, verifyGraphSinBuf);
+        int[] startPositions = new int[batch];
+        Arrays.fill(startPositions, startPos);
+        kvCachePool.prepareVerifyGraphStep(cacheLen, startPositions, windowLen);
+    }
+
+    /**
+     * Verify-graph forward core: identical structure to {@link #forwardRaggedDecodeCore}
+     * but always scores every window position (the whole point of window verify —
+     * see {@link #forward(Tensor, int, boolean)}'s {@code allTokenLogits} branch),
+     * so unlike decode's {@code S == 1} core, no last-row slicing is needed.
+     */
+    private Tensor forwardVerifyGraphCore(Tensor tokens, int[] startPositions,
+                                          Tensor cos, Tensor sin) {
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            Tensor h = tokEmbeddings.forward(tokens);
+            for (int i = 0; i < layers.size(); i++) {
+                Tensor next = layers.get(i).forward(h, startPositions, cos, sin, null);
+                h.close();
+                h = next;
+            }
+            Tensor normalized = norm.forward(h);
+            h.close();
+            if (mtp != null) {
+                capturePreNormHidden(normalized);
+            }
+            Tensor logitsF = lmHead.forward(normalized);
+            normalized.close();
+            Tensor logits = logitsF.to(ScalarType.Float);
+            if (logits != logitsF) {
+                logitsF.close();
             }
             logits.promoteToParent();
             return logits;

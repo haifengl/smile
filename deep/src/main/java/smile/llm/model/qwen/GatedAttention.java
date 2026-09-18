@@ -316,12 +316,26 @@ public class GatedAttention implements Attention {
             Tensor attn;
             if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
                 FlashInferKvMetadata meta = cachePool.sharedFlashInferMetadata(cacheLen);
-                var ctx = AttentionContext.paged(
-                        scale, false,
-                        numHeads, numKvHeads, headDim,
-                        kvLayerId, startPos, seqlen, cacheLen,
-                        cachePool, meta, cachePool.flashInferWorkspace());
-                attn = AttentionBackends.kernel().forward(qT, null, null, mask, ctx);
+                if (cachePool.verifyGraphBuffers()) {
+                    // Graph-capturable verify kernel: causal masking is the kernel's
+                    // own compile-time MaskMode::kCausal (Stage 1/2 validated
+                    // equivalent to the additive continuation-window mask below), so
+                    // no mask tensor is built or passed here.
+                    Tensor qoIndptr = cachePool.verifyQoIndptrBuf(batchSize, seqlen);
+                    var ctx = AttentionContext.paged(
+                            scale, true,
+                            numHeads, numKvHeads, headDim,
+                            kvLayerId, startPos, seqlen, cacheLen,
+                            cachePool, meta, cachePool.flashInferWorkspace());
+                    attn = smile.torch.Native.flashInferAttentionVerifyGraph(qT, ctx, qoIndptr);
+                } else {
+                    var ctx = AttentionContext.paged(
+                            scale, false,
+                            numHeads, numKvHeads, headDim,
+                            kvLayerId, startPos, seqlen, cacheLen,
+                            cachePool, meta, cachePool.flashInferWorkspace());
+                    attn = AttentionBackends.kernel().forward(qT, null, null, mask, ctx);
+                }
             } else {
                 var cached = cachePool.get(kvLayerId, cacheLen);
                 Tensor keys = cached._1();
