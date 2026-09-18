@@ -1,0 +1,501 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - Hyperparameter Optimization
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 order-md-first">
+    <h1 id="hpo-top" class="title">Hyperparameter Optimization</h1>
+
+    <p>A <em>hyperparameter</em> is chosen before training, unlike learned parameters such as weights, split thresholds, and centroids. <strong>Model hyperparameters</strong> determine model capacity or shape (for example tree depth or network topology); <strong>algorithm hyperparameters</strong> govern optimization, such as learning rate and mini-batch size.</p>
+    <p><code>smile.hpo.Hyperparameters</code> is a lightweight fluent builder for these search spaces. Its grid and random strategies yield ordinary <code>java.util.Properties</code>, which can be passed directly to a model overload such as <code>fit(formula, data, props)</code>.</p>
+
+
+    <h2 id="registering" class="title">Registering Parameters</h2>
+
+    <p>Every overloaded <code>add(name, ...)</code> returns the same builder, so fixed values, discrete choices, and ranges can be chained. Names must be the property keys recognized by the target model.</p>
+
+    <dl class="options-dl">
+        <dt><code>add(name, value)</code></dt>
+        <dd>Fix an <code>int</code>, <code>double</code>, or <code>String</code> in every generated configuration.</dd>
+        <dt><code>add(name, values)</code></dt>
+        <dd>Choose from a non-empty <code>int[]</code>, <code>double[]</code>, or <code>String[]</code>.</dd>
+        <dt><code>add(name, int start, int end)</code></dt>
+        <dd>Integer range with automatic step <code>max(1, (end - start) / 10)</code>.</dd>
+        <dt><code>add(name, int start, int end, int step)</code></dt>
+        <dd>Integer range with an explicit positive grid step.</dd>
+        <dt><code>add(name, double start, double end[, double step])</code></dt>
+        <dd>Floating-point range with automatic or explicit grid step.</dd>
+    </dl>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-1-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.hpo.Hyperparameters;
+
+var hp = new Hyperparameters()
+    .add("smile.random_forest.trees", 100)
+    .add("smile.random_forest.mtry", new int[] {2, 3, 4})
+    .add("smile.random_forest.max_nodes", 100, 300, 50)
+    .add("smile.svm.C", new double[] {0.01, 0.1, 1.0, 10.0});</code></pre>
+    </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.hpo.Hyperparameters
+
+val hp = new Hyperparameters()
+  .add("smile.random_forest.trees", 100)
+  .add("smile.random_forest.mtry", Array(2, 3, 4))
+  .add("smile.random_forest.max_nodes", 100, 300, 50)
+  .add("smile.svm.C", Array(0.01, 0.1, 1.0, 10.0))</code></pre>
+    </div>
+    <div id="pg-1-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.hpo.Hyperparameters
+
+val hp = Hyperparameters()
+    .add("smile.random_forest.trees", 100)
+    .add("smile.random_forest.mtry", intArrayOf(2, 3, 4))
+    .add("smile.random_forest.max_nodes", 100, 300, 50)
+    .add("smile.svm.C", doubleArrayOf(0.01, 0.1, 1.0, 10.0))</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>For grid search, ranges include stepped values from <code>start</code> up to the largest value not greater than <code>end</code>. The <code>step</code> applies only to the grid. Random search ignores it and samples ranged integers and doubles uniformly from <code>[start, end)</code>.</p>
+
+
+    <h2 id="grid-search" class="title">Grid Search</h2>
+
+    <p><code>hp.grid()</code> is a finite stream containing the Cartesian product of all registered choices. Count a grid before fitting and call <code>grid()</code> again afterward because <code>count()</code> consumes the stream. A few wide dimensions can create a combinatorial explosion.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-2-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.classification.RandomForest;
+import smile.datasets.ImageSegmentation;
+import smile.hpo.Hyperparameters;
+import smile.validation.metric.Accuracy;
+
+var segment = new ImageSegmentation();
+var hp = new Hyperparameters()
+    .add("smile.random_forest.trees", 100)
+    .add("smile.random_forest.mtry", new int[] {2, 3, 4})
+    .add("smile.random_forest.max_nodes", 100, 300, 50);
+
+System.out.println("Configurations: " + hp.grid().count());
+var best = new double[] {0.0};
+var bestProps = new java.util.Properties[1];
+hp.grid().forEach(props -&gt; {
+    var model = RandomForest.fit(segment.formula(), segment.train(), props);
+    double accuracy = Accuracy.of(segment.testy(), model.predict(segment.test()));
+    if (accuracy &gt; best[0]) {
+        best[0] = accuracy;
+        bestProps[0] = props;
+    }
+});
+System.out.printf("Best accuracy: %.2f%%%n", 100.0 * best[0]);</code></pre>
+    </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.classification.RandomForest
+import smile.datasets.ImageSegmentation
+import smile.hpo.Hyperparameters
+import smile.validation.metric.Accuracy
+
+val segment = new ImageSegmentation()
+val hp = new Hyperparameters()
+  .add("smile.random_forest.trees", 100)
+  .add("smile.random_forest.mtry", Array(2, 3, 4))
+  .add("smile.random_forest.max_nodes", 100, 300, 50)
+
+println(s"Configurations: ${hp.grid.count}")
+var best = 0.0
+var bestProps: java.util.Properties = null
+hp.grid.forEach { props =&gt;
+  val model = RandomForest.fit(segment.formula, segment.train, props)
+  val accuracy = Accuracy.of(segment.testy, model.predict(segment.test))
+  if (accuracy &gt; best) { best = accuracy; bestProps = props }
+}
+println(f"Best accuracy: ${100.0 * best}%.2f%%")</code></pre>
+    </div>
+    <div id="pg-2-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.classification.RandomForest
+import smile.datasets.ImageSegmentation
+import smile.hpo.Hyperparameters
+import smile.validation.metric.Accuracy
+
+val segment = ImageSegmentation()
+val hp = Hyperparameters()
+    .add("smile.random_forest.trees", 100)
+    .add("smile.random_forest.mtry", intArrayOf(2, 3, 4))
+    .add("smile.random_forest.max_nodes", 100, 300, 50)
+
+println("Configurations: ${hp.grid().count()}")
+var best = 0.0
+var bestProps: Properties? = null
+hp.grid().forEach { props -&gt;
+    val model = RandomForest.fit(segment.formula(), segment.train(), props)
+    val accuracy = Accuracy.of(segment.testy(), model.predict(segment.test()))
+    if (accuracy &gt; best) { best = accuracy; bestProps = props }
+}
+println("Best accuracy: %.2f%%".format(100.0 * best))</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="random-search" class="title">Random Search</h2>
+
+    <p>Random search lets the evaluation budget stay independent of the full Cartesian product. <code>random()</code> is intentionally unbounded: always add <code>limit(n)</code>, or use the finite convenience method <code>random(n)</code>. Never call <code>collect()</code>, <code>count()</code>, or <code>forEach()</code> directly on the unbounded stream.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-3-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.classification.RandomForest;
+import smile.datasets.ImageSegmentation;
+import smile.hpo.Hyperparameters;
+import smile.validation.metric.Accuracy;
+
+var segment = new ImageSegmentation();
+var hp = new Hyperparameters()
+    .add("smile.random_forest.trees", new int[] {100, 200, 500})
+    .add("smile.random_forest.mtry", 2, 18)
+    .add("smile.random_forest.max_nodes", 50, 500);
+
+hp.random().limit(20).forEach(props -&gt; {
+    var model = RandomForest.fit(segment.formula(), segment.train(), props);
+    double accuracy = Accuracy.of(segment.testy(), model.predict(segment.test()));
+    System.out.printf("%.4f  %s%n", accuracy, props);
+});
+// Equivalent finite stream: hp.random(20)</code></pre>
+    </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.classification.RandomForest
+import smile.datasets.ImageSegmentation
+import smile.hpo.Hyperparameters
+import smile.validation.metric.Accuracy
+
+val segment = new ImageSegmentation()
+val hp = new Hyperparameters()
+  .add("smile.random_forest.trees", Array(100, 200, 500))
+  .add("smile.random_forest.mtry", 2, 18)
+  .add("smile.random_forest.max_nodes", 50, 500)
+
+hp.random.limit(20).forEach { props =&gt;
+  val model = RandomForest.fit(segment.formula, segment.train, props)
+  val accuracy = Accuracy.of(segment.testy, model.predict(segment.test))
+  println(f"$accuracy%.4f  $props")
+}
+// Equivalent finite stream: hp.random(20)</code></pre>
+    </div>
+    <div id="pg-3-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.classification.RandomForest
+import smile.datasets.ImageSegmentation
+import smile.hpo.Hyperparameters
+import smile.validation.metric.Accuracy
+
+val segment = ImageSegmentation()
+val hp = Hyperparameters()
+    .add("smile.random_forest.trees", intArrayOf(100, 200, 500))
+    .add("smile.random_forest.mtry", 2, 18)
+    .add("smile.random_forest.max_nodes", 50, 500)
+
+hp.random().limit(20).forEach { props -&gt;
+    val model = RandomForest.fit(segment.formula(), segment.train(), props)
+    val accuracy = Accuracy.of(segment.testy(), model.predict(segment.test()))
+    println("%.4f  %s".format(accuracy, props))
+}
+// Equivalent finite stream: hp.random(20)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="managing" class="title">Managing a Search Space</h2>
+
+    <p>Adding the same name again overwrites its previous definition. <code>remove(name)</code> deletes one parameter, <code>clear()</code> deletes all parameters, and <code>size()</code> reports the current number. Both removal methods return the builder for chaining.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-4-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.hpo.Hyperparameters;
+
+var hp = new Hyperparameters()
+    .add("smile.random_forest.trees", 100)
+    .add("smile.random_forest.mtry", new int[] {2, 3});
+hp.add("smile.random_forest.trees", new int[] {100, 200, 500});
+System.out.println(hp.size()); // 2
+hp.remove("smile.random_forest.mtry");
+hp.clear();</code></pre>
+    </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.hpo.Hyperparameters
+
+val hp = new Hyperparameters()
+  .add("smile.random_forest.trees", 100)
+  .add("smile.random_forest.mtry", Array(2, 3))
+hp.add("smile.random_forest.trees", Array(100, 200, 500))
+println(hp.size) // 2
+hp.remove("smile.random_forest.mtry")
+hp.clear()</code></pre>
+    </div>
+    <div id="pg-4-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.hpo.Hyperparameters
+
+val hp = Hyperparameters()
+    .add("smile.random_forest.trees", 100)
+    .add("smile.random_forest.mtry", intArrayOf(2, 3))
+hp.add("smile.random_forest.trees", intArrayOf(100, 200, 500))
+println(hp.size()) // 2
+hp.remove("smile.random_forest.mtry")
+hp.clear()</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="integration" class="title">Model Integration</h2>
+
+    <p>Each model documents the property keys accepted by its <code>fit(..., Properties)</code> overload. The same builder can therefore tune any model without a model-specific search API. This short Gradient Tree Boost example uses the <code>smile.gradient_boost.*</code> keys.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-5-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.classification.GradientTreeBoost;
+import smile.datasets.Iris;
+import smile.hpo.Hyperparameters;
+
+var iris = new Iris();
+var hp = new Hyperparameters()
+    .add("smile.gradient_boost.trees", new int[] {100, 200})
+    .add("smile.gradient_boost.max_depth", new int[] {4, 6, 8})
+    .add("smile.gradient_boost.shrinkage", new double[] {0.05, 0.1, 0.2})
+    .add("smile.gradient_boost.sampling_rate", new double[] {0.7, 0.8, 1.0});
+
+hp.random(12).forEach(props -&gt;
+    GradientTreeBoost.fit(iris.formula(), iris.data(), props));</code></pre>
+    </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.classification.GradientTreeBoost
+import smile.datasets.Iris
+import smile.hpo.Hyperparameters
+
+val iris = new Iris()
+val hp = new Hyperparameters()
+  .add("smile.gradient_boost.trees", Array(100, 200))
+  .add("smile.gradient_boost.max_depth", Array(4, 6, 8))
+  .add("smile.gradient_boost.shrinkage", Array(0.05, 0.1, 0.2))
+  .add("smile.gradient_boost.sampling_rate", Array(0.7, 0.8, 1.0))
+
+hp.random(12).forEach { props =&gt;
+  GradientTreeBoost.fit(iris.formula, iris.data, props)
+}</code></pre>
+    </div>
+    <div id="pg-5-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.classification.GradientTreeBoost
+import smile.datasets.Iris
+import smile.hpo.Hyperparameters
+
+val iris = Iris()
+val hp = Hyperparameters()
+    .add("smile.gradient_boost.trees", intArrayOf(100, 200))
+    .add("smile.gradient_boost.max_depth", intArrayOf(4, 6, 8))
+    .add("smile.gradient_boost.shrinkage", doubleArrayOf(0.05, 0.1, 0.2))
+    .add("smile.gradient_boost.sampling_rate", doubleArrayOf(0.7, 0.8, 1.0))
+
+hp.random(12).forEach { props -&gt;
+    GradientTreeBoost.fit(iris.formula(), iris.data(), props)
+}</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="cross-validation" class="title">Cross-Validation Inside the Loop</h2>
+
+    <p>A held-out test set is useful for a final unbiased estimate, but small training sets benefit from cross-validation during tuning. Evaluate each configuration with <code>CrossValidation.classification</code> and choose by the average fold metric; keep the final test set outside this loop.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-6-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Properties;
+import smile.classification.RandomForest;
+import smile.datasets.Iris;
+import smile.hpo.Hyperparameters;
+import smile.validation.CrossValidation;
+
+var iris = new Iris();
+var hp = new Hyperparameters()
+    .add("smile.random_forest.trees", new int[] {100, 200})
+    .add("smile.random_forest.max_nodes", new int[] {10, 20, 40});
+double best = 0.0;
+Properties bestProps = null;
+
+for (var props : (Iterable&lt;Properties&gt;) hp.grid()::iterator) {
+    var cv = CrossValidation.classification(5, iris.formula(), iris.data(),
+        (formula, data) -&gt; RandomForest.fit(formula, data, props));
+    double accuracy = cv.avg().accuracy();
+    if (accuracy &gt; best) { best = accuracy; bestProps = props; }
+}
+System.out.printf("Best CV accuracy: %.4f%n", best);</code></pre>
+    </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.classification.RandomForest
+import smile.datasets.Iris
+import smile.hpo.Hyperparameters
+import smile.validation.CrossValidation
+
+val iris = new Iris()
+val hp = new Hyperparameters()
+  .add("smile.random_forest.trees", Array(100, 200))
+  .add("smile.random_forest.max_nodes", Array(10, 20, 40))
+var best = 0.0
+var bestProps: java.util.Properties = null
+
+hp.grid.forEach { props =&gt;
+  val cv = CrossValidation.classification(5, iris.formula, iris.data,
+    (formula, data) =&gt; RandomForest.fit(formula, data, props))
+  val accuracy = cv.avg.accuracy
+  if (accuracy &gt; best) { best = accuracy; bestProps = props }
+}
+println(f"Best CV accuracy: $best%.4f")</code></pre>
+    </div>
+    <div id="pg-6-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.classification.RandomForest
+import smile.datasets.Iris
+import smile.hpo.Hyperparameters
+import smile.validation.CrossValidation
+
+val iris = Iris()
+val hp = Hyperparameters()
+    .add("smile.random_forest.trees", intArrayOf(100, 200))
+    .add("smile.random_forest.max_nodes", intArrayOf(10, 20, 40))
+var best = 0.0
+var bestProps: Properties? = null
+
+hp.grid().forEach { props -&gt;
+    val cv = CrossValidation.classification(5, iris.formula(), iris.data()) {
+        formula, data -&gt; RandomForest.fit(formula, data, props)
+    }
+    val accuracy = cv.avg().accuracy()
+    if (accuracy &gt; best) { best = accuracy; bestProps = props }
+}
+println("Best CV accuracy: %.4f".format(best))</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="best-practices" class="title">Best Practices</h2>
+
+<ol>
+    <li>Start with a budgeted random search, then narrow a small grid
+        around the promising region.</li>
+    <li>Count grid configurations first, and always limit random
+        streams with <code>limit(n)</code> or <code>random(n)</code>.</li>
+    <li>Represent multiplicative scales explicitly, for example
+        <code>new double[] {0.001, 0.01, 0.1, 1, 10, 100}</code> for
+        regularization <code>C</code> or learning rate.</li>
+    <li>Use <code>parallel()</code> only after checking the trainer.
+        Models such as random forest already parallelize internally;
+        nested parallelism can oversubscribe resources or deadlock.</li>
+    <li>Persist the winning <code>Properties</code> so training and
+        deployment use the exact same configuration.</li>
+</ol>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-7-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.io.FileOutputStream;
+import java.util.Properties;
+
+Properties bestProps = /* result of the search */ new Properties();
+try (var out = new FileOutputStream("best.properties")) {
+    bestProps.store(out, "Best hyperparameters");
+}</code></pre>
+    </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.io.FileOutputStream
+import java.util.Properties
+
+val bestProps = new Properties() // result of the search
+val out = new FileOutputStream("best.properties")
+try bestProps.store(out, "Best hyperparameters")
+finally out.close()</code></pre>
+    </div>
+    <div id="pg-7-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.io.FileOutputStream
+import java.util.Properties
+
+val bestProps = Properties() // result of the search
+FileOutputStream("best.properties").use { out -&gt;
+    bestProps.store(out, "Best hyperparameters")
+}</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="model-validation.html" title="Previous Section: Model Validation"><span>Model Validation</span></a>
+        <a class="btn-next-text" href="clustering.html" title="Next Section: Clustering"><span>Clustering</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>

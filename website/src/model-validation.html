@@ -1,0 +1,956 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - Model Validation
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 order-md-first">
+    <h1 id="validation-top" class="title">Model Validation</h1>
+
+    <p>Training error measures how closely a model fits observations it has already seen. Model validation instead estimates <em>generalization</em>: performance on independent data from the same target population. A low training error alone may only reveal overfitting.</p>
+    <p>SMILE separates orchestration in <code>smile.validation</code> from scores in <code>smile.validation.metric</code>. Splitters return a <code>Bag</code> record; validation runners fit models, score held-out rows, and collect timing, predictions, confusion matrices, and metrics.</p>
+    <p>A hard classifier returns only labels. A soft classifier also returns posterior probabilities, which enable AUC, log loss, and multiclass cross entropy. Metrics that do not apply to the classifier type or class count are represented by <code>Double.NaN</code> in <code>ClassificationMetrics</code>.</p>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead><tr><th>Package</th><th>Purpose</th></tr></thead>
+        <tbody>
+        <tr><td><code>smile.validation</code></td>
+            <td>Splits, hold-out evaluation, bootstrap, cross-validation,
+                LOOCV, result records, and model-selection criteria</td></tr>
+        <tr><td><code>smile.validation.metric</code></td>
+            <td>Classification, probabilistic classification, regression,
+                and clustering scores</td></tr>
+        </tbody>
+    </table>
+</div>
+
+    <dl class="options-dl">
+        <dt><code>Bag.samples()</code></dt>
+        <dd>Training-row indices. Bootstrap bags may repeat an index because sampling is with replacement.</dd>
+        <dt><code>Bag.oob()</code></dt>
+        <dd>Held-out or out-of-bag row indices used for validation.</dd>
+    </dl>
+
+
+    <h2 id="classification-metrics" class="title">Classification Metrics</h2>
+
+    <p>Classification metrics consume integer ground-truth and predicted labels. Import them from <code>smile.validation.metric.*</code>. Accuracy and error work directly for multiclass data; many rate metrics default to binary labels <code>{0, 1}</code>.</p>
+
+
+    <h3 id="accuracy-error">Accuracy and Error</h3>
+
+    <p><code>Accuracy</code> is the fraction correctly predicted; <code>Error</code> is the number of incorrect predictions. The Iris class column is named <code>class</code> and has three classes.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-1-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Iris
+import smile.validation.metric.Accuracy
+import smile.validation.metric.Error
+
+var iris = new Iris()
+int[] truth = iris.y()
+int[] prediction = truth.clone()
+prediction[0] = 1
+prediction[50] = 2
+prediction[100] = 0
+System.out.printf("accuracy=%.2f, error=%d%n",
+    Accuracy.of(truth, prediction), Error.of(truth, prediction))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+accuracy=0.98, error=3
+      </code></pre>
+    </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Iris
+import smile.validation.metric.{Accuracy, Error}
+
+val iris = new Iris()
+val truth = iris.y
+val prediction = truth.clone
+prediction(0) = 1
+prediction(50) = 2
+prediction(100) = 0
+println(f"accuracy=${Accuracy.of(truth, prediction)}%.2f, " +
+  s"error=${Error.of(truth, prediction)}")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+accuracy=0.98, error=3
+      </code></pre>
+    </div>
+    <div id="pg-1-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Iris
+import smile.validation.metric.Accuracy
+import smile.validation.metric.Error
+
+val iris = Iris()
+val truth = iris.y()
+val prediction = truth.clone()
+prediction[0] = 1
+prediction[50] = 2
+prediction[100] = 0
+println("accuracy=%.2f, error=%d".format(
+    Accuracy.of(truth, prediction), Error.of(truth, prediction)))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+accuracy=0.98, error=3
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="binary-rates">Precision, Recall, F-Score, and Rates</h3>
+
+    <p>Precision asks how many predicted positives are correct; recall (the same quantity as sensitivity) asks how many actual positives were found. Specificity is the true-negative rate, fallout is the false-positive rate, and FDR is the false-discovery rate. F-score balances precision and recall; <code>FScore.F1.score(...)</code> is equivalent to <code>FScore.of(truth, prediction, 1.0, null)</code> for binary labels.</p>
+    <p>For multiclass precision, recall, and F-score, pass <code>Averaging.Macro</code>, <code>Micro</code>, or <code>Weighted</code>. Macro gives each class equal weight, micro pools decisions, and weighted averaging follows class support.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-2-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.validation.metric.*
+
+int[] truth =      {0, 0, 1, 1, 1, 0}
+int[] prediction = {0, 1, 1, 1, 0, 0}
+System.out.printf(
+    "P=%.3f R=%.3f F1=%.3f sensitivity=%.3f specificity=%.3f%n" +
+    "fallout=%.3f FDR=%.3f MCC=%.3f%n",
+    Precision.of(truth, prediction),
+    Recall.of(truth, prediction),
+    FScore.F1.score(truth, prediction),
+    Sensitivity.of(truth, prediction),
+    Specificity.of(truth, prediction),
+    Fallout.of(truth, prediction),
+    FDR.of(truth, prediction),
+    MatthewsCorrelation.of(truth, prediction))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+P=0.667 R=0.667 F1=0.667
+sensitivity=0.667 specificity=0.667 fallout=0.333 FDR=0.333 MCC=0.333
+      </code></pre>
+    </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.validation.metric.*
+
+val truth = Array(0, 0, 1, 1, 1, 0)
+val prediction = Array(0, 1, 1, 1, 0, 0)
+println(f"P=${Precision.of(truth, prediction)}%.3f " +
+  f"R=${Recall.of(truth, prediction)}%.3f " +
+  f"F1=${FScore.F1.score(truth, prediction)}%.3f")
+println(f"sensitivity=${Sensitivity.of(truth, prediction)}%.3f " +
+  f"specificity=${Specificity.of(truth, prediction)}%.3f " +
+  f"fallout=${Fallout.of(truth, prediction)}%.3f " +
+  f"FDR=${FDR.of(truth, prediction)}%.3f " +
+  f"MCC=${MatthewsCorrelation.of(truth, prediction)}%.3f")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+P=0.667 R=0.667 F1=0.667
+sensitivity=0.667 specificity=0.667 fallout=0.333 FDR=0.333 MCC=0.333
+      </code></pre>
+    </div>
+    <div id="pg-2-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.validation.metric.*
+
+val truth = intArrayOf(0, 0, 1, 1, 1, 0)
+val prediction = intArrayOf(0, 1, 1, 1, 0, 0)
+println("P=%.3f R=%.3f F1=%.3f".format(
+    Precision.of(truth, prediction),
+    Recall.of(truth, prediction),
+    FScore.F1.score(truth, prediction)))
+println("sensitivity=%.3f specificity=%.3f fallout=%.3f FDR=%.3f MCC=%.3f".format(
+    Sensitivity.of(truth, prediction),
+    Specificity.of(truth, prediction),
+    Fallout.of(truth, prediction),
+    FDR.of(truth, prediction),
+    MatthewsCorrelation.of(truth, prediction)))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+P=0.667 R=0.667 F1=0.667
+sensitivity=0.667 specificity=0.667 fallout=0.333 FDR=0.333 MCC=0.333
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="mcc-confusion">MCC and Confusion Matrix</h3>
+
+    <p>Matthews correlation coefficient summarizes all four binary contingency counts and remains informative under imbalance. <code>ConfusionMatrix.of</code> exposes the complete class-by-class count matrix, with truth on rows and prediction on columns.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-3-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.validation.metric.ConfusionMatrix
+
+int[] truth =      {0, 0, 1, 1, 1, 0}
+int[] prediction = {0, 1, 1, 1, 0, 0}
+System.out.println(ConfusionMatrix.of(truth, prediction))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+2 x 2 confusion matrix with rows [2, 1] and [1, 2]
+      </code></pre>
+    </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.validation.metric.ConfusionMatrix
+
+val truth = Array(0, 0, 1, 1, 1, 0)
+val prediction = Array(0, 1, 1, 1, 0, 0)
+println(ConfusionMatrix.of(truth, prediction))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+2 x 2 confusion matrix with rows [2, 1] and [1, 2]
+      </code></pre>
+    </div>
+    <div id="pg-3-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.validation.metric.ConfusionMatrix
+
+val truth = intArrayOf(0, 0, 1, 1, 1, 0)
+val prediction = intArrayOf(0, 1, 1, 1, 0, 0)
+println(ConfusionMatrix.of(truth, prediction))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+2 x 2 confusion matrix with rows [2, 1] and [1, 2]
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="classification-fields">ClassificationMetrics Fields</h3>
+
+    <dl class="options-dl">
+        <dt><code>fitTime(), scoreTime()</code></dt>
+        <dd>Mean milliseconds spent fitting and scoring.</dd>
+        <dt><code>size(), error()</code></dt>
+        <dd>Validation row count and misclassification count.</dd>
+        <dt><code>accuracy()</code></dt>
+        <dd>Fraction of correct labels.</dd>
+        <dt><code>sensitivity(), specificity()</code></dt>
+        <dd>Binary true-positive and true-negative rates.</dd>
+        <dt><code>precision(), f1(), mcc()</code></dt>
+        <dd>Binary precision, F1, and Matthews correlation.</dd>
+        <dt><code>auc(), logloss()</code></dt>
+        <dd>Binary probability metrics; NaN for hard classifiers.</dd>
+        <dt><code>crossEntropy()</code></dt>
+        <dd>Multiclass probability loss; NaN when posterior probabilities are unavailable.</dd>
+    </dl>
+
+
+    <h2 id="probabilistic-metrics" class="title">Probabilistic Classification Metrics</h2>
+
+    <p>AUC and log loss accept the probability of binary class 1. AUC measures ranking quality; log loss penalizes confident mistakes. Cross entropy generalizes log loss to a posterior-probability row for every multiclass sample. These scores require a soft classifier or explicitly supplied probabilities.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-4-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.validation.metric.AUC
+import smile.validation.metric.LogLoss
+import smile.validation.metric.CrossEntropy
+
+int[] binaryTruth = {0, 0, 1, 1}
+double[] probability = {0.10, 0.40, 0.35, 0.80}
+System.out.printf("AUC=%.2f, logloss=%.4f%n",
+    AUC.of(binaryTruth, probability),
+    LogLoss.of(binaryTruth, probability))
+
+int[] truth = {0, 2, 1}
+double[][] posterior = {
+    {0.80, 0.10, 0.10},
+    {0.05, 0.15, 0.80},
+    {0.10, 0.70, 0.20}
+}
+System.out.printf("crossEntropy=%.4f%n",
+    CrossEntropy.of(truth, posterior))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+AUC=0.75, logloss=0.4723
+crossEntropy=0.2677
+      </code></pre>
+    </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.validation.metric.{AUC, CrossEntropy, LogLoss}
+
+val binaryTruth = Array(0, 0, 1, 1)
+val probability = Array(0.10, 0.40, 0.35, 0.80)
+println(f"AUC=${AUC.of(binaryTruth, probability)}%.2f, " +
+  f"logloss=${LogLoss.of(binaryTruth, probability)}%.4f")
+
+val truth = Array(0, 2, 1)
+val posterior = Array(
+  Array(0.80, 0.10, 0.10),
+  Array(0.05, 0.15, 0.80),
+  Array(0.10, 0.70, 0.20))
+println(f"crossEntropy=${CrossEntropy.of(truth, posterior)}%.4f")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+AUC=0.75, logloss=0.4723
+crossEntropy=0.2677
+      </code></pre>
+    </div>
+    <div id="pg-4-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.validation.metric.AUC
+import smile.validation.metric.LogLoss
+import smile.validation.metric.CrossEntropy
+
+val binaryTruth = intArrayOf(0, 0, 1, 1)
+val probability = doubleArrayOf(0.10, 0.40, 0.35, 0.80)
+println("AUC=%.2f, logloss=%.4f".format(
+    AUC.of(binaryTruth, probability),
+    LogLoss.of(binaryTruth, probability)))
+
+val truth = intArrayOf(0, 2, 1)
+val posterior = arrayOf(
+    doubleArrayOf(0.80, 0.10, 0.10),
+    doubleArrayOf(0.05, 0.15, 0.80),
+    doubleArrayOf(0.10, 0.70, 0.20))
+println("crossEntropy=%.4f".format(
+    CrossEntropy.of(truth, posterior)))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+AUC=0.75, logloss=0.4723
+crossEntropy=0.2677
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="regression-metrics" class="title">Regression Metrics</h2>
+
+    <p>Regression scores compare continuous predictions with true responses. MSE and RMSE emphasize large residuals, MAD is more robust, RSS is the unnormalized squared-error total, and R² reports improvement over predicting the response mean.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-5-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.validation.metric.*
+
+double[] truth = {3.0, -0.5, 2.0, 7.0}
+double[] prediction = {2.5, 0.0, 2.0, 8.0}
+System.out.printf("MSE=%.3f RMSE=%.3f MAD=%.3f RSS=%.3f R2=%.3f%n",
+    MSE.of(truth, prediction), RMSE.of(truth, prediction),
+    MAD.of(truth, prediction), RSS.of(truth, prediction),
+    R2.of(truth, prediction))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+MSE=0.375 RMSE=0.612 MAD=0.500 RSS=1.500 R2=0.949
+      </code></pre>
+    </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.validation.metric.*
+
+val truth = Array(3.0, -0.5, 2.0, 7.0)
+val prediction = Array(2.5, 0.0, 2.0, 8.0)
+println(f"MSE=${MSE.of(truth, prediction)}%.3f " +
+  f"RMSE=${RMSE.of(truth, prediction)}%.3f " +
+  f"MAD=${MAD.of(truth, prediction)}%.3f " +
+  f"RSS=${RSS.of(truth, prediction)}%.3f " +
+  f"R2=${R2.of(truth, prediction)}%.3f")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+MSE=0.375 RMSE=0.612 MAD=0.500 RSS=1.500 R2=0.949
+      </code></pre>
+    </div>
+    <div id="pg-5-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.validation.metric.*
+
+val truth = doubleArrayOf(3.0, -0.5, 2.0, 7.0)
+val prediction = doubleArrayOf(2.5, 0.0, 2.0, 8.0)
+println("MSE=%.3f RMSE=%.3f MAD=%.3f RSS=%.3f R2=%.3f".format(
+    MSE.of(truth, prediction), RMSE.of(truth, prediction),
+    MAD.of(truth, prediction), RSS.of(truth, prediction),
+    R2.of(truth, prediction)))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+MSE=0.375 RMSE=0.612 MAD=0.500 RSS=1.500 R2=0.949
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <dl class="options-dl">
+        <dt><code>fitTime(), scoreTime()</code></dt>
+        <dd>Mean milliseconds spent fitting and scoring.</dd>
+        <dt><code>size()</code></dt>
+        <dd>Number of validation rows.</dd>
+        <dt><code>rss()</code></dt>
+        <dd>Residual sum of squares.</dd>
+        <dt><code>mse(), rmse()</code></dt>
+        <dd>Mean squared error and its square root.</dd>
+        <dt><code>mad()</code></dt>
+        <dd>Mean absolute deviation of predictions from truth.</dd>
+        <dt><code>r2()</code></dt>
+        <dd>Coefficient of determination; higher is better.</dd>
+    </dl>
+
+
+    <h2 id="data-splitting" class="title">Data Splitting</h2>
+
+    <p>Splitting must happen before fitting preprocessors or models. <code>Bag.split</code> makes one random hold-out split; its DataFrame overload returns <code>Tuple2&lt;DataFrame, DataFrame&gt;</code>. <code>Bag.stratify</code> preserves class proportions.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-6-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Iris
+import smile.validation.Bag
+
+var iris = new Iris()
+Bag index = Bag.split(iris.data().nrow(), 0.20)
+var split = Bag.split(iris.data(), 0.20)
+var stratified = Bag.stratify(iris.data(), "class", 0.20)
+System.out.printf("indices=%d/%d, frames=%d/%d, stratified=%d/%d%n",
+    index.samples().length, index.oob().length,
+    split._1().nrow(), split._2().nrow(),
+    stratified._1().nrow(), stratified._2().nrow())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+indices=120/30, frames=120/30, stratified=120/30
+      </code></pre>
+    </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Iris
+import smile.validation.Bag
+
+val iris = new Iris()
+val index = Bag.split(iris.data.nrow, 0.20)
+val split = Bag.split(iris.data, 0.20)
+val stratified = Bag.stratify(iris.data, "class", 0.20)
+println(s"indices=${index.samples.length}/${index.oob.length}, " +
+  s"frames=${split._1.nrow}/${split._2.nrow}, " +
+  s"stratified=${stratified._1.nrow}/${stratified._2.nrow}")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+indices=120/30, frames=120/30, stratified=120/30
+      </code></pre>
+    </div>
+    <div id="pg-6-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Iris
+import smile.validation.Bag
+
+val iris = Iris()
+val index = Bag.split(iris.data().nrow(), 0.20)
+val split = Bag.split(iris.data(), 0.20)
+val stratified = Bag.stratify(iris.data(), "class", 0.20)
+println("indices=${index.samples().size}/${index.oob().size}, " +
+    "frames=${split._1().nrow()}/${split._2().nrow()}, " +
+    "stratified=${stratified._1().nrow()}/${stratified._2().nrow()}")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+indices=120/30, frames=120/30, stratified=120/30
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p><code>Bootstrap.of</code> samples training rows with replacement and puts never-selected rows in <code>oob()</code>. <code>CrossValidation.of</code> partitions rows into k folds; <code>stratify</code> preserves labels and <code>nonoverlap</code> keeps all rows from a group in one test fold. <code>LOOCV.of</code> returns the training indices for every possible single-row hold-out.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-7-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Iris
+import smile.validation.*
+
+var iris = new Iris()
+Bag[] bootstrap = Bootstrap.of(iris.data().nrow(), 5)
+Bag[] folds = CrossValidation.of(iris.data().nrow(), 10)
+Bag[] stratified = CrossValidation.stratify(iris.y(), 10)
+int[] groups = new int[150]
+for (int i = 0; i &lt; groups.length; i++) groups[i] = i / 10
+Bag[] grouped = CrossValidation.nonoverlap(groups, 5)
+int[][] loo = LOOCV.of(iris.data().nrow())
+System.out.printf("%d bootstrap, %d folds, %d stratified, %d grouped, %d LOO%n",
+    bootstrap.length, folds.length, stratified.length,
+    grouped.length, loo.length)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+5 bootstrap, 10 folds, 10 stratified, 5 grouped, 150 LOO
+      </code></pre>
+    </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Iris
+import smile.validation.*
+
+val iris = new Iris()
+val bootstrap = Bootstrap.of(iris.data.nrow, 5)
+val folds = CrossValidation.of(iris.data.nrow, 10)
+val stratified = CrossValidation.stratify(iris.y, 10)
+val groups = Array.tabulate(150)(_ / 10)
+val grouped = CrossValidation.nonoverlap(groups, 5)
+val loo = LOOCV.of(iris.data.nrow)
+println(s"${bootstrap.length} bootstrap, ${folds.length} folds, " +
+  s"${stratified.length} stratified, ${grouped.length} grouped, ${loo.length} LOO")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+5 bootstrap, 10 folds, 10 stratified, 5 grouped, 150 LOO
+      </code></pre>
+    </div>
+    <div id="pg-7-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Iris
+import smile.validation.Bootstrap
+import smile.validation.CrossValidation
+import smile.validation.LOOCV
+
+val iris = Iris()
+val bootstrap = Bootstrap.of(iris.data().nrow(), 5)
+val folds = CrossValidation.of(iris.data().nrow(), 10)
+val stratified = CrossValidation.stratify(iris.y(), 10)
+val groups = IntArray(150) { it / 10 }
+val grouped = CrossValidation.nonoverlap(groups, 5)
+val loo = LOOCV.of(iris.data().nrow())
+println("${bootstrap.size} bootstrap, ${folds.size} folds, " +
+    "${stratified.size} stratified, ${grouped.size} grouped, ${loo.size} LOO")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+5 bootstrap, 10 folds, 10 stratified, 5 grouped, 150 LOO
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="holdout" class="title">Hold-out Validation</h2>
+
+    <p>When a dataset already supplies independent train and test partitions, pass both to <code>ClassificationValidation.of</code>. The result retains the model, labels, predictions, posterior probabilities when available, a confusion matrix, and metrics.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-8-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-8-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.classification.DecisionTree
+import smile.datasets.ImageSegmentation
+import smile.validation.ClassificationValidation
+
+var segment = new ImageSegmentation()
+var validation = ClassificationValidation.of(
+    segment.formula(), segment.train(), segment.test(), DecisionTree::fit)
+System.out.println(validation.metrics().accuracy())
+System.out.println(validation.confusion())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+test accuracy, followed by the 7 × 7 confusion matrix
+      </code></pre>
+    </div>
+    <div id="pg-8-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.classification.DecisionTree
+import smile.datasets.ImageSegmentation
+import smile.validation.ClassificationValidation
+
+val segment = new ImageSegmentation()
+val validation = ClassificationValidation.of(
+  segment.formula, segment.train, segment.test, DecisionTree.fit)
+println(validation.metrics.accuracy)
+println(validation.confusion)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+test accuracy, followed by the 7 × 7 confusion matrix
+      </code></pre>
+    </div>
+    <div id="pg-8-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.classification.DecisionTree
+import smile.datasets.ImageSegmentation
+import smile.validation.ClassificationValidation
+
+val segment = ImageSegmentation()
+val validation = ClassificationValidation.of(
+    segment.formula(), segment.train(), segment.test()) { f, d -&gt;
+    DecisionTree.fit(f, d)
+}
+println(validation.metrics().accuracy())
+println(validation.confusion())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+test accuracy, followed by the 7 × 7 confusion matrix
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="out-of-bag" class="title">Out-of-Bag Estimates</h2>
+
+    <p>Out-of-bag evaluation is also an ensemble property. For example, a fitted <code>RandomForest.metrics()</code> after fit reports OOB <code>ClassificationMetrics</code> computed while growing the forest. That estimate is produced by the ensemble itself; it is not a separate <code>smile.validation</code> runner.</p>
+
+
+    <h2 id="cross-validation" class="title">Cross-Validation Runners</h2>
+
+    <p>The runners build every model and return <code>ClassificationValidations</code>. Use <code>avg()</code> and <code>std()</code> for aggregate records and <code>rounds()</code> for individual folds. Stratification is usually preferred for imbalanced classification.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-9-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-9-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.classification.DecisionTree
+import smile.datasets.Iris
+import smile.validation.CrossValidation
+
+var iris = new Iris()
+var cv = CrossValidation.classification(
+    10, iris.formula(), iris.data(), DecisionTree::fit)
+var stratified = CrossValidation.stratify(
+    10, iris.formula(), iris.data(), DecisionTree::fit)
+var repeated = CrossValidation.classification(
+    3, 5, iris.formula(), iris.data(), DecisionTree::fit)
+System.out.printf("cv=%.3f ± %.3f, stratified=%.3f, repeated rounds=%d%n",
+    cv.avg().accuracy(), cv.std().accuracy(),
+    stratified.avg().accuracy(), repeated.rounds().size())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+10-fold mean ± standard deviation; repeated rounds=15
+      </code></pre>
+    </div>
+    <div id="pg-9-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.classification.DecisionTree
+import smile.datasets.Iris
+import smile.validation.CrossValidation
+
+val iris = new Iris()
+val cv = CrossValidation.classification(
+  10, iris.formula, iris.data, DecisionTree.fit)
+val stratified = CrossValidation.stratify(
+  10, iris.formula, iris.data, DecisionTree.fit)
+val repeated = CrossValidation.classification(
+  3, 5, iris.formula, iris.data, DecisionTree.fit)
+println(f"cv=${cv.avg.accuracy}%.3f ± ${cv.std.accuracy}%.3f, " +
+  f"stratified=${stratified.avg.accuracy}%.3f, " +
+  s"repeated rounds=${repeated.rounds.size}")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+10-fold mean ± standard deviation; repeated rounds=15
+      </code></pre>
+    </div>
+    <div id="pg-9-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.classification.DecisionTree
+import smile.datasets.Iris
+import smile.validation.CrossValidation
+
+val iris = Iris()
+val cv = CrossValidation.classification(
+    10, iris.formula(), iris.data()) { f, d -&gt; DecisionTree.fit(f, d) }
+val stratified = CrossValidation.stratify(
+    10, iris.formula(), iris.data()) { f, d -&gt; DecisionTree.fit(f, d) }
+val repeated = CrossValidation.classification(
+    3, 5, iris.formula(), iris.data()) { f, d -&gt; DecisionTree.fit(f, d) }
+println("cv=%.3f ± %.3f, stratified=%.3f, repeated rounds=%d".format(
+    cv.avg().accuracy(), cv.std().accuracy(),
+    stratified.avg().accuracy(), repeated.rounds().size))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+10-fold mean ± standard deviation; repeated rounds=15
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="loocv" class="title">Leave-One-Out Cross-Validation</h2>
+
+    <p>LOOCV trains once per row and combines all left-out predictions into one metrics record. It can reduce split-size bias but is computationally expensive. <code>LDA.fit</code> is an array API, so the runnable Iris demo uses <code>x()</code> and <code>y()</code> rather than a Formula overload.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-10-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-10-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-10-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-10-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.classification.LDA
+import smile.datasets.Iris
+import smile.validation.LOOCV
+
+var iris = new Iris()
+var metrics = LOOCV.classification(iris.x(), iris.y(), LDA::fit)
+System.out.println(metrics.accuracy())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Iris leave-one-out accuracy
+      </code></pre>
+    </div>
+    <div id="pg-10-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.classification.LDA
+import smile.datasets.Iris
+import smile.validation.LOOCV
+
+val iris = new Iris()
+val metrics = LOOCV.classification(iris.x, iris.y, LDA.fit)
+println(metrics.accuracy)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Iris leave-one-out accuracy
+      </code></pre>
+    </div>
+    <div id="pg-10-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.classification.LDA
+import smile.datasets.Iris
+import smile.validation.LOOCV
+
+val iris = Iris()
+val metrics = LOOCV.classification(iris.x(), iris.y()) { x, y -&gt;
+    LDA.fit(x, y)
+}
+println(metrics.accuracy())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Iris leave-one-out accuracy
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="bootstrap" class="title">Bootstrap Validation</h2>
+
+    <p>Bootstrap validation repeatedly samples a training bag with replacement and scores the observations absent from that bag. More rounds stabilize the estimate at the cost of more fits.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-11-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-11-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.classification.DecisionTree
+import smile.datasets.Iris
+import smile.validation.Bootstrap
+
+var iris = new Iris()
+var result = Bootstrap.classification(
+    100, iris.formula(), iris.data(), DecisionTree::fit)
+System.out.printf("accuracy=%.3f ± %.3f%n",
+    result.avg().accuracy(), result.std().accuracy())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+100-bootstrap mean accuracy ± standard deviation
+      </code></pre>
+    </div>
+    <div id="pg-11-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.classification.DecisionTree
+import smile.datasets.Iris
+import smile.validation.Bootstrap
+
+val iris = new Iris()
+val result = Bootstrap.classification(
+  100, iris.formula, iris.data, DecisionTree.fit)
+println(f"accuracy=${result.avg.accuracy}%.3f ± " +
+  f"${result.std.accuracy}%.3f")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+100-bootstrap mean accuracy ± standard deviation
+      </code></pre>
+    </div>
+    <div id="pg-11-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.classification.DecisionTree
+import smile.datasets.Iris
+import smile.validation.Bootstrap
+
+val iris = Iris()
+val result = Bootstrap.classification(
+    100, iris.formula(), iris.data()) { f, d -&gt; DecisionTree.fit(f, d) }
+println("accuracy=%.3f ± %.3f".format(
+    result.avg().accuracy(), result.std().accuracy()))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+100-bootstrap mean accuracy ± standard deviation
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="regression-cv" class="title">Regression Cross-Validation</h2>
+
+    <p>Regression runners mirror classification runners and return <code>RegressionValidations</code>. This example predicts Abalone <code>rings</code> with a regression tree and reports held-out RMSE.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-12-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-12-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Abalone
+import smile.regression.RegressionTree
+import smile.validation.CrossValidation
+
+var abalone = new Abalone()
+var cv = CrossValidation.regression(
+    10, abalone.formula(), abalone.train(), RegressionTree::fit)
+System.out.printf("RMSE=%.4f ± %.4f%n",
+    cv.avg().rmse(), cv.std().rmse())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+10-fold RMSE mean ± standard deviation
+      </code></pre>
+    </div>
+    <div id="pg-12-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Abalone
+import smile.regression.RegressionTree
+import smile.validation.CrossValidation
+
+val abalone = new Abalone()
+val cv = CrossValidation.regression(
+  10, abalone.formula, abalone.train, RegressionTree.fit)
+println(f"RMSE=${cv.avg.rmse}%.4f ± ${cv.std.rmse}%.4f")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+10-fold RMSE mean ± standard deviation
+      </code></pre>
+    </div>
+    <div id="pg-12-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Abalone
+import smile.regression.RegressionTree
+import smile.validation.CrossValidation
+
+val abalone = Abalone()
+val cv = CrossValidation.regression(
+    10, abalone.formula(), abalone.train()) { f, d -&gt;
+    RegressionTree.fit(f, d)
+}
+println("RMSE=%.4f ± %.4f".format(
+    cv.avg().rmse(), cv.std().rmse()))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+10-fold RMSE mean ± standard deviation
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="model-selection" class="title">AIC and BIC</h2>
+
+    <p><code>ModelSelection.AIC(logL, k)</code> and <code>ModelSelection.BIC(logL, k, n)</code> balance maximized log-likelihood against parameter count. Lower is preferred among models fit to the same response data. BIC's <code>k log(n)</code> penalty grows more strongly with sample size than AIC's <code>2k</code> penalty.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-13-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-13-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-13-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-13-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.validation.ModelSelection
+
+double logL = -120.0
+int parameters = 8
+int samples = 500
+System.out.printf("AIC=%.2f, BIC=%.2f%n",
+    ModelSelection.AIC(logL, parameters),
+    ModelSelection.BIC(logL, parameters, samples))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+AIC=256.00, BIC=289.72
+      </code></pre>
+    </div>
+    <div id="pg-13-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.validation.ModelSelection
+
+val logL = -120.0
+val parameters = 8
+val samples = 500
+println(f"AIC=${ModelSelection.AIC(logL, parameters)}%.2f, " +
+  f"BIC=${ModelSelection.BIC(logL, parameters, samples)}%.2f")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+AIC=256.00, BIC=289.72
+      </code></pre>
+    </div>
+    <div id="pg-13-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.validation.ModelSelection
+
+val logL = -120.0
+val parameters = 8
+val samples = 500
+println("AIC=%.2f, BIC=%.2f".format(
+    ModelSelection.AIC(logL, parameters),
+    ModelSelection.BIC(logL, parameters, samples)))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+AIC=256.00, BIC=289.72
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>For systematic hyperparameter search around a validation objective, continue to <a href="hpo.html">Hyperparameter Optimization</a>.</p>
+
+
+    <h2 id="pitfalls" class="title">Validation Pitfalls</h2>
+
+<div class="alert alert-warning" role="alert">
+    <strong>Keep the estimate honest.</strong>
+    <ul>
+        <li><strong>Leakage:</strong> fit scaling, imputation, feature
+            selection, and all learned transforms inside each training
+            split—not once on the full dataset.</li>
+        <li><strong>Imbalance:</strong> accuracy can hide failure on a
+            rare class; stratify and inspect precision, recall, MCC, and
+            the confusion matrix.</li>
+        <li><strong>LOOCV cost:</strong> it trains one model per sample
+            and is often slower than k-fold CV without a practical gain.</li>
+        <li><strong>NaN metrics:</strong> probability scores require a
+            soft classifier, and binary-only rates are unavailable for
+            multiclass results unless an averaging strategy is used.</li>
+    </ul>
+</div>
+
+
+    <h2 id="clustering" class="title">Clustering Metrics</h2>
+
+    <p>Rand index, adjusted Rand index, mutual information, and normalized or adjusted mutual information are covered with clustering workflows on the <a href="clustering.html">Clustering</a> page.</p>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="feature-engineering.html"
+           title="Previous Section: Feature Engineering"><span>Feature Engineering</span></a>
+        <a class="btn-next-text" href="hpo.html"
+           title="Next Section: Hyperparameter Optimization"><span>Hyperparameter Optimization</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
