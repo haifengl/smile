@@ -1,0 +1,472 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - Compressed Sensing
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 order-md-first">
+
+    <h1 id="cs-top" class="title">Compressed Sensing</h1>
+
+    <p>Compressed sensing recovers a high-dimensional signal from far fewer
+        linear measurements than the Nyquist–Shannon rate when the signal is
+        sparse (or sparse in a known basis). SMILE’s
+        <a href="api/java/smile/cs/package-summary.html"><code>smile.cs</code></a>
+        package provides sensing matrices and three recovery algorithms:</p>
+
+    <ul>
+        <li><code>MeasurementMatrix</code> — Gaussian, Bernoulli, or partial-identity Φ, optional wavelet Ψ</li>
+        <li><code>OMP</code> — Orthogonal Matching Pursuit (fast greedy, known <em>k</em>)</li>
+        <li><code>CoSaMP</code> — Compressive Sampling Matching Pursuit (near-optimal greedy)</li>
+        <li><code>BasisPursuit</code> — L1 minimization / BPDN (convex, <em>k</em> optional)</li>
+    </ul>
+
+    <p>With a <em>k</em>-sparse <code>x ∈ ℝⁿ</code> and measurements
+        <code>y = A x</code> where <code>A ∈ ℝ<sup>m×n</sup></code> and
+        <code>m ≪ n</code>, recovery is typically reliable when
+        <code>m = O(k log(n/k))</code> (a practical rule of thumb is
+        <code>m ≥ 4k</code>–<code>5k</code>).</p>
+
+    <h2 id="quickstart" class="title">Quick Start</h2>
+
+    <p>Build a sparse ground truth, take Gaussian measurements, and recover
+        with OMP and CoSaMP. Relative L2 error is machine-epsilon on this
+        noiseless instance.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays
+import smile.cs.*
+import smile.math.MathEx
+
+MathEx.setSeed(19650218)
+int n = 128, m = 50, k = 5
+
+double[] xTrue = new double[n]
+int[] locs = MathEx.permutate(n)
+for (int i = 0; i < k; i++) {
+    double amp = 1.0 + MathEx.random()
+    xTrue[locs[i]] = MathEx.random() < 0.5 ? amp : -amp
+}
+
+var mm = MeasurementMatrix.gaussian(m, n)
+double[] y = mm.measure(xTrue)
+
+var omp = OMP.fit(mm.phi(), y, k)
+Arrays.toString(omp.support())
+
+double[] d = omp.x().clone()
+for (int i = 0; i < n; i++) d[i] -= xTrue[i]
+MathEx.norm(d) / MathEx.norm(xTrue)
+
+var cosamp = CoSaMP.fit(mm.phi(), y, k)
+d = cosamp.x().clone()
+for (int i = 0; i < n; i++) d[i] -= xTrue[i]
+MathEx.norm(d) / MathEx.norm(xTrue)
+cosamp.iter()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[56, 110, 20, 34, 114]
+2.59e-16
+2.59e-16
+1
+      </code></pre>
+    </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.cs.*
+import smile.math.MathEx
+
+MathEx.setSeed(19650218)
+val n = 128; val m = 50; val k = 5
+
+val xTrue = new Array[Double](n)
+val locs = MathEx.permutate(n)
+for (i <- 0 until k) {
+  val amp = 1.0 + MathEx.random()
+  xTrue(locs(i)) = if (MathEx.random() < 0.5) amp else -amp
+}
+
+val mm = MeasurementMatrix.gaussian(m, n)
+val y = mm.measure(xTrue)
+
+val omp = OMP.fit(mm.phi(), y, k)
+omp.support().mkString("[", ", ", "]")
+
+def relError(xRec: Array[Double], xTrue: Array[Double]): Double = {
+  val d = xRec.indices.map(i => xRec(i) - xTrue(i)).toArray
+  MathEx.norm(d) / MathEx.norm(xTrue)
+}
+relError(omp.x(), xTrue)
+
+val cosamp = CoSaMP.fit(mm.phi(), y, k)
+relError(cosamp.x(), xTrue)
+cosamp.iter()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[56, 110, 20, 34, 114]
+2.59e-16
+2.59e-16
+1
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h2 id="sensing" class="title">Measurement Matrix</h2>
+
+    <p><code>MeasurementMatrix</code> wraps the sensing operator Φ (and an
+        optional sparsifying wavelet Ψ). Factory methods scale entries so that
+        <code>E[‖Φ x‖₂²] ≈ ‖x‖₂²</code>. Use <code>measure</code> /
+        <code>backProject</code> for forward and adjoint maps, and
+        <code>toMatrix()</code> for an implicit <code>Matrix</code> that
+        supports both <code>mv</code> and <code>tv</code>.</p>
+
+    <ul>
+        <li><code>gaussian(m, n)</code> — i.i.d. <code>N(0, 1/m)</code>; default choice, strongest RIP guarantees</li>
+        <li><code>bernoulli(m, n)</code> — ±1/√m; hardware-friendly</li>
+        <li><code>partial(m, n)</code> — random row subsample of the identity (needs a basis incoherent with the canonical one)</li>
+        <li><code>withWavelet(Wavelet)</code> — compound <code>A = Φ · IDWT</code> without forming Ψ explicitly</li>
+    </ul>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.cs.*
+import smile.math.MathEx
+
+MathEx.setSeed(0)
+var g = MeasurementMatrix.gaussian(30, 100)
+var b = MeasurementMatrix.bernoulli(20, 64)
+var p = MeasurementMatrix.partial(20, 64)
+
+g.nrow() + " x " + g.ncol()
+b.nrow() + " x " + b.ncol()
+p.nrow()
+
+// Adjoint identity: ⟨Φx, y⟩ = ⟨x, Φᵀ y⟩
+double[] x = new double[100]
+double[] yv = new double[30]
+for (int i = 0; i < 100; i++) x[i] = MathEx.random() - 0.5
+for (int i = 0; i < 30; i++) yv[i] = MathEx.random() - 0.5
+double lhs = MathEx.dot(g.measure(x), yv)
+double rhs = MathEx.dot(x, g.backProject(yv))
+lhs
+rhs
+Math.abs(lhs - rhs)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+30 x 100
+20 x 64
+20
+-0.3969560959
+-0.3969560959
+3.33e-16
+      </code></pre>
+    </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.cs.*
+import smile.math.MathEx
+
+MathEx.setSeed(0)
+val g = MeasurementMatrix.gaussian(30, 100)
+val b = MeasurementMatrix.bernoulli(20, 64)
+val p = MeasurementMatrix.partial(20, 64)
+
+s"${g.nrow} x ${g.ncol}"
+s"${b.nrow} x ${b.ncol}"
+p.nrow
+
+val x = Array.fill(100)(MathEx.random() - 0.5)
+val yv = Array.fill(30)(MathEx.random() - 0.5)
+val lhs = MathEx.dot(g.measure(x), yv)
+val rhs = MathEx.dot(x, g.backProject(yv))
+lhs
+rhs
+math.abs(lhs - rhs)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+30 x 100
+20 x 64
+20
+-0.3969560959
+-0.3969560959
+3.33e-16
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h2 id="omp" class="title">Orthogonal Matching Pursuit</h2>
+
+    <p>OMP greedily grows a support of size <em>k</em>: each step picks the
+        column of <code>A</code> most correlated with the residual, then
+        re-solves least squares on the active set (incremental QR). With a
+        Gaussian matrix and <code>m ≥ C k log n</code>, exact recovery holds
+        when the RIP constant satisfies
+        <code>δ<sub>2k</sub> &lt; √2 − 1</code>.</p>
+
+    <p>Use <code>OMP.fit(A, y, k)</code> or
+        <code>new OMP.Options(k, tol)</code> for early stopping on
+        <code>‖r‖₂ / ‖y‖₂</code>. Prefer OMP when <em>k</em> is known and
+        speed matters.</p>
+
+    <h2 id="cosamp" class="title">CoSaMP</h2>
+
+    <p>CoSaMP maintains a <code>2k</code>-candidate support, prunes to
+        <em>k</em>, and re-solves least squares—yielding near-optimal
+        guarantees and better noise tolerance than plain OMP. It is robust to
+        moderate over-estimates of <em>k</em> (requires <code>2k &lt; m</code>).
+        Call <code>CoSaMP.fit(A, y, k)</code> or pass
+        <code>CoSaMP.Options(k, maxIter, tol)</code>.</p>
+
+    <h2 id="bp" class="title">Basis Pursuit / BPDN</h2>
+
+    <p>Basis Pursuit solves the convex program
+        <code>minimize ‖x‖₁</code> subject to <code>A x = y</code>
+        (or <code>‖A x − y‖₂ ≤ ε</code> for BPDN). SMILE uses a log-barrier
+        interior-point method with CG Newton steps. Unlike the greedy methods,
+        <em>k</em> need not be known. Prefer BP/BPDN for best quality under
+        noise on small-to-medium problems.</p>
+
+    <p>Exact BP is more reliable when <code>m</code> is not too small relative
+        to <code>n</code>. The example below uses a compact instance and tight
+        options; the residual <code>‖A x − y‖₂ / ‖y‖₂</code> shows feasibility.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.cs.*
+import smile.math.MathEx
+import smile.tensor.Vector
+
+MathEx.setSeed(7777)
+int n = 32, m = 20, k = 3
+double[] xTrue = new double[n]
+int[] locs = MathEx.permutate(n)
+for (int i = 0; i < k; i++)
+    xTrue[locs[i]] = (i + 1) * (MathEx.random() < 0.5 ? 1 : -1)
+
+var mm = MeasurementMatrix.gaussian(m, n)
+double[] y = mm.measure(xTrue)
+
+var opts = new BasisPursuit.Options(0.0, 10.0, 1e-10, 300, 50, 1e-4)
+var bp = BasisPursuit.fit(mm.phi(), y, opts)
+bp.iter()
+
+var Ax = mm.phi().mv(Vector.column(bp.x()))
+double[] res = new double[m]
+for (int i = 0; i < m; i++) res[i] = Ax.get(i) - y[i]
+MathEx.norm(res) / MathEx.norm(y)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+5
+2.10e-12
+      </code></pre>
+    </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.cs.*
+import smile.math.MathEx
+import smile.tensor.Vector
+
+MathEx.setSeed(7777)
+val n = 32; val m = 20; val k = 3
+val xTrue = new Array[Double](n)
+val locs = MathEx.permutate(n)
+for (i <- 0 until k)
+  xTrue(locs(i)) = (i + 1) * (if (MathEx.random() < 0.5) 1 else -1)
+
+val mm = MeasurementMatrix.gaussian(m, n)
+val y = mm.measure(xTrue)
+
+val opts = new BasisPursuit.Options(0.0, 10.0, 1e-10, 300, 50, 1e-4)
+val bp = BasisPursuit.fit(mm.phi(), y, opts)
+bp.iter()
+
+val Ax = mm.phi().mv(Vector.column(bp.x()))
+val res = Array.tabulate(m)(i => Ax.get(i) - y(i))
+MathEx.norm(res) / MathEx.norm(y)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+5
+2.10e-12
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>For noisy data set <code>epsilon ≈ σ √m</code> (expected
+        <code>‖ε‖₂</code>) in <code>BasisPursuit.Options</code>. OMP/CoSaMP
+        instead loosen <code>tol</code> to about the noise-to-signal ratio.</p>
+
+    <h2 id="compare" class="title">Choosing an Algorithm</h2>
+
+    <ul>
+        <li><strong>OMP</strong> — fastest greedy method; needs a sparsity estimate; best in high SNR</li>
+        <li><strong>CoSaMP</strong> — near-optimal greedy guarantees; tolerates over-estimated <em>k</em> and moderate noise</li>
+        <li><strong>Basis Pursuit / BPDN</strong> — convex L1; no <em>k</em> required; strongest under noise, slowest</li>
+    </ul>
+
+    <p>Aim for <code>m ≥ 4k</code> at least; for high-probability recovery use roughly
+        <code>m ≥ 4k log(n/k)</code>. Increase <code>m</code> if the relative error
+        stays large.</p>
+
+    <h2 id="wavelet" class="title">Wavelet-Domain Sparsity</h2>
+
+    <p>Images and audio are often dense in the time/space domain but sparse
+        after a wavelet transform. Chain
+        <code>MeasurementMatrix.gaussian(m, n).withWavelet(psi)</code> so
+        solvers operate on the coefficient domain
+        (<code>A = Φ · IDWT</code>). Recover sparse coefficients with OMP, then
+        synthesize the signal via <code>psi.inverse</code>.</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays
+import smile.cs.*
+import smile.math.MathEx
+import smile.wavelet.HaarWavelet
+
+MathEx.setSeed(19650218)
+int n = 128, m = 50, k = 5
+
+double[] s = new double[n]
+int[] locs = MathEx.permutate(n)
+for (int i = 0; i < k; i++) {
+    double amp = 1.0 + MathEx.random()
+    s[locs[i]] = MathEx.random() < 0.5 ? amp : -amp
+}
+
+var wm = MeasurementMatrix.gaussian(m, n).withWavelet(new HaarWavelet())
+double[] y = wm.measureSparse(s)
+
+var omp = OMP.fit(wm.toMatrix(), y, k)
+Arrays.toString(omp.support())
+
+double[] d = omp.x().clone()
+for (int i = 0; i < n; i++) d[i] -= s[i]
+MathEx.norm(d) / MathEx.norm(s)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[34, 110, 56, 20, 114]
+2.50e-16
+      </code></pre>
+    </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.cs.*
+import smile.math.MathEx
+import smile.wavelet.HaarWavelet
+
+MathEx.setSeed(19650218)
+val n = 128; val m = 50; val k = 5
+
+val s = new Array[Double](n)
+val locs = MathEx.permutate(n)
+for (i <- 0 until k) {
+  val amp = 1.0 + MathEx.random()
+  s(locs(i)) = if (MathEx.random() < 0.5) amp else -amp
+}
+
+val wm = MeasurementMatrix.gaussian(m, n).withWavelet(new HaarWavelet())
+val y = wm.measureSparse(s)
+
+val omp = OMP.fit(wm.toMatrix(), y, k)
+omp.support().mkString("[", ", ", "]")
+
+val d = omp.x().indices.map(i => omp.x()(i) - s(i)).toArray
+MathEx.norm(d) / MathEx.norm(s)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[34, 110, 56, 20, 114]
+2.50e-16
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Haar is a good default for piecewise-constant structure;
+        <code>DaubechiesWavelet(8)</code> or higher suits smoother signals.
+        Signal length must be a power of two for the DWT.</p>
+
+    <h2 id="options" class="title">Options Persistence</h2>
+
+    <p>All <code>Options</code> records serialize through
+        <code>java.util.Properties</code>:</p>
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.cs.*
+
+var opts = new OMP.Options(8, 1e-8)
+var props = opts.toProperties()
+var restored = OMP.Options.of(props)
+restored.sparsity()
+restored.tol()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+8
+1.0E-8
+      </code></pre>
+    </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.cs.*
+
+val opts = new OMP.Options(8, 1e-8)
+val props = opts.toProperties()
+val restored = OMP.Options.of(props)
+restored.sparsity()
+restored.tol()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+8
+1.0E-8
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <h2 id="refs" class="title">References</h2>
+
+    <ol>
+        <li>E. J. Candès and M. B. Wakin, “An introduction to compressive sampling,”
+            <em>IEEE Signal Process. Mag.</em>, 25(2):21–30, 2008.</li>
+        <li>D. L. Donoho, “Compressed sensing,”
+            <em>IEEE Trans. Inf. Theory</em>, 52(4):1289–1306, 2006.</li>
+        <li>J. A. Tropp and A. C. Gilbert, “Signal recovery from random measurements via orthogonal matching pursuit,”
+            <em>IEEE Trans. Inf. Theory</em>, 53(12):4655–4666, 2007.</li>
+        <li>D. Needell and J. A. Tropp, “CoSaMP: Iterative signal recovery from incomplete and inaccurate samples,”
+            <em>Appl. Comput. Harmon. Anal.</em>, 26(3):301–321, 2009.</li>
+        <li>S. S. Chen, D. L. Donoho and M. A. Saunders, “Atomic decomposition by basis pursuit,”
+            <em>SIAM Rev.</em>, 43(1):129–159, 2001.</li>
+    </ol>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="wavelet.html" title="Previous Section: Wavelet"><span>Wavelet</span></a>
+        <a class="btn-next-text" href="graph.html" title="Next Section: Graph"><span>Graph</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
