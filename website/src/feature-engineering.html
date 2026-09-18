@@ -1,0 +1,1404 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: Smile - Feature Engineering
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 order-md-first">
+    <h1 id="feature-top" class="title">Feature Engineering</h1>
+
+    <p>Feature quality often matters more than the choice of learning algorithm. SMILE’s <code>smile.feature.*</code> packages cover scaling, encoding, dimensionality reduction, imputation, selection, and tree-ensemble SHAP.</p>
+    <p>This page follows the same playground conventions as <a href="classification.html">Classification</a> and <a href="regression.html">Regression</a>: Java / Scala / Kotlin tabs, runnable snippets, and expected outputs from unit tests where available.</p>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+        <tr><th>Subpackage</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+        <tr><td><code>smile.feature.transform</code></td>
+            <td>Scale, standardize, or row-normalize numeric columns</td></tr>
+        <tr><td><code>smile.feature.extraction</code></td>
+            <td>PCA family, random projection, text / categorical encoders</td></tr>
+        <tr><td><code>smile.feature.imputation</code></td>
+            <td>Fill missing values before training</td></tr>
+        <tr><td><code>smile.feature.selection</code></td>
+            <td>Rank or search for informative features</td></tr>
+        <tr><td><code>smile.feature.importance</code></td>
+            <td>SHAP / TreeSHAP explanations</td></tr>
+        </tbody>
+    </table>
+</div>
+
+    <p>Column-wise transformers return <code>InvertibleColumnTransform</code> (extends <code>Transform</code>) and chain with <code>Transform.pipeline(...)</code>. Deep manifold methods (UMAP, t-SNE, LLE, …) live on the <a href="manifold.html">Manifold Learning</a> page; here we keep PCA / KernelPCA / GHA / RandomProjection as feature extractors.</p>
+
+
+    <h2 id="transform" class="title">Feature Transformation</h2>
+
+    <p>Package <code>smile.feature.transform</code>: five column-wise invertible scalers plus a stateless row-wise <code>Normalizer</code>. Fit on training data, then <code>apply</code> to train/test (and <code>invert</code> when you need the original scale).</p>
+
+
+    <h3 id="scaler">Scaler</h3>
+
+    <p>Min–max scaling maps each column to <code>[0, 1]</code> using training min/max. Out-of-range values are clamped, so invert is lossy outside the training range. Prefer when algorithms want bounded inputs and outliers are mild.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-1-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Iris
+import smile.feature.transform.Scaler
+
+var iris = new Iris()
+var scaler = Scaler.fit(iris.data())
+var scaled = scaler.apply(iris.data())
+var restored = scaler.invert(scaled)
+scaled.getDouble(0, 0)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+first petal length scaled ∈ [0, 1]
+      </code></pre>
+    </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Iris
+import smile.feature.transform.Scaler
+
+val iris = new Iris()
+val scaler = Scaler.fit(iris.data)
+val scaled = scaler.apply(iris.data)
+scaler.invert(scaled)
+scaled.getDouble(0, 0)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+first petal length scaled ∈ [0, 1]
+      </code></pre>
+    </div>
+    <div id="pg-1-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Iris
+import smile.feature.transform.Scaler
+
+val iris = Iris()
+val scaler = Scaler.fit(iris.data())
+val scaled = scaler.apply(iris.data())
+scaler.invert(scaled)
+scaled.getDouble(0, 0)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+first petal length scaled ∈ [0, 1]
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="winsor-scaler">WinsorScaler</h3>
+
+    <p>Outlier-robust min–max: default 5th–95th percentile bounds (via <code>IQAgent</code>), then scale to <code>[0, 1]</code>. Use when extreme tails would crush the range of ordinary values.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-2-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Iris
+import smile.feature.transform.WinsorScaler
+
+var iris = new Iris()
+var t = WinsorScaler.fit(iris.data())                 // 5%–95%
+var t2 = WinsorScaler.fit(iris.data(), 0.01, 0.99)    // custom
+t.apply(iris.data())</code></pre>
+    </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Iris
+import smile.feature.transform.WinsorScaler
+
+val iris = new Iris()
+val t = WinsorScaler.fit(iris.data)
+val t2 = WinsorScaler.fit(iris.data, 0.01, 0.99)
+t.apply(iris.data)</code></pre>
+    </div>
+    <div id="pg-2-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Iris
+import smile.feature.transform.WinsorScaler
+
+val iris = Iris()
+val t = WinsorScaler.fit(iris.data())
+val t2 = WinsorScaler.fit(iris.data(), 0.01, 0.99)
+t.apply(iris.data())</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="maxabs-scaler">MaxAbsScaler</h3>
+
+    <p>Divide by <code>max(|x|)</code> → <code>[−1, 1]</code> without centering, so zeros stay zero. Good for sparse matrices and sparse-kernel SVM.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-3-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Iris
+import smile.feature.transform.MaxAbsScaler
+
+var t = MaxAbsScaler.fit(new Iris().data())
+t.apply(new Iris().data())</code></pre>
+    </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Iris
+import smile.feature.transform.MaxAbsScaler
+
+val t = MaxAbsScaler.fit(new Iris().data)
+t.apply(new Iris().data)</code></pre>
+    </div>
+    <div id="pg-3-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Iris
+import smile.feature.transform.MaxAbsScaler
+
+val t = MaxAbsScaler.fit(Iris().data())
+t.apply(Iris().data())</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="standardizer">Standardizer</h3>
+
+    <p>Z-score: <code>(x − μ) / σ</code> with sample standard deviation. Prefer for distance-based and linear models when features are roughly Gaussian. Not robust to outliers — use <code>RobustStandardizer</code> then.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-4-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Iris
+import smile.feature.transform.Standardizer
+
+var t = Standardizer.fit(new Iris().data())
+var z = t.apply(new Iris().data())
+z.mean()   // ≈ 0 per column</code></pre>
+    </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Iris
+import smile.feature.transform.Standardizer
+
+val t = Standardizer.fit(new Iris().data)
+val z = t.apply(new Iris().data)
+z.mean()</code></pre>
+    </div>
+    <div id="pg-4-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Iris
+import smile.feature.transform.Standardizer
+
+val t = Standardizer.fit(Iris().data())
+val z = t.apply(Iris().data())
+z.mean()</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="robust-standardizer">RobustStandardizer</h3>
+
+    <p>Median / IQR standardization. Same use cases as <code>Standardizer</code> when outliers inflate σ.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-5-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Iris
+import smile.feature.transform.RobustStandardizer
+
+RobustStandardizer.fit(new Iris().data()).apply(new Iris().data())</code></pre>
+    </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Iris
+import smile.feature.transform.RobustStandardizer
+
+RobustStandardizer.fit(new Iris().data).apply(new Iris().data)</code></pre>
+    </div>
+    <div id="pg-5-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Iris
+import smile.feature.transform.RobustStandardizer
+
+RobustStandardizer.fit(Iris().data()).apply(Iris().data())</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="normalizer">Normalizer</h3>
+
+    <p>Row-wise unit norm (<code>Norm.L1</code>, <code>L2</code>, or <code>L_INF</code>). Stateless — no fit. Use for TF vectors and cosine-similarity settings.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-6-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Iris
+import smile.feature.transform.Normalizer
+
+var iris = new Iris()
+var l2 = new Normalizer(Normalizer.Norm.L2, iris.data().names())
+l2.apply(iris.data())</code></pre>
+    </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Iris
+import smile.feature.transform.Normalizer
+
+val iris = new Iris()
+val l2 = new Normalizer(Normalizer.Norm.L2, iris.data.names: _*)
+l2.apply(iris.data)</code></pre>
+    </div>
+    <div id="pg-6-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Iris
+import smile.feature.transform.Normalizer
+
+val iris = Iris()
+val l2 = Normalizer(Normalizer.Norm.L2, *iris.data().names())
+l2.apply(iris.data())</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="pipeline">Transform Pipelines</h3>
+
+    <p>Chain with <code>Transform.pipeline(...)</code> when stages are already fitted, or <code>Transform.fit(data, trainer1, trainer2, …)</code> when each stage must see the previous stage’s output. See also <code>base/DATA_TRANSFORMS.md</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-7-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.data.transform.Transform
+import smile.datasets.Iris
+import smile.feature.transform.MaxAbsScaler
+import smile.feature.transform.Standardizer
+
+var df = new Iris().data()
+// Fit each stage on the previous stage's output:
+Transform pipe = Transform.fit(df, Standardizer::fit, MaxAbsScaler::fit)
+// Or compose already-fitted transforms: Transform.pipeline(t1, t2)
+pipe.apply(df)</code></pre>
+    </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.data.transform.Transform
+import smile.datasets.Iris
+import smile.feature.transform.{MaxAbsScaler, Standardizer}
+
+val df = new Iris().data
+val pipe = Transform.fit(df,
+  (d: smile.data.DataFrame) =&gt; Standardizer.fit(d),
+  (d: smile.data.DataFrame) =&gt; MaxAbsScaler.fit(d))
+pipe.apply(df)</code></pre>
+    </div>
+    <div id="pg-7-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.data.transform.Transform
+import smile.datasets.Iris
+import smile.feature.transform.MaxAbsScaler
+import smile.feature.transform.Standardizer
+
+val df = Iris().data()
+val pipe = Transform.fit(df, { Standardizer.fit(it) }, { MaxAbsScaler.fit(it) })
+pipe.apply(df)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="extraction" class="title">Feature Extraction</h2>
+
+    <p>Package <code>smile.feature.extraction</code>: linear and nonlinear projections plus encoders that turn text / categoricals into numeric vectors.</p>
+
+
+    <h3 id="pca">Principal Component Analysis</h3>
+
+    <p>Orthogonal projection onto directions of maximum variance. <code>PCA.fit</code> uses the covariance matrix; <code>PCA.cor</code> uses correlations when scales differ. Keep top components by count or cumulative variance.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-8-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-8-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.PenDigits
+import smile.feature.extraction.PCA
+import smile.plot.swing.ScatterPlot
+import smile.plot.swing.ScreePlot
+
+var pen = new PenDigits()
+double[][] x = pen.x()
+int[] y = pen.y()
+
+var pca = PCA.fit(x)
+double[] vp = pca.varianceProportion().toArray(new double[0])
+new ScreePlot(vp).figure().show()              // scree plot below
+
+double[][] x3 = pca.getProjection(3).apply(x)
+ScatterPlot.of(x3, y, '.').figure().show()     // 3D projection below</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens scree plot, then 3D PenDigits projection)
+      </code></pre>
+    </div>
+    <div id="pg-8-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.PenDigits
+import smile.feature.extraction._
+import smile.plot.swing.{ScatterPlot, ScreePlot}
+
+val pen = new PenDigits()
+val x = pen.x
+val y = pen.y
+
+val pca = PCA.fit(x)
+val vp = pca.varianceProportion.toArray(Array.empty[Double])
+new ScreePlot(vp).figure.show()               // scree plot below
+
+val x3 = pca.getProjection(3).apply(x)
+ScatterPlot.of(x3, y, '.').figure.show()      // 3D projection below</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens scree plot, then 3D PenDigits projection)
+      </code></pre>
+    </div>
+    <div id="pg-8-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.PenDigits
+import smile.feature.extraction.pca
+import smile.plot.swing.ScatterPlot
+import smile.plot.swing.ScreePlot
+
+val pen = PenDigits()
+val x = pen.x()
+val y = pen.y()
+
+val model = pca(x)
+val vp = model.varianceProportion().toArray(DoubleArray(0))
+ScreePlot(vp).figure().show()                 // scree plot below
+
+val x3 = model.getProjection(3).apply(x)
+ScatterPlot.of(x3, y, '.').figure().show()    // 3D projection below</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens scree plot, then 3D PenDigits projection)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>The scree plot graphs variance proportion against component number. Look for an “elbow” where remaining components are small and roughly equal, then project into that many dimensions (here, three).</p>
+
+
+    <figure class="plot-figure">
+        <img src="images/scree.png" class="enlarge" alt="PCA scree plot of PenDigits" />
+        <figcaption>Scree plot of PenDigits eigenvalues — look for an elbow to choose how many components to keep.</figcaption>
+    </figure>
+
+
+    <figure class="plot-figure">
+        <img src="images/pca.png" class="enlarge" alt="PCA projection of PenDigits" />
+        <figcaption>PenDigits projected onto the first three principal components.</figcaption>
+    </figure>
+
+
+    <h3 id="ppca">Probabilistic PCA</h3>
+
+    <p>Latent variable model <code>y ∼ W·x + μ + ε</code> with isotropic noise. Fit with a fixed latent dimension <code>k</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-9-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-9-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.PenDigits
+import smile.feature.extraction.ProbabilisticPCA
+
+var pen = new PenDigits()
+var ppca = ProbabilisticPCA.fit(pen.x(), 3)
+ppca.variance()
+ppca.apply(pen.x())</code></pre>
+    </div>
+    <div id="pg-9-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.PenDigits
+import smile.feature.extraction.ProbabilisticPCA
+
+val pen = new PenDigits()
+val ppca = ProbabilisticPCA.fit(pen.x, 3)
+ppca.variance
+ppca.apply(pen.x)</code></pre>
+    </div>
+    <div id="pg-9-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.PenDigits
+import smile.feature.extraction.ppca
+
+val pen = PenDigits()
+val model = ppca(pen.x(), 3)
+model.variance()
+model.apply(pen.x())</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <figure class="plot-figure">
+        <img src="images/ppca.png" class="enlarge" alt="Probabilistic PCA on PenDigits" />
+        <figcaption>Probabilistic PCA latent projection of PenDigits.</figcaption>
+    </figure>
+
+
+    <h3 id="kpca">Kernel PCA</h3>
+
+    <p>Nonlinear PCA via a Mercer kernel. Options live on <code>smile.manifold.KPCA.Options</code> (component count and eigenvalue threshold).</p>
+
+    <p>Hyperparameters are fields of the nested <code>KPCA.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). Used by <code>KernelPCA.fit(data, kernel, options)</code>.</p>
+
+    <dl class="options-dl">
+        <dt><code>d</code><br><code>smile.kpca.d</code></dt>
+        <dd>Number of principal components to keep.</dd>
+        <dt><code>threshold</code><br><code>smile.kpca.threshold</code></dt>
+        <dd>Drop components with eigenvalues below this threshold.</dd>
+    </dl>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-10-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-10-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-10-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-10-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.PenDigits
+import smile.feature.extraction.KernelPCA
+import smile.manifold.KPCA
+import smile.math.kernel.GaussianKernel
+
+var features = new PenDigits().data().drop("class")
+var kpca = KernelPCA.fit(features, new GaussianKernel(45),
+    new KPCA.Options(3))
+kpca.apply(features)</code></pre>
+    </div>
+    <div id="pg-10-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.PenDigits
+import smile.feature.extraction.KernelPCA
+import smile.manifold.KPCA
+import smile.math.kernel.GaussianKernel
+
+val features = new PenDigits().data.drop("class")
+val kpca = KernelPCA.fit(features, new GaussianKernel(45),
+  new KPCA.Options(3))
+kpca.apply(features)</code></pre>
+    </div>
+    <div id="pg-10-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.PenDigits
+import smile.feature.extraction.kpca
+import smile.math.kernel.GaussianKernel
+
+val features = PenDigits().data().drop("class")
+val model = kpca(features, GaussianKernel(45.0), 3)
+model.apply(features)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <figure class="plot-figure">
+        <img src="images/kpca.png" class="enlarge" alt="Kernel PCA on PenDigits" />
+        <figcaption>Gaussian-kernel PCA projection of PenDigits.</figcaption>
+    </figure>
+
+
+    <h3 id="gha">Generalized Hebbian Algorithm</h3>
+
+    <p>Online PCA for streaming / large data: update with centered samples, then <code>apply</code>. Requires a learning-rate <code>TimeFunction</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-11-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-11-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.PenDigits
+import smile.feature.extraction.GHA
+import smile.math.MathEx
+import smile.util.function.TimeFunction
+
+MathEx.setSeed(19650218)
+double[][] x = new PenDigits().x()
+var gha = new GHA(x[0].length, 3, TimeFunction.constant(0.00001))
+for (double[] xi : x) gha.update(xi)
+gha.apply(x)</code></pre>
+    </div>
+    <div id="pg-11-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.PenDigits
+import smile.feature.extraction.GHA
+import smile.math.MathEx
+import smile.util.function.TimeFunction
+
+MathEx.setSeed(19650218)
+val x = new PenDigits().x
+val gha = new GHA(x(0).length, 3, TimeFunction.constant(0.00001))
+x.foreach(gha.update)
+gha.apply(x)</code></pre>
+    </div>
+    <div id="pg-11-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.PenDigits
+import smile.feature.extraction.gha
+import smile.math.MathEx
+import smile.util.function.TimeFunction
+
+MathEx.setSeed(19650218)
+val x = PenDigits().x()
+val model = gha(x, 3, TimeFunction.constant(0.00001))
+model.apply(x)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <figure class="plot-figure">
+        <img src="images/gha.png" class="enlarge" alt="GHA projection of PenDigits" />
+        <figcaption>Online GHA principal components on PenDigits.</figcaption>
+    </figure>
+
+
+    <h3 id="random-projection">Random Projection</h3>
+
+    <p>Johnson–Lindenstrauss random maps — no training data. Dense Gaussian or sparse ternary projections preserve distances approximately.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-12-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-12-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.feature.extraction.RandomProjection
+import smile.math.MathEx
+
+MathEx.setSeed(19650218)
+var rp = RandomProjection.of(1000, 50)       // dense
+var rps = RandomProjection.sparse(1000, 50)  // sparse
+double[] y = rp.apply(new double[1000])
+y.length</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+50
+      </code></pre>
+    </div>
+    <div id="pg-12-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.feature.extraction.RandomProjection
+import smile.math.MathEx
+
+MathEx.setSeed(19650218)
+val rp = RandomProjection.of(1000, 50)
+val rps = RandomProjection.sparse(1000, 50)
+rp.apply(new Array[Double](1000)).length</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+50
+      </code></pre>
+    </div>
+    <div id="pg-12-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.feature.extraction.RandomProjection
+import smile.math.MathEx
+
+MathEx.setSeed(19650218)
+val rp = RandomProjection.of(1000, 50)
+val rps = RandomProjection.sparse(1000, 50)
+rp.apply(DoubleArray(1000)).size</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+50
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="bag-of-words">BagOfWords</h3>
+
+    <p>Text column → dense count (or binary presence) vector over a fixed vocabulary. Prefer when word order does not matter.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-13-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-13-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-13-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-13-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.feature.extraction.BagOfWords
+
+String[] vocabulary = {"smile", "feature", "learning"}
+var bow = new BagOfWords(s -&gt; s.toLowerCase().split("\\s+"), vocabulary)
+// binary presence: new BagOfWords(tokenizer, vocabulary, true)
+bow.apply("Smile feature learning with SMILE")</code></pre>
+    </div>
+    <div id="pg-13-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.feature.extraction.BagOfWords
+
+val vocabulary = Array("smile", "feature", "learning")
+val bow = new BagOfWords((s: String) =&gt; s.toLowerCase.split("\\s+"), vocabulary)
+bow.apply("Smile feature learning with SMILE")</code></pre>
+    </div>
+    <div id="pg-13-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.feature.extraction.BagOfWords
+
+val vocabulary = arrayOf("smile", "feature", "learning")
+val bow = BagOfWords({ it.lowercase().split(Regex("\\s+")).toTypedArray() }, vocabulary)
+bow.apply("Smile feature learning with SMILE")</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="encoders">BinaryEncoder, SparseEncoder, HashEncoder</h3>
+
+    <p><code>BinaryEncoder</code> one-hots categoricals to sparse <code>int[]</code> indices. <code>SparseEncoder</code> mixes numeric values with one-hot categoricals into a <code>SparseArray</code>. <code>HashEncoder</code> is the hashing trick for open vocabularies (optional alternating signs).</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-14-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-14-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-14-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-14-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Default
+import smile.feature.extraction.BinaryEncoder
+import smile.feature.extraction.HashEncoder
+import smile.feature.extraction.SparseEncoder
+
+var data = new Default().data()
+var binary = new BinaryEncoder(data.schema(), "student")
+int[] idx = binary.apply(data.get(0))
+
+var sparse = new SparseEncoder(data.schema())
+var sa = sparse.apply(data.get(0))
+
+var hash = new HashEncoder(s -&gt; s.toLowerCase().split("\\s+"), 1 &lt;&lt; 16)
+hash.apply("student yes balance high")</code></pre>
+    </div>
+    <div id="pg-14-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Default
+import smile.feature.extraction.{BinaryEncoder, HashEncoder, SparseEncoder}
+
+val data = new Default().data
+val binary = new BinaryEncoder(data.schema, "student")
+val idx = binary.apply(data(0))
+val sparse = new SparseEncoder(data.schema)
+val sa = sparse.apply(data(0))
+val hash = new HashEncoder((s: String) =&gt; s.toLowerCase.split("\\s+"), 1 &lt;&lt; 16)
+hash.apply("student yes balance high")</code></pre>
+    </div>
+    <div id="pg-14-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Default
+import smile.feature.extraction.BinaryEncoder
+import smile.feature.extraction.HashEncoder
+import smile.feature.extraction.SparseEncoder
+
+val data = Default().data()
+val binary = BinaryEncoder(data.schema(), "student")
+val idx = binary.apply(data.get(0))
+val sparse = SparseEncoder(data.schema())
+val sa = sparse.apply(data.get(0))
+val hash = HashEncoder({ it.lowercase().split(Regex("\\s+")).toTypedArray() }, 1 shl 16)
+hash.apply("student yes balance high")</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="date-feature">DateFeature</h3>
+
+    <p>Calendar / time fields come from Formula terms <code>date(...)</code> / <code>DateFeature</code> in <code>smile.data.formula</code> — not a separate <code>smile.feature</code> class. See Formula docs for <code>year</code>, <code>month</code>, <code>dayOfWeek</code>, etc.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-15-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-15-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-15-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-15-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.data.formula.DateFeature
+import smile.data.formula.Formula
+import static smile.data.formula.Terms.date
+
+// Extract calendar fields from a timestamp column "ts"
+Formula formula = Formula.of("y",
+    date("ts", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_WEEK))</code></pre>
+    </div>
+    <div id="pg-15-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.data.formula.{DateFeature, Formula}
+import smile.data.formula.Terms.date
+
+val formula = Formula.of("y",
+  date("ts", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_WEEK))</code></pre>
+    </div>
+    <div id="pg-15-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.data.formula.DateFeature
+import smile.data.formula.Formula
+import smile.data.formula.Terms.date
+
+val formula = Formula.of("y",
+    date("ts", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_WEEK))</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="imputation" class="title">Missing Value Imputation</h2>
+
+    <p>Real datasets often contain missing entries from nonresponse, dropout, sensor failure, or researcher error. Before imputing, ask <em>why</em> values are missing — the mechanism drives which methods are safe.</p>
+    <p><strong>MCAR</strong> (missing completely at random): missingness is unrelated to any variable; complete-case analysis is unbiased but wasteful. <strong>MAR</strong> / covariate-dependent: missingness depends on observed variables, not on the missing values themselves — most modern imputers target this ignorable case. <strong>Non-ignorable</strong> (MNAR): missingness depends on the unobserved value (e.g. high incomes withheld); simple imputation can be badly biased and needs specialized modeling.</p>
+    <p>Imputation is not the only option: EM can estimate models with missingness directly, and some learners tolerate missing inputs when absence is structural rather than measurement noise. When you do impute, treat filled values as uncertain relative to truly observed ones.</p>
+    <p>Package <code>smile.feature.imputation</code>. DataFrame <code>null</code> and matrix <code>NaN</code> count as missing. Imputers implement <code>Transform</code>; check rows with <code>SimpleImputer.hasMissing(tuple)</code>.</p>
+
+
+    <h3 id="simple-imputer">SimpleImputer</h3>
+
+    <p>Column-wise constant fill — a fast baseline when missingness is roughly MCAR. <code>fit(df)</code> uses the median for numeric columns, the mode for boolean/nominal columns, and empty string for text. <code>fit(df, lower, upper)</code> imputes numerics with the mean of values between those percentiles (e.g. <code>0.0, 1.0</code> for the full mean). Or pass a custom <code>Map</code> of column → constant to the constructor.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-16-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-16-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-16-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-16-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Map
+import smile.datasets.Iris
+import smile.feature.imputation.SimpleImputer
+
+var df = new Iris().data()
+var median = SimpleImputer.fit(df)                 // default: median
+var mean = SimpleImputer.fit(df, 0.0, 1.0)         // mean in [0,1] percentiles
+var custom = new SimpleImputer(Map.of("sepallength", 5.0))
+median.apply(df)</code></pre>
+    </div>
+    <div id="pg-16-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Map
+import smile.datasets.Iris
+import smile.feature.imputation.SimpleImputer
+
+val df = new Iris().data
+val median = SimpleImputer.fit(df)
+val mean = SimpleImputer.fit(df, 0.0, 1.0)
+val custom = new SimpleImputer(Map.of("sepallength", 5.0))
+median.apply(df)</code></pre>
+    </div>
+    <div id="pg-16-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Iris
+import smile.feature.imputation.SimpleImputer
+
+val df = Iris().data()
+val median = SimpleImputer.fit(df)
+val mean = SimpleImputer.fit(df, 0.0, 1.0)
+val custom = SimpleImputer(mapOf&lt;String, Any&gt;("sepallength" to 5.0))
+median.apply(df)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="knn-imputer">KNNImputer</h3>
+
+    <p>For a row with a missing attribute <code>i</code>, find <code>k</code> neighbors that have <code>i</code> observed and are closest on the other complete attributes (e.g. Euclidean), then fill with their (distance-weighted) average on <code>i</code>. Prefer when nearby rows share local structure. Constructor takes the reference frame + <code>k</code> (optional distance / columns); no separate training step beyond storing neighbors.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-17-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-17-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-17-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-17-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Iris
+import smile.feature.imputation.KNNImputer
+
+var df = new Iris().data()
+var imputer = new KNNImputer(df, 5)  // Euclidean on all columns
+imputer.apply(df)</code></pre>
+    </div>
+    <div id="pg-17-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Iris
+import smile.feature.imputation.KNNImputer
+
+val df = new Iris().data
+val imputer = new KNNImputer(df, 5)
+imputer.apply(df)</code></pre>
+    </div>
+    <div id="pg-17-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Iris
+import smile.feature.imputation.KNNImputer
+
+val df = Iris().data()
+val imputer = KNNImputer(df, 5)
+imputer.apply(df)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="kmedoids-imputer">KMedoidsImputer</h3>
+
+    <p>k-medoids clustering (k-means with a real data point as the center). Missing entries in a row are copied from the nearest medoid. Fit with <code>KMedoidsImputer.fit(df, distance, k)</code> — useful for mixed-type data when a missing-tolerant distance is available.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-18-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-18-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-18-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-18-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Iris
+import smile.feature.imputation.KMedoidsImputer
+import smile.math.MathEx
+
+var df = new Iris().data()
+var imputer = KMedoidsImputer.fit(df,
+    (x, y) -&gt; MathEx.distanceWithMissingValues(x.toArray(), y.toArray()), 3)
+imputer.apply(df)</code></pre>
+    </div>
+    <div id="pg-18-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Iris
+import smile.feature.imputation.KMedoidsImputer
+import smile.math.MathEx
+
+val df = new Iris().data
+val imputer = KMedoidsImputer.fit(df,
+  (x, y) =&gt; MathEx.distanceWithMissingValues(x.toArray, y.toArray), 3)
+imputer.apply(df)</code></pre>
+    </div>
+    <div id="pg-18-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Iris
+import smile.feature.imputation.KMedoidsImputer
+import smile.math.MathEx
+
+val df = Iris().data()
+val imputer = KMedoidsImputer.fit(df,
+    { x, y -&gt; MathEx.distanceWithMissingValues(x.toArray(), y.toArray()) }, 3)
+imputer.apply(df)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="svd-imputer">SVDImputer</h3>
+
+    <p>Low-rank matrix completion via SVD. Given <code>A = U Σ V<sup>T</sup></code>, estimate missing entry <code>(i, j)</code> by regressing row <code>i</code> on the top <code>k</code> right singular vectors (excluding column <code>j</code>), then reconstructing from that linear combination. Because SVD needs a complete matrix, missing cells are first filled (e.g. column means); EM then iterates estimate → re-factorize until the change falls below a threshold.</p>
+    <p>Unlike the other imputers, <code>SVDImputer.impute</code> works on <code>double[][]</code> with <code>NaN</code> markers (not a DataFrame <code>Transform</code>). Best when numeric features are strongly correlated / approximately low-rank.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-19-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-19-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-19-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-19-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.feature.imputation.SVDImputer
+import smile.math.MathEx
+
+MathEx.setSeed(19650218)
+double[][] X = ... // may contain NaN
+double[][] filled = SVDImputer.impute(X, 5, 100)</code></pre>
+    </div>
+    <div id="pg-19-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.feature.imputation.SVDImputer
+import smile.math.MathEx
+
+MathEx.setSeed(19650218)
+val X: Array[Array[Double]] = ...
+val filled = SVDImputer.impute(X, 5, 100)</code></pre>
+    </div>
+    <div id="pg-19-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.feature.imputation.SVDImputer
+import smile.math.MathEx
+
+MathEx.setSeed(19650218)
+val X: Array&lt;DoubleArray&gt; = ...
+val filled = SVDImputer.impute(X, 5, 100)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="selection" class="title">Feature Selection</h2>
+
+    <p>Package <code>smile.feature.selection</code>: fast univariate filters plus GAFE as a wrapper search.</p>
+    <p><strong>Hughes effect.</strong> With fixed sample size, adding irrelevant dimensions eventually hurts predictive accuracy (curse of dimensionality). Prefer ranking/selection or projection before distance-based models.</p>
+
+
+    <h3 id="signal-noise-ratio">SignalNoiseRatio</h3>
+
+    <p>Binary classification filter: <code>|μ₁ − μ₂| / (σ₁ + σ₂)</code> per feature (Golub-style). Higher is better.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-20-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-20-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-20-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-20-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Comparator
+import smile.datasets.BreastCancer
+import smile.feature.selection.SignalNoiseRatio
+
+var data = new BreastCancer().data()
+var scores = SignalNoiseRatio.fit(data, "diagnosis")
+java.util.Arrays.stream(scores)
+    .sorted(Comparator.reverseOrder())
+    .limit(5)
+    .forEach(System.out::println)</code></pre>
+    </div>
+    <div id="pg-20-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.BreastCancer
+import smile.feature.selection.SignalNoiseRatio
+
+val data = new BreastCancer().data
+val scores = SignalNoiseRatio.fit(data, "diagnosis")
+scores.sorted(Ordering.reverse).take(5).foreach(println)</code></pre>
+    </div>
+    <div id="pg-20-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.BreastCancer
+import smile.feature.selection.SignalNoiseRatio
+
+val data = BreastCancer().data()
+val scores = SignalNoiseRatio.fit(data, "diagnosis")
+scores.sortedArrayDescending().take(5).forEach(::println)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="sum-squares-ratio">SumSquaresRatio</h3>
+
+    <p>Multi-class BSS/WSS ratio per feature. Higher values mean better class separability.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-21-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-21-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-21-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-21-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Iris
+import smile.feature.selection.SumSquaresRatio
+
+var scores = SumSquaresRatio.fit(new Iris().data(), "class")
+java.util.Arrays.sort(scores)
+for (var s : scores) System.out.println(s)</code></pre>
+    </div>
+    <div id="pg-21-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Iris
+import smile.feature.selection.SumSquaresRatio
+
+val scores = SumSquaresRatio.fit(new Iris().data, "class")
+scala.util.Sorting.quickSort(scores)
+scores.foreach(println)</code></pre>
+    </div>
+    <div id="pg-21-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Iris
+import smile.feature.selection.SumSquaresRatio
+
+val scores = SumSquaresRatio.fit(Iris().data(), "class")
+scores.sorted().forEach(::println)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <figure class="plot-figure">
+        <img src="images/iris-petal-width-length.png" class="enlarge" alt="Iris petal width vs length" />
+        <figcaption>Iris petal measurements separate classes well — high BSS/WSS features.</figcaption>
+    </figure>
+
+
+    <h3 id="f-regression">FRegression</h3>
+
+    <p>Univariate F-tests for regression responses (Pearson for numeric predictors; ANOVA for categoricals). Filter by <code>pvalue()</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-22-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-22-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-22-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-22-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.Abalone
+import smile.feature.selection.FRegression
+
+var scores = FRegression.fit(new Abalone().train(), "rings")
+java.util.Arrays.stream(scores)
+    .filter(r -&gt; r.pvalue() &lt; 0.05)
+    .map(FRegression::feature)
+    .forEach(System.out::println)</code></pre>
+    </div>
+    <div id="pg-22-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Abalone
+import smile.feature.selection.FRegression
+
+val scores = FRegression.fit(new Abalone().train, "rings")
+scores.filter(_.pvalue &lt; 0.05).map(_.feature).foreach(println)</code></pre>
+    </div>
+    <div id="pg-22-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Abalone
+import smile.feature.selection.FRegression
+
+val scores = FRegression.fit(Abalone().train(), "rings")
+scores.filter { it.pvalue() &lt; 0.05 }.map { it.feature() }.forEach(::println)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="information-value">InformationValue</h3>
+
+    <p>Binary IV / WoE scoring (credit-style). IV &lt; 0.02 useless; 0.1–0.3 medium; &gt; 0.5 suspicious. <code>InformationValue.toTransform(ivs)</code> builds a WoE <code>ColumnTransform</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-23-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-23-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-23-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-23-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Comparator
+import smile.datasets.Default
+import smile.feature.selection.InformationValue
+
+var data = new Default().data()
+var ivs = InformationValue.fit(data, "default", 10)
+java.util.Arrays.sort(ivs, Comparator.reverseOrder())
+var woe = InformationValue.toTransform(ivs)
+woe.apply(data)</code></pre>
+    </div>
+    <div id="pg-23-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.Default
+import smile.feature.selection.InformationValue
+
+val data = new Default().data
+val ivs = InformationValue.fit(data, "default", 10)
+scala.util.Sorting.quickSort(ivs)(Ordering.reverse)
+val woe = InformationValue.toTransform(ivs)
+woe.apply(data)</code></pre>
+    </div>
+    <div id="pg-23-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Arrays
+import java.util.Comparator
+import smile.datasets.Default
+import smile.feature.selection.InformationValue
+
+val data = Default().data()
+val ivs = InformationValue.fit(data, "default", 10)
+Arrays.sort(ivs, Comparator.reverseOrder())
+val woe = InformationValue.toTransform(ivs)
+woe.apply(data)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="gafe">GAFE</h3>
+
+    <p>Genetic-algorithm wrapper search. Use <code>GAFE.fitness(...)</code> with a train/test metric and trainer, then <code>apply(generations, population, length, fitness)</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-24-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-24-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-24-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-24-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.classification.DecisionTree
+import smile.datasets.ImageSegmentation
+import smile.feature.selection.GAFE
+import smile.validation.metric.Accuracy
+
+var segment = new ImageSegmentation()
+var gafe = new GAFE()
+var bits = gafe.apply(50, 10, segment.train().ncol() - 1,
+    GAFE.fitness("class", segment.train(), segment.test(),
+        new Accuracy(), DecisionTree::fit))
+bits[bits.length - 1]  // elitism: inspect last generation</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+last-generation BitString (fitness + selected bits)
+      </code></pre>
+    </div>
+    <div id="pg-24-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.classification.DecisionTree
+import smile.datasets.ImageSegmentation
+import smile.feature.selection.GAFE
+import smile.validation.metric.Accuracy
+
+val segment = new ImageSegmentation()
+val gafe = new GAFE()
+val bits = gafe.apply(50, 10, segment.train.ncol - 1,
+  GAFE.fitness("class", segment.train, segment.test,
+    new Accuracy(), DecisionTree.fit))
+bits(bits.length - 1)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+last-generation BitString (fitness + selected bits)
+      </code></pre>
+    </div>
+    <div id="pg-24-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.classification.DecisionTree
+import smile.datasets.ImageSegmentation
+import smile.feature.selection.GAFE
+import smile.validation.metric.Accuracy
+
+val segment = ImageSegmentation()
+val gafe = GAFE()
+val bits = gafe.apply(50, 10, segment.train().ncol() - 1,
+    GAFE.fitness("class", segment.train(), segment.test(),
+        Accuracy()) { f, d -&gt; DecisionTree.fit(f, d) })
+bits[bits.size - 1]</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+last-generation BitString (fitness + selected bits)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="importance" class="title">Feature Importance</h2>
+
+    <p>Ensemble impurity importance is a fast global ranking from tree models. TreeSHAP gives exact local Shapley attributions for tree ensembles (<code>RandomForest</code>, <code>GradientTreeBoost</code>, <code>AdaBoost</code>, <code>DecisionTree</code>).</p>
+
+
+    <h3 id="impurity-importance">Ensemble Impurity Importance</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-25-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-25-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-25-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-25-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.classification.RandomForest
+import smile.datasets.Iris
+
+var iris = new Iris()
+var rf = RandomForest.fit(iris.formula(), iris.data())
+rf.importance()</code></pre>
+    </div>
+    <div id="pg-25-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.classification._
+import smile.datasets.Iris
+
+val iris = new Iris()
+val rf = randomForest(iris.formula, iris.data)
+rf.importance</code></pre>
+    </div>
+    <div id="pg-25-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.classification.randomForest
+import smile.datasets.Iris
+
+val iris = Iris()
+val rf = randomForest(iris.formula(), iris.data())
+rf.importance()</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="treeshap">TreeSHAP</h3>
+
+    <p>Exact SHAP for trees via <code>TreeSHAP</code>. For classification, <code>phi.length = p · k</code> (features × classes); for regression, <code>phi.length = p</code>. <code>shap(DataFrame)</code> / <code>shap(Stream)</code> return mean absolute SHAP — a global importance proxy.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-26-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-26-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-26-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-26-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.classification.RandomForest
+import smile.datasets.Iris
+
+var iris = new Iris()
+var rf = RandomForest.fit(iris.formula(), iris.data())
+double[] local = rf.shap(iris.data().get(0))   // signed, one row
+double[] global = rf.shap(iris.data())         // mean |SHAP|
+global</code></pre>
+    </div>
+    <div id="pg-26-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.classification._
+import smile.datasets.Iris
+
+val iris = new Iris()
+val rf = randomForest(iris.formula, iris.data)
+val local = rf.shap(iris.data(0))
+val global = rf.shap(iris.data)
+global</code></pre>
+    </div>
+    <div id="pg-26-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.classification.randomForest
+import smile.datasets.Iris
+
+val iris = Iris()
+val rf = randomForest(iris.formula(), iris.data())
+val local = rf.shap(iris.data().get(0))
+val global = rf.shap(iris.data())
+global</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="guide" class="title">Choosing the Right Technique</h2>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead>
+        <tr><th>Situation</th><th>Recommended</th></tr>
+        </thead>
+        <tbody>
+        <tr><td>Bounded inputs, mild outliers</td><td><code>Scaler</code></td></tr>
+        <tr><td>Bounded inputs, heavy outliers</td><td><code>WinsorScaler</code></td></tr>
+        <tr><td>Sparse features, no centering</td><td><code>MaxAbsScaler</code></td></tr>
+        <tr><td>Gaussian-like, distance models</td><td><code>Standardizer</code></td></tr>
+        <tr><td>Outliers + distance models</td><td><code>RobustStandardizer</code></td></tr>
+        <tr><td>Row direction / cosine similarity</td><td><code>Normalizer</code></td></tr>
+        <tr><td>Linear DR, moderate size</td><td><code>PCA</code> / <code>PCA.cor</code></td></tr>
+        <tr><td>Probabilistic latent model</td><td><code>ProbabilisticPCA</code></td></tr>
+        <tr><td>Nonlinear structure</td><td><code>KernelPCA</code></td></tr>
+        <tr><td>Streaming / very large</td><td><code>GHA</code></td></tr>
+        <tr><td>Fast approximate DR</td><td><code>RandomProjection</code></td></tr>
+        <tr><td>Text bag-of-words</td><td><code>BagOfWords</code> / <code>HashEncoder</code></td></tr>
+        <tr><td>Categorical → sparse indices</td><td><code>BinaryEncoder</code> / <code>SparseEncoder</code></td></tr>
+        <tr><td>MCAR baseline imputation</td><td><code>SimpleImputer</code></td></tr>
+        <tr><td>Local structure imputation</td><td><code>KNNImputer</code></td></tr>
+        <tr><td>Clustered mixed types</td><td><code>KMedoidsImputer</code></td></tr>
+        <tr><td>Low-rank numeric matrix</td><td><code>SVDImputer</code></td></tr>
+        <tr><td>Multi-class filter</td><td><code>SumSquaresRatio</code></td></tr>
+        <tr><td>Binary filter</td><td><code>SignalNoiseRatio</code></td></tr>
+        <tr><td>Regression filter</td><td><code>FRegression</code></td></tr>
+        <tr><td>Binary WoE / credit</td><td><code>InformationValue</code></td></tr>
+        <tr><td>Wrapper search</td><td><code>GAFE</code></td></tr>
+        <tr><td>Tree ensemble explanation</td><td>TreeSHAP (<code>model.shap</code>)</td></tr>
+        </tbody>
+    </table>
+</div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="regression.html" title="Previous Section: Regression"><span>Regression</span></a>
+        <a class="btn-next-text" href="validation.html" title="Next Section: Model Validation"><span>Validation</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
