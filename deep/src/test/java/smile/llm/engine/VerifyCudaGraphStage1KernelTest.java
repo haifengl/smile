@@ -79,6 +79,44 @@ public class VerifyCudaGraphStage1KernelTest {
     }
 
     /**
+     * Prints per-(head,position) row norms and the first few values of each
+     * output, to distinguish "shifted/permuted but attention-shaped" from
+     * "garbage/uninitialized" failures without needing another round trip.
+     */
+    private static void dumpDiagnostic(Config cfg, Tensor eager, Tensor capturable) {
+        int hq = cfg.numQoHeads();
+        int s = cfg.windowLen();
+        int d = cfg.headDim();
+        try (Tensor eagerCpu = eager.to(ScalarType.Float).to(Device.CPU());
+             Tensor capCpu = capturable.to(ScalarType.Float).to(Device.CPU())) {
+            float[] ea = eagerCpu.floatArray();
+            float[] ca = capCpu.floatArray();
+            System.out.println("---- dumpDiagnostic cfg=" + cfg + " shape=[1," + hq + "," + s + "," + d + "] ----");
+            for (int h = 0; h < hq; h++) {
+                for (int p = 0; p < s; p++) {
+                    int base = (h * s + p) * d;
+                    double eNorm = 0, cNorm = 0;
+                    for (int i = 0; i < d; i++) {
+                        eNorm += (double) ea[base + i] * ea[base + i];
+                        cNorm += (double) ca[base + i] * ca[base + i];
+                    }
+                    StringBuilder eHead = new StringBuilder();
+                    StringBuilder cHead = new StringBuilder();
+                    for (int i = 0; i < Math.min(6, d); i++) {
+                        eHead.append(String.format("%.4f ", ea[base + i]));
+                        cHead.append(String.format("%.4f ", ca[base + i]));
+                    }
+                    System.out.printf("h=%d p=%d |eager|=%.4f |capturable|=%.4f%n"
+                                    + "    eager[0:6]     = %s%n"
+                                    + "    capturable[0:6]= %s%n",
+                            h, p, Math.sqrt(eNorm), Math.sqrt(cNorm), eHead, cHead);
+                }
+            }
+            System.out.println("---- end dumpDiagnostic ----");
+        }
+    }
+
+    /**
      * @param pageSize      tokens per KV page.
      * @param numSlots      total slots allocated (must be a multiple of pageSize).
      * @param existingLen   cached length before the verify window (row 0 only, B=1).
@@ -149,6 +187,9 @@ public class VerifyCudaGraphStage1KernelTest {
 
                 try (eager; capturable) {
                     double d = maxAbsDiff(eager, capturable);
+                    if (d >= TOLERANCE) {
+                        dumpDiagnostic(cfg, eager, capturable);
+                    }
                     assertTrue(d < TOLERANCE,
                             "capturable-kernel vs eager-SDPA max abs diff=" + d
                                     + " (cfg=" + cfg + ")");
