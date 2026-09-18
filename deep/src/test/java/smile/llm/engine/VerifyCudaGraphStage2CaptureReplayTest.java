@@ -74,6 +74,27 @@ public class VerifyCudaGraphStage2CaptureReplayTest {
     }
 
     /**
+     * Bottom-right-aligned ("continuation window") additive causal mask,
+     * shape {@code [s, kvLen]} — see the identical helper's javadoc in
+     * VerifyCudaGraphStage1KernelTest for why this (not plain
+     * {@code isCausal=true} with no mask) is required for a correct eager
+     * reference here: PyTorch SDPA's own {@code is_causal} is top-left-aligned
+     * when query/key lengths differ, not bottom-right.
+     */
+    private static Tensor buildContinuationCausalMask(int s, int kvLen, Device device, ScalarType dtype) {
+        try (Tensor block = Tensor.zeros(s, s).fill_(Float.NEGATIVE_INFINITY).triu_(1)) {
+            if (kvLen == s) {
+                return block.to(device, dtype);
+            }
+            try (Tensor past = Tensor.zeros(s, kvLen - s)) {
+                try (Tensor mask = Tensor.hstack(past, block)) {
+                    return mask.to(device, dtype);
+                }
+            }
+        }
+    }
+
+    /**
      * Max absolute difference between two same-shape tensors, computed via
      * Java arrays rather than {@code Tensor.max()} + {@code doubleValue()}.
      * {@code smile_tensor_max} is not a true global reduction in the current
@@ -157,10 +178,12 @@ public class VerifyCudaGraphStage2CaptureReplayTest {
 
                         Native.cudaGraphReplay(graph);
 
-                        try (Tensor eager = Native.flashInferAttentionPagedRaw(
+                        try (Tensor mask = buildContinuationCausalMask(
+                                     qoLen, lastPageLens[i], device, ScalarType.BFloat16);
+                             Tensor eager = Native.flashInferAttentionPagedRaw(
                                 query, kCache, vCache, kvIndptr, kvIndices, kvLastPageLen,
                                 pageSize, numKvHeads, headDim, lastPageLens[i],
-                                -1.0, /*isCausal=*/true, wsHandle)) {
+                                -1.0, /*isCausal=*/true, mask, wsHandle)) {
                             double d = maxAbsDiff(capturedOut, eager);
                             assertTrue(d < TOLERANCE,
                                     "replay #" + i + " (lastPageLen=" + lastPageLens[i]

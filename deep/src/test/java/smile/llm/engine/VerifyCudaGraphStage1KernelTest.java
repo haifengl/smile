@@ -144,6 +144,33 @@ public class VerifyCudaGraphStage1KernelTest {
         }
     }
 
+    /**
+     * Bottom-right-aligned ("continuation window") additive causal mask,
+     * shape {@code [s, kvLen]}: column j valid for row i iff
+     * {@code j <= i + (kvLen - s)}. Mirrors exactly how {@code QwenModel.forward}
+     * builds its real production mask ({@code triu_(1)} block hstacked after
+     * zeros for the prior-context columns) — <b>not</b> the same as passing
+     * plain {@code isCausal=true} with no mask to SDPA: PyTorch's own
+     * {@code is_causal} is top-left-aligned when the query/key lengths
+     * differ (confirmed via pytorch/pytorch#108108 — bottom-right alignment
+     * needs the newer explicit {@code causal_lower_right} utility, not the
+     * boolean), which is wrong for this "query is a continuation, not a
+     * sequence start" use case and was the actual cause of an earlier
+     * apparent kernel mismatch here that turned out to be a bad reference.
+     */
+    private static Tensor buildContinuationCausalMask(int s, int kvLen, Device device, ScalarType dtype) {
+        try (Tensor block = Tensor.zeros(s, s).fill_(Float.NEGATIVE_INFINITY).triu_(1)) {
+            if (kvLen == s) {
+                return block.to(device, dtype);
+            }
+            try (Tensor past = Tensor.zeros(s, kvLen - s)) {
+                try (Tensor mask = Tensor.hstack(past, block)) {
+                    return mask.to(device, dtype);
+                }
+            }
+        }
+    }
+
     private void runAndCompare(Config cfg) {
         runAndCompare(cfg, true);
     }
@@ -179,12 +206,16 @@ public class VerifyCudaGraphStage1KernelTest {
                  Tensor kvIndptr = Tensor.of(kvIndptrArr).to(device);
                  Tensor kvIndices = Tensor.of(kvIndicesArr).to(device);
                  Tensor kvLastPageLen = Tensor.of(kvLastPageLenArr).to(device);
-                 Tensor qoIndptr = Tensor.of(qoIndptrArr).to(device)) {
+                 Tensor qoIndptr = Tensor.of(qoIndptrArr).to(device);
+                 Tensor mask = isCausal
+                         ? buildContinuationCausalMask(
+                                 cfg.windowLen(), cfg.totalLen(), device, ScalarType.BFloat16)
+                         : null) {
 
                 Tensor eager = Native.flashInferAttentionPagedRaw(
                         query, kCache, vCache, kvIndptr, kvIndices, kvLastPageLen,
                         cfg.pageSize(), cfg.numKvHeads(), cfg.headDim(), cfg.totalLen(),
-                        /*scale=*/-1.0, isCausal, ws.handle());
+                        /*scale=*/-1.0, isCausal, mask, ws.handle());
                 Tensor capturable;
                 try {
                     capturable = Native.flashInferAttentionVerifyCapturable(
