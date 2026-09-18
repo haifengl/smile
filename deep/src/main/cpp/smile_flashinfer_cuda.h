@@ -56,9 +56,13 @@ void smile_flashinfer_runtime_cache_free(void *cache_slot);
 /**
  * Stage 1 (SMILE_VERIFY_CUDA_GRAPH): graph-capturable multi-token (S>1) causal
  * paged attention, isolated from smile_flashinfer_paged_attention_cuda's S==1/
- * S>1 dispatch (see smile_flashinfer_kernels.cu for rationale). Always causal;
- * falls back internally to the same eager gather+SDPA path
- * (run_batch_prefill_sdpa) for unsupported dtype/head_dim.
+ * S>1 dispatch (see smile_flashinfer_kernels.cu for rationale). Falls back
+ * internally to the same eager gather+SDPA path (run_batch_prefill_sdpa) for
+ * unsupported dtype/head_dim.
+ *
+ * @param is_causal diagnostic-only toggle (MaskMode::kCausal vs kNone);
+ *                  production callers always pass 1 — verify windows are
+ *                  always causal.
  */
 int smile_flashinfer_paged_attention_verify_cuda(
         const torch::Tensor &query,
@@ -75,6 +79,7 @@ int smile_flashinfer_paged_attention_verify_cuda(
         float scale,
         float k_scale,
         float v_scale,
+        int is_causal,
         torch::Tensor *float_workspace,       /* nullable → allocate locals */
         torch::Tensor *int_workspace,         /* nullable */
         torch::Tensor *pinned_int_workspace,  /* nullable */

@@ -1398,6 +1398,7 @@ extern "C" int smile_flashinfer_paged_attention_verify_cuda(
         float scale,
         float k_scale,
         float v_scale,
+        int is_causal, // diagnostic-only toggle; production callers pass 1
         torch::Tensor *float_workspace,
         torch::Tensor *int_workspace,
         torch::Tensor *pinned_int_workspace,
@@ -1464,43 +1465,56 @@ extern "C" int smile_flashinfer_paged_attention_verify_cuda(
 
         if (head_dim == 64 || head_dim == 128 || head_dim == 256 || head_dim == 512) {
             int rc = -1;
-            if (query.scalar_type() == at::kBFloat16) {
-                auto dispatch_hd = [&](auto head_dim_c) {
-                    constexpr uint32_t HEAD_DIM = decltype(head_dim_c)::value;
-                    rc = run_batch_prefill_capturable<nv_bfloat16, MaskMode::kCausal, HEAD_DIM>(
-                            query, k_pages, v_pages, qo_ip, kv_ip, kv_ix, kv_last, page_size,
-                            static_cast<int>(Hq), num_kv_heads, head_dim, qo_len, scale,
-                            float_ws, int_ws, pinned_int, runtime_cache_slot, out, err);
-                };
-                if (head_dim == 64) {
-                    dispatch_hd(std::integral_constant<uint32_t, 64>{});
-                } else if (head_dim == 128) {
-                    dispatch_hd(std::integral_constant<uint32_t, 128>{});
-                } else if (head_dim == 256) {
-                    dispatch_hd(std::integral_constant<uint32_t, 256>{});
+            // Diagnostic: MaskMode is a runtime-selected compile-time template
+            // arg so a test can compare the non-causal path directly against
+            // run_batch_prefill_sdpa's non-causal output, isolating whether a
+            // mismatch is in causal-restriction logic specifically or more
+            // fundamental (layout / KV representation). Production callers
+            // always pass is_causal=1 (verify windows are always causal).
+            auto dispatch_mask = [&](auto mask_mode_c) {
+                constexpr MaskMode MM = decltype(mask_mode_c)::value;
+                if (query.scalar_type() == at::kBFloat16) {
+                    auto dispatch_hd = [&](auto head_dim_c) {
+                        constexpr uint32_t HEAD_DIM = decltype(head_dim_c)::value;
+                        rc = run_batch_prefill_capturable<nv_bfloat16, MM, HEAD_DIM>(
+                                query, k_pages, v_pages, qo_ip, kv_ip, kv_ix, kv_last, page_size,
+                                static_cast<int>(Hq), num_kv_heads, head_dim, qo_len, scale,
+                                float_ws, int_ws, pinned_int, runtime_cache_slot, out, err);
+                    };
+                    if (head_dim == 64) {
+                        dispatch_hd(std::integral_constant<uint32_t, 64>{});
+                    } else if (head_dim == 128) {
+                        dispatch_hd(std::integral_constant<uint32_t, 128>{});
+                    } else if (head_dim == 256) {
+                        dispatch_hd(std::integral_constant<uint32_t, 256>{});
+                    } else {
+                        dispatch_hd(std::integral_constant<uint32_t, 512>{});
+                    }
+                } else if (query.scalar_type() == at::kHalf) {
+                    auto dispatch_hd = [&](auto head_dim_c) {
+                        constexpr uint32_t HEAD_DIM = decltype(head_dim_c)::value;
+                        rc = run_batch_prefill_capturable<__half, MM, HEAD_DIM>(
+                                query, k_pages, v_pages, qo_ip, kv_ip, kv_ix, kv_last, page_size,
+                                static_cast<int>(Hq), num_kv_heads, head_dim, qo_len, scale,
+                                float_ws, int_ws, pinned_int, runtime_cache_slot, out, err);
+                    };
+                    if (head_dim == 64) {
+                        dispatch_hd(std::integral_constant<uint32_t, 64>{});
+                    } else if (head_dim == 128) {
+                        dispatch_hd(std::integral_constant<uint32_t, 128>{});
+                    } else if (head_dim == 256) {
+                        dispatch_hd(std::integral_constant<uint32_t, 256>{});
+                    } else {
+                        dispatch_hd(std::integral_constant<uint32_t, 512>{});
+                    }
                 } else {
-                    dispatch_hd(std::integral_constant<uint32_t, 512>{});
+                    err = "FlashInfer capturable prefill requires bf16 or fp16 query dtype";
                 }
-            } else if (query.scalar_type() == at::kHalf) {
-                auto dispatch_hd = [&](auto head_dim_c) {
-                    constexpr uint32_t HEAD_DIM = decltype(head_dim_c)::value;
-                    rc = run_batch_prefill_capturable<__half, MaskMode::kCausal, HEAD_DIM>(
-                            query, k_pages, v_pages, qo_ip, kv_ip, kv_ix, kv_last, page_size,
-                            static_cast<int>(Hq), num_kv_heads, head_dim, qo_len, scale,
-                            float_ws, int_ws, pinned_int, runtime_cache_slot, out, err);
-                };
-                if (head_dim == 64) {
-                    dispatch_hd(std::integral_constant<uint32_t, 64>{});
-                } else if (head_dim == 128) {
-                    dispatch_hd(std::integral_constant<uint32_t, 128>{});
-                } else if (head_dim == 256) {
-                    dispatch_hd(std::integral_constant<uint32_t, 256>{});
-                } else {
-                    dispatch_hd(std::integral_constant<uint32_t, 512>{});
-                }
+            };
+            if (is_causal) {
+                dispatch_mask(std::integral_constant<MaskMode, MaskMode::kCausal>{});
             } else {
-                err = "FlashInfer capturable prefill requires bf16 or fp16 query dtype";
-                return -1;
+                dispatch_mask(std::integral_constant<MaskMode, MaskMode::kNone>{});
             }
             if (rc == 0) {
                 return 0;
@@ -1517,7 +1531,7 @@ extern "C" int smile_flashinfer_paged_attention_verify_cuda(
 
         return run_batch_prefill_sdpa(
                 query, k_pages, v_pages, kv_ip, kv_ix, kv_last, page_size, num_kv_heads,
-                head_dim, /*cache_len=*/0, scale, /*is_causal=*/1, /*attn_mask=*/nullptr,
+                head_dim, /*cache_len=*/0, scale, is_causal, /*attn_mask=*/nullptr,
                 runtime_cache_slot, out, err);
     } catch (const std::exception &ex) {
         err = ex.what();

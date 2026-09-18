@@ -145,6 +145,17 @@ public class VerifyCudaGraphStage1KernelTest {
     }
 
     private void runAndCompare(Config cfg) {
+        runAndCompare(cfg, true);
+    }
+
+    /**
+     * @param isCausal diagnostic-only toggle: {@code false} compares
+     *                 non-causal attention between the two paths, isolating
+     *                 whether a mismatch is specifically in causal-restriction
+     *                 logic (only fails with {@code true}) or more fundamental
+     *                 (fails either way — layout / KV representation).
+     */
+    private void runAndCompare(Config cfg, boolean isCausal) {
         assumeTrue(cudaAvailable(), "CUDA not available in this environment");
         Device device = Device.CUDA();
 
@@ -173,13 +184,13 @@ public class VerifyCudaGraphStage1KernelTest {
                 Tensor eager = Native.flashInferAttentionPagedRaw(
                         query, kCache, vCache, kvIndptr, kvIndices, kvLastPageLen,
                         cfg.pageSize(), cfg.numKvHeads(), cfg.headDim(), cfg.totalLen(),
-                        /*scale=*/-1.0, /*isCausal=*/true, ws.handle());
+                        /*scale=*/-1.0, isCausal, ws.handle());
                 Tensor capturable;
                 try {
                     capturable = Native.flashInferAttentionVerifyCapturable(
                             query, kCache, vCache, qoIndptr, kvIndptr, kvIndices, kvLastPageLen,
                             cfg.pageSize(), cfg.numKvHeads(), cfg.headDim(), cfg.windowLen(),
-                            /*scale=*/-1.0, /*kScale=*/1.0f, /*vScale=*/1.0f, ws.handle());
+                            /*scale=*/-1.0, /*kScale=*/1.0f, /*vScale=*/1.0f, isCausal, ws.handle());
                 } catch (RuntimeException e) {
                     eager.close();
                     throw e;
@@ -192,7 +203,7 @@ public class VerifyCudaGraphStage1KernelTest {
                     }
                     assertTrue(d < TOLERANCE,
                             "capturable-kernel vs eager-SDPA max abs diff=" + d
-                                    + " (cfg=" + cfg + ")");
+                                    + " (cfg=" + cfg + ", isCausal=" + isCausal + ")");
                 }
             }
         }
@@ -223,5 +234,14 @@ public class VerifyCudaGraphStage1KernelTest {
         // S=4 (n=3 drafts), still within one page — the largest window this
         // plan's Stage 5 default range (n up to ~4) is expected to exercise.
         runAndCompare(new Config(8, 8, 3, 4, 2, 2));
+    }
+
+    @Test
+    public void testGivenNonCausalSamePageMhaWhenComparedToEagerThenMatches() {
+        // Diagnostic (see runAndCompare(cfg, isCausal) javadoc): same shape as
+        // testGivenSamePageMhaWhenComparedToEagerThenMatches but MaskMode::kNone.
+        // If this PASSES while the causal version fails, the bug is specifically
+        // in causal-restriction logic; if this ALSO fails, it's more fundamental.
+        runAndCompare(new Config(8, 8, 4, 2, 2, 2), false);
     }
 }

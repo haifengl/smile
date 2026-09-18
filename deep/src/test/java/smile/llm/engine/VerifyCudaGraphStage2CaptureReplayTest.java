@@ -126,7 +126,8 @@ public class VerifyCudaGraphStage2CaptureReplayTest {
                 for (int i = 0; i < 2; i++) {
                     try (Tensor warm = Native.flashInferAttentionVerifyCapturable(
                             query, kCache, vCache, qoIndptr, kvIndptr, kvIndices, kvLastPageLen,
-                            pageSize, numKvHeads, headDim, qoLen, -1.0, 1.0f, 1.0f, wsHandle)) {
+                            pageSize, numKvHeads, headDim, qoLen, -1.0, 1.0f, 1.0f,
+                            /*isCausal=*/true, wsHandle)) {
                         // discarded; only the plan-cache side effect matters here
                     }
                 }
@@ -139,7 +140,8 @@ public class VerifyCudaGraphStage2CaptureReplayTest {
                     Native.cudaGraphCaptureBegin(graph, 0);
                     capturedOut = Native.flashInferAttentionVerifyCapturable(
                             query, kCache, vCache, qoIndptr, kvIndptr, kvIndices, kvLastPageLen,
-                            pageSize, numKvHeads, headDim, qoLen, -1.0, 1.0f, 1.0f, wsHandle);
+                            pageSize, numKvHeads, headDim, qoLen, -1.0, 1.0f, 1.0f,
+                            /*isCausal=*/true, wsHandle);
                     Native.cudaGraphCaptureEnd(graph);
                     assertTrue(Native.cudaGraphIsReady(graph), "graph not ready after capture_end");
 

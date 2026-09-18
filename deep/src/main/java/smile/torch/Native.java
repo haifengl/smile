@@ -266,6 +266,7 @@ public final class Native {
                         ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
                         ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE,
                         ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT,
+                        ValueLayout.JAVA_INT,
                         ValueLayout.ADDRESS)))
                 .orElse(null);
         static final MethodHandle FLASHINFER_RAGGED = smile_torch_h.SYMBOL_LOOKUP
@@ -1408,8 +1409,8 @@ public final class Native {
      * against {@link #flashInferAttention}'s existing SDPA path before any
      * later stage touches {@code Qwen}/{@code QwenModel}.
      *
-     * <p>Always causal; no mask parameter (FlashInfer's causal masking here is
-     * compile-time, unlike the additive-mask SDPA path).
+     * <p>No additive mask parameter (FlashInfer's masking here is compile-time
+     * {@code MaskMode}, unlike the additive-mask SDPA path).
      *
      * @param query      query {@code [B, Hq, S, D]}
      * @param kCache     key cache {@code [numSlots, Hkv, D]} (one layer slice)
@@ -1425,6 +1426,8 @@ public final class Native {
      * @param scale      attention scale ({@code <= 0} &rarr; {@code 1/sqrt(D)})
      * @param kScale     FP8 KV key dequant scale (1.0 when KV is bf16/fp16)
      * @param vScale     FP8 KV value dequant scale (1.0 when KV is bf16/fp16)
+     * @param isCausal   diagnostic-only toggle (MaskMode::kCausal vs kNone);
+     *                   production callers always pass {@code true}
      * @param workspace  FlashInfer workspace handle
      * @return output {@code [B, Hq, S, D]}
      */
@@ -1432,7 +1435,7 @@ public final class Native {
             Tensor query, Tensor kCache, Tensor vCache,
             Tensor qoIndptr, Tensor kvIndptr, Tensor kvIndices, Tensor kvLastPageLen,
             int pageSize, int numKvHeads, int headDim, int qoLen,
-            double scale, float kScale, float vScale, MemorySegment workspace) {
+            double scale, float kScale, float vScale, boolean isCausal, MemorySegment workspace) {
         if (Bindings.FLASHINFER_PAGED_VERIFY == null) {
             throw new IllegalStateException(
                     "smile_flashinfer_paged_attention_verify not in libsmile_torch");
@@ -1454,6 +1457,7 @@ public final class Native {
                     scale,
                     kScale,
                     vScale,
+                    isCausal ? 1 : 0,
                     workspace);
         } catch (Throwable t) {
             throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
