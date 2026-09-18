@@ -600,4 +600,122 @@ public class KvCachePoolTest {
             v.close();
         }
     }
+
+    @Test
+    public void testGivenMtpRoundTripWhenSealAndRegrowSamePageThenReusesCsrTensors() {
+        // Given – pageSize 16 large enough that a full MTP round trip (draft
+        // depth n=3) never crosses a page boundary: 10 -> 13 (accept) ->
+        // 11 (reject 2) -> 14 (accept again). This is the exact
+        // grow/shrink/grow oscillation a captured verify graph's CSR
+        // addresses must survive (Stage 3 of the verify-CUDA-graph plan).
+        try (var pool = new KvCachePool(1, 64, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            pool.setPrefixReuseEnabled(false);
+            pool.bindRequests(1, 32);
+
+            Tensor k = Tensor.ones(1, 14, 2, 16);
+            Tensor v = Tensor.ones(1, 14, 2, 16);
+            pool.put(0, 0, k, v);
+            k.close();
+            v.close();
+
+            var meta0 = pool.sharedFlashInferMetadata(10);
+            Tensor indptr0 = meta0.pagedKvIndptr();
+            Tensor indices0 = meta0.pagedKvIndices();
+
+            // Round 1: verify window grows 10 -> 13, fully accepted.
+            pool.truncateTo(13, 13);
+            var meta1 = pool.sharedFlashInferMetadata(13);
+            assertSame(meta0, meta1, "same-page grow after truncateTo reuses metadata");
+            assertSame(indptr0, meta1.pagedKvIndptr());
+            assertSame(indices0, meta1.pagedKvIndices());
+
+            // Round 2: next verify window grows 13 -> 16 but only 1 token accepted.
+            pool.truncateTo(11, 16);
+            var meta2 = pool.sharedFlashInferMetadata(11);
+            assertSame(meta0, meta2, "same-page shrink (reject) reuses metadata");
+            assertSame(indptr0, meta2.pagedKvIndptr());
+            assertSame(indices0, meta2.pagedKvIndices());
+            assertEquals(11, meta2.pagedKvLastPageLen().intArray()[0]);
+
+            // Round 3: grow again within the same page.
+            pool.truncateTo(14, 14);
+            var meta3 = pool.sharedFlashInferMetadata(14);
+            assertSame(meta0, meta3, "second same-page grow still reuses metadata");
+            assertEquals(14, meta3.pagedKvLastPageLen().intArray()[0]);
+
+            pool.unbindRequests();
+        }
+    }
+
+    @Test
+    public void testGivenVerifyGraphBuffersWhenPutThenWritesSameSlotsAsFreshIndexPath() {
+        // Given – two active requests so the flat [batch*windowLen] index
+        // buffer must interleave rows correctly, not just a batch=1 case.
+        try (var pool = new KvCachePool(1, 128, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            pool.setPrefixReuseEnabled(false);
+            int id1 = pool.bindRequest(new int[]{1, 2, 3, 4}, 32);
+            int id2 = pool.bindRequest(new int[]{5, 6, 7, 8}, 32);
+            pool.activateStep(id1, id2);
+
+            int windowLen = 3;
+            int[] startPos = {4, 4};
+            Tensor k = Tensor.ones(2, windowLen, 2, 16);
+            Tensor v = Tensor.full(9.0f, 2, windowLen, 2, 16);
+            pool.put(0, startPos, k, v); // ordinary index path establishes the baseline
+
+            var before = pool.get(0, 7);
+            assertEquals(9.0f, before._2().getFloat(0, 6, 0, 0), 1e-5);
+            assertEquals(9.0f, before._2().getFloat(1, 4, 0, 0), 1e-5);
+            before._1().close();
+            before._2().close();
+
+            // When – overwrite the identical [startPos, startPos+windowLen) window
+            // through the verify-graph fixed-index-buffer path instead.
+            pool.activateStep(id1, id2);
+            pool.prepareVerifyGraphStep(7, startPos, windowLen);
+            pool.setVerifyGraphBuffers(true);
+            Tensor v2 = Tensor.full(42.0f, 2, windowLen, 2, 16);
+            try {
+                pool.put(0, startPos, k, v2);
+            } finally {
+                pool.setVerifyGraphBuffers(false);
+            }
+            v2.close();
+
+            // Then – both rows landed on the same physical slots as the fresh-index path.
+            var after = pool.get(0, 7);
+            assertEquals(42.0f, after._2().getFloat(0, 4, 0, 0), 1e-5);
+            assertEquals(42.0f, after._2().getFloat(0, 6, 0, 0), 1e-5);
+            assertEquals(42.0f, after._2().getFloat(1, 4, 0, 0), 1e-5);
+            assertEquals(42.0f, after._2().getFloat(1, 6, 0, 0), 1e-5);
+            after._1().close();
+            after._2().close();
+
+            k.close();
+            v.close();
+            pool.unbindRequest(id1);
+            pool.unbindRequest(id2);
+        }
+    }
+
+    @Test
+    public void testGivenVerifyGraphBuffersWhenBufferNotPreparedThenThrows() {
+        // Given – verifyGraphBuffers flagged on without prepareVerifyGraphStep
+        // first must fail loudly rather than silently mis-index (mirrors the
+        // existing decodeGraphBuffers guard in put()).
+        try (var pool = new KvCachePool(1, 64, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
+            pool.setPrefixReuseEnabled(false);
+            pool.bindRequests(1, 32);
+            pool.setVerifyGraphBuffers(true);
+            Tensor k = Tensor.ones(1, 3, 2, 16);
+            Tensor v = Tensor.ones(1, 3, 2, 16);
+            try {
+                assertThrows(IllegalStateException.class, () -> pool.put(0, 0, k, v));
+            } finally {
+                pool.setVerifyGraphBuffers(false);
+                k.close();
+                v.close();
+            }
+        }
+    }
 }

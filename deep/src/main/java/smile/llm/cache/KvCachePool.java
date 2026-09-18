@@ -186,6 +186,21 @@ public class KvCachePool implements AutoCloseable {
     /** Reused KV slot index {@code [1]} for graph decode {@link #put}. */
     private Tensor decodeKvIndexBuf;
 
+    /**
+     * When true, the multi-token MTP verify forward uses a stable
+     * {@code [batch*windowLen]} GPU KV index buffer for CUDA graph capture
+     * (SMILE_VERIFY_CUDA_GRAPH). Independent of {@link #decodeGraphBuffers}:
+     * different buffer shape, different call sites, must never cross-
+     * contaminate the decode graph path.
+     */
+    private boolean verifyGraphBuffers;
+    /** Reused flat KV slot index {@code [batch*windowLen]} for graph verify {@link #put}. */
+    private Tensor verifyKvIndexBuf;
+    /** Reused query-side CSR {@code [batch+1]} for the graph verify kernel; rebuilt only on a {@code (batch,windowLen)} bucket change. */
+    private Tensor verifyQoIndptrBuf;
+    private int verifyQoIndptrBatch = -1;
+    private int verifyQoIndptrWindowLen = -1;
+
     /** Scratch slot indices for next-bucket graph prefetch (isolated from live requests). */
     private long[] prefetchSlots;
     /** Saved step metadata while a prefetch forward runs. */
@@ -598,6 +613,25 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * Enables stable-address KV index/CSR tensors for the MTP window-verify
+     * CUDA graph. Independent of {@link #setDecodeGraphBuffers}.
+     *
+     * @param enabled {@code true} during verify graph capture / replay forwards.
+     */
+    public void setVerifyGraphBuffers(boolean enabled) {
+        verifyGraphBuffers = enabled;
+    }
+
+    /**
+     * Returns whether verify CUDA-graph fixed buffers are active for this step.
+     *
+     * @return whether verify CUDA-graph fixed buffers are active for this step.
+     */
+    public boolean verifyGraphBuffers() {
+        return verifyGraphBuffers;
+    }
+
+    /**
      * KV page count for a uniform cache length (CUDA graph bucket key).
      *
      * @param length inclusive cached token count.
@@ -730,6 +764,109 @@ public class KvCachePool implements AutoCloseable {
         var opts = new Tensor.Options().device(device).dtype(ScalarType.Int64);
         decodeKvIndexBuf = Tensor.zeros(opts, batch);
         decodeKvIndexBuf.detachFromScopes();
+    }
+
+    /**
+     * Updates FlashInfer metadata and the flat {@code [batch*windowLen]} KV
+     * write-index buffer before a verify-graph replay (single-request form).
+     *
+     * @param cacheLen  inclusive cache length for the active request.
+     * @param startPos  KV write position for the first token of the window.
+     * @param windowLen number of tokens written by this verify step.
+     */
+    public void prepareVerifyGraphStep(int cacheLen, int startPos, int windowLen) {
+        prepareVerifyGraphStep(cacheLen, new int[]{startPos}, windowLen);
+    }
+
+    /**
+     * Updates FlashInfer metadata and the flat {@code [batch*windowLen]} KV
+     * write-index buffer before a verify-graph replay.
+     *
+     * @param cacheLen       inclusive cache length (uniform across the batch).
+     * @param startPositions KV write position of the window's first token per batch row.
+     * @param windowLen      number of tokens written by this verify step (uniform across the batch).
+     */
+    public void prepareVerifyGraphStep(int cacheLen, int[] startPositions, int windowLen) {
+        if (startPositions == null || startPositions.length == 0) {
+            throw new IllegalArgumentException("startPositions must be non-empty");
+        }
+        if (windowLen < 1) {
+            throw new IllegalArgumentException("windowLen must be >= 1");
+        }
+        sharedFlashInferMetadata(cacheLen);
+        int batch = startPositions.length;
+        ensureVerifyKvIndexBuf(batch, windowLen);
+        long[] flat = new long[batch * windowLen];
+        for (int b = 0; b < batch; b++) {
+            long[] slots = requestSlots[b];
+            int start = startPositions[b];
+            for (int t = 0; t < windowLen; t++) {
+                flat[b * windowLen + t] = slots[start + t];
+            }
+        }
+        try (Tensor cpu = Tensor.of(flat)) {
+            if (device.isCUDA()) {
+                try (Tensor gpu = cpu.to(device)) {
+                    smile.torch.Native.copy_(verifyKvIndexBuf, gpu);
+                }
+            } else {
+                smile.torch.Native.copy_(verifyKvIndexBuf, cpu);
+            }
+        }
+        bumpUniformFlashInferMetadata(cacheLen, batch);
+    }
+
+    private void ensureVerifyKvIndexBuf(int batch, int windowLen) {
+        long needed = (long) batch * windowLen;
+        if (verifyKvIndexBuf != null && verifyKvIndexBuf.shape()[0] == needed) {
+            return;
+        }
+        if (verifyKvIndexBuf != null) {
+            verifyKvIndexBuf.close();
+            verifyKvIndexBuf = null;
+        }
+        var opts = new Tensor.Options().device(device).dtype(ScalarType.Int64);
+        verifyKvIndexBuf = Tensor.zeros(opts, needed);
+        verifyKvIndexBuf.detachFromScopes();
+    }
+
+    /**
+     * Returns a stable query-side CSR {@code [batch+1]} tensor with values
+     * {@code [0, windowLen, 2*windowLen, ...]}, rebuilt (new address) only
+     * when the {@code (batch, windowLen)} bucket changes. Callers that need a
+     * fixed address across a captured verify graph's lifetime must only call
+     * this once per bucket, before capture, and reuse the returned tensor for
+     * every replay in that bucket.
+     *
+     * @param batch     active batch size.
+     * @param windowLen number of query tokens per row.
+     * @return query-side CSR tensor; do not close (owned by the pool).
+     */
+    public Tensor verifyQoIndptrBuf(int batch, int windowLen) {
+        if (verifyQoIndptrBuf != null && verifyQoIndptrBatch == batch
+                && verifyQoIndptrWindowLen == windowLen) {
+            return verifyQoIndptrBuf;
+        }
+        int[] vals = new int[batch + 1];
+        for (int b = 0; b <= batch; b++) {
+            vals[b] = b * windowLen;
+        }
+        Tensor fresh;
+        if (device.isCUDA()) {
+            try (Tensor cpu = Tensor.of(vals)) {
+                fresh = cpu.to(device);
+            }
+        } else {
+            fresh = Tensor.of(vals);
+        }
+        fresh.detachFromScopes();
+        if (verifyQoIndptrBuf != null) {
+            verifyQoIndptrBuf.close();
+        }
+        verifyQoIndptrBuf = fresh;
+        verifyQoIndptrBatch = batch;
+        verifyQoIndptrWindowLen = windowLen;
+        return verifyQoIndptrBuf;
     }
 
     /**
@@ -1194,6 +1331,16 @@ public class KvCachePool implements AutoCloseable {
                 throw new IllegalStateException("decode KV index buffer not prepared for batch " + batch);
             }
             idx = decodeKvIndexBuf;
+        } else if (verifyGraphBuffers) {
+            // Index updated in prepareVerifyGraphStep() before capture/replay; must not
+            // scalar-put from CPU during CUDA graph capture. Structurally independent from
+            // the decodeGraphBuffers branch above (different buffer, different shape).
+            long needed = (long) batch * seqlen;
+            if (verifyKvIndexBuf == null || verifyKvIndexBuf.shape()[0] != needed) {
+                throw new IllegalStateException(
+                        "verify KV index buffer not prepared for batch " + batch + ", seqlen " + seqlen);
+            }
+            idx = verifyKvIndexBuf;
         } else {
             long[] indices = new long[batch * seqlen];
             for (int b = 0; b < batch; b++) {
@@ -1354,6 +1501,16 @@ public class KvCachePool implements AutoCloseable {
                         sealedLen, requestSlots[b].length));
             }
         }
+        // Try the in-place bump first so a captured verify/decode graph's CSR
+        // tensor addresses survive the round-to-round grow(+n)/shrink(reject)/
+        // grow(+n) oscillation, as long as the window stays within the same KV
+        // page count. Only a genuine page-boundary-crossing seal (or a ragged
+        // step) falls through to the unconditional rebuild.
+        if (sealedLen > 0 && stepFlashInferMeta != null && stepFlashInferLengths == null
+                && requestSlots != null
+                && bumpUniformFlashInferMetadata(sealedLen, requestSlots.length)) {
+            return;
+        }
         clearStepFlashInferMetadata();
         if (sealedLen > 0) {
             stepFlashInferMeta = buildFlashInferMetadata(sealedLen);
@@ -1434,8 +1591,6 @@ public class KvCachePool implements AutoCloseable {
             return stepFlashInferMeta;
         }
         if (stepFlashInferMeta != null && stepFlashInferLengths == null
-                && stepFlashInferUniformLen >= 0
-                && length == stepFlashInferUniformLen + 1
                 && requestSlots != null
                 && bumpUniformFlashInferMetadata(length, requestSlots.length)) {
             return stepFlashInferMeta;
@@ -1447,8 +1602,12 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
-     * Updates uniform CSR metadata in place when cache length grows by one
-     * within the same KV page (avoids realloc + H2D each decode step).
+     * Updates uniform CSR metadata in place when the cache length moves
+     * (grows <em>or</em> shrinks) without changing KV page count (avoids
+     * realloc + H2D). {@code pagedKvIndices} only depends on page ids, which
+     * are unchanged whenever page count is unchanged, so this covers the
+     * grow(+n)/shrink(reject)/grow(+n) oscillation of speculative rounds, not
+     * just steady +1 decode growth.
      *
      * @param newLength new inclusive cache length.
      * @param batch     active batch size.
@@ -1456,14 +1615,14 @@ public class KvCachePool implements AutoCloseable {
      */
     private boolean bumpUniformFlashInferMetadata(int newLength, int batch) {
         int oldLen = stepFlashInferUniformLen;
-        if (newLength != oldLen + 1 || stepFlashInferMeta == null) {
+        if (newLength < 1 || oldLen < 0 || stepFlashInferMeta == null) {
             return false;
         }
         if (requestSlots == null || requestSlots.length != batch) {
             return false;
         }
-        int oldPages = (oldLen + pageSize - 1) / pageSize;
-        int newPages = (newLength + pageSize - 1) / pageSize;
+        int oldPages = numPagesForLength(oldLen);
+        int newPages = numPagesForLength(newLength);
         if (newPages != oldPages) {
             return false;
         }
