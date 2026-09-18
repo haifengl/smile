@@ -73,6 +73,28 @@ public class VerifyCudaGraphStage2CaptureReplayTest {
         }
     }
 
+    /**
+     * Max absolute difference between two same-shape tensors, computed via
+     * Java arrays rather than {@code Tensor.max()} + {@code doubleValue()}.
+     * {@code smile_tensor_max} is not a true global reduction in the current
+     * native binary (returns a same-shape, non-scalar result), and the
+     * native {@code item_*} call behind {@code doubleValue()} aborts the JVM
+     * (SIGABRT, not a catchable exception) when called on a non-scalar.
+     */
+    private static double maxAbsDiff(Tensor a, Tensor b) {
+        try (Tensor diff = a.to(ScalarType.Float).sub(b.to(ScalarType.Float)).abs();
+             Tensor cpu = diff.to(Device.CPU())) {
+            double max = 0.0;
+            for (float v : cpu.floatArray()) {
+                double av = Math.abs((double) v);
+                if (av > max) {
+                    max = av;
+                }
+            }
+            return max;
+        }
+    }
+
     @Test
     public void testGivenCapturedGraphWhenReplayedWithVaryingKvThenMatchesEagerEveryTime() {
         assumeTrue(cudaAvailable(), "CUDA not available in this environment");
@@ -136,11 +158,8 @@ public class VerifyCudaGraphStage2CaptureReplayTest {
                         try (Tensor eager = Native.flashInferAttentionPagedRaw(
                                 query, kCache, vCache, kvIndptr, kvIndices, kvLastPageLen,
                                 pageSize, numKvHeads, headDim, lastPageLens[i],
-                                -1.0, /*isCausal=*/true, wsHandle);
-                             Tensor diff = capturedOut.to(ScalarType.Float)
-                                     .sub(eager.to(ScalarType.Float)).abs();
-                             Tensor maxDiff = diff.max()) {
-                            double d = maxDiff.doubleValue();
+                                -1.0, /*isCausal=*/true, wsHandle)) {
+                            double d = maxAbsDiff(capturedOut, eager);
                             assertTrue(d < TOLERANCE,
                                     "replay #" + i + " (lastPageLen=" + lastPageLens[i]
                                             + ") vs fresh eager max abs diff=" + d
