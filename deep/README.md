@@ -3,8 +3,9 @@
 The `smile-deep` module provides idiomatic Java API for deep learning
 on the JVM while still reaching CPU, CUDA, and MPS backends by wrapping
 the PyTorch / LibTorch C++ runtime. It also provides tiktoken BPE tokenizer,
-LLaMA-3 inference, EfficientNet-V2, and an image classification pipeline
-out of the box.
+LLaMA-3 inference, EfficientNet-V2, an image classification pipeline, and
+ONNX Runtime inference (`smile.onnx`) out of the box — paving the way for
+ONNX GenAI support.
 
 ---
 
@@ -42,10 +43,11 @@ out of the box.
     - [Image Dataset](#image-dataset)
     - [EfficientNet](#efficientnet)
     - [ImageNet Labels](#imagenet-labels)
-14. [End-to-End Examples](#end-to-end-examples)
+14. [ONNX Runtime (`smile.onnx`)](#onnx-runtime-smileonnx)
+15. [End-to-End Examples](#end-to-end-examples)
     - [Training a LeNet on MNIST](#training-a-lenet-on-mnist)
     - [CPU-only MLP Training](#cpu-only-mlp-training)
-15. [Building and Testing](#building-and-testing)
+16. [Building and Testing](#building-and-testing)
 
 ---
 
@@ -66,6 +68,9 @@ Runtime requirements:
   - **Windows:** `PATH`
   - **Linux:** `LD_LIBRARY_PATH`
   - **macOS:** `DYLD_LIBRARY_PATH`
+- For ONNX inference (`smile.onnx`), the ONNX Runtime shared library
+  (`onnxruntime.dll` / `libonnxruntime.so` / `libonnxruntime.dylib`) must also
+  be on the OS library search path ([ORT releases](https://github.com/microsoft/onnxruntime/releases)).
 - When launching outside Gradle or Smile Studio, enable FFM access explicitly:
 
 ```text
@@ -123,11 +128,21 @@ smile.vision
 ├── VisionModel.java    Model subclass coupling a LayerBlock with a Transform
 ├── ImageDataset.java   Folder-per-class dataset with background prefetch
 └── ImageNet.java       1000-class ImageNet label/folder arrays + utilities
+
+smile.onnx
+├── foreign/       Panama FFM bindings to the ONNX Runtime C API
+├── InferenceSession.java  Load and run ONNX models
+├── OrtValue.java          Tensor / sequence / map containers
+├── SessionOptions.java    Threads, graph opts, execution providers
+├── RunOptions.java        Per-run log tag, severity, cancellation
+├── Environment.java       Shared OrtEnv / thread pools
+└── ModelMetadata.java, NodeInfo.java, TensorInfo.java, …
 ```
 
 The native side lives in `deep/src/main/cpp` and exposes a compact C ABI
 (`smile_torch`) over LibTorch. This hourglass layer keeps the Java API on top
 of FFM while isolating the higher-level code from LibTorch's C++ ABI.
+ONNX Runtime is linked separately through `smile.onnx.foreign`.
 
 ---
 
@@ -893,6 +908,39 @@ String name  = inet.classify("n02124075");
 // Map a folder name to a class index (useful as targetTransform)
 int index    = inet.targetTransform("n02124075");
 ```
+
+---
+
+## ONNX Runtime (`smile.onnx`)
+
+`smile.onnx` wraps the [ONNX Runtime](https://onnxruntime.ai/) C API through
+Panama FFM so you can load and run ONNX models (exported from PyTorch,
+TensorFlow, scikit-learn, XGBoost, …) on the JVM. This package lives in
+`smile-deep` alongside LibTorch-backed training/inference, and is the
+foundation for future ONNX GenAI integration.
+
+```java
+import java.util.Map;
+import smile.onnx.InferenceSession;
+import smile.onnx.OrtValue;
+
+try (var session = InferenceSession.create("resnet50.onnx")) {
+    float[] pixels = /* NCHW float32 image */;
+    try (OrtValue input = OrtValue.fromFloatArray(pixels, new long[]{1, 3, 224, 224})) {
+        OrtValue[] outputs = session.run(Map.of("input", input));
+        float[] logits = outputs[0].toFloatArray();
+        for (OrtValue v : outputs) {
+            v.close();
+        }
+    }
+}
+```
+
+Session options can enable CUDA / TensorRT / other execution providers,
+graph optimization levels, and thread pools. Prefer try-with-resources for
+`InferenceSession`, `OrtValue`, `SessionOptions`, and `Environment`.
+
+📖 **Full guide:** [ONNX.md](ONNX.md)
 
 ---
 
