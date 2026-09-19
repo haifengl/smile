@@ -6,43 +6,29 @@ title: SMILE - Deep Learning
 {% include "toc.njk" %}
 
 <div class="col-md-9 order-md-first">
-    <h1 id="feature-top" class="title">Deep Learning</h1>
+    <h1 id="dl-top" class="title">Deep Learning</h1>
 
-    <p>Deep learning is based on artificial neural networks (ANNs)
-        with representation learning. The adjective "deep" refers to the use of
-        multiple layers in the network. Fundamentally, deep learning algorithms,
-        such as convolutional neural networks and transformers, leverage a hierarchy
-        of layers to transform input data into a slightly more abstract and composite
-        representation.</p>
+    <p>Deep learning is based on artificial neural networks with representation learning. The adjective “deep” refers to stacking many layers so that each stage transforms the input into a slightly more abstract representation. Unlike classical pipelines that rely on hand-crafted features, deep models discover useful features from data — though architecture choices such as depth, width, and regularization still matter.</p>
+    <p>SMILE’s <code>smile-core</code> module already ships a tabular <code>MLP</code> for classification and regression. The <code>smile-deep</code> module goes further: an idiomatic Java API over LibTorch (CPU, CUDA, and MPS), computer-vision models and transforms (<code>smile.vision</code>), and ONNX Runtime inference (<code>smile.onnx</code>). Large language models and ONNX GenAI are covered separately on <a href="llm.html">LLM</a>.</p>
 
-    <p>Importantly, a deep learning process can learn which features to optimally
-        place in which level on its own. Prior to deep learning, machine learning
-        techniques often involved hand-crafted feature engineering to transform
-        the data into a more suitable representation for a classification algorithm
-        to operate upon. In the deep learning approach, features are not hand-crafted
-        and the model discovers useful feature representations from the data automatically.
-        This does not eliminate the need for hand-tuning; for example, varying numbers
-        of layers and layer sizes can provide different degrees of abstraction.</p>
 
-    <p>While smile-core module provides MLP (multi-layer perceptron) for classification
-        and regression tasks on tabular data, smile-deep module provides advanced
-        algorithms for computer vision and large language models (LLMs). Furthermore,
-        smile-deep supports GPU devices.</p>
+    <h2 id="prerequisites" class="title">Prerequisites</h2>
 
-    <h2 id="mnist">A Gentle Example</h2>
+    <p>Runtime requirements for <code>smile-deep</code>:</p>
 
-    <p>In the below code snippets, we show how to train a model on MNIST dataset.
-        On line 5, we call the function <code>Device.preferredDevice()</code> that
-        will return a GPU device if it exists, otherwise the default CPU device.
-        You can also create a Device object by calling its factory methods such as
-        <code>Device.GPU(0)</code>, <code>Device.MPS()</code>, or <code>Device.CPU()</code>.
-        Then we set the returned device as the default compute device. Line 5 and 6 are optional.
-        Without them, we will use CPU as the default compute device.</p>
+    <dl class="options-dl">
+        <dt><code>Java 25+</code></dt>
+        <dd>Panama FFM is used for native interop; use a JDK that matches the project’s Java toolchain.</dd>
+        <dt><code>smile_torch / LibTorch</code></dt>
+        <dd>The native <code>smile_torch</code> shared library and its LibTorch dependencies must be on the platform loader path: <code>PATH</code> (Windows), <code>LD_LIBRARY_PATH</code> (Linux), or <code>DYLD_LIBRARY_PATH</code> (macOS).</dd>
+        <dt><code>ONNX Runtime</code></dt>
+        <dd>For <code>smile.onnx</code>, place <code>onnxruntime.dll</code> / <code>libonnxruntime.so</code> / <code>libonnxruntime.dylib</code> on the same search path (<a href="https://github.com/microsoft/onnxruntime/releases">ORT releases</a>).</dd>
+        <dt><code>--enable-native-access=ALL-UNNAMED</code></dt>
+        <dd>Required when launching outside Gradle or SMILE Studio so FFM can load native code.</dd>
+        <dt><code>--add-opens=java.base/java.nio=ALL-UNNAMED</code></dt>
+        <dd>Optional but recommended if you hit buffer-interop errors; SMILE’s Gradle tests set this flag.</dd>
+    </dl>
 
-    <p>On Line 8, we define a deep learning model with a sequential block of layers.
-        For complicated models, it is helpful to print out its structure for verification
-        as we do on Line 14. On Line 15, we move the model to the preferred compute
-        device.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -51,76 +37,63 @@ title: SMILE - Deep Learning
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">import smile.deep.layer.*;
-    import smile.deep.metric.*;
-    import smile.deep.tensor.*;
-
-    Device device = Device.preferredDevice();
-    device.setDefaultDevice();
-
-    Model net = new Model(new SequentialBlock(
-            Layer.relu(784, 64, 0.5),
-            Layer.relu(64, 32),
-            Layer.logSoftmax(32, 10))
-    );
-
-    System.out.println(net);
-    net.to(device);
-
-    CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
-    double[][] x = Read.csv("data/mnist/mnist2500_X.txt", format).toArray();
-    int[] y = Read.csv("data/mnist/mnist2500_labels.txt", format).column(0).toIntArray();
-    Dataset dataset = Dataset.of(x, y, 64);
-
-    Optimizer optimizer = Optimizer.SGD(net, 0.01);
-    Loss loss = Loss.nll();
-    net.train(100, optimizer, loss, dataset);
-
-    try (var guard = Tensor.noGradGuard()) {
-        Map&lt;String, Double&gt; metrics = net.eval(dataset,
-                new Accuracy(),
-                new Precision(Averaging.Micro),
-                new Precision(Averaging.Macro),
-                new Precision(Averaging.Weighted),
-                new Recall(Averaging.Micro),
-                new Recall(Averaging.Macro),
-                new Recall(Averaging.Weighted));
-        for (var entry : metrics.entrySet()) {
-            System.out.format("Training %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
-        }
-    }</code></pre>
+  <pre class="playground-source language-java"><code class="language-java">// Example JVM flags for a custom launcher
+java --enable-native-access=ALL-UNNAMED \
+     --add-opens=java.base/java.nio=ALL-UNNAMED \
+     -jar myapp.jar</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>From line 17 to 19, we load a sample data of MNIST. This is same as we used to do with
-        smile-core. The data are read in as plain <code>double[][]</code>. Then on line 20, we
-        create a <code>Dataset</code> object that wraps the data and target labels.
-        The <code>Dataset</code> object implements the <code>Iterable</code> interface
-        so that it may emit mini-batch samples of size 64 as specified by the third parameter
-        if we loop through it.</p>
 
-    <p>From line 22 to 24, we create an SGD (stochastic gradient descent) optimizer,
-        the negative log-likelihood (NLL) loss function, and train the model for 100 epochs.
-        The whole process should finish very quickly (e.g. 15 seconds with CPU). Finally,
-        we evaluate the model with a variety of metrics from line 26 to 38. Note that
-        the evaluation is on the training data only for demonstration purpose. In practice,
-        it is better to evaluate on a hold-out test dataset. On line 26, we create a
-        no-grad guard in a try-with statement to prevent gradient computation. The inference
-        code should be inside this try-with block. This is very helpful for inference
-        as it minimizes the memory usage and avoids a lot of unnecessary computation. The guard
-        object will be automatically released after the code block finishes.</p>
+    <h2 id="module-structure" class="title">Module Structure</h2>
 
-    <h2 id="efficient-net">EfficientNet</h2>
+    <p>The deep-learning surface (excluding LLMs and GenAI) is organized as follows:</p>
 
-    <p>In previous section, we train a model from scratch. In this section, we demonstrate
-        image classification with pretrained EfficientNetV2 models.
-        EfficientNetV2 is a new family of convolutional networks that have faster training
-        speed and better parameter efficiency than previous models.</p>
+    <pre>
+smile.deep
+├── tensor/        Tensor, Index, Device, DeviceType, ScalarType, Layout
+├── layer/         Layer interface and built-in layers
+├── activation/    ActivationFunction and activation modules
+├── metric/        Accuracy, Precision, Recall, F1Score, Averaging
+├── Loss.java      Static factories for standard losses
+├── Optimizer.java SGD, Adam, AdamW, RMSprop
+├── Model.java     Trainable model wrapper over a LayerBlock
+├── Dataset.java   Dataset interface + factories
+├── DatasetImpl.java, SampleBatch.java
+└── CUDA.java      GPU info helpers
 
-    <p>On line 1, we create an instance of EfficientNet V2_S (small) model, which will load
-        the pretrained weights at <code>model/EfficientNet/efficientnet_v2_s.pt</code>
-        from the working directory. You may download the weights from
-        <a href="https://smile-ai.org/model/EfficientNet/efficientnet_v2_s.pt">smile-ai.org</a>.</p>
+smile.torch
+├── smile_torch_h.java  FFM downcalls for the C ABI
+└── Native.java         Cleaner / error-handling over raw FFM bindings
+
+smile.vision
+├── transform/     Transform, ImageClassification pipeline
+├── layer/         MBConv, FusedMBConv, Conv2dNormActivation, …
+├── EfficientNet.java   EfficientNet-V2 + pretrained factories
+├── VisionModel.java    LayerBlock coupled with a Transform
+├── ImageDataset.java   Folder-per-class dataset with prefetch
+└── ImageNet.java       1000-class labels / folders / target maps
+
+smile.onnx
+├── foreign/       Panama FFM bindings to the ONNX Runtime C API
+├── InferenceSession.java  Load and run ONNX models
+├── OrtValue.java          Tensor / sequence / map containers
+├── SessionOptions.java    Threads, graph opts, execution providers
+├── RunOptions.java        Per-run logging and cancellation
+├── Environment.java       Shared OrtEnv / thread pools
+└── ModelMetadata.java, NodeInfo.java, TensorInfo.java, …
+    </pre>
+
+    <p>The native bridge lives under <code>deep/src/main/cpp</code> and exposes a compact C ABI (<code>smile_torch</code>) over LibTorch. ONNX Runtime is linked separately through <code>smile.onnx.foreign</code>.</p>
+
+
+    <h2 id="tensors" class="title">Tensors</h2>
+
+    <p><code>Tensor</code> is a multidimensional array backed by a native LibTorch tensor. It implements <code>AutoCloseable</code> — always close tensors (or use a scope) when they are no longer needed to avoid native memory leaks.</p>
+
+
+    <h3 id="tensor-factories">Factory Methods</h3>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -129,55 +102,34 @@ title: SMILE - Deep Learning
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">var model = EfficientNet.V2S();
-    model.to(device);
-    model.eval();
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.tensor.Tensor;
 
-    var lenna = ImageIO.read(new File("data/image/Lenna.png"));
-    var panda = ImageIO.read(new File("data/image/panda.jpg"));
+// Zeros / ones
+Tensor z = Tensor.zeros(3, 4);       // shape [3,4], float32
+Tensor o = Tensor.ones(2, 3);
 
-    try (var guard = Tensor.noGradGuard()) {
-        long startTime = System.nanoTime();
-        var output = model.forward(panda);
-        long endTime = System.nanoTime();
-        long duration = (endTime - startTime) / 1000000;  //divide by 1000000 to get milliseconds.
-        System.out.println("1st run elapsed time: " + duration + "ms");
+// Random
+Tensor r  = Tensor.rand(5, 5);       // uniform [0,1)
+Tensor rn = Tensor.randn(5, 5);      // standard normal
 
-        startTime = System.nanoTime();
-        output = model.forward(lenna, panda);
-        endTime = System.nanoTime();
-        duration = (endTime - startTime) / 1000000;
-        System.out.println("2nd run elapsed time: " + duration + "ms");
+// From Java arrays
+float[] data = {1f, 2f, 3f, 4f};
+Tensor t = Tensor.of(data, 2, 2);    // shape [2,2]
 
-        var topk = output.topk(5);
-        topk._2().to(Device.CPU());
-        String[] images = {"Lenna", "Panda"};
-        for (int i = 0; i &lt; 2; i++) {
-            System.out.println("======== " + images[i] + " ========");
-            for (int j = 0; j &lt; 5; j++) {
-                System.out.println(ImageNet.labels[topk._2().getInt(i, j)]);
-            }
-        }</code></pre>
+long[] ldata = {0L, 1L, 2L};
+Tensor li = Tensor.of(ldata, 3);     // Int64 tensor
+
+// Arange and eye
+Tensor ar = Tensor.arange(0, 10, 1); // [0,1,...,9]
+Tensor eye = Tensor.eye(4);</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Note that we run the inference twice for benchmarking.
-        The first inference is typically slow due to multiple reasons.
-        The very first CUDA call (it could be a tensor creation etc.)
-        is creating the CUDA context, which loads the driver etc.
-        The first inference also needs to allocate new memory, which will then
-        be reused through the CUDACachingAllocator. However, the initial
-        cudaMalloc calls are also "expensive" (compared to just reusing the
-        already allocated memory) and you would thus also
-        see a slow iteration time until your workload reached the peak memory
-        and is able to reuse the GPU memory. Note that new cudaMalloc calls
-        could of course still happen during the training, e.g. if your input
-        size increases etc.</p>
 
-    <h2 id="dl-train">Training a Custom MLP with LibTorch</h2>
+    <h3 id="tensor-indexing">Indexing</h3>
 
-    <p>Beyond pretrained models, <code>smile-deep</code> provides a high-level training loop
-       for custom architectures built from <code>SequentialBlock</code> layers.</p>
+    <p><code>smile.deep.tensor.Index</code> provides Python-style index objects for slicing and advanced indexing.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -186,25 +138,1289 @@ title: SMILE - Deep Learning
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">
-import smile.deep.*;
-import smile.deep.layer.*;
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.tensor.Index;
 import smile.deep.tensor.Tensor;
 
-var mlp = new SequentialBlock(
+Tensor t = Tensor.rand(4, 4);
+
+Tensor col1 = t.get(Index.Colon, Index.of(1));   // all rows, column 1
+Tensor row2 = t.get(Index.of(2));                // row 2
+Tensor sub  = t.get(Index.Slice(1, 3));          // rows 1–2
+Tensor last = t.get(Index.Ellipsis, Index.of(3));
+Tensor newDim = t.get(Index.None, Index.of(0));  // insert batch dim
+
+int[] rows = {0, 2};
+Tensor rowIdx = Tensor.of(rows, 2);
+Tensor subset = t.get(rowIdx);                   // rows 0 and 2</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="tensor-arithmetic">Arithmetic &amp; Math</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.tensor.Device;
+import smile.deep.tensor.ScalarType;
+import smile.deep.tensor.Tensor;
+
+Tensor a = Tensor.ones(3);
+Tensor b = Tensor.ones(3).mul(2.0);
+
+// Non-mutating
+Tensor sum  = a.add(b);
+Tensor diff = a.sub(1.0f);
+Tensor prod = a.mul(3.0);
+Tensor quot = a.div(2.0);
+
+// In-place (trailing underscore)
+a.add_(1.0);
+a.sub_(0.5f);
+a.mul_(2.0);
+a.exp_();
+a.fill_(0.0f);
+
+// Reductions and shape
+double s = a.sum().doubleValue();
+Tensor argmax = a.argmax(0, false);
+Tensor topk2  = a.topk(2, 0, true, true)._1();
+
+long[] shape = a.shape();
+int rank = a.dim();
+Tensor flat = a.view(-1);
+Tensor t2d = flat.reshape(3, 1);
+Tensor tr = t2d.t().contiguous();
+
+// Casting / device move
+Tensor fp16 = a.to(ScalarType.Float16);
+Tensor onCuda = a.to(Device.CUDA());</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="tensor-scope">AutoScope &amp; noGradGuard</h3>
+
+    <p>Use <code>AutoScope</code> with <code>Tensor.push</code> / <code>Tensor.pop</code> to batch-free many tensors. Call <code>promoteToParent()</code> on values that must outlive the current scope. For inference, <code>Tensor.noGradGuard()</code> disables gradient tracking and reduces memory use.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.tensor.Tensor;
+import smile.util.AutoScope;
+
+try (var scope = new AutoScope()) {
+    Tensor.push(scope);
+    Tensor result = Tensor.randn(8, 8).mul(2.0);
+    result.promoteToParent(); // survive pop of this scope
+    Tensor.pop();             // closes other tracked tensors
+}
+
+try (var guard = Tensor.noGradGuard()) {
+    // Tensor output = model.forward(input);
+    // no gradient graph is built
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="tensor-options">Options: dtype &amp; device</h3>
+
+    <p>Set global defaults with <code>Tensor.setDefaultOptions</code>, or pass a per-call <code>Tensor.Options</code>. There is no <code>Device.setDefaultDevice()</code> — prefer <code>Device.preferredDevice()</code> and apply it via options or <code>model.to(device)</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.tensor.Device;
+import smile.deep.tensor.ScalarType;
+import smile.deep.tensor.Tensor;
+import smile.deep.tensor.Tensor.Options;
+
+Device device = Device.preferredDevice(); // CUDA if available, else CPU
+
+Tensor.setDefaultOptions(new Options()
+        .dtype(ScalarType.Float32)
+        .device(device));
+
+// Per-tensor override
+Tensor t = Tensor.ones(new Options().dtype(ScalarType.Float64), 3, 3);
+
+// BF16 performance check (Ampere or newer)
+boolean bf16 = Tensor.isBF16Supported();</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="layers" class="title">Layers</h2>
+
+    <p>All layers implement <code>Layer</code>, which extends <code>Function&lt;Tensor, Tensor&gt;</code> and exposes <code>forward</code>, a native module handle, a name, and <code>to(Device)</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">// Layer interface (sketch)
+public interface Layer extends Function&lt;Tensor, Tensor&gt; {
+    Tensor forward(Tensor input);
+    MemorySegment module();
+    String name();
+    Layer to(Device device);
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="layers-dense">Dense Shortcuts</h3>
+
+    <p><code>Layer</code> factories combine a linear layer with an activation (and optional dropout) into a <code>SequentialBlock</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.layer.Layer;
+import smile.deep.layer.LinearLayer;
+import smile.deep.layer.SequentialBlock;
+
+LinearLayer fc = Layer.linear(128, 64);           // no activation
+SequentialBlock r  = Layer.relu(128, 64);        // Linear + ReLU
+SequentialBlock rd = Layer.relu(128, 64, 0.2);  // + Dropout(0.2)
+SequentialBlock g  = Layer.gelu(128, 64);
+SequentialBlock s  = Layer.silu(128, 64);
+SequentialBlock t  = Layer.tanh(128, 64);
+SequentialBlock sg = Layer.sigmoid(128, 64);
+SequentialBlock ls = Layer.logSoftmax(128, 64);
+SequentialBlock lk = Layer.leaky(128, 64, 0.01);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="layers-conv">Convolution &amp; Pooling</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.layer.Layer;
+
+// Simple conv: in, out, kernel
+var c1 = Layer.conv2d(3, 32, 3);
+
+// Full control: kernel, stride, padding, dilation, groups, bias, mode
+var c2 = Layer.conv2d(3, 32, 3, 1, 1, 1, 1, true, "zeros");
+
+// String padding ("valid" or "same")
+var c3 = Layer.conv2d(3, 32, 3, 1, "same", 1, 1, true, "zeros");
+
+var mp = Layer.maxPool2d(2);
+var ap = Layer.avgPool2d(2);
+var aa = Layer.adaptiveAvgPool2d(1);  // global 1×1</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="layers-norm-drop">Norms, Dropout &amp; Embedding</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.layer.Layer;
+
+var bn1 = Layer.batchNorm1d(64);
+var bn2 = Layer.batchNorm2d(32);
+var gn  = Layer.groupNorm(4, 32);
+var rms = Layer.rmsNorm(64);
+
+var drop = Layer.dropout(0.3);
+var emb  = Layer.embedding(50000, 256);
+var emb2 = Layer.embedding(50000, 256, 1.0);  // scale alpha</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="layers-sequential">SequentialBlock</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.layer.Layer;
+import smile.deep.layer.SequentialBlock;
+import smile.deep.tensor.Tensor;
+
+SequentialBlock mlp = new SequentialBlock(
     Layer.relu(784, 256),
     Layer.relu(256, 128),
     Layer.logSoftmax(128, 10)
 );
 
-var optimizer = Optimizer.adam(mlp.asTorch().parameters(), 1e-3);
-var criterion = Loss.nll();
+// Tensor output = mlp.forward(input);
 
-mlp.train(10, trainDataset, criterion, optimizer,
-          new smile.deep.metric.Accuracy(), testDataset);
-    </code></pre>
+SequentialBlock seq = new SequentialBlock();
+seq.add(Layer.linear(64, 32));
+seq.add(Layer.relu(32, 10));</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
+
+
+    <h2 id="activations" class="title">Activations</h2>
+
+    <p>Activations implement <code>ActivationFunction</code> (which extends <code>Layer</code>). Use them standalone or inside a <code>SequentialBlock</code>.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Activation</th></tr></thead>
+            <tbody>
+            <tr><td><code>ReLU</code></td><td>max(0, x)</td></tr>
+            <tr><td><code>LeakyReLU</code></td><td>max(αx, x)</td></tr>
+            <tr><td><code>GELU</code></td><td>Gaussian-error linear unit</td></tr>
+            <tr><td><code>SiLU</code></td><td>x·σ(x) (Swish)</td></tr>
+            <tr><td><code>Tanh</code></td><td>tanh(x)</td></tr>
+            <tr><td><code>Sigmoid</code></td><td>σ(x)</td></tr>
+            <tr><td><code>Softmax</code></td><td>softmax along last dim</td></tr>
+            <tr><td><code>LogSoftmax</code></td><td>log-softmax</td></tr>
+            <tr><td><code>LogSigmoid</code></td><td>log(σ(x))</td></tr>
+            <tr><td><code>GLU</code></td><td>Gated linear unit</td></tr>
+            <tr><td><code>HardShrink</code></td><td>x if |x| &gt; λ else 0</td></tr>
+            <tr><td><code>SoftShrink</code></td><td>sign(x)·max(0,|x|−λ)</td></tr>
+            <tr><td><code>TanhShrink</code></td><td>x − tanh(x)</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.activation.GELU;
+import smile.deep.activation.ReLU;
+import smile.deep.tensor.Tensor;
+
+Tensor x = Tensor.randn(8, 16);
+ReLU relu = new ReLU(true);   // inplace
+Tensor y = relu.forward(x);
+
+GELU gelu = new GELU();
+Tensor z = gelu.forward(x);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="loss-optimizers" class="title">Loss &amp; Optimizers</h2>
+
+
+    <h3 id="loss">Loss Factories</h3>
+
+    <p><code>Loss</code> is a <code>BiFunction&lt;Tensor, Tensor, Tensor&gt;</code>. Standard PyTorch-style losses are available as static factories.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.Loss;
+import smile.deep.tensor.Tensor;
+
+Loss l1   = Loss.l1();              // MAE
+Loss mse  = Loss.mse();
+Loss bce  = Loss.bce();             // expects sigmoid input
+Loss bceL = Loss.bceWithLogits();
+Loss ce   = Loss.crossEntropy();    // classification logits
+Loss nll  = Loss.nll();             // expects log-softmax
+Loss sl1  = Loss.smoothL1();
+Loss hub  = Loss.huber(0.5);
+Loss kl   = Loss.kl();
+Loss hinge = Loss.hingeEmbedding();
+
+// Tensor lossTensor = ce.apply(logits, labels);
+// double lossVal = lossTensor.doubleValue();
+
+// Three-argument helpers
+// Tensor mr = Loss.marginRanking(input1, input2, target);
+// Tensor tm = Loss.tripleMarginRanking(anchor, positive, negative);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="optimizers">Optimizers</h3>
+
+    <p>Create an optimizer from a <code>Model</code> and learning rate. Each step is <code>reset()</code> → <code>loss.backward()</code> → <code>step()</code>. Note the capital <code>A</code> in <code>Optimizer.Adam</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.Model;
+import smile.deep.Optimizer;
+import smile.deep.layer.Layer;
+import smile.deep.layer.SequentialBlock;
+
+Model model = new Model(new SequentialBlock(
+    Layer.relu(784, 128),
+    Layer.logSoftmax(128, 10)));
+
+Optimizer sgd   = Optimizer.SGD(model, 0.01);
+Optimizer adam  = Optimizer.Adam(model, 1e-3);
+Optimizer adamW = Optimizer.AdamW(model, 1e-3);
+Optimizer rms   = Optimizer.RMSprop(model, 1e-3);
+
+// Per step inside a training loop:
+// optimizer.reset();
+// loss.backward();
+// optimizer.step();</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="model-api" class="title">Model API</h2>
+
+    <p>Compose a <code>Model</code> from a custom <code>LayerBlock</code> when you need architectures beyond a plain sequential stack. Register submodules with <code>add(name, layer)</code> so parameters are tracked for the optimizer.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.Model;
+import smile.deep.layer.Conv2dLayer;
+import smile.deep.layer.Layer;
+import smile.deep.layer.LayerBlock;
+import smile.deep.layer.LinearLayer;
+import smile.deep.tensor.Tensor;
+
+LayerBlock net = new LayerBlock("MyCNN") {
+    private final Conv2dLayer conv1 = Layer.conv2d(1, 32, 3);
+    private final LinearLayer fc = Layer.linear(32 * 13 * 13, 10);
+
+    {
+        add("conv1", conv1);
+        add("fc", fc);
+    }
+
+    @Override
+    public Tensor forward(Tensor input) {
+        Tensor h = conv1.forward(input);
+        h = h.relu_();
+        h = Layer.maxPool2d(2).forward(h);
+        h = h.view(h.size(0), -1);
+        return fc.forward(h);
+    }
+};
+
+Model model = new Model(net);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p><code>Model.train</code> runs the full epoch loop: shuffle via the training <code>Dataset</code> iterator (each pass reshuffles), optimizer reset / forward / backward / step, optional validation metrics, and optional checkpoint path.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.Loss;
+import smile.deep.Model;
+import smile.deep.Optimizer;
+import smile.deep.metric.Accuracy;
+
+// model.train(
+//     10,                 // epochs
+//     optimizer,
+//     Loss.crossEntropy(),
+//     trainDataset,
+//     testDataset,        // may be null
+//     null,               // checkpoint path
+//     new Accuracy()      // Metric...
+// );</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="metrics-data" class="title">Metrics &amp; Data</h2>
+
+
+    <h3 id="metrics">Metrics</h3>
+
+    <p>Metrics implement <code>update</code>, <code>compute</code>, <code>reset</code>, and <code>name</code>. For multi-class scores, pass an <code>Averaging</code> strategy (<code>Macro</code>, <code>Micro</code>, <code>Weighted</code>).</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>Accuracy</code></td><td># correct / total</td></tr>
+            <tr><td><code>Precision</code></td><td>TP / (TP + FP)</td></tr>
+            <tr><td><code>Recall</code></td><td>TP / (TP + FN)</td></tr>
+            <tr><td><code>F1Score</code></td><td>Harmonic mean of precision and recall</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.metric.Accuracy;
+import smile.deep.metric.Averaging;
+import smile.deep.metric.F1Score;
+import smile.deep.metric.Precision;
+import smile.deep.metric.Recall;
+
+Accuracy acc = new Accuracy();
+Precision mp = new Precision(Averaging.Macro);
+Recall mr = new Recall(Averaging.Micro);
+F1Score wf1 = new F1Score(Averaging.Weighted);
+F1Score binF1 = new F1Score();  // binary, threshold 0.5
+
+// acc.update(output, target);
+// double result = acc.compute();
+// acc.reset();</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="datasets">Datasets &amp; Sampling</h3>
+
+    <p>Build mini-batch datasets from arrays with <code>Dataset.of</code>, or load IDX MNIST with <code>Dataset.mnist</code>. <code>Dataset</code> itself is <code>Iterable&lt;SampleBatch&gt;</code> — each iterator reshuffles. Every <code>SampleBatch</code> exposes <code>data()</code> and <code>target()</code> tensors.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.Dataset;
+import smile.deep.SampleBatch;
+
+float[][] features = /* ... */;
+int[] labels = /* ... */;
+Dataset ds = Dataset.of(features, labels, 64);
+// also: Dataset.of(double[][], int[], batch)
+// MNIST IDX: Dataset.mnist("data/mnist", true, 64);
+
+for (SampleBatch batch : ds) {
+    var x = batch.data();
+    var y = batch.target();
+    // train step...
+    batch.close();
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="cuda" class="title">CUDA</h2>
+
+    <p><code>smile.deep.CUDA</code> reports device availability and memory. Use <code>Device.CUDA()</code> or <code>Device.CUDA(index)</code> to place tensors and models. <code>Tensor.isBF16Supported()</code> reports whether BF16 is performant on the current GPU (Ampere or newer).</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.CUDA;
+import smile.deep.tensor.Device;
+import smile.deep.tensor.Tensor;
+
+boolean available = CUDA.isAvailable();
+long count = CUDA.deviceCount();
+long total = CUDA.totalMemory(0);
+long free  = CUDA.freeMemory(0);
+long[] stats = CUDA.allocatorStats(0); // {allocated, reserved}
+
+Device gpu = CUDA.device();       // Device.CUDA()
+Device gpu1 = CUDA.device((byte) 1);
+
+boolean bf16 = Tensor.isBF16Supported();</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="vision" class="title">Computer Vision</h2>
+
+    <p>The <code>smile.vision</code> package builds image-classification pipelines on the deep layer stack: transforms, folder datasets, ImageNet label maps, and EfficientNet-V2.</p>
+
+
+    <h3 id="vision-transforms">Transforms</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import java.awt.image.BufferedImage;
+import java.io.File;
+import javax.imageio.ImageIO;
+import smile.deep.tensor.Tensor;
+import smile.vision.transform.ImageClassification;
+import smile.vision.transform.Transform;
+
+// ImageNet-style: resize shorter side → 384, center-crop 384×384, normalize
+Transform t = Transform.classification(384, 384);
+
+Transform custom = new ImageClassification(
+        224, 256,
+        new float[]{0.5f, 0.5f, 0.5f},
+        new float[]{0.5f, 0.5f, 0.5f},
+        java.awt.Image.SCALE_SMOOTH);
+
+BufferedImage img = ImageIO.read(new File("cat.jpg"));
+try (Tensor batch = t.forward(img)) {
+    // batch shape: [1, 3, 384, 384]
+}
+
+float[] mean = Transform.DEFAULT_MEAN; // {0.485f, 0.456f, 0.406f}
+float[] std  = Transform.DEFAULT_STD;  // {0.229f, 0.224f, 0.225f}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="vision-dataset">ImageDataset</h3>
+
+    <p><code>ImageDataset</code> reads a <strong>folder-per-class</strong> tree and prefetches batches on a background thread. The constructor is <code>ImageDataset(String root, int batch, Transform transform, ToIntFunction&lt;String&gt; targetTransform)</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.vision.ImageDataset;
+import smile.vision.ImageNet;
+import smile.vision.transform.Transform;
+
+Transform t = Transform.classification(224, 224);
+
+// root/
+//   dog/dog001.jpg
+//   cat/cat001.jpg
+ImageDataset ds = new ImageDataset(
+        "data/train",
+        32,
+        t,
+        ImageNet.folder2Target);
+
+for (var batch : ds) {
+    var images = batch.data();   // [32, 3, 224, 224]
+    var labels = batch.target(); // [32]
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="vision-imagenet">ImageNet Labels</h3>
+
+    <p><code>ImageNet</code> is an interface of static fields — there is no <code>ImageNet.INSTANCE</code>. Use <code>ImageNet.labels[i]</code>, <code>ImageNet.folders</code>, <code>ImageNet.folder2Target</code>, and <code>ImageNet.label2Target</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.vision.ImageNet;
+
+String label = ImageNet.labels[282];
+String folder = ImageNet.folders[282];
+int id = ImageNet.folder2Target.applyAsInt("n02124075");
+int fromLabel = ImageNet.label2Target.applyAsInt("tiger cat");</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="vision-efficientnet">EfficientNet-V2</h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Factory</th><th>Variant</th><th>Input size</th><th>Parameters</th></tr></thead>
+            <tbody>
+            <tr><td><code>EfficientNet.V2S()</code></td><td>EfficientNet-V2-S</td><td>384 × 384</td><td>~21 M</td></tr>
+            <tr><td><code>EfficientNet.V2M()</code></td><td>EfficientNet-V2-M</td><td>480 × 480</td><td>~54 M</td></tr>
+            <tr><td><code>EfficientNet.V2L()</code></td><td>EfficientNet-V2-L</td><td>480 × 480</td><td>~119 M</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p><code>VisionModel.forward(BufferedImage...)</code> applies the model’s associated transform automatically. <code>output.topk(5)</code> returns a <code>Tuple2&lt;Tensor, Tensor&gt;</code> of values and indices. Custom architectures can be built with <code>MBConvConfig</code> stages.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import java.io.File;
+import javax.imageio.ImageIO;
+import smile.deep.tensor.Device;
+import smile.deep.tensor.Tensor;
+import smile.vision.EfficientNet;
+import smile.vision.ImageNet;
+import smile.vision.layer.MBConvConfig;
+
+var model = EfficientNet.V2S();
+// or EfficientNet.V2S("checkpoints/efficientnet_v2_s.pt");
+model.to(Device.preferredDevice());
+model.eval();
+
+var img = ImageIO.read(new File("dog.jpg"));
+try (var guard = Tensor.noGradGuard();
+     var output = model.forward(img)) {
+    var top5 = output.topk(5);
+    try (var indices = top5._2().to(Device.CPU())) {
+        System.out.println(ImageNet.labels[indices.getInt(0, 0)]);
+    }
+}
+
+// Custom stages (sketch)
+MBConvConfig[] config = {
+    MBConvConfig.FusedMBConv(1, 3, 1, 24, 24, 2),
+    MBConvConfig.MBConv(4, 3, 2, 24, 48, 4),
+};
+// new EfficientNet(config, 0.2, 0.2, 1000, 1280, null);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="examples" class="title">End-to-End Examples</h2>
+
+
+    <h3 id="example-mnist-mlp">Gentle MNIST MLP</h3>
+
+    <p>Pick a device with <code>Device.preferredDevice()</code>, set tensor defaults via <code>Tensor.setDefaultOptions</code> (there is no <code>setDefaultDevice</code>), wrap arrays with <code>Dataset.of</code>, and train with NLL loss over a log-softmax head.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import java.util.Map;
+import org.apache.commons.csv.CSVFormat;
+import smile.deep.*;
+import smile.deep.layer.*;
+import smile.deep.metric.*;
+import smile.deep.tensor.*;
+import smile.io.Read;
+
+Device device = Device.preferredDevice();
+Tensor.setDefaultOptions(new Tensor.Options().device(device));
+
+Model net = new Model(new SequentialBlock(
+        Layer.relu(784, 64, 0.5),
+        Layer.relu(64, 32),
+        Layer.logSoftmax(32, 10)));
+
+System.out.println(net);
+net.to(device);
+
+CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').build();
+double[][] x = Read.csv("data/mnist/mnist2500_X.txt", format).toArray();
+int[] y = Read.csv("data/mnist/mnist2500_labels.txt", format)
+        .column(0).toIntArray();
+Dataset dataset = Dataset.of(x, y, 64);
+
+Optimizer optimizer = Optimizer.SGD(net, 0.01);
+Loss loss = Loss.nll();
+net.train(100, optimizer, loss, dataset);
+
+try (var guard = Tensor.noGradGuard()) {
+    Map&lt;String, Double&gt; metrics = net.eval(dataset,
+            new Accuracy(),
+            new Precision(Averaging.Micro),
+            new Precision(Averaging.Macro),
+            new Recall(Averaging.Weighted));
+    for (var entry : metrics.entrySet()) {
+        System.out.format("Training %s = %.2f%%%n",
+                entry.getKey(), 100 * entry.getValue());
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="example-manual-loop">Manual Training Loop</h3>
+
+    <p>When you need full control, drive epochs yourself with <code>optimizer.reset()</code>, <code>backward()</code>, and <code>step()</code>. Alternatively, call <code>Model.train</code> as in the LeNet example below.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.*;
+import smile.deep.layer.*;
+import smile.deep.tensor.Tensor;
+
+SequentialBlock mlp = new SequentialBlock(
+    Layer.relu(784, 256),
+    Layer.relu(256, 128),
+    Layer.logSoftmax(128, 10));
+Model model = new Model(mlp);
+
+Optimizer optimizer = Optimizer.Adam(model, 1e-3);
+Loss criterion = Loss.nll();
+
+// Dataset trainDataset = Dataset.of(x, y, 64);
+for (int epoch = 0; epoch &lt; 5; epoch++) {
+    for (SampleBatch batch : trainDataset) {
+        optimizer.reset();
+        Tensor logp = model.forward(batch.data());
+        Tensor loss = criterion.apply(logp, batch.target());
+        loss.backward();
+        optimizer.step();
+        batch.close();
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="example-lenet">LeNet with Model.train</h3>
+
+    <p>A convolutional LeNet on MNIST. Load IDX files with <code>Dataset.mnist(path, trainMode, batch)</code> (shape <code>[N, 1, 28, 28]</code>), then call the high-level <code>Model.train</code> API.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.*;
+import smile.deep.activation.LogSoftmax;
+import smile.deep.activation.ReLU;
+import smile.deep.layer.*;
+import smile.deep.metric.Accuracy;
+import smile.deep.tensor.Tensor;
+
+Dataset mnistTrainDataset = Dataset.mnist("data/mnist", true, 64);
+Dataset mnistTestDataset = Dataset.mnist("data/mnist", false, 64);
+
+LayerBlock net = new LayerBlock("LeNet") {
+    private final Conv2dLayer conv1 = Layer.conv2d(1, 6, 5);
+    private final Conv2dLayer conv2 = Layer.conv2d(6, 16, 5);
+    private final LinearLayer fc1 = Layer.linear(16 * 4 * 4, 120);
+    private final LinearLayer fc2 = Layer.linear(120, 84);
+    private final LinearLayer fc3 = Layer.linear(84, 10);
+    private final MaxPool2dLayer pool = Layer.maxPool2d(2);
+
+    {
+        add("conv1", conv1); add("conv2", conv2);
+        add("fc1", fc1); add("fc2", fc2); add("fc3", fc3);
+    }
+
+    @Override
+    public Tensor forward(Tensor input) {
+        Tensor x = pool.forward(
+                new ReLU(true).forward(conv1.forward(input)));
+        x = pool.forward(new ReLU(true).forward(conv2.forward(x)));
+        x = x.view(x.size(0), -1);
+        x = new ReLU(true).forward(fc1.forward(x));
+        x = new ReLU(true).forward(fc2.forward(x));
+        return new LogSoftmax().forward(fc3.forward(x));
+    }
+};
+
+Model lenet = new Model(net);
+lenet.train(
+    10,
+    Optimizer.SGD(lenet, 0.01, 0.9, 0.0, 0.0, false),
+    Loss.nll(),
+    mnistTrainDataset,
+    mnistTestDataset,
+    null,
+    new Accuracy());</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="example-efficientnet">EfficientNet Pretrained Inference</h3>
+
+    <p>Download weights such as <a href="https://smile-ai.org/model/EfficientNet/efficientnet_v2_s.pt">efficientnet_v2_s.pt</a> into <code>model/EfficientNet/</code> (or pass a custom path). The first CUDA inference is often slower because the driver context and allocator warm up.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import java.io.File;
+import javax.imageio.ImageIO;
+import smile.deep.tensor.Device;
+import smile.deep.tensor.Tensor;
+import smile.vision.EfficientNet;
+import smile.vision.ImageNet;
+
+Device device = Device.preferredDevice();
+var model = EfficientNet.V2S();
+model.to(device);
+model.eval();
+
+var lenna = ImageIO.read(new File("data/image/Lenna.png"));
+var panda = ImageIO.read(new File("data/image/panda.jpg"));
+
+try (var guard = Tensor.noGradGuard()) {
+    long start = System.nanoTime();
+    var output = model.forward(panda);
+    System.out.println("1st run: "
+            + (System.nanoTime() - start) / 1_000_000 + "ms");
+
+    start = System.nanoTime();
+    output = model.forward(lenna, panda);
+    System.out.println("2nd run: "
+            + (System.nanoTime() - start) / 1_000_000 + "ms");
+
+    var topk = output.topk(5);
+    topk._2().to(Device.CPU());
+    String[] images = {"Lenna", "Panda"};
+    for (int i = 0; i &lt; 2; i++) {
+        System.out.println("======== " + images[i] + " ========");
+        for (int j = 0; j &lt; 5; j++) {
+            System.out.println(
+                    ImageNet.labels[topk._2().getInt(i, j)]);
+        }
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="onnx" class="title">ONNX Runtime</h2>
+
+    <p><code>smile.onnx</code> wraps the <a href="https://onnxruntime.ai/">ONNX Runtime</a> C API through Panama FFM so you can load models exported from PyTorch, TensorFlow, scikit-learn, XGBoost, and more. Generative ONNX (GenAI) is documented on <a href="llm.html">LLM</a>, not here.</p>
+
+
+    <h3 id="onnx-overview">Overview</h3>
+
+    <pre>
+┌──────────────────────────────────────┐
+│           Your Application           │
+├──────────────────────────────────────┤
+│              smile.onnx              │
+│  InferenceSession  OrtValue  ...     │
+├──────────────────────────────────────┤
+│   smile.onnx.foreign  (Panama FFM)   │
+├──────────────────────────────────────┤
+│    onnxruntime shared library        │
+└──────────────────────────────────────┘
+    </pre>
+
+
+    <h3 id="onnx-prereqs">Prerequisites</h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Requirement</th><th>Notes</th></tr></thead>
+            <tbody>
+            <tr><td>Java 25+</td><td>Same FFM requirement as smile-deep</td></tr>
+            <tr><td>ONNX Runtime 1.18+</td><td>Shared library on PATH / LD_LIBRARY_PATH / DYLD_LIBRARY_PATH</td></tr>
+            <tr><td>JVM flag</td><td><code>--enable-native-access=ALL-UNNAMED</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h3 id="onnx-packages">Package Structure</h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class / Enum</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>InferenceSession</code></td><td>Loads a model and runs inference</td></tr>
+            <tr><td><code>OrtValue</code></td><td>Tensor / sequence / map container</td></tr>
+            <tr><td><code>SessionOptions</code></td><td>Threads, graph opts, EPs</td></tr>
+            <tr><td><code>RunOptions</code></td><td>Per-run log tag, severity, cancel</td></tr>
+            <tr><td><code>Environment</code></td><td>Shared OrtEnv / thread pools</td></tr>
+            <tr><td><code>ModelMetadata</code></td><td>Producer, version, custom metadata</td></tr>
+            <tr><td><code>NodeInfo</code></td><td>Name + type for one I/O node</td></tr>
+            <tr><td><code>TensorInfo</code></td><td>Element type + shape</td></tr>
+            <tr><td><code>ElementType</code></td><td>ONNX tensor element types</td></tr>
+            <tr><td><code>OnnxType</code></td><td>TENSOR, SEQUENCE, MAP, …</td></tr>
+            <tr><td><code>GraphOptimizationLevel</code></td><td>Optimization depth</td></tr>
+            <tr><td><code>ExecutionMode</code></td><td>SEQUENTIAL or PARALLEL</td></tr>
+            <tr><td><code>LoggingLevel</code></td><td>ORT logging severity</td></tr>
+            <tr><td><code>OnnxException</code></td><td>Runtime exception on ORT errors</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h3 id="onnx-quickstart">Quick Start</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import java.util.Map;
+import smile.onnx.InferenceSession;
+import smile.onnx.OrtValue;
+
+try (var session = InferenceSession.create("resnet50.onnx")) {
+    session.inputNames().forEach(System.out::println);
+
+    float[] pixels = /* NCHW float32, e.g. 1×3×224×224 */;
+    long[] shape = {1, 3, 224, 224};
+
+    try (OrtValue input = OrtValue.fromFloatArray(pixels, shape)) {
+        OrtValue[] outputs = session.run(Map.of("data", input));
+        float[] scores = outputs[0].toFloatArray();
+        // argmax(scores) → predicted class
+        for (OrtValue v : outputs) {
+            v.close();
+        }
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="onnx-session">InferenceSession</h3>
+
+    <p>Create sessions from a file path or byte array, optionally with <code>SessionOptions</code>. <code>run</code> accepts a <code>Map&lt;String, OrtValue&gt;</code> and is thread-safe for concurrent calls on the same session.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+
+InferenceSession session = InferenceSession.create("model.onnx");
+
+try (var opts = new SessionOptions()) {
+    opts.setIntraOpNumThreads(4)
+        .setGraphOptimizationLevel(GraphOptimizationLevel.ENABLE_ALL);
+    session = InferenceSession.create("model.onnx", opts);
+}
+
+// byte[] modelBytes = Files.readAllBytes(Path.of("model.onnx"));
+// InferenceSession.fromBytes = InferenceSession.create(modelBytes);
+
+// OrtValue[] all = session.run(inputs);
+// OrtValue[] some = session.run(inputs, new String[]{"output_0"});
+// try (var runOpts = new RunOptions()) {
+//     runOpts.setLogTag("my-run");
+//     session.run(inputs, outputNames, runOpts);
+// }</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="onnx-ortvalue">OrtValue</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.OrtValue;
+
+OrtValue v = OrtValue.fromFloatArray(
+        new float[]{1f, 2f, 3f, 4f}, new long[]{2, 2});
+OrtValue d = OrtValue.fromDoubleArray(
+        new double[]{1.0, 2.0}, new long[]{2});
+OrtValue i = OrtValue.fromIntArray(
+        new int[]{10, 20}, new long[]{2});
+OrtValue l = OrtValue.fromLongArray(
+        new long[]{100L, 200L}, new long[]{2});
+
+float[] floats = v.toFloatArray();
+var ti = v.tensorInfo();
+// ti.elementType(), ti.shape(), ti.rank(), ti.isDynamic()
+v.close();</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="onnx-options">SessionOptions &amp; Environment</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+
+try (var opts = new SessionOptions()) {
+    opts.setIntraOpNumThreads(4)
+        .setInterOpNumThreads(2)
+        .setGraphOptimizationLevel(GraphOptimizationLevel.ENABLE_ALL)
+        .setExecutionMode(ExecutionMode.SEQUENTIAL)
+        .enableCpuMemArena()
+        .setLogId("my-session")
+        .setLogSeverityLevel(LoggingLevel.WARNING)
+        .appendCudaExecutionProvider(0);
+
+    try (var session = InferenceSession.create("model.onnx", opts)) {
+        // ...
+    }
+}
+
+try (var env = new Environment(LoggingLevel.WARNING, "my-app");
+     var s1 = env.createSession("model_a.onnx");
+     var s2 = env.createSession("model_b.onnx")) {
+    System.out.println(Environment.buildInfo());
+    System.out.println(Environment.availableProviders());
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="onnx-eps">Execution Providers</h3>
+
+    <p>Append providers on <code>SessionOptions</code> before creating the session. If a provider is missing from the ORT build, creation fails — check <code>Environment.availableProviders()</code> first.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Provider helper</th><th>Typical use</th></tr></thead>
+            <tbody>
+            <tr><td><code>appendCudaExecutionProvider(deviceId)</code></td><td>NVIDIA GPU inference</td></tr>
+            <tr><td><code>appendTensorRTExecutionProvider(deviceId)</code></td><td>TensorRT-accelerated GPU (when built into ORT)</td></tr>
+            <tr><td>CPU (default)</td><td>Always available; no append needed</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h3 id="onnx-resources">Resource Management</h3>
+
+    <p><code>InferenceSession</code>, <code>OrtValue</code>, <code>SessionOptions</code>, <code>RunOptions</code>, and <code>Environment</code> all implement <code>AutoCloseable</code>. Prefer try-with-resources. Output arrays from <code>session.run</code> must be closed explicitly (the session does not own them).</p>
+
+
+    <h3 id="onnx-resnet">Tutorial: ResNet-50</h3>
+
+    <p>Load an image as NCHW float32 (resize, ImageNet mean/std), run the session, then softmax / argmax. Preprocessing details vary by export; keep the tensor layout consistent with the model’s input name and shape.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import java.util.Map;
+import smile.onnx.*;
+
+float[] pixels = preprocessImage("cat.jpg", 224, 224); // your NCHW code
+long[] shape = {1, 3, 224, 224};
+
+try (var session = InferenceSession.create("resnet50.onnx");
+     OrtValue input = OrtValue.fromFloatArray(pixels, shape)) {
+    System.out.println(session.inputInfos().getFirst());
+    String name = session.inputNames().getFirst();
+    OrtValue[] outputs = session.run(Map.of(name, input));
+    try {
+        float[] logits = outputs[0].toFloatArray();
+        // softmax + argmax → class id
+    } finally {
+        for (OrtValue v : outputs) v.close();
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="onnx-shared-env">Tutorial: Shared Environment</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+
+try (var env = new Environment(LoggingLevel.WARNING, "model-server");
+     var opts = new SessionOptions()) {
+    opts.setGraphOptimizationLevel(GraphOptimizationLevel.ENABLE_ALL)
+        .setIntraOpNumThreads(4);
+
+    try (InferenceSession a = env.createSession("detector.onnx", opts);
+         InferenceSession b = env.createSession("classifier.onnx", opts)) {
+        // Both sessions share OrtEnv thread pools
+        System.out.println(Environment.availableProviders());
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="onnx-cuda-ep">Tutorial: CUDA Execution Provider</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import java.util.List;
+import java.util.Map;
+import smile.onnx.*;
+
+List&lt;String&gt; providers = Environment.availableProviders();
+
+try (var opts = new SessionOptions()) {
+    if (providers.contains("CUDAExecutionProvider")) {
+        opts.appendCudaExecutionProvider(0);
+    }
+    opts.setGraphOptimizationLevel(GraphOptimizationLevel.ENABLE_ALL);
+
+    try (var session = InferenceSession.create("resnet50.onnx", opts);
+         OrtValue input = OrtValue.fromFloatArray(
+                 new float[3 * 224 * 224], new long[]{1, 3, 224, 224})) {
+        OrtValue[] outputs = session.run(
+                Map.of(session.inputNames().getFirst(), input));
+        for (OrtValue v : outputs) v.close();
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="onnx-api-tables">API Quick Reference</h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>InferenceSession</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>create(path)</code></td><td>Load from file (default options)</td></tr>
+            <tr><td><code>create(path, opts)</code></td><td>Load from file with options</td></tr>
+            <tr><td><code>create(bytes)</code> / <code>create(bytes, opts)</code></td><td>Load from byte array</td></tr>
+            <tr><td><code>run(Map)</code></td><td>Run all outputs</td></tr>
+            <tr><td><code>run(Map, String[])</code></td><td>Selected outputs</td></tr>
+            <tr><td><code>run(Map, String[], RunOptions)</code></td><td>With per-call options</td></tr>
+            <tr><td><code>inputNames()</code> / <code>outputNames()</code></td><td>I/O name lists</td></tr>
+            <tr><td><code>inputInfos()</code> / <code>outputInfos()</code></td><td><code>List&lt;NodeInfo&gt;</code></td></tr>
+            <tr><td><code>metadata()</code></td><td><code>ModelMetadata</code></td></tr>
+            <tr><td><code>close()</code></td><td>Release native session</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>OrtValue</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>fromFloatArray</code> / <code>fromDoubleArray</code></td><td>FLOAT / DOUBLE tensors</td></tr>
+            <tr><td><code>fromIntArray</code> / <code>fromLongArray</code></td><td>INT32 / INT64</td></tr>
+            <tr><td><code>fromByteArray</code> / <code>fromBooleanArray</code></td><td>INT8 / BOOL</td></tr>
+            <tr><td><code>toFloatArray()</code> …</td><td>Extract typed data</td></tr>
+            <tr><td><code>tensorInfo()</code></td><td>Shape + element type</td></tr>
+            <tr><td><code>close()</code></td><td>Release native value</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>SessionOptions</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>setIntraOpNumThreads</code> / <code>setInterOpNumThreads</code></td><td>Thread pools</td></tr>
+            <tr><td><code>setGraphOptimizationLevel</code></td><td>DISABLE_ALL … ENABLE_ALL</td></tr>
+            <tr><td><code>setExecutionMode</code></td><td>SEQUENTIAL or PARALLEL</td></tr>
+            <tr><td><code>appendCudaExecutionProvider</code></td><td>Add CUDA EP</td></tr>
+            <tr><td><code>enableProfiling</code> / <code>disableProfiling</code></td><td>Chrome-trace profiling</td></tr>
+            <tr><td><code>setOptimizedModelFilePath</code></td><td>Persist optimized graph</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>For chat / generative ONNX workflows, see <a href="llm.html">Large Language Models</a>.</p>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
