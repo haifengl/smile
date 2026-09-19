@@ -1,0 +1,413 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - Time Series Analysis
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 order-md-first">
+    <h1 id="timeseries-top" class="title">Time Series Analysis</h1>
+
+    <p>The <code>smile.timeseries</code> package models and forecasts univariate time series. It supplies diagnostics and transformations alongside autoregressive and autoregressive moving-average models.</p>
+    <p>The examples use the Java APIs directly from Java, Scala, and Kotlin. Financial examples start from <code>smile.datasets.BitcoinPrice</code>, take its log closing prices, and difference them into log returns.</p>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead><tr><th>Class</th><th>Purpose</th></tr></thead>
+        <tbody>
+        <tr><td><code>TimeSeries</code></td>
+            <td>Differencing, autocovariance, ACF, and PACF utilities</td></tr>
+        <tr><td><code>BoxTest</code></td>
+            <td>Box–Pierce and Ljung–Box portmanteau tests</td></tr>
+        <tr><td><code>AR</code></td>
+            <td>AR(<em>p</em>) models fitted by Yule–Walker or OLS</td></tr>
+        <tr><td><code>ARMA</code></td>
+            <td>ARMA(<em>p</em>, <em>q</em>) models fitted by Hannan–Rissanen</td></tr>
+        </tbody>
+    </table>
+</div>
+
+
+    <h2 id="foundations" class="title">Foundations</h2>
+
+
+    <h3 id="stationarity">Stationarity</h3>
+
+    <p>These models assume <em>weak stationarity</em>: a time-invariant mean and autocovariance. Trending prices and seasonal series usually violate that assumption. Differencing removes polynomial trends, while a log transform often stabilizes variance. For asset prices, <code>log(p<sub>t</sub>) − log(p<sub>t−1</sub>)</code> is a common stationary starting point.</p>
+
+
+    <h3 id="taxonomy">AR, MA, and ARMA</h3>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead><tr><th>Model</th><th>Definition</th><th>Diagnostic pattern</th></tr></thead>
+        <tbody>
+        <tr><td>AR(<em>p</em>)</td>
+            <td>x<sub>t</sub> = b + Σ φ<sub>i</sub>x<sub>t−i</sub> + ε<sub>t</sub></td>
+            <td>PACF cuts off; ACF tails off</td></tr>
+        <tr><td>MA(<em>q</em>)</td>
+            <td>x<sub>t</sub> = b + ε<sub>t</sub> + Σ θ<sub>i</sub>ε<sub>t−i</sub></td>
+            <td>ACF cuts off; PACF tails off</td></tr>
+        <tr><td>ARMA(<em>p</em>, <em>q</em>)</td>
+            <td>Combines AR and MA terms</td>
+            <td>Both ACF and PACF tail off</td></tr>
+        </tbody>
+    </table>
+</div>
+
+    <p>Here ε<sub>t</sub> is white noise with variance σ² and <code>b</code> is the intercept. ACF/PACF patterns are order-selection heuristics, not proof; compare candidate models out of sample when possible.</p>
+
+
+    <h2 id="utilities" class="title">TimeSeries Utilities</h2>
+
+    <p><code>TimeSeries</code> is an interface containing static methods; it is never instantiated. <code>diff(x, lag)</code> shortens a series by the lag. The three-argument overload performs repeated differencing and returns each intermediate series.</p>
+
+    <dl class="options-dl">
+        <dt><code>diff(x, lag)</code></dt>
+        <dd>Difference observations separated by <code>lag</code>.</dd>
+        <dt><code>diff(x, lag, differences)</code></dt>
+        <dd>Apply differencing repeatedly; requires <code>lag × differences &lt; x.length</code>.</dd>
+        <dt><code>cov(x, lag)</code></dt>
+        <dd>Raw, unnormalized autocovariance sum; negative lags use their absolute value.</dd>
+        <dt><code>acf(x, lag)</code></dt>
+        <dd>Normalized autocovariance; lag zero is always 1.</dd>
+        <dt><code>pacf(x, lag)</code></dt>
+        <dd>Direct lag correlation after removing intermediate lags with the Yule–Walker equations.</dd>
+    </dl>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-1-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays
+import smile.timeseries.TimeSeries
+
+double[] x = {1, 2, 4, 8, 16}
+double[][] d = TimeSeries.diff(x, 1, 2)
+System.out.println(Arrays.toString(d[0]))
+System.out.println(Arrays.toString(d[1]))
+System.out.printf("cov1=%.2f acf1=%.4f pacf2=%.4f%n",
+    TimeSeries.cov(x, 1), TimeSeries.acf(x, 1), TimeSeries.pacf(x, 2))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[1.0, 2.0, 4.0, 8.0]
+[1.0, 2.0, 4.0]
+      </code></pre>
+    </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Arrays
+import smile.timeseries.TimeSeries
+
+val x = Array(1.0, 2.0, 4.0, 8.0, 16.0)
+val d = TimeSeries.diff(x, 1, 2)
+println(Arrays.toString(d(0)))
+println(Arrays.toString(d(1)))
+println(f"cov1=${TimeSeries.cov(x, 1)}%.2f " +
+  f"acf1=${TimeSeries.acf(x, 1)}%.4f pacf2=${TimeSeries.pacf(x, 2)}%.4f")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[1.0, 2.0, 4.0, 8.0]
+[1.0, 2.0, 4.0]
+      </code></pre>
+    </div>
+    <div id="pg-1-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Arrays
+import smile.timeseries.TimeSeries
+
+val x = doubleArrayOf(1.0, 2.0, 4.0, 8.0, 16.0)
+val d = TimeSeries.diff(x, 1, 2)
+println(Arrays.toString(d[0]))
+println(Arrays.toString(d[1]))
+println("cov1=%.2f acf1=%.4f pacf2=%.4f".format(
+    TimeSeries.cov(x, 1), TimeSeries.acf(x, 1), TimeSeries.pacf(x, 2)))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[1.0, 2.0, 4.0, 8.0]
+[1.0, 2.0, 4.0]
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="box-test" class="title">BoxTest: Residual Diagnostics</h2>
+
+    <p>Portmanteau tests ask whether the first several autocorrelations are jointly zero. <code>pierce</code> computes Q = nΣr²; <code>ljung</code> applies the small-sample correction n(n+2)Σr²/(n−lag) and is usually preferred for short series.</p>
+    <p>Read <code>type</code>, <code>df</code>, <code>q</code>, and <code>pvalue</code> directly. A large p-value means the data do not provide evidence against the white-noise null; it does not prove independence.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-2-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.timeseries.BoxTest
+
+double[] residuals = {
+    0.12, -0.08, 0.03, 0.14, -0.11, 0.02, -0.04, 0.09,
+    -0.06, 0.01, 0.05, -0.10, 0.07, -0.02, 0.04, -0.03
+}
+BoxTest pierce = BoxTest.pierce(residuals, 5)
+BoxTest ljung = BoxTest.ljung(residuals, 5)
+System.out.println(pierce)
+System.out.println(ljung)
+System.out.println(ljung.pvalue &gt; 0.05)</code></pre>
+    </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.timeseries.BoxTest
+
+val residuals = Array(
+  0.12, -0.08, 0.03, 0.14, -0.11, 0.02, -0.04, 0.09,
+  -0.06, 0.01, 0.05, -0.10, 0.07, -0.02, 0.04, -0.03)
+val pierce = BoxTest.pierce(residuals, 5)
+val ljung = BoxTest.ljung(residuals, 5)
+println(pierce)
+println(ljung)
+println(ljung.pvalue &gt; 0.05)</code></pre>
+    </div>
+    <div id="pg-2-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.timeseries.BoxTest
+
+val residuals = doubleArrayOf(
+    0.12, -0.08, 0.03, 0.14, -0.11, 0.02, -0.04, 0.09,
+    -0.06, 0.01, 0.05, -0.10, 0.07, -0.02, 0.04, -0.03)
+val pierce = BoxTest.pierce(residuals, 5)
+val ljung = BoxTest.ljung(residuals, 5)
+println(pierce)
+println(ljung)
+println(ljung.pvalue &gt; 0.05)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="ar" class="title">AR: Autoregressive Models</h2>
+
+
+    <h3 id="ar-fitting">Yule–Walker vs OLS</h3>
+
+    <p><code>AR.fit(x, p)</code> uses Yule–Walker: it is fast, depends on the ACF, and guarantees a stationary fitted model. <code>AR.ols(x, p)</code> uses least squares and normally provides more accurate coefficients plus standard errors, but does not guarantee stationarity. <code>AR.ols(x, p, false)</code> skips standard errors when only point estimates are needed.</p>
+
+    <dl class="options-dl">
+        <dt><code>p(), intercept(), ar()</code></dt>
+        <dd>Model order, intercept, and AR coefficients.</dd>
+        <dt><code>fittedValues(), residuals()</code></dt>
+        <dd>In-sample fitted values and errors; each has length <code>x.length − p</code>.</dd>
+        <dt><code>RSS(), variance(), df()</code></dt>
+        <dd>Residual sum of squares, residual variance, and degrees of freedom.</dd>
+        <dt><code>R2(), adjustedR2()</code></dt>
+        <dd>In-sample goodness-of-fit summaries.</dd>
+        <dt><code>ttest()</code></dt>
+        <dd>A <code>p × 4</code> OLS matrix: estimate, standard error, t-statistic, and p-value. Yule–Walker returns <code>null</code>.</dd>
+        <dt><code>forecast(), forecast(h)</code></dt>
+        <dd>One-step or iterated multi-step forecasts; <code>h</code> must be positive.</dd>
+    </dl>
+
+
+    <h3 id="ar-bitcoin">Bitcoin Log Returns</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-3-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays
+import smile.datasets.BitcoinPrice
+import smile.timeseries.AR
+import smile.timeseries.BoxTest
+import smile.timeseries.TimeSeries
+
+var bitcoin = new BitcoinPrice()
+double[] returns = TimeSeries.diff(bitcoin.logPrice(), 1)
+AR yw = AR.fit(returns, 6)
+AR ols = AR.ols(returns, 6)
+
+System.out.printf("p=%d intercept=%g R2=%g%n",
+    ols.p(), ols.intercept(), ols.R2())
+System.out.println(Arrays.toString(ols.ar()))
+System.out.println(Arrays.toString(ols.forecast(5)))
+System.out.println(BoxTest.ljung(ols.residuals(), 20))
+System.out.println(yw.ttest() == null)</code></pre>
+    </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Arrays
+import smile.datasets.BitcoinPrice
+import smile.timeseries.{AR, BoxTest, TimeSeries}
+
+val bitcoin = new BitcoinPrice()
+val returns = TimeSeries.diff(bitcoin.logPrice, 1)
+val yw = AR.fit(returns, 6)
+val ols = AR.ols(returns, 6)
+
+println(s"p=${ols.p} intercept=${ols.intercept} R2=${ols.R2}")
+println(Arrays.toString(ols.ar))
+println(Arrays.toString(ols.forecast(5)))
+println(BoxTest.ljung(ols.residuals, 20))
+println(yw.ttest == null)</code></pre>
+    </div>
+    <div id="pg-3-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Arrays
+import smile.datasets.BitcoinPrice
+import smile.timeseries.AR
+import smile.timeseries.BoxTest
+import smile.timeseries.TimeSeries
+
+val bitcoin = BitcoinPrice()
+val returns = TimeSeries.diff(bitcoin.logPrice(), 1)
+val yw = AR.fit(returns, 6)
+val ols = AR.ols(returns, 6)
+
+println("p=${ols.p()} intercept=${ols.intercept()} R2=${ols.R2()}")
+println(Arrays.toString(ols.ar()))
+println(Arrays.toString(ols.forecast(5)))
+println(BoxTest.ljung(ols.residuals(), 20))
+println(yw.ttest() == null)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Inspect PACF lags before choosing <code>p</code>. Multi-step forecasts feed each prediction back as a lagged value and therefore tend toward the model’s long-run mean. For OLS, <code>ttest()</code> has one row per AR coefficient; the intercept is not included.</p>
+
+
+    <h2 id="arma" class="title">ARMA: Autoregressive Moving-Average Models</h2>
+
+    <p><code>ARMA.fit(x, p, q)</code> uses the two-stage Hannan–Rissanen procedure: first fit a long AR model to obtain proxy residuals, then regress on the requested AR and MA lags with SVD-based least squares. The MA terms can capture short-memory dependence that would otherwise require a high-order AR model.</p>
+    <p>The series must satisfy <code>x.length &gt; p + q + 20 + max(p, q)</code>. Accessors mirror <code>AR</code>, with additional <code>q()</code> and <code>ma()</code>. <code>ttest()</code> has <code>p + q</code> rows: AR rows first, then MA.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-4-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays
+import smile.datasets.BitcoinPrice
+import smile.timeseries.ARMA
+import smile.timeseries.BoxTest
+import smile.timeseries.TimeSeries
+
+double[] returns = TimeSeries.diff(new BitcoinPrice().logPrice(), 1)
+ARMA model = ARMA.fit(returns, 6, 3)
+System.out.printf("ARMA(%d,%d), variance=%g%n",
+    model.p(), model.q(), model.variance())
+System.out.println(Arrays.toString(model.ar()))
+System.out.println(Arrays.toString(model.ma()))
+System.out.println(model.forecast())
+System.out.println(Arrays.toString(model.forecast(3)))
+System.out.println(BoxTest.ljung(model.residuals(), 20))</code></pre>
+    </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Arrays
+import smile.datasets.BitcoinPrice
+import smile.timeseries.{ARMA, BoxTest, TimeSeries}
+
+val returns = TimeSeries.diff(new BitcoinPrice().logPrice, 1)
+val model = ARMA.fit(returns, 6, 3)
+println(s"ARMA(${model.p},${model.q}), variance=${model.variance}")
+println(Arrays.toString(model.ar))
+println(Arrays.toString(model.ma))
+println(model.forecast)
+println(Arrays.toString(model.forecast(3)))
+println(BoxTest.ljung(model.residuals, 20))</code></pre>
+    </div>
+    <div id="pg-4-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Arrays
+import smile.datasets.BitcoinPrice
+import smile.timeseries.ARMA
+import smile.timeseries.BoxTest
+import smile.timeseries.TimeSeries
+
+val returns = TimeSeries.diff(BitcoinPrice().logPrice(), 1)
+val model = ARMA.fit(returns, 6, 3)
+println("ARMA(${model.p()},${model.q()}), variance=${model.variance()}")
+println(Arrays.toString(model.ar()))
+println(Arrays.toString(model.ma()))
+println(model.forecast())
+println(Arrays.toString(model.forecast(3)))
+println(BoxTest.ljung(model.residuals(), 20))</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>A one-step ARMA forecast uses the latest observed values and residuals. Unknown future residuals are assigned their expectation of zero, so the MA contribution disappears after <code>q</code> steps and longer forecasts are driven by the AR recursion.</p>
+
+
+    <h2 id="workflow" class="title">Modeling Workflow</h2>
+
+<ol>
+    <li>Plot the raw series and assess stationarity. Apply logs,
+        <code>TimeSeries.diff</code>, or seasonal differencing as needed.</li>
+    <li>Inspect ACF and PACF. Start with small <code>p</code> and
+        <code>q</code>, then compare plausible candidates.</li>
+    <li>Use <code>AR</code> when PACF cuts off and ACF tails off; use
+        <code>ARMA</code> when both tail off and an MA component gives a
+        more parsimonious fit.</li>
+    <li>For AR, prefer OLS when inference and coefficient accuracy matter.
+        Choose Yule–Walker when a stationary fitted model is required.</li>
+    <li>Inspect coefficients and, where available, their t-tests. Validate
+        forecasts out of sample; information criteria are external to this API.</li>
+    <li>Run <code>BoxTest.ljung(model.residuals(), lag)</code>. If it
+        rejects white noise, revisit transformations or model order.</li>
+    <li>Forecast only after diagnostics are satisfactory, and communicate
+        uncertainty separately because these methods return point forecasts.</li>
+</ol>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead><tr><th>AR estimator</th><th>Yule–Walker</th><th>OLS</th></tr></thead>
+        <tbody>
+        <tr><td>Factory</td><td><code>AR.fit</code></td><td><code>AR.ols</code></td></tr>
+        <tr><td>Stationary fitted model</td><td>Guaranteed</td><td>Not guaranteed</td></tr>
+        <tr><td>Coefficient behavior</td><td>Slightly biased</td><td>Consistent</td></tr>
+        <tr><td>Standard errors / t-tests</td><td>No</td><td>Yes, unless disabled</td></tr>
+        </tbody>
+    </table>
+</div>
+
+
+    <h2 id="pitfalls" class="title">Common Pitfalls</h2>
+
+    <dl class="options-dl">
+        <dt><code>Non-stationary input</code></dt>
+        <dd>Do not fit directly to trending prices or untreated seasonality. Use logs/differences and check stationarity first.</dd>
+        <dt><code>Excessive lag order</code></dt>
+        <dd>Large <code>p</code> or <code>q</code> overfits, destabilizes coefficients, and consumes observations. Start around 1–3 and increase only when diagnostics justify it.</dd>
+        <dt><code>Short ARMA series</code></dt>
+        <dd>Respect <code>n &gt; p + q + 20 + max(p, q)</code>; otherwise <code>ARMA.fit</code> throws <code>IllegalArgumentException</code>.</dd>
+        <dt><code>Unstable OLS AR</code></dt>
+        <dd><code>AR.ols</code> does not guarantee stationarity. Use <code>AR.fit</code> or check characteristic roots when forecasts must remain stable.</dd>
+        <dt><code>Misreading Ljung–Box</code></dt>
+        <dd>A large p-value only means there is insufficient evidence of autocorrelation at the tested lags; it does not validate every model assumption.</dd>
+        <dt><code>MA forecast memory</code></dt>
+        <dd>Future ARMA residuals are zero in expectation, so MA effects fade after <code>q</code> steps. This is expected.</dd>
+        <dt><code>Overinterpreting ttest()</code></dt>
+        <dd>AR t-tests cover AR lags, not the intercept. ARMA rows list all AR coefficients before MA coefficients.</dd>
+    </dl>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="sequence-labeling.html" title="Previous Section: Sequence Labeling"><span>Sequence Labeling</span></a>
+        <a class="btn-next-text" href="feature-engineering.html" title="Next Section: Feature Engineering"><span>Feature Engineering</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>

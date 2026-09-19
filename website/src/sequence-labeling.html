@@ -1,0 +1,310 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - Sequence Labeling
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 order-md-first">
+    <h1 id="sequence-top" class="title">Sequence Labeling</h1>
+
+    <p>The <code>smile.sequence</code> package labels each position in a sequence of symbols or feature vectors. It supplies a common labeler abstraction, a generative hidden Markov model, and a discriminative conditional random field.</p>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead><tr><th>Class</th><th>Model and input</th><th>Training</th><th>Inference</th></tr></thead>
+        <tbody>
+        <tr><td><code>HMM</code></td><td>Generative; integer symbols</td>
+            <td>Supervised MLE or Baum–Welch update</td><td>Viterbi</td></tr>
+        <tr><td><code>HMMLabeler&lt;T&gt;</code></td><td>Generic wrapper for HMM</td>
+            <td>Delegates through an ordinal function</td><td>Viterbi</td></tr>
+        <tr><td><code>CRF</code></td><td>Discriminative; feature Tuples</td>
+            <td>Gradient tree boosting</td><td>Forward-backward or Viterbi</td></tr>
+        <tr><td><code>CRFLabeler&lt;T&gt;</code></td><td>Generic wrapper for CRF</td>
+            <td>Delegates through a feature function</td><td>Forward-backward or Viterbi</td></tr>
+        </tbody>
+    </table>
+</div>
+
+
+    <h2 id="sequence-labeler" class="title">SequenceLabeler</h2>
+
+    <p><code>SequenceLabeler&lt;T&gt;</code> is a serializable functional interface whose <code>predict(T[] x)</code> method returns one dense, zero-based integer label per input position. Both generic wrappers implement it, so applications can exchange HMM and CRF labelers behind one API.</p>
+
+    <dl class="options-dl">
+        <dt><code>T[] x</code></dt>
+        <dd>A non-empty observation sequence.</dd>
+        <dt><code>int[] predict(T[] x)</code></dt>
+        <dd>A label sequence with the same length as the input.</dd>
+    </dl>
+
+
+    <h2 id="hmm" class="title">Hidden Markov Model</h2>
+
+    <p>A first-order <code>HMM</code> is generative: hidden states emit observed symbols. Its parameters are the initial probabilities <code>π</code>, state-transition matrix <code>A</code>, and symbol-emission matrix <code>B</code>.</p>
+
+    <dl class="options-dl">
+        <dt><code>π [N]</code></dt>
+        <dd>Initial-state probabilities.</dd>
+        <dt><code>A [N × N]</code></dt>
+        <dd><code>A[i][j] = P(s<sub>t</sub>=j | s<sub>t-1</sub>=i)</code>.</dd>
+        <dt><code>B [N × M]</code></dt>
+        <dd><code>B[i][j] = P(o<sub>t</sub>=j | s<sub>t</sub>=i)</code>.</dd>
+    </dl>
+
+    <p><code>HMM.fit(int[][] observations, int[][] labels)</code> estimates all three from aligned labeled sequences by maximum likelihood. For unlabeled sequences, a pre-initialized model can run an in-place Baum–Welch EM update with <code>update(observations, iterations)</code>; each sequence must contain more than two symbols.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-1-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays;
+import smile.sequence.HMM;
+
+int[][] coins = {{ '{{' }}0, 0, 1, 0, 1}, {1, 1, 0, 1, 0{{ '}}' }};
+int[][] states = {{ '{{' }}0, 0, 1, 0, 1}, {1, 1, 0, 1, 0{{ '}}' }};
+HMM hmm = HMM.fit(coins, states);
+
+int[] tosses = {0, 1, 1, 0};
+System.out.println(Arrays.toString(hmm.predict(tosses)));
+System.out.printf("log P(o) = %.4f%n", hmm.logp(tosses));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Viterbi state sequence and its finite log likelihood
+      </code></pre>
+    </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.sequence.hmm
+
+val coins = Array(Array(0, 0, 1, 0, 1), Array(1, 1, 0, 1, 0))
+val states = Array(Array(0, 0, 1, 0, 1), Array(1, 1, 0, 1, 0))
+val model = hmm(coins, states)
+
+val tosses = Array(0, 1, 1, 0)
+println(model.predict(tosses).mkString("[", ", ", "]"))
+println(f"log P(o) = ${model.logp(tosses)}%.4f")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Viterbi state sequence and its finite log likelihood
+      </code></pre>
+    </div>
+    <div id="pg-1-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.sequence.HMM
+
+val coins = arrayOf(intArrayOf(0, 0, 1, 0, 1), intArrayOf(1, 1, 0, 1, 0))
+val states = arrayOf(intArrayOf(0, 0, 1, 0, 1), intArrayOf(1, 1, 0, 1, 0))
+val hmm = HMM.fit(coins, states)
+
+val tosses = intArrayOf(0, 1, 1, 0)
+println(hmm.predict(tosses).contentToString())
+println("log P(o) = %.4f".format(hmm.logp(tosses)))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Viterbi state sequence and its finite log likelihood
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p><code>predict</code> decodes the most likely state path with Viterbi. <code>logp(o, s)</code> scores a particular joint observation/state path, while <code>logp(o)</code> computes the stable log marginal likelihood. Prefer log probabilities for long sequences.</p>
+
+
+    <h3 id="hmm-labeler">HMMLabeler</h3>
+
+    <p><code>HMMLabeler&lt;T&gt;</code> keeps an HMM and a <code>ToIntFunction&lt;T&gt;</code> that maps domain symbols to vocabulary indices. Its scoring, prediction, and Baum–Welch methods translate the symbols and delegate to the underlying model.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-2-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays;
+import smile.sequence.HMMLabeler;
+
+String[][] x = {{ '{{' }}"H", "H", "T"}, {"T", "T", "H"{{ '}}' }};
+int[][] y = {{ '{{' }}0, 0, 1}, {1, 1, 0{{ '}}' }};
+var labeler = HMMLabeler.fit(x, y, s -&gt; s.equals("H") ? 0 : 1);
+System.out.println(Arrays.toString(labeler.predict(new String[]{"H", "T", "H"})));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[0, 1, 0]
+      </code></pre>
+    </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.function.ToIntFunction
+import smile.sequence.hmm
+
+val x = Array(Array("H", "H", "T"), Array("T", "T", "H"))
+val y = Array(Array(0, 0, 1), Array(1, 1, 0))
+val ordinal = ToIntFunction[String](s =&gt; if s == "H" then 0 else 1)
+val labeler = hmm(x, y, ordinal)
+println(labeler.predict(Array("H", "T", "H")).mkString("[", ", ", "]"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[0, 1, 0]
+      </code></pre>
+    </div>
+    <div id="pg-2-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.function.ToIntFunction
+import smile.sequence.HMMLabeler
+
+val x = arrayOf(arrayOf("H", "H", "T"), arrayOf("T", "T", "H"))
+val y = arrayOf(intArrayOf(0, 0, 1), intArrayOf(1, 1, 0))
+val ordinal = ToIntFunction&lt;String&gt; { if (it == "H") 0 else 1 }
+val labeler = HMMLabeler.fit(x, y, ordinal)
+println(labeler.predict(arrayOf("H", "T", "H")).contentToString())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[0, 1, 0]
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="crf" class="title">Conditional Random Field</h2>
+
+    <p>A linear-chain <code>CRF</code> models <code>P(y | x)</code> directly. SMILE represents each position as a schema-consistent <code>Tuple</code> and learns label potentials as gradient-boosted regression trees, allowing overlapping and nonlinear features without modeling the input distribution.</p>
+    <p><code>predict(Tuple[])</code> chooses each position’s marginal argmax with forward-backward and usually optimizes token accuracy. <code>viterbi(Tuple[])</code> returns the single highest-scoring global path when sequence coherence matters.</p>
+
+
+    <h3 id="crf-options">CRF Options</h3>
+
+    <p>Hyperparameters are fields of the nested <code>CRF.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). The full constructor is <code>new CRF.Options(ntrees, maxDepth, maxNodes, nodeSize, shrinkage)</code>.</p>
+
+    <dl class="options-dl">
+        <dt><code>ntrees</code><br><code>smile.crf.trees</code></dt>
+        <dd>Boosting rounds / trees per class; default <code>100</code>.</dd>
+        <dt><code>maxDepth</code><br><code>smile.crf.max_depth</code></dt>
+        <dd>Maximum tree depth; default <code>20</code>.</dd>
+        <dt><code>maxNodes</code><br><code>smile.crf.max_nodes</code></dt>
+        <dd>Maximum leaf nodes per tree; default <code>100</code>.</dd>
+        <dt><code>nodeSize</code><br><code>smile.crf.node_size</code></dt>
+        <dd>Minimum samples in a leaf; default <code>5</code>.</dd>
+        <dt><code>shrinkage</code><br><code>smile.crf.shrinkage</code></dt>
+        <dd>Learning rate in <code>(0, 1]</code>; default <code>1.0</code>.</dd>
+    </dl>
+
+
+    <h3 id="crf-labeler">CRFLabeler</h3>
+
+    <p><code>CRFLabeler&lt;T&gt;</code> maps each observation through a <code>Function&lt;T, Tuple&gt;</code>. Every returned tuple must share the same <code>StructType</code>. The toy POS-style example below uses token length, capitalization count, and an <code>-ed</code> suffix flag.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-3-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays;
+import java.util.function.Function;
+import smile.data.Tuple;
+import smile.data.type.*;
+import smile.sequence.*;
+
+String[][] x = {{ '{{' }}"The", "cat", "sat"}, {"Dogs", "run", "fast"{{ '}}' }};
+int[][] y = {{ '{{' }}2, 0, 1}, {0, 1, 2{{ '}}' }}; // noun=0, verb=1, other=2
+var schema = new StructType(
+    new StructField("length", DataTypes.IntType),
+    new StructField("capitals", DataTypes.IntType),
+    new StructField("has_ed", DataTypes.IntType));
+Function&lt;String, Tuple&gt; features = w -&gt; Tuple.of(schema, new int[]{
+    w.length(), (int) w.chars().filter(Character::isUpperCase).count(),
+    w.endsWith("ed") ? 1 : 0});
+var tagger = CRFLabeler.fit(x, y, features,
+    new CRF.Options(20, 5, 16, 1, 0.2));
+System.out.println(Arrays.toString(
+    tagger.predict(new String[]{"The", "dogs", "barked"})));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Three POS label indices, one per token
+      </code></pre>
+    </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.function.Function
+import smile.data.Tuple
+import smile.data.`type`.{DataTypes, StructField, StructType}
+import smile.sequence.gcrf
+
+val x = Array(Array("The", "cat", "sat"), Array("Dogs", "run", "fast"))
+val y = Array(Array(2, 0, 1), Array(0, 1, 2))
+val schema = new StructType(
+  new StructField("length", DataTypes.IntType),
+  new StructField("capitals", DataTypes.IntType),
+  new StructField("has_ed", DataTypes.IntType))
+val features = Function[String, Tuple](w =&gt; Tuple.of(schema, Array(
+  w.length, w.count(_.isUpper).toInt, if w.endsWith("ed") then 1 else 0)))
+val tagger = gcrf(x, y, features, 20, 5, 16, 1, 0.2)
+println(tagger.predict(Array("The", "dogs", "barked")).mkString("[", ", ", "]"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Three POS label indices, one per token
+      </code></pre>
+    </div>
+    <div id="pg-3-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.function.Function
+import smile.data.Tuple
+import smile.data.type.DataTypes
+import smile.data.type.StructField
+import smile.data.type.StructType
+import smile.sequence.CRF
+import smile.sequence.CRFLabeler
+
+val x = arrayOf(arrayOf("The", "cat", "sat"), arrayOf("Dogs", "run", "fast"))
+val y = arrayOf(intArrayOf(2, 0, 1), intArrayOf(0, 1, 2))
+val schema = StructType(
+    StructField("length", DataTypes.IntType),
+    StructField("capitals", DataTypes.IntType),
+    StructField("has_ed", DataTypes.IntType))
+val features = Function&lt;String, Tuple&gt; { w -&gt; Tuple.of(schema, intArrayOf(
+    w.length, w.count { it.isUpperCase() }, if (w.endsWith("ed")) 1 else 0)) }
+val tagger = CRFLabeler.fit(x, y, features, CRF.Options(20, 5, 16, 1, 0.2))
+println(tagger.predict(arrayOf("The", "dogs", "barked")).contentToString())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Three POS label indices, one per token
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="comparison" class="title">HMM vs CRF</h2>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead><tr><th>Criterion</th><th>HMM</th><th>CRF</th></tr></thead>
+        <tbody>
+        <tr><td>Model</td><td>Generative <code>P(o, s)</code></td><td>Discriminative <code>P(y | x)</code></td></tr>
+        <tr><td>Input</td><td>Discrete vocabulary indices</td><td>Arbitrary Tuple features</td></tr>
+        <tr><td>Training</td><td>Fast labeled MLE; optional unlabeled Baum–Welch</td><td>Labeled gradient boosting</td></tr>
+        <tr><td>Decoding</td><td>Viterbi</td><td>Marginal argmax or Viterbi</td></tr>
+        <tr><td>Strength</td><td>Simple, fast, interpretable baseline</td><td>Rich features and usually higher accuracy</td></tr>
+        <tr><td>Trade-off</td><td>Large emission matrix for large vocabularies</td><td>Slower training and feature design</td></tr>
+        </tbody>
+    </table>
+</div>
+
+
+    <h2 id="tips" class="title">Practical Tips</h2>
+
+    <p><strong>Persist models.</strong> All models and wrappers are serializable. Save with <code>Write.object(model, Path.of("tagger.ser"))</code> and restore with <code>Read.object(...)</code>.</p>
+    <p><strong>Evaluate the task metric.</strong> Compute token accuracy by summing position-wise matches over all test sequences. For CRF, compare both decoders on held-out data: use <code>predict</code> when per-token accuracy is primary, and <code>viterbi</code> when only a coherent global path is acceptable.</p>
+    <p><strong>NLP shortcut.</strong> For a ready-made HMM part-of-speech tagger, see <a href="nlp.html">Natural Language Processing</a> and <code>HMMPOSTagger</code>.</p>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="deep-learning.html" title="Previous Section: Deep Learning"><span>Deep Learning</span></a>
+        <a class="btn-next-text" href="time-series.html" title="Next Section: Time Series"><span>Time Series</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>

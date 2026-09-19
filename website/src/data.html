@@ -1,7 +1,7 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: Smile - Data Processing
+title: SMILE - Data Processing
 ---
 {% include "toc.njk" %}
 
@@ -61,7 +61,7 @@ title: Smile - Data Processing
 
     <h2 id="DataFrame">DataFrame</h2>
 
-    <p>While some Smile algorithms take simple <code>double[]</code> as input, we often use
+    <p>While some SMILE algorithms take simple <code>double[]</code> as input, we often use
         the encapsulation class <a href="api/java/smile/data/DataFrame.html">DataFrame</a>.
         DataFrame is a two-dimensional data structure like a table with rows
         and columns. Each column is a <a href="api/java/smile/data/vector/ValueVector.html">ValueVector</a>
@@ -804,7 +804,7 @@ iris.add(df.column("V1"), df.column("V3"))</code></pre>
 
     <h3 id="DataFrame_Missing">Missing Data</h3>
     <p>For object column, <code>null</code> indicates missing data. For primitive
-        columns, Smile maintains a bit mask to indicate missing values. However,
+        columns, SMILE maintains a bit mask to indicate missing values. However,
         it is conventional that users use <code>NaN</code> to represent missing data
         for floating numeric types. One may use <code>DataFrame.isNullAt(i, j)</code>
         to check if a cell is null or NaN.</p>
@@ -1310,7 +1310,7 @@ Map(
 
     <h2 id="SQL">SQL</h2>
 
-    <p>While Smile provides many imperative ways to manipulate DataFrames as shown above,
+    <p>While SMILE provides many imperative ways to manipulate DataFrames as shown above,
         it is often easier to do so with SQL.</p>
 
     <div class="code-playground glass" data-lang="java">

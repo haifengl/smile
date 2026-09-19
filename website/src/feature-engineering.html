@@ -1,7 +1,7 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: Smile - Feature Engineering
+title: SMILE - Feature Engineering
 ---
 {% include "toc.njk" %}
 
@@ -696,21 +696,21 @@ rp.apply(DoubleArray(1000)).size</code></pre>
 String[] vocabulary = {"smile", "feature", "learning"}
 var bow = new BagOfWords(s -&gt; s.toLowerCase().split("\\s+"), vocabulary)
 // binary presence: new BagOfWords(tokenizer, vocabulary, true)
-bow.apply("Smile feature learning with SMILE")</code></pre>
+bow.apply("Feature learning with SMILE")</code></pre>
     </div>
     <div id="pg-13-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.feature.extraction.BagOfWords
 
 val vocabulary = Array("smile", "feature", "learning")
 val bow = new BagOfWords((s: String) =&gt; s.toLowerCase.split("\\s+"), vocabulary)
-bow.apply("Smile feature learning with SMILE")</code></pre>
+bow.apply("Feature learning with SMILE")</code></pre>
     </div>
     <div id="pg-13-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.feature.extraction.BagOfWords
 
 val vocabulary = arrayOf("smile", "feature", "learning")
 val bow = BagOfWords({ it.lowercase().split(Regex("\\s+")).toTypedArray() }, vocabulary)
-bow.apply("Smile feature learning with SMILE")</code></pre>
+bow.apply("Feature learning with SMILE")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
@@ -1397,7 +1397,7 @@ global</code></pre>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
-        <a class="btn-prev-text" href="regression.html" title="Previous Section: Regression"><span>Regression</span></a>
+        <a class="btn-prev-text" href="time-series.html" title="Previous Section: Time Series"><span>Time Series</span></a>
         <a class="btn-next-text" href="model-validation.html" title="Next Section: Model Validation"><span>Validation</span></a>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
