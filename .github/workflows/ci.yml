@@ -29,20 +29,24 @@ jobs:
 
       - name: Install ONNX Runtime and set LD_LIBRARY_PATH
         run: |
-          pip install onnxruntime
+          # CPU wheels only — GitHub-hosted runners have no GPU.
+          # Use the same interpreter for install and path resolution so pip/python
+          # cannot disagree about site-packages (the old `pip show` / `find` pitfall).
+          python3 -m pip install --user onnxruntime onnxruntime-genai
 
-          # Locate the onnxruntime/capi directory robustly with 'find' rather than
-          # parsing 'pip show', which can return a user-local path (~/.local/lib) that
-          # differs from the actual installed location, or produce no output at all
-          # when pip and python are mismatched on the runner.
-          ONNX_CAPI_DIR=$(find /home -type d -name "capi" \
-            -path "*/onnxruntime/capi" 2>/dev/null | head -n 1)
+          ONNX_CAPI_DIR=$(python3 -c "import onnxruntime, os; print(os.path.join(os.path.dirname(onnxruntime.__file__), 'capi'))")
+          ONNX_GENAI_DIR=$(python3 -c "import onnxruntime_genai, os; print(os.path.dirname(onnxruntime_genai.__file__))")
 
-          if [ -z "$ONNX_CAPI_DIR" ]; then
-            echo "ERROR: could not locate onnxruntime/capi directory" >&2
+          if [ ! -d "$ONNX_CAPI_DIR" ]; then
+            echo "ERROR: onnxruntime capi missing at: ${ONNX_CAPI_DIR}" >&2
+            exit 1
+          fi
+          if [ ! -d "$ONNX_GENAI_DIR" ]; then
+            echo "ERROR: onnxruntime_genai missing at: ${ONNX_GENAI_DIR}" >&2
             exit 1
           fi
           echo "Found ONNX capi at: ${ONNX_CAPI_DIR}"
+          echo "Found ONNX GENAI at: ${ONNX_GENAI_DIR}"
 
           # Create a symlink to the latest libonnxruntime.so in the capi directory
           ln -sfr "$(ls -t ${ONNX_CAPI_DIR}/libonnxruntime.so.* | head -n 1)" ${ONNX_CAPI_DIR}/libonnxruntime.so
@@ -50,8 +54,14 @@ jobs:
           # Use the safe ${VAR:+:$VAR} idiom so no trailing colon is introduced when
           # LD_LIBRARY_PATH is unset or empty (an empty segment is interpreted as CWD
           # by glibc and may be silently rejected by the JVM launcher).
-          echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
-          echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}" >> "$GITHUB_ENV"
+          {
+            echo "LD_LIBRARY_PATH=${ONNX_CAPI_DIR}:${ONNX_GENAI_DIR}${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+            # Absolute dirs for GenAI preload / Model.open (preferred over LD_LIBRARY_PATH alone).
+            echo "ONNXRUNTIME_NATIVE_PATH=${ONNX_CAPI_DIR}"
+            echo "ONNXRUNTIME_GENAI_NATIVE_PATH=${ONNX_GENAI_DIR}"
+            # Runners have no GPU; never attempt the CUDA EP in CI.
+            echo "SMILE_ONNX_GENAI_PROVIDER=cpu"
+          } | tee -a "$GITHUB_ENV"
 
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -76,6 +86,8 @@ jobs:
         run: chmod +x gradlew
 
       - name: Run unit tests (skip integration tests)
+        # No SMILE_ONNX_GENAI_MODEL on runners: GenAINativeTest skips model cases and
+        # only exercises natives when ONNXRUNTIME_* paths are set (above).
         run: xvfb-run --auto-servernum ./gradlew test -DexcludeTags=integration --no-daemon
 
       - name: Upload test reports
