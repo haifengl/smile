@@ -103,11 +103,24 @@ ST_FlashInferWorkspace smile_flashinfer_workspace_create(
                 {int_bytes},
                 at::TensorOptions().dtype(at::kByte).pinned_memory(true));
         // Separate scratch region for verify's PrefillPlan — see the struct
-        // comment above; must never alias float_workspace/int_workspace.
-        ws->verify_float_workspace = at::empty({float_bytes}, opts);
-        ws->verify_int_workspace = at::empty({int_bytes}, opts);
+        // comment above; must never alias float_workspace/int_workspace. Sized
+        // to match smile_flashinfer_paged_attention_verify_cuda's own non-pooled
+        // fallback allocation (32 MiB / 8 MiB / 8 MiB) — already exercised and
+        // proven sufficient by the Stage 1/2 VerifyCudaGraph*Test suites, which
+        // hit exactly that fallback path — rather than decode's much larger
+        // 128 MiB / 16 MiB sizing, which is provisioned for decode's potentially
+        // bigger batches and is unnecessary headroom for a single-digit-S,
+        // typically batch=1 verify plan. Doubling decode's full footprint here
+        // measurably increased allocator pressure on real hardware (~15% lower
+        // aggregate throughput on a long generation, worsening as this
+        // request's own KV usage grew toward capacity) without any offsetting
+        // correctness need.
+        constexpr int64_t kVerifyFloatBytes = 32LL << 20;
+        constexpr int64_t kVerifyIntBytes = 8LL << 20;
+        ws->verify_float_workspace = at::empty({kVerifyFloatBytes}, opts);
+        ws->verify_int_workspace = at::empty({kVerifyIntBytes}, opts);
         ws->verify_pinned_int_workspace = at::empty(
-                {int_bytes},
+                {kVerifyIntBytes},
                 at::TensorOptions().dtype(at::kByte).pinned_memory(true));
         return ws;
     } catch (const std::exception &ex) {
