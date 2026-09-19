@@ -39,19 +39,36 @@ lazy val commonSettings = Seq(
     "--enable-native-access=ALL-UNNAMED",
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
     "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
-  ),
+  ) ++ {
+    // Forward only JVM system properties set via `sbt -J-Dkey=value` into the
+    // forked test JVM. Do NOT snapshot getenv() here — an sbt server keeps
+    // settings from its first load and would pin stale paths into -D, which then
+    // override a newer SMILE_ONNX_GENAI_MODEL in the shell. Forked tests already
+    // inherit the client process environment for ONNXRUNTIME_* / SMILE_*.
+    Seq(
+      "onnxruntime.native.path",
+      "onnxruntime-genai.native.path",
+      "smile.onnx.genai.model"
+    ).flatMap { key =>
+      sys.props.get(key).filter(_.nonEmpty).map(v => s"-D$key=$v")
+    }
+  },
   Test / envVars ++= {
     val binDir = s"${(Test / baseDirectory).value}/studio/src/universal/bin"
     val torchDir = s"${(Test / baseDirectory).value}/deep/libtorch/lib"
+    // Prefer -J-D dirs for PATH; otherwise inherit ONNXRUNTIME_* from the fork env.
+    val ortDir = sys.props.getOrElse("onnxruntime.native.path", "")
+    val genaiDir = sys.props.getOrElse("onnxruntime-genai.native.path", "")
+    val prefix = Seq(binDir, torchDir, ortDir, genaiDir).filter(_.nonEmpty)
     Map(os match {
       case "windows" =>
-        "PATH" -> s"$binDir;$torchDir;${System.getenv("PATH")}"
+        "PATH" -> s"${prefix.mkString(";")};${System.getenv("PATH")}"
       case "mac" =>
-        "DYLD_LIBRARY_PATH" -> s"$binDir:$torchDir:/opt/homebrew/lib/:/usr/local/lib:${System.getenv("DYLD_LIBRARY_PATH")}"
+        "DYLD_LIBRARY_PATH" -> s"${prefix.mkString(":")}:/opt/homebrew/lib/:/usr/local/lib:${System.getenv("DYLD_LIBRARY_PATH")}"
       case _ =>
-        "LD_LIBRARY_PATH" -> s"$binDir:$torchDir:${System.getenv("LD_LIBRARY_PATH")}"
-    }
-  )},
+        "LD_LIBRARY_PATH" -> s"${prefix.mkString(":")}:${System.getenv("LD_LIBRARY_PATH")}"
+    })
+  },
 
   versionScheme := Some("early-semver"),
   publishTo := {

@@ -113,12 +113,13 @@ the module overview, or drill into individual topic guides.
 | [VECTOR_QUANTIZATION.md](core/VECTOR_QUANTIZATION.md) | LVQ, Neural Gas, SOM as vector quantizers |
 
 ### `deep/` — Deep Learning & LLMs
-> LibTorch-backed GPU/CPU tensor operations, neural network layers, LLaMA-3 inference, EfficientNet, ONNX Runtime
+> LibTorch-backed GPU/CPU tensor operations, neural network layers, LLaMA-3 inference, EfficientNet, ONNX Runtime & GenAI
 
 | Document | Topics |
 |---|---|
 | [README](deep/README.md) | Full deep-learning & LLM user guide (tensors, layers, loss, optimizer, EfficientNet, LLaMA, ONNX) |
 | [ONNX.md](deep/ONNX.md) | ONNX Runtime inference (`smile.onnx`) — sessions, tensors, execution providers |
+| [ONNX_GENAI.md](deep/ONNX_GENAI.md) | ONNX Runtime GenAI (`smile.onnx.genai`) — generate loop, chat model, multimodal |
 
 The `deep/README.md` covers:
 - **`smile.deep.tensor`** — Tensor factory, indexing, arithmetic, AutoScope memory management, dtype/device
@@ -134,6 +135,7 @@ The `deep/README.md` covers:
 - **`smile.vision`** — `VisionModel`, `ImageDataset`, `EfficientNet.V2S/M/L()` pretrained models, ImageNet labels
 - **`smile.vision.transform`** — `Transform` interface, `ImageClassification` pipeline, resize/crop/toTensor helpers
 - **`smile.onnx`** — ONNX Runtime inference via Panama FFM (`InferenceSession`, `OrtValue`, CUDA/TensorRT EPs)
+- **`smile.onnx.genai`** — ONNX Runtime GenAI (`SimpleGenAI`, `GenAiChatModel` / `LanguageModel`)
 
 ### `nlp/` — Natural Language Processing
 > Text normalization, tokenization, POS tagging, stemming, relevance ranking

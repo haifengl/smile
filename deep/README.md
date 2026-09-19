@@ -4,8 +4,8 @@ The `smile-deep` module provides idiomatic Java API for deep learning
 on the JVM while still reaching CPU, CUDA, and MPS backends by wrapping
 the PyTorch / LibTorch C++ runtime. It also provides tiktoken BPE tokenizer,
 LLaMA-3 inference, EfficientNet-V2, an image classification pipeline, and
-ONNX Runtime inference (`smile.onnx`) out of the box — paving the way for
-ONNX GenAI support.
+ONNX Runtime inference (`smile.onnx`) out of the box — plus ONNX GenAI
+(`smile.onnx.genai`) for generative models.
 
 ---
 
@@ -44,10 +44,11 @@ ONNX GenAI support.
     - [EfficientNet](#efficientnet)
     - [ImageNet Labels](#imagenet-labels)
 14. [ONNX Runtime (`smile.onnx`)](#onnx-runtime-smileonnx)
-15. [End-to-End Examples](#end-to-end-examples)
+15. [ONNX Runtime GenAI (`smile.onnx.genai`)](#onnx-runtime-genai-smileonnxgenai)
+16. [End-to-End Examples](#end-to-end-examples)
     - [Training a LeNet on MNIST](#training-a-lenet-on-mnist)
     - [CPU-only MLP Training](#cpu-only-mlp-training)
-16. [Building and Testing](#building-and-testing)
+17. [Building and Testing](#building-and-testing)
 
 ---
 
@@ -71,6 +72,8 @@ Runtime requirements:
 - For ONNX inference (`smile.onnx`), the ONNX Runtime shared library
   (`onnxruntime.dll` / `libonnxruntime.so` / `libonnxruntime.dylib`) must also
   be on the OS library search path ([ORT releases](https://github.com/microsoft/onnxruntime/releases)).
+- For ONNX GenAI (`smile.onnx.genai`), also place `onnxruntime-genai` on the
+  library path ([GenAI releases](https://github.com/microsoft/onnxruntime-genai/releases)).
 - When launching outside Gradle or Smile Studio, enable FFM access explicitly:
 
 ```text
@@ -137,6 +140,11 @@ smile.onnx
 ├── RunOptions.java        Per-run log tag, severity, cancellation
 ├── Environment.java       Shared OrtEnv / thread pools
 └── ModelMetadata.java, NodeInfo.java, TensorInfo.java, …
+
+smile.onnx.genai
+├── foreign/       Panama FFM bindings to onnxruntime-genai
+├── Model / Tokenizer / Generator / SimpleGenAI
+└── GenAiChatModel.java    LanguageModel adapter for serve
 ```
 
 The native side lives in `deep/src/main/cpp` and exposes a compact C ABI
@@ -917,7 +925,7 @@ int index    = inet.targetTransform("n02124075");
 Panama FFM so you can load and run ONNX models (exported from PyTorch,
 TensorFlow, scikit-learn, XGBoost, …) on the JVM. This package lives in
 `smile-deep` alongside LibTorch-backed training/inference, and is the
-foundation for future ONNX GenAI integration.
+foundation for ONNX GenAI (`smile.onnx.genai`).
 
 ```java
 import java.util.Map;
@@ -941,6 +949,28 @@ graph optimization levels, and thread pools. Prefer try-with-resources for
 `InferenceSession`, `OrtValue`, `SessionOptions`, and `Environment`.
 
 📖 **Full guide:** [ONNX.md](ONNX.md)
+
+### ONNX Runtime GenAI (`smile.onnx.genai`)
+
+Text (and multimodal) generation over [ORT GenAI](https://onnxruntime.ai/docs/genai/)
+with the same AutoCloseable / exception style as `smile.onnx`. Requires both
+`onnxruntime` and `onnxruntime-genai` on the OS library path.
+
+```java
+import smile.onnx.genai.SimpleGenAI;
+
+try (var genai = SimpleGenAI.of("models/phi-3-mini-cpu")) {
+    try (var params = genai.createGeneratorParams()) {
+        params.setSearchOption("max_length", 128);
+        System.out.println(genai.generate(params, "Hello!", System.out::print));
+    }
+}
+```
+
+`GenAiChatModel` implements `smile.llm.LanguageModel` for a future serve
+backend. Continuous batching (`OgaEngine`) is deferred.
+
+📖 **Full guide:** [ONNX_GENAI.md](ONNX_GENAI.md)
 
 ---
 

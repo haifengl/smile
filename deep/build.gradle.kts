@@ -19,4 +19,5 @@ tasks.withType<Test>().all {
 tasks.withType<Javadoc> {
     // Exclude generated packages from Javadoc generation
     exclude("smile/torch/**")
+    exclude("smile/onnx/genai/foreign/**")
 }
