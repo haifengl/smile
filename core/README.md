@@ -8,7 +8,7 @@ It builds on `smile-base` (math, linear algebra, data frames) and provides:
 - Semi-supervised / online methods — sequence labeling, time series
 - Feature engineering — scaling, extraction, selection, imputation, SHAP
 - Model evaluation — cross-validation, metrics, hyper-parameter optimization
-- Production tooling — ONNX inference, model wrappers, anomaly detection
+- Production tooling — model wrappers, anomaly detection
 
 ---
 
@@ -28,9 +28,8 @@ It builds on `smile-base` (math, linear algebra, data frames) and provides:
 12. [Time Series](#time-series)
 13. [Model Validation & Metrics](#model-validation--metrics)
 14. [Hyper-Parameter Optimization](#hyper-parameter-optimization)
-15. [ONNX Inference](#onnx-inference)
-16. [User Guides](#user-guides)
-17. [Building and Testing](#building-and-testing)
+15. [User Guides](#user-guides)
+16. [Building and Testing](#building-and-testing)
 
 ---
 
@@ -50,7 +49,6 @@ smile.feature          – Transforms, extraction, selection, imputation, SHAP
 smile.hpo              – Hyper-parameter search (grid, random, Bayesian)
 smile.manifold         – IsoMap, LLE, t-SNE, UMAP, KPCA, …
 smile.model            – Unified model wrappers (CART, MLP internals)
-smile.onnx             – ONNX runtime integration
 smile.regression       – 15+ regressors (RF, GBT, SVM, MLP, OLS, LASSO, …)
 smile.sequence         – HMM, CRF sequence labeling
 smile.timeseries       – ARIMA, GARCH, exponential smoothing, …
@@ -59,6 +57,9 @@ smile.vq               – SOM, Neural Gas, GNG, NeuralMap, BIRCH
 ```
 
 **Dependency:** `smile-core` → `smile-base` only (no circular deps).
+
+> **Note:** ONNX Runtime integration (`smile.onnx`) lives in the `deep` module.
+> See [deep/ONNX.md](../deep/ONNX.md).
 
 ---
 
@@ -503,28 +504,6 @@ HPO.Result result = HPO.randomSearch(50, params -> {
 
 ---
 
-## ONNX Inference
-
-`smile.onnx` wraps the ONNX Runtime Java API so you can deploy any
-ONNX-compatible model (PyTorch, TensorFlow, scikit-learn, XGBoost, …) inside
-a SMILE pipeline.
-
-```java
-import smile.onnx.ONNXModel;
-
-try (ONNXModel model = ONNXModel.load("model.onnx")) {
-    float[][] input  = prepareInput(df);
-    float[][] output = model.predict(input);
-}
-
-model.inputNames();    // ["input"]
-model.outputNames();   // ["output", "probabilities"]
-```
-
-📖 **Full guide:** [ONNX.md](ONNX.md)
-
----
-
 ## User Guides
 
 Detailed documentation for each area of the module:
@@ -545,7 +524,6 @@ Detailed documentation for each area of the module:
 | [VALIDATION_METRICS.md](VALIDATION_METRICS.md) | `smile.validation.metric` |
 | [HYPER_PARAMETER_OPTIMIZATION.md](HYPER_PARAMETER_OPTIMIZATION.md) | `smile.hpo` |
 | [TRAINING.md](TRAINING.md) | Model training utilities and patterns |
-| [ONNX.md](ONNX.md) | `smile.onnx` |
 
 ---
 
