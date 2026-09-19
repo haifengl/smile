@@ -1,7 +1,7 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: Smile - NLP
+title: SMILE - NLP
 ---
 {% include "toc.njk" %}
 
@@ -127,7 +127,7 @@ val text = unicode.normalize()
         hand, some poems may not contain any sentence punctuation at all.</p>
 
     <p>We implement an efficient rule-based sentence splitter for English.
-        In Smile shell, simply call <code>sentences</code> on a string
+        In SMILE shell, simply call <code>sentences</code> on a string
         to return an array of sentences. Any carriage returns
         in the text will be replaced by whitespace.</p>
     <div class="code-playground glass" data-lang="java">
@@ -751,13 +751,13 @@ res21: Seq[NGram] = Buffer(
         &ndash; and sometimes in terms of morphology, in that they undergo
         inflection for similar properties. Commonly listed English parts of
         speech are noun, verb, adjective, adverb, pronoun, preposition,
-        conjunction, interjection, etc. In Smile, we use the Penn Treebank
+        conjunction, interjection, etc. In SMILE, we use the Penn Treebank
         PoS tag set. The complete list can be found in the class
         <a href="api/java/smile/nlp/pos/PennTreebankPOS.html"><code>smile.nlp.pos.PennTreebankPOS</code></a>.</p>
 
     <p>PoS tagging is an important intermediate task to make sense of
         some of the structure inherent in language without requiring
-        complete understanding. Smile implements a highly efficient
+        complete understanding. SMILE implements a highly efficient
         English PoS tagger based on hidden Markov model (HMM). Suppose
         a string is a single sentence, simply call <code>postag</code>
         on the string to return an array of (word, tag) pairs. Because
@@ -992,7 +992,9 @@ res2: Array[pos.PennTreebankPOS] = Array(
         to a sequence of labels. Given language consists of sequences
         at many representational levels, sequence labeling tasks come up throughout
         speech and language processing. These include part-of-speech tagging,
-        named entity recognition, and speech recognition among others.</p>
+        named entity recognition, and speech recognition among others.
+        For the core <code>smile.sequence</code> APIs (HMM, CRF, and labeler wrappers),
+        see <a href="sequence-labeling.html">Sequence Labeling</a>.</p>
 
     <p>An HMM is a probabilistic sequence model: given a sequence of units,
         it computes a probability distribution over possible sequences of labels

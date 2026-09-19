@@ -1,0 +1,826 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - Unified Training Interface
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 order-md-first">
+    <h1 id="training-top" class="title">Unified Training Interface</h1>
+
+    <p><code>smile.model.Model</code> provides one entry point for tabular classification and regression. Choose an algorithm name, a <code>Formula</code>, data, and a <code>Properties</code> bag of hyperparameters; the result is a <code>ClassificationModel</code> or <code>RegressionModel</code> record containing the predictor, metrics, schema, formula, and metadata.</p>
+    <p>Use the focused <a href="classification.html">classification</a> and <a href="regression.html">regression</a> guides for algorithm theory and complete <code>Options</code> references.</p>
+
+
+    <h2 id="quick-start" class="title">Quick Start</h2>
+
+    <p>This Random Forest example trains on Iris with a small <code>Properties</code> configuration. Passing <code>null</code> for the test frame still returns the rich model record.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-1-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-1-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Properties;
+import smile.datasets.Iris;
+import smile.model.Model;
+
+var iris = new Iris();
+var params = new Properties();
+params.setProperty("smile.random_forest.trees", "200");
+
+var model = Model.classification(
+    "random-forest", iris.formula(), iris.data(), null, params);
+System.out.println(model.algorithm());
+System.out.println(model.train().accuracy());</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+random-forest
+(training accuracy)
+      </code></pre>
+    </div>
+    <div id="pg-1-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Properties
+import smile.datasets.Iris
+import smile.model.Model
+
+val iris = new Iris()
+val params = new Properties()
+params.setProperty("smile.random_forest.trees", "200")
+val model = Model.classification(
+  "random-forest", iris.formula, iris.data, null, params)
+println(model.algorithm)
+println(model.train.accuracy)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+random-forest
+(training accuracy)
+      </code></pre>
+    </div>
+    <div id="pg-1-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.datasets.Iris
+import smile.model.Model
+
+val iris = Iris()
+val params = Properties()
+params.setProperty("smile.random_forest.trees", "200")
+val model = Model.classification(
+    "random-forest", iris.formula(), iris.data(), null, params)
+println(model.algorithm())
+println(model.train().accuracy())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+random-forest
+(training accuracy)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="core-concepts" class="title">Core Concepts</h2>
+
+    <dl class="options-dl">
+        <dt><code>algorithm()</code></dt>
+        <dd>The exact dispatch name, such as <code>random-forest</code>.</dd>
+        <dt><code>schema()</code></dt>
+        <dd>Predictor schema with the response column removed.</dd>
+        <dt><code>formula()</code></dt>
+        <dd>The formula bound during training.</dd>
+        <dt><code>tags()</code></dt>
+        <dd>Mutable metadata and a cloned snapshot of training properties.</dd>
+    </dl>
+
+    <p><code>Formula.lhs("y")</code> selects <code>y</code> as the response and uses all remaining columns as predictors. The supplied <code>Properties</code> is cloned when the record is created: later changes to the original do not change <code>model.tags()</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-2-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-2-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Properties;
+import smile.datasets.Iris;
+import smile.model.Model;
+
+var iris = new Iris();
+var params = new Properties();
+var model = Model.classification(
+    "cart", iris.formula(), iris.data(), null, params);
+params.setProperty("after.training", "not copied");
+
+System.out.println(model.formula());
+System.out.println(model.schema());
+System.out.println(model.tags().containsKey("after.training"));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(formula)
+(predictor schema)
+false
+      </code></pre>
+    </div>
+    <div id="pg-2-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Properties
+import smile.datasets.Iris
+import smile.model.Model
+
+val iris = new Iris()
+val params = new Properties()
+val model = Model.classification("cart", iris.formula, iris.data, null, params)
+params.setProperty("after.training", "not copied")
+println(model.formula)
+println(model.schema)
+println(model.tags.containsKey("after.training"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(formula)
+(predictor schema)
+false
+      </code></pre>
+    </div>
+    <div id="pg-2-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.datasets.Iris
+import smile.model.Model
+
+val iris = Iris()
+val params = Properties()
+val model = Model.classification("cart", iris.formula(), iris.data(), null, params)
+params.setProperty("after.training", "not copied")
+println(model.formula())
+println(model.schema())
+println(model.tags().containsKey("after.training"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(formula)
+(predictor schema)
+false
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="classification" class="title">Training Classification Models</h2>
+
+    <p>The five-argument overload accepts an optional held-out test frame. The full overload additionally controls repeated cross-validation and whether fold predictors become the final ensemble.</p>
+
+    <dl class="options-dl">
+        <dt><code>classification(algorithm, formula, data, params)</code></dt>
+        <dd>Returns the underlying <code>DataFrameClassifier</code>; no metric record.</dd>
+        <dt><code>classification(algorithm, formula, data, test, params)</code></dt>
+        <dd>Returns <code>ClassificationModel</code>; <code>test</code> may be null.</dd>
+        <dt><code>classification(algorithm, formula, data, test, params, kfold, round, ensemble)</code></dt>
+        <dd>Adds repeated stratified CV and optional fold-model ensembling.</dd>
+    </dl>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-3-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-3-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Properties;
+import smile.datasets.ImageSegmentation;
+import smile.model.Model;
+
+var data = new ImageSegmentation();
+var plain = Model.classification(
+    "random-forest", data.formula(), data.train(), null, new Properties());
+var tested = Model.classification(
+    "random-forest", data.formula(), data.train(), data.test(), new Properties());
+var validated = Model.classification(
+    "random-forest", data.formula(), data.train(), data.test(),
+    new Properties(), 5, 1, false);
+System.out.println(tested.test().accuracy());
+System.out.println(validated.validation().accuracy());</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(held-out accuracy)
+(average CV accuracy)
+      </code></pre>
+    </div>
+    <div id="pg-3-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Properties
+import smile.datasets.ImageSegmentation
+import smile.model.Model
+
+val data = new ImageSegmentation()
+val plain = Model.classification(
+  "random-forest", data.formula, data.train, null, new Properties())
+val tested = Model.classification(
+  "random-forest", data.formula, data.train, data.test, new Properties())
+val validated = Model.classification(
+  "random-forest", data.formula, data.train, data.test,
+  new Properties(), 5, 1, false)
+println(tested.test.accuracy)
+println(validated.validation.accuracy)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(held-out accuracy)
+(average CV accuracy)
+      </code></pre>
+    </div>
+    <div id="pg-3-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.datasets.ImageSegmentation
+import smile.model.Model
+
+val data = ImageSegmentation()
+val plain = Model.classification(
+    "random-forest", data.formula(), data.train(), null, Properties())
+val tested = Model.classification(
+    "random-forest", data.formula(), data.train(), data.test(), Properties())
+val validated = Model.classification(
+    "random-forest", data.formula(), data.train(), data.test(),
+    Properties(), 5, 1, false)
+println(tested.test().accuracy())
+println(validated.validation().accuracy())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(held-out accuracy)
+(average CV accuracy)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="regression" class="title">Training Regression Models</h2>
+
+    <p>Regression has the same three overload shapes. The four-argument form returns <code>DataFrameRegression</code>; the forms with a test argument return <code>RegressionModel</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-4-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-4-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Properties;
+import smile.datasets.Abalone;
+import smile.model.Model;
+
+var abalone = new Abalone();
+var model = Model.regression(
+    "ols", abalone.formula(), abalone.train(), abalone.test(),
+    new Properties());
+System.out.println(model.test().rmse());
+
+var cv = Model.regression(
+    "ols", abalone.formula(), abalone.train(), abalone.test(),
+    new Properties(), 5, 1, false);
+System.out.println(cv.validation().r2());</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(held-out RMSE)
+(average CV R²)
+      </code></pre>
+    </div>
+    <div id="pg-4-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Properties
+import smile.datasets.Abalone
+import smile.model.Model
+
+val abalone = new Abalone()
+val model = Model.regression(
+  "ols", abalone.formula, abalone.train, abalone.test, new Properties())
+println(model.test.rmse)
+val cv = Model.regression(
+  "ols", abalone.formula, abalone.train, abalone.test,
+  new Properties(), 5, 1, false)
+println(cv.validation.r2)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(held-out RMSE)
+(average CV R²)
+      </code></pre>
+    </div>
+    <div id="pg-4-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.datasets.Abalone
+import smile.model.Model
+
+val abalone = Abalone()
+val model = Model.regression(
+    "ols", abalone.formula(), abalone.train(), abalone.test(), Properties())
+println(model.test().rmse())
+val cv = Model.regression(
+    "ols", abalone.formula(), abalone.train(), abalone.test(),
+    Properties(), 5, 1, false)
+println(cv.validation().r2())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(held-out RMSE)
+(average CV R²)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="cross-validation" class="title">Cross-Validation and Ensembles</h2>
+
+    <p>Set <code>kfold &gt;= 2</code> to run <code>round × kfold</code> folds. Classification uses stratified folds; regression uses regular folds. <code>validation()</code> stores the average metrics. With <code>ensemble=false</code>, SMILE retrains on all training rows; with <code>ensemble=true</code>, the fold models are combined. When <code>kfold &lt; 2</code>, validation is null and the flag is ignored.</p>
+    <p>For choosing folds and comparing candidates, see <a href="model-validation.html">Model Validation</a>. For searching property configurations, see <a href="hpo.html">Hyperparameter Optimization</a>.</p>
+
+
+    <h2 id="evaluation" class="title">Evaluating Models</h2>
+
+    <p>The records expose <code>train()</code>, <code>validation()</code>, and <code>test()</code>. Training metrics are always populated; validation and test metrics are nullable because their data is optional. Classification metrics include accuracy, errors, precision, recall, F1, and binary AUC where applicable. Regression metrics include RMSE, MAE, and R².</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-5-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-5-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Properties;
+import smile.datasets.ImageSegmentation;
+import smile.model.Model;
+
+var data = new ImageSegmentation();
+var model = Model.classification(
+    "cart", data.formula(), data.train(), data.test(),
+    new Properties(), 5, 1, false);
+System.out.printf("train %.3f%n", model.train().accuracy());
+System.out.printf("cv %.3f%n", model.validation().accuracy());
+System.out.printf("test %.3f%n", model.test().accuracy());</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+train (accuracy)
+cv (accuracy)
+test (accuracy)
+      </code></pre>
+    </div>
+    <div id="pg-5-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Properties
+import smile.datasets.ImageSegmentation
+import smile.model.Model
+
+val data = new ImageSegmentation()
+val model = Model.classification(
+  "cart", data.formula, data.train, data.test,
+  new Properties(), 5, 1, false)
+println(model.train.accuracy)
+println(model.validation.accuracy)
+println(model.test.accuracy)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+train (accuracy)
+cv (accuracy)
+test (accuracy)
+      </code></pre>
+    </div>
+    <div id="pg-5-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.datasets.ImageSegmentation
+import smile.model.Model
+
+val data = ImageSegmentation()
+val model = Model.classification(
+    "cart", data.formula(), data.train(), data.test(),
+    Properties(), 5, 1, false)
+println(model.train().accuracy())
+println(model.validation().accuracy())
+println(model.test().accuracy())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+train (accuracy)
+cv (accuracy)
+test (accuracy)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="predictions" class="title">Making Predictions</h2>
+
+    <p>Both records implement single-row <code>predict(Tuple)</code>. Classification also accepts a posterior-probability array and exposes <code>numClasses()</code>. For batches, call <code>classifier()</code> or <code>regression()</code> and predict a <code>DataFrame</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-6-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Properties;
+import smile.datasets.Iris;
+import smile.model.Model;
+
+var iris = new Iris();
+var model = Model.classification(
+    "random-forest", iris.formula(), iris.data(), null, new Properties());
+int one = model.predict(iris.data().get(0));
+double[] posterior = new double[model.numClasses()];
+model.predict(iris.data().get(0), posterior);
+int[] batch = model.classifier().predict(iris.data());
+System.out.println(one + " / " + batch.length);</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(predicted class) / 150
+      </code></pre>
+    </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Properties
+import smile.datasets.Iris
+import smile.model.Model
+
+val iris = new Iris()
+val model = Model.classification(
+  "random-forest", iris.formula, iris.data, null, new Properties())
+val one = model.predict(iris.data(0))
+val posterior = new Array[Double](model.numClasses)
+model.predict(iris.data(0), posterior)
+val batch = model.classifier.predict(iris.data)
+println(s"$one / ${batch.length}")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(predicted class) / 150
+      </code></pre>
+    </div>
+    <div id="pg-6-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.datasets.Iris
+import smile.model.Model
+
+val iris = Iris()
+val model = Model.classification(
+    "random-forest", iris.formula(), iris.data(), null, Properties())
+val one = model.predict(iris.data().get(0))
+val posterior = DoubleArray(model.numClasses())
+model.predict(iris.data().get(0), posterior)
+val batch = model.classifier().predict(iris.data())
+println("$one / ${batch.size}")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(predicted class) / 150
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="metadata" class="title">Metadata Tags</h2>
+
+    <p>Tags are strings stored in the record's <code>Properties</code>. <code>Model.ID</code> and <code>Model.VERSION</code> are conventional keys; custom provenance keys are welcome. Read them with <code>getTag(key)</code> or <code>getTag(key, defaultValue)</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-7-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Properties;
+import smile.datasets.Iris;
+import smile.model.Model;
+
+var iris = new Iris();
+var model = Model.classification(
+    "cart", iris.formula(), iris.data(), null, new Properties());
+model.setTag(Model.ID, "iris-cart");
+model.setTag(Model.VERSION, "1.0");
+model.setTag("dataset", "iris");
+System.out.println(model.getTag(Model.ID));
+System.out.println(model.getTag("environment", "development"));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+iris-cart
+development
+      </code></pre>
+    </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Properties
+import smile.datasets.Iris
+import smile.model.Model
+
+val iris = new Iris()
+val model = Model.classification("cart", iris.formula, iris.data, null, new Properties())
+model.setTag(Model.ID, "iris-cart")
+model.setTag(Model.VERSION, "1.0")
+model.setTag("dataset", "iris")
+println(model.getTag(Model.ID))
+println(model.getTag("environment", "development"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+iris-cart
+development
+      </code></pre>
+    </div>
+    <div id="pg-7-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.datasets.Iris
+import smile.model.Model
+
+val iris = Iris()
+val model = Model.classification("cart", iris.formula(), iris.data(), null, Properties())
+model.setTag(Model.ID, "iris-cart")
+model.setTag(Model.VERSION, "1.0")
+model.setTag("dataset", "iris")
+println(model.getTag(Model.ID))
+println(model.getTag("environment", "development"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+iris-cart
+development
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="algorithms" class="title">Algorithm Reference</h2>
+
+    <p>Names below are the exact strings accepted by the <code>Model</code> switch cases. Prefixes identify the most useful property families, not every available key.</p>
+
+
+    <h3 id="classification-algorithms">Classification</h3>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead><tr><th>Name</th><th>Algorithm</th><th>Key property prefix</th></tr></thead>
+        <tbody>
+        <tr><td><code>random-forest</code></td><td>Random Forest</td><td><code>smile.random_forest.*</code></td></tr>
+        <tr><td><code>gradient-boost</code></td><td>Gradient Boosted Trees</td><td><code>smile.gradient_boost.*</code></td></tr>
+        <tr><td><code>ada-boost</code></td><td>AdaBoost</td><td><code>smile.adaboost.*</code></td></tr>
+        <tr><td><code>cart</code></td><td>Decision Tree</td><td><code>smile.cart.*</code></td></tr>
+        <tr><td><code>logistic</code></td><td>Logistic Regression</td><td><code>smile.logistic.*</code></td></tr>
+        <tr><td><code>fisher</code>, <code>lda</code>, <code>qda</code></td><td>Discriminant analysis</td><td>none</td></tr>
+        <tr><td><code>rda</code></td><td>Regularized Discriminant Analysis</td><td><code>smile.rda.*</code></td></tr>
+        <tr><td><code>mlp</code></td><td>Multilayer Perceptron</td><td><code>smile.mlp.*</code></td></tr>
+        <tr><td><code>svm</code></td><td>Support Vector Machine</td><td><code>smile.svm.*</code></td></tr>
+        <tr><td><code>rbf</code></td><td>RBF Network</td><td>algorithm defaults</td></tr>
+        </tbody>
+    </table>
+</div>
+
+
+    <h3 id="regression-algorithms">Regression</h3>
+
+<div class="table-responsive">
+    <table class="table table-striped table-bordered">
+        <thead><tr><th>Name</th><th>Algorithm</th><th>Key property prefix</th></tr></thead>
+        <tbody>
+        <tr><td><code>random-forest</code></td><td>Random Forest</td><td><code>smile.random_forest.*</code></td></tr>
+        <tr><td><code>gradient-boost</code></td><td>Gradient Boosted Trees</td><td><code>smile.gradient_boost.*</code></td></tr>
+        <tr><td><code>cart</code></td><td>Regression Tree</td><td><code>smile.cart.*</code></td></tr>
+        <tr><td><code>ols</code></td><td>Ordinary Least Squares</td><td><code>smile.ols.*</code></td></tr>
+        <tr><td><code>lasso</code></td><td>LASSO</td><td><code>smile.lasso.*</code></td></tr>
+        <tr><td><code>elastic-net</code></td><td>Elastic Net</td><td><code>smile.elastic_net.*</code></td></tr>
+        <tr><td><code>ridge</code></td><td>Ridge Regression</td><td><code>smile.ridge.*</code></td></tr>
+        <tr><td><code>gaussian-process</code></td><td>Gaussian Process</td><td><code>smile.gaussian_process.*</code></td></tr>
+        <tr><td><code>mlp</code></td><td>Multilayer Perceptron</td><td><code>smile.mlp.*</code></td></tr>
+        <tr><td><code>svm</code></td><td>Support Vector Regression</td><td><code>smile.svm.*</code></td></tr>
+        <tr><td><code>rbf</code></td><td>RBF Network</td><td>algorithm defaults</td></tr>
+        </tbody>
+    </table>
+</div>
+
+    <p>Common examples include <code>smile.random_forest.trees</code>, <code>smile.gradient_boost.shrinkage</code>, <code>smile.cart.max_depth</code>, <code>smile.svm.C</code>, and <code>smile.ols.method</code>. Use <a href="hpo.html">Hyperparameter Optimization</a> to generate candidate <code>Properties</code> configurations.</p>
+
+
+    <h2 id="kernels" class="title">Kernel Specification Strings</h2>
+
+    <p>SVM and Gaussian Process properties parse compact kernel strings. Supported forms include <code>linear</code>, <code>Gaussian(sigma)</code>, <code>Laplacian(sigma)</code>, <code>Polynomial(degree,scale,offset)</code>, <code>ThinPlateSpline(sigma)</code>, <code>Pearson(omega,nu)</code>, <code>Hyperbolic(scale,offset)</code>, <code>Hellinger</code>, <code>SparsLinear</code>, and <code>BinarySparseLinear</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-8-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-8-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Properties;
+import smile.datasets.Iris;
+import smile.model.Model;
+
+var iris = new Iris();
+var params = new Properties();
+params.setProperty("smile.svm.kernel", "Gaussian(1.0)");
+params.setProperty("smile.svm.C", "10");
+params.setProperty("smile.svm.type", "ovo");
+var svm = Model.classification(
+    "svm", iris.formula(), iris.data(), null, params);
+System.out.println(svm.train().accuracy());</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(training accuracy)
+      </code></pre>
+    </div>
+    <div id="pg-8-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Properties
+import smile.datasets.Iris
+import smile.model.Model
+
+val iris = new Iris()
+val params = new Properties()
+params.setProperty("smile.svm.kernel", "Gaussian(1.0)")
+params.setProperty("smile.svm.C", "10")
+params.setProperty("smile.svm.type", "ovo")
+val svm = Model.classification("svm", iris.formula, iris.data, null, params)
+println(svm.train.accuracy)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(training accuracy)
+      </code></pre>
+    </div>
+    <div id="pg-8-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.datasets.Iris
+import smile.model.Model
+
+val iris = Iris()
+val params = Properties()
+params.setProperty("smile.svm.kernel", "Gaussian(1.0)")
+params.setProperty("smile.svm.C", "10")
+params.setProperty("smile.svm.type", "ovo")
+val svm = Model.classification("svm", iris.formula(), iris.data(), null, params)
+println(svm.train().accuracy())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(training accuracy)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="serialization" class="title">Serialization</h2>
+
+    <p>Both model records implement <code>Serializable</code>. <code>smile.io.Write.object</code> writes a record and <code>smile.io.Read.object</code> restores it. Keep serialized models with their compatible SMILE version; Java serialization is not a language-neutral interchange format.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-9-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-9-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.nio.file.Path;
+import java.util.Properties;
+import smile.datasets.Iris;
+import smile.io.Read;
+import smile.io.Write;
+import smile.model.ClassificationModel;
+import smile.model.Model;
+
+var iris = new Iris();
+var model = Model.classification(
+    "cart", iris.formula(), iris.data(), null, new Properties());
+Path path = Write.object(model);
+var restored = (ClassificationModel) Read.object(path);
+System.out.println(restored.predict(iris.data().get(0)));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(predicted class from restored model)
+      </code></pre>
+    </div>
+    <div id="pg-9-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Properties
+import smile.datasets.Iris
+import smile.io.{Read, Write}
+import smile.model.{ClassificationModel, Model}
+
+val iris = new Iris()
+val model = Model.classification("cart", iris.formula, iris.data, null, new Properties())
+val path = Write.object(model)
+val restored = Read.object(path).asInstanceOf[ClassificationModel]
+println(restored.predict(iris.data(0)))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(predicted class from restored model)
+      </code></pre>
+    </div>
+    <div id="pg-9-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.datasets.Iris
+import smile.io.Read
+import smile.io.Write
+import smile.model.ClassificationModel
+import smile.model.Model
+
+val iris = Iris()
+val model = Model.classification("cart", iris.formula(), iris.data(), null, Properties())
+val path = Write.object(model)
+val restored = Read.object(path) as ClassificationModel
+println(restored.predict(iris.data().get(0)))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(predicted class from restored model)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="end-to-end" class="title">Complete End-to-End Example</h2>
+
+    <p>This held-out Image Segmentation run trains, evaluates, tags, and uses one Random Forest model. The test frame is never used for fitting.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-10-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-10-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-10-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-10-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Properties;
+import smile.datasets.ImageSegmentation;
+import smile.model.Model;
+
+var data = new ImageSegmentation();
+var params = new Properties();
+params.setProperty("smile.random_forest.trees", "200");
+params.setProperty("smile.random_forest.max_nodes", "100");
+
+var model = Model.classification(
+    "random-forest", data.formula(), data.train(), data.test(), params);
+model.setTag(Model.ID, "segmentation-rf");
+model.setTag(Model.VERSION, "1.0");
+
+System.out.printf("train accuracy = %.3f%n", model.train().accuracy());
+System.out.printf("test accuracy  = %.3f%n", model.test().accuracy());
+int prediction = model.predict(data.test().get(0));
+System.out.println("first prediction = " + prediction);</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+train accuracy = (value)
+test accuracy = (value)
+first prediction = (class)
+      </code></pre>
+    </div>
+    <div id="pg-10-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import java.util.Properties
+import smile.datasets.ImageSegmentation
+import smile.model.Model
+
+val data = new ImageSegmentation()
+val params = new Properties()
+params.setProperty("smile.random_forest.trees", "200")
+params.setProperty("smile.random_forest.max_nodes", "100")
+val model = Model.classification(
+  "random-forest", data.formula, data.train, data.test, params)
+model.setTag(Model.ID, "segmentation-rf")
+model.setTag(Model.VERSION, "1.0")
+println(s"train accuracy = ${model.train.accuracy}")
+println(s"test accuracy = ${model.test.accuracy}")
+println(s"first prediction = ${model.predict(data.test(0))}")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+train accuracy = (value)
+test accuracy = (value)
+first prediction = (class)
+      </code></pre>
+    </div>
+    <div id="pg-10-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
+import smile.datasets.ImageSegmentation
+import smile.model.Model
+
+val data = ImageSegmentation()
+val params = Properties()
+params.setProperty("smile.random_forest.trees", "200")
+params.setProperty("smile.random_forest.max_nodes", "100")
+val model = Model.classification(
+    "random-forest", data.formula(), data.train(), data.test(), params)
+model.setTag(Model.ID, "segmentation-rf")
+model.setTag(Model.VERSION, "1.0")
+println("train accuracy = ${model.train().accuracy()}")
+println("test accuracy = ${model.test().accuracy()}")
+println("first prediction = ${model.predict(data.test().get(0))}")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+train accuracy = (value)
+test accuracy = (value)
+first prediction = (class)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="hpo.html" title="Previous Section: Hyperparameter Optimization"><span>Hyperparameter Optimization</span></a>
+        <a class="btn-next-text" href="clustering.html" title="Next Section: Clustering"><span>Clustering</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>

@@ -1,7 +1,7 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: Smile - Data Import and Export
+title: SMILE - Data Import and Export
 ---
 {% include "toc.njk" %}
 
@@ -550,7 +550,7 @@ df: DataFrame =
 
     <h3 id="read.csv">Delimited Text and CSV</h3>
     <p>The delimited text files are widely used in machine learning research community.
-        The comma-separated values (CSV) file is a special case. Smile provides flexible
+        The comma-separated values (CSV) file is a special case. SMILE provides flexible
         parser for them based on
         <a href="https://commons.apache.org/proper/commons-csv/">Apache Commons CSV</a> library.</p>
 
@@ -813,7 +813,7 @@ val array = read.json("data/kylo/books_array.json", JSON.Mode.MULTI_LINE, null)<
     <p>To read a libsvm file, <code>smile.io</code> has the function</p>
 
     <p>Although libsvm employs a sparse format, most libsvm files contain dense data.
-        Therefore, Smile also provides helper functions to convert
+        Therefore, SMILE also provides helper functions to convert
         it to dense arrays.</p>
 
     <div class="code-playground glass" data-lang="java">
@@ -1066,7 +1066,7 @@ smile.math.matrix.SparseMatrix@37672764
 </div>
 
     <h3 id="wireframe">Wireframe</h3>
-    <p>Smile can parse 3D wireframe models in Wavefront OBJ files.</p>
+    <p>SMILE can parse 3D wireframe models in Wavefront OBJ files.</p>
 
     <div class="code-playground glass" data-lang="scala">
   <div class="playground-toolbar">
