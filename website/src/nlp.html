@@ -1,42 +1,40 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: SMILE - NLP
+title: Smile - Natural Language Processing
 ---
 {% include "toc.njk" %}
 
 <div class="col-md-9 order-md-first">
-
     <h1 id="nlp-top" class="title">Natural Language Processing</h1>
 
-    <p>Natural language processing (NLP) is about developing applications
-        and services that are able to understand human languages. Advanced
-        high level NLP tasks include speech recognition, machine translation,
-        natural language understanding, natural language generation,
-        dialog system, etc. While smile-deep module supports LLMs, smile-nlp
-        module focuses on low and intermediate level NLP tasks such as
-        sentence breaking, stemming, n-gram, part-of-speech recognition,
-        keyword detection, named entity recognition, etc.</p>
+    <p>The <code>smile-nlp</code> module covers the classical text-processing pipeline: Unicode normalization, paragraph / sentence / word splitting, stemming, part-of-speech tagging, dictionaries, collocation extraction, relevance ranking, word embeddings, and lightweight concept taxonomies.</p>
+    <p>This guide is for engineered NLP features and retrieval — not large language models. For LLM serving and generation APIs, see <a href="llm.html">Large Language Models</a>. Trainable sequence labelers (HMM / CRF) live on <a href="sequence-labeling.html">Sequence Labeling</a>; classic bag-of-words classifiers are on <a href="classification.html">Classification</a>.</p>
 
-    <h2 id="normalization" class="title">Normalization</h2>
 
-    <p>Text often contains variations (various quote marks in Unicode) that
-        introduces annoying problems in many NLP tools. Normalization is typically
-        applied to text first to remove unwanted variations. Normalization may
-        range from light textual cleanup such as compressing whitespace to
-        more aggressive and knowledge-intensive forms like standardizing date
-        formats or expanding abbreviations. The nature and extent of normalization,
-        as well as whether it is most appropriate to apply on the document, sentence,
-        or token level, must be determined in the context of a specific application.</p>
+    <h2 id="module-contents" class="title">Module Contents</h2>
 
-    <p>The function <code>normalize</code> is a simple normalizer for
-        processing Unicode text:</p>
-    <ul>
-        <li>Apply Unicode normalization form NFKC.</li>
-        <li>Strip, trim, normalize, and compress whitespace.</li>
-        <li>Remove control and formatting characters.</li>
-        <li>Normalize dash, double and single quotes.</li>
-    </ul>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Sub-package / Class</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>smile.nlp</code> (core)</td><td><code>Text</code>, <code>Corpus</code>, <code>SimpleCorpus</code>, <code>Bigram</code>, <code>NGram</code>, <code>Word2Vec</code></td></tr>
+            <tr><td><code>smile.nlp.normalizer</code></td><td>Unicode text normalization</td></tr>
+            <tr><td><code>smile.nlp.tokenizer</code></td><td>Paragraph, sentence, and word splitting</td></tr>
+            <tr><td><code>smile.nlp.stemmer</code></td><td>Porter and Lancaster word stemmers</td></tr>
+            <tr><td><code>smile.nlp.pos</code></td><td>Penn Treebank POS tagging (pretrained HMM)</td></tr>
+            <tr><td><code>smile.nlp.dictionary</code></td><td>Stop words, punctuations, English dictionary</td></tr>
+            <tr><td><code>smile.nlp.relevance</code></td><td>TF-IDF and BM25 relevance ranking</td></tr>
+            <tr><td><code>smile.nlp.taxonomy</code></td><td>Concept taxonomy and taxonomic distance</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2 id="quick-start" class="title">Quick Start</h2>
+
+    <p>A typical preprocessing path is normalize → paragraphs → sentences → tokens → POS tags → stems. Filter on <code>PennTreebankPOS.open</code> when you only want content words. Use one <code>PorterStemmer</code> per thread; the default HMM tagger is safe to share.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -48,88 +46,90 @@ title: SMILE - NLP
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-1-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-import smile.math.MathEx;
-import smile.nlp.*;
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.normalizer.SimpleNormalizer;
 import smile.nlp.tokenizer.*;
-import smile.nlp.normalizer.*;
-import smile.nlp.collocation.*;
-import smile.nlp.dictionary.*;
-import smile.nlp.keyword.*;
-import smile.nlp.stemmer.*;
+import smile.nlp.stemmer.PorterStemmer;
 import smile.nlp.pos.*;
 
-var unicode = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.\n\n" +
-        "\"It was very strange to see the seal. I've seen a lot of things on runways, but never a seal,\" Babcock told ABC News. His footage of the hefty mammal went viral after he posted it on Facebook.\n\n" +
-        "According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a \"sled.\"\n\n" +
-        " Normal air traffic soon resumed, the station said.\n\n" +
-        "Poking fun at the seal's surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of  \"low sealings\" in the North Slope region - a pun on \"low ceilings,\" a term used to describe low clouds and poor visibility.\n\n" +
-        "Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.\n\n" +
-        "\"Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,\" department spokeswoman Meadow Bailey told the Associated Press. \"Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare\"";
+String raw = "Machine learning is a subfield of AI. Deep learning uses neural nets.";
+String text = SimpleNormalizer.getInstance().normalize(raw);
 
-var text = SimpleNormalizer.getInstance().normalize(unicode);
-          </code></pre>
+var paragraphs = SimpleParagraphSplitter.getInstance();
+var sentences = SimpleSentenceSplitter.getInstance();
+var tokenizer = new SimpleTokenizer();
+var tagger = HMMPOSTagger.getDefault();
+var stemmer = new PorterStemmer();
+
+for (String para : paragraphs.split(text)) {
+    for (String sent : sentences.split(para)) {
+        String[] tokens = tokenizer.split(sent);
+        PennTreebankPOS[] tags = tagger.tag(tokens);
+        for (int i = 0; i &lt; tokens.length; i++) {
+            if (tags[i].open) {
+                System.out.printf("%-16s %-6s %s%n",
+                    tokens[i], tags[i], stemmer.stem(tokens[i].toLowerCase()));
+            }
+        }
+    }
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Machine          NN     machin
+learning         NN     learn
+...
+      </code></pre>
     </div>
     <div id="pg-1-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-val unicode = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
+import smile.nlp.pos.PennTreebankPOS
 
-“It was very strange to see the seal. I’ve seen a lot of things on runways, but never a seal,” Babcock told ABC News. His footage of the hefty mammal went viral after he posted it on Facebook.
-
-According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a “sled.”
-
-Normal air traffic soon resumed, the station said.
-
-Poking fun at the seal’s surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of  “low sealings” in the North Slope region — a pun on “low ceilings,” a term used to describe low clouds and poor visibility.
-
-Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.
-
-“Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,” department spokeswoman Meadow Bailey told the Associated Press. “Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare.”"""
-
-val text = unicode.normalize
-    </code></pre>
+val raw = "Machine learning is a subfield of AI. Deep learning uses neural nets."
+for (sent &lt;- raw.normalize.sentences) {
+  val words = sent.words("none")
+  val tags = postag(words)
+  words.zip(tags).foreach { case (w, t) =&gt;
+    if (t.open) println(f"$w%-16s $t%-6s ${porter.stem(w.toLowerCase)}")
+  }
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Machine          NN     machin
+learning         NN     learn
+...
+      </code></pre>
     </div>
     <div id="pg-1-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-import smile.nlp.*;
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
 
-val unicode = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.
-
-“It was very strange to see the seal. I’ve seen a lot of things on runways, but never a seal,” Babcock told ABC News. His footage of the hefty mammal went viral after he posted it on Facebook.
-
-According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a “sled.”
-
-Normal air traffic soon resumed, the station said.
-
-Poking fun at the seal’s surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of  “low sealings” in the North Slope region — a pun on “low ceilings,” a term used to describe low clouds and poor visibility.
-
-Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.
-
-“Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,” department spokeswoman Meadow Bailey told the Associated Press. “Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare.”"""
-
-val text = unicode.normalize()
-    </code></pre>
+val raw = "Machine learning is a subfield of AI. Deep learning uses neural nets."
+for (sent in raw.normalize().sentences()) {
+    val words = sent.words("none")
+    val tags = postag(words)
+    for (i in words.indices) {
+        if (tags[i].open) {
+            println("%-16s %-6s %s".format(
+                words[i], tags[i], porter(words[i].lowercase())))
+        }
+    }
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Machine          NN     machin
+learning         NN     learn
+...
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <h2 id="sentence" class="title">Sentence Breaking</h2>
 
-    <p>In many NLP tasks, the input text has to be divided into sentences.
-        However, sentence boundary identification is challenging because
-        punctuation marks are often ambiguous.
-        In English, punctuation marks that usually appear at the end of a sentence
-        may not indicate the end of a sentence. The period is the worst offender.
-        A period can end a sentence, but it can also be part of an abbreviation
-        or acronym, an ellipsis, a decimal number, or part of a bracket of periods
-        surrounding a Roman numeral. A period can even act both as the end of an
-        abbreviation and the end of a sentence at the same time. Other the other
-        hand, some poems may not contain any sentence punctuation at all.</p>
+    <h2 id="core-types" class="title">Core Types</h2>
 
-    <p>We implement an efficient rule-based sentence splitter for English.
-        In SMILE shell, simply call <code>sentences</code> on a string
-        to return an array of sentences. Any carriage returns
-        in the text will be replaced by whitespace.</p>
+    <p>The root <code>smile.nlp</code> package holds the document model, collocation records, an in-memory corpus, and word-embedding loaders.</p>
+
+
+    <h3 id="text">Text</h3>
+
+    <p><code>Text</code> is a lightweight immutable record with optional title and body. Factory methods are <code>Text.of(content)</code> and <code>Text.of(title, content)</code>.</p>
+
+
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
     <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
@@ -140,169 +140,76 @@ val text = unicode.normalize()
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-2-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-smile> var sentences = SimpleSentenceSplitter.getInstance().split(text)
-sentences ==> String[10] { "When airport foreman Scott Babcock  ... mmal strikes are rare\"" }
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.Text;
 
-smile> for (int i = 0; i < sentences.length; i++) System.out.println(sentences[i]+"\n")
-When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.
-
-"It was very strange to see the seal.
-
-I've seen a lot of things on runways, but never a seal," Babcock told ABC News.
-
-His footage of the hefty mammal went viral after he posted it on Facebook.
-
-According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a "sled."
-
-Normal air traffic soon resumed, the station said.
-
-Poking fun at the seal's surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of "low sealings" in the North Slope region - a pun on "low ceilings," a term used to describe low clouds and poor visibility.
-
-Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.
-
-"Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year," department spokeswoman Meadow Bailey told the Associated Press.
-
-"Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare"
-          </code></pre>
+Text doc = Text.of("Machine learning is a subfield of AI.");
+Text titled = Text.of("Overview", "Machine learning is a subfield of AI.");
+System.out.println(doc.content());
+System.out.println(titled.title());</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Machine learning is a subfield of AI.
+Overview
+      </code></pre>
     </div>
     <div id="pg-2-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-smile&gt; val sentences = text.sentences
-sentences: Array[String] = Array(
-  "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.",
-  "\"It was very strange to see the seal.",
-  "I've seen a lot of things on runways, but never a seal,\" Babcock told ABC News.",
-  "His footage of the hefty mammal went viral after he posted it on Facebook.",
-  "According to local TV station KTVA, animal control was called in and eventually moved the seal with the help of a \"sled.\"",
-  "Normal air traffic soon resumed, the station said.",
-  "Poking fun at the seal's surprise appearance, the Alaska Department of Transportation warned pilots on Tuesday of \"low sealings\" in the North Slope region -- a pun on \"low ceilings,\" a term used to describe low clouds and poor visibility.",
-  "Though this was the first seal sighting on the runway at the airport, the department said other animals, including birds, caribou and polar bears, have been spotted there in the past.",
-  "\"Wildlife strikes to aircraft pose a significant safety hazard and cost the aviation industry hundreds of millions of dollars each year,\" department spokeswoman Meadow Bailey told the Associated Press.",
-  "\"Birds make up over 90 percent of strikes in the U.S., while mammal strikes are rare.\"",
-  ""
-)
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp.Text
+
+val doc = Text.of("Machine learning is a subfield of AI.")
+val titled = Text.of("Overview", "Machine learning is a subfield of AI.")
+println(doc.content)
+println(titled.title)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Machine learning is a subfield of AI.
+Overview
+      </code></pre>
     </div>
     <div id="pg-2-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    val sentences = text.sentences()
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.Text
+
+val doc = Text.of("Machine learning is a subfield of AI.")
+val titled = Text.of("Overview", "Machine learning is a subfield of AI.")
+println(doc.content())
+println(titled.title())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Machine learning is a subfield of AI.
+Overview
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <h2 id="tokenizer" class="title">Word Segmentation</h2>
 
-    <p>For a language like English, this is fairly trivial to
-        separate a chunk of continuous text into separate words,
-        since words are usually separated by spaces.
-        However, some written languages like Chinese, Japanese
-        and Thai do not mark word boundaries by spaces.
-        In those languages word segmentation is a significant
-        task requiring knowledge of the vocabulary and morphology
-        of words in the language.</p>
+    <h3 id="bigram-ngram">Bigram and NGram</h3>
 
-    <p>The method <code>words(filter)</code> assumes that an English text
-        has already been segmented into sentences and splits a sentence
-        into tokens. Any periods &ndash; apart from those at the end
-        of a string or before newline &ndash; are assumed to be part
-        of the word they are attached to (e.g. for abbreviations, etc.),
-        and are not separately tokenized. Most punctuation is split
-        from adjoining words. Verb contractions and the Anglo-Saxon
-        genitive of nouns are split into their component morphemes,
-        and each morpheme is tagged separately. The below example
-        splits a set of sentences and flat out the results into one
-        array.</p>
+    <p><code>Bigram</code> and <code>NGram</code> are records for word pairs and n-word phrases, optionally carrying raw frequency and association scores. They are the return types of collocation extractors.</p>
+
+
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-3-2">Kotlin</button>
+    <span class="lang-tab is-active">Java</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-3-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-smile> var tokenizer = new SimpleTokenizer(true)
-tokenizer ==> smile.nlp.tokenizer.SimpleTokenizer@6b53e23f
+  <pre class="playground-source language-java"><code class="language-java">import smile.nlp.Bigram;
+import smile.nlp.NGram;
 
-smile> var words = Arrays.stream(sentences).
-         flatMap(s -> Arrays.stream(tokenizer.split(s))).
-         filter(w -> !(EnglishStopWords.DEFAULT.contains(w.toLowerCase()) || EnglishPunctuations.getInstance().contains(w))).
-         toArray(String[]::new)
-words ==> String[133] { "airport", "foreman", "Scott", "Babcock", "went", "runway", "Wiley", "Post-Will", "Rogers", "Memorial", "Airport", "Utqiagvik", "Alaska", "Monday", "clear", "snow", "surprised", "visitor", "waiting", "asphalt", "450-pound", "bearded", "seal", "chilling", "milky", "sunshine", "strange", "seal", "seen", "lot", "things", "runways", "seal", "Babcock", "told", "ABC", "News", "footage", "hefty", "mammal", "went", "viral", "posted", "Facebook", "According", "local", "TV", "station", "KTVA", "animal", "control", "called", "eventually", "moved", "seal", "help", "sled.", "Normal", "air", "traffic", "soon", "resumed", "station", "said", "Poking", "fun ... spotted", "past", "Wildlife", "strikes", "aircraft", "pose", "significant", "safety", "hazard", "cost", "aviation", "industry", "hundreds", "millions", "dollars", "year", "department", "spokeswoman", "Meadow", "Bailey", "told", "Associated", "Press", "Birds", "make", "90", "percent", "strikes", "U.S.", "mammal", "strikes", "rare" }
-          </code></pre>
-    </div>
-    <div id="pg-3-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-smile&gt; sentences.flatMap(_.words())
-res6: Array[String] = Array(airport, foreman, Scott, Babcock, went, runway, Wiley, Post-Will, Rogers, Memorial, Airport, Utqiagvik, Alaska, Monday, clear, snow, surprised, visitor, waiting, asphalt, 450-pound, bearded, seal, chilling, milky, sunshine, strange, seal, seen, lot, things, runways, seal, Babcock, told, ABC, News, footage, hefty, mammal, went, viral, posted, Facebook, According, local, TV, station, KTVA, animal, control, called, eventually, moved, seal, help, sled., Normal, air, traffic, soon, resumed, station, said, Poking, fun, seal, surprise, appearance, Alaska, Department, Transportation, warned, pilots, Tuesday, low, sealings, North, Slope, region, pun, low, ceilings, term, used, low, clouds, poor, visibility, seal, sighting, runway, airport...
-    </code></pre>
-    </div>
-    <div id="pg-3-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
->>> sentences.flatMap{ it.words().asIterable() }
-res6: kotlin.collections.List&lt;kotlin.String&gt; = [airport, foreman, Scott, Babcock, went, runway, Wiley, Post-Will, Rogers, Memorial, Airport, Utqiagvik, Alaska, Monday, clear, snow, surprised, visitor, waiting, asphalt, 450-pound, bearded, seal, chilling, milky, sunshine, strange, seal, seen, lot, things, runways, seal, Babcock, told, ABC, News, footage, hefty, mammal, went, viral, posted, Facebook, According, local, TV, station, KTVA, animal, control, called, eventually, moved, seal, help, sled., Normal, air, traffic, soon, resumed, station, said, Poking, fun, seal, surprise, appearance, Alaska, Department, Transportation, warned, pilots, Tuesday, low, sealings, North, Slope, region, pun, low, ceilings, term, used, low, clouds, poor, visibility, seal, sighting, runway, airport, department, said, animals, including, birds, caribou, polar, bears, spotted, past, Wildlife, strikes, aircraft, pose, significant, safety, hazard, cost, aviation, industry, hundreds, millions, dollars, year, department, spokeswoman, Meadow, Bailey, told, Associated, Press, Birds, make, 90, percent, strikes, U.S., mammal, strikes, rare.]
-    </code></pre>
-    </div>
+Bigram b = new Bigram("machine", "learning");
+NGram n = new NGram(new String[]{"deep", "learning"});
+System.out.println(b);
+System.out.println(n);</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Bigram{w1='machine', w2='learning', ...}
+NGram{words=[deep, learning], ...}
+      </code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>You may notice that some words like "the", "a", etc. are missing
-        in the result. It is because that <code>words()</code> filters
-        out stop words and punctuations by default. A stop word is a
-        commonly used word that many NLP algorithms would like to ignore.
-        For example, a search engine ignores stop words both when indexing
-        entries and when retrieving them in order to save space and
-        time as stop words are deemed irrelevant for searching
-        purposes. There is no definite list of stop words which all tools
-        incorporate. So the parameter <code>filter</code> may take the
-        following values:</p>
-        <ul>
-            <li>"none": no filtering</li>
-            <li>"default": the default English stop word list</li>
-            <li>"comprehensive": a more comprehensive English stop word list</li>
-            <li>"google": the stop words list used by Google search engine</li>
-            <li>"mysql": the stop words list used by MySQL FullText feature</li>
-            <li>custom stop word list: comma separated stop word list</li>
-        </ul>
 
-    <h2 id="stemmer" class="title">Stemming</h2>
+    <h3 id="simple-corpus">SimpleCorpus</h3>
 
-    <p>For grammatical reasons, we use different forms of a word,
-        such as go, goes, and went. Additionally, there are families
-        of derivationally related words with similar meanings,
-        such as democracy, democratic, and democratization. For many
-        machine learning algorithms, it is good to reduce inflectional
-        forms and sometimes derivationally related forms of a word
-        to a common base form to improve the signal-to-noise ratio.</p>
+    <p><code>Corpus</code> is the indexed-document interface. <code>SimpleCorpus</code> is the built-in in-memory implementation: it tokenizes on insert and keeps term / bigram tables for collocations and relevance search. Scala and Kotlin helpers build a corpus from a sequence of strings.</p>
 
-    <p> Stemming is a crude heuristic process that chops off the
-        ends of words in the hope of achieving this goal correctly
-        most of the time, and often includes the removal of
-        derivational affixes. The most common algorithm for stemming
-        English is Porter's algorithm. Porter's algorithm is based on the idea that the
-        suffixes in the English language are mostly made up of a combination of
-        smaller and simpler suffixes. As a linear step stemmer,
-        Porter's algorithm consists of 5 phases of word reductions, applied sequentially.
-        Within each step, if a suffix rule matched to a word, then the conditions
-        attached to that rule are tested on what would be the resulting stem,
-        if that suffix was removed, in the way defined by the rule. Once a Rule
-        passes its conditions and is accepted the rule fires and the suffix is
-        removed and control moves to the next step. If the rule is not accepted
-        then the next rule in the step is tested, until either a rule from that
-        step fires and control passes to the next step or there are no more rules
-        in that step whence control moves to the next step.</p>
-
-    <p>Another popular stemming algorithm is the Paice/Husk Lancaster
-        algorithm, which is a conflation based iterative stemmer.
-        The stemmer, although remaining efficient and easily implemented,
-        is known to be very strong and aggressive. The stemmer
-        utilizes a single table of rules, each of which may specify
-        the removal or replacement of an ending. The implementation
-        <code>LancasterStemmer</code> allows the user to load customized rules.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -314,113 +221,100 @@ res6: kotlin.collections.List&lt;kotlin.String&gt; = [airport, foreman, Scott, B
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-4-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-smile> var porter = new PorterStemmer()
-porter ==> smile.nlp.stemmer.PorterStemmer@5ea434c8
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.SimpleCorpus;
 
-smile> var lancaster = new LancasterStemmer()
-lancaster ==> smile.nlp.stemmer.LancasterStemmer@2aa5fe93
-
-smile> porter.stem("democratization")
-$42 ==> "democrat"
-
-smile> lancaster.stem("democratization")
-$43 ==> "democr"
-          </code></pre>
+SimpleCorpus corpus = new SimpleCorpus();
+corpus.add(corpus.doc("SMILE is a fast machine learning library."));
+corpus.add(corpus.doc("Deep learning uses neural networks."));
+System.out.println(corpus.docCount());
+System.out.println(corpus.count("learning"));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+2
+2
+      </code></pre>
     </div>
     <div id="pg-4-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    smile&gt; porter.stem("democratization")
-    res10: String = "democrat"
-    smile&gt; lancaster.stem("democratization")
-    res11: String = "democr"
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
+
+val c = corpus(Seq(
+  "SMILE is a fast machine learning library.",
+  "Deep learning uses neural networks."
+))
+println(c.docCount)
+println(c.count("learning"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+2
+2
+      </code></pre>
     </div>
     <div id="pg-4-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    >>> porter("democratization")
-    res18: kotlin.String = democrat
-    >>> lancaster("democratization")
-    res19: kotlin.String = democr
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
+
+val c = corpus(listOf(
+    "SMILE is a fast machine learning library.",
+    "Deep learning uses neural networks."
+))
+println(c.docCount())
+println(c.count("learning"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+2
+2
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Different from stemming that commonly collapses derivationally
-        related words, lemmatization aims to remove inflectional endings
-        only and to return the base or dictionary form of a word, which is
-        known as the lemma.</p>
 
-    <h2 id="bag-of-words" class="title">Bag of Words</h2>
+    <h3 id="word2vec">Word2Vec</h3>
 
-    <p>The bag-of-words model is a simple representation of text
-        as the bag of its words, disregarding grammar and word
-        order but keeping multiplicity.</p>
+    <p><code>Word2Vec</code> loads pretrained embeddings in Word2vec binary format (<code>Word2Vec.of</code>) or GloVe text format (<code>Word2Vec.glove</code>). Look up vectors with <code>apply</code> or <code>lookup</code>, and compare tokens with cosine <code>similarity</code>.</p>
 
-    <p>The method <code>bag(stemmer)</code> returns the map
-        of word to frequency. By default, the parameter <code>stemmer</code>
-        use Porter's algorithm. Passing <code>None</code> to disable stemming.
-        There is a similar function <code>bag2(stemmer)</code> that returns
-        a binary bag of words (<code>Set[String]</code>). That is, presence/absence
-        is used instead of frequencies.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-5-2">Kotlin</button>
+    <span class="lang-tab is-active">Java</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-5-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-smile> var map = Arrays.stream(words).
-         map(porter::stem).
-         map(String::toLowerCase).
-         collect(Collectors.groupingBy(java.util.function.Function.identity(), Collectors.summingInt(e -> 1)))
-map ==> {spokeswoman=1, u.s.=1, bailei=1, year=1, told=2, ... l=1, transport=1, sled.=1}
-          </code></pre>
-    </div>
-    <div id="pg-5-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-smile&gt; text.bag()
-res12: Map[String, Int] = Map(move -> 1, 90 -> 1, call -> 1, spokeswoman -> 1, snow -> 1, anim -> 2, post -> 1, footag -> 1, wait -> 1, carib -> 1, industri -> 1, sunshin -> 1, seen -> 1, abc -> 1, said -> 2, pun -> 1, polar -> 1, bear -> 1, soon -> 1, warn -> 1, sight -> 1, babcock -> 2, u.s. -> 1, clear -> 1, normal -> 1, appear -> 1, sled. -> 1, strike -> 3, foreman -> 1, milki -> 1, resum -> 1, meadow -> 1, bailei -> 1, bird -> 2, us -> 1, dollar -> 1, poke -> 1, mondai -> 1, local -> 1, term -> 1, thing -> 1, scott -> 1, year -> 1, associat -> 1, ktva -> 1, tv -> 1, told -> 2, visibl -> 1, eventu -> 1, seal -> 7, hundr -> 1, surpris -> 2, aircraft -> 1, runwai -> 3, ceil -> 1, includ -> 1, asphalt -> 1, visitor -> 1, help -> 1, hazard -> 1, transport -> ...
-    </code></pre>
-    </div>
-    <div id="pg-5-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
->>> text.bag()
-res20: kotlin.collections.Map&lt;kotlin.String, kotlin.Int&gt; = {airport=3, foreman=1, scott=1, babcock=2, went=2, runwai=3, wilei=1, post-wil=1, roger=1, memori=1, utqiagvik=1, alaska=2, mondai=1, clear=1, snow=1, surpris=2, visitor=1, wait=1, asphalt=1, 450-pound=1, beard=1, seal=7, chill=1, milki=1, sunshin=1, strang=1, seen=1, lot=1, thing=1, told=2, abc=1, new=1, footag=1, hefti=1, mammal=2, viral=1, post=1, facebook=1, accord=1, local=1, tv=1, station=2, ktva=1, anim=2, control=1, call=1, eventu=1, move=1, help=1, sled.=1, normal=1, air=1, traffic=1, soon=1, resum=1, said=2, poke=1, fun=1, appear=1, depart=3, transport=1, warn=1, pilot=1, tuesdai=1, low=3, north=1, slope=1, region=1, pun=1, ceil=1, term=1, us=1, cloud=1, poor=1, visibl=1, sight=1, includ=1, bird=2, carib=1, polar=1, bear=1, spot=1, past=1, wildlif=1, strike=3, aircraft=1, pose=1, signific=1, safeti=1, hazard=1, cost=1, aviat=1, industri=1, hundr=1, million=1, dollar=1, year=1, spokeswoman=1, meadow=1, bailei=1, associat=1, press=1, make=1, 90=1, percent=1, u.s.=1, rare.=1}
-    </code></pre>
-    </div>
+  <pre class="playground-source language-java"><code class="language-java">import java.nio.file.Path;
+import smile.nlp.Word2Vec;
+
+// Word2vec binary or GloVe text
+Word2Vec w2v = Word2Vec.of(Path.of("GoogleNews-vectors-negative300.bin"));
+// Word2Vec glove = Word2Vec.glove(Path.of("glove.6B.100d.txt"));
+
+float[] vec = w2v.apply("king");
+w2v.lookup("king").ifPresent(v -&gt; System.out.println(v.length));
+w2v.similarity("king", "queen").ifPresent(System.out::println);
+System.out.println(w2v.size() + " x " + w2v.dimension());</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+300
+≈ 0.65
+(vocabulary size) x 300
+      </code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The function <code>vectorize(features, bag)</code> converts
-        a bag of words to a feature vector. The parameter
-        <code>features</code> is the token list used as features
-        in machine learning models. Generally it is not
-        a good practice to use all tokens in the corpus as features.
-        Therefore, we require the user to provide a list of selected
-        tokens as the features in <code>vectorize()</code>.
-        An overloaded version of <code>vectorize()</code> converts
-        a binary bag of words (<code>Set[String]</code>) to a sparse
-        integer vector, which elements are the indices of presented
-        feature tokens in ascending order. As most documents will typically
-        use a very small subset of the words used in the corpus,
-        this representation is very memory efficient and often used with
-        Maximum Entropy Classifier (<code>Maxent</code>).</p>
 
-    <p>In practice, the bag-of-words model is mainly used for
-        feature generation in document classification by calculating
-        various measures to characterize the text. The most common
-        feature is term frequency. However, a high raw term frequency
-        doesn't necessarily mean that the corresponding word is more
-        important. It is popular to normalize the term frequencies
-        by the inverse of document frequency, i.e. tf-idf (term
-        frequency-inverse document frequency).</p>
+    <h2 id="normalizer" class="title">Normalizer</h2>
+
+    <p><code>SimpleNormalizer</code> is a thread-safe singleton that cleans heterogeneous Unicode before tokenization. Always normalize text from the web, PDFs, or user input to avoid spurious tokens from encoding variants.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Step</th><th>Detail</th></tr></thead>
+            <tbody>
+            <tr><td>NFKC</td><td>Canonical decomposition followed by composition</td></tr>
+            <tr><td>Whitespace</td><td>Strip, trim, and compress whitespace</td></tr>
+            <tr><td>Control chars</td><td>Remove <code>Cc</code> and <code>Cf</code> categories</td></tr>
+            <tr><td>Dashes</td><td>Em-dash, en-dash, etc. → <code>-</code></td></tr>
+            <tr><td>Double quotes</td><td>Typographic quotes → <code>"</code></td></tr>
+            <tr><td>Single quotes</td><td>Typographic apostrophes → <code>'</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -432,113 +326,57 @@ res20: kotlin.collections.Map&lt;kotlin.String, kotlin.Int&gt; = {airport=3, for
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-6-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var lines = Files.lines(java.nio.file.Paths.get("data/text/movie.txt"));
-    var corpus = lines.map(line -> {
-              var sentences = SimpleSentenceSplitter.getInstance().split(SimpleNormalizer.getInstance().normalize(line));
-              var words = Arrays.stream(sentences).
-                  flatMap(s -> Arrays.stream(tokenizer.split(s))).
-                  filter(w -> !(EnglishStopWords.DEFAULT.contains(w.toLowerCase()) || EnglishPunctuations.getInstance().contains(w))).
-                  toArray(String[]::new);
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.normalizer.SimpleNormalizer;
 
-              var bag = Arrays.stream(words).
-                  map(porter::stem).
-                  map(String::toLowerCase).
-                  collect(Collectors.groupingBy(java.util.function.Function.identity(), Collectors.summingInt(e -> 1)));
-
-              return bag;
-          });
-
-    String[] features = {"like", "good", "perform", "littl", "love", "bad", "best"};
-    var zero = Integer.valueOf(0);
-    var bags = corpus.map(bag -> {
-              double[] x = new double[features.length];
-              for (int i = 0; i < x.length; i++) x[i] = (Integer) bag.getOrDefault(features[i], zero);
-              return x;
-          }).toArray(double[][]::new);
-
-    var n = bags.length;
-    int[] df = new int[features.length];
-    for (double[] bag : bags) {
-      for (int i = 0; i < df.length; i++) {
-        if (bag[i] > 0) df[i]++;
-      }
-    }
-
-    var data = Arrays.stream(bags).map(bag -> {
-            var maxtf = MathEx.max(bag);
-            double[] x = new double[bag.length];
-
-            for (int i = 0; i < x.length; i++) {
-                x[i] = (bag[i] / maxtf) * Math.log((1.0 + n) / (1.0 + df[i]));
-            }
-
-            MathEx.unitize(x);
-            return x;
-    }).toArray(double[][]::new);
-          </code></pre>
+SimpleNormalizer norm = SimpleNormalizer.getInstance();
+String clean = norm.normalize("\u201CHello,\u201D   world\u2019s\u2026");
+System.out.println(clean);</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+"Hello," world's...
+      </code></pre>
     </div>
     <div id="pg-6-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val lines = scala.io.Source.fromFile("data/text/movie.txt").getLines().toSeq
-    val corpus = lines.map(_.bag())
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
 
-    val features = Array("like", "good", "perform", "littl", "love", "bad", "best")
-    val bags = corpus.map(vectorize(features, _))
-    val data = tfidf(bags)
-    </code></pre>
+val clean = "\u201CHello,\u201D   world\u2019s\u2026".normalize
+println(clean)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+"Hello," world's...
+      </code></pre>
     </div>
     <div id="pg-6-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    import java.io.File
-    val lines = File("data/text/movie.txt").readLines()
-    val corpus = lines.map{ it.bag() }
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
 
-    val features = arrayOf("like", "good", "perform", "littl", "love", "bad", "best")
-    val bags = corpus.map{ vectorize(features, it) }
-    val data = tfidf(bags)
-    </code></pre>
+val clean = "\u201CHello,\u201D   world\u2019s\u2026".normalize()
+println(clean)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+"Hello," world's...
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>In the example, we load a file, of which each line is a document.
-        We define a short list of terms as the features (only for demo
-        purpose). Then we apply the function <code>vectorize()</code>
-        to convert the bag-of-words counts to the feature vectors.
-        Finally, we use the function <code>tfidf</code> to compute the
-        normalized feature vectors, which may be used in machine learning
-        algorithms.</p>
 
-    <p>For a new document in prediction phase, an overload version of <code>tfidf(bag, n, df)</code>
-        can be employed, where <code>bag</code> is the bag-of-words feature
-        vector of a document, <code>n</code> is the number of documents in
-        training corpus, and <code>df</code> is an array which element is
-        the number of documents containing the given term in the corpus.</p>
+    <h2 id="tokenizers" class="title">Tokenizers</h2>
 
-    <h2 id="phrase" class="title">Phrase/Collocation Extraction</h2>
+    <p>The tokenizer package splits text at three levels. All splitter interfaces extend <code>Function&lt;String, String[]&gt;</code>, so they compose in streams. Prefer the <code>Simple*</code> and <code>PennTreebank</code> singletons for English; <code>BreakIterator*</code> variants are locale-aware but not thread-safe.</p>
 
-    <p>So far, we have treat words to be independent. But natural languages
-        include the expressions consisting of two or more words that correspond
-        to some conventional way of saying things. A collocation is a sequence of
-        words or terms that co-occur more often than would be expected by chance.
-        There are about six main types of collocations: adjective+noun, noun+noun,
-        verb+noun, adverb+adjective, verbs+prepositional, and verb+adverb.
-        Collocation extraction employs various computational linguistics
-        techniques to find collocations in a document or corpus that are
-        statistically significant.</p>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Level</th><th>Notes</th></tr></thead>
+            <tbody>
+            <tr><td><code>SimpleParagraphSplitter</code></td><td>Paragraph</td><td>Blank lines; singleton</td></tr>
+            <tr><td><code>SimpleSentenceSplitter</code></td><td>Sentence</td><td>English heuristics + abbreviations; singleton</td></tr>
+            <tr><td><code>BreakIteratorSentenceSplitter</code></td><td>Sentence</td><td>Locale-aware; not thread-safe</td></tr>
+            <tr><td><code>SimpleTokenizer</code></td><td>Word</td><td>Expands contractions; thread-safe</td></tr>
+            <tr><td><code>PennTreebankTokenizer</code></td><td>Word</td><td>Penn Treebank conventions; singleton</td></tr>
+            <tr><td><code>BreakIteratorTokenizer</code></td><td>Word</td><td>Locale-aware; not thread-safe</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-    <p>Finding collocations requires first calculating the frequencies of words
-        and their appearance in the context of other words. Often the collection
-        of words will then require filtering to only retain useful content terms.
-        Each n-gram of words may then be scored according to some association measure,
-        in order to determine the relative likelihood of each n-gram being a collocation.</p>
+    <p>Scala and Kotlin enrich strings with <code>sentences</code> and <code>words(filter)</code>. The filter may be <code>none</code>, <code>default</code>, <code>comprehensive</code>, <code>google</code>, <code>mysql</code>, or a comma-separated custom stop list.</p>
 
-    <p>The functions <code>bigram(k, minFreq, text*)</code> and <code>bigram(p, minFreq, text*)</code>
-        can find bigrams in a document/corpus. The integer parameter <code>k</code> specifies how many
-        top bigrams to find. Alternatively, you may provide a double parameter <code>p</code>
-        to specify the p-value threshold. The parameter <code>minFreq</code> is the minimum
-        frequency of collocation in the corpus.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -550,53 +388,62 @@ res20: kotlin.collections.Map&lt;kotlin.String, kotlin.Int&gt; = {airport=3, for
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-7-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-smile> var corpus = new SimpleCorpus()
-corpus ==> smile.nlp.SimpleCorpus@59309333
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.tokenizer.*;
 
-smile> Files.lines(java.nio.file.Paths.get("data/text/movie.txt")).forEach(text -> corpus.add(new Text(text)));
-
-smile> import smile.nlp.collocation.Bigram;
-
-smile> Bigram.of(corpus, 10, 5);
-$119 ==> Bigram[10] { (special effects, 381, 4849.22), (new york, 248, 3038.85), (= =, 226, 2560.62), (star wars, 165, 2184.18), (high school, 173, 1911.50), (science fiction, 126, 1733.94), (ve seen, 191, 1669.02), (hong kong, 90, 1592.32), (star trek, 119, 1463.29), (pulp fiction, 93, 1419.28) }
-          </code></pre>
+String text = "Dr. Smith lives in the U.S. He works at NASA.";
+String[] sents = SimpleSentenceSplitter.getInstance().split(text);
+Tokenizer tok = new SimpleTokenizer();
+for (String s : sents) {
+    System.out.println(String.join(" | ", tok.split(s)));
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Dr. | Smith | lives | in | the | U.S. | .
+He | works | at | NASA | .
+      </code></pre>
     </div>
     <div id="pg-7-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-smile&gt; bigram(10, 5, lines: _*)
-[main] INFO smile.util.package$ - runtime: 255287.678705 ms
-res16: Array[collocation.BigramCollocation] = Array(
-  (special effects, 278, 3522.38),
-  (new york, 201, 2450.90),
-  (star wars, 153, 2016.87),
-  (high school, 132, 1432.43),
-  (science fiction, 105, 1408.87),
-  (phantom menace, 76, 1330.73),
-  (ve seen, 147, 1291.82),
-  (pulp fiction, 83, 1254.05),
-  (star trek, 100, 1209.88),
-  (hong kong, 61, 1088.61)
-)
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
+
+val text = "Dr. Smith lives in the U.S. He works at NASA."
+text.sentences.foreach { s =&gt;
+  println(s.words("none").mkString(" | "))
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Dr. | Smith | lives | in | the | U.S. | .
+He | works | at | NASA | .
+      </code></pre>
     </div>
     <div id="pg-7-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
->>> bigram(10, 5, lines)
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
+
+val text = "Dr. Smith lives in the U.S. He works at NASA."
+for (s in text.sentences()) {
+    println(s.words("none").joinToString(" | "))
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Dr. | Smith | lives | in | the | U.S. | .
+He | works | at | NASA | .
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>In the output, the second column is the frequency of bigrams and
-        the third is the statistical test score.</p>
 
-    <p>To find the collocations of more than 2 words, the function
-        <code>ngram(maxNGramSize: Int, minFreq: Int, text: String*)</code>
-        can be used. This function uses an Apiori-like algorithm to
-        extract n-gram phrases. It takes a collection of texts and generates all n-grams of
-        length at most maxNGramSize that occur at least minFreq times in the
-        text.</p>
+    <h2 id="stemmers" class="title">Stemmers</h2>
+
+    <p>Both stemmers implement <code>Stemmer extends Function&lt;String,String&gt;</code> for stream use. Porter is moderate and <strong>not</strong> thread-safe (one instance per thread). Lancaster is aggressive and shareable; pass <code>true</code> to also strip prefixes.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Algorithm</th><th>Aggressiveness</th><th>Thread-safe?</th></tr></thead>
+            <tbody>
+            <tr><td><code>PorterStemmer</code></td><td>Porter 1980</td><td>Moderate</td><td>No (per-thread)</td></tr>
+            <tr><td><code>LancasterStemmer</code></td><td>Paice/Husk 1990</td><td>High</td><td>Yes</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
     <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
@@ -607,95 +454,57 @@ res16: Array[collocation.BigramCollocation] = Array(
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-8-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-smile> var turing = Files.lines(java.nio.file.Paths.get("data/text/turing.txt")).collect(Collectors.joining(" "))
-turing ==> "COMPUTING MACHINERY AND INTELLIGENCE  1. The Imi ... e imitation game, the part
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.stemmer.*;
 
-smile> var sentences = SimpleSentenceSplitter.getInstance().split(SimpleNormalizer.getInstance().normalize(turing))
-sentences ==> String[571] { "COMPUTING MACHINERY AND INTELLIGEN ...  wish we can make this sup
-
-smile> var text = Arrays.stream(sentences).
-         map(s -> Arrays.stream(tokenizer.split(s)).
-         map(w -> porter.stripPluralParticiple(w).toLowerCase()).
-         toArray(String[]::new)).
-         collect(Collectors.toList())
-text ==> [[Ljava.lang.String;@71238fc2, [Ljava.lang.String ... ava.lang.String;@28cda624]
-
-smile> import smile.nlp.collocation.NGram
-
-smile> var phrase = NGram.of(text, 4, 4)
-phrase ==> NGram[5][] { NGram[0] {  }, NGram[335] { ([machin ... ew], 4) }, NGram[0] {  } }
-
-smile> phrase[2]
-$135 ==> NGram[16] { ([digital, computer], 34), ([discrete-state, machine], 17), ([imitation, game], 15), ([storage, capacity], 11), ([human, computer], 10), ([machine, think], 9), ([child, machine], 7), ([scientific, induction], 6), ([well-establish, fact], 5), ([learn, machine], 5), ([someth, like], 5), ([lady, lovelace], 5), ([analytical, engine], 5), ([manchester, machine], 4), ([differential, analyser], 4), ([subject, matter], 4) }
-
-smile> phrase[3]
-$136 ==> NGram[8] { ([number, of, state], 5), ([law, of, behaviour], 5), ([winter, 's, day], 5), ([rule, of, conduct], 5), ([argument, from, consciousness], 4), ([machine, in, question], 4), ([punishment, and, reward], 4), ([point, of, view], 4) }
-          </code></pre>
+PorterStemmer porter = new PorterStemmer();
+LancasterStemmer lancaster = new LancasterStemmer();
+System.out.println(porter.stem("generalization"));
+System.out.println(lancaster.stem("presumably"));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+gener
+presum
+      </code></pre>
     </div>
     <div id="pg-8-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-smile&gt; val turing = scala.io.Source.fromFile("data/text/turing.txt").getLines.mkString
-smile&gt; val phrase = ngram(4, 4, turing)
-smile&gt; phrase(2)
-res19: Seq[NGram] = Buffer(
-  ([digital, computer], 32),
-  ([discrete-state, machine], 17),
-  ([imitation, game], 14),
-  ([storage, capacity], 11),
-  ([human, computer], 10),
-  ([machine, think], 9),
-  ([child, machine], 7),
-  ([scientific, induction], 6),
-  ([analytical, engine], 5),
-  ([lady, lovelace], 5),
-  ([someth, like], 5),
-  ([well-establish, fact], 5),
-  ([subject, matter], 4),
-  ([differential, analyser], 4),
-  ([manchester, machine], 4),
-  ([learn, machine], 4)
-)
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
 
-smile&gt; phrase(3)
-res20: Seq[NGram] = Buffer(
-  ([rule, of, conduct], 5),
-  ([winter, 's, day], 5),
-  ([law, of, behaviour], 5),
-  ([number, of, state], 5),
-  ([point, of, view], 4),
-  ([punishment, and, reward], 4),
-  ([machine, in, question], 4)
-)
-    </code></pre>
+println(porter.stem("generalization"))
+println(lancaster.stem("presumably"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+gener
+presum
+      </code></pre>
     </div>
     <div id="pg-8-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
->>> val turing = File("data/text/turing.txt").readLines()
->>> val phrase = ngram(4, 4, turing)
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
+
+println(porter("generalization"))
+println(lancaster("presumably"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+gener
+presum
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The result is an array list of sets of n-grams. The i-th entry is the set of i-grams.</p>
 
-    <h2 id="keyword" class="title">Keyword Extraction</h2>
+    <h2 id="pos" class="title">Part-of-Speech Tagging</h2>
 
-    <p>Beyond finding phrases, keyword extraction is tasked with the automatic
-        identification of terms that best describe the subject of a document,
-        Keywords are the terms that represent the most relevant information
-        contained in the document, i.e. characterization of the topic discussed
-        in a document.</p>
+    <p><code>HMMPOSTagger.getDefault()</code> loads a pretrained first-order HMM over the Penn Treebank tag set. <code>PennTreebankPOS.open</code> marks content (open-class) tags. <code>RegexPOSTagger</code> is a rule-based pre-classifier for numbers, URLs, and e-mails. To train custom HMM or CRF sequence models, see <a href="sequence-labeling.html">Sequence Labeling</a>.</p>
 
-    <p>We provide a method <code>keywords(k: Int)</code> to returns top-k
-        keywords in a single document using word co-occurrence statistical
-        information. The below is the found keywords of Turing's famous paper
-        "Computing Machinery and Intelligence". The seminal paper on artificial
-        intelligence introduces the concept of what is now known as the Turing test.
-        As shown in the results, the algorithm works pretty well and captures
-        many important concepts in the paper such as "storage capacity", "machine",
-        "digital computer", "discrete-state machine", etc.</p>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>PennTreebankPOS</code></td><td>45-tag enum; <code>open</code> distinguishes content vs function words</td></tr>
+            <tr><td><code>HMMPOSTagger</code></td><td>Pretrained HMM tagger; serializable</td></tr>
+            <tr><td><code>RegexPOSTagger</code></td><td>Rule-based pre-classifier for numbers, URLs, e-mails</td></tr>
+            <tr><td><code>EnglishPOSLexicon</code></td><td>~200k word lexicon (Moby + WordNet)</td></tr>
+            </tbody>
+        </table>
+    </div>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -707,64 +516,82 @@ res20: Seq[NGram] = Buffer(
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-9-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-smile> smile.nlp.keyword.CooccurrenceKeywords.of(turing, 10)
-$137 ==> NGram[10] { ([storage, capacity], 11), ([machine], 198), ([think], 46), ([teach], 11), ([process], 17), ([digital, computer], 34), ([discrete-state, machine], 17), ([imitation, game], 15), ([child], 15), ([view], 20) }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.pos.*;
+
+HMMPOSTagger tagger = HMMPOSTagger.getDefault();
+String[] tokens = {"The", "cat", "sat", "on", "the", "mat", "."};
+PennTreebankPOS[] tags = tagger.tag(tokens);
+for (int i = 0; i &lt; tokens.length; i++) {
+    System.out.printf("%-12s %s%n", tokens[i], tags[i]);
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+The          DT
+cat          NN
+sat          VBD
+on           IN
+the          DT
+mat          NN
+.            .
+      </code></pre>
     </div>
     <div id="pg-9-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-smile&gt; turing.keywords(10)
-res21: Seq[NGram] = Buffer(
-  ([storage, capacity], 11),
-  ([machine], 197),
-  ([think], 45),
-  ([digital, computer], 32),
-  ([imitation, game], 14),
-  ([discrete-state, machine], 17),
-  ([teach], 11),
-  ([view], 20),
-  ([process], 17),
-  ([play], 15)
-)
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
+
+val tokens = Array("The", "cat", "sat", "on", "the", "mat", ".")
+tokens.zip(postag(tokens)).foreach { case (w, t) =&gt;
+  println(f"$w%-12s $t")
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+The          DT
+cat          NN
+sat          VBD
+on           IN
+the          DT
+mat          NN
+.            .
+      </code></pre>
     </div>
     <div id="pg-9-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
->>> turing.joinToString("\n").keywords(10)
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
+
+val tokens = arrayOf("The", "cat", "sat", "on", "the", "mat", ".")
+val tags = postag(tokens)
+for (i in tokens.indices) {
+    println("%-12s %s".format(tokens[i], tags[i]))
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+The          DT
+cat          NN
+sat          VBD
+on           IN
+the          DT
+mat          NN
+.            .
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>This algorithm relies on co-occurrence probability and information theory.
-        Therefore, the article should be long enough to contain sufficient
-        statistical signals. In other words, it won't work on short text such as
-        tweets.</p>
 
-    <h2 id="pos" class="title">Part-of-Speech Tagging</h2>
+    <h2 id="dictionaries" class="title">Dictionaries</h2>
 
-    <p>A part of speech (PoS) is a category of words which have similar
-        grammatical properties. Words that are assigned to the same part
-        of speech generally display similar behavior in terms of syntax &ndash;
-        they play similar roles within the grammatical structure of sentences
-        &ndash; and sometimes in terms of morphology, in that they undergo
-        inflection for similar properties. Commonly listed English parts of
-        speech are noun, verb, adjective, adverb, pronoun, preposition,
-        conjunction, interjection, etc. In SMILE, we use the Penn Treebank
-        PoS tag set. The complete list can be found in the class
-        <a href="api/java/smile/nlp/pos/PennTreebankPOS.html"><code>smile.nlp.pos.PennTreebankPOS</code></a>.</p>
+    <p>Ready-made English word lists live in <code>smile.nlp.dictionary</code>. Use them to filter tokens before bag-of-words or keyword extraction.</p>
 
-    <p>PoS tagging is an important intermediate task to make sense of
-        some of the structure inherent in language without requiring
-        complete understanding. SMILE implements a highly efficient
-        English PoS tagger based on hidden Markov model (HMM). Suppose
-        a string is a single sentence, simply call <code>postag</code>
-        on the string to return an array of (word, tag) pairs. Because
-        PoS tags are often used as features along with other attributes
-        in machine learning algorithms, the sentence is typically
-        already split into words. In this case, just call <code>postag(words)</code>
-        on an array of words.</p>
+
+    <h3 id="stop-words">EnglishStopWords</h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Constant</th><th>Coverage</th></tr></thead>
+            <tbody>
+            <tr><td><code>EnglishStopWords.DEFAULT</code></td><td>Standard list (~500 words)</td></tr>
+            <tr><td><code>EnglishStopWords.COMPREHENSIVE</code></td><td>Extended list (thousands)</td></tr>
+            <tr><td><code>EnglishStopWords.GOOGLE</code></td><td>Google stop-word list</td></tr>
+            <tr><td><code>EnglishStopWords.MYSQL</code></td><td>MySQL FullText stop-word list</td></tr>
+            </tbody>
+        </table>
+    </div>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -776,320 +603,465 @@ res21: Seq[NGram] = Buffer(
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-10-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-smile> var sentence = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine.";
-sentence ==> "When airport foreman Scott Babcock went out onto ... ng in the milky sunshine."
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.dictionary.EnglishStopWords;
 
-smile> var words = Arrays.stream(tokenizer.split(sentence)).
-         map(w -> porter.stripPluralParticiple(w).toLowerCase()).
-         toArray(String[]::new)
-words ==> String[52] { "when", "airport", "foreman", "scott ... "milky", "sunshine", "." }
-|    update replaced variable map, reset to null
-
-smile> HMMPOSTagger.getDefault().tag(words)
-$141 ==> PennTreebankPOS[52] { WRB, NN, NN, NNP, NNP, VBD, RP, IN, DT, NN, IN, PRP, MD, VB, JJ, NN, IN, NNP, ,, NNP, ,, IN, NN, TO, VB, DT, NN, ,, PRP, VBD, NN, TO, VB, DT, NN, NN, IN, PRP, IN, DT, NN, :, DT, NN, NN, NN, NN, IN, DT, JJ, NN, . }
-          </code></pre>
+EnglishStopWords stop = EnglishStopWords.DEFAULT;
+System.out.println(stop.contains("the"));
+System.out.println(stop.contains("machine"));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+true
+false
+      </code></pre>
     </div>
     <div id="pg-10-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-smile&gt; val sentence = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."""
-sentence: String = "When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp.dictionary.EnglishStopWords
 
-smile&gt; sentence.postag
-res1: Array[(String, pos.PennTreebankPOS)] = Array(
-  ("When", WRB),
-  ("airport", NN),
-  ("foreman", NN),
-  ("Scott", NNP),
-  ("Babcock", NNP),
-  ("went", VBD),
-  ("out", RP),
-  ("onto", IN),
-  ("the", DT),
-  ("runway", NN),
-  ("at", IN),
-  ("Wiley", NNP),
-  ("Post-Will", NNP),
-  ("Rogers", NNP),
-  ("Memorial", NNP),
-  ("Airport", NNP),
-  ("in", IN),
-  ("Utqiagvik", NNP),
-  (",", ,),
-  ("Alaska", NNP),
-  (",", ,),
-  ("on", IN),
-  ("Monday", NNP),
-  ("to", TO),
-...
-
-smile&gt; postag(sentence.words("none"))
-[main] INFO smile.util.package$ - runtime: 4.356543 ms
-res2: Array[pos.PennTreebankPOS] = Array(
-  WRB,
-  NN,
-  NN,
-  NNP,
-  NNP,
-  VBD,
-  RP,
-  IN,
-  DT,
-  NN,
-  IN,
-  NNP,
-  NNP,
-  NNP,
-  NNP,
-  NNP,
-  IN,
-  NNP,
-  ,,
-  NNP,
-  ,,
-  IN,
-  NNP,
-  TO,
-...
-    </code></pre>
+val stop = EnglishStopWords.DEFAULT
+println(stop.contains("the"))
+println(stop.contains("machine"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+true
+false
+      </code></pre>
     </div>
     <div id="pg-10-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
->>> val sentence = """When airport foreman Scott Babcock went out onto the runway at Wiley Post-Will Rogers Memorial Airport in Utqiagvik, Alaska, on Monday to clear some snow, he was surprised to find a visitor waiting for him on the asphalt: a 450-pound bearded seal chilling in the milky sunshine."""
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.dictionary.EnglishStopWords
 
->>> sentence.postag()
-
->>> postag(sentence.words("none"))
-    </code></pre>
+val stop = EnglishStopWords.DEFAULT
+println(stop.contains("the"))
+println(stop.contains("machine"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+true
+false
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <h2 id="naive-bayes" class="title">Naive Bayes</h2>
 
-    <p>After generating feature vectors of texts, many machine learning
-        algorithms can be applied. But there are several algorithms
-        are particularly popular in NLP, e.g. naive Bayes, maximum
-        entropy classifier, conditional random fields, etc.</p>
+    <h3 id="punctuations">EnglishPunctuations</h3>
 
-    <p>A naive Bayes classifier is a simple probabilistic
-        classifier based on applying Bayes' theorem with strong (naive) independence
-        assumptions. Depending on the precise nature of the probability model, naive
-        Bayes classifiers can be trained very efficiently in a supervised learning
-        setting. In spite of their naive design and apparently over-simplified assumptions,
-        naive Bayes classifiers have worked quite well in many complex real-world
-        situations and are very popular in NLP.</p>
 
-    <p>For a general purpose naive Bayes classifier without any assumptions
-        about the underlying distribution of each variable, we don't provide
-        a learning method to infer the variable distributions from the training data.
-        Instead, the users can fit any appropriate distributions on the data by
-        themselves with various <code>Distribution</code> classes. Although the <code>predict</code>
-        method takes an array of double values as a general form of independent variables,
-        the users are free to use any discrete distributions to model categorical or
-        ordinal random variables.</p>
-
-    <div class="code-playground glass" data-lang="scala">
+    <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Scala</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-11-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-scala"><code class="language-scala">
-    def naiveBayes(priori: Array[Double], condprob: Array[Array[Distribution]]): NaiveBayes
-    </code></pre>
+    <div id="pg-11-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.dictionary.EnglishPunctuations;
+
+EnglishPunctuations punct = EnglishPunctuations.getInstance();
+System.out.println(punct.contains("."));
+System.out.println(punct.contains("NLP"));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+true
+false
+      </code></pre>
+    </div>
+    <div id="pg-11-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp.dictionary.EnglishPunctuations
+
+val punct = EnglishPunctuations.getInstance
+println(punct.contains("."))
+println(punct.contains("NLP"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+true
+false
+      </code></pre>
+    </div>
+    <div id="pg-11-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.dictionary.EnglishPunctuations
+
+val punct = EnglishPunctuations.getInstance()
+println(punct.contains("."))
+println(punct.contains("NLP"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+true
+false
+      </code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>For document classification in NLP, there are two different ways we can set
-        up a naive Bayes classifier: multinomial model and Bernoulli model. The
-        multinomial model generates one term from the vocabulary in each position
-        of the document. The multivariate Bernoulli model or Bernoulli model
-        generates an indicator for each term of the vocabulary, either indicating
-        presence of the term in the document or indicating absence.
-        Of the two models, the Bernoulli model is particularly sensitive to noise
-        features. A Bernoulli naive Bayes classifier requires some form of feature
-        selection or else its accuracy will be low.</p>
 
-    <div class="code-playground glass" data-lang="scala">
+    <h3 id="english-dictionary">EnglishDictionary</h3>
+
+    <p><code>EnglishDictionary</code> is an <em>enum</em> with a membership test over a loaded word list. Use the <code>CONCISE</code> constant — there is no static <code>EnglishDictionary.contains</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Scala</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-12-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-scala"><code class="language-scala">
-    def naiveBayes(x: Array[Array[Int]], y: Array[Int], model: DiscreteNaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): DiscreteNaiveBayes
-    </code></pre>
+    <div id="pg-12-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.dictionary.EnglishDictionary;
+
+System.out.println(EnglishDictionary.CONCISE.contains("serendipity"));
+System.out.println(EnglishDictionary.CONCISE.contains("xyzzy"));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+true
+false
+      </code></pre>
+    </div>
+    <div id="pg-12-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp.dictionary.EnglishDictionary
+
+println(EnglishDictionary.CONCISE.contains("serendipity"))
+println(EnglishDictionary.CONCISE.contains("xyzzy"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+true
+false
+      </code></pre>
+    </div>
+    <div id="pg-12-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.dictionary.EnglishDictionary
+
+println(EnglishDictionary.CONCISE.contains("serendipity"))
+println(EnglishDictionary.CONCISE.contains("xyzzy"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+true
+false
+      </code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The different generation models imply different estimation strategies and
-        different classification rules. The Bernoulli model estimates as the
-        fraction of documents of class that contain term. In contrast, the
-        multinomial model estimates as the fraction of tokens or fraction of
-        positions in documents of class that contain term. When classifying a
-        test document, the Bernoulli model uses binary occurrence information,
-        ignoring the number of occurrences, whereas the multinomial model keeps
-        track of multiple occurrences. As a result, the Bernoulli model typically
-        makes many mistakes when classifying long documents. However, it was reported
-        that the Bernoulli model works better in sentiment analysis.</p>
 
-    <p>The models also differ in how non-occurring terms are used in classification.
-        They do not affect the classification decision in the multinomial model;
-        but in the Bernoulli model the probability of nonoccurrence is factored
-        in when computing. This is because only the Bernoulli model models
-        absence of terms explicitly.</p>
+    <h2 id="collocations" class="title">Collocations</h2>
 
-    <h2 id="maxent">Maximum Entropy Classifier</h2>
+    <p>Collocations are statistically significant word co-occurrences. <code>SimpleCorpus.bigrams</code> ranks adjacent pairs by likelihood ratio; <code>NGram.apriori</code> mines frequent phrases of length up to <code>maxN</code> from already-tokenized sentences.</p>
 
-    <p>Maximum entropy is a technique for learning
-        probability distributions from data. In maximum entropy models, the
-        observed data itself is assumed to be the testable information. Maximum
-        entropy models don't assume anything about the probability distribution
-        other than what have been observed and always choose the most uniform
-        distribution subject to the observed constraints.</p>
 
-    <p>Basically, maximum entropy classifier is another name of multinomial logistic
-        regression applied to categorical independent variables, which are
-        converted to binary dummy variables. Maximum entropy models are widely
-        used in natural language processing.  Here, we provide an implementation
-        which assumes that binary features are stored in a sparse array, of which
-        entries are the indices of nonzero features.</p>
-
-    <div class="code-playground glass" data-lang="scala">
+    <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Scala</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-13-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-13-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-13-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-scala"><code class="language-scala">
-    def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent
-    </code></pre>
+    <div id="pg-13-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.SimpleCorpus;
+
+SimpleCorpus corpus = new SimpleCorpus();
+corpus.add(corpus.doc("Machine learning is part of artificial intelligence."));
+corpus.add(corpus.doc("Deep learning is a type of machine learning."));
+corpus.add(corpus.doc("Neural networks power deep learning systems."));
+
+corpus.bigrams(5, 1).forEach(b -&gt;
+    System.out.println(b.w1() + " " + b.w2() + "  score=" + b.score()));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+machine learning  score=...
+deep learning  score=...
+      </code></pre>
+    </div>
+    <div id="pg-13-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
+
+val top = bigram(5, 1,
+  "Machine learning is part of artificial intelligence.",
+  "Deep learning is a type of machine learning.",
+  "Neural networks power deep learning systems.")
+top.foreach(b =&gt; println(s"${b.w1} ${b.w2}  score=${b.score}"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+machine learning  score=...
+deep learning  score=...
+      </code></pre>
+    </div>
+    <div id="pg-13-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
+
+val docs = listOf(
+    "Machine learning is part of artificial intelligence.",
+    "Deep learning is a type of machine learning.",
+    "Neural networks power deep learning systems."
+)
+for (b in bigrams(5, 1, docs)) {
+    println("${b.w1()} ${b.w2()}  score=${b.score()}")
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+machine learning  score=...
+deep learning  score=...
+      </code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where <code>x</code> is the sparse training samples. Each sample is represented by a set of sparse
-        binary features. The features are stored in an integer array, of which
-        are the indices of nonzero features.
-        The parameter <code>p</code> is the dimension of feature space, and <code>lambda</code>
-        is the regularization factor.</p>
+    <p>For n-grams longer than two, tokenize sentences first, then call <code>NGram.apriori(sentences, maxN, minFreq)</code>. Index <code>result[n]</code> holds the n-grams (sorted by descending count). Scala / Kotlin <code>ngram</code> helpers accept raw text and handle sentence splitting and stemming internally.</p>
 
-    <p>Like naive Byes, maximum entropy classifier is often used in text
-        categorization tasks. Besides, it is also applied in sentence boundary
-        detection (is a period end of sentence or abbreviation?), sentiment
-        analysis, prepositional phrase attachment ambiguity resolution
-        (attach to verb or noun?), and parsing decisions in general.</p>
 
-    <h2 id="hmm" class="title">Hidden Markov Model</h2>
-
-    <p>Both naive Bayes and maximum entropy classifier ignore the sequence information
-        of text. In contrast, the hidden Markov model (HMM) is a sequence model.
-        A sequence model or sequence classifier is a model to assign a label or
-        class to each unit in a sequence, thus mapping a sequence of observations
-        to a sequence of labels. Given language consists of sequences
-        at many representational levels, sequence labeling tasks come up throughout
-        speech and language processing. These include part-of-speech tagging,
-        named entity recognition, and speech recognition among others.
-        For the core <code>smile.sequence</code> APIs (HMM, CRF, and labeler wrappers),
-        see <a href="sequence-labeling.html">Sequence Labeling</a>.</p>
-
-    <p>An HMM is a probabilistic sequence model: given a sequence of units,
-        it computes a probability distribution over possible sequences of labels
-        and chooses the best label sequence. An HMM is a statistical Markov model
-        in which the system being modeled is assumed to be a Markov process with unobserved (hidden) states.
-        An HMM can be considered as the simplest dynamic Bayesian network.
-        In a regular Markov model, the state is directly visible to the observer,
-        and therefore the state transition probabilities are the only parameters.
-        In a hidden Markov model, the state is not directly visible, but output,
-        dependent on the state, is visible. Each state has a probability distribution
-        over the possible output tokens. Therefore, the sequence of tokens generated
-        by an HMM gives some information about the sequence of states.</p>
-
-    <p>The below function trains a first-order hidden Markov model.</p>
-
-    <div class="code-playground glass" data-lang="scala">
+    <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Scala</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-14-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-14-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-14-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-scala"><code class="language-scala">
-    def hmm(observations: Array[Array[Int]], labels: Array[Array[Int]]): HMM[Int]
+    <div id="pg-14-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.List;
+import smile.nlp.NGram;
+import smile.nlp.tokenizer.*;
 
-    def hmm[T](observations: Array[Array[T]], labels: Array[Array[Int]], ordinal: ToIntFunction[T]): HMMLabeler[T]
-    </code></pre>
+String[] docs = {
+    "Machine learning is part of artificial intelligence.",
+    "Deep learning is a type of machine learning."
+};
+var splitter = SimpleSentenceSplitter.getInstance();
+var tokenizer = new SimpleTokenizer();
+List&lt;String[]&gt; sentences = java.util.Arrays.stream(docs)
+    .flatMap(d -&gt; java.util.Arrays.stream(splitter.split(d)))
+    .map(tokenizer::split)
+    .toList();
+
+NGram[][] result = NGram.apriori(sentences, 3, 2);
+for (NGram g : result[2]) {
+    System.out.println(String.join(" ", g.words()) + "  count=" + g.count());
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+machin learn  count=...
+      </code></pre>
+    </div>
+    <div id="pg-14-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
+
+val result = ngram(3, 2,
+  "Machine learning is part of artificial intelligence.",
+  "Deep learning is a type of machine learning.")
+result(2).foreach(g =&gt; println(g.words.mkString(" ") + "  count=" + g.count))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+machin learn  count=...
+      </code></pre>
+    </div>
+    <div id="pg-14-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
+
+val result = ngram(3, 2, listOf(
+    "Machine learning is part of artificial intelligence.",
+    "Deep learning is a type of machine learning."
+))
+for (g in result[2]) {
+    println(g.words().joinToString(" ") + "  count=" + g.count())
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+machin learn  count=...
+      </code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where <code>observations</code> is the observation sequences, of which symbols take
-        values in [0, n), where n is the number of unique symbols.
-        The parameter <code>labels</code> is the state labels of observations,
-        of which states take values in [0, p), where p is the number of hidden states.</p>
 
-    <h2 id="crf" class="title">Conditional Random Field</h2>
+    <h2 id="keywords" class="title">Keywords</h2>
 
-    <p>As an alternative to the related HMM, conditional random fields (CRFs)
-        are also widely used in NLP. A conditional random field is a type of
-        discriminative undirected probabilistic graphical model.
-        It is used to encode known relationships between observations and construct
-        consistent interpretations. It is often used for labeling or parsing of
-        sequential data, such as natural language processing or biological sequences
-        and in computer vision.</p>
+    <p><code>Text.keywords(maxNum)</code> extracts top phrases from a single document via word co-occurrence statistics (Matsuo &amp; Ishizuka). Scala and Kotlin expose the same algorithm as string extensions.</p>
 
-    <p>A CRF is a Markov random field that was trained discriminatively.
-        Therefore, it is not necessary to model the distribution over
-        always observed variables, which makes it possible to include
-        arbitrarily complicated features of the observed variables into the model.</p>
 
-    <p>Training CRF is usually done by maximum likelihood learning.
-        If all nodes have exponential family distributions and all
-        nodes are observed during training, this optimization is convex.
-        It can be solved for example using gradient descent algorithms,
-        or Quasi-Newton methods such as the L-BFGS algorithm.
-        On the other hand, if some variables are unobserved, the inference
-        problem has to be solved for these variables. Exact inference is
-        intractable in general graphs, so approximations have to be used.</p>
-
-    <p>We implement an algorithm that trains CRFs via gradient
-        tree boosting (Thomas G. Dietterich, Guohua Hao, and
-        Adam Ashenfelter. Gradient Tree Boosting for Training Conditional Random
-        Fields. JMLR, 2008). In tree boosting, the CRF potential functions
-        are represented as weighted sums of regression trees, which provide
-        compact representations of feature interactions. So the algorithm does
-        not explicitly consider the potentially large parameter space. As a result,
-        gradient tree boosting scales linearly in the order of the Markov model and in
-        the order of the feature interactions, rather than exponentially as
-        in previous algorithms based on iterative scaling and gradient descent.</p>
-
-    <div class="code-playground glass" data-lang="scala">
+    <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Scala</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-15-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-15-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-15-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-scala"><code class="language-scala">
-    def crf(sequences: Array[Array[Tuple]], labels: Array[Array[Int]], ntrees: Int = 100, maxDepth: Int = 20, maxNodes: Int = 100, nodeSize: Int = 5, shrinkage: Double = 1.0): CRF
-    </code></pre>
+    <div id="pg-15-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.Text;
+
+String body = "Machine learning is a field of artificial intelligence. "
+    + "Deep learning is a subfield of machine learning that uses neural networks. "
+    + "Neural networks learn hierarchical representations from data.";
+Text.of(body).keywords(5).forEach(k -&gt;
+    System.out.println(String.join(" ", k.words()) + "  count=" + k.count()));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+machin learn  count=...
+deep learn  count=...
+      </code></pre>
+    </div>
+    <div id="pg-15-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
+
+val body =
+  """Machine learning is a field of artificial intelligence.
+     Deep learning is a subfield of machine learning that uses neural networks.
+     Neural networks learn hierarchical representations from data."""
+body.keywords(5).foreach(k =&gt;
+  println(k.words.mkString(" ") + "  count=" + k.count))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+machin learn  count=...
+deep learn  count=...
+      </code></pre>
+    </div>
+    <div id="pg-15-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
+
+val body = """
+    Machine learning is a field of artificial intelligence.
+    Deep learning is a subfield of machine learning that uses neural networks.
+    Neural networks learn hierarchical representations from data.
+    """.trimIndent()
+for (k in body.keywords(5)) {
+    println(k.words().joinToString(" ") + "  count=" + k.count())
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+machin learn  count=...
+deep learn  count=...
+      </code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where <code>sequences</code> is the observation attribute sequences,
-        <code>labels</code> is sequence labels,
-        <code>attributes</code> is the feature attributes,
-        <code>k</code> is the number of classes,
-        <code>eta</code> is the learning rate of potential function,
-        <code>ntrees</code> is the number of trees/iterations,
-        <code>maxNodes</code> is the maximum number of leaf nodes in the tree.</p>
+
+    <h2 id="relevance" class="title">Relevance Ranking</h2>
+
+    <p>Plug a <code>RelevanceRanker</code> into <code>Corpus.search</code> to rank documents for a query string or token array. <code>TFIDF</code> is classic weighted bag-of-words; <code>BM25</code> is Okapi BM25 for ad-hoc retrieval.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Ranker</th><th>Class</th><th>Notes</th></tr></thead>
+            <tbody>
+            <tr><td>TF-IDF</td><td><code>TFIDF</code></td><td>Classic weighted bag-of-words</td></tr>
+            <tr><td>BM25 / Okapi</td><td><code>BM25</code></td><td>Probabilistic; strong for ad-hoc search</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-16-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-16-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-16-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-16-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.Text;
+import smile.nlp.SimpleCorpus;
+import smile.nlp.relevance.*;
+
+SimpleCorpus corpus = new SimpleCorpus();
+corpus.add(corpus.doc(Text.of("Intro", "SMILE is a fast machine learning library.")));
+corpus.add(corpus.doc(Text.of("DL", "Deep learning uses neural networks.")));
+corpus.add(corpus.doc(Text.of("IR", "BM25 ranks documents for information retrieval.")));
+
+RelevanceRanker bm25 = new BM25();
+corpus.search(bm25, new String[]{"machine", "learning"})
+    .forEachRemaining(r -&gt;
+        System.out.printf("%.4f  %s%n", r.score(), r.text().title()));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+0.xxxx  Intro
+...
+      </code></pre>
+    </div>
+    <div id="pg-16-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
+import smile.nlp.Text
+import smile.nlp.relevance.BM25
+import scala.jdk.CollectionConverters._
+
+val c = new SimpleCorpus
+c.add(c.doc(Text.of("Intro", "SMILE is a fast machine learning library.")))
+c.add(c.doc(Text.of("DL", "Deep learning uses neural networks.")))
+c.add(c.doc(Text.of("IR", "BM25 ranks documents for information retrieval.")))
+c.search(new BM25, Array("machine", "learning")).asScala.foreach { r =&gt;
+  println(f"${r.score}%.4f  ${r.text.title}")
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+0.xxxx  Intro
+...
+      </code></pre>
+    </div>
+    <div id="pg-16-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
+import smile.nlp.relevance.BM25
+
+val c = SimpleCorpus()
+c.add(c.doc(Text.of("Intro", "SMILE is a fast machine learning library.")))
+c.add(c.doc(Text.of("DL", "Deep learning uses neural networks.")))
+c.add(c.doc(Text.of("IR", "BM25 ranks documents for information retrieval.")))
+c.search(BM25(), arrayOf("machine", "learning")).forEachRemaining { r -&gt;
+    println("%.4f  %s".format(r.score(), r.text().title()))
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+0.xxxx  Intro
+...
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="taxonomy" class="title">Taxonomy</h2>
+
+    <p>A <code>Taxonomy</code> is an ordered IS-A tree of <code>Concept</code> nodes. Each concept carries a synonym set via <code>keywords()</code> (not <code>getKeywords()</code>). <code>TaxonomicDistance</code> implements Wu–Palmer-style measures; call <code>dist.d("dog", "cat")</code> for pairwise distance.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.nlp.taxonomy.*;
+
+Taxonomy taxonomy = new Taxonomy("entity");
+Concept entity = taxonomy.getConcept("entity");
+Concept animal = entity.addChild("animal");
+Concept plant = entity.addChild("plant");
+Concept dog = animal.addChild("dog");
+Concept cat = animal.addChild("cat");
+plant.addChild("rose");
+
+Concept c = taxonomy.getConcept("dog");
+System.out.println(c.keywords());
+
+TaxonomicDistance dist = new TaxonomicDistance(taxonomy);
+System.out.println(dist.d("dog", "cat"));
+System.out.println(dist.d("dog", "rose"));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[dog]
+(sibling distance)
+(cross-branch distance)
+      </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="package-map" class="title">Package Map</h2>
+
+    <pre>
+smile.nlp
+├── Text, Corpus, SimpleCorpus          – document model &amp; in-memory corpus
+├── Bigram, NGram                        – collocation data records
+├── Word2Vec                             – word embeddings (Word2vec / GloVe)
+│
+├── normalizer/   SimpleNormalizer
+├── tokenizer/    Paragraph / Sentence / Word splitters
+├── stemmer/      PorterStemmer, LancasterStemmer
+├── pos/          HMMPOSTagger, PennTreebankPOS, RegexPOSTagger
+├── dictionary/   EnglishStopWords, EnglishPunctuations, EnglishDictionary
+├── relevance/    TFIDF, BM25
+└── taxonomy/     Concept, Taxonomy, TaxonomicDistance
+    </pre>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
-        <a class="btn-prev-text" href="graph.html" title="Previous Section: Graph"><span>Graph</span></a>
-        <a class="btn-next-text" href="faq.html" title="Next Section: FAQ"><span>FAQ</span></a>
+        <a class="btn-prev-text" href="sequence-labeling.html" title="Previous Section: Sequence Labeling"><span>Sequence Labeling</span></a>
+        <a class="btn-next-text" href="feature-engineering.html" title="Next Section: Feature Engineering"><span>Feature Engineering</span></a>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
