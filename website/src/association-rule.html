@@ -6,146 +6,83 @@ title: SMILE - Association Rule Mining
 {% include "toc.njk" %}
 
 <div class="col-md-9 order-md-first">
-    <h1 id="association-rule-top" class="title">Association Rule Mining</h1>
+    <h1 id="association-top" class="title">Association Rule Mining</h1>
 
-    <p>Association rule mining is a popular method for discovering
-        meaningful co-occurrence patterns in large transaction databases.
-        Let I = {i<sub>1</sub>, i<sub>2</sub>,..., i<sub>n</sub>} be a set of n
-        binary attributes called items. Let D = {t<sub>1</sub>, t<sub>2</sub>,..., t<sub>m</sub>}
-        be a set of transactions called the database. Each transaction in D has a
-        unique transaction ID and contains a subset of the items in I.
-        An association rule is defined as an implication of the form X &rArr; Y
-        where X, Y &sube; I and X &cap; Y = &Oslash;. The item sets X and Y are called
-        antecedent (left-hand-side or LHS) and consequent (right-hand-side or RHS)
-        of the rule, respectively. The support supp(X) of an item set X is defined as
-        the proportion of transactions in the database which contain the item set.
-        Note that the support of an association rule X &rArr; Y is supp(X &cup; Y).
-        The confidence of a rule is defined conf(X &rArr; Y) = supp(X &cup; Y) / supp(X).
-        Confidence can be interpreted as an estimate of the probability P(Y | X).
-        In addition to support and confidence, SMILE also reports <code>lift</code>
-        and <code>leverage</code> to measure statistical dependence.</p>
 
-    <p>For example, the rule {onions, potatoes} &rArr; {burger} in supermarket
-        data suggests customers buying onions and potatoes together are also likely
-        to buy burger. Such patterns are useful for product placement and promotion strategy.</p>
+    <h2 id="overview" class="title">Overview</h2>
 
-    <p>Association rules are usually required to satisfy a user-specified minimum
-        support and a user-specified minimum confidence at the same time. Association
-        rule generation is usually split up into two separate steps:</p>
+    <p>The package <a href="api/java/smile/association/package-summary.html"><code>smile.association</code></a> provides efficient mining of <strong>frequent item sets</strong> via the FP-Growth algorithm and <strong>association rules</strong> with support, confidence, lift, and leverage metrics.</p>
+    <p>Association rule mining discovers meaningful co-occurrence patterns in large transaction databases. Let I = {i<sub>1</sub>, i<sub>2</sub>,…, i<sub>n</sub>} be a set of binary attributes called items, and D = {t<sub>1</sub>, t<sub>2</sub>,…, t<sub>m</sub>} a set of transactions. An association rule is an implication X&nbsp;&rArr;&nbsp;Y where X, Y &sube; I and X&nbsp;&cap;&nbsp;Y = &empty;. X is the antecedent (LHS) and Y the consequent (RHS).</p>
+    <p>For example, the rule {onions, potatoes}&nbsp;&rArr;&nbsp;{burger} in supermarket data suggests customers buying onions and potatoes together are also likely to buy burger — useful for product placement and promotion strategy.</p>
+    <p>Rules are usually required to satisfy a user-specified minimum support and minimum confidence. Generation is split into two steps:</p>
 
     <ul>
-        <li>First, minimum support is applied to find all frequent item sets
-            in a database (i.e. frequent item set mining).
-
-        <li> Second, these frequent item sets and the minimum confidence constraint
-        are used to form rules.
+        <li>First, minimum support finds all frequent item sets in the database (frequent item set mining).</li>
+        <li>Second, those frequent item sets and the minimum confidence constraint are used to form rules.</li>
     </ul>
 
-    <h2 id="fim">Frequent Itemset Mining</h2>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>FPTree</code></td><td>Compact transaction index (prefix tree + header table)</td></tr>
+            <tr><td><code>FPGrowth</code></td><td>Frequent item set mining via FP-Growth</td></tr>
+            <tr><td><code>ItemSet</code></td><td>Frequent item set with raw support count</td></tr>
+            <tr><td><code>ARM</code></td><td>Association rule mining from the T-tree</td></tr>
+            <tr><td><code>AssociationRule</code></td><td>Rule with antecedent, consequent, and metrics</td></tr>
+            </tbody>
+        </table>
+    </div>
 
-    <p>Finding all frequent item sets in a database is difficult since it involves
-        searching all possible item sets (item combinations). The set of possible
-        item sets is the power set over I (the set of items) and has size 2<sup>n</sup> - 1
-        (excluding the empty set which is not a valid item set). Although the size
-        of the power set grows exponentially in the number of items n in I, efficient
-        search is possible using the downward-closure property of support
-        (also called anti-monotonicity) which guarantees that for a frequent item set
-        also all its subsets are frequent and thus for an infrequent item set, all
-        its supersets must be infrequent.</p>
+    <p>Typical workflow:</p>
 
-    <p>In practice, we may only consider the frequent item set that has the maximum
-        number of items bypassing all the sub item sets. An item set is maximal
-        frequent if none of its immediate supersets is frequent.</p>
-
-    <p>For a maximal frequent item set, even though we know that all the sub item
-        sets are frequent, we don't know the actual support of those sub item sets,
-        which are very important to find the association rules within the item sets.
-        If the final goal is association rule mining, we would like to discover
-        closed frequent item sets. An item set is closed if none of its immediate
-        supersets has the same support as the item set.</p>
-
-    <p>Some well known algorithms of frequent item set mining are Apriori,
-        Eclat, and FP-Growth. Apriori is the best-known algorithm to mine association
-        rules. It uses a breadth-first search strategy to counting the support of
-        item sets and uses a candidate generation function which exploits the downward
-        closure property of support. Eclat is a depth-first search algorithm using
-        set intersection.</p>
-
-    <p>FP-growth (frequent pattern growth) algorithm employs an extended prefix-tree (FP-tree) structure to
-        store the database in a compressed form. The FP-growth algorithm is
-        currently one of the fastest approaches to discover frequent item sets.
-        FP-growth adopts a divide-and-conquer approach to decompose both the mining
-        tasks and the databases. It uses a pattern fragment growth method to avoid
-        the costly process of candidate generation and testing used by Apriori.</p>
-
-    <p>The basic idea of the FP-growth algorithm can be described as a
-        recursive elimination scheme: in a preprocessing step delete
-        all items from the transactions that are not frequent individually,
-        i.e., do not appear in a user-specified minimum
-        number of transactions. Then select all transactions that
-        contain the least frequent item (least frequent among those
-        that are frequent) and delete this item from them. Recurse
-        to process the obtained reduced (also known as projected)
-        database, remembering that the item sets found in the recursion
-        share the deleted item as a prefix. On return, remove
-        the processed item from the database of all transactions
-        and start over, i.e., process the second frequent item etc. In
-        these processing steps the prefix tree, which is enhanced by
-        links between the branches, is exploited to quickly find the
-        transactions containing a given item and also to remove this
-        item from the transactions after it has been processed.</p>
-
-    <p>When input itemsets are already in memory, use the methods below.
-        The parameter <code>itemsets</code> is the item set database,
-        where each row is an item set, which may have different length.
-        The item identifiers have to be in [0, n), where n is the number of items.
-        Duplicate items in one row are tolerated and collapsed by presence semantics.
-        Note that each row may be reordered after the call.
-        The parameter <code>minSupport</code> is the required minimum support of item sets in terms
-        of frequency. The output is a lazy <code>Stream&lt;ItemSet&gt;</code>.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-1-2">Kotlin</button>
+    <span class="lang-tab is-active">Java</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-1-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class FPTree {
-        public static FPTree of(int minSupport, int[][] itemsets);
-        public static FPTree of(double minSupport, int[][] itemsets);
-    }
+  <pre class="playground-source language-java"><code class="language-java">// transactions  →  FPTree.of(minSupport, ...)
+//               →  FPGrowth.apply(tree)        // Stream&lt;ItemSet&gt;
+//               →  ARM.apply(confidence, tree) // Stream&lt;AssociationRule&gt;
 
-    public class FPGrowth {
-        public static Stream&lt;ItemSet&gt; apply(FPTree tree);
-    }
-
-    // ItemSet is a record
-    // int[] items();
-    // int support();
-          </code></pre>
-    </div>
-    <div id="pg-1-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def fpgrowth(minSupport: Int, itemsets: Array[Array[Int]]): Stream[ItemSet]
-    </code></pre>
-    </div>
-    <div id="pg-1-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun fpgrowth(minSupport: Int, itemsets: Array&lt;IntArray&gt;): Stream&lt;ItemSet&gt;
-    </code></pre>
-    </div>
+FPTree tree = FPTree.of(0.3, transactions);
+Stream&lt;ItemSet&gt; sets = FPGrowth.apply(tree);
+Stream&lt;AssociationRule&gt; rules = ARM.apply(0.5, tree);</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>In practice, the raw input is often too large to fit in memory.
-        To handle this case, SMILE accepts <code>Supplier&lt;Stream&lt;int[]&gt;&gt;</code>.
-        The supplier is invoked twice internally: once for item frequency counting,
-        and once to build the FP-Tree.</p>
+
+    <h2 id="core-concepts" class="title">Core Concepts</h2>
+
+    <dl class="options-dl">
+        <dt><code>Transaction</code></dt>
+        <dd>A set of item IDs (one basket / purchase / document).</dd>
+        <dt><code>Item set</code></dt>
+        <dd>A subset of items appearing together in transactions.</dd>
+        <dt><code>Support supp(X)</code></dt>
+        <dd>Proportion of transactions containing X. Raw count in <code>ItemSet</code>; fraction in <code>AssociationRule</code>.</dd>
+        <dt><code>Rule X ⇒ Y</code></dt>
+        <dd>X (antecedent) and Y (consequent) are disjoint item sets.</dd>
+        <dt><code>Confidence conf(X ⇒ Y)</code></dt>
+        <dd><code>supp(X ∪ Y) / supp(X)</code> — estimated <code>P(Y | X)</code>.</dd>
+        <dt><code>Lift lift(X ⇒ Y)</code></dt>
+        <dd><code>supp(X ∪ Y) / (supp(X) · supp(Y))</code> — ratio versus statistical independence. &gt; 1 positive correlation; = 1 independent; &lt; 1 negative.</dd>
+        <dt><code>Leverage lev(X ⇒ Y)</code></dt>
+        <dd><code>supp(X ∪ Y) − supp(X) · supp(Y)</code> — absolute deviation from independence.</dd>
+    </dl>
+
+    <p>Finding all frequent item sets is hard because the search space is the power set of I (size 2<sup>n</sup> − 1). Efficient search relies on the <strong>downward-closure</strong> (anti-monotonicity) property of support: every subset of a frequent item set is frequent, and all supersets of an infrequent item set are infrequent.</p>
+    <p>An item set is <strong>maximal frequent</strong> if none of its immediate supersets is frequent. Maximal sets omit the support of subsets, which matters for rule mining. An item set is <strong>closed frequent</strong> if none of its immediate supersets has the same support — preferred when the goal is association rules.</p>
+    <p>Well-known algorithms include Apriori (breadth-first candidate generation), Eclat (depth-first set intersection), and <strong>FP-Growth</strong>. SMILE uses FP-Growth: an extended prefix tree (FP-tree) stores the database in compressed form, then a divide-and-conquer pattern-growth method avoids Apriori’s costly candidate generation and testing.</p>
+
+
+    <h2 id="data-format" class="title">Data Format</h2>
+
+    <p>Transactions are <code>int[]</code> arrays of non-negative item IDs. Prefer compact IDs in <code>[0, n)</code> where <code>n</code> is the number of distinct items.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -157,46 +94,69 @@ title: SMILE - Association Rule Mining
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-2-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    import java.nio.file.Files;
-    import java.nio.file.Path;
-    import java.util.Arrays;
-    import java.util.function.Supplier;
-    import java.util.stream.Stream;
-
-    Supplier&lt;Stream&lt;int[]&gt;&gt; supplier = () -> {
-        try {
-            return Files.lines(Path.of("transactions.dat"))
-                    .map(line -> Arrays.stream(line.split("\\s+"))
-                            .mapToInt(Integer::parseInt)
-                            .toArray());
-        } catch (Exception ex) {
-            throw new RuntimeException(ex);
-        }
-    };
-
-    FPTree tree = FPTree.of(1500, supplier);   // absolute support
-    FPTree tree2 = FPTree.of(0.003, supplier); // relative support (0.3%)
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">int[][] transactions = {
+    {1, 3},
+    {2},
+    {4},
+    {2, 3, 4},
+    {2, 3},
+    {2, 3},
+    {1, 2, 3, 4},
+    {1, 3},
+    {1, 2, 3},
+    {1, 2, 3}
+};</code></pre>
     </div>
     <div id="pg-2-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def fptree(minSupport: Int, supplier: Supplier[Stream[Array[Int]]]): FPTree
-
-    def fpgrowth(tree: FPTree): Stream[ItemSet]
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">val transactions = Array(
+  Array(1, 3),
+  Array(2),
+  Array(4),
+  Array(2, 3, 4),
+  Array(2, 3),
+  Array(2, 3),
+  Array(1, 2, 3, 4),
+  Array(1, 3),
+  Array(1, 2, 3),
+  Array(1, 2, 3)
+)</code></pre>
     </div>
     <div id="pg-2-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun fptree(minSupport: Int, supplier: Supplier&lt;Stream&lt;IntArray&gt;&gt;): FPTree
-
-    fun fpgrowth(tree: FPTree): Stream&lt;ItemSet&gt;
-          </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">val transactions = arrayOf(
+    intArrayOf(1, 3),
+    intArrayOf(2),
+    intArrayOf(4),
+    intArrayOf(2, 3, 4),
+    intArrayOf(2, 3),
+    intArrayOf(2, 3),
+    intArrayOf(1, 2, 3, 4),
+    intArrayOf(1, 3),
+    intArrayOf(1, 2, 3),
+    intArrayOf(1, 2, 3)
+)</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Below is a complete Java example on an in-memory toy dataset.</p>
+    <p>Rules for encoding:</p>
+
+    <ul>
+        <li>Item IDs must be non-negative integers.</li>
+        <li>Each row may have a different length.</li>
+        <li>Duplicate items within one transaction are tolerated and collapsed: support is counted by <em>presence per transaction</em>, not multiplicity. Rows may be reordered after the call.</li>
+    </ul>
+
+
+    <h2 id="fptree" class="title">Build an FP-Tree</h2>
+
+    <p>Class <code>smile.association.FPTree</code> is a compact transaction index: a prefix tree plus a header table used by FP-Growth and ARM.</p>
+
+
+    <h3 id="fptree-memory">In-Memory Construction</h3>
+
+    <p>Use absolute frequency counts or a relative fraction of the database. The two forms produce identical trees when the percentage rounds to the same integer count.</p>
+
+
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
     <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
@@ -207,101 +167,100 @@ title: SMILE - Association Rule Mining
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-3-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    smile> import smile.association.*;
-    smile> import java.util.Arrays;
+      <pre class="playground-source language-java"><code class="language-java">                import smile.association.FPTree;
 
-    smile> int[][] itemsets = {
-                {1, 3},
-                {2},
-                {4},
-                {2, 3, 4},
-                {2, 3},
-                {2, 3},
-                {1, 2, 3, 4},
-                {1, 3},
-                {1, 2, 3},
-                {1, 2, 3}
-            }
-    itemsets ==> int[10][] { int[2] { 1, 3 }, int[1] { 2 }, int[1] ...  3 }, int[3] { 1, 2, 3 } }
+                int[][] transactions = {
+    {1, 3},
+    {2},
+    {4},
+    {2, 3, 4},
+    {2, 3},
+    {2, 3},
+    {1, 2, 3, 4},
+    {1, 3},
+    {1, 2, 3},
+    {1, 2, 3}
+};
 
-    smile> var tree = FPTree.of(0.3, itemsets)
-    tree ==> smile.association.FPTree@2a7b6f69
+                // Absolute minimum support (frequency count)
+                FPTree tree = FPTree.of(3, transactions);   // minSupport = 3
 
-    smile> System.out.println(tree.size())
-    10
+                // Relative minimum support (fraction of transactions)
+                FPTree tree2 = FPTree.of(0.3, transactions); // 30% of 10 = 3
 
-    smile> System.out.println(tree.minSupport())
-    3
-
-    smile> FPGrowth.apply(tree).forEach(set ->
-               System.out.printf("%s support=%d%n",
-                   Arrays.toString(set.items()), set.support()))
-    [4] support=3
-    [1] support=5
-    ...
-    [3, 2] support=6
-    [3] support=8
-          </code></pre>
+                System.out.println(tree.size());       // number of transactions
+                System.out.println(tree.minSupport()); // effective integer threshold</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+10
+3
+      </code></pre>
     </div>
     <div id="pg-3-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    smile> val itemsets = Array(
-        Array(1, 3),
-        Array(2),
-        Array(4),
-        Array(2, 3, 4),
-        Array(2, 3),
-        Array(2, 3),
-        Array(1, 2, 3, 4),
-        Array(1, 3),
-        Array(1, 2, 3),
-        Array(1, 2, 3)
-    )
+      <pre class="playground-source language-scala"><code class="language-scala">                import smile.association._
+                import java.util.function.Supplier
+                import java.util.stream.Stream
 
-    smile> fpgrowth(3, itemsets).forEach { itemset => println(itemset) }
-    4 (3)
-    1 (5)
-    2 1 (3)
-    3 2 1 (3)
-    3 1 (5)
-    2 (7)
-    3 2 (6)
-    3 (8)
-    </code></pre>
+                val transactions = Array(
+  Array(1, 3),
+  Array(2),
+  Array(4),
+  Array(2, 3, 4),
+  Array(2, 3),
+  Array(2, 3),
+  Array(1, 2, 3, 4),
+  Array(1, 3),
+  Array(1, 2, 3),
+  Array(1, 2, 3)
+)
+
+                val tree = FPTree.of(3, transactions)
+                // or via supplier helper:
+                val tree2 = fptree(3, () =&gt; Stream.of(transactions: _*))
+
+                println(tree.size)
+                println(tree.minSupport)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+10
+3
+      </code></pre>
     </div>
     <div id="pg-3-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    >>> import smile.association.*
-    >>> val itemsets = arrayOf(
-        intArrayOf(1, 3),
-        intArrayOf(2),
-        intArrayOf(4),
-        intArrayOf(2, 3, 4),
-        intArrayOf(2, 3),
-        intArrayOf(2, 3),
-        intArrayOf(1, 2, 3, 4),
-        intArrayOf(1, 3),
-        intArrayOf(1, 2, 3),
-        intArrayOf(1, 2, 3)
-    )
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">                import smile.association.*
+                import java.util.function.Supplier
+                import java.util.stream.Stream
 
-    >>> fpgrowth(3, itemsets).forEach { println(it) }
-    4 (3)
-    1 (5)
-    2 1 (3)
-    3 2 1 (3)
-    3 1 (5)
-    2 (7)
-    3 2 (6)
-    3 (8)
-    </code></pre>
+                val transactions = arrayOf(
+    intArrayOf(1, 3),
+    intArrayOf(2),
+    intArrayOf(4),
+    intArrayOf(2, 3, 4),
+    intArrayOf(2, 3),
+    intArrayOf(2, 3),
+    intArrayOf(1, 2, 3, 4),
+    intArrayOf(1, 3),
+    intArrayOf(1, 2, 3),
+    intArrayOf(1, 2, 3)
+)
+
+                val tree = FPTree.of(3, transactions)
+                // or via supplier helper:
+                val tree2 = fptree(3, Supplier { Stream.of(*transactions) })
+
+                println(tree.size())
+                println(tree.minSupport())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+10
+3
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Each row above is a frequent item set with its raw support count.
-        For larger datasets, stream transactions from a file and consume the output lazily.</p>
+
+    <h3 id="fptree-streaming">Streaming Construction</h3>
+
+    <p>For large datasets that cannot fit in memory, pass a <code>Supplier&lt;Stream&lt;int[]&gt;&gt;</code>. The supplier is called <strong>twice</strong> — once for frequency counting and once for tree construction — so it must reopen the source on each call.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -313,177 +272,856 @@ title: SMILE - Association Rule Mining
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-4-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    smile> var data = (java.util.function.Supplier&lt;java.util.stream.Stream&lt;int[]&gt;&gt;) () ->
-                java.nio.file.Files.lines(java.nio.file.Path.of("transactions.dat"))
-                    .map(line -> java.util.Arrays.stream(line.split("\\s+"))
+      <pre class="playground-source language-java"><code class="language-java">import smile.association.FPTree;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+Supplier&lt;Stream&lt;int[]&gt;&gt; supplier = () -&gt; {
+    try {
+        return Files.lines(Path.of("transactions.dat"))
+                .map(line -&gt; Arrays.stream(line.split("\\s+"))
                         .mapToInt(Integer::parseInt)
-                        .toArray())
+                        .toArray());
+    } catch (Exception ex) {
+        throw new RuntimeException(ex);
+    }
+};
 
-    smile> var tree = FPTree.of(0.003, data)
-    tree ==> smile.association.FPTree@3dddbe65
-
-    smile> long nSets = FPGrowth.apply(tree).count()
-    nSets ==> 711424
-
-    smile> long nRules = ARM.apply(0.5, tree).count()
-    nRules ==> 1302458
-          </code></pre>
+FPTree tree = FPTree.of(1500, supplier);   // absolute support
+FPTree tree2 = FPTree.of(0.003, supplier); // relative (0.3%)</code></pre>
     </div>
     <div id="pg-4-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    smile> val tree = fptree(1000, () => {
-      smile.util.Paths.getTestDataLines("transaction/kosarak.dat").map { line =>
-          line.split(" ").map(_.toInt).toArray
-      }
-    })
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.association._
+import smile.util.Paths
 
-    smile> fpgrowth(tree).limit(10).forEach { itemset => println(itemset) }
-    5634 (1000)
-    3805 (1001)
-    3376 (1001)
-    2279 (1001)
-    6333 (1002)
-    243 (1002)
-    808 (1003)
-    3875 (1004)
-    2265 (1004)
-    996 (1004)
-    </code></pre>
+val tree = fptree(1000, () =&gt; {
+  Paths.getTestDataLines("transaction/kosarak.dat").map { line =&gt;
+    line.split(" ").map(_.toInt)
+  }
+})
+println(tree.size)
+println(tree.minSupport)</code></pre>
     </div>
     <div id="pg-4-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    >>> import smile.util.*;
-        import java.util.function.*;
-        import java.util.stream.*;
-        class Parser : Supplier&lt;Stream&lt;IntArray&gt;&gt; {
-            override fun get(): Stream&lt;IntArray&gt; {  
-               return smile.util.Paths.getTestDataLines("transaction/kosarak.dat").map { line ->
-                   line.split(" ").map({ w -> w.toInt() }).toIntArray()
-               }
-            }
-        }
-        val tree = fptree(1000, Parser())
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.association.*
+import smile.util.Paths
+import java.util.function.Supplier
+import java.util.stream.Stream
 
-    >>> fpgrowth(tree).limit(10).forEach { println(it) }
-    5634 (1000)
-    3805 (1001)
-    3376 (1001)
-    2279 (1001)
-    6333 (1002)
-    243 (1002)
-    808 (1003)
-    3875 (1004)
-    2265 (1004)
-    996 (1004)
-    </code></pre>
-    </div>
-  <div class="playground-editor" hidden></div>
-</div>
-
-    <p>For large inputs, tune <code>minSupport</code> first and filter rules early
-        (e.g. by lift/leverage) to reduce memory pressure and improve throughput.</p>
-
-    <h2 id="arm">Association Rules</h2>
-
-    <p>After mining frequent itemsets, generate association rules with a confidence threshold.
-        SMILE computes support, confidence, lift, and leverage for each rule.</p>
-
-    <div class="code-playground glass" data-lang="java">
-  <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-5-2">Kotlin</button>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-    <div id="pg-5-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class ARM {
-        public static Stream&lt;AssociationRule&gt; apply(double confidence, FPTree tree);
+val tree = fptree(1000, Supplier {
+    Paths.getTestDataLines("transaction/kosarak.dat").map { line -&gt;
+        line.split(" ").map { it.toInt() }.toIntArray()
     }
-
-    // AssociationRule is a record
-    // int[] antecedent();
-    // int[] consequent();
-    // double support(), confidence(), lift(), leverage();
-          </code></pre>
-    </div>
-    <div id="pg-5-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def arm(minSupport: Int, confidence: Double, itemsets: Array[Array[Int]]): Stream[AssociationRule]
-
-    def arm(confidence: Double, tree: FPTree): Stream[AssociationRule]
-    </code></pre>
-    </div>
-    <div id="pg-5-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    def arm(minSupport: Int, confidence: Double, itemsets: Array&lt;IntArray&gt;): Stream&lt;AssociationRule&gt;
-
-    def arm(confidence: Double, tree: FPTree): Stream&lt;AssociationRule&gt;
-    </code></pre>
+})
+println(tree.size())
+println(tree.minSupport())</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The API is similar to <code>fpgrowth</code> with an additional
-        <code>confidence</code> parameter in [0, 1].</p>
+
+    <h3 id="fptree-validation">Input Validation</h3>
+
+    <p><code>FPTree.of</code> enforces these preconditions, throwing <code>IllegalArgumentException</code> on violation:</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Variant</th><th>Condition checked</th></tr></thead>
+            <tbody>
+            <tr><td><code>of(int, …)</code></td><td><code>minSupport &gt;= 1</code></td></tr>
+            <tr><td><code>of(double, …)</code></td><td><code>minSupport</code> in <code>(0, 1]</code></td></tr>
+            <tr><td>Both</td><td>stream must not be empty</td></tr>
+            </tbody>
+        </table>
+    </div>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-6-2">Kotlin</button>
+    <span class="lang-tab is-active">Java</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-6-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    smile> ARM.apply(0.5, tree).limit(10).forEach(System.out::println)
-    AssociationRule([3] => [1], support=50.0%, confidence=62.5%, lift=1.25, leverage=0.100)
-    AssociationRule([1] => [3], support=50.0%, confidence=100.0%, lift=1.25, leverage=0.100)
-    AssociationRule([2] => [1], support=30.0%, confidence=42.9%, lift=0.86, leverage=-0.050)
-    ...
-          </code></pre>
+  <pre class="playground-source language-java"><code class="language-java">FPTree.of(0, transactions);    // throws — minSupport must be &gt;= 1
+FPTree.of(0.0, transactions);  // throws — percentage must be &gt; 0
+FPTree.of(1.1, transactions);  // throws — percentage must be &lt;= 1</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p><strong>Empty-tree handling:</strong> when <code>minSupport</code> is larger than the total transaction count, no items are frequent. <code>FPGrowth.apply</code> and <code>ARM.apply</code> both return empty streams without error — this is the correct and tested behavior.</p>
+
+
+    <h2 id="fpgrowth" class="title">Mine Frequent Item Sets (FP-Growth)</h2>
+
+    <p>Class <code>smile.association.FPGrowth</code> returns a lazy sequential <code>Stream&lt;ItemSet&gt;</code>. <code>ItemSet</code> is an immutable record:</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">record ItemSet(int[] items, int support) { ... }</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Field</th><th>Type</th><th>Meaning</th></tr></thead>
+            <tbody>
+            <tr><td><code>items()</code></td><td><code>int[]</code></td><td>Item IDs in frequency-descending order</td></tr>
+            <tr><td><code>support()</code></td><td><code>int</code></td><td>Raw transaction count</td></tr>
+            </tbody>
+        </table>
     </div>
-    <div id="pg-6-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    smile> arm(0.6, tree).limit(10).forEach { rule => println(rule) }
-    (11) => (6) support = 32.73% confidence = 89.00% lift = 1.47 leverage = 0.1039
-    (3, 11) => (6) support = 14.51% confidence = 89.09% lift = 1.47 leverage = 0.0462
-    (1) => (6) support = 13.34% confidence = 66.89% lift = 1.10 leverage = 0.0123
-    (3, 1) => (6) support = 5.84% confidence = 68.28% lift = 1.12 leverage = 0.0064
-    (6, 1) => (11) support = 8.70% confidence = 65.17% lift = 1.77 leverage = 0.0379
-    (11, 1) => (6) support = 8.70% confidence = 93.70% lift = 1.54 leverage = 0.0306
-    (6, 3, 1) => (11) support = 3.81% confidence = 65.30% lift = 1.78 leverage = 0.0167
-    (3, 11, 1) => (6) support = 3.81% confidence = 93.73% lift = 1.54 leverage = 0.0134
-    (218) => (6) support = 7.85% confidence = 87.67% lift = 1.44 leverage = 0.0241
-    (3, 218) => (6) support = 3.43% confidence = 87.86% lift = 1.45 leverage = 0.0106
-    </code></pre>
+
+    <p><code>ItemSet.equals</code> / <code>hashCode</code> include both <code>items</code> and <code>support</code>. <code>toString</code> produces e.g. <code>ItemSet([3, 2], support=6)</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-7-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">                import smile.association.*;
+                import java.util.Arrays;
+
+                int[][] transactions = {
+    {1, 3},
+    {2},
+    {4},
+    {2, 3, 4},
+    {2, 3},
+    {2, 3},
+    {1, 2, 3, 4},
+    {1, 3},
+    {1, 2, 3},
+    {1, 2, 3}
+};
+
+                FPTree tree = FPTree.of(3, transactions);
+                FPGrowth.apply(tree).forEach(set -&gt;
+                    System.out.printf("%s  (support=%d)%n",
+                            Arrays.toString(set.items()), set.support())
+                );</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[4]  (support=3)
+[1]  (support=5)
+[2, 1]  (support=3)
+[3, 2, 1]  (support=3)
+[3, 1]  (support=5)
+[2]  (support=7)
+[3, 2]  (support=6)
+[3]  (support=8)
+      </code></pre>
     </div>
-    <div id="pg-6-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    >>> arm(0.6, tree).limit(10).forEach { println(it) }
-    (11) => (6) support = 32.73% confidence = 89.00% lift = 1.47 leverage = 0.1039
-    (3, 11) => (6) support = 14.51% confidence = 89.09% lift = 1.47 leverage = 0.0462
-    (1) => (6) support = 13.34% confidence = 66.89% lift = 1.10 leverage = 0.0123
-    (3, 1) => (6) support = 5.84% confidence = 68.28% lift = 1.12 leverage = 0.0064
-    (6, 1) => (11) support = 8.70% confidence = 65.17% lift = 1.77 leverage = 0.0379
-    (11, 1) => (6) support = 8.70% confidence = 93.70% lift = 1.54 leverage = 0.0306
-    (6, 3, 1) => (11) support = 3.81% confidence = 65.30% lift = 1.78 leverage = 0.0167
-    (3, 11, 1) => (6) support = 3.81% confidence = 93.73% lift = 1.54 leverage = 0.0134
-    (218) => (6) support = 7.85% confidence = 87.67% lift = 1.44 leverage = 0.0241
-    (3, 218) => (6) support = 3.43% confidence = 87.86% lift = 1.45 leverage = 0.0106
-    </code></pre>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">                import smile.association._
+
+                val transactions = Array(
+  Array(1, 3),
+  Array(2),
+  Array(4),
+  Array(2, 3, 4),
+  Array(2, 3),
+  Array(2, 3),
+  Array(1, 2, 3, 4),
+  Array(1, 3),
+  Array(1, 2, 3),
+  Array(1, 2, 3)
+)
+
+                fpgrowth(3, transactions).forEach(println)
+                // or: val tree = FPTree.of(3, transactions); fpgrowth(tree)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[4]  (support=3)
+[1]  (support=5)
+[2, 1]  (support=3)
+[3, 2, 1]  (support=3)
+[3, 1]  (support=5)
+[2]  (support=7)
+[3, 2]  (support=6)
+[3]  (support=8)
+      </code></pre>
     </div>
+    <div id="pg-7-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">                import smile.association.*
+
+                val transactions = arrayOf(
+    intArrayOf(1, 3),
+    intArrayOf(2),
+    intArrayOf(4),
+    intArrayOf(2, 3, 4),
+    intArrayOf(2, 3),
+    intArrayOf(2, 3),
+    intArrayOf(1, 2, 3, 4),
+    intArrayOf(1, 3),
+    intArrayOf(1, 2, 3),
+    intArrayOf(1, 2, 3)
+)
+
+                fpgrowth(3, transactions).forEach { println(it) }
+                // or: val tree = FPTree.of(3, transactions); fpgrowth(tree)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[4]  (support=3)
+[1]  (support=5)
+[2, 1]  (support=3)
+[3, 2, 1]  (support=3)
+[3, 1]  (support=5)
+[2]  (support=7)
+[3, 2]  (support=6)
+[3]  (support=8)
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="arm" class="title">Mine Association Rules (ARM)</h2>
+
+    <p>Class <code>smile.association.ARM</code> generates rules from the FP-tree’s total-support tree. <code>AssociationRule</code> is an immutable record holding antecedent, consequent, and four metrics.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">record AssociationRule(int[] antecedent, int[] consequent,
+                       double support, double confidence,
+                       double lift, double leverage) { ... }</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="arm-confidence">Confidence Threshold</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-9-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-9-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">                import smile.association.*;
+
+                int[][] transactions = {
+    {1, 3},
+    {2},
+    {4},
+    {2, 3, 4},
+    {2, 3},
+    {2, 3},
+    {1, 2, 3, 4},
+    {1, 3},
+    {1, 2, 3},
+    {1, 2, 3}
+};
+
+                FPTree tree = FPTree.of(3, transactions);
+
+                // All rules with confidence &gt;= 0.5
+                ARM.apply(0.5, tree).forEach(System.out::println);
+
+                // Deterministic rules only
+                ARM.apply(1.0, tree);
+
+                // All generated rules
+                ARM.apply(0.0, tree);
+
+                // Filter for positive, meaningful correlation
+                ARM.apply(0.5, tree)
+                   .filter(r -&gt; r.lift() &gt; 1.1 &amp;&amp; r.leverage() &gt; 0.01)
+                   .forEach(System.out::println);</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+AssociationRule([3] =&gt; [2], support=60.0%, confidence=75.0%, lift=1.07, leverage=0.040)
+…
+      </code></pre>
+    </div>
+    <div id="pg-9-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">                import smile.association._
+
+                val transactions = Array(
+  Array(1, 3),
+  Array(2),
+  Array(4),
+  Array(2, 3, 4),
+  Array(2, 3),
+  Array(2, 3),
+  Array(1, 2, 3, 4),
+  Array(1, 3),
+  Array(1, 2, 3),
+  Array(1, 2, 3)
+)
+
+                val tree = FPTree.of(3, transactions)
+                arm(0.5, tree).forEach(println)
+                // or one-shot: arm(3, 0.5, transactions)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+AssociationRule([3] =&gt; [2], support=60.0%, confidence=75.0%, lift=1.07, leverage=0.040)
+…
+      </code></pre>
+    </div>
+    <div id="pg-9-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">                import smile.association.*
+
+                val transactions = arrayOf(
+    intArrayOf(1, 3),
+    intArrayOf(2),
+    intArrayOf(4),
+    intArrayOf(2, 3, 4),
+    intArrayOf(2, 3),
+    intArrayOf(2, 3),
+    intArrayOf(1, 2, 3, 4),
+    intArrayOf(1, 3),
+    intArrayOf(1, 2, 3),
+    intArrayOf(1, 2, 3)
+)
+
+                val tree = FPTree.of(3, transactions)
+                arm(0.5, tree).forEach { println(it) }
+                // or one-shot: arm(3, 0.5, transactions)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+AssociationRule([3] =&gt; [2], support=60.0%, confidence=75.0%, lift=1.07, leverage=0.040)
+…
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="arm-validation">Input Validation</h3>
+
+    <p><code>ARM.apply</code> validates that <code>confidence</code> is in <code>[0, 1]</code>:</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">ARM.apply(-0.1, tree);  // throws IllegalArgumentException
+ARM.apply(1.1,  tree);  // throws IllegalArgumentException</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="metrics" class="title">Interpret Rule Metrics</h2>
+
+    <p>Given rule X&nbsp;&rArr;&nbsp;Y over a database of <code>N</code> transactions:</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Metric</th><th>Formula</th><th>Interpretation</th></tr></thead>
+            <tbody>
+            <tr><td><code>support</code></td><td><code>count(X ∪ Y) / N</code></td><td>Fraction of transactions containing both X and Y</td></tr>
+            <tr><td><code>confidence</code></td><td><code>count(X ∪ Y) / count(X)</code></td><td>Estimated <code>P(Y | X)</code></td></tr>
+            <tr><td><code>lift</code></td><td><code>support / (supp(X) · supp(Y))</code></td><td>&gt; 1 positive; = 1 independent; &lt; 1 negative</td></tr>
+            <tr><td><code>leverage</code></td><td><code>support − supp(X) · supp(Y)</code></td><td>Absolute gain over independence</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p><strong>Example</strong> — rule {3}&nbsp;&rArr;&nbsp;{2} from the 10-transaction dataset:</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Quantity</th><th>Value</th></tr></thead>
+            <tbody>
+            <tr><td><code>count({3})</code></td><td>8 → <code>supp({3}) = 0.8</code></td></tr>
+            <tr><td><code>count({2})</code></td><td>7 → <code>supp({2}) = 0.7</code></td></tr>
+            <tr><td><code>count({3,2})</code></td><td>6 → <code>support = 0.6</code></td></tr>
+            <tr><td><code>confidence</code></td><td><code>6/8 = 0.75</code></td></tr>
+            <tr><td><code>lift</code></td><td><code>0.6 / (0.8 × 0.7) ≈ 1.071</code></td></tr>
+            <tr><td><code>leverage</code></td><td><code>0.6 − 0.8 × 0.7 = 0.04</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p><strong>Note on <code>equals</code>/<code>hashCode</code>:</strong> two <code>AssociationRule</code> objects are equal if they have the same antecedent, consequent, support, and confidence. <code>lift</code> and <code>leverage</code> are derived metrics and are <strong>intentionally excluded</strong> from equality comparisons, so floating-point drift in those fields does not break equality.</p>
+
+
+    <h2 id="examples" class="title">End-to-End Examples</h2>
+
+
+    <h3 id="example-memory">In-Memory Transactions</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-11-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-11-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">                import smile.association.*;
+                import java.util.Arrays;
+
+                int[][] transactions = {
+    {1, 3},
+    {2},
+    {4},
+    {2, 3, 4},
+    {2, 3},
+    {2, 3},
+    {1, 2, 3, 4},
+    {1, 3},
+    {1, 2, 3},
+    {1, 2, 3}
+};
+
+                FPTree tree = FPTree.of(0.3, transactions);
+                System.out.println("Transactions: " + tree.size());
+                System.out.println("Min support:  " + tree.minSupport());
+
+                System.out.println("\nFrequent item sets:");
+                FPGrowth.apply(tree).forEach(set -&gt;
+                    System.out.printf("  %s  support=%d%n",
+                        Arrays.toString(set.items()), set.support())
+                );
+
+                System.out.println("\nAssociation rules (conf &gt;= 0.5):");
+                ARM.apply(0.5, tree).forEach(rule -&gt;
+                    System.out.printf(
+                        "  %s =&gt; %s  supp=%.2f conf=%.2f lift=%.3f lev=%.3f%n",
+                        Arrays.toString(rule.antecedent()),
+                        Arrays.toString(rule.consequent()),
+                        rule.support(), rule.confidence(),
+                        rule.lift(), rule.leverage())
+                );</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Transactions: 10
+Min support:  3
+
+Frequent item sets:
+  [4]     support=3
+  [1]     support=5
+  [1, 3]  support=5
+  …
+  [3, 2]  support=6
+  [3]     support=8
+
+Association rules (conf &gt;= 0.5):
+  [3] =&gt; [2]     supp=0.60 conf=0.75 lift=1.071 lev=0.040
+  [3] =&gt; [1]     supp=0.50 conf=0.63 lift=1.250 lev=0.100
+  …
+      </code></pre>
+    </div>
+    <div id="pg-11-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">                import smile.association._
+
+                val transactions = Array(
+  Array(1, 3),
+  Array(2),
+  Array(4),
+  Array(2, 3, 4),
+  Array(2, 3),
+  Array(2, 3),
+  Array(1, 2, 3, 4),
+  Array(1, 3),
+  Array(1, 2, 3),
+  Array(1, 2, 3)
+)
+
+                val tree = FPTree.of(0.3, transactions)
+                println(s"Transactions: ${tree.size}")
+                println(s"Min support:  ${tree.minSupport}")
+
+                println("Frequent item sets:")
+                fpgrowth(tree).forEach(println)
+
+                println("Association rules (conf &gt;= 0.5):")
+                arm(0.5, tree).forEach(println)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Transactions: 10
+Min support:  3
+
+Frequent item sets:
+  [4]     support=3
+  [1]     support=5
+  [1, 3]  support=5
+  …
+  [3, 2]  support=6
+  [3]     support=8
+
+Association rules (conf &gt;= 0.5):
+  [3] =&gt; [2]     supp=0.60 conf=0.75 lift=1.071 lev=0.040
+  [3] =&gt; [1]     supp=0.50 conf=0.63 lift=1.250 lev=0.100
+  …
+      </code></pre>
+    </div>
+    <div id="pg-11-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">                import smile.association.*
+
+                val transactions = arrayOf(
+    intArrayOf(1, 3),
+    intArrayOf(2),
+    intArrayOf(4),
+    intArrayOf(2, 3, 4),
+    intArrayOf(2, 3),
+    intArrayOf(2, 3),
+    intArrayOf(1, 2, 3, 4),
+    intArrayOf(1, 3),
+    intArrayOf(1, 2, 3),
+    intArrayOf(1, 2, 3)
+)
+
+                val tree = FPTree.of(0.3, transactions)
+                println("Transactions: ${tree.size()}")
+                println("Min support:  ${tree.minSupport()}")
+
+                println("Frequent item sets:")
+                fpgrowth(tree).forEach { println(it) }
+
+                println("Association rules (conf &gt;= 0.5):")
+                arm(0.5, tree).forEach { println(it) }</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Transactions: 10
+Min support:  3
+
+Frequent item sets:
+  [4]     support=3
+  [1]     support=5
+  [1, 3]  support=5
+  …
+  [3, 2]  support=6
+  [3]     support=8
+
+Association rules (conf &gt;= 0.5):
+  [3] =&gt; [2]     supp=0.60 conf=0.75 lift=1.071 lev=0.040
+  [3] =&gt; [1]     supp=0.50 conf=0.63 lift=1.250 lev=0.100
+  …
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="example-supplier">Supplier-Based Large File Mining</h3>
+
+    <p>Use the <code>Supplier&lt;Stream&lt;int[]&gt;&gt;</code> API when the dataset does not fit in memory. The supplier is called twice internally.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-12-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-12-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.association.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
+
+Supplier&lt;Stream&lt;int[]&gt;&gt; data = () -&gt; {
+    try {
+        return Files.lines(Path.of("transactions.dat"))
+                .map(line -&gt; Arrays.stream(line.split("\\s+"))
+                        .mapToInt(Integer::parseInt)
+                        .toArray());
+    } catch (Exception ex) {
+        throw new RuntimeException(ex);
+    }
+};
+
+FPTree tree = FPTree.of(0.003, data);  // 0.3% of transactions
+
+long nSets  = FPGrowth.apply(tree).count();
+long nRules = ARM.apply(0.5, tree).count();
+System.out.printf("Frequent sets: %d, Rules: %d%n", nSets, nRules);</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+5634 (1000)
+3805 (1001)
+3376 (1001)
+…
+Frequent sets: …, Rules: …
+      </code></pre>
+    </div>
+    <div id="pg-12-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.association._
+import smile.util.Paths
+
+val tree = fptree(1000, () =&gt; {
+  Paths.getTestDataLines("transaction/kosarak.dat").map { line =&gt;
+    line.split(" ").map(_.toInt)
+  }
+})
+
+fpgrowth(tree).limit(10).forEach(println)
+val nRules = arm(0.5, tree).count()
+println(s"Rules: $nRules")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+5634 (1000)
+3805 (1001)
+3376 (1001)
+…
+Frequent sets: …, Rules: …
+      </code></pre>
+    </div>
+    <div id="pg-12-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.association.*
+import smile.util.Paths
+import java.util.function.Supplier
+
+val tree = fptree(1000, Supplier {
+    Paths.getTestDataLines("transaction/kosarak.dat").map { line -&gt;
+        line.split(" ").map { it.toInt() }.toIntArray()
+    }
+})
+
+fpgrowth(tree).limit(10).forEach { println(it) }
+val nRules = arm(0.5, tree).count()
+println("Rules: $nRules")</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+5634 (1000)
+3805 (1001)
+3376 (1001)
+…
+Frequent sets: …, Rules: …
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="example-lift">Filter by Lift</h3>
+
+    <p>Mining can produce thousands of rules; narrow them with stream operations and sort by lift:</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-13-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-13-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-13-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-13-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">                import smile.association.*;
+                import java.util.Comparator;
+
+                int[][] transactions = {
+    {1, 3},
+    {2},
+    {4},
+    {2, 3, 4},
+    {2, 3},
+    {2, 3},
+    {1, 2, 3, 4},
+    {1, 3},
+    {1, 2, 3},
+    {1, 2, 3}
+};
+
+                FPTree tree = FPTree.of(3, transactions);
+
+                ARM.apply(0.5, tree)
+                   .filter(r -&gt; r.lift() &gt; 1.1)
+                   .filter(r -&gt; r.leverage() &gt; 0.01)
+                   .sorted(Comparator.comparingDouble(AssociationRule::lift).reversed())
+                   .limit(20)
+                   .forEach(System.out::println);</code></pre>
+    </div>
+    <div id="pg-13-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">                import smile.association._
+                import java.util.Comparator
+
+                val transactions = Array(
+  Array(1, 3),
+  Array(2),
+  Array(4),
+  Array(2, 3, 4),
+  Array(2, 3),
+  Array(2, 3),
+  Array(1, 2, 3, 4),
+  Array(1, 3),
+  Array(1, 2, 3),
+  Array(1, 2, 3)
+)
+
+                val tree = FPTree.of(3, transactions)
+                arm(0.5, tree)
+                  .filter(r =&gt; r.lift &gt; 1.1 &amp;&amp; r.leverage &gt; 0.01)
+                  .sorted(Comparator.comparingDouble[AssociationRule](_.lift).reversed)
+                  .limit(20)
+                  .forEach(println)</code></pre>
+    </div>
+    <div id="pg-13-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">                import smile.association.*
+                import java.util.Comparator
+
+                val transactions = arrayOf(
+    intArrayOf(1, 3),
+    intArrayOf(2),
+    intArrayOf(4),
+    intArrayOf(2, 3, 4),
+    intArrayOf(2, 3),
+    intArrayOf(2, 3),
+    intArrayOf(1, 2, 3, 4),
+    intArrayOf(1, 3),
+    intArrayOf(1, 2, 3),
+    intArrayOf(1, 2, 3)
+)
+
+                val tree = FPTree.of(3, transactions)
+                arm(0.5, tree)
+                    .filter { it.lift() &gt; 1.1 &amp;&amp; it.leverage() &gt; 0.01 }
+                    .sorted(Comparator.comparingDouble(AssociationRule::lift).reversed())
+                    .limit(20)
+                    .forEach { println(it) }</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="edge-cases" class="title">Validation and Edge Cases</h2>
+
+
+    <h3 id="empty-tree">Empty tree (minSupport too high)</h3>
+
+    <p>If <code>minSupport</code> exceeds the total number of transactions, no item is frequent. Both <code>FPGrowth.apply</code> and <code>ARM.apply</code> return empty streams gracefully:</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">FPTree tree = FPTree.of(11, transactions);  // only 10 transactions
+assert FPGrowth.apply(tree).count() == 0;
+assert ARM.apply(0.5, tree).count() == 0;</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="duplicates">Duplicate items in one transaction</h3>
+
+    <p>Items appearing more than once in a transaction are collapsed before indexing:</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">int[][] dup = {{ '{{' }}1, 1, 2}, {1, 2}, {1, 1, 1, 2{{ '}}' }};
+FPTree tree = FPTree.of(2, dup);
+// support of {1} = 3, {2} = 3, {1, 2} = 3  (not inflated)</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="iterator-contract">Iterator contract</h3>
+
+    <p>All three iterators (<code>FPGrowth</code>, <code>TotalSupportTree</code>, <code>ARM</code>) throw <code>NoSuchElementException</code> when <code>next()</code> is called after exhaustion, consistent with the Java <code>Iterator</code> contract.</p>
+
+
+    <h3 id="rule-equality">AssociationRule equality</h3>
+
+    <p><code>equals</code> and <code>hashCode</code> use antecedent, consequent, support, and confidence. <code>lift</code> and <code>leverage</code> are derived values and are excluded, so two rules representing the same statistical relationship compare equal regardless of floating-point rounding in the derived metrics.</p>
+
+
+    <h2 id="performance" class="title">Performance Tips</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Tip</th><th>Rationale</th></tr></thead>
+            <tbody>
+            <tr><td>Use compact integer IDs in <code>[0, N)</code></td><td>Avoids sparse array overhead in the header table</td></tr>
+            <tr><td>Use the supplier API for large files</td><td>The two-pass design avoids loading all data into memory</td></tr>
+            <tr><td>Tune <code>minSupport</code> first</td><td>Support pruning dominates runtime; lower = exponentially more work</td></tr>
+            <tr><td>Stream and filter immediately</td><td>Avoid materializing millions of rules into a <code>List</code></td></tr>
+            <tr><td>Percentage support for portability</td><td><code>0.01</code> works for any database size; absolute counts are dataset-specific</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2 id="api" class="title">API Quick Reference</h2>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">// ── FP-Tree construction ──────────────────────────────────────────────────────
+
+FPTree.of(int minSupport,    int[][] itemsets)
+FPTree.of(double minSupport, int[][] itemsets)   // minSupport in (0, 1]
+FPTree.of(int minSupport,    Supplier&lt;Stream&lt;int[]&gt;&gt; supplier)
+FPTree.of(double minSupport, Supplier&lt;Stream&lt;int[]&gt;&gt; supplier)
+
+int tree.size()          // number of transactions
+int tree.minSupport()    // effective integer support threshold
+
+// ── Frequent item sets ────────────────────────────────────────────────────────
+
+Stream&lt;ItemSet&gt; FPGrowth.apply(FPTree tree)
+
+// ItemSet (record)
+int[]  items()     // item IDs
+int    support()   // raw count
+
+// ── Association rules ─────────────────────────────────────────────────────────
+
+Stream&lt;AssociationRule&gt; ARM.apply(double confidence, FPTree tree)
+// confidence must be in [0, 1]
+
+// AssociationRule (record)
+int[]  antecedent()   // LHS item IDs
+int[]  consequent()   // RHS item IDs
+double support()      // P(X ∪ Y)  — fraction
+double confidence()   // P(Y | X)
+double lift()         // correlation vs. independence (&gt;1 = positive)
+double leverage()     // absolute gain over independence
+
+// Scala / Kotlin helpers (package smile.association)
+// fptree(minSupport, supplier)
+// fpgrowth(minSupport, itemsets) / fpgrowth(tree)
+// arm(minSupport, confidence, itemsets) / arm(confidence, tree)</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
-        <a class="btn-prev-text" href="vector-quantization.html" title="Previous Section: Vector Quantization"><span>Vector Quantization</span></a>
+        <a class="btn-prev-text" href="anomaly-detection.html" title="Previous Section: Anomaly Detection"><span>Anomaly Detection</span></a>
         <a class="btn-next-text" href="mds.html" title="Next Section: Multi-Dimensional Scaling"><span>Multi-Dimensional Scaling</span></a>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>

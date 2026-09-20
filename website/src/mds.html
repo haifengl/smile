@@ -1,53 +1,48 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: SMILE - MDS
+title: SMILE - Multi-Dimensional Scaling
 ---
 {% include "toc.njk" %}
 
 <div class="col-md-9 order-md-first">
     <h1 id="mds-top" class="title">Multi-Dimensional Scaling</h1>
 
-    <p>Multidimensional scaling is a set of related statistical techniques
-        often used in information visualization for exploring similarities or
-        dissimilarities in data. An MDS algorithm starts with a matrix of item-item
-        similarities, then assigns a location to each item in low-dimensional space.
-        For sufficiently low dimension, the resulting locations may be displayed in a
-        graph or 3D visualization.</p>
+
+    <h2 id="overview" class="title">Overview</h2>
+
+    <p>Multidimensional scaling (MDS) is a family of techniques for exploring similarities or dissimilarities among items. An MDS algorithm starts with an item–item proximity matrix and assigns each item a location in a low-dimensional Euclidean space. For two or three dimensions, the resulting layout can be plotted directly for information visualization and exploratory analysis.</p>
+    <p>SMILE’s MDS algorithms live in <a href="api/java/smile/manifold/package-summary.html"><code>smile.manifold</code></a>. The package provides classical MDS (<code>MDS</code>), Kruskal’s nonmetric MDS (<code>IsotonicMDS</code>), and Sammon’s mapping (<code>SammonMapping</code>).</p>
 
     <p>The major types of MDS algorithms include:</p>
-    <dl>
-     <dt>Classical multi-dimensional scaling</dt>
-     <dd><p>It takes an input matrix giving dissimilarities between pairs of items and
-     outputs a coordinate matrix whose configuration minimizes a loss function
-     called strain.</p></dd>
-     <dt>Metric multi-dimensional scaling</dt>
-     <dd><p>A superset of classical MDS that generalizes the optimization procedure
-     to a variety of loss functions and input matrices of known distances with
-     weights and so on. A useful loss function in this context is called stress
-     which is often minimized using a procedure called stress majorization.</p></dd>
-     <dt>Non-metric multi-dimensional scaling</dt>
-     <dd><p>In contrast to metric MDS, non-metric MDS finds both a non-parametric
-     monotonic relationship between the dissimilarities in the item-item matrix
-     and the Euclidean distances between items, and the location of each item in
-     the low-dimensional space. The relationship is typically found using isotonic
-     regression.</p></dd>
-     <dt>Generalized multi-dimensional scaling</dt>
-     <dd><p>An extension of metric multidimensional scaling, in which the target
-     space is an arbitrary smooth non-Euclidean space. In case when the
-     dissimilarities are distances on a surface and the target space is another
-     surface, GMDS allows finding the minimum-distortion embedding of one surface
-     into another.</p></dd>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Type</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td>Classical multi-dimensional scaling</td><td>Takes an input matrix of dissimilarities between pairs of items and outputs a coordinate matrix whose configuration minimizes a loss function called <em>strain</em>.</td></tr>
+            <tr><td>Metric multi-dimensional scaling</td><td>A superset of classical MDS that generalizes the optimization to a variety of loss functions and weighted distance matrices. A common loss is <em>stress</em>, often minimized by stress majorization.</td></tr>
+            <tr><td>Non-metric multi-dimensional scaling</td><td>Finds both a non-parametric monotonic relationship between dissimilarities and Euclidean distances, and the locations of items in the low-dimensional space. The relationship is typically recovered by isotonic regression.</td></tr>
+            <tr><td>Generalized multi-dimensional scaling</td><td>Extends metric MDS so the target space may be an arbitrary smooth non-Euclidean manifold. When dissimilarities are distances on one surface and the target is another, GMDS finds a minimum-distortion embedding between surfaces.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2 id="classical" class="title">Classical Multi-dimensional Scaling</h2>
+
+    <p>Classical multidimensional scaling is also known as principal coordinates analysis. Given a matrix of dissimilarities (for example pairwise distances), <code>MDS</code> finds points in a low-dimensional space that well-approximate those dissimilarities. Any dissimilarity measure may be used; when the input is Euclidean distances, classical MDS is equivalent to PCA.</p>
+    <p>The proximity matrix must be non-negative and symmetric, with zeros on the diagonal. For pairwise distances, pass the plain distances — not squared distances. The result is a record with <code>scores()</code>, <code>proportion()</code> of variance, and <code>coordinates()</code>.</p>
+
+    <p>Hyperparameters are fields of the nested <code>MDS.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). Convenience constructor <code>new MDS.Options()</code> uses <code>d = 2</code> and <code>positive = false</code>.</p>
+
+    <dl class="options-dl">
+        <dt><code>d</code><br><code>smile.mds.d</code></dt>
+        <dd>Dimension of the projection (≥ 2). Default <code>2</code>.</dd>
+        <dt><code>positive</code><br><code>smile.mds.positive</code></dt>
+        <dd>If <code>true</code>, estimate an additive constant to add to all off-diagonal dissimilarities so the double-centered matrix is positive semi-definite. Useful when proximities are on an interval scale with no natural origin. Default <code>false</code>.</dd>
     </dl>
 
-    <h2 id="classical">Classical Multi-dimensional Scaling</h2>
-
-    <p>Classical multidimensional scaling is also known as principal coordinates
-        analysis. Given a matrix <code>A</code> of dissimilarities (e.g. pairwise distances), MDS
-        finds a set of points in low dimensional space that well-approximates the
-        dissimilarities in <code>A</code>. We are not restricted to using a Euclidean
-        distance metric. However, when Euclidean distances are used, classical MDS is
-        equivalent to PCA.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -59,40 +54,37 @@ title: SMILE - MDS
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-1-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class MDS {
-        public static MDS fit(double[][] proximity, Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.manifold.MDS;
+
+MDS model = MDS.fit(proximity);
+MDS model2 = MDS.fit(proximity, new MDS.Options(2, true));
+double[][] x = model2.coordinates();
+double[] scores = model2.scores();
+double[] prop = model2.proportion();</code></pre>
     </div>
     <div id="pg-1-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def mds(proximity: Array[Array[Double]], k: Int, add: Boolean = false): MDS
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.manifold._
+
+val model = mds(proximity, 2)
+val model2 = mds(proximity, 2, positive = true)
+val x = model2.coordinates
+val scores = model2.scores
+val prop = model2.proportion</code></pre>
     </div>
     <div id="pg-1-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun mds(proximity: Array&lt;DoubleArray&gt;, k: Int, add: Boolean = false): MDS
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.manifold.*
+
+val model = mds(proximity, 2)
+val model2 = mds(proximity, 2, positive = true)
+val x = model2.coordinates()
+val scores = model2.scores()
+val prop = model2.proportion()</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where <code>proximity</code> is the non-negative proximity matrix of dissimilarities.
-        The diagonal should be zero and all other elements should be positive and
-        symmetric. For pairwise distances matrix, it should be just the plain
-        distance, not squared.
-        The parameter <code>k</code> is the dimension of output space.
-        If the parameter <code>add</code> is true, the method estimates an appropriate constant to be added
-        to all the dissimilarities, apart from the self-dissimilarities, that
-        makes the learning matrix positive semi-definite. The other formulation of
-        the additive constant problem is as follows. If the proximity is
-        measured in an interval scale, where there is no natural origin, then there
-        is not a sympathy of the dissimilarities to the distances in the Euclidean
-        space used to represent the objects. In this case, we can estimate a constant c
-        such that proximity + c may be taken as ratio data, and also possibly
-        to minimize the dimensionality of the Euclidean space required for
-        representing the objects.</p>
+    <p>The following example embeds European cities from a tabulated distance matrix (<code>data/mds/eurodist.txt</code>: tab-delimited, first column city names, remaining columns the distance matrix).</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -104,55 +96,81 @@ title: SMILE - MDS
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-2-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var eurodist = Read.csv("data/mds/eurodist.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
-    var dist = eurodist.drop(0).toArray();
-    var citys = eurodist.column(0).toStringArray();
-    var x = MDS.fit(dist, new MDS.Options(2, true)).coordinates();
-    var figure = TextPlot.of(citys, x).figure();
-    show(figure);
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.io.Read;
+import smile.manifold.MDS;
+import smile.plot.swing.TextPlot;
+import org.apache.commons.csv.CSVFormat;
+
+var eurodist = Read.csv("data/mds/eurodist.txt",
+    CSVFormat.DEFAULT.withDelimiter('\t'));
+var dist = eurodist.drop(0).toArray();
+var citys = eurodist.column(0).toStringArray();
+var x = MDS.fit(dist, new MDS.Options(2, true)).coordinates();
+TextPlot.of(citys, x).canvas().window();</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+// TextPlot.of(citys, x).canvas().window()
+(opens plot: classical MDS of European cities)
+      </code></pre>
     </div>
     <div id="pg-2-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val eurodist = read.csv("data/mds/eurodist.txt", delimiter = "\t", header = false)
-    val dist = eurodist.drop(0).toArray()
-    val citys = eurodist.stringVector(0).toArray()
-    val x = mds(dist, 2).coordinates
-    show(text(citys, x))
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.manifold._
+import smile.plot.swing.TextPlot
+import smile.read
+
+val eurodist = read.csv("data/mds/eurodist.txt",
+  delimiter = "\t", header = false)
+val dist = eurodist.drop(0).toArray()
+val citys = eurodist.column(0).toStringArray()
+val x = mds(dist, 2, positive = true).coordinates
+TextPlot.of(citys, x).canvas.window</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+// TextPlot.of(citys, x).canvas().window()
+(opens plot: classical MDS of European cities)
+      </code></pre>
     </div>
     <div id="pg-2-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    import smile.*;
-    import smile.manifold.*;
-    import smile.plot.swing.*;
-    val eurodist = read.csv("data/mds/eurodist.txt", delimiter = '\t', header = false)
-    val dist = eurodist.drop(0).toArray()
-    val citys = eurodist.stringVector(0).toArray()
-    val x = mds(dist, 2).coordinates
-    TextPlot.of(citys, x).canvas().window()
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.io.Read
+import smile.manifold.*
+import smile.plot.swing.TextPlot
+import org.apache.commons.csv.CSVFormat
+
+val eurodist = Read.csv("data/mds/eurodist.txt",
+    CSVFormat.DEFAULT.withDelimiter('\t'))
+val dist = eurodist.drop(0).toArray()
+val citys = eurodist.column(0).toStringArray()
+val x = mds(dist, 2, positive = true).coordinates()
+TextPlot.of(citys, x).canvas().window()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+// TextPlot.of(citys, x).canvas().window()
+(opens plot: classical MDS of European cities)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>In the above example, we apply MDS to a distance matrix of some European cities.</p>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/mds.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">MDS</div>
-    </div>
+    <figure class="plot-figure">
+        <img src="images/mds.png" class="enlarge" alt="Classical MDS of European cities" />
+        <figcaption>Classical MDS of European cities</figcaption>
+    </figure>
 
-    <h2 id="kruskal">Kruskal's Nonmetric MDS</h2>
 
-    <p>Kruskal's nonmetric MDS. In non-metric MDS, only the rank order of entries
-        in the proximity matrix (not the actual dissimilarities) is assumed to
-        contain the significant information. Hence, the distances of the final
-        configuration should as far as possible be in the same rank order as the
-        original data. Note that a perfect ordinal re-scaling of the data into
-        distances is usually not possible. The relationship is typically found
-        using isotonic regression.</p>
+    <h2 id="kruskal" class="title">Kruskal's Nonmetric MDS</h2>
+
+    <p>Kruskal’s nonmetric MDS (<code>IsotonicMDS</code>) assumes that only the <em>rank order</em> of entries in the proximity matrix carries significant information — not the numeric dissimilarities themselves. The final configuration should preserve that rank order as far as possible. A perfect ordinal rescaling into distances is usually impossible; the monotonic relationship is recovered by isotonic regression.</p>
+    <p>The result exposes <code>stress()</code> (the objective value) and <code>coordinates()</code>. Fitting starts from a classical MDS initialization when no custom start is supplied.</p>
+
+    <p>Hyperparameters are fields of the nested <code>IsotonicMDS.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). Default constructor <code>new IsotonicMDS.Options()</code> uses <code>d = 2</code>, <code>tol = 1E-4</code>, <code>maxIter = 200</code>.</p>
+
+    <dl class="options-dl">
+        <dt><code>d</code><br><code>smile.isotonic_mds.d</code></dt>
+        <dd>Dimension of the projection (≥ 2). Default <code>2</code>.</dd>
+        <dt><code>tol</code><br><code>smile.isotonic_mds.tolerance</code></dt>
+        <dd>Tolerance for stopping iterations. Default <code>1E-4</code>.</dd>
+        <dt><code>maxIter</code><br><code>smile.isotonic_mds.iterations</code></dt>
+        <dd>Maximum number of iterations. Default <code>200</code>.</dd>
+    </dl>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -164,27 +182,33 @@ title: SMILE - MDS
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-3-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class IsotonicMDS {
-        public static IsotonicMDS fit(double[][] proximity, Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.manifold.IsotonicMDS;
+
+IsotonicMDS model = IsotonicMDS.fit(proximity);
+IsotonicMDS model2 = IsotonicMDS.fit(proximity,
+    new IsotonicMDS.Options(2, 1E-4, 200));
+double stress = model2.stress();
+double[][] x = model2.coordinates();</code></pre>
     </div>
     <div id="pg-3-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def isomds(proximity: Array[Array[Double]], k: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.manifold._
+
+val model = isomds(proximity, 2)
+val model2 = isomds(proximity, 2, tol = 1E-4, maxIter = 200)
+val stress = model2.stress
+val x = model2.coordinates</code></pre>
     </div>
     <div id="pg-3-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun isomds(proximity: Array&lt;DoubleArray&gt;, k: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.manifold.*
+
+val model = isomds(proximity, 2)
+val model2 = isomds(proximity, 2, tol = 1E-4, maxIter = 200)
+val stress = model2.stress()
+val x = model2.coordinates()</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where <code>tol</code> is the tolerance for stopping iterations, and
-        <code>maxIter</code> is the maximum number of iterations.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -196,92 +220,126 @@ title: SMILE - MDS
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-4-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var x = IsotonicMDS.fit(dist).coordinates();
-    var figure = TextPlot.of(citys, x).figure();
-    show(figure);
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.io.Read;
+import smile.manifold.IsotonicMDS;
+import smile.plot.swing.TextPlot;
+import org.apache.commons.csv.CSVFormat;
+
+var eurodist = Read.csv("data/mds/eurodist.txt",
+    CSVFormat.DEFAULT.withDelimiter('\t'));
+var dist = eurodist.drop(0).toArray();
+var citys = eurodist.column(0).toStringArray();
+var x = IsotonicMDS.fit(dist).coordinates();
+TextPlot.of(citys, x).canvas().window();</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+// TextPlot.of(citys, x).canvas().window()
+(opens plot: Kruskal's nonmetric MDS)
+      </code></pre>
     </div>
     <div id="pg-4-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val x = isomds(dist, 2).coordinates
-    show(text(citys, x))
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.manifold._
+import smile.plot.swing.TextPlot
+import smile.read
+
+val eurodist = read.csv("data/mds/eurodist.txt",
+  delimiter = "\t", header = false)
+val dist = eurodist.drop(0).toArray()
+val citys = eurodist.column(0).toStringArray()
+val x = isomds(dist, 2).coordinates
+TextPlot.of(citys, x).canvas.window</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+// TextPlot.of(citys, x).canvas().window()
+(opens plot: Kruskal's nonmetric MDS)
+      </code></pre>
     </div>
     <div id="pg-4-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    val x = isomds(dist, 2).coordinates
-    TextPlot.of(citys, x).canvas().window()
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.io.Read
+import smile.manifold.*
+import smile.plot.swing.TextPlot
+import org.apache.commons.csv.CSVFormat
+
+val eurodist = Read.csv("data/mds/eurodist.txt",
+    CSVFormat.DEFAULT.withDelimiter('\t'))
+val dist = eurodist.drop(0).toArray()
+val citys = eurodist.column(0).toStringArray()
+val x = isomds(dist, 2).coordinates()
+TextPlot.of(citys, x).canvas().window()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+// TextPlot.of(citys, x).canvas().window()
+(opens plot: Kruskal's nonmetric MDS)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/isomds.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Kruskal's Nonmetric MDS</div>
-    </div>
 
-    <h2 id="sammon">Sammon's Mapping</h2>
+    <figure class="plot-figure">
+        <img src="images/isomds.png" class="enlarge" alt="Kruskal's nonmetric MDS" />
+        <figcaption>Kruskal's nonmetric MDS</figcaption>
+    </figure>
 
-    <p>Sammon's mapping is an iterative technique for making interpoint
-        distances in the low-dimensional projection as close as possible to the
-        interpoint distances in the high-dimensional object. Two points close
-        together in the high-dimensional space should appear close together in the
-        projection, while two points far apart in the high dimensional space should
-        appear far apart in the projection. The Sammon's mapping is a special case of
-        metric least-square multidimensional scaling.</p>
 
-    <p>Ideally when we project from a high dimensional space to a low dimensional
-        space the image would be geometrically congruent to the original figure.
-        This is called an isometric projection. Unfortunately it is rarely possible
-        to isometrically project objects down into lower dimensional spaces. Instead of
-        trying to achieve equality between corresponding inter-point distances we
-        can minimize the difference between corresponding inter-point distances.
-        This is one goal of the Sammon's mapping algorithm. A second goal of the Sammon's
-        mapping algorithm is to preserve the topology as good as possible by giving
-        greater emphasize to smaller interpoint distances. The Sammon's mapping
-        algorithm has the advantage that whenever it is possible to isometrically
-        project an object into a lower dimensional space it will be isometrically
-        projected into the lower dimensional space. But whenever an object cannot
-        be projected down isometrically the Sammon's mapping projects it down to reduce
-        the distortion in interpoint distances and to limit the change in the
-        topology of the object.</p>
+    <h2 id="sammon" class="title">Sammon's Mapping</h2>
 
-    <p>The projection cannot be solved in a closed form and may be found by an
-        iterative algorithm such as gradient descent suggested by Sammon. Kohonen
-        also provides a heuristic that is simple and works reasonably well.</p>
+    <p>Sammon’s mapping is an iterative technique that makes interpoint distances in the low-dimensional projection as close as possible to those in the high-dimensional object. Points that are close together should remain close; points that are far apart should remain far apart. It is a special case of metric least-squares multidimensional scaling.</p>
+    <p>Ideally a projection would be geometrically congruent to the original figure — an isometric embedding. That is rarely possible in lower dimensions, so Sammon’s algorithm minimizes differences between corresponding interpoint distances. A second goal is to preserve topology by putting greater stress on smaller distances. Whenever an isometric projection exists, Sammon’s mapping recovers it; otherwise it reduces distance distortion while limiting topological change.</p>
+    <p>The embedding has no closed-form solution. Sammon suggested gradient descent; Kohonen’s heuristic is simple and works reasonably well. SMILE’s <code>SammonMapping.fit(proximity)</code> defaults to <code>d = 2</code> and step size <code>0.2</code>. The result exposes <code>stress()</code> and <code>coordinates()</code>.</p>
+
+    <p>Hyperparameters are fields of the nested <code>SammonMapping.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). Convenience constructor <code>new SammonMapping.Options(d, step, maxIter)</code> uses <code>tol = 1E-4</code>, <code>stepTol = 1E-3</code>, and no controller.</p>
+
+    <dl class="options-dl">
+        <dt><code>d</code><br><code>smile.sammon.d</code></dt>
+        <dd>Dimension of the projection (≥ 2). Default <code>2</code>.</dd>
+        <dt><code>step</code><br><code>smile.sammon.step</code></dt>
+        <dd>Initial step size in the diagonal Newton method (≥ 0). Default <code>0.2</code>.</dd>
+        <dt><code>maxIter</code><br><code>smile.sammon.iterations</code></dt>
+        <dd>Maximum number of iterations (&gt; 0). Default <code>100</code>.</dd>
+        <dt><code>tol</code><br><code>smile.sammon.tolerance</code></dt>
+        <dd>Tolerance of the convergence test (&gt; 0). Default <code>1E-4</code>.</dd>
+        <dt><code>stepTol</code><br><code>smile.sammon.step_tolerance</code></dt>
+        <dd>Tolerance on step size (&gt; 0). Default <code>1E-3</code>.</dd>
+        <dt><code>controller</code></dt>
+        <dd>Optional <code>IterativeAlgorithmController&lt;AlgoStatus&gt;</code>; pass <code>null</code> to disable.</dd>
+    </dl>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
     <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
     <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-2">Kotlin</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-5-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-5-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class SammonMapping {
-        public static SammonMapping fit(double[][] proximity, Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.manifold.SammonMapping;
+
+SammonMapping model = SammonMapping.fit(proximity);
+SammonMapping model2 = SammonMapping.fit(proximity,
+    new SammonMapping.Options(2, 0.2, 100));
+double stress = model2.stress();
+double[][] x = model2.coordinates();</code></pre>
     </div>
     <div id="pg-5-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def sammon(proximity: Array[Array[Double]], k: Int, lambda: Double = 0.2, tol: Double = 0.0001, maxIter: Int = 100): SammonMapping
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.manifold._
+
+val model = sammon(proximity, 2)
+val model2 = sammon(proximity, 2, step = 0.2, maxIter = 100)
+val stress = model2.stress
+val x = model2.coordinates</code></pre>
     </div>
     <div id="pg-5-2" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    fun sammon(proximity: Array&lt;DoubleArray&gt;, k: Int, lambda: Double = 0.2, tol: Double = 0.0001, maxIter: Int = 100): SammonMapping
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.manifold.*
+
+val model = sammon(proximity, 2)
+val model2 = sammon(proximity, 2, step = 0.2, maxIter = 100)
+val stress = model2.stress()
+val x = model2.coordinates()</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where <code>lambda</code> is the initial value of the step size constant in diagonal Newton method.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -293,31 +351,64 @@ title: SMILE - MDS
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-6-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var x = SammonMapping.fit(dist).coordinates();
-    var figure = TextPlot.of(citys, x).figure();
-    show(figure);
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.io.Read;
+import smile.manifold.SammonMapping;
+import smile.plot.swing.TextPlot;
+import org.apache.commons.csv.CSVFormat;
+
+var eurodist = Read.csv("data/mds/eurodist.txt",
+    CSVFormat.DEFAULT.withDelimiter('\t'));
+var dist = eurodist.drop(0).toArray();
+var citys = eurodist.column(0).toStringArray();
+var x = SammonMapping.fit(dist).coordinates();
+TextPlot.of(citys, x).canvas().window();</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+// TextPlot.of(citys, x).canvas().window()
+(opens plot: Sammon's mapping)
+      </code></pre>
     </div>
     <div id="pg-6-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val x = sammon(dist, 2).coordinates
-    show(text(citys, x))
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.manifold._
+import smile.plot.swing.TextPlot
+import smile.read
+
+val eurodist = read.csv("data/mds/eurodist.txt",
+  delimiter = "\t", header = false)
+val dist = eurodist.drop(0).toArray()
+val citys = eurodist.column(0).toStringArray()
+val x = sammon(dist, 2).coordinates
+TextPlot.of(citys, x).canvas.window</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+// TextPlot.of(citys, x).canvas().window()
+(opens plot: Sammon's mapping)
+      </code></pre>
     </div>
     <div id="pg-6-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    val x = sammon(dist, 2).coordinates
-    TextPlot.of(citys, x).canvas().window()
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.io.Read
+import smile.manifold.*
+import smile.plot.swing.TextPlot
+import org.apache.commons.csv.CSVFormat
+
+val eurodist = Read.csv("data/mds/eurodist.txt",
+    CSVFormat.DEFAULT.withDelimiter('\t'))
+val dist = eurodist.drop(0).toArray()
+val citys = eurodist.column(0).toStringArray()
+val x = sammon(dist, 2).coordinates()
+TextPlot.of(citys, x).canvas().window()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+// TextPlot.of(citys, x).canvas().window()
+(opens plot: Sammon's mapping)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/sammon.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Sammon's Mapping</div>
-    </div>
+
+    <figure class="plot-figure">
+        <img src="images/sammon.png" class="enlarge" alt="Sammon's mapping" />
+        <figcaption>Sammon's mapping</figcaption>
+    </figure>
+
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>

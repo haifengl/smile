@@ -9,7 +9,7 @@ title: SMILE - Deep Learning
     <h1 id="dl-top" class="title">Deep Learning</h1>
 
     <p>Deep learning is based on artificial neural networks with representation learning. The adjective “deep” refers to stacking many layers so that each stage transforms the input into a slightly more abstract representation. Unlike classical pipelines that rely on hand-crafted features, deep models discover useful features from data — though architecture choices such as depth, width, and regularization still matter.</p>
-    <p>SMILE’s <code>smile-core</code> module already ships a tabular <code>MLP</code> for classification and regression. The <code>smile-deep</code> module goes further: an idiomatic Java API over LibTorch (CPU, CUDA, and MPS), computer-vision models and transforms (<code>smile.vision</code>), and ONNX Runtime inference (<code>smile.onnx</code>). Large language models and ONNX GenAI are covered separately on <a href="llm.html">LLM</a>.</p>
+    <p>SMILE’s <code>smile-core</code> module already ships a tabular <code>MLP</code> for classification and regression. The <code>smile-deep</code> module goes further: an idiomatic Java API over LibTorch (CPU, CUDA, and MPS), computer-vision models and transforms (<code>smile.vision</code>), and ONNX Runtime inference (<code>smile.onnx</code>). Large language models and ONNX GenAI are covered separately on <a href="llm.html">llm.html</a>.</p>
 
 
     <h2 id="prerequisites" class="title">Prerequisites</h2>
@@ -38,9 +38,9 @@ title: SMILE - Deep Learning
     {% include "components/playground-extra-actions.njk" %}
   </div>
   <pre class="playground-source language-java"><code class="language-java">// Example JVM flags for a custom launcher
-java --enable-native-access=ALL-UNNAMED \
-     --add-opens=java.base/java.nio=ALL-UNNAMED \
-     -jar myapp.jar</code></pre>
+// java --enable-native-access=ALL-UNNAMED \
+//      --add-opens=java.base/java.nio=ALL-UNNAMED \
+//      -jar myapp.jar</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
@@ -279,12 +279,12 @@ boolean bf16 = Tensor.isBF16Supported();</code></pre>
     {% include "components/playground-extra-actions.njk" %}
   </div>
   <pre class="playground-source language-java"><code class="language-java">// Layer interface (sketch)
-public interface Layer extends Function&lt;Tensor, Tensor&gt; {
-    Tensor forward(Tensor input);
-    MemorySegment module();
-    String name();
-    Layer to(Device device);
-}</code></pre>
+// public interface Layer extends Function&lt;Tensor, Tensor&gt; {
+//     Tensor forward(Tensor input);
+//     MemorySegment module();
+//     String name();
+//     Layer to(Device device);
+// }</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
@@ -1064,7 +1064,7 @@ try (var guard = Tensor.noGradGuard()) {
 
     <h2 id="onnx" class="title">ONNX Runtime</h2>
 
-    <p><code>smile.onnx</code> wraps the <a href="https://onnxruntime.ai/">ONNX Runtime</a> C API through Panama FFM so you can load models exported from PyTorch, TensorFlow, scikit-learn, XGBoost, and more. Generative ONNX (GenAI) is documented on <a href="llm.html">LLM</a>, not here.</p>
+    <p><code>smile.onnx</code> wraps the <a href="https://onnxruntime.ai/">ONNX Runtime</a> C API through Panama FFM so you can load models exported from PyTorch, TensorFlow, scikit-learn, XGBoost, and more. Generative ONNX (GenAI) is documented on <a href="llm.html">llm.html</a>, not here.</p>
 
 
     <h3 id="onnx-overview">Overview</h3>

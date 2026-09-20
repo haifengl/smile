@@ -613,6 +613,66 @@
     max-width: 100%;
     height: auto;
   }
+  .figure-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: stretch;
+    gap: 1.25rem;
+    margin: 1.5rem 0;
+  }
+  .figure-row > .plot-figure {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 0;
+    margin-bottom: 0;
+    flex: 1 1 16rem;
+    max-width: 26rem;
+  }
+  .figure-row > .plot-figure > img {
+    width: 100%;
+    height: 16rem;
+    object-fit: contain;
+  }
+  .figure-row > .plot-figure > figcaption {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
+    text-align: center;
+  }
+  .figure-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+    align-items: stretch;
+  }
+  @media (max-width: 640px) {
+    .figure-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .figure-grid > .plot-figure {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 0;
+    margin-bottom: 0;
+    width: 100%;
+    max-width: none;
+  }
+  .figure-grid > .plot-figure > img {
+    width: 100%;
+    height: 16rem;
+    object-fit: contain;
+  }
+  .figure-grid > .plot-figure > figcaption {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
+    text-align: center;
+  }
   .plot-figure > figcaption,
   .dot-figure > figcaption,
   .dot-figure > .caption {

@@ -8,56 +8,64 @@ title: SMILE - Clustering
 <div class="col-md-9 order-md-first">
     <h1 id="clustering-top" class="title">Clustering</h1>
 
-    <p>Clustering is the assignment of a set of observations
-        into subsets (called clusters) so that observations in the same cluster are
-        similar in some sense. Clustering is a method of unsupervised learning,
-        and a common technique for statistical data analysis used in many fields.</p>
+    <p>Clustering assigns observations to groups so that points in the same cluster are more similar to each other than to points in other clusters. It is unsupervised learning and appears in exploratory analysis, customer segmentation, anomaly detection, and document organization.</p>
+    <p>SMILE’s <code>smile.clustering</code> package ships partitional (K-Means family), density-based (DBSCAN, HDBSCAN, DENCLUE, MEC), spectral, hierarchical, and text-oriented (SIB) algorithms. Each algorithm is a static factory that returns a rich result object with labels, optional centroids, and usually <code>predict</code>.</p>
+    <p>Prefer clustering when you need structure without labeled targets. Choose K-Means / K-Modes when <code>k</code> is known and clusters are roughly convex; X-Means / G-Means when <code>k</code> is unknown but roughly spherical; DBSCAN / HDBSCAN for arbitrary shapes and noise; hierarchical methods when you want a full dendrogram.</p>
 
-    <p>Hierarchical algorithms find successive clusters using previously
-        established clusters. These algorithms usually are either agglomerative
-        ("bottom-up") or divisive ("top-down"). Agglomerative algorithms begin
-        with each element as a separate cluster and merge them into successively
-        larger clusters. Divisive algorithms begin with the whole set and proceed
-        to divide it into successively smaller clusters.</p>
 
-    <p>Partitional algorithms typically determine all clusters at once, but can
-        also be used as divisive algorithms in the hierarchical clustering.
-        Many partitional clustering algorithms require the specification of
-        the number of clusters to produce in the input data set, prior to
-        execution of the algorithm. Barring knowledge of the proper value
-        beforehand, the appropriate value must be determined, a problem on
-        its own for which a number of techniques have been developed.</p>
+    <h2 id="core-abstractions" class="title">Core Abstractions</h2>
 
-    <p>Density-based clustering algorithms are devised to discover
-        arbitrary-shaped clusters. In this approach, a cluster is regarded as
-        a region in which the density of data objects exceeds a threshold.</p>
 
-    <p>Subspace clustering methods look for clusters that can only be seen in
-        a particular projection (subspace, manifold) of the data. These methods
-        thus can ignore irrelevant attributes. The general problem is also known
-        as Correlation clustering while the special case of axis-parallel subspaces
-        is also known as two-way clustering, co-clustering or biclustering in
-        bioinformatics: in these methods not only the objects are clustered but
-        also the features of the objects, i.e., if the data is represented in
-        a data matrix, the rows and columns are clustered simultaneously. They
-        usually do not however work with arbitrary feature combinations as in general
-        subspace methods.</p>
+    <h3 id="clustering-interface">Clustering Interface and Options</h3>
 
-    <h2 id="hierarchical">Agglomerative Hierarchical Clustering</h2>
+    <p><code>Clustering</code> defines the shared outlier sentinel and the common <code>Options</code> record used by most partitioning algorithms. Noise / outlier points are labeled <code>Clustering.OUTLIER</code> (<code>Integer.MAX_VALUE</code>).</p>
 
-    <p>Agglomerative hierarchical clustering
-        seeks to build a hierarchy of clusters in a bottom up approach: each
-        observation starts in its own cluster, and pairs of clusters are merged as
-        one moves up the hierarchy. The results of hierarchical clustering are
-        usually presented in a dendrogram.</p>
+    <p>Hyperparameters are fields of the nested <code>Clustering.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). Convenience constructor <code>new Clustering.Options(k, maxIter)</code> uses <code>tol = 1E-4</code> and no controller.</p>
 
-    <p>In general, the merges are determined in a greedy manner. In order to decide
-        which clusters should be combined, a measure of dissimilarity between sets
-        of observations is required. In most methods of hierarchical clustering,
-        this is achieved by use of an appropriate metric, and a linkage criteria
-        which specifies the dissimilarity of sets as a function of the pairwise
-        distances of observations in the sets. Hierarchical clustering has the
-        distinct advantage that any valid measure of distance can be used.</p>
+    <dl class="options-dl">
+        <dt><code>k</code><br><code>smile.clustering.k</code></dt>
+        <dd>Number of clusters (≥ 2). Default <code>2</code>.</dd>
+        <dt><code>maxIter</code><br><code>smile.clustering.iterations</code></dt>
+        <dd>Maximum iterations (&gt; 0). Default <code>100</code>.</dd>
+        <dt><code>tol</code><br><code>smile.clustering.tolerance</code></dt>
+        <dd>Convergence tolerance (≥ 0). Default <code>1E-4</code>.</dd>
+        <dt><code>controller</code></dt>
+        <dd>Optional <code>IterativeAlgorithmController&lt;AlgoStatus&gt;</code>; pass <code>null</code> to disable.</dd>
+    </dl>
+
+
+    <h3 id="partitioning">Partitioning</h3>
+
+    <p><code>Partitioning</code> is the base class for density-based algorithms (DBSCAN, HDBSCAN, MEC, DENCLUE) that do not produce centroids. It stores <code>k()</code> — the number of real clusters (excluding the outlier pseudo-cluster) — and <code>group()</code> labels, where noise carries <code>Clustering.OUTLIER</code>.</p>
+
+
+    <h3 id="centroid-clustering">CentroidClustering</h3>
+
+    <p><code>CentroidClustering&lt;T, U&gt;</code> is the record returned by centroid-based algorithms. <code>T</code> is the centroid type and <code>U</code> is the observation type (usually both <code>double[]</code>; SIB uses different types). It implements <code>Comparable</code> by total distortion so <code>Clustering.run</code> can pick the best restart.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Method</th><th>Returns</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>k()</code></td><td><code>int</code></td><td>Number of clusters</td></tr>
+            <tr><td><code>centers()</code></td><td><code>T[]</code></td><td>Cluster centroids / medoids</td></tr>
+            <tr><td><code>center(i)</code></td><td><code>T</code></td><td>Centroid of cluster <code>i</code></td></tr>
+            <tr><td><code>group()</code></td><td><code>int[]</code></td><td>Per-point cluster labels</td></tr>
+            <tr><td><code>group(i)</code></td><td><code>int</code></td><td>Label of data point <code>i</code></td></tr>
+            <tr><td><code>proximity(i)</code></td><td><code>double</code></td><td>Squared distance of point <code>i</code> to its centroid</td></tr>
+            <tr><td><code>size(i)</code></td><td><code>int</code></td><td>Number of points in cluster <code>i</code></td></tr>
+            <tr><td><code>distortions()</code></td><td><code>double[]</code></td><td>Average squared distance per cluster + overall</td></tr>
+            <tr><td><code>distortion()</code></td><td><code>double</code></td><td>Overall average squared distance (WCSS / n)</td></tr>
+            <tr><td><code>radius(i)</code></td><td><code>double</code></td><td>RMS radius of cluster <code>i</code>: <code>sqrt(distortions[i])</code></td></tr>
+            <tr><td><code>predict(x)</code></td><td><code>int</code></td><td>Assign a new point to the nearest centroid</td></tr>
+            <tr><td><code>name()</code></td><td><code>String</code></td><td>Algorithm name</td></tr>
+            <tr><td><code>toString()</code></td><td><code>String</code></td><td>Formatted cluster summary table</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>K-Means++ seeding is used internally by every centroid algorithm. Helpers <code>CentroidClustering.init</code> and <code>CentroidClustering.seeds</code> are also available for custom initialization.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -69,94 +77,66 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-1-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class HierarchicalClustering {
-        public static HierarchicalClustering fit(Linkage linkage);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.KMeans;
+import smile.datasets.GaussianMixture;
+import smile.math.MathEx;
+
+MathEx.setSeed(19650218);
+var data = GaussianMixture.generate().x();
+var model = KMeans.fit(data, 4, 100);
+System.out.println(model);
+System.out.printf("Distortion: %.4f%n", model.distortion());
+System.out.printf("Cluster 0 RMS radius: %.4f%n", model.radius(0));
+int label = model.predict(data[0]);
+System.out.println("First point label = " + label);</code></pre>
     </div>
     <div id="pg-1-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def hclust(data: Array[Array[Double]], method: String): HierarchicalClustering
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.KMeans
+import smile.datasets.GaussianMixture
+import smile.math.MathEx
 
-    def hclust[T](data: Array[T], distance: Distance[T], method: String): HierarchicalClustering
-    </code></pre>
+MathEx.setSeed(19650218)
+val data = GaussianMixture.generate.x
+val model = KMeans.fit(data, 4, 100)
+println(model)
+println(f"Distortion: ${model.distortion}%.4f")
+println(f"Cluster 0 RMS radius: ${model.radius(0)}%.4f")
+println("First point label = " + model.predict(data(0)))</code></pre>
     </div>
     <div id="pg-1-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun hclust(data: Array&lt;DoubleArray&gt;, method: String): HierarchicalClustering
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.KMeans
+import smile.datasets.GaussianMixture
+import smile.math.MathEx
 
-    fun &lt;T&gt; hclust(data: Array&lt;T&gt;, distance: Distance&lt;T&gt;, method: String): HierarchicalClustering
-    </code></pre>
+MathEx.setSeed(19650218)
+val data = GaussianMixture.generate().x()
+val model = KMeans.fit(data, 4, 100)
+println(model)
+println("Distortion: %.4f".format(model.distortion()))
+println("Cluster 0 RMS radius: %.4f".format(model.radius(0)))
+println("First point label = ${model.predict(data[0])}")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The parameter <code>method</code> specifies the agglomeration method to
-        merge clusters. This should be one of "single", "complete",
-        "upgma"/"average", "upgmc"/"centroid", "wpgma", "wpgmc"/"median",
-        and "ward".</p>
 
-    <p>The single linkage defines the distance between groups as the distance
-        between the closest pair of objects, one from each group.
-        A drawback of this method is the so-called chaining phenomenon: clusters
-        may be forced together due to single elements being close to each other,
-        even though many of the elements in each cluster may be very distant to
-        each other.</p>
+    <h2 id="kmeans" class="title">K-Means</h2>
 
-    <p>Single linkage clustering is essentially the same as Kruskal's algorithm
-        for minimum spanning trees. However, in single linkage clustering, the
-        order in which clusters are formed is important, while for minimum spanning
-        trees what matters is the set of pairs of points that form distances chosen
-        by the algorithm.</p>
+    <p>Lloyd’s algorithm with K-Means++ initialization and BBD-tree acceleration (Kanungo et al.). The BBD-tree speeds assignment from O(nkd) toward O(n log k · d). Missing-value data is supported via <code>KMeans.lloyd</code>.</p>
+    <p>Default choice for numerical vectors when <code>k</code> is known — fast and memory-efficient even for large <code>n</code>.</p>
+    <p>The examples in this section (and in CLARANS, X-Means, G-Means, Deterministic Annealing, DENCLUE, MEC, and Hierarchical Clustering below) use <strong>rem.txt</strong>: 1,800 points from six 2-D Gaussian distributions — a clean mixture where centroid-based methods work well.</p>
 
-    <p>The complete linkage is the opposite of single linkage. Distance between
-        groups is now defined as the distance between the most distant pair of
-        objects, one from each group.</p>
+    <dl class="options-dl">
+        <dt><code>KMeans.fit(data, k, maxIter)</code></dt>
+        <dd>Quick form returning <code>CentroidClustering&lt;double[], double[]&gt;</code>.</dd>
+        <dt><code>KMeans.fit(data, options)</code></dt>
+        <dd>Full control via <code>Clustering.Options</code>.</dd>
+        <dt><code>KMeans.fit(bbd, data, options)</code></dt>
+        <dd>Reuse a pre-built <code>BBDTree</code> across runs.</dd>
+        <dt><code>KMeans.lloyd(data, k, maxIter)</code></dt>
+        <dd>Lloyd updates that tolerate NaN missing values.</dd>
+    </dl>
 
-    <p>UPGMA (Unweighted Pair Group Method with Arithmetic mean, also known as average linkage)
-        defines the distance between two clusters as the mean distance between all possible
-        pairs of nodes in the two clusters.</p>
-
-    <p>In bioinformatics, UPGMA is used for the creation of phenetic trees
-        (phenograms). UPGMA assumes a constant rate of evolution (molecular
-        clock hypothesis), and is not a well-regarded method for inferring
-        relationships unless this assumption has been tested and justified
-        for the data set being used.</p>
-
-    <p>UPGMC (Unweighted Pair Group Method using Centroids, also known as centroid linkage)
-        defines the distance between two clusters as the Euclidean distance between their
-        centroids, as calculated by arithmetic mean. Only valid for Euclidean
-        distance based proximity matrix.</p>
-
-    <p>WPGMA (Weighted Pair Group Method with Arithmetic mean) down-weights the
-        largest group by giving equal weights to the two branches of the dendrogram
-        that are about to fuse.</p>
-
-    <p>Note that the terms weighted and unweighted refer to the final result,
-        not the math by which it is achieved. Thus, the simple averaging in WPGMA
-        produces a weighted result, and the proportional averaging in UPGMA produces
-        an unweighted result.</p>
-
-    <p>WPGMC (Weighted Pair Group Method using Centroids, also known as median linkage)
-        defines the distance between two clusters as the Euclidean distance between their
-        weighted centroids. Only valid for Euclidean distance based proximity matrix.</p>
-
-    <p>Ward's linkage. Ward's linkage follows the analysis of variance approach
-        The dissimilarity between two clusters is computed as the
-        increase in the "error sum of squares" (ESS) after fusing two clusters
-        into a single cluster. Ward's Method seeks to choose the successive
-        clustering steps to minimize the increase in ESS at each step.
-        Note that it is only valid for Euclidean distance based proximity matrix.</p>
-
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/six.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Mixture of Six Gaussians</div>
-    </div>
-
-    <p>To visualize the clustering results, we apply hierarchical clustering
-        to 2d data in the following. The data is generated from six Gaussian
-        distributions, each 300 samples.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -168,49 +148,74 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-2-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    import smile.clustering.*;
-    import smile.clustering.linkage.*;
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.BBDTree;
+import smile.clustering.Clustering;
+import smile.clustering.KMeans;
+import smile.io.Read;
+import smile.math.MathEx;
+import org.apache.commons.csv.CSVFormat;
 
-    var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
-    var clusters = HierarchicalClustering.fit(CompleteLinkage.of(x));
-    var figure = new Dendrogram(clusters.tree(), clusters.height()).figure();
-    show(figure);
-          </code></pre>
+MathEx.setSeed(19650218);
+double[][] data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+
+var model = Clustering.run(20, () -&gt; KMeans.fit(data, 6, 100));
+System.out.println(model);
+
+var bbd = new BBDTree(data);
+var opts = new Clustering.Options(6, 100, 1E-4, null);
+var again = KMeans.fit(bbd, data, opts);
+System.out.printf("BBD distortion: %.4f%n", again.distortion());
+System.out.printf("Best of 20: %.4f%n", model.distortion());</code></pre>
     </div>
     <div id="pg-2-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=" ").toArray()
-    val clusters = hclust(x, "complete")
-    show(dendrogram(clusters))
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.{BBDTree, Clustering, KMeans}
+import smile.math.MathEx
+import smile.read
+
+MathEx.setSeed(19650218)
+val data = read.csv("data/clustering/rem.txt",
+  header = false, delimiter = " ").toArray
+val model = Clustering.run(20, () =&gt; KMeans.fit(data, 6, 100))
+println(model)
+
+val bbd = new BBDTree(data)
+val opts = new Clustering.Options(6, 100, 1E-4, null)
+val again = KMeans.fit(bbd, data, opts)
+println(f"BBD distortion: ${again.distortion}%.4f")
+println(f"Best of 20: ${model.distortion}%.4f")</code></pre>
     </div>
     <div id="pg-2-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    import smile.*;
-    import smile.clustering.*;
-    import smile.plot.swing.*;
-    import java.awt.Color;
-    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=' ').toArray();
-    val clusters = hclust(x, "complete");
-    val plot = Dendrogram(clusters.tree(), clusters.height());
-    plot.canvas().window();
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.BBDTree
+import smile.clustering.Clustering
+import smile.clustering.KMeans
+import smile.io.Read
+import smile.math.MathEx
+import org.apache.commons.csv.CSVFormat
+
+MathEx.setSeed(19650218)
+val data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray()
+val model = Clustering.run(20) { KMeans.fit(data, 6, 100) }
+println(model)
+
+val bbd = BBDTree(data)
+val opts = Clustering.Options(6, 100, 1E-4, null)
+val again = KMeans.fit(bbd, data, opts)
+println("BBD distortion: %.4f".format(again.distortion()))
+println("Best of 20: %.4f".format(model.distortion()))</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The clustering results can be visualized by a hendroagram, which
-        is a tree diagram to illustrate the arrangement
-        of the clusters produced by hierarchical clustering.</p>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/hclust-dendrogram.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Dendrogram</div>
-    </div>
+    <figure class="plot-figure">
+        <img src="images/kmeans-six.png" class="enlarge" alt="K-Means on six Gaussians" />
+        <figcaption>K-Means on six Gaussians</figcaption>
+    </figure>
 
-    <p>If a hard partition is need, we can cut a hierarchical clustering tree
-        into several groups by specifying the desired number or the cut height.</p>
+    <p>Centroid methods struggle when clusters are long and thin rather than roughly spherical. The <strong>elongate.txt</strong> data (300 points) are two parallel diagonal strips. K-Means minimizes within-cluster sum of squares with Euclidean Voronoi cells, so points at the far ends of a strip are often closer to the other strip’s centroid than to their own. With <code>k = 2</code> it typically cuts both strips crosswise instead of recovering the two longitudinal clusters — prefer density-based or spectral methods for shapes like this.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -222,64 +227,68 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-3-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var y = clusters.partition(6);
-    ScatterPlot.of(x, y, '.').canvas().window();
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.Clustering;
+import smile.clustering.KMeans;
+import smile.io.Read;
+import smile.math.MathEx;
+import org.apache.commons.csv.CSVFormat;
+
+MathEx.setSeed(19650218);
+double[][] data = Read.csv("data/clustering/elongate.txt",
+    CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
+var model = Clustering.run(20, () -&gt; KMeans.fit(data, 2, 100));
+System.out.println(model);
+System.out.printf("Distortion: %.4f%n", model.distortion());</code></pre>
     </div>
     <div id="pg-3-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val y = clusters.partition(6)
-    show(plot(x, y, '.'))
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.{Clustering, KMeans}
+import smile.math.MathEx
+import smile.read
+
+MathEx.setSeed(19650218)
+val data = read.csv("data/clustering/elongate.txt",
+  header = false, delimiter = "\t").toArray
+val model = Clustering.run(20, () =&gt; KMeans.fit(data, 2, 100))
+println(model)
+println(f"Distortion: ${model.distortion}%.4f")</code></pre>
     </div>
     <div id="pg-3-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    val y = clusters.partition(6)
-    ScatterPlot.of(x, y, '.').canvas().window();
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.Clustering
+import smile.clustering.KMeans
+import smile.io.Read
+import smile.math.MathEx
+import org.apache.commons.csv.CSVFormat
+
+MathEx.setSeed(19650218)
+val data = Read.csv("data/clustering/elongate.txt",
+    CSVFormat.DEFAULT.withDelimiter('\t')).toArray()
+val model = Clustering.run(20) { KMeans.fit(data, 2, 100) }
+println(model)
+println("Distortion: %.4f".format(model.distortion()))</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The partitioning of six clusters is shown as</p>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/hclust-six.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Hierarchical Clustering</div>
-    </div>
+    <figure class="plot-figure">
+        <img src="images/kmeans-elongate.png" class="enlarge" alt="K-Means on two elongate clusters" />
+        <figcaption>K-Means on two elongate clusters</figcaption>
+    </figure>
 
-    <h2 id="k-means">K-Means</h2>
 
-    <p>K-Means clustering partitions <code>n</code> observations into <code>k</code> clusters in which
-        each observation belongs to the cluster with the nearest mean.
-        Although finding an exact solution to the K-Means problem for arbitrary
-        input is NP-hard, the standard approach to finding an approximate solution
-        (often called Lloyd's algorithm or the K-Means algorithm) is used widely
-        and frequently finds reasonable solutions quickly.</p>
+    <h2 id="kmedoids" class="title">K-Medoids (CLARANS)</h2>
 
-    <p>K-Means is a hard clustering method, i.e. each sample is assigned to
-        a specific cluster. In contrast, soft clustering, e.g. the
-        Expectation-Maximization algorithm for Gaussian mixtures, assign samples
-        to different clusters with different probabilities.</p>
+    <p>CLARANS (Clustering Large Applications based on RANdomized Search). Unlike K-Means, medoids are always actual data points. Use when centers must be real observations, when you need a custom <code>Distance&lt;T&gt;</code> on arbitrary objects, or when outliers would distort Euclidean centroids.</p>
 
-    <p>The K-Means algorithm has at least two major theoretic shortcomings:</p>
-    <ul>
-        <li>First, it has been shown that the worst case running time of the
-            algorithm is super-polynomial in the input size.</li>
+    <dl class="options-dl">
+        <dt><code>k</code></dt>
+        <dd>Number of clusters.</dd>
+        <dt><code>maxIter</code></dt>
+        <dd>Mapped to <code>numLocal</code> — number of local-minima searches (capped at 3; 2 is usually best).</dd>
+        <dt><code>tol</code></dt>
+        <dd>Ratio for <code>maxNeighbor = tol * k * (n - k)</code> (default <code>0.0125</code>).</dd>
+    </dl>
 
-        <li>Second, the approximation found can be arbitrarily bad with respect
-            to the objective function compared to the optimal learn.</li>
-    </ul>
-
-    <p>In SMILE, we use K-Means++ which addresses the second of these
-        obstacles by specifying a procedure to initialize the cluster centers before
-        proceeding with the standard K-Means optimization iterations. With the
-        K-Means++ initialization, the algorithm is guaranteed to find a solution
-        that is O(log k) competitive to the optimal K-Means solution.</p>
-
-    <p>We also use K-D trees to speed up each K-Means step as described in the filter
-        algorithm by Kanungo, et al.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -291,30 +300,73 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-4-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class KMeans {
-        public static KMeans fit(double[][] data, Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.Clustering;
+import smile.clustering.KMedoids;
+import smile.io.Read;
+import smile.math.MathEx;
+import smile.math.distance.EuclideanDistance;
+import org.apache.commons.csv.CSVFormat;
+
+MathEx.setSeed(19650218);
+double[][] data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+var model = Clustering.run(20,
+    () -&gt; KMedoids.fit(data, new EuclideanDistance(), 6));
+System.out.println(model);
+System.out.printf("Distortion = %.4f%n", model.distortion());</code></pre>
     </div>
     <div id="pg-4-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.{Clustering, KMedoids}
+import smile.math.MathEx
+import smile.math.distance.EuclideanDistance
+import smile.read
+
+MathEx.setSeed(19650218)
+val data = read.csv("data/clustering/rem.txt",
+  header = false, delimiter = " ").toArray
+val model = Clustering.run(20,
+  () =&gt; KMedoids.fit(data, new EuclideanDistance, 6))
+println(model)
+println(f"Distortion = ${model.distortion}%.4f")</code></pre>
     </div>
     <div id="pg-4-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun kmeans(data: Array&lt;DoubleArray&gt;, k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.Clustering
+import smile.clustering.KMedoids
+import smile.io.Read
+import smile.math.MathEx
+import smile.math.distance.EuclideanDistance
+import org.apache.commons.csv.CSVFormat
+
+MathEx.setSeed(19650218)
+val data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray()
+val model = Clustering.run(20) {
+    KMedoids.fit(data, EuclideanDistance(), 6)
+}
+println(model)
+println("Distortion = %.4f".format(model.distortion()))</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The parameter <code>maxIter</code> specifies the maximum number of iterations.
-        If the output of K-Means is used to initialize other algorithms, a small number (says 20)
-        is usually sufficient. In practice, we often run the K-Means multiple times
-        and choose the best one. To do that, set the parameter <code>runs &gt; 1</code>
-        (e.g. 10 ~ 20).</p>
+
+    <figure class="plot-figure">
+        <img src="images/clarans.png" class="enlarge" alt="CLARANS on six Gaussians" />
+        <figcaption>CLARANS on six Gaussians</figcaption>
+    </figure>
+
+
+    <h2 id="kmodes" class="title">K-Modes</h2>
+
+    <p>Categorical analogue of K-Means. Centroids are per-column modes (most frequent category), and distances are Hamming distances on integer-coded categorical features. Use for purely categorical or mixed-integer data where Euclidean distance is meaningless.</p>
+
+    <dl class="options-dl">
+        <dt><code>KModes.fit(int[][] data, k, maxIter)</code></dt>
+        <dd>Quick form returning <code>CentroidClustering&lt;int[], int[]&gt;</code>.</dd>
+        <dt><code>KModes.fit(data, options)</code></dt>
+        <dd>Full control via <code>Clustering.Options</code>.</dd>
+    </dl>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -326,89 +378,86 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-5-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var clusters = Clustering.run(20, () -> KMeans.fit(x, 6, 100));
-    var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
-    show(figure);
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.KModes;
+import smile.datasets.WeatherNominal;
+import smile.math.MathEx;
+
+MathEx.setSeed(19650218);
+var weather = new WeatherNominal();
+double[][] level = weather.level();
+int[][] data = new int[level.length][level[0].length];
+for (int i = 0; i &lt; level.length; i++) {
+    for (int j = 0; j &lt; level[i].length; j++) {
+        data[i][j] = (int) level[i][j];
+    }
+}
+
+var model = KModes.fit(data, 2, 10);
+System.out.println(model);
+System.out.println("Mode of cluster 0: " +
+    java.util.Arrays.toString(model.center(0)));
+System.out.println("Predict: " + model.predict(data[0]));</code></pre>
     </div>
     <div id="pg-5-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val clusters = kmeans(x, 6, runs = 20)
-    show(plot(x, clusters.y, '.'))
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.KModes
+import smile.datasets.WeatherNominal
+import smile.math.MathEx
+
+MathEx.setSeed(19650218)
+val weather = new WeatherNominal
+val level = weather.level
+val data = level.map(_.map(_.toInt))
+val model = KModes.fit(data, 2, 10)
+println(model)
+println("Mode of cluster 0: " + model.center(0).mkString("[", ", ", "]"))
+println("Predict: " + model.predict(data(0)))</code></pre>
     </div>
     <div id="pg-5-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    val clusters = kmeans(x, 6, runs = 20)
-    ScatterPlot.of(x, clusters.y, '.').canvas().window()
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.KModes
+import smile.datasets.WeatherNominal
+import smile.math.MathEx
+
+MathEx.setSeed(19650218)
+val weather = WeatherNominal()
+val level = weather.level()
+val data = Array(level.size) { i -&gt;
+    IntArray(level[i].size) { j -&gt; level[i][j].toInt() }
+}
+val model = KModes.fit(data, 2, 10)
+println(model)
+println("Mode of cluster 0: ${model.center(0).contentToString()}")
+println("Predict: ${model.predict(data[0])}")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>K-Means works very well on Gaussian mixtures.</p>
+    <p>Minimal synthetic example — Gender (0/1), Color (0–2), Size (0–2):</p>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/kmeans-six.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">K-Means on Gaussian Mixture</div>
-    </div>
-
-    <p>If the clusters are elongated, however, the results may be far from optimal.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-6-2">Kotlin</button>
+    <span class="lang-tab is-active">Java</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-6-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var x = Read.csv("data/clustering/elongate.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
-    var clusters = Clustering.run(20, () -> KMeans.fit(elongate, 2, 100));
-    var figure = ScatterPlot.of(elongate, clusters.group(), '.').figure();
-    show(figure);
-          </code></pre>
-    </div>
-    <div id="pg-6-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val x = read.csv("data/clustering/elongate.txt", header=false, delimiter="\t").toArray()
-    val clusters = kmeans(x, 2, runs = 20)
-    show(plot(x, clusters.y, '.'))
-    </code></pre>
-    </div>
-    <div id="pg-6-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    val x = read.csv("data/clustering/elongate.txt", header=false, delimiter='\t').toArray()
-    val clusters = kmeans(x, 2, runs = 20)
-    ScatterPlot.of(x, clusters.y, '.').canvas().window()
-    </code></pre>
-    </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.clustering.KModes;
+
+int[][] data = {
+    {0, 0, 0}, {0, 0, 1}, {1, 2, 2}, {1, 2, 1}
+};
+var model = KModes.fit(data, 2, 50);
+int[] mode0 = model.center(0);
+int label = model.predict(new int[]{0, 0, 0});</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/kmeans-elongate.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">K-Means on 2 Elongate Clusters</div>
-    </div>
 
-    <p>In K-Means, the number of clusters <code>K</code> has to be supplied by the user.
-        However, the appropriate number of clusters is often unknown in practice.
-        Several approaches (e.g. X-Means, G-Means, deterministic annealing, etc.)
-        have been proposed to handle this challenge.</p>
+    <h2 id="xmeans" class="title">X-Means</h2>
 
-    <h2 id="x-means">X-Means</h2>
+    <p>Extends K-Means by automatically determining the number of clusters. Starting from one cluster, it tries to split each centroid; a split is accepted only if the BIC of the two-child model improves under a Gaussian spherical assumption. After each splitting round, centroids are refined with BBD-tree-accelerated Lloyd updates.</p>
+    <p>Use when <code>k</code> is unknown and the data are reasonably Gaussian-like. The BIC criterion favors spherical, balanced clusters.</p>
 
-    <p>X-Means clustering algorithm is an extended K-Means which tries to
-        automatically determine the number of clusters based on BIC scores.
-        Starting with only one cluster, the X-Means algorithm goes into action
-        after each run of K-Means, making local decisions about which subset of the
-        current centroids should split themselves in order to better fit the data.
-        The splitting decision is done by computing the Bayesian Information
-        Criterion (BIC).</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -420,26 +469,57 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-7-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class XMeans {
-        public static XMeans fit(double[][] data, Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.XMeans;
+import smile.io.Read;
+import smile.math.MathEx;
+import org.apache.commons.csv.CSVFormat;
+
+MathEx.setSeed(19650218);
+double[][] data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+var model = XMeans.fit(data, 50, 100);
+System.out.printf("Discovered %d clusters, distortion = %.4f%n",
+    model.k(), model.distortion());</code></pre>
     </div>
     <div id="pg-7-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.XMeans
+import smile.math.MathEx
+import smile.read
+
+MathEx.setSeed(19650218)
+val data = read.csv("data/clustering/rem.txt",
+  header = false, delimiter = " ").toArray
+val model = XMeans.fit(data, 50, 100)
+println(f"Discovered ${model.k} clusters, distortion = ${model.distortion}%.4f")</code></pre>
     </div>
     <div id="pg-7-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun xmeans(data: Array&lt;DoubleArray&gt;, k: Int = 100): XMeans
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.XMeans
+import smile.io.Read
+import smile.math.MathEx
+import org.apache.commons.csv.CSVFormat
+
+MathEx.setSeed(19650218)
+val data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray()
+val model = XMeans.fit(data, 50, 100)
+println("Discovered %d clusters, distortion = %.4f"
+    .format(model.k(), model.distortion()))</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where the parameter <code>k</code> is the maximum number of clusters</p>
+
+    <figure class="plot-figure">
+        <img src="images/xmeans-six.png" class="enlarge" alt="X-Means on six Gaussians" />
+        <figcaption>X-Means on six Gaussians</figcaption>
+    </figure>
+
+
+    <h2 id="gmeans" class="title">G-Means</h2>
+
+    <p>Like X-Means, but uses the Anderson-Darling test instead of BIC to decide whether to split. Cluster members are projected onto the candidate split direction; if the 1-D projection is rejected as Gaussian, the split is accepted.</p>
+    <p>Prefer G-Means when you suspect non-Gaussian within-cluster distributions — it is more sensitive to multi-modality than X-Means.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -451,43 +531,69 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-8-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
-    var clusters = XMeans.fit(x, 50, 100);
-    var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
-    show(figure);
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.GMeans;
+import smile.io.Read;
+import smile.math.MathEx;
+import org.apache.commons.csv.CSVFormat;
+
+MathEx.setSeed(19650218);
+double[][] data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+var model = GMeans.fit(data, 50, 100);
+System.out.printf("G-Means found %d clusters%n", model.k());</code></pre>
     </div>
     <div id="pg-8-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=" ").toArray()
-    val clusters = xmeans(x, 50)
-    show(plot(x, clusters.y, '.'))
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.GMeans
+import smile.math.MathEx
+import smile.read
+
+MathEx.setSeed(19650218)
+val data = read.csv("data/clustering/rem.txt",
+  header = false, delimiter = " ").toArray
+val model = GMeans.fit(data, 50, 100)
+println(s"G-Means found ${model.k} clusters")</code></pre>
     </div>
     <div id="pg-8-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=' ').toArray()
-    val clusters = xmeans(x, 50)
-    ScatterPlot.of(x, clusters.y, '.').canvas().window()
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.GMeans
+import smile.io.Read
+import smile.math.MathEx
+import org.apache.commons.csv.CSVFormat
+
+MathEx.setSeed(19650218)
+val data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray()
+val model = GMeans.fit(data, 50, 100)
+println("G-Means found ${model.k()} clusters")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/xmeans-six.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">X-Means</div>
-    </div>
 
-    <h2 id="g-means">G-Means</h2>
+    <figure class="plot-figure">
+        <img src="images/gmeans-six.png" class="enlarge" alt="G-Means on six Gaussians" />
+        <figcaption>G-Means on six Gaussians</figcaption>
+    </figure>
 
-    <p>G-Means clustering algorithm is another extended K-Means which tries to
-        automatically determine the number of clusters by normality test.
-        The G-Means algorithm is based on a statistical test for the hypothesis
-        that a subset of data follows a Gaussian distribution. G-Means runs
-        K-Means with increasing k in a hierarchical fashion until the test accepts
-        the hypothesis that the data assigned to each K-Means center are Gaussian.</p>
+
+    <h2 id="deterministic-annealing" class="title">Deterministic Annealing</h2>
+
+    <p>A soft-EM approach that avoids local optima by annealing temperature. At high temperature all centroids converge to the global mean; as temperature decreases, pairs of centroids split when separation exceeds a threshold, growing the model up to <code>kmax</code>. A final hard-assignment pass produces the <code>CentroidClustering</code> result.</p>
+
+    <p>Hyperparameters are fields of the nested <code>DeterministicAnnealing.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip).</p>
+
+    <dl class="options-dl">
+        <dt><code>kmax</code><br><code>smile.deterministic_annealing.k</code></dt>
+        <dd>Maximum number of clusters (≥ 2). Default <code>2</code>.</dd>
+        <dt><code>alpha</code><br><code>smile.deterministic_annealing.alpha</code></dt>
+        <dd>Temperature cooling rate in (0, 1). Typical: 0.8–0.95. Default <code>0.9</code>.</dd>
+        <dt><code>maxIter</code><br><code>smile.deterministic_annealing.iterations</code></dt>
+        <dd>Maximum Lloyd iterations at each temperature. Default <code>100</code>.</dd>
+        <dt><code>tol</code><br><code>smile.deterministic_annealing.tolerance</code></dt>
+        <dd>Convergence tolerance for soft distortion. Default <code>1E-4</code>.</dd>
+        <dt><code>splitTol</code><br><code>smile.deterministic_annealing.split_tolerance</code></dt>
+        <dd>Minimum centroid separation before a split is accepted. Default <code>1E-2</code>.</dd>
+    </dl>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -499,31 +605,66 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-9-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class GMeans {
-        public static GMeans fit(double[][] data, Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.DeterministicAnnealing;
+import smile.io.Read;
+import smile.math.MathEx;
+import org.apache.commons.csv.CSVFormat;
+
+MathEx.setSeed(19650218);
+double[][] data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+var model = DeterministicAnnealing.fit(data, 12, 0.9, 100);
+System.out.printf("Converged to %d clusters, distortion = %.4f%n",
+    model.k(), model.distortion());</code></pre>
     </div>
     <div id="pg-9-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def gmeans(data: Array[Array[Double]], k: Int = 100): GMeans
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.DeterministicAnnealing
+import smile.math.MathEx
+import smile.read
+
+MathEx.setSeed(19650218)
+val data = read.csv("data/clustering/rem.txt",
+  header = false, delimiter = " ").toArray
+val model = DeterministicAnnealing.fit(data, 12, 0.9, 100)
+println(f"Converged to ${model.k} clusters, distortion = ${model.distortion}%.4f")</code></pre>
     </div>
     <div id="pg-9-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun gmeans(data: Array&lt;DoubleArray&gt;, k: Int = 100): GMeans
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.DeterministicAnnealing
+import smile.io.Read
+import smile.math.MathEx
+import org.apache.commons.csv.CSVFormat
+
+MathEx.setSeed(19650218)
+val data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray()
+val model = DeterministicAnnealing.fit(data, 12, 0.9, 100)
+println("Converged to %d clusters, distortion = %.4f"
+    .format(model.k(), model.distortion()))</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where the parameter <code>k</code> is the maximum number of clusters</p>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/gmeans-six.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">G-Means</div>
-    </div>
+    <figure class="plot-figure">
+        <img src="images/deterministic-annealing.png" class="enlarge" alt="Deterministic Annealing on six Gaussians" />
+        <figcaption>Deterministic Annealing on six Gaussians</figcaption>
+    </figure>
+
+
+    <h2 id="dbscan" class="title">DBSCAN</h2>
+
+    <p>Density-Based Spatial Clustering of Applications with Noise. A point is a <em>core point</em> if at least <code>minPts</code> neighbors lie within radius <code>ε</code>. Dense regions reachable from a core point form a cluster; unreachable points are labeled <code>Clustering.OUTLIER</code>.</p>
+    <p>Discovers arbitrary shapes, does not require <code>k</code>, and labels noise natively. Uses a KD-tree for <code>double[]</code> (O(n log n)); a <code>LinearSearch</code> for arbitrary types. Works poorly in high dimensions.</p>
+
+    <dl class="options-dl">
+        <dt><code>minPts</code></dt>
+        <dd>Minimum neighbors within <code>radius</code> for a core point (≥ 1). Typical: 4–10.</dd>
+        <dt><code>radius</code></dt>
+        <dd>Neighborhood radius <code>ε</code> (&gt; 0). Choose at the knee of a k-NN distance plot.</dd>
+    </dl>
+
+    <p>The example below uses the <strong>Chameleon t4.8k</strong> dataset (8,000 noisy 2-D points with irregular cluster shapes) — a standard benchmark for density-based clustering.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -535,90 +676,77 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-10-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var clusters = GMeans.fit(x, 50, 100);
-    var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
-    show(figure);
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays;
+import smile.clustering.Clustering;
+import smile.clustering.DBSCAN;
+import smile.io.Read;
+import org.apache.commons.csv.CSVFormat;
+
+double[][] data = Read.csv("data/clustering/chameleon/t4.8k.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+DBSCAN&lt;double[]&gt; model = DBSCAN.fit(data, 20, 10);
+System.out.printf("Found %d clusters%n", model.k());
+
+long noise = Arrays.stream(model.group())
+    .filter(l -&gt; l == Clustering.OUTLIER).count();
+System.out.printf("Noise points: %d%n", noise);
+int label = model.predict(data[0]);
+if (label == Clustering.OUTLIER) System.out.println("Noise");
+else System.out.println("Cluster " + label);</code></pre>
     </div>
     <div id="pg-10-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val clusters = gmeans(x, 50)
-    show(plot(x, clusters.y, '.'))
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.{Clustering, DBSCAN}
+import smile.read
+
+val data = read.csv("data/clustering/chameleon/t4.8k.txt",
+  header = false, delimiter = " ").toArray
+val model = DBSCAN.fit(data, 20, 10)
+println(s"Found ${model.k} clusters")
+val noise = model.group.count(_ == Clustering.OUTLIER)
+println(s"Noise points: $noise")
+val label = model.predict(data(0))
+println(if (label == Clustering.OUTLIER) "Noise" else s"Cluster $label")</code></pre>
     </div>
     <div id="pg-10-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    val clusters = gmeans(x, 50)
-    ScatterPlot.of(x, clusters.y, '.').canvas().window()
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.Clustering
+import smile.clustering.DBSCAN
+import smile.io.Read
+import org.apache.commons.csv.CSVFormat
+
+val data = Read.csv("data/clustering/chameleon/t4.8k.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray()
+val model = DBSCAN.fit(data, 20, 10)
+println("Found ${model.k()} clusters")
+val noise = model.group().count { it == Clustering.OUTLIER }
+println("Noise points: $noise")
+val label = model.predict(data[0])
+println(if (label == Clustering.OUTLIER) "Noise" else "Cluster $label")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Neither X-Means nor G-Means works well on the elongate data. Both report only
-        one cluster.</p>
 
-    <h2 id="deterministic-annealing">Deterministic Annealing Clustering</h2>
+    <figure class="plot-figure">
+        <img src="images/dbscan.png" class="enlarge" alt="DBSCAN on Chameleon t4.8k" />
+        <figcaption>DBSCAN on Chameleon t4.8k</figcaption>
+    </figure>
 
-    <p>The observation of annealing processes in physical chemistry motivated
-        the use of similar concepts to avoid local minima of the optimization cost.
-        Certain chemical systems can be driven to their low-energy states
-        by annealing, which is a gradual reduction of temperature,
-        spending a long time at the vicinity of the phase transition points.
-        In the corresponding probabilistic framework, a Gibbs distribution
-        is defined over the set of all possible configurations which assigns
-        higher probability to configurations of lower energy. This distribution
-        is parameterized by the temperature, and as the temperature is lowered
-        it becomes more discriminating (concentrating most of the probability
-        in a smaller subset of low-energy configurations). At the limit of
-        low temperature it assigns nonzero probability only to global minimum
-        configurations.</p>
 
-    <p>A known technique for nonconvex optimization that
-        capitalizes on this physical analogy is simulated annealing based on
-        the Metropolis algorithm. A sequence of random
-        moves is generated and the random decision to accept a move depends
-        on the cost of the resulting configuration relative to that of the
-        current state. However, one must be very careful with the annealing
-        schedule, i.e., the rate at which the temperature is lowered.
-        In theory, the global minimum can be achieved if the schedule obeys
-        <code>T &prop; 1 / log n</code>, where <code>n</code> is the number
-        of the current iteration. Such schedules are not realistic in many applications.
-        It was shown that perturbations of infinite variance (e.g., the Cauchy distribution)
-        provide better ability to escape from minima and allow, in principle,
-        the use of faster schedules.</p>
+    <h2 id="hdbscan" class="title">HDBSCAN</h2>
 
-    <p>Deterministic annealing tries to enjoy the best of both worlds.
-        On the one hand it is deterministic, meaning that we do not want
-        to be wandering randomly on the energy surface while making
-        incremental progress on the average, as is the case for simulated annealing.
-        On the other hand, it is still an annealing method and aims at the global
-        minimum, instead of getting greedily attracted to a nearby local minimum.
-        One can view deterministic annealing as replacing stochastic simulations by the use of expectation.
-        An effective energy function, which is parameterized by a (pseudo) temperature,
-        is derived through expectation and is deterministically optimized at successively
-        reduced temperatures.</p>
+    <p>Hierarchical DBSCAN builds a full density hierarchy (mutual-reachability MST → condensed tree) and selects stable flat clusters via a stability criterion. Unlike DBSCAN, it handles clusters of varying density without a global <code>ε</code>.</p>
+    <p>Pipeline: core distances from <code>minPoints</code> nearest neighbors → mutual-reachability graph → MST → condensed hierarchy pruned by <code>minClusterSize</code>.</p>
+    <p><strong>Note:</strong> the current implementation computes full pairwise distances (O(n²) memory and time). For very large datasets consider sub-sampling.</p>
 
-    <p>Deterministic annealing clustering is based on principles of information theory
-        and probability theory, and it consists of minimizing the clustering cost
-        at prescribed levels of randomness.
-        The method provides soft clustering solutions at different scales,
-        where the scale is directly related to the temperature parameter.
-        For each temperature value, the algorithm iterates between the calculation
-        of all posteriori probabilities and the update of the centroids vectors,
-        until convergence is reached.
-        There are "phase transitions" in the design process, where phases
-        correspond to the number of effective clusters in the solution,
-        which grows via splits as the temperature is lowered.
-        The annealing starts with a high temperature.
-        Here, all centroids vectors converge to the center of the pattern
-        distribution (independent of their initial positions). Below a critical
-        temperature the vectors start to split. Further decreasing the temperature
-        leads to more splittings until all centroids vectors are separate. The
-        annealing can therefore avoid (if it is sufficiently slow) the convergence
-        to local minima. If a limitation on the number of clusters is imposed,
-        then at zero temperature a hard clustering solution is obtained.</p>
+    <p>Hyperparameters are fields of the nested <code>HDBSCAN.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). Convenience form: <code>HDBSCAN.fit(data, minPoints, minClusterSize)</code>. Also accepts a custom <code>Distance&lt;T&gt;</code>.</p>
+
+    <dl class="options-dl">
+        <dt><code>minPoints</code></dt>
+        <dd>Neighborhood size for core-distance estimation. Larger = smoother density.</dd>
+        <dt><code>minClusterSize</code></dt>
+        <dd>Minimum cluster size in the condensed hierarchy. Controls granularity.</dd>
+    </dl>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -630,28 +758,74 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-11-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class DeterministicAnnealing {
-        public static DeterministicAnnealing fit(double[][] data, Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.Clustering;
+import smile.clustering.HDBSCAN;
+import smile.io.Read;
+import org.apache.commons.csv.CSVFormat;
+
+double[][] data = Read.csv("data/clustering/chameleon/t4.8k.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+HDBSCAN&lt;double[]&gt; model = HDBSCAN.fit(data, 20, 40);
+System.out.printf("Found %d clusters%n", model.k());
+double[] stability = model.stability();
+for (int i = 0; i &lt; model.k(); i++) {
+    System.out.printf("Cluster %d stability: %.4f%n", i, stability[i]);
+}
+long noise = java.util.Arrays.stream(model.group())
+    .filter(l -&gt; l == Clustering.OUTLIER).count();
+System.out.println("Outliers: " + noise);</code></pre>
     </div>
     <div id="pg-11-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def dac(data: Array[Array[Double]], k: Int, alpha: Double): DeterministicAnnealing
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.{Clustering, HDBSCAN}
+import smile.read
+
+val data = read.csv("data/clustering/chameleon/t4.8k.txt",
+  header = false, delimiter = " ").toArray
+val model = HDBSCAN.fit(data, 20, 40)
+println(s"Found ${model.k} clusters")
+model.stability.zipWithIndex.foreach { case (s, i) =&gt;
+  println(f"Cluster $i stability: $s%.4f")
+}
+println("Outliers: " + model.group.count(_ == Clustering.OUTLIER))</code></pre>
     </div>
     <div id="pg-11-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun dac(data: Array&lt;DoubleArray&gt;, k: Int, alpha: Double): DeterministicAnnealing
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.Clustering
+import smile.clustering.HDBSCAN
+import smile.io.Read
+import org.apache.commons.csv.CSVFormat
+
+val data = Read.csv("data/clustering/chameleon/t4.8k.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray()
+val model = HDBSCAN.fit(data, 20, 40)
+println("Found ${model.k()} clusters")
+model.stability().forEachIndexed { i, s -&gt;
+    println("Cluster $i stability: %.4f".format(s))
+}
+val outliers = model.group().count { it == Clustering.OUTLIER }
+println("Outliers: $outliers")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>where <code>k</code> is the maximum number of clusters, and <code>alpha</code>
-        is the annealing control parameter in (0, 1). The temperature <code>T</code>
-        is decreasing as <code>T<sub>i+1</sub> = alpha * T<sub>i</sub></code>.</p>
+
+    <h2 id="denclue" class="title">DENCLUE</h2>
+
+    <p>DENsity CLUstering selects <code>m</code> representative sample points via K-Means (“particles”), then hill-climbs the Gaussian kernel density estimate from each training point to its local density maximum (“attractor”). DBSCAN is run on the attractors for the final assignment.</p>
+    <p>Best for smooth, continuous data with density peaks — not for high dimensions, sparse data, or uniform distributions.</p>
+
+    <p>Hyperparameters are fields of the nested <code>DENCLUE.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). Quick form: <code>DENCLUE.fit(data, sigma, m)</code>. <code>predict(x)</code> may return <code>Clustering.OUTLIER</code>.</p>
+
+    <dl class="options-dl">
+        <dt><code>sigma</code><br><code>smile.denclue.sigma</code></dt>
+        <dd>Gaussian kernel bandwidth. Choose so attractor count is stable across a range of sigma. Default <code>1.0</code>.</dd>
+        <dt><code>m</code><br><code>smile.denclue.m</code></dt>
+        <dd>Number of sample points for KDE (≪ n). Default <code>100</code>.</dd>
+        <dt><code>minPts</code><br><code>smile.denclue.min_points</code></dt>
+        <dd>Minimum attractor neighborhood for DBSCAN post-processing. Default <code>10</code>.</dd>
+        <dt><code>tol</code><br><code>smile.denclue.tolerance</code></dt>
+        <dd>Hill-climbing convergence tolerance. Default <code>1E-2</code>.</dd>
+    </dl>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -663,104 +837,71 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-12-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    smile> DeterministicAnnealing.fit(x, 12, 0.9, 100)
-    $126 ==> Cluster distortion: 2862.52100
-    Cluster size of 1800 data points:
-    Cluster    1    297 (16.5%)
-    Cluster    2    105 ( 5.8%)
-    Cluster    3    159 ( 8.8%)
-    Cluster    4    137 ( 7.6%)
-    Cluster    5    139 ( 7.7%)
-    Cluster    6     21 ( 1.2%)
-    Cluster    7    292 (16.2%)
-    Cluster    8    149 ( 8.3%)
-    Cluster    9    140 ( 7.8%)
-    Cluster   10     59 ( 3.3%)
-    Cluster   11    143 ( 7.9%)
-    Cluster   12    159 ( 8.8%)
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.DENCLUE;
+import smile.io.Read;
+import smile.math.MathEx;
+import org.apache.commons.csv.CSVFormat;
+
+MathEx.setSeed(19650218);
+double[][] data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+DENCLUE model = DENCLUE.fit(data, 1.0, 50);
+System.out.printf("DENCLUE found %d clusters%n", model.k());
+System.out.println("Predict first: " + model.predict(data[0]));</code></pre>
     </div>
     <div id="pg-12-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    smile> dac(x, 12, 0.9)
-    res58: DeterministicAnnealing = Cluster distortion: 17904.72351
-    Cluster size of 300 data points:
-    Cluster    1    157 (52.3%)
-    Cluster    2     42 (14.0%)
-    Cluster    3      3 ( 1.0%)
-    Cluster    4      2 ( 0.7%)
-    Cluster    5      3 ( 1.0%)
-    Cluster    6      0 ( 0.0%)
-    Cluster    7      0 ( 0.0%)
-    Cluster    8      0 ( 0.0%)
-    Cluster    9     84 (28.0%)
-    Cluster   10      2 ( 0.7%)
-    Cluster   11      2 ( 0.7%)
-    Cluster   12      5 ( 1.7%)
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.DENCLUE
+import smile.math.MathEx
+import smile.read
+
+MathEx.setSeed(19650218)
+val data = read.csv("data/clustering/rem.txt",
+  header = false, delimiter = " ").toArray
+val model = DENCLUE.fit(data, 1.0, 50)
+println(s"DENCLUE found ${model.k} clusters")
+println("Predict first: " + model.predict(data(0)))</code></pre>
     </div>
     <div id="pg-12-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    >>> dac(x, 12, 0.9)
-    res22: smile.clustering.DeterministicAnnealing = Cluster distortion: 2862.52100
-    Cluster size of 1800 data points:
-    Cluster    1    297 (16.5%)
-    Cluster    2    105 ( 5.8%)
-    Cluster    3    159 ( 8.8%)
-    Cluster    4    137 ( 7.6%)
-    Cluster    5    139 ( 7.7%)
-    Cluster    6     21 ( 1.2%)
-    Cluster    7    292 (16.2%)
-    Cluster    8    149 ( 8.3%)
-    Cluster    9    140 ( 7.8%)
-    Cluster   10     59 ( 3.3%)
-    Cluster   11    143 ( 7.9%)
-    Cluster   12    159 ( 8.8%)
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.DENCLUE
+import smile.io.Read
+import smile.math.MathEx
+import org.apache.commons.csv.CSVFormat
+
+MathEx.setSeed(19650218)
+val data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray()
+val model = DENCLUE.fit(data, 1.0, 50)
+println("DENCLUE found ${model.k()} clusters")
+println("Predict first: ${model.predict(data[0])}")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Note that we set <code>k = 12</code> in the example although we know there are 6 clusters.
-        It is because we maintain two codevectors/centroids for each cluster for sake of split.
-        The algorithm correctly figures out that half of them are ghost clusters without samples.
-        In the output summary, the first column is the cluster id, the second column is the size
-        of clusters, and the third column is the percentage of samples.</p>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/deterministic-annealing.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Deterministic Annealing</div>
-    </div>
+    <figure class="plot-figure">
+        <img src="images/denclue.png" class="enlarge" alt="DENCLUE on six Gaussians" />
+        <figcaption>DENCLUE on six Gaussians</figcaption>
+    </figure>
 
-    <p>Although deterministic annealing is physical and mathematical sound, the results may
-        not reveal the correct structure of data as shown in the above.</p>
 
-    <h2 id="sib">Sequential Information Bottleneck</h2>
+    <h2 id="mec" class="title">MEC</h2>
 
-    <p>The Sequential Information Bottleneck (SIB) algorithm clusters co-occurrence
-        data such as text documents vs words. SIB is guaranteed to converge to a local
-        maximum of the information. Moreover, the time and space complexity are
-        significantly improved in contrast to the agglomerative IB algorithm.</p>
+    <p>Non-parametric Minimum Conditional Entropy Clustering minimizes H(C | x) by iteratively relabeling each point to reduce entropy in its neighborhood (Parzen density estimate). Unlike DBSCAN/DENCLUE, MEC needs a good initialization — the public <code>MEC.fit(data, distance, k, radius)</code> API initializes from K-Means (Euclidean <code>double[][]</code>) or K-Medoids (arbitrary distance).</p>
+    <p>Effective when the true cluster count is uncertain: start with a generous <code>k</code>; MEC may merge clusters toward lower entropy. <code>MEC</code> implements <code>Comparable</code> by entropy for use with <code>Clustering.run</code>.</p>
 
-    <p>In analogy to K-Means, SIB's update formulas are essentially same as the
-        EM algorithm for estimating finite Gaussian mixture model by replacing
-        regular Euclidean distance with Kullback-Leibler divergence, which is
-        clearly a better dissimilarity measure for co-occurrence data. However,
-        the common batch updating rule (assigning all instances to nearest centroids
-        and then updating centroids) of K-Means won't work in SIB, which has
-        to work in a sequential way (reassigning (if better) each instance then
-        immediately update related centroids). It might be because K-L divergence
-        is very sensitive and the centroids may be significantly changed in each
-        iteration in batch updating rule.</p>
+    <p>Hyperparameters are fields of the nested <code>MEC.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). Primary API: <code>MEC.fit(data, distance, k, radius)</code>. Full control uses <code>MEC.fit(data, nns, group, options)</code> with a precomputed initial partition.</p>
 
-    <p>Note that this implementation has a little difference from the original
-        paper, in which a weighted Jensen-Shannon divergence is employed as a
-        criterion to assign a randomly-picked sample to a different cluster.
-        However, this doesn't work well in some cases as we experienced probably
-        because the weighted JS divergence gives too much weight to clusters which
-        is much larger than a single sample. In this implementation, we instead
-        use the regular/unweighted Jensen-Shannon divergence.</p>
+    <dl class="options-dl">
+        <dt><code>k</code><br><code>smile.mec.k</code></dt>
+        <dd>Initial number of clusters (hint; final count may be smaller). Default <code>2</code>.</dd>
+        <dt><code>radius</code><br><code>smile.mec.radius</code></dt>
+        <dd>Parzen window radius for density estimation. Default <code>1.0</code>.</dd>
+        <dt><code>maxIter</code><br><code>smile.mec.iterations</code></dt>
+        <dd>Maximum relabeling iterations. Default <code>500</code>.</dd>
+        <dt><code>tol</code><br><code>smile.mec.tolerance</code></dt>
+        <dd>Convergence tolerance. Default <code>1E-4</code>.</dd>
+    </dl>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -772,88 +913,114 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-13-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class SIB {
-        public static SIB fit(SparseArray[] data, Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.Clustering;
+import smile.clustering.MEC;
+import smile.io.Read;
+import smile.math.MathEx;
+import smile.math.distance.EuclideanDistance;
+import org.apache.commons.csv.CSVFormat;
+
+MathEx.setSeed(19650218);
+double[][] data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+MEC&lt;double[]&gt; model = MEC.fit(data, new EuclideanDistance(), 20, 2.0);
+System.out.printf("MEC entropy: %.4f, clusters: %d%n",
+    model.entropy(), model.k());
+
+MEC&lt;double[]&gt; best = Clustering.run(5,
+    () -&gt; MEC.fit(data, new EuclideanDistance(), 20, 2.0));
+System.out.printf("Best entropy: %.4f%n", best.entropy());</code></pre>
     </div>
     <div id="pg-13-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def sib(data: Array[SparseArray], k: Int, maxIter: Int = 100, runs: Int = 1): SIB
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.{Clustering, MEC}
+import smile.math.MathEx
+import smile.math.distance.EuclideanDistance
+import smile.read
+
+MathEx.setSeed(19650218)
+val data = read.csv("data/clustering/rem.txt",
+  header = false, delimiter = " ").toArray
+val model = MEC.fit(data, new EuclideanDistance, 20, 2.0)
+println(f"MEC entropy: ${model.entropy}%.4f, clusters: ${model.k}")
+val best = Clustering.run(5, () =&gt; MEC.fit(data, new EuclideanDistance, 20, 2.0))
+println(f"Best entropy: ${best.entropy}%.4f")</code></pre>
     </div>
     <div id="pg-13-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun sib(data: Array&lt;SparseArray&gt;, k: Int, maxIter: Int = 100, runs: Int = 1): SIB
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.Clustering
+import smile.clustering.MEC
+import smile.io.Read
+import smile.math.MathEx
+import smile.math.distance.EuclideanDistance
+import org.apache.commons.csv.CSVFormat
+
+MathEx.setSeed(19650218)
+val data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray()
+val model = MEC.fit(data, EuclideanDistance(), 20, 2.0)
+println("MEC entropy: %.4f, clusters: %d".format(model.entropy(), model.k()))
+val best = Clustering.run(5) {
+    MEC.fit(data, EuclideanDistance(), 20, 2.0)
+}
+println("Best entropy: %.4f".format(best.entropy()))</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The news data in <code>data/libsvm/news20.dat</code> is a very sparse data
-        of dimension 62061. The data contains 15935 samples. The below example
-        clusters it into 20 clusters.</p>
+
+    <figure class="plot-figure">
+        <img src="images/mec.png" class="enlarge" alt="MEC on six Gaussians" />
+        <figcaption>MEC on six Gaussians</figcaption>
+    </figure>
+
+
+    <h2 id="sib" class="title">SIB</h2>
+
+    <p>Sequential Information Bottleneck clusters document vectors (sparse term histograms) by minimizing Jensen-Shannon divergence between cluster centroids and member distributions. Each iteration reassigns every document to the cluster that most reduces JS divergence.</p>
+    <p>Use for text clustering (bag-of-words or TF-IDF). Input is <code>SparseArray[]</code> normalized so each row sums to 1. The result is <code>CentroidClustering&lt;double[], SparseArray&gt;</code> (dense centroid coordinates, sparse observations).</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-14-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-14-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-14-2">Kotlin</button>
+    <span class="lang-tab is-active">Java</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-14-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var data = Read.libsvm("data/libsvm/news20.dat");
-    var sparse = data.stream().map(i -> i.x()).toArray(SparseArray[]::new);
-    var clusters = SIB.fit(sparse, 20, 100);
-          </code></pre>
-    </div>
-    <div id="pg-14-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val data = read.libsvm("data/libsvm/news20.dat")
-    val sparse = (0 until data.size).map(i => data(i).x).toSeq
-    val clusters = sib(sparse.toArray, 20, 100)
-    </code></pre>
-    </div>
-    <div id="pg-14-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    val data = read.libsvm("data/libsvm/news20.dat")
-    val sparse = data.map { it.x }
-    val clusters = sib(sparse, 20, 100)
-    </code></pre>
-    </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.clustering.SIB;
+import smile.util.SparseArray;
+
+// Build normalized term-frequency vectors (each SparseArray sums to 1)
+SparseArray[] docs = /* ... */;
+
+var model = SIB.fit(docs, 5, 100);
+System.out.printf("SIB JS distortion: %.4f%n", model.distortion());
+int label = model.predict(docs[0]);</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <h2 id="clarans">K-Medoids</h2>
 
-    <p>The K-Medoids algorithm is an adaptation of the k-means algorithm.
-        Rather than calculate the mean of the items in each cluster,
-        a representative item, or medoid, is chosen for each cluster
-        at each iteration. The K-Medoids algorithm attempts
-        to minimize the distance between points labeled to be in a cluster and
-        the medoid of that cluster. So a medoid is a most centrally
-        located point in the cluster. K-Medoids works with an arbitrary
-        matrix of distances between data points instead of L<sub>2</sub>.
-        It is also more robust to noise and outliers as compared to K-Means.</p>
+    <h2 id="spectral" class="title">Spectral Clustering</h2>
 
-    <p>The most common realization of K-Medoids clustering is the Partitioning
-        Around Medoids (PAM) algorithm. PAM uses a greedy search which may not
-        find the optimum solution, but it is faster than exhaustive search.</p>
+    <p>Builds an RBF similarity matrix, computes the normalized graph Laplacian, embeds data in the top-<code>k</code> eigenvectors, then runs K-Means in that embedding. Captures non-convex clusters and manifold structure.</p>
+    <p>For large <code>n</code>, set Nyström sample count <code>l &gt; 0</code> to approximate eigenvectors without the full n×n matrix (cost O(nl) instead of O(n²)). Sparse text path: <code>SpectralClustering.fit(SparseIntArray[], p, Clustering.Options)</code> builds a TF-IDF-weighted Laplacian for term-count arrays.</p>
 
-    <p>CLARANS (Clustering Large Applications based upon RANdomized Search) is a more
-        efficient medoid-based clustering algorithm. In CLARANS, the process of finding
-        <code>k</code> medoids from <code>n</code> objects is viewed abstractly
-        as searching through a certain graph. In the graph, a node is represented
-        by a set of <code>k</code> objects as selected medoids. Two
-        nodes are neighbors if their sets differ by only one object. In each iteration,
-        CLARANS considers a set of randomly chosen neighbor nodes as candidate
-        of new medoids. We will move to the neighbor node if the neighbor
-        is a better choice for medoids. Otherwise, a local optima is discovered. The
-        entire process is repeated multiple time to find better.</p>
+    <p>Hyperparameters are fields of the nested <code>SpectralClustering.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). Fit with <code>SpectralClustering.fit(data, options)</code>. Convenience constructor <code>new Options(k, sigma, maxIter)</code> sets <code>l = 0</code>.</p>
+
+    <dl class="options-dl">
+        <dt><code>k</code><br><code>smile.spectral_clustering.k</code></dt>
+        <dd>Number of clusters (≥ 2). Default <code>2</code>.</dd>
+        <dt><code>l</code><br><code>smile.spectral_clustering.l</code></dt>
+        <dd>Nyström sample count. Use 0 for exact. Must be ≥ k if &gt; 0. Default <code>0</code>.</dd>
+        <dt><code>sigma</code><br><code>smile.spectral_clustering.sigma</code></dt>
+        <dd>RBF kernel width. Sensitive; tune on your data. Default <code>1.0</code>.</dd>
+        <dt><code>maxIter</code><br><code>smile.spectral_clustering.iterations</code></dt>
+        <dd>K-Means iterations in embedding space. Default <code>100</code>.</dd>
+        <dt><code>tol</code><br><code>smile.spectral_clustering.tolerance</code></dt>
+        <dd>K-Means convergence tolerance. Default <code>1E-4</code>.</dd>
+    </dl>
+
+    <p>The example uses <strong>sincos.txt</strong> (300 points): two interlocking crescent “moons.” They are not linearly separable and are poorly suited to spherical centroids — K-Means tends to cut each arc in half. With a suitable RBF width, spectral clustering embeds the graph connectivity so the two manifolds separate cleanly.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -865,30 +1032,91 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-15-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class KMedoids {
-        public static KMedoids&lt;T&gt; fit(T[] data, Distance&lt;T&gt; distance, Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.SpectralClustering;
+import smile.io.Read;
+import smile.math.MathEx;
+import org.apache.commons.csv.CSVFormat;
+
+MathEx.setSeed(19650218);
+double[][] data = Read.csv("data/clustering/sincos.txt",
+    CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
+var opts = new SpectralClustering.Options(2, 0.2, 100);
+var model = SpectralClustering.fit(data, opts);
+System.out.printf("Spectral clustering: %d clusters, distortion = %.4f%n",
+    model.k(), model.distortion());</code></pre>
     </div>
     <div id="pg-15-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def clarans[T](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int): CLARANS[T]
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.SpectralClustering
+import smile.math.MathEx
+import smile.read
+
+MathEx.setSeed(19650218)
+val data = read.csv("data/clustering/sincos.txt",
+  header = false, delimiter = "\t").toArray
+val opts = new SpectralClustering.Options(2, 0.2, 100)
+val model = SpectralClustering.fit(data, opts)
+println(f"Spectral clustering: ${model.k} clusters, distortion = ${model.distortion}%.4f")</code></pre>
     </div>
     <div id="pg-15-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun &lt;T&gt; clarans(data: Array&lt;T&gt;, distance: Distance&lt;T&gt;, k: Int, maxNeighbor: Int, numLocal: Int): CLARANS&lt;T&gt;
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.SpectralClustering
+import smile.io.Read
+import smile.math.MathEx
+import org.apache.commons.csv.CSVFormat
+
+MathEx.setSeed(19650218)
+val data = Read.csv("data/clustering/sincos.txt",
+    CSVFormat.DEFAULT.withDelimiter('\t')).toArray()
+val opts = SpectralClustering.Options(2, 0.2, 100)
+val model = SpectralClustering.fit(data, opts)
+println("Spectral clustering: %d clusters, distortion = %.4f"
+    .format(model.k(), model.distortion()))</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The parameter <code>maxNeighbor</code> specifies the maximum number of
-        neighbors examined. The higher the value of maxNeighbor, the closer is
-        CLARANS to PAM, and the longer is each search of a local minima. But
-        the quality of such a local minima is higher and fewer local minima
-        needs to be obtained.</p>
+
+    <figure class="plot-figure">
+        <img src="images/spectral-clustering.png" class="enlarge" alt="Spectral clustering on two moons" />
+        <figcaption>Spectral clustering on two moons</figcaption>
+    </figure>
+
+
+    <h2 id="hierarchical" class="title">Hierarchical Clustering</h2>
+
+    <p>Agglomerative bottom-up clustering: each observation starts alone; pairs merge greedily by the chosen linkage until one cluster remains. The full dendrogram can be cut by cluster count or merge height.</p>
+    <p>Use when you want to explore hierarchy without committing to a fixed <code>k</code>, on small-to-medium data (O(n²) / O(n² log n)), or when the dendrogram itself is insightful. <code>Linkage</code> stores distances as <code>float</code> and supports at most 65 535 observations.</p>
+
+    <dl class="options-dl">
+        <dt><code>HierarchicalClustering.fit(linkage)</code></dt>
+        <dd>Build the full dendrogram from any <code>Linkage</code>.</dd>
+        <dt><code>partition(k)</code></dt>
+        <dd>Cut into <code>k</code> clusters.</dd>
+        <dt><code>partition(h)</code></dt>
+        <dd>Cut by merge height. Height array must be monotonically non-decreasing.</dd>
+        <dt><code>tree() / height()</code></dt>
+        <dd>(n−1)×2 merge table and merge heights.</dd>
+    </dl>
+
+
+    <h3 id="linkage-methods">Linkage Methods</h3>
+
+    <p>All linkage classes live in <code>smile.clustering.linkage</code> and implement <code>Linkage</code>. Build from a data matrix (<code>WardLinkage.of(data)</code>) or a pre-computed proximity matrix.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Update</th><th>Notes</th></tr></thead>
+            <tbody>
+            <tr><td><code>SingleLinkage</code></td><td>min(d(a,x), d(b,x))</td><td>Chaining effect; sensitive to outliers</td></tr>
+            <tr><td><code>CompleteLinkage</code></td><td>max(d(a,x), d(b,x))</td><td>Compact, balanced clusters</td></tr>
+            <tr><td><code>UPGMALinkage</code></td><td>size-weighted average</td><td>UPGMA; good general-purpose choice</td></tr>
+            <tr><td><code>WPGMALinkage</code></td><td>unweighted average</td><td>WPGMA; ignores cluster sizes</td></tr>
+            <tr><td><code>UPGMCLinkage</code></td><td>centroid of centroids (squared)</td><td>Stored as squared distance; height sqrt’d at output</td></tr>
+            <tr><td><code>WPGMCLinkage</code></td><td>midpoint (squared)</td><td>Stored as squared distance; height sqrt’d at output</td></tr>
+            <tr><td><code>WardLinkage</code></td><td>minimizes within-cluster variance</td><td>Best cluster quality; similar to K-Means</td></tr>
+            </tbody>
+        </table>
+    </div>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -900,40 +1128,65 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-16-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var clusters = Clustering.run(20, () -> KMedoids.fit(x, new EuclideanDistance(), 10));
-    var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
-    show(figure);
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.HierarchicalClustering;
+import smile.clustering.linkage.CompleteLinkage;
+import smile.io.Read;
+import org.apache.commons.csv.CSVFormat;
+
+double[][] data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+var model = HierarchicalClustering.fit(CompleteLinkage.of(data));
+int[] labels = model.partition(6);
+System.out.println("Cut into 6: first labels = "
+    + java.util.Arrays.toString(
+        java.util.Arrays.copyOf(labels, 5)));
+double[] heights = model.height();
+System.out.printf("Last merge height: %.4f%n",
+    heights[heights.length - 1]);</code></pre>
     </div>
     <div id="pg-16-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val clusters = clarans(x, new EuclideanDistance(), 6, 10, 20)
-    show(plot(x, clusters.y, '.'))
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.HierarchicalClustering
+import smile.clustering.linkage.CompleteLinkage
+import smile.read
+
+val data = read.csv("data/clustering/rem.txt",
+  header = false, delimiter = " ").toArray
+val model = HierarchicalClustering.fit(CompleteLinkage.of(data))
+val labels = model.partition(6)
+println("Cut into 6: first labels = " + labels.take(5).mkString("[", ", ", "]"))
+val heights = model.height
+println(f"Last merge height: ${heights.last}%.4f")</code></pre>
     </div>
     <div id="pg-16-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    import smile.math.distance.*;
-    val clusters = clarans(x, EuclideanDistance(), 6, 10, 20)
-    ScatterPlot.of(x, clusters.y, '.').canvas().window()
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.hclust
+import smile.io.Read
+import org.apache.commons.csv.CSVFormat
+
+val data = Read.csv("data/clustering/rem.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray()
+val model = hclust(data, "complete")
+val labels = model.partition(6)
+println("Cut into 6: first labels = ${labels.take(5).contentToString()}")
+val heights = model.height()
+println("Last merge height: %.4f".format(heights.last()))</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/clarans.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">CLARANS</div>
+
+
+    <div class="figure-row">
+<figure class="plot-figure">
+        <img src="images/hclust-dendrogram.png" class="enlarge" alt="Complete-linkage dendrogram" />
+        <figcaption>Complete-linkage dendrogram</figcaption>
+    </figure>
+<figure class="plot-figure">
+        <img src="images/hclust-six.png" class="enlarge" alt="Hierarchical clustering cut into 6" />
+        <figcaption>Hierarchical clustering cut into 6</figcaption>
+    </figure>
     </div>
 
-    <p>The above clustering partition is achieved with <code>maxNeighbor = 10</code>
-        and <code>numLocal = 20</code>.</p>
+    <p>Single linkage shines on connectivity-defined shapes. On <strong>sincos.txt</strong> (the same interlocking moons as in Spectral Clustering), chaining along nearest neighbors recovers each crescent; a large gap in the dendrogram marks the cut into two clusters. Centroid methods typically fail here.</p>
 
-    <h2 id="dbscan">DBSCAN</h2>
-
-    <p> DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
-        finds a number of clusters starting from the estimated density
-        distribution of corresponding nodes.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -945,60 +1198,77 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-17-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class DBSCAN {
-        public static DBSCAN&lt;double[]&gt; fit(double[][] data, int minPts, double radius);
-        public static DBSCAN&lt;T&gt; fit(T[] data, Distance&lt;T&gt; distance, int minPts, double radius);
-        public static DBSCAN&lt;T&gt; fit(T[] data, RNNSearch&lt;T, T&gt; nns, int minPts, double radius);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.HierarchicalClustering;
+import smile.clustering.linkage.SingleLinkage;
+import smile.io.Read;
+import org.apache.commons.csv.CSVFormat;
+
+double[][] data = Read.csv("data/clustering/sincos.txt",
+    CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
+var model = HierarchicalClustering.fit(SingleLinkage.of(data));
+int[] labels = model.partition(2);
+System.out.println("Cut into 2: first labels = "
+    + java.util.Arrays.toString(
+        java.util.Arrays.copyOf(labels, 5)));
+double[] heights = model.height();
+System.out.printf("Last merge height: %.4f%n",
+    heights[heights.length - 1]);</code></pre>
     </div>
     <div id="pg-17-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    // DBSCAN with a customized data structure for neighborhood search
-    def dbscan[T](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBSCAN[T]
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.HierarchicalClustering
+import smile.clustering.linkage.SingleLinkage
+import smile.read
 
-    def dbscan[T](data: Array[T], distance: Metric[T], minPts: Int, radius: Double): DBSCAN[T]
-
-    // DBSCAN with Euclidean distance
-    def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBSCAN[Array[Double]]
-    </code></pre>
+val data = read.csv("data/clustering/sincos.txt",
+  header = false, delimiter = "\t").toArray
+val model = HierarchicalClustering.fit(SingleLinkage.of(data))
+val labels = model.partition(2)
+println("Cut into 2: first labels = " + labels.take(5).mkString("[", ", ", "]"))
+val heights = model.height
+println(f"Last merge height: ${heights.last}%.4f")</code></pre>
     </div>
     <div id="pg-17-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    // DBSCAN with a customized data structure for neighborhood search
-    fun &lt;T&gt; dbscan(data: Array&lt;T&gt;, nns: RNNSearch&lt;T, T&gt;, minPts: Int, radius: Double): DBSCAN&lt;T&gt;
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.hclust
+import smile.io.Read
+import org.apache.commons.csv.CSVFormat
 
-    fun &lt;T&gt; dbscan(data: Array&lt;T&gt;, distance: Metric&lt;T&gt;, minPts: Int, radius: Double): DBSCAN&lt;T&gt;
-
-    // DBSCAN with Euclidean distance
-    fun dbscan(data: Array&lt;DoubleArray&gt;, minPts: Int, radius: Double): DBSCAN&lt;DoubleArray&gt;
-    </code></pre>
+val data = Read.csv("data/clustering/sincos.txt",
+    CSVFormat.DEFAULT.withDelimiter('\t')).toArray()
+val model = hclust(data, "single")
+val labels = model.partition(2)
+println("Cut into 2: first labels = ${labels.take(5).contentToString()}")
+val heights = model.height()
+println("Last merge height: %.4f".format(heights.last()))</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>DBSCAN requires two parameters: <code>radius</code> (i.e. neighborhood radius) and the
-        number of minimum points required to form a cluster (<code>minPts</code>). It starts
-        with an arbitrary starting point that has not been visited. This point's
-        neighborhood is retrieved, and if it contains sufficient number of points,
-        a cluster is started. Otherwise, the point is labeled as noise. Note that
-        this point might later be found in a sufficiently sized radius-environment
-        of a different point and hence be made part of a cluster.</p>
 
-    <p>If a point is found to be part of a cluster, its neighborhood is also
-        part of that cluster. Hence, all points that are found within the
-        neighborhood are added, as is their own neighborhood. This process
-        continues until the cluster is completely found. Then, a new unvisited point
-        is retrieved and processed, leading to the discovery of a further cluster
-        of noise.</p>
+    <figure class="plot-figure">
+        <img src="images/hclust-sincos.png" class="enlarge" alt="Single-linkage hierarchical clustering on two moons" />
+        <figcaption>Single-linkage hierarchical clustering on two moons</figcaption>
+    </figure>
 
-    <p>DBSCAN visits each point of the database, possibly multiple times (e.g.,
-        as candidates to different clusters). For practical considerations, however,
-        the time complexity is mostly governed by the number of nearest neighbor
-        queries. DBSCAN executes exactly one such query for each point, and if
-        an indexing structure is used that executes such a neighborhood query
-        in <code>O(log n)</code>, an overall runtime complexity of <code>O(n log n)</code> is obtained.</p>
+
+    <h3 id="linkage-chooser">Linkage Selection</h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Goal</th><th>Recommended linkage</th></tr></thead>
+            <tbody>
+            <tr><td>Compact spherical clusters</td><td><code>WardLinkage</code></td></tr>
+            <tr><td>Long chains or arbitrary shape</td><td><code>SingleLinkage</code></td></tr>
+            <tr><td>Balanced clusters, moderate sensitivity</td><td><code>CompleteLinkage</code></td></tr>
+            <tr><td>Robust average (bioinformatics)</td><td><code>UPGMALinkage</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2 id="multiple-trials" class="title">Running Multiple Trials</h2>
+
+    <p>Algorithms with random initialization (K-Means, K-Medoids, K-Modes, MEC, …) may converge to different local optima. <code>Clustering.run(n, supplier)</code> repeats the fit <code>n</code> times and returns the best result by <code>compareTo</code> (distortion for <code>CentroidClustering</code>, entropy for <code>MEC</code>). Throws if <code>runs ≤ 0</code>.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -1010,79 +1280,84 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-18-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').get();
-    var d4 = Read.csv("data/clustering/d4.txt", format).toArray();
-    var clusters = DBSCAN.fit(d4, 20, 10);
-    var figure = ScatterPlot.of(d4, clusters.group(), 'o').figure();
-    show(figure);
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.Clustering;
+import smile.clustering.KMeans;
+import smile.datasets.GaussianMixture;
+import smile.math.MathEx;
+
+MathEx.setSeed(19650218);
+double[][] data = GaussianMixture.generate().x();
+var best = Clustering.run(10, () -&gt; KMeans.fit(data, 4, 100));
+System.out.printf("Best distortion: %.4f%n", best.distortion());</code></pre>
     </div>
     <div id="pg-18-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=" ").toArray()
-    val clusters = dbscan(x, 20, 10)
-    plot(x, clusters.y, '.')
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.{Clustering, KMeans}
+import smile.datasets.GaussianMixture
+import smile.math.MathEx
+
+MathEx.setSeed(19650218)
+val data = GaussianMixture.generate.x
+val best = Clustering.run(10, () =&gt; KMeans.fit(data, 4, 100))
+println(f"Best distortion: ${best.distortion}%.4f")</code></pre>
     </div>
     <div id="pg-18-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=' ').toArray()
-    val clusters = dbscan(x, 20, 10.0)
-    ScatterPlot.of(x, clusters.y, '.').canvas().window()
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.Clustering
+import smile.clustering.KMeans
+import smile.datasets.GaussianMixture
+import smile.math.MathEx
+
+MathEx.setSeed(19650218)
+val data = GaussianMixture.generate().x()
+val best = Clustering.run(10) { KMeans.fit(data, 4, 100) }
+println("Best distortion: %.4f".format(best.distortion()))</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The chameleon is a set of complicated spatial data of
-        arbitrary cluster shapes. With appropriate parameters, DBSCAN
-        can discover the correct clusters and also identify outliers.</p>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/dbscan.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">DBSCAN</div>
+    <h2 id="comparison" class="title">Algorithm Comparison</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Algorithm</th><th>k required</th><th>Outliers</th><th>Arbitrary shape</th><th>Distance</th><th>Data type</th><th>Scalability</th></tr></thead>
+            <tbody>
+            <tr><td>K-Means</td><td>Yes</td><td>No</td><td>No (convex)</td><td>Euclidean</td><td><code>double[]</code></td><td>O(nkd·iter) fast</td></tr>
+            <tr><td>K-Medoids</td><td>Yes</td><td>Partial</td><td>No (convex)</td><td>Any</td><td>Any</td><td>O(n²k)</td></tr>
+            <tr><td>K-Modes</td><td>Yes</td><td>No</td><td>No (convex)</td><td>Hamming</td><td><code>int[]</code> categorical</td><td>O(nkd·iter)</td></tr>
+            <tr><td>X-Means</td><td>Upper bound</td><td>No</td><td>No (spherical)</td><td>Euclidean</td><td><code>double[]</code></td><td>O(nkd·iter)</td></tr>
+            <tr><td>G-Means</td><td>Upper bound</td><td>No</td><td>No</td><td>Euclidean</td><td><code>double[]</code></td><td>O(nkd·iter)</td></tr>
+            <tr><td>Det. Annealing</td><td>Upper bound</td><td>No</td><td>No</td><td>Euclidean</td><td><code>double[]</code></td><td>Slow (multi-temperature)</td></tr>
+            <tr><td>DBSCAN</td><td>No</td><td>Yes</td><td>Yes</td><td>Any</td><td>Any (KD-tree for <code>double[]</code>)</td><td>O(n log n) w/ index</td></tr>
+            <tr><td>HDBSCAN</td><td>No</td><td>Yes</td><td>Yes</td><td>Any</td><td>Any</td><td>O(n²) current impl.</td></tr>
+            <tr><td>DENCLUE</td><td>No</td><td>Yes</td><td>Yes (density)</td><td>Euclidean</td><td><code>double[]</code></td><td>O(nm·iter)</td></tr>
+            <tr><td>MEC</td><td>Initial k</td><td>Yes</td><td>Yes (density)</td><td>Any</td><td>Any</td><td>O(n·radius·iter)</td></tr>
+            <tr><td>SIB</td><td>Yes</td><td>No</td><td>No</td><td>Jensen-Shannon</td><td><code>SparseArray</code> text</td><td>O(nkd·iter)</td></tr>
+            <tr><td>Spectral</td><td>Yes</td><td>No</td><td>Yes (manifold)</td><td>RBF kernel</td><td><code>double[]</code></td><td>O(n²) or O(nl) w/ Nyström</td></tr>
+            <tr><td>Hierarchical</td><td>Post-hoc</td><td>Partial</td><td>Yes</td><td>Any</td><td>Any (float prox.)</td><td>O(n² log n), ≤ 65 535 pts</td></tr>
+            </tbody>
+        </table>
     </div>
 
-    <p>DBSCAN has many advantages such as</p>
 
-     <ul>
-         <li>DBSCAN does not need to know the number of clusters in the data
-             a priori, as opposed to K-Means.</li>
+    <h2 id="patterns" class="title">Common Patterns</h2>
 
-         <li>DBSCAN can find arbitrarily shaped clusters. It can even find clusters
-             completely surrounded by (but not connected to) a different cluster.
-             Due to the <code>MinPts</code> parameter, the so-called single-link effect
-             (different clusters being connected by a thin line of points) is reduced.</li>
 
-         <li>DBSCAN has a notion of noise. Outliers are labeled as <code>Clustering.OUTLIER</code>,
-             which is <code>Integer.MAX_VALUE</code>.</li>
+    <h3 id="choosing-k">Choosing k</h3>
 
-         <li>DBSCAN requires just two parameters and is mostly insensitive to the
-             ordering of the points in the database. (Only points sitting on the
-             edge of two different clusters might swap cluster membership if the
-             ordering of the points is changed, and the cluster assignment is unique
-             only up to isomorphism.)</li>
-     </ul>
+    <p><strong>Unknown k:</strong> X-Means or G-Means for Gaussian-like data; DBSCAN or HDBSCAN for density-based / irregular clusters; MEC when you have an initial partition.</p>
+    <p><strong>Elbow:</strong> run K-Means for k = 2…K, plot <code>model.distortion()</code> vs. k, pick the elbow.</p>
+    <p><strong>Silhouette:</strong> compare k values with <code>smile.validation.metric.Silhouette</code>.</p>
 
-    <p>On the other hand, DBSCAN has the disadvantages of</p>
 
-    <ul>
-        <li>In high dimensional space, the data are sparse everywhere
-            because of the curse of dimensionality. Therefore, DBSCAN doesn't
-            work well on high-dimensional data in general.
+    <h3 id="outliers">Handling Outliers</h3>
 
-        <li>DBSCAN does not respond well to data sets with varying densities.
-    </ul>
+    <p>DBSCAN, HDBSCAN, DENCLUE, and MEC label noise with <code>Clustering.OUTLIER</code>. Centroid methods are sensitive to outliers — consider removing noise with DBSCAN before K-Means.</p>
 
-    <h2 id="denclue">DENCLUE</h2>
 
-    <p>DENCLUE (DENsity CLUstering) employs a cluster model based on
-        kernel density estimation. A cluster is defined by a local maximum of the
-        estimated density function. Data points going to the same local maximum
-        are put into the same cluster.
-        DENCLUE works efficiently for high-dimensional data sets and allows arbitrary
-        noise levels while still guaranteeing to find the clustering.</p>
+    <h3 id="reproducibility">Reproducibility</h3>
+
+    <p>Randomized algorithms respect SMILE’s global RNG. Call <code>MathEx.setSeed(…)</code> before every <code>fit</code> for repeatable results.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -1094,288 +1369,42 @@ title: SMILE - Clustering
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-19-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class DENCLUE {
-        public static DENCLUE fit(double[][] data, Options options);
-    }
-          </code></pre>
+      <pre class="playground-source language-java"><code class="language-java">import smile.math.MathEx;
+MathEx.setSeed(42);</code></pre>
     </div>
     <div id="pg-19-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def denclue(data: Array[Array[Double]], sigma: Double, m: Int): DENCLUE
-    </code></pre>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.math.MathEx
+MathEx.setSeed(42)</code></pre>
     </div>
     <div id="pg-19-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun denclue(data: Array&lt;DoubleArray&gt;, sigma: Double, m: Int): DENCLUE
-    </code></pre>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.math.MathEx
+MathEx.setSeed(42)</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The parameter <code>sigma</code> is the smooth parameter in the Gaussian kernel.
-        The user can choose <code>sigma</code> such that number of density attractors
-        is constant for a long interval of <code>sigma</code>.
-        The parameter <code>m</code> is the number of selected samples used in the iteration.
-        This number should be much smaller than the number of data points
-        to speed up the algorithm. It should also be large enough to capture
-        the sufficient information of underlying distribution.</p>
 
-    <p>Clearly, DENCLUE doesn't work on data with uniform distribution. In high
-        dimensional space, the data always look like uniformly distributed because
-        of the curse of dimensionality. Therefore, DENCLUDE doesn't work well on
-        high-dimensional data in general.</p>
+    <h3 id="serialization">Serialization</h3>
+
+    <p>Most models implement <code>java.io.Serializable</code>. Persist with <code>smile.io.Write.object</code> / <code>smile.io.Read.object</code>. Dedicated <code>Options</code> records also round-trip through <code>java.util.Properties</code>.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-20-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-20-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-20-2">Kotlin</button>
+    <span class="lang-tab is-active">Java</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-20-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
-    var clusters = DENCLUE.fit(x, 1.0, 50);
-    var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
-    show(figure);
-          </code></pre>
-    </div>
-    <div id="pg-20-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=" ").toArray()
-    val clusters = denclue(x, 1.0, 50)
-    show(plot(x, clusters.y, '.'))
-    </code></pre>
-    </div>
-    <div id="pg-20-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=' ').toArray()
-    val clusters = denclue(x, 1.0, 50)
-    ScatterPlot.of(x, clusters.y, '.').canvas().window()
-    </code></pre>
-    </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.io.*;
+import smile.clustering.CentroidClustering;
+import java.nio.file.Path;
+
+Path file = Write.object(model);
+@SuppressWarnings("unchecked")
+var loaded = (CentroidClustering&lt;double[], double[]&gt;) Read.object(file);</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
-
-    <p>DENCLUE doesn't directly label some data as outliers. However, it may report
-        very small clusters, which could be regarded as outliers.</p>
-
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/denclue.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">DENCLUE</div>
-    </div>
-
-    <h2 id="spectral-clustering">Spectral Clustering</h2>
-
-    <p>Given a set of data points, the similarity matrix may
-        be defined as a matrix <code>S</code> where <code>S<sub>ij</sub></code>
-        represents a measure of the
-        similarity between points. Spectral clustering techniques make use of the
-        spectrum of the similarity matrix of the data to perform dimensionality
-        reduction for clustering in fewer dimensions. Then the clustering will
-        be performed in the dimension-reduce space, in which clusters of non-convex
-        shape may become tight. There are some intriguing similarities between
-        spectral clustering methods and kernel PCA, which has been empirically
-        observed to perform clustering.</p>
-
-    <div class="code-playground glass" data-lang="java">
-  <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-21-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-21-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-21-2">Kotlin</button>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-    <div id="pg-21-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class SpectralClustering {
-        public static SpectralClustering fit(DenseMatrix W, Options options);
-        public static SpectralClustering fit(double[][] data, Options options);
-        // Feature count matrix with cosine similarity
-        public static SpectralClustering fit(SparseIntArray[] data, Options options);
-    }
-          </code></pre>
-    </div>
-    <div id="pg-21-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def specc(W: Array[Array[Double]], k: Int): SpectralClustering
-
-    def specc(data: Array[Array[Double]], k: Int, sigma: Double): SpectralClustering
-
-    // Nystrom approximation
-    def specc(data: Array[Array[Double]], k: Int, l: Int, sigma: Double): SpectralClustering
-    </code></pre>
-    </div>
-    <div id="pg-21-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun specc(W: Array&lt;DoubleArray&gt;, k: Int): SpectralClustering
-
-    fun specc(data: Array&lt;DoubleArray&gt;, k: Int, sigma: Double): SpectralClustering
-
-    // Nystrom approximation
-    fun specc(data: Array&lt;DoubleArray&gt;, k: Int, l: Int, sigma: Double): SpectralClustering
-    </code></pre>
-    </div>
-  <div class="playground-editor" hidden></div>
-</div>
-
-    <p>where <code>W</code> is the adjacency matrix of graph. The user may also
-        provide the raw input <code>data</code> and the smooth/width parameter <code>sigma</code>
-        of Gaussian kernel, which is a somewhat sensitive parameter. To search for the best setting,
-        one may pick the value that gives the tightest clusters (smallest
-        distortion, reported by the method <code>distortion</code>) in feature space.
-        Spectral clustering is memory intensive because of the adjacency matrix.
-        For large data, one may use Nystrom approximation by selecting some
-        random samples. The parameter <code>l</code> specifies the number of
-        random samples.</p>
-
-    <div class="code-playground glass" data-lang="java">
-  <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-22-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-22-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-22-2">Kotlin</button>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-    <div id="pg-22-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    CSVFormat format = CSVFormat.Builder.create().setDelimiter('\t').get();
-    var sincos = Read.csv("data/clustering/sincos.txt", format).toArray();
-    var clusters = SpectralClustering.fit(sincos, new SpectralClustering.Options(2, 0.2, 100));
-    var figure = ScatterPlot.of(sincos, clusters.group(), 'o').figure();
-    show(figure);
-          </code></pre>
-    </div>
-    <div id="pg-22-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val x = read.csv("data/clustering/sincos.txt", header=false, delimiter="\t").toArray()
-    val clusters = specc(x, 2, 0.2)
-    show(plot(x, clusters.y, 'o'))
-    </code></pre>
-    </div>
-    <div id="pg-22-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    val x = read.csv("data/clustering/sincos.txt", header=false, delimiter='\t').toArray()
-    val clusters = specc(x, 2, 0.2)
-    ScatterPlot.of(x, clusters.y, 'o').canvas().window()
-    </code></pre>
-    </div>
-  <div class="playground-editor" hidden></div>
-</div>
-
-    <p>For this nonconvex data, spectral clustering works very well with appropriate smooth parameter.</p>
-
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/spectral-clustering.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Spectral Clustering</div>
-    </div>
-
-    <h2 id="mec">Minimum Entropy Clustering</h2>
-
-    <p>In this algorithm, the clustering criterion is based on the conditional entropy
-        <code>H(C | x)</code>, where <code>C</code> is the cluster label and
-        <code>x</code> is an observation. According to Fano's
-        inequality, we can estimate <code>C</code> with a low probability of error only if the
-        conditional entropy <code>H(C | x)</code> is small.
-        Minimum Entropy Clustering (MEC) also generalizes the criterion
-        by replacing Shannon's entropy with Havrda-Charvat's structural
-        <code>&alpha;</code>-entropy. Interestingly, the minimum entropy criterion based
-        on structural <code>&alpha;</code>-entropy is equal to the probability error of the
-        nearest neighbor method when <code>&alpha;</code>= 2. To estimate
-        <code>p(C | x)</code>, MEC employs
-        Parzen density estimation, a nonparametric approach.</p>
-
-    <p>This method performs
-        very well especially when the exact number of clusters is unknown.
-        The method can also correctly reveal the structure of data and effectively
-        identify outliers simultaneously.</p>
-
-    <div class="code-playground glass" data-lang="java">
-  <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-23-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-23-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-23-2">Kotlin</button>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-    <div id="pg-23-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    public class MEC {
-        public static MEC&lt;T&gt; fit(T[] data, Distance&lt;T&gt; distance, Options options);
-        public static MEC&lt;T&gt; fit(T[] data, RNNSearch&lt;T, T&gt; nns, Options options);
-    }
-          </code></pre>
-    </div>
-    <div id="pg-23-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    def mec[T](data: Array[T], distance: Distance[T], k: Int, radius: Double): MEC[T]
-    def mec[T](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int]): MEC[T]
-    def mec(data: Array[Array[Double]], k: Int, radius: Double): MEC[Array[Double]]
-    </code></pre>
-    </div>
-    <div id="pg-23-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    fun mec&lt;T&gt;(data: Array&lt;T&gt;, distance: Distance&lt;T&gt;, k: Int, radius: Double): MEC&lt;T&gt;
-    fun mec&lt;T&gt;(data: Array&lt;T&gt;, nns: RNNSearch&lt;T, T&gt;, k: Int, radius: Double, y: Array[Int]): MEC&lt;T&gt;
-    fun mec(data: Array&lt;DoubleArray&gt;, k: Int, radius: Double): MEC&lt;DoubleArray&gt;
-    </code></pre>
-    </div>
-  <div class="playground-editor" hidden></div>
-</div>
-
-    <p>MEC is an iterative algorithm starting with an initial partition given by
-        any other clustering methods, e.g. K-Means, CLARNAS, hierarchical clustering,
-        etc. Note that a random initialization is NOT appropriate.</p>
-
-    <div class="code-playground glass" data-lang="java">
-  <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-24-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-24-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-24-2">Kotlin</button>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-    <div id="pg-24-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var x = Read.csv("data/clustering/rem.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
-    var clusters = MEC.fit(x, new EuclideanDistance(), 20, 2.0);
-    var figure = ScatterPlot.of(x, clusters.group(), '.').figure();
-    show(figure);
-          </code></pre>
-    </div>
-    <div id="pg-24-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=" ").toArray()
-    val clusters = mec(x, 20, 2.0)
-    show(plot(x, clusters.y, '.'))
-    </code></pre>
-    </div>
-    <div id="pg-24-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">
-    val x = read.csv("data/clustering/rem.txt", header=false, delimiter=' ').toArray()
-    val clusters = mec(x, 20, 2.0)
-    ScatterPlot.of(x, clusters.y, '.').canvas().window()
-    </code></pre>
-    </div>
-  <div class="playground-editor" hidden></div>
-</div>
-
-    <p>Note that we use <code>k = 20</code> for this data and the algorithm still successfully
-        finds the correct structure of data. In practice, we rarely know the right number of
-        clusters in advance. With MEC, one may start with a large <code>k</code> and the algorithm
-        often can automatically remove unnecessary clusters and reach a lower entropy state.</p>
-
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/mec.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">MEC</div>
-    </div>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>

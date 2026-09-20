@@ -330,7 +330,7 @@ println(cv.validation().r2())</code></pre>
 
     <h2 id="cross-validation" class="title">Cross-Validation and Ensembles</h2>
 
-    <p>Set <code>kfold &gt;= 2</code> to run <code>round × kfold</code> folds. Classification uses stratified folds; regression uses regular folds. <code>validation()</code> stores the average metrics. With <code>ensemble=false</code>, SMILE retrains on all training rows; with <code>ensemble=true</code>, the fold models are combined. When <code>kfold &lt; 2</code>, validation is null and the flag is ignored.</p>
+    <p>Set <code>kfold &gt;= 2</code> to run <code>round × kfold</code> folds. Classification uses stratified folds; regression uses regression folds. <code>validation()</code> stores the average metrics. With <code>ensemble=false</code>, SMILE retrains on all training rows; with <code>ensemble=true</code>, the fold models are combined. When <code>kfold &lt; 2</code>, validation is null and the flag is ignored.</p>
     <p>For choosing folds and comparing candidates, see <a href="model-validation.html">Model Validation</a>. For searching property configurations, see <a href="hpo.html">Hyperparameter Optimization</a>.</p>
 
 
