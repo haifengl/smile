@@ -20,7 +20,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
+import smile.util.OS;
 
 /**
  * Preference / cascade ordering tests (no natives required).
@@ -51,7 +53,7 @@ public class GenAIProviderPreferenceTest {
     @Test
     public void autoCascadeOrder() {
         assertEquals(
-                List.of("cuda", "ryzenai", "openvino", "qnn"),
+                List.of("cuda", "ryzenai", "openvino", "qnn", "dml"),
                 GenAIProviders.candidateIdsFor("auto"));
     }
 
@@ -73,6 +75,13 @@ public class GenAIProviderPreferenceTest {
         assertEquals(List.of("ryzenai"), GenAIProviders.candidateIdsFor("ryzenai"));
         assertEquals(List.of("openvino"), GenAIProviders.candidateIdsFor("openvino"));
         assertEquals(List.of("qnn"), GenAIProviders.candidateIdsFor("qnn"));
+        assertEquals(List.of("dml"), GenAIProviders.candidateIdsFor("dml"));
+    }
+
+    @Test
+    public void directMlNativesOnlyOnWindows() {
+        Assumptions.assumeFalse(OS.isWindows());
+        assertFalse(GenAIProviders.DIRECT_ML.nativesPresent());
     }
 
     @Test
