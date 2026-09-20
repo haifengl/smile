@@ -48,7 +48,7 @@ public final class GenAI {
     /**
      * Execution-provider preference: {@code auto} (default), {@code cuda},
      * {@code npu}, {@code ryzenai}/{@code hybrid}, {@code openvino}, {@code qnn},
-     * or {@code cpu}.
+     * {@code dml}/{@code directml}, or {@code cpu}.
      * Environment variable {@code SMILE_ONNX_GENAI_PROVIDER} overrides the system
      * property {@code smile.onnx.genai.provider}.
      *
@@ -76,7 +76,8 @@ public final class GenAI {
      * Returns the preferred GenAI execution-provider mode.
      *
      * @return normalized preference: {@code auto}, {@code cuda}, {@code npu},
-     *         {@code ryzenai}, {@code openvino}, {@code qnn}, or {@code cpu}.
+     *         {@code ryzenai}, {@code openvino}, {@code qnn}, {@code dml},
+     *         or {@code cpu}.
      */
     public static String providerPreference() {
         String fromEnv = System.getenv(PROVIDER_ENV);
@@ -90,6 +91,7 @@ public final class GenAI {
             case "ryzenai", "hybrid" -> "ryzenai";
             case "openvino" -> "openvino";
             case "qnn" -> "qnn";
+            case "dml", "directml" -> "dml";
             case "cpu" -> "cpu";
             default -> "auto";
         };

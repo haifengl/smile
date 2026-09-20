@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import smile.util.OS;
 
 /**
  * Registry of {@link GenAIProviderCandidate}s and per-id usable caches for
@@ -41,6 +42,7 @@ final class GenAIProviders {
     static final GenAIProviderCandidate RYZEN_AI = new RyzenAiCandidate();
     static final GenAIProviderCandidate OPENVINO_NPU = new OpenVinoNpuCandidate();
     static final GenAIProviderCandidate QNN = new QnnCandidate();
+    static final GenAIProviderCandidate DIRECT_ML = new DirectMlCandidate();
 
     private GenAIProviders() {}
 
@@ -57,9 +59,10 @@ final class GenAIProviders {
             case "ryzenai" -> List.of(RYZEN_AI);
             case "openvino" -> List.of(OPENVINO_NPU);
             case "qnn" -> List.of(QNN);
+            case "dml" -> List.of(DIRECT_ML);
             case "npu" -> List.of(RYZEN_AI, OPENVINO_NPU, QNN);
-            // auto
-            default -> List.of(CUDA, RYZEN_AI, OPENVINO_NPU, QNN);
+            // auto: accelerators then Windows DirectML, then CPU fallback in Model.open
+            default -> List.of(CUDA, RYZEN_AI, OPENVINO_NPU, QNN, DIRECT_ML);
         };
     }
 
@@ -173,6 +176,30 @@ final class GenAIProviders {
             if (htp != null) {
                 config.setProviderOption("qnn", "backend_path", htp);
             }
+        }
+    }
+
+    /**
+     * Windows DirectML GPU (iGPU/dGPU) — last accelerator before CPU on
+     * {@code auto}. Skipped on non-Windows even if listed in the cascade.
+     */
+    private static final class DirectMlCandidate implements GenAIProviderCandidate {
+        @Override
+        public String id() {
+            return "dml";
+        }
+
+        @Override
+        public boolean nativesPresent() {
+            if (!OS.isWindows()) {
+                return false;
+            }
+            return libraryPresent("onnxruntime_providers_dml");
+        }
+
+        @Override
+        public void configure(Config config, String modelDir) {
+            config.clearProviders().appendProvider("dml");
         }
     }
 

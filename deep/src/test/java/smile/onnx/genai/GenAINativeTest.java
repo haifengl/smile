@@ -32,8 +32,8 @@ import smile.llm.Role;
  * {@code SMILE_ONNX_GENAI_MODEL} pointing at a GenAI model directory.
  *
  * <p>Model loads use {@link Model#open(Path)}, which cascades CUDA → RyzenAI →
- * OpenVINO NPU → QNN → CPU when preference is {@code auto}. Override with
- * {@code SMILE_ONNX_GENAI_PROVIDER}.
+ * OpenVINO NPU → QNN → DirectML (Windows) → CPU when preference is {@code auto}.
+ * Override with {@code SMILE_ONNX_GENAI_PROVIDER}.
  *
  * <p>The onnxruntime-genai {@code test/models/qwen3-5} fixture is a tiny Identity
  * ONNX graph: load / tokenize / create {@link Generator} are supported, but a
@@ -230,6 +230,7 @@ public class GenAINativeTest {
                         || activeProvider.equals("ryzenai")
                         || activeProvider.equals("openvino")
                         || activeProvider.equals("qnn")
+                        || activeProvider.equals("dml")
                         || activeProvider.equals("default"),
                 "unexpected provider: " + activeProvider
                         + " (preference=" + GenAI.providerPreference() + ")");

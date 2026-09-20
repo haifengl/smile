@@ -46,8 +46,9 @@
  *
  * <h2>Providers</h2>
  * <p>{@link smile.onnx.genai.Model#open(String)} cascades CUDA → RyzenAI →
- * OpenVINO NPU → QNN → CPU when {@code SMILE_ONNX_GENAI_PROVIDER} is
- * {@code auto} (default). Each accelerator requires matching EP natives.
+ * OpenVINO NPU → QNN → DirectML (Windows) → CPU when
+ * {@code SMILE_ONNX_GENAI_PROVIDER} is {@code auto} (default). Each accelerator
+ * requires matching EP natives.
  * Classical Vitis AI for general ONNX is
  * {@link smile.onnx.SessionOptions#appendVitisAiExecutionProvider()}.
  *
