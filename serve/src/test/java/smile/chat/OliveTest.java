@@ -21,12 +21,12 @@ import org.junit.jupiter.api.io.TempDir;
  *
  * @author Haifeng Li
  */
-public class OliveAutoOptTest {
+public class OliveTest {
 
     @Test
     public void findGenAiRootDirect(@TempDir Path dir) throws Exception {
         Files.writeString(dir.resolve("genai_config.json"), "{}");
-        Optional<Path> hit = OliveAutoOpt.findGenAiRoot(dir);
+        Optional<Path> hit = Olive.findGenAiRoot(dir);
         assertTrue(hit.isPresent());
         assertEquals(dir, hit.get());
     }
@@ -35,7 +35,7 @@ public class OliveAutoOptTest {
     public void findGenAiRootNestedModel(@TempDir Path dir) throws Exception {
         Path model = Files.createDirectories(dir.resolve("model"));
         Files.writeString(model.resolve("genai_config.json"), "{}");
-        Optional<Path> hit = OliveAutoOpt.findGenAiRoot(dir);
+        Optional<Path> hit = Olive.findGenAiRoot(dir);
         assertTrue(hit.isPresent());
         assertEquals(model, hit.get());
     }
@@ -43,7 +43,7 @@ public class OliveAutoOptTest {
     @Test
     public void sanitizeModelSpec() {
         assertEquals("Qwen_Qwen2.5-0.5B-Instruct",
-                OliveAutoOpt.sanitize("Qwen/Qwen2.5-0.5B-Instruct"));
+                Olive.sanitize("Qwen/Qwen2.5-0.5B-Instruct"));
     }
 
     @Test
@@ -53,5 +53,24 @@ public class OliveAutoOptTest {
         assertTrue(GenAiModelPaths.isGenAiCheckpoint(dir));
         assertEquals(dir.toAbsolutePath().normalize(),
                 GenAiModelPaths.resolveGenAiReady(dir.toString()).orElseThrow());
+    }
+
+    @Test
+    public void clampPrecisionMapsFp8ToInt4() {
+        assertEquals("int4", Olive.clampPrecision("fp8"));
+        assertEquals("fp16", Olive.clampPrecision("fp16"));
+        assertEquals("int4", Olive.clampPrecision("int4"));
+    }
+
+    @Test
+    public void clampProviderMapsDirectMlToCpu() {
+        assertEquals("CPUExecutionProvider",
+                Olive.clampProvider("DmlExecutionProvider"));
+        assertEquals("CUDAExecutionProvider",
+                Olive.clampProvider("CUDAExecutionProvider"));
+        assertEquals("cpu",
+                Olive.clampDevice("gpu", "CPUExecutionProvider"));
+        assertEquals("gpu",
+                Olive.clampDevice("cpu", "CUDAExecutionProvider"));
     }
 }

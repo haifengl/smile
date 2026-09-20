@@ -218,12 +218,12 @@ public class ChatService implements OpenAiModelContributor {
                         + "chat completions will return HTTP 503", modelSpec);
                 return;
             }
-            if (!OliveAutoOpt.isAvailable(oga.oliveCommand())) {
+            if (!Olive.isAvailable(oga.oliveCommand())) {
                 logger.warnf("Olive CLI unavailable; cannot convert '%s' for OGA "
                         + "(chat completions will return HTTP 503)", modelSpec);
                 return;
             }
-            genAiDir = OliveAutoOpt.resolveOrConvert(modelSpec, oga);
+            genAiDir = Olive.resolveOrConvert(modelSpec, oga);
             source = looksLikeHuggingFaceRepoId(modelSpec) ? "huggingface" : "local";
         } else {
             source = looksLikeHuggingFaceRepoId(modelSpec) ? "huggingface" : "local";

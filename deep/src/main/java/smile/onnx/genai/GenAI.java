@@ -128,7 +128,7 @@ public final class GenAI {
     }
 
     /**
-     * Resolves Olive {@code auto-opt} {@code --device} / {@code --provider} /
+     * Resolves Olive {@code optimize} {@code --device} / {@code --provider} /
      * default precision from {@link #providerPreference()} and EP natives
      * (same order as {@link Model#open}).
      *
