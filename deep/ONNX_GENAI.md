@@ -161,13 +161,15 @@ ORT GenAI:
 
 1. Local / HF snapshot with `genai_config.json` (repo root **or** nested under
    provider folders such as `cuda/cuda-int4-rtn-block-32/`, as in
-   `microsoft/Phi-3-mini-4k-instruct-onnx`) → `GenAiChatModel.open` (no Olive).
+   `microsoft/Phi-3-mini-4k-instruct-onnx`) → `GenAiChatModel.open`.
    Nested packages are picked to match `GenAI.resolveOliveTarget()` (CUDA / DML / CPU).
-2. Else allowlisted plain HF (`GenAISupportedModels`) + Olive `optimize` → open
+2. Else a prior Olive cache hit under `{SMILE_CACHE}/olive/...` → open
 3. Else chat stays unavailable (HTTP 503)
 
-Prebuilt ONNX GenAI Hub packages (nested `genai_config.json`, no
-`pytorch_model.bin` / `model.safetensors`) are never sent through Olive.
+**Serve does not run Olive at startup.** `olive optimize` (int4/GPTQ) can take
+hours; convert offline with `smile.chat.Olive.resolveOrConvert` / the
+`olive_cli.py` bootstrap, then restart serve (same HF id finds the cache, or
+point `smile.chat.model` at the GenAI output directory).
 
 | Artifact | Location | Override |
 |---|---|---|
@@ -177,16 +179,16 @@ Prebuilt ONNX GenAI Hub packages (nested `genai_config.json`, no
 Serve config (`smile.chat.oga.*`): `enabled`, `precision` (`auto` = cascade
 default; Olive `optimize` clamps unsupported values such as `fp8` → `int4`),
 `cache-dir`, `olive-command`, optional `device` / `provider`.
-Olive `optimize --device`/`--provider` follow `GenAI.resolveOliveTarget()` (same EP
-cascade as `Model.open`, honor `SMILE_ONNX_GENAI_PROVIDER`); DirectML is remapped
-to CPU for the Olive CLI because `optimize` does not list `DmlExecutionProvider`.
-If Olive fails while registering an unused ORT EP (common on Windows when the
-CUDA wheel ships `onnxruntime_providers_tensorrt.dll` but TensorRT/`nvinfer` is
-not installed), smile-serve launches Olive through a Python bootstrap that only
-registers EPs Olive explicitly requested, and may still retry with
-`CPUExecutionProvider`. Override the interpreter with `SMILE_OLIVE_PYTHON`.
-Conversion uses `--exporter model_builder` (GenAI-ready output). Runtime load
-still uses `GenAiChatModel.open` / the GenAI EP cascade.
+Offline Olive `optimize --device`/`--provider` follow `GenAI.resolveOliveTarget()`
+(same EP cascade as `Model.open`, honor `SMILE_ONNX_GENAI_PROVIDER`); DirectML
+is remapped to CPU for the Olive CLI because `optimize` does not list
+`DmlExecutionProvider`. If Olive fails while registering an unused ORT EP
+(common on Windows when the CUDA wheel ships `onnxruntime_providers_tensorrt.dll`
+but TensorRT/`nvinfer` is not installed), the offline launcher uses a Python
+bootstrap that only registers EPs Olive explicitly requested, and may still
+retry with `CPUExecutionProvider`. Override the interpreter with
+`SMILE_OLIVE_PYTHON`. Conversion uses `--exporter model_builder` (GenAI-ready
+output). Runtime load still uses `GenAiChatModel.open` / the GenAI EP cascade.
 
 Olive’s Python env needs a full toolchain for `optimize` (especially int4/GPTQ
 calibration). Typical install:
