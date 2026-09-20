@@ -10,10 +10,12 @@ package smile.chat;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -31,7 +33,9 @@ import smile.onnx.genai.GenAIOliveTarget;
  * Facade over the Olive CLI ({@code olive …}) for smile-serve chat.
  *
  * <p>Today this drives {@code olive optimize} to produce ORT GenAI model
- * directories. Additional Olive subcommands can be added here later.
+ * directories. Olive is launched via a small Python bootstrap that only
+ * registers ORT EPs Olive explicitly requested (avoids Windows TensorRT
+ * registration crashes when {@code nvinfer} is not installed).
  *
  * <p>Never writes into the Hugging Face hub cache. Cache hits skip the CLI.
  *
@@ -39,6 +43,7 @@ import smile.onnx.genai.GenAIOliveTarget;
  */
 public final class Olive {
     private static final Logger logger = Logger.getLogger(Olive.class);
+    private static final String BOOTSTRAP_RESOURCE = "/smile/chat/olive_cli.py";
 
     /** Precisions accepted by {@code olive optimize --precision}. */
     private static final Set<String> OPTIMIZE_PRECISIONS = Set.of(
@@ -59,12 +64,16 @@ public final class Olive {
     private Olive() {}
 
     /**
-     * Returns whether the Olive CLI appears to be on {@code PATH}.
+     * Returns whether Olive is importable from a Python interpreter on
+     * {@code PATH} (preferred), or the configured Olive executable responds.
      *
      * @param oliveCommand configured command (e.g. {@code olive}).
-     * @return {@code true} when a version probe succeeds.
+     * @return {@code true} when Olive can be launched.
      */
     public static boolean isAvailable(String oliveCommand) {
+        if (resolvePythonWithOlive().isPresent()) {
+            return true;
+        }
         String cmd = oliveCommand == null || oliveCommand.isBlank() ? "olive" : oliveCommand.trim();
         try {
             Process p = new ProcessBuilder(cmd, "--help")
@@ -117,11 +126,31 @@ public final class Olive {
         }
 
         Files.createDirectories(outDir);
-        optimize(oliveCmd, modelSpec, outDir, precision, device, provider);
-
-        Path finalOut = outDir;
-        return findGenAiRoot(finalOut).orElseThrow(() -> new IOException(
-                "Olive finished but genai_config.json not found under " + finalOut));
+        try {
+            optimize(oliveCmd, modelSpec, outDir, precision, device, provider);
+            Path finalOut = outDir;
+            return findGenAiRoot(finalOut).orElseThrow(() -> new IOException(
+                    "Olive finished but genai_config.json not found under " + finalOut));
+        } catch (IOException e) {
+            String clamped = clampProvider(provider);
+            if ("CPUExecutionProvider".equals(clamped) || !isOrtEpLoadFailure(e)) {
+                throw e;
+            }
+            logger.warnf(e,
+                    "Olive with %s failed (ORT EP registration); retrying with CPUExecutionProvider",
+                    clamped);
+            Path cpuOut = cacheRoot.resolve(sanitize(modelSpec)).resolve("cpu-" + precision);
+            Optional<Path> cpuHit = findGenAiRoot(cpuOut);
+            if (cpuHit.isPresent()) {
+                logger.infof("Olive CPU cache hit: %s", cpuHit.get());
+                return cpuHit.get();
+            }
+            Files.createDirectories(cpuOut);
+            optimize(oliveCmd, modelSpec, cpuOut, precision, "cpu", "CPUExecutionProvider");
+            Path finalCpu = cpuOut;
+            return findGenAiRoot(finalCpu).orElseThrow(() -> new IOException(
+                    "Olive finished but genai_config.json not found under " + finalCpu));
+        }
     }
 
     static String resolvePrecision(OgaChatConfig oga, GenAIOliveTarget cascade) {
@@ -188,23 +217,8 @@ public final class Olive {
             throws IOException {
         String oliveProvider = clampProvider(provider);
         String oliveDevice = clampDevice(device, oliveProvider);
-        List<String> cmd = new ArrayList<>();
-        cmd.add(oliveCmd);
-        cmd.add("optimize");
-        cmd.add("--model_name_or_path");
-        cmd.add(modelSpec);
-        cmd.add("--output_path");
-        cmd.add(outDir.toAbsolutePath().toString());
-        cmd.add("--precision");
-        cmd.add(precision);
-        cmd.add("--device");
-        cmd.add(oliveDevice);
-        cmd.add("--provider");
-        cmd.add(oliveProvider);
-        // ModelBuilder emits GenAI-ready trees (genai_config.json); default for
-        // text modality, but set explicitly so behavior does not depend on defaults.
-        cmd.add("--exporter");
-        cmd.add("model_builder");
+        List<String> cmd = buildOptimizeCommand(
+                oliveCmd, modelSpec, outDir, precision, oliveDevice, oliveProvider);
         logger.infof("Running Olive: %s", String.join(" ", cmd));
         ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.redirectErrorStream(true);
@@ -229,6 +243,136 @@ public final class Olive {
         if (code != 0) {
             throw new IOException("Olive exited with code " + code + ":\n" + log);
         }
+    }
+
+    /**
+     * Builds the process argv: prefer {@code python olive_cli.py …} so EP
+     * registration is patched; fall back to the raw {@code olive} executable.
+     */
+    static List<String> buildOptimizeCommand(String oliveCmd, String modelSpec, Path outDir,
+                                             String precision, String device, String provider)
+            throws IOException {
+        List<String> args = new ArrayList<>();
+        args.add("optimize");
+        args.add("--model_name_or_path");
+        args.add(modelSpec);
+        args.add("--output_path");
+        args.add(outDir.toAbsolutePath().toString());
+        args.add("--precision");
+        args.add(precision);
+        args.add("--device");
+        args.add(device);
+        args.add("--provider");
+        args.add(provider);
+        args.add("--exporter");
+        args.add("model_builder");
+
+        Optional<String> python = resolvePythonWithOlive();
+        if (python.isPresent()) {
+            List<String> cmd = new ArrayList<>();
+            String py = python.get();
+            cmd.add(py);
+            if ("py".equals(py)) {
+                cmd.add("-3");
+            }
+            cmd.add(materializeBootstrap().toAbsolutePath().toString());
+            cmd.addAll(args);
+            return cmd;
+        }
+        String cmdName = oliveCmd == null || oliveCmd.isBlank() ? "olive" : oliveCmd.trim();
+        List<String> cmd = new ArrayList<>();
+        cmd.add(cmdName);
+        cmd.addAll(args);
+        return cmd;
+    }
+
+    /** Cached result of {@link #resolvePythonWithOlive()} ({@code null} until probed). */
+    private static volatile Optional<String> cachedPythonWithOlive;
+
+    /**
+     * Finds a Python interpreter that can {@code import olive}.
+     * Result is cached for the JVM lifetime (probes spawn processes).
+     */
+    static Optional<String> resolvePythonWithOlive() {
+        Optional<String> cached = cachedPythonWithOlive;
+        if (cached != null) {
+            return cached;
+        }
+        synchronized (Olive.class) {
+            if (cachedPythonWithOlive != null) {
+                return cachedPythonWithOlive;
+            }
+            cachedPythonWithOlive = probePythonWithOlive();
+            return cachedPythonWithOlive;
+        }
+    }
+
+    private static Optional<String> probePythonWithOlive() {
+        String override = System.getenv("SMILE_OLIVE_PYTHON");
+        List<String> candidates = new ArrayList<>();
+        if (override != null && !override.isBlank()) {
+            candidates.add(override.trim());
+        }
+        candidates.add("python");
+        candidates.add("py");
+        for (String candidate : candidates) {
+            try {
+                ProcessBuilder pb = "py".equals(candidate)
+                        ? new ProcessBuilder(candidate, "-3", "-c", "import olive")
+                        : new ProcessBuilder(candidate, "-c", "import olive");
+                pb.redirectErrorStream(true);
+                Process p = pb.start();
+                boolean finished = p.waitFor(20, TimeUnit.SECONDS);
+                if (!finished) {
+                    p.destroyForcibly();
+                    continue;
+                }
+                if (p.exitValue() == 0) {
+                    return Optional.of(candidate);
+                }
+            } catch (Exception ignored) {
+                // try next
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Copies the bootstrap script from the classpath into the Olive cache dir.
+     */
+    static Path materializeBootstrap() throws IOException {
+        Path dest = Path.of(CacheFiles.dir(), "olive", "olive_cli.py");
+        Files.createDirectories(dest.getParent());
+        try (InputStream in = Olive.class.getResourceAsStream(BOOTSTRAP_RESOURCE)) {
+            if (in == null) {
+                throw new IOException("Missing classpath resource " + BOOTSTRAP_RESOURCE);
+            }
+            Files.copy(in, dest, StandardCopyOption.REPLACE_EXISTING);
+        }
+        return dest;
+    }
+
+    /**
+     * Returns whether Olive failed while loading an ORT execution-provider DLL
+     * (e.g. TensorRT without {@code nvinfer_*.dll} on PATH).
+     *
+     * @param error failure from {@link #optimize}.
+     * @return {@code true} when a CPU retry is appropriate.
+     */
+    static boolean isOrtEpLoadFailure(Throwable error) {
+        if (error == null) {
+            return false;
+        }
+        String msg = error.getMessage();
+        if (msg == null) {
+            return false;
+        }
+        String lower = msg.toLowerCase(Locale.ROOT);
+        return lower.contains("nvinfer")
+                || lower.contains("tensorrt")
+                || lower.contains("register_execution_provider_library")
+                || lower.contains("onnxruntime_providers_tensorrt")
+                || (lower.contains("error loading") && lower.contains("onnxruntime_providers_"));
     }
 
     /**
