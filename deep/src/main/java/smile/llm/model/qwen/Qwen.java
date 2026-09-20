@@ -2696,20 +2696,29 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     }
 
     /**
-     * {@link KvCachePool#truncateTo} rebuilds the FlashInfer CSR (never an
-     * in-place bump, unlike ordinary +1 decode growth), so any CUDA graph
-     * captured against the old CSR buffer would replay against freed/rebuilt
-     * memory. Drop it here, on every round, rather than disabling capture for
-     * the process: plain (non-speculative) decode steps recapture lazily and
-     * keep the graph fast path once no further truncate invalidates it.
+     * {@link KvCachePool#truncateTo} rebuilds the FlashInfer CSR on a genuine
+     * page-boundary crossing (or bumps it in place within the same page,
+     * since Stage 3 of the verify-CUDA-graph plan) — any CUDA graph captured
+     * against the old CSR buffer would replay against freed/rebuilt memory
+     * once a rebuild happens. Drop decode's graph here unconditionally, on
+     * every round, rather than disabling capture for the process: plain
+     * (non-speculative) decode steps recapture lazily and keep the graph fast
+     * path once no further truncate invalidates it. The verify graph, by
+     * contrast, is dropped only when {@code truncateTo} actually rebuilt
+     * (returned {@code false}) — in steady state, once a page-stable bucket
+     * is reached, this should essentially never fire mid-generation, which is
+     * the whole point of Stage 3's bump generalization.
      */
     private void truncateKv(int requestId, int sealedLen, int writtenEnd) {
         for (QwenModel m : models) {
             KvCachePool pool = m.kvCachePool();
             if (pool != null) {
                 pool.activateStep(requestId);
-                pool.truncateTo(sealedLen, writtenEnd);
+                boolean bumped = pool.truncateTo(sealedLen, writtenEnd);
                 m.invalidateDecodeCudaGraphs();
+                if (!bumped) {
+                    m.invalidateVerifyCudaGraphs();
+                }
             }
         }
     }
@@ -2718,8 +2727,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         for (QwenModel m : models) {
             KvCachePool pool = m.kvCachePool();
             if (pool != null) {
-                pool.truncateTo(sealedLen, writtenEnd);
+                boolean bumped = pool.truncateTo(sealedLen, writtenEnd);
                 m.invalidateDecodeCudaGraphs();
+                if (!bumped) {
+                    m.invalidateVerifyCudaGraphs();
+                }
             }
         }
     }
