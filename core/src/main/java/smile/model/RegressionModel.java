@@ -16,6 +16,7 @@
  */
 package smile.model;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Properties;
 import smile.data.Tuple;
@@ -45,6 +46,9 @@ public record RegressionModel(String algorithm,
                               RegressionMetrics validation,
                               RegressionMetrics test,
                               Properties tags) implements Model, Serializable {
+    @Serial
+    private static final long serialVersionUID = 3L;
+
     /**
      * Model inference.
      * @param x the input tuple.
