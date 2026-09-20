@@ -6,578 +6,950 @@ title: SMILE - Vector Quantization
 {% include "toc.njk" %}
 
 <div class="col-md-9 order-md-first">
-    <h1 id="vector-quantization-top" class="title">Vector Quantization</h1>
+    <h1 id="vq-top" class="title">Vector Quantization</h1>
 
-    <p>Originally used for data compression, Vector quantization (VQ)
-        allows the modeling of probability density functions by
-        the distribution of prototype vectors. It works by dividing a large set of points
-        (vectors) into groups having approximately the same number of
-        points closest to them. Each group is represented by its centroid
-        point, as in K-Means and some other clustering algorithms.
-        Because of this reason, the algorithm discussed in this section are
-        in the same package of clustering algorithms.</p>
 
-    <p>Vector quantization is based on the competitive learning paradigm,
-        and also closely related to sparse coding models
-        used in deep learning algorithms such as autoencoder.</p>
+    <h2 id="overview" class="title">Overview</h2>
 
-    <h2 id="som">Self-Organizing Map</h2>
+    <p><strong>Vector quantization (VQ)</strong> is a lossy compression technique that maps an input vector to the nearest element of a finite set of <em>code vectors</em> (also called <em>prototypes</em> or <em>centroids</em>). Each algorithm in <a href="api/java/smile/vq/package-summary.html"><code>smile.vq</code></a> learns these prototypes from data through online, competitive learning: prototypes compete for each incoming signal, and the winner (or winners) are updated to better represent that signal.</p>
+    <p>SMILE’s VQ algorithms all implement the <code>VectorQuantizer</code> interface and support incremental learning via <code>update(double[] x)</code>. That makes them suitable for streaming data, large datasets that do not fit in memory, or distributions that may shift over time.</p>
+    <p>The package contains five quantizer implementations:</p>
 
-    <p>A Self-Organizing Map (SOM) is an unsupervised learning method to produce
-        a low-dimensional (typically two-dimensional) discretized representation
-        (called a map) of the input space of the training samples. The model was
-        first described as an artificial neural network by Teuvo Kohonen, and is
-        sometimes called a Kohonen map.</p>
-
-    <p>While it is typical to consider SOMs as related to feed-forward networks where
-        the nodes are visualized as being attached, this type of architecture is
-        fundamentally different in arrangement and motivation because SOMs use a
-        neighborhood function to preserve the topological properties of the input
-        space. This makes SOMs useful for visualizing low-dimensional views of
-        high-dimensional data, akin to multi-dimensional scaling.</p>
-
-    <p>An SOM consists of components called nodes or neurons.
-        Associated with each node is a weight vector of the same dimension as
-        the input data vectors and a position in the map space. The usual arrangement
-        of nodes is a regular spacing in a hexagonal or rectangular grid. During the (iterative) learning,
-        the input vectors are compared to the weight vector of each neuron. Neurons
-        who most closely match the input are known as the best match unit (BMU) of
-        the system. The weight vector of the BMU and those of nearby neurons are
-        adjusted to be closer to the input vector by a certain step size.</p>
-
-    <p>There are two ways to interpret a SOM. Because in the training phase weights
-        of the whole neighborhood are moved in the same direction, similar items
-        tend to excite adjacent neurons. Therefore, SOM forms a semantic map where
-        similar samples are mapped close together and dissimilar apart.
-        The other way is to think of neuronal weights as pointers to the input space.
-        They form a discrete approximation of the distribution of training samples.
-        More neurons point to regions with high training sample concentration and
-        fewer where the samples are scarce.</p>
-
-    <p>SOM may be considered a nonlinear generalization of PCA.
-        It has been shown, using both artificial and real
-        geophysical data, that SOM has many advantages over the conventional feature
-        extraction methods such as Empirical Orthogonal Functions (EOF) or PCA.</p>
-
-    <p>It has been shown that while SOMs with a small number of nodes behave in a
-        way that is similar to K-means. However, larger SOMs rearrange data
-        in a way that is fundamentally topological in character and display properties
-        which are emergent. Therefore, large maps are preferable to smaller ones.
-        In maps consisting of thousands of nodes, it is possible to perform cluster
-        operations on the map itself.</p>
-
-    <p>A common way to display SOMs is the heat map of U-matrix. The U-matrix value
-        of a particular node is the minimum/maximum/average distance between the node
-        and its closest neighbors. In a rectangular grid for instance, we might
-        consider the closest 4 or 8 nodes. It is common to use the U-Matrix to
-        visualize an SOM. The U-Matrix value of a particular node is the average
-        distance between the node's weight vector and that of its closest neighbors.
-        In a square grid, for instance, we might consider the closest 4 or 8 nodes
-        (the Von Neumann and Moore neighborhoods, respectively), or six nodes in
-        a hexagonal grid.</p>
-
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/t4.8k.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Chameleon t4.8k</div>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Topology</th><th>Fixed size?</th><th>Key strength</th></tr></thead>
+            <tbody>
+            <tr><td><code>BIRCH</code></td><td>CF-tree (hierarchical)</td><td>No</td><td>Fast, memory-bounded, handles very large datasets</td></tr>
+            <tr><td><code>NeuralGas</code></td><td>None (soft competition)</td><td>Yes</td><td>Robust convergence, good coverage</td></tr>
+            <tr><td><code>GrowingNeuralGas</code></td><td>Graph (dynamic)</td><td>No</td><td>Adapts topology and size to data</td></tr>
+            <tr><td><code>NeuralMap</code></td><td>Graph (dynamic, radius-gated)</td><td>No</td><td>Memory-efficient, noise-resistant</td></tr>
+            <tr><td><code>SOM</code></td><td>2-D rectangular lattice</td><td>Yes</td><td>Topology-preserving, visual interpretation</td></tr>
+            </tbody>
+        </table>
     </div>
 
-    <p>In what follows, we apply SOM to a complicated data from Chameleon
-        data set, as shown in the above. The SOM has <code>20 x 20</code>
-        neurons.</p>
+    <p>Several playgrounds on this page use the <strong>Chameleon t4.8k</strong> dataset — a well-known 2-D spatial benchmark for data mining and clustering algorithms. It belongs to a suite of synthetic packages associated with the CHAMELEON clustering algorithm (George Karypis et al.) and consists of 8,000 points in a 2-dimensional space (8000&nbsp;&times;&nbsp;2).</p>
+    <p>The data contain seven distinct, highly irregular density clusters with varying shapes (curves, nested structures) and sizes, plus a high degree of background noise. That mix stresses how robustly an algorithm can filter outliers and recover cluster boundaries. Researchers often bench spatial and density-based models on t4.8k together with sibling sets t5.8k, t7.10k, and t8.8k.</p>
+
+
+    <figure class="plot-figure">
+        <img src="images/t4.8k.png" class="enlarge" alt="Chameleon t4.8k" />
+        <figcaption>Chameleon t4.8k</figcaption>
+    </figure>
+
+
+    <h2 id="vector-quantizer" class="title">The VectorQuantizer Interface</h2>
+
+    <p>Every algorithm implements <code>VectorQuantizer</code>, which extends <code>Serializable</code>:</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-1-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-1-1">Scala</button>
+    <span class="lang-tab is-active">Java</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-1-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    import smile.util.*;
-    import smile.vq.*;
-    var x = Read.csv("data/clustering/chameleon/t4.8k.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
-
-    var epochs = 20;
-    var lattice = SOM.lattice(20, 20, x);
-    var som = new SOM(lattice,
-                TimeFunction.constant(0.1),
-                Neighborhood.Gaussian(1, x.length * epochs / 4));
-
-    for (int e = 0; e < epochs; e++) {
-        for (int i : MathEx.permutate(x.length)) {
-            som.update(x[i]);
-        }
-    }
-
-    Hexmap.of(som.umatrix(), Palette.jet(256)).canvas().window();
-          </code></pre>
-    </div>
-    <div id="pg-1-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=" ").toArray
-
-    val epochs = 20
-    val lattice = SOM.lattice(20, 20, x)
-    val som = new SOM(lattice,
-                TimeFunction.constant(0.1),
-                Neighborhood.Gaussian(1, x.length * epochs / 4))
-
-    (1 to epochs).foreach { _ =>
-        MathEx.permutate(x.length).foreach { i =>
-            som.update(x(i));
-        }
-    }
-
-    show(hexmap(som.umatrix, Palette.jet(256)))
-    </code></pre>
-    </div>
+  <pre class="playground-source language-java"><code class="language-java">public interface VectorQuantizer extends Serializable {
+    int OUTLIER = Integer.MAX_VALUE;
+    void update(double[] x);
+    double[] quantize(double[] x);
+}</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The U-Matrix is visualized with a hexmap, where a dark red coloring between
-        the neurons corresponds to a large distance and thus a gap between
-        the codebook values in the input space. A dark blue coloring between
-        the neurons signifies that the codebook vectors are close to each other
-        in the input space. The blueish areas can be thought as clusters and
-        reddish areas as cluster separators. This can be a helpful presentation
-        when one tries to find clusters in the input data without having any
-        <i>a priori</i> information about the clusters.</p>
+    <dl class="options-dl">
+        <dt><code>update(double[] x)</code></dt>
+        <dd>Presents a new observation. The model updates its internal prototype(s) with competitive learning. Call repeatedly over the training set (typically for multiple epochs in random order) to train.</dd>
+        <dt><code>quantize(double[] x)</code></dt>
+        <dd>Returns the weight vector of the nearest prototype. For Neural Gas, GNG, NeuralMap, and SOM this is an <strong>internal reference</strong> — do not mutate it. Clone first if you need a writable copy. BIRCH returns a freshly computed centroid array and is safe to modify.</dd>
+        <dt><code>OUTLIER</code></dt>
+        <dd><code>Integer.MAX_VALUE</code>, reserved as a label for outliers or noise in higher-level clustering that builds on VQ. The VQ algorithms themselves do not use it internally.</dd>
+    </dl>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/som-umatrix-hexmap.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">SOM U-Matrix</div>
-    </div>
+    <p>All implementations are serializable, so a trained model can be saved and restored with standard Java object streams.</p>
 
-    <p>One may also fit a Gaussian mixture model on the U-Matrix values.
-        Our implementation of EM algorithm to fix mixture models can automatically
-        determine the number of components in the mixture. The distribution
-        information can be used in other algorithms such as Guassian kernel smooth
-        parameters, nearest neighbor range, etc.</p>
+
+    <h2 id="birch" class="title">BIRCH — CF-Tree Quantizer</h2>
+
+    <p>BIRCH (Balanced Iterative Reducing and Clustering using Hierarchies) builds a <strong>CF-tree</strong> — a height-balanced tree of <em>Clustering Features (CF)</em>. Each CF is a compact statistical summary <code>(N, LS, SS)</code>: the point count, linear sum, and square sum. From these three statistics the centroid and radius of a sub-cluster can be computed exactly and cheaply.</p>
+    <p>When a new point arrives, it is absorbed into the closest leaf CF if the resulting radius stays within the threshold <code>T</code>; otherwise a new CF is created. Leaves that exceed capacity <code>L</code> are split; internal nodes that exceed branching factor <code>B</code> are likewise split. <code>quantize</code> descends the tree to the nearest leaf CF and returns its centroid.</p>
+
+
+    <h3 id="birch-construction">Construction</h3>
+
+    <dl class="options-dl">
+        <dt><code>d</code></dt>
+        <dd>Dimensionality of the data.</dd>
+        <dt><code>B</code></dt>
+        <dd>Maximum children per internal node (typical 5–50; ≥ 2).</dd>
+        <dt><code>L</code></dt>
+        <dd>Maximum CFs per leaf node (typical 5–50; ≥ 2).</dd>
+        <dt><code>T</code></dt>
+        <dd>Radius threshold for absorbing a point into an existing CF (must be &gt; 0). Smaller <code>T</code> yields finer sub-clusters; larger <code>T</code> yields coarser ones.</dd>
+    </dl>
+
+    <p>The constructor is <code>BIRCH(int d, int B, int L, double T)</code>. <code>T</code> is the most important parameter — calibrate it from pairwise distances so it matches expected intra-cluster spread.</p>
+
+
+    <h3 id="birch-usage">Usage</h3>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
     <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-2-0">Java</button>
     <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-2-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-2-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-2-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var dist = Arrays.stream(som.umatrix()).flatMapToDouble(r -> Arrays.stream(r)).toArray();
-    var canvas = smile.plot.swing.Histogram.of(dist, 100, true).canvas();
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.GaussianMixture;
+import smile.math.MathEx;
+import smile.vq.BIRCH;
 
-    var mixture = GaussianMixture.fit(dist);
+MathEx.setSeed(19650218);
+double[][] x = GaussianMixture.generate().x();
 
-    var minDist = MathEx.min(dist);
-    var w = (MathEx.max(dist) - minDist) / 50;
-    var pdf = new double[51][2];
-    for (int i = 0; i < pdf.length; i++) {
-      pdf[i][0] = minDist + i * w;
-      pdf[i][1] = mixture.p(pdf[i][0]) * w;
-    }
+BIRCH birch = new BIRCH(x[0].length, 5, 5, 1.0);
+for (double[] xi : x) {
+    birch.update(xi);
+}
 
-    canvas.add(LinePlot.of(pdf, Color.RED));
-    canvas.window();
-          </code></pre>
+double[] prototype = birch.quantize(x[0]);
+double[][] centroids = birch.centroids();
+System.out.println(centroids.length);
+System.out.println(prototype.length);</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(leaf centroid count)
+(dimensionality)
+      </code></pre>
     </div>
     <div id="pg-2-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val dist = som.umatrix.flatten
-    val canvas = hist(dist, 100, true)
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.GaussianMixture
+import smile.math.MathEx
+import smile.vq.BIRCH
 
-    val mixture = GaussianMixture.fit(dist)
+MathEx.setSeed(19650218)
+val x = GaussianMixture.generate.x
 
-    val minDist = MathEx.min(dist)
-    val w = (MathEx.max(dist) - minDist) / 50
-    val pdf = (0 to 50).map { i =>
-      val x = minDist + i * w
-      val y = mixture.p(x) * w
-      Array(x, y)
-    }.toArray
+val birch = new BIRCH(x(0).length, 5, 5, 1.0)
+x.foreach(birch.update)
+val prototype = birch.quantize(x(0))
+val centroids = birch.centroids
+println(centroids.length)
+println(prototype.length)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(leaf centroid count)
+(dimensionality)
+      </code></pre>
+    </div>
+    <div id="pg-2-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.GaussianMixture
+import smile.math.MathEx
+import smile.vq.BIRCH
 
-    canvas.add(LinePlot.of(pdf, Color.RED))
-    show(canvas)
-    </code></pre>
+MathEx.setSeed(19650218)
+val x = GaussianMixture.generate().x()
+
+val birch = BIRCH(x[0].size, 5, 5, 1.0)
+for (xi in x) birch.update(xi)
+val prototype = birch.quantize(x[0])
+val centroids = birch.centroids()
+println(centroids.size)
+println(prototype.size)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(leaf centroid count)
+(dimensionality)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/som-umatrix-hist.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">SOM U-Matrix Value Distribution</div>
-    </div>
+    <p><code>centroids()</code> returns the centroid of every CF at the leaf level. Feed these into hierarchical clustering (e.g. <code>HierarchicalClustering</code>) for phase 2 of the original BIRCH pipeline.</p>
+    <p>Key properties: single-pass construction, memory-bounded tree depth controlled by <code>T</code>/<code>B</code>/<code>L</code>, and O(log n) insertions. BIRCH’s <code>quantize</code> returns a new array computed from CF statistics, so it is safe to modify.</p>
 
-    <p>It is also common to visualize an SOM by mapping the neuron
-        codebook vectors to a lower dimensional space (e.g. by Sammon's mapping).</p>
+
+    <figure class="plot-figure">
+        <img src="images/birch.png" class="enlarge" alt="BIRCH" />
+        <figcaption>BIRCH</figcaption>
+    </figure>
+
+
+    <h2 id="neural-gas" class="title">Neural Gas</h2>
+
+    <p>Neural Gas (Martinetz &amp; Schulten) uses <strong>soft competition</strong>: for every input <code>x</code>, all neurons are ranked by distance and updated, with adaptation strength decaying exponentially with rank. The closest neuron (rank 0) moves the most. A competitive Hebbian edge is also drawn between the best-matching unit (BMU) and the second-best; old edges can be pruned via <code>network()</code>.</p>
+    <p>The adaptation rule for rank <code>k</code> at iteration <code>t</code> is <code>Δw<sub>k</sub> = α(t)·exp(−k/θ(t))·(x − w<sub>k</sub>)</code>, where <code>α(t)</code> and <code>θ(t)</code> typically decay over time.</p>
+
+
+    <h3 id="neural-gas-construction">Construction</h3>
+
+    <dl class="options-dl">
+        <dt><code>neurons</code></dt>
+        <dd>Initial weight vectors (at least 2); commonly drawn with <code>CentroidClustering.seeds</code>.</dd>
+        <dt><code>alpha</code></dt>
+        <dd>Learning-rate schedule <code>α(t)</code>.</dd>
+        <dt><code>theta</code></dt>
+        <dd>Neighbourhood-width schedule <code>θ(t)</code>.</dd>
+        <dt><code>lifetime</code></dt>
+        <dd>Edge lifetime: edges older than <code>lifetime(t)</code> steps are zeroed by <code>network()</code>.</dd>
+    </dl>
+
+    <p>Constructor: <code>NeuralGas(double[][] neurons, TimeFunction alpha, TimeFunction theta, TimeFunction lifetime)</code>. <code>TimeFunction</code> lives in <code>smile.util.function</code>; common schedules are <code>TimeFunction.constant(v)</code> and <code>TimeFunction.exp(v0, T)</code> (<code>v0 · exp(−t / T)</code>).</p>
+
+
+    <h3 id="neural-gas-usage">Usage</h3>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
     <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-3-0">Java</button>
     <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-3-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-3-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-3-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var codebook = Arrays.stream(som.neurons()).flatMap(r -> Arrays.stream(r)).toArray(double[][]::new);
-    var codebook2d = SammonMapping.of(MathEx.pdist(codebook, false).toArray(), 2).coordinates;
+      <pre class="playground-source language-java"><code class="language-java">import smile.clustering.CentroidClustering;
+import smile.datasets.GaussianMixture;
+import smile.math.MathEx;
+import smile.util.function.TimeFunction;
+import smile.vq.NeuralGas;
 
-    var nodes = 20;
-    var neurons = new double[nodes][nodes][];
-    for (int i = 0, k = 0; i < nodes; i++) {
-        for (int j = 0; j < nodes; j++, k++) {
-            neurons[i][j] = codebook2d[k];
-        }
+MathEx.setSeed(19650218);
+double[][] x = GaussianMixture.generate().x();
+int epochs = 10;
+int T = x.length * epochs;
+
+NeuralGas gas = new NeuralGas(
+    CentroidClustering.seeds(x, 20),
+    TimeFunction.exp(0.3, T / 2.0),
+    TimeFunction.exp(5, T / 8.0),
+    TimeFunction.constant(x.length * 2));
+
+for (int epoch = 0; epoch &lt; epochs; epoch++) {
+    for (int j : MathEx.permutate(x.length)) {
+        gas.update(x[j]);
     }
-    Grid.of(neurons).canvas().window();
-          </code></pre>
+}
+
+System.out.println(gas.neurons().length);
+System.out.println(gas.network().getVertexCount());</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+20
+20
+      </code></pre>
     </div>
     <div id="pg-3-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val codebook = som.neurons.flatten
-    val codebook2d = sammon(pdist(codebook, false).toArray(), 2).coordinates
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.clustering.CentroidClustering
+import smile.datasets.GaussianMixture
+import smile.math.MathEx
+import smile.util.function.TimeFunction
+import smile.vq.NeuralGas
 
-    val nodes = 20
-    val neurons = (0 until nodes).map { i => codebook2d.slice(nodes*i, nodes*(i+1)) }.toArray
-    show(grid(neurons))
-    </code></pre>
+MathEx.setSeed(19650218)
+val x = GaussianMixture.generate.x
+val epochs = 10
+val T = x.length * epochs
+
+val gas = new NeuralGas(
+  CentroidClustering.seeds(x, 20),
+  TimeFunction.exp(0.3, T / 2.0),
+  TimeFunction.exp(5, T / 8.0),
+  TimeFunction.constant(x.length * 2))
+
+for (epoch &lt;- 0 until epochs) {
+  for (j &lt;- MathEx.permutate(x.length)) gas.update(x(j))
+}
+println(gas.neurons.length)
+println(gas.network.getVertexCount)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+20
+20
+      </code></pre>
+    </div>
+    <div id="pg-3-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.clustering.CentroidClustering
+import smile.datasets.GaussianMixture
+import smile.math.MathEx
+import smile.util.function.TimeFunction
+import smile.vq.NeuralGas
+
+MathEx.setSeed(19650218)
+val x = GaussianMixture.generate().x()
+val epochs = 10
+val T = x.size * epochs
+
+val gas = NeuralGas(
+    CentroidClustering.seeds(x, 20),
+    TimeFunction.exp(0.3, T / 2.0),
+    TimeFunction.exp(5.0, T / 8.0),
+    TimeFunction.constant((x.size * 2).toDouble()))
+
+repeat(epochs) {
+    for (j in MathEx.permutate(x.size)) gas.update(x[j])
+}
+println(gas.neurons().size)
+println(gas.network().vertexCount)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+20
+20
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Because this artificial data is 2-dimensional, it is not necessary
-        to map the neurons in the SOM to a lower dimensional space.
-        For demonstration, we still go through the whole process with a Sammon's mapping.</p>
+    <p><code>neurons()</code> returns weight vectors in the original constructor index order. <code>network()</code> returns an <code>AdjacencyMatrix</code> of competitive Hebbian edges after pruning expired ones. Neural Gas has a fixed prototype count, smooth soft-competition convergence, and needs <code>alpha</code>/<code>theta</code> to decay near zero by the end of training.</p>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/som-sammon.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">SOM Neuron Grid after Sammon's Mapping</div>
+
+    <figure class="plot-figure">
+        <img src="images/neural-gas.png" class="enlarge" alt="Neural Gas" />
+        <figcaption>Neural Gas</figcaption>
+    </figure>
+
+
+    <h2 id="growing-neural-gas" class="title">Growing Neural Gas</h2>
+
+    <p>Growing Neural Gas (GNG, Fritzke) extends Neural Gas with dynamic neuron insertion and removal. It uses hard competition (BMU and second-best only), competitive Hebbian edges, age-based edge pruning, local error accumulation, and periodic insertion every <code>lambda</code> signals halfway between the highest-error neuron and its worst neighbor.</p>
+
+
+    <h3 id="gng-construction">Construction</h3>
+
+    <p>Two constructors: <code>GrowingNeuralGas(int d)</code> with defaults, or the full form <code>GrowingNeuralGas(int d, double epsBest, double epsNeighbor, int edgeLifetime, int lambda, double alpha, double beta)</code>.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Parameter</th><th>Default</th><th>Meaning</th></tr></thead>
+            <tbody>
+            <tr><td><code>d</code></td><td>—</td><td>Dimensionality</td></tr>
+            <tr><td><code>epsBest</code></td><td>0.2</td><td>Learning rate for BMU</td></tr>
+            <tr><td><code>epsNeighbor</code></td><td>0.006</td><td>Learning rate for BMU neighbors</td></tr>
+            <tr><td><code>edgeLifetime</code></td><td>50</td><td>Maximum edge age before pruning</td></tr>
+            <tr><td><code>lambda</code></td><td>100</td><td>Neuron insertion interval (signals)</td></tr>
+            <tr><td><code>alpha</code></td><td>0.5</td><td>Error reduction for <code>q</code> and <code>f</code> after insertion</td></tr>
+            <tr><td><code>beta</code></td><td>0.995</td><td>Global error decay after every signal</td></tr>
+            </tbody>
+        </table>
     </div>
 
-    <h2 id="neural-gas">Neural Gas</h2>
+    <p>The first two <code>update</code> calls only bootstrap the first two neurons; learning begins from the third call onward.</p>
 
-    <p>The Neural Gas algorithm is inspired
-        by the SOM for finding optimal data representations based on
-        feature vectors. The algorithm was coined "Neural Gas" because of the
-        dynamics of the feature vectors during the adaptation process, which
-        distribute themselves like a gas within the data space. Although it is mainly
-        applied where data compression or vector quantization is an issue,
-        it is also used for cluster analysis as a robustly converging alternative to
-        the k-means clustering.</p>
 
-    <p>Compared to SOM, neural gas has no topology of a fixed dimensionality
-        (in fact, no topology at all). For each input signal during learning, the
-        neural gas algorithm sorts the neurons of the network according to the
-        distance of their reference vectors to the input signal. Based on this
-        "rank order", neurons are adapted based on the adaptation strength that are
-       decreased according to a fixed schedule.</p>
+    <h3 id="gng-usage">Usage</h3>
 
-    <p>The adaptation step of the Neural Gas can be interpreted as gradient descent
-        on a cost function. By adapting not only the closest feature vector but all
-        of them with a step size decreasing with increasing distance order,
-        compared to k-means clustering, a much more robust convergence of the
-        algorithm can be achieved.</p>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
     <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-4-0">Java</button>
     <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-4-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-4-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-4-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var epochs = 20;
-    var gas = new NeuralGas(NeuralGas.seed(400, x),
-                TimeFunction.exp(0.3, x.length * epochs / 2),
-                TimeFunction.exp(30, x.length * epochs / 8),
-                TimeFunction.constant(x.length * 2));
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.GaussianMixture;
+import smile.math.MathEx;
+import smile.vq.GrowingNeuralGas;
 
-    for (int e = 0; e < epochs; e++) {
-        for (int i : MathEx.permutate(x.length)) {
-            gas.update(x[i]);
-        }
+MathEx.setSeed(19650218);
+double[][] x = GaussianMixture.generate().x();
+GrowingNeuralGas model = new GrowingNeuralGas(x[0].length);
+
+for (int epoch = 0; epoch &lt; 5; epoch++) {
+    for (int j : MathEx.permutate(x.length)) {
+        model.update(x[j]);
     }
+}
 
-    var canvas = ScatterPlot.of(x, '.').canvas();
-    canvas.add(ScatterPlot.of(gas.neurons(), '#', Color.BLUE));
-    canvas.window();
-          </code></pre>
+var neurons = model.neurons();
+System.out.println(neurons.length);
+System.out.println(neurons[0].w.length);
+System.out.println(model.quantize(x[0]).length);</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(neuron count grows)
+(dimensionality)
+(dimensionality)
+      </code></pre>
     </div>
     <div id="pg-4-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val epochs = 20
-    val gas = new NeuralGas(NeuralGas.seed(400, x),
-                TimeFunction.exp(0.3, x.length * epochs / 2),
-                TimeFunction.exp(30, x.length * epochs / 8),
-                TimeFunction.constant(x.length * 2))
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.GaussianMixture
+import smile.math.MathEx
+import smile.vq.GrowingNeuralGas
 
-    (1 to epochs).foreach { _ =>
-        MathEx.permutate(x.length).foreach { i =>
-            gas.update(x(i))
-        }
-    }
+MathEx.setSeed(19650218)
+val x = GaussianMixture.generate.x
+val model = new GrowingNeuralGas(x(0).length)
 
-    val canvas = plot(x, '.')
-    canvas.add(ScatterPlot.of(gas.neurons, '#', BLUE))
-    show(canvas)
-    </code></pre>
+for (epoch &lt;- 0 until 5) {
+  for (j &lt;- MathEx.permutate(x.length)) model.update(x(j))
+}
+val neurons = model.neurons
+println(neurons.length)
+println(neurons(0).w.length)
+println(model.quantize(x(0)).length)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(neuron count grows)
+(dimensionality)
+(dimensionality)
+      </code></pre>
+    </div>
+    <div id="pg-4-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.GaussianMixture
+import smile.math.MathEx
+import smile.vq.GrowingNeuralGas
+
+MathEx.setSeed(19650218)
+val x = GaussianMixture.generate().x()
+val model = GrowingNeuralGas(x[0].size)
+
+repeat(5) {
+    for (j in MathEx.permutate(x.size)) model.update(x[j])
+}
+val neurons = model.neurons()
+println(neurons.size)
+println(neurons[0].w.size)
+println(model.quantize(x[0]).size)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(neuron count grows)
+(dimensionality)
+(dimensionality)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>In the plot, we draw the neurons as big blue dots.</p>
+    <p><code>neurons()</code> returns <code>Neuron[]</code> from <code>smile.vq.hebb</code>. Each neuron exposes <code>w</code> (prototype), <code>counter</code> (accumulated local error), and <code>edges</code> (topological neighbors). Disconnected components in the edge graph correspond to separate clusters. You do not need to choose the prototype count in advance.</p>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/neural-gas.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Neural Gas</div>
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Goal</th><th>Adjustment</th></tr></thead>
+            <tbody>
+            <tr><td>Fewer, coarser prototypes</td><td>Increase <code>lambda</code>, decrease <code>edgeLifetime</code></td></tr>
+            <tr><td>More, finer prototypes</td><td>Decrease <code>lambda</code>, increase <code>edgeLifetime</code></td></tr>
+            <tr><td>Faster convergence</td><td>Increase <code>epsBest</code> and <code>epsNeighbor</code></td></tr>
+            <tr><td>Smoother topology</td><td>Decrease <code>epsBest</code>, increase <code>edgeLifetime</code></td></tr>
+            <tr><td>Drifting distributions</td><td>Smaller <code>beta</code>, smaller <code>edgeLifetime</code></td></tr>
+            </tbody>
+        </table>
     </div>
 
-    <h2 id="growing-neural-gas">Growing Neural Gas</h2>
 
-    <p>A prominent extension is the Growing Neural Gas (GNG).
-        GNG can add and delete nodes during algorithm execution.
-        The growth mechanism is based on growing cell structures
-        and competitive Hebbian learning.</p>
+    <figure class="plot-figure">
+        <img src="images/growing-neural-gas.png" class="enlarge" alt="Growing Neural Gas" />
+        <figcaption>Growing Neural Gas</figcaption>
+    </figure>
 
-    <p>Compared to Neural Gas, GNG has the following distinctions:</p>
-    <ul>
-        <li>The system has the ability to add and delete nodes.</li>
 
-        <li>Local Error measurements are noted at each step helping it to locally
-            insert/delete nodes.</li>
+    <h2 id="neural-map" class="title">NeuralMap</h2>
 
-        <li>Edges are connected between nodes, so a sufficiently old edges is
-            deleted. Such edges are intended placeholders for localized
-            data distribution.</li>
+    <p>NeuralMap combines ideas from GNG and BIRCH. Like GNG it uses competitive Hebbian learning and edge aging, but neuron creation is gated by a distance threshold <code>r</code> rather than a fixed insertion interval. Isolated far-outlier signals create their own neuron, which quickly becomes stale and is removed by <code>clear</code>.</p>
 
-        <li>Such edges also help to locate distinct clusters (those clusters are
-            not connected by edges).</li>
-    </ul>
+    <dl class="options-dl">
+        <dt><code>d</code></dt>
+        <dd>Dimensionality.</dd>
+        <dt><code>r</code></dt>
+        <dd>Distance threshold for neuron activation.</dd>
+        <dt><code>epsBest</code></dt>
+        <dd>Learning rate for the nearest neuron.</dd>
+        <dt><code>epsNeighbor</code></dt>
+        <dd>Learning rate for topological neighbors.</dd>
+        <dt><code>edgeLifetime</code></dt>
+        <dd>Maximum edge age before pruning.</dd>
+        <dt><code>beta</code></dt>
+        <dd>Global freshness decay per step (<code>0 &lt; beta ≤ 1</code>).</dd>
+    </dl>
+
+    <p>Constructor: <code>NeuralMap(int d, double r, double epsBest, double epsNeighbor, int edgeLifetime, double beta)</code>.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
     <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-5-0">Java</button>
     <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-5-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-5-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-5-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var gng = new GrowingNeuralGas(x[0].length);
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.GaussianMixture;
+import smile.math.MathEx;
+import smile.vq.NeuralMap;
 
-    for (int e = 0; e < epochs; e++) {
-        for (int i : MathEx.permutate(x.length)) {
-            gng.update(x[i]);
-        }
+MathEx.setSeed(19650218);
+double[][] x = GaussianMixture.generate().x();
+NeuralMap model = new NeuralMap(x[0].length, 1.5, 0.01, 0.002, 50, 0.995);
+
+for (int epoch = 0; epoch &lt; 5; epoch++) {
+    for (int j : MathEx.permutate(x.length)) {
+        model.update(x[j]);
     }
+    model.clear(1E-7);
+}
 
-    var neurons = gng.neurons();
-    var canvas = ScatterPlot.of(x, '.').canvas();
-    canvas.add(ScatterPlot.of(Arrays.stream(neurons).map(n -> n.w).toArray(double[][]::new), '@', Color.BLUE));
-
-    Arrays.stream(neurons).forEach(neuron -> {
-        neuron.edges.stream().forEach(edge -> {
-            double[][] e = {neuron.w, edge.neighbor.w};
-            canvas.add(LinePlot.of(e, Color.BLUE));
-        });
-    });
-    canvas.window();
-          </code></pre>
+System.out.println(model.neurons().length);
+System.out.println(model.quantize(x[0]).length);</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(compact neuron count)
+(dimensionality)
+      </code></pre>
     </div>
     <div id="pg-5-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val gng = new GrowingNeuralGas(x(0).length)
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.GaussianMixture
+import smile.math.MathEx
+import smile.vq.NeuralMap
 
-    (1 to 10).foreach { _ =>
-        MathEx.permutate(x.length).foreach { i =>
-            gng.update(x(i))
-        }
-    }
+MathEx.setSeed(19650218)
+val x = GaussianMixture.generate.x
+val model = new NeuralMap(x(0).length, 1.5, 0.01, 0.002, 50, 0.995)
 
-    val neurons = gng.neurons
-    val canvas = plot(x, '.')
-    canvas.add(ScatterPlot.of(neurons.map(_.w).toArray, '@', BLUE))
+for (epoch &lt;- 0 until 5) {
+  for (j &lt;- MathEx.permutate(x.length)) model.update(x(j))
+  model.clear(1E-7)
+}
+println(model.neurons.length)
+println(model.quantize(x(0)).length)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(compact neuron count)
+(dimensionality)
+      </code></pre>
+    </div>
+    <div id="pg-5-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.GaussianMixture
+import smile.math.MathEx
+import smile.vq.NeuralMap
 
-    import scala.jdk.CollectionConverters._
-    neurons.foreach { neuron =>
-      neuron.edges.asScala.foreach { edge =>
-        canvas.add(LinePlot.of(Array(neuron.w, edge.neighbor.w), BLUE))
-      }
-    }
-    show(canvas)
-    </code></pre>
+MathEx.setSeed(19650218)
+val x = GaussianMixture.generate().x()
+val model = NeuralMap(x[0].size, 1.5, 0.01, 0.002, 50, 0.995)
+
+repeat(5) {
+    for (j in MathEx.permutate(x.size)) model.update(x[j])
+    model.clear(1E-7)
+}
+println(model.neurons().size)
+println(model.quantize(x[0]).size)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(compact neuron count)
+(dimensionality)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>As shown in the plot, GNG nicely capture the structure of data.
-        However, there are also neurons fitting noises and connecting
-        clusters that should be separated. A further graph cut/clustering
-        may help removing these neurons of noise.</p>
+    <p><code>clear(double eps)</code> removes neurons whose freshness <code>counter &lt; eps</code> and whose edge list is empty, and prunes stale edges on surviving neurons. Call it between epochs to keep the model compact. <code>eps</code> must be non-negative or an <code>IllegalArgumentException</code> is thrown. Network size is bounded by how many distinct <code>r</code>-balls cover the data.</p>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/growing-neural-gas.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Growing Neural Gas</div>
-    </div>
 
-    <h2 id="neural-map">Neural Map</h2>
+    <figure class="plot-figure">
+        <img src="images/neural-map.png" class="enlarge" alt="NeuralMap" />
+        <figcaption>NeuralMap</figcaption>
+    </figure>
 
-    <p>Neural Map is an efficient competitive learning algorithm inspired by growing
-        neural gas and BIRCH. Like growing neural gas, Neural Map has the ability to
-        add and delete neurons with competitive Hebbian learning. Edges exist between
-        neurons close to each other. Such edges are intended placeholders for
-        localized data distribution. Such edges also help to locate distinct clusters
-        (those clusters are not connected by edges). Neural Map employs Locality-Sensitive
-        Hashing to speed up the learning while BIRCH uses balanced CF trees.</p>
+
+    <h2 id="som" class="title">Self-Organizing Map (SOM)</h2>
+
+    <p>The Self-Organizing Map (Kohonen) organizes a fixed set of neurons on a <strong>2-D rectangular lattice</strong>. Each neuron has a grid position <code>(i, j)</code> and a weight vector in input space. Training finds the BMU, then updates all neurons toward <code>x</code> with magnitude <code>α(t)·θ(di, dj, t)</code>. As <code>α</code> and the neighborhood shrink, the map first organizes globally and then fine-tunes locally — a topology-preserving projection onto the 2-D lattice.</p>
+
+    <p>Constructor: <code>SOM(double[][][] neurons, TimeFunction alpha, Neighborhood theta)</code>. All rows must share the same column count; all weight vectors must share dimensionality <code>d</code>.</p>
+    <p>Prefer <code>SOM.lattice(nrow, ncol, samples)</code> for initialization: it seeds with <code>CentroidClustering.seeds</code>, embeds those seeds with MDS, and orders the grid so row/column positions respect the embedding. That preserves global structure from the start.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
     <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-6-0">Java</button>
     <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-6-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-6-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-6-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var cortex = new NeuralMap(x[0].length, 10, 0.01, 0.002, 50, 0.995);
+      <pre class="playground-source language-java"><code class="language-java">import smile.io.Read;
+import smile.math.MathEx;
+import smile.plot.swing.Hexmap;
+import smile.plot.swing.Palette;
+import smile.util.function.TimeFunction;
+import smile.vq.Neighborhood;
+import smile.vq.SOM;
+import org.apache.commons.csv.CSVFormat;
 
-    for (int e = 0; e < 5; e++) {
-        for (int i : MathEx.permutate(x.length)) {
-            cortex.update(x[i]);
-        }
+var x = Read.csv("data/clustering/chameleon/t4.8k.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+int epochs = 20;
+var lattice = SOM.lattice(20, 20, x);
+var som = new SOM(lattice,
+    TimeFunction.constant(0.1),
+    Neighborhood.Gaussian(1.0, x.length * epochs / 4.0));
 
-        // Removes staled neurons and the edges beyond lifetime.
-        cortex.clear(1E-7);
+for (int e = 0; e &lt; epochs; e++) {
+    for (int i : MathEx.permutate(x.length)) {
+        som.update(x[i]);
     }
+}
 
-    var neurons = cortex.neurons();
-    var canvas = ScatterPlot.of(x, '.').canvas();
-    canvas.add(ScatterPlot.of(Arrays.stream(neurons).map(n -> n.w).toArray(double[][]::new), '@', Color.BLUE));
-
-    Arrays.stream(neurons).forEach(neuron -> {
-        neuron.edges.stream().forEach(edge -> {
-            double[][] e = {neuron.w, edge.neighbor.w};
-            canvas.add(LinePlot.of(e, Color.BLUE));
-        });
-    });
-    canvas.window();
-          </code></pre>
+Hexmap.of(som.umatrix(), Palette.jet(256)).canvas().window();</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: U-matrix hexmap)
+      </code></pre>
     </div>
     <div id="pg-6-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val cortex = new NeuralMap(x(0).length, 10, 0.01, 0.002, 50, 0.995)
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.math.MathEx
+import smile.plot.swing.{Hexmap, Palette}
+import smile.util.function.TimeFunction
+import smile.vq.{Neighborhood, SOM}
+import smile.read
 
-    (1 to 5).foreach { _ =>
-        MathEx.permutate(x.length).foreach { i =>
-            cortex.update(x(i))
-        }
+val x = read.csv("data/clustering/chameleon/t4.8k.txt",
+  header = false, delimiter = " ").toArray
+val epochs = 20
+val lattice = SOM.lattice(20, 20, x)
+val som = new SOM(lattice,
+  TimeFunction.constant(0.1),
+  Neighborhood.Gaussian(1.0, x.length * epochs / 4.0))
 
-        // Removes staled neurons and the edges beyond lifetime.
-        cortex.clear(1E-7)
-    }
+for (e &lt;- 0 until epochs) {
+  for (i &lt;- MathEx.permutate(x.length)) som.update(x(i))
+}
+Hexmap.of(som.umatrix, Palette.jet(256)).canvas.window</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: U-matrix hexmap)
+      </code></pre>
+    </div>
+    <div id="pg-6-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.io.Read
+import smile.math.MathEx
+import smile.plot.swing.Hexmap
+import smile.plot.swing.Palette
+import smile.util.function.TimeFunction
+import smile.vq.Neighborhood
+import smile.vq.SOM
+import org.apache.commons.csv.CSVFormat
 
-    val neurons = cortex.neurons
-    val canvas = plot(x, '.')
-    canvas.add(ScatterPlot.of(neurons.map(_.w).toArray, '@', BLUE))
+val x = Read.csv("data/clustering/chameleon/t4.8k.txt",
+    CSVFormat.DEFAULT.withDelimiter(' ')).toArray()
+val epochs = 20
+val lattice = SOM.lattice(20, 20, x)
+val som = SOM(lattice,
+    TimeFunction.constant(0.1),
+    Neighborhood.Gaussian(1.0, x.size * epochs / 4.0))
 
-    import scala.jdk.CollectionConverters._
-    neurons.foreach { neuron =>
-      neuron.edges.asScala.foreach { edge =>
-        canvas.add(LinePlot.of(Array(neuron.w, edge.neighbor.w), BLUE))
-      }
-    }
-    show(canvas)
-    </code></pre>
+repeat(epochs) {
+    for (i in MathEx.permutate(x.size)) som.update(x[i])
+}
+Hexmap.of(som.umatrix(), Palette.jet(256)).canvas().window()</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(opens plot: U-matrix hexmap)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Note that points in orange are outliers labeled by the algorithm.</p>
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/neural-map.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">Neural Map</div>
+    <p><code>neurons()</code> returns the learned <code>[nrow][ncol][d]</code> lattice (internal references — do not modify). <code>umatrix()</code> computes the Unified Distance Matrix: for each neuron, the maximum Euclidean distance to its orthogonal (4-connected) grid neighbors. Large values mark cluster boundaries; low values mark dense regions. The grid is not toroidal — corner and edge cells only consider existing neighbors.</p>
+
+
+    <div class="figure-grid">
+<figure class="plot-figure">
+        <img src="images/t4.8k.png" class="enlarge" alt="Chameleon t4.8k" />
+        <figcaption>Chameleon t4.8k</figcaption>
+    </figure>
+<figure class="plot-figure">
+        <img src="images/som-umatrix-hexmap.png" class="enlarge" alt="SOM U-matrix (hexmap)" />
+        <figcaption>SOM U-matrix (hexmap)</figcaption>
+    </figure>
+<figure class="plot-figure">
+        <img src="images/som-umatrix-hist.png" class="enlarge" alt="SOM U-matrix (histogram)" />
+        <figcaption>SOM U-matrix (histogram)</figcaption>
+    </figure>
+<figure class="plot-figure">
+        <img src="images/som-sammon.png" class="enlarge" alt="SOM Sammon mapping" />
+        <figcaption>SOM Sammon mapping</figcaption>
+    </figure>
     </div>
 
-    <h2 id="birch">BIRCH</h2>
+    <p>Built-in neighborhoods: <code>Neighborhood.bubble(radius)</code> (flat Euclidean disk) and <code>Neighborhood.Gaussian(sigma, T)</code> (recommended; width decays from <code>sigma</code> to ~0 over <code>T</code> iterations). See <a href="#neighborhood">Neighborhood Functions</a> below.</p>
 
-    <p>BIRCH (Balanced Iterative Reducing and Clustering using Hierarchies) performs
-        hierarchical clustering over particularly large datasets. An advantage of
-        BIRCH is its ability to incrementally and dynamically cluster incoming,
-        multidimensional metric data points in an attempt to produce the high
-        quality clustering for a given set of resources (memory and time constraints).</p>
 
-    <p>BIRCH has several advantages. For example, each clustering decision is made
-        without scanning all data points and currently existing clusters. It
-        exploits the observation that data space is not usually uniformly occupied
-        and not every data point is equally important. It makes full use of
-        available memory to derive the finest possible sub-clusters while minimizing
-        I/O costs. It is also an incremental method that does not require the whole
-        data set in advance.</p>
+    <h2 id="hebb" class="title">The smile.vq.hebb Package</h2>
 
-    <p>This implementation produces a clustering in three steps. First step
-        builds a CF (clustering feature) tree by a single scan of database.
-        The second step clusters the leaves of CF tree by hierarchical clustering.
-        Then the user can use the learned model to cluster input data in the final
-        step. In total, we scan the database twice.</p>
+    <p>The sub-package <code>smile.vq.hebb</code> provides the graph primitives used by Growing Neural Gas and NeuralMap.</p>
 
-    <p>A CF leaf will be treated as outlier if the number of its
-        points is less than the parameter <code>minPts</code>.
-        The branching factor parameter <code>branch</code> is the
-        maximum number of children nodes and the parameter <code>radius</code>
-        is the maximum radius of a sub-cluster.</p>
+
+    <h3 id="neuron">Neuron</h3>
+
+    <dl class="options-dl">
+        <dt><code>w</code></dt>
+        <dd>Weight / prototype vector (<code>final double[]</code>).</dd>
+        <dt><code>edges</code></dt>
+        <dd>Topological neighbors; undirected edges stored bidirectionally.</dd>
+        <dt><code>distance</code></dt>
+        <dd>Last computed distance to an input (<code>transient</code> — not serialized).</dd>
+        <dt><code>counter</code></dt>
+        <dd>Local counter (error accumulation in GNG, freshness in NeuralMap).</dd>
+    </dl>
+
+    <p>Key methods: <code>update(x, eps)</code> moves <code>w += eps·(x − w)</code>; <code>distance(x)</code> sets <code>this.distance</code>; <code>addEdge</code> / <code>removeEdge</code> / <code>setEdgeAge</code> maintain the undirected graph; <code>age()</code> increments ages of all emanating edges; <code>compareTo</code> orders by <code>distance</code> for <code>HeapSelect</code>.</p>
+
+
+    <h3 id="edge">Edge</h3>
+
+    <p>An <code>Edge</code> holds <code>neighbor</code> (the connected <code>Neuron</code>) and <code>age</code> (steps since last refresh). Edges are stored bidirectionally: if A has an edge to B, B also has an edge to A. Algorithms maintain that invariant by calling <code>addEdge</code>/<code>removeEdge</code> on both endpoints.</p>
+
+
+    <h2 id="neighborhood" class="title">Neighborhood Functions</h2>
+
+    <p><code>Neighborhood</code> is a <code>@FunctionalInterface</code> with <code>double of(int i, int j, int t)</code>, where <code>i</code>/<code>j</code> are signed row/column displacements from the BMU and <code>t</code> is the iteration count.</p>
+
+
+    <h3 id="bubble">Bubble neighborhood</h3>
+
+    <p><code>Neighborhood.bubble(int radius)</code> returns <code>1.0</code> when the Euclidean lattice distance <code>√(i² + j²) ≤ radius</code>, else <code>0.0</code>. The boundary is included. (For a Chebyshev square that excludes the boundary, use <code>Neighborhood.square(width)</code>.)</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <span class="lang-tab is-active">Java</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-7-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">
-    var birch = new BIRCH(x[0].length, 6, 3, 10);
-    for (double[] xi : x) {
-        birch.update(xi);
-    }
+  <pre class="playground-source language-java"><code class="language-java">import smile.vq.Neighborhood;
 
-    var canvas = ScatterPlot.of(x, '.').canvas();
-    canvas.add(ScatterPlot.of(birch.centroids(), '#', Color.BLUE));
-    canvas.window();
-          </code></pre>
+Neighborhood bubble = Neighborhood.bubble(2);
+System.out.println(bubble.of(0, 0, 0)); // 1.0 winner
+System.out.println(bubble.of(0, 2, 0)); // 1.0 on boundary
+System.out.println(bubble.of(2, 1, 0)); // 0.0 outside</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+1.0
+1.0
+0.0
+      </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="gaussian">Gaussian neighborhood</h3>
+
+    <p><code>Neighborhood.Gaussian(double sigma, double T)</code> returns <code>exp(−0.5·(i²+j²)/s²)</code> where <code>s = sigma·exp(−t/T)</code>. The neighbourhood width shrinks exponentially from <code>sigma</code> to near zero over <code>T</code> iterations. The winner always evaluates to <code>1.0</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.vq.Neighborhood;
+
+Neighborhood gauss = Neighborhood.Gaussian(2.0, 8000.0);
+System.out.println(gauss.of(0, 0, 0));    // 1.0
+System.out.println(gauss.of(1, 0, 0));    // ≈ 0.882
+System.out.println(gauss.of(1, 0, 4000)); // narrower</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+1.0
+0.8824969...
+(smaller)
+      </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Because <code>Neighborhood</code> is a functional interface, you can supply any lambda for custom decay schedules. Also available: <code>triangle</code> and <code>MexicanHat</code>.</p>
+
+
+    <h2 id="comparison" class="title">Algorithm Comparison and Selection Guide</h2>
+
+    <p>Quantization error on USPS handwritten digits (256-dimensional, ~7,000 training, ~2,000 test) from the integration test suite with seed <code>19650218</code>. Lower is better; errors are mean Euclidean distances.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Algorithm</th><th>Config</th><th>Train error</th><th>Test error</th></tr></thead>
+            <tbody>
+            <tr><td>K-Means (baseline)</td><td>k=400</td><td>5.829</td><td>6.631</td></tr>
+            <tr><td>Neural Gas</td><td>400 neurons, 20 epochs</td><td>5.699</td><td>6.531</td></tr>
+            <tr><td>Growing Neural Gas</td><td>default params, 10 epochs</td><td>5.593</td><td>6.432</td></tr>
+            <tr><td>NeuralMap</td><td>r=8, 5 epochs + clear</td><td>6.023</td><td>6.939</td></tr>
+            <tr><td>SOM</td><td>20×20 grid, 20 epochs</td><td>—</td><td>6.582</td></tr>
+            <tr><td>BIRCH</td><td>B=5, L=5, T=6</td><td>5.902</td><td>7.350</td></tr>
+            </tbody>
+        </table>
     </div>
-    <div id="pg-7-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">
-    val birch = new BIRCH(x(0).length, 6, 3, 10)
-    x.foreach { xi =>
-        birch.update(xi)
-    }
 
-    val canvas = plot(x, '.')
-    canvas.add(ScatterPlot.of(birch.centroids, '#', BLUE))
-    show(canvas)
-    </code></pre>
+
+    <h3 id="decision-guide">Decision guide</h3>
+
+    <p><strong>Use BIRCH</strong> for very large datasets needing a single fast pass, memory-constrained CF-trees, or two-phase pipelines that cluster the resulting centroids — especially when you do not need a fixed prototype count.</p>
+    <p><strong>Use Neural Gas</strong> when you know the prototype count, want smooth soft-competition convergence without lattice constraints, and can afford multi-epoch training (optionally using the Hebbian topology graph).</p>
+    <p><strong>Use Growing Neural Gas</strong> when prototype count is unknown, cluster structure is complex, and you want the topology graph to emerge naturally.</p>
+    <p><strong>Use NeuralMap</strong> for streaming data with outliers, radius-based noise rejection, and periodically pruned compact models (<code>clear</code> between epochs).</p>
+    <p><strong>Use SOM</strong> when topology preservation and U-matrix visualization matter, with a fixed 2-D neuron budget and an ordered grid for downstream navigation or coloring.</p>
+
+
+    <h2 id="patterns" class="title">Common Patterns and Tips</h2>
+
+
+    <h3 id="multi-epoch">Multi-epoch training with random shuffling</h3>
+
+    <p>All online VQ algorithms benefit from a different random order each epoch. <code>MathEx.permutate(n)</code> returns a random permutation of <code>0..n−1</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-9-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-9-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.datasets.GaussianMixture;
+import smile.math.MathEx;
+import smile.vq.GrowingNeuralGas;
+
+MathEx.setSeed(19650218);
+double[][] x = GaussianMixture.generate().x();
+GrowingNeuralGas model = new GrowingNeuralGas(x[0].length);
+
+for (int epoch = 0; epoch &lt; 5; epoch++) {
+    for (int j : MathEx.permutate(x.length)) {
+        model.update(x[j]);
+    }
+}
+System.out.println(model.neurons().length);</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(neuron count)
+      </code></pre>
+    </div>
+    <div id="pg-9-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.datasets.GaussianMixture
+import smile.math.MathEx
+import smile.vq.GrowingNeuralGas
+
+MathEx.setSeed(19650218)
+val x = GaussianMixture.generate.x
+val model = new GrowingNeuralGas(x(0).length)
+for (epoch &lt;- 0 until 5) {
+  for (j &lt;- MathEx.permutate(x.length)) model.update(x(j))
+}
+println(model.neurons.length)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(neuron count)
+      </code></pre>
+    </div>
+    <div id="pg-9-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.GaussianMixture
+import smile.math.MathEx
+import smile.vq.GrowingNeuralGas
+
+MathEx.setSeed(19650218)
+val x = GaussianMixture.generate().x()
+val model = GrowingNeuralGas(x[0].size)
+repeat(5) {
+    for (j in MathEx.permutate(x.size)) model.update(x[j])
+}
+println(model.neurons().size)</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+(neuron count)
+      </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/birch.png" class="enlarge" style="width: 480px;" />
-        <div class="caption" style="min-width: 480px;">BIRCH</div>
-    </div>
+
+    <h3 id="quantization-error">Computing mean quantization error</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">double error = 0.0;
+for (double[] xi : testData) {
+    double[] proto = model.quantize(xi);
+    error += MathEx.distance(xi, proto);
+}
+error /= testData.length;
+System.out.printf("Mean quantization error = %.4f%n", error);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="do-not-mutate">Do not modify the returned prototype</h3>
+
+    <p><code>quantize</code> and <code>neurons()</code> return internal references for Neural Gas, GNG, NeuralMap, and SOM. Mutating them corrupts the model. Always <code>clone()</code> first. BIRCH’s <code>quantize</code> is the exception — it returns a freshly computed centroid.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">// Dangerous — modifies the internal weight vector:
+// double[] proto = gas.quantize(x);
+// proto[0] = 0.0; // BUG
+
+// Safe:
+double[] proto = gas.quantize(x).clone();</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="seeding">Seeding prototypes intelligently</h3>
+
+    <p>For Neural Gas and SOM, prefer k-means++ seeds (<code>CentroidClustering.seeds</code>) or the MDS-based <code>SOM.lattice</code> helper over random uniform initialization.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">// Neural Gas: seed with representative points
+double[][] seeds = CentroidClustering.seeds(trainingData, 200);
+NeuralGas gas = new NeuralGas(seeds, alpha, theta, lifetime);
+
+// SOM: MDS-ordered lattice
+double[][][] lattice = SOM.lattice(10, 20, trainingData);
+SOM som = new SOM(lattice, alpha, Neighborhood.Gaussian(1.0, T));</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="schedules">Learning-rate schedules</h3>
+
+    <p>A common rule of thumb for exponential schedules over <code>N = n · epochs</code> update steps:</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">int N = trainingData.length * numEpochs;
+TimeFunction alpha = TimeFunction.exp(0.3, N / 2.0);
+TimeFunction theta = TimeFunction.exp(30.0, N / 8.0);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Both should reach near-zero by the end of training. Too large a final value leaves the map restless; too small wastes early epochs.</p>
+    <p>For GNG / NeuralMap, print <code>neurons().length</code> between epochs (and call <code>clear</code> for NeuralMap). If the count grows without bound, decrease <code>edgeLifetime</code> or (for GNG) increase pruning pressure via <code>lambda</code>. For BIRCH radius calibration, estimate mean pairwise distance on a sample and set <code>T</code> to roughly 10–20% of that value.</p>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
         <a class="btn-prev-text" href="clustering.html" title="Previous Section: Clustering"><span>Clustering</span></a>
-        <a class="btn-next-text" href="association-rule.html" title="Next Section: Association Rule Mining"><span>Association Rule Mining</span></a>
+        <a class="btn-next-text" href="anomaly-detection.html" title="Next Section: Anomaly Detection"><span>Anomaly Detection</span></a>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>

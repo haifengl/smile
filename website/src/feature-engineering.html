@@ -696,21 +696,21 @@ rp.apply(DoubleArray(1000)).size</code></pre>
 String[] vocabulary = {"smile", "feature", "learning"}
 var bow = new BagOfWords(s -&gt; s.toLowerCase().split("\\s+"), vocabulary)
 // binary presence: new BagOfWords(tokenizer, vocabulary, true)
-bow.apply("Feature learning with SMILE")</code></pre>
+bow.apply("SMILE feature learning")</code></pre>
     </div>
     <div id="pg-13-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.feature.extraction.BagOfWords
 
 val vocabulary = Array("smile", "feature", "learning")
 val bow = new BagOfWords((s: String) =&gt; s.toLowerCase.split("\\s+"), vocabulary)
-bow.apply("Feature learning with SMILE")</code></pre>
+bow.apply("SMILE feature learning")</code></pre>
     </div>
     <div id="pg-13-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.feature.extraction.BagOfWords
 
 val vocabulary = arrayOf("smile", "feature", "learning")
 val bow = BagOfWords({ it.lowercase().split(Regex("\\s+")).toTypedArray() }, vocabulary)
-bow.apply("Feature learning with SMILE")</code></pre>
+bow.apply("SMILE feature learning")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
