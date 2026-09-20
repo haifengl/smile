@@ -141,6 +141,27 @@ public class InferenceSessionTest {
                 "CPUExecutionProvider should always be present; got: " + providers);
     }
 
+    @Test
+    @Order(3)
+    @DisplayName("CoreML EP: append and create session when CoreMLExecutionProvider is available")
+    void testCoreMLExecutionProviderWhenAvailable() {
+        Assumptions.assumeTrue(
+                Environment.availableProviders().contains("CoreMLExecutionProvider"),
+                "CoreMLExecutionProvider not in this ORT build");
+        Assumptions.assumeTrue(modelExists("squeezenet"),
+                "light_squeezenet.onnx not found");
+        Path model = resourcePath(LIGHT_DIR + "light_squeezenet.onnx");
+        try (SessionOptions opts = new SessionOptions()) {
+            opts.appendCoreMLExecutionProvider(Map.of(
+                    "ModelFormat", "MLProgram",
+                    "MLComputeUnits", "ALL"));
+            try (InferenceSession session = InferenceSession.create(model.toString(), opts)) {
+                assertNotNull(session);
+                assertTrue(session.inputCount() > 0);
+            }
+        }
+    }
+
     // -----------------------------------------------------------------------
     // Session creation tests
     // -----------------------------------------------------------------------
