@@ -47,10 +47,14 @@ public final class GenAI {
     public static final String GENAI_NATIVE_PATH_PROPERTY = "onnxruntime-genai.native.path";
     /**
      * Execution-provider preference: {@code auto} (default), {@code cuda},
-     * {@code npu}, {@code ryzenai}/{@code hybrid}, {@code vitisai},
-     * {@code openvino}, {@code qnn}, or {@code cpu}.
+     * {@code npu}, {@code ryzenai}/{@code hybrid}, {@code openvino}, {@code qnn},
+     * or {@code cpu}.
      * Environment variable {@code SMILE_ONNX_GENAI_PROVIDER} overrides the system
      * property {@code smile.onnx.genai.provider}.
+     *
+     * <p>Classical Vitis AI for general ONNX is configured via
+     * {@link smile.onnx.SessionOptions#appendVitisAiExecutionProvider()}, not this
+     * GenAI preference.
      */
     public static final String PROVIDER_PROPERTY = "smile.onnx.genai.provider";
     /** Environment variable for {@link #PROVIDER_PROPERTY}. */
@@ -72,8 +76,7 @@ public final class GenAI {
      * Returns the preferred GenAI execution-provider mode.
      *
      * @return normalized preference: {@code auto}, {@code cuda}, {@code npu},
-     *         {@code ryzenai}, {@code vitisai}, {@code openvino}, {@code qnn},
-     *         or {@code cpu}.
+     *         {@code ryzenai}, {@code openvino}, {@code qnn}, or {@code cpu}.
      */
     public static String providerPreference() {
         String fromEnv = System.getenv(PROVIDER_ENV);
@@ -85,7 +88,6 @@ public final class GenAI {
             case "cuda", "gpu" -> "cuda";
             case "npu" -> "npu";
             case "ryzenai", "hybrid" -> "ryzenai";
-            case "vitisai" -> "vitisai";
             case "openvino" -> "openvino";
             case "qnn" -> "qnn";
             case "cpu" -> "cpu";

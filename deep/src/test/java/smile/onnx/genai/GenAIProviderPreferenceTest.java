@@ -51,14 +51,14 @@ public class GenAIProviderPreferenceTest {
     @Test
     public void autoCascadeOrder() {
         assertEquals(
-                List.of("cuda", "ryzenai", "vitisai", "openvino", "qnn"),
+                List.of("cuda", "ryzenai", "openvino", "qnn"),
                 GenAIProviders.candidateIdsFor("auto"));
     }
 
     @Test
     public void npuCascadeSkipsCuda() {
         assertEquals(
-                List.of("ryzenai", "vitisai", "openvino", "qnn"),
+                List.of("ryzenai", "openvino", "qnn"),
                 GenAIProviders.candidateIdsFor("npu"));
     }
 
@@ -71,7 +71,6 @@ public class GenAIProviderPreferenceTest {
     public void singleProviderPreferences() {
         assertEquals(List.of("cuda"), GenAIProviders.candidateIdsFor("cuda"));
         assertEquals(List.of("ryzenai"), GenAIProviders.candidateIdsFor("ryzenai"));
-        assertEquals(List.of("vitisai"), GenAIProviders.candidateIdsFor("vitisai"));
         assertEquals(List.of("openvino"), GenAIProviders.candidateIdsFor("openvino"));
         assertEquals(List.of("qnn"), GenAIProviders.candidateIdsFor("qnn"));
     }

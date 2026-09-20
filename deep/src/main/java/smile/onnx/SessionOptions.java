@@ -302,6 +302,52 @@ public class SessionOptions implements AutoCloseable {
     }
 
     /**
+     * Appends the Vitis AI execution provider (AMD Ryzen AI <em>NPU</em> / Vitis AI DPU).
+     *
+     * <p>This is for general ONNX {@link InferenceSession} inference, not the
+     * GenAI LLM path ({@code smile.onnx.genai} uses RyzenAI OGA for LLMs).
+     *
+     * @return this options object for chaining.
+     */
+    public SessionOptions appendVitisAiExecutionProvider() {
+        return appendVitisAiExecutionProvider(java.util.Map.of());
+    }
+
+    /**
+     * Appends the Vitis AI execution provider with optional EP options
+     * (e.g. {@code cache_dir}, {@code config_file}, {@code target}).
+     *
+     * @param options provider options; may be empty.
+     * @return this options object for chaining.
+     */
+    public SessionOptions appendVitisAiExecutionProvider(java.util.Map<String, String> options) {
+        MemorySegment keysPtr = MemorySegment.NULL;
+        MemorySegment valuesPtr = MemorySegment.NULL;
+        long numKeys = 0L;
+        if (options != null && !options.isEmpty()) {
+            numKeys = options.size();
+            MemorySegment keys = arena.allocate(onnxruntime_c_api_h.C_POINTER, numKeys);
+            MemorySegment values = arena.allocate(onnxruntime_c_api_h.C_POINTER, numKeys);
+            int i = 0;
+            for (var entry : options.entrySet()) {
+                if (entry.getKey() == null || entry.getValue() == null) {
+                    throw new IllegalArgumentException("VitisAI option keys/values must not be null");
+                }
+                keys.setAtIndex(onnxruntime_c_api_h.C_POINTER, i, arena.allocateFrom(entry.getKey()));
+                values.setAtIndex(onnxruntime_c_api_h.C_POINTER, i, arena.allocateFrom(entry.getValue()));
+                i++;
+            }
+            keysPtr = keys;
+            valuesPtr = values;
+        }
+        MemorySegment status = OrtApi.SessionOptionsAppendExecutionProvider_VitisAI.invoke(
+                OrtApi.SessionOptionsAppendExecutionProvider_VitisAI(api),
+                handle, keysPtr, valuesPtr, numKeys);
+        OrtRuntime.checkStatus(api, status);
+        return this;
+    }
+
+    /**
      * Adds a session configuration entry as a key-value pair.
      *
      * @param key   the configuration key.

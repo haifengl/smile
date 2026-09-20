@@ -34,7 +34,7 @@ public final class Model implements AutoCloseable {
     private MemorySegment handle;
     /**
      * Execution provider path selected for this instance ({@code cuda},
-     * {@code ryzenai}, {@code vitisai}, {@code openvino}, {@code qnn},
+     * {@code ryzenai}, {@code openvino}, {@code qnn},
      * {@code default}, or {@code config}).
      */
     private final String provider;
@@ -82,9 +82,13 @@ public final class Model implements AutoCloseable {
      * Opens a model with an accelerator cascade, then CPU.
      *
      * <p>Default {@code SMILE_ONNX_GENAI_PROVIDER=auto} order:
-     * CUDA → RyzenAI → VitisAI → OpenVINO NPU → QNN → CPU ({@link #of(String)}).
+     * CUDA → RyzenAI → OpenVINO NPU → QNN → CPU ({@link #of(String)}).
      * Each accelerator is attempted only when matching EP natives are present;
      * Java failures fall through to the next candidate.
+     *
+     * <p>Classical Vitis AI for general ONNX is
+     * {@link smile.onnx.SessionOptions#appendVitisAiExecutionProvider()}, not
+     * part of this GenAI cascade.
      *
      * @param modelDir GenAI model directory.
      * @return a new model owned by the caller.
@@ -197,7 +201,7 @@ public final class Model implements AutoCloseable {
     /**
      * Returns which execution-provider path was selected for this instance.
      *
-     * @return {@code cuda}, {@code ryzenai}, {@code vitisai}, {@code openvino},
+     * @return {@code cuda}, {@code ryzenai}, {@code openvino},
      *         {@code qnn}, {@code default}, or {@code config}.
      */
     public String provider() {

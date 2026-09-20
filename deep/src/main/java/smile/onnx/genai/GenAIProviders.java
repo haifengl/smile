@@ -29,6 +29,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Registry of {@link GenAIProviderCandidate}s and per-id usable caches for
  * {@link Model#open}.
  *
+ * <p>Classical Vitis AI EP for general ONNX lives in
+ * {@link smile.onnx.SessionOptions#appendVitisAiExecutionProvider()}, not here.
+ *
  * @author Haifeng Li
  */
 final class GenAIProviders {
@@ -36,7 +39,6 @@ final class GenAIProviders {
 
     static final GenAIProviderCandidate CUDA = new CudaCandidate();
     static final GenAIProviderCandidate RYZEN_AI = new RyzenAiCandidate();
-    static final GenAIProviderCandidate VITIS_AI = new VitisAiCandidate();
     static final GenAIProviderCandidate OPENVINO_NPU = new OpenVinoNpuCandidate();
     static final GenAIProviderCandidate QNN = new QnnCandidate();
 
@@ -53,12 +55,11 @@ final class GenAIProviders {
             case "cpu" -> List.of();
             case "cuda" -> List.of(CUDA);
             case "ryzenai" -> List.of(RYZEN_AI);
-            case "vitisai" -> List.of(VITIS_AI);
             case "openvino" -> List.of(OPENVINO_NPU);
             case "qnn" -> List.of(QNN);
-            case "npu" -> List.of(RYZEN_AI, VITIS_AI, OPENVINO_NPU, QNN);
+            case "npu" -> List.of(RYZEN_AI, OPENVINO_NPU, QNN);
             // auto
-            default -> List.of(CUDA, RYZEN_AI, VITIS_AI, OPENVINO_NPU, QNN);
+            default -> List.of(CUDA, RYZEN_AI, OPENVINO_NPU, QNN);
         };
     }
 
@@ -135,35 +136,6 @@ final class GenAIProviders {
         }
     }
 
-    private static final class VitisAiCandidate implements GenAIProviderCandidate {
-        @Override
-        public String id() {
-            return "vitisai";
-        }
-
-        @Override
-        public boolean nativesPresent() {
-            return libraryPresent("onnxruntime_providers_vitisai");
-        }
-
-        @Override
-        public void configure(Config config, String modelDir) {
-            config.clearProviders().appendProvider("vitisai");
-            String cacheDir = firstEnv(
-                    "SMILE_ONNX_GENAI_VITISAI_CACHE_DIR",
-                    "smile.onnx.genai.vitisai.cache_dir");
-            if (cacheDir != null) {
-                config.setProviderOption("vitisai", "cache_dir", cacheDir);
-            }
-            String configFile = firstEnv(
-                    "SMILE_ONNX_GENAI_VITISAI_CONFIG_FILE",
-                    "smile.onnx.genai.vitisai.config_file");
-            if (configFile != null) {
-                config.setProviderOption("vitisai", "config_file", configFile);
-            }
-        }
-    }
-
     private static final class OpenVinoNpuCandidate implements GenAIProviderCandidate {
         @Override
         public String id() {
@@ -223,18 +195,6 @@ final class GenAIProviders {
         } catch (IOException e) {
             return false;
         }
-    }
-
-    private static String firstEnv(String envKey, String propKey) {
-        String fromEnv = System.getenv(envKey);
-        if (fromEnv != null && !fromEnv.isBlank()) {
-            return fromEnv;
-        }
-        String fromProp = System.getProperty(propKey);
-        if (fromProp != null && !fromProp.isBlank()) {
-            return fromProp;
-        }
-        return null;
     }
 
     /** Visible for tests: preference → candidate ids. */
