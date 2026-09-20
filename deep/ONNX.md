@@ -558,6 +558,11 @@ try (var opts = new SessionOptions()) {
     // DirectML (Windows GPU — NVIDIA, AMD, Intel)
     opts.appendDirectMLExecutionProvider(0);
 
+    // CoreML (Apple Neural Engine / GPU / CPU — macOS / iOS)
+    opts.appendCoreMLExecutionProvider(Map.of(
+            "ModelFormat", "MLProgram",
+            "MLComputeUnits", "ALL"));
+
     // Vitis AI (AMD Ryzen AI NPU / Vitis AI DPU) — general ONNX, not GenAI LLMs
     opts.appendVitisAiExecutionProvider(Map.of(
             "cache_dir", "C:\\temp\\vaip_cache",
@@ -1155,6 +1160,7 @@ public class CancellableInferenceExample {
 | `appendTensorRTExecutionProvider(int)` | Add TensorRT EP                     |
 | `appendRocmExecutionProvider(int)` | Add ROCM EP                         |
 | `appendDirectMLExecutionProvider(int)` | Add DirectML EP (Windows)           |
+| `appendCoreMLExecutionProvider()` / `(Map)` | Add CoreML EP (Apple)            |
 | `appendVitisAiExecutionProvider()` / `(Map)` | Add Vitis AI NPU EP           |
 | `addConfigEntry(String, String)` | Low-level key-value config          |
 | `close()` | Release native resources            |
