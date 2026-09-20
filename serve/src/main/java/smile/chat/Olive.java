@@ -30,14 +30,20 @@ import smile.onnx.genai.GenAI;
 import smile.onnx.genai.GenAIOliveTarget;
 
 /**
- * Facade over the Olive CLI ({@code olive …}) for smile-serve chat.
+ * Facade over the Olive CLI ({@code olive …}) for offline GenAI conversion.
  *
- * <p>Today this drives {@code olive optimize} to produce ORT GenAI model
- * directories. Olive is launched via a small Python bootstrap that only
- * registers ORT EPs Olive explicitly requested (avoids Windows TensorRT
- * registration crashes when {@code nvinfer} is not installed).
+ * <p>{@link ChatService} does <strong>not</strong> invoke
+ * {@link #resolveOrConvert} at startup ({@code optimize} can take hours). Serve
+ * only opens models that are already GenAI-ready, including hits from
+ * {@link #resolveCached}. Run {@link #resolveOrConvert} (or the CLI via
+ * {@code olive_cli.py}) offline, then point {@code smile.chat.model} at the
+ * output directory or keep the HF id so the cache under
+ * {@code {SMILE_CACHE}/olive} is found.
  *
- * <p>Never writes into the Hugging Face hub cache. Cache hits skip the CLI.
+ * <p>Never writes into the Hugging Face hub cache. Olive is launched via a
+ * small Python bootstrap that only registers ORT EPs Olive explicitly
+ * requested (avoids Windows TensorRT registration crashes when
+ * {@code nvinfer} is not installed).
  *
  * @author Haifeng Li
  */
@@ -91,7 +97,48 @@ public final class Olive {
     }
 
     /**
-     * Resolves a GenAI model directory from Olive cache or {@code optimize}.
+     * Looks up a previously converted GenAI tree under the Olive cache
+     * (no CLI). Used by {@link ChatService} at startup.
+     *
+     * @param modelSpec HF id or local path used as the cache key.
+     * @param oga       OGA config (cache dir / precision / EP overrides).
+     * @return GenAI model dir if present in cache.
+     */
+    public static Optional<Path> resolveCached(String modelSpec, OgaChatConfig oga) {
+        if (modelSpec == null || modelSpec.isBlank()) {
+            return Optional.empty();
+        }
+        GenAIOliveTarget cascade = GenAI.resolveOliveTarget();
+        String candidateId = cascade.candidateId();
+        if (oga.device().isPresent() || oga.provider().isPresent()) {
+            candidateId = candidateId + "-override";
+        }
+        String precision = clampPrecision(resolvePrecision(oga, cascade));
+        Path modelCache = cacheRoot(oga).resolve(sanitize(modelSpec));
+        if (!Files.isDirectory(modelCache)) {
+            return Optional.empty();
+        }
+        Optional<Path> preferred = findGenAiRoot(
+                modelCache.resolve(candidateId + "-" + precision));
+        if (preferred.isPresent()) {
+            logger.infof("Olive cache hit: %s", preferred.get());
+            return preferred;
+        }
+        Optional<Path> cpu = findGenAiRoot(modelCache.resolve("cpu-" + precision));
+        if (cpu.isPresent()) {
+            logger.infof("Olive CPU cache hit: %s", cpu.get());
+            return cpu;
+        }
+        Optional<Path> any = findGenAiRoot(modelCache);
+        if (any.isPresent()) {
+            logger.infof("Olive cache hit (alternate target): %s", any.get());
+        }
+        return any;
+    }
+
+    /**
+     * Offline helper: resolves a GenAI model directory from Olive cache or
+     * runs {@code optimize}. Not called by smile-serve startup.
      *
      * @param modelSpec HF id or local HF layout path.
      * @param oga       OGA config.
@@ -99,6 +146,11 @@ public final class Olive {
      * @throws IOException if conversion fails or Olive is missing.
      */
     public static Path resolveOrConvert(String modelSpec, OgaChatConfig oga) throws IOException {
+        Optional<Path> cached = resolveCached(modelSpec, oga);
+        if (cached.isPresent()) {
+            return cached.get();
+        }
+
         GenAIOliveTarget cascade = GenAI.resolveOliveTarget();
         String device = oga.device().filter(s -> !s.isBlank()).orElse(cascade.device());
         String provider = oga.provider().filter(s -> !s.isBlank()).orElse(cascade.provider());
@@ -110,11 +162,6 @@ public final class Olive {
         String precision = clampPrecision(resolvePrecision(oga, cascade));
         Path cacheRoot = cacheRoot(oga);
         Path outDir = cacheRoot.resolve(sanitize(modelSpec)).resolve(candidateId + "-" + precision);
-        Optional<Path> hit = findGenAiRoot(outDir);
-        if (hit.isPresent()) {
-            logger.infof("Olive cache hit: %s", hit.get());
-            return hit.get();
-        }
 
         if (!oga.enabled()) {
             throw new IOException("smile.chat.oga.enabled=false; cannot convert " + modelSpec);

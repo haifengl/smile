@@ -14,33 +14,39 @@ import io.smallrye.config.WithDefault;
 import io.smallrye.config.WithName;
 
 /**
- * ONNX Runtime GenAI / Olive fallback settings ({@code smile.chat.oga.*}).
+ * ONNX Runtime GenAI settings ({@code smile.chat.oga.*}).
+ *
+ * <p>Serve loads GenAI-ready models only (HF/local {@code genai_config.json},
+ * including nested packages, or a prior Olive cache). Olive conversion is
+ * offline via {@link Olive#resolveOrConvert}; it is not run at startup.
  *
  * @author Haifeng Li
  */
 @ConfigMapping(prefix = "smile.chat.oga")
 public interface OgaChatConfig {
     /**
-     * When {@code false}, skip OGA / Olive fallback (Torch-only chat).
+     * When {@code false}, skip the OGA fallback (Torch-only chat).
      */
     @WithDefault("true")
     boolean enabled();
 
     /**
-     * Olive {@code --precision} override. Empty or {@code auto} means FP8 when
-     * the selected EP supports it, else {@code int4}.
+     * Olive {@code --precision} for offline {@link Olive#resolveOrConvert}
+     * and cache-key matching. Empty or {@code auto} uses the cascade default
+     * ({@code int4} — {@code optimize} does not accept {@code fp8}).
      */
     Optional<String> precision();
 
     /**
      * Olive output cache root. Empty uses {@code {SMILE_CACHE}/olive}
-     * ({@link smile.io.CacheFiles#dir()}).
+     * ({@link smile.io.CacheFiles#dir()}). Serve opens cache hits at startup;
+     * conversion writes here when run offline.
      */
     @WithName("cache-dir")
     Optional<String> cacheDir();
 
     /**
-     * Olive CLI executable (default {@code olive}).
+     * Olive CLI executable (default {@code olive}) for offline conversion.
      */
     @WithName("olive-command")
     @WithDefault("olive")

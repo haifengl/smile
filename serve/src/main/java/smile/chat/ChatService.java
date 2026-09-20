@@ -209,34 +209,26 @@ public class ChatService implements OpenAiModelContributor {
     }
 
     private void loadOgaModel(String modelSpec, OgaChatConfig oga) throws Exception {
-        Path genAiDir = GenAiModelPaths.resolveGenAiReady(modelSpec).orElse(null);
+        // Serve never runs Olive at startup (conversion can take hours). Open only
+        // GenAI-ready trees: HF/local (incl. nested packages) or a prior Olive cache.
+        Path genAiDir = GenAiModelPaths.resolveGenAiReady(modelSpec)
+                .or(() -> Olive.resolveCached(modelSpec, oga))
+                .orElse(null);
         if (genAiDir == null) {
-            // Prebuilt ONNX GenAI Hub packages (nested genai_config.json, no PyTorch
-            // weights) must not be sent through Olive — conversion always fails.
             if (looksLikeHuggingFaceRepoId(modelSpec)
                     && !GenAiModelPaths.listHfGenAiConfigPaths(modelSpec).isEmpty()) {
                 logger.warnf("Model '%s' publishes nested GenAI packages but none could be "
                         + "materialized for the current EP; chat completions will return HTTP 503",
                         modelSpec);
-                return;
+            } else {
+                logger.warnf("Model '%s' is not GenAI-ready (no genai_config.json / Olive cache). "
+                        + "Convert offline with Olive (see smile.chat.Olive) or point "
+                        + "smile.chat.model at a GenAI package; chat completions will return HTTP 503",
+                        modelSpec);
             }
-            Path local = Path.of(modelSpec);
-            Path probe = Files.isDirectory(local) ? local : null;
-            if (!GenAISupportedModels.isChatConvertible(probe, modelSpec)) {
-                logger.warnf("Model '%s' is not on the onnx-genai chat allowlist; "
-                        + "chat completions will return HTTP 503", modelSpec);
-                return;
-            }
-            if (!Olive.isAvailable(oga.oliveCommand())) {
-                logger.warnf("Olive CLI unavailable; cannot convert '%s' for OGA "
-                        + "(chat completions will return HTTP 503)", modelSpec);
-                return;
-            }
-            genAiDir = Olive.resolveOrConvert(modelSpec, oga);
-            source = looksLikeHuggingFaceRepoId(modelSpec) ? "huggingface" : "local";
-        } else {
-            source = looksLikeHuggingFaceRepoId(modelSpec) ? "huggingface" : "local";
+            return;
         }
+        source = looksLikeHuggingFaceRepoId(modelSpec) ? "huggingface" : "local";
         model = GenAiChatModel.open(genAiDir);
         ownedBy = ModelObject.ownedByFromFamily(model.family());
         createdAt = Instant.now().getEpochSecond();

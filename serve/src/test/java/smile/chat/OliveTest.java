@@ -123,6 +123,26 @@ public class OliveTest {
     }
 
     @Test
+    public void resolveCachedFindsPriorOliveOutput(@TempDir Path dir) throws Exception {
+        Path packageDir = Files.createDirectories(
+                dir.resolve("owner_model").resolve("cuda-int4").resolve("model"));
+        Files.writeString(packageDir.resolve("genai_config.json"), "{}");
+        OgaChatConfig oga = new OgaChatConfig() {
+            @Override public boolean enabled() { return true; }
+            @Override public Optional<String> precision() { return Optional.of("int4"); }
+            @Override public Optional<String> cacheDir() {
+                return Optional.of(dir.toString());
+            }
+            @Override public String oliveCommand() { return "olive"; }
+            @Override public Optional<String> device() { return Optional.empty(); }
+            @Override public Optional<String> provider() { return Optional.empty(); }
+        };
+        Optional<Path> hit = Olive.resolveCached("owner/model", oga);
+        assertTrue(hit.isPresent());
+        assertTrue(GenAiModelPaths.isGenAiCheckpoint(hit.get()));
+    }
+
+    @Test
     public void buildOptimizeCommandPrefersPythonBootstrap() throws Exception {
         Path out = Path.of("target", "olive-out");
         List<String> cmd = Olive.buildOptimizeCommand(
