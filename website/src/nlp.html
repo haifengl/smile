@@ -1,7 +1,7 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: Smile - Natural Language Processing
+title: SMILE - Natural Language Processing
 ---
 {% include "toc.njk" %}
 
@@ -429,6 +429,110 @@ He | works | at | NASA | .
 </div>
 
 
+    <h3 id="choosing-tokenizers">Choosing an Implementation</h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Word tokenizer scenario</th><th>Recommended</th></tr></thead>
+            <tbody>
+            <tr><td>General English text</td><td><code>SimpleTokenizer</code></td></tr>
+            <tr><td>Penn Treebank / pretrained NLP models</td><td><code>PennTreebankTokenizer</code></td></tr>
+            <tr><td>Non-English or multilingual</td><td><code>BreakIteratorTokenizer</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Sentence splitter scenario</th><th>Recommended</th></tr></thead>
+            <tbody>
+            <tr><td>English text (production)</td><td><code>SimpleSentenceSplitter</code></td></tr>
+            <tr><td>Multilingual / locale-sensitive</td><td><code>BreakIteratorSentenceSplitter</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Paragraph splitter scenario</th><th>Recommended</th></tr></thead>
+            <tbody>
+            <tr><td>Blank-line paragraph boundaries</td><td><code>SimpleParagraphSplitter</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h3 id="tokenizer-thread-safety">Thread Safety</h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Thread-safe?</th><th>Notes</th></tr></thead>
+            <tbody>
+            <tr><td><code>SimpleTokenizer</code></td><td>Yes</td><td>Stateless after construction</td></tr>
+            <tr><td><code>PennTreebankTokenizer</code></td><td>Yes</td><td>Stateless singleton</td></tr>
+            <tr><td><code>BreakIteratorTokenizer</code></td><td>No</td><td>Use one instance per thread (<code>ThreadLocal</code>)</td></tr>
+            <tr><td><code>SimpleSentenceSplitter</code></td><td>Yes</td><td>Stateless singleton</td></tr>
+            <tr><td><code>BreakIteratorSentenceSplitter</code></td><td>No</td><td>Use one instance per thread</td></tr>
+            <tr><td><code>SimpleParagraphSplitter</code></td><td>Yes</td><td>Stateless singleton</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h3 id="ptb-vs-simple">Penn Treebank vs SimpleTokenizer</h3>
+
+    <p>Package-private <code>EnglishAbbreviations</code> backs the English splitters: <code>SimpleSentenceSplitter</code> and both word tokenizers consult it so titles and Latin abbreviations (<code>Dr.</code>, <code>etc.</code>, <code>U.S.</code>, …) are not treated as sentence or token boundaries. Prefer <code>PennTreebankTokenizer.getInstance()</code> when feeding <code>HMMPOSTagger</code> (trained on Treebank conventions); <code>SimpleTokenizer</code> is the general-purpose default.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-8-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-8-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays;
+import smile.nlp.tokenizer.*;
+
+String s = "They couldn't have known.";
+Tokenizer simple = new SimpleTokenizer();
+Tokenizer ptb = PennTreebankTokenizer.getInstance();
+System.out.println(Arrays.toString(simple.split(s)));
+System.out.println(Arrays.toString(ptb.split(s)));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[They, couldn't, have, known, .]
+[They, could, n't, have, known, .]
+      </code></pre>
+    </div>
+    <div id="pg-8-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp.tokenizer._
+
+val s = "They couldn't have known."
+println(new SimpleTokenizer().split(s).mkString("[", ", ", "]"))
+println(PennTreebankTokenizer.getInstance.split(s).mkString("[", ", ", "]"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[They, couldn't, have, known, .]
+[They, could, n't, have, known, .]
+      </code></pre>
+    </div>
+    <div id="pg-8-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.tokenizer.*
+
+val s = "They couldn't have known."
+println(SimpleTokenizer().split(s).contentToString())
+println(PennTreebankTokenizer.getInstance().split(s).contentToString())</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[They, couldn't, have, known, .]
+[They, could, n't, have, known, .]
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
     <h2 id="stemmers" class="title">Stemmers</h2>
 
     <p>Both stemmers implement <code>Stemmer extends Function&lt;String,String&gt;</code> for stream use. Porter is moderate and <strong>not</strong> thread-safe (one instance per thread). Lancaster is aggressive and shareable; pass <code>true</code> to also strip prefixes.</p>
@@ -446,14 +550,14 @@ He | works | at | NASA | .
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-8-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-9-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-8-0" class="hero-pane">
+    <div id="pg-9-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import smile.nlp.stemmer.*;
 
 PorterStemmer porter = new PorterStemmer();
@@ -465,7 +569,7 @@ gener
 presum
       </code></pre>
     </div>
-    <div id="pg-8-1" class="hero-pane" hidden>
+    <div id="pg-9-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
 
 println(porter.stem("generalization"))
@@ -475,7 +579,7 @@ gener
 presum
       </code></pre>
     </div>
-    <div id="pg-8-2" class="hero-pane" hidden>
+    <div id="pg-9-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
 
 println(porter("generalization"))
@@ -489,9 +593,146 @@ presum
 </div>
 
 
+    <h3 id="choosing-stemmers">Porter vs Lancaster</h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Criterion</th><th>Porter</th><th>Lancaster</th></tr></thead>
+            <tbody>
+            <tr><td>Stem readability</td><td>Often recognizable</td><td>Often fragments</td></tr>
+            <tr><td>Conflation strength</td><td>Moderate</td><td>High</td></tr>
+            <tr><td>Typical use</td><td>IR, topic models, search</td><td>Aggressive dedup / small vocabularies</td></tr>
+            <tr><td>Thread safety</td><td>One instance per thread</td><td>Safe to share after construction</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>Start with <code>PorterStemmer</code>. Switch to <code>LancasterStemmer</code> when vocabulary size is the bottleneck. Porter does not lower-case input; Lancaster lower-cases and strips non-letters automatically.</p>
+
+
+    <h3 id="strip-plural-participle">stripPluralParticiple</h3>
+
+    <p><code>PorterStemmer.stripPluralParticiple</code> applies only the plural / participle step (Porter step 1a/1b-style), useful when you want light normalization without full stemming. Short words such as <code>was</code>, <code>has</code>, <code>his</code>, and <code>this</code> are preserved.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-10-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-10-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-10-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-10-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.stemmer.PorterStemmer;
+
+PorterStemmer porter = new PorterStemmer();
+System.out.println(porter.stripPluralParticiple("cats"));
+System.out.println(porter.stripPluralParticiple("running"));
+System.out.println(porter.stripPluralParticiple("was"));
+System.out.println(porter.stem("generalization"));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+cat
+run
+was
+gener
+      </code></pre>
+    </div>
+    <div id="pg-10-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp.stemmer.PorterStemmer
+
+val porter = new PorterStemmer
+println(porter.stripPluralParticiple("cats"))
+println(porter.stripPluralParticiple("running"))
+println(porter.stripPluralParticiple("was"))
+println(porter.stem("generalization"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+cat
+run
+was
+gener
+      </code></pre>
+    </div>
+    <div id="pg-10-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.stemmer.PorterStemmer
+
+val porter = PorterStemmer()
+println(porter.stripPluralParticiple("cats"))
+println(porter.stripPluralParticiple("running"))
+println(porter.stripPluralParticiple("was"))
+println(porter.stem("generalization"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+cat
+run
+was
+gener
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="lancaster-prefix">Lancaster Prefix Stripping</h3>
+
+    <p>Pass <code>true</code> to strip scientific prefixes (<code>kilo</code>, <code>micro</code>, <code>milli</code>, <code>intra</code>, <code>ultra</code>, <code>mega</code>, <code>nano</code>, <code>pico</code>, <code>pseudo</code>). You can also supply a custom Lancaster rule file via <code>new LancasterStemmer(InputStream)</code> or <code>new LancasterStemmer(InputStream, boolean)</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-11-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-11-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.stemmer.LancasterStemmer;
+
+LancasterStemmer lancaster = new LancasterStemmer(true);
+System.out.println(lancaster.stem("microprocessor"));
+System.out.println(lancaster.stem("kilowatt"));
+System.out.println(lancaster.stem("pseudoscience"));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+process
+wat
+scy
+      </code></pre>
+    </div>
+    <div id="pg-11-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp.stemmer.LancasterStemmer
+
+val lancaster = new LancasterStemmer(true)
+println(lancaster.stem("microprocessor"))
+println(lancaster.stem("kilowatt"))
+println(lancaster.stem("pseudoscience"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+process
+wat
+scy
+      </code></pre>
+    </div>
+    <div id="pg-11-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.stemmer.LancasterStemmer
+
+val lancaster = LancasterStemmer(true)
+println(lancaster.stem("microprocessor"))
+println(lancaster.stem("kilowatt"))
+println(lancaster.stem("pseudoscience"))</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+process
+wat
+scy
+      </code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
     <h2 id="pos" class="title">Part-of-Speech Tagging</h2>
 
-    <p><code>HMMPOSTagger.getDefault()</code> loads a pretrained first-order HMM over the Penn Treebank tag set. <code>PennTreebankPOS.open</code> marks content (open-class) tags. <code>RegexPOSTagger</code> is a rule-based pre-classifier for numbers, URLs, and e-mails. To train custom HMM or CRF sequence models, see <a href="sequence-labeling.html">Sequence Labeling</a>.</p>
+    <p><code>HMMPOSTagger.getDefault()</code> loads a pretrained first-order HMM over the Penn Treebank tag set. <code>PennTreebankPOS.open</code> marks content (open-class) tags. Package-private <code>RegexPOSTagger</code> is the OOV pre-classifier used inside the HMM for numbers, URLs, and e-mails. To train general HMM / CRF sequence models, see <a href="sequence-labeling.html">Sequence Labeling</a>.</p>
 
     <div class="table-responsive">
         <table class="table table-striped table-bordered">
@@ -499,7 +740,7 @@ presum
             <tbody>
             <tr><td><code>PennTreebankPOS</code></td><td>45-tag enum; <code>open</code> distinguishes content vs function words</td></tr>
             <tr><td><code>HMMPOSTagger</code></td><td>Pretrained HMM tagger; serializable</td></tr>
-            <tr><td><code>RegexPOSTagger</code></td><td>Rule-based pre-classifier for numbers, URLs, e-mails</td></tr>
+            <tr><td><code>RegexPOSTagger</code></td><td>Package-private OOV rules (numbers, URLs, e-mails)</td></tr>
             <tr><td><code>EnglishPOSLexicon</code></td><td>~200k word lexicon (Moby + WordNet)</td></tr>
             </tbody>
         </table>
@@ -508,14 +749,14 @@ presum
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-9-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-12-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-9-0" class="hero-pane">
+    <div id="pg-12-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import smile.nlp.pos.*;
 
 HMMPOSTagger tagger = HMMPOSTagger.getDefault();
@@ -534,7 +775,7 @@ mat          NN
 .            .
       </code></pre>
     </div>
-    <div id="pg-9-1" class="hero-pane" hidden>
+    <div id="pg-12-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
 
 val tokens = Array("The", "cat", "sat", "on", "the", "mat", ".")
@@ -551,7 +792,7 @@ mat          NN
 .            .
       </code></pre>
     </div>
-    <div id="pg-9-2" class="hero-pane" hidden>
+    <div id="pg-12-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
 
 val tokens = arrayOf("The", "cat", "sat", "on", "the", "mat", ".")
@@ -569,6 +810,101 @@ mat          NN
 .            .
       </code></pre>
     </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="open-closed-pos">Open vs Closed Class</h3>
+
+    <p>Open-class tags (nouns, verbs, adjectives, adverbs, …) have <code>open == true</code> and are the usual candidates for bag-of-words and keyword features. Closed-class tags (determiners, prepositions, pronouns, …) have <code>open == false</code>. <code>PennTreebankPOS.getValue(String)</code> parses corpus tag strings, including punctuation symbols mapped to named constants (e.g. <code>"."</code> → <code>SENT</code>).</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.nlp.pos.PennTreebankPOS;
+
+PennTreebankPOS nn = PennTreebankPOS.getValue("NN");
+PennTreebankPOS dot = PennTreebankPOS.getValue(".");
+System.out.println(nn + " open=" + nn.open);
+System.out.println(dot + " open=" + dot.open);
+System.out.println(PennTreebankPOS.DT.open);</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+NN open=true
+. open=false
+false
+      </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="regex-pos">RegexPOSTagger (internal OOV rules)</h3>
+
+    <p><code>RegexPOSTagger</code> is package-private and used by <code>HMMPOSTagger</code> for out-of-vocabulary tokens. Its <code>tag(String)</code> returns an <code>Optional&lt;PennTreebankPOS&gt;</code>: cardinal / comma-formatted numbers → <code>CD</code>; phone numbers, URLs, and e-mails → <code>NN</code>; empty when no pattern matches.</p>
+
+
+    <h3 id="english-pos-lexicon">EnglishPOSLexicon</h3>
+
+    <p><code>EnglishPOSLexicon.get(word)</code> looks up ~200k English words (Moby + WordNet) and returns an <code>Optional</code> of candidate Penn tags in priority order.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import java.util.Arrays;
+import smile.nlp.pos.EnglishPOSLexicon;
+
+EnglishPOSLexicon.get("run").ifPresent(tags -&gt; {
+    System.out.println("primary=" + tags[0]);
+    System.out.println(Arrays.toString(tags));
+});
+System.out.println(EnglishPOSLexicon.get("xyzzy").isEmpty());</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+primary=VB
+[VB, VB, VB, NN]
+true
+      </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="custom-hmm-pos">Custom HMM POS Model</h3>
+
+    <p>Train a domain tagger with <code>HMMPOSTagger.fit</code> on aligned token / tag arrays. On the bundled WSJ Treebank data, 10-fold CV error is about 5&nbsp;%. Package-private <code>HMMPOSTagger.read</code> loads <code>*.POS</code> files (<code>word/TAG</code> lines) when you train from inside the module; otherwise build the arrays yourself. For general HMM / CRF training APIs, see <a href="sequence-labeling.html">Sequence Labeling</a>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.nlp.pos.*;
+
+// sentences: String[][] tokens; labels: PennTreebankPOS[][]
+// HMMPOSTagger.read(dir, sentences, labels); // package-private helper
+String[][] x = {
+    {"The", "cat", "sat", "."},
+    {"Dogs", "bark", "."}
+};
+PennTreebankPOS[][] y = {
+    {PennTreebankPOS.DT, PennTreebankPOS.NN, PennTreebankPOS.VBD, PennTreebankPOS.SENT},
+    {PennTreebankPOS.NNS, PennTreebankPOS.VBP, PennTreebankPOS.SENT}
+};
+HMMPOSTagger custom = HMMPOSTagger.fit(x, y);
+System.out.println(java.util.Arrays.toString(custom.tag(x[0])));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+[DT, NN, VBD, .]
+      </code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
@@ -595,14 +931,14 @@ mat          NN
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-10-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-10-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-10-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-16-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-16-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-16-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-10-0" class="hero-pane">
+    <div id="pg-16-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import smile.nlp.dictionary.EnglishStopWords;
 
 EnglishStopWords stop = EnglishStopWords.DEFAULT;
@@ -613,7 +949,7 @@ true
 false
       </code></pre>
     </div>
-    <div id="pg-10-1" class="hero-pane" hidden>
+    <div id="pg-16-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp.dictionary.EnglishStopWords
 
 val stop = EnglishStopWords.DEFAULT
@@ -624,7 +960,7 @@ true
 false
       </code></pre>
     </div>
-    <div id="pg-10-2" class="hero-pane" hidden>
+    <div id="pg-16-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.dictionary.EnglishStopWords
 
 val stop = EnglishStopWords.DEFAULT
@@ -644,14 +980,14 @@ false
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-11-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-17-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-17-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-17-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-11-0" class="hero-pane">
+    <div id="pg-17-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import smile.nlp.dictionary.EnglishPunctuations;
 
 EnglishPunctuations punct = EnglishPunctuations.getInstance();
@@ -662,7 +998,7 @@ true
 false
       </code></pre>
     </div>
-    <div id="pg-11-1" class="hero-pane" hidden>
+    <div id="pg-17-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp.dictionary.EnglishPunctuations
 
 val punct = EnglishPunctuations.getInstance
@@ -673,7 +1009,7 @@ true
 false
       </code></pre>
     </div>
-    <div id="pg-11-2" class="hero-pane" hidden>
+    <div id="pg-17-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.dictionary.EnglishPunctuations
 
 val punct = EnglishPunctuations.getInstance()
@@ -695,14 +1031,14 @@ false
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-12-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-18-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-18-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-18-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-12-0" class="hero-pane">
+    <div id="pg-18-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import smile.nlp.dictionary.EnglishDictionary;
 
 System.out.println(EnglishDictionary.CONCISE.contains("serendipity"));
@@ -712,7 +1048,7 @@ true
 false
       </code></pre>
     </div>
-    <div id="pg-12-1" class="hero-pane" hidden>
+    <div id="pg-18-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp.dictionary.EnglishDictionary
 
 println(EnglishDictionary.CONCISE.contains("serendipity"))
@@ -722,7 +1058,7 @@ true
 false
       </code></pre>
     </div>
-    <div id="pg-12-2" class="hero-pane" hidden>
+    <div id="pg-18-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.dictionary.EnglishDictionary
 
 println(EnglishDictionary.CONCISE.contains("serendipity"))
@@ -738,19 +1074,19 @@ false
 
     <h2 id="collocations" class="title">Collocations</h2>
 
-    <p>Collocations are statistically significant word co-occurrences. <code>SimpleCorpus.bigrams</code> ranks adjacent pairs by likelihood ratio; <code>NGram.apriori</code> mines frequent phrases of length up to <code>maxN</code> from already-tokenized sentences.</p>
+    <p>Collocations are statistically significant word co-occurrences. <code>SimpleCorpus</code> exposes two bigram overloads ranked by log-likelihood ratio (−2&nbsp;log&nbsp;λ, χ² with 1&nbsp;df): <code>bigrams(k, minFreq)</code> returns the top-k pairs, and <code>bigrams(p, minFreq)</code> returns all pairs whose p-value is below <code>p</code> (<code>0 &lt; p &lt; 1</code>). <code>minFrequency</code> is exclusive (<code>count &gt; minFrequency</code>). <code>NGram.apriori</code> mines frequent phrases of length up to <code>maxN</code> from already-tokenized sentences.</p>
 
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-13-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-13-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-13-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-19-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-19-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-19-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-13-0" class="hero-pane">
+    <div id="pg-19-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import smile.nlp.SimpleCorpus;
 
 SimpleCorpus corpus = new SimpleCorpus();
@@ -758,27 +1094,39 @@ corpus.add(corpus.doc("Machine learning is part of artificial intelligence."));
 corpus.add(corpus.doc("Deep learning is a type of machine learning."));
 corpus.add(corpus.doc("Neural networks power deep learning systems."));
 
+System.out.println("--- top-k ---");
 corpus.bigrams(5, 1).forEach(b -&gt;
+    System.out.println(b.w1() + " " + b.w2() + "  score=" + b.score()));
+
+System.out.println("--- p-value ---");
+corpus.bigrams(0.01, 1).forEach(b -&gt;
     System.out.println(b.w1() + " " + b.w2() + "  score=" + b.score()));</code></pre>
       <pre class="playground-output" aria-label="Expected output"><code>
+--- top-k ---
 machine learning  score=...
-deep learning  score=...
+--- p-value ---
+...
       </code></pre>
     </div>
-    <div id="pg-13-1" class="hero-pane" hidden>
+    <div id="pg-19-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
 
-val top = bigram(5, 1,
+val docs = Seq(
   "Machine learning is part of artificial intelligence.",
   "Deep learning is a type of machine learning.",
   "Neural networks power deep learning systems.")
-top.foreach(b =&gt; println(s"${b.w1} ${b.w2}  score=${b.score}"))</code></pre>
+println("--- top-k ---")
+bigram(5, 1, docs: _*).foreach(b =&gt; println(s"${b.w1} ${b.w2}  score=${b.score}"))
+println("--- p-value ---")
+bigram(0.01, 1, docs: _*).foreach(b =&gt; println(s"${b.w1} ${b.w2}  score=${b.score}"))</code></pre>
       <pre class="playground-output" aria-label="Expected output"><code>
+--- top-k ---
 machine learning  score=...
-deep learning  score=...
+--- p-value ---
+...
       </code></pre>
     </div>
-    <div id="pg-13-2" class="hero-pane" hidden>
+    <div id="pg-19-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
 
 val docs = listOf(
@@ -786,30 +1134,51 @@ val docs = listOf(
     "Deep learning is a type of machine learning.",
     "Neural networks power deep learning systems."
 )
+println("--- top-k ---")
 for (b in bigrams(5, 1, docs)) {
+    println("${b.w1()} ${b.w2()}  score=${b.score()}")
+}
+println("--- p-value ---")
+for (b in bigrams(0.01, 1, docs)) {
     println("${b.w1()} ${b.w2()}  score=${b.score()}")
 }</code></pre>
       <pre class="playground-output" aria-label="Expected output"><code>
+--- top-k ---
 machine learning  score=...
-deep learning  score=...
+--- p-value ---
+...
       </code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
+
+
+    <h3 id="collocation-tuning">Parameter Tuning</h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Parameter</th><th>Guidance</th></tr></thead>
+            <tbody>
+            <tr><td><code>minFrequency</code></td><td>Exclusive lower bound. Tiny corpora: 1–2; 1k–10k tokens: 2–5; 10k–100k: 5–10; larger: 10–50</td></tr>
+            <tr><td><code>k</code> (top-k)</td><td>Fixed-size feature / display lists; start around 20</td></tr>
+            <tr><td><code>p</code></td><td><code>0.05</code> lenient; <code>0.01</code> / <code>0.001</code> stricter; <code>0.0001</code> very strict</td></tr>
+            </tbody>
+        </table>
+    </div>
 
     <p>For n-grams longer than two, tokenize sentences first, then call <code>NGram.apriori(sentences, maxN, minFreq)</code>. Index <code>result[n]</code> holds the n-grams (sorted by descending count). Scala / Kotlin <code>ngram</code> helpers accept raw text and handle sentence splitting and stemming internally.</p>
 
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-14-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-14-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-14-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-20-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-20-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-20-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-14-0" class="hero-pane">
+    <div id="pg-20-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import java.util.List;
 import smile.nlp.NGram;
 import smile.nlp.tokenizer.*;
@@ -833,7 +1202,7 @@ for (NGram g : result[2]) {
 machin learn  count=...
       </code></pre>
     </div>
-    <div id="pg-14-1" class="hero-pane" hidden>
+    <div id="pg-20-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
 
 val result = ngram(3, 2,
@@ -844,7 +1213,7 @@ result(2).foreach(g =&gt; println(g.words.mkString(" ") + "  count=" + g.count))
 machin learn  count=...
       </code></pre>
     </div>
-    <div id="pg-14-2" class="hero-pane" hidden>
+    <div id="pg-20-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
 
 val result = ngram(3, 2, listOf(
@@ -869,14 +1238,14 @@ machin learn  count=...
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-15-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-15-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-15-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-21-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-21-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-21-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-15-0" class="hero-pane">
+    <div id="pg-21-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import smile.nlp.Text;
 
 String body = "Machine learning is a field of artificial intelligence. "
@@ -889,7 +1258,7 @@ machin learn  count=...
 deep learn  count=...
       </code></pre>
     </div>
-    <div id="pg-15-1" class="hero-pane" hidden>
+    <div id="pg-21-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
 
 val body =
@@ -903,7 +1272,7 @@ machin learn  count=...
 deep learn  count=...
       </code></pre>
     </div>
-    <div id="pg-15-2" class="hero-pane" hidden>
+    <div id="pg-21-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
 
 val body = """
@@ -925,14 +1294,17 @@ deep learn  count=...
 
     <h2 id="relevance" class="title">Relevance Ranking</h2>
 
-    <p>Plug a <code>RelevanceRanker</code> into <code>Corpus.search</code> to rank documents for a query string or token array. <code>TFIDF</code> is classic weighted bag-of-words; <code>BM25</code> is Okapi BM25 for ad-hoc retrieval.</p>
+    <p>Plug a <code>RelevanceRanker</code> into <code>Corpus.search</code> to rank documents for a query string or token array. <code>TFIDF</code> is classic weighted bag-of-words; <code>BM25</code> is Okapi BM25+ for ad-hoc retrieval. Default <code>new BM25()</code> uses <code>k1=1.2</code>, <code>b=0.75</code>, <code>delta=1.0</code>; tune with <code>new BM25(k1, b, delta)</code> (set <code>delta=0</code> for classic BM25 without the BM25+ floor).</p>
 
     <div class="table-responsive">
         <table class="table table-striped table-bordered">
-            <thead><tr><th>Ranker</th><th>Class</th><th>Notes</th></tr></thead>
+            <thead><tr><th>Criterion</th><th>TF-IDF</th><th>BM25</th></tr></thead>
             <tbody>
-            <tr><td>TF-IDF</td><td><code>TFIDF</code></td><td>Classic weighted bag-of-words</td></tr>
-            <tr><td>BM25 / Okapi</td><td><code>BM25</code></td><td>Probabilistic; strong for ad-hoc search</td></tr>
+            <tr><td>Simplicity</td><td>Straightforward formula</td><td>Slightly more parameters</td></tr>
+            <tr><td>Long documents</td><td>Bias toward long docs</td><td>Length-normalized by <code>b</code></td></tr>
+            <tr><td>TF saturation</td><td>None (linear in tf)</td><td>Logarithmic via <code>k1</code></td></tr>
+            <tr><td>Tunable</td><td>One parameter (<code>a</code>)</td><td>Three (<code>k1</code>, <code>b</code>, <code>delta</code>)</td></tr>
+            <tr><td>Recommended for</td><td>Prototypes, small corpora</td><td>Production search, larger corpora</td></tr>
             </tbody>
         </table>
     </div>
@@ -940,14 +1312,14 @@ deep learn  count=...
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-16-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-16-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-16-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-22-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-22-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-22-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-16-0" class="hero-pane">
+    <div id="pg-22-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import smile.nlp.Text;
 import smile.nlp.SimpleCorpus;
 import smile.nlp.relevance.*;
@@ -966,7 +1338,7 @@ corpus.search(bm25, new String[]{"machine", "learning"})
 ...
       </code></pre>
     </div>
-    <div id="pg-16-1" class="hero-pane" hidden>
+    <div id="pg-22-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.nlp._
 import smile.nlp.Text
 import smile.nlp.relevance.BM25
@@ -984,7 +1356,7 @@ c.search(new BM25, Array("machine", "learning")).asScala.foreach { r =&gt;
 ...
       </code></pre>
     </div>
-    <div id="pg-16-2" class="hero-pane" hidden>
+    <div id="pg-22-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.nlp.*
 import smile.nlp.relevance.BM25
 
@@ -1004,9 +1376,54 @@ c.search(BM25(), arrayOf("machine", "learning")).forEachRemaining { r -&gt;
 </div>
 
 
+    <h3 id="tfidf-vs-bm25">TF-IDF Side by Side</h3>
+
+    <p>Same corpus, same query — swap the ranker to compare scores. Start with <code>new BM25()</code> for production; use <code>TFIDF</code> when you want a simpler baseline.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.nlp.Text;
+import smile.nlp.SimpleCorpus;
+import smile.nlp.relevance.*;
+
+SimpleCorpus corpus = new SimpleCorpus();
+corpus.add(corpus.doc(Text.of("Intro", "SMILE is a fast machine learning library.")));
+corpus.add(corpus.doc(Text.of("DL", "Deep learning uses neural networks.")));
+corpus.add(corpus.doc(Text.of("IR", "BM25 ranks documents for information retrieval.")));
+
+String[] q = {"machine", "learning"};
+System.out.println("BM25:");
+corpus.search(new BM25(), q).forEachRemaining(r -&gt;
+    System.out.printf("  %.4f  %s%n", r.score(), r.text().title()));
+System.out.println("TF-IDF:");
+corpus.search(new TFIDF(), q).forEachRemaining(r -&gt;
+    System.out.printf("  %.4f  %s%n", r.score(), r.text().title()));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+BM25:
+  0.xxxx  Intro
+  ...
+TF-IDF:
+  0.xxxx  Intro
+  ...
+      </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
     <h2 id="taxonomy" class="title">Taxonomy</h2>
 
-    <p>A <code>Taxonomy</code> is an ordered IS-A tree of <code>Concept</code> nodes. Each concept carries a synonym set via <code>keywords()</code> (not <code>getKeywords()</code>). <code>TaxonomicDistance</code> implements Wu–Palmer-style measures; call <code>dist.d("dog", "cat")</code> for pairwise distance.</p>
+    <p>A <code>Taxonomy</code> is an ordered IS-A tree of <code>Concept</code> nodes. Each concept carries a synonym set via <code>keywords()</code>. <code>TaxonomicDistance</code> provides edge-counting distance <code>d()</code>, normalized distance, and three similarity measures (Wu–Palmer, Leacock–Chodorow, Lin). <code>d()</code> counts edges through the LCA — it is not Wu–Palmer; call <code>wuPalmer</code> separately for that similarity.</p>
+
+
+    <h3 id="taxonomy-of">Parsing with Taxonomy.of</h3>
+
+    <p><code>Taxonomy.of(String)</code> builds a tree from indented text: 4 spaces (or one tab) per level, comma-separated synonyms on a line, <code>#</code> comments allowed. The first non-blank line is the root.</p>
 
 
     <div class="code-playground glass" data-lang="java">
@@ -1018,24 +1435,112 @@ c.search(BM25(), arrayOf("machine", "learning")).forEachRemaining { r -&gt;
   </div>
   <pre class="playground-source language-java"><code class="language-java">import smile.nlp.taxonomy.*;
 
-Taxonomy taxonomy = new Taxonomy("entity");
-Concept entity = taxonomy.getConcept("entity");
-Concept animal = entity.addChild("animal");
-Concept plant = entity.addChild("plant");
-Concept dog = animal.addChild("dog");
-Concept cat = animal.addChild("cat");
-plant.addChild("rose");
-
-Concept c = taxonomy.getConcept("dog");
-System.out.println(c.keywords());
-
-TaxonomicDistance dist = new TaxonomicDistance(taxonomy);
-System.out.println(dist.d("dog", "cat"));
-System.out.println(dist.d("dog", "rose"));</code></pre>
+Taxonomy taxonomy = Taxonomy.of("""
+    animal
+        mammal, warm-blooded
+            dog, canine
+            cat, feline
+        reptile
+            snake
+    """);
+System.out.println(taxonomy);
+System.out.println(taxonomy.getConcept("dog") == taxonomy.getConcept("canine"));
+System.out.println(taxonomy.getConcept("dog").keywords());</code></pre>
       <pre class="playground-output" aria-label="Expected output"><code>
-[dog]
-(sibling distance)
-(cross-branch distance)
+[animal]
+├── [mammal, warm-blooded]
+│   ├── [canine, dog]
+│   └── [cat, feline]
+└── [reptile]
+    └── [snake]
+true
+[canine, dog]
+      </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="taxonomy-queries">Depth, LCA, and Ancestors</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.nlp.taxonomy.*;
+
+Taxonomy t = Taxonomy.of("""
+    animal
+        mammal, warm-blooded
+            dog, canine
+            cat, feline
+        reptile
+            snake
+    """);
+System.out.println("depth(dog)=" + t.depth("dog"));
+System.out.println("LCA(dog,snake)=" + t.lowestCommonAncestor("dog", "snake"));
+System.out.println("isAncestor(mammal,dog)=" + t.isAncestor("mammal", "dog"));
+System.out.println("height=" + t.height() + " size=" + t.size());</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+depth(dog)=2
+LCA(dog,snake)=Concept [animal]
+isAncestor(mammal,dog)=true
+height=2 size=9
+      </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="taxonomic-distance">TaxonomicDistance Measures</h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Method</th><th>Kind</th><th>Notes</th></tr></thead>
+            <tbody>
+            <tr><td><code>d</code></td><td>Distance</td><td>Edge count via LCA: <code>depth(a)+depth(b)−2·depth(LCA)</code></td></tr>
+            <tr><td><code>normalizedDistance</code></td><td>Distance</td><td>Raw distance / diameter ∈ [0, 1]</td></tr>
+            <tr><td><code>wuPalmer</code></td><td>Similarity</td><td><code>2·depth(LCA)/(depth(a)+depth(b))</code></td></tr>
+            <tr><td><code>leacockChodorow</code></td><td>Similarity</td><td>Path length vs taxonomy height, normalized to [0, 1]</td></tr>
+            <tr><td><code>lin</code></td><td>Similarity</td><td>Depth-proxy information content; no external corpus</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.nlp.taxonomy.*;
+
+Taxonomy t = Taxonomy.of("""
+    animal
+        mammal, warm-blooded
+            dog, canine
+            cat, feline
+        reptile
+            snake
+    """);
+TaxonomicDistance td = new TaxonomicDistance(t);
+System.out.printf("d(dog,cat)=%.1f%n", td.d("dog", "cat"));
+System.out.printf("normalized=%.3f%n", td.normalizedDistance("dog", "cat"));
+System.out.printf("wuPalmer=%.3f%n", td.wuPalmer("dog", "cat"));
+System.out.printf("leacockChodorow=%.3f%n", td.leacockChodorow("dog", "cat"));
+System.out.printf("wuPalmer(dog,snake)=%.3f%n", td.wuPalmer("dog", "snake"));
+System.out.printf("lin(dog,cat)=%.3f%n", td.lin("dog", "cat"));</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+d(dog,cat)=2.0
+normalized=0.500
+wuPalmer=0.500
+leacockChodorow=0.500
+wuPalmer(dog,snake)=0.000
+lin(dog,cat)=0.000
       </code></pre>
   <div class="playground-editor" hidden></div>
 </div>
