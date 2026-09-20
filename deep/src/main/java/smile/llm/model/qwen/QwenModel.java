@@ -1285,52 +1285,59 @@ public class QwenModel extends LayerBlock {
                             "verify graph logits buffer missing; warmup must run before capture");
                 }
                 int deviceIndex = Byte.toUnsignedInt(tokens.device().index());
-                try {
-                    verifyGraphSession.beginCapture(deviceIndex);
+                // Serialize the capture region across TP ranks — see
+                // VerifyCudaGraph.CAPTURE_LOCK's javadoc: concurrent multi-rank
+                // capture (routine here, since every rank hits the same bucket
+                // transition on the same round) was observed to cross-wire
+                // captured graphs between ranks' devices on real hardware.
+                synchronized (VerifyCudaGraph.captureLock()) {
                     try {
-                        Tensor raw = forwardVerifyGraphCore(
-                                verifyGraphTokenBuf, startPositions,
-                                verifyGraphCosBuf, verifyGraphSinBuf);
-                        if (logger.isInfoEnabled()) {
-                            logger.info("tpRank={}: verify graph CAPTURE raw.shape={} "
-                                            + "verifyGraphLogitsBuf.shape(before copy)={} "
-                                            + "(identityHash={})",
-                                    tpRank, java.util.Arrays.toString(raw.shape()),
-                                    java.util.Arrays.toString(verifyGraphLogitsBuf.shape()),
-                                    System.identityHashCode(verifyGraphLogitsBuf));
+                        verifyGraphSession.beginCapture(deviceIndex);
+                        try {
+                            Tensor raw = forwardVerifyGraphCore(
+                                    verifyGraphTokenBuf, startPositions,
+                                    verifyGraphCosBuf, verifyGraphSinBuf);
+                            if (logger.isInfoEnabled()) {
+                                logger.info("tpRank={}: verify graph CAPTURE raw.shape={} "
+                                                + "verifyGraphLogitsBuf.shape(before copy)={} "
+                                                + "(identityHash={})",
+                                        tpRank, java.util.Arrays.toString(raw.shape()),
+                                        java.util.Arrays.toString(verifyGraphLogitsBuf.shape()),
+                                        System.identityHashCode(verifyGraphLogitsBuf));
+                            }
+                            smile.torch.Native.copy_(verifyGraphLogitsBuf, raw);
+                            verifyGraphLogitsOut = verifyGraphLogitsBuf;
+                        } finally {
+                            verifyGraphSession.endCapture();
                         }
-                        smile.torch.Native.copy_(verifyGraphLogitsBuf, raw);
-                        verifyGraphLogitsOut = verifyGraphLogitsBuf;
-                    } finally {
-                        verifyGraphSession.endCapture();
-                    }
-                    if (verifyGraphSession.canReplay(batch, windowLen, numPages)) {
-                        verifyGraphSession.logCapture(tpRank);
-                        if (logger.isInfoEnabled()) {
-                            logger.info("tpRank={}: verify graph CAPTURE return shape={} "
-                                            + "(identityHash={})",
-                                    tpRank, java.util.Arrays.toString(verifyGraphLogitsBuf.shape()),
-                                    System.identityHashCode(verifyGraphLogitsBuf));
+                        if (verifyGraphSession.canReplay(batch, windowLen, numPages)) {
+                            verifyGraphSession.logCapture(tpRank);
+                            if (logger.isInfoEnabled()) {
+                                logger.info("tpRank={}: verify graph CAPTURE return shape={} "
+                                                + "(identityHash={})",
+                                        tpRank, java.util.Arrays.toString(verifyGraphLogitsBuf.shape()),
+                                        System.identityHashCode(verifyGraphLogitsBuf));
+                            }
+                            return verifyGraphLogitsBuf;
                         }
-                        return verifyGraphLogitsBuf;
-                    }
-                    logger.warn("tpRank={}: verify CUDA graph capture did not produce a "
-                            + "replayable graph", tpRank);
-                    VerifyCudaGraph.disableCapture("capture incomplete");
-                    verifyGraphSession.close();
-                    verifyGraphSession = null;
-                    verifyGraphLogitsOut = null;
-                } catch (RuntimeException e) {
-                    logger.warn("tpRank={}: verify CUDA graph capture failed, falling back "
-                            + "to eager: {}", tpRank, e.getMessage());
-                    VerifyCudaGraph.disableCapture(e.getMessage());
-                    if (verifyGraphSession != null) {
+                        logger.warn("tpRank={}: verify CUDA graph capture did not produce a "
+                                + "replayable graph", tpRank);
+                        VerifyCudaGraph.disableCapture("capture incomplete");
                         verifyGraphSession.close();
                         verifyGraphSession = null;
+                        verifyGraphLogitsOut = null;
+                    } catch (RuntimeException e) {
+                        logger.warn("tpRank={}: verify CUDA graph capture failed, falling back "
+                                + "to eager: {}", tpRank, e.getMessage());
+                        VerifyCudaGraph.disableCapture(e.getMessage());
+                        if (verifyGraphSession != null) {
+                            verifyGraphSession.close();
+                            verifyGraphSession = null;
+                        }
+                        verifyGraphLogitsOut = null;
+                        kvCachePool.setVerifyGraphBuffers(false);
+                        return forward(tokens, startPos, true);
                     }
-                    verifyGraphLogitsOut = null;
-                    kvCachePool.setVerifyGraphBuffers(false);
-                    return forward(tokens, startPos, true);
                 }
             }
 
