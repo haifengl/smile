@@ -19,6 +19,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import org.jboss.logging.Logger;
@@ -27,16 +28,35 @@ import smile.onnx.genai.GenAI;
 import smile.onnx.genai.GenAIOliveTarget;
 
 /**
- * Resolves or builds an ORT GenAI model directory via Olive {@code auto-opt}.
+ * Facade over the Olive CLI ({@code olive …}) for smile-serve chat.
+ *
+ * <p>Today this drives {@code olive optimize} to produce ORT GenAI model
+ * directories. Additional Olive subcommands can be added here later.
  *
  * <p>Never writes into the Hugging Face hub cache. Cache hits skip the CLI.
  *
  * @author Haifeng Li
  */
-public final class OliveAutoOpt {
-    private static final Logger logger = Logger.getLogger(OliveAutoOpt.class);
+public final class Olive {
+    private static final Logger logger = Logger.getLogger(Olive.class);
 
-    private OliveAutoOpt() {}
+    /** Precisions accepted by {@code olive optimize --precision}. */
+    private static final Set<String> OPTIMIZE_PRECISIONS = Set.of(
+            "int4", "int8", "int16", "int32",
+            "uint4", "uint8", "uint16", "uint32",
+            "fp16", "fp32", "bf16");
+
+    /** Providers accepted by {@code olive optimize --provider}. */
+    private static final Set<String> OPTIMIZE_PROVIDERS = Set.of(
+            "CPUExecutionProvider",
+            "CUDAExecutionProvider",
+            "QNNExecutionProvider",
+            "VitisAIExecutionProvider",
+            "OpenVINOExecutionProvider",
+            "WebGpuExecutionProvider",
+            "NvTensorRTRTXExecutionProvider");
+
+    private Olive() {}
 
     /**
      * Returns whether the Olive CLI appears to be on {@code PATH}.
@@ -62,7 +82,7 @@ public final class OliveAutoOpt {
     }
 
     /**
-     * Resolves a GenAI model directory from Olive cache or conversion.
+     * Resolves a GenAI model directory from Olive cache or {@code optimize}.
      *
      * @param modelSpec HF id or local HF layout path.
      * @param oga       OGA config.
@@ -78,7 +98,7 @@ public final class OliveAutoOpt {
             candidateId = candidateId + "-override";
         }
 
-        String precision = resolvePrecision(oga, cascade);
+        String precision = clampPrecision(resolvePrecision(oga, cascade));
         Path cacheRoot = cacheRoot(oga);
         Path outDir = cacheRoot.resolve(sanitize(modelSpec)).resolve(candidateId + "-" + precision);
         Optional<Path> hit = findGenAiRoot(outDir);
@@ -97,24 +117,7 @@ public final class OliveAutoOpt {
         }
 
         Files.createDirectories(outDir);
-        try {
-            runOlive(oliveCmd, modelSpec, outDir, precision, device, provider);
-        } catch (IOException e) {
-            if (cascade.prefersFp8() && "fp8".equalsIgnoreCase(precision)
-                    && oga.precision().filter(s -> !s.isBlank() && !"auto".equalsIgnoreCase(s)).isEmpty()) {
-                logger.warnf(e, "Olive fp8 failed for %s; retrying with int4", modelSpec);
-                precision = "int4";
-                outDir = cacheRoot.resolve(sanitize(modelSpec)).resolve(candidateId + "-" + precision);
-                hit = findGenAiRoot(outDir);
-                if (hit.isPresent()) {
-                    return hit.get();
-                }
-                Files.createDirectories(outDir);
-                runOlive(oliveCmd, modelSpec, outDir, precision, device, provider);
-            } else {
-                throw e;
-            }
-        }
+        optimize(oliveCmd, modelSpec, outDir, precision, device, provider);
 
         Path finalOut = outDir;
         return findGenAiRoot(finalOut).orElseThrow(() -> new IOException(
@@ -177,12 +180,17 @@ public final class OliveAutoOpt {
         }
     }
 
-    private static void runOlive(String oliveCmd, String modelSpec, Path outDir,
+    /**
+     * Runs {@code olive optimize} for an ORT GenAI-ready package.
+     */
+    private static void optimize(String oliveCmd, String modelSpec, Path outDir,
                                  String precision, String device, String provider)
             throws IOException {
+        String oliveProvider = clampProvider(provider);
+        String oliveDevice = clampDevice(device, oliveProvider);
         List<String> cmd = new ArrayList<>();
         cmd.add(oliveCmd);
-        cmd.add("auto-opt");
+        cmd.add("optimize");
         cmd.add("--model_name_or_path");
         cmd.add(modelSpec);
         cmd.add("--output_path");
@@ -190,10 +198,13 @@ public final class OliveAutoOpt {
         cmd.add("--precision");
         cmd.add(precision);
         cmd.add("--device");
-        cmd.add(device);
+        cmd.add(oliveDevice);
         cmd.add("--provider");
-        cmd.add(provider);
-        cmd.add("--use_ort_genai");
+        cmd.add(oliveProvider);
+        // ModelBuilder emits GenAI-ready trees (genai_config.json); default for
+        // text modality, but set explicitly so behavior does not depend on defaults.
+        cmd.add("--exporter");
+        cmd.add("model_builder");
         logger.infof("Running Olive: %s", String.join(" ", cmd));
         ProcessBuilder pb = new ProcessBuilder(cmd);
         pb.redirectErrorStream(true);
@@ -218,5 +229,61 @@ public final class OliveAutoOpt {
         if (code != 0) {
             throw new IOException("Olive exited with code " + code + ":\n" + log);
         }
+    }
+
+    /**
+     * Maps cascade precision onto values accepted by {@code olive optimize}.
+     * (Legacy {@code auto-opt} allowed {@code fp8}; {@code optimize} does not.)
+     */
+    static String clampPrecision(String precision) {
+        if (precision == null || precision.isBlank()) {
+            return "int4";
+        }
+        String p = precision.trim().toLowerCase(Locale.ROOT);
+        if (OPTIMIZE_PRECISIONS.contains(p)) {
+            return p;
+        }
+        logger.warnf("Olive optimize does not support precision '%s'; using int4", precision);
+        return "int4";
+    }
+
+    /**
+     * Maps cascade providers onto values accepted by {@code olive optimize}.
+     * DirectML is not in the optimize EP list — fall back to CPU for conversion.
+     */
+    static String clampProvider(String provider) {
+        if (provider == null || provider.isBlank()) {
+            return "CPUExecutionProvider";
+        }
+        String p = provider.trim();
+        if (OPTIMIZE_PROVIDERS.contains(p)) {
+            return p;
+        }
+        logger.warnf("Olive optimize does not support provider '%s'; using CPUExecutionProvider",
+                provider);
+        return "CPUExecutionProvider";
+    }
+
+    static String clampDevice(String device, String provider) {
+        if ("CPUExecutionProvider".equals(provider)) {
+            return "cpu";
+        }
+        if ("CUDAExecutionProvider".equals(provider)
+                || "NvTensorRTRTXExecutionProvider".equals(provider)
+                || "WebGpuExecutionProvider".equals(provider)) {
+            return "gpu";
+        }
+        if ("QNNExecutionProvider".equals(provider)
+                || "OpenVINOExecutionProvider".equals(provider)
+                || "VitisAIExecutionProvider".equals(provider)) {
+            return "npu";
+        }
+        if (device != null && !device.isBlank()) {
+            String d = device.trim().toLowerCase(Locale.ROOT);
+            if (d.equals("cpu") || d.equals("gpu") || d.equals("npu")) {
+                return d;
+            }
+        }
+        return "cpu";
     }
 }

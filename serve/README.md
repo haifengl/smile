@@ -217,7 +217,7 @@ the corresponding profiles.
 | `smile.chat.kv-cache.prefix-reuse` | `true` | Match/insert prompts in the radix KV tree (SGLang-style). Hybrid Qwen also needs `hybrid-prefix-replay` |
 | `smile.chat.kv-cache.hybrid-prefix-replay` | `true` | On a hybrid Qwen prefix hit, replay the matched prefix to restore DeltaNet state while sharing KV pages. Set `false` to force-disable hybrid prefix reuse |
 | `smile.chat.oga.enabled` | `true` | When Torch path is not selected (no CUDA or non-builtin architecture), try ORT GenAI / Olive fallback |
-| `smile.chat.oga.precision` | _(auto)_ | Olive `--precision` override; empty/`auto` = FP8 on CUDA EP else `int4` (auto FP8 failures retry int4) |
+| `smile.chat.oga.precision` | _(auto)_ | Olive `optimize --precision` override; empty/`auto` uses cascade default (`int4` today — `optimize` does not accept `fp8`) |
 | `smile.chat.oga.cache-dir` | `{SMILE_CACHE}/olive` | Olive output cache root (never writes into `HF_HOME` hub trees) |
 | `smile.chat.oga.olive-command` | `olive` | Olive CLI executable |
 | `smile.chat.oga.device` / `provider` | _(cascade)_ | Optional Olive overrides; default from `GenAI.resolveOliveTarget()` |

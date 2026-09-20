@@ -160,7 +160,7 @@ try (var chat = GenAiChatModel.of("models/phi-3-mini-4k-instruct-cpu")) {
 ORT GenAI:
 
 1. Local / HF snapshot with `genai_config.json` → `GenAiChatModel.open` (no Olive)
-2. Else allowlisted plain HF (`GenAISupportedModels`) + Olive `auto-opt` → open
+2. Else allowlisted plain HF (`GenAISupportedModels`) + Olive `optimize` → open
 3. Else chat stays unavailable (HTTP 503)
 
 | Artifact | Location | Override |
@@ -168,10 +168,13 @@ ORT GenAI:
 | HF checkpoints / GenAI-ready repos | Hub cache (`HF_HOME` / `HF_HUB_CACHE`) | same as `huggingface_hub` |
 | Olive-converted GenAI | `{SMILE_CACHE}/olive/...` | `smile.chat.oga.cache-dir` |
 
-Serve config (`smile.chat.oga.*`): `enabled`, `precision` (`auto` = FP8 on CUDA
-else int4), `cache-dir`, `olive-command`, optional `device` / `provider`.
-Olive `--device`/`--provider` follow `GenAI.resolveOliveTarget()` (same EP
-cascade as `Model.open`, honor `SMILE_ONNX_GENAI_PROVIDER`).
+Serve config (`smile.chat.oga.*`): `enabled`, `precision` (`auto` = cascade
+default; Olive `optimize` clamps unsupported values such as `fp8` → `int4`),
+`cache-dir`, `olive-command`, optional `device` / `provider`.
+Olive `optimize --device`/`--provider` follow `GenAI.resolveOliveTarget()` (same EP
+cascade as `Model.open`, honor `SMILE_ONNX_GENAI_PROVIDER`); DirectML is remapped
+to CPU for the Olive CLI because `optimize` does not list `DmlExecutionProvider`.
+Conversion uses `--exporter model_builder` (GenAI-ready output).
 
 **Tools I/O (Phase 1):** OpenAI `tools` reach the GenAI chat template; completions
 are post-processed to structured `tool_calls` (`JsonToolCallParser` /

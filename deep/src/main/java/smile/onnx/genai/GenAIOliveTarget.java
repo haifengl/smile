@@ -17,7 +17,7 @@
 package smile.onnx.genai;
 
 /**
- * Olive {@code auto-opt} target derived from the GenAI EP cascade.
+ * Olive {@code optimize} target derived from the GenAI EP cascade.
  *
  * @param candidateId      GenAI cascade id ({@code cuda}, {@code dml}, {@code cpu}, …).
  * @param device           Olive {@code --device} ({@code gpu}, {@code npu}, {@code cpu}).
