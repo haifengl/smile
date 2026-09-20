@@ -16,6 +16,7 @@
  */
 package smile.model;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Properties;
 import smile.classification.*;
@@ -46,6 +47,8 @@ public record ClassificationModel(String algorithm,
                                   ClassificationMetrics validation,
                                   ClassificationMetrics test,
                                   Properties tags) implements Model, Serializable {
+    @Serial
+    private static final long serialVersionUID = 3L;
 
     /**
      * Model inference.
