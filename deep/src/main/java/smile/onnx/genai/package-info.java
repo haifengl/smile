@@ -44,6 +44,11 @@
  * }
  * }</pre>
  *
+ * <h2>Providers</h2>
+ * <p>{@link smile.onnx.genai.Model#open(String)} cascades CUDA → RyzenAI →
+ * VitisAI → OpenVINO NPU → QNN → CPU when {@code SMILE_ONNX_GENAI_PROVIDER}
+ * is {@code auto} (default). Each accelerator requires matching EP natives.
+ *
  * <h2>Native libraries</h2>
  * <p>Both {@code onnxruntime} and {@code onnxruntime-genai} must be on the OS
  * library search path. Use {@code --enable-native-access=ALL-UNNAMED}.

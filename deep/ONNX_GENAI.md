@@ -42,7 +42,7 @@ absolute path before FFM lookup, which also avoids an older
 | `ONNXRUNTIME_NATIVE_PATH` | Directory containing `onnxruntime` (e.g. pip `capi`) |
 | `ONNXRUNTIME_GENAI_NATIVE_PATH` | Directory containing `onnxruntime-genai` |
 | `SMILE_ONNX_GENAI_MODEL` | GenAI model directory (`genai_config.json`); needed for native model tests |
-| `SMILE_ONNX_GENAI_PROVIDER` | `auto` (default: try CUDA, fall back to CPU), `cuda` (require GPU), or `cpu` |
+| `SMILE_ONNX_GENAI_PROVIDER` | `auto` (default cascade), `cuda`, `npu`, `ryzenai`/`hybrid`, `vitisai`, `openvino`, `qnn`, or `cpu` |
 
 ```powershell
 $ort = "$env:LOCALAPPDATA\Python\pythoncore-3.14-64\Lib\site-packages\onnxruntime\capi"
@@ -55,12 +55,11 @@ $env:SMILE_ONNX_GENAI_MODEL = $model
 # optional: $env:SMILE_ONNX_GENAI_PROVIDER = "auto"   # or "cuda" / "cpu"
 ```
 
-`Model.open` / `SimpleGenAI.open` / `GenAiChatModel.open` try the CUDA EP first when
-preference is `auto` and CUDA GenAI/ORT natives are present
-(`onnxruntime-genai-cuda` / `onnxruntime_providers_cuda`), and fall back to the
-default CPU providers if CUDA is missing or fails to initialize. Machines with
-only the CPU GenAI wheel never attempt CUDA. `Model.of` always uses
-`genai_config.json` providers unchanged.
+`Model.open` / `SimpleGenAI.open` / `GenAiChatModel.open` run an accelerator
+cascade when preference is `auto`: **CUDA → RyzenAI → VitisAI → OpenVINO NPU →
+QNN → CPU**. Each step is attempted only when matching EP natives are present;
+Java failures fall through. Machines with only the CPU GenAI wheel never attempt
+accelerators. `Model.of` always uses `genai_config.json` providers unchanged.
 
 Check availability:
 
@@ -156,20 +155,34 @@ try (var chat = GenAiChatModel.of("models/phi-3-mini-4k-instruct-cpu")) {
 
 ---
 
-## CUDA / providers
+## CUDA / NPU providers
 
-Prefer GPU with automatic CPU failover (`Model.open`):
+`Model.open` cascade (`SMILE_ONNX_GENAI_PROVIDER=auto`):
 
 ```java
 try (var model = Model.open(modelDir)) {
-    // model.provider() is "cuda" when the CUDA EP loaded, else "default"
+    // model.provider() is cuda | ryzenai | vitisai | openvino | qnn | default
 }
 ```
 
-`auto` (default) attempts CUDA only when CUDA GenAI/ORT natives are on the
-library path (`onnxruntime-genai-cuda` / `onnxruntime_providers_cuda`). If the
-CUDA EP throws, or natives are absent, it falls back to CPU. Force with
-`SMILE_ONNX_GENAI_PROVIDER=cuda` or `cpu`.
+| Preference | Behavior |
+|---|---|
+| `auto` | CUDA → RyzenAI → VitisAI → OpenVINO NPU → QNN → CPU |
+| `cuda` / `gpu` | CUDA only (throw if fails) |
+| `npu` | Skip CUDA; try RyzenAI → VitisAI → OpenVINO → QNN |
+| `ryzenai` / `hybrid` | AMD OGA RyzenAI only (hybrid or NPU-only **model** determines mode) |
+| `vitisai` | Classical VitisAI EP only |
+| `openvino` | OpenVINO with `device_type=NPU` |
+| `qnn` | Qualcomm QNN |
+| `cpu` | No accelerator attempts (CI) |
+
+**AMD Ryzen AI:** hybrid (NPU+iGPU) vs NPU-only is which model package you load
+(AMD HF hybrid vs NPU collections), not a separate EP flip. Needs
+`onnxruntime-genai-directml-ryzenai` (or Ryzen AI MSI), NPU drivers, and a GPU
+driver for hybrid. Stock Microsoft pip GenAI often lacks RyzenAI/VitisAI.
+
+**Out of scope for now:** ROCm/MIGraphX, NvTensorRtRtx (TensorRT-RTX), pure
+DirectML iGPU-only.
 
 Or set providers explicitly:
 
@@ -188,7 +201,7 @@ try (var config = Config.of(modelDir)) {
 
 Unit tests under `deep/src/test/java/smile/onnx/genai/`:
 
-- `GenAIExceptionTest` — no natives required
+- `GenAIExceptionTest` / `GenAIProviderPreferenceTest` — no natives required
 - `GenAINativeTest` — needs natives; model tests need `SMILE_ONNX_GENAI_MODEL`
 
 GitHub Actions (`.github/workflows/ci.yml`) installs CPU `onnxruntime` /
