@@ -1267,6 +1267,13 @@ public class QwenModel extends LayerBlock {
 
             if (verifyGraphSession.canReplay(batch, windowLen, numPages)) {
                 verifyGraphSession.replay(tpRank);
+                if (logger.isInfoEnabled()) {
+                    logger.info("tpRank={}: verify graph REPLAY return shape={} dtype={} device={} "
+                                    + "(identityHash={})",
+                            tpRank, java.util.Arrays.toString(verifyGraphLogitsBuf.shape()),
+                            verifyGraphLogitsBuf.dtype(), verifyGraphLogitsBuf.device(),
+                            System.identityHashCode(verifyGraphLogitsBuf));
+                }
                 return verifyGraphLogitsBuf;
             }
 
@@ -1284,6 +1291,14 @@ public class QwenModel extends LayerBlock {
                         Tensor raw = forwardVerifyGraphCore(
                                 verifyGraphTokenBuf, startPositions,
                                 verifyGraphCosBuf, verifyGraphSinBuf);
+                        if (logger.isInfoEnabled()) {
+                            logger.info("tpRank={}: verify graph CAPTURE raw.shape={} "
+                                            + "verifyGraphLogitsBuf.shape(before copy)={} "
+                                            + "(identityHash={})",
+                                    tpRank, java.util.Arrays.toString(raw.shape()),
+                                    java.util.Arrays.toString(verifyGraphLogitsBuf.shape()),
+                                    System.identityHashCode(verifyGraphLogitsBuf));
+                        }
                         smile.torch.Native.copy_(verifyGraphLogitsBuf, raw);
                         verifyGraphLogitsOut = verifyGraphLogitsBuf;
                     } finally {
@@ -1291,6 +1306,12 @@ public class QwenModel extends LayerBlock {
                     }
                     if (verifyGraphSession.canReplay(batch, windowLen, numPages)) {
                         verifyGraphSession.logCapture(tpRank);
+                        if (logger.isInfoEnabled()) {
+                            logger.info("tpRank={}: verify graph CAPTURE return shape={} "
+                                            + "(identityHash={})",
+                                    tpRank, java.util.Arrays.toString(verifyGraphLogitsBuf.shape()),
+                                    System.identityHashCode(verifyGraphLogitsBuf));
+                        }
                         return verifyGraphLogitsBuf;
                     }
                     logger.warn("tpRank={}: verify CUDA graph capture did not produce a "
