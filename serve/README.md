@@ -216,6 +216,11 @@ the corresponding profiles.
 | `smile.chat.kv-cache.page-size` | `16` | Tokens per radix / KV pool page (prefix match and insert are page-aligned) |
 | `smile.chat.kv-cache.prefix-reuse` | `true` | Match/insert prompts in the radix KV tree (SGLang-style). Hybrid Qwen also needs `hybrid-prefix-replay` |
 | `smile.chat.kv-cache.hybrid-prefix-replay` | `true` | On a hybrid Qwen prefix hit, replay the matched prefix to restore DeltaNet state while sharing KV pages. Set `false` to force-disable hybrid prefix reuse |
+| `smile.chat.oga.enabled` | `true` | When Torch path is not selected (no CUDA or non-builtin architecture), try ORT GenAI / Olive fallback |
+| `smile.chat.oga.precision` | _(auto)_ | Olive `--precision` override; empty/`auto` = FP8 on CUDA EP else `int4` (auto FP8 failures retry int4) |
+| `smile.chat.oga.cache-dir` | `{SMILE_CACHE}/olive` | Olive output cache root (never writes into `HF_HOME` hub trees) |
+| `smile.chat.oga.olive-command` | `olive` | Olive CLI executable |
+| `smile.chat.oga.device` / `provider` | _(cascade)_ | Optional Olive overrides; default from `GenAI.resolveOliveTarget()` |
 | `quarkus.datasource.db-kind` | `postgresql` | Database backend for chat history |
 | `quarkus.datasource.jdbc.url` | `jdbc:postgresql://localhost:5432/smile` | JDBC connection URL |
 | `quarkus.hibernate-orm.active` | `false` | Enable ORM (set `true` when database is available) |
@@ -583,8 +588,17 @@ for on-premise LLM inference. The chat API is designed to be compatible with
 the OpenAI Chat Completions interface.
 
 The LLM is optional: if the path specified by the property `smile.chat.model`
-does not exist on the file system, `ChatService` starts in an *unavailable*
-state and every request to the chat endpoints returns **HTTP 503 Service Unavailable**.
+does not exist on the file system (and cannot be resolved via Hugging Face /
+OGA), `ChatService` starts in an *unavailable* state and every request to the
+chat endpoints returns **HTTP 503 Service Unavailable**.
+
+**Backend selection:** with CUDA and a builtin Llama/Qwen checkpoint, serve uses
+the Torch path + continuous batching. Otherwise it falls back to ONNX Runtime
+GenAI (`GenAiChatModel`): GenAI-ready trees (`genai_config.json`) open directly;
+plain Transformers checkpoints on the onnx-genai allowlist may be converted with
+Olive into `{SMILE_CACHE}/olive` (see `smile.chat.oga.*`). Tools input / structured
+`tool_calls` output work on the serial GenAI path; multimodal GenAI materializes
+media to temp files. See [deep/ONNX_GENAI.md](../deep/ONNX_GENAI.md).
 
 ### 7.1 List models
 

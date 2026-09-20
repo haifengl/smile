@@ -117,6 +117,54 @@ public final class GenAI {
         return GenAIProviders.CUDA.nativesPresent();
     }
 
+    /**
+     * Returns whether candidate {@code id} is known to support FP8 Olive builds.
+     *
+     * @param candidateId GenAI cascade id (e.g. {@code cuda}).
+     * @return {@code true} when auto precision should try {@code fp8} first.
+     */
+    public static boolean supportsFp8(String candidateId) {
+        return candidateId != null && "cuda".equalsIgnoreCase(candidateId.trim());
+    }
+
+    /**
+     * Resolves Olive {@code auto-opt} {@code --device} / {@code --provider} /
+     * default precision from {@link #providerPreference()} and EP natives
+     * (same order as {@link Model#open}).
+     *
+     * @return Olive target; {@code cpu}/{@code int4} when no accelerator is present.
+     */
+    public static GenAIOliveTarget resolveOliveTarget() {
+        String preference = providerPreference();
+        if ("cpu".equals(preference)) {
+            return cpuOliveTarget();
+        }
+        for (GenAIProviderCandidate c : GenAIProviders.candidatesFor(preference)) {
+            if (c.nativesPresent()) {
+                return toOliveTarget(c.id());
+            }
+        }
+        return cpuOliveTarget();
+    }
+
+    static GenAIOliveTarget toOliveTarget(String candidateId) {
+        String id = candidateId == null ? "cpu" : candidateId.toLowerCase();
+        String precision = supportsFp8(id) ? "fp8" : "int4";
+        return switch (id) {
+            case "cuda" -> new GenAIOliveTarget("cuda", "gpu", "CUDAExecutionProvider", precision);
+            case "ryzenai" -> new GenAIOliveTarget("ryzenai", "npu", "DmlExecutionProvider", precision);
+            case "openvino" -> new GenAIOliveTarget(
+                    "openvino", "npu", "OpenVINOExecutionProvider", precision);
+            case "qnn" -> new GenAIOliveTarget("qnn", "npu", "QNNExecutionProvider", precision);
+            case "dml" -> new GenAIOliveTarget("dml", "gpu", "DmlExecutionProvider", precision);
+            default -> cpuOliveTarget();
+        };
+    }
+
+    private static GenAIOliveTarget cpuOliveTarget() {
+        return new GenAIOliveTarget("cpu", "cpu", "CPUExecutionProvider", "int4");
+    }
+
     /** @return resolved ORT native directory after preload, or {@code null}. */
     static String ortNativeDir() {
         preloadNatives();

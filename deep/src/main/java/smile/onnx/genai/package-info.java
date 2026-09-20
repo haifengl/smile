@@ -30,7 +30,10 @@
  *   <li><b>Convenience</b> — {@link smile.onnx.genai.SimpleGenAI} for
  *       prompt → stream → text.</li>
  *   <li><b>Serve seam</b> — {@link smile.onnx.genai.GenAiChatModel} implements
- *       {@link smile.llm.LanguageModel} (wire from ChatService in a follow-up).</li>
+ *       {@link smile.llm.LanguageModel}; smile-serve uses it as OGA fallback
+ *       (allowlist + optional Olive) when Torch CUDA/builtin does not apply.</li>
+ *   <li><b>Allowlist / Olive target</b> — {@link smile.onnx.genai.GenAISupportedModels},
+ *       {@link smile.onnx.genai.GenAI#resolveOliveTarget()}.</li>
  * </ul>
  *
  * <h2>Quick start</h2>

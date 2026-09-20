@@ -146,14 +146,41 @@ try (var chat = GenAiChatModel.of("models/phi-3-mini-4k-instruct-cpu")) {
 `GenAiChatModel`:
 
 - `family()` → `"onnx/genai"`
-- Builds GenAI chat-template JSON from `smile.llm.Message[]`
-- Streams via `GenerationListener.onText`
+- Builds GenAI chat-template JSON from `smile.llm.Message[]` (including `tools`)
+- Streams via `GenerationListener.onText`; strips `<think>…</think>` and reports
+  `onThinkingTokens` while streaming
 - Honors `BooleanSupplier cancelRequested` between tokens
 - Multimodal: local image/audio file paths through `MultiModalProcessor`
+- Final content is sanitized with `AssistantTextSanitizer` (also via serve’s
+  `ToolCallPostProcessor` for structured `tool_calls`)
 
-**Not in this phase:** smile-serve `ChatService` wiring
-(`smile.chat.backend=onnx-genai`), and GenAI `OgaEngine` continuous batching
-(future `ModelExecutor`).
+### smile-serve OGA fallback
+
+`ChatService` keeps Torch for **CUDA + builtin Llama/Qwen**. Otherwise it tries
+ORT GenAI:
+
+1. Local / HF snapshot with `genai_config.json` → `GenAiChatModel.open` (no Olive)
+2. Else allowlisted plain HF (`GenAISupportedModels`) + Olive `auto-opt` → open
+3. Else chat stays unavailable (HTTP 503)
+
+| Artifact | Location | Override |
+|---|---|---|
+| HF checkpoints / GenAI-ready repos | Hub cache (`HF_HOME` / `HF_HUB_CACHE`) | same as `huggingface_hub` |
+| Olive-converted GenAI | `{SMILE_CACHE}/olive/...` | `smile.chat.oga.cache-dir` |
+
+Serve config (`smile.chat.oga.*`): `enabled`, `precision` (`auto` = FP8 on CUDA
+else int4), `cache-dir`, `olive-command`, optional `device` / `provider`.
+Olive `--device`/`--provider` follow `GenAI.resolveOliveTarget()` (same EP
+cascade as `Model.open`, honor `SMILE_ONNX_GENAI_PROVIDER`).
+
+**Tools I/O (Phase 1):** OpenAI `tools` reach the GenAI chat template; completions
+are post-processed to structured `tool_calls` (`JsonToolCallParser` /
+Qwen3 XML). No agent loop / tool execution.
+
+**Multimodal (Phase 2):** serve materializes data-URL / HTTP media to temp files
+(`GenAiMediaMaterializer`) before `GenAiChatModel` multimodal chat.
+
+Continuous batching / GenAI `OgaEngine` remains out of scope.
 
 ---
 

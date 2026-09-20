@@ -46,6 +46,8 @@ import smile.llm.engine.DecodeCudaGraph;
 import smile.llm.checkpoint.SafeTensorsLoaderThreads;
 import smile.llm.model.llama.*;
 import smile.llm.model.qwen.Qwen;
+import smile.onnx.genai.GenAISupportedModels;
+import smile.onnx.genai.GenAiChatModel;
 import smile.serve.model.LlmModelDetails;
 import smile.serve.model.ModelObject;
 import smile.serve.model.OpenAiModelContributor;
@@ -121,7 +123,8 @@ public class ChatService implements OpenAiModelContributor {
      * @param kvCache KV-cache storage configuration.
      */
     @Inject
-    public ChatService(ChatServiceConfig config, KvCacheConfig kvCache, MediaService mediaService) {
+    public ChatService(ChatServiceConfig config, KvCacheConfig kvCache, MediaService mediaService,
+                       OgaChatConfig oga) {
         this.mediaService = mediaService;
         this.speculative = config.speculative();
         this.speculativeTokens = config.speculativeTokens();
@@ -129,89 +132,29 @@ public class ChatService implements OpenAiModelContributor {
         this.modelId = publicModelId(modelSpec);
         try {
             long cudaDevices = CUDA.isAvailable() ? CUDA.deviceCount() : 0L;
-            if (cudaDevices < 1L) {
-                logger.warnf("No CUDA device available; skipping chat model load for '%s' "
-                                + "(chat completions will return HTTP 503)",
-                        modelSpec);
-                return;
-            }
-            logger.infof("CUDA devices detected: %d", cudaDevices);
-
-            String cacheDir = config.flashinferCacheDir()
-                    .filter(s -> !s.isBlank())
-                    .orElseGet(() -> Path.of(System.getProperty("user.home"),
-                            ".cache", "smile", "flashinfer").toString());
-            FlashInferArtifacts.resolveAndInstall(
-                    config.flashinferAotDir().orElse(null),
-                    cacheDir,
-                    config.flashinferDownload(),
-                    config.flashinferCudaTag());
-            AttentionBackend requested = AttentionBackend.parse(config.attentionBackend());
-            AttentionBackends.install(requested);
-            if (requested == AttentionBackend.FLASHINFER
-                    && AttentionBackends.current() != AttentionBackend.FLASHINFER
-                    && !config.flashinferAllowTorchFallback()) {
-                throw new IllegalStateException(
-                        "FlashInfer requested but unavailable and flashinfer-allow-torch-fallback=false");
-            }
-            logger.infof("Decode CUDA graph: %s",
-                    DecodeCudaGraph.enabled() ? "enabled" : "disabled");
-            double memFraction = config.memFractionStatic();
-            String kvDtype = kvCache.dtype().orElse(null);
-            int pageSize = kvCache.pageSize();
             Path localPath = Path.of(modelSpec);
-            if (Files.isDirectory(localPath)) {
-                model = loadFromLocal(localPath, config, memFraction, kvDtype, pageSize);
-                ownedBy = ModelObject.ownedByFromFamily(model.family());
-                source = "local";
-                createdAt = Instant.now().getEpochSecond();
-            } else if (looksLikeHuggingFaceRepoId(modelSpec)) {
-                model = loadFromHuggingFace(config, memFraction, kvDtype, pageSize);
-                ownedBy = ModelObject.ownedByFromHuggingFaceId(modelSpec);
-                source = "huggingface";
-                createdAt = Instant.now().getEpochSecond();
-            } else {
-                logger.warnf("Chat model '%s' is neither a local directory nor a Hugging Face "
-                        + "repository ID; chat completions will return HTTP 503", modelSpec);
-            }
-            if (model != null) {
-                applyPrefixReuse(model, kvCache.prefixReuse(), kvCache.hybridPrefixReplay());
-                applySpeculative(model, config.speculative(), config.speculativeTokens());
-                logQuantBackend(model, config, kvCache);
-                if (model instanceof smile.llm.engine.ModelExecutor exec) {
-                    int maxInFlight = Math.max(1, config.maxBatchSize());
-                    int maxDecode = config.maxDecodeBatch() > 0
-                            ? config.maxDecodeBatch() : maxInFlight;
-                    engine = new smile.llm.engine.InferenceEngine(
-                            exec,
-                            maxInFlight,
-                            maxDecode,
-                            Math.max(1, config.prefillTokenBudget()),
-                            config.admissionTimeoutMs(),
-                            Math.max(0L, config.admitCoalesceMs()));
-                    engine.setMaxSpeculativeConcurrency(Math.max(1, config.speculativeMaxConcurrency()));
-                    String sysProp = System.getProperty("smile.chat.max-batch-size");
-                    logger.infof("Chat continuous batching: model=%s family=%s maxSeqLen=%d "
-                                    + "maxInFlight=%d maxDecodeBatch=%d prefillTokenBudget=%d "
-                                    + "admissionTimeoutMs=%d admitCoalesceMs=%d speculativeMaxConcurrency=%d "
-                                    + "(config.maxBatchSize=%d, -Dsmile.chat.max-batch-size=%s)",
-                            modelId, model.family(), model.maxSeqLen(),
-                            engine.maxInFlight(), engine.maxDecodeBatch(),
-                            Math.max(1, config.prefillTokenBudget()),
-                            config.admissionTimeoutMs(),
-                            engine.admitCoalesceMs(),
-                            engine.maxSpeculativeConcurrency(),
-                            config.maxBatchSize(),
-                            sysProp == null ? "<unset>" : sysProp);
-                    if (engine.maxInFlight() <= 1) {
-                        logger.warnf("maxInFlight=1 — parallel requests run one at a time. "
-                                        + "Raise smile.chat.max-batch-size (e.g. JAVA_OPTS_APPEND "
-                                        + "-Dsmile.chat.max-batch-size=4 in Docker).");
-                    }
+            boolean localDir = Files.isDirectory(localPath);
+            boolean preferTorch = cudaDevices >= 1L
+                    && ((localDir && isBuiltinTorchCheckpoint(localPath))
+                    || (!localDir && looksLikeHuggingFaceRepoId(modelSpec)
+                    && isBuiltinTorchFamily(modelSpec)));
+
+            if (preferTorch) {
+                logger.infof("CUDA devices detected: %d; loading builtin Torch chat model '%s'",
+                        cudaDevices, modelSpec);
+                loadTorchModel(config, kvCache, modelSpec, localPath, localDir);
+            } else if (oga.enabled()) {
+                if (cudaDevices < 1L) {
+                    logger.infof("No CUDA (or non-builtin architecture); trying OGA fallback for '%s'",
+                            modelSpec);
                 } else {
-                    logger.warnf("Chat model %s does not implement ModelExecutor; "
-                            + "continuous batching unavailable", modelId);
+                    logger.infof("Non-builtin architecture with CUDA; trying OGA fallback for '%s'",
+                            modelSpec);
                 }
+                loadOgaModel(modelSpec, oga);
+            } else {
+                logger.warnf("Chat model '%s' not loaded (oga disabled and Torch path not selected)",
+                        modelSpec);
             }
         } catch (Exception ex) {
             // Keep the service up in an unavailable state so classic ML / ONNX
@@ -223,12 +166,172 @@ public class ChatService implements OpenAiModelContributor {
         }
     }
 
+    private void loadTorchModel(ChatServiceConfig config, KvCacheConfig kvCache,
+                                String modelSpec, Path localPath, boolean localDir)
+            throws Exception {
+        String cacheDir = config.flashinferCacheDir()
+                .filter(s -> !s.isBlank())
+                .orElseGet(() -> Path.of(System.getProperty("user.home"),
+                        ".cache", "smile", "flashinfer").toString());
+        FlashInferArtifacts.resolveAndInstall(
+                config.flashinferAotDir().orElse(null),
+                cacheDir,
+                config.flashinferDownload(),
+                config.flashinferCudaTag());
+        AttentionBackend requested = AttentionBackend.parse(config.attentionBackend());
+        AttentionBackends.install(requested);
+        if (requested == AttentionBackend.FLASHINFER
+                && AttentionBackends.current() != AttentionBackend.FLASHINFER
+                && !config.flashinferAllowTorchFallback()) {
+            throw new IllegalStateException(
+                    "FlashInfer requested but unavailable and flashinfer-allow-torch-fallback=false");
+        }
+        logger.infof("Decode CUDA graph: %s",
+                DecodeCudaGraph.enabled() ? "enabled" : "disabled");
+        double memFraction = config.memFractionStatic();
+        String kvDtype = kvCache.dtype().orElse(null);
+        int pageSize = kvCache.pageSize();
+        if (localDir) {
+            model = loadFromLocal(localPath, config, memFraction, kvDtype, pageSize);
+            ownedBy = ModelObject.ownedByFromFamily(model.family());
+            source = "local";
+            createdAt = Instant.now().getEpochSecond();
+        } else if (looksLikeHuggingFaceRepoId(modelSpec)) {
+            model = loadFromHuggingFace(config, memFraction, kvDtype, pageSize);
+            ownedBy = ModelObject.ownedByFromHuggingFaceId(modelSpec);
+            source = "huggingface";
+            createdAt = Instant.now().getEpochSecond();
+        } else {
+            logger.warnf("Chat model '%s' is neither a local directory nor a Hugging Face "
+                    + "repository ID; chat completions will return HTTP 503", modelSpec);
+        }
+        finishModelSetup(config, kvCache);
+    }
+
+    private void loadOgaModel(String modelSpec, OgaChatConfig oga) throws Exception {
+        Path genAiDir = GenAiModelPaths.resolveGenAiReady(modelSpec).orElse(null);
+        if (genAiDir == null) {
+            Path local = Path.of(modelSpec);
+            Path probe = Files.isDirectory(local) ? local : null;
+            if (!GenAISupportedModels.isChatConvertible(probe, modelSpec)) {
+                logger.warnf("Model '%s' is not on the onnx-genai chat allowlist; "
+                        + "chat completions will return HTTP 503", modelSpec);
+                return;
+            }
+            if (!OliveAutoOpt.isAvailable(oga.oliveCommand())) {
+                logger.warnf("Olive CLI unavailable; cannot convert '%s' for OGA "
+                        + "(chat completions will return HTTP 503)", modelSpec);
+                return;
+            }
+            genAiDir = OliveAutoOpt.resolveOrConvert(modelSpec, oga);
+            source = looksLikeHuggingFaceRepoId(modelSpec) ? "huggingface" : "local";
+        } else {
+            source = looksLikeHuggingFaceRepoId(modelSpec) ? "huggingface" : "local";
+        }
+        model = GenAiChatModel.open(genAiDir);
+        ownedBy = ModelObject.ownedByFromFamily(model.family());
+        createdAt = Instant.now().getEpochSecond();
+        logger.infof("Loaded GenAI chat model '%s' (continuous batching unavailable)",
+                modelId);
+        // No InferenceEngine for GenAI — serial LanguageModel.generate path.
+        finishModelSetupForGenAi();
+    }
+
+    private void finishModelSetup(ChatServiceConfig config, KvCacheConfig kvCache) {
+        if (model == null) {
+            return;
+        }
+        applyPrefixReuse(model, kvCache.prefixReuse(), kvCache.hybridPrefixReplay());
+        applySpeculative(model, config.speculative(), config.speculativeTokens());
+        logQuantBackend(model, config, kvCache);
+        if (model instanceof smile.llm.engine.ModelExecutor exec) {
+            int maxInFlight = Math.max(1, config.maxBatchSize());
+            int maxDecode = config.maxDecodeBatch() > 0
+                    ? config.maxDecodeBatch() : maxInFlight;
+            engine = new smile.llm.engine.InferenceEngine(
+                    exec,
+                    maxInFlight,
+                    maxDecode,
+                    Math.max(1, config.prefillTokenBudget()),
+                    config.admissionTimeoutMs(),
+                    Math.max(0L, config.admitCoalesceMs()));
+            engine.setMaxSpeculativeConcurrency(Math.max(1, config.speculativeMaxConcurrency()));
+            String sysProp = System.getProperty("smile.chat.max-batch-size");
+            logger.infof("Chat continuous batching: model=%s family=%s maxSeqLen=%d "
+                            + "maxInFlight=%d maxDecodeBatch=%d prefillTokenBudget=%d "
+                            + "admissionTimeoutMs=%d admitCoalesceMs=%d speculativeMaxConcurrency=%d "
+                            + "(config.maxBatchSize=%d, -Dsmile.chat.max-batch-size=%s)",
+                    modelId, model.family(), model.maxSeqLen(),
+                    engine.maxInFlight(), engine.maxDecodeBatch(),
+                    Math.max(1, config.prefillTokenBudget()),
+                    config.admissionTimeoutMs(),
+                    engine.admitCoalesceMs(),
+                    engine.maxSpeculativeConcurrency(),
+                    config.maxBatchSize(),
+                    sysProp == null ? "<unset>" : sysProp);
+            if (engine.maxInFlight() <= 1) {
+                logger.warnf("maxInFlight=1 — parallel requests run one at a time. "
+                                + "Raise smile.chat.max-batch-size (e.g. JAVA_OPTS_APPEND "
+                                + "-Dsmile.chat.max-batch-size=4 in Docker).");
+            }
+        } else {
+            logger.warnf("Chat model %s does not implement ModelExecutor; "
+                    + "continuous batching unavailable", modelId);
+        }
+    }
+
+    private void finishModelSetupForGenAi() {
+        // GenAI: no prefix reuse / speculative / InferenceEngine.
+    }
+
+    /**
+     * Returns {@code true} when the local checkpoint is a smile.llm.model
+     * Llama or Qwen layout suitable for the Torch path.
+     */
+    static boolean isBuiltinTorchCheckpoint(Path checkpointDir) throws IOException {
+        if (checkpointDir == null || !Files.isDirectory(checkpointDir)) {
+            return false;
+        }
+        if (isQwenCheckpoint(checkpointDir)) {
+            return true;
+        }
+        // Llama-family: HF config.json model_type llama, or classic tokenizer layout.
+        Path config = checkpointDir.resolve("config.json");
+        if (Files.isRegularFile(config)) {
+            String json = Files.readString(config);
+            if (json.contains("\"model_type\"") && json.toLowerCase().contains("llama")) {
+                return true;
+            }
+        }
+        return Files.isRegularFile(checkpointDir.resolve("tokenizer.model"))
+                || Files.isRegularFile(checkpointDir.resolve("original").resolve("tokenizer.model"))
+                || Files.isRegularFile(checkpointDir.resolve("tokenizer.json"));
+    }
+
+    /**
+     * Returns {@code true} when the HF id looks like a builtin Torch Llama/Qwen family.
+     */
+    static boolean isBuiltinTorchFamily(String modelSpec) {
+        return GenAISupportedModels.matchRepoId(modelSpec)
+                .map(f -> f == GenAISupportedModels.Family.LLAMA
+                        || f == GenAISupportedModels.Family.QWEN)
+                .orElse(false);
+    }
+
     @PreDestroy
     void shutdown() {
         if (engine != null) {
             engine.close();
             engine = null;
         }
+        if (model instanceof AutoCloseable closeable) {
+            try {
+                closeable.close();
+            } catch (Exception e) {
+                logger.warnf(e, "Failed to close chat model");
+            }
+        }
+        model = null;
     }
 
     /**
@@ -502,36 +605,54 @@ public class ChatService implements OpenAiModelContributor {
                 }
             }
         }
-        smile.llm.engine.GenerationRequest genReq;
-        int promptLen;
+        smile.llm.engine.GenerationRequest genReq = null;
+        int promptLen = 0;
         var throughput = new TokenThroughputLogger(aggregateThroughput);
         var listener = GenerationListeners.compose(
                 throughput,
                 publisher != null ? GenerationListeners.toPublisher(publisher) : null);
         try {
             if (hasMedia) {
-                if (!(model instanceof Qwen qwen) || !qwen.isMultimodal()) {
+                if (model instanceof GenAiChatModel) {
+                    // Serial GenAI multimodal path materializes files below.
+                } else if (!(model instanceof Qwen qwen) || !qwen.isMultimodal()) {
                     throw new IllegalArgumentException(
-                            "Multimodal content requires a Qwen3.8 vision checkpoint");
+                            "Multimodal content requires a Qwen3.8 vision checkpoint "
+                                    + "or a GenAI multimodal model");
+                } else {
+                    var mm = qwen.processMultimodal(messages);
+                    int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), mm.inputIds().length);
+                    promptLen = mm.inputIds().length;
+                    genReq = smile.llm.engine.GenerationRequest.ofMultimodal(
+                            mm, maxGenLen, request.temperature, request.topP,
+                            request.logprobs, request.seed, listener, chatOptions,
+                            speculative, speculativeTokens);
                 }
-                var mm = qwen.processMultimodal(messages);
-                int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), mm.inputIds().length);
-                promptLen = mm.inputIds().length;
-                genReq = smile.llm.engine.GenerationRequest.ofMultimodal(
-                        mm, maxGenLen, request.temperature, request.topP,
-                        request.logprobs, request.seed, listener, chatOptions,
-                        speculative, speculativeTokens);
+            }
+            if (!hasMedia || !(model instanceof GenAiChatModel)) {
+                if (!hasMedia) {
+                    int[] prompt = model.encodeChat(messages, chatOptions);
+                    int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
+                    promptLen = prompt.length;
+                    genReq = smile.llm.engine.GenerationRequest.ofTokens(
+                            prompt, maxGenLen, request.temperature, request.topP,
+                            request.logprobs, request.seed, listener, chatOptions,
+                            speculative, speculativeTokens);
+                }
             } else {
-                int[] prompt = model.encodeChat(messages, chatOptions);
-                int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), prompt.length);
-                promptLen = prompt.length;
+                // GenAI multimodal: placeholder request for max tokens / listener only.
+                int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), 0);
+                promptLen = 0;
                 genReq = smile.llm.engine.GenerationRequest.ofTokens(
-                        prompt, maxGenLen, request.temperature, request.topP,
+                        new int[0], maxGenLen, request.temperature, request.topP,
                         request.logprobs, request.seed, listener, chatOptions,
                         speculative, speculativeTokens);
             }
         } catch (java.io.IOException e) {
             throw new IllegalArgumentException("Failed to process multimodal request", e);
+        }
+        if (genReq == null) {
+            throw new IllegalStateException("Failed to build generation request");
         }
         if (engine != null) {
             var handle = engine.submit(genReq, h -> throughput.setRequestId(h.requestId()));
@@ -556,8 +677,22 @@ public class ChatService implements OpenAiModelContributor {
         throughput.setRequestId(handle.requestId());
         try {
             if (hasMedia) {
+                if (model instanceof GenAiChatModel) {
+                    Message[] materialized = GenAiMediaMaterializer.materialize(messages);
+                    ChatCompletion result = model.chat(materialized, genReq.maxGenLen(),
+                            request.temperature, request.topP, request.logprobs, request.seed,
+                            listener, handle::isAborted);
+                    result = smile.llm.tool.ToolCallPostProcessor.apply(result, chatOptions);
+                    if (!handle.isAborted()) {
+                        future.complete(result);
+                    } else {
+                        future.completeExceptionally(
+                                new java.util.concurrent.CancellationException("aborted"));
+                    }
+                    return handle;
+                }
                 throw new UnsupportedOperationException(
-                        "Multimodal chat requires InferenceEngine (continuous batching)");
+                        "Multimodal chat requires a GenAI vision model or Qwen VL + InferenceEngine");
             }
             ChatCompletion result = model.generate(genReq.promptTokens(), genReq.maxGenLen(),
                     request.temperature, request.topP, request.logprobs, request.seed,
