@@ -364,15 +364,15 @@ public class SmileStudio extends JFrame implements SearchListener {
      * Sets the icon images for the frame.
      */
     private void setFrameIcon() {
-        try (InputStream input = SmileStudio.class.getResourceAsStream("images/robot.png")) {
+        try (InputStream input = SmileStudio.class.getResourceAsStream("images/smile.png")) {
             if (input == null) {
-                logger.error("Resource not found: images/robot.png");
+                logger.error("Resource not found: images/smile.png");
                 return;
             }
 
             BufferedImage icon = ImageIO.read(input);
             if (icon == null) {
-                logger.error("Could not decode image: images/robot.png");
+                logger.error("Could not decode image: images/smile.png");
                 return;
             }
             int[] sizes = {16, 24, 32, 48, 64, 128, 256};
@@ -386,7 +386,7 @@ public class SmileStudio extends JFrame implements SearchListener {
             }
             setIconImages(icons);
         } catch (IOException e) {
-            logger.error("Error loading image robot.png from resource: {}", e.getMessage());
+            logger.error("Error loading image smile.png from resource: {}", e.getMessage());
         }
     }
 

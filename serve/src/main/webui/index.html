@@ -6,9 +6,8 @@
     <title>SMILE Serve</title>
     <link rel="icon" href="/favicon.ico" />
     <!--
-      Critical styles: logo.svg is ~1400×1643. Before Vite CSS arrives the raw
-      <img> paints at intrinsic size. Constrain + center for first paint; infer
-      index.css overrides this to the compact sticky header.
+      Critical styles: constrain the header logo before Vite CSS arrives so
+      first paint stays centered and within ~1/3 of the viewport.
     -->
     <style>
       html, body { margin: 0; }
@@ -56,7 +55,7 @@
   </head>
   <body>
     <header class="site-header">
-      <img src="/logo.svg" alt="SMILE" class="header-logo" width="48" height="56">
+      <img src="/smile.png" alt="SMILE" class="header-logo" width="48" height="48">
       <h1>SMILE &mdash; Statistical Machine Intelligence and Learning Engine</h1>
     </header>
     <div id="root"></div>
