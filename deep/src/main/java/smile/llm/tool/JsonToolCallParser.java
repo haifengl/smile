@@ -115,17 +115,17 @@ public final class JsonToolCallParser implements ToolCallParser {
         String args = null;
         if (node.has("arguments")) {
             JsonNode a = node.get("arguments");
-            args = a.isTextual() ? a.asText() : a.toString();
+            args = a.isString() ? a.asString() : a.toString();
         } else if (node.has("parameters")) {
             JsonNode a = node.get("parameters");
-            args = a.isTextual() ? a.asText() : a.toString();
+            args = a.isString() ? a.asString() : a.toString();
         }
         if ((name == null || name.isBlank()) && node.has("function")) {
             JsonNode fn = node.get("function");
             name = text(fn, "name");
             if (fn.has("arguments")) {
                 JsonNode a = fn.get("arguments");
-                args = a.isTextual() ? a.asText() : a.toString();
+                args = a.isString() ? a.asString() : a.toString();
             }
         }
         if (name == null || name.isBlank()) {
@@ -145,6 +145,6 @@ public final class JsonToolCallParser implements ToolCallParser {
         if (node == null || !node.has(field) || node.get(field).isNull()) {
             return null;
         }
-        return node.get(field).asText();
+        return node.get(field).asString();
     }
 }
