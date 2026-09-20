@@ -22,14 +22,15 @@ import smile.torch.Native;
  * Optional CUDA graph capture for the multi-token MTP window-verify forward
  * ({@code S = numDrafts + 1}), independent of {@link DecodeCudaGraph}.
  *
- * <p>Enable buffer/kernel wiring with environment variable
- * {@code SMILE_VERIFY_CUDA_GRAPH=1}. Actual graph <em>capture</em> is a
- * separate, additional gate ({@link #captureEnabled()}) — Stage 4 of the
- * verify-CUDA-graph plan wires the new stable-buffer / graph-capturable-kernel
- * path in shadow-run mode only (every call still runs eager, through the new
- * kernel, but {@code beginCapture} is never reached); Stage 5 flips
- * {@link #captureEnabled()} once Stage 4's numerics have been validated
- * against the existing eager path on real hardware.
+ * <p>Enable with environment variable {@code SMILE_VERIFY_CUDA_GRAPH=1} —
+ * this both wires the new stable-buffer / graph-capturable-kernel path and
+ * enables real capture ({@link #captureEnabled()}), mirroring
+ * {@code SMILE_DECODE_CUDA_GRAPH}'s single-flag design. Stage 4 of the
+ * verify-CUDA-graph plan validated the buffer/kernel path in a shadow-run
+ * mode with capture hard-disabled (a now-removed compile-time constant, not a
+ * runtime flag); Stage 5 enables real capture once Stage 4's numerics were
+ * validated against the existing eager path on real hardware (byte-identical
+ * output, no perf regression).
  *
  * <p>Bucketed by {@code (batch, windowLen, numPages)}, mirroring
  * {@link DecodeCudaGraph}'s {@code (batch, numPages)} bucketing plus the
@@ -40,13 +41,6 @@ import smile.torch.Native;
 public final class VerifyCudaGraph {
     private static final boolean ENABLED = "1".equals(System.getenv("SMILE_VERIFY_CUDA_GRAPH"));
     private static final boolean AVAILABLE = Native.cudaGraphAvailable();
-    /**
-     * Stage 4: capture is force-disabled regardless of {@link #ENABLED}. Only
-     * the buffer/kernel plumbing runs (shadow-run mode); {@code beginCapture}
-     * must never be called while this is {@code false}. Stage 5 flips this to
-     * a real gate once Stage 4's shadow-run numerics are validated.
-     */
-    private static final boolean CAPTURE_ENABLED = false;
     /** Set after a capture failure so we stop retrying every few verify steps. */
     private static volatile boolean captureDisabled;
 
@@ -63,14 +57,14 @@ public final class VerifyCudaGraph {
     }
 
     /**
-     * Returns whether real graph capture may be attempted. {@code false}
-     * during Stage 4 shadow-run; {@link #enabled} may still be {@code true}
-     * so the new buffer/kernel path runs eagerly.
+     * Returns whether real graph capture may be attempted (Stage 5: same gate
+     * as {@link #enabled()} — a single flag, mirroring {@code SMILE_DECODE_CUDA_GRAPH}).
      *
-     * @return {@code true} once Stage 5 enables real capture.
+     * @return {@code true} when verify CUDA graphs are enabled and capture has
+     *         not been disabled after a prior failure.
      */
     public static boolean captureEnabled() {
-        return CAPTURE_ENABLED && !captureDisabled;
+        return enabled();
     }
 
     /**

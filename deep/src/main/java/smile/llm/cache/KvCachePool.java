@@ -1488,8 +1488,13 @@ public class KvCachePool implements AutoCloseable {
      * positions {@code >= sealedLen} (required after speculative reject).
      *
      * @param sealedLen inclusive committed token count ({@code [0, sealedLen)}).
+     * @return {@code true} when the existing CSR was bumped in place (same
+     *         tensor addresses survive); {@code false} when it was rebuilt
+     *         (a genuine page-boundary crossing, or a ragged step) — callers
+     *         holding a captured CUDA graph keyed to the old CSR addresses
+     *         must invalidate it when this returns {@code false}.
      */
-    public void sealLength(int sealedLen) {
+    public boolean sealLength(int sealedLen) {
         ensureBound();
         if (sealedLen < 0) {
             throw new IllegalArgumentException("sealedLen must be >= 0");
@@ -1509,13 +1514,14 @@ public class KvCachePool implements AutoCloseable {
         if (sealedLen > 0 && stepFlashInferMeta != null && stepFlashInferLengths == null
                 && requestSlots != null
                 && bumpUniformFlashInferMetadata(sealedLen, requestSlots.length)) {
-            return;
+            return true;
         }
         clearStepFlashInferMetadata();
         if (sealedLen > 0) {
             stepFlashInferMeta = buildFlashInferMetadata(sealedLen);
             stepFlashInferUniformLen = sealedLen;
         }
+        return false;
     }
 
     /**
@@ -1566,8 +1572,10 @@ public class KvCachePool implements AutoCloseable {
      *
      * @param sealedLen  committed inclusive length after accept/reject.
      * @param writtenEnd exclusive end of the speculative window write.
+     * @return {@code true} when the existing CSR was bumped in place (see
+     *         {@link #sealLength}); {@code false} when it was rebuilt.
      */
-    public void truncateTo(int sealedLen, int writtenEnd) {
+    public boolean truncateTo(int sealedLen, int writtenEnd) {
         if (writtenEnd < sealedLen) {
             throw new IllegalArgumentException(
                     "writtenEnd must be >= sealedLen");
@@ -1575,7 +1583,7 @@ public class KvCachePool implements AutoCloseable {
         if (writtenEnd > sealedLen) {
             invalidateRange(sealedLen, writtenEnd);
         }
-        sealLength(sealedLen);
+        return sealLength(sealedLen);
     }
 
     /**
