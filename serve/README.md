@@ -594,8 +594,9 @@ chat endpoints returns **HTTP 503 Service Unavailable**.
 
 **Backend selection:** with CUDA and a builtin Llama/Qwen checkpoint, serve uses
 the Torch path + continuous batching. Otherwise it falls back to ONNX Runtime
-GenAI (`GenAiChatModel`): GenAI-ready trees (`genai_config.json`) open directly;
-plain Transformers checkpoints on the onnx-genai allowlist may be converted with
+GenAI (`GenAiChatModel`): GenAI-ready trees (`genai_config.json` at the repo root
+or under provider folders such as `cuda/cuda-int4-…/`) open directly; plain
+Transformers checkpoints on the onnx-genai allowlist may be converted with
 Olive into `{SMILE_CACHE}/olive` (see `smile.chat.oga.*`). Tools input / structured
 `tool_calls` output work on the serial GenAI path; multimodal GenAI materializes
 media to temp files. See [deep/ONNX_GENAI.md](../deep/ONNX_GENAI.md).

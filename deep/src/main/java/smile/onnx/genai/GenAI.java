@@ -120,11 +120,14 @@ public final class GenAI {
     /**
      * Returns whether candidate {@code id} is known to support FP8 Olive builds.
      *
+     * <p>Olive {@code optimize} currently does not accept {@code fp8} in its
+     * CLI precision enum; keep this {@code false} until that changes.
+     *
      * @param candidateId GenAI cascade id (e.g. {@code cuda}).
      * @return {@code true} when auto precision should try {@code fp8} first.
      */
     public static boolean supportsFp8(String candidateId) {
-        return candidateId != null && "cuda".equalsIgnoreCase(candidateId.trim());
+        return false;
     }
 
     /**

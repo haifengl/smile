@@ -159,9 +159,15 @@ try (var chat = GenAiChatModel.of("models/phi-3-mini-4k-instruct-cpu")) {
 `ChatService` keeps Torch for **CUDA + builtin Llama/Qwen**. Otherwise it tries
 ORT GenAI:
 
-1. Local / HF snapshot with `genai_config.json` → `GenAiChatModel.open` (no Olive)
+1. Local / HF snapshot with `genai_config.json` (repo root **or** nested under
+   provider folders such as `cuda/cuda-int4-rtn-block-32/`, as in
+   `microsoft/Phi-3-mini-4k-instruct-onnx`) → `GenAiChatModel.open` (no Olive).
+   Nested packages are picked to match `GenAI.resolveOliveTarget()` (CUDA / DML / CPU).
 2. Else allowlisted plain HF (`GenAISupportedModels`) + Olive `optimize` → open
 3. Else chat stays unavailable (HTTP 503)
+
+Prebuilt ONNX GenAI Hub packages (nested `genai_config.json`, no
+`pytorch_model.bin` / `model.safetensors`) are never sent through Olive.
 
 | Artifact | Location | Override |
 |---|---|---|
@@ -174,7 +180,23 @@ default; Olive `optimize` clamps unsupported values such as `fp8` → `int4`),
 Olive `optimize --device`/`--provider` follow `GenAI.resolveOliveTarget()` (same EP
 cascade as `Model.open`, honor `SMILE_ONNX_GENAI_PROVIDER`); DirectML is remapped
 to CPU for the Olive CLI because `optimize` does not list `DmlExecutionProvider`.
-Conversion uses `--exporter model_builder` (GenAI-ready output).
+If Olive fails while registering an unused ORT EP (common on Windows when the
+CUDA wheel ships `onnxruntime_providers_tensorrt.dll` but TensorRT/`nvinfer` is
+not installed), smile-serve launches Olive through a Python bootstrap that only
+registers EPs Olive explicitly requested, and may still retry with
+`CPUExecutionProvider`. Override the interpreter with `SMILE_OLIVE_PYTHON`.
+Conversion uses `--exporter model_builder` (GenAI-ready output). Runtime load
+still uses `GenAiChatModel.open` / the GenAI EP cascade.
+
+Olive’s Python env needs a full toolchain for `optimize` (especially int4/GPTQ
+calibration). Typical install:
+
+```bash
+pip install "olive-ai[gpu]" datasets
+# or CPU: pip install olive-ai datasets
+```
+
+Missing `datasets` fails mid-run with `ModuleNotFoundError: No module named 'datasets'`.
 
 **Tools I/O (Phase 1):** OpenAI `tools` reach the GenAI chat template; completions
 are post-processed to structured `tool_calls` (`JsonToolCallParser` /

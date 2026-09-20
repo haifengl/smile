@@ -211,6 +211,15 @@ public class ChatService implements OpenAiModelContributor {
     private void loadOgaModel(String modelSpec, OgaChatConfig oga) throws Exception {
         Path genAiDir = GenAiModelPaths.resolveGenAiReady(modelSpec).orElse(null);
         if (genAiDir == null) {
+            // Prebuilt ONNX GenAI Hub packages (nested genai_config.json, no PyTorch
+            // weights) must not be sent through Olive — conversion always fails.
+            if (looksLikeHuggingFaceRepoId(modelSpec)
+                    && !GenAiModelPaths.listHfGenAiConfigPaths(modelSpec).isEmpty()) {
+                logger.warnf("Model '%s' publishes nested GenAI packages but none could be "
+                        + "materialized for the current EP; chat completions will return HTTP 503",
+                        modelSpec);
+                return;
+            }
             Path local = Path.of(modelSpec);
             Path probe = Files.isDirectory(local) ? local : null;
             if (!GenAISupportedModels.isChatConvertible(probe, modelSpec)) {

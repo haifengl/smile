@@ -36,7 +36,7 @@ public class GenAIOliveTargetTest {
 
     @Test
     public void mapsCascadeIds() {
-        assertEquals(new GenAIOliveTarget("cuda", "gpu", "CUDAExecutionProvider", "fp8"),
+        assertEquals(new GenAIOliveTarget("cuda", "gpu", "CUDAExecutionProvider", "int4"),
                 GenAI.toOliveTarget("cuda"));
         assertEquals(new GenAIOliveTarget("dml", "gpu", "DmlExecutionProvider", "int4"),
                 GenAI.toOliveTarget("dml"));
@@ -48,7 +48,7 @@ public class GenAIOliveTargetTest {
 
     @Test
     public void supportsFp8OnlyCuda() {
-        assertTrue(GenAI.supportsFp8("cuda"));
+        assertFalse(GenAI.supportsFp8("cuda"));
         assertFalse(GenAI.supportsFp8("dml"));
         assertFalse(GenAI.supportsFp8("cpu"));
     }
