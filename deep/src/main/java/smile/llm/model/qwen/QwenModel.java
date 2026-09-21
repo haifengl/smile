@@ -1267,6 +1267,7 @@ public class QwenModel extends LayerBlock {
 
             if (verifyGraphSession.canReplay(batch, windowLen, numPages)) {
                 verifyGraphSession.replay(tpRank);
+                VerifyCudaGraph.markPersistentLogits(true);
                 return verifyGraphLogitsBuf;
             }
 
@@ -1296,11 +1297,13 @@ public class QwenModel extends LayerBlock {
                     }
                     if (verifyGraphSession.canReplay(batch, windowLen, numPages)) {
                         verifyGraphSession.logCapture(tpRank);
+                        VerifyCudaGraph.markPersistentLogits(true);
                         return verifyGraphLogitsBuf;
                     }
                     logger.warn("tpRank={}: verify CUDA graph capture did not produce a "
                             + "replayable graph", tpRank);
                     VerifyCudaGraph.disableCapture("capture incomplete");
+                    VerifyCudaGraph.markPersistentLogits(false);
                     verifyGraphSession.close();
                     verifyGraphSession = null;
                     verifyGraphLogitsOut = null;
@@ -1308,6 +1311,7 @@ public class QwenModel extends LayerBlock {
                     logger.warn("tpRank={}: verify CUDA graph capture failed, falling back "
                             + "to eager: {}", tpRank, e.getMessage());
                     VerifyCudaGraph.disableCapture(e.getMessage());
+                    VerifyCudaGraph.markPersistentLogits(false);
                     if (verifyGraphSession != null) {
                         verifyGraphSession.close();
                         verifyGraphSession = null;

@@ -16,6 +16,7 @@
  */
 package smile.llm.engine;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import smile.torch.Native;
 
 /**
@@ -43,6 +44,7 @@ public final class VerifyCudaGraph {
     private static final boolean AVAILABLE = Native.cudaGraphAvailable();
     /** Set after a capture failure so we stop retrying every few verify steps. */
     private static volatile boolean captureDisabled;
+    private static final AtomicBoolean PERSISTENT_LOGITS = new AtomicBoolean(false);
 
     private VerifyCudaGraph() {}
 
@@ -106,5 +108,29 @@ public final class VerifyCudaGraph {
      */
     public static int warmupSteps() {
         return 2;
+    }
+
+    /**
+     * Marks that the current verify step returned logits backed by a captured
+     * CUDA graph output buffer (must not be closed by the caller) — mirrors
+     * {@link DecodeCudaGraph#markPersistentLogits(boolean)}. A shared
+     * {@link AtomicBoolean}, not thread-local: TP fan-out sets this from each
+     * rank's worker thread, and the join point (after every rank's future
+     * completes) reads it back on the calling thread.
+     *
+     * @param persistent {@code true} when logits outlive the caller's own scope.
+     */
+    public static void markPersistentLogits(boolean persistent) {
+        PERSISTENT_LOGITS.set(persistent);
+    }
+
+    /**
+     * Returns whether verify logits outlive the caller's own scope (i.e. are
+     * QwenModel's own reused capture buffer, not a throwaway eager tensor).
+     *
+     * @return {@code true} when the caller must not close the returned tensor.
+     */
+    public static boolean persistentLogits() {
+        return PERSISTENT_LOGITS.get();
     }
 }
