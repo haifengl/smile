@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 /**
  * Hybrid AOT resolution without network download.
@@ -42,6 +43,16 @@ public class FlashInferArtifactsTest {
 
     @Test
     public void testGivenMissingDirWhenResolveThenEmpty() {
+        // resolve() falls through an explicitly-missing dir to
+        // FlashInferArtifacts.BUNDLED_AOT_DIR ("/opt/flashinfer/aot") before
+        // ever looking at env vars or a cache dir — deliberate production
+        // behavior (a bundled deployment must work even with a wrong/missing
+        // explicit config), not a bug. Dockerfile.gpu-test bundles a real AOT
+        // directory at exactly that path, so this test's premise (no fallback
+        // succeeds) only holds when it doesn't exist on the running machine.
+        assumeFalse(FlashInferArtifacts.isUsableAot(Path.of(FlashInferArtifacts.BUNDLED_AOT_DIR)),
+                "skipping: " + FlashInferArtifacts.BUNDLED_AOT_DIR + " is a usable AOT bundle "
+                        + "on this machine, so resolve() is expected to fall through to it");
         assertTrue(FlashInferArtifacts.resolve(
                 tmp.resolve("nope").toString(), null, false, "cu132").isEmpty());
     }
