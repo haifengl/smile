@@ -22,8 +22,11 @@
 #   docker run --rm --gpus all smile-gpu-test
 #
 # Runs only the two Stage 1/2 test classes by default (fast, focused go/no-go
-# gate). Override the Gradle test filter to run the full deep module suite:
-#   docker run --rm --gpus all smile-gpu-test ./gradlew :deep:test --no-daemon
+# gate) when invoked directly like this. bin/gpu-test-and-build.sh — the
+# normal entry point — overrides this CMD to run the full deep module suite
+# (./gradlew :deep:test) and copies JUnit results to a mounted /model volume;
+# see that script for details. To do the same manually:
+#   docker run --rm --gpus all -v /model:/model smile-gpu-test ./gradlew :deep:test --no-daemon
 ###
 ARG CUDA_VERSION=13.2.0
 ARG TORCH_VERSION=2.13.0
