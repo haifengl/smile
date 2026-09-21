@@ -1297,6 +1297,13 @@ public class QwenModel extends LayerBlock {
                     }
                     if (verifyGraphSession.canReplay(batch, windowLen, numPages)) {
                         verifyGraphSession.logCapture(tpRank);
+                        // capture_end() only instantiates the graph; it never executes the
+                        // recorded operations (confirmed in smile_cuda_graph.cpp: "capture_end()
+                        // instantiates; do not call instantiate()"). Without this replay,
+                        // verifyGraphLogitsBuf still held whatever was there BEFORE this round
+                        // (stale/garbage) — the capture round must explicitly replay once to
+                        // actually produce this round's real result.
+                        verifyGraphSession.replay(tpRank);
                         VerifyCudaGraph.markPersistentLogits(true);
                         return verifyGraphLogitsBuf;
                     }
