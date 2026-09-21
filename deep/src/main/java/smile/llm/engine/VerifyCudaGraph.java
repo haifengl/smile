@@ -43,20 +43,6 @@ public final class VerifyCudaGraph {
     private static final boolean AVAILABLE = Native.cudaGraphAvailable();
     /** Set after a capture failure so we stop retrying every few verify steps. */
     private static volatile boolean captureDisabled;
-    /**
-     * Process-wide lock serializing the {@code beginCapture}/forward/{@code endCapture}
-     * region across TP ranks (each rank runs on its own thread, targeting its own
-     * device). Real-hardware testing found that letting all ranks capture
-     * concurrently — which happens routinely here because every rank reaches the
-     * same {@code (batch, windowLen, numPages)} bucket transition on the same
-     * round, unlike decode's own graph where per-rank timing drift makes
-     * simultaneous capture unlikely — produces a captured graph whose replay
-     * reads back a <em>different rank's</em> device/tensor (observed as a clean
-     * pairwise device swap across 4 ranks, e.g. rank 0's replay returning rank
-     * 3's GPU). Capture happens once per bucket, so serializing only this region
-     * (never replay, never the eager path) costs nothing in steady state.
-     */
-    private static final Object CAPTURE_LOCK = new Object();
 
     private VerifyCudaGraph() {}
 
@@ -120,16 +106,5 @@ public final class VerifyCudaGraph {
      */
     public static int warmupSteps() {
         return 2;
-    }
-
-    /**
-     * Lock guarding the capture region (see {@link #CAPTURE_LOCK}'s javadoc).
-     * Callers must hold this for the entire {@code beginCapture}/forward/
-     * {@code endCapture} sequence, not just the native calls.
-     *
-     * @return the process-wide capture-serialization lock.
-     */
-    public static Object captureLock() {
-        return CAPTURE_LOCK;
     }
 }
