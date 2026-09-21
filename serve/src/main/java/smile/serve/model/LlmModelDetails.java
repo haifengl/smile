@@ -16,6 +16,7 @@ import smile.llm.model.llama.Llama;
 import smile.llm.model.llama.LlamaModelArgs;
 import smile.llm.model.qwen.Qwen;
 import smile.llm.model.qwen.QwenModelArgs;
+import smile.onnx.genai.GenAiChatModel;
 
 /**
  * Chat LLM details returned by {@code GET /models/{id}}.
@@ -64,7 +65,30 @@ public record LlmModelDetails(
         if (model instanceof Qwen qwen) {
             return of(qwen, source);
         }
+        if (model instanceof GenAiChatModel genai) {
+            return of(genai, source);
+        }
         throw new IllegalArgumentException("Unsupported model type: " + model.getClass().getName());
+    }
+
+    /**
+     * Builds details from a loaded {@link GenAiChatModel} (ORT GenAI).
+     *
+     * <p>GenAI packages do not expose layer dims the same way as Torch
+     * checkpoints; only family / max sequence length / source are filled.
+     */
+    public static LlmModelDetails of(GenAiChatModel genai, String source) {
+        return new LlmModelDetails(
+                genai.family(),
+                source,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                genai.maxSeqLen());
     }
 
     /**

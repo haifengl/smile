@@ -28,6 +28,7 @@ import smile.llm.FinishReason;
  */
 public final class ToolCallPostProcessor {
     private static final ToolCallParser QWEN3_XML = new Qwen3XmlToolCallParser();
+    private static final ToolCallParser JSON = new JsonToolCallParser();
 
     private ToolCallPostProcessor() {}
 
@@ -64,14 +65,15 @@ public final class ToolCallPostProcessor {
         }
 
         boolean lengthLimited = completion.reason() == FinishReason.length;
-        ParseResult parsed = QWEN3_XML.parse(completion.content(), lengthLimited);
+        String raw = completion.content() == null ? "" : completion.content();
+        ParseResult parsed = parseToolCalls(raw, lengthLimited);
         if (parsed.hasToolCalls()) {
             // Visible content is only the optional prefix before tool calls
             // (already think-stripped by the parser); never return raw XML.
             String visible = AssistantTextSanitizer.sanitize(parsed.content());
             return new ChatCompletion(
                     completion.model(),
-                    visible,
+                    visible == null ? "" : visible,
                     completion.promptTokens(),
                     completion.completionTokens(),
                     FinishReason.tool_calls,
@@ -92,5 +94,22 @@ public final class ToolCallPostProcessor {
                 reason,
                 completion.logprobs(),
                 null);
+    }
+
+    private static ParseResult parseToolCalls(String raw, boolean lengthLimited) {
+        if (raw.contains("<function=")) {
+            ParseResult qwen = QWEN3_XML.parse(raw, lengthLimited);
+            if (qwen.hasToolCalls()) {
+                return qwen;
+            }
+        }
+        ParseResult json = JSON.parse(raw, lengthLimited);
+        if (json.hasToolCalls()) {
+            return json;
+        }
+        if (raw.contains("<tool_call>")) {
+            return QWEN3_XML.parse(raw, lengthLimited);
+        }
+        return json;
     }
 }

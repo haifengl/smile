@@ -42,7 +42,7 @@ absolute path before FFM lookup, which also avoids an older
 | `ONNXRUNTIME_NATIVE_PATH` | Directory containing `onnxruntime` (e.g. pip `capi`) |
 | `ONNXRUNTIME_GENAI_NATIVE_PATH` | Directory containing `onnxruntime-genai` |
 | `SMILE_ONNX_GENAI_MODEL` | GenAI model directory (`genai_config.json`); needed for native model tests |
-| `SMILE_ONNX_GENAI_PROVIDER` | `auto` (default: try CUDA, fall back to CPU), `cuda` (require GPU), or `cpu` |
+| `SMILE_ONNX_GENAI_PROVIDER` | `auto` (default cascade), `cuda`, `npu`, `ryzenai`/`hybrid`, `openvino`, `qnn`, `dml`/`directml`, or `cpu` |
 
 ```powershell
 $ort = "$env:LOCALAPPDATA\Python\pythoncore-3.14-64\Lib\site-packages\onnxruntime\capi"
@@ -55,12 +55,13 @@ $env:SMILE_ONNX_GENAI_MODEL = $model
 # optional: $env:SMILE_ONNX_GENAI_PROVIDER = "auto"   # or "cuda" / "cpu"
 ```
 
-`Model.open` / `SimpleGenAI.open` / `GenAiChatModel.open` try the CUDA EP first when
-preference is `auto` and CUDA GenAI/ORT natives are present
-(`onnxruntime-genai-cuda` / `onnxruntime_providers_cuda`), and fall back to the
-default CPU providers if CUDA is missing or fails to initialize. Machines with
-only the CPU GenAI wheel never attempt CUDA. `Model.of` always uses
-`genai_config.json` providers unchanged.
+`Model.open` / `SimpleGenAI.open` / `GenAiChatModel.open` run an accelerator
+cascade when preference is `auto`: **CUDA → RyzenAI → OpenVINO NPU → QNN →
+DirectML (Windows) → CPU**. Each step is attempted only when matching EP natives
+are present; Java failures fall through. On non-Windows, DirectML is skipped
+automatically. Classical **Vitis AI** (general ONNX on AMD NPU) is configured on
+`smile.onnx.SessionOptions`, not via this GenAI preference.
+`Model.of` always uses `genai_config.json` providers unchanged.
 
 Check availability:
 
@@ -145,33 +146,107 @@ try (var chat = GenAiChatModel.of("models/phi-3-mini-4k-instruct-cpu")) {
 `GenAiChatModel`:
 
 - `family()` → `"onnx/genai"`
-- Builds GenAI chat-template JSON from `smile.llm.Message[]`
-- Streams via `GenerationListener.onText`
+- Builds GenAI chat-template JSON from `smile.llm.Message[]` (including `tools`)
+- Streams via `GenerationListener.onText`; strips `<think>…</think>` and reports
+  `onThinkingTokens` while streaming
 - Honors `BooleanSupplier cancelRequested` between tokens
 - Multimodal: local image/audio file paths through `MultiModalProcessor`
+- Final content is sanitized with `AssistantTextSanitizer` (also via serve’s
+  `ToolCallPostProcessor` for structured `tool_calls`)
 
-**Not in this phase:** smile-serve `ChatService` wiring
-(`smile.chat.backend=onnx-genai`), and GenAI `OgaEngine` continuous batching
-(future `ModelExecutor`).
+### smile-serve OGA fallback
+
+`ChatService` keeps Torch for **CUDA + builtin Llama/Qwen**. Otherwise it tries
+ORT GenAI:
+
+1. Local / HF snapshot with `genai_config.json` (repo root **or** nested under
+   provider folders such as `cuda/cuda-int4-rtn-block-32/`, as in
+   `microsoft/Phi-3-mini-4k-instruct-onnx`) → `GenAiChatModel.open`.
+   Nested packages are picked to match `GenAI.resolveOliveTarget()` (CUDA / DML / CPU).
+2. Else a prior Olive cache hit under `{SMILE_CACHE}/olive/...` → open
+3. Else chat stays unavailable (HTTP 503)
+
+**Serve does not run Olive at startup.** `olive optimize` (int4/GPTQ) can take
+hours; convert offline with `smile.chat.Olive.resolveOrConvert` / the
+`olive_cli.py` bootstrap, then restart serve (same HF id finds the cache, or
+point `smile.chat.model` at the GenAI output directory).
+
+| Artifact | Location | Override |
+|---|---|---|
+| HF checkpoints / GenAI-ready repos | Hub cache (`HF_HOME` / `HF_HUB_CACHE`) | same as `huggingface_hub` |
+| Olive-converted GenAI | `{SMILE_CACHE}/olive/...` | `smile.chat.oga.cache-dir` |
+
+Serve config (`smile.chat.oga.*`): `enabled`, `precision` (`auto` = cascade
+default; Olive `optimize` clamps unsupported values such as `fp8` → `int4`),
+`cache-dir`, `olive-command`, optional `device` / `provider`.
+Offline Olive `optimize --device`/`--provider` follow `GenAI.resolveOliveTarget()`
+(same EP cascade as `Model.open`, honor `SMILE_ONNX_GENAI_PROVIDER`); DirectML
+is remapped to CPU for the Olive CLI because `optimize` does not list
+`DmlExecutionProvider`. If Olive fails while registering an unused ORT EP
+(common on Windows when the CUDA wheel ships `onnxruntime_providers_tensorrt.dll`
+but TensorRT/`nvinfer` is not installed), the offline launcher uses a Python
+bootstrap that only registers EPs Olive explicitly requested, and may still
+retry with `CPUExecutionProvider`. Override the interpreter with
+`SMILE_OLIVE_PYTHON`. Conversion uses `--exporter model_builder` (GenAI-ready
+output). Runtime load still uses `GenAiChatModel.open` / the GenAI EP cascade.
+
+Olive’s Python env needs a full toolchain for `optimize` (especially int4/GPTQ
+calibration). Typical install:
+
+```bash
+pip install "olive-ai[gpu]" datasets
+# or CPU: pip install olive-ai datasets
+```
+
+Missing `datasets` fails mid-run with `ModuleNotFoundError: No module named 'datasets'`.
+
+**Tools I/O (Phase 1):** OpenAI `tools` reach the GenAI chat template; completions
+are post-processed to structured `tool_calls` (`JsonToolCallParser` /
+Qwen3 XML). No agent loop / tool execution.
+
+**Multimodal (Phase 2):** serve materializes data-URL / HTTP media to temp files
+(`GenAiMediaMaterializer`) before `GenAiChatModel` multimodal chat.
+
+Continuous batching / GenAI `OgaEngine` remains out of scope.
 
 ---
 
-## CUDA / providers
+## CUDA / NPU providers
 
-Prefer GPU with automatic CPU failover (`Model.open`):
+`Model.open` cascade (`SMILE_ONNX_GENAI_PROVIDER=auto`):
 
 ```java
 try (var model = Model.open(modelDir)) {
-    // model.provider() is "cuda" when the CUDA EP loaded, else "default"
+    // model.provider() is cuda | ryzenai | openvino | qnn | dml | default
 }
 ```
 
-`auto` (default) attempts CUDA only when CUDA GenAI/ORT natives are on the
-library path (`onnxruntime-genai-cuda` / `onnxruntime_providers_cuda`). If the
-CUDA EP throws, or natives are absent, it falls back to CPU. Force with
-`SMILE_ONNX_GENAI_PROVIDER=cuda` or `cpu`.
+| Preference | Behavior |
+|---|---|
+| `auto` | CUDA → RyzenAI → OpenVINO NPU → QNN → DirectML (Windows) → CPU |
+| `cuda` / `gpu` | CUDA only (throw if fails) |
+| `npu` | Skip CUDA; try RyzenAI → OpenVINO → QNN |
+| `ryzenai` / `hybrid` | AMD OGA RyzenAI only (hybrid or NPU-only **model** determines mode) |
+| `openvino` | OpenVINO with `device_type=NPU` |
+| `qnn` | Qualcomm QNN |
+| `dml` / `directml` | Windows DirectML only (throw if fails / not Windows) |
+| `cpu` | No accelerator attempts (CI) |
 
-Or set providers explicitly:
+**AMD Ryzen AI (LLMs):** hybrid (NPU+iGPU) vs NPU-only is which model package you
+load (AMD HF hybrid vs NPU collections). Needs
+`onnxruntime-genai-directml-ryzenai` (or Ryzen AI MSI), NPU drivers, and a GPU
+driver for hybrid.
+
+**Windows DirectML:** general GPU via `onnxruntime_providers_dml` (iGPU/dGPU).
+Tried on `auto` after NPU candidates and before CPU; inactive off Windows.
+
+**AMD Vitis AI (general ONNX on NPU):** use
+`smile.onnx.SessionOptions.appendVitisAiExecutionProvider()` — not this GenAI
+cascade.
+
+**Out of scope for GenAI cascade:** ROCm/MIGraphX, NvTensorRtRtx (TensorRT-RTX).
+
+Or set GenAI providers explicitly:
 
 ```java
 try (var config = Config.of(modelDir)) {
@@ -188,7 +263,7 @@ try (var config = Config.of(modelDir)) {
 
 Unit tests under `deep/src/test/java/smile/onnx/genai/`:
 
-- `GenAIExceptionTest` — no natives required
+- `GenAIExceptionTest` / `GenAIProviderPreferenceTest` — no natives required
 - `GenAINativeTest` — needs natives; model tests need `SMILE_ONNX_GENAI_MODEL`
 
 GitHub Actions (`.github/workflows/ci.yml`) installs CPU `onnxruntime` /

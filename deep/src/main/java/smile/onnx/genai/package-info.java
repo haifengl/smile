@@ -30,7 +30,10 @@
  *   <li><b>Convenience</b> — {@link smile.onnx.genai.SimpleGenAI} for
  *       prompt → stream → text.</li>
  *   <li><b>Serve seam</b> — {@link smile.onnx.genai.GenAiChatModel} implements
- *       {@link smile.llm.LanguageModel} (wire from ChatService in a follow-up).</li>
+ *       {@link smile.llm.LanguageModel}; smile-serve uses it as OGA fallback
+ *       (allowlist + optional Olive) when Torch CUDA/builtin does not apply.</li>
+ *   <li><b>Allowlist / Olive target</b> — {@link smile.onnx.genai.GenAISupportedModels},
+ *       {@link smile.onnx.genai.GenAI#resolveOliveTarget()}.</li>
  * </ul>
  *
  * <h2>Quick start</h2>
@@ -43,6 +46,14 @@
  *     }
  * }
  * }</pre>
+ *
+ * <h2>Providers</h2>
+ * <p>{@link smile.onnx.genai.Model#open(String)} cascades CUDA → RyzenAI →
+ * OpenVINO NPU → QNN → DirectML (Windows) → CPU when
+ * {@code SMILE_ONNX_GENAI_PROVIDER} is {@code auto} (default). Each accelerator
+ * requires matching EP natives.
+ * Classical Vitis AI for general ONNX is
+ * {@link smile.onnx.SessionOptions#appendVitisAiExecutionProvider()}.
  *
  * <h2>Native libraries</h2>
  * <p>Both {@code onnxruntime} and {@code onnxruntime-genai} must be on the OS

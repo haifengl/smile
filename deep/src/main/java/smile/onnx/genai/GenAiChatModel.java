@@ -40,11 +40,8 @@ import smile.llm.VideoUrlPart;
  * {@link GenerationListener#onText}. Cooperative cancel is checked between
  * {@link Generator#generateNextToken} steps.
  *
- * <p>Serve wiring (e.g. {@code smile.chat.backend=onnx-genai}) is intentionally
- * left to a follow-up; this class is API-ready for that integration.
- *
- * <p>Continuous batching via GenAI {@code OgaEngine} / {@code OgaRequest} is
- * deferred; map that to {@code ModelExecutor} later.
+ * <p>Serve wires this via ChatService OGA fallback (tools I/O, optional
+ * multimodal). Continuous batching via GenAI {@code OgaEngine} is deferred.
  *
  * @author Haifeng Li
  */
@@ -56,6 +53,8 @@ public final class GenAiChatModel implements LanguageModel, AutoCloseable {
     /** Matches {@code "context_length": N} in genai_config.json. */
     private static final Pattern CONTEXT_LENGTH = Pattern.compile(
             "\"context_length\"\\s*:\\s*(\\d+)");
+    private static final String THINK_OPEN = "<think>";
+    private static final String THINK_CLOSE = "</think>";
     /**
      * ChatML-style Jinja used when the model tokenizer has no embedded chat template
      * (e.g. onnxruntime-genai {@code test/models/qwen3-5}).
@@ -187,6 +186,16 @@ public final class GenAiChatModel implements LanguageModel, AutoCloseable {
     @Override
     public String name() {
         return name;
+    }
+
+    /**
+     * Returns the GenAI execution-provider path selected at open
+     * ({@link Model#provider()}).
+     *
+     * @return provider id (e.g. {@code cuda}, {@code dml}, {@code default}).
+     */
+    public String provider() {
+        return model.provider();
     }
 
     @Override
@@ -340,6 +349,7 @@ public final class GenAiChatModel implements LanguageModel, AutoCloseable {
         StringBuilder text = new StringBuilder();
         int generated = 0;
         boolean stopped = false;
+        ThinkStream think = new ThinkStream();
 
         try (TokenizerStream stream = tokenizer.createStream()) {
             while (!generator.isDone()) {
@@ -349,15 +359,19 @@ public final class GenAiChatModel implements LanguageModel, AutoCloseable {
                 }
                 generator.generateNextToken();
                 generated++;
-                if (listener != null) {
-                    listener.onGeneratedTokens(1);
-                }
                 String chunk = stream.decode(generator.getLastToken(0));
                 if (chunk != null && !chunk.isEmpty()) {
                     text.append(chunk);
+                    boolean thinking = think.feed(chunk, listener);
                     if (listener != null) {
-                        listener.onText(chunk);
+                        if (thinking) {
+                            listener.onThinkingTokens(1);
+                        } else {
+                            listener.onGeneratedTokens(1);
+                        }
                     }
+                } else if (listener != null) {
+                    listener.onGeneratedTokens(1);
                 }
                 if (generator.isDone()) {
                     stopped = true;
@@ -366,21 +380,111 @@ public final class GenAiChatModel implements LanguageModel, AutoCloseable {
             if (generator.isDone()) {
                 stopped = true;
             }
+            think.flush(listener);
         }
 
         int[] full = generator.getSequence(0);
         int[] completion = full.length <= promptLen
                 ? new int[0]
                 : Arrays.copyOfRange(full, promptLen, full.length);
-        // Prefer stream-accumulated text; fall back to decoding completion only.
-        String content = !text.isEmpty()
+        String raw = !text.isEmpty()
                 ? text.toString()
                 : (completion.length == 0 ? "" : tokenizer.decode(completion));
+        String content = smile.llm.tool.AssistantTextSanitizer.sanitize(raw);
+        if (content == null) {
+            content = "";
+        }
         int[] promptTokens = full.length >= promptLen
                 ? Arrays.copyOf(full, promptLen)
                 : full;
         FinishReason reason = stopped ? FinishReason.stop : FinishReason.length;
         return new ChatCompletion(name, content, promptTokens, completion, reason, null);
+    }
+
+    /**
+     * Streaming strip of {@code <think>…</think>} with visible {@code onText} emits.
+     * Token attribution uses {@link #inThink} at feed time (caller reports counts).
+     */
+    static final class ThinkStream {
+        private final StringBuilder hold = new StringBuilder();
+        private boolean inThink;
+
+        /**
+         * Feeds a decoded chunk; emits visible text via {@code listener.onText}.
+         *
+         * @return {@code true} when this chunk is attributed to thinking.
+         */
+        boolean feed(String chunk, GenerationListener listener) {
+            boolean wasInThink = inThink;
+            hold.append(chunk);
+            drain(listener);
+            return wasInThink || inThink || hold.indexOf(THINK_OPEN) >= 0;
+        }
+
+        void flush(GenerationListener listener) {
+            if (!inThink && !hold.isEmpty()) {
+                String rest = hold.toString();
+                // Drop a trailing incomplete open tag.
+                int partial = incompleteOpenTag(rest);
+                if (partial >= 0) {
+                    rest = rest.substring(0, partial);
+                }
+                hold.setLength(0);
+                if (!rest.isEmpty() && listener != null) {
+                    listener.onText(rest);
+                }
+            }
+        }
+
+        private void drain(GenerationListener listener) {
+            String s = hold.toString();
+            while (true) {
+                if (inThink) {
+                    int close = s.indexOf(THINK_CLOSE);
+                    if (close < 0) {
+                        hold.setLength(0);
+                        hold.append(s);
+                        return;
+                    }
+                    s = s.substring(close + THINK_CLOSE.length());
+                    inThink = false;
+                    continue;
+                }
+                int open = s.indexOf(THINK_OPEN);
+                if (open >= 0) {
+                    if (open > 0) {
+                        emit(s.substring(0, open), listener);
+                    }
+                    s = s.substring(open + THINK_OPEN.length());
+                    inThink = true;
+                    continue;
+                }
+                // Keep a suffix that might be a partial "<think>" open tag.
+                int keep = Math.min(s.length(), THINK_OPEN.length() - 1);
+                if (s.length() > keep) {
+                    emit(s.substring(0, s.length() - keep), listener);
+                    s = s.substring(s.length() - keep);
+                }
+                hold.setLength(0);
+                hold.append(s);
+                return;
+            }
+        }
+
+        private static void emit(String text, GenerationListener listener) {
+            if (listener != null && text != null && !text.isEmpty()) {
+                listener.onText(text);
+            }
+        }
+
+        private static int incompleteOpenTag(String s) {
+            for (int n = Math.min(s.length(), THINK_OPEN.length() - 1); n >= 1; n--) {
+                if (THINK_OPEN.startsWith(s.substring(s.length() - n))) {
+                    return s.length() - n;
+                }
+            }
+            return -1;
+        }
     }
 
     private static void applySearchOptions(GeneratorParams params, int maxLength,

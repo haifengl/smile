@@ -18,6 +18,7 @@ package smile.onnx;
 
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
+import java.util.Map;
 import smile.onnx.foreign.OrtApi;
 import smile.onnx.foreign.onnxruntime_c_api_h;
 
@@ -300,6 +301,101 @@ public class SessionOptions implements AutoCloseable {
         OrtRuntime.checkStatus(api, status);
         return this;
     }
+
+    /**
+     * Appends the CoreML execution provider (Apple Neural Engine / GPU / CPU).
+     *
+     * <p>Requires an ONNX Runtime build with CoreML (macOS 10.15+ / iOS 13+).
+     * Uses the current {@code SessionOptionsAppendExecutionProvider("CoreML", …)}
+     * API; the legacy flag-based CoreML append is deprecated in ORT 1.20+.
+     *
+     * @return this options object for chaining.
+     * @see <a href="https://onnxruntime.ai/docs/execution-providers/CoreML-ExecutionProvider.html">CoreML EP</a>
+     */
+    public SessionOptions appendCoreMLExecutionProvider() {
+        return appendCoreMLExecutionProvider(Map.of());
+    }
+
+    /**
+     * Appends the CoreML execution provider with optional EP options.
+     *
+     * <p>Common keys (string values): {@code ModelFormat} ({@code MLProgram} /
+     * {@code NeuralNetwork}), {@code MLComputeUnits} ({@code ALL},
+     * {@code CPUOnly}, {@code CPUAndGPU}, {@code CPUAndNeuralEngine}),
+     * {@code RequireStaticInputShapes}, {@code EnableOnSubgraphs},
+     * {@code ModelCacheDirectory}.
+     *
+     * @param options provider options; may be empty.
+     * @return this options object for chaining.
+     */
+    public SessionOptions appendCoreMLExecutionProvider(Map<String, String> options) {
+        return appendNamedExecutionProvider("CoreML", options);
+    }
+
+    /**
+     * Appends the Vitis AI execution provider (AMD Ryzen AI <em>NPU</em> / Vitis AI DPU).
+     *
+     * <p>This is for general ONNX {@link InferenceSession} inference, not the
+     * GenAI LLM path ({@code smile.onnx.genai} uses RyzenAI OGA for LLMs).
+     *
+     * @return this options object for chaining.
+     */
+    public SessionOptions appendVitisAiExecutionProvider() {
+        return appendVitisAiExecutionProvider(Map.of());
+    }
+
+    /**
+     * Appends the Vitis AI execution provider with optional EP options
+     * (e.g. {@code cache_dir}, {@code config_file}, {@code target}).
+     *
+     * @param options provider options; may be empty.
+     * @return this options object for chaining.
+     */
+    public SessionOptions appendVitisAiExecutionProvider(Map<String, String> options) {
+        ProviderKeyValues kv = packProviderOptions(options, "VitisAI");
+        MemorySegment status = OrtApi.SessionOptionsAppendExecutionProvider_VitisAI.invoke(
+                OrtApi.SessionOptionsAppendExecutionProvider_VitisAI(api),
+                handle, kv.keys(), kv.values(), kv.numKeys());
+        OrtRuntime.checkStatus(api, status);
+        return this;
+    }
+
+    /**
+     * Appends a named execution provider via
+     * {@code SessionOptionsAppendExecutionProvider} (e.g. {@code CoreML}, {@code DML}).
+     */
+    private SessionOptions appendNamedExecutionProvider(String providerName,
+                                                        Map<String, String> options) {
+        ProviderKeyValues kv = packProviderOptions(options, providerName);
+        MemorySegment nameSeg = arena.allocateFrom(providerName);
+        MemorySegment status = OrtApi.SessionOptionsAppendExecutionProvider.invoke(
+                OrtApi.SessionOptionsAppendExecutionProvider(api),
+                handle, nameSeg, kv.keys(), kv.values(), kv.numKeys());
+        OrtRuntime.checkStatus(api, status);
+        return this;
+    }
+
+    private ProviderKeyValues packProviderOptions(Map<String, String> options, String label) {
+        if (options == null || options.isEmpty()) {
+            return new ProviderKeyValues(MemorySegment.NULL, MemorySegment.NULL, 0L);
+        }
+        long numKeys = options.size();
+        MemorySegment keys = arena.allocate(onnxruntime_c_api_h.C_POINTER, numKeys);
+        MemorySegment values = arena.allocate(onnxruntime_c_api_h.C_POINTER, numKeys);
+        int i = 0;
+        for (var entry : options.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null) {
+                throw new IllegalArgumentException(
+                        label + " option keys/values must not be null");
+            }
+            keys.setAtIndex(onnxruntime_c_api_h.C_POINTER, i, arena.allocateFrom(entry.getKey()));
+            values.setAtIndex(onnxruntime_c_api_h.C_POINTER, i, arena.allocateFrom(entry.getValue()));
+            i++;
+        }
+        return new ProviderKeyValues(keys, values, numKeys);
+    }
+
+    private record ProviderKeyValues(MemorySegment keys, MemorySegment values, long numKeys) {}
 
     /**
      * Adds a session configuration entry as a key-value pair.
