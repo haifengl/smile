@@ -9,6 +9,18 @@ SMILE also provides idiomatic APIs for **Scala** and **Kotlin**.
 With advanced data structures and algorithms, SMILE delivers state-of-the-art
 performance across every aspect of machine learning.
 
+SMILE Serve is a production-ready inference server
+that brings together three complementary inference capabilities on the JVM:
+
+| Capability | API prefix  | Description |
+|---|----------------------|-------------|
+| **Classic ML** | `/api/v1/ml/models` | Serialized SMILE models (`.sml`) — classifiers and regressors |
+| **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`) |
+| **LLM Chat** | `/api/v1/chat/completions` | OpenAI-compatible chat completions |
+
+A React-based web UI is bundled and served from the same process.
+See [serve/README.md](serve/README.md) how to build and run the service.
+
 SMILE Studio is an agentic IDE for data science using Python, Java, or Scala.
 See [studio/README.md](studio/README.md) how to get your first project up and
 start interacting with your data with natural language in a few minutes.
@@ -372,11 +384,11 @@ SMILE provides two visualization layers:
 
 ## License
 
-SMILE employs a dual license model designed to meet the development
-and distribution needs of both commercial distributors (OEMs, ISVs, VARs)
-and open source projects.  For details, see
-[LICENSE](https://github.com/haifengl/smile/blob/master/LICENSE).
-To acquire a commercial license, contact **smile.sales@outlook.com**.
+SMILE employs a modern multi-product licensing model designed to support
+free academic and open-source collaboration while offering commercial licensing
+and enterprise support for proprietary and mission-critical deployments.
+For details, see [LICENSE](https://github.com/haifengl/smile/blob/master/LICENSE).
+To acquire a commercial license, contact **sales@aihalo.dev**.
 
 ---
 
