@@ -54,6 +54,7 @@ import smile.llm.checkpoint.SafeTensorsLoaderThreads;
 import smile.llm.attention.AttentionBackend;
 import smile.llm.attention.AttentionBackends;
 import smile.llm.engine.DecodeCudaGraph;
+import smile.llm.engine.VerifyCudaGraph;
 import smile.llm.engine.DecodeForwardProfile;
 import smile.llm.engine.DecodeStepTiming;
 import smile.llm.engine.Sampling;
@@ -2647,24 +2648,55 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             // scatter=true (DeltaNet replay) discards logits; skip the vocab-sized
             // lm_head projection on every replayed position and only score the last.
             // scatter=false (the primary online-accept verify) is graph-eligible.
-            Tensor[] logits = scatter
-                    ? forwardWindow(shards, startPos, tpExecutor, false)
-                    : forwardWindowVerify(shards, startPos, tpExecutor);
             if (scatter) {
+                Tensor[] logits = forwardWindow(shards, startPos, tpExecutor, false);
                 scatterDeltaNet();
-            }
-            for (int r = 1; r < logits.length; r++) {
-                if (logits[r] != null) {
-                    logits[r].close();
+                for (int r = 1; r < logits.length; r++) {
+                    if (logits[r] != null) {
+                        logits[r].close();
+                    }
                 }
+                return logits[0];
             }
-            return logits[0];
+            Tensor[] logits = forwardWindowVerify(shards, startPos, tpExecutor);
+            return ownedVerifyWindowLogits(logits);
         } finally {
             for (Tensor t : shards) {
                 if (t != null) {
                     t.close();
                 }
             }
+        }
+    }
+
+    /**
+     * Returns an owned copy of rank 0's verify-window logits and closes every
+     * rank's tensor — <em>except</em> when {@link VerifyCudaGraph#persistentLogits()}
+     * reports the graph capture/replay path returned each {@code QwenModel}'s
+     * own reused {@code verifyGraphLogitsBuf}, which must survive for the next
+     * replay (closing it here would free the buffer a captured graph replay
+     * still writes into — a real, reproducible use-after-free found on real
+     * TP=4 hardware with both decode and verify CUDA graphs enabled: the
+     * lighter single-GPU/TP=2 capture-correctness tests never hit it because
+     * their low heap/allocator churn happened not to reuse the freed native
+     * handle before the next replay read it back). Mirrors
+     * {@code logitsRowFromDecodeOutput}'s identical decode-side pattern.
+     */
+    private static Tensor ownedVerifyWindowLogits(Tensor[] logits) {
+        boolean persistent = VerifyCudaGraph.persistentLogits();
+        try {
+            Tensor out = logits[0].copy();
+            out.promoteToParent();
+            if (!persistent) {
+                for (Tensor l : logits) {
+                    if (l != null) {
+                        l.close();
+                    }
+                }
+            }
+            return out;
+        } finally {
+            VerifyCudaGraph.markPersistentLogits(false);
         }
     }
 
