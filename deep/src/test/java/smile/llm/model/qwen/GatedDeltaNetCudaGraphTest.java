@@ -136,7 +136,15 @@ public class GatedDeltaNetCudaGraphTest {
                 args.linearConvDim(), args.linearConvKernelDim(),
                 Math.max(2, args.maxBatchSize()), device, ScalarType.Float);
         GatedDeltaNet delta = new GatedDeltaNet(args, 0, pool);
-        delta.to(device);
+        // GatedDeltaNet is a plain class (no Layer/LayerBlock supertype), so it
+        // has no .to(Device) of its own — move its native module tree directly,
+        // the same native call Layer.to(Device)'s default implementation uses.
+        MemorySegment deviceHandle = device.toNative();
+        try {
+            smile.torch.smile_torch_h.smile_module_to_device(delta.module(), deviceHandle, 1);
+        } finally {
+            smile.torch.smile_torch_h.smile_device_free(deviceHandle);
+        }
 
         pool.bindRequest(1);
         pool.activateStep(1);
