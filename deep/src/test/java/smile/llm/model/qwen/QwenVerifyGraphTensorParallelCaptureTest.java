@@ -114,7 +114,8 @@ public class QwenVerifyGraphTensorParallelCaptureTest {
                     4,      // numLayers
                     4,      // numHeads
                     2,      // numKvHeads
-                    16,     // headDim
+                    64,     // headDim — real FlashInfer decode kernel only supports
+                            // 64/128/256/512; 16 silently falls back to gather+SDPA
                     248320, // vocabSize — matches the real model that crashed
                     128,    // intermediateSize
                     1e-6,   // normEps
