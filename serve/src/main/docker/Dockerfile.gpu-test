@@ -118,6 +118,7 @@ FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu24.04 AS gpu-test
 
 ARG TORCH_VERSION
 ARG CU_VERSION
+ARG ORT_VERSION=1.29.0
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Same runtime CUDA extras as Dockerfile.jvm-gpu's final stage, plus a full
@@ -142,13 +143,24 @@ ENV PATH="${JAVA_HOME}/bin:${PATH}"
 # ~2GB network fetch); Gradle's test tasks (buildlogic.common-conventions)
 # expect it at deep/libtorch/lib.
 COPY --from=smile-torch-builder /usr/local/libtorch /usr/local/libtorch
+
+# ONNX Runtime — same version/install as Dockerfile.jvm-gpu's final stage.
+# Originally omitted here (this image only ran the Stage 1/2 FlashInfer
+# tests, which never touch smile.onnx), but bin/gpu-test-and-build.sh now
+# runs the full :deep:test suite by default, which includes
+# smile.onnx.InferenceSessionTest and anything else that loads
+# libonnxruntime.so at class-init time — without this, every one of those
+# tests fails with ExceptionInInitializerError before running at all.
+RUN curl -fsSL "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz" \
+    | tar -zx -C /usr/local/ \
+    && mv /usr/local/onnxruntime-linux-x64-${ORT_VERSION} /usr/local/onnxruntime
+
 # /usr/lib/x86_64-linux-gnu/nvshmem/13 holds libnvshmem_host.so.3 (from the
 # libnvshmem3-cuda-13 package installed above) — a versioned, non-standard
 # subdirectory the dynamic linker never searches by default. Confirmed via
 # `ldd libsmile_torch.so` => "libnvshmem_host.so.3 => not found" without this;
-# matches Dockerfile.jvm-gpu's runtime stage exactly (minus onnxruntime, which
-# this test image doesn't need).
-ENV LD_LIBRARY_PATH="/usr/local/libtorch/lib:/usr/lib/x86_64-linux-gnu/nvshmem/13${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+# matches Dockerfile.jvm-gpu's runtime stage exactly.
+ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/libtorch/lib:/usr/lib/x86_64-linux-gnu/nvshmem/13${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 WORKDIR /src
 COPY . /src

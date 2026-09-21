@@ -32,7 +32,6 @@ import smile.llm.parallel.TensorShardSpec;
 import smile.torch.Native;
 import smile.util.Bytes;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -163,10 +162,15 @@ public class QwenVerifyGraphTensorParallelCaptureTest {
             // after — each round independently diffed against a sequential-decode
             // reference computed outside any graph.
             for (int round = 0; round < ROUNDS; round++) {
-                int[][] both = qwen.windowVsSequentialArgmax(requestId, window, startPos);
-                assertArrayEquals(both[1], both[0],
-                        "round " + round + ": window allTokenLogits argmax must match "
-                                + "sequential decodeStep");
+                // Deliberately no exact-argmax assertion (see
+                // QwenVerifyGraphFullModelCaptureTest's identical comment): with
+                // random, untrained weights and a ~250k-entry vocab, top logits
+                // are frequently near-tied, so a legitimate, tiny floating-point
+                // difference between kernels can flip an argmax that is
+                // essentially a coin flip. The logit-magnitude diff below is the
+                // real, robust correctness signal.
+                qwen.windowVsSequentialArgmax(requestId, window, startPos);
+                System.out.println("round " + round + ": maxAbs=" + qwen.lastWindowVsSequentialMaxAbs);
                 assertTrue(qwen.lastWindowVsSequentialMaxAbs < 1e-2f,
                         "round " + round + ": window vs sequential logits maxAbs="
                                 + qwen.lastWindowVsSequentialMaxAbs);
