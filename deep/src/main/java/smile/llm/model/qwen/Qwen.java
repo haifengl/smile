@@ -2538,9 +2538,12 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         try (Tensor logits = forwardVerifyWindow(requestId, window, lastPos, false)) {
             speculativeTargetForwards.incrementAndGet();
             targetSamples = sampleTargetWindow(logits, temperature, topp);
+            speculativeVerifyNanos.addAndGet(System.nanoTime() - tVerify);
+            // Outside the timed region: this diagnostic's own extra eager forward
+            // must never be counted as real verify cost (it isn't — it's a debug-
+            // only reference computation, gated off by default).
             debugDiffVerifyGraphVsEager(window, lastPos, logits);
         }
-        speculativeVerifyNanos.addAndGet(System.nanoTime() - tVerify);
         if (targetSamples.length != n + 1) {
             throw new IllegalStateException(
                     "window logits produced " + targetSamples.length + " samples, expected " + (n + 1));
