@@ -69,7 +69,7 @@ public class QwenVerifyGraphFullModelCaptureTest {
     private static KvCachePool kvCachePoolWithRealisticPageSize(KvCacheLayout layout, Device device) {
         int numSlots = layout.maxBatchSize() * layout.maxSeqLen();
         return new KvCachePool(layout.numLayers(), numSlots, layout.numKvHeads(), layout.headDim(),
-                PAGE_SIZE, device, ScalarType.Float);
+                PAGE_SIZE, device, ScalarType.BFloat16);
     }
 
     private static boolean cudaAvailable() {
@@ -138,13 +138,22 @@ public class QwenVerifyGraphFullModelCaptureTest {
                     args.linearConvDim(), args.linearConvKernelDim(),
                     Math.max(2, args.maxBatchSize()), device, ScalarType.Float);
             QwenModel model = new QwenModel(args, statePool);
-            model.to(device);
+            // bf16 compute (not the CPU-only ScalarType.Float convention this test
+            // otherwise mirrors): the verify-capturable kernel's own dispatch
+            // requires a bf16/fp16 query, else it falls through to the same
+            // mask-less SDPA fallback the headDim=64 fix above addressed —
+            // fixing headDim alone wasn't sufficient, both gates must pass.
+            // DeltaNetStatePool's own recurrent state deliberately stays
+            // ScalarType.Float above, matching production's own choice (a
+            // separate, independently-managed pool that model.to() never touches).
+            model.to(device, ScalarType.BFloat16);
             model.eval();
             // KvCachePool.forTesting hardcodes pageSize=1 (fine for CPU-only
             // plumbing tests, but a degenerate case — every token its own page
             // — that neither Stage 1/2's kernel tests (pageSize=8) nor
             // production (pageSize~16) ever exercise with the verify-capturable
-            // kernel). Build the pool directly with a realistic page size.
+            // kernel). Build the pool directly with a realistic page size and
+            // dtype (bf16, matching the model's own compute dtype above).
             model.setKvCachePool(kvCachePoolWithRealisticPageSize(args.kvCacheLayout(), device), false);
 
             Qwen qwen = new Qwen("cuda-verify-graph-full-model", model, tinyTokenizer(), args);
@@ -176,7 +185,11 @@ public class QwenVerifyGraphFullModelCaptureTest {
                 // diff below is the real, robust correctness signal.
                 qwen.windowVsSequentialArgmax(requestId, window, startPos);
                 System.out.println("round " + round + ": maxAbs=" + qwen.lastWindowVsSequentialMaxAbs);
-                assertTrue(qwen.lastWindowVsSequentialMaxAbs < 1e-2f,
+                // 5e-2, matching Stage 1/2's own established bf16 tolerance (looser
+                // than fp32-scale thresholds since this now accumulates rounding
+                // error across 4 real layers + a 248320-wide lm_head matmul, not a
+                // single isolated kernel call).
+                assertTrue(qwen.lastWindowVsSequentialMaxAbs < 5e-2f,
                         "round " + round + ": window vs sequential logits maxAbs="
                                 + qwen.lastWindowVsSequentialMaxAbs);
             }

@@ -69,7 +69,7 @@ public class QwenVerifyGraphTensorParallelCaptureTest {
     private static KvCachePool kvCachePoolWithRealisticPageSize(KvCacheLayout layout, Device device) {
         int numSlots = layout.maxBatchSize() * layout.maxSeqLen();
         return new KvCachePool(layout.numLayers(), numSlots, layout.numKvHeads(), layout.headDim(),
-                PAGE_SIZE, device, ScalarType.Float);
+                PAGE_SIZE, device, ScalarType.BFloat16);
     }
 
     private static boolean cudaAvailable() {
@@ -148,7 +148,13 @@ public class QwenVerifyGraphTensorParallelCaptureTest {
                         Math.max(2, args.maxBatchSize()), device, ScalarType.Float);
 
                 QwenModel model = new QwenModel(args, statePool, shard, tpGroup, null);
-                model.to(device);
+                // bf16 compute — see QwenVerifyGraphFullModelCaptureTest's identical
+                // comment: the verify-capturable kernel's dispatch requires a
+                // bf16/fp16 query, else it falls through to the same mask-less SDPA
+                // fallback the headDim=64 fix addressed on its own wasn't enough to
+                // clear, since both gates must pass. statePool above deliberately
+                // stays ScalarType.Float, matching production's own choice.
+                model.to(device, ScalarType.BFloat16);
                 model.eval();
                 model.setKvCachePool(kvCachePoolWithRealisticPageSize(args.kvCacheLayout(shard), device), false);
                 models[rank] = model;
@@ -181,7 +187,9 @@ public class QwenVerifyGraphTensorParallelCaptureTest {
                 // real, robust correctness signal.
                 qwen.windowVsSequentialArgmax(requestId, window, startPos);
                 System.out.println("round " + round + ": maxAbs=" + qwen.lastWindowVsSequentialMaxAbs);
-                assertTrue(qwen.lastWindowVsSequentialMaxAbs < 1e-2f,
+                // 5e-2, matching Stage 1/2's own established bf16 tolerance (see
+                // QwenVerifyGraphFullModelCaptureTest's identical comment).
+                assertTrue(qwen.lastWindowVsSequentialMaxAbs < 5e-2f,
                         "round " + round + ": window vs sequential logits maxAbs="
                                 + qwen.lastWindowVsSequentialMaxAbs);
             }
