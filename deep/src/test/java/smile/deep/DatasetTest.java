@@ -45,39 +45,48 @@ public class DatasetTest {
     public void test() throws IOException {
         Device device = Device.preferredDevice();
         Tensor.setDefaultOptions(new Tensor.Options().device(device));
-        Model net = new Model(new SequentialBlock(
-                Layer.relu(784, 64, 0.5),
-                Layer.relu(64, 32),
-                Layer.logSoftmax(32, 10))
-        );
+        try {
+            Model net = new Model(new SequentialBlock(
+                    Layer.relu(784, 64, 0.5),
+                    Layer.relu(64, 32),
+                    Layer.logSoftmax(32, 10))
+            );
 
-        System.out.println(net);
-        net.to(device);
+            System.out.println(net);
+            net.to(device);
 
-        CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').get();
-        double[][] x = Read.csv(Paths.getTestData("mnist/mnist2500_X.txt"), format).toArray();
-        int[] y = Read.csv(Paths.getTestData("mnist/mnist2500_labels.txt"), format).column(0).toIntArray();
-        Dataset dataset = Dataset.of(x, y, 64);
+            CSVFormat format = CSVFormat.Builder.create().setDelimiter(' ').get();
+            double[][] x = Read.csv(Paths.getTestData("mnist/mnist2500_X.txt"), format).toArray();
+            int[] y = Read.csv(Paths.getTestData("mnist/mnist2500_labels.txt"), format).column(0).toIntArray();
+            Dataset dataset = Dataset.of(x, y, 64);
 
-        Optimizer optimizer = Optimizer.SGD(net, 0.01);
-        Loss loss = Loss.nll();
-        net.train(100, optimizer, loss, dataset);
+            Optimizer optimizer = Optimizer.SGD(net, 0.01);
+            Loss loss = Loss.nll();
+            net.train(100, optimizer, loss, dataset);
 
-        try (var __ = Tensor.noGradGuard()) {
-            Map<String, Double> metrics = net.eval(dataset,
-                    new Accuracy(),
-                    new Precision(Averaging.Micro),
-                    new Precision(Averaging.Macro),
-                    new Precision(Averaging.Weighted),
-                    new Recall(Averaging.Micro),
-                    new Recall(Averaging.Macro),
-                    new Recall(Averaging.Weighted));
-            for (var entry : metrics.entrySet()) {
-                System.out.format("Training %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
+            try (var __ = Tensor.noGradGuard()) {
+                Map<String, Double> metrics = net.eval(dataset,
+                        new Accuracy(),
+                        new Precision(Averaging.Micro),
+                        new Precision(Averaging.Macro),
+                        new Precision(Averaging.Weighted),
+                        new Recall(Averaging.Micro),
+                        new Recall(Averaging.Macro),
+                        new Recall(Averaging.Weighted));
+                for (var entry : metrics.entrySet()) {
+                    System.out.format("Training %s = %.2f%%\n", entry.getKey(), 100 * entry.getValue());
+                }
+                assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
+                assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
+                assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
             }
-            assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Precision"), 0.001);
-            assertEquals(metrics.get("Accuracy"), metrics.get("Micro-Recall"), 0.001);
-            assertEquals(metrics.get("Accuracy"), metrics.get("Weighted-Recall"), 0.001);
+        } finally {
+            // Global, process-wide state (Tensor.defaultOptions has no getter to
+            // save/restore a prior value) — reset to the unset default so this
+            // integration test (opt-in via -DexcludeTags=integration, but not
+            // excluded by default) never leaks a CUDA default device into
+            // whichever test happens to run next in the same JVM.
+            Tensor.setDefaultOptions(null);
         }
     }
 

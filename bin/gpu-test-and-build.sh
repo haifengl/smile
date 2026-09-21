@@ -27,7 +27,7 @@ cd "$(dirname "$0")/.."
 
 TEST_TAG="smile-gpu-test"
 SERVE_TAG="quarkus/smile-serve-gpu"
-MODEL_DIR="${MODEL_DIR:-/model}"
+MODEL_DIR="${MODEL_DIR:-/tmp/model}"
 
 echo "==> [1/3] Building GPU test image (${TEST_TAG})..."
 docker build -f serve/src/main/docker/Dockerfile.gpu-test -t "${TEST_TAG}" .
@@ -39,7 +39,14 @@ docker run --rm --gpus all \
     "${TEST_TAG}" \
     bash -c '
         set +e
-        ./gradlew :deep:test --no-daemon --rerun
+        # -DexcludeTags=integration matches the project'\''s own CI convention
+        # (.github/workflows/ci.yml, core/README.md) — integration tests like
+        # DatasetTest.test() call Tensor.setDefaultOptions(...) pointing at CUDA
+        # and never reset it, leaking global state into every test that runs
+        # afterward in the same JVM (alphabetically, smile.deep.DatasetTest runs
+        # before smile.deep.ModelTest, which then fails on a device mismatch that
+        # has nothing to do with ModelTest itself).
+        ./gradlew :deep:test --no-daemon --rerun -DexcludeTags=integration
         code=$?
         echo "==> Copying test results to /model/gpu-test-results (exit code ${code})..."
         mkdir -p /model/gpu-test-results
