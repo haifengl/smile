@@ -24,6 +24,7 @@ import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.attention.AttentionBackend;
 import smile.llm.attention.AttentionBackends;
+import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
 import smile.util.Bytes;
 
@@ -61,6 +62,15 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 public class QwenVerifyGraphFullModelCaptureTest {
 
     private static final int ROUNDS = 15;
+
+    /** Realistic page size (matches production's ~16, not forTesting's degenerate pageSize=1). */
+    private static final int PAGE_SIZE = 16;
+
+    private static KvCachePool kvCachePoolWithRealisticPageSize(KvCacheLayout layout, Device device) {
+        int numSlots = layout.maxBatchSize() * layout.maxSeqLen();
+        return new KvCachePool(layout.numLayers(), numSlots, layout.numKvHeads(), layout.headDim(),
+                PAGE_SIZE, device, ScalarType.Float);
+    }
 
     private static boolean cudaAvailable() {
         return smile.torch.smile_torch_h.smile_cuda_is_available() != 0;
@@ -129,7 +139,12 @@ public class QwenVerifyGraphFullModelCaptureTest {
             QwenModel model = new QwenModel(args, statePool);
             model.to(device);
             model.eval();
-            model.setKvCachePool(KvCachePool.forTesting(args.kvCacheLayout(), device), false);
+            // KvCachePool.forTesting hardcodes pageSize=1 (fine for CPU-only
+            // plumbing tests, but a degenerate case — every token its own page
+            // — that neither Stage 1/2's kernel tests (pageSize=8) nor
+            // production (pageSize~16) ever exercise with the verify-capturable
+            // kernel). Build the pool directly with a realistic page size.
+            model.setKvCachePool(kvCachePoolWithRealisticPageSize(args.kvCacheLayout(), device), false);
 
             Qwen qwen = new Qwen("cuda-verify-graph-full-model", model, tinyTokenizer(), args);
 

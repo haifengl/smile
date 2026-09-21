@@ -25,6 +25,7 @@ import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.attention.AttentionBackend;
 import smile.llm.attention.AttentionBackends;
+import smile.llm.cache.KvCacheLayout;
 import smile.llm.cache.KvCachePool;
 import smile.llm.parallel.ParallelConfig;
 import smile.llm.parallel.TensorParallelGroup;
@@ -62,6 +63,14 @@ public class QwenVerifyGraphTensorParallelCaptureTest {
 
     private static final int ROUNDS = 15;
     private static final int TP_SIZE = 2;
+    /** Realistic page size (matches production's ~16, not forTesting's degenerate pageSize=1). */
+    private static final int PAGE_SIZE = 16;
+
+    private static KvCachePool kvCachePoolWithRealisticPageSize(KvCacheLayout layout, Device device) {
+        int numSlots = layout.maxBatchSize() * layout.maxSeqLen();
+        return new KvCachePool(layout.numLayers(), numSlots, layout.numKvHeads(), layout.headDim(),
+                PAGE_SIZE, device, ScalarType.Float);
+    }
 
     private static boolean cudaAvailable() {
         return smile.torch.smile_torch_h.smile_cuda_is_available() != 0;
@@ -140,7 +149,7 @@ public class QwenVerifyGraphTensorParallelCaptureTest {
                 QwenModel model = new QwenModel(args, statePool, shard, tpGroup, null);
                 model.to(device);
                 model.eval();
-                model.setKvCachePool(KvCachePool.forTesting(args.kvCacheLayout(shard), device), false);
+                model.setKvCachePool(kvCachePoolWithRealisticPageSize(args.kvCacheLayout(shard), device), false);
                 models[rank] = model;
             }
 
