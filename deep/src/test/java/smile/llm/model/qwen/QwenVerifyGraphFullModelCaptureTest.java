@@ -33,19 +33,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * Reproduces, in isolation, the real-hardware Stage 5 corruption (captured
- * verify graph replay returning a different — sometimes crashing — tensor)
- * with the two already-ruled-out variables removed: no tensor parallelism (a
- * single GPU, single thread, no {@code ExecutorService} futures — concurrent
- * multi-rank capture was serialized and still failed) and DeltaNet's own
- * {@code S > 1} forward already proven safe in isolation
- * ({@code GatedDeltaNetCudaGraphTest}). What's left, untested until now: the
- * <em>full</em> hybrid model forward — alternating full-attention and
+ * Proves the full hybrid model forward — alternating full-attention and
  * DeltaNet layers, the real {@code lm_head} at production vocab size
- * (~250k), {@code capturePreNormHidden} — all captured together in one graph,
- * with the verify-capturable attention kernel invoked once per full-attention
- * layer within that single capture (Stage 2's own kernel test only ever
- * captured one call to it).
+ * (~250k), {@code capturePreNormHidden} — captures and replays correctly as
+ * one graph, single GPU, with the verify-capturable attention kernel
+ * invoked once per full-attention layer within that single capture (Stage
+ * 2's own kernel test only ever captured one call to it). Requires
+ * {@code headDim=64} and bf16 compute: the verify-capturable kernel's own
+ * dispatch falls back to a mask-less SDPA path (silently wrong for a
+ * continuation window) for unsupported head_dim or non-bf16/fp16 query
+ * dtype — an earlier version of this test using {@code headDim=16}/fp32
+ * (copied from a CPU-only test's convention) exercised exactly that
+ * fallback and produced a real, substantial logit divergence that looked
+ * like a capture/replay bug but wasn't.
  *
  * <p>Drives the exact same code path production uses
  * ({@code Qwen.forwardVerifyWindow}'s {@code scatter == false} branch →

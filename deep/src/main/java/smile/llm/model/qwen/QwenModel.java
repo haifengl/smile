@@ -1267,13 +1267,6 @@ public class QwenModel extends LayerBlock {
 
             if (verifyGraphSession.canReplay(batch, windowLen, numPages)) {
                 verifyGraphSession.replay(tpRank);
-                if (logger.isInfoEnabled()) {
-                    logger.info("tpRank={}: verify graph REPLAY return shape={} dtype={} device={} "
-                                    + "(identityHash={})",
-                            tpRank, java.util.Arrays.toString(verifyGraphLogitsBuf.shape()),
-                            verifyGraphLogitsBuf.dtype(), verifyGraphLogitsBuf.device(),
-                            System.identityHashCode(verifyGraphLogitsBuf));
-                }
                 return verifyGraphLogitsBuf;
             }
 
@@ -1285,30 +1278,17 @@ public class QwenModel extends LayerBlock {
                             "verify graph logits buffer missing; warmup must run before capture");
                 }
                 int deviceIndex = Byte.toUnsignedInt(tokens.device().index());
-                // NOT serialized across TP ranks (a prior fix attempt was): capture
-                // must let all ranks reach their own NCCL all-reduce concurrently,
-                // exactly like decode's own proven-working graph — serializing rank
-                // 0's entire capture (including its own all-reduce call) ahead of
-                // ranks 1-3 starting theirs fights that requirement rather than
-                // helping. Real-hardware testing confirmed this: concurrent capture
-                // (no lock) and serialized capture (with a lock) both produced the
-                // same class of corrupted replay; a single-GPU (no TP, no NCCL)
-                // version of this exact forward passed cleanly. The bug is in
-                // capturing the TP all-reduce itself, not in capture concurrency.
+                // NOT serialized across TP ranks: capture must let all ranks reach
+                // their own NCCL all-reduce concurrently, exactly like decode's own
+                // proven-working graph — serializing rank 0's entire capture
+                // (including its own all-reduce call) ahead of ranks 1-3 starting
+                // theirs fights that requirement rather than helping.
                 try {
                     verifyGraphSession.beginCapture(deviceIndex);
                     try {
                         Tensor raw = forwardVerifyGraphCore(
                                 verifyGraphTokenBuf, startPositions,
                                 verifyGraphCosBuf, verifyGraphSinBuf);
-                        if (logger.isInfoEnabled()) {
-                            logger.info("tpRank={}: verify graph CAPTURE raw.shape={} "
-                                            + "verifyGraphLogitsBuf.shape(before copy)={} "
-                                            + "(identityHash={})",
-                                    tpRank, java.util.Arrays.toString(raw.shape()),
-                                    java.util.Arrays.toString(verifyGraphLogitsBuf.shape()),
-                                    System.identityHashCode(verifyGraphLogitsBuf));
-                        }
                         smile.torch.Native.copy_(verifyGraphLogitsBuf, raw);
                         verifyGraphLogitsOut = verifyGraphLogitsBuf;
                     } finally {
@@ -1316,12 +1296,6 @@ public class QwenModel extends LayerBlock {
                     }
                     if (verifyGraphSession.canReplay(batch, windowLen, numPages)) {
                         verifyGraphSession.logCapture(tpRank);
-                        if (logger.isInfoEnabled()) {
-                            logger.info("tpRank={}: verify graph CAPTURE return shape={} "
-                                            + "(identityHash={})",
-                                    tpRank, java.util.Arrays.toString(verifyGraphLogitsBuf.shape()),
-                                    System.identityHashCode(verifyGraphLogitsBuf));
-                        }
                         return verifyGraphLogitsBuf;
                     }
                     logger.warn("tpRank={}: verify CUDA graph capture did not produce a "

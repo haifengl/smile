@@ -38,16 +38,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
- * The decisive test: {@link QwenVerifyGraphFullModelCaptureTest} proved the
- * full hybrid model — real vocab size, real {@code lm_head}, alternating
- * attention/DeltaNet layers — captures and replays correctly on a single
- * GPU. Every production failure so far has used real tensor parallelism
- * (4 GPUs, NCCL all-reduce inside the captured region); a capture-region
- * serialization fix across TP ranks did not help, and was removed after
- * this test's own single-GPU sibling proved capture concurrency was never
- * the actual variable. The one remaining untested dimension is TP itself:
- * does capturing an NCCL all-reduce for a multi-token (S &gt; 1) verify
- * forward work at all, independent of the full 4-GPU production scale?
+ * Proves TP + NCCL all-reduce is safe inside a captured verify-graph forward.
+ * {@link QwenVerifyGraphFullModelCaptureTest} proved the same for the
+ * single-GPU case; this is its {@code tpSize = 2} sibling, exercising a real
+ * cross-device NCCL all-reduce inside the captured region. (An earlier round
+ * of real-hardware failures here turned out to be unrelated to TP/capture at
+ * all — both tests were using {@code headDim=16} and fp32 query dtype, which
+ * silently routed the verify-capturable kernel through its own mask-less
+ * SDPA fallback; fixing both to {@code headDim=64}/bf16 cleared it.)
  *
  * <p>Mirrors {@code Qwen.constructRank}'s real production shard-construction
  * sequence (see {@code Qwen.java}: {@code TensorShardSpec.forRank},
