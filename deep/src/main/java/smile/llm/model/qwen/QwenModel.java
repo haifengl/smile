@@ -847,6 +847,14 @@ public class QwenModel extends LayerBlock {
                     if (decodeGraphSession.canReplay(batch, numPages)) {
                         DecodeCudaGraphLog.bucketCapture(tpRank, batch, numPages,
                                 decodeGraphSession.lastCaptureMs(), false);
+                        // capture_end() only instantiates the graph; it never executes the
+                        // recorded operations (see smile_cuda_graph.cpp: "capture_end()
+                        // instantiates; do not call instantiate()"). Without this replay,
+                        // decodeGraphLogitsBuf still held whatever was there BEFORE this round
+                        // (stale/garbage) — same bug found and fixed in forwardVerifyGraph's
+                        // identical capture branch; the capture round must explicitly replay
+                        // once to actually produce this round's real result.
+                        decodeGraphSession.replay(tpRank);
                         DecodeCudaGraph.markPersistentLogits(true);
                         maybePrefetchNextBucket(batch, numPages, cacheLen, cachePositions,
                                 ropePositions, tokens.device());
