@@ -19,6 +19,7 @@ package smile.onnx.genai;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import java.nio.file.Path;
+import java.util.List;
 import smile.onnx.genai.foreign.ort_genai_c_h;
 
 /**
@@ -31,7 +32,11 @@ public final class Model implements AutoCloseable {
     private final String name;
     /** Native {@code OgaModel*} handle. */
     private MemorySegment handle;
-    /** Execution provider used for this instance ({@code cuda}, {@code cpu}, or {@code default}). */
+    /**
+     * Execution provider path selected for this instance ({@code cuda},
+     * {@code ryzenai}, {@code openvino}, {@code qnn}, {@code dml},
+     * {@code default}, or {@code config}).
+     */
     private final String provider;
 
     private Model(String name, MemorySegment handle, String provider) {
@@ -74,11 +79,16 @@ public final class Model implements AutoCloseable {
     }
 
     /**
-     * Opens a model, preferring CUDA when available and falling back to the
-     * default/CPU providers on failure.
+     * Opens a model with an accelerator cascade, then CPU.
      *
-     * <p>Override with environment variable {@code SMILE_ONNX_GENAI_PROVIDER}:
-     * {@code auto} (default), {@code cuda} (require GPU), or {@code cpu}.
+     * <p>Default {@code SMILE_ONNX_GENAI_PROVIDER=auto} order:
+     * CUDA → RyzenAI → OpenVINO NPU → QNN → DirectML (Windows) → CPU
+     * ({@link #of(String)}). Each accelerator is attempted only when matching
+     * EP natives are present; Java failures fall through to the next candidate.
+     *
+     * <p>Classical Vitis AI for general ONNX is
+     * {@link smile.onnx.SessionOptions#appendVitisAiExecutionProvider()}, not
+     * part of this GenAI cascade.
      *
      * @param modelDir GenAI model directory.
      * @return a new model owned by the caller.
@@ -91,8 +101,7 @@ public final class Model implements AutoCloseable {
     }
 
     /**
-     * Opens a model, preferring CUDA when available and falling back to the
-     * default/CPU providers on failure.
+     * Opens a model with an accelerator cascade, then CPU.
      *
      * @param modelDir GenAI model directory.
      * @return a new model owned by the caller.
@@ -103,35 +112,39 @@ public final class Model implements AutoCloseable {
             throw new IllegalArgumentException("modelDir must not be blank");
         }
         String preference = GenAI.providerPreference();
-        boolean tryCuda = switch (preference) {
-            case "cpu" -> false;
-            case "cuda" -> true;
-            // auto: try CUDA when companion natives exist (or a prior attempt succeeded).
-            default -> {
-                Boolean cached = GenAI.cudaProviderUsable();
-                if (cached != null) {
-                    yield cached;
-                }
-                yield GenAI.cudaNativesPresent();
-            }
-        };
+        if ("cpu".equals(preference)) {
+            return of(modelDir);
+        }
 
-        if (tryCuda) {
+        List<GenAIProviderCandidate> candidates = GenAIProviders.candidatesFor(preference);
+        boolean allowCpuFallback = "auto".equals(preference);
+        RuntimeException lastFailure = null;
+
+        for (GenAIProviderCandidate candidate : candidates) {
+            if (!candidate.shouldAttempt()) {
+                continue;
+            }
             Config config = Config.of(modelDir);
             try {
-                config.clearProviders().appendProvider("cuda");
-                Model model = of(config, leafName(modelDir), "cuda");
-                GenAI.noteCudaProviderUsable(true);
+                candidate.configure(config, modelDir);
+                // RyzenAI with config already listing RyzenAI leaves providers untouched;
+                // create from config either way so options are applied.
+                Model model = of(config, leafName(modelDir), candidate.id());
+                GenAIProviders.noteUsable(candidate.id(), true);
                 return model;
             } catch (RuntimeException e) {
-                GenAI.noteCudaProviderUsable(false);
-                if ("cuda".equals(preference)) {
-                    throw new GenAIException(
-                            "SMILE_ONNX_GENAI_PROVIDER=cuda but CUDA EP failed to load", e);
-                }
+                GenAIProviders.noteUsable(candidate.id(), false);
+                lastFailure = e;
             } finally {
                 config.close();
             }
+        }
+
+        if (!allowCpuFallback) {
+            throw new GenAIException(
+                    "SMILE_ONNX_GENAI_PROVIDER=" + preference
+                            + " but no matching execution provider loaded",
+                    lastFailure);
         }
         return of(modelDir);
     }
@@ -188,7 +201,8 @@ public final class Model implements AutoCloseable {
     /**
      * Returns which execution-provider path was selected for this instance.
      *
-     * @return {@code cuda}, {@code default}, or {@code config}.
+     * @return {@code cuda}, {@code ryzenai}, {@code openvino},
+     *         {@code qnn}, {@code dml}, {@code default}, or {@code config}.
      */
     public String provider() {
         return provider;

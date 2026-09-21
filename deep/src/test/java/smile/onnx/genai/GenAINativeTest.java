@@ -31,9 +31,9 @@ import smile.llm.Role;
  * <p>Requires {@code onnxruntime-genai} natives. Model tests also need
  * {@code SMILE_ONNX_GENAI_MODEL} pointing at a GenAI model directory.
  *
- * <p>Model loads use {@link Model#open(Path)}, which prefers the CUDA EP when
- * available and falls back to CPU. Override with {@code SMILE_ONNX_GENAI_PROVIDER}
- * ({@code auto}/{@code cuda}/{@code cpu}).
+ * <p>Model loads use {@link Model#open(Path)}, which cascades CUDA → RyzenAI →
+ * OpenVINO NPU → QNN → DirectML (Windows) → CPU when preference is {@code auto}.
+ * Override with {@code SMILE_ONNX_GENAI_PROVIDER}.
  *
  * <p>The onnxruntime-genai {@code test/models/qwen3-5} fixture is a tiny Identity
  * ONNX graph: load / tokenize / create {@link Generator} are supported, but a
@@ -225,8 +225,13 @@ public class GenAINativeTest {
     public void reportsSelectedProvider() {
         Assumptions.assumeTrue(modelReady,
                 "Set SMILE_ONNX_GENAI_MODEL to a GenAI model dir");
-        // auto/cuda → "cuda" when EP works; otherwise "default" (CPU path).
-        assertTrue(activeProvider.equals("cuda") || activeProvider.equals("default"),
+        assertTrue(
+                activeProvider.equals("cuda")
+                        || activeProvider.equals("ryzenai")
+                        || activeProvider.equals("openvino")
+                        || activeProvider.equals("qnn")
+                        || activeProvider.equals("dml")
+                        || activeProvider.equals("default"),
                 "unexpected provider: " + activeProvider
                         + " (preference=" + GenAI.providerPreference() + ")");
     }

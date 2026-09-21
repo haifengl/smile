@@ -1,21 +1,45 @@
 .site-header {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: 1rem;
   background-color: #2fa4e7;
   color: white;
-  padding: 4px 0px;
+  padding: 4px 16px;
   text-align: left;
   position: sticky;
   top: 0;
   z-index: 1000;
   width: 100%;
   box-sizing: border-box;
+  min-height: 72px;
+}
+
+.site-header h1 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding-left: 0;
+  font-size: 2.4em;
+  font-weight: inherit;
+  line-height: 1.1;
+  text-align: left;
+  max-width: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-logo {
-  float: right;
-  margin-top: 8px;
-  margin-right: 16px;
+  display: block;
+  float: none;
+  flex-shrink: 0;
+  margin: 0;
   width: 48px;
   height: auto;
+  max-width: 48px;
+  max-height: 48px;
+  object-fit: contain;
 }
 
 :root {

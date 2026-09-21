@@ -46,9 +46,15 @@ public final class GenAI {
      */
     public static final String GENAI_NATIVE_PATH_PROPERTY = "onnxruntime-genai.native.path";
     /**
-     * Execution-provider preference: {@code auto} (default), {@code cuda}, or {@code cpu}.
-     * Environment variable {@code SMILE_ONNX_GENAI_PROVIDER} overrides the system property
-     * {@code smile.onnx.genai.provider}.
+     * Execution-provider preference: {@code auto} (default), {@code cuda},
+     * {@code npu}, {@code ryzenai}/{@code hybrid}, {@code openvino}, {@code qnn},
+     * {@code dml}/{@code directml}, or {@code cpu}.
+     * Environment variable {@code SMILE_ONNX_GENAI_PROVIDER} overrides the system
+     * property {@code smile.onnx.genai.provider}.
+     *
+     * <p>Classical Vitis AI for general ONNX is configured via
+     * {@link smile.onnx.SessionOptions#appendVitisAiExecutionProvider()}, not this
+     * GenAI preference.
      */
     public static final String PROVIDER_PROPERTY = "smile.onnx.genai.provider";
     /** Environment variable for {@link #PROVIDER_PROPERTY}. */
@@ -58,22 +64,20 @@ public final class GenAI {
     private static volatile Boolean available;
     /** Whether absolute-path preload has been attempted. */
     private static boolean preloaded;
-    /**
-     * Cached result of the last CUDA EP open attempt; {@code null} if not tried yet.
-     */
-    private static volatile Boolean cudaProviderUsable;
-    /**
-     * Whether the GenAI CUDA companion library (or ORT CUDA EP) was found during preload.
-     */
-    private static volatile boolean cudaNativesPresent;
+    /** Resolved ORT native directory (after preload), or {@code null}. */
+    private static String ortNativeDir;
+    /** Resolved GenAI native directory (after preload), or {@code null}. */
+    private static String genaiNativeDir;
 
     /** Not instantiable. */
     private GenAI() {}
 
     /**
-     * Returns the preferred GenAI execution provider: {@code auto}, {@code cuda}, or {@code cpu}.
+     * Returns the preferred GenAI execution-provider mode.
      *
-     * @return normalized preference string.
+     * @return normalized preference: {@code auto}, {@code cuda}, {@code npu},
+     *         {@code ryzenai}, {@code openvino}, {@code qnn}, {@code dml},
+     *         or {@code cpu}.
      */
     public static String providerPreference() {
         String fromEnv = System.getenv(PROVIDER_ENV);
@@ -83,6 +87,11 @@ public final class GenAI {
         String pref = raw == null ? "auto" : raw.trim().toLowerCase();
         return switch (pref) {
             case "cuda", "gpu" -> "cuda";
+            case "npu" -> "npu";
+            case "ryzenai", "hybrid" -> "ryzenai";
+            case "openvino" -> "openvino";
+            case "qnn" -> "qnn";
+            case "dml", "directml" -> "dml";
             case "cpu" -> "cpu";
             default -> "auto";
         };
@@ -95,7 +104,7 @@ public final class GenAI {
      * @return {@code true}/{@code false} after a CUDA attempt, else {@code null}.
      */
     public static Boolean cudaProviderUsable() {
-        return cudaProviderUsable;
+        return GenAIProviders.usable("cuda");
     }
 
     /**
@@ -105,13 +114,109 @@ public final class GenAI {
      * @return {@code true} when CUDA companion natives are present.
      */
     public static boolean cudaNativesPresent() {
-        preloadNatives();
-        return cudaNativesPresent;
+        return GenAIProviders.CUDA.nativesPresent();
     }
 
-    /** Records CUDA EP probe result for subsequent {@link Model#open} calls. */
-    static void noteCudaProviderUsable(boolean usable) {
-        cudaProviderUsable = usable;
+    /**
+     * Returns whether candidate {@code id} is known to support FP8 Olive builds.
+     *
+     * <p>Olive {@code optimize} currently does not accept {@code fp8} in its
+     * CLI precision enum; keep this {@code false} until that changes.
+     *
+     * @param candidateId GenAI cascade id (e.g. {@code cuda}).
+     * @return {@code true} when auto precision should try {@code fp8} first.
+     */
+    public static boolean supportsFp8(String candidateId) {
+        return false;
+    }
+
+    /**
+     * Resolves Olive {@code optimize} {@code --device} / {@code --provider} /
+     * default precision from {@link #providerPreference()} and EP natives
+     * (same order as {@link Model#open}).
+     *
+     * @return Olive target; {@code cpu}/{@code int4} when no accelerator is present.
+     */
+    public static GenAIOliveTarget resolveOliveTarget() {
+        String preference = providerPreference();
+        if ("cpu".equals(preference)) {
+            return cpuOliveTarget();
+        }
+        for (GenAIProviderCandidate c : GenAIProviders.candidatesFor(preference)) {
+            if (c.nativesPresent()) {
+                return toOliveTarget(c.id());
+            }
+        }
+        return cpuOliveTarget();
+    }
+
+    static GenAIOliveTarget toOliveTarget(String candidateId) {
+        String id = candidateId == null ? "cpu" : candidateId.toLowerCase();
+        String precision = supportsFp8(id) ? "fp8" : "int4";
+        return switch (id) {
+            case "cuda" -> new GenAIOliveTarget("cuda", "gpu", "CUDAExecutionProvider", precision);
+            case "ryzenai" -> new GenAIOliveTarget("ryzenai", "npu", "DmlExecutionProvider", precision);
+            case "openvino" -> new GenAIOliveTarget(
+                    "openvino", "npu", "OpenVINOExecutionProvider", precision);
+            case "qnn" -> new GenAIOliveTarget("qnn", "npu", "QNNExecutionProvider", precision);
+            case "dml" -> new GenAIOliveTarget("dml", "gpu", "DmlExecutionProvider", precision);
+            default -> cpuOliveTarget();
+        };
+    }
+
+    private static GenAIOliveTarget cpuOliveTarget() {
+        return new GenAIOliveTarget("cpu", "cpu", "CPUExecutionProvider", "int4");
+    }
+
+    /** @return resolved ORT native directory after preload, or {@code null}. */
+    static String ortNativeDir() {
+        preloadNatives();
+        return ortNativeDir;
+    }
+
+    /** @return resolved GenAI native directory after preload, or {@code null}. */
+    static String genaiNativeDir() {
+        preloadNatives();
+        return genaiNativeDir;
+    }
+
+    /**
+     * Returns whether {@link System#mapLibraryName(String) mapped} {@code bareName}
+     * exists under the ORT/GenAI native dirs or on the OS library path.
+     *
+     * @param bareName library stem (e.g. {@code onnxruntime_providers_cuda}).
+     * @return {@code true} if the file is present (not loaded).
+     */
+    static boolean libraryFilePresent(String bareName) {
+        return findLibraryFile(bareName) != null;
+    }
+
+    /**
+     * Absolute path to a mapped library file if found.
+     *
+     * @param bareName library stem (e.g. {@code QnnHtp}).
+     * @return absolute path, or {@code null}.
+     */
+    static String findLibraryFile(String bareName) {
+        preloadNatives();
+        String mapped = System.mapLibraryName(bareName);
+        for (String dir : new String[]{ortNativeDir, genaiNativeDir}) {
+            if (dir == null) {
+                continue;
+            }
+            Path path = Path.of(dir, mapped);
+            if (Files.isRegularFile(path)) {
+                return path.toAbsolutePath().toString();
+            }
+        }
+        String onPath = findOnLibraryPath(mapped);
+        if (onPath != null) {
+            Path path = Path.of(onPath, mapped);
+            if (Files.isRegularFile(path)) {
+                return path.toAbsolutePath().toString();
+            }
+        }
+        return null;
     }
     /**
      * Returns whether the {@code onnxruntime-genai} native library can be loaded.
@@ -203,22 +308,14 @@ public final class GenAI {
                 System.getenv("ONNXRUNTIME_GENAI_NATIVE_PATH"),
                 findOnLibraryPath(System.mapLibraryName("onnxruntime-genai")));
         // Load ORT before GenAI so GenAI's dependency resolves to the same copy.
-        // Do not System.load CUDA EP DLLs here — that can hard-crash the JVM on
-        // mismatched CUDA toolkits. Presence alone gates Model.open's CUDA attempt;
-        // ORT/GenAI load those libs when appendProvider("cuda") is used.
+        // Do not System.load CUDA/NPU EP DLLs here — presence checks gate Model.open.
         if (ortDir != null) {
+            ortNativeDir = ortDir;
             loadIfExists(ortDir, System.mapLibraryName("onnxruntime"));
-            if (Files.isRegularFile(Path.of(ortDir,
-                    System.mapLibraryName("onnxruntime_providers_cuda")))) {
-                cudaNativesPresent = true;
-            }
         }
         if (genaiDir != null) {
+            genaiNativeDir = genaiDir;
             loadIfExists(genaiDir, System.mapLibraryName("onnxruntime-genai"));
-            if (Files.isRegularFile(Path.of(genaiDir,
-                    System.mapLibraryName("onnxruntime-genai-cuda")))) {
-                cudaNativesPresent = true;
-            }
         }
     }
 

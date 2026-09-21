@@ -51,7 +51,12 @@ module.exports = function (config) {
       const re = /<h([23])[^>]*id="([^"]+)"[^>]*>([\s\S]*?)<\/h\1>/gi;
       let m;
       while ((m = re.exec(content)) !== null) {
-        const text = m[3].replace(/<[^>]+>/g, "").trim();
+        // Strip tags; then remove any leftover '<' so incomplete tags cannot remain
+        // (CodeQL js/incomplete-multi-character-sanitization).
+        const text = m[3]
+          .replace(/<\/?[^>]*>?/g, "")
+          .replace(/</g, "")
+          .trim();
         if (text) headings.push({ id: m[2], text, level: Number(m[1]) });
       }
       index.push({ title, url: url.replace(/^\//, ""), headings });

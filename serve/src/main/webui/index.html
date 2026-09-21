@@ -5,6 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SMILE Serve</title>
     <link rel="icon" href="/favicon.ico" />
+    <!--
+      Critical styles: constrain the header logo before Vite CSS arrives so
+      first paint stays centered and within ~1/3 of the viewport.
+    -->
+    <style>
+      html, body { margin: 0; }
+      .site-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        box-sizing: border-box;
+        min-height: 100vh;
+        padding: 1.5rem;
+        background-color: #2fa4e7;
+        color: white;
+        text-align: center;
+      }
+      .site-header h1 {
+        margin: 0;
+        font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+        font-weight: 600;
+        line-height: 1.25;
+        max-width: 32rem;
+      }
+      .header-logo {
+        display: block;
+        width: auto;
+        height: auto;
+        max-width: min(33vw, 280px);
+        max-height: 33vh;
+        object-fit: contain;
+      }
+    </style>
     <!-- By default, react-jsonschema-form leverages the Bootstrap semantics -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
@@ -20,8 +55,8 @@
   </head>
   <body>
     <header class="site-header">
-      <img src="/logo.svg" alt="SMILE" class="header-logo">
-      <h1>SMILE &mdash; Statistical Machine Intelligence and Learning Engine</h1>
+      <img src="/smile.png" alt="SMILE" class="header-logo" width="48" height="48">
+      <h1>SMILE &mdash; Statistical Machine Intelligence &amp; Learning Engine</h1>
     </header>
     <div id="root"></div>
     <script type="module" src="/infer/main.jsx"></script>

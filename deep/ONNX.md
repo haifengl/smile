@@ -537,7 +537,7 @@ Describes the kind of an `OrtValue`:
 
 ---
 
-## Execution Providers (GPU Acceleration)
+## Execution Providers (GPU / NPU Acceleration)
 
 Execution providers let ORT offload work to GPUs or specialized accelerators.
 They are configured on `SessionOptions` and tried in registration order; ORT
@@ -558,8 +558,18 @@ try (var opts = new SessionOptions()) {
     // DirectML (Windows GPU — NVIDIA, AMD, Intel)
     opts.appendDirectMLExecutionProvider(0);
 
+    // CoreML (Apple Neural Engine / GPU / CPU — macOS / iOS)
+    opts.appendCoreMLExecutionProvider(Map.of(
+            "ModelFormat", "MLProgram",
+            "MLComputeUnits", "ALL"));
+
+    // Vitis AI (AMD Ryzen AI NPU / Vitis AI DPU) — general ONNX, not GenAI LLMs
+    opts.appendVitisAiExecutionProvider(Map.of(
+            "cache_dir", "C:\\temp\\vaip_cache",
+            "log_level", "info"));
+
     try (var session = InferenceSession.create("model.onnx", opts)) {
-        // Inference runs on GPU if the provider compiled in
+        // Inference runs on the first available registered provider
     }
 }
 ```
@@ -1150,6 +1160,8 @@ public class CancellableInferenceExample {
 | `appendTensorRTExecutionProvider(int)` | Add TensorRT EP                     |
 | `appendRocmExecutionProvider(int)` | Add ROCM EP                         |
 | `appendDirectMLExecutionProvider(int)` | Add DirectML EP (Windows)           |
+| `appendCoreMLExecutionProvider()` / `(Map)` | Add CoreML EP (Apple)            |
+| `appendVitisAiExecutionProvider()` / `(Map)` | Add Vitis AI NPU EP           |
 | `addConfigEntry(String, String)` | Low-level key-value config          |
 | `close()` | Release native resources            |
 
