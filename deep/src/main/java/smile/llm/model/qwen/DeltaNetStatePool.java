@@ -57,6 +57,15 @@ public class DeltaNetStatePool implements AutoCloseable {
     final Tensor[] conv;
 
     private int boundBatch;
+    /**
+     * Set only around the primary MTP verify-window forward
+     * ({@code Qwen.verifyWindowOnline}). While {@code true}, {@link GatedDeltaNet}
+     * runs its per-position loop and retains per-position checkpoints instead
+     * of the normal batched {@code S>1} path; decode ({@code S=1}), prefill,
+     * and every other call site are unaffected since this defaults to
+     * {@code false} everywhere else.
+     */
+    private boolean verifyWindowActive;
     /** requestId → home row. */
     private final Map<Integer, Integer> requestRows = new HashMap<>();
     private final BitSet freeRows;
@@ -221,6 +230,25 @@ public class DeltaNetStatePool implements AutoCloseable {
         }
         this.activeHomeRows = homes;
         this.boundBatch = homes.length;
+    }
+
+    /**
+     * Sets whether the primary MTP verify-window forward is in flight.
+     *
+     * @param active {@code true} around the verify-window forward only.
+     */
+    public void setVerifyWindowActive(boolean active) {
+        this.verifyWindowActive = active;
+    }
+
+    /**
+     * Returns whether the primary MTP verify-window forward is in flight.
+     *
+     * @return {@code true} when {@link GatedDeltaNet} should run its
+     *         per-position verify loop instead of the batched {@code S>1} path.
+     */
+    public boolean verifyWindowActive() {
+        return verifyWindowActive;
     }
 
     /**
@@ -417,6 +445,46 @@ public class DeltaNetStatePool implements AutoCloseable {
      */
     public void restoreCheckpoint(int slot) {
         copyActiveToSlot(slot, false);
+    }
+
+    /**
+     * Copies active working rows {@code [0, boundBatch)} for a single
+     * linear-attention layer into checkpoint {@code slot}.
+     *
+     * <p>Used by the verify-window per-position loop: {@code QwenModel}'s
+     * layer stack is depth-sequential, so each layer's own forward (including
+     * its internal per-position loop) finishes before the next layer starts.
+     * A whole-pool save mid-loop would capture sibling layers' stale state;
+     * this saves only the layer that just finished its own position {@code t}.
+     *
+     * @param slot    checkpoint index ({@code 0 .. numSlots-1}).
+     * @param layerId ordinal among linear-attention layers.
+     */
+    public void saveCheckpointForLayer(int slot, int layerId) {
+        if (speculativeRecurrent == null || slot < 0 || slot >= speculativeSlots) {
+            throw new IllegalStateException("speculative checkpoint slot out of range: " + slot);
+        }
+        int b = boundBatch;
+        if (b <= 0) {
+            return;
+        }
+        if (b > speculativeBatchCapacity) {
+            throw new IllegalStateException(
+                    "active batch " + b + " exceeds speculative checkpoint capacity "
+                            + speculativeBatchCapacity + "; call ensureSpeculativeCheckpoints after activateStep");
+        }
+        try (var span = Index.slice(0, b)) {
+            try (Tensor src = recurrent[layerId].get(span);
+                 Tensor dst = speculativeRecurrent[slot][layerId].get(span)) {
+                smile.torch.Native.copy_(dst, src);
+            }
+            if (conv[layerId] != null && speculativeConv[slot][layerId] != null) {
+                try (Tensor src = conv[layerId].get(span);
+                     Tensor dst = speculativeConv[slot][layerId].get(span)) {
+                    smile.torch.Native.copy_(dst, src);
+                }
+            }
+        }
     }
 
     private void copyActiveToSlot(int slot, boolean save) {

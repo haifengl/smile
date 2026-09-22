@@ -126,6 +126,14 @@ public class QwenModel extends LayerBlock {
     Tensor verifyGraphLogitsOut;
     /** Pre-capture logits buffer (stable address outside the graph memory pool). */
     Tensor verifyGraphLogitsBuf;
+    /**
+     * Retained per-position post-final-norm hidden {@code [1, S, D]} for the
+     * verify-window forward, populated only while
+     * {@link DeltaNetStatePool#verifyWindowActive()}. On a partial MTP accept,
+     * {@link #setMtpAnchorAtWindowPosition} restores the anchor from row
+     * {@code r} here instead of a second full-window forward.
+     */
+    Tensor verifyWindowNormalizedBuf;
 
     /**
      * Constructs the module graph on CPU. Call {@link #to(Device)} after weight
@@ -364,49 +372,93 @@ public class QwenModel extends LayerBlock {
         }
         Tensor row = hidden;
         boolean sliced = false;
-        if (hidden.dim() == 3) {
-            if (hidden.shape()[1] > 1) {
-                try (var last = Index.of(-1)) {
-                    row = hidden.get(Index.Colon, last);
-                    sliced = true;
-                }
-            }
-            if (row.dim() == 3 && row.shape()[1] == 1) {
-                long[] sh = row.shape();
-                Tensor squeezed = row.reshape(sh[0], sh[2]);
-                if (sliced) {
-                    row.close();
-                }
-                row = squeezed;
+        if (hidden.dim() == 3 && hidden.shape()[1] > 1) {
+            try (var last = Index.of(-1)) {
+                row = hidden.get(Index.Colon, last);
                 sliced = true;
             }
+        }
+        setLastPreNormHiddenRow(row);
+        if (sliced) {
+            row.close();
+        }
+    }
+
+    /**
+     * Squeezes an optional size-1 sequence dim then stores/copies {@code row}
+     * into {@link #lastPreNormHidden}, matching {@link #capturePreNormHidden}'s
+     * graph-mode / dtype / device change handling. Does not close {@code row}
+     * itself — the caller owns it.
+     *
+     * @param row post-final-norm hidden {@code [B, 1, D]} or {@code [B, D]}.
+     */
+    private void setLastPreNormHiddenRow(Tensor row) {
+        Tensor squeezed = row;
+        boolean owned = false;
+        if (row.dim() == 3 && row.shape()[1] == 1) {
+            long[] sh = row.shape();
+            squeezed = row.reshape(sh[0], sh[2]);
+            owned = true;
         }
         boolean graphMode = kvCachePool != null
                 && (kvCachePool.decodeGraphBuffers() || kvCachePool.verifyGraphBuffers());
         boolean needAlloc = lastPreNormHidden == null
-                || !java.util.Arrays.equals(lastPreNormHidden.shape(), row.shape())
-                || lastPreNormHidden.device().index() != row.device().index()
-                || lastPreNormHidden.dtype() != row.dtype();
+                || !java.util.Arrays.equals(lastPreNormHidden.shape(), squeezed.shape())
+                || lastPreNormHidden.device().index() != squeezed.device().index()
+                || lastPreNormHidden.dtype() != squeezed.dtype();
         if (needAlloc) {
             if (graphMode) {
                 // Allocating during CUDA graph capture/replay is illegal; keep
                 // the previous anchor until the next eager forward.
-                if (sliced) {
-                    row.close();
+                if (owned) {
+                    squeezed.close();
                 }
                 return;
             }
             if (lastPreNormHidden != null) {
                 lastPreNormHidden.close();
             }
-            lastPreNormHidden = row.copy();
+            lastPreNormHidden = squeezed.copy();
             lastPreNormHidden.detachFromScopes();
         } else {
-            smile.torch.Native.copy_(lastPreNormHidden, row);
+            smile.torch.Native.copy_(lastPreNormHidden, squeezed);
         }
-        if (sliced) {
-            row.close();
+        if (owned) {
+            squeezed.close();
         }
+    }
+
+    /**
+     * On a partial MTP accept at window position {@code r} (checkpoint-replay
+     * path), restores the MTP anchor from the per-position hidden retained in
+     * {@link #verifyWindowNormalizedBuf} instead of a second full-window
+     * forward.
+     *
+     * @param r accepted window position (0-indexed).
+     */
+    public void setMtpAnchorAtWindowPosition(int r) {
+        if (mtp == null || verifyWindowNormalizedBuf == null) {
+            return;
+        }
+        try (var idx = Index.of(r); Tensor row = verifyWindowNormalizedBuf.get(Index.Colon, idx)) {
+            setLastPreNormHiddenRow(row);
+        }
+    }
+
+    /** Allocates the retained per-position verify-window hidden buffer (shape/device/dtype change only). */
+    private void ensureVerifyWindowNormalizedBuf(Tensor prototype) {
+        if (verifyWindowNormalizedBuf != null
+                && java.util.Arrays.equals(verifyWindowNormalizedBuf.shape(), prototype.shape())) {
+            return;
+        }
+        if (verifyWindowNormalizedBuf != null) {
+            verifyWindowNormalizedBuf.close();
+            verifyWindowNormalizedBuf = null;
+        }
+        verifyWindowNormalizedBuf = Tensor.zeros(
+                new Tensor.Options().device(prototype.device()).dtype(prototype.dtype()),
+                prototype.shape());
+        verifyWindowNormalizedBuf.detachFromScopes();
     }
 
     /**
@@ -526,6 +578,10 @@ public class QwenModel extends LayerBlock {
                 // MTP expects the backbone hidden that feeds the LM head (post-final-norm),
                 // matching vLLM/SGLang Qwen3.5 MTP.
                 capturePreNormHidden(normalized);
+                if (deltaNetStatePool != null && deltaNetStatePool.verifyWindowActive()) {
+                    ensureVerifyWindowNormalizedBuf(normalized);
+                    smile.torch.Native.copy_(verifyWindowNormalizedBuf, normalized);
+                }
             }
             // mask is independently allocated; free before the vocab-sized lm_head.
             if (mask != null) {
@@ -1463,6 +1519,10 @@ public class QwenModel extends LayerBlock {
             h.close();
             if (mtp != null) {
                 capturePreNormHidden(normalized);
+                if (deltaNetStatePool != null && deltaNetStatePool.verifyWindowActive()) {
+                    ensureVerifyWindowNormalizedBuf(normalized);
+                    smile.torch.Native.copy_(verifyWindowNormalizedBuf, normalized);
+                }
             }
             Tensor logitsF = lmHead.forward(normalized);
             normalized.close();

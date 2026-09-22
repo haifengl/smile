@@ -252,6 +252,11 @@ public class GatedDeltaNet {
         // disagrees with token-by-token decode — garbes MTP window verify).
         boolean hasActiveState = statePool != null && statePool.boundBatch() > 0;
         boolean decodeS1 = hasActiveState && seqLen == 1;
+        // MTP verify-window forward: run the per-position loop below instead
+        // of the batched S>1 path, so a partial-accept reject can restore a
+        // retained per-position checkpoint instead of a second full forward.
+        // Decode (S=1), prefill, and every other call site never set this flag.
+        boolean verifyLoop = hasActiveState && seqLen > 1 && statePool.verifyWindowActive();
 
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
@@ -285,7 +290,7 @@ public class GatedDeltaNet {
             Tensor mixedConv = null;
             Tensor mixedConvBase = null;
 
-            if (decodeS1 && convState != null) {
+            if (!verifyLoop && decodeS1 && convState != null) {
                 Tensor[] qkv = GatedDeltaRule.causalConv1dUpdateSplitQkv(
                         mixed, convState, conv1dWeight,
                         numKHeads, numVHeads, headKDim, headVDim);
@@ -297,7 +302,7 @@ public class GatedDeltaNet {
                     value = qkv[2];
                 }
             }
-            if (query == null) {
+            if (!verifyLoop && query == null) {
                 // S>1 with an active pool (MTP verify) must use Update so the
                 // prior K-1 conv context is applied; Prefill pads with zeros.
                 mixedConvBase = hasActiveState && convState != null
@@ -351,39 +356,48 @@ public class GatedDeltaNet {
                 tMark = System.nanoTime();
             }
 
-            Tensor initState = statePool != null ? statePool.activeRecurrent(linearLayerId) : null;
-            var result = GatedDeltaRule.recurrentGatedDeltaRule(
-                    query, key, value, g, beta, initState, statePool != null, true);
-            query.close();
-            key.close();
-            value.close();
-            if (qSlice != null) {
-                qSlice.close();
-            }
-            if (kSlice != null) {
-                kSlice.close();
-            }
-            if (vSlice != null) {
-                vSlice.close();
-            }
-            g.close();
-            beta.close();
-            if (mixedConv != null) {
-                mixedConv.close();
-            }
-            if (mixedConvBase != null) {
-                mixedConvBase.close();
+            Tensor core;
+            if (verifyLoop) {
+                core = forwardVerifyWindowLoop(mixed, convState, g, beta, batch, seqLen);
+                mixed.close();
+                mixedRaw.close();
+                g.close();
+                beta.close();
+            } else {
+                Tensor initState = statePool != null ? statePool.activeRecurrent(linearLayerId) : null;
+                var result = GatedDeltaRule.recurrentGatedDeltaRule(
+                        query, key, value, g, beta, initState, statePool != null, true);
+                query.close();
+                key.close();
+                value.close();
+                if (qSlice != null) {
+                    qSlice.close();
+                }
+                if (kSlice != null) {
+                    kSlice.close();
+                }
+                if (vSlice != null) {
+                    vSlice.close();
+                }
+                g.close();
+                beta.close();
+                if (mixedConv != null) {
+                    mixedConv.close();
+                }
+                if (mixedConvBase != null) {
+                    mixedConvBase.close();
+                }
+
+                core = result._1();
+                if (statePool != null && result._2() != null) {
+                    Tensor dest = statePool.activeRecurrent(linearLayerId);
+                    dest.put_(result._2(), Index.Colon, Index.Colon, Index.Colon, Index.Colon);
+                    result._2().close();
+                }
             }
             if (profile) {
                 smile.llm.engine.DecodeForwardProfile.addDeltaRecurrent(System.nanoTime() - tMark);
                 tMark = System.nanoTime();
-            }
-
-            Tensor core = result._1();
-            if (statePool != null && result._2() != null) {
-                Tensor dest = statePool.activeRecurrent(linearLayerId);
-                dest.put_(result._2(), Index.Colon, Index.Colon, Index.Colon, Index.Colon);
-                result._2().close();
             }
 
             core = core.reshape(batch * seqLen * numVHeads, headVDim);
@@ -403,5 +417,74 @@ public class GatedDeltaNet {
         } finally {
             Tensor.pop();
         }
+    }
+
+    /**
+     * Per-position verify-window loop: invokes the exact per-step kernels
+     * decode's {@code S=1} path already uses ({@code causalConv1dUpdateSplitQkv}
+     * once per position for the fused conv+QKV-split+head-repeat, then
+     * {@code recurrentGatedDeltaRule} with {@code S=1}) instead of the batched
+     * whole-window call, and retains a checkpoint after every position so a
+     * partial MTP accept can restore directly rather than re-forwarding.
+     *
+     * <p>{@code g}/{@code beta} are the already-computed whole-window decay
+     * gate / input gate ({@code [B,S,H]}) — elementwise per position, so no
+     * per-step recomputation is needed; only DeltaNet's own recurrent state
+     * carries across positions.
+     *
+     * @param mixed     pre-conv QKV projection {@code [B, C, S]}.
+     * @param convState conv left-context {@code [B, C, K-1]} (rolled in place).
+     * @param g         decay gate {@code [B, S, H]}.
+     * @param beta      input gate {@code [B, S, H]}.
+     * @param batch     batch size.
+     * @param seqLen    verify-window length ({@code numDrafts + 1}).
+     * @return mixer core output {@code [B, S, H, Dv]} (pre-gate/pre-norm).
+     */
+    private Tensor forwardVerifyWindowLoop(Tensor mixed, Tensor convState, Tensor g, Tensor beta,
+                                           int batch, int seqLen) {
+        var opts = new Tensor.Options()
+                .device(mixed.device()).dtype(beta.dtype()).requireGradients(false);
+        Tensor coreOut = Tensor.zeros(opts, batch, seqLen, numVHeads, headVDim);
+        Tensor initState = statePool.activeRecurrent(linearLayerId);
+        for (int t = 0; t < seqLen; t++) {
+            AutoScope stepScope = new AutoScope();
+            Tensor.push(stepScope);
+            try (var tSpan = Index.slice(t, t + 1)) {
+                Tensor mixedStep = mixed.get(Index.Colon, Index.Colon, tSpan);
+                Tensor[] qkv = GatedDeltaRule.causalConv1dUpdateSplitQkv(
+                        mixedStep, convState, conv1dWeight, numKHeads, numVHeads, headKDim, headVDim);
+                mixedStep.close();
+                Tensor qStep = qkv[0];
+                Tensor kStep = qkv[1];
+                Tensor vStep = qkv[2];
+
+                // A scalar Index.of(t) squeezes the dim (PyTorch indexing
+                // semantics); Index.slice keeps it as size 1 ([B,1,H]) — matches
+                // the [B,S,H] shape recurrentGatedDeltaRule expects with S=1.
+                Tensor gStep = g.get(Index.Colon, tSpan);
+                Tensor betaStep = beta.get(Index.Colon, tSpan);
+
+                var stepResult = GatedDeltaRule.recurrentGatedDeltaRule(
+                        qStep, kStep, vStep, gStep, betaStep, initState, true, true);
+                qStep.close();
+                kStep.close();
+                vStep.close();
+                gStep.close();
+                betaStep.close();
+
+                Tensor stepCore = stepResult._1();
+                if (stepResult._2() != null) {
+                    Tensor dest = statePool.activeRecurrent(linearLayerId);
+                    dest.put_(stepResult._2(), Index.Colon, Index.Colon, Index.Colon, Index.Colon);
+                    stepResult._2().close();
+                }
+                coreOut.put_(stepCore, Index.Colon, tSpan, Index.Colon, Index.Colon);
+                stepCore.close();
+                statePool.saveCheckpointForLayer(t + 1, linearLayerId);
+            } finally {
+                Tensor.pop();
+            }
+        }
+        return coreOut;
     }
 }
