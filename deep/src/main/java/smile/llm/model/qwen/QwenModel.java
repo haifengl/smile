@@ -530,8 +530,13 @@ public class QwenModel extends LayerBlock {
             logger.debug("tpRank={}: forward start seqlen={} freeMiB={}",
                     tpRank, seqlen, freeBefore / (1024 * 1024));
         }
+        boolean profile = DecodeForwardProfile.enabled();
         try (var pos = Index.slice(startPos, startPos + seqlen)) {
+            long tEmbed = profile ? System.nanoTime() : 0L;
             Tensor h = tokEmbeddings.forward(tokens);
+            if (profile) {
+                DecodeForwardProfile.addEmbed(System.nanoTime() - tEmbed);
+            }
             Tensor cos = rope.cos().get(pos);
             Tensor sin = rope.sin().get(pos);
 
@@ -589,6 +594,7 @@ public class QwenModel extends LayerBlock {
                 mask = null;
             }
             // cos/sin are slices of long-lived tables — leave to AutoScope pop.
+            long tHead = profile ? System.nanoTime() : 0L;
             Tensor logitsF;
             if (!allTokenLogits && seqlen > 1) {
                 try (var last = Index.of(-1);
@@ -604,6 +610,9 @@ public class QwenModel extends LayerBlock {
             Tensor logits = logitsF.to(ScalarType.Float);
             if (logits != logitsF) {
                 logitsF.close();
+            }
+            if (profile) {
+                DecodeForwardProfile.addLmHead(System.nanoTime() - tHead);
             }
             logits.promoteToParent();
             return logits;
@@ -1508,8 +1517,13 @@ public class QwenModel extends LayerBlock {
                                           Tensor cos, Tensor sin) {
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
+        boolean profile = DecodeForwardProfile.enabled();
         try {
+            long tEmbed = profile ? System.nanoTime() : 0L;
             Tensor h = tokEmbeddings.forward(tokens);
+            if (profile) {
+                DecodeForwardProfile.addEmbed(System.nanoTime() - tEmbed);
+            }
             for (int i = 0; i < layers.size(); i++) {
                 Tensor next = layers.get(i).forward(h, startPositions, cos, sin, null);
                 h.close();
@@ -1524,8 +1538,12 @@ public class QwenModel extends LayerBlock {
                     smile.torch.Native.copy_(verifyWindowNormalizedBuf, normalized);
                 }
             }
+            long tHead = profile ? System.nanoTime() : 0L;
             Tensor logitsF = lmHead.forward(normalized);
             normalized.close();
+            if (profile) {
+                DecodeForwardProfile.addLmHead(System.nanoTime() - tHead);
+            }
             Tensor logits = logitsF.to(ScalarType.Float);
             if (logits != logitsF) {
                 logitsF.close();

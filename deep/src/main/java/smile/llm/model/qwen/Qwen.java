@@ -156,6 +156,14 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      */
     private final java.util.concurrent.atomic.AtomicLong speculativeBookkeepingNanos =
             new java.util.concurrent.atomic.AtomicLong();
+    /**
+     * Max-across-ranks phase breakdown for the most recent primary verify
+     * forward ({@code SMILE_DECODE_PROFILE=1} only); {@code null} otherwise,
+     * or when the round replayed a captured verify CUDA graph (replay bypasses
+     * every instrumented Java call site, so no phase breakdown is available
+     * for that round — only eager/capture rounds populate this).
+     */
+    private volatile DecodeForwardProfile.Snapshot lastVerifyProfile;
 
     /**
      * Constructor.
@@ -2184,17 +2192,29 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      */
     private Tensor[] forwardWindowVerify(Tensor[] tokenShards, int startPos, ExecutorService pool) {
         Tensor[] logits = new Tensor[models.length];
+        boolean profile = DecodeForwardProfile.enabled();
+        DecodeForwardProfile.Snapshot merged = profile ? new DecodeForwardProfile.Snapshot() : null;
         if (models.length == 1) {
             logits[0] = models[0].forwardVerifyGraph(tokenShards[0], startPos);
+            if (merged != null) {
+                merged.maxWith(DecodeForwardProfile.snapshotAndReset());
+            }
+            lastVerifyProfile = merged;
             return logits;
         }
+        DecodeForwardProfile.Snapshot[] rankProfiles =
+                profile ? new DecodeForwardProfile.Snapshot[models.length] : null;
         List<Future<Tensor>> futures = new ArrayList<>(models.length);
         for (int r = 0; r < models.length; r++) {
             final int rank = r;
             futures.add(pool.submit(() -> {
                 ParallelState.setCurrent(tpGroup.state(rank));
                 try (var guard = Tensor.noGradGuard()) {
-                    return models[rank].forwardVerifyGraph(tokenShards[rank], startPos);
+                    Tensor out = models[rank].forwardVerifyGraph(tokenShards[rank], startPos);
+                    if (rankProfiles != null) {
+                        rankProfiles[rank] = DecodeForwardProfile.snapshotAndReset();
+                    }
+                    return out;
                 } finally {
                     ParallelState.clearCurrent();
                 }
@@ -2203,6 +2223,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         try {
             for (int r = 0; r < models.length; r++) {
                 logits[r] = futures.get(r).get();
+                if (merged != null) {
+                    merged.maxWith(rankProfiles[r]);
+                }
             }
         } catch (Exception e) {
             for (Tensor l : logits) {
@@ -2212,6 +2235,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
             throw new RuntimeException("TP verify-graph forward failed", e);
         }
+        lastVerifyProfile = merged;
         return logits;
     }
 
@@ -2515,14 +2539,32 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     private void logVerify(int drafts, int accepted, int bonus) {
         if (logger.isDebugEnabled() || speculativeRounds.get() % 32 == 1) {
             double[] timing = speculativeMeanRoundTimingMs();
-            logger.info("MTP verify: drafts={} accepted={} bonus={} acceptRate={} meanDepth={} targetFwd/round={} "
-                            + "meanRoundMs(draft={} verify={} replay={} bookkeeping={})",
-                    drafts, accepted, bonus,
-                    String.format("%.3f", speculativeAcceptRate()),
-                    String.format("%.2f", speculativeMeanAcceptedDepth()),
-                    String.format("%.2f", speculativeMeanTargetForwardsPerRound()),
-                    String.format("%.2f", timing[0]), String.format("%.2f", timing[1]),
-                    String.format("%.2f", timing[2]), String.format("%.2f", timing[3]));
+            var p = lastVerifyProfile;
+            if (p != null) {
+                logger.info("MTP verify: drafts={} accepted={} bonus={} acceptRate={} meanDepth={} targetFwd/round={} "
+                                + "meanRoundMs(draft={} verify={} replay={} bookkeeping={}) "
+                                + "verifyProfile(embed={} fullAttn={} linearAttn={} mlp={} nccl={} lmHead={}) "
+                                + "delta(proj={} conv={} gate={} recurrent={} out={})",
+                        drafts, accepted, bonus,
+                        String.format("%.3f", speculativeAcceptRate()),
+                        String.format("%.2f", speculativeMeanAcceptedDepth()),
+                        String.format("%.2f", speculativeMeanTargetForwardsPerRound()),
+                        String.format("%.2f", timing[0]), String.format("%.2f", timing[1]),
+                        String.format("%.2f", timing[2]), String.format("%.2f", timing[3]),
+                        p.embedMs(), p.fullAttnMs(), p.linearAttnMs(),
+                        p.mlpMs(), p.ncclMs(), p.lmHeadMs(),
+                        p.deltaProjMs(), p.deltaConvMs(), p.deltaGateMs(),
+                        p.deltaRecurrentMs(), p.deltaOutMs());
+            } else {
+                logger.info("MTP verify: drafts={} accepted={} bonus={} acceptRate={} meanDepth={} targetFwd/round={} "
+                                + "meanRoundMs(draft={} verify={} replay={} bookkeeping={})",
+                        drafts, accepted, bonus,
+                        String.format("%.3f", speculativeAcceptRate()),
+                        String.format("%.2f", speculativeMeanAcceptedDepth()),
+                        String.format("%.2f", speculativeMeanTargetForwardsPerRound()),
+                        String.format("%.2f", timing[0]), String.format("%.2f", timing[1]),
+                        String.format("%.2f", timing[2]), String.format("%.2f", timing[3]));
+            }
         }
     }
 
