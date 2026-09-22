@@ -90,47 +90,58 @@ public final class DecodeForwardProfile {
             deltaOutNs = Math.max(deltaOutNs, other.deltaOutNs);
         }
 
-        long embedMs() {
+        /** @return {@link #embedNs} in milliseconds. */
+        public long embedMs() {
             return embedNs / 1_000_000L;
         }
 
-        long fullAttnMs() {
+        /** @return {@link #fullAttnNs} in milliseconds. */
+        public long fullAttnMs() {
             return fullAttnNs / 1_000_000L;
         }
 
-        long linearAttnMs() {
+        /** @return {@link #linearAttnNs} in milliseconds. */
+        public long linearAttnMs() {
             return linearAttnNs / 1_000_000L;
         }
 
-        long mlpMs() {
+        /** @return {@link #mlpNs} in milliseconds. */
+        public long mlpMs() {
             return mlpNs / 1_000_000L;
         }
 
-        long ncclMs() {
+        /** @return {@link #ncclNs} in milliseconds. */
+        public long ncclMs() {
             return ncclNs / 1_000_000L;
         }
 
-        long lmHeadMs() {
+        /** @return {@link #lmHeadNs} in milliseconds. */
+        public long lmHeadMs() {
             return lmHeadNs / 1_000_000L;
         }
 
-        long deltaProjMs() {
+        /** @return {@link #deltaProjNs} in milliseconds. */
+        public long deltaProjMs() {
             return deltaProjNs / 1_000_000L;
         }
 
-        long deltaConvMs() {
+        /** @return {@link #deltaConvNs} in milliseconds. */
+        public long deltaConvMs() {
             return deltaConvNs / 1_000_000L;
         }
 
-        long deltaGateMs() {
+        /** @return {@link #deltaGateNs} in milliseconds. */
+        public long deltaGateMs() {
             return deltaGateNs / 1_000_000L;
         }
 
-        long deltaRecurrentMs() {
+        /** @return {@link #deltaRecurrentNs} in milliseconds. */
+        public long deltaRecurrentMs() {
             return deltaRecurrentNs / 1_000_000L;
         }
 
-        long deltaOutMs() {
+        /** @return {@link #deltaOutNs} in milliseconds. */
+        public long deltaOutMs() {
             return deltaOutNs / 1_000_000L;
         }
     }
