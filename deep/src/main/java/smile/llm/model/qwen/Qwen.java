@@ -79,6 +79,16 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     static final String family = "alibaba/qwen3.5";
 
+    /**
+     * Kill switch for the checkpoint-replay verify-window fix: on a partial
+     * MTP accept, restore a per-position DeltaNet checkpoint retained during
+     * the primary verify forward instead of a second full-window forward.
+     * Default off until real-traffic validation; mirrors the single-flag
+     * design of {@code SMILE_VERIFY_CUDA_GRAPH} / {@code SMILE_DECODE_CUDA_GRAPH}.
+     */
+    private static final boolean MTP_VERIFY_CHECKPOINT_REPLAY =
+            "1".equals(System.getenv("SMILE_MTP_VERIFY_CHECKPOINT_REPLAY"));
+
     private static final Pattern HF_LAYER_WEIGHT = Pattern.compile(
             "^model\\.layers\\.(\\d+)\\.(self_attn|linear_attn|mlp|input_layernorm|post_attention_layernorm)\\.(.+)$");
     private static final Pattern HF_MTP_LAYER_WEIGHT = Pattern.compile(
@@ -2530,19 +2540,23 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         long tBookkeeping = System.nanoTime();
         activatePools(requestId);
-        saveDeltaNetCheckpoint();
+        saveDeltaNetCheckpoint(n);
         speculativeBookkeepingNanos.addAndGet(System.nanoTime() - tBookkeeping);
 
+        boolean checkpointReplay = MTP_VERIFY_CHECKPOINT_REPLAY;
+        if (checkpointReplay) {
+            setVerifyWindowActive(true);
+        }
         long tVerify = System.nanoTime();
         int[] targetSamples;
         try (Tensor logits = forwardVerifyWindow(requestId, window, lastPos, false)) {
             speculativeTargetForwards.incrementAndGet();
             targetSamples = sampleTargetWindow(logits, temperature, topp);
             speculativeVerifyNanos.addAndGet(System.nanoTime() - tVerify);
-            // Outside the timed region: this diagnostic's own extra eager forward
-            // must never be counted as real verify cost (it isn't — it's a debug-
-            // only reference computation, gated off by default).
-            debugDiffVerifyGraphVsEager(window, lastPos, logits);
+        } finally {
+            if (checkpointReplay) {
+                setVerifyWindowActive(false);
+            }
         }
         if (targetSamples.length != n + 1) {
             throw new IllegalStateException(
@@ -2559,12 +2573,19 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         if (r < n) {
             long tReplay = System.nanoTime();
-            // Working rows hold end-of-window state; home still pre-window (no scatter yet).
-            restoreDeltaNetCheckpoint();
-            scatterDeltaNet();
-            int[] committed = Arrays.copyOf(window, r + 1);
-            try (Tensor ignored = forwardVerifyWindow(requestId, committed, lastPos, true)) {
-                // Replay restores DeltaNet through the sealed prefix and scatters home rows.
+            if (checkpointReplay) {
+                // Working rows already hold the state retained after window
+                // position r by the per-step verify loop — no second forward.
+                restoreDeltaNetCheckpointAtWindowPosition(r);
+                scatterDeltaNet();
+            } else {
+                // Working rows hold end-of-window state; home still pre-window (no scatter yet).
+                restoreDeltaNetCheckpoint();
+                scatterDeltaNet();
+                int[] committed = Arrays.copyOf(window, r + 1);
+                try (Tensor ignored = forwardVerifyWindow(requestId, committed, lastPos, true)) {
+                    // Replay restores DeltaNet through the sealed prefix and scatters home rows.
+                }
             }
             speculativeReplayNanos.addAndGet(System.nanoTime() - tReplay);
         } else {
@@ -2713,12 +2734,24 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     }
 
     private void saveDeltaNetCheckpoint() {
-        // ensureSpeculativeCheckpoints wipes/reallocates ALL slots to zero when
-        // growing the slot count — the debug-diff slot (1) must be sized here,
-        // before this call's own saveCheckpoint(0) writes real pre-round state,
-        // never later (debugDiffVerifyGraphVsEager relies on slot count already
-        // being correct and never calls ensureSpeculativeCheckpoints itself).
-        int slots = VerifyCudaGraph.enabled() && VerifyCudaGraph.debugDiff() ? 2 : 1;
+        saveDeltaNetCheckpointSlots(1);
+    }
+
+    /**
+     * Sizes checkpoint slots for the checkpoint-replay path (kill-switch gated):
+     * slot 0 is the existing pre-round snapshot; slots {@code 1..numDrafts+1}
+     * retain per-position state (slot {@code i+1} = state after window
+     * position {@code i}), written by {@link GatedDeltaNet}'s per-position
+     * verify loop. Falls back to the plain 1-slot sizing when the checkpoint-
+     * replay kill switch is off, so the old second-forward path is unaffected.
+     *
+     * @param numDrafts number of draft tokens in this round ({@code n}).
+     */
+    private void saveDeltaNetCheckpoint(int numDrafts) {
+        saveDeltaNetCheckpointSlots(MTP_VERIFY_CHECKPOINT_REPLAY ? numDrafts + 2 : 1);
+    }
+
+    private void saveDeltaNetCheckpointSlots(int slots) {
         for (QwenModel m : models) {
             DeltaNetStatePool pool = m.deltaNetStatePool();
             if (pool != null && pool.boundBatch() > 0) {
@@ -2738,134 +2771,34 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     }
 
     /**
-     * Diagnostic only ({@link VerifyCudaGraph#debugDiff()}): recomputes the
-     * identical verify window via a direct, graph-bypassing eager
-     * {@code model.forward(tokens, startPos, true)} call (never
-     * {@code forwardVerifyGraph}) and logs the numeric gap against
-     * {@code graphLogits} — the graph path's own output, already sampled by
-     * the caller. Doubles verify cost every round; stashes/restores
-     * DeltaNet state around the extra call (checkpoint slot 1, distinct
-     * from slot 0's pre-round snapshot the caller already holds) so this
-     * never perturbs the graph path's own trajectory. Added to get a direct
-     * numeric read on real traffic after real-hardware testing showed
-     * verify-graph measurably lowers MTP acceptance vs. the identical eager
-     * path on the same prompt/model — isolated tests only validated
-     * {@code maxAbs < 5e-2} against a small random-weight model, too loose
-     * a bar to say whether that's normal bf16 divergence or a real bug at
-     * production scale, where acceptance is an exact-match test.
+     * Checkpoint-replay path: restores every model's DeltaNet working rows
+     * from the per-position checkpoint retained after window position
+     * {@code r} (slot {@code r+1}, written by {@link GatedDeltaNet}'s
+     * per-position verify loop) and restores the MTP anchor from the same
+     * position — replacing a second full-window forward on partial accept.
+     *
+     * @param r accepted window position (0-indexed, {@code < numDrafts}).
      */
-    private void debugDiffVerifyGraphVsEager(int[] window, int startPos, Tensor graphLogits) {
-        if (!VerifyCudaGraph.enabled() || !VerifyCudaGraph.debugDiff()) {
-            return;
-        }
-        // Slot count (2) is sized once, up front, by saveDeltaNetCheckpoint's own
-        // ensureSpeculativeCheckpoints call for this round — never here: growing
-        // the slot count wipes every slot to zero, which would destroy the real
-        // pre-round state saveDeltaNetCheckpoint just wrote to slot 0 above us.
+    private void restoreDeltaNetCheckpointAtWindowPosition(int r) {
         for (QwenModel m : models) {
             DeltaNetStatePool pool = m.deltaNetStatePool();
             if (pool != null && pool.boundBatch() > 0) {
-                pool.saveCheckpoint(1);
-                pool.restoreCheckpoint(0);
+                pool.restoreCheckpoint(r + 1);
             }
+            m.setMtpAnchorAtWindowPosition(r);
         }
-        long[] toks = new long[window.length];
-        for (int i = 0; i < window.length; i++) {
-            toks[i] = window[i];
-        }
-        Tensor[] shards = new Tensor[models.length];
-        Tensor[] eager = new Tensor[models.length];
-        // capturePreNormHidden (inside forward()) mutates each model's
-        // lastPreNormHidden IN PLACE (same persistent buffer, copy-only) --
-        // the next round's draftGreedy reads that same field, so the extra
-        // eager forward below must not be allowed to leave its own value
-        // there. Stash the real (graph-path) value now, restore it after.
-        Tensor[] savedHidden = new Tensor[models.length];
-        try {
-            for (int r = 0; r < models.length; r++) {
-                Tensor h = models[r].lastPreNormHidden();
-                if (h != null) {
-                    savedHidden[r] = h.copy();
-                    savedHidden[r].detachFromScopes();
-                }
-            }
-            for (int r = 0; r < models.length; r++) {
-                shards[r] = Tensor.of(toks).reshape(1, toks.length).to(models[r].device());
-            }
-            if (models.length == 1) {
-                eager[0] = models[0].forward(shards[0], startPos, true);
-            } else {
-                List<Future<Tensor>> futures = new ArrayList<>(models.length);
-                for (int r = 0; r < models.length; r++) {
-                    final int rank = r;
-                    futures.add(tpExecutor.submit(() -> {
-                        ParallelState.setCurrent(tpGroup.state(rank));
-                        try (var guard = Tensor.noGradGuard()) {
-                            return models[rank].forward(shards[rank], startPos, true);
-                        } finally {
-                            ParallelState.clearCurrent();
-                        }
-                    }));
-                }
-                for (int r = 0; r < models.length; r++) {
-                    eager[r] = futures.get(r).get();
-                }
-            }
-            float[][] graphRows = logitsRowsToFloat(graphLogits);
-            float[][] eagerRows = logitsRowsToFloat(eager[0]);
-            float maxAbs = 0f;
-            int mismatches = 0;
-            int rows = Math.min(graphRows.length, eagerRows.length);
-            for (int i = 0; i < rows; i++) {
-                float[] g = graphRows[i];
-                float[] e = eagerRows[i];
-                int cols = Math.min(g.length, e.length);
-                int gArg = 0;
-                int eArg = 0;
-                for (int j = 1; j < cols; j++) {
-                    if (g[j] > g[gArg]) {
-                        gArg = j;
-                    }
-                    if (e[j] > e[eArg]) {
-                        eArg = j;
-                    }
-                }
-                if (gArg != eArg) {
-                    mismatches++;
-                }
-                for (int j = 0; j < cols; j++) {
-                    maxAbs = Math.max(maxAbs, Math.abs(g[j] - e[j]));
-                }
-            }
-            logger.info("verify-graph debug diff: maxAbs={} argmaxMismatch={}/{}",
-                    maxAbs, mismatches, rows);
-        } catch (Exception e) {
-            logger.warn("verify-graph debug diff failed: {}", e.getMessage());
-        } finally {
-            for (Tensor t : shards) {
-                if (t != null) {
-                    t.close();
-                }
-            }
-            for (Tensor t : eager) {
-                if (t != null) {
-                    t.close();
-                }
-            }
-            for (int r = 0; r < models.length; r++) {
-                if (savedHidden[r] != null) {
-                    Tensor h = models[r].lastPreNormHidden();
-                    if (h != null) {
-                        smile.torch.Native.copy_(h, savedHidden[r]);
-                    }
-                    savedHidden[r].close();
-                }
-            }
-            for (QwenModel m : models) {
-                DeltaNetStatePool pool = m.deltaNetStatePool();
-                if (pool != null && pool.boundBatch() > 0) {
-                    pool.restoreCheckpoint(1);
-                }
+    }
+
+    /**
+     * Sets whether every model's DeltaNet pool is in the primary MTP
+     * verify-window forward, gating {@link GatedDeltaNet}'s per-position
+     * verify loop (see {@link DeltaNetStatePool#verifyWindowActive()}).
+     */
+    private void setVerifyWindowActive(boolean active) {
+        for (QwenModel m : models) {
+            DeltaNetStatePool pool = m.deltaNetStatePool();
+            if (pool != null) {
+                pool.setVerifyWindowActive(active);
             }
         }
     }

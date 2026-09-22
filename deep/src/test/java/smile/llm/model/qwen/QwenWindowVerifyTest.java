@@ -123,6 +123,52 @@ public class QwenWindowVerifyTest {
     }
 
     @Test
+    public void testGivenMtpModelWhenPartialAcceptThenCheckpointReplayCompletesWithoutSecondForward() {
+        // SMILE_MTP_VERIFY_CHECKPOINT_REPLAY=1 is set for the whole :deep:test
+        // task (deep/build.gradle.kts) — this exercises Qwen.verifyWindowOnline's
+        // checkpoint-replay branch (GatedDeltaNet's per-position verify loop +
+        // DeltaNetStatePool per-position checkpoint restore + QwenModel's MTP
+        // anchor retention) end-to-end on a real, MTP-enabled hybrid model,
+        // instead of the old second-full-forward replay.
+        QwenModelArgs args = new QwenModelArgs(
+                64, 4, 4, 2, 16, 100, 128, 1e-6, 10000.0, 0.25,
+                4, 16, 16, 2, 4, QwenModelArgs.defaultLayerTypes(4, 4), 1, 32,
+                1, 3);
+        assertTrue(args.hasMtp());
+        QwenModel model = tinyModel(args);
+        Qwen qwen = new Qwen("tiny-mtp-checkpoint-replay", model, tinyTokenizer(), args);
+        qwen.resetSpeculativeMetrics();
+
+        int[] prompt = pageAlignedPrompt();
+        int requestId = qwen.bind(prompt, 32);
+        try (Tensor prefill = qwen.prefillChunk(requestId, prompt, 0, prompt.length)) {
+            assertNotNull(prefill);
+        }
+
+        int lastPos = prompt.length - 1;
+        int lastToken = prompt[lastPos];
+        // Random-weight model output won't greedily match every draft, so this
+        // reliably exercises the r < n (partial accept / checkpoint-restore) branch.
+        int[] drafts = {7, 11, 13};
+        int written = qwen.verifyWindowOnlineRecorded(requestId, lastToken, lastPos, drafts);
+        assertTrue(written >= 1 && written <= drafts.length + 1,
+                "accepted token count out of range: " + written);
+        assertEquals(1.0, qwen.speculativeMeanTargetForwardsPerRound(), 1e-9,
+                "checkpoint-replay must still count exactly one target forward per round");
+
+        // A further decode step from the sealed position must not throw and
+        // must produce finite logits — corrupted/misaligned DeltaNet or KV
+        // state from a bad checkpoint restore would typically surface here.
+        int nextPos = lastPos + written;
+        try (Tensor logits = qwen.decodeStep(
+                new int[]{requestId}, new int[]{lastToken}, new int[]{nextPos})) {
+            assertNotNull(logits);
+        }
+
+        qwen.evict(requestId);
+    }
+
+    @Test
     public void testGivenPartialAcceptWhenTruncateThenSealedLenHidesRejectedTail() {
         QwenModelArgs args = new QwenModelArgs();
         QwenModel model = tinyModel(args);

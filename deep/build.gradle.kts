@@ -14,6 +14,11 @@ tasks.withType<Test>().all {
     // test (this only changes behavior inside an active cudaStreamCapture
     // region, which nothing else here creates).
     environment("SMILE_VERIFY_CUDA_GRAPH", "1")
+    // Opt-in flag for the MTP verify-window checkpoint-replay tests
+    // (GatedDeltaNetVerifyLoopEquivalenceTest, QwenWindowVerifyTest). Only
+    // changes behavior inside Qwen.verifyWindowOnline; harmless for any
+    // other test since nothing else here reaches that method.
+    environment("SMILE_MTP_VERIFY_CHECKPOINT_REPLAY", "1")
 }
 
 tasks.withType<Javadoc> {

@@ -66,6 +66,39 @@ The service starts on port 8080 inside the container (mapped to 8888 on the host
 Place your `.sml` and `.onnx` model files in `/path/to/model/folder`; they are
 discovered automatically at startup.
 
+### 1.1 GPU Build & Run
+
+Build the JVM+GPU image from source and run it with CUDA graph decode enabled.
+To enable Google login, add `-Dsmile.auth.google.client-id=...
+-Dsmile.auth.google.client-secret=... -Dsmile.auth.google.redirect-uri=...` to
+`JAVA_OPTS_APPEND` yourself (see [§7.4](#authentication)); keep those values
+out of shell history / `docker inspect` by sourcing them from environment
+variables rather than inlining literals.
+
+```shell
+./gradlew :serve:build
+sudo docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t quarkus/smile-serve-gpu .
+sudo docker run -i --rm --gpus all -p 8888:8080 \
+  -e SMILE_DECODE_CUDA_GRAPH=1 \
+  -e SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE=0 \
+  -e SMILE_VERIFY_CUDA_GRAPH=1 \
+  -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,4,6,7 -Dsmile.chat.max-batch-size=48 -Dquarkus.log.level=INFO -XX:ErrorFile=/model/hs_err_%p.log -Dsmile.chat.admit-coalesce-ms=50 -Dsmile.chat.speculative=true -Dsmile.chat.speculative-tokens=2" \
+  -u root -v "/raid/llm/model":/model quarkus/smile-serve-gpu
+```
+
+Debug variant (adds `CUDA_LAUNCH_BLOCKING=1` for synchronous CUDA error
+reporting; slower, use only when diagnosing a CUDA graph issue):
+
+```shell
+sudo docker run -i --rm --gpus all -p 8888:8080 \
+  -e SMILE_DECODE_CUDA_GRAPH=1 \
+  -e SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE=0 \
+  -e SMILE_VERIFY_CUDA_GRAPH=1 \
+  -e CUDA_LAUNCH_BLOCKING=1 \
+  -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,4,6,7 -Dsmile.chat.max-batch-size=48 -Dquarkus.log.level=INFO -XX:ErrorFile=/model/hs_err_%p.log -Dsmile.chat.admit-coalesce-ms=50 -Dsmile.chat.speculative=true -Dsmile.chat.speculative-tokens=2" \
+  -u root -v "/raid/llm/model":/model quarkus/smile-serve-gpu
+```
+
 ---
 
 ## 2. LLM Decode Benchmarks

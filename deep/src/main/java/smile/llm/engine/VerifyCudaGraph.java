@@ -42,19 +42,6 @@ import smile.torch.Native;
 public final class VerifyCudaGraph {
     private static final boolean ENABLED = "1".equals(System.getenv("SMILE_VERIFY_CUDA_GRAPH"));
     private static final boolean AVAILABLE = Native.cudaGraphAvailable();
-    /**
-     * Diagnostic only (never enabled by default, doubles verify cost every
-     * round): recompute the same verify window eagerly and log the numeric
-     * gap against the graph path's own output, on real traffic. Added to
-     * investigate a real-hardware finding that verify-graph measurably
-     * lowers MTP acceptance vs. the identical eager path on the exact same
-     * prompt/model, despite passing isolated correctness tests at a looser
-     * tolerance (small random-weight models, not the real trained model
-     * where acceptance is an exact-match test sensitive to any systematic
-     * numeric offset between two independently-implemented kernels).
-     */
-    private static final boolean DEBUG_DIFF =
-            "1".equals(System.getenv("SMILE_VERIFY_CUDA_GRAPH_DEBUG_DIFF"));
     /** Set after a capture failure so we stop retrying every few verify steps. */
     private static volatile boolean captureDisabled;
     private static final AtomicBoolean PERSISTENT_LOGITS = new AtomicBoolean(false);
@@ -121,16 +108,6 @@ public final class VerifyCudaGraph {
      */
     public static int warmupSteps() {
         return 2;
-    }
-
-    /**
-     * Returns whether the diagnostic eager-vs-graph verify diff is enabled
-     * (see {@link #DEBUG_DIFF}).
-     *
-     * @return {@code true} when {@code SMILE_VERIFY_CUDA_GRAPH_DEBUG_DIFF=1}.
-     */
-    public static boolean debugDiff() {
-        return DEBUG_DIFF;
     }
 
     /**
