@@ -442,8 +442,12 @@ public class GatedDeltaNet {
      */
     private Tensor forwardVerifyWindowLoop(Tensor mixed, Tensor convState, Tensor g, Tensor beta,
                                            int batch, int seqLen) {
+        // recurrentGatedDeltaRule casts its per-step output back to the
+        // compute dtype (query/mixed's dtype) internally — g/beta stay float
+        // for numerically-stable gating, so coreOut must match mixed's dtype,
+        // not beta's, or outProj's later matmul dtype-mismatches (bf16 vs float).
         var opts = new Tensor.Options()
-                .device(mixed.device()).dtype(beta.dtype()).requireGradients(false);
+                .device(mixed.device()).dtype(mixed.dtype()).requireGradients(false);
         Tensor coreOut = Tensor.zeros(opts, batch, seqLen, numVHeads, headVDim);
         Tensor initState = statePool.activeRecurrent(linearLayerId);
         for (int t = 0; t < seqLen; t++) {
