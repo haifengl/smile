@@ -816,6 +816,51 @@ public class KvCachePool implements AutoCloseable {
         bumpUniformFlashInferMetadata(cacheLen, batch);
     }
 
+    /**
+     * Updates FlashInfer metadata and the flat {@code [batch*windowLen]} KV
+     * write-index buffer before a batched eager verify forward whose rows
+     * belong to different concurrent requests at different absolute cache
+     * lengths — the multi-request counterpart of
+     * {@link #prepareVerifyGraphStep(int, int[], int)}, which requires a
+     * single {@code cacheLen} shared by every row (fine for the single-request
+     * / graph-capturable cohort that method still serves).
+     *
+     * @param cacheLengths   inclusive cache length per batch row.
+     * @param startPositions KV write position of the window's first token per batch row.
+     * @param windowLen      number of tokens written by this verify step (uniform across the batch).
+     */
+    public void prepareVerifyGraphStep(int[] cacheLengths, int[] startPositions, int windowLen) {
+        if (startPositions == null || startPositions.length == 0) {
+            throw new IllegalArgumentException("startPositions must be non-empty");
+        }
+        if (cacheLengths == null || cacheLengths.length != startPositions.length) {
+            throw new IllegalArgumentException("cacheLengths length must equal startPositions length");
+        }
+        if (windowLen < 1) {
+            throw new IllegalArgumentException("windowLen must be >= 1");
+        }
+        sharedFlashInferMetadata(cacheLengths);
+        int batch = startPositions.length;
+        ensureVerifyKvIndexBuf(batch, windowLen);
+        long[] flat = new long[batch * windowLen];
+        for (int b = 0; b < batch; b++) {
+            long[] slots = requestSlots[b];
+            int start = startPositions[b];
+            for (int t = 0; t < windowLen; t++) {
+                flat[b * windowLen + t] = slots[start + t];
+            }
+        }
+        try (Tensor cpu = Tensor.of(flat)) {
+            if (device.isCUDA()) {
+                try (Tensor gpu = cpu.to(device)) {
+                    smile.torch.Native.copy_(verifyKvIndexBuf, gpu);
+                }
+            } else {
+                smile.torch.Native.copy_(verifyKvIndexBuf, cpu);
+            }
+        }
+    }
+
     private void ensureVerifyKvIndexBuf(int batch, int windowLen) {
         long needed = (long) batch * windowLen;
         if (verifyKvIndexBuf != null && verifyKvIndexBuf.shape()[0] == needed) {

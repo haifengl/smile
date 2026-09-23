@@ -5,7 +5,7 @@ This file provides context for AI coding agents working on this multi-module Gra
 ## 🚀 Build & Runtime Environment
 - **Language:** Java 25
 - **Build System:** Gradle 9.x (Kotlin DSL)
-- **Testing:** JUnit 5
+- **Testing:** JUnit 6
 
 ## ⌨️ Build & Development Commands
 Always use the Gradle Wrapper (`./gradlew`) to ensure version consistency.

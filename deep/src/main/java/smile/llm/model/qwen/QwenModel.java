@@ -78,8 +78,15 @@ public class QwenModel extends LayerBlock {
      * Last backbone post-final-norm hidden (detached) for MTP anchoring; null when
      * unused. Named historically; matches vLLM/SGLang which pass {@code model.norm}
      * output into the MTP {@code pre_fc_norm_*} fusion.
+     *
+     * <p>Shared by every forward (decode/prefill/verify) for whichever batch just
+     * ran — {@code Qwen} scatters it into {@link #mtpAnchorPool} by request id
+     * immediately after each forward, since this field alone cannot survive a
+     * later forward for a different batch.
      */
     Tensor lastPreNormHidden;
+    /** Per-request durable MTP anchor store; null when {@link #mtp} is null. */
+    final MtpAnchorPool mtpAnchorPool;
     /** HF-style partial RoPE cos/sin tables (moved with {@link #to}). */
     PartialRotaryEncoding.CosSin rope;
     /** Optional native vision tower (Qwen3.8); null for text-only. */
@@ -209,10 +216,12 @@ public class QwenModel extends LayerBlock {
             this.mtp = new QwenMtp(args, shard, tpGroup);
             this.mtp.bindShared(tokEmbeddings, lmHead, rope);
             add("mtp", mtp);
+            this.mtpAnchorPool = new MtpAnchorPool(args.maxBatchSize(), args.dim());
             logger.info("tpRank={}: MTP head (layers={}) in {} ms",
                     tpRank, args.mtpNumHiddenLayers(), System.currentTimeMillis() - tMtp);
         } else {
             this.mtp = null;
+            this.mtpAnchorPool = null;
         }
 
         if (visionArgs != null) {
@@ -340,6 +349,14 @@ public class QwenModel extends LayerBlock {
     }
 
     /**
+     * Returns the per-request MTP anchor store.
+     * @return anchor pool, or {@code null} when {@link #mtp()} is null.
+     */
+    public MtpAnchorPool mtpAnchorPool() {
+        return mtpAnchorPool;
+    }
+
+    /**
      * Returns the native MTP draft head.
      *
      * @return native MTP draft head, or {@code null} when not configured.
@@ -442,6 +459,37 @@ public class QwenModel extends LayerBlock {
         }
         try (var idx = Index.of(r); Tensor row = verifyWindowNormalizedBuf.get(Index.Colon, idx)) {
             setLastPreNormHiddenRow(row);
+        }
+    }
+
+    /**
+     * Batched counterpart of {@link #setMtpAnchorAtWindowPosition}: restores
+     * each row {@code i}'s MTP anchor from its own retained window position
+     * {@code positions[i]} — needed when concurrent requests verified
+     * together in one round accept different numbers of draft tokens.
+     *
+     * @param positions accepted window position per row (0-indexed), length {@code B}.
+     */
+    public void setMtpAnchorAtWindowPositions(int[] positions) {
+        if (mtp == null || verifyWindowNormalizedBuf == null) {
+            return;
+        }
+        int b = positions.length;
+        long dim = verifyWindowNormalizedBuf.shape()[2];
+        Tensor gathered = Tensor.zeros(
+                new Tensor.Options().device(verifyWindowNormalizedBuf.device())
+                        .dtype(verifyWindowNormalizedBuf.dtype()).requireGradients(false),
+                b, dim);
+        try {
+            for (int i = 0; i < b; i++) {
+                try (var rowIdx = Index.of(i); var posIdx = Index.of(positions[i]);
+                     Tensor src = verifyWindowNormalizedBuf.get(rowIdx, posIdx)) {
+                    gathered.put_(src, Index.of(i), Index.Colon);
+                }
+            }
+            setLastPreNormHiddenRow(gathered);
+        } finally {
+            gathered.close();
         }
     }
 
@@ -1362,7 +1410,7 @@ public class QwenModel extends LayerBlock {
                     try {
                         Tensor raw = forwardVerifyGraphCore(
                                 verifyGraphTokenBuf, startPositions,
-                                verifyGraphCosBuf, verifyGraphSinBuf);
+                                verifyGraphCosBuf, verifyGraphSinBuf, null);
                         smile.torch.Native.copy_(verifyGraphLogitsBuf, raw);
                         verifyGraphLogitsOut = verifyGraphLogitsBuf;
                     } finally {
@@ -1403,7 +1451,7 @@ public class QwenModel extends LayerBlock {
             }
 
             Tensor raw = forwardVerifyGraphCore(
-                    verifyGraphTokenBuf, startPositions, verifyGraphCosBuf, verifyGraphSinBuf);
+                    verifyGraphTokenBuf, startPositions, verifyGraphCosBuf, verifyGraphSinBuf, null);
             ensureVerifyGraphLogitsBuf(raw);
             smile.torch.Native.copy_(verifyGraphLogitsBuf, raw);
             return raw;
@@ -1512,9 +1560,17 @@ public class QwenModel extends LayerBlock {
      * but always scores every window position (the whole point of window verify —
      * see {@link #forward(Tensor, int, boolean)}'s {@code allTokenLogits} branch),
      * so unlike decode's {@code S == 1} core, no last-row slicing is needed.
+     *
+     * @param mask explicit dense causal mask, or {@code null} to rely on the
+     *             FlashInfer kernel's own {@code MaskMode::kCausal} — <b>only
+     *             correct when the caller has set {@code kvCachePool.setVerifyGraphBuffers(true)}
+     *             first</b> (every existing call site does; see {@link #forwardVerifyGraph}).
+     *             Pass an explicit mask instead for any caller that does not set that flag
+     *             (e.g. {@link #forwardBatchedVerify}), or attention silently runs
+     *             non-causal within the window.
      */
     private Tensor forwardVerifyGraphCore(Tensor tokens, int[] startPositions,
-                                          Tensor cos, Tensor sin) {
+                                          Tensor cos, Tensor sin, Tensor mask) {
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
         boolean profile = DecodeForwardProfile.enabled();
@@ -1524,10 +1580,14 @@ public class QwenModel extends LayerBlock {
             if (profile) {
                 DecodeForwardProfile.addEmbed(System.nanoTime() - tEmbed);
             }
+            Tensor maskUse = mask != null && mask.dtype() != h.dtype() ? mask.to(h.dtype()) : mask;
             for (int i = 0; i < layers.size(); i++) {
-                Tensor next = layers.get(i).forward(h, startPositions, cos, sin, null);
+                Tensor next = layers.get(i).forward(h, startPositions, cos, sin, maskUse);
                 h.close();
                 h = next;
+            }
+            if (maskUse != null && maskUse != mask) {
+                maskUse.close();
             }
             Tensor normalized = norm.forward(h);
             h.close();
@@ -1552,6 +1612,61 @@ public class QwenModel extends LayerBlock {
             return logits;
         } finally {
             Tensor.pop();
+        }
+    }
+
+    /**
+     * Batched eager verify forward for a cohort of concurrent requests that
+     * may be at <em>different</em> absolute positions — the multi-request
+     * counterpart of {@link #forwardVerifyGraph}, which requires a single
+     * shared start position across the batch so it can be CUDA-graph-captured
+     * (see {@code VerifyCudaGraph#canGraphVerify}). This always runs eager;
+     * heterogeneous-position batched cohorts do not graph-capture (a
+     * deliberately deferred fast-follow — see the batching plan).
+     *
+     * @param tokens         token ids {@code [B, windowLen]}.
+     * @param startPositions KV write position of the window's first token per row.
+     * @param cacheLengths   inclusive cache length per row (prompt + already-sealed generation).
+     * @return logits {@code [B, windowLen, V]} in float32.
+     */
+    public Tensor forwardBatchedVerify(Tensor tokens, int[] startPositions, int[] cacheLengths) {
+        if (kvCachePool == null) {
+            throw new IllegalStateException("KV cache pool not installed");
+        }
+        int windowLen = (int) tokens.shape()[1];
+        kvCachePool.prepareVerifyGraphStep(cacheLengths, startPositions, windowLen);
+        Tensor cos = PartialRotaryEncoding.gatherWindow(rope.cos(), startPositions, windowLen);
+        Tensor sin = PartialRotaryEncoding.gatherWindow(rope.sin(), startPositions, windowLen);
+        // forwardVerifyGraphCore relies on the FlashInfer kernel's own
+        // MaskMode::kCausal when the caller sets kvCachePool.verifyGraphBuffers(true)
+        // (every other caller does); this one doesn't (that flag also gates
+        // lastPreNormHidden reallocation, which a first-ever batch-size-B round
+        // here legitimately needs), so build the same explicit dense causal
+        // mask QwenModel.forward's own S>1 path uses instead — correct under
+        // every backend, not just FlashInfer's kernel-internal mode.
+        int startPos = startPositions[0];
+        Tensor mask = null;
+        if (windowLen > 1) {
+            var maskOpts = new Tensor.Options()
+                    .device(tokens.device()).dtype(ScalarType.Float).requireGradients(false);
+            mask = Tensor.zeros(maskOpts, windowLen, windowLen).fill_(Float.NEGATIVE_INFINITY);
+            mask.triu_(1);
+            if (startPos > 0) {
+                try (Tensor zeros = Tensor.zeros(maskOpts, windowLen, startPos)) {
+                    Tensor prev = mask;
+                    mask = Tensor.hstack(zeros, prev);
+                    prev.close();
+                }
+            }
+        }
+        try {
+            return forwardVerifyGraphCore(tokens, startPositions, cos, sin, mask);
+        } finally {
+            cos.close();
+            sin.close();
+            if (mask != null) {
+                mask.close();
+            }
         }
     }
 
