@@ -16,6 +16,7 @@
  */
 package smile.llm.engine;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
@@ -44,6 +45,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author Haifeng Li
  */
+@Tag("cuda")
 public class VerifyCudaGraphStage1KernelTest {
 
     /** Max abs diff tolerance for bf16 compute (both paths run the same dtype). */
