@@ -490,6 +490,47 @@ public class QwenModel extends LayerBlock {
     }
 
     /**
+     * Pre-sizes {@link #verifyWindowNormalizedBuf} to {@code [batch,
+     * windowLen, dim]} while it is still safe to reallocate — must be called
+     * strictly before the caller raises {@code kvCachePool.setVerifyGraphBuffers}
+     * for this tick, mirroring {@link #ensureLastPreNormHiddenCapacity}'s own
+     * rationale for the verify graph's other stable buffers.
+     *
+     * <p>Unlike {@link #ensureLastPreNormHiddenCapacity}'s guarded field,
+     * {@link #ensureVerifyWindowNormalizedBuf} has no graph-mode awareness at
+     * all — it unconditionally closes and reallocates on any shape change.
+     * A verify round whose {@code (batch, windowLen)} shape first differs
+     * from whatever shape last wrote this buffer (e.g. switching between the
+     * single-request graph-captured path at {@code batch=1} and the batched
+     * eager path at {@code batch>1} across rounds for the same model
+     * instance — both of which set {@code verifyWindowActive} and so both
+     * write this buffer) would otherwise free/reallocate it right as this
+     * tick's graph capture/warmup window is active: a genuine memory-safety
+     * hazard for anything a captured graph may still reference on replay,
+     * not merely a stale value like the {@code lastPreNormHidden} case.
+     *
+     * @param batch     target row count for this tick.
+     * @param windowLen target verify window length for this tick.
+     */
+    void ensureVerifyWindowNormalizedBufCapacity(int batch, int windowLen) {
+        if (mtp == null || verifyWindowNormalizedBuf == null) {
+            return;
+        }
+        long[] shape = verifyWindowNormalizedBuf.shape();
+        if (shape[0] == batch && shape[1] == windowLen) {
+            return;
+        }
+        long dim = shape[2];
+        Tensor resized = Tensor.zeros(
+                new Tensor.Options().device(verifyWindowNormalizedBuf.device())
+                        .dtype(verifyWindowNormalizedBuf.dtype()).requireGradients(false),
+                batch, windowLen, dim);
+        resized.detachFromScopes();
+        verifyWindowNormalizedBuf.close();
+        verifyWindowNormalizedBuf = resized;
+    }
+
+    /**
      * On a partial MTP accept at window position {@code r} (checkpoint-replay
      * path), restores the MTP anchor from the per-position hidden retained in
      * {@link #verifyWindowNormalizedBuf} instead of a second full-window
@@ -1425,6 +1466,7 @@ public class QwenModel extends LayerBlock {
         int numPages = kvCachePool.numPagesForLength(cacheLen);
 
         ensureLastPreNormHiddenCapacity(batch);
+        ensureVerifyWindowNormalizedBufCapacity(batch, windowLen);
         kvCachePool.setVerifyGraphBuffers(true);
         try {
             ensureVerifyGraphTokenBuf(tokens.device(), batch, windowLen, tokens.dtype());

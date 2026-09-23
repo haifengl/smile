@@ -37,11 +37,11 @@ SERVE_TAG="quarkus/smile-serve-gpu"
 MODEL_DIR="${MODEL_DIR:-/tmp/model}"
 
 echo "==> [1/3] Building GPU test image (${TEST_TAG})..."
-sudo docker build -f serve/src/main/docker/Dockerfile.gpu-test -t "${TEST_TAG}" .
+docker build -f serve/src/main/docker/Dockerfile.gpu-test -t "${TEST_TAG}" .
 
 echo "==> [2/3] Running GPU tests (docker run --gpus all)..."
 mkdir -p "${MODEL_DIR}/gpu-test-results"
-sudo docker run --rm --gpus all \
+docker run --rm --gpus all \
     -v "${MODEL_DIR}:/model" \
     "${TEST_TAG}" \
     bash -c '
@@ -86,6 +86,6 @@ echo "==> GPU tests passed (results in ${MODEL_DIR}/gpu-test-results). Continuin
 
 echo "==> [3/3] Building serve jars and the production GPU image..."
 ./gradlew :serve:build
-sudo docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t "${SERVE_TAG}" .
+docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t "${SERVE_TAG}" .
 
 echo "==> Done. Built ${SERVE_TAG}."

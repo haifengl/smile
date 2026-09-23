@@ -866,7 +866,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         if (model.mtp() != null) {
             long t0 = System.currentTimeMillis();
             KvCacheLayout mtpLayout = model.mtp().kvCacheLayout();
-            KvCachePool mtpPool = KvCachePool.forTesting(mtpLayout, device);
+            KvCachePool mtpPool = memFractionStatic > 0
+                    ? KvCachePool.forMtp(mtpLayout, device, cacheDtype, pageSize)
+                    : KvCachePool.forTesting(mtpLayout, device);
             model.mtp().setKvCachePool(mtpPool, false);
             logger.info("tpRank={}: MTP KvCachePool allocate in {} ms",
                     rank, System.currentTimeMillis() - t0);
@@ -2840,6 +2842,14 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         SpeculativeDecoding.AcceptResult[] results = new SpeculativeDecoding.AcceptResult[b];
         int[] restoreSlots = new int[b];
+        // 0-indexed window position (valid 0..n) — distinct from restoreSlots'
+        // 1-indexed checkpoint slot (valid 1..n+1). Mirrors the single-request
+        // path's own restoreDeltaNetCheckpointAtWindowPosition, which passes
+        // r+1 to DeltaNetStatePool.restoreCheckpoint but r (not r+1) to
+        // QwenModel.setMtpAnchorAtWindowPosition. Reusing restoreSlots for both
+        // previously sent an out-of-range window position (n+1) for any
+        // fully-accepted row (r == n) sharing a batch with a partial one.
+        int[] anchorPositions = new int[b];
         boolean anyPartial = false;
         tBookkeeping = System.nanoTime();
         for (int i = 0; i < b; i++) {
@@ -2849,6 +2859,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             int sealedLen = lastPositions[i] + 1 + r;
             truncateKv(requestIds[i], sealedLen, writtenEnd);
             restoreSlots[i] = r + 1;
+            anchorPositions[i] = r;
             if (r < n) {
                 anyPartial = true;
             }
@@ -2859,7 +2870,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 if (pool != null && pool.boundBatch() > 0) {
                     pool.restoreCheckpointPerRow(restoreSlots);
                 }
-                m.setMtpAnchorAtWindowPositions(restoreSlots.clone());
+                m.setMtpAnchorAtWindowPositions(anchorPositions.clone());
             }
         }
         scatterDeltaNet();
@@ -3057,7 +3068,17 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         for (QwenModel m : models) {
             DeltaNetStatePool pool = m.deltaNetStatePool();
             if (pool != null && pool.boundBatch() > 0) {
-                pool.ensureSpeculativeCheckpoints(slots);
+                // A verify CUDA graph captured while checkpoint-replay's
+                // per-position loop was writing into the *previous*,
+                // now-freed speculative checkpoint tensors would replay
+                // against stale memory (illegal access / silent corruption)
+                // the next time this bucket's graph replays — mirrors the
+                // existing truncateKv -> invalidateVerifyCudaGraphs()
+                // convention for the same "buffer this graph references was
+                // rebuilt out from under it" hazard.
+                if (pool.ensureSpeculativeCheckpoints(slots)) {
+                    m.invalidateVerifyCudaGraphs();
+                }
                 pool.saveCheckpoint(0);
             }
         }
@@ -3345,6 +3366,16 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 verifyWindowOnline(requestId, lastToken, lastPos, drafts, 0.0, 1.0);
         recordSpeculativeRound(drafts.length, accept.numDraftAccepted());
         return accept.numTokens();
+    }
+
+    /**
+     * Package-visible helper for tests: batched online window verify with
+     * explicit drafts (bypasses the MTP draft head), mirroring
+     * {@link #verifyWindowOnlineRecorded}'s single-request counterpart.
+     */
+    SpeculativeDecoding.AcceptResult[] verifyWindowOnlineBatchRecorded(int[] requestIds,
+            int[] lastTokens, int[] lastPositions, int[][] drafts) {
+        return verifyWindowOnlineBatch(requestIds, lastTokens, lastPositions, drafts, 0.0, 1.0);
     }
 
     /**
