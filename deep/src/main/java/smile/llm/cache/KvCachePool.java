@@ -547,6 +547,30 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * Creates a small fixed-size pool sized to {@code maxBatchSize × maxSeqLen}
+     * (page-aligned) for the MTP draft head's own short-lived, per-round KV
+     * cache. Unlike the main model's {@link #allocate}, this is not sized by
+     * a fraction of free device memory — the draft window is tiny and fixed —
+     * but it must still use the model's real KV cache dtype and page size,
+     * not {@link #forTesting}'s CPU-unit-test-only defaults (float32, page
+     * size 1): a production batched draft step (multiple concurrent requests'
+     * MTP rounds sharing one FlashInfer decode call) crashed with an illegal
+     * memory access until this matched the main pool's real dtype/page size.
+     *
+     * @param layout   cache layout.
+     * @param device   compute device.
+     * @param dtype    element dtype (the model's real KV cache dtype).
+     * @param pageSize tokens per page (the model's real KV cache page size).
+     * @return the MTP pool.
+     */
+    public static KvCachePool forMtp(KvCacheLayout layout, Device device, ScalarType dtype, int pageSize) {
+        int perRequest = ((layout.maxSeqLen() + pageSize - 1) / pageSize) * pageSize;
+        int numSlots = layout.maxBatchSize() * perRequest;
+        return new KvCachePool(layout.numLayers(), numSlots, layout.numKvHeads(), layout.headDim(),
+                pageSize, device, dtype);
+    }
+
+    /**
      * Returns the embedded radix tree used for prefix sharing.
      * @return the radix tree.
      */

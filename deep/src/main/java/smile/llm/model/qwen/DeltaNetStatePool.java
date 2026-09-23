@@ -387,9 +387,20 @@ public class DeltaNetStatePool implements AutoCloseable {
      * currently activated batch ({@link #boundBatch}), not the full pool
      * {@code maxBatchSize}. Full-pool sizing OOMs under serving configs.
      *
+     * <p>Growth-only: never reallocates smaller for a later, smaller
+     * {@code boundBatch} (the early-return below already guarantees this),
+     * since a shrink would be pointless — the real reason growth matters is
+     * that any verify CUDA graph already captured against the old, smaller
+     * buffers becomes invalid the moment this reallocates (replay would then
+     * write into freed memory) — see the {@code true}-return contract below.
+     *
      * @param numSlots checkpoint slots ({@code N+1} for {@code N} draft tokens).
+     * @return {@code true} if this call reallocated (the caller must then
+     *         invalidate any captured verify CUDA graph via
+     *         {@link QwenModel#invalidateVerifyCudaGraphs()} before it can be
+     *         replayed again).
      */
-    public void ensureSpeculativeCheckpoints(int numSlots) {
+    public boolean ensureSpeculativeCheckpoints(int numSlots) {
         if (numSlots < 1) {
             throw new IllegalArgumentException("numSlots must be >= 1");
         }
@@ -397,7 +408,7 @@ public class DeltaNetStatePool implements AutoCloseable {
         if (speculativeRecurrent != null
                 && speculativeSlots >= numSlots
                 && speculativeBatchCapacity >= rows) {
-            return;
+            return false;
         }
         closeSpeculativeCheckpoints();
         speculativeSlots = numSlots;
@@ -419,6 +430,7 @@ public class DeltaNetStatePool implements AutoCloseable {
                 }
             }
         }
+        return true;
     }
 
     /**

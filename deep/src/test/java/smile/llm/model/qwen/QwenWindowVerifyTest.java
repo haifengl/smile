@@ -292,6 +292,285 @@ public class QwenWindowVerifyTest {
     }
 
     @Test
+    public void testGivenMixedFullAndPartialAcceptInBatchWhenVerifyBatchThenAnchorPositionsStayInBounds() {
+        // Regression guard for a real production crash: Qwen.verifyWindowOnlineBatch
+        // reused restoreSlots (r+1, a 1-indexed DeltaNet checkpoint slot, valid
+        // 1..n+1) directly as the 0-indexed window position argument to
+        // QwenModel.setMtpAnchorAtWindowPositions (valid 0..n) whenever *any*
+        // row in the batch was a partial accept. A fully-accepted row (r == n)
+        // sharing that batch then passed window position n+1 — one past the
+        // last valid window index — and crashed:
+        // "index 3 is out of bounds for dimension 1 with size 3". The
+        // single-request path never hits this because it only ever calls
+        // setMtpAnchorAtWindowPosition(r) (not r+1) and only when r < n.
+        //
+        // Forces exactly that mix deterministically: row A's single draft is
+        // set to the target model's own greedy continuation (computed from an
+        // identically-seeded reference instance, so its weights — and thus
+        // this greedy prediction — are bit-identical to the subject instance),
+        // guaranteeing a full accept (r == n == 1); row B's draft is an
+        // arbitrary token guaranteed to mismatch, guaranteeing a partial
+        // accept (r == 0 < n).
+        QwenModelArgs args = new QwenModelArgs(
+                64, 4, 4, 2, 16, 100, 128, 1e-6, 10000.0, 0.25,
+                4, 16, 16, 2, 4, QwenModelArgs.defaultLayerTypes(4, 4), 2, 32,
+                1, 3);
+        long seed = 123L;
+
+        smile.torch.smile_torch_h.smile_manual_seed(seed);
+        QwenModel modelRef = tinyModel(args);
+        Qwen qwenRef = new Qwen("tiny-mixed-accept-ref", modelRef, tinyTokenizer(), args);
+
+        int[] promptA = pageAlignedPrompt();
+        int lastPosA = promptA.length - 1;
+        int lastTokenA = promptA[lastPosA];
+        int reqARef = qwenRef.bind(promptA, 32);
+        try (Tensor p = qwenRef.prefillChunk(reqARef, promptA, 0, promptA.length)) {
+            assertNotNull(p);
+        }
+        int greedyNextA;
+        try (Tensor logits = qwenRef.decodeStep(
+                new int[]{reqARef}, new int[]{lastTokenA}, new int[]{lastPosA})) {
+            greedyNextA = smile.llm.engine.Sampling.sampleGreedyTokenId(logits);
+        }
+
+        smile.torch.smile_torch_h.smile_manual_seed(seed);
+        QwenModel modelSubject = tinyModel(args);
+        Qwen qwenSubject = new Qwen("tiny-mixed-accept-subject", modelSubject, tinyTokenizer(), args);
+
+        int[] promptB = new int[promptA.length];
+        for (int i = 0; i < promptB.length; i++) {
+            promptB[i] = 1 + ((i * 3 + 7) % 50);
+        }
+        int lastPosB = promptB.length - 1;
+        int lastTokenB = promptB[lastPosB];
+
+        int reqA = qwenSubject.bind(promptA, 32);
+        try (Tensor p = qwenSubject.prefillChunk(reqA, promptA, 0, promptA.length)) {
+            assertNotNull(p);
+        }
+        int reqB = qwenSubject.bind(promptB, 32);
+        try (Tensor p = qwenSubject.prefillChunk(reqB, promptB, 0, promptB.length)) {
+            assertNotNull(p);
+        }
+
+        // A guaranteed mismatch: the model's vocab here is 100, so a token far
+        // outside anything plausible for a greedy match still round-trips fine.
+        int mismatchDraftB = (lastTokenB + 43) % 100;
+
+        SpeculativeDecoding.AcceptResult[] results = assertDoesNotThrow(() ->
+                qwenSubject.verifyWindowOnlineBatchRecorded(
+                        new int[]{reqA, reqB},
+                        new int[]{lastTokenA, lastTokenB},
+                        new int[]{lastPosA, lastPosB},
+                        new int[][]{{greedyNextA}, {mismatchDraftB}}));
+
+        assertEquals(1, results[0].numDraftAccepted(), "row A's single draft must fully accept");
+        assertEquals(0, results[1].numDraftAccepted(), "row B's mismatched draft must be rejected");
+
+        // A further decode step for each (separately — the two rows now sit
+        // at different absolute positions since they accepted different
+        // counts, and torch_native's decode path requires uniform positions
+        // across a single batched call) must not throw and must produce
+        // finite logits — corrupted anchor/DeltaNet state from the bug would
+        // typically surface here.
+        try (Tensor logits = qwenSubject.decodeStep(
+                new int[]{reqA}, new int[]{lastTokenA}, new int[]{lastPosA + results[0].numTokens()})) {
+            assertNotNull(logits);
+        }
+        try (Tensor logits = qwenSubject.decodeStep(
+                new int[]{reqB}, new int[]{lastTokenB}, new int[]{lastPosB + results[1].numTokens()})) {
+            assertNotNull(logits);
+        }
+
+        qwenRef.evict(reqARef);
+        qwenSubject.evict(reqA);
+        qwenSubject.evict(reqB);
+    }
+
+    @Test
+    public void testGivenManyConsecutiveRoundsWhenBatchedSpeculateThenMatchesSingleRequestPathPerRound() {
+        // Regression guard for a real production symptom: a 4-concurrent-request
+        // run with speculative-max-concurrency=4 produced coherent output for the
+        // first ~15-20 speculative rounds, then all four requests degenerated
+        // into repetitive garbage at almost the same relative position — a
+        // classic symptom of state (DeltaNet / anchor / KV) slowly desyncing
+        // across MANY consecutive rounds, not a single-round bug. The existing
+        // single-round equivalence tests
+        // (testGivenSamePositionBatchedCohortWhenSpeculateBatchThenMatches...,
+        // testGivenMixedFullAndPartialAcceptInBatchWhenVerifyBatchThenAnchor...)
+        // only ever check one round from a fresh prefill, so they cannot catch
+        // a bug that only accumulates over many rounds.
+        //
+        // Uses the *same* prompt for both rows, matching the real production
+        // run exactly (all 4 concurrent requests there shared one identical
+        // prompt at temperature=0.0): with identical input and deterministic
+        // greedy sampling, both rows must accept the same draft count every
+        // round and never drift apart in absolute position, keeping this
+        // fully runnable on torch_native (heterogeneous-position batched
+        // verify needs FlashInfer, unavailable on this host — see
+        // testGivenDifferentPositionsOnTorchNativeWhenBatchedVerifyThenThrowsClearError).
+        // Each row's reference sequence comes from the already-trusted
+        // single-request path (b=1, on a separate but identically-seeded model
+        // instance) rather than forced/artificial drafts, so this reproduces
+        // the real MTP-driven multi-round accumulation end to end; a bug in
+        // how the batched path indexes/restores per-row state would still
+        // show up as a divergence from that reference even though both rows
+        // "should" behave identically to each other.
+        QwenModelArgs args = new QwenModelArgs(
+                64, 4, 4, 2, 16, 100, 128, 1e-6, 10000.0, 0.25,
+                4, 16, 16, 2, 4, QwenModelArgs.defaultLayerTypes(4, 4), 2, 700,
+                1, 2);
+        long seed = 777L;
+
+        smile.torch.smile_torch_h.smile_manual_seed(seed);
+        QwenModel modelRef = tinyModel(args);
+        Qwen qwenRef = new Qwen("tiny-many-rounds-ref", modelRef, tinyTokenizer(), args);
+
+        smile.torch.smile_torch_h.smile_manual_seed(seed);
+        QwenModel modelBatch = tinyModel(args);
+        Qwen qwenBatch = new Qwen("tiny-many-rounds-batch", modelBatch, tinyTokenizer(), args);
+
+        int[] promptA = pageAlignedPrompt();
+        int[] promptB = promptA.clone();
+
+        int reqARef = qwenRef.bind(promptA, 700);
+        try (Tensor p = qwenRef.prefillChunk(reqARef, promptA, 0, promptA.length)) {
+            assertNotNull(p);
+        }
+        int reqBRef = qwenRef.bind(promptB, 700);
+        try (Tensor p = qwenRef.prefillChunk(reqBRef, promptB, 0, promptB.length)) {
+            assertNotNull(p);
+        }
+
+        int reqA = qwenBatch.bind(promptA, 700);
+        try (Tensor p = qwenBatch.prefillChunk(reqA, promptA, 0, promptA.length)) {
+            assertNotNull(p);
+        }
+        int reqB = qwenBatch.bind(promptB, 700);
+        try (Tensor p = qwenBatch.prefillChunk(reqB, promptB, 0, promptB.length)) {
+            assertNotNull(p);
+        }
+
+        int lastPosARef = promptA.length - 1;
+        int lastTokenARef = promptA[lastPosARef];
+        int lastPosBRef = promptB.length - 1;
+        int lastTokenBRef = promptB[lastPosBRef];
+        int lastPosA = lastPosARef;
+        int lastTokenA = lastTokenARef;
+        int lastPosB = lastPosBRef;
+        int lastTokenB = lastTokenBRef;
+
+        int numDrafts = 2;
+        int rounds = 150;
+        for (int round = 0; round < rounds; round++) {
+            int[][] refA = qwenRef.speculateStep(
+                    new int[]{reqARef}, new int[]{lastTokenARef}, new int[]{lastPosARef},
+                    numDrafts, 0.0, 1.0);
+            int[][] refB = qwenRef.speculateStep(
+                    new int[]{reqBRef}, new int[]{lastTokenBRef}, new int[]{lastPosBRef},
+                    numDrafts, 0.0, 1.0);
+
+            int[][] batch = qwenBatch.speculateStep(
+                    new int[]{reqA, reqB}, new int[]{lastTokenA, lastTokenB},
+                    new int[]{lastPosA, lastPosB}, numDrafts, 0.0, 1.0);
+
+            assertArrayEquals(refA[0], batch[0],
+                    "round " + round + ": row A (batched) diverged from its single-request reference");
+            assertArrayEquals(refB[0], batch[1],
+                    "round " + round + ": row B (batched) diverged from its single-request reference");
+
+            lastPosARef += refA[0].length;
+            lastTokenARef = refA[0][refA[0].length - 1];
+            lastPosBRef += refB[0].length;
+            lastTokenBRef = refB[0][refB[0].length - 1];
+            lastPosA += batch[0].length;
+            lastTokenA = batch[0][batch[0].length - 1];
+            lastPosB += batch[1].length;
+            lastTokenB = batch[1][batch[1].length - 1];
+        }
+
+        qwenRef.evict(reqARef);
+        qwenRef.evict(reqBRef);
+        qwenBatch.evict(reqA);
+        qwenBatch.evict(reqB);
+    }
+
+    @Test
+    public void testGivenManyConsecutiveRoundsWhenSingleRequestSpeculateThenMatchesPlainGreedyDecode() {
+        // Isolates whether many-round speculative decoding is correct at all,
+        // independent of batching: speculative decoding is supposed to be
+        // output-equivalent to plain greedy decoding at temperature=0 (that's
+        // the entire premise of the technique), so the single-request path
+        // (already proven correct for one round by
+        // testGivenMtpModelWhenPartialAcceptThenCheckpointReplayCompletesWithoutSecondForward)
+        // must still match plain decode after MANY consecutive rounds. If this
+        // fails, the real production degeneration (garbled repetitive output
+        // after ~15-20 rounds) is a general MTP checkpoint-replay bug, not
+        // something specific to the new batched path.
+        QwenModelArgs args = new QwenModelArgs(
+                64, 4, 4, 2, 16, 100, 128, 1e-6, 10000.0, 0.25,
+                4, 16, 16, 2, 4, QwenModelArgs.defaultLayerTypes(4, 4), 2, 700,
+                1, 2);
+        long seed = 777L;
+
+        smile.torch.smile_torch_h.smile_manual_seed(seed);
+        QwenModel modelSpec = tinyModel(args);
+        Qwen qwenSpec = new Qwen("tiny-many-rounds-spec", modelSpec, tinyTokenizer(), args);
+
+        smile.torch.smile_torch_h.smile_manual_seed(seed);
+        QwenModel modelPlain = tinyModel(args);
+        Qwen qwenPlain = new Qwen("tiny-many-rounds-plain", modelPlain, tinyTokenizer(), args);
+
+        int[] prompt = pageAlignedPrompt();
+
+        int reqSpec = qwenSpec.bind(prompt, 700);
+        try (Tensor p = qwenSpec.prefillChunk(reqSpec, prompt, 0, prompt.length)) {
+            assertNotNull(p);
+        }
+        int reqPlain = qwenPlain.bind(prompt, 700);
+        try (Tensor p = qwenPlain.prefillChunk(reqPlain, prompt, 0, prompt.length)) {
+            assertNotNull(p);
+        }
+
+        int lastPosSpec = prompt.length - 1;
+        int lastTokenSpec = prompt[lastPosSpec];
+        int lastPosPlain = prompt.length - 1;
+        int lastTokenPlain = prompt[lastPosPlain];
+
+        int numDrafts = 2;
+        int rounds = 150;
+        java.util.List<Integer> specTokens = new java.util.ArrayList<>();
+        java.util.List<Integer> plainTokens = new java.util.ArrayList<>();
+        for (int round = 0; round < rounds; round++) {
+            int[][] out = qwenSpec.speculateStep(
+                    new int[]{reqSpec}, new int[]{lastTokenSpec}, new int[]{lastPosSpec},
+                    numDrafts, 0.0, 1.0);
+            for (int tok : out[0]) {
+                specTokens.add(tok);
+            }
+            lastPosSpec += out[0].length;
+            lastTokenSpec = out[0][out[0].length - 1];
+
+            for (int i = 0; i < out[0].length; i++) {
+                try (Tensor logits = qwenPlain.decodeStep(
+                        new int[]{reqPlain}, new int[]{lastTokenPlain}, new int[]{lastPosPlain})) {
+                    int tok = smile.llm.engine.Sampling.sampleGreedyTokenId(logits);
+                    plainTokens.add(tok);
+                    lastPosPlain++;
+                    lastTokenPlain = tok;
+                }
+            }
+        }
+
+        assertEquals(plainTokens, specTokens,
+                "speculative decoding must be output-equivalent to plain greedy decode at temperature=0");
+
+        qwenSpec.evict(reqSpec);
+        qwenPlain.evict(reqPlain);
+    }
+
+    @Test
     public void testGivenSamePositionBatchedCohortWhenSpeculateBatchThenMatchesSingleRequestPathPerRow() {
         // Stage 2/3 equivalence guard: Qwen.speculateBatch (batched draft +
         // batched ragged verify, heterogeneous per-row positions) must
