@@ -2,14 +2,8 @@
 
 # In a script, history expansion is turned off by default, enable it with
 set -o history -o histexpand
-
-check_error() {
-  local retval=$?
-  if [ $retval -ne 0 ]; then
-    echo "'$1' returns code $retval"
-    exit $retval
-  fi
-}
+# Fail fast, exit safely, and prevent hidden errors from executing downstream
+set -euo pipefail
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     export JAVA_HOME=`/usr/libexec/java_home -v 25`
@@ -19,25 +13,20 @@ sbt clean
 rm -rf doc/*
 rm -rf website/_site/api
 sbt unidoc
-check_error "!!"
 mv target/javaunidoc doc/java
 
 sbt json/doc
-check_error "!!"
 find doc/json -name '*.html' -exec bin/gtag.sh {} \;
 
 sbt scala/doc
-check_error "!!"
 find doc/scala -name '*.html' -exec bin/gtag.sh {} \;
 
 ./gradlew :kotlin:dokkaGenerate
-check_error "!!"
 find doc/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
 cd website
 npm install
 npm run deploy
-check_error "!!"
 mkdir -p _site/api
 mv ../doc/* _site/api/
 
@@ -45,21 +34,16 @@ mv ../doc/* _site/api/
 cd ..
 ./gradlew :serve:build
 sbt studio/Universal/packageBin
-check_error "!!"
 
 while true; do
     read -p "Do you want to publish smile? (yes/no): " ans
     case $ans in
         [Yy]* )
             sbt publishSigned
-            check_error "sbt publish"
 
             sbt ++2.13.18 scala/publishSigned
-            check_error "sbt scala/publish"
             sbt ++2.13.18 json/publishSigned
-            check_error "sbt json/publish"
             # sbt ++2.13.18 spark/publishSigned
-            # check_error "sbt spark/publish"
             break;;
         [Nn]* ) exit 0;;
         * ) echo "Please answer yes or no.";;
@@ -71,7 +55,6 @@ while true; do
     case $ans in
         [Yy]* )
             sbt sonaRelease
-            check_error "sbt release"
             break;;
         [Nn]* ) exit 0;;
         * ) echo "Please answer yes or no.";;
@@ -84,13 +67,10 @@ while true; do
         [Yy]* )
             cd clojure
             ./lein test
-            check_error "lein test"
 
             ./lein codox
-            check_error "lein codox"
 
             ./lein deploy clojars
-            check_error "lein deploy"
 
             cd ..
             find doc/clojure -name '*.html' -exec tidy -m {} \;
