@@ -32,7 +32,7 @@ mv ../doc/* _site/api/
 
 # build binary package
 cd ..
-./gradlew :serve:build
+./gradlew :serve:build -Dquarkus.profile=default
 sbt studio/Universal/packageBin
 
 while true; do

@@ -64,7 +64,7 @@ jobs:
 
       - name: Build app
         run: |
-          ./gradlew :serve:build
+          ./gradlew :serve:build -Dquarkus.profile=default
           cp studio/src/universal/bin/libsmile_torch.so serve/build/quarkus-app/lib/
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
