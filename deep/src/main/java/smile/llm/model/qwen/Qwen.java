@@ -2534,12 +2534,36 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         if (n < 1) {
             throw new IllegalArgumentException("numDrafts must be >= 1");
         }
+        if (b > 1 && allAnchorsReady(requestIds)) {
+            return speculateBatch(requestIds, lastTokens, positions, n, temperature, topp);
+        }
         int[][] out = new int[b][];
         for (int i = 0; i < b; i++) {
             out[i] = speculateOneRequest(requestIds[i], lastTokens[i], positions[i], n,
                     temperature, topp);
         }
         return out;
+    }
+
+    /**
+     * True when every row's MTP anchor (see {@link MtpAnchorPool#hasRow}) is
+     * already written, i.e. the whole cohort is eligible for
+     * {@link #speculateBatch} in one call. A single missing row falls the
+     * whole batch back to {@link #speculateOneRequest} per row rather than
+     * splitting the batch, matching {@code InferenceEngine}'s own
+     * uniform-or-fallback grouping philosophy elsewhere.
+     */
+    private boolean allAnchorsReady(int[] requestIds) {
+        MtpAnchorPool anchorPool = models[0].mtpAnchorPool();
+        if (models[0].mtp() == null || anchorPool == null) {
+            return false;
+        }
+        for (int requestId : requestIds) {
+            if (!anchorPool.hasRow(requestId)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private int[] speculateOneRequest(int requestId, int lastToken, int lastPos, int numDrafts,

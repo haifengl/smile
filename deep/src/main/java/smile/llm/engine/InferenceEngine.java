@@ -739,69 +739,162 @@ public final class InferenceEngine implements AutoCloseable {
                 break;
             }
         }
+
+        // Batch together every cohort member that shares sampling params with
+        // the rest (mirrors runDecodeStep's own uniformSampling gate for its
+        // batched-vs-per-row sample split) and has room for the cohort's full
+        // draft window; everyone else falls back to the proven per-request
+        // path unchanged, so batching here is purely additive.
+        int maxDrafts = Math.max(1, n > 0 ? n : 3);
+        List<Active> batch = new ArrayList<>();
+        List<Active> singles = new ArrayList<>();
+        boolean uniform = speculative.size() > 1 && uniformSampling(speculative);
         for (Active a : speculative) {
-            if (a.phase != Phase.DECODING || a.handle.isAborted()) {
-                continue;
-            }
-            int remaining = Math.min(a.maxGenLen - a.completion.size(),
-                    a.totalCapacity - a.promptLen - a.completion.size());
-            if (remaining < 1) {
-                continue;
-            }
-            int maxDrafts = Math.min(
-                    Math.max(1, n > 0 ? n : 3),
-                    Math.max(0, remaining - 1));
-            int pos = a.promptLen + a.completion.size() - 1;
-            long t0 = System.nanoTime();
-            try {
-                if (maxDrafts < 1) {
-                    // No room for draft+bonus; one plain decode (speculative jobs are
-                    // excluded from runDecodeStep).
-                    try (Tensor logits = executor.decodeStep(
-                            new int[]{a.kvRequestId},
-                            new int[]{a.lastToken},
-                            new int[]{pos})) {
-                        sampleAndAppend(a, logits);
-                    }
+            if (uniform) {
+                int remaining = Math.min(a.maxGenLen - a.completion.size(),
+                        a.totalCapacity - a.promptLen - a.completion.size());
+                if (remaining >= 1 && remaining - 1 >= maxDrafts) {
+                    batch.add(a);
                     continue;
                 }
-                int[][] accepted = executor.speculateStep(
+            }
+            singles.add(a);
+        }
+        if (batch.size() == 1) {
+            singles.add(batch.remove(0));
+        }
+        if (batch.size() > 1) {
+            runSpeculateBatch(batch, maxDrafts);
+        }
+        for (Active a : singles) {
+            runSpeculateOne(a, n);
+        }
+        active.removeIf(a -> a.phase == Phase.DONE);
+        maybeEmptyDeviceCache();
+    }
+
+    /**
+     * One speculative round for a single request — the original per-request
+     * path, unchanged, used both for cohort members that don't fit a batched
+     * call (non-uniform sampling params, or too close to their own generation
+     * cap for the cohort's draft depth) and as the fallback when a batched
+     * call throws.
+     */
+    private void runSpeculateOne(Active a, int n) {
+        if (a.phase != Phase.DECODING || a.handle.isAborted()) {
+            return;
+        }
+        int remaining = Math.min(a.maxGenLen - a.completion.size(),
+                a.totalCapacity - a.promptLen - a.completion.size());
+        if (remaining < 1) {
+            return;
+        }
+        int maxDrafts = Math.min(
+                Math.max(1, n > 0 ? n : 3),
+                Math.max(0, remaining - 1));
+        int pos = a.promptLen + a.completion.size() - 1;
+        long t0 = System.nanoTime();
+        try {
+            if (maxDrafts < 1) {
+                // No room for draft+bonus; one plain decode (speculative jobs are
+                // excluded from runDecodeStep).
+                try (Tensor logits = executor.decodeStep(
                         new int[]{a.kvRequestId},
                         new int[]{a.lastToken},
-                        new int[]{pos},
-                        maxDrafts,
-                        a.temperature,
-                        a.topp);
-                long decodeMs = (System.nanoTime() - t0) / 1_000_000L;
-                decodeMsTotal.addAndGet(decodeMs);
-                if (accepted == null || accepted.length == 0 || accepted[0] == null) {
+                        new int[]{pos})) {
+                    sampleAndAppend(a, logits);
+                }
+                return;
+            }
+            int[][] accepted = executor.speculateStep(
+                    new int[]{a.kvRequestId},
+                    new int[]{a.lastToken},
+                    new int[]{pos},
+                    maxDrafts,
+                    a.temperature,
+                    a.topp);
+            long decodeMs = (System.nanoTime() - t0) / 1_000_000L;
+            decodeMsTotal.addAndGet(decodeMs);
+            if (accepted == null || accepted.length == 0 || accepted[0] == null) {
+                return;
+            }
+            for (int tok : accepted[0]) {
+                if (a.phase != Phase.DECODING) {
+                    break;
+                }
+                appendToken(a, tok);
+            }
+        } catch (UnsupportedOperationException unsupported) {
+            // No MTP head — one plain decode step for this request.
+            logger.debug("speculateStep unsupported; plain decode: {}",
+                    unsupported.toString());
+            int fallbackPos = a.promptLen + a.completion.size() - 1;
+            try (Tensor logits = executor.decodeStep(
+                    new int[]{a.kvRequestId},
+                    new int[]{a.lastToken},
+                    new int[]{fallbackPos})) {
+                sampleAndAppend(a, logits);
+            } catch (Throwable t) {
+                failActive(a, t);
+            }
+        } catch (Throwable t) {
+            failActive(a, t);
+        }
+    }
+
+    /**
+     * Batched counterpart of {@link #runSpeculateOne}: one draft+verify round
+     * for the whole {@code batch} in a single {@code executor.speculateStep}
+     * call (real cross-request batching, mirroring how {@code runDecodeStep}
+     * already batches its own forward). Callers guarantee every member shares
+     * sampling params and has room for {@code maxDrafts}. Falls back to
+     * {@link #runSpeculateOne} per member if the executor doesn't support
+     * batched speculation (e.g. no MTP head loaded) — zero regression risk.
+     */
+    private void runSpeculateBatch(List<Active> batch, int maxDrafts) {
+        int b = batch.size();
+        int[] requestIds = new int[b];
+        int[] lastTokens = new int[b];
+        int[] positions = new int[b];
+        for (int i = 0; i < b; i++) {
+            Active a = batch.get(i);
+            requestIds[i] = a.kvRequestId;
+            lastTokens[i] = a.lastToken;
+            positions[i] = a.promptLen + a.completion.size() - 1;
+        }
+        Active first = batch.get(0);
+        long t0 = System.nanoTime();
+        try {
+            int[][] accepted = executor.speculateStep(
+                    requestIds, lastTokens, positions, maxDrafts, first.temperature, first.topp);
+            long decodeMs = (System.nanoTime() - t0) / 1_000_000L;
+            decodeMsTotal.addAndGet(decodeMs);
+            if (accepted == null) {
+                return;
+            }
+            for (int i = 0; i < b; i++) {
+                Active a = batch.get(i);
+                if (i >= accepted.length || accepted[i] == null) {
                     continue;
                 }
-                for (int tok : accepted[0]) {
+                for (int tok : accepted[i]) {
                     if (a.phase != Phase.DECODING) {
                         break;
                     }
                     appendToken(a, tok);
                 }
-            } catch (UnsupportedOperationException unsupported) {
-                // No MTP head — one plain decode step for this request.
-                logger.debug("speculateStep unsupported; plain decode: {}",
-                        unsupported.toString());
-                int fallbackPos = a.promptLen + a.completion.size() - 1;
-                try (Tensor logits = executor.decodeStep(
-                        new int[]{a.kvRequestId},
-                        new int[]{a.lastToken},
-                        new int[]{fallbackPos})) {
-                    sampleAndAppend(a, logits);
-                } catch (Throwable t) {
-                    failActive(a, t);
-                }
-            } catch (Throwable t) {
+            }
+        } catch (UnsupportedOperationException unsupported) {
+            logger.debug("speculateStep (batched) unsupported; falling back per-request: {}",
+                    unsupported.toString());
+            for (Active a : batch) {
+                runSpeculateOne(a, maxDrafts);
+            }
+        } catch (Throwable t) {
+            for (Active a : batch) {
                 failActive(a, t);
             }
         }
-        active.removeIf(a -> a.phase == Phase.DONE);
-        maybeEmptyDeviceCache();
     }
 
     private void runDecodeStep() {
