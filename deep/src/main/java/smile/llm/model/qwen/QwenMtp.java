@@ -181,9 +181,10 @@ public class QwenMtp extends LayerBlock {
     }
 
     /**
-     * One MTP draft step: fuse embedding(token) with previous hidden, run layers,
-     * return float logits {@code [B, V]} and update {@code hiddenOut} with the
-     * pre-lm-head hidden for the next draft step.
+     * One MTP draft step (single logical request; broadcasts {@code position}
+     * to every row of a batch — only correct when every row is truly at the
+     * same absolute position). Prefer {@link #draftStep(Tensor, Tensor, int[], int)}
+     * for the request-pooled batched path.
      *
      * @param tokenIds     token ids {@code [B]} (last sampled / previous draft).
      * @param prevHidden   previous hidden {@code [B, D]} (backbone or prior MTP).
@@ -192,6 +193,28 @@ public class QwenMtp extends LayerBlock {
      * @return logits {@code [B, V]} in float32 (caller owns).
      */
     public Tensor draftStep(Tensor tokenIds, Tensor prevHidden, int position, int draftStep) {
+        int[] positions = new int[(int) tokenIds.shape()[0]];
+        java.util.Arrays.fill(positions, position);
+        return draftStep(tokenIds, prevHidden, positions, draftStep);
+    }
+
+    /**
+     * One MTP draft step: fuse embedding(token) with previous hidden, run layers,
+     * return float logits {@code [B, V]} and update {@code lastDraftHidden} with
+     * the pre-lm-head hidden for the next draft step.
+     *
+     * @param tokenIds     token ids {@code [B]} (last sampled / previous draft).
+     * @param prevHidden   previous hidden {@code [B, D]} (backbone or prior MTP).
+     * @param positions    absolute RoPE / cache write position per batch row —
+     *                     concurrent requests are generally at different
+     *                     absolute positions, unlike the relative in-round
+     *                     {@code draftStep} index below.
+     * @param draftStep    zero-based index within the current draft window (MTP KV);
+     *                     uniform across the batch — every row in a round is always
+     *                     at the same relative draft-step.
+     * @return logits {@code [B, V]} in float32 (caller owns).
+     */
+    public Tensor draftStep(Tensor tokenIds, Tensor prevHidden, int[] positions, int draftStep) {
         if (tokEmbeddings == null || lmHead == null || rope == null) {
             throw new IllegalStateException("MTP shared bindings not installed; call bindShared");
         }
@@ -216,12 +239,12 @@ public class QwenMtp extends LayerBlock {
             eNorm.close();
             fused.close();
 
-            Tensor cos = PartialRotaryEncoding.gather(rope.cos(), new int[]{position});
-            Tensor sin = PartialRotaryEncoding.gather(rope.sin(), new int[]{position});
-            int[] positions = new int[(int) h.shape()[0]];
-            java.util.Arrays.fill(positions, draftStep);
+            Tensor cos = PartialRotaryEncoding.gather(rope.cos(), positions);
+            Tensor sin = PartialRotaryEncoding.gather(rope.sin(), positions);
+            int[] cacheSteps = new int[(int) h.shape()[0]];
+            java.util.Arrays.fill(cacheSteps, draftStep);
             for (QwenBlock layer : layers) {
-                Tensor next = layer.forward(h, positions, cos, sin, null);
+                Tensor next = layer.forward(h, cacheSteps, cos, sin, null);
                 h.close();
                 h = next;
             }
@@ -261,17 +284,30 @@ public class QwenMtp extends LayerBlock {
     }
 
     /**
-     * Clears MTP KV for a new speculative round (bind capacity for the draft window).
+     * Clears MTP KV for a new single-request speculative round (bind capacity
+     * for the draft window). Prefer {@link #beginRound(int, int)} for the
+     * request-pooled batched path.
      *
      * @param draftWindow number of draft steps to reserve.
      */
     public void beginRound(int draftWindow) {
+        beginRound(1, draftWindow);
+    }
+
+    /**
+     * Clears MTP KV for a new speculative round sized for {@code batchSize}
+     * concurrent requests, each reserving {@code draftWindow + 1} slots.
+     *
+     * @param batchSize   number of concurrent requests in this round's cohort.
+     * @param draftWindow number of draft steps to reserve per request.
+     */
+    public void beginRound(int batchSize, int draftWindow) {
         if (kvCachePool == null) {
             return;
         }
         int cap = Math.max(1, draftWindow + 1);
         kvCachePool.unbindRequests();
-        kvCachePool.bindRequests(1, cap);
+        kvCachePool.bindRequests(Math.max(1, batchSize), cap);
     }
 
     /** Releases MTP draft KV after a speculative round. */

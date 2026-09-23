@@ -18,6 +18,7 @@ package smile.llm.model.qwen;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
@@ -59,6 +60,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author Haifeng Li
  */
+@Tag("cuda")
 public class QwenVerifyGraphFullModelCaptureTest {
 
     private static final int ROUNDS = 15;

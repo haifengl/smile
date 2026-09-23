@@ -17,6 +17,7 @@
 package smile.llm.engine;
 
 import java.lang.foreign.MemorySegment;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Index;
@@ -49,6 +50,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  *
  * @author Haifeng Li
  */
+@Tag("cuda")
 public class VerifyCudaGraphStage2CaptureReplayTest {
 
     private static final double TOLERANCE = 5e-2;
