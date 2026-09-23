@@ -85,7 +85,7 @@ docker run --rm --gpus all \
 echo "==> GPU tests passed (results in ${MODEL_DIR}/gpu-test-results). Continuing to the production image build."
 
 echo "==> [3/3] Building serve jars and the production GPU image..."
-./gradlew :serve:build
+./gradlew :serve:build -Dquarkus.profile=default
 docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t "${SERVE_TAG}" .
 
 echo "==> Done. Built ${SERVE_TAG}."
