@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import smile.deep.tensor.Device;
+import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCachePool;
@@ -228,6 +229,69 @@ public class QwenWindowVerifyTest {
     }
 
     @Test
+    public void testGivenGraphBuffersActiveWhenBatchGrowsThenAnchorCapacityIsPreSizedNotStale() {
+        // Regression guard for a real production crash: InferenceEngine batched
+        // 4 concurrent requests into one decode step right after each was
+        // prefilled alone (batch=1), by which point CUDA decode-graph buffers
+        // were already pinned for the new batch=4 bucket. QwenModel's MTP
+        // anchor (lastPreNormHidden) refuses to reallocate while graph buffers
+        // are active (illegal mid-capture), so without pre-sizing it while
+        // still eager, the anchor stayed at its earlier batch=1 shape and the
+        // subsequent 4-row Qwen.scatterMtpAnchor indexed row 1 out of bounds:
+        // "index 1 is out of bounds for dimension 0 with size 1".
+        // QwenModel.ensureLastPreNormHiddenCapacity is the fix — called from
+        // forwardDecodeGraph/forwardVerifyGraph strictly before the graph
+        // buffers flag flips — exercised directly here since actually
+        // reaching forwardDecodeGraph needs real CUDA graph capture.
+        QwenModelArgs args = new QwenModelArgs(
+                64, 4, 4, 2, 16, 100, 128, 1e-6, 10000.0, 0.25,
+                4, 16, 16, 2, 4, QwenModelArgs.defaultLayerTypes(4, 4), 4, 32,
+                1, 3);
+        QwenModel model = tinyModel(args);
+
+        // Four requests, each prefilled alone (batch=1), leave the anchor at [1, D].
+        try (Tensor hidden1 = Tensor.rand(
+                new Tensor.Options().device(Device.CPU()).dtype(ScalarType.Float),
+                1, args.dim())) {
+            model.capturePreNormHidden(hidden1);
+        }
+        assertEquals(1, model.lastPreNormHidden().shape()[0]);
+
+        // The fix: pre-size while still eager, before graph buffers pin the shape.
+        model.ensureLastPreNormHiddenCapacity(4);
+        assertEquals(4, model.lastPreNormHidden().shape()[0],
+                "pre-sizing must grow the anchor buffer before graph buffers pin its shape");
+
+        model.kvCachePool().setDecodeGraphBuffers(true);
+        try {
+            try (Tensor hidden4 = Tensor.rand(
+                    new Tensor.Options().device(Device.CPU()).dtype(ScalarType.Float),
+                    4, args.dim())) {
+                model.capturePreNormHidden(hidden4);
+            }
+        } finally {
+            model.kvCachePool().setDecodeGraphBuffers(false);
+        }
+
+        Tensor anchor = model.lastPreNormHidden();
+        assertEquals(4, anchor.shape()[0],
+                "anchor must still be batch=4 after capturing this round's real hidden under graph mode");
+
+        // The actual crash site: scattering every row into the per-request
+        // pool must not throw an out-of-bounds index for row > 0.
+        for (int i = 0; i < 4; i++) {
+            model.mtpAnchorPool().bindRequest(1000 + i);
+        }
+        assertDoesNotThrow(() -> {
+            for (int i = 0; i < 4; i++) {
+                try (var idx = Index.of(i); Tensor row = anchor.get(idx)) {
+                    model.mtpAnchorPool().setRow(1000 + i, row);
+                }
+            }
+        });
+    }
+
+    @Test
     public void testGivenSamePositionBatchedCohortWhenSpeculateBatchThenMatchesSingleRequestPathPerRow() {
         // Stage 2/3 equivalence guard: Qwen.speculateBatch (batched draft +
         // batched ragged verify, heterogeneous per-row positions) must
@@ -310,6 +374,54 @@ public class QwenWindowVerifyTest {
         qwenRef.evict(reqBRef);
         qwenBatch.evict(reqABatch);
         qwenBatch.evict(reqBBatch);
+    }
+
+    @Test
+    public void testGivenDifferentPositionsOnTorchNativeWhenBatchedVerifyThenThrowsClearError() {
+        // Stage 5 regression guard: GatedAttention.forward's ragged seqLen>1
+        // dispatch (forwardVerifyRagged) requires FlashInfer — torch_native has
+        // no per-row-KV-length gather path for it (mirrors forwardDecodeRagged's
+        // identical seqLen==1 restriction). On this CPU-only host that's the
+        // only backend available, so calling batched verify with genuinely
+        // different positions per row must fail loudly with a clear message,
+        // not silently misbehave.
+        QwenModelArgs args = new QwenModelArgs(
+                64, 4, 4, 2, 16, 100, 128, 1e-6, 10000.0, 0.25,
+                4, 16, 16, 2, 4, QwenModelArgs.defaultLayerTypes(4, 4), 2, 32,
+                1, 3);
+        QwenModel model = tinyModel(args);
+        Qwen qwen = new Qwen("tiny-ragged-guard", model, tinyTokenizer(), args);
+
+        int[] promptA = pageAlignedPrompt();
+        int[] promptB = new int[promptA.length - 4];
+        for (int i = 0; i < promptB.length; i++) {
+            promptB[i] = 1 + ((i * 3 + 7) % 50);
+        }
+
+        int requestA = qwen.bind(promptA, 32);
+        try (Tensor p = qwen.prefillChunk(requestA, promptA, 0, promptA.length)) {
+            assertNotNull(p);
+        }
+        int requestB = qwen.bind(promptB, 32);
+        try (Tensor p = qwen.prefillChunk(requestB, promptB, 0, promptB.length)) {
+            assertNotNull(p);
+        }
+
+        int lastPosA = promptA.length - 1;
+        int lastPosB = promptB.length - 1;
+        int[] windowA = {7, 11, 13};
+        int[] windowB = {17, 19, 23};
+
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
+                qwen.windowVsSequentialArgmaxBatch(
+                        new int[]{requestA, requestB},
+                        new int[][]{windowA, windowB},
+                        new int[]{lastPosA, lastPosB}));
+        assertTrue(ex.getMessage().contains("ragged verify window requires FlashInfer"),
+                "expected clear ragged-verify error, got: " + ex.getMessage());
+
+        qwen.evict(requestA);
+        qwen.evict(requestB);
     }
 
     @Test

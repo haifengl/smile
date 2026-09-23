@@ -446,6 +446,50 @@ public class QwenModel extends LayerBlock {
     }
 
     /**
+     * Pre-sizes {@link #lastPreNormHidden} to {@code batch} rows while it is
+     * still safe to reallocate — must be called strictly <em>before</em> the
+     * caller raises {@code kvCachePool.setDecodeGraphBuffers}/
+     * {@code setVerifyGraphBuffers} for this tick, mirroring the same
+     * ensure-then-copy-in-place convention already used for the graph's
+     * other stable buffers ({@code decodeGraphTokenBuf} etc. via
+     * {@code ensureDecodeGraphTokenBuf}).
+     *
+     * <p>Without this, a decoding/verify batch that first grows past
+     * whatever size last captured this anchor (e.g. concurrent requests each
+     * prefilled alone at batch 1, then joined into one batch-4 decode round)
+     * would hit {@link #setLastPreNormHiddenRow}'s graph-mode guard right as
+     * the shape mismatch appears — silently keeping the stale, too-small
+     * anchor for as long as this bucket's graph buffers stay active, since
+     * that guard only ever sees {@code graphMode == true} once the bucket is
+     * pinned to the new size. A later multi-row {@code scatterMtpAnchor}
+     * call then indexes past the stale tensor's row count and throws.
+     *
+     * @param batch target row count for this tick.
+     */
+    void ensureLastPreNormHiddenCapacity(int batch) {
+        if (mtp == null || lastPreNormHidden == null
+                || lastPreNormHidden.shape()[0] == batch) {
+            return;
+        }
+        long dim = lastPreNormHidden.shape()[1];
+        Tensor resized = Tensor.zeros(
+                new Tensor.Options().device(lastPreNormHidden.device())
+                        .dtype(lastPreNormHidden.dtype()).requireGradients(false),
+                batch, dim);
+        int copyRows = (int) Math.min(batch, lastPreNormHidden.shape()[0]);
+        try (var rows = Index.slice(0, copyRows)) {
+            Tensor dst = resized.get(rows);
+            Tensor src = lastPreNormHidden.get(rows);
+            smile.torch.Native.copy_(dst, src);
+            dst.close();
+            src.close();
+        }
+        lastPreNormHidden.close();
+        lastPreNormHidden = resized;
+        lastPreNormHidden.detachFromScopes();
+    }
+
+    /**
      * On a partial MTP accept at window position {@code r} (checkpoint-replay
      * path), restores the MTP anchor from the per-position hidden retained in
      * {@link #verifyWindowNormalizedBuf} instead of a second full-window
@@ -923,6 +967,7 @@ public class QwenModel extends LayerBlock {
         int numPages = kvCachePool.numPagesForLength(cacheLen);
         promotePrefetchIfReady(batch, numPages);
 
+        ensureLastPreNormHiddenCapacity(batch);
         kvCachePool.setDecodeGraphBuffers(true);
         try {
             ensureDecodeGraphTokenBuf(tokens.device(), batch, tokens.dtype());
@@ -1379,6 +1424,7 @@ public class QwenModel extends LayerBlock {
         int cacheLen = startPos + windowLen;
         int numPages = kvCachePool.numPagesForLength(cacheLen);
 
+        ensureLastPreNormHiddenCapacity(batch);
         kvCachePool.setVerifyGraphBuffers(true);
         try {
             ensureVerifyGraphTokenBuf(tokens.device(), batch, windowLen, tokens.dtype());

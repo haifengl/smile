@@ -35,13 +35,13 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Proves {@code Qwen.verifyWindowOnlineBatch}'s real FlashInfer path — two
- * concurrent requests at the same absolute position verified in <em>one</em>
- * batched forward — matches each request's own sequential-decode reference,
- * on real CUDA hardware with the exact configuration
- * {@code QwenVerifyGraphFullModelCaptureTest} already found necessary to
- * avoid silently falling back to a mask-less SDPA path: {@code headDim=64}
- * (FlashInfer's decode/paged kernel only supports 64/128/256/512) and bf16
- * compute (the kernel dispatch requires bf16/fp16 query).
+ * concurrent requests verified in <em>one</em> batched forward — matches
+ * each request's own sequential-decode reference, on real CUDA hardware with
+ * the exact configuration {@code QwenVerifyGraphFullModelCaptureTest} already
+ * found necessary to avoid silently falling back to a mask-less SDPA path:
+ * {@code headDim=64} (FlashInfer's decode/paged kernel only supports
+ * 64/128/256/512) and bf16 compute (the kernel dispatch requires bf16/fp16
+ * query).
  *
  * <p>This is the batched counterpart of that test's own
  * {@code windowVsSequentialArgmax} comparison, now for
@@ -50,6 +50,16 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * that test's javadoc for why (a coin-flip argmax on random/untrained
  * weights is not evidence of a real numeric problem, but a growing raw logit
  * gap is).
+ *
+ * <p>Covers both dispatch branches of {@code GatedAttention.forward(Tensor,
+ * int[], ...)}: same-position cohorts (the uniform {@code forwardUniform}
+ * path, already validated in production) and, more importantly, cohorts at
+ * <em>genuinely different</em> absolute positions (the ragged
+ * {@code forwardVerifyRagged} path added to close the batching plan's
+ * Stage 5 gap — reuses the dedicated CSR-based verify kernel eagerly, with
+ * per-row bottom-right-aligned causal masking derived from each row's own
+ * KV length; this is the test that actually exercises that new code, since
+ * it cannot be validated without real CUDA + FlashInfer).
  *
  * @author Haifeng Li
  */
@@ -77,16 +87,61 @@ public class QwenBatchedVerifyCudaTest {
         return new Tokenizer(ranks);
     }
 
-    private static int[] pageAlignedPrompt(int seed) {
-        int[] p = new int[16];
+    private static int[] pageAlignedPrompt(int seed, int len) {
+        int[] p = new int[len];
         for (int i = 0; i < p.length; i++) {
             p[i] = 1 + ((i * 3 + seed) % 50);
         }
         return p;
     }
 
+    private static int[] pageAlignedPrompt(int seed) {
+        return pageAlignedPrompt(seed, 16);
+    }
+
+    // Same shape as QwenVerifyGraphFullModelCaptureTest's own hard-won config,
+    // except maxBatchSize=2 (two concurrent requests) instead of 1, and no MTP
+    // head (these tests target the batched *verify* forward directly via
+    // windowVsSequentialArgmaxBatch, not the draft head — same as the
+    // single-request test this mirrors).
+    private static Qwen twoRequestModel(Device device) {
+        String[] types = QwenModelArgs.defaultLayerTypes(4, 4);
+        QwenModelArgs args = new QwenModelArgs(
+                64,     // dim
+                4,      // numLayers
+                4,      // numHeads
+                2,      // numKvHeads
+                64,     // headDim — 16/128/256/512 only; 64 avoids the silent
+                        // mask-less SDPA fallback QwenVerifyGraphFullModelCaptureTest found
+                248320, // vocabSize — matches the real model that crashed
+                128,    // intermediateSize
+                1e-6,   // normEps
+                10000.0, // ropeTheta
+                0.25,   // partialRotaryFactor
+                4,      // linearConvKernelDim
+                16,     // linearKeyHeadDim
+                16,     // linearValueHeadDim
+                2,      // linearNumKeyHeads
+                4,      // linearNumValueHeads
+                types,
+                2,      // maxBatchSize — two concurrent requests
+                64      // maxSeqLen — headroom for the longer-prompt heterogeneous test below
+        );
+
+        DeltaNetStatePool statePool = new DeltaNetStatePool(
+                args.numLinearAttentionLayers(), args.linearNumValueHeads(),
+                args.linearKeyHeadDim(), args.linearValueHeadDim(),
+                args.linearConvDim(), args.linearConvKernelDim(),
+                args.maxBatchSize(), device, ScalarType.Float);
+        QwenModel model = new QwenModel(args, statePool);
+        model.to(device, ScalarType.BFloat16);
+        model.eval();
+        model.setKvCachePool(kvCachePoolWithRealisticPageSize(args.kvCacheLayout(), device), false);
+        return new Qwen("cuda-batched-verify", model, tinyTokenizer(), args);
+    }
+
     @Test
-    public void testGivenTwoConcurrentRequestsOnCudaWhenBatchedVerifyThenMatchesSequentialDecodePerRow() {
+    public void testGivenTwoConcurrentRequestsAtSamePositionOnCudaWhenBatchedVerifyThenMatchesSequentialDecodePerRow() {
         assumeTrue(cudaAvailable(), "CUDA not available in this environment");
 
         AttentionBackend previousBackend = AttentionBackends.current();
@@ -95,46 +150,7 @@ public class QwenBatchedVerifyCudaTest {
                 "FlashInfer not compiled into libsmile_torch");
         try {
             Device device = Device.CUDA();
-
-            // Same shape as QwenVerifyGraphFullModelCaptureTest's own hard-won
-            // config, except maxBatchSize=2 (two concurrent requests) instead
-            // of 1, and no MTP head (this test targets the batched *verify*
-            // forward directly via windowVsSequentialArgmaxBatch, not the
-            // draft head — same as the single-request test it mirrors).
-            String[] types = QwenModelArgs.defaultLayerTypes(4, 4);
-            QwenModelArgs args = new QwenModelArgs(
-                    64,     // dim
-                    4,      // numLayers
-                    4,      // numHeads
-                    2,      // numKvHeads
-                    64,     // headDim — 16/128/256/512 only; 64 avoids the silent
-                            // mask-less SDPA fallback QwenVerifyGraphFullModelCaptureTest found
-                    248320, // vocabSize — matches the real model that crashed
-                    128,    // intermediateSize
-                    1e-6,   // normEps
-                    10000.0, // ropeTheta
-                    0.25,   // partialRotaryFactor
-                    4,      // linearConvKernelDim
-                    16,     // linearKeyHeadDim
-                    16,     // linearValueHeadDim
-                    2,      // linearNumKeyHeads
-                    4,      // linearNumValueHeads
-                    types,
-                    2,      // maxBatchSize — two concurrent requests
-                    32      // maxSeqLen
-            );
-
-            DeltaNetStatePool statePool = new DeltaNetStatePool(
-                    args.numLinearAttentionLayers(), args.linearNumValueHeads(),
-                    args.linearKeyHeadDim(), args.linearValueHeadDim(),
-                    args.linearConvDim(), args.linearConvKernelDim(),
-                    args.maxBatchSize(), device, ScalarType.Float);
-            QwenModel model = new QwenModel(args, statePool);
-            model.to(device, ScalarType.BFloat16);
-            model.eval();
-            model.setKvCachePool(kvCachePoolWithRealisticPageSize(args.kvCacheLayout(), device), false);
-
-            Qwen qwen = new Qwen("cuda-batched-verify", model, tinyTokenizer(), args);
+            Qwen qwen = twoRequestModel(device);
 
             int[] promptA = pageAlignedPrompt(0);
             int[] promptB = pageAlignedPrompt(7);
@@ -155,15 +171,70 @@ public class QwenBatchedVerifyCudaTest {
             // QwenVerifyGraphFullModelCaptureTest's own rationale: re-exercise
             // the identical grow(+3)/shrink(reject-all) bucket every round
             // (windowVsSequentialArgmaxBatch always fully "rejects", restoring
-            // DeltaNet/KV back to startPos after each comparison).
+            // DeltaNet/KV back to startPos after each comparison). Two equal
+            // positions take GatedAttention's forwardUniform (non-ragged) branch.
             for (int round = 0; round < ROUNDS; round++) {
                 qwen.windowVsSequentialArgmaxBatch(
                         new int[]{requestA, requestB},
                         new int[][]{windowA, windowB},
                         new int[]{startPos, startPos});
-                System.out.println("round " + round + ": maxAbs=" + qwen.lastWindowVsSequentialMaxAbs);
+                System.out.println("same-position round " + round + ": maxAbs="
+                        + qwen.lastWindowVsSequentialMaxAbs);
                 assertTrue(qwen.lastWindowVsSequentialMaxAbs < 5e-2f,
                         "round " + round + ": batched-window vs sequential logits maxAbs="
+                                + qwen.lastWindowVsSequentialMaxAbs);
+            }
+
+            qwen.evict(requestA);
+            qwen.evict(requestB);
+        } finally {
+            AttentionBackends.install(previousBackend);
+        }
+    }
+
+    @Test
+    public void testGivenTwoConcurrentRequestsAtDifferentPositionsOnCudaWhenBatchedVerifyThenMatchesSequentialDecodePerRow() {
+        // The test that actually exercises GatedAttention.forwardVerifyRagged
+        // (Stage 5 of the batching plan): two rows genuinely at different
+        // absolute positions, forcing GatedAttention.forward's ragged branch
+        // instead of forwardUniform. Cannot be validated without real CUDA +
+        // FlashInfer — this is that validation.
+        assumeTrue(cudaAvailable(), "CUDA not available in this environment");
+
+        AttentionBackend previousBackend = AttentionBackends.current();
+        AttentionBackends.install(AttentionBackend.FLASHINFER);
+        assumeTrue(AttentionBackends.current() == AttentionBackend.FLASHINFER,
+                "FlashInfer not compiled into libsmile_torch");
+        try {
+            Device device = Device.CUDA();
+            Qwen qwen = twoRequestModel(device);
+
+            // Different lengths -> different lastPos/startPos per row.
+            int[] promptA = pageAlignedPrompt(0, 16);
+            int[] promptB = pageAlignedPrompt(7, 24);
+            int requestA = qwen.bind(promptA, 40);
+            try (Tensor prefill = qwen.prefillChunk(requestA, promptA, 0, promptA.length)) {
+                assertNotNull(prefill);
+            }
+            int requestB = qwen.bind(promptB, 40);
+            try (Tensor prefill = qwen.prefillChunk(requestB, promptB, 0, promptB.length)) {
+                assertNotNull(prefill);
+            }
+
+            int startPosA = promptA.length;
+            int startPosB = promptB.length;
+            int[] windowA = {7, 11, 13};
+            int[] windowB = {17, 19, 23};
+
+            for (int round = 0; round < ROUNDS; round++) {
+                qwen.windowVsSequentialArgmaxBatch(
+                        new int[]{requestA, requestB},
+                        new int[][]{windowA, windowB},
+                        new int[]{startPosA, startPosB});
+                System.out.println("different-position round " + round + ": maxAbs="
+                        + qwen.lastWindowVsSequentialMaxAbs);
+                assertTrue(qwen.lastWindowVsSequentialMaxAbs < 5e-2f,
+                        "round " + round + ": ragged batched-window vs sequential logits maxAbs="
                                 + qwen.lastWindowVsSequentialMaxAbs);
             }
 

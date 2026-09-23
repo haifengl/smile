@@ -236,14 +236,19 @@ public class GatedAttention implements Attention {
     }
 
     /**
-     * Decode with per-row cache write positions ({@code seqLen == 1}), or uniform
-     * prefill when every row shares the same {@code positions[0]}.
+     * Decode with per-row cache write positions ({@code seqLen == 1}), uniform
+     * prefill/verify when every row shares the same {@code positions[0]}, or a
+     * genuinely ragged multi-token verify window (concurrent requests at
+     * different absolute positions, {@code seqLen > 1}) via
+     * {@link #forwardVerifyRagged}.
      *
      * @param x         hidden states {@code [B, S, D]}.
      * @param positions absolute write position per batch row.
      * @param cos       cosines {@code [S, R]} or per-row {@code [B, S, R]}.
      * @param sin       sines with the same layout as {@code cos}.
-     * @param mask      causal mask, or {@code null} for decode.
+     * @param mask      causal mask; ignored by the ragged verify path (that
+     *                  kernel's causal masking is unconditional), used
+     *                  otherwise, or {@code null} for decode.
      * @return attention output.
      */
     public Tensor forward(Tensor x, int[] positions, Tensor cos, Tensor sin, Tensor mask) {
@@ -255,13 +260,17 @@ public class GatedAttention implements Attention {
         }
         int seqlen = (int) x.shape()[1];
         if (seqlen != 1) {
+            boolean uniform = true;
             for (int i = 1; i < positions.length; i++) {
                 if (positions[i] != positions[0]) {
-                    throw new IllegalArgumentException(
-                            "ragged positions only supported for decode seqLen==1");
+                    uniform = false;
+                    break;
                 }
             }
-            return forwardUniform(x, positions[0], cos, sin, mask);
+            if (uniform) {
+                return forwardUniform(x, positions[0], cos, sin, mask);
+            }
+            return forwardVerifyRagged(x, positions, cos, sin);
         }
         return forwardDecodeRagged(x, positions, cos, sin);
     }
@@ -472,6 +481,115 @@ public class GatedAttention implements Attention {
             Tensor attnC = attnT.contiguous();
             attn = attnC.view(batchSize, seqlen, -1);
             Tensor gated = smile.torch.Native.mulSigmoid(attn, gate);
+            if (gated == null) {
+                Tensor gateSig = sigmoid.forward(gate);
+                gated = attn.mul(gateSig);
+            }
+            Tensor out = oProj.forward(gated);
+            if (profile) {
+                smile.llm.engine.DecodeForwardProfile.addFullAttn(System.nanoTime() - t0);
+            }
+            if (tpGroup != null && tpGroup.tpSize() > 1) {
+                tpGroup.allReduceSumInPlace(tpRank, out);
+            }
+            out.promoteToParent();
+            return out;
+        } finally {
+            Tensor.pop();
+        }
+    }
+
+    /**
+     * Multi-token verify window for a batched cohort of concurrent requests
+     * at genuinely different absolute positions ({@code seqLen > 1}, ragged).
+     * Reuses the dedicated CSR-based verify kernel
+     * ({@code smile_flashinfer_paged_attention_verify_cuda}, exposed via
+     * {@link Native#flashInferAttentionVerifyGraph}) eagerly — despite the
+     * name, that entry point has no CUDA-graph-capture requirement; it is
+     * simply the verify attention kernel. Causal masking is that kernel's
+     * own unconditional, per-row bottom-right-aligned {@code MaskMode::kCausal}
+     * (derived from each row's own KV length via the CSR {@code kv_indptr}),
+     * so no {@code mask} tensor is built or used here — unlike
+     * {@link #forwardUniform}'s non-capture branch, which needs one.
+     *
+     * <p>{@code torch_native} has no per-row-KV-length gather path for this
+     * case (mirrors {@link #forwardDecodeRagged}'s identical restriction for
+     * {@code seqLen == 1}), so this requires FlashInfer.
+     *
+     * @param x         hidden states {@code [B, S, D]}, {@code S > 1}.
+     * @param positions absolute write position per batch row (non-uniform).
+     * @param cos       per-row cosines {@code [B, S, R]}.
+     * @param sin       per-row sines {@code [B, S, R]}.
+     * @return attention output {@code [B, S, D]}.
+     */
+    private Tensor forwardVerifyRagged(Tensor x, int[] positions, Tensor cos, Tensor sin) {
+        long[] shape = x.shape();
+        int batchSize = (int) shape[0];
+        int seqlen = (int) shape[1];
+
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        boolean profile = smile.llm.engine.DecodeForwardProfile.enabled();
+        long t0 = profile ? System.nanoTime() : 0L;
+        try {
+            Tensor qRaw = qProj.forward(x);
+            Tensor qFull = qRaw.view(batchSize, seqlen, numHeads, headDim * 2);
+            Tensor query;
+            Tensor gate;
+            try (var qSlice = smile.deep.tensor.Index.slice(0, headDim);
+                 var gSlice = smile.deep.tensor.Index.slice(headDim, headDim * 2)) {
+                query = qFull.get(smile.deep.tensor.Index.Ellipsis, qSlice);
+                Tensor gateSlice = qFull.get(smile.deep.tensor.Index.Ellipsis, gSlice);
+                gate = gateSlice.reshape(batchSize, seqlen, numHeads * headDim);
+            }
+
+            Tensor kRaw = kProj.forward(x);
+            Tensor key = kRaw.view(batchSize, seqlen, numKvHeads, headDim);
+            Tensor vRaw = vProj.forward(x);
+            Tensor value = vRaw.view(batchSize, seqlen, numKvHeads, headDim);
+
+            Tensor qFlat = query.reshape(batchSize * seqlen * numHeads, headDim);
+            Tensor qNormed = qNorm.forward(qFlat);
+            query = qNormed.view(batchSize, seqlen, numHeads, headDim);
+
+            Tensor kFlat = key.reshape(batchSize * seqlen * numKvHeads, headDim);
+            Tensor kNormed = kNorm.forward(kFlat);
+            key = kNormed.view(batchSize, seqlen, numKvHeads, headDim);
+
+            var rope = PartialRotaryEncoding.apply(query, key, cos, sin, rotaryDim);
+            Tensor qRope = rope._1();
+            Tensor kRope = rope._2();
+
+            cachePool.put(kvLayerId, positions, kRope, value);
+            kRope.close();
+
+            if (AttentionBackends.current() != AttentionBackend.FLASHINFER) {
+                throw new IllegalStateException(
+                        "ragged verify window requires FlashInfer; torch_native needs equal positions");
+            }
+
+            int[] cacheLens = new int[batchSize];
+            for (int b = 0; b < batchSize; b++) {
+                cacheLens[b] = positions[b] + seqlen;
+            }
+            double scale = 1.0 / Math.sqrt(headDim);
+            Tensor qT = qRope.transpose(1, 2);
+            FlashInferKvMetadata meta = cachePool.sharedFlashInferMetadata(cacheLens);
+            Tensor qoIndptr = cachePool.verifyQoIndptrBuf(batchSize, seqlen);
+            // startPos/cacheLen args below are unused placeholders for this call —
+            // Native.flashInferAttentionVerifyGraph reads only kvMetadata/seqLen/
+            // isCausal plus the explicit qoIndptr, never ctx.startPos()/ctx.cacheLen().
+            var ctx = AttentionContext.paged(
+                    scale, true,
+                    numHeads, numKvHeads, headDim,
+                    kvLayerId, 0, seqlen, 0,
+                    cachePool, meta, cachePool.flashInferWorkspace());
+            Tensor attn = Native.flashInferAttentionVerifyGraph(qT, ctx, qoIndptr);
+
+            Tensor attnT = attn.transpose(1, 2);
+            Tensor attnC = attnT.contiguous();
+            attn = attnC.view(batchSize, seqlen, -1);
+            Tensor gated = Native.mulSigmoid(attn, gate);
             if (gated == null) {
                 Tensor gateSig = sigmoid.forward(gate);
                 gated = attn.mul(gateSig);
