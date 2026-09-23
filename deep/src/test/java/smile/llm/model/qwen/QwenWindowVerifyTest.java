@@ -58,6 +58,10 @@ public class QwenWindowVerifyTest {
         model.to(Device.CPU());
         model.eval();
         model.setKvCachePool(KvCachePool.forTesting(args.kvCacheLayout(), Device.CPU()), false);
+        if (model.mtp() != null) {
+            model.mtp().setKvCachePool(
+                    KvCachePool.forTesting(model.mtp().kvCacheLayout(), Device.CPU()), false);
+        }
         return model;
     }
 
@@ -166,6 +170,146 @@ public class QwenWindowVerifyTest {
         }
 
         qwen.evict(requestId);
+    }
+
+    @Test
+    public void testGivenTwoConcurrentRequestsWhenOtherDecodesThenAnchorPoolIsolatesEachRequest() {
+        // Regression guard for the MtpAnchorPool fix: QwenModel.lastPreNormHidden
+        // is a single field overwritten by every forward, for whichever batch of
+        // requestIds it just processed. Qwen.scatterMtpAnchor immediately copies
+        // it into a per-request row right after each forward, so request B's own
+        // decode step (batch [B]) must never affect request A's already-written
+        // anchor row, even though both share the same QwenModel instance.
+        QwenModelArgs args = new QwenModelArgs(
+                64, 4, 4, 2, 16, 100, 128, 1e-6, 10000.0, 0.25,
+                4, 16, 16, 2, 4, QwenModelArgs.defaultLayerTypes(4, 4), 2, 32,
+                1, 3);
+        QwenModel model = tinyModel(args);
+        Qwen qwen = new Qwen("tiny-mtp-anchor-isolation", model, tinyTokenizer(), args);
+
+        int[] promptA = pageAlignedPrompt();
+        int requestA = qwen.bind(promptA, 32);
+        try (Tensor prefill = qwen.prefillChunk(requestA, promptA, 0, promptA.length)) {
+            assertNotNull(prefill);
+        }
+        int lastPosA = promptA.length - 1;
+        int lastTokenA = promptA[lastPosA];
+        int[] draftsA = {7, 11, 13};
+        int written = qwen.verifyWindowOnlineRecorded(requestA, lastTokenA, lastPosA, draftsA);
+        assertTrue(written >= 1);
+
+        Tensor anchorABefore = model.mtpAnchorPool().getRow(requestA);
+        assertNotNull(anchorABefore, "request A must have a written anchor after its own verify round");
+        float[] beforeValues = anchorABefore.to(Device.CPU(), ScalarType.Float).floatArray();
+
+        // A second, unrelated request prefills and decodes on the same model.
+        int[] promptB = {2, 4, 6, 8, 10, 12, 14, 16};
+        int requestB = qwen.bind(promptB, 32);
+        try (Tensor prefill = qwen.prefillChunk(requestB, promptB, 0, promptB.length)) {
+            assertNotNull(prefill);
+        }
+        int lastPosB = promptB.length - 1;
+        int lastTokenB = promptB[lastPosB];
+        try (Tensor logits = qwen.decodeStep(
+                new int[]{requestB}, new int[]{lastTokenB}, new int[]{lastPosB})) {
+            assertNotNull(logits);
+        }
+
+        Tensor anchorAAfter = model.mtpAnchorPool().getRow(requestA);
+        assertNotNull(anchorAAfter);
+        float[] afterValues = anchorAAfter.to(Device.CPU(), ScalarType.Float).floatArray();
+        assertArrayEquals(beforeValues, afterValues, 0f,
+                "request B's decode step must not change request A's MTP anchor");
+
+        anchorABefore.close();
+        anchorAAfter.close();
+        qwen.evict(requestA);
+        qwen.evict(requestB);
+    }
+
+    @Test
+    public void testGivenSamePositionBatchedCohortWhenSpeculateBatchThenMatchesSingleRequestPathPerRow() {
+        // Stage 2/3 equivalence guard: Qwen.speculateBatch (batched draft +
+        // batched ragged verify, heterogeneous per-row positions) must
+        // produce, for each row, exactly what the existing single-request
+        // Qwen.speculateStep path produces from the identical starting state.
+        // Two separately-constructed model instances, seeded identically
+        // right before construction, get bit-identical random weights;
+        // temperature=0 (greedy) means no further randomness is consumed
+        // during generation, so any divergence points to a real bug in the
+        // batched/ragged plumbing (positions, cache lengths, per-row
+        // checkpoint restore), not to random noise.
+        QwenModelArgs args = new QwenModelArgs(
+                64, 4, 4, 2, 16, 100, 128, 1e-6, 10000.0, 0.25,
+                4, 16, 16, 2, 4, QwenModelArgs.defaultLayerTypes(4, 4), 2, 32,
+                1, 3);
+        long seed = 42L;
+
+        smile.torch.smile_torch_h.smile_manual_seed(seed);
+        QwenModel modelRef = tinyModel(args);
+        Qwen qwenRef = new Qwen("tiny-batch-ref", modelRef, tinyTokenizer(), args);
+
+        smile.torch.smile_torch_h.smile_manual_seed(seed);
+        QwenModel modelBatch = tinyModel(args);
+        Qwen qwenBatch = new Qwen("tiny-batch-subject", modelBatch, tinyTokenizer(), args);
+
+        // Same length (-> same lastPos) so both rows share one absolute
+        // position: GatedAttention's full-attention layer only has a ragged
+        // (per-row-position) code path for seqlen==1 (decode); a verify
+        // window (seqlen>1) with genuinely different positions per row would
+        // need a new ragged-prefill attention path that doesn't exist yet
+        // (and, on this CPU-only host, torch_native explicitly refuses
+        // non-uniform positions even for the seqlen==1 case it does support —
+        // see GatedAttention.forwardDecodeRagged). Same-position batching is
+        // still the realistic common case: smile.chat.admit-coalesce-ms
+        // exists specifically to admit concurrent requests together so they
+        // progress in lockstep.
+        int[] promptA = pageAlignedPrompt();
+        int[] promptB = new int[promptA.length];
+        for (int i = 0; i < promptB.length; i++) {
+            promptB[i] = 1 + ((i * 3 + 7) % 50);
+        }
+        int lastPosA = promptA.length - 1;
+        int lastTokenA = promptA[lastPosA];
+        int lastPosB = promptB.length - 1;
+        int lastTokenB = promptB[lastPosB];
+
+        int reqARef = qwenRef.bind(promptA, 32);
+        try (Tensor p = qwenRef.prefillChunk(reqARef, promptA, 0, promptA.length)) {
+            assertNotNull(p);
+        }
+        int reqBRef = qwenRef.bind(promptB, 32);
+        try (Tensor p = qwenRef.prefillChunk(reqBRef, promptB, 0, promptB.length)) {
+            assertNotNull(p);
+        }
+        int[][] refA = qwenRef.speculateStep(
+                new int[]{reqARef}, new int[]{lastTokenA}, new int[]{lastPosA}, 3, 0.0, 1.0);
+        int[][] refB = qwenRef.speculateStep(
+                new int[]{reqBRef}, new int[]{lastTokenB}, new int[]{lastPosB}, 3, 0.0, 1.0);
+
+        int reqABatch = qwenBatch.bind(promptA, 32);
+        try (Tensor p = qwenBatch.prefillChunk(reqABatch, promptA, 0, promptA.length)) {
+            assertNotNull(p);
+        }
+        int reqBBatch = qwenBatch.bind(promptB, 32);
+        try (Tensor p = qwenBatch.prefillChunk(reqBBatch, promptB, 0, promptB.length)) {
+            assertNotNull(p);
+        }
+        int[][] batched = qwenBatch.speculateBatch(
+                new int[]{reqABatch, reqBBatch},
+                new int[]{lastTokenA, lastTokenB},
+                new int[]{lastPosA, lastPosB},
+                3, 0.0, 1.0);
+
+        assertArrayEquals(refA[0], batched[0],
+                "request A's batched accepted tokens must match the single-request reference");
+        assertArrayEquals(refB[0], batched[1],
+                "request B's batched accepted tokens must match the single-request reference");
+
+        qwenRef.evict(reqARef);
+        qwenRef.evict(reqBRef);
+        qwenBatch.evict(reqABatch);
+        qwenBatch.evict(reqBBatch);
     }
 
     @Test

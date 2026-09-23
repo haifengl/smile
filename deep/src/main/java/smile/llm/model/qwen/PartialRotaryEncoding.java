@@ -226,6 +226,42 @@ public final class PartialRotaryEncoding {
     }
 
     /**
+     * Gathers a per-row contiguous window of RoPE rows, for a batched verify
+     * step where concurrent requests are at different absolute positions
+     * (unlike {@link #gatherWindowInto}, which broadcasts one shared window
+     * across the whole batch — only correct when every row shares it).
+     *
+     * @param table          {@code [maxPos, rotaryDim]} table.
+     * @param startPositions absolute position of the window's first token per batch row.
+     * @param windowLen      number of contiguous positions to gather per row.
+     * @return owned {@code [B, windowLen, rotaryDim]} tensor.
+     */
+    public static Tensor gatherWindow(Tensor table, int[] startPositions, int windowLen) {
+        if (windowLen < 1) {
+            throw new IllegalArgumentException("windowLen must be >= 1");
+        }
+        if (startPositions == null || startPositions.length == 0) {
+            throw new IllegalArgumentException("startPositions must be non-empty");
+        }
+        int b = startPositions.length;
+        int[] flat = new int[b * windowLen];
+        for (int row = 0; row < b; row++) {
+            int start = startPositions[row];
+            for (int i = 0; i < windowLen; i++) {
+                flat[row * windowLen + i] = start + i;
+            }
+        }
+        long rotaryDim = table.shape()[1];
+        try (var idx = Index.of(flat);
+             Tensor rows = table.get(idx); // [B*windowLen, R]
+             Tensor reshaped = rows.reshape(b, windowLen, rotaryDim)) {
+            Tensor out = reshaped.copy();
+            out.promoteToParent();
+            return out;
+        }
+    }
+
+    /**
      * Reshapes {@code [S, R]}, {@code [B, S, R]}, or {@code [R]} cos/sin for
      * {@code [B, S, H, D]} query/key broadcast.
      */

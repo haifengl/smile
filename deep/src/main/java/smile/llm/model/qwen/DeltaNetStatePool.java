@@ -448,6 +448,49 @@ public class DeltaNetStatePool implements AutoCloseable {
     }
 
     /**
+     * Restores each active row {@code i} from its own checkpoint slot
+     * {@code slots[i]} — the batched-cohort counterpart of
+     * {@link #restoreCheckpoint}, which restores every active row from the
+     * same slot. Needed when concurrent requests verified together in one
+     * round accept different numbers of draft tokens.
+     *
+     * @param slots checkpoint slot per active row (length {@code boundBatch}).
+     */
+    public void restoreCheckpointPerRow(int[] slots) {
+        if (speculativeRecurrent == null) {
+            throw new IllegalStateException("no speculative checkpoints allocated");
+        }
+        int b = boundBatch;
+        if (b <= 0) {
+            return;
+        }
+        if (slots.length != b) {
+            throw new IllegalArgumentException("slots length (" + slots.length
+                    + ") must equal boundBatch (" + b + ")");
+        }
+        for (int row = 0; row < b; row++) {
+            int slot = slots[row];
+            if (slot < 0 || slot >= speculativeSlots) {
+                throw new IllegalStateException("speculative checkpoint slot out of range: " + slot);
+            }
+            try (var r = Index.of(row)) {
+                for (int i = 0; i < numLinearLayers; i++) {
+                    try (Tensor src = speculativeRecurrent[slot][i].get(r);
+                         Tensor dst = recurrent[i].get(r)) {
+                        smile.torch.Native.copy_(dst, src);
+                    }
+                    if (conv[i] != null && speculativeConv[slot][i] != null) {
+                        try (Tensor src = speculativeConv[slot][i].get(r);
+                             Tensor dst = conv[i].get(r)) {
+                            smile.torch.Native.copy_(dst, src);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Copies active working rows {@code [0, boundBatch)} for a single
      * linear-attention layer into checkpoint {@code slot}.
      *

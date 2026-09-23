@@ -44,10 +44,18 @@ tasks.named<Test>("test") {
     // Use JUnit Platform for unit tests.
     useJUnitPlatform {
         // Allow callers to skip tagged groups, e.g.:
-        //   ./gradlew :deep:test -DexcludeTags=integration
+        //   ./gradlew :deep:test -DexcludeTags=integration,cuda
         val excludeTagsProp = System.getProperty("excludeTags")
         if (!excludeTagsProp.isNullOrBlank()) {
             excludeTags(*excludeTagsProp.split(",").map(String::trim).toTypedArray())
+        }
+        // Allow callers to run only tagged groups, e.g. in the GPU test container
+        // (bin/gpu-test-and-build.sh) to positively confirm every @Tag("cuda") test
+        // actually ran rather than silently assumeTrue-skipping:
+        //   ./gradlew :deep:test -DincludeTags=cuda
+        val includeTagsProp = System.getProperty("includeTags")
+        if (!includeTagsProp.isNullOrBlank()) {
+            includeTags(*includeTagsProp.split(",").map(String::trim).toTypedArray())
         }
     }
     workingDir = project.rootDir
