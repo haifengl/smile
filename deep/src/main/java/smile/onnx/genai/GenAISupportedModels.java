@@ -43,24 +43,43 @@ public final class GenAISupportedModels {
      * Chat-capable (and Whisper) families tracked for Olive / OGA conversion.
      */
     public enum Family {
+        /** AMD OLMo. */
         AMD_OLMO(true, "olmo", "amd_olmo", "amd-olmo"),
+        /** ChatGLM / GLM. */
         CHATGLM(true, "chatglm", "glm", "chatglm2", "chatglm3", "chatglm4"),
+        /** DeepSeek. */
         DEEPSEEK(true, "deepseek", "deepseek_v2", "deepseek_v3", "deepseek_r1"),
+        /** ERNIE. */
         ERNIE(true, "ernie", "ernie4", "ernie_4", "ernie45", "ernie_4_5"),
+        /** Fara. */
         FARA(true, "fara"),
+        /** Gemma. */
         GEMMA(true, "gemma", "gemma2", "gemma3", "google/gemma"),
+        /** GPT-OSS. */
         GPT_OSS(true, "gpt-oss", "gpt_oss", "gptoss"),
+        /** Granite. */
         GRANITE(true, "granite", "granite_moe", "granitemoe"),
+        /** Granite MoE hybrid. */
         GRANITE_MOE_HYBRID(true, "granite_moe_hybrid", "granite-moe-hybrid"),
+        /** Hunyuan. */
         HUNYUAN(true, "hunyuan", "hunyuan_dense", "hunyuandense"),
+        /** InternLM. */
         INTERNLM2(true, "internlm", "internlm2", "internlm3"),
+        /** LFM2. */
         LFM2(true, "lfm2", "lfm"),
+        /** Llama. */
         LLAMA(true, "llama", "llama2", "llama3", "llama4", "meta-llama", "meta/llama"),
+        /** Mistral / Mixtral. */
         MISTRAL(true, "mistral", "mixtral", "mistralai"),
+        /** Nemotron. */
         NEMOTRON(true, "nemotron", "nvidia/nemotron"),
+        /** Phi. */
         PHI(true, "phi", "phi2", "phi3", "phi3_5", "phi4", "microsoft/phi"),
+        /** Qwen. */
         QWEN(true, "qwen", "qwen2", "qwen2_5", "qwen3", "qwen3_5", "qwen3_8"),
+        /** SmolLM. */
         SMOLLM3(true, "smollm", "smollm2", "smollm3", "huggingfacetb/smollm"),
+        /** Whisper (speech; not chat-capable). */
         WHISPER(false, "whisper");
 
         private final boolean chat;
@@ -71,7 +90,11 @@ public final class GenAISupportedModels {
             this.aliases = aliases;
         }
 
-        /** @return {@code true} when suitable for {@code /chat/completions}. */
+        /**
+         * Returns whether this family is suitable for chat completions.
+         *
+         * @return {@code true} when suitable for {@code /chat/completions}.
+         */
         public boolean isChat() {
             return chat;
         }
