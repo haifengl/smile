@@ -90,57 +90,101 @@ public final class DecodeForwardProfile {
             deltaOutNs = Math.max(deltaOutNs, other.deltaOutNs);
         }
 
-        /** @return {@link #embedNs} in milliseconds. */
+        /**
+         * Elapsed embedding time in milliseconds.
+         *
+         * @return {@link #embedNs} converted to ms.
+         */
         public long embedMs() {
             return embedNs / 1_000_000L;
         }
 
-        /** @return {@link #fullAttnNs} in milliseconds. */
+        /**
+         * Elapsed full-attention time in milliseconds.
+         *
+         * @return {@link #fullAttnNs} converted to ms.
+         */
         public long fullAttnMs() {
             return fullAttnNs / 1_000_000L;
         }
 
-        /** @return {@link #linearAttnNs} in milliseconds. */
+        /**
+         * Elapsed linear-attention time in milliseconds.
+         *
+         * @return {@link #linearAttnNs} converted to ms.
+         */
         public long linearAttnMs() {
             return linearAttnNs / 1_000_000L;
         }
 
-        /** @return {@link #mlpNs} in milliseconds. */
+        /**
+         * Elapsed MLP time in milliseconds.
+         *
+         * @return {@link #mlpNs} converted to ms.
+         */
         public long mlpMs() {
             return mlpNs / 1_000_000L;
         }
 
-        /** @return {@link #ncclNs} in milliseconds. */
+        /**
+         * Elapsed NCCL / collective time in milliseconds.
+         *
+         * @return {@link #ncclNs} converted to ms.
+         */
         public long ncclMs() {
             return ncclNs / 1_000_000L;
         }
 
-        /** @return {@link #lmHeadNs} in milliseconds. */
+        /**
+         * Elapsed LM-head time in milliseconds.
+         *
+         * @return {@link #lmHeadNs} converted to ms.
+         */
         public long lmHeadMs() {
             return lmHeadNs / 1_000_000L;
         }
 
-        /** @return {@link #deltaProjNs} in milliseconds. */
+        /**
+         * Elapsed DeltaNet projection time in milliseconds.
+         *
+         * @return {@link #deltaProjNs} converted to ms.
+         */
         public long deltaProjMs() {
             return deltaProjNs / 1_000_000L;
         }
 
-        /** @return {@link #deltaConvNs} in milliseconds. */
+        /**
+         * Elapsed DeltaNet convolution time in milliseconds.
+         *
+         * @return {@link #deltaConvNs} converted to ms.
+         */
         public long deltaConvMs() {
             return deltaConvNs / 1_000_000L;
         }
 
-        /** @return {@link #deltaGateNs} in milliseconds. */
+        /**
+         * Elapsed DeltaNet gate time in milliseconds.
+         *
+         * @return {@link #deltaGateNs} converted to ms.
+         */
         public long deltaGateMs() {
             return deltaGateNs / 1_000_000L;
         }
 
-        /** @return {@link #deltaRecurrentNs} in milliseconds. */
+        /**
+         * Elapsed DeltaNet recurrent time in milliseconds.
+         *
+         * @return {@link #deltaRecurrentNs} converted to ms.
+         */
         public long deltaRecurrentMs() {
             return deltaRecurrentNs / 1_000_000L;
         }
 
-        /** @return {@link #deltaOutNs} in milliseconds. */
+        /**
+         * Elapsed DeltaNet output-projection time in milliseconds.
+         *
+         * @return {@link #deltaOutNs} converted to ms.
+         */
         public long deltaOutMs() {
             return deltaOutNs / 1_000_000L;
         }
