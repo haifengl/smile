@@ -103,19 +103,25 @@ public class InferenceEngineTest {
     @Test
     public void testGivenIdleAdmitCoalesceWhenStaggeredSubmitThenFirstBindAfterSecond()
             throws Exception {
-        // Given – idle coalesce 200ms, maxInFlight=2
+        // Given – long idle coalesce so CI scheduling jitter cannot outrun the window
+        // (a short Thread.sleep before the second submit used to overshoot 200ms under load).
         StepStub stub = new StepStub();
         stub.blockDecode = true;
-        try (var engine = new InferenceEngine(stub, 2, 2, 64, 5_000, 200L)) {
-            assertEquals(200L, engine.admitCoalesceMs());
-            // When – first request, then second after a short stagger
+        try (var engine = new InferenceEngine(stub, 2, 2, 64, 5_000, 2_000L)) {
+            assertEquals(2_000L, engine.admitCoalesceMs());
+            // When – first request alone must stay unbound while coalesce holds
             engine.submit(GenerationRequest.ofTokens(
                     new int[]{1, 2}, 3, 0.0, 0.9, false, 0, null));
-            Thread.sleep(30);
+            long holdDeadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(150);
+            while (System.nanoTime() < holdDeadline) {
+                assertEquals(0L, stub.firstBindNs.get(),
+                        "first request bound before coalesce cohort formed");
+                Thread.sleep(5);
+            }
             long secondSubmitNs = System.nanoTime();
             engine.submit(GenerationRequest.ofTokens(
                     new int[]{3, 4}, 3, 0.0, 0.9, false, 0, null));
-            stub.awaitDecode(2, TimeUnit.SECONDS);
+            stub.awaitDecode(5, TimeUnit.SECONDS);
             // Then – first bind waited for the second arrival (cohort form)
             assertTrue(stub.firstBindNs.get() > 0, "expected bind");
             assertTrue(stub.firstBindNs.get() >= secondSubmitNs,
