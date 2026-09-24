@@ -105,9 +105,9 @@ libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-repl"        % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
   "ch.qos.logback"    % "logback-classic"    % "1.6.3",
-  "com.openai"        % "openai-java"        % "4.63.1",
-  "com.anthropic"     % "anthropic-java"     % "2.62.0",
-  "com.google.genai"  % "google-genai"       % "1.71.0",
+  "com.openai"        % "openai-java"        % "4.69.0",
+  "com.anthropic"     % "anthropic-java"     % "2.65.0",
+  "com.google.genai"  % "google-genai"       % "1.73.0",
   "org.commonmark"    % "commonmark"         % "0.30.0",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.5.0",
   "org.eclipse.lsp4j" % "org.eclipse.lsp4j"  % "1.0.0",
@@ -117,7 +117,7 @@ libraryDependencies ++= Seq(
   "com.formdev"       % "flatlaf"            % "3.7.2",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.9.16",
-  "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.22",
+  "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.23",
   "io.modelcontextprotocol.sdk" % "mcp"          % "2.0.1",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "com.github.serpapi"          % "serpapi-java" % "1.2.0",
@@ -125,7 +125,7 @@ libraryDependencies ++= Seq(
 )
 
 libraryDependencies ++= {
-  val jacksonV = "3.2.2"
+  val jacksonV = "3.2.3"
   val jsonschemaV = "4.38.0"
   Seq(
     "tools.jackson.core"       % "jackson-databind"            % jacksonV,
