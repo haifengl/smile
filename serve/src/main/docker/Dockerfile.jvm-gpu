@@ -35,7 +35,7 @@
 #
 ###
 ARG CUDA_VERSION=13.2.0
-ARG TORCH_VERSION=2.13.0
+ARG TORCH_VERSION=2.14.1
 ARG CU_VERSION=132
 
 # -----------------------------------------------------------------------------
@@ -127,7 +127,7 @@ FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu24.04
 
 ARG TORCH_VERSION
 ARG CU_VERSION
-ARG ORT_VERSION=1.29.0
+ARG ORT_VERSION=1.30.0
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \

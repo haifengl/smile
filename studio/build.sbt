@@ -104,8 +104,8 @@ batScriptExtraDefines ++= Seq(
 libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-repl"        % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
-  "ch.qos.logback"    % "logback-classic"    % "1.6.3",
-  "com.openai"        % "openai-java"        % "4.69.0",
+  "ch.qos.logback"    % "logback-classic"    % "1.6.4",
+  "com.openai"        % "openai-java"        % "4.69.3",
   "com.anthropic"     % "anthropic-java"     % "2.65.0",
   "com.google.genai"  % "google-genai"       % "1.73.0",
   "org.commonmark"    % "commonmark"         % "0.30.0",
