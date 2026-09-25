@@ -36,7 +36,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  TORCH_VERSION: "2.13.0"
+  TORCH_VERSION: "2.14.1"
   BUILD_DIR: build/cpp
 
 jobs:
@@ -66,7 +66,7 @@ jobs:
           # ----------------------------------------------------------------
           # Linux — GCC, libtorch Linux CPU release (cxx11 ABI)
           # ----------------------------------------------------------------
-          - runner: ubuntu-22.04
+          - runner: ubuntu-24.04
             os-label: Linux (GCC)
             libtorch-url-template: "https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-TORCH_VERSION%2Bcpu.zip"
             archive-name: libtorch-linux.zip
