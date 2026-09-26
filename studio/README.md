@@ -487,6 +487,7 @@ Type `/` followed by a command name and press `Ctrl + Enter`:
 | `/plan off` | Exit plan mode |
 | `/compact [instructions]` | Summarize the conversation and compact the context window |
 | `/clear` | Clear the current conversation session |
+| `/resume` | Choose a previous session and restore its messages into context |
 | `/edit <file>` | Open a file in the Notepad editor |
 | `/train` | Train a machine learning model (runs `smile train`) |
 | `/predict` | Run batch inference (runs `smile predict`) |

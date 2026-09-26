@@ -19,11 +19,15 @@ package smile.studio.cli;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -31,6 +35,9 @@ import com.formdev.flatlaf.util.SystemInfo;
 import ioa.agent.AgentListener;
 import ioa.agent.AgentRequest;
 import ioa.agent.Context;
+import ioa.llm.Conversation;
+import ioa.llm.Message;
+import ioa.llm.Role;
 import ioa.llm.client.LLM;
 import ioa.agent.Agent;
 import ioa.agent.memory.Skill;
@@ -351,6 +358,7 @@ public class AgentCLI extends JPanel {
         hints.put("/memory edit", "[ENTER to open a notepad to edit the long term memory]");
         hints.put("/memory refresh", "[ENTER to reload the context from disk]");
         hints.put("/compact", "[instructions]");
+        hints.put("/resume", "[ENTER to choose a previous session]");
         hints.put("/plan", "[off|short description of goals or tasks]");
         hints.put("/edit", "[file path]");
         hints.put("/train", "[ENTER for helps]");
@@ -467,6 +475,7 @@ public class AgentCLI extends JPanel {
                 case "memory" -> memory(args, instructions, intent);
                 case "system" -> showSystemPrompt(intent.output()); // for debugging
                 case "clear" -> clear(intent.output());
+                case "resume" -> resume(intent.output());
                 case "compact" -> compact(instructions, intent);
                 case "plan" -> plan(args, instructions, intent.output());
                 default -> runSkill(args[0], instructions, intent);
@@ -507,6 +516,7 @@ public class AgentCLI extends JPanel {
                 /plan               Enter the plan mode.
                 /plan off           Exit  the plan mode.
                 /clear              Clear the current conversation session.
+                /resume             Choose a previous session and restore its context.
                 /compact            Summarize the conversation and retain critical details.
                 /edit               Edit a file with notepad.
                 /train              Train a machine learning model
@@ -605,6 +615,202 @@ public class AgentCLI extends JPanel {
         if (!isAgentAvailable(output)) return;
         agent.clear();
         output.println("Current conversation session was cleared.");
+    }
+
+    /** Opens a session picker and loads the selected conversation. */
+    private void resume(OutputArea output) {
+        if (!isAgentAvailable(output)) return;
+        if (agent.session().isBusy()) {
+            output.println("Wait until the current turn finishes before resuming a session.");
+            return;
+        }
+        List<Conversation.Session> sessions;
+        try {
+            sessions = agent.conversation().sessions();
+        } catch (IOException ex) {
+            output.println("Failed to list sessions: " + ex.getMessage());
+            return;
+        }
+        if (sessions.isEmpty()) {
+            output.println("No previous sessions.");
+            return;
+        }
+        Conversation.Session selected = pickSession(sessions);
+        if (selected == null) {
+            return;
+        }
+        if (agent.session().isBusy()) {
+            output.println("Wait until the current turn finishes before resuming a session.");
+            return;
+        }
+        try {
+            int count = agent.conversation().resume(selected.directory());
+            showResumedSession(selected, count);
+        } catch (IOException ex) {
+            output.println("Failed to resume session: " + ex.getMessage());
+        }
+    }
+
+    private Conversation.Session pickSession(List<Conversation.Session> sessions) {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        JDialog dialog = new JDialog(owner, "Resume session", Dialog.ModalityType.APPLICATION_MODAL);
+        DefaultListModel<Conversation.Session> model = new DefaultListModel<>();
+        sessions.forEach(model::addElement);
+        JList<Conversation.Session> list = new JList<>(model);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list.setSelectedIndex(0);
+        list.setVisibleRowCount(12);
+        list.setCellRenderer(new SessionRenderer());
+
+        final Conversation.Session[] chosen = new Conversation.Session[1];
+        Runnable choose = () -> {
+            chosen[0] = list.getSelectedValue();
+            dialog.dispose();
+        };
+        list.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent event) {
+                if (event.getClickCount() == 2 && list.getSelectedValue() != null) {
+                    choose.run();
+                }
+            }
+        });
+        list.getInputMap().put(KeyStroke.getKeyStroke("ENTER"), "resume");
+        list.getActionMap().put("resume", new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent event) {
+                choose.run();
+            }
+        });
+
+        JButton resume = new JButton("Resume");
+        resume.addActionListener(event -> choose.run());
+        JButton cancel = new JButton("Cancel");
+        cancel.addActionListener(event -> dialog.dispose());
+        JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttons.add(cancel);
+        buttons.add(resume);
+
+        JLabel hint = new JLabel("Choose a session. The model continues with that conversation.");
+        hint.setBorder(new EmptyBorder(8, 12, 4, 12));
+        dialog.add(hint, BorderLayout.NORTH);
+        dialog.add(new JScrollPane(list), BorderLayout.CENTER);
+        dialog.add(buttons, BorderLayout.SOUTH);
+        dialog.getRootPane().setDefaultButton(resume);
+        dialog.getRootPane().registerKeyboardAction(event -> dialog.dispose(),
+                KeyStroke.getKeyStroke("ESCAPE"), JComponent.WHEN_IN_FOCUSED_WINDOW);
+        dialog.setPreferredSize(new Dimension(560, 420));
+        dialog.pack();
+        dialog.setLocationRelativeTo(owner);
+        dialog.setVisible(true);
+        return chosen[0];
+    }
+
+    /**
+     * Replaces the transcript with the resumed messages. The caller appends a
+     * fresh composer after this returns.
+     */
+    private void showResumedSession(Conversation.Session session, int count) {
+        List<Intent> banners = new ArrayList<>();
+        for (Component component : intents.getComponents()) {
+            if (component instanceof Intent intent && intent.getIntentType() == IntentType.Raw) {
+                banners.add(intent);
+            }
+        }
+        intents.removeAll();
+        for (Intent banner : banners) {
+            intents.add(banner);
+        }
+
+        Intent current = null;
+        StringBuilder body = new StringBuilder();
+        for (Message message : agent.conversation().messages()) {
+            if (!(message.content() instanceof String text) || text.isBlank()) {
+                continue;
+            }
+            if (message.role() == Role.user) {
+                flushHistory(current, body);
+                current = historyIntent(text);
+            } else {
+                if (current == null) {
+                    current = historyIntent("Session summary");
+                }
+                if (!body.isEmpty()) {
+                    body.append("\n\n");
+                }
+                body.append(forDisplay(text));
+            }
+        }
+        flushHistory(current, body);
+        if (current != null) {
+            current.setStatus("Resumed " + sessionLabel(session) + " · " + count + " messages");
+        }
+
+        intents.add(Box.createVerticalGlue());
+        intents.revalidate();
+        revalidate();
+        intents.repaint();
+        SwingUtilities.invokeLater(() -> {
+            JScrollPane scroll = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, intents);
+            if (scroll != null) {
+                JScrollBar bar = scroll.getVerticalScrollBar();
+                bar.setValue(bar.getMaximum());
+            }
+        });
+    }
+
+    private Intent historyIntent(String prompt) {
+        Intent intent = new Intent(this);
+        intent.editor().setText(prompt);
+        intent.setEditable(false);
+        intents.add(intent);
+        return intent;
+    }
+
+    private static void flushHistory(Intent current, StringBuilder body) {
+        if (current == null || body.isEmpty()) {
+            return;
+        }
+        String shown = body.toString();
+        current.output().print(shown);
+        current.output().setText(shown);
+        body.setLength(0);
+    }
+
+    private static String forDisplay(String text) {
+        int limit = 12_000;
+        if (text.length() <= limit) {
+            return text;
+        }
+        return text.substring(0, limit) + "\n\n… [truncated in the view; the model still has the full text]";
+    }
+
+    private static String sessionLabel(Conversation.Session session) {
+        try {
+            LocalDateTime parsed = LocalDateTime.parse(session.id(), DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"));
+            return parsed.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        } catch (Exception ex) {
+            return session.id();
+        }
+    }
+
+    private final class SessionRenderer extends DefaultListCellRenderer {
+        @Override
+        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean selected, boolean focus) {
+            JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, selected, focus);
+            if (value instanceof Conversation.Session session) {
+                String current = session.directory().equals(agent.conversation().path()) ? " (current)" : "";
+                String preview = session.preview().isBlank() ? "(no preview)" : session.preview();
+                label.setText("<html><b>" + escapeHtml(sessionLabel(session)) + "</b>" + escapeHtml(current)
+                        + "<br>&nbsp;<span style='color:#666'>" + escapeHtml(preview) + "</span></html>");
+                label.setBorder(new EmptyBorder(4, 8, 4, 8));
+            }
+            return label;
+        }
+    }
+
+    private static String escapeHtml(String text) {
+        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
     }
 
     private void runSkill(String command, String instructions, Intent intent) {
