@@ -167,7 +167,6 @@ public class Intent extends JPanel {
 
         var levels = effortLevels.toArray(new String[0]);
         var effortComboBox = new JComboBox<>(levels);
-        effortComboBox.setSelectedItem(levels[0]);
         effortComboBox.setBorder(BorderFactory.createEmptyBorder());
         effortComboBox.setBackground(inputPaneColor);
         if (effortComboBox.getComponentCount() > 0 &&

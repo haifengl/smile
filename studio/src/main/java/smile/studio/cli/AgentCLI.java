@@ -63,7 +63,7 @@ public class AgentCLI extends JPanel {
     private final JPanel intents = new ScrollablePanel();
     /** The agent. */
     private final Agent agent;
-    /** The reasoning effort level. */
+    /** The reasoning effort level. {@code default} sends nothing, so the server uses its own budget. */
     private String reasoningEffort = LLM.DEFAULT_REASONING_EFFORT;
     /** The intent whose parent turn is showing, or the next user prompt. */
     private Intent activeIntent;
