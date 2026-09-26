@@ -794,23 +794,50 @@ public class AgentCLI extends JPanel {
         }
     }
 
-    private final class SessionRenderer extends DefaultListCellRenderer {
-        @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean selected, boolean focus) {
-            JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, selected, focus);
-            if (value instanceof Conversation.Session session) {
-                String current = session.directory().equals(agent.conversation().path()) ? " (current)" : "";
-                String preview = session.preview().isBlank() ? "(no preview)" : session.preview();
-                label.setText("<html><b>" + escapeHtml(sessionLabel(session)) + "</b>" + escapeHtml(current)
-                        + "<br>&nbsp;<span style='color:#666'>" + escapeHtml(preview) + "</span></html>");
-                label.setBorder(new EmptyBorder(4, 8, 4, 8));
-            }
-            return label;
-        }
-    }
+    /**
+     * Two-line session row. Both lines use the list foreground, including the
+     * selection colors, so the preview stays readable in light and dark themes.
+     */
+    private final class SessionRenderer extends JPanel implements ListCellRenderer<Conversation.Session> {
+        private final JLabel title = new JLabel();
+        private final JLabel preview = new JLabel();
 
-    private static String escapeHtml(String text) {
-        return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+        private SessionRenderer() {
+            super(new BorderLayout(0, 2));
+            setBorder(new EmptyBorder(6, 10, 6, 10));
+            title.setOpaque(false);
+            preview.setOpaque(false);
+            add(title, BorderLayout.NORTH);
+            add(preview, BorderLayout.CENTER);
+        }
+
+        @Override
+        public Component getListCellRendererComponent(JList<? extends Conversation.Session> list, Conversation.Session session,
+                                                      int index, boolean selected, boolean focus) {
+            String current = session.directory().equals(agent.conversation().path()) ? " (current)" : "";
+            String text = session.preview().isBlank() ? "(no preview)" : session.preview();
+            title.setText(sessionLabel(session) + current);
+            preview.setText(text);
+
+            Font base = list.getFont();
+            title.setFont(base.deriveFont(Font.BOLD));
+            preview.setFont(base);
+
+            Color background = selected ? list.getSelectionBackground() : list.getBackground();
+            Color foreground = selected ? list.getSelectionForeground() : list.getForeground();
+            if (background == null) {
+                background = UIManager.getColor(selected ? "List.selectionBackground" : "List.background");
+            }
+            if (foreground == null) {
+                foreground = UIManager.getColor("List.foreground");
+            }
+            setBackground(background);
+            setForeground(foreground);
+            title.setForeground(foreground);
+            preview.setForeground(foreground);
+            setOpaque(true);
+            return this;
+        }
     }
 
     private void runSkill(String command, String instructions, Intent intent) {
