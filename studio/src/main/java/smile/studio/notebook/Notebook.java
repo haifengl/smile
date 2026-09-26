@@ -31,7 +31,10 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import ioa.agent.Coder;
+import org.fife.rsta.ui.search.SearchEvent;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rtextarea.SearchContext;
+import org.fife.ui.rtextarea.SearchEngine;
 import smile.io.Paths;
 import smile.studio.SmileStudio;
 import smile.studio.kernel.*;
@@ -928,6 +931,62 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
     public void clearAllOutputs() {
         for (int i = 0; i < cells.getComponentCount(); i++) {
             getCell(i).output().setText("");
+        }
+    }
+
+    /**
+     * Returns the text selected in any cell, or null if nothing is selected.
+     *
+     * @return the selected text.
+     */
+    @Override
+    public String getSelectedText() {
+        for (int i = 0; i < cells.getComponentCount(); i++) {
+            var selectedText = getCell(i).editor().getSelectedText();
+            if (selectedText != null) return selectedText;
+        }
+        return null;
+    }
+
+    /**
+     * Applies a search or replace event across all cells.
+     *
+     * @param e the search event.
+     */
+    @Override
+    public void searchEvent(SearchEvent e) {
+        SearchEvent.Type type = e.getType();
+        SearchContext context = e.getSearchContext();
+        int count = cells.getComponentCount();
+
+        switch (type) {
+            case MARK_ALL, FIND -> {
+                context.setMarkAll(true);
+                int marked = 0;
+                for (int i = 0; i < count; i++) {
+                    var result = SearchEngine.markAll(getCell(i).editor(), context);
+                    marked += result.getMarkedCount();
+                }
+                var text = MessageFormat.format(bundle.getString("MarkCount"), marked);
+                SwingUtilities.invokeLater(() -> SmileStudio.setStatus(this, text));
+            }
+            case REPLACE -> {
+                var editor = getCell(0).editor();
+                var result = SearchEngine.replace(editor, context);
+                if (!result.wasFound() || result.isWrapped()) {
+                    UIManager.getLookAndFeel().provideErrorFeedback(editor);
+                }
+            }
+            case REPLACE_ALL -> {
+                int replaced = 0;
+                for (int i = 0; i < count; i++) {
+                    var result = SearchEngine.replaceAll(getCell(i).editor(), context);
+                    replaced += result.getCount();
+                }
+                JOptionPane.showMessageDialog(
+                        this,
+                        MessageFormat.format(bundle.getString("ReplaceCount"), replaced));
+            }
         }
     }
 }

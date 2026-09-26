@@ -18,14 +18,19 @@ package smile.studio.workspace;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import org.fife.rsta.ui.search.SearchListener;
 
 /**
  * A file opened in the workspace. Every implementation is a Swing component
  * so that it can be hosted as a tab of the workspace tabbed pane.
  *
+ * <p>An open file is also a {@link SearchListener}, so that the application
+ * level Find and Replace dialogs can be routed to whichever tab is selected,
+ * whether it is a notebook or a plain text file.
+ *
  * @author Haifeng Li
  */
-public interface OpenFile {
+public interface OpenFile extends SearchListener {
     /**
      * Returns the file backing this tab.
      *
