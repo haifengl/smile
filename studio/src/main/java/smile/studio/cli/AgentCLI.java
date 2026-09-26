@@ -199,7 +199,9 @@ public class AgentCLI extends JPanel {
                             activeIntent.setStatus(outputTokens + " output tokens");
                         }
                     }
-                    if (totalTokens > agent.llm().map(LLM::compactThreshold).orElse(180_000) && activeIntent != null) {
+                    boolean alreadyCompacted = "true".equals(agent.conversation().params().getProperty(LLM.COMPACTED));
+                    agent.conversation().params().remove(LLM.COMPACTED);
+                    if (!alreadyCompacted && totalTokens > agent.llm().map(LLM::compactThreshold).orElse(LLM.DEFAULT_COMPACT_THRESHOLD) && activeIntent != null) {
                         activeIntent.output().append("\n\n[The conversation session is too long, a compact command will be executed to summarize conversation.]\n");
                         compact("", activeIntent);
                     }
@@ -622,7 +624,7 @@ public class AgentCLI extends JPanel {
     /** Compacts conversation session by summarization. */
     private void compact(String instructions, Intent intent) {
         var prompt = "";
-        try (var is = ioa.llm.Conversation.class.getClassLoader().getResourceAsStream("/ioa/llm/compact.md")) {
+        try (var is = ioa.llm.Conversation.class.getResourceAsStream("/ioa/llm/compact.md")) {
             if (is == null) {
                 logger.error("ioa.llm.compact not found.");
             } else {
