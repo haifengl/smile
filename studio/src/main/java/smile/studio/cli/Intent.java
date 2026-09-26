@@ -19,7 +19,9 @@ package smile.studio.cli;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.Locale;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.Callable;
 import javax.swing.*;
@@ -63,9 +65,12 @@ public class Intent extends JPanel {
     private final JPanel progressPane = new JPanel(new FlowLayout(FlowLayout.RIGHT));
     private final JProgressBar progress = new JProgressBar();
     private final JButton stopButton = new JButton("❌");
-    // Output pane
+    // Output pane. Subagent runs are tabs inside this pane.
     private final JPanel outputPane = new JPanel();
     private OutputArea output = createOutputArea();
+    private JTabbedPane runs;
+    private final Map<String, JPanel> runPanes = new LinkedHashMap<>();
+    private final Map<String, OutputArea> runOutputs = new LinkedHashMap<>();
 
     /**
      * Constructor.
@@ -322,16 +327,117 @@ public class Intent extends JPanel {
      * @param question the question to add.
      */
     public void addQuestion(Question question) {
-        if (output.getText().isBlank()) {
-            // keep the output area at the bottom for subsequent outputs
-            outputPane.remove(output);
-            outputPane.add(question.createGUI());
-            outputPane.add(output);
+        JPanel pane = runs == null ? outputPane : runPanes.get("");
+        addQuestionTo(pane == null ? outputPane : pane, null, question);
+    }
+
+    /**
+     * Adds a question to the parent turn or to one subagent tab.
+     * @param runId null for the parent turn.
+     * @param question the question to add.
+     */
+    public void addQuestion(String runId, Question question) {
+        if (runId == null || runs == null) {
+            addQuestion(question);
+            return;
+        }
+        JPanel pane = runPanes.get(runId);
+        if (pane == null) {
+            addQuestion(question);
+            return;
+        }
+        addQuestionTo(pane, runId, question);
+    }
+
+    private void addQuestionTo(JPanel pane, String runId, Question question) {
+        OutputArea area = runId == null ? output : runOutputs.getOrDefault(runId, output);
+        if (area.getText().isBlank()) {
+            pane.remove(area);
+            pane.add(question.createGUI());
+            pane.add(area);
         } else {
-            outputPane.add(question.createGUI());
-            // add a new output area for subsequent outputs
-            output = createOutputArea();
-            outputPane.add(output);
+            pane.add(question.createGUI());
+            OutputArea next = createOutputArea();
+            pane.add(next);
+            if (runId == null) {
+                output = next;
+                if (runs != null) {
+                    runOutputs.put("", next);
+                }
+            } else {
+                runOutputs.put(runId, next);
+            }
+        }
+        pane.revalidate();
+    }
+
+    /**
+     * Opens a tab for a subagent run. The first run wraps the parent output
+     * in a tab and selects the new run.
+     * @param runId the subagent run id.
+     * @param label the tab title.
+     * @param parentTitle the title of the parent tab, added with the first run.
+     */
+    public void beginRun(String runId, String label, String parentTitle) {
+        if (runs == null) {
+            runs = new JTabbedPane();
+            outputPane.remove(output);
+            JPanel parent = new JPanel();
+            parent.setLayout(new BoxLayout(parent, BoxLayout.Y_AXIS));
+            parent.add(output);
+            runPanes.put("", parent);
+            runOutputs.put("", output);
+            runs.addTab(parentTitle, parent);
+            outputPane.add(runs);
+        }
+        JPanel existing = runPanes.get(runId);
+        if (existing != null) {
+            runs.setSelectedComponent(existing);
+            return;
+        }
+        OutputArea area = createOutputArea();
+        JPanel pane = new JPanel();
+        pane.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
+        pane.add(area);
+        runOutputs.put(runId, area);
+        runPanes.put(runId, pane);
+        runs.addTab(label, pane);
+        int index = runs.getTabCount() - 1;
+        runs.setToolTipTextAt(index, "Running");
+        runs.setSelectedIndex(index);
+        outputPane.revalidate();
+        outputPane.repaint();
+    }
+
+    /**
+     * Appends text to the parent output or to one subagent tab.
+     * @param runId null for the parent turn.
+     * @param chunk the text to append.
+     */
+    public void appendRun(String runId, String chunk) {
+        OutputArea area = runId == null || runs == null ? output : runOutputs.get(runId);
+        if (area == null) {
+            area = output;
+        }
+        area.append(chunk);
+    }
+
+    /**
+     * Marks a subagent tab as finished and leaves it in place.
+     * @param runId the subagent run id.
+     * @param tooltip the tab tooltip.
+     */
+    public void finishRun(String runId, String tooltip) {
+        if (runs == null || runId == null) {
+            return;
+        }
+        JPanel pane = runPanes.get(runId);
+        if (pane == null) {
+            return;
+        }
+        int index = runs.indexOfComponent(pane);
+        if (index >= 0) {
+            runs.setToolTipTextAt(index, tooltip);
         }
     }
 

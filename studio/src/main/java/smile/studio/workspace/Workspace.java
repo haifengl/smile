@@ -148,10 +148,12 @@ public class Workspace extends JSplitPane {
             notebookTabs.addTab(notebook.getFile().getFileName().toString(), notebook);
         }
 
-        agentTabs.addTab("📊 Clair the Analyst", analystCLI(analyst));
-        agentTabs.addTab("\uD83C\uDFAF Steve the Product Manager", productManagerCLI(productManager));
-        agentTabs.addTab("☕ James the Java Guru", javaCoderCLI(coders.get("Java")));
-        agentTabs.addTab("\uD83D\uDC0D Guido the Pythonista", pythonCoderCLI(coders.get("Python")));
+        Agent architect = initArchitect(cwd);
+        openAgent("📊 Clair the Analyst", analyst, "clair", analystCLI(analyst));
+        openAgent("\uD83C\uDFAF Steve the Product Manager", productManager, "steve", productManagerCLI(productManager));
+        openAgent("\uD83D\uDCD0 Ada the Architect", architect, "ada", architectCLI(architect));
+        openAgent("☕ James the Java Guru", coders.get("Java"), "james", javaCoderCLI(coders.get("Java")));
+        openAgent("\uD83D\uDC0D Guido the Pythonista", coders.get("Python"), "guido", pythonCoderCLI(coders.get("Python")));
 
         project.setLeftComponent(explorerTabs);
         project.setRightComponent(notebookTabs);
@@ -231,6 +233,18 @@ public class Workspace extends JSplitPane {
     }
 
     /**
+     * Initializes the architect agent.
+     */
+    private Agent initArchitect(Path cwd) {
+        try {
+            return new Agent(Agent.Spec.of("architect"), SmileStudio::llm, cwd);
+        } catch (Exception ex) {
+            logger.error("Failed to initialize architect agent: {}", ex.getMessage());
+        }
+        return null;
+    }
+
+    /**
      * Initializes the Java coding agent.
      */
     private Coder initJavaCoder(Path cwd) {
@@ -255,6 +269,24 @@ public class Workspace extends JSplitPane {
     }
 
     /**
+     * Registers a top-level agent under its call-out name and shows its tab.
+     * A queued request selects that tab so the turn's progress is visible.
+     */
+    private void openAgent(String title, Agent agent, String name, AgentCLI cli) {
+        if (agent != null) {
+            agent.session().setCallName(name);
+            ioa.agent.LocalAgentDirectory.shared().register(agent.session());
+            agent.session().addListener(new ioa.agent.AgentListener() {
+                @Override
+                public void onQueued(ioa.agent.AgentRequest request) {
+                    SwingUtilities.invokeLater(() -> agentTabs.setSelectedComponent(cli));
+                }
+            });
+        }
+        agentTabs.addTab(title, cli);
+    }
+
+    /**
      * Creates an analyst agent cli.
      */
     private AgentCLI analystCLI(Analyst analyst) {
@@ -276,6 +308,18 @@ public class Workspace extends JSplitPane {
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
                         MessageFormat.format(bundle.getString("ProductManagerWelcome"), System.getProperty("user.dir")),
+                bundle.getString("ProductManagerTips"));
+        return cli;
+    }
+
+    /**
+     * Creates the architect agent cli.
+     */
+    private AgentCLI architectCLI(Agent architect) {
+        var cli = new AgentCLI(architect);
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+                        bundle.getString("WelcomeSeparator") + '\n' +
+                        MessageFormat.format(bundle.getString("ArchitectWelcome"), System.getProperty("user.dir")),
                 bundle.getString("ProductManagerTips"));
         return cli;
     }

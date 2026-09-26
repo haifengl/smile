@@ -28,11 +28,12 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import com.formdev.flatlaf.util.SystemInfo;
+import ioa.agent.AgentListener;
+import ioa.agent.AgentRequest;
 import ioa.agent.Context;
 import ioa.llm.client.LLM;
 import ioa.agent.Agent;
 import ioa.agent.memory.Skill;
-import ioa.llm.client.StreamResponseHandler;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
 import smile.studio.SmileStudio;
@@ -57,6 +58,10 @@ public class AgentCLI extends JPanel {
     private final Agent agent;
     /** The reasoning effort level. */
     private String reasoningEffort = LLM.DEFAULT_REASONING_EFFORT;
+    /** The intent whose parent turn is showing, or the next user prompt. */
+    private Intent activeIntent;
+    /** Intents waiting for their queued turn to start, in queue order. */
+    private final ArrayDeque<Intent> pendingTurns = new ArrayDeque<>();
     /** The hint window for showing argument hints of slash commands. */
     private final HintWindow hintWindow;
 
@@ -83,6 +88,182 @@ public class AgentCLI extends JPanel {
 
         intents.add(new Intent(this));
         intents.add(Box.createVerticalGlue());
+        if (agent != null) {
+            agent.session().addListener(sessionListener());
+        }
+    }
+
+    /** Renders queued requests, notices, and stream progress for this agent. */
+    private AgentListener sessionListener() {
+        return new AgentListener() {
+            @Override
+            public void onQueued(AgentRequest request) {
+                if (request.kind() == AgentRequest.Kind.NOTICE) {
+                    return;
+                }
+                onEdtNow(() -> {
+                    if (request.from() == null || request.from().isBlank()) {
+                        if (activeIntent != null) {
+                            pendingTurns.addLast(activeIntent);
+                        }
+                    } else {
+                        pendingTurns.addLast(openRequest(request.modelPrompt()));
+                    }
+                });
+            }
+
+            @Override
+            public void onNotice(AgentRequest request) {
+                onEdtNow(() -> openRequest(request.task()).setProgress(false));
+            }
+
+            @Override
+            public void onSkipped(AgentRequest request, String reason) {
+                onEdtNow(() -> {
+                    Intent intent = pendingTurns.pollFirst();
+                    if (intent == null) {
+                        intent = openRequest("");
+                    }
+                    intent.output().append(reason);
+                    intent.setProgress(false);
+                });
+            }
+
+            @Override
+            public void onStarted(String runId, String label) {
+                onEdtNow(() -> {
+                    if (runId == null) {
+                        Intent intent = pendingTurns.pollFirst();
+                        if (intent != null) {
+                            activeIntent = intent;
+                        }
+                        if (activeIntent != null) {
+                            activeIntent.setProgress(true);
+                            activeIntent.setStatus("Thinking...");
+                        }
+                        return;
+                    }
+                    if (activeIntent != null) {
+                        activeIntent.beginRun(runId, label, agent.session().callName());
+                    }
+                });
+            }
+
+            @Override
+            public void onNext(String runId, String chunk) {
+                onEdt(() -> {
+                    if (activeIntent != null) {
+                        activeIntent.appendRun(runId, chunk);
+                    }
+                });
+            }
+
+            @Override
+            public void onStatus(String runId, String status) {
+                if (Strings.isNullOrBlank(status)) {
+                    return;
+                }
+                onEdt(() -> {
+                    if (activeIntent == null) {
+                        return;
+                    }
+                    if (runId == null) {
+                        activeIntent.setStatus(status);
+                    } else {
+                        activeIntent.appendRun(runId, "\n[" + status + "]\n");
+                    }
+                });
+            }
+
+            @Override
+            public void onQuestion(String runId, Question question) {
+                onEdtNow(() -> {
+                    if (activeIntent != null) {
+                        activeIntent.addQuestion(runId, question);
+                    }
+                });
+            }
+
+            @Override
+            public void onComplete(String runId, long totalTokens, long outputTokens, long inputTokens) {
+                onEdtNow(() -> {
+                    if (runId != null) {
+                        if (activeIntent != null) {
+                            activeIntent.finishRun(runId, "Finished");
+                        }
+                        return;
+                    }
+                    if (activeIntent != null) {
+                        activeIntent.setProgress(false);
+                        if (outputTokens > 0) {
+                            activeIntent.setStatus(outputTokens + " output tokens");
+                        }
+                    }
+                    if (totalTokens > agent.llm().map(LLM::compactThreshold).orElse(180_000) && activeIntent != null) {
+                        activeIntent.output().append("\n\n[The conversation session is too long, a compact command will be executed to summarize conversation.]\n");
+                        compact("", activeIntent);
+                    }
+                });
+            }
+
+            @Override
+            public void onException(String runId, Throwable ex) {
+                onEdtNow(() -> {
+                    Throwable root = ex;
+                    while (root.getCause() != null && root.getCause() != root) {
+                        root = root.getCause();
+                    }
+                    String message = root.getMessage() == null ? root.toString() : root.getMessage();
+                    if (runId != null) {
+                        if (activeIntent != null) {
+                            activeIntent.appendRun(runId, "\n" + message);
+                            activeIntent.finishRun(runId, root.getClass().getSimpleName());
+                        }
+                        return;
+                    }
+                    if (activeIntent != null) {
+                        activeIntent.setProgress(false);
+                        activeIntent.setStatus(root.getClass().getSimpleName());
+                        activeIntent.output().append("\n" + message);
+                    }
+                });
+            }
+        };
+    }
+
+    private void onEdt(Runnable action) {
+        if (SwingUtilities.isEventDispatchThread()) {
+            action.run();
+        } else {
+            SwingUtilities.invokeLater(action);
+        }
+    }
+
+    private void onEdtNow(Runnable action) {
+        if (SwingUtilities.isEventDispatchThread()) {
+            action.run();
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(action);
+            } catch (Exception ex) {
+                logger.error("Failed to update the agent view: {}", ex.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Inserts a read-only intent for work that arrived from another agent
+     * or as a notice, above the empty composer.
+     * @param text the prompt or notice.
+     * @return the new intent.
+     */
+    public Intent openRequest(String text) {
+        Intent intent = new Intent(this);
+        intent.editor().setText(text);
+        intent.setEditable(false);
+        intents.add(intent, Math.max(0, intents.getComponentCount() - 1));
+        intents.revalidate();
+        return intent;
     }
 
     /**
@@ -482,62 +663,9 @@ public class AgentCLI extends JPanel {
             agent.conversation().params().setProperty(LLM.REASONING_EFFORT, reasoningEffort);
         }
 
-        intent.setProgress(true);
+        activeIntent = intent;
         agent.conversation().params().setProperty(LLM.INTERRUPTED, "false");
         intent.setStopAction(() -> agent.conversation().params().setProperty(LLM.INTERRUPTED, "true"));
-
-        // Stream processing runs in a background thread so that we don't
-        // need to create a SwingWorker thread.
-        agent.stream(prompt, new StreamResponseHandler() {
-            @Override
-            public void onNext(String chunk) {
-                SwingUtilities.invokeLater(() -> {
-                    intent.output().append(chunk);
-                });
-            }
-
-            @Override
-            public void onComplete(long totalTokens, long outputTokens, long inputTokens) {
-                SwingUtilities.invokeLater(() -> {
-                    intent.setProgress(false);
-                    if (outputTokens > 0) {
-                        intent.setStatus(outputTokens + " output tokens");
-                    }
-                });
-
-                // Auto compact if total tokens exceed the threshold, otherwise render Markdown if applicable.
-                if (totalTokens > agent.llm().map(LLM::compactThreshold).orElse(180_000)) {
-                    SwingUtilities.invokeLater(() ->
-                            intent.output().append("\n\n[The conversation session is too long, a compact command will be executed to summarize conversation.]\n"));
-                    compact("", intent);
-                }
-            }
-
-            @Override
-            public void onException(Throwable ex) {
-                SwingUtilities.invokeLater(() -> {
-                    Throwable rootCause = ex;
-                    // Loop until getCause() returns null or points to itself
-                    while (rootCause.getCause() != null && rootCause.getCause() != rootCause) {
-                        rootCause = rootCause.getCause();
-                    }
-                    intent.setProgress(false);
-                    intent.setStatus(rootCause.getClass().getSimpleName());
-                    intent.output().append("\n" + rootCause.getMessage());
-                });
-            }
-
-            @Override
-            public void onStatus(String status) {
-                if (!Strings.isNullOrBlank(status)) {
-                    SwingUtilities.invokeLater(() -> intent.setStatus(status));
-                }
-            }
-
-            @Override
-            public void onQuestion(Question question) {
-                SwingUtilities.invokeLater(() -> intent.addQuestion(question));
-            }
-        });
+        agent.session().accept(AgentRequest.fromUser(agent.session().callName(), prompt));
     }
 }
