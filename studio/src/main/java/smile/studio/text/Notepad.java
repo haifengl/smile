@@ -19,6 +19,7 @@ package smile.studio.text;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
@@ -42,24 +43,28 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
 import smile.studio.StatusBar;
+import smile.studio.workspace.OpenFile;
 
 /**
- * A simple text editor.
+ * A simple text editor. It is hosted as a tab of the workspace tabbed pane.
  *
  * @author Haifeng Li
  */
-public final class Notepad extends JFrame implements SearchListener, DocumentListener {
+public final class Notepad extends JPanel implements OpenFile, SearchListener, DocumentListener {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Notepad.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Notepad.class.getName(), Locale.getDefault());
 
     // TODO: update to lazy constant with Java 25+ (still preview)
     private static SpellingParser dict = null;
-    private final Path file;
+    private Path file;
     private final CollapsibleSectionPanel csp = new CollapsibleSectionPanel();
     private final Editor editor = new Editor(40, 120);
     private final StatusBar statusBar = new StatusBar();
-    private final FindDialog findDialog = new FindDialog(this, this);
-    private final ReplaceDialog replaceDialog = new ReplaceDialog(this, this);
+    /** The search context shared by the dialogs and the tool bars. */
+    private final SearchContext searchContext = new SearchContext();
+    /** Lazily created because the dialogs need a window owner. */
+    private FindDialog findDialog;
+    private ReplaceDialog replaceDialog;
     private final FindToolBar findToolBar = new FindToolBar(this);
     private final ReplaceToolBar replaceToolBar = new ReplaceToolBar(this);
     private boolean changed = false;
@@ -68,14 +73,13 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
      * Constructor.
      * @param file the file to open.
      */
-    private Notepad(Path file) {
+    public Notepad(Path file) {
+        super(new BorderLayout());
         this.file = file;
-        JPanel contentPane = new JPanel(new BorderLayout());
-        setContentPane(contentPane);
-        contentPane.add(csp, BorderLayout.CENTER);
-        contentPane.add(statusBar, BorderLayout.SOUTH);
-        setJMenuBar(createMenuBar());
+        add(csp, BorderLayout.CENTER);
+        add(statusBar, BorderLayout.SOUTH);
         initSearchDialogs();
+        initSearchKeyBindings();
 
         editor.setFont(Monospaced.getFont());
         editor.setCodeFoldingEnabled(true);
@@ -118,60 +122,9 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
         csp.add(sp);
 
         ErrorStrip errorStrip = new ErrorStrip(editor);
-        contentPane.add(errorStrip, BorderLayout.LINE_END);
+        add(errorStrip, BorderLayout.LINE_END);
 
-        setTitle(file.normalize().toAbsolutePath().toString());
         editor.getDocument().addDocumentListener(this);
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                switch (confirmSaveNotebook()) {
-                    case JOptionPane.YES_OPTION:
-                        if (save()) {
-                            dispose();
-                        }
-                        editor.close();
-                        break;
-
-                    case JOptionPane.NO_OPTION:
-                        dispose();
-                        editor.close();
-                        break;
-
-                    case JOptionPane.CANCEL_OPTION:
-                        return;
-                }
-            }
-        });
-    }
-
-    private JMenuBar createMenuBar() {
-        JMenuBar menubar = new JMenuBar();
-        JMenu fileMenu = new JMenu(bundle.getString("File"));
-        fileMenu.add(new JMenuItem(new SaveFileAction()));
-        fileMenu.add(new JMenuItem(new ExitAction()));
-        menubar.add(fileMenu);
-
-        JMenu searchMenu = new JMenu(bundle.getString("Search"));
-        searchMenu.add(new JMenuItem(new ShowFindDialogAction()));
-        searchMenu.add(new JMenuItem(new ShowReplaceDialogAction()));
-        searchMenu.add(new JMenuItem(new GoToLineAction()));
-        searchMenu.addSeparator();
-
-        int ctrl = getToolkit().getMenuShortcutKeyMaskEx();
-        int shift = InputEvent.SHIFT_DOWN_MASK;
-        KeyStroke key = KeyStroke.getKeyStroke(KeyEvent.VK_F, ctrl|shift);
-        Action action = csp.addBottomComponent(key, findToolBar);
-        action.putValue(Action.NAME, bundle.getString("ShowFindBar"));
-        searchMenu.add(new JMenuItem(action));
-        key = KeyStroke.getKeyStroke(KeyEvent.VK_H, ctrl|shift);
-        action = csp.addBottomComponent(key, replaceToolBar);
-        action.putValue(Action.NAME, bundle.getString("ShowReplaceBar"));
-        searchMenu.add(new JMenuItem(action));
-
-        menubar.add(searchMenu);
-        return menubar;
     }
 
     @Override
@@ -183,13 +136,81 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
      * Creates our Find and Replace dialogs.
      */
     private void initSearchDialogs() {
-        // This ties the properties of the two dialogs together (match case, regex, etc.).
-        SearchContext context = findDialog.getSearchContext();
-        replaceDialog.setSearchContext(context);
-
         // Tie toolbar's search contexts together.
-        findToolBar.setSearchContext(context);
-        replaceToolBar.setSearchContext(context);
+        findToolBar.setSearchContext(searchContext);
+        replaceToolBar.setSearchContext(searchContext);
+    }
+
+    /**
+     * Binds the search actions and tool bars to the keyboard shortcuts that
+     * used to live in the (now removed) menu bar.
+     */
+    private void initSearchKeyBindings() {
+        int ctrl = getToolkit().getMenuShortcutKeyMaskEx();
+        int shift = InputEvent.SHIFT_DOWN_MASK;
+        KeyStroke key = KeyStroke.getKeyStroke(KeyEvent.VK_F, ctrl|shift);
+        Action action = csp.addBottomComponent(key, findToolBar);
+        action.putValue(Action.NAME, bundle.getString("ShowFindBar"));
+        key = KeyStroke.getKeyStroke(KeyEvent.VK_H, ctrl|shift);
+        action = csp.addBottomComponent(key, replaceToolBar);
+        action.putValue(Action.NAME, bundle.getString("ShowReplaceBar"));
+
+        // The dialogs and the go-to-line dialog are only reachable through
+        // these shortcuts now that the notepad has no menu bar of its own.
+        bind(new ShowFindDialogAction());
+        bind(new ShowReplaceDialogAction());
+        bind(new GoToLineAction());
+    }
+
+    /**
+     * Binds an action to its accelerator while this panel or one of its
+     * descendants has the focus.
+     *
+     * @param action the action to bind.
+     */
+    private void bind(Action action) {
+        Object name = action.getValue(Action.NAME);
+        getActionMap().put(name, action);
+        getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
+                .put((KeyStroke) action.getValue(Action.ACCELERATOR_KEY), name);
+    }
+
+    /**
+     * Returns the find dialog, creating it on first use so that the current
+     * window ancestor can be used as its owner.
+     *
+     * @return the find dialog.
+     */
+    private FindDialog findDialog() {
+        if (findDialog == null) {
+            findDialog = new FindDialog(owner(), this);
+            findDialog.setSearchContext(searchContext);
+        }
+        return findDialog;
+    }
+
+    /**
+     * Returns the replace dialog, creating it on first use so that the current
+     * window ancestor can be used as its owner.
+     *
+     * @return the replace dialog.
+     */
+    private ReplaceDialog replaceDialog() {
+        if (replaceDialog == null) {
+            replaceDialog = new ReplaceDialog(owner(), this);
+            replaceDialog.setSearchContext(searchContext);
+        }
+        return replaceDialog;
+    }
+
+    /**
+     * Returns the window ancestor of this panel, or null if it is not yet
+     * displayed. A null owner is accepted by the search dialogs.
+     *
+     * @return the owning frame.
+     */
+    private Frame owner() {
+        return SwingUtilities.getWindowAncestor(this) instanceof Frame frame ? frame : null;
     }
 
     /**
@@ -231,19 +252,6 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
     }
 
     /**
-     * Opens a file with notepad.
-     * @param file the file to open.
-     */
-    public static void open(Path file) {
-        SwingUtilities.invokeLater(() -> {
-            var notepad = new Notepad(file);
-            notepad.pack();
-            notepad.setLocationRelativeTo(null);
-            notepad.setVisible(true);
-        });
-    }
-
-    /**
      * Opens the "Go to Line" dialog.
      */
     private class GoToLineAction extends AbstractAction {
@@ -255,13 +263,13 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (findDialog.isVisible()) {
+            if (findDialog != null && findDialog.isVisible()) {
                 findDialog.setVisible(false);
             }
-            if (replaceDialog.isVisible()) {
+            if (replaceDialog != null && replaceDialog.isVisible()) {
                 replaceDialog.setVisible(false);
             }
-            GoToDialog dialog = new GoToDialog(Notepad.this);
+            GoToDialog dialog = new GoToDialog(owner());
             dialog.setMaxLineNumberAllowed(editor.getLineCount());
             dialog.setVisible(true);
             int line = dialog.getLineNumber();
@@ -288,10 +296,10 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (replaceDialog.isVisible()) {
+            if (replaceDialog != null && replaceDialog.isVisible()) {
                 replaceDialog.setVisible(false);
             }
-            findDialog.setVisible(true);
+            findDialog().setVisible(true);
         }
 
     }
@@ -308,68 +316,81 @@ public final class Notepad extends JFrame implements SearchListener, DocumentLis
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (findDialog.isVisible()) {
+            if (findDialog != null && findDialog.isVisible()) {
                 findDialog.setVisible(false);
             }
-            replaceDialog.setVisible(true);
+            replaceDialog().setVisible(true);
         }
 
-    }
-
-    private class SaveFileAction extends AbstractAction {
-        public SaveFileAction() {
-            super(bundle.getString("Save"));
-            int c = getToolkit().getMenuShortcutKeyMaskEx();
-            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_S, c));
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            save();
-        }
-    }
-
-    private class ExitAction extends AbstractAction {
-        public ExitAction() {
-            super(bundle.getString("Exit"));
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            var notepad = Notepad.this;
-            dispatchEvent(new WindowEvent(notepad, WindowEvent.WINDOW_CLOSING));
-        }
     }
 
     /**
      * Saves the file.
-     * @return true if the file is saved successfully, false otherwise.
+     *
+     * @throws IOException if an I/O error occurs.
      */
-    private boolean save() {
-        try {
-            Files.writeString(file, editor.getText());
-            changed = false;
-            return true;
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(
-                    Notepad.this,
-                    ex.getMessage(),
-                    bundle.getString("Error"),
-                    JOptionPane.ERROR_MESSAGE);
-        }
-        return false;
+    @Override
+    public void save() throws IOException {
+        Files.writeString(file, editor.getText());
+        changed = false;
     }
 
     /**
-     * Prompts if the file is not saved.
-     * @return an integer indicating the option selected by the user.
+     * Re-reads the file from disk, discarding unsaved changes.
+     *
+     * @throws IOException if an I/O error occurs.
      */
-    private int confirmSaveNotebook() {
-        if (!changed) return JOptionPane.NO_OPTION;
-        return JOptionPane.showConfirmDialog(this,
-                bundle.getString("SaveMessage"),
-                bundle.getString("SaveTitle"),
-                JOptionPane.YES_NO_CANCEL_OPTION);
+    @Override
+    public void reload() throws IOException {
+        editor.setText(Files.readString(file));
+        editor.setCaretPosition(0);
+        changed = false;
+    }
+
+    /**
+     * Returns the file.
+     *
+     * @return the file.
+     */
+    @Override
+    public Path getFile() {
+        return file;
+    }
+
+    /**
+     * Sets the file and updates the enclosing tab title.
+     *
+     * @param file the file.
+     */
+    @Override
+    public void setFile(Path file) {
+        this.file = file;
+        if (SwingUtilities.getAncestorOfClass(JTabbedPane.class, this) instanceof JTabbedPane tabs) {
+            for (int i = 0; i < tabs.getTabCount(); i++) {
+                if (SwingUtilities.isDescendingFrom(this, tabs.getComponentAt(i))) {
+                    tabs.setTitleAt(i, file.getFileName().toString());
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns true if there are no unsaved changes.
+     *
+     * @return true if there are no unsaved changes.
+     */
+    @Override
+    public boolean isSaved() {
+        return !changed;
+    }
+
+    /**
+     * Closes the autocomplete provider.
+     */
+    @Override
+    public void close() {
+        editor.close();
     }
 
     @Override

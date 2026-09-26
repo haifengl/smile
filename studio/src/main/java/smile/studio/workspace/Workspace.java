@@ -31,7 +31,6 @@ import java.util.concurrent.*;
 import java.util.function.IntConsumer;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.Agent;
-import ioa.agent.Analyst;
 import ioa.agent.Coder;
 import smile.io.Paths;
 import smile.shell.JShell;
@@ -81,14 +80,14 @@ public class Workspace extends JSplitPane {
      */
     private final JTabbedPane agentTabs = new JTabbedPane();
     /**
-     * The editor of notebook.
+     * The opened files, notebooks and plain text alike.
      */
-    private final List<Notebook> notebooks = new ArrayList<>();
+    private final List<OpenFile> openFiles = new ArrayList<>();
     /**
-     * Index from absolute, normalized path string to the open {@link Notebook},
-     * enabling O(1) lookup in {@link #handleFileChanged} and {@link #openNotebook}.
+     * Index from absolute, normalized path string to the open {@link OpenFile},
+     * enabling O(1) lookup in {@link #handleFileChanged} and {@link #openFile(Path)}.
      */
-    private final Map<String, Notebook> notebookIndex = new HashMap<>();
+    private final Map<String, OpenFile> openFileIndex = new HashMap<>();
     /**
      * The file explorer of current working directory.
      */
@@ -121,7 +120,7 @@ public class Workspace extends JSplitPane {
         this.fileChooser = new SystemFileChooser();
         fileChooser.setCurrentDirectory(cwd.toFile());
 
-        Analyst analyst = initAnalyst(cwd);
+        Agent analyst = initAnalyst(cwd);
         Agent productManager = initProductManager(cwd);
         coders.put("Java", initJavaCoder(cwd));
         coders.put("Python", initPythonCoder(cwd));
@@ -131,21 +130,25 @@ public class Workspace extends JSplitPane {
         explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
 
         for (var file : getOpenFilePaths()) {
-            openNotebook(file);
+            openFile(file);
         }
 
         // Open a default notebook if there is no previously opened file.
         if (fileWatcher.files().isEmpty()) {
-            openNotebook(cwd.resolve("Untitled.jsh"));
+            openFile(cwd.resolve("Untitled.jsh"));
             // Initialized as true so that we won't try to save sample code.
             // Delay 200ms so that it be called after DocumentUpdate events.
-            Timer timer = new Timer(200, e -> notebooks.getFirst().setSaved(true));
+            Timer timer = new Timer(200, e -> openFiles.stream()
+                    .filter(Notebook.class::isInstance)
+                    .map(Notebook.class::cast)
+                    .findFirst()
+                    .ifPresent(notebook -> notebook.setSaved(true)));
             timer.setRepeats(false); // Ensures the action only runs once
             timer.start();
         }
 
-        for (var notebook : notebooks) {
-            notebookTabs.addTab(notebook.getFile().getFileName().toString(), notebook);
+        for (var openFile : openFiles) {
+            notebookTabs.addTab(openFile.getFile().getFileName().toString(), (Component) openFile);
         }
 
         Agent architect = initArchitect(cwd);
@@ -168,7 +171,7 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Opens a notebook when double-clicking a supported file in the explorer.
+     * Opens a file when double-clicking it in the explorer.
      */
     private void setFileExplorerMouseListener() {
         fileExplorer.addMouseListener(new MouseAdapter() {
@@ -183,23 +186,7 @@ public class Workspace extends JSplitPane {
                         if (selPath.getLastPathComponent() instanceof DirectoryTreeNode node) {
                             Path path = node.path();
                             if (Files.isRegularFile(path)) {
-                                String fileExtension = Paths.getFileExtension(path);
-                                if (Arrays.asList(SMILE_FILE_EXTENSIONS).contains(fileExtension)) {
-                                    openNotebook(path);
-                                } else if (!Paths.isBinary(path)) {
-                                    Notepad.open(path);
-                                } else {
-                                    var desktop = Desktop.getDesktop();
-                                    if (desktop.isSupported(Desktop.Action.OPEN)) {
-                                        try {
-                                            desktop.open(path.toFile());
-                                        } catch (IOException ex) {
-                                            JOptionPane.showMessageDialog(Workspace.this,
-                                                    "Failed to open: " + ex.getMessage(),
-                                                    "Error", JOptionPane.ERROR_MESSAGE);
-                                        }
-                                    }
-                                }
+                                openFile(path);
                             }
                         }
                     }
@@ -211,9 +198,9 @@ public class Workspace extends JSplitPane {
     /**
      * Initializes the analyst agent.
      */
-    private Analyst initAnalyst(Path cwd) {
+    private Agent initAnalyst(Path cwd) {
         try {
-            return new Analyst("analyst", SmileStudio::llm, cwd);
+            return new Agent(Agent.Spec.of("analyst"), SmileStudio::llm, cwd);
         } catch (Exception ex) {
             logger.error("Failed to initialize data analyst agent: {}", ex.getMessage());
         }
@@ -289,8 +276,8 @@ public class Workspace extends JSplitPane {
     /**
      * Creates an analyst agent cli.
      */
-    private AgentCLI analystCLI(Analyst analyst) {
-        var cli = new AgentCLI(analyst);
+    private AgentCLI analystCLI(Agent analyst) {
+        var cli = new AgentCLI(analyst, this);
 
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
@@ -303,7 +290,7 @@ public class Workspace extends JSplitPane {
      * Creates a product manager agent cli.
      */
     private AgentCLI productManagerCLI(Agent productManager) {
-        var cli = new AgentCLI(productManager);
+        var cli = new AgentCLI(productManager, this);
 
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
@@ -316,7 +303,7 @@ public class Workspace extends JSplitPane {
      * Creates the architect agent cli.
      */
     private AgentCLI architectCLI(Agent architect) {
-        var cli = new AgentCLI(architect);
+        var cli = new AgentCLI(architect, this);
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
                         MessageFormat.format(bundle.getString("ArchitectWelcome"), System.getProperty("user.dir")),
@@ -328,7 +315,7 @@ public class Workspace extends JSplitPane {
      * Creates a Java coding agent cli.
      */
     private AgentCLI javaCoderCLI(Coder coder) {
-        var cli = new AgentCLI(coder);
+        var cli = new AgentCLI(coder, this);
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
                         MessageFormat.format(bundle.getString("JavaCoderWelcome"), System.getProperty("user.dir")),
@@ -340,7 +327,7 @@ public class Workspace extends JSplitPane {
      * Creates a Python coding agent cli.
      */
     private AgentCLI pythonCoderCLI(Coder coder) {
-        var cli = new AgentCLI(coder);
+        var cli = new AgentCLI(coder, this);
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
                         MessageFormat.format(bundle.getString("PythonCoderWelcome"), System.getProperty("user.dir")),
@@ -349,22 +336,23 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Sets the callback for closing notebook tabs.
+     * Sets the callback for closing file tabs.
      */
     private void setNotebookTabCloseCallback() {
         notebookTabs.putClientProperty("JTabbedPane.tabClosable", true);
         notebookTabs.putClientProperty("JTabbedPane.tabCloseCallback",
                 (IntConsumer) tabIndex -> {
-                    Notebook notebook = (Notebook) notebookTabs.getComponentAt(tabIndex);
-                    if (closeNotebook(notebook)) {
-                        notebookTabs.removeTabAt(tabIndex);
-                        // files and fileWatcher are already updated inside closeNotebook().
+                    if (notebookTabs.getComponentAt(tabIndex) instanceof OpenFile openFile) {
+                        if (closeFile(openFile)) {
+                            notebookTabs.removeTabAt(tabIndex);
+                            // openFiles and fileWatcher are already updated inside closeFile().
+                        }
                     }
                 });
     }
 
     /**
-     * Sets the listener for switching notebook tabs to refresh the kernel explorer.
+     * Sets the listener for switching file tabs to refresh the kernel explorer.
      */
     private void setNotebookTabsListener() {
         notebookTabs.addChangeListener(e -> {
@@ -426,12 +414,37 @@ public class Workspace extends JSplitPane {
     }
 
     /**
+     * Returns the opened files, notebooks and plain text alike.
+     *
+     * @return the opened files.
+     */
+    public List<OpenFile> openFiles() {
+        return openFiles;
+    }
+
+    /**
      * Returns the opened notebooks.
      *
      * @return the opened notebooks.
      */
     public List<Notebook> notebooks() {
-        return notebooks;
+        return openFiles.stream()
+                .filter(Notebook.class::isInstance)
+                .map(Notebook.class::cast)
+                .toList();
+    }
+
+    /**
+     * Returns the selected file.
+     *
+     * @return the selected file.
+     */
+    public Optional<OpenFile> selectedFile() {
+        if (notebookTabs.getSelectedComponent() instanceof OpenFile openFile) {
+            return Optional.of(openFile);
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**
@@ -448,96 +461,131 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Opens a notebook.
+     * Opens a file as a tab. Notebooks are opened as notebooks; other
+     * non-binary files are opened in a plain text editor; binary files are
+     * handed over to the desktop.
      *
-     * @param path the notebook file path.
+     * @param path the file path.
      */
-    public void openNotebook(Path path) {
+    public void openFile(Path path) {
         path = path.toAbsolutePath().normalize();
         var filename = path.getFileName().toString();
         // already opened — just switch to its tab
         if (fileWatcher.isOpen(path)) {
-            int index = notebookTabs.indexOfTab(filename);
+            OpenFile openFile = openFileIndex.get(path.toString());
+            if (openFile == null) {
+                logger.warn("Tab {} not found", filename);
+                return;
+            }
+            int index = notebookTabs.indexOfComponent((Component) openFile);
             if (index != -1) {
                 notebookTabs.setSelectedIndex(index);
             } else {
                 logger.warn("Tab {} not found", filename);
             }
-        } else {
-            Notebook notebook = new Notebook(path, coders, kernelExplorer::refresh);
-            notebookTabs.addTab(filename, notebook);
-            notebookTabs.setSelectedComponent(notebook);
-            notebooks.add(notebook);
-            notebookIndex.put(path.toString(), notebook);
-            fileWatcher.addFile(path);
-            fileWatcher.recordModTime(path);
-            fileWatcher.watchDirectory(path.getParent());
+            return;
         }
+
+        OpenFile openFile;
+        if (Arrays.asList(SMILE_FILE_EXTENSIONS).contains(Paths.getFileExtension(path))) {
+            openFile = new Notebook(path, coders, kernelExplorer::refresh);
+        } else if (!Paths.isBinary(path)) {
+            openFile = new Notepad(path);
+        } else {
+            var desktop = Desktop.getDesktop();
+            if (desktop.isSupported(Desktop.Action.OPEN)) {
+                try {
+                    desktop.open(path.toFile());
+                } catch (IOException ex) {
+                    JOptionPane.showMessageDialog(this,
+                            "Failed to open: " + ex.getMessage(),
+                            "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            return;
+        }
+
+        notebookTabs.addTab(filename, (Component) openFile);
+        notebookTabs.setSelectedComponent((Component) openFile);
+        openFiles.add(openFile);
+        openFileIndex.put(path.toString(), openFile);
+        fileWatcher.addFile(path);
+        fileWatcher.recordModTime(path);
+        fileWatcher.watchDirectory(path.getParent());
     }
 
     /**
-     * Opens a notebook with file chooser.
+     * Opens a notebook.
+     *
+     * @param path the notebook file path.
      */
-    public void openNotebook() {
+    public void openNotebook(Path path) {
+        openFile(path);
+    }
+
+    /**
+     * Opens a file with file chooser.
+     */
+    public void openFile() {
         fileChooser.setDialogTitle(bundle.getString("OpenNotebook"));
         fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(
                 bundle.getString("SmileFile"), SMILE_FILE_EXTENSIONS));
         if (fileChooser.showOpenDialog(this) == SystemFileChooser.APPROVE_OPTION) {
             Path file = fileChooser.getSelectedFile().toPath();
-            openNotebook(file);
+            openFile(file);
         }
     }
 
     /**
-     * Closes a notebook with prompt to save if there are unsaved changes.
+     * Closes a file with prompt to save if there are unsaved changes.
      *
-     * @param notebook the notebook to close.
-     * @return true if the notebook is closed, false if the close operation is canceled.
+     * @param openFile the file to close.
+     * @return true if the file is closed, false if the close operation is canceled.
      */
-    public boolean closeNotebook(Notebook notebook) {
-        boolean confirmed = switch (confirmSaveNotebook(notebook)) {
-            case JOptionPane.YES_OPTION -> saveNotebook(notebook, false);
+    public boolean closeFile(OpenFile openFile) {
+        boolean confirmed = switch (confirmSave(openFile)) {
+            case JOptionPane.YES_OPTION -> saveFile(openFile, false);
             case JOptionPane.NO_OPTION -> true;
             default -> false;
         };
 
         if (confirmed) {
             // Shuts down the execution engines and frees resources.
-            notebook.close();
-            notebooks.remove(notebook);
-            Path absPath = notebook.getFile().toAbsolutePath().normalize();
-            notebookIndex.remove(absPath.toString());
+            openFile.close();
+            openFiles.remove(openFile);
+            Path absPath = openFile.getFile().toAbsolutePath().normalize();
+            openFileIndex.remove(absPath.toString());
             fileWatcher.removeFile(absPath);
         }
         return confirmed;
     }
 
     /**
-     * Prompts if the notebook is not saved.
+     * Prompts if the file is not saved.
      *
      * @return an integer indicating the option selected by the user.
      */
-    private int confirmSaveNotebook(Notebook notebook) {
-        if (notebook.isSaved()) return JOptionPane.NO_OPTION;
+    private int confirmSave(OpenFile openFile) {
+        if (openFile.isSaved()) return JOptionPane.NO_OPTION;
         return JOptionPane.showConfirmDialog(this,
-                MessageFormat.format(bundle.getString("SaveMessage"), notebook.getFile().getFileName()),
+                MessageFormat.format(bundle.getString("SaveMessage"), openFile.getFile().getFileName()),
                 bundle.getString("SaveTitle"),
                 JOptionPane.YES_NO_CANCEL_OPTION);
     }
 
     /**
-     * Saves the notebook.
+     * Saves the file.
      *
-     * @param notebook the notebook to save.
-     * @param saveAs   save the notebook to a new file if true.
-     * @return true if the notebook is saved successfully, false otherwise
+     * @param openFile the file to save.
+     * @param saveAs   save the file to a new file if true.
+     * @return true if the file is saved successfully, false otherwise
      * or the save operation is canceled.
      */
-    public boolean saveNotebook(Notebook notebook, boolean saveAs) {
-        Path oldPath = notebook.getFile() != null
-                ? notebook.getFile().toAbsolutePath().normalize() : null;
+    public boolean saveFile(OpenFile openFile, boolean saveAs) {
+        Path oldPath = openFile.getFile() != null
+                ? openFile.getFile().toAbsolutePath().normalize() : null;
 
-        if (notebook.getFile() == null || saveAs) {
+        if (openFile.getFile() == null || saveAs) {
             fileChooser.setDialogTitle(bundle.getString("SaveNotebook"));
             fileChooser.setFileFilter(new SystemFileChooser.FileNameExtensionFilter(
                     bundle.getString("SmileFile"), SMILE_FILE_EXTENSIONS));
@@ -546,26 +594,26 @@ public class Workspace extends JSplitPane {
             }
 
             File file = fileChooser.getSelectedFile();
-            String name = file.getName().toLowerCase();
-            if (!(name.endsWith(".java") || name.endsWith(".jsh"))) {
-                file = new File(file.getParentFile(), file.getName() + ".java");
+            // Only append a default extension when the chosen name has none.
+            if (Paths.getFileExtension(file.toPath()).isEmpty()) {
+                file = new File(file.getParentFile(), file.getName() + defaultExtension(oldPath));
             }
 
             Path path = file.toPath();
-            notebook.setFile(path);
+            openFile.setFile(path);
         }
 
         try {
-            notebook.save();
-            Path newPath = notebook.getFile().toAbsolutePath().normalize();
+            openFile.save();
+            Path newPath = openFile.getFile().toAbsolutePath().normalize();
 
             // If the path changed (Save As), update index and watcher.
             if (!newPath.equals(oldPath)) {
                 if (oldPath != null) {
-                    notebookIndex.remove(oldPath.toString());
+                    openFileIndex.remove(oldPath.toString());
                     fileWatcher.removeFile(oldPath);
                 }
-                notebookIndex.put(newPath.toString(), notebook);
+                openFileIndex.put(newPath.toString(), openFile);
                 fileWatcher.addFile(newPath);
                 fileWatcher.watchDirectory(newPath.getParent());
             }
@@ -580,6 +628,23 @@ public class Workspace extends JSplitPane {
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
         return false;
+    }
+
+    /**
+     * Returns the extension to append when a Save-As name has none, derived
+     * from the current file's extension.
+     *
+     * @param oldPath the current file path, may be null.
+     * @return the extension including the leading dot.
+     */
+    private static String defaultExtension(Path oldPath) {
+        if (oldPath != null) {
+            String extension = Paths.getFileExtension(oldPath);
+            if (!extension.isEmpty()) {
+                return "." + extension;
+            }
+        }
+        return ".jsh";
     }
 
     /**
@@ -621,14 +686,14 @@ public class Workspace extends JSplitPane {
 
     /**
      * Called on the Swing EDT when an external change to {@code path} has
-     * been detected.  Presents a confirm dialog and reloads the notebook if
+     * been detected.  Presents a confirm dialog and reloads the file if
      * the user agrees.
      *
      * @param path the changed file path (absolute, normalized).
      */
     private void handleFileChanged(Path path) {
-        Notebook notebook = notebookIndex.get(path.toString());
-        if (notebook == null) return;
+        OpenFile openFile = openFileIndex.get(path.toString());
+        if (openFile == null) return;
 
         String filename = path.getFileName().toString();
 
@@ -640,38 +705,28 @@ public class Workspace extends JSplitPane {
                 JOptionPane.QUESTION_MESSAGE);
 
         if (choice == JOptionPane.YES_OPTION) {
-            reloadNotebook(notebook, path);
+            reloadFile(openFile, path);
         }
     }
 
     /**
-     * Reloads the content of {@code notebook} from disk, preserving its
-     * position in the tab strip.
+     * Reloads the content of {@code openFile} from disk in place, preserving
+     * its position in the tab strip and, for notebooks, its kernel.
      *
-     * @param notebook the notebook to reload.
+     * @param openFile the file to reload.
      * @param path     the file to reload from.
      */
-    private void reloadNotebook(Notebook notebook, Path path) {
-        int tabIndex = notebookTabs.indexOfComponent(notebook);
-        if (tabIndex < 0) return;
-
-        // Close the old notebook silently (skip unsaved-changes check
-        // as the user just confirmed they want the disk version).
-        notebook.close();
-        notebooks.remove(notebook);
-        notebookIndex.remove(path.toString());
-        // fileSet stays unchanged — same path, still open.
-
-        // Open fresh copy at the same tab position.
-        Notebook fresh = new Notebook(path, coders, kernelExplorer::refresh);
-        notebookTabs.setComponentAt(tabIndex, fresh);
-        notebookTabs.setSelectedIndex(tabIndex);
-        notebooks.add(fresh);
-        notebookIndex.put(path.toString(), fresh);
-        // Record updated mod time so the next save isn't mistaken for external change.
-        fileWatcher.recordModTime(path);
-
-        logger.info("Reloaded notebook from disk: {}", path);
+    private void reloadFile(OpenFile openFile, Path path) {
+        try {
+            openFile.reload();
+            // Record updated mod time so the next save isn't mistaken for external change.
+            fileWatcher.recordModTime(path);
+            logger.info("Reloaded file from disk: {}", path);
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Failed to reload: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**
