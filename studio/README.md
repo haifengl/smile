@@ -757,7 +757,7 @@ python -c "import IPython; print(IPython.__version__)"
 
 ### Scala kernel produces no output
 
-The Scala script engine needs the `smile.home` system property and the classpath to include Scala libraries. Ensure you are launching Studio via the provided `smile studio` script which sets these properties.
+The Scala script engine needs the `smile.home` system property and the classpath to include Scala libraries. Ensure you are launching Studio via the provided `smile` launcher (run with no arguments), which sets `-Dsmile.home`, `-Dscala.usejavacp=true`, and `-Dscala.repl.autoruncode`.
 
 ### Ty server doesn't start
 
