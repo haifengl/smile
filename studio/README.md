@@ -517,10 +517,14 @@ Each intent input shows a **Reasoning Effort** combo box. The available levels d
 
 | Level | Effect |
 |-------|--------|
-| *(default)* | Provider's default thinking behavior |
-| `low` / `medium` / `high` | Explicit thinking budget (supported by Anthropic, OpenAI o-series, etc.) |
+| *(default)* | Studio's starting selection. Omit the effort field and let the server use its own budget |
+| `minimal` / `low` / `medium` / `high` | Shared set for OpenAI, Gemini, and compatible servers. Anthropic uses `low` / `medium` / `high` / `xhigh` / `max` |
 
 Increasing reasoning effort produces more careful responses at the cost of higher latency and token usage.
+
+On an OpenAI-compatible server, hidden reasoning counts toward the output-token cap. That cap is often 8192 when the request does not set one, so a long prompt can spend the whole budget on thinking and show almost no answer. Requests now ask for up to **16384** output tokens (less when the prompt already fills the context window). Set `smile.agent.max.output.tokens` to change that budget. The effort box on each turn chooses the thinking budget.
+
+If a reply still stops at the output limit, the next attempt uses reasoning effort `high`. If that also stops at the limit, one more attempt uses `low`, and then the turn ends. The retry does not use `medium`, because some models reject it.
 
 Thinking tokens stay out of the output panel unless the system property `smile.agent.show.thinking` is `true`. A long chain of thought would otherwise bury the answer.
 
