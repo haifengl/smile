@@ -44,7 +44,6 @@ import org.fife.rsta.ui.search.ReplaceDialog;
 import org.fife.rsta.ui.search.SearchEvent;
 import org.fife.rsta.ui.search.SearchListener;
 import org.fife.ui.rtextarea.SearchContext;
-import org.fife.ui.rtextarea.SearchEngine;
 import smile.studio.workspace.OpenFile;
 import smile.studio.workspace.Workspace;
 import smile.swing.Button;
@@ -427,10 +426,14 @@ public class SmileStudio extends JFrame implements SearchListener {
         cellMenu.add(new JMenuItem(clearAll));
         cellMenu.add(new JMenuItem(restart));
         cellMenu.add(new JMenuItem(stop));
-        cellMenu.addSeparator();
-        cellMenu.add(new JMenuItem(new ShowFindDialogAction()));
-        cellMenu.add(new JMenuItem(new ShowReplaceDialogAction()));
         menuBar.add(cellMenu);
+
+        // Find and Replace work on the selected tab, notebook or plain text,
+        // so they belong in an Edit menu rather than the Cell menu.
+        JMenu editMenu = new JMenu(bundle.getString("Edit"));
+        editMenu.add(new JMenuItem(new ShowFindDialogAction()));
+        editMenu.add(new JMenuItem(new ShowReplaceDialogAction()));
+        menuBar.add(editMenu);
 
         JMenu helpMenu = new JMenu(bundle.getString("Help"));
         helpMenu.add(new JMenuItem(new TutorialAction()));
@@ -456,65 +459,28 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     @Override
     public String getSelectedText() {
-        var opt = workspace.notebook();
-        if (opt.isEmpty()) return null;
-        var notebook = opt.get();
-        int count = notebook.getCellCount();
-        for (int i = 0; i < count; i++) {
-            var selectedText = notebook.getCell(i).editor().getSelectedText();
-            if (selectedText != null) return selectedText;
-        }
-        return null;
+        return workspace.selectedFile()
+                .map(OpenFile::getSelectedText)
+                .orElse(null);
     }
 
     @Override
     public void searchEvent(SearchEvent e) {
-        var opt = workspace.notebook();
-        if (opt.isEmpty() || opt.get().getCellCount() <= 0) {
+        var opt = workspace.selectedFile();
+        if (opt.isEmpty()) {
             SwingUtilities.invokeLater(() ->
                     JOptionPane.showMessageDialog(
                             this,
-                            bundle.getString("NoActiveNotebook"),
+                            bundle.getString("NoActiveFile"),
                             bundle.getString("Search"),
                             JOptionPane.INFORMATION_MESSAGE
                     ));
             return;
         }
 
-        SearchEvent.Type type = e.getType();
-        SearchContext context = e.getSearchContext();
-
-        var notebook = opt.get();
-        int count = notebook.getCellCount();
-        switch (type) {
-            case MARK_ALL, FIND -> {
-                context.setMarkAll(true);
-                int marked = 0;
-                for (int i = 0; i < count; i++) {
-                    var result = SearchEngine.markAll(notebook.getCell(i).editor(), context);
-                    marked += result.getMarkedCount();
-                }
-                var text = MessageFormat.format(bundle.getString("MarkCount"), marked);
-                SwingUtilities.invokeLater(() -> statusBar.setStatus(text));
-            }
-            case REPLACE -> {
-                var editor = notebook.getCell(0).editor();
-                var result = SearchEngine.replace(editor, context);
-                if (!result.wasFound() || result.isWrapped()) {
-                    UIManager.getLookAndFeel().provideErrorFeedback(editor);
-                }
-            }
-            case REPLACE_ALL -> {
-                int replaced = 0;
-                for (int i = 0; i < count; i++) {
-                    var result = SearchEngine.replaceAll(notebook.getCell(i).editor(), context);
-                    replaced += result.getCount();
-                }
-                JOptionPane.showMessageDialog(
-                        this,
-                        MessageFormat.format(bundle.getString("ReplaceCount"), replaced));
-            }
-        }
+        // The selected tab owns the search: a notebook searches every cell,
+        // a plain text file searches its single editor.
+        opt.get().searchEvent(e);
     }
 
     private class NewNotebookAction extends AbstractAction {

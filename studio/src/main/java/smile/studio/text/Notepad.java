@@ -31,11 +31,8 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import org.fife.rsta.ui.CollapsibleSectionPanel;
 import org.fife.rsta.ui.GoToDialog;
-import org.fife.rsta.ui.search.FindDialog;
-import org.fife.rsta.ui.search.ReplaceDialog;
 import org.fife.rsta.ui.search.ReplaceToolBar;
 import org.fife.rsta.ui.search.SearchEvent;
-import org.fife.rsta.ui.search.SearchListener;
 import org.fife.rsta.ui.search.FindToolBar;
 import org.fife.ui.rsyntaxtextarea.spell.SpellingParser;
 import org.fife.ui.rsyntaxtextarea.ErrorStrip;
@@ -50,7 +47,7 @@ import smile.studio.workspace.OpenFile;
  *
  * @author Haifeng Li
  */
-public final class Notepad extends JPanel implements OpenFile, SearchListener, DocumentListener {
+public final class Notepad extends JPanel implements OpenFile, DocumentListener {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Notepad.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Notepad.class.getName(), Locale.getDefault());
 
@@ -60,11 +57,8 @@ public final class Notepad extends JPanel implements OpenFile, SearchListener, D
     private final CollapsibleSectionPanel csp = new CollapsibleSectionPanel();
     private final Editor editor = new Editor(40, 120);
     private final StatusBar statusBar = new StatusBar();
-    /** The search context shared by the dialogs and the tool bars. */
+    /** The search context shared by the inline tool bars. */
     private final SearchContext searchContext = new SearchContext();
-    /** Lazily created because the dialogs need a window owner. */
-    private FindDialog findDialog;
-    private ReplaceDialog replaceDialog;
     private final FindToolBar findToolBar = new FindToolBar(this);
     private final ReplaceToolBar replaceToolBar = new ReplaceToolBar(this);
     private boolean changed = false;
@@ -133,7 +127,7 @@ public final class Notepad extends JPanel implements OpenFile, SearchListener, D
     }
 
     /**
-     * Creates our Find and Replace dialogs.
+     * Creates our Find and Replace tool bars.
      */
     private void initSearchDialogs() {
         // Tie toolbar's search contexts together.
@@ -142,8 +136,9 @@ public final class Notepad extends JPanel implements OpenFile, SearchListener, D
     }
 
     /**
-     * Binds the search actions and tool bars to the keyboard shortcuts that
-     * used to live in the (now removed) menu bar.
+     * Binds the inline search tool bars and the go-to-line dialog to keyboard
+     * shortcuts. The Find and Replace dialogs themselves are owned by the
+     * application's Edit menu, which routes them to the selected tab.
      */
     private void initSearchKeyBindings() {
         int ctrl = getToolkit().getMenuShortcutKeyMaskEx();
@@ -155,10 +150,6 @@ public final class Notepad extends JPanel implements OpenFile, SearchListener, D
         action = csp.addBottomComponent(key, replaceToolBar);
         action.putValue(Action.NAME, bundle.getString("ShowReplaceBar"));
 
-        // The dialogs and the go-to-line dialog are only reachable through
-        // these shortcuts now that the notepad has no menu bar of its own.
-        bind(new ShowFindDialogAction());
-        bind(new ShowReplaceDialogAction());
         bind(new GoToLineAction());
     }
 
@@ -176,36 +167,8 @@ public final class Notepad extends JPanel implements OpenFile, SearchListener, D
     }
 
     /**
-     * Returns the find dialog, creating it on first use so that the current
-     * window ancestor can be used as its owner.
-     *
-     * @return the find dialog.
-     */
-    private FindDialog findDialog() {
-        if (findDialog == null) {
-            findDialog = new FindDialog(owner(), this);
-            findDialog.setSearchContext(searchContext);
-        }
-        return findDialog;
-    }
-
-    /**
-     * Returns the replace dialog, creating it on first use so that the current
-     * window ancestor can be used as its owner.
-     *
-     * @return the replace dialog.
-     */
-    private ReplaceDialog replaceDialog() {
-        if (replaceDialog == null) {
-            replaceDialog = new ReplaceDialog(owner(), this);
-            replaceDialog.setSearchContext(searchContext);
-        }
-        return replaceDialog;
-    }
-
-    /**
      * Returns the window ancestor of this panel, or null if it is not yet
-     * displayed. A null owner is accepted by the search dialogs.
+     * displayed. A null owner is accepted by the go-to-line dialog.
      *
      * @return the owning frame.
      */
@@ -263,12 +226,6 @@ public final class Notepad extends JPanel implements OpenFile, SearchListener, D
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (findDialog != null && findDialog.isVisible()) {
-                findDialog.setVisible(false);
-            }
-            if (replaceDialog != null && replaceDialog.isVisible()) {
-                replaceDialog.setVisible(false);
-            }
             GoToDialog dialog = new GoToDialog(owner());
             dialog.setMaxLineNumberAllowed(editor.getLineCount());
             dialog.setVisible(true);
@@ -282,46 +239,6 @@ public final class Notepad extends JPanel implements OpenFile, SearchListener, D
                 }
             }
         }
-    }
-
-    /**
-     * Shows the Find dialog.
-     */
-    private class ShowFindDialogAction extends AbstractAction {
-        ShowFindDialogAction() {
-            super(bundle.getString("Find"));
-            int c = getToolkit().getMenuShortcutKeyMaskEx();
-            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_F, c));
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (replaceDialog != null && replaceDialog.isVisible()) {
-                replaceDialog.setVisible(false);
-            }
-            findDialog().setVisible(true);
-        }
-
-    }
-
-    /**
-     * Shows the Replace dialog.
-     */
-    private class ShowReplaceDialogAction extends AbstractAction {
-        ShowReplaceDialogAction() {
-            super(bundle.getString("Replace"));
-            int c = getToolkit().getMenuShortcutKeyMaskEx();
-            putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_H, c));
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (findDialog != null && findDialog.isVisible()) {
-                findDialog.setVisible(false);
-            }
-            replaceDialog().setVisible(true);
-        }
-
     }
 
     /**
