@@ -67,6 +67,7 @@ batScriptConfigLocation := Some("%APP_HOME%\\conf\\smile.ini")
 
 bashScriptExtraDefines ++= Seq(
   """export SMILE_HOME=$(dirname "${app_home}")""",
+  """addApp "-no-version-check"""",
   """addJava "-XX:MaxMetaspaceSize=1024M"""",
   """addJava "-Xss4M"""",
   """addJava "--add-opens=java.base/java.nio=ALL-UNNAMED"""",
