@@ -522,9 +522,13 @@ Each intent input shows a **Reasoning Effort** combo box. The available levels d
 
 Increasing reasoning effort produces more careful responses at the cost of higher latency and token usage.
 
+Thinking tokens stay out of the output panel unless the system property `smile.agent.show.thinking` is `true`. A long chain of thought would otherwise bury the answer.
+
 ### 9.9 Auto-Compact
 
 Auto-compact runs `/compact` before the assumed context window is full. OpenAI, Anthropic, and Gemini assume a **1,000,000** token window and compact after **900,000** tokens. An OpenAI-compatible server (a local or on-prem model) assumes a **200,000** token window and compacts after **180,000** tokens, because the inference engine often sets a smaller limit than the weights allow. Set the system property `smile.agent.auto.compact` to use one token threshold for every provider.
+
+When auto-compact finishes, the agent keeps only the summary and continues the task that was in progress. A `/compact` you type yourself summarizes and stops.
 
 ---
 
@@ -611,9 +615,12 @@ All three files are loaded if they exist; tools from all connected servers becom
 
 **Example `mcp.json`:**
 
+> **Note:** the top-level key is `servers`, not `mcpServers`. A file using
+> `mcpServers` is parsed without error but its servers are silently ignored.
+
 ```json
 {
-  "mcpServers": {
+  "servers": {
     "filesystem": {
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "/your/project"]

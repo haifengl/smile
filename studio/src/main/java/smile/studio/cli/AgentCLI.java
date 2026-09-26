@@ -69,6 +69,17 @@ public class AgentCLI extends JPanel {
     private Intent activeIntent;
     /** Intents waiting for their queued turn to start, in queue order. */
     private final ArrayDeque<Intent> pendingTurns = new ArrayDeque<>();
+    /**
+     * Set when auto-compact interrupted a task. After the summary is stored,
+     * that same turn continues on the compacted context.
+     */
+    private boolean continueAfterCompact;
+    /** How many times this task has already been compacted and resumed. */
+    private int compactContinuations;
+    private static final String CONTINUE_AFTER_COMPACT = """
+            The conversation was just compacted to fit the context window. The summary above is your memory. \
+            Continue the task from where you left off and finish it. Do not repeat the summary. \
+            If you were about to call a tool, call it now.""";
     /** The hint window for showing argument hints of slash commands. */
     private final HintWindow hintWindow;
 
@@ -208,9 +219,30 @@ public class AgentCLI extends JPanel {
                     }
                     boolean alreadyCompacted = "true".equals(agent.conversation().params().getProperty(LLM.COMPACTED));
                     agent.conversation().params().remove(LLM.COMPACTED);
+                    if (continueAfterCompact) {
+                        continueAfterCompact = false;
+                        boolean interrupted = "true".equals(agent.conversation().params().getProperty(LLM.INTERRUPTED));
+                        if (alreadyCompacted && !interrupted && activeIntent != null) {
+                            activeIntent.output().append("\n\n[Context compacted. Continuing the task.]\n");
+                            activeIntent.setStatus("Continuing...");
+                            chat(activeIntent, CONTINUE_AFTER_COMPACT);
+                        } else if (!alreadyCompacted && activeIntent != null) {
+                            activeIntent.output().append("\n\n[Compaction did not produce a summary, so the task was not resumed.]\n");
+                        }
+                        return;
+                    }
                     if (!alreadyCompacted && totalTokens > agent.llm().map(LLM::compactThreshold).orElse(LLM.DEFAULT_COMPACT_THRESHOLD) && activeIntent != null) {
+                        if (compactContinuations >= 2) {
+                            compactContinuations = 0;
+                            activeIntent.output().append("\n\n[The conversation is still too long after compaction, so the task was not resumed.]\n");
+                            return;
+                        }
+                        compactContinuations++;
                         activeIntent.output().append("\n\n[The conversation session is too long, a compact command will be executed to summarize conversation.]\n");
+                        continueAfterCompact = true;
                         compact("", activeIntent);
+                    } else {
+                        compactContinuations = 0;
                     }
                 });
             }
@@ -869,6 +901,7 @@ public class AgentCLI extends JPanel {
         }
 
         if (prompt.isBlank()) {
+            continueAfterCompact = false;
             logger.error("No compact instructions specified.");
             return;
         }
