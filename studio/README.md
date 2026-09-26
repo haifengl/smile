@@ -523,7 +523,7 @@ Increasing reasoning effort produces more careful responses at the cost of highe
 
 ### 9.9 Auto-Compact
 
-If a conversation session exceeds **180,000 tokens** (configurable via the system property `smile.agent.auto.compact`), the agent automatically runs `/compact` to summarize the conversation and free context window space.
+Auto-compact runs `/compact` before the assumed context window is full. OpenAI, Anthropic, and Gemini assume a **1,000,000** token window and compact after **900,000** tokens. An OpenAI-compatible server (a local or on-prem model) assumes a **200,000** token window and compacts after **180,000** tokens, because the inference engine often sets a smaller limit than the weights allow. Set the system property `smile.agent.auto.compact` to use one token threshold for every provider.
 
 ---
 
@@ -541,7 +541,7 @@ The **Notepad** is a standalone text editor window opened for non-notebook files
 |---------|-------------|
 | Syntax highlighting | Detected from file extension (Java, Python, Markdown, SQL, Scala, JSON, YAML, Shell, etc.) |
 | Code folding | Enabled for all code languages |
-| LSP auto-completion | Triggers on `.` for Java and Python files |
+| LSP auto-completion | Triggers on `.` for Python files; for Java files only when JDT LS is installed (see §15) |
 | Spell checking | English spell checker loaded from `data/eng_dic.zip` |
 | Find / Replace | `Ctrl+F` (dialog), `Ctrl+Shift+F` (toolbar), `Ctrl+H` (replace dialog), `Ctrl+Shift+H` (replace toolbar) |
 | Go To Line | Available in the Search menu |
@@ -630,19 +630,34 @@ All three files are loaded if they exist; tools from all connected servers becom
 
 ## 15. LSP (Language Server Protocol) Integration
 
-SMILE Studio starts two language servers in the background:
+SMILE Studio starts the **Ty** language server for Python in the background:
 
-| Server | Language | Provides |
-|--------|----------|---------|
-| **Ty** | Python | Type checking, diagnostics |
-| **JDT LS** | Java | Completions, hover, diagnostics |
+| Server | Language | Provides | Bundled |
+|--------|----------|----------|---------|
+| **Ty** | Python | Type checking, diagnostics | Yes — started automatically |
+| **JDT LS** | Java | Completions, hover, diagnostics | **No — opt-in, see below** |
 
-Both servers are started automatically. The `jdtls` binary is expected at `$SMILE_HOME/jdtls/bin/jdtls`.
+### Java LSP (opt-in)
+
+**JDT LS is not bundled with SMILE Studio.** Eclipse JDT LS is designed for
+Gradle/Maven projects and does not handle JShell scripts well, which is what the Java
+kernel actually executes, so it is not a good fit for the default install.
+
+The integration is still present and works if you want it: Studio starts JDT LS
+automatically **only if** `$SMILE_HOME/jdtls` exists. To enable Java completions,
+hover, and diagnostics, install JDT LS yourself so that the launcher is at:
+
+```
+$SMILE_HOME/jdtls/bin/jdtls
+```
+
+If that directory is absent, Studio skips the Java server silently and Java
+notebooks fall back to syntax highlighting plus AI completion (`Tab`).
 
 Auto-completion is powered by the LSP providers and activates:
 
 - **Automatically** after 300 ms of inactivity (configurable)
-- **On `.`** — immediately triggers member completion for Java and Python
+- **On `.`** — immediately triggers member completion for Python, and for Java when JDT LS is installed
 
 The completion popup is provided by RSyntaxTextArea's `AutoCompletion` infrastructure wired to a custom `LspCompletionProvider`.
 
@@ -736,9 +751,19 @@ python -c "import IPython; print(IPython.__version__)"
 
 The Scala script engine needs the `smile.home` system property and the classpath to include Scala libraries. Ensure you are launching Studio via the provided `smile studio` script which sets these properties.
 
-### JDT LS / Ty server doesn't start
+### Ty server doesn't start
 
-Check that `$SMILE_HOME/jdtls/bin/jdtls` exists and is executable. Errors are logged to the application log and shown briefly in the status bar.
+The `ty` binary ships in the bundled venv (`$SMILE_HOME/venv`), which the `smile`
+launch script activates. If you launch Studio by another route, ensure that venv is
+active so `ty` is on `PATH`. Errors are logged to the application log and shown
+briefly in the status bar.
+
+### Java completions don't work
+
+This is expected on a default install — **JDT LS is not bundled** (see §15). To enable
+Java completions, hover, and diagnostics, install JDT LS so that
+`$SMILE_HOME/jdtls/bin/jdtls` exists and is executable. If it is installed and still
+does not start, check the application log; errors are also shown briefly in the status bar.
 
 ### AI features not working (Tab completion, code generation, agents)
 
