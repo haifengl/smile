@@ -386,7 +386,7 @@ public class Intent extends JPanel {
             parent.add(output);
             runPanes.put("", parent);
             runOutputs.put("", output);
-            runs.addTab(parentTitle, parent);
+            runs.addTab(displayName(parentTitle), parent);
             outputPane.add(runs);
         }
         JPanel existing = runPanes.get(runId);
@@ -406,6 +406,18 @@ public class Intent extends JPanel {
         runs.setSelectedIndex(index);
         outputPane.revalidate();
         outputPane.repaint();
+    }
+
+    /**
+     * Call-out names are stored in lower case. The parent tab shows the same
+     * name with a capital initial. An AID is left unchanged.
+     */
+    static String displayName(String name) {
+        if (name == null || name.isBlank() || name.indexOf(':') >= 0) {
+            return name == null ? "" : name;
+        }
+        int end = name.offsetByCodePoints(0, 1);
+        return name.substring(0, end).toUpperCase(Locale.ROOT) + name.substring(end);
     }
 
     /**
