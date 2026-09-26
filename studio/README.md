@@ -522,15 +522,15 @@ Each intent input shows a **Reasoning Effort** combo box. The available levels d
 
 Increasing reasoning effort produces more careful responses at the cost of higher latency and token usage.
 
-On an OpenAI-compatible server, hidden reasoning counts toward the output-token cap. That cap is often 8192 when the request does not set one, so a long prompt can spend the whole budget on thinking and show almost no answer. Requests now ask for up to **16384** output tokens (less when the prompt already fills the context window). Set `smile.agent.max.output.tokens` to change that budget. The effort box on each turn chooses the thinking budget.
+On an OpenAI-compatible server, hidden reasoning counts toward the output-token cap. That cap is often 8192 when the request does not set one, so a long prompt can spend the whole budget on thinking and show almost no answer. You may set `smile.agent.max-output-tokens` to change that budget. The effort box on each turn chooses the thinking budget.
 
 If a reply still stops at the output limit, the next attempt uses reasoning effort `high`. If that also stops at the limit, one more attempt uses `low`, and then the turn ends. The retry does not use `medium`, because some models reject it.
 
-Thinking tokens stay out of the output panel unless the system property `smile.agent.show.thinking` is `true`. A long chain of thought would otherwise bury the answer.
+Thinking tokens stay out of the output panel unless the system property `smile.agent.show-thinking` is `true`. A long chain of thought would otherwise bury the answer.
 
 ### 9.9 Auto-Compact
 
-Auto-compact runs `/compact` before the assumed context window is full. OpenAI, Anthropic, and Gemini assume a **1,000,000** token window and compact after **900,000** tokens. An OpenAI-compatible server (a local or on-prem model) assumes a **200,000** token window and compacts after **180,000** tokens, because the inference engine often sets a smaller limit than the weights allow. Set the system property `smile.agent.auto.compact` to use one token threshold for every provider.
+Auto-compact runs `/compact` before the assumed context window is full. OpenAI, Anthropic, and Gemini assume a **1,000,000** token window and compact after **900,000** tokens. An OpenAI-compatible server (a local or on-prem model) assumes a **200,000** token window and compacts after **180,000** tokens, because the inference engine often sets a smaller limit than the weights allow. Set the system property `smile.agent.auto-compact` to use one token threshold for every provider.
 
 When auto-compact finishes, the agent keeps only the summary and continues the task that was in progress. A `/compact` you type yourself summarizes and stops.
 

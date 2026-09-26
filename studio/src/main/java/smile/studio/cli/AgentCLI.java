@@ -45,8 +45,8 @@ import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
 import smile.studio.SmileStudio;
 import smile.studio.text.HintWindow;
-import smile.studio.text.Notepad;
 import smile.studio.text.OutputArea;
+import smile.studio.workspace.Workspace;
 import smile.swing.ScrollablePanel;
 import smile.util.OS;
 import smile.util.Strings;
@@ -63,6 +63,8 @@ public class AgentCLI extends JPanel {
     private final JPanel intents = new ScrollablePanel();
     /** The agent. */
     private final Agent agent;
+    /** The workspace that hosts the file tabs. */
+    private final Workspace workspace;
     /** The reasoning effort level. {@code default} sends nothing, so the server uses its own budget. */
     private String reasoningEffort = LLM.DEFAULT_REASONING_EFFORT;
     /** The intent whose parent turn is showing, or the next user prompt. */
@@ -86,10 +88,12 @@ public class AgentCLI extends JPanel {
     /**
      * Constructor.
      * @param agent the agent.
+     * @param workspace the workspace that hosts the file tabs.
      */
-    public AgentCLI(Agent agent) {
+    public AgentCLI(Agent agent, Workspace workspace) {
         super(new BorderLayout());
         this.agent = agent;
+        this.workspace = workspace;
         var frame = Arrays.stream(Window.getWindows())
               .filter(win -> win instanceof SmileStudio)
               .findFirst();
@@ -387,7 +391,7 @@ public class AgentCLI extends JPanel {
         hints.put("/memory", "[show|add|edit|refresh]");
         hints.put("/memory show", "[ENTER to display the long term memory]");
         hints.put("/memory add", "[additional instructions]");
-        hints.put("/memory edit", "[ENTER to open a notepad to edit the long term memory]");
+        hints.put("/memory edit", "[ENTER to open a tab to edit the long term memory]");
         hints.put("/memory refresh", "[ENTER to reload the context from disk]");
         hints.put("/compact", "[instructions]");
         hints.put("/resume", "[ENTER to choose a previous session]");
@@ -525,7 +529,7 @@ public class AgentCLI extends JPanel {
         }
 
         String path = args[1];
-        Notepad.open(Path.of(path));
+        workspace.openFile(Path.of(path));
     }
 
     private boolean isAgentAvailable(OutputArea output) {
@@ -543,14 +547,14 @@ public class AgentCLI extends JPanel {
                 
                 /memory show        Display the content of long term memory
                 /memory add         Add facts or notes to long term memory
-                /memory edit        Open a notepad to edit the long term memory
+                /memory edit        Open a tab to edit the long term memory
                 /memory refresh     Reload the context from disk
                 /plan               Enter the plan mode.
                 /plan off           Exit  the plan mode.
                 /clear              Clear the current conversation session.
                 /resume             Choose a previous session and restore its context.
                 /compact            Summarize the conversation and retain critical details.
-                /edit               Edit a file with notepad.
+                /edit               Edit a file in a tab.
                 /train              Train a machine learning model
                 /predict            Run batch inference
                 /serve              Start an inference service""");
@@ -620,10 +624,10 @@ public class AgentCLI extends JPanel {
         }
     }
 
-    /** Open a notepad to edit the project's long term memory. */
+    /** Open a tab to edit the project's long term memory. */
     private void editMemory(OutputArea output) {
-        Notepad.open(agent.context().path().resolve(Context.SMILE_MD));
-        output.setText("SMILE.md is opened in a notepad window. Edit and save the file to update the long term memory.");
+        workspace.openFile(agent.context().path().resolve(Context.SMILE_MD));
+        output.setText("SMILE.md is opened in a tab. Edit and save the file to update the long term memory.");
     }
 
     /** Displays the project's long term memory. */

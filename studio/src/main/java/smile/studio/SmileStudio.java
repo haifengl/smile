@@ -45,6 +45,7 @@ import org.fife.rsta.ui.search.SearchEvent;
 import org.fife.rsta.ui.search.SearchListener;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
+import smile.studio.workspace.OpenFile;
 import smile.studio.workspace.Workspace;
 import smile.swing.Button;
 import smile.studio.notebook.Cell;
@@ -170,16 +171,16 @@ public class SmileStudio extends JFrame implements SearchListener {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                // Persist the open-file list *before* closing notebooks so that
+                // Persist the open-file list *before* closing files so that
                 // fileWatcher.files() still contains all paths at save time.
-                // closeNotebook() calls fileWatcher.removeFile() for each notebook,
+                // closeFile() calls fileWatcher.removeFile() for each file,
                 // so saving after the loop would always write an empty list.
                 workspace.saveOpenFilePaths();
 
-                // Iterate over a snapshot — closeNotebook() removes from the list.
-                List<Notebook> notebooks = new ArrayList<>(workspace.notebooks());
-                for (Notebook notebook : notebooks) {
-                    if (!workspace.closeNotebook(notebook)) {
+                // Iterate over a snapshot — closeFile() removes from the list.
+                List<OpenFile> openFiles = new ArrayList<>(workspace.openFiles());
+                for (OpenFile openFile : openFiles) {
+                    if (!workspace.closeFile(openFile)) {
                         // User canceled saving — abort the close operation.
                         return;
                     }
@@ -393,9 +394,9 @@ public class SmileStudio extends JFrame implements SearchListener {
     /** Initializes the menubar and the toolbar. */
     private void initMenuAndToolBar() {
         var newNotebook = new NewNotebookAction();
-        var openNotebook = new OpenNotebookAction();
-        var saveNotebook = new SaveNotebookAction();
-        var saveAsNotebook = new SaveAsNotebookAction();
+        var openFile = new OpenNotebookAction();
+        var saveFile = new SaveNotebookAction();
+        var saveAsFile = new SaveAsNotebookAction();
         autoSaveAction = new AutoSaveAction();
         var addCell = new AddCellAction();
         var runAll = new RunAllAction();
@@ -412,9 +413,9 @@ public class SmileStudio extends JFrame implements SearchListener {
 
         JMenu fileMenu = new JMenu(bundle.getString("File"));
         fileMenu.add(new JMenuItem(newNotebook));
-        fileMenu.add(new JMenuItem(openNotebook));
-        fileMenu.add(new JMenuItem(saveNotebook));
-        fileMenu.add(new JMenuItem(saveAsNotebook));
+        fileMenu.add(new JMenuItem(openFile));
+        fileMenu.add(new JMenuItem(saveFile));
+        fileMenu.add(new JMenuItem(saveAsFile));
         fileMenu.add(autoSaveMenuItem);
         fileMenu.add(new JMenuItem(settings));
         fileMenu.add(new JMenuItem(exit));
@@ -442,9 +443,9 @@ public class SmileStudio extends JFrame implements SearchListener {
         // Show a border only when the mouse hovers over a button
         toolBar.setRollover(true);
         toolBar.add(new Button(newNotebook));
-        toolBar.add(new Button(openNotebook));
-        toolBar.add(new Button(saveNotebook));
-        toolBar.add(new Button(saveAsNotebook));
+        toolBar.add(new Button(openFile));
+        toolBar.add(new Button(saveFile));
+        toolBar.add(new Button(saveAsFile));
         toolBar.addSeparator();
         toolBar.add(new Button(addCell));
         toolBar.add(new Button(runAll));
@@ -546,7 +547,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            workspace.openNotebook();
+            workspace.openFile();
         }
     }
 
@@ -563,7 +564,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            workspace.notebook().ifPresent(book -> workspace.saveNotebook(book, false));
+            workspace.selectedFile().ifPresent(file -> workspace.saveFile(file, false));
         }
     }
 
@@ -578,7 +579,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            workspace.notebook().ifPresent(book -> workspace.saveNotebook(book, true));
+            workspace.selectedFile().ifPresent(file -> workspace.saveFile(file, true));
         }
     }
 
@@ -587,9 +588,9 @@ public class SmileStudio extends JFrame implements SearchListener {
         static final ImageIcon icon16 = scaleImageIcon(icon, 16);
         static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         final Timer timer = new Timer(60000, e -> {
-            for (var notebook : workspace.notebooks()) {
-                if (notebook.getFile() != null && !notebook.isSaved()) {
-                    workspace.saveNotebook(notebook, false);
+            for (var openFile : workspace.openFiles()) {
+                if (openFile.getFile() != null && !openFile.isSaved()) {
+                    workspace.saveFile(openFile, false);
                 }
             }
         });

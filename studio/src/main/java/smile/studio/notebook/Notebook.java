@@ -36,6 +36,7 @@ import smile.io.Paths;
 import smile.studio.SmileStudio;
 import smile.studio.kernel.*;
 import smile.studio.text.Editor;
+import smile.studio.workspace.OpenFile;
 import smile.swing.ScrollablePanel;
 import smile.util.ipynb.JupyterNotebook;
 
@@ -46,7 +47,7 @@ import smile.util.ipynb.JupyterNotebook;
  *
  * @author Haifeng Li
  */
-public class Notebook extends JPanel implements DocumentListener {
+public class Notebook extends JPanel implements OpenFile, DocumentListener {
     private static final String JAVA_CELL_SEPARATOR = "//--- CELL ---";
     private static final String PY_CELL_SEPARATOR = "#--- CELL ---";
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Notebook.class);
@@ -58,7 +59,7 @@ public class Notebook extends JPanel implements DocumentListener {
     /** Programming language syntax highlight style. */
     private final String syntaxStyle;
     /** The original Jupyter notebook read from .ipynb file. */
-    private final JupyterNotebook jupyter;
+    private JupyterNotebook jupyter;
     /** Execution engine. */
     private Kernel<?> kernel;
     // TODO: Use LazyConstant as kernel initialization is expensive and
@@ -340,6 +341,7 @@ public class Notebook extends JPanel implements DocumentListener {
     /**
      * Shuts down the execution engine and frees resources.
      */
+    @Override
     public void close() {
         if (kernel != null) {
             kernel.close();
@@ -377,6 +379,7 @@ public class Notebook extends JPanel implements DocumentListener {
      *
      * @return the notebook file.
      */
+    @Override
     public Path getFile() {
         return file;
     }
@@ -386,6 +389,7 @@ public class Notebook extends JPanel implements DocumentListener {
      *
      * @param file the notebook file.
      */
+    @Override
     public void setFile(Path file) {
         this.file = file;
         if (SwingUtilities.getAncestorOfClass(JTabbedPane.class, this) instanceof JTabbedPane tabs) {
@@ -511,6 +515,7 @@ public class Notebook extends JPanel implements DocumentListener {
      *
      * @throws IOException If an I/O error occurs.
      */
+    @Override
     public void save() throws IOException {
         if (file == null) {
             logger.error("Notebook file is null");
@@ -522,6 +527,27 @@ public class Notebook extends JPanel implements DocumentListener {
         } else {
             saveAsSource();
         }
+        setSaved(true);
+    }
+
+    /**
+     * Re-reads the notebook from disk in place, preserving the kernel.
+     *
+     * @throws IOException If an I/O error occurs.
+     */
+    @Override
+    public void reload() throws IOException {
+        if (file == null) {
+            logger.error("Notebook file is null");
+            return;
+        }
+
+        if (Paths.getFileExtension(file).equals("ipynb")) {
+            jupyter = JupyterNotebook.from(file);
+        }
+
+        loadCells(file);
+        clearAllOutputs();
         setSaved(true);
     }
 
@@ -581,6 +607,7 @@ public class Notebook extends JPanel implements DocumentListener {
      *
      * @return true if the notebook is saved.
      */
+    @Override
     public boolean isSaved() {
         return saved;
     }
