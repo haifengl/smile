@@ -716,8 +716,14 @@ The file `conf/smile.ini` contains JVM flags that are passed to every `smile`
 invocation.  The defaults are tuned for a modern multi-core machine:
 
 ```ini
-# Heap size
--J-Xmx4G -J-Xms2G
+# Heap: use up to 75% of RAM
+-J-XX:MaxRAMPercentage=75
+
+# Metaspace for classes, methods, fields, etc.
+-J-XX:MaxMetaspaceSize=1024M
+
+# Large thread stack for deep recursive functions
+-J-Xss4M
 
 # ZGC for low-latency GC pauses
 -J-XX:+UseZGC
@@ -732,14 +738,25 @@ invocation.  The defaults are tuned for a modern multi-core machine:
 -J-XX:+UseStringDeduplication
 ```
 
+The file also contains several **commented-out** options you can enable by
+uncommenting them — an explicit heap size, large TLB pages, and compressed oops
+beyond 32 GB:
+
+```ini
+#-J-Xmx4G -J-Xms2G
+#-J-XX:+UseLargePages -J-XX:LargePageSizeInBytes=2M
+#-J-XX:+UseCompressedOops -J-XX:ObjectAlignmentInBytes=16
+```
+
 Key settings to adjust:
 
 | Goal | Change |
 |---|---|
-| More heap for large datasets | `-J-Xmx8G` or `-J-XX:MaxRAMPercentage=75` |
+| More heap for large datasets | Raise `-J-XX:MaxRAMPercentage`, or uncomment `-J-Xmx8G` |
+| Fixed heap instead of a percentage | Uncomment `-J-Xmx4G -J-Xms2G` and remove `-J-XX:MaxRAMPercentage` |
 | Reproducible GC pauses | Keep `-J-XX:+UseZGC` |
-| Enable large TLB pages | Uncomment `-J-XX:+UseLargePages` |
-| Reduce GC pressure | Increase `-J-Xms` closer to `-J-Xmx` |
+| Enable large TLB pages | Uncomment `-J-XX:+UseLargePages -J-XX:LargePageSizeInBytes=2M` (needs root) |
+| Reduce GC pressure | Set `-J-Xms` closer to `-J-Xmx` |
 
 ---
 
