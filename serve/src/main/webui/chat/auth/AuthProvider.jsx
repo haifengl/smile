@@ -1,10 +1,10 @@
 /*
  * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
- * SMILE is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * SMILE Serve is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { fetchAuthMe, loginWithGoogle, logout as apiLogout } from '../api'
