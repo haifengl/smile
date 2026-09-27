@@ -385,7 +385,7 @@ This resolves the Maven dependency (transitively) via Eclipse Aether and adds th
 The **Project** tab in the left panel shows the file tree rooted at the current working directory.
 
 - **Navigate** the tree by expanding folders.
-- **Double-click** a supported source file (`.java`, `.jsh`, `.scala`, `.sc`, `.py`, `.ipynb`) to open it in the notebook.
+- **Double-click** a supported source file (`.jsh`, `.sc`, `.py`, `.ipynb`) to open it in the notebook.
 - **Double-click** any other non-binary text file to open it in the **Notepad** editor.
 - Binary files are silently ignored on double-click.
 
