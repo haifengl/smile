@@ -795,5 +795,5 @@ The remote JVM is allocated up to 75% of the system RAM (`-XX:MaxRAMPercentage=7
 
 ---
 
-*SMILE Studio is free software under the GNU General Public License v3. For commercial use enquiries contact smile.sales@outlook.com.*
+*SMILE Studio is free software under the GNU General Public License v3. For commercial use enquiries contact sales@aihalo.dev*
 

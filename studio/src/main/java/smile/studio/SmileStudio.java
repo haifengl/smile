@@ -789,7 +789,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                     All rights reserved.
                     
                     Smile Studio is free for research and educational use.
-                    For commercial use, please contact smile.sales@outlook.com
+                    For commercial use, please contact sales@aihalo.dev
                     """, version);
             JOptionPane.showMessageDialog(SmileStudio.this,
                     message,

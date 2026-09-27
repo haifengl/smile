@@ -1160,5 +1160,5 @@ The test class `InferenceResourceTest` covers:
 
 ---
 
-*SMILE Serve is free software under the GNU General Public License v3. For commercial use enquiries contact smile.sales@outlook.com.*
+*SMILE Serve is free software under the GNU General Public License v3. For commercial use enquiries contact sales@aihalo.dev*
 
