@@ -45,7 +45,7 @@ public class SearchResourceBundleTest {
 
     /** Keys the Find and Replace menu reads at runtime. */
     private static final List<String> REQUIRED_KEYS = List.of(
-            "Edit", "Search", "NoActiveFile", "Find", "Replace");
+            "FindMenu", "Search", "NoActiveFile", "Find", "Replace");
 
     @Test
     public void testBaseBundleHasSearchKeys() {
@@ -73,7 +73,7 @@ public class SearchResourceBundleTest {
 
     @Test
     public void testOpenFileIsASearchListener() {
-        System.out.println("OpenFile: is a SearchListener so the Edit menu can route to any tab");
+        System.out.println("OpenFile: is a SearchListener so the Find menu can route to any tab");
         assertTrue(SearchListener.class.isAssignableFrom(OpenFile.class),
                 "OpenFile must extend SearchListener for Find/Replace to reach a text tab");
     }

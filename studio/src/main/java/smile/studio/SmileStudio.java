@@ -429,11 +429,11 @@ public class SmileStudio extends JFrame implements SearchListener {
         menuBar.add(cellMenu);
 
         // Find and Replace work on the selected tab, notebook or plain text,
-        // so they belong in an Edit menu rather than the Cell menu.
-        JMenu editMenu = new JMenu(bundle.getString("Edit"));
-        editMenu.add(new JMenuItem(new ShowFindDialogAction()));
-        editMenu.add(new JMenuItem(new ShowReplaceDialogAction()));
-        menuBar.add(editMenu);
+        // so they belong in a Find menu rather than the Cell menu.
+        JMenu findMenu = new JMenu(bundle.getString("FindMenu"));
+        findMenu.add(new JMenuItem(new ShowFindDialogAction()));
+        findMenu.add(new JMenuItem(new ShowReplaceDialogAction()));
+        menuBar.add(findMenu);
 
         JMenu helpMenu = new JMenu(bundle.getString("Help"));
         helpMenu.add(new JMenuItem(new TutorialAction()));

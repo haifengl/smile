@@ -180,6 +180,13 @@ The divider positions are persisted and restored between sessions.
 | **Restart Kernel** | Restart the execution engine (confirmation required) |
 | **Stop** | Interrupt the currently running cell |
 
+### Find Menu
+
+| Action | Description |
+|--------|-------------|
+| **Find…** | Open the Find dialog for the selected tab (`Ctrl+F`) |
+| **Replace…** | Open the Replace dialog for the selected tab (`Ctrl+H`) |
+
 ### Help Menu
 
 | Action | Description |
