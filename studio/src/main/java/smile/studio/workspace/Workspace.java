@@ -199,7 +199,9 @@ public class Workspace extends JSplitPane {
      */
     private Agent initDataScientist(Path cwd) {
         try {
-            return new Agent(Agent.Spec.of("data-scientist"), SmileStudio::llm, cwd);
+            Agent agent = new Agent(Agent.Spec.of("data-scientist"), SmileStudio::llm, cwd);
+            applyDefaultModel(agent);
+            return agent;
         } catch (Exception ex) {
             logger.error("Failed to initialize data scientist agent: {}", ex.getMessage());
         }
@@ -211,7 +213,9 @@ public class Workspace extends JSplitPane {
      */
     private Agent initProductManager(Path cwd) {
         try {
-            return new Agent(Agent.Spec.of("product-manager"), SmileStudio::llm, cwd);
+            Agent agent = new Agent(Agent.Spec.of("product-manager"), SmileStudio::llm, cwd);
+            applyDefaultModel(agent);
+            return agent;
         } catch (Exception ex) {
             logger.error("Failed to initialize Product Manager agent: {}", ex.getMessage());
         }
@@ -223,7 +227,9 @@ public class Workspace extends JSplitPane {
      */
     private Agent initArchitect(Path cwd) {
         try {
-            return new Agent(Agent.Spec.of("architect"), SmileStudio::llm, cwd);
+            Agent agent = new Agent(Agent.Spec.of("architect"), SmileStudio::llm, cwd);
+            applyDefaultModel(agent);
+            return agent;
         } catch (Exception ex) {
             logger.error("Failed to initialize architect agent: {}", ex.getMessage());
         }
@@ -235,7 +241,9 @@ public class Workspace extends JSplitPane {
      */
     private Coder initJavaCoder(Path cwd) {
         try {
-            return new Coder("java-coder", SmileStudio::llm, cwd);
+            Coder coder = new Coder("java-coder", SmileStudio::llm, cwd);
+            applyDefaultModel(coder);
+            return coder;
         } catch (Exception ex) {
             logger.error("Failed to initialize Java coding agent: {}", ex.getMessage());
         }
@@ -247,11 +255,38 @@ public class Workspace extends JSplitPane {
      */
     private Coder initPythonCoder(Path cwd) {
         try {
-            return new Coder("pythonista", SmileStudio::llm, cwd);
+            Coder coder = new Coder("pythonista", SmileStudio::llm, cwd);
+            applyDefaultModel(coder);
+            return coder;
         } catch (Exception ex) {
             logger.error("Failed to initialize Python coding agent: {}", ex.getMessage());
         }
         return null;
+    }
+
+    private static void applyDefaultModel(Agent agent) {
+        if (agent == null) {
+            return;
+        }
+        var def = SmileStudio.llmServices().defaultModel();
+        if (def != null) {
+            String existing = agent.conversation().params().getProperty(ioa.llm.client.LLM.MODEL, "");
+            if (existing == null || existing.isBlank()) {
+                agent.conversation().params().setProperty(ioa.llm.client.LLM.MODEL, def.model().id());
+            }
+        }
+    }
+
+    /**
+     * Refreshes model selectors on every agent CLI after settings change.
+     */
+    public void refreshAgentModelSelectors() {
+        for (int i = 0; i < agentTabs.getTabCount(); i++) {
+            Component c = agentTabs.getComponentAt(i);
+            if (c instanceof AgentCLI cli) {
+                cli.refreshModels();
+            }
+        }
     }
 
     /**
