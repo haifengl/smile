@@ -298,7 +298,8 @@ public class AgentCLI extends JPanel {
 
     /**
      * Inserts a read-only intent for work that arrived from another agent
-     * or as a notice, above the empty composer.
+     * or as a notice, just above the empty composer. Keeping the composer as
+     * the last intent lets the user find it easily to type a new prompt.
      * @param text the prompt or notice.
      * @return the new intent.
      */
@@ -306,9 +307,32 @@ public class AgentCLI extends JPanel {
         Intent intent = new Intent(this);
         intent.editor().setText(text);
         intent.setEditable(false);
-        intents.add(intent, Math.max(0, intents.getComponentCount() - 1));
+        intents.add(intent, composerIndex());
         intents.revalidate();
         return intent;
+    }
+
+    /**
+     * Returns the index at which a new intent should be inserted so that the
+     * empty composer stays the last intent in the conversation. The trailing
+     * vertical glue is not an intent and is skipped.
+     * @return the insertion index.
+     */
+    private int composerIndex() {
+        int count = intents.getComponentCount();
+        int index = count;
+        while (index > 0 && !(intents.getComponent(index - 1) instanceof Intent)) {
+            index--;
+        }
+        while (index > 0 && isComposer((Intent) intents.getComponent(index - 1))) {
+            index--;
+        }
+        return index;
+    }
+
+    /** Returns true if the intent is the active composer the user types into. */
+    private static boolean isComposer(Intent intent) {
+        return intent.editor().isEditable();
     }
 
     /**
@@ -343,10 +367,10 @@ public class AgentCLI extends JPanel {
         this.reasoningEffort = reasoningEffort;
     }
 
-    /** Append a new intent box. */
+    /** Append a new intent box, keeping it as the last intent in the conversation. */
     public void addIntent() {
         Intent intent = new Intent(this);
-        intents.add(intent, intents.getComponentCount() - 1);
+        intents.add(intent, composerIndex());
         SwingUtilities.invokeLater(() -> intent.editor().requestFocusInWindow());
     }
 
