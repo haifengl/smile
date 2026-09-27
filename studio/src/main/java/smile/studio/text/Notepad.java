@@ -136,7 +136,7 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
     /**
      * Binds the inline search tool bars and the go-to-line dialog to keyboard
      * shortcuts. The Find and Replace dialogs themselves are owned by the
-     * application's Edit menu, which routes them to the selected tab.
+     * application's Find menu, which routes them to the selected tab.
      */
     private void initSearchKeyBindings() {
         int ctrl = getToolkit().getMenuShortcutKeyMaskEx();
