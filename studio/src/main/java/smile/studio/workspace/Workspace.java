@@ -27,7 +27,6 @@ import java.nio.file.*;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.*;
 import java.util.function.IntConsumer;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.Agent;
@@ -120,7 +119,7 @@ public class Workspace extends JSplitPane {
         this.fileChooser = new SystemFileChooser();
         fileChooser.setCurrentDirectory(cwd.toFile());
 
-        Agent analyst = initAnalyst(cwd);
+        Agent dataScientist = initDataScientist(cwd);
         Agent productManager = initProductManager(cwd);
         coders.put("Java", initJavaCoder(cwd));
         coders.put("Python", initPythonCoder(cwd));
@@ -152,7 +151,7 @@ public class Workspace extends JSplitPane {
         }
 
         Agent architect = initArchitect(cwd);
-        openAgent("📊 Clair the Analyst", analyst, "clair", analystCLI(analyst));
+        openAgent("📊 Clair the Data Scientist", dataScientist, "clair", dataScientistCLI(dataScientist));
         openAgent("\uD83C\uDFAF Steve the Product Manager", productManager, "steve", productManagerCLI(productManager));
         openAgent("\uD83D\uDCD0 Ada the Architect", architect, "ada", architectCLI(architect));
         openAgent("☕ James the Java Guru", coders.get("Java"), "james", javaCoderCLI(coders.get("Java")));
@@ -196,13 +195,13 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Initializes the analyst agent.
+     * Initializes the data scientist agent.
      */
-    private Agent initAnalyst(Path cwd) {
+    private Agent initDataScientist(Path cwd) {
         try {
-            return new Agent(Agent.Spec.of("analyst"), SmileStudio::llm, cwd);
+            return new Agent(Agent.Spec.of("data-scientist"), SmileStudio::llm, cwd);
         } catch (Exception ex) {
-            logger.error("Failed to initialize data analyst agent: {}", ex.getMessage());
+            logger.error("Failed to initialize data scientist agent: {}", ex.getMessage());
         }
         return null;
     }
@@ -274,15 +273,17 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Creates an analyst agent cli.
+     * Creates a data scientist agent cli.
      */
-    private AgentCLI analystCLI(Agent analyst) {
-        var cli = new AgentCLI(analyst, this);
+    private AgentCLI dataScientistCLI(Agent dataScientist) {
+        var cli = new AgentCLI(dataScientist, this);
 
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
-                        MessageFormat.format(bundle.getString("AnalystWelcome"), System.getProperty("user.dir")),
-                bundle.getString("AnalystTips"));
+                        bundle.getString("DataScientistWelcome") + "\n\n" +
+                        bundle.getString("Tips"),
+                MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
+                        "\n\n" + bundle.getString("DataScientistOutput"));
         return cli;
     }
 
@@ -294,8 +295,10 @@ public class Workspace extends JSplitPane {
 
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
-                        MessageFormat.format(bundle.getString("ProductManagerWelcome"), System.getProperty("user.dir")),
-                bundle.getString("ProductManagerTips"));
+                        bundle.getString("ProductManagerWelcome") + "\n\n" +
+                        bundle.getString("Tips"),
+                MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
+                        "\n\n" + bundle.getString("ProductManagerOutput"));
         return cli;
     }
 
@@ -306,8 +309,10 @@ public class Workspace extends JSplitPane {
         var cli = new AgentCLI(architect, this);
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
-                        MessageFormat.format(bundle.getString("ArchitectWelcome"), System.getProperty("user.dir")),
-                bundle.getString("ProductManagerTips"));
+                        bundle.getString("ArchitectWelcome") + "\n\n" +
+                        bundle.getString("Tips"),
+                MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
+                        "\n\n" + bundle.getString("ArchitectOutput"));
         return cli;
     }
 
@@ -318,8 +323,10 @@ public class Workspace extends JSplitPane {
         var cli = new AgentCLI(coder, this);
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
-                        MessageFormat.format(bundle.getString("JavaCoderWelcome"), System.getProperty("user.dir")),
-                bundle.getString("CoderTips"));
+                        bundle.getString("JavaCoderWelcome") + "\n\n" +
+                        bundle.getString("Tips"),
+                MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
+                        "\n\n" + bundle.getString("JavaCoderOutput"));
         return cli;
     }
 
@@ -330,8 +337,10 @@ public class Workspace extends JSplitPane {
         var cli = new AgentCLI(coder, this);
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
-                        MessageFormat.format(bundle.getString("PythonCoderWelcome"), System.getProperty("user.dir")),
-                bundle.getString("CoderTips"));
+                        bundle.getString("PythonCoderWelcome") + "\n\n" +
+                        bundle.getString("Tips"),
+                MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
+                        "\n\n" + bundle.getString("PythonCoderOutput"));
         return cli;
     }
 
