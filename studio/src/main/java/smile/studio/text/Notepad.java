@@ -39,7 +39,7 @@ import org.fife.ui.rsyntaxtextarea.ErrorStrip;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
-import smile.studio.StatusBar;
+import smile.studio.SmileStudio;
 import smile.studio.workspace.OpenFile;
 
 /**
@@ -56,7 +56,6 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
     private Path file;
     private final CollapsibleSectionPanel csp = new CollapsibleSectionPanel();
     private final Editor editor = new Editor(40, 120);
-    private final StatusBar statusBar = new StatusBar();
     /** The search context shared by the inline tool bars. */
     private final SearchContext searchContext = new SearchContext();
     private final FindToolBar findToolBar = new FindToolBar(this);
@@ -71,7 +70,6 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
         super(new BorderLayout());
         this.file = file;
         add(csp, BorderLayout.CENTER);
-        add(statusBar, BorderLayout.SOUTH);
         initSearchDialogs();
         initSearchKeyBindings();
 
@@ -188,7 +186,7 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
             case MARK_ALL -> {
                 var result = SearchEngine.markAll(editor, context);
                 var text = MessageFormat.format(bundle.getString("MarkCount"), result.getMarkedCount());
-                SwingUtilities.invokeLater(() -> statusBar.setStatus(text));
+                SwingUtilities.invokeLater(() -> SmileStudio.setStatus(this, text));
             }
             case FIND -> {
                 var result = SearchEngine.find(editor, context);
@@ -196,7 +194,7 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
                     UIManager.getLookAndFeel().provideErrorFeedback(editor);
                 } else if (context.getMarkAll()) {
                     var text = MessageFormat.format(bundle.getString("MarkCount"), result.getMarkedCount());
-                    SwingUtilities.invokeLater(() -> statusBar.setStatus(text));
+                    SwingUtilities.invokeLater(() -> SmileStudio.setStatus(this, text));
                 }
             }
             case REPLACE -> {
