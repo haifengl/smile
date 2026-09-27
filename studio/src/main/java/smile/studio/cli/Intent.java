@@ -48,8 +48,8 @@ import static smile.studio.cli.IntentType.*;
 public class Intent extends JPanel {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), Locale.getDefault());
     private static final Color borderColor = Palette.web("#8dd4e8");
-    /** The maximum number of lines a subagent output panel shows before it scrolls. */
-    private static final int MAX_RUN_LINES = 25;
+    /** The scroll unit increment in pixels for the subagent output scrollbars. */
+    private static final int SCROLL_UNIT_INCREMENT = 18;
     // Input pane
     private Color inputPaneColor = UIManager.getColor("TextField.background");
     private final JPanel inputPane = new JPanel(new BorderLayout());
@@ -391,6 +391,7 @@ public class Intent extends JPanel {
             runs.addTab(displayName(parentTitle), parent);
             outputPane.add(runs);
         }
+
         JPanel existing = runPanes.get(runId);
         if (existing != null) {
             int index = runTabIndex(existing);
@@ -399,45 +400,35 @@ public class Intent extends JPanel {
             }
             return;
         }
+
         OutputArea area = createOutputArea();
-        JPanel pane = new JPanel();
-        pane.setLayout(new BoxLayout(pane, BoxLayout.Y_AXIS));
-        pane.add(area);
+        area.setRows(5);
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+
+        // Wraps a subagent output pane in a scroll pane.
+        // To prevent the scroll pane from growing past a certain point
+        // unless the parent container itself expands to give it more space,
+        // wrap the JScrollPane in a panel utilizing GridBagLayout.
+        JScrollPane scrollPane = new JScrollPane(area);
+        JPanel pane = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0; // Tells the component to absorb extra vertical space
+        gbc.fill = GridBagConstraints.BOTH; // Expands component to fill that space
+
+        // Add scroll pane to wrapper panel, then wrapper panel to tab
+        pane.add(scrollPane, gbc);
         runOutputs.put(runId, area);
         runPanes.put(runId, pane);
-        runs.addTab(label, createRunTab(pane, area));
+        runs.addTab(label, pane);
         int index = runs.getTabCount() - 1;
         runs.setToolTipTextAt(index, "Running");
         runs.setSelectedIndex(index);
         outputPane.revalidate();
         outputPane.repaint();
-    }
-
-    /**
-     * Wraps a subagent output pane in a vertical scroll pane that shows at most
-     * {@value #MAX_RUN_LINES} lines. The pane is top-aligned so that a taller
-     * parent tab does not stretch it beyond the line limit. The parent turn is
-     * never wrapped, so its output keeps growing with the content.
-     *
-     * @param pane the subagent output pane.
-     * @param area the output area of the subagent run, used to size one line.
-     * @return the tab component for the subagent run.
-     */
-    private JComponent createRunTab(JPanel pane, OutputArea area) {
-        JScrollPane scroll = new JScrollPane(pane,
-                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scroll.setBorder(null);
-        scroll.setOpaque(false);
-        scroll.getViewport().setOpaque(false);
-        scroll.getVerticalScrollBar().setUnitIncrement(18);
-        int lineHeight = area.getFontMetrics(area.getFont()).getHeight();
-        scroll.setPreferredSize(new Dimension(0, lineHeight * MAX_RUN_LINES));
-
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.setOpaque(false);
-        wrapper.add(scroll, BorderLayout.NORTH);
-        return wrapper;
     }
 
     /** Returns the tab index of a run pane, or -1 if it is not shown. */
