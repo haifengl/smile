@@ -29,7 +29,6 @@ import java.io.*;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
 import java.util.prefs.Preferences;
@@ -37,7 +36,7 @@ import java.util.prefs.Preferences;
 import com.formdev.flatlaf.*;
 import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.SystemInfo;
-import ioa.llm.client.*;
+import ioa.llm.client.LLM;
 import ioa.llm.mcp.MCP;
 import org.fife.rsta.ui.search.FindDialog;
 import org.fife.rsta.ui.search.ReplaceDialog;
@@ -49,7 +48,6 @@ import smile.studio.workspace.Workspace;
 import smile.swing.Button;
 import smile.studio.notebook.Cell;
 import smile.studio.notebook.Notebook;
-import smile.util.Strings;
 import smile.util.lsp.LanguageService;
 import static smile.swing.SmileUtilities.scaleImageIcon;
 
@@ -65,8 +63,8 @@ public class SmileStudio extends JFrame implements SearchListener {
     private static final Preferences prefs = Preferences.userNodeForPackage(SmileStudio.class);
     /** The key for auto save preference. */
     private static final String AUTO_SAVE_KEY = "autoSave";
-    /** The LLM model. Declared volatile so that updates made on the EDT are immediately visible to other threads. */
-    private static volatile LLM llm;
+    /** Client pool and available models. Reloaded on the EDT when settings change. */
+    private static final LlmServices llmServices = new LlmServices();
     /** Application icons in different sizes. */
     private final List<Image> icons = new ArrayList<>();
     private final JMenuBar menuBar = new JMenuBar();
@@ -89,9 +87,8 @@ public class SmileStudio extends JFrame implements SearchListener {
         SearchContext context = findDialog.getSearchContext();
         replaceDialog.setSearchContext(context);
 
-        // Initialize the LLM on the EDT (after Swing is set up) so that any
-        // error dialog shown by createLLM() runs on the correct thread.
-        llm = createLLM();
+        // Initialize LLM clients on the EDT so error dialogs run on the right thread.
+        llmServices.reload(prefs);
 
         // Assign workspace before initMenuAndToolBar() so that AutoSaveAction's
         // timer callback (which captures workspace) is never handed a null reference.
@@ -241,123 +238,52 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     /**
-     * Returns an LLM instance if initialized successfully.
-     * @return an LLM instance if initialized successfully.
+     * Returns the shared LLM services manager (client pool and model list).
+     * @return the services manager.
+     */
+    public static LlmServices llmServices() {
+        return llmServices;
+    }
+
+    /**
+     * Returns the default service's LLM client if configured.
+     * @return an LLM instance, or null.
      */
     public static LLM llm() {
-        return llm;
+        return llmServices.defaultClient();
     }
 
     /**
-     * Re-creates the LLM from the current preferences and stores it in the
-     * shared {@code llm} field.  Must be called on the Event Dispatch Thread.
+     * Reloads clients and available models from preferences.
+     * Must be called on the Event Dispatch Thread.
      *
-     * @return the newly created {@link LLM}, or {@code null} if none is
-     *         configured or initialization fails.
+     * @return the default service's client, or {@code null} if none is configured.
      */
     public static LLM updateLLM() {
-        llm = createLLM();
-        return llm;
+        llmServices.reload(prefs);
+        return llmServices.defaultClient();
     }
 
     /**
-     * Creates an LLM instance specified by app settings.
-     *
-     * <p>Must be called on the Event Dispatch Thread so that any error dialog
-     * is shown on the correct thread.
-     *
-     * @return a new {@link LLM} instance, or {@code null} if none is configured
-     *         or initialization fails.
+     * Refreshes model/effort combos on every open agent CLI after settings change.
      */
+    public static void refreshModelSelectors() {
+        for (Window window : Window.getWindows()) {
+            if (window instanceof SmileStudio studio) {
+                studio.workspace.refreshAgentModelSelectors();
+            }
+        }
+    }
+
+    /**
+     * Reloads LLM services from preferences. Prefer {@link #updateLLM()}.
+     *
+     * @return the default service's client, or {@code null}.
+     * @deprecated use {@link #updateLLM()}.
+     */
+    @Deprecated
     public static LLM createLLM() {
-        var service = prefs.get(SettingsDialog.AI_SERVICE_KEY, "");
-        if (service.isBlank()) {
-            return null;
-        }
-
-        // Propagate stored API keys / base URLs to system properties so that
-        // LLM clients that call fromEnv() can pick them up automatically.
-        setSystemPropertyFromPrefs("openai.apiKey", "openaiApiKey");
-        setSystemPropertyFromPrefs("openai.baseUrl", "openaiBaseUrl");
-        setSystemPropertyFromPrefs("anthropic.apiKey", "anthropicApiKey");
-        setSystemPropertyFromPrefs("anthropic.baseUrl", "anthropicBaseUrl");
-
-        try {
-            return switch (service) {
-                case "OpenAI" -> {
-                    var openai = new OpenAI(prefs.get("openaiModel", "gpt-5.5"));
-                    var apiKey = prefs.get("openaiApiKey", "");
-                    if (!apiKey.isBlank()) {
-                        openai.withApiKey(apiKey);
-                    }
-                    var baseUrl = prefs.get("openaiBaseUrl", "");
-                    if (!baseUrl.isBlank()) {
-                        openai.withBaseUrl(baseUrl);
-                    }
-                    yield openai;
-                }
-
-                case "Azure OpenAI" -> OpenAI.azure(
-                        prefs.get("azureOpenAIApiKey", ""),
-                        prefs.get("azureOpenAIBaseUrl", ""),
-                        prefs.get("azureOpenAIModel", "gpt-5.5"));
-
-                // Don't call withApiKey or withBaseUrl for Anthropic and Gemini client.
-                // As they read from system properties directly, calling withApiKey will
-                // cause errors.
-                case "Anthropic" -> {
-                    if (System.getProperty(Anthropic.BASE_URL_PROPERTY_KEY, "").contains("bedrock") &&
-                        System.getProperty(Anthropic.API_KEY_PROPERTY_KEY) == null) {
-                        var apiKey = System.getenv("AWS_BEARER_TOKEN_BEDROCK");
-                        if (!Strings.isNullOrBlank(apiKey)) {
-                            System.setProperty(Anthropic.API_KEY_PROPERTY_KEY, apiKey);
-                        }
-                    }
-
-                    yield new Anthropic(prefs.get("anthropicModel", "claude-sonnet-5"));
-                }
-
-                case "Google Gemini" ->
-                    new GoogleGemini(
-                            prefs.get("googleGeminiApiKey", ""),
-                            prefs.get("googleGeminiModel", "gemini-3.1-pro-preview"));
-
-                case "Google Gemini Enterprise" ->
-                    GoogleGemini.enterprise(
-                            prefs.get("googleEnterpriseApiKey", ""), // Project
-                            prefs.get("googleEnterpriseBaseUrl", ""), // Location
-                            prefs.get("googleEnterpriseModel", "gemini-3.1-pro-preview"));
-
-                default -> {
-                    // Many AI services are compatible with OpenAI ChatCompletions API,
-                    // so we try to initialize OpenAI client.
-                    var baseUrl = prefs.get("chatCompletionsBaseUrl", "");
-                    if (baseUrl.isBlank()) {
-                        throw new RuntimeException("missing base URL");
-                    }
-                    var apiKey = prefs.get("chatCompletionsApiKey", "");
-                    if (apiKey.isBlank()) {
-                        apiKey = System.getenv("AWS_BEARER_TOKEN_BEDROCK");
-                        if (Strings.isNullOrBlank(apiKey)) {
-                            throw new RuntimeException("missing API Key");
-                        }
-                    }
-                    yield new ChatCompletions(
-                            baseUrl,
-                            apiKey,
-                            prefs.get("chatCompletionsModel", service));
-                }
-            };
-        } catch (Throwable t) {
-            // It is often a rethrow exception
-            var cause = t.getCause() != null ? t.getCause() : t;
-            JOptionPane.showMessageDialog(
-                    null,
-                    MessageFormat.format(bundle.getString("InitError"), cause.getMessage()),
-                    bundle.getString("Error"),
-                    JOptionPane.ERROR_MESSAGE);
-        }
-        return null;
+        return updateLLM();
     }
 
     /**
@@ -796,22 +722,6 @@ public class SmileStudio extends JFrame implements SearchListener {
                     bundle.getString("About"),
                     JOptionPane.INFORMATION_MESSAGE,
                     icons.size() > 4 ? new ImageIcon(icons.get(4)) : null);
-        }
-    }
-
-    /**
-     * Sets a system property from a stored preference value if the system
-     * property is not already set.
-     *
-     * @param sysProp  the system-property name to set.
-     * @param prefKey  the preference key to read the value from.
-     */
-    private static void setSystemPropertyFromPrefs(String sysProp, String prefKey) {
-        if (System.getProperty(sysProp, "").isBlank()) {
-            String value = prefs.get(prefKey, "").trim();
-            if (!value.isEmpty()) {
-                System.setProperty(sysProp, value);
-            }
         }
     }
 

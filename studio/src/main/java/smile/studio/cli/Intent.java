@@ -34,6 +34,8 @@ import ioa.llm.client.LLM;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
+import smile.studio.LlmServices;
+import smile.studio.SmileStudio;
 import smile.studio.text.Markdown;
 import smile.studio.text.Monospaced;
 import smile.studio.text.OutputArea;
@@ -60,6 +62,11 @@ public class Intent extends JPanel {
     // Left side for intent type, reasoning effort and status bar
     private final JPanel controlPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
     private final JComboBox<IntentType> intentTypeComboBox = new JComboBox<>(IntentType.values());
+    private final JLabel modelLabel = new JLabel(bundle.getString("Model"));
+    private final JComboBox<String> modelComboBox = new JComboBox<>();
+    /** Null means auto/default; otherwise the explicit selection. */
+    private LlmServices.AvailableModel selectedModel;
+    private final Map<String, LlmServices.AvailableModel> modelByLabel = new LinkedHashMap<>();
     private final JLabel reasoningLabel = new JLabel(bundle.getString("ReasoningEffort"));
     private final JComboBox<String> effortComboBox;
     private final JLabel status = new JLabel();
@@ -84,6 +91,7 @@ public class Intent extends JPanel {
 
         effortComboBox = initEffortComboBox(cli);
         effortComboBox.setSelectedItem(cli.getReasoningEffort());
+        initModelComboBox(cli);
         initInputPane();
         initActionMap(cli);
 
@@ -103,6 +111,7 @@ public class Intent extends JPanel {
                     controlPane.setBackground(inputPaneColor);
                     intentTypeComboBox.setBackground(inputPaneColor);
                     effortComboBox.setBackground(inputPaneColor);
+                    modelComboBox.setBackground(inputPaneColor);
                     inputPane.setBackground(inputPaneColor);
                     inputPane.setBorder(createRoundBorder());
                 }
@@ -144,7 +153,10 @@ public class Intent extends JPanel {
 
         controlPane.setBackground(inputPaneColor);
         controlPane.add(intentTypeComboBox);
-        controlPane.add(Box.createHorizontalStrut(20));
+        controlPane.add(Box.createHorizontalStrut(12));
+        controlPane.add(modelLabel);
+        controlPane.add(modelComboBox);
+        controlPane.add(Box.createHorizontalStrut(12));
         controlPane.add(reasoningLabel);
         controlPane.add(effortComboBox);
         footer.add(controlPane);
@@ -160,15 +172,7 @@ public class Intent extends JPanel {
 
     /** Initializes the reasoning effort combo box. */
     private JComboBox<String> initEffortComboBox(AgentCLI cli) {
-        ArrayList<String> effortLevels =new ArrayList<>();
-        effortLevels.add(LLM.DEFAULT_REASONING_EFFORT);
-
-        if (cli.agent() != null) {
-            cli.agent().llm().ifPresent(model -> effortLevels.addAll(model.reasoningEffortLevels()));
-        }
-
-        var levels = effortLevels.toArray(new String[0]);
-        var effortComboBox = new JComboBox<>(levels);
+        var effortComboBox = new JComboBox<String>();
         effortComboBox.setBorder(BorderFactory.createEmptyBorder());
         effortComboBox.setBackground(inputPaneColor);
         if (effortComboBox.getComponentCount() > 0 &&
@@ -182,6 +186,104 @@ public class Intent extends JPanel {
             }
         });
         return effortComboBox;
+    }
+
+    /** Initializes the model combo box to the left of reasoning effort. */
+    private void initModelComboBox(AgentCLI cli) {
+        modelComboBox.setBorder(BorderFactory.createEmptyBorder());
+        modelComboBox.setBackground(inputPaneColor);
+        if (modelComboBox.getComponentCount() > 0 &&
+            modelComboBox.getComponent(0) instanceof AbstractButton button) {
+            button.setVisible(false);
+        }
+        modelComboBox.addItemListener(e -> {
+            if (e.getStateChange() != ItemEvent.SELECTED) {
+                return;
+            }
+            String label = (String) modelComboBox.getSelectedItem();
+            if (label == null || bundle.getString("AutoModel").equals(label)) {
+                selectedModel = null;
+            } else {
+                selectedModel = modelByLabel.get(label);
+            }
+            refillEffortLevels(cli.getReasoningEffort());
+        });
+        refreshModels();
+    }
+
+    /**
+     * Rebuilds the model list from {@link SmileStudio#llmServices()}.
+     * Keeps the current selection when it is still available.
+     */
+    public void refreshModels() {
+        String previous = selectedModel == null
+                ? bundle.getString("AutoModel")
+                : selectedModel.model().id();
+        String previousService = selectedModel == null ? null : selectedModel.serviceKey();
+
+        modelComboBox.removeAllItems();
+        modelByLabel.clear();
+        modelComboBox.addItem(bundle.getString("AutoModel"));
+
+        var available = SmileStudio.llmServices().availableModels();
+        boolean qualify = available.stream().map(m -> m.model().id()).distinct().count()
+                < available.size();
+        for (var entry : available) {
+            String label = entry.displayLabel(qualify);
+            modelByLabel.put(label, entry);
+            modelComboBox.addItem(label);
+        }
+
+        String restore = bundle.getString("AutoModel");
+        if (previousService != null) {
+            for (var e : modelByLabel.entrySet()) {
+                if (e.getValue().serviceKey().equals(previousService)
+                        && e.getValue().model().id().equals(previous)) {
+                    restore = e.getKey();
+                    break;
+                }
+            }
+        }
+        modelComboBox.setSelectedItem(restore);
+        if (bundle.getString("AutoModel").equals(restore)) {
+            selectedModel = null;
+        } else {
+            selectedModel = modelByLabel.get(restore);
+        }
+        refillEffortLevels(null);
+    }
+
+    private void refillEffortLevels(String prefer) {
+        String keep = prefer != null ? prefer : (String) effortComboBox.getSelectedItem();
+        effortComboBox.removeAllItems();
+        effortComboBox.addItem(LLM.DEFAULT_REASONING_EFFORT);
+        var model = resolveModel();
+        if (model != null) {
+            for (String level : model.model().reasoningEffortLevels()) {
+                effortComboBox.addItem(level);
+            }
+        }
+        if (keep != null) {
+            for (int i = 0; i < effortComboBox.getItemCount(); i++) {
+                if (keep.equals(effortComboBox.getItemAt(i))) {
+                    effortComboBox.setSelectedIndex(i);
+                    return;
+                }
+            }
+        }
+        effortComboBox.setSelectedItem(LLM.DEFAULT_REASONING_EFFORT);
+    }
+
+    /**
+     * Returns the model for this prompt: the explicit selection, or the
+     * services default when the combo is on {@code default}.
+     * @return the available model, or null when none are configured.
+     */
+    public LlmServices.AvailableModel resolveModel() {
+        if (selectedModel != null) {
+            return selectedModel;
+        }
+        return SmileStudio.llmServices().defaultModel();
     }
 
     /** Initializes the intent type combo box. */
@@ -202,13 +304,11 @@ public class Intent extends JPanel {
                 editor.requestFocusInWindow();
 
                 if (effortComboBox != null) {
-                    if (intentType == Instructions || intentType == Command) {
-                        reasoningLabel.setVisible(true);
-                        effortComboBox.setVisible(true);
-                    } else {
-                        reasoningLabel.setVisible(false);
-                        effortComboBox.setVisible(false);
-                    }
+                    boolean show = intentType == Instructions || intentType == Command;
+                    modelLabel.setVisible(show);
+                    modelComboBox.setVisible(show);
+                    reasoningLabel.setVisible(show);
+                    effortComboBox.setVisible(show);
                 }
 
                 switch (intentType) {

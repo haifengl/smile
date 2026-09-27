@@ -39,11 +39,12 @@ import ioa.llm.Conversation;
 import ioa.llm.Message;
 import ioa.llm.Role;
 import ioa.llm.client.LLM;
+import smile.studio.LlmServices;
+import smile.studio.SmileStudio;
 import ioa.agent.Agent;
 import ioa.agent.memory.Skill;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
-import smile.studio.SmileStudio;
 import smile.studio.text.HintWindow;
 import smile.studio.text.OutputArea;
 import smile.studio.workspace.Workspace;
@@ -111,6 +112,13 @@ public class AgentCLI extends JPanel {
         intents.add(new Intent(this));
         intents.add(Box.createVerticalGlue());
         if (agent != null) {
+            var def = SmileStudio.llmServices().defaultModel();
+            if (def != null) {
+                String existing = agent.conversation().params().getProperty(LLM.MODEL, "");
+                if (existing == null || existing.isBlank()) {
+                    agent.conversation().params().setProperty(LLM.MODEL, def.model().id());
+                }
+            }
             agent.session().addListener(sessionListener());
         }
     }
@@ -235,7 +243,16 @@ public class AgentCLI extends JPanel {
                         }
                         return;
                     }
-                    if (!alreadyCompacted && totalTokens > agent.llm().map(LLM::compactThreshold).orElse(LLM.DEFAULT_COMPACT_THRESHOLD) && activeIntent != null) {
+                    long compactAt = LLM.DEFAULT_COMPACT_THRESHOLD;
+                    try {
+                        compactAt = agent.turnModel().compactThreshold();
+                    } catch (RuntimeException ignored) {
+                        var resolved = activeIntent != null ? activeIntent.resolveModel() : null;
+                        if (resolved != null) {
+                            compactAt = resolved.model().compactThreshold();
+                        }
+                    }
+                    if (!alreadyCompacted && totalTokens > compactAt && activeIntent != null) {
                         if (compactContinuations >= 2) {
                             compactContinuations = 0;
                             activeIntent.output().append("\n\n[The conversation is still too long after compaction, so the task was not resumed.]\n");
@@ -365,6 +382,15 @@ public class AgentCLI extends JPanel {
      */
     public void setReasoningEffort(String reasoningEffort) {
         this.reasoningEffort = reasoningEffort;
+    }
+
+    /** Refreshes model and effort combos on every Intent after settings change. */
+    public void refreshModels() {
+        for (Component component : intents.getComponents()) {
+            if (component instanceof Intent intent) {
+                intent.refreshModels();
+            }
+        }
     }
 
     /** Append a new intent box, keeping it as the last intent in the conversation. */
@@ -948,7 +974,8 @@ public class AgentCLI extends JPanel {
             return;
         }
 
-        if (agent == null || agent.llm().isEmpty()) {
+        LlmServices.AvailableModel available = intent.resolveModel();
+        if (agent == null || available == null || available.client() == null) {
             intent.output().setText(bundle.getString("NoAIServiceError"));
             return;
         }
@@ -958,10 +985,14 @@ public class AgentCLI extends JPanel {
         } else {
             agent.conversation().params().setProperty(LLM.REASONING_EFFORT, reasoningEffort);
         }
+        agent.conversation().params().setProperty(LLM.MODEL, available.model().id());
 
         activeIntent = intent;
         agent.conversation().params().setProperty(LLM.INTERRUPTED, "false");
         intent.setStopAction(() -> agent.conversation().params().setProperty(LLM.INTERRUPTED, "true"));
-        agent.session().accept(AgentRequest.fromUser(agent.session().callName(), prompt));
+        agent.session().accept(
+                AgentRequest.fromUser(agent.session().callName(), prompt),
+                available.client(),
+                available.model());
     }
 }

@@ -42,9 +42,9 @@ public class SettingsDialog extends JDialog implements ActionListener {
     // Interactions API is not yet supported on Vertex
     private static final String[] aiServiceOptions = {"OpenAI", "Azure OpenAI", "Anthropic", "Google Gemini", "Google Gemini Enterprise", "Chat Completions Compatible"};
     private static final String[] aiServiceKeys = {"openai", "azureOpenAI", "anthropic", "googleGemini", "googleEnterprise", "chatCompletions"};
-    private static final String[] openaiModels = {"gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.4-mini"};
-    private static final String[] anthropicModels = {"claude-fable-5", "claude-opus-4-8", "claude-sonnet-5", "claude-haiku-4-5"};
-    private static final String[] geminiModels = {"gemini-3.8-flash", "gemini-3.1-pro-preview", "gemini-3.1-flash-lite"};
+    private static final String[] openaiModels = {"gpt-6-astra", "gpt-6-sol", "gpt-6-luna"};
+    private static final String[] anthropicModels = {"claude-fable-5-1", "claude-opus-5-5", "claude-sonnet-5", "claude-haiku-4-5-20251001"};
+    private static final String[] geminiModels = {"gemini-3.8-flash", "gemini-3.5-flash-lite"};
 
     private static final String[] openaiBaseUrls = { "https://api.openai.com/v1" };
     private static final String[] anthropicBaseUrls = { "https://api.anthropic.com" };
@@ -59,7 +59,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
             "https://api.orcarouter.ai/v1", // OrcaRouter
             "https://openrouter.ai/api/v1"  // OpenRouter
     };
-    private static final String[] otherModels = {"llama3.1", "qwen3.8", "minimax-m2.7", "kimi-k3", "deepseek-v4-flash"};
+    private static final String[] otherModels = {"qwen3.8-27b", "minimax-m2.7", "kimi-k3", "deepseek-v4.1-flash"};
     private final JComboBox<String> themeCombo = new JComboBox<>(UI_THEMES);
     private final JComboBox<String> aiServiceCombo = new JComboBox<>(aiServiceOptions);;
     private final CardLayout cardLayout = new CardLayout();
@@ -195,12 +195,14 @@ public class SettingsDialog extends JDialog implements ActionListener {
         JComboBox<String> modelField = switch (service) {
             case "openai", "azureOpenAI" -> new JComboBox<>(openaiModels);
             case "anthropic" -> new JComboBox<>(anthropicModels);
-            case "googleGemini", "googleVertexAI" -> new JComboBox<>(geminiModels);
+            case "googleGemini", "googleEnterprise" -> new JComboBox<>(geminiModels);
             case "chatCompletions" -> new JComboBox<>(otherModels);
             default -> new JComboBox<>();
         };
         modelField.setEditable(true);
+        // Comma-separated list; first id is the default for this service.
         modelField.setSelectedItem(prefs.get(service + "Model", ""));
+        modelField.setToolTipText(bundle.getString("Model"));
         modelFields.put(service, modelField);
         card.add(modelField, gbc);
 
@@ -225,6 +227,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 prefs.put(service + MODEL, (String) modelFields.get(service).getSelectedItem());
             }
             SmileStudio.updateLLM();
+            SmileStudio.refreshModelSelectors();
             dispose();
         });
 
