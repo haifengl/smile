@@ -180,9 +180,9 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
 
         var ext = Paths.getFileExtension(file);
         return switch (ext) {
-            case "java", "jsh" -> "Java";
-            case "scala", "sc" -> "Scala";
-            case "kt", "kts" -> "Kotlin";
+            case "jsh" -> "Java";
+            case "sc" -> "Scala";
+            case "kts" -> "Kotlin";
             case "py", "ipynb" -> "Python";
             default -> ext;
         };
