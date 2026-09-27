@@ -48,6 +48,8 @@ import static smile.studio.cli.IntentType.*;
 public class Intent extends JPanel {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), Locale.getDefault());
     private static final Color borderColor = Palette.web("#8dd4e8");
+    /** The maximum number of lines a subagent output panel shows before it scrolls. */
+    private static final int MAX_RUN_LINES = 25;
     // Input pane
     private Color inputPaneColor = UIManager.getColor("TextField.background");
     private final JPanel inputPane = new JPanel(new BorderLayout());
@@ -391,7 +393,10 @@ public class Intent extends JPanel {
         }
         JPanel existing = runPanes.get(runId);
         if (existing != null) {
-            runs.setSelectedComponent(existing);
+            int index = runTabIndex(existing);
+            if (index >= 0) {
+                runs.setSelectedIndex(index);
+            }
             return;
         }
         OutputArea area = createOutputArea();
@@ -400,12 +405,50 @@ public class Intent extends JPanel {
         pane.add(area);
         runOutputs.put(runId, area);
         runPanes.put(runId, pane);
-        runs.addTab(label, pane);
+        runs.addTab(label, createRunTab(pane, area));
         int index = runs.getTabCount() - 1;
         runs.setToolTipTextAt(index, "Running");
         runs.setSelectedIndex(index);
         outputPane.revalidate();
         outputPane.repaint();
+    }
+
+    /**
+     * Wraps a subagent output pane in a vertical scroll pane that shows at most
+     * {@value #MAX_RUN_LINES} lines. The pane is top-aligned so that a taller
+     * parent tab does not stretch it beyond the line limit. The parent turn is
+     * never wrapped, so its output keeps growing with the content.
+     *
+     * @param pane the subagent output pane.
+     * @param area the output area of the subagent run, used to size one line.
+     * @return the tab component for the subagent run.
+     */
+    private JComponent createRunTab(JPanel pane, OutputArea area) {
+        JScrollPane scroll = new JScrollPane(pane,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setBorder(null);
+        scroll.setOpaque(false);
+        scroll.getViewport().setOpaque(false);
+        scroll.getVerticalScrollBar().setUnitIncrement(18);
+        int lineHeight = area.getFontMetrics(area.getFont()).getHeight();
+        scroll.setPreferredSize(new Dimension(0, lineHeight * MAX_RUN_LINES));
+
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setOpaque(false);
+        wrapper.add(scroll, BorderLayout.NORTH);
+        return wrapper;
+    }
+
+    /** Returns the tab index of a run pane, or -1 if it is not shown. */
+    private int runTabIndex(JPanel pane) {
+        for (int i = 0; i < runs.getTabCount(); i++) {
+            Component tab = runs.getComponentAt(i);
+            if (tab == pane || (tab instanceof Container container && SwingUtilities.isDescendingFrom(pane, container))) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     /**
@@ -446,7 +489,7 @@ public class Intent extends JPanel {
         if (pane == null) {
             return;
         }
-        int index = runs.indexOfComponent(pane);
+        int index = runTabIndex(pane);
         if (index >= 0) {
             runs.setToolTipTextAt(index, tooltip);
         }
