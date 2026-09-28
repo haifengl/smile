@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 import ioa.agent.Coder;
@@ -64,7 +65,9 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
     /** The original Jupyter notebook read from .ipynb file. */
     private JupyterNotebook jupyter;
     /** Execution engine. */
-    private Kernel<?> kernel;
+    private volatile Kernel<?> kernel;
+    /** The lifecycle state of the execution engine. */
+    private volatile KernelState kernelState = KernelState.STARTING;
     // TODO: Use LazyConstant as kernel initialization is expensive and
     // we want to delay it until first run. For now, we initialize it
     // in constructor as LazyConstant is still in preview.
@@ -259,66 +262,81 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
         setSaved(true);
     }
 
-    /** Creates the kernel instance. */
-    private Kernel<?> createKernel() {
-        return switch (lang) {
-            case "Java" -> new JavaKernel();
-            case "Scala" -> new ScalaKernel();
-            case "Kotlin" -> new KotlinKernel();
-            case "Python" -> {
-                try {
-                    yield new PythonKernel();
-                } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(this,
-                            "Failed to initialize Python kernel: " + ex.getMessage(),
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE);
-                    yield null;
-                }
-            }
-            default -> {
-                JOptionPane.showMessageDialog(this,
-                        MessageFormat.format(bundle.getString("UnsupportedNotebookMessage"), file.getFileName()),
-                        bundle.getString("UnsupportedNotebookTitle"),
-                        JOptionPane.ERROR_MESSAGE);
-                yield null;
-            }
-        };
+    /**
+     * The lifecycle state of the execution engine.
+     *
+     * <p>Kernel construction is expensive — the Scala and Python kernels start
+     * an external process and can take seconds to minutes to become ready — so
+     * it runs on a background thread while the notebook is already usable. This
+     * state distinguishes a kernel that is merely not ready yet ({@link #STARTING})
+     * from one that can never run ({@link #UNSUPPORTED}), so that running a cell
+     * early reports the former instead of the misleading latter.
+     */
+    private enum KernelState {
+        /** The kernel is being created on a background thread. */
+        STARTING,
+        /** The kernel is constructed and ready to evaluate code. */
+        READY,
+        /** No kernel is available for the notebook language. */
+        UNSUPPORTED
     }
 
     /** Initialize the kernel. */
     private void initKernel() {
-        SwingWorker<Kernel<?>, Kernel<?>> worker = new SwingWorker<>() {
+        SwingWorker<Kernel<?>, Void> worker = new SwingWorker<>() {
             @Override
-            protected Kernel<?> doInBackground() throws IOException, UnsupportedOperationException {
-                kernel = switch (lang) {
+            protected Kernel<?> doInBackground() throws IOException {
+                return switch (lang) {
                     case "Java" -> new JavaKernel();
                     case "Scala" -> new ScalaKernel();
                     case "Kotlin" -> new KotlinKernel();
                     case "Python" -> new PythonKernel();
-                    default -> throw new UnsupportedOperationException();
+                    default -> null;
                 };
-                return kernel;
             }
 
             @Override
             protected void done() {
-                if (kernel == null) {
-                    if (lang.equals("Python")) {
-                        JOptionPane.showMessageDialog(Notebook.this,
-                                bundle.getString("PythonKernelInitErrorMessage"),
-                                "Error",
-                                JOptionPane.ERROR_MESSAGE);
-                    } else {
-                        JOptionPane.showMessageDialog(Notebook.this,
-                                MessageFormat.format(bundle.getString("UnsupportedKernelMessage"), lang),
-                                "Error",
-                                JOptionPane.ERROR_MESSAGE);
-                    }
+                try {
+                    kernel = get();
+                    kernelState = kernel == null ? KernelState.UNSUPPORTED : KernelState.READY;
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    kernelState = KernelState.UNSUPPORTED;
+                } catch (ExecutionException ex) {
+                    // The kernel constructor failed (e.g. Python is not installed).
+                    logger.error("Failed to initialize {} kernel: {}", lang, ex.getCause().getMessage());
+                    kernelState = KernelState.UNSUPPORTED;
+                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Notebook.this,
+                            MessageFormat.format(bundle.getString("KernelInitErrorMessage"), lang),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE));
                 }
             }
         };
         worker.execute();
+    }
+
+    /**
+     * Shows the dialog that a cell cannot run because the kernel is not ready.
+     *
+     * @return true if the kernel is ready, false if a dialog was shown.
+     */
+    private boolean checkKernelReady() {
+        if (kernelState != KernelState.READY || kernel == null) {
+            if (kernelState == KernelState.STARTING) {
+                JOptionPane.showMessageDialog(this,
+                        MessageFormat.format(bundle.getString("KernelStartingMessage"), lang),
+                        bundle.getString("KernelStartingTitle"),
+                        JOptionPane.WARNING_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        MessageFormat.format(bundle.getString("UnsupportedKernelMessage"), lang),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -761,10 +779,7 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
      * @param behavior post-run navigation behavior.
      */
     public synchronized void runCell(Cell cell, PostRunNavigation behavior) {
-        if (kernel == null) {
-            JOptionPane.showMessageDialog(this,
-                    MessageFormat.format(bundle.getString("UnsupportedKernelMessage"), lang),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+        if (!checkKernelReady()) {
             return;
         }
         if (kernel.isRunning()) {
@@ -860,10 +875,7 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
      * @param cell the selected cell.
      */
     public synchronized void runCellAndBelow(Cell cell) {
-        if (kernel == null) {
-            JOptionPane.showMessageDialog(this,
-                    MessageFormat.format(bundle.getString("UnsupportedKernelMessage"), lang),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+        if (!checkKernelReady()) {
             return;
         }
         if (kernel.isRunning()) {
@@ -885,10 +897,7 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
      * Runs all cells.
      */
     public synchronized void runAllCells() {
-        if (kernel == null) {
-            JOptionPane.showMessageDialog(this,
-                    MessageFormat.format(bundle.getString("UnsupportedKernelMessage"), lang),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+        if (!checkKernelReady()) {
             return;
         }
         if (kernel.isRunning()) {
