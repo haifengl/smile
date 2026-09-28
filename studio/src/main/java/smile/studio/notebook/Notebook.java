@@ -264,6 +264,7 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
         return switch (lang) {
             case "Java" -> new JavaKernel();
             case "Scala" -> new ScriptKernel("scala");
+            case "Kotlin" -> new KotlinKernel();
             case "Python" -> {
                 try {
                     yield new PythonKernel();
@@ -315,6 +316,7 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
                 kernel = switch (lang) {
                     case "Java" -> new JavaKernel();
                     case "Scala" -> new ScriptKernel("scala");
+                    case "Kotlin" -> new KotlinKernel();
                     case "Python" -> new PythonKernel();
                     default -> throw new UnsupportedOperationException();
                 };

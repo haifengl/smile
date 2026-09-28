@@ -122,7 +122,14 @@ libraryDependencies ++= Seq(
   "io.modelcontextprotocol.sdk" % "mcp"          % "2.0.1",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "com.github.serpapi"          % "serpapi-java" % "1.2.0",
-  "com.google.code.gson"        % "gson"         % "2.14.0" // evict older version used by serpapi
+  "com.google.code.gson"        % "gson"         % "2.14.0", // evict older version used by serpapi
+  // Kotlin scripting host, required at runtime by KotlinKernel. The kotlin
+  // module compiles against these as Provided; the host supplies them.
+  // Keep in sync with the `kotlin` version in gradle/libs.versions.toml.
+  "org.jetbrains.kotlin" % "kotlin-scripting-jvm-host"    % "2.4.20",
+  "org.jetbrains.kotlin" % "kotlin-scripting-common"      % "2.4.20",
+  "org.jetbrains.kotlin" % "kotlin-scripting-jvm"         % "2.4.20",
+  "org.jetbrains.kotlin" % "kotlin-compiler-embeddable"   % "2.4.20"
 )
 
 libraryDependencies ++= {

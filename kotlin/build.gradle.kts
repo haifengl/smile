@@ -5,7 +5,20 @@ plugins {
 dependencies {
     api(project(":core"))
     api(project(":nlp"))
+
+    // The Kotlin scripting host API used by smile.studio.kernel.ScriptRunnerBridge.
+    // It is only needed by hosts that embed the Kotlin scripting engine (Studio),
+    // not by consumers of the smile-kotlin API, so it is kept off the published
+    // POM (compileOnly). A host must put the same artifacts on its runtime
+    // classpath.
+    compileOnly(libs.kotlin.scripting.jvm.host)
+    compileOnly(libs.kotlin.scripting.common)
+    compileOnly(libs.kotlin.scripting.jvm)
+    compileOnly(libs.kotlin.compiler.embeddable)
 }
+
+// The Kotlin scripting host API is not needed at test time either, as the
+// Kotlin module tests exercise the SMILE API rather than the scripting bridge.
 
 // Sets test working directory to parent (root) directory
 tasks.withType<Test> {

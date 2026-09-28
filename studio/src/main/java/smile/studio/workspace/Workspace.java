@@ -53,9 +53,8 @@ public class Workspace extends JSplitPane {
      */
     private static final String[] SMILE_FILE_EXTENSIONS = {
             "jsh", // JShell scripts
-            "sc", // Scala scripts
-            // Kotlin's support for JSR-223 was deprecated in Kotlin 2.2.0.
-            // "kts",   // Kotlin source files and scripts
+            "sc",  // Scala scripts
+            "kts", // Kotlin scripts
             "py", "ipynb"  // Python source files and Jupyter notebooks
     };
     /**
