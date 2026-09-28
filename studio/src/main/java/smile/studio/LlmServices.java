@@ -59,6 +59,7 @@ public final class LlmServices {
     private volatile Map<String, LLM> clients = Map.of();
     private volatile List<AvailableModel> models = List.of();
     private volatile String defaultServiceKey = "";
+    private volatile AvailableModel defaultModel;
     private volatile Preferences prefs;
 
     /**
@@ -132,6 +133,7 @@ public final class LlmServices {
 
         clients = Map.copyOf(nextClients);
         models = List.copyOf(nextModels);
+        defaultModel = computeDefaultModel();
     }
 
     /**
@@ -171,6 +173,17 @@ public final class LlmServices {
      * @return the default entry, or null when the pool is empty.
      */
     public AvailableModel defaultModel() {
+        return defaultModel;
+    }
+
+    /**
+     * Resolves the auto/default selection from preferences and the current
+     * model pool. Called by {@link #reload(Preferences)} and
+     * {@link #defaultModel(AvailableModel)} to keep the cached
+     * {@link #defaultModel} field in sync.
+     * @return the default entry, or null when the pool is empty.
+     */
+    private AvailableModel computeDefaultModel() {
         if (models.isEmpty()) {
             return null;
         }
@@ -230,6 +243,7 @@ public final class LlmServices {
                 p.put(SettingsDialog.DEFAULT_MODEL_KEY, value);
             }
         }
+        defaultModel = computeDefaultModel();
     }
 
     /**
