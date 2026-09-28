@@ -730,14 +730,21 @@ public class Workspace extends JSplitPane {
 
     /**
      * Called on the Swing EDT when an external change to {@code path} has
-     * been detected.  Presents a confirm dialog and reloads the file if
-     * the user agrees.
+     * been detected.  If the tab has no unsaved edits, the file is reloaded
+     * silently; otherwise the user is asked, because reloading would discard
+     * their in-memory work.
      *
      * @param path the changed file path (absolute, normalized).
      */
     private void handleFileChanged(Path path) {
         OpenFile openFile = openFileIndex.get(path.toString());
         if (openFile == null) return;
+
+        // No in-memory edits to lose, so adopt the disk version without asking.
+        if (openFile.isSaved()) {
+            reloadFile(openFile, path);
+            return;
+        }
 
         String filename = path.getFileName().toString();
 
@@ -766,6 +773,8 @@ public class Workspace extends JSplitPane {
             // Record updated mod time so the next save isn't mistaken for external change.
             fileWatcher.recordModTime(path);
             logger.info("Reloaded file from disk: {}", path);
+            SmileStudio.setStatus(this, MessageFormat.format(
+                    bundle.getString("ExternalChangeReloaded"), path.getFileName()));
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this,
                     "Failed to reload: " + ex.getMessage(),
