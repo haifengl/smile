@@ -58,4 +58,99 @@ class LlmServicesTest {
             prefs.removeNode();
         }
     }
+
+    @Test
+    void defaultModel_withPreference_returnsConfiguredModel() throws Exception {
+        Preferences prefs = Preferences.userRoot().node("smile/studio/LlmServicesTest");
+        try {
+            prefs.clear();
+            prefs.put(SettingsDialog.AI_SERVICE_KEY, "OpenAI");
+            prefs.put("openaiApiKey", "test-key");
+            prefs.put("openaiModel", "gpt-6-sol, gpt-6-astra");
+            prefs.put("anthropicApiKey", "anth-key");
+            prefs.put("anthropicModel", "claude-sonnet-5");
+            prefs.put(SettingsDialog.DEFAULT_MODEL_KEY, "claude-sonnet-5");
+
+            LlmServices services = new LlmServices();
+            services.reload(prefs);
+
+            assertEquals("claude-sonnet-5", services.defaultModel().model().id());
+            assertEquals("anthropic", services.defaultModel().serviceKey());
+        } finally {
+            prefs.removeNode();
+        }
+    }
+
+    @Test
+    void defaultModel_withServicePrefix_returnsConfiguredModel() throws Exception {
+        Preferences prefs = Preferences.userRoot().node("smile/studio/LlmServicesTest");
+        try {
+            prefs.clear();
+            prefs.put(SettingsDialog.AI_SERVICE_KEY, "OpenAI");
+            prefs.put("openaiApiKey", "test-key");
+            prefs.put("openaiModel", "gpt-6-sol");
+            prefs.put("anthropicApiKey", "anth-key");
+            prefs.put("anthropicModel", "claude-sonnet-5");
+            prefs.put(SettingsDialog.DEFAULT_MODEL_KEY, "anthropic:claude-sonnet-5");
+
+            LlmServices services = new LlmServices();
+            services.reload(prefs);
+
+            assertEquals("claude-sonnet-5", services.defaultModel().model().id());
+            assertEquals("anthropic", services.defaultModel().serviceKey());
+        } finally {
+            prefs.removeNode();
+        }
+    }
+
+    @Test
+    void defaultModel_withInvalidPreference_fallsBackToHeuristic() throws Exception {
+        Preferences prefs = Preferences.userRoot().node("smile/studio/LlmServicesTest");
+        try {
+            prefs.clear();
+            prefs.put(SettingsDialog.AI_SERVICE_KEY, "OpenAI");
+            prefs.put("openaiApiKey", "test-key");
+            prefs.put("openaiModel", "gpt-6-sol, gpt-6-astra");
+            prefs.put(SettingsDialog.DEFAULT_MODEL_KEY, "non-existent-model");
+
+            LlmServices services = new LlmServices();
+            services.reload(prefs);
+
+            assertEquals("gpt-6-sol", services.defaultModel().model().id());
+        } finally {
+            prefs.removeNode();
+        }
+    }
+
+    @Test
+    void defaultModel_setter_updatesPreferenceAndRemovesOnNull() throws Exception {
+        Preferences prefs = Preferences.userRoot().node("smile/studio/LlmServicesTest");
+        try {
+            prefs.clear();
+            prefs.put(SettingsDialog.AI_SERVICE_KEY, "OpenAI");
+            prefs.put("openaiApiKey", "test-key");
+            prefs.put("openaiModel", "gpt-6-sol, gpt-6-astra");
+            prefs.put("anthropicApiKey", "anth-key");
+            prefs.put("anthropicModel", "claude-sonnet-5");
+
+            LlmServices services = new LlmServices();
+            services.reload(prefs);
+
+            // Initially fallback heuristic
+            assertEquals("gpt-6-sol", services.defaultModel().model().id());
+
+            // Set default model
+            var claude = services.find("anthropic", "claude-sonnet-5").orElseThrow();
+            services.defaultModel(claude);
+            assertEquals("claude-sonnet-5", prefs.get(SettingsDialog.DEFAULT_MODEL_KEY, null));
+            assertEquals("claude-sonnet-5", services.defaultModel().model().id());
+
+            // Remove default model preference
+            services.defaultModel(null);
+            assertNull(prefs.get(SettingsDialog.DEFAULT_MODEL_KEY, null));
+            assertEquals("gpt-6-sol", services.defaultModel().model().id());
+        } finally {
+            prefs.removeNode();
+        }
+    }
 }
