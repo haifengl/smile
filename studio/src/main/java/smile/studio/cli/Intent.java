@@ -69,7 +69,12 @@ public class Intent extends JPanel {
     private final Map<String, LlmServices.AvailableModel> modelByLabel = new LinkedHashMap<>();
     private final JLabel reasoningLabel = new JLabel(bundle.getString("ReasoningEffort"));
     private final JComboBox<String> effortComboBox;
-    private final JLabel status = new JLabel();
+    private final JLabel status = new JLabel() {
+        @Override
+        public Dimension getMinimumSize() {
+            return new Dimension(0, super.getMinimumSize().height);
+        }
+    };
     // Right side for status and stop button.
     private final JPanel progressPane = new JPanel(new FlowLayout(FlowLayout.RIGHT));
     private final JProgressBar progress = new JProgressBar();
@@ -139,17 +144,19 @@ public class Intent extends JPanel {
         editor.setBackground(inputPaneColor);
 
         status.setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
+        status.setHorizontalAlignment(SwingConstants.LEFT);
         stopButton.setVisible(false);
         stopButton.setToolTipText(bundle.getString("Stop"));
         progress.putClientProperty("JProgressBar.largeHeight", true);
+        progressPane.setOpaque(false);
         progressPane.add(progress);
         progressPane.add(Box.createHorizontalStrut(10));
         progressPane.add(stopButton);
 
         initIntentTypeComboBox();
-        footer.setLayout(new BoxLayout(footer, BoxLayout.X_AXIS));
+        footer.setLayout(new BorderLayout());
         footer.setOpaque(false);
-        footer.add(Box.createHorizontalStrut(indicator.getPreferredSize().width));
+        footer.setBorder(BorderFactory.createEmptyBorder(0, indicator.getPreferredSize().width, 0, 0));
 
         controlPane.setBackground(inputPaneColor);
         controlPane.add(intentTypeComboBox);
@@ -159,9 +166,8 @@ public class Intent extends JPanel {
         controlPane.add(Box.createHorizontalStrut(12));
         controlPane.add(reasoningLabel);
         controlPane.add(effortComboBox);
-        footer.add(controlPane);
-        footer.add(status);
-        footer.add(Box.createHorizontalGlue());
+        footer.add(controlPane, BorderLayout.WEST);
+        footer.add(status, BorderLayout.CENTER);
 
         inputPane.setBackground(inputPaneColor);
         inputPane.setBorder(createRoundBorder());
@@ -426,6 +432,9 @@ public class Intent extends JPanel {
      */
     public <T> void setStopAction(Callable<T> stop) {
         stopButton.setVisible(true);
+        progressPane.revalidate();
+        footer.revalidate();
+        footer.repaint();
         stopButton.addActionListener(e -> {
             try {
                 stop.call();
@@ -646,11 +655,14 @@ public class Intent extends JPanel {
             controlPane.setBackground(inputPaneColor);
             intentTypeComboBox.setBackground(inputPaneColor);
             effortComboBox.setBackground(inputPaneColor);
+            footer.add(controlPane, BorderLayout.WEST);
         } else {
             editor.setBackground(getBackground());
             inputPane.setBackground(getBackground());
             footer.remove(controlPane);
         }
+        footer.revalidate();
+        footer.repaint();
     }
 
     /**
@@ -669,6 +681,7 @@ public class Intent extends JPanel {
     public void setInputFont(Font font) {
         indicator.setFont(font);
         editor.setFont(font);
+        footer.setBorder(BorderFactory.createEmptyBorder(0, indicator.getPreferredSize().width, 0, 0));
     }
 
     /**
@@ -691,7 +704,9 @@ public class Intent extends JPanel {
      * Sets the status label.
      */
     public void setStatus(String text) {
-        status.setText(text);
+        String msg = text == null ? "" : text.strip().replaceAll("\\s+", " ");
+        status.setText(msg);
+        status.setToolTipText(text != null && !text.isBlank() ? text : null);
     }
 
     /**
@@ -701,15 +716,14 @@ public class Intent extends JPanel {
         if (on) {
             progress.setIndeterminate(true);
             progress.setEnabled(true);
-            footer.add(progressPane);
+            footer.add(progressPane, BorderLayout.EAST);
         } else {
             progress.setIndeterminate(false);
             progress.setEnabled(false);
             footer.remove(progressPane);
-            // Repaint the footer to reflect the removal of the progress bar.
-            // This is necessary as Swing is optimized for lazy evaluation.
-            footer.repaint();
         }
+        footer.revalidate();
+        footer.repaint();
     }
 
     /**
