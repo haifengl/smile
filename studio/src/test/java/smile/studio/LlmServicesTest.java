@@ -16,8 +16,8 @@ class LlmServicesTest {
     @Test
     void parseModelIds_splitsCommaSeparatedList() {
         assertEquals(
-                List.of("gpt-5.4", "claude-sonnet-5", "qwen3.8"),
-                LlmServices.parseModelIds("gpt-5.4, claude-sonnet-5, qwen3.8"));
+                List.of("gpt-6-astra", "claude-sonnet-5", "qwen3.8"),
+                LlmServices.parseModelIds("gpt-6-astra, claude-sonnet-5, qwen3.8"));
     }
 
     @Test
@@ -41,7 +41,7 @@ class LlmServicesTest {
             prefs.clear();
             prefs.put(SettingsDialog.AI_SERVICE_KEY, "OpenAI");
             prefs.put("openaiApiKey", "test-key");
-            prefs.put("openaiModel", "gpt-5.4-mini, gpt-5.4");
+            prefs.put("openaiModel", "gpt-6-sol, gpt-6-astra");
             prefs.put("anthropicApiKey", "anth-key");
             prefs.put("anthropicModel", "claude-sonnet-5");
 
@@ -49,11 +49,11 @@ class LlmServicesTest {
             services.reload(prefs);
 
             assertEquals(3, services.availableModels().size());
-            assertEquals("gpt-5.4-mini", services.defaultModel().model().id());
+            assertEquals("gpt-6-sol", services.defaultModel().model().id());
             assertNotNull(services.defaultClient());
             assertTrue(services.client("anthropic").isPresent());
-            assertTrue(services.find("openai", "gpt-5.4").isPresent());
-            assertTrue(services.find("anthropic", "gpt-5.4").isEmpty());
+            assertTrue(services.find("openai", "gpt-6-astra").isPresent());
+            assertTrue(services.find("anthropic", "gpt-6-astra").isEmpty());
         } finally {
             prefs.removeNode();
         }

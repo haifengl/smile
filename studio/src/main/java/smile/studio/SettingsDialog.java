@@ -17,6 +17,7 @@
 package smile.studio;
 
 import com.formdev.flatlaf.*;
+import ioa.llm.Model;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
@@ -24,6 +25,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.*;
 import java.util.prefs.Preferences;
+import java.util.stream.Stream;
 
 /**
  * The application preference and configuration dialog.
@@ -42,9 +44,24 @@ public class SettingsDialog extends JDialog implements ActionListener {
     // Interactions API is not yet supported on Vertex
     private static final String[] aiServiceOptions = {"OpenAI", "Azure OpenAI", "Anthropic", "Google Gemini", "Google Gemini Enterprise", "Chat Completions Compatible"};
     private static final String[] aiServiceKeys = {"openai", "azureOpenAI", "anthropic", "googleGemini", "googleEnterprise", "chatCompletions"};
-    private static final String[] openaiModels = {"gpt-6-astra", "gpt-6-sol", "gpt-6-luna"};
-    private static final String[] anthropicModels = {"claude-fable-5-1", "claude-opus-5-5", "claude-sonnet-5", "claude-haiku-4-5-20251001"};
-    private static final String[] geminiModels = {"gemini-3.8-flash", "gemini-3.5-flash-lite"};
+    /** OpenAI / Azure — ids from {@link Model} family {@code gpt}. */
+    private static final String[] openaiModels = modelIds("gpt");
+    /** Anthropic — ids from {@link Model} family {@code claude}. */
+    private static final String[] anthropicModels = modelIds("claude");
+    /** Gemini — ids from {@link Model} family {@code gemini}. */
+    private static final String[] geminiModels = modelIds("gemini");
+    /**
+     * Chat Completions–compatible / open-weight hosts — non-frontier families
+     * registered in {@link Model}.
+     */
+    private static final String[] otherModels = Stream.of("qwen", "deepseek", "glm", "kimi", "minimax")
+            .flatMap(family -> Model.family(family).stream())
+            .map(Model::id)
+            .toArray(String[]::new);
+
+    private static String[] modelIds(String family) {
+        return Model.family(family).stream().map(Model::id).toArray(String[]::new);
+    }
 
     private static final String[] openaiBaseUrls = { "https://api.openai.com/v1" };
     private static final String[] anthropicBaseUrls = { "https://api.anthropic.com" };
@@ -59,7 +76,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
             "https://api.orcarouter.ai/v1", // OrcaRouter
             "https://openrouter.ai/api/v1"  // OpenRouter
     };
-    private static final String[] otherModels = {"qwen3.8-27b", "minimax-m2.7", "kimi-k3", "deepseek-v4.1-flash"};
     private final JComboBox<String> themeCombo = new JComboBox<>(UI_THEMES);
     private final JComboBox<String> aiServiceCombo = new JComboBox<>(aiServiceOptions);;
     private final CardLayout cardLayout = new CardLayout();
