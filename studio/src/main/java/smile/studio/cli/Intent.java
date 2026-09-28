@@ -50,6 +50,8 @@ import static smile.studio.cli.IntentType.*;
 public class Intent extends JPanel {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), Locale.getDefault());
     private static final Color borderColor = Palette.web("#8dd4e8");
+    /** Emoji prefix (U+1F916 robot face) for status messages originating from agents. */
+    static final String AGENT_STATUS_PREFIX = "\uD83E\uDD16 ";
     /** The scroll unit increment in pixels for the subagent output scrollbars. */
     private static final int SCROLL_UNIT_INCREMENT = 18;
     // Input pane
@@ -95,17 +97,23 @@ public class Intent extends JPanel {
         setBorder(new EmptyBorder(8,8,8,8));
 
         effortComboBox = initEffortComboBox(cli);
-        effortComboBox.setSelectedItem(cli.getReasoningEffort());
+        if (cli != null) {
+            effortComboBox.setSelectedItem(cli.getReasoningEffort());
+        }
         initModelComboBox(cli);
         initInputPane();
-        initActionMap(cli);
+        if (cli != null) {
+            initActionMap(cli);
+        }
 
         outputPane.setLayout(new BoxLayout(outputPane, BoxLayout.Y_AXIS));
         outputPane.add(output);
 
         add(inputPane, BorderLayout.CENTER);
         add(outputPane, BorderLayout.SOUTH);
-        cli.hintWindow().addEditor(editor);
+        if (cli != null && cli.hintWindow() != null) {
+            cli.hintWindow().addEditor(editor);
+        }
 
         // Listen for global Look and Feel changes
         UIManager.addPropertyChangeListener(evt -> {
@@ -187,7 +195,7 @@ public class Intent extends JPanel {
         }
 
         effortComboBox.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
+            if (e.getStateChange() == ItemEvent.SELECTED && cli != null) {
                 cli.setReasoningEffort((String) effortComboBox.getSelectedItem());
             }
         });
@@ -225,7 +233,9 @@ public class Intent extends JPanel {
             } else {
                 selectedModel = modelByLabel.get(label);
             }
-            refillEffortLevels(cli.getReasoningEffort());
+            if (cli != null) {
+                refillEffortLevels(cli.getReasoningEffort());
+            }
             modelComboBox.repaint();
         });
         refreshModels();
@@ -701,12 +711,28 @@ public class Intent extends JPanel {
     }
 
     /**
-     * Sets the status label.
+     * Sets the status label and updates the status bar in SmileStudio.
+     *
+     * @param text the status message text.
      */
     public void setStatus(String text) {
         String msg = text == null ? "" : text.strip().replaceAll("\\s+", " ");
         status.setText(msg);
         status.setToolTipText(text != null && !text.isBlank() ? text : null);
+        if (!msg.isEmpty()) {
+            String statusText = msg.startsWith(AGENT_STATUS_PREFIX) ? msg : AGENT_STATUS_PREFIX + msg;
+            SmileStudio.setStatus(this, statusText);
+        } else {
+            SmileStudio.setStatus(this, "");
+        }
+    }
+
+    /**
+     * Returns the status label.
+     * @return the status label.
+     */
+    public JLabel status() {
+        return status;
     }
 
     /**
