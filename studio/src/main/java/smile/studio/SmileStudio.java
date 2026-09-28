@@ -232,9 +232,24 @@ public class SmileStudio extends JFrame implements SearchListener {
      * @param status the status message.
      */
     public static void setStatus(Component comp, String status) {
-        if (SwingUtilities.getWindowAncestor(comp) instanceof SmileStudio studio) {
-            studio.statusBar.setStatus(status);
+        Runnable task = () -> {
+            if (SwingUtilities.getWindowAncestor(comp) instanceof SmileStudio studio) {
+                studio.statusBar.setStatus(status);
+            }
+        };
+        if (SwingUtilities.isEventDispatchThread()) {
+            task.run();
+        } else {
+            SwingUtilities.invokeLater(task);
         }
+    }
+
+    /**
+     * Returns the status bar.
+     * @return the status bar.
+     */
+    public StatusBar statusBar() {
+        return statusBar;
     }
 
     /**

@@ -102,4 +102,12 @@ public class StatusBar extends JPanel {
         status.setText(message);
         timer.restart();
     }
+
+    /**
+     * Returns the current status message.
+     * @return the status message.
+     */
+    public String getStatus() {
+        return status.getText();
+    }
 }
