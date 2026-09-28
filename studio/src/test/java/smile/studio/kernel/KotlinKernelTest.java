@@ -123,6 +123,26 @@ public class KotlinKernelTest {
     }
 
     @Test
+    public void testIsScalaClasspathEntry() {
+        System.out.println("KotlinKernel: isScalaClasspathEntry identifies Scala entries");
+        assertTrue(KotlinKernel.isScalaClasspathEntry("com.github.haifengl.smile-scala-6.3.0.jar"));
+        assertTrue(KotlinKernel.isScalaClasspathEntry("smile-scala_3-6.3.0.jar"));
+        assertTrue(KotlinKernel.isScalaClasspathEntry("smile-scala-6.3.0.jar"));
+        assertTrue(KotlinKernel.isScalaClasspathEntry("C:\\code\\smile\\target\\out\\jvm\\scala-3.9.0\\smile-scala\\classes"));
+        assertTrue(KotlinKernel.isScalaClasspathEntry("C:/code/smile/scala/build/classes/scala/main"));
+        assertTrue(KotlinKernel.isScalaClasspathEntry("/home/user/smile/scala/bin/classes"));
+
+        assertFalse(KotlinKernel.isScalaClasspathEntry("com.github.haifengl.smile-kotlin-6.3.0.jar"));
+        assertFalse(KotlinKernel.isScalaClasspathEntry("smile-kotlin-6.3.0.jar"));
+        assertFalse(KotlinKernel.isScalaClasspathEntry("scala3-library_3-3.9.0.jar"));
+        assertFalse(KotlinKernel.isScalaClasspathEntry("scala-library-2.13.18.jar"));
+        assertFalse(KotlinKernel.isScalaClasspathEntry("scala-logging_3-3.9.6.jar"));
+        assertFalse(KotlinKernel.isScalaClasspathEntry("kotlin-stdlib-2.4.20.jar"));
+        assertFalse(KotlinKernel.isScalaClasspathEntry(null));
+        assertFalse(KotlinKernel.isScalaClasspathEntry(""));
+    }
+
+    @Test
     public void testSmileClassesAreResolvable() {
         System.out.println("KotlinKernel: the SMILE libraries are on the script classpath");
         // The scripting engine derives its classpath from the hosting
@@ -145,6 +165,18 @@ public class KotlinKernelTest {
         assertTrue(ok, "Script failed:\n" + output.buffer());
         Object result = kernel.eval("df.nrow()");
         assertEquals(3, result);
+    }
+
+    @Test
+    public void testSmileReadCsvInScript() {
+        System.out.println("KotlinKernel: smile.read.csv can be invoked in a script");
+        output.clear();
+        boolean ok = evalSucceeds("""
+                val df = smile.read.csv(smile.io.Paths.getTestData("classification/breastcancer.csv").toString())
+                """);
+        assertTrue(ok, "Script failed:\n" + output.buffer());
+        Object result = kernel.eval("df.nrow()");
+        assertEquals(569, result);
     }
 
     /**

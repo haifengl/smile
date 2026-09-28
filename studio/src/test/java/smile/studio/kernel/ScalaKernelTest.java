@@ -159,6 +159,25 @@ public class ScalaKernelTest {
     // ------------------------------------------------------------------
 
     @Test
+    public void testIsKotlinClasspathEntry() {
+        System.out.println("ScalaKernel: isKotlinClasspathEntry identifies Kotlin entries");
+        assertTrue(ScalaKernel.isKotlinClasspathEntry("com.github.haifengl.smile-kotlin-6.3.0.jar"));
+        assertTrue(ScalaKernel.isKotlinClasspathEntry("smile-kotlin-6.3.0.jar"));
+        assertTrue(ScalaKernel.isKotlinClasspathEntry("C:\\code\\smile\\target\\out\\jvm\\u\\smile-kotlin\\classes"));
+        assertTrue(ScalaKernel.isKotlinClasspathEntry("C:/code/smile/kotlin/build/classes/kotlin/main"));
+        assertTrue(ScalaKernel.isKotlinClasspathEntry("/home/user/smile/kotlin/bin/classes"));
+
+        assertFalse(ScalaKernel.isKotlinClasspathEntry("com.github.haifengl.smile-scala-6.3.0.jar"));
+        assertFalse(ScalaKernel.isKotlinClasspathEntry("smile-scala_3-6.3.0.jar"));
+        assertFalse(ScalaKernel.isKotlinClasspathEntry("kotlin-stdlib-2.4.20.jar"));
+        assertFalse(ScalaKernel.isKotlinClasspathEntry("kotlin-reflect-1.9.25.jar"));
+        assertFalse(ScalaKernel.isKotlinClasspathEntry("kotlin-scripting-jvm-2.4.20.jar"));
+        assertFalse(ScalaKernel.isKotlinClasspathEntry("scala3-library_3-3.9.0.jar"));
+        assertFalse(ScalaKernel.isKotlinClasspathEntry(null));
+        assertFalse(ScalaKernel.isKotlinClasspathEntry(""));
+    }
+
+    @Test
     public void testSmileClassesAreResolvable() {
         System.out.println("ScalaKernel: the SMILE libraries are on the script classpath");
         // The kernel passes the application classpath to the REPL, so the
@@ -174,6 +193,14 @@ public class ScalaKernelTest {
         assertTrue(evalSucceeds(
                 "val df = DataFrame.of(Array(Array(1.0, 2.0), Array(3.0, 4.0)), \"x\", \"y\")"));
         assertTrue(evalSucceeds("df.nrow()"));
+    }
+
+    @Test
+    public void testSmileReadCsvInScript() {
+        System.out.println("ScalaKernel: smile.read.csv can be invoked in a script");
+        assertTrue(evalSucceeds(
+                "val df = smile.read.csv(smile.io.Paths.getTestData(\"mnist/mnist2500_X.txt\").toString, delimiter=\" \", header=false)"));
+        assertTrue(evalSucceeds("df.nrow() == 2500"));
     }
 
     // ------------------------------------------------------------------

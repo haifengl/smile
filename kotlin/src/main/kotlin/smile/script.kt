@@ -16,7 +16,12 @@
  */
 package smile.studio.kernel
 
+import java.io.File
 import java.lang.reflect.Modifier
+import java.net.URL
+import java.util.Collections
+import java.util.Enumeration
+import java.util.Locale
 import java.util.concurrent.locks.ReentrantReadWriteLock
 import kotlin.reflect.KClass
 import kotlin.script.experimental.api.ScriptCompilationConfiguration
@@ -24,9 +29,11 @@ import kotlin.script.experimental.api.ScriptEvaluationConfiguration
 import kotlin.script.experimental.api.displayName
 import kotlin.script.experimental.api.repl
 import kotlin.script.experimental.api.resultFieldPrefix
+import kotlin.script.experimental.jvm.baseClassLoader
 import kotlin.script.experimental.jvm.defaultJvmScriptingHostConfiguration
-import kotlin.script.experimental.jvm.dependenciesFromCurrentContext
 import kotlin.script.experimental.jvm.jvm
+import kotlin.script.experimental.jvm.updateClasspath
+import kotlin.script.experimental.jvm.util.scriptCompilationClasspathFromContext
 import kotlin.script.experimental.jvmhost.repl.JvmReplCompiler
 import kotlin.script.experimental.jvmhost.repl.JvmReplEvaluator
 import org.jetbrains.kotlin.cli.common.repl.IReplStageState
@@ -63,6 +70,48 @@ data class ScriptResult(
 data class ScriptVariable(val name: String, val typeName: String)
 
 /**
+ * A ClassLoader that delegates to a parent ClassLoader but hides any class
+ * or resource belonging to smile-scala, allowing the Kotlin scripting engine
+ * to resolve smile-kotlin declarations instead.
+ */
+class ScriptBaseClassLoader(
+    parent: ClassLoader,
+    private val filter: (String) -> Boolean = { ScriptRunnerBridge.isScalaClasspathEntry(it) }
+) : ClassLoader(parent) {
+
+    override fun loadClass(name: String, resolve: Boolean): Class<*> {
+        if (!name.startsWith("java.") && !name.startsWith("javax.") && !name.startsWith("kotlin.")) {
+            val resourceName = name.replace('.', '/') + ".class"
+            val url = parent?.getResource(resourceName)
+            if (url != null && filter(url.toString())) {
+                throw ClassNotFoundException(name)
+            }
+        }
+        return super.loadClass(name, resolve)
+    }
+
+    override fun getResource(name: String): URL? {
+        val url = super.getResource(name)
+        if (url != null && filter(url.toString())) {
+            return null
+        }
+        return url
+    }
+
+    override fun getResources(name: String): Enumeration<URL> {
+        val resources = super.getResources(name)
+        val filtered = ArrayList<URL>()
+        while (resources.hasMoreElements()) {
+            val url = resources.nextElement()
+            if (!filter(url.toString())) {
+                filtered.add(url)
+            }
+        }
+        return Collections.enumeration(filtered)
+    }
+}
+
+/**
  * Evaluates Kotlin scripts with the Kotlin scripting host, keeping the state
  * of a session across calls so that successive snippets share declarations.
  *
@@ -77,14 +126,26 @@ data class ScriptVariable(val name: String, val typeName: String)
  *
  * @author Haifeng Li
  */
-class ScriptRunnerBridge {
+class ScriptRunnerBridge @JvmOverloads constructor(
+    classpathFilter: ((File) -> Boolean)? = null
+) {
+    private val scriptBaseClassLoader = ScriptBaseClassLoader(
+        Thread.currentThread().contextClassLoader ?: ScriptRunnerBridge::class.java.classLoader
+    )
+
     /** The compilation configuration shared by all snippets of the session. */
     private val compilationConfiguration: ScriptCompilationConfiguration = ScriptCompilationConfiguration {
         displayName("SMILE Kotlin")
         // Let snippets resolve the classes of the hosting application,
-        // including the SMILE libraries and their dependencies.
+        // including the SMILE libraries and their dependencies, but
+        // excluding smile-scala to avoid package-level shadowing.
         jvm {
-            dependenciesFromCurrentContext(wholeClasspath = true)
+            val filter = classpathFilter ?: { !isScalaClasspathEntry(it) }
+            val classpath = scriptCompilationClasspathFromContext(
+                classLoader = scriptBaseClassLoader,
+                wholeClasspath = true
+            ).filter(filter)
+            updateClasspath(classpath)
         }
         repl {
             // The REPL stores the value of an expression in a synthetic
@@ -95,7 +156,11 @@ class ScriptRunnerBridge {
     }
 
     /** The evaluation configuration shared by all snippets of the session. */
-    private val evaluationConfiguration = ScriptEvaluationConfiguration()
+    private val evaluationConfiguration = ScriptEvaluationConfiguration {
+        jvm {
+            this[baseClassLoader] = scriptBaseClassLoader
+        }
+    }
 
     /** The compiler of the current session, or null when not running. */
     private var compiler: JvmReplCompiler? = null
@@ -238,5 +303,31 @@ class ScriptRunnerBridge {
         private const val FIRST_GENERATION = 1
         /** Matches the synthetic result fields of the REPL, e.g. "res3". */
         private val RESULT_FIELD = Regex("$RESULT_FIELD_PREFIX\\d+")
+
+        /**
+         * Returns true if the given file or directory belongs to smile-scala.
+         */
+        @JvmStatic
+        fun isScalaClasspathEntry(file: File): Boolean = isScalaClasspathEntry(file.path)
+
+        /**
+         * Returns true if the given classpath entry path belongs to smile-scala.
+         */
+        @JvmStatic
+        fun isScalaClasspathEntry(path: String?): Boolean {
+            if (path.isNullOrBlank()) return false
+            var normalized = path.replace('\\', '/')
+            if (normalized.contains("!")) {
+                normalized = normalized.substringBefore("!")
+            }
+            val lower = normalized.lowercase(Locale.ROOT)
+            if (lower.contains("smile-scala")) {
+                return true
+            }
+            if (normalized.matches(Regex("(?i).*/scala/(build/classes|bin|target)(/.*)?"))) {
+                return true
+            }
+            return false
+        }
     }
 }
