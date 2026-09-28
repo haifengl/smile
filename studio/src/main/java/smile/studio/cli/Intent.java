@@ -196,6 +196,19 @@ public class Intent extends JPanel {
             modelComboBox.getComponent(0) instanceof AbstractButton button) {
             button.setVisible(false);
         }
+        modelComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                    int index, boolean isSelected, boolean cellHasFocus) {
+                Component c = super.getListCellRendererComponent(
+                        list, value, index, isSelected, cellHasFocus);
+                if (!(c instanceof JLabel label) || value == null) {
+                    return c;
+                }
+                label.setText(modelItemText(value.toString(), index >= 0));
+                return label;
+            }
+        });
         modelComboBox.addItemListener(e -> {
             if (e.getStateChange() != ItemEvent.SELECTED) {
                 return;
@@ -207,8 +220,38 @@ public class Intent extends JPanel {
                 selectedModel = modelByLabel.get(label);
             }
             refillEffortLevels(cli.getReasoningEffort());
+            modelComboBox.repaint();
         });
         refreshModels();
+    }
+
+    /**
+     * Renders a model combo item. Selected rows get a check mark; the
+     * {@code default} row also shows the resolved model id so the user can see
+     * which model auto-selection uses.
+     */
+    private String modelItemText(String item, boolean inPopup) {
+        String auto = bundle.getString("AutoModel");
+        boolean isAuto = auto.equals(item);
+        boolean checked = isAuto ? selectedModel == null
+                : selectedModel != null && selectedModel.equals(modelByLabel.get(item));
+
+        String display = item;
+        if (isAuto) {
+            var resolved = SmileStudio.llmServices().defaultModel();
+            if (resolved != null) {
+                boolean qualify = modelByLabel.values().stream()
+                        .map(m -> m.model().id()).distinct().count() < modelByLabel.size();
+                display = auto + " · " + resolved.displayLabel(qualify);
+            }
+        }
+
+        // Closed combo: show resolved id on default, no check mark.
+        // Popup list: check mark on the active selection.
+        if (!inPopup) {
+            return isAuto ? display : item;
+        }
+        return (checked ? "✓ " : "   ") + display;
     }
 
     /**
@@ -253,6 +296,10 @@ public class Intent extends JPanel {
         refillEffortLevels(null);
     }
 
+    /**
+     * Refills reasoning effort from the resolved model's catalog entry.
+     * Always includes {@link LLM#DEFAULT_REASONING_EFFORT} first.
+     */
     private void refillEffortLevels(String prefer) {
         String keep = prefer != null ? prefer : (String) effortComboBox.getSelectedItem();
         effortComboBox.removeAllItems();
