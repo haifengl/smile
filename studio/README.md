@@ -297,7 +297,11 @@ Enable **File > Auto Save** to automatically save all open notebooks that have u
 
 ### 5.9 External File Changes
 
-If a file that is open in the notebook is modified by an external process (e.g., git checkout, another editor), Studio detects the change via a background file-watcher and prompts:
+If a file that is open in the notebook is modified by an external process (e.g., git checkout, another editor), Studio detects the change via a background file-watcher.
+
+If the tab has **no unsaved edits**, Studio reloads it from disk immediately and reports the reload in the status bar — there is nothing to lose, so no dialog interrupts you.
+
+If the tab **has unsaved edits**, Studio prompts before discarding them:
 
 > *"'filename' has been changed externally. Reload?"*
 
