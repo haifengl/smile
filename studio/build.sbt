@@ -77,6 +77,10 @@ bashScriptExtraDefines ++= Seq(
   """addJava "-Dscala.repl.autoruncode=${app_home}/predef.sc"""",
   """export PYTHONPATH="${PYTHONPATH}:${app_home}/../lib/ioa-agent-1.0.0.jar"""",
   """export PYTHONUTF8=1""",
+  // Put the launcher's bin directory on PATH, as the .bat launcher does with
+  // %~dp0. ScalaKernel looks up `scala-cli`, which `bin/setup` installs there,
+  // so without this Scala notebooks only work on Windows.
+  """export PATH="${app_home}:${PATH}"""",
   """source "$SMILE_HOME/venv/bin/activate"""",
   """export LD_LIBRARY_PATH=${app_home}/../venv/Lib/site-packages/torch/lib:${app_home}/../venv/Lib/site-packages/onnxruntime/capi:$LD_LIBRARY_PATH"""
 )
