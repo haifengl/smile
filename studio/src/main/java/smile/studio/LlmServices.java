@@ -59,6 +59,7 @@ public final class LlmServices {
     private volatile Map<String, LLM> clients = Map.of();
     private volatile List<AvailableModel> models = List.of();
     private volatile String defaultServiceKey = "";
+    private volatile Preferences prefs;
 
     /**
      * One selectable model bound to the client that serves it.
@@ -89,6 +90,7 @@ public final class LlmServices {
      * @param prefs application preferences.
      */
     public void reload(Preferences prefs) {
+        this.prefs = prefs;
         Map<String, LLM> nextClients = new LinkedHashMap<>();
         List<AvailableModel> nextModels = new ArrayList<>();
 
@@ -162,13 +164,41 @@ public final class LlmServices {
     }
 
     /**
-     * Returns the auto/default selection: first model of the default service,
-     * or the first available model if that service has none.
+     * Returns the auto/default selection: the model configured in preferences
+     * if present and available, or falling back to the first model of the
+     * active/default AI service, or the first available model if that service
+     * has none.
      * @return the default entry, or null when the pool is empty.
      */
     public AvailableModel defaultModel() {
         if (models.isEmpty()) {
             return null;
+        }
+        Preferences p = prefs != null ? prefs : SmileStudio.preferences();
+        if (p != null) {
+            String defaultModelId = p.get(SettingsDialog.DEFAULT_MODEL_KEY, "").trim();
+            if (!defaultModelId.isEmpty()) {
+                String service = null;
+                String modelId = defaultModelId;
+                int sep = defaultModelId.indexOf(':');
+                if (sep < 0) {
+                    sep = defaultModelId.indexOf('/');
+                }
+                if (sep > 0) {
+                    service = defaultModelId.substring(0, sep).trim();
+                    modelId = defaultModelId.substring(sep + 1).trim();
+                }
+                var found = find(service, modelId);
+                if (found.isEmpty() && service == null && !defaultServiceKey.isBlank()) {
+                    found = find(defaultServiceKey, modelId);
+                }
+                if (found.isEmpty()) {
+                    found = find(null, modelId);
+                }
+                if (found.isPresent()) {
+                    return found.get();
+                }
+            }
         }
         if (!defaultServiceKey.isBlank()) {
             for (AvailableModel m : models) {
@@ -178,6 +208,28 @@ public final class LlmServices {
             }
         }
         return models.getFirst();
+    }
+
+    /**
+     * Sets the default model in preferences.
+     * @param model the default model, or null to remove the preference and
+     *              fall back to the default service heuristic.
+     */
+    public void defaultModel(AvailableModel model) {
+        Preferences p = prefs != null ? prefs : SmileStudio.preferences();
+        if (p != null) {
+            if (model == null) {
+                p.remove(SettingsDialog.DEFAULT_MODEL_KEY);
+            } else {
+                boolean duplicate = models.stream()
+                        .filter(m -> m.model().id().equals(model.model().id()))
+                        .count() > 1;
+                String value = duplicate
+                        ? model.serviceKey() + ":" + model.model().id()
+                        : model.model().id();
+                p.put(SettingsDialog.DEFAULT_MODEL_KEY, value);
+            }
+        }
     }
 
     /**
@@ -304,5 +356,3 @@ public final class LlmServices {
         };
     }
 }
-
-

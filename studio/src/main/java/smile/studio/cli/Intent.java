@@ -35,6 +35,7 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import ioa.llm.tool.Question;
 import smile.plot.swing.Palette;
 import smile.studio.LlmServices;
+import smile.studio.SettingsDialog;
 import smile.studio.SmileStudio;
 import smile.studio.text.Markdown;
 import smile.studio.text.Monospaced;
@@ -69,6 +70,8 @@ public class Intent extends JPanel {
     /** Null means auto/default; otherwise the explicit selection. */
     private LlmServices.AvailableModel selectedModel;
     private final Map<String, LlmServices.AvailableModel> modelByLabel = new LinkedHashMap<>();
+    /** Flag to suppress ItemListener during programmatic combo updates. */
+    private boolean updatingModelComboBox;
     private final JLabel reasoningLabel = new JLabel(bundle.getString("ReasoningEffort"));
     private final JComboBox<String> effortComboBox;
     private final JLabel status = new JLabel() {
@@ -224,14 +227,16 @@ public class Intent extends JPanel {
             }
         });
         modelComboBox.addItemListener(e -> {
-            if (e.getStateChange() != ItemEvent.SELECTED) {
+            if (e.getStateChange() != ItemEvent.SELECTED || updatingModelComboBox) {
                 return;
             }
             String label = (String) modelComboBox.getSelectedItem();
             if (label == null || bundle.getString("AutoModel").equals(label)) {
                 selectedModel = null;
+                SmileStudio.llmServices().defaultModel(null);
             } else {
                 selectedModel = modelByLabel.get(label);
+                SmileStudio.llmServices().defaultModel(selectedModel);
             }
             if (cli != null) {
                 refillEffortLevels(cli.getReasoningEffort());
@@ -275,41 +280,59 @@ public class Intent extends JPanel {
      * Keeps the current selection when it is still available.
      */
     public void refreshModels() {
-        String previous = selectedModel == null
-                ? bundle.getString("AutoModel")
-                : selectedModel.model().id();
-        String previousService = selectedModel == null ? null : selectedModel.serviceKey();
+        updatingModelComboBox = true;
+        try {
+            String previous = selectedModel == null
+                    ? null
+                    : selectedModel.model().id();
+            String previousService = selectedModel == null ? null : selectedModel.serviceKey();
 
-        modelComboBox.removeAllItems();
-        modelByLabel.clear();
-        modelComboBox.addItem(bundle.getString("AutoModel"));
+            modelComboBox.removeAllItems();
+            modelByLabel.clear();
+            modelComboBox.addItem(bundle.getString("AutoModel"));
 
-        var available = SmileStudio.llmServices().availableModels();
-        boolean qualify = available.stream().map(m -> m.model().id()).distinct().count()
-                < available.size();
-        for (var entry : available) {
-            String label = entry.displayLabel(qualify);
-            modelByLabel.put(label, entry);
-            modelComboBox.addItem(label);
-        }
+            var available = SmileStudio.llmServices().availableModels();
+            boolean qualify = available.stream().map(m -> m.model().id()).distinct().count()
+                    < available.size();
+            for (var entry : available) {
+                String label = entry.displayLabel(qualify);
+                modelByLabel.put(label, entry);
+                modelComboBox.addItem(label);
+            }
 
-        String restore = bundle.getString("AutoModel");
-        if (previousService != null) {
-            for (var e : modelByLabel.entrySet()) {
-                if (e.getValue().serviceKey().equals(previousService)
-                        && e.getValue().model().id().equals(previous)) {
-                    restore = e.getKey();
-                    break;
+            String restore = bundle.getString("AutoModel");
+            if (previousService != null && previous != null) {
+                for (var e : modelByLabel.entrySet()) {
+                    if (e.getValue().serviceKey().equals(previousService)
+                            && e.getValue().model().id().equals(previous)) {
+                        restore = e.getKey();
+                        break;
+                    }
+                }
+            } else {
+                String defaultModelPref = SmileStudio.preferences().get(SettingsDialog.DEFAULT_MODEL_KEY, "").trim();
+                if (!defaultModelPref.isEmpty()) {
+                    var def = SmileStudio.llmServices().defaultModel();
+                    if (def != null) {
+                        for (var e : modelByLabel.entrySet()) {
+                            if (e.getValue().equals(def)) {
+                                restore = e.getKey();
+                                break;
+                            }
+                        }
+                    }
                 }
             }
+            modelComboBox.setSelectedItem(restore);
+            if (bundle.getString("AutoModel").equals(restore)) {
+                selectedModel = null;
+            } else {
+                selectedModel = modelByLabel.get(restore);
+            }
+            refillEffortLevels(null);
+        } finally {
+            updatingModelComboBox = false;
         }
-        modelComboBox.setSelectedItem(restore);
-        if (bundle.getString("AutoModel").equals(restore)) {
-            selectedModel = null;
-        } else {
-            selectedModel = modelByLabel.get(restore);
-        }
-        refillEffortLevels(null);
     }
 
     /**

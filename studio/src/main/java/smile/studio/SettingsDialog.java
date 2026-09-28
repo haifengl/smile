@@ -37,6 +37,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SettingsDialog.class.getName(), Locale.getDefault());
     public static final String AI_SERVICE_KEY = "aiService";
     public static final String UI_THEME_KEY = "uiTheme";
+    public static final String DEFAULT_MODEL_KEY = "defaultModel";
     private static final String API_KEY = "ApiKey";
     private static final String BASE_URL = "BaseUrl";
     private static final String MODEL = "Model";
