@@ -34,6 +34,7 @@ import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Scala code execution engine.
@@ -83,6 +84,8 @@ public class ScalaKernel extends Kernel<String> {
 
     /** How long to wait for the first prompt, including compiler download. */
     private static final long STARTUP_TIMEOUT_MS = 10 * 60 * 1000L;
+    /** How long to wait for a prompt before treating an intermediate line as continuation. */
+    private static final long CONTINUATION_TIMEOUT_MS = 1000L;
     /** How long to wait for a prompt before treating the line as incomplete. */
     private static final long EVAL_TIMEOUT_MS = 3 * 60 * 1000L;
 
@@ -127,8 +130,11 @@ public class ScalaKernel extends Kernel<String> {
                 command.add("--classpath");
                 command.add(classpath);
             }
-            command.add("--java-opt");
-            command.add("-Dsmile.home=" + System.getProperty("smile.home", "."));
+            String home = System.getProperty("smile.home");
+            if (home != null && !home.isBlank()) {
+                command.add("--java-opt");
+                command.add("-Dsmile.home=" + home);
+            }
 
             ProcessBuilder builder = new ProcessBuilder(command);
             // scala-cli draws progress bars and JLine may probe the terminal;
@@ -224,7 +230,8 @@ public class ScalaKernel extends Kernel<String> {
 
         for (int i = 0; i < lines.size(); i++) {
             sendLine(lines.get(i));
-            String response = awaitQuietly(EVAL_TIMEOUT_MS);
+            long timeout = (i == lines.size() - 1) ? EVAL_TIMEOUT_MS : CONTINUATION_TIMEOUT_MS;
+            String response = awaitQuietly(timeout);
             if (response == null) {
                 if (i == lines.size() - 1) {
                     // The last line never produced a prompt: the code is
@@ -456,7 +463,9 @@ public class ScalaKernel extends Kernel<String> {
             loader = loader.getParent();
         }
 
-        return String.join(File.pathSeparator, entries);
+        return entries.stream()
+                .filter(entry -> !isKotlinClasspathEntry(entry))
+                .collect(Collectors.joining(File.pathSeparator));
     }
 
     /**
@@ -468,7 +477,9 @@ public class ScalaKernel extends Kernel<String> {
     private void addClasspathEntry(Set<String> entries, String entry) {
         if (entry == null || entry.isBlank()) return;
         if (!entry.endsWith("*")) {
-            entries.add(entry);
+            if (!isKotlinClasspathEntry(entry)) {
+                entries.add(entry);
+            }
             return;
         }
 
@@ -479,11 +490,33 @@ public class ScalaKernel extends Kernel<String> {
         try (var jars = Files.list(directory)) {
             jars.filter(p -> p.toString().endsWith(".jar"))
                 .map(Path::toString)
+                .filter(path -> !isKotlinClasspathEntry(path))
                 .sorted()
                 .forEach(entries::add);
         } catch (IOException ex) {
             logger.warn("Failed to expand classpath wildcard {}: {}", entry, ex.getMessage());
         }
+    }
+
+    /**
+     * Returns true if the given classpath entry path belongs to smile-kotlin.
+     * @param path the classpath entry path.
+     * @return true if the entry belongs to smile-kotlin.
+     */
+    public static boolean isKotlinClasspathEntry(String path) {
+        if (path == null || path.isBlank()) return false;
+        String normalized = path.replace('\\', '/');
+        if (normalized.contains("!")) {
+            normalized = normalized.substring(0, normalized.indexOf('!'));
+        }
+        String lower = normalized.toLowerCase(Locale.ROOT);
+        if (lower.contains("smile-kotlin")) {
+            return true;
+        }
+        if (normalized.matches("(?i).*/kotlin/(build/classes|bin|target)(/.*)?")) {
+            return true;
+        }
+        return false;
     }
 
     /**

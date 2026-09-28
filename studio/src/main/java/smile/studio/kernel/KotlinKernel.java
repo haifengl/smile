@@ -134,4 +134,13 @@ public class KotlinKernel extends Kernel<ScriptResult> {
                 .map(v -> new Variable(v.name(), v.typeName()))
                 .toList();
     }
+
+    /**
+     * Returns true if the given classpath entry path belongs to smile-scala.
+     * @param path the classpath entry path.
+     * @return true if the entry belongs to smile-scala.
+     */
+    public static boolean isScalaClasspathEntry(String path) {
+        return ScriptRunnerBridge.isScalaClasspathEntry(path);
+    }
 }
