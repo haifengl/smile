@@ -22,6 +22,7 @@ import java.util.ResourceBundle;
 import org.fife.rsta.ui.search.SearchListener;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
+import smile.studio.kernel.ScalaKernel;
 import smile.studio.workspace.OpenFile;
 
 /**
@@ -46,6 +47,10 @@ public class SearchResourceBundleTest {
     /** Keys the Find and Replace menu reads at runtime. */
     private static final List<String> REQUIRED_KEYS = List.of(
             "FindMenu", "Search", "NoActiveFile", "Find", "Replace");
+
+    /** Keys the Scala kernel reads when it fails to start scala-cli. */
+    private static final List<String> SCALA_KERNEL_KEYS = List.of(
+            "ScalaCliInstallTitle", "ScalaCliInstallMessage");
 
     @Test
     public void testBaseBundleHasSearchKeys() {
@@ -76,5 +81,21 @@ public class SearchResourceBundleTest {
         System.out.println("OpenFile: is a SearchListener so the Find menu can route to any tab");
         assertTrue(SearchListener.class.isAssignableFrom(OpenFile.class),
                 "OpenFile must extend SearchListener for Find/Replace to reach a text tab");
+    }
+
+    @Test
+    public void testScalaKernelBundleHasEveryLocale() {
+        System.out.println("ScalaKernel: every locale defines the scala-cli install hint");
+        // A key added to the base bundle but not to a locale is a
+        // MissingResourceException at runtime.
+        for (Locale locale : LOCALES) {
+            ResourceBundle bundle = ResourceBundle.getBundle(ScalaKernel.class.getName(), locale);
+            for (String key : SCALA_KERNEL_KEYS) {
+                assertTrue(bundle.containsKey(key),
+                        locale + " ScalaKernel bundle is missing key: " + key);
+                assertFalse(bundle.getString(key).isBlank(),
+                        locale + " ScalaKernel bundle has a blank value for key: " + key);
+            }
+        }
     }
 }
