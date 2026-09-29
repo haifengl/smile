@@ -703,7 +703,7 @@ Change the theme by setting the `Theme` preference (e.g., programmatically or vi
 
 JetBrains Mono is installed as the default monospaced font via `FlatJetBrainsMonoFont.install()`.
 
-**macOS:** Full window content mode and transparent title bar are enabled automatically for a native look.
+**macOS:** Full window content mode and transparent title bar are enabled automatically for a native look. Metal rendering pipeline is disabled (`sun.java2d.metal=false`) to avoid CoreVideo `CVDisplayLink` crashes during display sleep/wake.
 
 **Windows:** Per-monitor DPI scaling is disabled (`sun.java2d.uiScale=1.0`) to prevent blurry icons.
 
