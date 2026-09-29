@@ -92,10 +92,12 @@ public class ScalaKernel extends Kernel<String> {
 
     /** How long to wait for the first prompt. */
     private static final long STARTUP_TIMEOUT_MS = 60 * 1000L;
-    /** How long to wait for a prompt before treating an intermediate line as continuation. */
-    private static final long CONTINUATION_TIMEOUT_MS = 1000L;
     /** How long to wait for a prompt before treating the line as incomplete. */
     private static final long EVAL_TIMEOUT_MS = 3 * 60 * 1000L;
+
+    /** Parser context for checking statement completeness. */
+    private final dotty.tools.dotc.core.Contexts.Context parseCtx =
+            new dotty.tools.dotc.core.Contexts.ContextBase().initialCtx();
 
     /** Print REPL output to the output area. */
     private final PrintWriter out = new PrintWriter(console, true, StandardCharsets.UTF_8);
@@ -137,6 +139,11 @@ public class ScalaKernel extends Kernel<String> {
             command.add("-XX:MaxMetaspaceSize=1024M");
             command.add("-Xss4M");
             command.add("--add-opens=java.base/java.nio=ALL-UNNAMED");
+            command.add("--add-opens=java.desktop/sun.swing=ALL-UNNAMED");
+            if (OS.isMacOS()) {
+                command.add("--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED");
+                command.add("--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED");
+            }
             command.add("--enable-native-access=ALL-UNNAMED");
             if (OS.isWindows()) {
                 // Icons may become blurry due to desktop scaling with standard JDK.
@@ -195,6 +202,16 @@ public class ScalaKernel extends Kernel<String> {
                 started = true;
                 synchronized (carry) {
                     carry.setLength(0);
+                }
+                suppressingOutput = true;
+                try {
+                    sendLine("javax.swing.SwingUtilities.invokeLater(() => com.formdev.flatlaf.FlatLightLaf.setup())");
+                    awaitQuietly(EVAL_TIMEOUT_MS);
+                } finally {
+                    synchronized (carry) {
+                        carry.setLength(0);
+                    }
+                    suppressingOutput = false;
                 }
             }
         } catch (IOException ex) {
@@ -268,37 +285,30 @@ public class ScalaKernel extends Kernel<String> {
             return false;
         }
 
-        StringBuilder captured = new StringBuilder();
-        List<String> lines = new ArrayList<>();
-        for (String line : code.split("\r?\n")) {
-            // Blank lines would be echoed back as an empty prompt by the REPL.
-            if (!line.isBlank()) lines.add(line);
+        List<String> statements = splitStatements(code);
+        if (statements.isEmpty()) {
+            return true;
         }
 
-        for (int i = 0; i < lines.size(); i++) {
-            sendLine(lines.get(i));
-            long timeout = (i == lines.size() - 1) ? EVAL_TIMEOUT_MS : CONTINUATION_TIMEOUT_MS;
-            String response = awaitQuietly(timeout);
+        StringBuilder captured = new StringBuilder();
+        for (int i = 0; i < statements.size(); i++) {
+            String stmt = statements.get(i);
+            if (dotty.tools.repl.ParseResult$.MODULE$.isIncomplete(stmt, parseCtx)) {
+                process(List.of("The code is incomplete and swallowed by the REPL."));
+                out.println("ERROR: incomplete code. The kernel has been restarted.");
+                out.flush();
+                restart();
+                return false;
+            }
+
+            sendLine(stmt);
+            String response = awaitQuietly(EVAL_TIMEOUT_MS);
             if (response == null) {
-                if (i == lines.size() - 1) {
-                    // The last line never produced a prompt: the code is
-                    // incomplete. Restart to guarantee a clean state, as the
-                    // REPL is still waiting for the rest of the block and
-                    // would swallow the following cells.
-                    process(List.of("The code is incomplete and swallowed by the REPL."));
-                    out.println("ERROR: incomplete code. The kernel has been restarted.");
-                    out.flush();
-                    restart();
-                    return false;
-                } else {
-                    // The line opened a block (e.g. "class Foo {" or a
-                    // method signature) whose continuation is on the next
-                    // line, which is the normal multi-line case. If the code
-                    // never closes the block, the pending output is reported
-                    // as an error.
-                    logger.debug("Line {} awaits a continuation.", i + 1);
-                }
-                continue;
+                process(List.of("The code is incomplete and swallowed by the REPL."));
+                out.println("ERROR: incomplete code. The kernel has been restarted.");
+                out.flush();
+                restart();
+                return false;
             }
             captured.append(response).append('\n');
 
@@ -314,6 +324,36 @@ public class ScalaKernel extends Kernel<String> {
 
         collectVariables(captured.toString());
         return true;
+    }
+
+    /**
+     * Splits code into complete executable statements using Scala's parser.
+     *
+     * @param code the source code.
+     * @return the list of complete statements.
+     */
+    List<String> splitStatements(String code) {
+        List<String> statements = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        for (String line : code.split("\r?\n")) {
+            if (current.isEmpty()) {
+                if (line.isBlank() || line.trim().startsWith("//")) {
+                    continue;
+                }
+            }
+            if (!current.isEmpty()) {
+                current.append('\n');
+            }
+            current.append(line);
+            if (!dotty.tools.repl.ParseResult$.MODULE$.isIncomplete(current.toString(), parseCtx)) {
+                statements.add(current.toString());
+                current.setLength(0);
+            }
+        }
+        if (!current.isEmpty()) {
+            statements.add(current.toString());
+        }
+        return statements;
     }
 
     /**
@@ -427,12 +467,19 @@ public class ScalaKernel extends Kernel<String> {
             carry.append(text);
             int start;
             while ((start = carry.indexOf(PROMPT)) >= 0) {
-                print(carry.substring(0, start));
+                int end = start;
+                if (end > 0 && carry.charAt(end - 1) == '\n') {
+                    end--;
+                    if (end > 0 && carry.charAt(end - 1) == '\r') {
+                        end--;
+                    }
+                }
+                print(carry.substring(0, end));
                 carry.delete(0, start + PROMPT.length());
             }
 
-            // Keep the tail in case it is the beginning of a prompt.
-            int safe = carry.length() - (PROMPT.length() - 1);
+            // Keep the tail in case it is the beginning of a prompt (including preceding newline).
+            int safe = carry.length() - (PROMPT.length() + 1);
             if (safe > 0) {
                 print(carry.substring(0, safe));
                 carry.delete(0, safe);

@@ -212,6 +212,36 @@ public class ScalaKernelTest {
         assertTrue(evalSucceeds("df.nrow() == 2500"));
     }
 
+    @Test
+    public void testTsneScript() throws IOException {
+        System.out.println("ScalaKernel: run tsne.sc example");
+        String code = java.nio.file.Files.readString(java.nio.file.Path.of("studio/src/universal/examples/tsne.sc"));
+        assertTrue(evalSucceeds(code), "tsne.sc should evaluate without errors");
+        var names = kernel.variables().stream().map(Variable::name).toList();
+        assertTrue(names.contains("model"), "model variable should be bound");
+        assertTrue(names.contains("canvas"), "canvas variable should be bound");
+    }
+
+    @Test
+    public void testUspsScript() throws IOException {
+        System.out.println("ScalaKernel: run usps.sc example");
+        String code = java.nio.file.Files.readString(java.nio.file.Path.of("studio/src/universal/examples/usps.sc"));
+        String snippet = code.substring(0, code.indexOf("// Gradient Tree Boost"));
+        assertTrue(evalSucceeds(snippet), "usps.sc should evaluate without errors");
+        var names = kernel.variables().stream().map(Variable::name).toList();
+        assertTrue(names.contains("zipTrain"), "zipTrain variable should be bound");
+        assertTrue(names.contains("zipTest"), "zipTest variable should be bound");
+        assertTrue(names.contains("metrics"), "metrics variable should be bound");
+    }
+
+    @Test
+    public void testNoExtraEmptyLinesForImports() {
+        System.out.println("ScalaKernel: imports produce no extra empty lines");
+        output.clear();
+        assertTrue(evalSucceeds("import smile.io.*\nimport smile.manifold.*"));
+        assertEquals("", output.buffer().toString(), "Imports should not print empty lines");
+    }
+
     // ------------------------------------------------------------------
     // eval – errors
     // ------------------------------------------------------------------

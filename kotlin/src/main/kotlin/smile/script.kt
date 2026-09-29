@@ -337,7 +337,7 @@ class ScriptRunnerBridge @JvmOverloads constructor(
                 return true
             }
             if (normalized.matches(Regex("(?i).*/scala/(build/classes|bin|target)(/.*)?"))) {
-            //    return true
+                return true
             }
             return false
         }
