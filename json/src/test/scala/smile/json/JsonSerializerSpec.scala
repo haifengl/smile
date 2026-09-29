@@ -16,12 +16,13 @@
  */
 package smile.json
 
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 
 /**
  * @author Haifeng Li
  */
-class JsonSerializerSpec extends Specification {
+class JsonSerializerSpec extends AnyWordSpec with Matchers {
 
   "The JsonSerializer" should {
     "serialize JsNull" in {

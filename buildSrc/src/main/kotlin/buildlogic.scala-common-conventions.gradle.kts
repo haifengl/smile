@@ -9,8 +9,8 @@ dependencies {
     implementation("org.scala-lang:scala3-library_3:3.3.7")
     implementation("com.typesafe.scala-logging:scala-logging_3:3.9.6")
 
-    // Use Specs2 for testing.
-    testImplementation("org.specs2:specs2-core_3:4.23.0")
+    // Use ScalaTest for testing.
+    testImplementation("org.scalatest:scalatest_3:3.2.20")
     testRuntimeOnly("org.slf4j:slf4j-simple:2.0.18")
 }
 

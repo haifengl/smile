@@ -20,17 +20,18 @@ import java.nio.file.Files
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.col
-import org.specs2.mutable.*
-import org.specs2.specification.{AfterAll, BeforeAll}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.BeforeAndAfterAll
 import smile.model.rbf.RBF
 import smile.classification.RBFNetwork
 import smile.io.Paths
 
-class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
+class SmileClassifierSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
 
   var spark: SparkSession = _
 
-  def beforeAll(): Unit = {
+  override def beforeAll(): Unit = {
     spark = SparkSession.builder().master("local[*]").getOrCreate()
   }
 
@@ -65,7 +66,7 @@ class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
     }
   }
 
-  def afterAll(): Unit = {
+  override def afterAll(): Unit = {
     spark.stop()
   }
 }

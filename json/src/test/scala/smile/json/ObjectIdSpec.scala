@@ -16,9 +16,10 @@
  */
 package smile.json
 
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 
-class ObjectIdSpec extends Specification {
+class ObjectIdSpec extends AnyWordSpec with Matchers {
 
   "ObjectId" should {
     "change over time" in {

@@ -16,13 +16,14 @@
  */
 package smile.association
 
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 
 /**
   *
   * @author Haifeng Li
   */
-class AssociationSpec extends Specification {
+class AssociationSpec extends AnyWordSpec with Matchers {
 
   // FPTree.of sorts/reorders each row in place. Specs2 may run examples
   // concurrently, so every example must use a fresh deep copy.
@@ -40,8 +41,6 @@ class AssociationSpec extends Specification {
   )
 
   "association rule mining" should {
-    sequential
-
     "FP-Growth" in {
       val tree = FPTree.of(3, sampleItemsets)
       val results = fpgrowth(tree).toList
@@ -78,22 +77,22 @@ class AssociationSpec extends Specification {
 
       9 === rules.size
 
-      rules.get(0).support() must beCloseTo(0.6, 1E-2)
-      rules.get(0).confidence() must beCloseTo(0.75, 1E-2)
+      rules.get(0).support() must be (0.6 +- 1E-2)
+      rules.get(0).confidence() must be (0.75 +- 1E-2)
       1 === rules.get(0).antecedent().length
       3 === rules.get(0).antecedent()(0)
       1 === rules.get(0).consequent().length
       2 === rules.get(0).consequent()(0)
 
-      rules.get(4).support() must beCloseTo(0.3, 1E-2)
-      rules.get(4).confidence() must beCloseTo(0.6, 1E-2)
+      rules.get(4).support() must be (0.3 +- 1E-2)
+      rules.get(4).confidence() must be (0.6 +- 1E-2)
       1 === rules.get(4).antecedent().length
       1 === rules.get(4).antecedent()(0)
       1 === rules.get(4).consequent().length
       2 === rules.get(4).consequent()(0)
 
-      rules.get(8).support() must beCloseTo(0.3, 1E-2)
-      rules.get(8).confidence() must beCloseTo(0.6, 1E-2)
+      rules.get(8).support() must be (0.3 +- 1E-2)
+      rules.get(8).confidence() must be (0.6 +- 1E-2)
       1 === rules.get(8).antecedent().length
       1 === rules.get(8).antecedent()(0)
       2 === rules.get(8).consequent().length

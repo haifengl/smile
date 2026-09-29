@@ -16,9 +16,10 @@
  */
 package smile.json
 
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 
-class JsValueSpec extends Specification {
+class JsValueSpec extends AnyWordSpec with Matchers {
   private val jsonSource = scala.io.Source.fromInputStream(getClass.getResourceAsStream("/store.json")).mkString
 
   "The JsValue" should {
@@ -47,7 +48,7 @@ class JsValueSpec extends Specification {
     "JsArray(10) selectDynamic" in {
       val json = JsonParser(jsonSource)
       val book = json.store.book
-      book(10).author must throwA[IndexOutOfBoundsException]
+      an [IndexOutOfBoundsException] must be thrownBy book(10).author
     }
 
     "JsObject update" in {
@@ -100,7 +101,7 @@ class JsValueSpec extends Specification {
     "JsArray(10) updateDynamic" in {
       val json = JsonParser(jsonSource)
       val book = json.store.book
-      (book(10).author = "Confucius") must throwA[IndexOutOfBoundsException]
+      an [IndexOutOfBoundsException] must be thrownBy { book(10).author = "Confucius" }
     }
 
     "JsObject remove" in {
@@ -110,7 +111,7 @@ class JsValueSpec extends Specification {
     }
     "JsArray remove" in {
       val json = JsonParser(jsonSource)
-      json("store")("book") remove 0
+      json("store")("book").remove(0)
       json("store")("book")(0) === JsObject(
         "category" -> "fiction",
         "author" -> "Evelyn Waugh",

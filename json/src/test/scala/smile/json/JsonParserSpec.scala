@@ -16,9 +16,10 @@
  */
 package smile.json
 
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 
-class JsonParserSpec extends Specification {
+class JsonParserSpec extends AnyWordSpec with Matchers {
 
   "The JsonParser" should {
     "parse 'null' to JsNull" in {
@@ -69,14 +70,14 @@ class JsonParserSpec extends Specification {
     "parse all representations of the slash (SOLIDUS) character in a JsString" in {
       JsonParser( "\"" + "/\\/\\u002f" + "\"") === JsString("///")
     }
-    "parse a simple JsObject" in (
+    "parse a simple JsObject" in {
       JsonParser(""" { "key" :42, "key2": "value" }""") ===
         JsObject("key" -> JsInt(42), "key2" -> JsString("value"))
-      )
-    "parse a simple JsArray" in (
+    }
+    "parse a simple JsArray" in {
       JsonParser("""[null, 1.23 ,{"key":true } ] """) ===
         JsArray(JsNull, JsDouble(1.23), JsObject("key" -> JsTrue))
-      )
+    }
     "parse directly from UTF-8 encoded bytes" in {
       val json = JsObject(
         "7-bit" -> JsString("This is regular 7-bit ASCII text."),

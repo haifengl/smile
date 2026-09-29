@@ -16,7 +16,8 @@
  */
 package smile.clustering
 
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 import smile.datasets.{USPS, WeatherNominal}
 import smile.math.MathEx
 import smile.validation.metric.{AdjustedRandIndex, RandIndex}
@@ -25,7 +26,7 @@ import smile.validation.metric.{AdjustedRandIndex, RandIndex}
   *
   * @author Haifeng Li
   */
-class ClusteringSpec extends Specification {
+class ClusteringSpec extends AnyWordSpec with Matchers {
 
   "clustering" should {
     "Hierarchical Clustering" in {
@@ -38,8 +39,8 @@ class ClusteringSpec extends Specification {
       val r = RandIndex.of(y, label)
       val r2 = AdjustedRandIndex.of(y, label)
       println(f"CompleteLinkage rand index = ${100 * r}%.2f%%, adjusted rand index = ${100 * r2}%.2f%%")
-      r must beCloseTo(0.8346, 1E-4)
-      r2 must beCloseTo(0.2930, 1E-4)
+      r must be (0.8346 +- 1E-4)
+      r2 must be (0.2930 +- 1E-4)
     }
 
     "KModes" in {
@@ -63,8 +64,8 @@ class ClusteringSpec extends Specification {
       val r = RandIndex.of(y, model.group)
       val r2 = AdjustedRandIndex.of(y, model.group)
       println(f"CompleteLinkage rand index = ${100 * r}%.2f%%, adjusted rand index = ${100 * r2}%.2f%%")
-      r must beCloseTo(0.5055, 1E-4)
-      r2 must beCloseTo(0.0116, 1E-4)
+      r must be (0.5055 +- 1E-4)
+      r2 must be (0.0116 +- 1E-4)
     }
   }
 }

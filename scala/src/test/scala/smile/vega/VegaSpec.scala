@@ -18,13 +18,14 @@ package smile.vega
 
 import scala.language.existentials
 import smile.json.*
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 
 /**
   *
   * @author Haifeng Li
   */
-class VegaSpec extends Specification {
+class VegaSpec extends AnyWordSpec with Matchers {
 
   "VegaLite" should {
     "Simple Bar Plot" in {
