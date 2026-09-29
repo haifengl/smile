@@ -92,8 +92,6 @@ public class ScalaKernel extends Kernel<String> {
 
     /** How long to wait for the first prompt. */
     private static final long STARTUP_TIMEOUT_MS = 60 * 1000L;
-    /** How long to wait for a prompt before treating the line as incomplete. */
-    private static final long EVAL_TIMEOUT_MS = 3 * 60 * 1000L;
 
     /** Parser context for checking statement completeness. */
     private final dotty.tools.dotc.core.Contexts.Context parseCtx =
@@ -201,7 +199,7 @@ public class ScalaKernel extends Kernel<String> {
                 suppressingOutput = true;
                 try {
                     sendLine("javax.swing.SwingUtilities.invokeLater(() => com.formdev.flatlaf.FlatLightLaf.setup())");
-                    awaitQuietly(EVAL_TIMEOUT_MS);
+                    awaitQuietly();
                 } finally {
                     synchronized (carry) {
                         carry.setLength(0);
@@ -248,7 +246,7 @@ public class ScalaKernel extends Kernel<String> {
         suppressingOutput = true;
         try {
             sendLine(":reset");
-            awaitQuietly(EVAL_TIMEOUT_MS);
+            awaitQuietly();
             variables.clear();
         } finally {
             synchronized (carry) {
@@ -289,20 +287,21 @@ public class ScalaKernel extends Kernel<String> {
         for (int i = 0; i < statements.size(); i++) {
             String stmt = statements.get(i);
             if (dotty.tools.repl.ParseResult$.MODULE$.isIncomplete(stmt, parseCtx)) {
-                process(List.of("The code is incomplete and swallowed by the REPL."));
-                out.println("ERROR: incomplete code. The kernel has been restarted.");
+                process(List.of("The code is incomplete."));
+                out.println("ERROR: incomplete code.");
                 out.flush();
-                restart();
                 return false;
             }
 
             sendLine(stmt);
-            String response = awaitQuietly(EVAL_TIMEOUT_MS);
-            if (response == null) {
-                process(List.of("The code is incomplete and swallowed by the REPL."));
-                out.println("ERROR: incomplete code. The kernel has been restarted.");
-                out.flush();
-                restart();
+            String response = awaitQuietly();
+            if (response == null || eof) {
+                if (eof) {
+                    process(List.of("The Scala REPL process terminated unexpectedly."));
+                    out.println("ERROR: the Scala REPL process terminated unexpectedly.");
+                    out.flush();
+                    restart();
+                }
                 return false;
             }
             captured.append(response).append('\n');
@@ -384,7 +383,28 @@ public class ScalaKernel extends Kernel<String> {
     }
 
     /**
-     * Waits for the REPL prompt.
+     * Waits indefinitely for the REPL prompt.
+     * @return the output produced before the prompt.
+     */
+    private String awaitPrompt() throws InterruptedException {
+        synchronized (lock) {
+            while (true) {
+                int index = pending.indexOf(PROMPT);
+                if (index >= 0) {
+                    String text = pending.substring(0, index);
+                    pending.delete(0, index + PROMPT.length());
+                    return text;
+                }
+                if (eof) {
+                    return pending.toString();
+                }
+                lock.wait();
+            }
+        }
+    }
+
+    /**
+     * Waits for the REPL prompt with a timeout.
      * @param timeoutMs the maximum time to wait.
      * @return the output produced before the prompt, or null on timeout.
      */
@@ -411,7 +431,20 @@ public class ScalaKernel extends Kernel<String> {
     }
 
     /**
-     * Waits for the REPL prompt, absorbing an interruption.
+     * Waits indefinitely for the REPL prompt, absorbing an interruption.
+     * @return the output produced before the prompt, or null on interruption.
+     */
+    private String awaitQuietly() {
+        try {
+            return awaitPrompt();
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return null;
+        }
+    }
+
+    /**
+     * Waits for the REPL prompt with a timeout, absorbing an interruption.
      * @param timeoutMs the maximum time to wait.
      * @return the output produced before the prompt, or null on timeout.
      */
