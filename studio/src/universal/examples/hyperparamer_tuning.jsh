@@ -2,6 +2,7 @@ import smile.classification.RandomForest;
 import smile.data.formula.Formula;
 import smile.hpo.Hyperparameters;
 import smile.io.*;
+import smile.io.Paths;
 import smile.validation.*;
 import smile.validation.metric.*;
 
@@ -14,7 +15,6 @@ var train = Read.arff(Paths.getTestData("weka/segment-challenge.arff"));
 var test = Read.arff(Paths.getTestData("weka/segment-test.arff"));
 var formula = Formula.lhs("class");
 var testy = formula.y(test).toIntArray();
-
 //--- CELL ---
 // grid search
 hp.grid().forEach(prop -> {
@@ -24,7 +24,6 @@ hp.grid().forEach(prop -> {
     System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
     System.out.println(ConfusionMatrix.of(testy, pred));
 });
-
 //--- CELL ---
 // random search
 hp.random().limit(20).forEach(prop -> {
