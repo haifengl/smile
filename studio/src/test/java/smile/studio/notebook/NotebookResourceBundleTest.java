@@ -49,6 +49,12 @@ public class NotebookResourceBundleTest {
     private static final List<String> STARTUP_KEYS = List.of(
             "KernelStartingTitle", "KernelStartingMessage", "KernelInitErrorMessage");
 
+    /**
+     * Keys the notebook reads to display status bar messages during kernel lifecycle.
+     */
+    private static final List<String> STATUS_KEYS = List.of(
+            "KernelStarting", "KernelReady");
+
     /** The key that must survive for genuinely unsupported languages. */
     private static final String UNSUPPORTED_KERNEL_KEY = "UnsupportedKernelMessage";
 
@@ -60,8 +66,15 @@ public class NotebookResourceBundleTest {
             assertTrue(bundle.containsKey(key),
                     "base bundle is missing key: " + key);
         }
+        for (String key : STATUS_KEYS) {
+            assertTrue(bundle.containsKey(key),
+                    "base bundle is missing status key: " + key);
+        }
         assertTrue(bundle.containsKey(UNSUPPORTED_KERNEL_KEY),
                 "base bundle is missing key: " + UNSUPPORTED_KERNEL_KEY);
+
+        assertEquals("Kernel is starting...", bundle.getString("KernelStarting"));
+        assertEquals("Kernel is ready", bundle.getString("KernelReady"));
     }
 
     @Test
@@ -74,6 +87,12 @@ public class NotebookResourceBundleTest {
                         locale + " bundle is missing key: " + key);
                 assertFalse(bundle.getString(key).isBlank(),
                         locale + " bundle has a blank value for key: " + key);
+            }
+            for (String key : STATUS_KEYS) {
+                assertTrue(bundle.containsKey(key),
+                        locale + " bundle is missing status key: " + key);
+                assertFalse(bundle.getString(key).isBlank(),
+                        locale + " bundle has a blank value for status key: " + key);
             }
             assertTrue(bundle.containsKey(UNSUPPORTED_KERNEL_KEY),
                     locale + " bundle is missing key: " + UNSUPPORTED_KERNEL_KEY);
