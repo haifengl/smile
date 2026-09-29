@@ -76,7 +76,9 @@ data class ScriptVariable(val name: String, val typeName: String)
  */
 class ScriptBaseClassLoader(
     parent: ClassLoader,
-    private val filter: (String) -> Boolean = { ScriptRunnerBridge.isScalaClasspathEntry(it) }
+    private val filter: (String) -> Boolean = {
+        ScriptRunnerBridge.isScalaClasspathEntry(it)
+    }
 ) : ClassLoader(parent) {
 
     override fun loadClass(name: String, resolve: Boolean): Class<*> {
@@ -305,13 +307,15 @@ class ScriptRunnerBridge @JvmOverloads constructor(
         private val RESULT_FIELD = Regex("$RESULT_FIELD_PREFIX\\d+")
 
         /**
-         * Returns true if the given file or directory belongs to smile-scala.
+         * Returns true if the given file or directory belongs to smile-scala
+         * or Scala compiler tooling jars.
          */
         @JvmStatic
         fun isScalaClasspathEntry(file: File): Boolean = isScalaClasspathEntry(file.path)
 
         /**
-         * Returns true if the given classpath entry path belongs to smile-scala.
+         * Returns true if the given classpath entry path belongs to smile-scala
+         * or Scala compiler tooling jars.
          */
         @JvmStatic
         fun isScalaClasspathEntry(path: String?): Boolean {
@@ -321,11 +325,19 @@ class ScriptRunnerBridge @JvmOverloads constructor(
                 normalized = normalized.substringBefore("!")
             }
             val lower = normalized.lowercase(Locale.ROOT)
-            if (lower.contains("smile-scala")) {
+            if (lower.contains("smile-scala") ||
+                lower.contains("scala3-compiler") ||
+                lower.contains("scala3-repl") ||
+                lower.contains("scala3-directives-parser") ||
+                lower.contains("scala3-interfaces") ||
+                lower.contains("compiler-interface") ||
+                lower.contains("util-interface") ||
+                lower.contains("tasty-core") ||
+                lower.contains("scala-asm")) {
                 return true
             }
             if (normalized.matches(Regex("(?i).*/scala/(build/classes|bin|target)(/.*)?"))) {
-                return true
+            //    return true
             }
             return false
         }

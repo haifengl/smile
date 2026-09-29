@@ -499,9 +499,10 @@ public class ScalaKernel extends Kernel<String> {
     }
 
     /**
-     * Returns true if the given classpath entry path belongs to smile-kotlin.
+     * Returns true if the given classpath entry path belongs to smile-kotlin
+     * or Kotlin compiler/scripting tooling jars.
      * @param path the classpath entry path.
-     * @return true if the entry belongs to smile-kotlin.
+     * @return true if the entry belongs to Kotlin.
      */
     public static boolean isKotlinClasspathEntry(String path) {
         if (path == null || path.isBlank()) return false;
@@ -510,7 +511,13 @@ public class ScalaKernel extends Kernel<String> {
             normalized = normalized.substring(0, normalized.indexOf('!'));
         }
         String lower = normalized.toLowerCase(Locale.ROOT);
-        if (lower.contains("smile-kotlin")) {
+        if (lower.contains("smile-kotlin") ||
+            lower.contains("kotlin-compiler-embeddable") ||
+            lower.contains("kotlin-daemon-embeddable") ||
+            lower.contains("kotlin-scripting-compiler-embeddable") ||
+            lower.contains("kotlin-scripting-compiler-impl-embeddable") ||
+            lower.contains("kotlin-scripting-jvm-host") ||
+            lower.contains("kotlin-build-tools-api")) {
             return true;
         }
         if (normalized.matches("(?i).*/kotlin/(build/classes|bin|target)(/.*)?")) {

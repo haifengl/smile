@@ -136,9 +136,10 @@ public class KotlinKernel extends Kernel<ScriptResult> {
     }
 
     /**
-     * Returns true if the given classpath entry path belongs to smile-scala.
+     * Returns true if the given classpath entry path belongs to smile-scala
+     * or Scala compiler tooling jars.
      * @param path the classpath entry path.
-     * @return true if the entry belongs to smile-scala.
+     * @return true if the entry belongs to smile-scala or Scala compiler tooling.
      */
     public static boolean isScalaClasspathEntry(String path) {
         return ScriptRunnerBridge.isScalaClasspathEntry(path);
