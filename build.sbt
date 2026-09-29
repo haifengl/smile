@@ -242,6 +242,5 @@ lazy val kotlin = project.in(file("kotlin"))
 
 lazy val studio = project.in(file("studio"))
   .settings(javaSettings*)
-  .settings(scalaSettings*)
   .settings(publish / skip := true)
   .dependsOn(deep, scala, kotlin)
