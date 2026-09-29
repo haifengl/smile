@@ -22,18 +22,19 @@ The module depends on `:core` (ML), `:base` (data and I/O), and `:nlp`.
 
 1. [Installation](#installation)
 2. [Data I/O — `read` and `write`](#data-io--read-and-write)
-3. [Classification](#classification)
-4. [Regression](#regression)
-5. [Clustering](#clustering)
-6. [Natural Language Processing](#natural-language-processing)
-7. [Dimensionality Reduction and Feature Extraction](#dimensionality-reduction-and-feature-extraction)
-8. [Manifold Learning](#manifold-learning)
-9. [Association Rule Mining](#association-rule-mining)
-10. [Wavelets](#wavelets)
-11. [Sequence Labeling](#sequence-labeling)
-12. [Model Validation](#model-validation)
-13. [Data Visualization — Swing Plots](#data-visualization--swing-plots)
-14. [Complete Examples](#complete-examples)
+3. [DataFrame and Data Operations](#dataframe-and-data-operations)
+4. [Classification](#classification)
+5. [Regression](#regression)
+6. [Clustering](#clustering)
+7. [Natural Language Processing](#natural-language-processing)
+8. [Dimensionality Reduction and Feature Extraction](#dimensionality-reduction-and-feature-extraction)
+9. [Manifold Learning](#manifold-learning)
+10. [Association Rule Mining](#association-rule-mining)
+11. [Wavelets](#wavelets)
+12. [Sequence Labeling](#sequence-labeling)
+13. [Model Validation](#model-validation)
+14. [Data Visualization — Swing Plots](#data-visualization--swing-plots)
+15. [Complete Examples](#complete-examples)
 
 ---
 
@@ -52,6 +53,7 @@ Each source file lives in its own package that mirrors the Java package, so
 imports are natural:
 
 ```kotlin
+import smile.data.*            // DataFrame extensions, operators, summary
 import smile.classification.*   // knn, logit, cart, randomForest, …
 import smile.regression.*       // lm, ridge, lasso, cart, randomForest, gpr, …
 import smile.clustering.*       // kmeans, hclust, dbscan, …
@@ -105,14 +107,14 @@ argument to enforce column types at parse time.
 #### CSV options in full
 
 ```kotlin
-read.csv(
-    file      = "data/prices.csv",
-    delimiter = ",",          // any single character or multi-char string
-    header    = true,         // skip first row as column names
-    quote     = '"',          // quote character
-    escape    = '\\',         // escape character
-    comment   = '#',          // lines starting with this char are skipped
-    schema    = null          // optional StructType for type enforcement
+val df = read.csv(
+    file        = "data/mydata.csv",
+    format      = CSVFormat.DEFAULT,
+    comment     = '#',
+    escape      = '\\',
+    quote       = '"',
+    header      = true,
+    schema      = mySchema           // optional StructType
 )
 ```
 
@@ -125,6 +127,91 @@ write.csv(df, "output/results.csv")               // comma-separated
 write.csv(df, "output/results.tsv", delimiter = '\t')
 write.arff(df, "output/results.arff", "MyRelation")
 write.arrow(df, "output/results.arrow")
+```
+
+---
+
+## DataFrame and Data Operations
+
+Import `smile.data.*` to enrich `DataFrame` and `Tuple` with idiomatic Kotlin operators and functional query methods.
+
+### Operator Overloading
+
+The Kotlin shim layer supports indexing (`[]`), invocation (`()`), containment (`in`), destructuring, and arithmetic (`+`, `-`) operators:
+
+```kotlin
+import smile.data.*
+
+val df = read.csv("data/iris.csv")
+
+// ── Indexing: [] ─────────────────────────────────────────────
+val col       = df["sepallength"]                  // ValueVector by column name
+val sub       = df["sepallength", "sepalwidth"]    // DataFrame with selected columns
+val slice     = df[0 until 10]                     // DataFrame row slice by IntRange/IntProgression
+val cell      = df[0, "sepallength"]               // cell value by row index and column name
+df[0, "sepallength"] = 5.5                         // update cell value
+df["newCol"]  = vector                             // add or replace column
+
+// ── Invocation: () ───────────────────────────────────────────
+val row0      = df(0)                              // row Tuple by index
+val colVec    = df("sepallength")                  // ValueVector by column name
+val subDf     = df("sepallength", "sepalwidth")    // select columns
+val v00       = df(0, 0)                           // cell value at (i, j)
+val v0col     = df(0, "sepallength")               // cell value at row i, column name
+val sliced    = df(0 until 10)                     // row slice
+val filtered  = df { it.getDouble("sepallength") > 5.0 } // filter with lambda predicate
+
+// ── Containment: in ──────────────────────────────────────────
+if ("sepallength" in df) { /* column exists in DataFrame */ }
+if ("sepallength" in tuple) { /* field exists in Tuple */ }
+
+// ── Arithmetic: + and - ──────────────────────────────────────
+val doubled   = df1 + df2                          // vertical concatenation (concat)
+val withCol   = df + extraVector                   // adds column, returns new DataFrame
+val dropped   = df - "class"                       // drops column, returns new DataFrame
+val fewer     = df - listOf("col1", "col2")        // drops multiple columns
+
+// ── Tuple Destructuring ──────────────────────────────────────
+val (c1, c2, c3, c4) = df[0]                       // destructure fields into variables
+```
+
+### Functional Query Operations
+
+```kotlin
+// Filter rows
+val large = df.filter { it.getDouble("sepallength") > 6.0 }
+
+// Partition rows into a Pair of DataFrames
+val (setosa, others) = df.partition { it.getString("class") == "Iris-setosa" }
+
+// Group by key
+val byClass: Map<String, DataFrame> = df.groupBy { it.getString("class") }
+
+// Find, exists, forall
+val firstLarge: Tuple? = df.find { it.getDouble("sepallength") > 7.0 }
+val hasAny: Boolean    = df.exists { it.getDouble("sepallength") > 7.5 }
+val allValid: Boolean  = df.forall { it.length() == 5 }
+
+// Map rows to a list
+val lengths: List<Double> = df.map { it.getDouble("sepallength") }
+
+// Select or drop column ranges
+val subColumns = df.select(0..2)
+val dropFirst  = df.drop(0..1)
+```
+
+### JSON Serialization
+
+```kotlin
+val dfJson: String    = df.toJSON()      // formatted JSON array
+val tupleJson: String = df[0].toJSON()   // formatted JSON object
+```
+
+### Summary Statistics
+
+```kotlin
+summary(intArray)     // prints min, Q1, median, mean, Q3, max for IntArray
+summary(doubleArray)  // prints min, Q1, median, mean, Q3, max for DoubleArray
 ```
 
 ---

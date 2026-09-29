@@ -432,3 +432,12 @@ Mathematical and statistical Swing plots.
 Swing based data visualization provides interactive charts and graphs including
 scatter plots, line plots, bar charts, box plots, histograms, QQ plots, heatmaps,
 contour plots, 3D surface and wireframe plots, and dendrograms.
+
+# Package smile.data
+
+Data structures, data frames, and manipulation utilities.
+
+A DataFrame is a two-dimensional, potentially heterogeneous tabular data
+structure with labeled axes (rows and columns). It supports flexible row/column
+indexing, slicing, functional query operations (filtering, partitioning, grouping),
+operator overloading for intuitive access and manipulation, and JSON serialization.
