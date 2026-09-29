@@ -415,3 +415,12 @@ model are acceptable with respect to the real data-generating process.
 A model can be validated only relative to some application area. A model
 that is valid for one application might be invalid for some other
 applications.
+
+# Package smile.sequence
+
+Sequence labeling algorithms.
+
+Sequence labeling is a type of pattern recognition task that involves
+the algorithmic assignment of a categorical label to each member of a
+sequence of observed values. Common examples include part-of-speech tagging,
+named-entity recognition, and gene prediction.

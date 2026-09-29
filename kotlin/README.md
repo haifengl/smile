@@ -30,8 +30,9 @@ The module depends on `:core` (ML), `:base` (data and I/O), and `:nlp`.
 8. [Manifold Learning](#manifold-learning)
 9. [Association Rule Mining](#association-rule-mining)
 10. [Wavelets](#wavelets)
-11. [Model Validation](#model-validation)
-12. [Complete Examples](#complete-examples)
+11. [Sequence Labeling](#sequence-labeling)
+12. [Model Validation](#model-validation)
+13. [Complete Examples](#complete-examples)
 
 ---
 
@@ -53,6 +54,7 @@ imports are natural:
 import smile.classification.*   // knn, logit, cart, randomForest, …
 import smile.regression.*       // lm, ridge, lasso, cart, randomForest, gpr, …
 import smile.clustering.*       // kmeans, hclust, dbscan, …
+import smile.sequence.*         // hmm, crf, gcrf, …
 import smile.validation.*       // validate, cv, loocv, bootstrap, accuracy, rmse, …
 import smile.nlp.*              // String.normalize(), String.bag(), …
 import smile.*                  // read, write objects
@@ -931,6 +933,57 @@ wsdenoise(
     filter = "haar",
     soft   = false    // true = soft thresholding, false = hard thresholding
 )
+```
+
+---
+
+## Sequence Labeling
+
+Functions live in `package smile.sequence`.
+
+Import `smile.sequence.*`.
+
+### Hidden Markov Model (HMM)
+
+```kotlin
+import smile.sequence.*
+
+// From probability matrices
+val model = hmm(pi, a, b)
+
+// Fits HMM from integer sequences
+val model = hmm(observations, labels)
+
+// Generic observation objects with an ordinal mapping
+val labeler = hmm(observations, labels) { word -> vocabulary[word] ?: 0 }
+
+// Prediction and probabilities
+val prediction = model.predict(sequence)
+val probability = model.p(sequence)
+val logProb = model.logp(sequence)
+```
+
+### Conditional Random Field (CRF)
+
+```kotlin
+import smile.sequence.*
+
+// First-order linear CRF from Tuple sequences
+val model = crf(sequences, labels, ntrees = 100, maxDepth = 20)
+
+// CRF for generic observation sequences with a feature extraction lambda
+val labeler = crf(sequences, labels, ntrees = 100) { item ->
+    Tuple.of(schema, arrayOf(item.word, item.prefix, item.suffix))
+}
+
+// gcrf alias matching the Scala API
+val labeler = gcrf(sequences, labels) { item ->
+    Tuple.of(schema, arrayOf(item.word, item.prefix, item.suffix))
+}
+
+// Prediction and Viterbi decoding
+val labels = labeler.predict(sequence)
+val viterbiPath = labeler.viterbi(sequence)
 ```
 
 ---
