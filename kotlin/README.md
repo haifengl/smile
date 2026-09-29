@@ -32,7 +32,8 @@ The module depends on `:core` (ML), `:base` (data and I/O), and `:nlp`.
 10. [Wavelets](#wavelets)
 11. [Sequence Labeling](#sequence-labeling)
 12. [Model Validation](#model-validation)
-13. [Complete Examples](#complete-examples)
+13. [Data Visualization — Swing Plots](#data-visualization--swing-plots)
+14. [Complete Examples](#complete-examples)
 
 ---
 
@@ -56,6 +57,7 @@ import smile.regression.*       // lm, ridge, lasso, cart, randomForest, gpr, �
 import smile.clustering.*       // kmeans, hclust, dbscan, …
 import smile.sequence.*         // hmm, crf, gcrf, …
 import smile.validation.*       // validate, cv, loocv, bootstrap, accuracy, rmse, …
+import smile.plot.swing.*        // plot, line, splom, boxplot, hist, heatmap, show, …
 import smile.nlp.*              // String.normalize(), String.bag(), …
 import smile.*                  // read, write objects
 ```
@@ -1094,6 +1096,93 @@ val r2   = r2(truth, predictions)
 val ri   = randIndex(y1, y2)
 val ari  = adjustedRandIndex(y1, y2)
 val nmi  = nmi(y1, y2)
+```
+
+---
+
+## Data Visualization — Swing Plots
+
+Functions live in `package smile.plot.swing`.
+
+Import `smile.plot.swing.*`.
+
+### Scatter Plots
+
+```kotlin
+import smile.plot.swing.*
+
+// From coordinates array
+val canvas = plot(coordinates, mark = '*', color = Color.RED)
+
+// From DataFrame
+val canvas = plot(df, x = "sepallength", y = "sepalwidth", category = "class", mark = 'o')
+
+// 3D scatter plot from DataFrame
+val canvas3d = plot(df, x = "sepallength", y = "sepalwidth", z = "petallength", category = "class", mark = '*')
+
+// Scatter Plot Matrix (SPLOM)
+val splomPane = splom(df, mark = '*', category = "class")
+```
+
+### Lines, Curves, and Histograms
+
+```kotlin
+// Line plot
+val lineCanvas = line(points, Line.Style.SOLID, Color.BLUE, label = "Trend")
+
+// Staircase plot
+val stepCanvas = staircase(points, Color.BLACK, label = "Step Function")
+
+// Histogram
+val histCanvas = hist(values, k = 20, prob = true, color = Color.BLUE)
+
+// 3D Bivariate Histogram
+val hist3d = hist3(coordinates, xbins = 20, ybins = 20)
+
+// Q-Q Plot
+val qq = qqplot(values)
+val qqDist = qqplot(values, GaussianDistribution(0.0, 1.0))
+```
+
+### Box Plots, Bar Plots, and Matrices
+
+```kotlin
+// Box plot from DataFrame columns
+val boxCanvas = boxplot(df, "sepallength", "sepalwidth")
+
+// Bar plot
+val barCanvas = barplot(doubleArrayOf(10.0, 25.0, 15.0, 30.0))
+
+// Heatmap and Hexmap
+val heatCanvas = heatmap(matrix, Palette.jet(256))
+val hexCanvas = hexmap(matrix, Palette.jet(16))
+
+// Contour and Surface
+val contourCanvas = contour(matrix)
+val surfaceCanvas = surface(matrix, Palette.jet(256))
+
+// Wireframe and Grid
+val wireCanvas = wireframe(vertices, edges)
+
+// Sparsity pattern
+val spyCanvas = spy(sparseMatrix)
+
+// Dendrogram
+val dendroCanvas = dendrogram(hc)
+```
+
+### Displaying and Exporting
+
+```kotlin
+// Display interactive window
+val frame = show(canvas)
+
+// Or using JWindow wrapper
+val window = JWindow.of(canvas)
+window.close()
+
+// Export to HTML img tag (base64 PNG)
+val imgTag = Html.figure(canvas.figure(), width = 800, height = 600)
 ```
 
 ---

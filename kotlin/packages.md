@@ -424,3 +424,11 @@ Sequence labeling is a type of pattern recognition task that involves
 the algorithmic assignment of a categorical label to each member of a
 sequence of observed values. Common examples include part-of-speech tagging,
 named-entity recognition, and gene prediction.
+
+# Package smile.plot.swing
+
+Mathematical and statistical Swing plots.
+
+Swing based data visualization provides interactive charts and graphs including
+scatter plots, line plots, bar charts, box plots, histograms, QQ plots, heatmaps,
+contour plots, 3D surface and wireframe plots, and dendrograms.

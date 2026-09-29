@@ -238,7 +238,7 @@ lazy val spark = project.in(file("spark"))
 lazy val kotlin = project.in(file("kotlin"))
   .settings(javaSettings*)
   .dependsOn(base % "provided->provided;compile->compile;test->test;runtime->runtime")
-  .dependsOn(core, nlp)
+  .dependsOn(core, nlp, plot)
 
 lazy val studio = project.in(file("studio"))
   .settings(javaSettings*)

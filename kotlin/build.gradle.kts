@@ -5,6 +5,7 @@ plugins {
 dependencies {
     api(project(":core"))
     api(project(":nlp"))
+    api(project(":plot"))
 
     // The Kotlin scripting host API used by smile.studio.kernel.ScriptRunnerBridge.
     // It is only needed by hosts that embed the Kotlin scripting engine (Studio),
