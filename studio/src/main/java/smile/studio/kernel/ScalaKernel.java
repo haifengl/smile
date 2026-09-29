@@ -65,13 +65,24 @@ public class ScalaKernel extends Kernel<String> {
     private static final String PROMPT = "scala> ";
     /** ANSI escape sequences, which the REPL may emit. */
     private static final Pattern ANSI = Pattern.compile("\u001B\\[[0-9;]*[A-Za-z]");
-    /** The start of a Scala 3 compiler diagnostic, e.g. "-- [E006] Not Found Error:". */
+    /** The start of a Scala REPL compiler error, e.g. "-- Error: --" or "-- [E006] Not Found Error:". */
+    private static final Pattern COMPILER_ERROR =
+            Pattern.compile("^-- (?:Error: --|Error:|\\[E\\d+\\](?!.*Warning:))", Pattern.MULTILINE);
+    /** The start of a Scala 3 compiler diagnostic code, e.g. "-- [E006]". */
     private static final Pattern COMPILER_DIAGNOSTIC = Pattern.compile("-- \\[E\\d+\\]");
+    /** Error line starting specifically with "-- Error: --". */
+    private static final Pattern COMPILER_ERROR_LINE = Pattern.compile("^-- Error: --", Pattern.MULTILINE);
     /** The compiler summary line, e.g. "1 error found". */
-    private static final Pattern COMPILER_SUMMARY = Pattern.compile("^ *\\d+ (error|warning)s? found", Pattern.MULTILINE);
+    private static final Pattern COMPILER_SUMMARY = Pattern.compile("^ *\\d+ errors? found", Pattern.MULTILINE);
+    /** A stack trace or elision marker emitted by the REPL for an uncaught exception. */
+    private static final Pattern STACK_TRACE =
+            Pattern.compile("\\R\\s*(?:\\.\\.\\. \\d+ elided|at\\s+)");
     /** An uncaught exception raised by the snippet. */
     private static final Pattern RUNTIME_ERROR =
-            Pattern.compile("^(?:[\\w$.]+\\.)?\\w*(?:Exception|Error|Throwable)(?:: .*)?$", Pattern.MULTILINE);
+            Pattern.compile("^(?:[\\w$.]+\\.)?[A-Z]\\w*(?:Exception|Error|Throwable)(?:: .*)?$", Pattern.MULTILINE);
+    /** Fallback pattern for uncaught qualified exceptions when stack trace is absent. */
+    private static final Pattern RUNTIME_ERROR_QUALIFIED =
+            Pattern.compile("^(?:java|scala|javax|jakarta)\\.[\\w$.]+\\.[A-Z]\\w*(?:Exception|Error|Throwable)(?:: .*)?$", Pattern.MULTILINE);
     /** A value or variable declaration echoed by the REPL. */
     private static final Pattern DECLARATION =
             Pattern.compile("^(?:val|var) (\\w+): (.+?) = ", Pattern.MULTILINE);
@@ -272,6 +283,7 @@ public class ScalaKernel extends Kernel<String> {
                     out.println("ERROR: incomplete code. The kernel has been restarted.");
                     out.flush();
                     restart();
+                    return false;
                 } else {
                     // The line opened a block (e.g. "class Foo {" or a
                     // method signature) whose continuation is on the next
@@ -283,18 +295,18 @@ public class ScalaKernel extends Kernel<String> {
                 continue;
             }
             captured.append(response).append('\n');
+
+            String error = detectError(response);
+            if (error != null) {
+                collectVariables(captured.toString());
+                process(List.of(error));
+                out.println("ERROR: " + error);
+                out.flush();
+                return false;
+            }
         }
 
-        String text = captured.toString();
-        String error = detectError(text);
-        if (error != null) {
-            process(List.of(error));
-            out.println("ERROR: " + error);
-            out.flush();
-            return false;
-        }
-
-        collectVariables(text);
+        collectVariables(captured.toString());
         return true;
     }
 
@@ -486,17 +498,33 @@ public class ScalaKernel extends Kernel<String> {
      * @param text the output produced by the REPL.
      * @return a one-line description of the error, or null if there is none.
      */
-    private String detectError(String text) {
-        if (COMPILER_DIAGNOSTIC.matcher(text).find() || COMPILER_SUMMARY.matcher(text).find()) {
-            Matcher matcher = COMPILER_DIAGNOSTIC.matcher(text);
-            String detail = matcher.find() ? matcher.group() : "compilation failed";
+    String detectError(String text) {
+        Matcher errorMatcher = COMPILER_ERROR.matcher(text);
+        if (errorMatcher.find() || COMPILER_SUMMARY.matcher(text).find()) {
+            Matcher diagMatcher = COMPILER_DIAGNOSTIC.matcher(text);
+            String detail;
+            if (diagMatcher.find()) {
+                detail = diagMatcher.group();
+            } else if (COMPILER_ERROR_LINE.matcher(text).find()) {
+                detail = "-- Error: --";
+            } else {
+                detail = "compilation failed";
+            }
             return "the snippet failed to compile (" + detail + ")";
         }
 
-        Matcher matcher = RUNTIME_ERROR.matcher(text);
-        if (matcher.find()) {
-            return matcher.group();
+        if (STACK_TRACE.matcher(text).find()) {
+            Matcher matcher = RUNTIME_ERROR.matcher(text);
+            if (matcher.find()) {
+                return matcher.group();
+            }
+        } else {
+            Matcher matcher = RUNTIME_ERROR_QUALIFIED.matcher(text);
+            if (matcher.find()) {
+                return matcher.group();
+            }
         }
+
         return null;
     }
 
