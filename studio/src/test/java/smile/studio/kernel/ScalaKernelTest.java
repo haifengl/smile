@@ -217,6 +217,89 @@ public class ScalaKernelTest {
     // ------------------------------------------------------------------
 
     @Test
+    public void testDetectErrorHeuristic() {
+        System.out.println("ScalaKernel: test error detection heuristic");
+        // Lines starting with -- Error: --
+        String replError = "-- Error: ----------------------------------------------------------------------\n"
+                + "1 |val x: Int = \"string\"\n"
+                + "  |             ^^^^^^^^\n"
+                + "  |             Found:    (\"string\" : String)\n"
+                + "  |             Required: Int\n"
+                + "1 error found\n";
+        assertEquals("the snippet failed to compile (-- Error: --)", kernel.detectError(replError));
+
+        String literalErrorDash = "-- Error: -- something broke\n";
+        assertEquals("the snippet failed to compile (-- Error: --)", kernel.detectError(literalErrorDash));
+
+        // Diagnostics with error code
+        String diagError = "-- [E006] Not Found Error: -----------------------------------------------------\n"
+                + "1 |noSuchFunction()\n"
+                + "1 error found\n";
+        assertEquals("the snippet failed to compile (-- [E006])", kernel.detectError(diagError));
+
+        // Compiler summary without header
+        String summaryOnly = "2 errors found\n";
+        assertEquals("the snippet failed to compile (compilation failed)", kernel.detectError(summaryOnly));
+
+        // Warnings must NOT be treated as compilation errors
+        String warningMsg = "-- Warning: --------------------------------------------------------------------\n"
+                + "1 |val 1 = 2\n"
+                + "1 warning found\n";
+        assertNull(kernel.detectError(warningMsg));
+
+        String warningCode = "-- [E030] Match case Unreachable Warning: -------------------------------------\n"
+                + "1 |case _ =>\n";
+        assertNull(kernel.detectError(warningCode));
+
+        // Runtime errors with stack trace / elision
+        String runtimeError = "java.lang.ArithmeticException: / by zero\n  ... 35 elided\n";
+        assertEquals("java.lang.ArithmeticException: / by zero", kernel.detectError(runtimeError));
+
+        String matchError = "scala.MatchError: 2 (of class java.lang.Integer)\n  ... 28 elided\n";
+        assertEquals("scala.MatchError: 2 (of class java.lang.Integer)", kernel.detectError(matchError));
+
+        // Normal output must not be detected as error
+        assertNull(kernel.detectError("val x: Int = 42\n"));
+        assertNull(kernel.detectError("Error: something failed\n"));
+        assertNull(kernel.detectError("This is not an error\n"));
+    }
+
+    @Test
+    public void testStopSendingCodeOnCompilationError() {
+        System.out.println("ScalaKernel: stop sending following code on compilation error");
+        output.clear();
+        assertFalse(evalSucceeds("val beforeErr = 100\nnoSuchFunction()\nval afterErr = 200"));
+        var names = kernel.variables().stream().map(Variable::name).toList();
+        assertTrue(names.contains("beforeErr"), "Code before error should be evaluated");
+        assertFalse(names.contains("afterErr"), "Code after error must not be evaluated");
+        assertFalse(output.buffer().toString().contains("afterErr = 200"),
+                "Following code must not produce output");
+        assertTrue(evalSucceeds("beforeErr == 100"), "Variables declared before error should exist in REPL");
+        assertFalse(evalSucceeds("afterErr"), "Variables declared after error must not exist in REPL");
+    }
+
+    @Test
+    public void testStopSendingCodeOnRuntimeError() {
+        System.out.println("ScalaKernel: stop sending following code on runtime error");
+        output.clear();
+        assertFalse(evalSucceeds("val beforeBoom = 300\n1 / 0\nval afterBoom = 400"));
+        var names = kernel.variables().stream().map(Variable::name).toList();
+        assertTrue(names.contains("beforeBoom"), "Code before error should be evaluated");
+        assertFalse(names.contains("afterBoom"), "Code after error must not be evaluated");
+        assertFalse(output.buffer().toString().contains("afterBoom = 400"),
+                "Following code must not produce output");
+        assertTrue(evalSucceeds("beforeBoom == 300"), "Variables declared before error should exist in REPL");
+        assertFalse(evalSucceeds("afterBoom"), "Variables declared after error must not exist in REPL");
+    }
+
+    @Test
+    public void testNormalOutputNotTreatedAsError() {
+        System.out.println("ScalaKernel: output mentioning error is not treated as failure");
+        assertTrue(evalSucceeds("println(\"Error: something failed\")"));
+        assertTrue(evalSucceeds("println(\"Not an Exception\")"));
+    }
+
+    @Test
     public void testEvalUnresolvedReference() {
         System.out.println("ScalaKernel: an unresolved reference returns false");
         assertFalse(evalSucceeds("noSuchFunction()"));
