@@ -405,3 +405,13 @@ operation that operates on a data vector whose length is an integer power
 of 2, transforming it into a numerically different vector of the same length.
 The wavelet transform is invertible and in fact orthogonal. Both FFT and DWT
 can be viewed as a rotation in function space.
+
+# Package smile.validation
+
+Model validation and selection.
+
+Model validation is the task of confirming that the outputs of a statistical
+model are acceptable with respect to the real data-generating process.
+A model can be validated only relative to some application area. A model
+that is valid for one application might be invalid for some other
+applications.

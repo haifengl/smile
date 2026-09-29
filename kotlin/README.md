@@ -30,7 +30,8 @@ The module depends on `:core` (ML), `:base` (data and I/O), and `:nlp`.
 8. [Manifold Learning](#manifold-learning)
 9. [Association Rule Mining](#association-rule-mining)
 10. [Wavelets](#wavelets)
-11. [Complete Examples](#complete-examples)
+11. [Model Validation](#model-validation)
+12. [Complete Examples](#complete-examples)
 
 ---
 
@@ -52,6 +53,7 @@ imports are natural:
 import smile.classification.*   // knn, logit, cart, randomForest, …
 import smile.regression.*       // lm, ridge, lasso, cart, randomForest, gpr, …
 import smile.clustering.*       // kmeans, hclust, dbscan, …
+import smile.validation.*       // validate, cv, loocv, bootstrap, accuracy, rmse, …
 import smile.nlp.*              // String.normalize(), String.bag(), …
 import smile.*                  // read, write objects
 ```
@@ -885,6 +887,116 @@ wsdenoise(
     filter = "haar",
     soft   = false    // true = soft thresholding, false = hard thresholding
 )
+```
+
+---
+
+## Model Validation
+
+Functions and validation runners live in `package smile.validation`.
+
+Import `smile.validation.*`.
+
+### One-shot train/test evaluation
+
+```kotlin
+import smile.validation.*
+
+// With raw arrays
+val result = validate.classification(trainX, trainY, testX, testY) { x, y ->
+    knn(x, y, 3)
+}
+println("Accuracy: ${result.metrics.accuracy}")
+
+// With DataFrame + Formula
+val result = validate.classification(formula, trainDf, testDf) { f, df ->
+    cart(f, df)
+}
+
+// Regression variants
+val regResult = validate.regression(trainX, trainY, testX, testY) { x, y ->
+    rbfnet(x, y, RBF.fit(x, 5))
+}
+val regResult = validate.regression(formula, trainDf, testDf) { f, df ->
+    lm(f, df)
+}
+```
+
+### Cross-Validation
+
+```kotlin
+// 5-fold cross-validation on DataFrame
+val cv5 = cv.classification(5, formula, data) { f, df ->
+    cart(f, df)
+}
+println("Avg Accuracy: ${cv5.avg.accuracy}")
+
+// With raw arrays
+val cv5 = cv.classification(5, x, y) { x, y ->
+    knn(x, y, 3)
+}
+
+// Stratified cross-validation
+val strat5 = cv.stratify(5, formula, data) { f, df ->
+    cart(f, df)
+}
+
+// Repeated cross-validation (2 rounds of 5-fold)
+val cvRep = cv.classification(2, 5, formula, data) { f, df ->
+    cart(f, df)
+}
+
+// Regression
+val cvReg = cv.regression(5, formula, data) { f, df -> lm(f, df) }
+val cvReg = cv.regression(5, x, y) { x, y -> rbfnet(x, y, RBF.fit(x, 5)) }
+```
+
+### Leave-One-Out CV
+
+```kotlin
+val loo = loocv.classification(formula, data) { f, df -> cart(f, df) }
+val loo = loocv.regression(formula, data) { f, df -> lm(f, df) }
+```
+
+### Bootstrap
+
+```kotlin
+val boot = bootstrap.classification(100, x, y) { x, y -> knn(x, y, 5) }
+val boot = bootstrap.regression(100, formula, data) { f, df -> lm(f, df) }
+```
+
+### Individual Metric Functions
+
+```kotlin
+import smile.validation.*
+
+// Classification
+val cm   = confusion(truth, predictions)
+val acc  = accuracy(truth, predictions)
+val rec  = recall(truth, predictions)
+val prec = precision(truth, predictions)
+val f1   = f1(truth, predictions)
+val f2   = fscore(truth, predictions, beta = 2.0)
+val sens = sensitivity(truth, predictions)
+val spec = specificity(truth, predictions)
+val fpr  = fallout(truth, predictions)
+val fdr  = fdr(truth, predictions)
+val auc  = auc(truth, probabilities)
+val ll   = logloss(truth, probabilities)
+val ce   = crossentropy(truth, probMatrix)
+val mcc  = mcc(truth, predictions)
+
+// Regression
+val mse  = mse(truth, predictions)
+val rmse = rmse(truth, predictions)
+val rss  = rss(truth, predictions)
+val mad  = mad(truth, predictions)
+val r2   = r2(truth, predictions)
+
+// Clustering
+val ri   = randIndex(y1, y2)
+val ari  = adjustedRandIndex(y1, y2)
+val nmi  = nmi(y1, y2)
 ```
 
 ---
