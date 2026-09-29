@@ -831,17 +831,15 @@ public class SmileStudio extends JFrame implements SearchListener {
      * @param args command-line arguments.
      */
     public static void start(String[] args) {
-        if (GraphicsEnvironment.isHeadless()) {
-            System.err.println("""
-                    Cannot start Smile Studio as JVM is running in headless mode.
-                    Run 'smile shell' for smile shell with Java.
-                    Run 'smile scala' for smile shell with Scala.""");
-            System.exit(1);
-        }
-
         // macOS global settings
         // Must be set on main thread and before AWT/Swing is initialized
         if (SystemInfo.isMacOS) {
+            // Disable Metal rendering pipeline to avoid CoreVideo CVDisplayLink crash
+            // on display sleep/wake/reconfiguration (JDK-8357418, JBR-5145).
+            // AWT falls back to the hardware-accelerated OpenGL pipeline.
+            if (System.getProperty("sun.java2d.metal") == null) {
+                System.setProperty("sun.java2d.metal", "false");
+            }
             // To move the menu bar out of the main window to the top of the screen on macOS.
             System.setProperty("apple.laf.useScreenMenuBar", "true");
             // Appearance of window title bars: use current macOS appearance
@@ -861,6 +859,14 @@ public class SmileStudio extends JFrame implements SearchListener {
             // enable custom window decorations
             JFrame.setDefaultLookAndFeelDecorated(true);
             JDialog.setDefaultLookAndFeelDecorated(true);
+        }
+
+        if (GraphicsEnvironment.isHeadless()) {
+            System.err.println("""
+                    Cannot start Smile Studio as JVM is running in headless mode.
+                    Run 'smile shell' for smile shell with Java.
+                    Run 'smile scala' for smile shell with Scala.""");
+            System.exit(1);
         }
 
         // Install font
