@@ -35,14 +35,14 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import smile.util.OS;
 
 /**
  * Scala code execution engine.
  *
- * <p>It drives {@code scala-cli repl} as a separate process and communicates
+ * <p>It drives {@code dotty.tools.repl.Main} in a child JVM process and communicates
  * with it through standard input and output, in the same way
- * {@link PythonKernel} drives {@code ipython}. Compared with the JSR-223
- * based {@link ScriptKernel}, running Scala in its own process gives us the
+ * {@link PythonKernel} drives {@code ipython}. Running Scala in its own process gives us the
  * real Scala 3 REPL: proper multi-line input, a compiler that matches the
  * language version, and no global {@code System.out} redirection.
  *
@@ -53,10 +53,7 @@ import java.util.stream.Collectors;
  * responsive.
  *
  * <p>The application classpath is passed to the REPL, so Scala scripts can use
- * the SMILE API just like the other kernels. This can be slow on first use,
- * as scala-cli downloads the compiler and dependencies.
- *
- * <p>Requires {@code scala-cli} on the {@code PATH}.
+ * the SMILE API just like the other kernels.
  *
  * @author Haifeng Li
  */
@@ -66,7 +63,7 @@ public class ScalaKernel extends Kernel<String> {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(ScalaKernel.class.getName(), Locale.getDefault());
     /** The Scala REPL prompt, which marks the completion of an evaluation. */
     private static final String PROMPT = "scala> ";
-    /** ANSI escape sequences, which scala-cli emits even with --color never. */
+    /** ANSI escape sequences, which the REPL may emit. */
     private static final Pattern ANSI = Pattern.compile("\u001B\\[[0-9;]*[A-Za-z]");
     /** The start of a Scala 3 compiler diagnostic, e.g. "-- [E006] Not Found Error:". */
     private static final Pattern COMPILER_DIAGNOSTIC = Pattern.compile("-- \\[E\\d+\\]");
@@ -82,8 +79,8 @@ public class ScalaKernel extends Kernel<String> {
     private static final Pattern DEFINITION =
             Pattern.compile("^// defined (?:case )?(\\w+) (\\w+)", Pattern.MULTILINE);
 
-    /** How long to wait for the first prompt, including compiler download. */
-    private static final long STARTUP_TIMEOUT_MS = 10 * 60 * 1000L;
+    /** How long to wait for the first prompt. */
+    private static final long STARTUP_TIMEOUT_MS = 60 * 1000L;
     /** How long to wait for a prompt before treating an intermediate line as continuation. */
     private static final long CONTINUATION_TIMEOUT_MS = 1000L;
     /** How long to wait for a prompt before treating the line as incomplete. */
@@ -94,13 +91,13 @@ public class ScalaKernel extends Kernel<String> {
     /** The variables declared in the session. */
     private final Map<String, String> variables = new LinkedHashMap<>();
 
-    /** scala-cli process. */
+    /** Child JVM process running dotty.tools.repl.Main. */
     private volatile Process process;
-    /** Send commands to the scala-cli process's input. */
+    /** Send commands to the child process's input. */
     private BufferedWriter writer;
     /** The thread that pumps the process's output. */
     private Thread pump;
-    /** Guards {@link #pending}, {@link #promptSeen} and {@link #eof}. */
+    /** Guards {@link #pending} and {@link #eof}. */
     private final Object lock = new Object();
     /** Output received but not yet consumed by {@link #eval}. */
     private final StringBuilder pending = new StringBuilder();
@@ -108,6 +105,10 @@ public class ScalaKernel extends Kernel<String> {
     private boolean eof = false;
     /** Holds back a possible partial prompt between reads. */
     private final StringBuilder carry = new StringBuilder();
+    /** Whether the initial startup prompt has been consumed. */
+    private volatile boolean started = false;
+    /** Whether output display is suppressed (e.g. during reset). */
+    private volatile boolean suppressingOutput = false;
 
     /**
      * Constructor.
@@ -121,30 +122,48 @@ public class ScalaKernel extends Kernel<String> {
         close();
         try {
             List<String> command = new ArrayList<>();
-            command.add("scala-cli");
-            command.add("repl");
-            command.add("--color");
-            command.add("never");
-            String classpath = classpath();
-            if (!classpath.isEmpty()) {
-                command.add("--classpath");
-                command.add(classpath);
+            command.add(javaExecutable());
+            command.add("-XX:MaxMetaspaceSize=1024M");
+            command.add("-Xss4M");
+            command.add("--add-opens=java.base/java.nio=ALL-UNNAMED");
+            command.add("--enable-native-access=ALL-UNNAMED");
+            if (OS.isWindows()) {
+                // Icons may become blurry due to desktop scaling with standard JDK.
+                // Set to 1.0 for no scaling if running with standard JDK.
+                // However, JBR optimizes HiDPI scaling.
+                //command.add("-Dsun.java2d.uiScale=1.0");
             }
             String home = System.getProperty("smile.home");
             if (home != null && !home.isBlank()) {
-                command.add("--java-opt");
                 command.add("-Dsmile.home=" + home);
+            }
+            command.add("-Dscala.usejavacp=true");
+
+            String classpath = classpath();
+            if (!classpath.isEmpty()) {
+                command.add("-cp");
+                command.add(classpath);
+            }
+
+            command.add("dotty.tools.repl.Main");
+            command.add("-color");
+            command.add("never");
+            command.add("-usejavacp");
+
+            String predef = loadPredef();
+            if (!predef.isEmpty()) {
+                command.add("-repl-init-script");
+                command.add(predef);
             }
 
             ProcessBuilder builder = new ProcessBuilder(command);
-            // scala-cli draws progress bars and JLine may probe the terminal;
-            // both would corrupt the output we parse.
-            builder.environment().put("COURSIER_PROGRESS", "false");
             builder.environment().put("TERM", "dumb");
             builder.redirectErrorStream(true);
             process = builder.start();
             writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream(), StandardCharsets.UTF_8));
 
+            started = false;
+            suppressingOutput = false;
             synchronized (lock) {
                 pending.setLength(0);
                 eof = false;
@@ -152,13 +171,16 @@ public class ScalaKernel extends Kernel<String> {
             carry.setLength(0);
             variables.clear();
 
-            pump = new Thread(this::pump, "scala-cli-output");
+            pump = new Thread(this::pump, "scala-repl-output");
             pump.setDaemon(true);
             pump.start();
 
             // Consume the banner and the first prompt.
             if (awaitPrompt(STARTUP_TIMEOUT_MS) == null) {
                 logger.error("Timed out waiting for the Scala REPL to start.");
+            } else {
+                started = true;
+                carry.setLength(0);
             }
         } catch (IOException ex) {
             logger.error("Failed to start the Scala REPL: {}", ex.getMessage());
@@ -174,6 +196,8 @@ public class ScalaKernel extends Kernel<String> {
 
     @Override
     public synchronized void close() {
+        started = false;
+        suppressingOutput = false;
         if (pump != null) {
             pump.interrupt();
             pump = null;
@@ -194,9 +218,15 @@ public class ScalaKernel extends Kernel<String> {
     public void reset() {
         // The REPL implements :reset, which forgets all session entries
         // without restarting the process.
-        sendLine(":reset");
-        awaitQuietly(EVAL_TIMEOUT_MS);
-        variables.clear();
+        suppressingOutput = true;
+        try {
+            sendLine(":reset");
+            awaitQuietly(EVAL_TIMEOUT_MS);
+            variables.clear();
+        } finally {
+            carry.setLength(0);
+            suppressingOutput = false;
+        }
     }
 
     @Override
@@ -358,7 +388,7 @@ public class ScalaKernel extends Kernel<String> {
                 display(text);
             }
         } catch (IOException ex) {
-            logger.warn("scala-cli output stream closed: {}", ex.getMessage());
+            logger.warn("Scala REPL output stream closed: {}", ex.getMessage());
         } finally {
             synchronized (lock) {
                 eof = true;
@@ -372,6 +402,9 @@ public class ScalaKernel extends Kernel<String> {
      * @param text the output received from the REPL.
      */
     private void display(String text) {
+        if (!started || suppressingOutput) {
+            return;
+        }
         carry.append(text);
         int start;
         while ((start = carry.indexOf(PROMPT)) >= 0) {
@@ -385,6 +418,56 @@ public class ScalaKernel extends Kernel<String> {
             print(carry.substring(0, safe));
             carry.delete(0, safe);
         }
+    }
+
+    /**
+     * Resolves the java executable for launching the child JVM.
+     *
+     * @return the java executable path.
+     */
+    private static String javaExecutable() {
+        String javaHome = System.getProperty("java.home");
+        if (javaHome != null && !javaHome.isBlank()) {
+            Path javaPath = Path.of(javaHome, "bin", OS.isWindows() ? "java.exe" : "java");
+            if (Files.exists(javaPath)) {
+                return javaPath.toString();
+            }
+        }
+        return ProcessHandle.current().info().command().orElse("java");
+    }
+
+    /**
+     * Loads the predef script used to initialize the REPL session.
+     *
+     * @return the predef script content, or empty string if not found.
+     */
+    private static String loadPredef() {
+        String home = System.getProperty("smile.home", ".");
+        List<Path> candidates = List.of(
+                Path.of(home, "bin", "predef.sc"),
+                Path.of(home, "studio", "src", "universal", "bin", "predef.sc"),
+                Path.of("bin", "predef.sc"),
+                Path.of("studio", "src", "universal", "bin", "predef.sc")
+        );
+        for (Path path : candidates) {
+            if (Files.exists(path)) {
+                try {
+                    return Files.readString(path, StandardCharsets.UTF_8);
+                } catch (IOException ex) {
+                    logger.warn("Failed to read predef script from {}: {}", path, ex.getMessage());
+                }
+            }
+        }
+
+        try (InputStream in = ScalaKernel.class.getResourceAsStream("/bin/predef.sc")) {
+            if (in != null) {
+                return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            }
+        } catch (IOException ex) {
+            // ignore
+        }
+
+        return "";
     }
 
     /**
