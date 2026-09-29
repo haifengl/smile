@@ -19,17 +19,18 @@ package org.apache.spark.ml.regression
 import java.nio.file.Files
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.sql.SparkSession
-import org.specs2.mutable.*
-import org.specs2.specification.{AfterAll, BeforeAll}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.BeforeAndAfterAll
 import smile.model.rbf.RBF
 import smile.regression.RBFNetwork
 import smile.io.Paths
 
-class SmileRegressionSpec extends Specification with BeforeAll with AfterAll{
+class SmileRegressionSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
 
   var spark: SparkSession = _
 
-  def beforeAll(): Unit = {
+  override def beforeAll(): Unit = {
     spark = SparkSession.builder().master("local[*]").getOrCreate()
   }
 
@@ -63,7 +64,7 @@ class SmileRegressionSpec extends Specification with BeforeAll with AfterAll{
     }
   }
 
-  def afterAll(): Unit = {
+  override def afterAll(): Unit = {
     spark.stop()
   }
 }

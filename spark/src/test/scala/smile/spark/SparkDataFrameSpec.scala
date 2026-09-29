@@ -17,19 +17,20 @@
 package smile.spark
 
 import org.apache.spark.sql.{DataFrame, Encoder, Encoders, SparkSession}
-import org.specs2.mutable.*
-import org.specs2.specification.{AfterAll, BeforeAll}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.BeforeAndAfterAll
 import smile.data.`type`.{DataTypes, StructField}
 import smile.io.Paths
 
 case class Person(name: String, age: Int, friends: Array[String])
 
-class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
+class SparkDataFrameSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
 
   var spark: SparkSession = _
   var sparkMushrooms: DataFrame = _
 
-  def beforeAll(): Unit = {
+  override def beforeAll(): Unit = {
     val path = "file:///" + Paths.getTestData("libsvm/mushrooms.svm").toAbsolutePath()
     spark = SparkSession.builder().master("local[*]").getOrCreate()
     sparkMushrooms = spark.read
@@ -74,7 +75,8 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
       val smilePersons = SparkDataFrame(sparkPersons.toDF())
 
       val names = Set("smith", "emma")
-      names must contain(smilePersons("name")(0)) and (names must contain(smilePersons("name")(1)))
+      names must contain (smilePersons("name")(0))
+      names must contain (smilePersons("name")(1))
     }
 
     "using object or implicit is equal" in {
@@ -85,7 +87,7 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
     }
   }
 
-  def afterAll(): Unit = {
+  override def afterAll(): Unit = {
     spark.stop()
   }
 }

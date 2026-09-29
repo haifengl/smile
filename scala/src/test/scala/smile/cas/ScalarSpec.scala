@@ -16,13 +16,14 @@
  */
 package smile.cas
 
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 
 /**
   *
   * @author Haifeng Li
   */
-class ScalarSpec extends Specification {
+class ScalarSpec extends AnyWordSpec with Matchers {
 
   "Scalar" should {
     "(3 + 5)" in {

@@ -19,7 +19,8 @@ package smile.plot.swing
 import java.awt.Color.{BLUE, RED}
 import java.lang.Math.*
 import scala.language.implicitConversions
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 import smile.read
 import smile.interpolation.*
 import smile.io.Paths
@@ -31,7 +32,7 @@ import smile.tensor.*
   *
   * @author Haifeng Li
   */
-class PlotSpec extends Specification {
+class PlotSpec extends AnyWordSpec with Matchers {
   val iris = read.arff(Paths.getTestData("weka/iris.arff"))
   // the matrix to display
   val z = Array(

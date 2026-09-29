@@ -16,19 +16,20 @@
  */
 package smile.spark
 
-import org.specs2.mutable.*
-import org.specs2.specification.{AfterAll, BeforeAll}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.BeforeAndAfterAll
 import org.apache.spark.sql.SparkSession
 import smile.data.`type`.{StructField, StructType}
 import smile.io.Read
 import smile.io.Paths
 
-class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
+class SmileDataFrameSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
 
   implicit var spark: SparkSession = _
   private val smileMushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).dropna()
 
-  def beforeAll(): Unit = {
+  override def beforeAll(): Unit = {
     spark = SparkSession.builder().master("local[*]").getOrCreate()
   }
 
@@ -46,7 +47,7 @@ class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
     }
   }
 
-  def afterAll(): Unit = {
+  override def afterAll(): Unit = {
     spark.stop()
   }
 }

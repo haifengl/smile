@@ -16,9 +16,10 @@
  */
 package smile.json
 
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 
-class CompactPrinterSpec extends Specification {
+class CompactPrinterSpec extends AnyWordSpec with Matchers {
 
   "The CompactPrinter" should {
     "print JsNull to 'null'" in {
@@ -63,20 +64,18 @@ class CompactPrinterSpec extends Specification {
       CompactPrinter(JsString("飞机因此受到损伤")) mustEqual "\"飞机因此受到损伤\""
       CompactPrinter(JsString("\uD834\uDD1E")) mustEqual "\"\uD834\uDD1E\""
     }
-    "properly print a simple JsObject" in (
-      CompactPrinter(JsObject("key" -> JsInt(42), "key2" -> JsString("value")))
-        mustEqual """{"key":42,"key2":"value"}"""
-      )
-    "properly print a simple JsArray" in (
-      CompactPrinter(JsArray(JsNull, JsDouble(1.23), JsObject("key" -> JsBoolean(true))))
-        mustEqual """[null,1.23,{"key":true}]"""
-      )
-    "properly print a simple JsArray in JSONL" in (
+    "properly print a simple JsObject" in {
+      CompactPrinter(JsObject("key" -> JsInt(42), "key2" -> JsString("value"))) mustEqual """{"key":42,"key2":"value"}"""
+    }
+    "properly print a simple JsArray" in {
+      CompactPrinter(JsArray(JsNull, JsDouble(1.23), JsObject("key" -> JsBoolean(true)))) mustEqual """[null,1.23,{"key":true}]"""
+    }
+    "properly print a simple JsArray in JSONL" in {
       """null
         |1.23
         |{"key":true}""".stripMargin mustEqual
       JsArray(JsNull, JsDouble(1.23), JsObject("key" -> JsBoolean(true))).jsonl
-      )
+    }
     "properly print a JSON padding (JSONP) if requested" in {
       CompactPrinter(JsTrue, Some("customCallback")) mustEqual "customCallback(true)"
     }

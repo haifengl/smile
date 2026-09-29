@@ -16,7 +16,8 @@
  */
 package smile.regression
 
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 import smile.datasets.Longley
 import smile.math.MathEx
 import smile.validation.metric.RMSE
@@ -25,7 +26,7 @@ import smile.validation.metric.RMSE
   *
   * @author Haifeng Li
   */
-class RegressionSpec extends Specification {
+class RegressionSpec extends AnyWordSpec with Matchers {
   var seeds = Array[Long](
     342317953, 521642753, 72070657, 577451521, 266953217, 179976193,
     374603777, 527788033, 303395329, 185759582, 261518209, 461300737,
@@ -77,7 +78,7 @@ class RegressionSpec extends Specification {
 
       val error = RMSE.of(longley.y(), model.predict(longley.data))
       println("Training RMSE = " + error)
-      error must beCloseTo(1.5771, 1E-4)
+      error must be (1.5771 +- 1E-4)
     }
 
     "Random Forest" in {
@@ -93,7 +94,7 @@ class RegressionSpec extends Specification {
 
       val error = RMSE.of(longley.y(), model.predict(longley.data))
       println("Training RMSE = " + error)
-      error must beCloseTo(1.6392, 1E-4)
+      error must be (1.6392 +- 1E-4)
     }
 
     "Gradient Boosting" in {
@@ -108,7 +109,7 @@ class RegressionSpec extends Specification {
 
       val error = RMSE.of(longley.y(), model.predict(longley.data))
       println("Training RMSE = " + error)
-      error must beCloseTo(2.1894, 1E-4)
+      error must be (2.1894 +- 1E-4)
     }
   }
 }

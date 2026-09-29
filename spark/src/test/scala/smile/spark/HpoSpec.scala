@@ -20,8 +20,9 @@ import java.util.Properties
 import java.util.stream.Collectors
 import scala.jdk.CollectionConverters.*
 import org.apache.spark.sql.SparkSession
-import org.specs2.mutable.*
-import org.specs2.specification.{AfterAll, BeforeAll}
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
+import org.scalatest.BeforeAndAfterAll
 import smile.classification.RandomForest
 import smile.data.DataFrame
 import smile.data.formula.Formula
@@ -29,11 +30,11 @@ import smile.hpo.Hyperparameters
 import smile.io.Read
 import smile.io.Paths
 
-class HpoSpec extends Specification with BeforeAll with AfterAll{
+class HpoSpec extends AnyWordSpec with Matchers with BeforeAndAfterAll {
 
   implicit var spark: SparkSession = _
 
-  def beforeAll(): Unit = {
+  override def beforeAll(): Unit = {
     spark = SparkSession.builder().master("local[*]").getOrCreate()
   }
 
@@ -61,7 +62,7 @@ class HpoSpec extends Specification with BeforeAll with AfterAll{
     }
   }
 
-  def afterAll(): Unit = {
+  override def afterAll(): Unit = {
     spark.stop()
   }
 }

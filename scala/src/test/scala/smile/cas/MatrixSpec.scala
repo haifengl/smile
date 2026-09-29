@@ -16,13 +16,14 @@
  */
 package smile.cas
 
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 
 /**
   *
   * @author Haifeng Li
   */
-class MatrixSpec extends Specification {
+class MatrixSpec extends AnyWordSpec with Matchers {
 
   "Matrix" should {
     "(x + 0)" in {

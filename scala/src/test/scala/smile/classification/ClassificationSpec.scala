@@ -16,7 +16,8 @@
  */
 package smile.classification
 
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 import smile.datasets.Iris
 import smile.math.MathEx
 import smile.validation.metric.Error
@@ -25,7 +26,7 @@ import smile.validation.metric.Error
   *
   * @author Haifeng Li
   */
-class ClassificationSpec extends Specification {
+class ClassificationSpec extends AnyWordSpec with Matchers {
   var seeds = Array[Long](
     342317953, 521642753, 72070657, 577451521, 266953217, 179976193,
     374603777, 527788033, 303395329, 185759582, 261518209, 461300737,

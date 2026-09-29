@@ -16,9 +16,10 @@
  */
 package smile.json
 
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 
-class PrettyPrinterSpec extends Specification {
+class PrettyPrinterSpec extends AnyWordSpec with Matchers {
 
   "The PrettyPrinter" should {
     "print a more complicated JsObject nicely aligned" in {

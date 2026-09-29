@@ -16,14 +16,15 @@
  */
 package smile
 
-import org.specs2.mutable.*
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.must.Matchers
 import smile.io.Paths
 
 /**
   *
   * @author Haifeng Li
   */
-class ReadSpec extends Specification {
+class ReadSpec extends AnyWordSpec with Matchers {
   "read" should {
     "arff" in {
       val weather = read.arff(Paths.getTestData("weka/weather.nominal.arff"))
