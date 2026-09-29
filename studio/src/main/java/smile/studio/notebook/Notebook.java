@@ -18,6 +18,8 @@ package smile.studio.notebook;
 
 import javax.swing.*;
 import javax.swing.Timer;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
@@ -272,7 +274,17 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
      * from one that can never run ({@link #UNSUPPORTED}), so that running a cell
      * early reports the former instead of the misleading latter.
      */
-    private enum KernelState {
+    /**
+     * The lifecycle state of the execution engine.
+     *
+     * <p>Kernel construction is expensive — the Scala and Python kernels start
+     * an external process and can take seconds to minutes to become ready — so
+     * it runs on a background thread while the notebook is already usable. This
+     * state distinguishes a kernel that is merely not ready yet ({@link #STARTING})
+     * from one that can never run ({@link #UNSUPPORTED}), so that running a cell
+     * early reports the former instead of the misleading latter.
+     */
+    public enum KernelState {
         /** The kernel is being created on a background thread. */
         STARTING,
         /** The kernel is constructed and ready to evaluate code. */
@@ -281,8 +293,60 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
         UNSUPPORTED
     }
 
+    /**
+     * Returns the lifecycle state of the execution engine.
+     * @return the lifecycle state of the execution engine.
+     */
+    public KernelState kernelState() {
+        return kernelState;
+    }
+
+    /**
+     * Sets the status in the status bar of the enclosing SmileStudio.
+     * If the notebook is not yet attached to a window ancestor, an
+     * AncestorListener is registered to update the status once attached.
+     *
+     * @param status the status message to display.
+     */
+    private void setKernelStatus(String status) {
+        if (SwingUtilities.getWindowAncestor(this) instanceof SmileStudio) {
+            SmileStudio.setStatus(this, status);
+        } else {
+            addAncestorListener(new AncestorListener() {
+                @Override
+                public void ancestorAdded(AncestorEvent event) {
+                    if (SwingUtilities.getWindowAncestor(Notebook.this) instanceof SmileStudio) {
+                        removeAncestorListener(this);
+                        String currentStatus = switch (kernelState) {
+                            case STARTING -> bundle.getString("KernelStarting");
+                            case READY -> bundle.getString("KernelReady");
+                            case UNSUPPORTED -> "";
+                        };
+                        SmileStudio.setStatus(Notebook.this, currentStatus);
+                    }
+                }
+
+                @Override
+                public void ancestorRemoved(AncestorEvent event) {}
+
+                @Override
+                public void ancestorMoved(AncestorEvent event) {}
+            });
+        }
+    }
+
     /** Initialize the kernel. */
     private void initKernel() {
+        if (!switch (lang) {
+            case "Java", "Scala", "Kotlin", "Python" -> true;
+            default -> false;
+        }) {
+            kernelState = KernelState.UNSUPPORTED;
+            return;
+        }
+
+        setKernelStatus(bundle.getString("KernelStarting"));
+
         SwingWorker<Kernel<?>, Void> worker = new SwingWorker<>() {
             @Override
             protected Kernel<?> doInBackground() throws IOException {
@@ -300,13 +364,20 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
                 try {
                     kernel = get();
                     kernelState = kernel == null ? KernelState.UNSUPPORTED : KernelState.READY;
+                    if (kernelState == KernelState.READY) {
+                        SmileStudio.setStatus(Notebook.this, bundle.getString("KernelReady"));
+                    } else {
+                        SmileStudio.setStatus(Notebook.this, "");
+                    }
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                     kernelState = KernelState.UNSUPPORTED;
+                    SmileStudio.setStatus(Notebook.this, "");
                 } catch (ExecutionException ex) {
                     // The kernel constructor failed (e.g. Python is not installed).
                     logger.error("Failed to initialize {} kernel: {}", lang, ex.getCause().getMessage());
                     kernelState = KernelState.UNSUPPORTED;
+                    SmileStudio.setStatus(Notebook.this, "");
                     SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Notebook.this,
                             MessageFormat.format(bundle.getString("KernelInitErrorMessage"), lang),
                             "Error",
