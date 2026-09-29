@@ -63,8 +63,10 @@ public class JavaKernel extends Kernel<SnippetEvent> {
                 .remoteVMOptions("-Dsmile.home=" + System.getProperty("smile.home", "."));
 
         if (SystemInfo.isWindows) {
-            // Set to 1.0 for no scaling
-            builder = builder.remoteVMOptions("-Dsun.java2d.uiScale=1.0");
+            // Icons may become blurry due to desktop scaling with standard JDK.
+            // Set to 1.0 for no scaling if running with standard JDK.
+            // However, JBR optimizes HiDPI scaling.
+            //builder = builder.remoteVMOptions("-Dsun.java2d.uiScale=1.0");
         }
         jshell = builder.build();
         sourceAnalyzer = jshell.sourceCodeAnalysis();

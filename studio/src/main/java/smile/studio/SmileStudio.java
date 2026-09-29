@@ -852,8 +852,8 @@ public class SmileStudio extends JFrame implements SearchListener {
 
         if (SystemInfo.isWindows) {
             // Icons may become blurry due to desktop scaling with standard JDK.
-            // However, JBR optimizes HiDPI scaling.
             // Set to 1.0 for no scaling if running with standard JDK.
+            // However, JBR optimizes HiDPI scaling.
             //System.setProperty("sun.java2d.uiScale", "1.0");
         }
 
@@ -882,6 +882,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         // Creating and showing GUI in EDT.
         SwingUtilities.invokeLater(() -> {
             if (args != null && args.length > 0) {
+                for (var arg : args) System.err.println(arg);
                 logger.warn("Smile Studio doesn't take arguments. Please start Smile Studio in your project directory.");
             }
             createAndShowGUI();
