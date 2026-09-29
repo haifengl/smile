@@ -167,12 +167,21 @@ public class ScalaKernelTest {
         assertTrue(ScalaKernel.isKotlinClasspathEntry("C:/code/smile/kotlin/build/classes/kotlin/main"));
         assertTrue(ScalaKernel.isKotlinClasspathEntry("/home/user/smile/kotlin/bin/classes"));
 
+        // Kotlin compiler & tooling jars
+        assertTrue(ScalaKernel.isKotlinClasspathEntry("org.jetbrains.kotlin.kotlin-compiler-embeddable-2.4.20.jar"));
+        assertTrue(ScalaKernel.isKotlinClasspathEntry("org.jetbrains.kotlin.kotlin-daemon-embeddable-2.4.20.jar"));
+        assertTrue(ScalaKernel.isKotlinClasspathEntry("org.jetbrains.kotlin.kotlin-scripting-compiler-embeddable-2.4.20.jar"));
+        assertTrue(ScalaKernel.isKotlinClasspathEntry("org.jetbrains.kotlin.kotlin-scripting-compiler-impl-embeddable-2.4.20.jar"));
+        assertTrue(ScalaKernel.isKotlinClasspathEntry("org.jetbrains.kotlin.kotlin-scripting-jvm-host-2.4.20.jar"));
+        assertTrue(ScalaKernel.isKotlinClasspathEntry("org.jetbrains.kotlin.kotlin-build-tools-api-2.4.20.jar"));
+
+        // Scala jars should not be filtered out by isKotlinClasspathEntry
         assertFalse(ScalaKernel.isKotlinClasspathEntry("com.github.haifengl.smile-scala-6.3.0.jar"));
         assertFalse(ScalaKernel.isKotlinClasspathEntry("smile-scala_3-6.3.0.jar"));
-        assertFalse(ScalaKernel.isKotlinClasspathEntry("kotlin-stdlib-2.4.20.jar"));
-        assertFalse(ScalaKernel.isKotlinClasspathEntry("kotlin-reflect-1.9.25.jar"));
-        assertFalse(ScalaKernel.isKotlinClasspathEntry("kotlin-scripting-jvm-2.4.20.jar"));
+        assertFalse(ScalaKernel.isKotlinClasspathEntry("org.scala-lang.scala3-compiler_3-3.9.0.jar"));
         assertFalse(ScalaKernel.isKotlinClasspathEntry("scala3-library_3-3.9.0.jar"));
+        assertFalse(ScalaKernel.isKotlinClasspathEntry("org.jetbrains.kotlin.kotlin-stdlib-2.4.20.jar"));
+        assertFalse(ScalaKernel.isKotlinClasspathEntry("org.jetbrains.kotlin.kotlin-reflect-1.9.25.jar"));
         assertFalse(ScalaKernel.isKotlinClasspathEntry(null));
         assertFalse(ScalaKernel.isKotlinClasspathEntry(""));
     }

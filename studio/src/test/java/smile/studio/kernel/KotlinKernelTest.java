@@ -132,11 +132,22 @@ public class KotlinKernelTest {
         assertTrue(KotlinKernel.isScalaClasspathEntry("C:/code/smile/scala/build/classes/scala/main"));
         assertTrue(KotlinKernel.isScalaClasspathEntry("/home/user/smile/scala/bin/classes"));
 
+        // Scala compiler & tooling jars
+        assertTrue(KotlinKernel.isScalaClasspathEntry("org.scala-lang.scala3-compiler_3-3.9.0.jar"));
+        assertTrue(KotlinKernel.isScalaClasspathEntry("org.scala-lang.scala3-repl_3-3.9.0.jar"));
+        assertTrue(KotlinKernel.isScalaClasspathEntry("org.scala-lang.scala3-directives-parser_3-3.9.0.jar"));
+        assertTrue(KotlinKernel.isScalaClasspathEntry("org.scala-lang.scala3-interfaces-3.9.0.jar"));
+        assertTrue(KotlinKernel.isScalaClasspathEntry("org.scala-sbt.compiler-interface-1.12.0.jar"));
+        assertTrue(KotlinKernel.isScalaClasspathEntry("org.scala-sbt.util-interface-1.11.5.jar"));
+        assertTrue(KotlinKernel.isScalaClasspathEntry("org.scala-lang.tasty-core_3-3.9.0.jar"));
+        assertTrue(KotlinKernel.isScalaClasspathEntry("org.scala-lang.modules.scala-asm-9.9.0-scala-1.jar"));
+
+        // Kotlin compiler jars should not be filtered out by isScalaClasspathEntry
+        assertFalse(KotlinKernel.isScalaClasspathEntry("org.jetbrains.kotlin.kotlin-compiler-embeddable-2.4.20.jar"));
+        assertFalse(KotlinKernel.isScalaClasspathEntry("org.jetbrains.kotlin.kotlin-daemon-embeddable-2.4.20.jar"));
+        assertFalse(KotlinKernel.isScalaClasspathEntry("org.jetbrains.kotlin.kotlin-scripting-compiler-embeddable-2.4.20.jar"));
         assertFalse(KotlinKernel.isScalaClasspathEntry("com.github.haifengl.smile-kotlin-6.3.0.jar"));
         assertFalse(KotlinKernel.isScalaClasspathEntry("smile-kotlin-6.3.0.jar"));
-        assertFalse(KotlinKernel.isScalaClasspathEntry("scala3-library_3-3.9.0.jar"));
-        assertFalse(KotlinKernel.isScalaClasspathEntry("scala-library-2.13.18.jar"));
-        assertFalse(KotlinKernel.isScalaClasspathEntry("scala-logging_3-3.9.6.jar"));
         assertFalse(KotlinKernel.isScalaClasspathEntry("kotlin-stdlib-2.4.20.jar"));
         assertFalse(KotlinKernel.isScalaClasspathEntry(null));
         assertFalse(KotlinKernel.isScalaClasspathEntry(""));
