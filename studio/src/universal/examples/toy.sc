@@ -1,8 +1,8 @@
 // Toy example
-import smile._
-import smile.io._
-import smile.data.formula._
-import smile.classification._
+import smile.*
+import smile.io.*
+import smile.data.formula.*
+import smile.classification.*
 
 val data = read.arff(Paths.getTestData("weka/iris.arff"))
 println(data)

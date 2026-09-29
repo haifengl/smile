@@ -1,8 +1,8 @@
 // t-SNE on MNIST
-import smile.io._
-import smile.feature.extraction._
-import smile.manifold._
-import smile.plot.swing._
+import smile.io.*
+import smile.feature.extraction.*
+import smile.manifold.*
+import smile.plot.swing.*
 
 var mnist = smile.read.csv(Paths.getTestData("mnist/mnist2500_X.txt").toString, delimiter=" ", header=false).toArray()
 val labels = smile.read.csv(Paths.getTestData("mnist/mnist2500_labels.txt").toString, header=false).column(0).toIntArray()

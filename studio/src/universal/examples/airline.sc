@@ -1,12 +1,12 @@
 // Benchmark on Airline data
 // https://github.com/szilard/benchm-ml
-import smile._
-import smile.io._
-import smile.classification._
-import smile.data.formula._
-import smile.data.measure._
-import smile.data.`type`._
-import smile.validation._
+import smile.*
+import smile.io.*
+import smile.classification.*
+import smile.data.formula.*
+import smile.data.measure.*
+import smile.data.`type`.*
+import smile.validation.*
 
 val airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
   "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN", "ALB", "ALO", "AMA", "ANC",

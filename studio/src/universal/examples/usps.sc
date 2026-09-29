@@ -1,19 +1,19 @@
 // Benchmark on USPS zip code handwriting data
-import smile._
-import smile.io._
-import smile.clustering._
-import smile.data.formula._
-import smile.data.`type`._
-import smile.classification._
-import smile.math._
-import smile.math.distance._
-import smile.math.kernel._
-import smile.math.rbf._
+import smile.*
+import smile.io.*
+import smile.clustering.*
+import smile.data.formula.*
+import smile.data.`type`.*
+import smile.classification.*
+import smile.math.*
+import smile.math.distance.*
+import smile.math.kernel.*
+import smile.math.rbf.*
 import smile.model.rbf.RBF
 import smile.model.mlp.{Layer, OutputFunction}
 import smile.util.function.TimeFunction
-import smile.validation._
-import smile.validation.metric._
+import smile.validation.*
+import smile.validation.metric.*
 
 val fields = new java.util.ArrayList[StructField]
 fields.add(new StructField("class", DataTypes.ByteType))
