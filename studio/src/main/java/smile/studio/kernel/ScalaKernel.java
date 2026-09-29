@@ -179,7 +179,9 @@ public class ScalaKernel extends Kernel<String> {
                 pending.setLength(0);
                 eof = false;
             }
-            carry.setLength(0);
+            synchronized (carry) {
+                carry.setLength(0);
+            }
             variables.clear();
 
             pump = new Thread(this::pump, "scala-repl-output");
@@ -191,7 +193,9 @@ public class ScalaKernel extends Kernel<String> {
                 logger.error("Timed out waiting for the Scala REPL to start.");
             } else {
                 started = true;
-                carry.setLength(0);
+                synchronized (carry) {
+                    carry.setLength(0);
+                }
             }
         } catch (IOException ex) {
             logger.error("Failed to start the Scala REPL: {}", ex.getMessage());
@@ -235,7 +239,9 @@ public class ScalaKernel extends Kernel<String> {
             awaitQuietly(EVAL_TIMEOUT_MS);
             variables.clear();
         } finally {
-            carry.setLength(0);
+            synchronized (carry) {
+                carry.setLength(0);
+            }
             suppressingOutput = false;
         }
     }
@@ -393,11 +399,11 @@ public class ScalaKernel extends Kernel<String> {
             int count;
             while ((count = reader.read(buffer)) >= 0) {
                 String text = new String(buffer, 0, count);
+                display(text);
                 synchronized (lock) {
                     pending.append(text);
                     lock.notifyAll();
                 }
-                display(text);
             }
         } catch (IOException ex) {
             logger.warn("Scala REPL output stream closed: {}", ex.getMessage());
@@ -417,18 +423,20 @@ public class ScalaKernel extends Kernel<String> {
         if (!started || suppressingOutput) {
             return;
         }
-        carry.append(text);
-        int start;
-        while ((start = carry.indexOf(PROMPT)) >= 0) {
-            print(carry.substring(0, start));
-            carry.delete(0, start + PROMPT.length());
-        }
+        synchronized (carry) {
+            carry.append(text);
+            int start;
+            while ((start = carry.indexOf(PROMPT)) >= 0) {
+                print(carry.substring(0, start));
+                carry.delete(0, start + PROMPT.length());
+            }
 
-        // Keep the tail in case it is the beginning of a prompt.
-        int safe = carry.length() - (PROMPT.length() - 1);
-        if (safe > 0) {
-            print(carry.substring(0, safe));
-            carry.delete(0, safe);
+            // Keep the tail in case it is the beginning of a prompt.
+            int safe = carry.length() - (PROMPT.length() - 1);
+            if (safe > 0) {
+                print(carry.substring(0, safe));
+                carry.delete(0, safe);
+            }
         }
     }
 
