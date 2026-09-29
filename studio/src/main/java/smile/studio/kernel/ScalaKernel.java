@@ -139,11 +139,6 @@ public class ScalaKernel extends Kernel<String> {
             command.add("-XX:MaxMetaspaceSize=1024M");
             command.add("-Xss4M");
             command.add("--add-opens=java.base/java.nio=ALL-UNNAMED");
-            command.add("--add-opens=java.desktop/sun.swing=ALL-UNNAMED");
-            if (OS.isMacOS()) {
-                command.add("--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED");
-                command.add("--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED");
-            }
             command.add("--enable-native-access=ALL-UNNAMED");
             if (OS.isWindows()) {
                 // Icons may become blurry due to desktop scaling with standard JDK.
