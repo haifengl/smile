@@ -101,4 +101,39 @@ class IntentTest {
         Intent intent2 = new Intent(null);
         assertEquals("gpt-6-sol", intent2.resolveModel().model().id());
     }
+
+    @Test
+    void agentStatusPrefixIsRobotEmoji() {
+        assertEquals(Character.toString(0x1F916) + " ", Intent.AGENT_STATUS_PREFIX);
+    }
+
+    @Test
+    void setStatusUpdatesLabelAndTooltip() {
+        Intent intent = new Intent(null);
+        intent.setStatus("Thinking...");
+        assertEquals("Thinking...", intent.status().getText());
+        assertEquals("Thinking...", intent.status().getToolTipText());
+    }
+
+    @Test
+    void setStatusNormalizesWhitespace() {
+        Intent intent = new Intent(null);
+        intent.setStatus("   Searching    codebase \t\n ");
+        assertEquals("Searching codebase", intent.status().getText());
+    }
+
+    @Test
+    void setStatusWithNullOrEmptyClearsLabel() {
+        Intent intent = new Intent(null);
+        intent.setStatus("Running");
+        assertEquals("Running", intent.status().getText());
+
+        intent.setStatus("");
+        assertEquals("", intent.status().getText());
+        assertNull(intent.status().getToolTipText());
+
+        intent.setStatus(null);
+        assertEquals("", intent.status().getText());
+        assertNull(intent.status().getToolTipText());
+    }
 }

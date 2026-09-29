@@ -42,7 +42,7 @@ public class SearchResourceBundleTest {
             Locale.SIMPLIFIED_CHINESE,
             Locale.JAPAN,
             Locale.FRANCE,
-            new Locale("es", "ES"));
+            Locale.of("es", "ES"));
 
     /** Keys the Find and Replace menu reads at runtime. */
     private static final List<String> REQUIRED_KEYS = List.of(
