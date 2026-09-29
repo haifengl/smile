@@ -309,7 +309,7 @@ dissimilarities are distances on a surface and the target space is another
 surface, GMDS allows finding the minimum-distortion embedding of one surface
 into another.
   
-# Package smile.projection
+# Package smile.feature.extraction
 
 Feature extraction.
 

@@ -26,7 +26,7 @@ The module depends on `:core` (ML), `:base` (data and I/O), and `:nlp`.
 4. [Regression](#regression)
 5. [Clustering](#clustering)
 6. [Natural Language Processing](#natural-language-processing)
-7. [Dimensionality Reduction and Projection](#dimensionality-reduction-and-projection)
+7. [Dimensionality Reduction and Feature Extraction](#dimensionality-reduction-and-feature-extraction)
 8. [Manifold Learning](#manifold-learning)
 9. [Association Rule Mining](#association-rule-mining)
 10. [Wavelets](#wavelets)
@@ -664,7 +664,7 @@ val matrix: List<DoubleArray> = tfidf(corpus.map { it.toDoubleArray() })
 
 ---
 
-## Dimensionality Reduction and Projection
+## Dimensionality Reduction and Feature Extraction
 
 Functions live in `package smile.feature.extraction`.
 
@@ -673,16 +673,28 @@ Functions live in `package smile.feature.extraction`.
 ```kotlin
 import smile.feature.extraction.*
 
-// PCA on covariance matrix
+// PCA on DataFrame (covariance or correlation)
+val pcaDf = pca(df)
+val pcaCor = pca(df, cor = true)
+val pcaCols = pca(df, false, "feature1", "feature2")
+
+// PCA on raw array
 val pca: PCA = pca(x, cor = false)
 
-// PCA on correlation matrix (for variables on different scales)
-val pca = pca(x, cor = true)
+// Project data point
+val projected: DoubleArray = pca.apply(x[0])
 
-// Project to k dimensions
-val projected: Array<DoubleArray> = pca.project(x, k = 2)
+// Change number of retained components
+val pca2 = pca.getProjection(2)
+```
 
-// Probabilistic PCA (handles missing values, gives Bayesian interpretation)
+### Probabilistic PCA
+
+```kotlin
+// On DataFrame
+val ppcaDf: ProbabilisticPCA = ppca(df, k = 10)
+
+// On raw array
 val ppca: ProbabilisticPCA = ppca(x, k = 10)
 ```
 
@@ -709,9 +721,41 @@ val model: GHA = gha(
     r    = TimeFunction.linear(0.01, 10_000.0, 0.001)
 )
 
-// With an explicit initial weight matrix (shape: inputDim × k)
-val w = Array(inputDim) { DoubleArray(k) }
-val model: GHA = gha(x, w, r = TimeFunction.constant(0.001))
+// With constant learning rate
+val model: GHA = gha(x, k = 10, r = 0.001)
+
+// With an explicit initial weight matrix (shape: k × inputDim)
+val w = Array(k) { DoubleArray(inputDim) }
+val model: GHA = gha(x, w, r = 0.001)
+```
+
+### Random Projection
+
+```kotlin
+// Gaussian random projection
+val rp = randomProjection(n = 100, p = 10)
+
+// Sparse random projection
+val srp = randomProjection(n = 100, p = 10, sparse = true)
+```
+
+### Feature Encoders
+
+```kotlin
+// Sparse binary one-hot encoder
+val binEnc = binaryEncoder(df.schema(), "outlook", "temperature")
+// or extension syntax
+val binEnc = df.binaryEncoder("outlook", "temperature")
+
+// Sparse encoder for mixed numeric and categorical features
+val spEnc = df.sparseEncoder()
+
+// Feature hashing (hashing trick)
+val hasher = hashEncoder(numFeatures = 1000) { text -> text.split(" ").toTypedArray() }
+
+// Bag-of-words feature transform
+val bow = bagOfWords(words = arrayOf("apple", "banana", "cherry")) { it.split(" ").toTypedArray() }
+val bowDf = bagOfWords(df, k = 100, "text") { it.split(" ").toTypedArray() }
 ```
 
 ---
