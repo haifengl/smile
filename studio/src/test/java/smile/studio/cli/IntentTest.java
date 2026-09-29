@@ -136,4 +136,56 @@ class IntentTest {
         assertEquals("", intent.status().getText());
         assertNull(intent.status().getToolTipText());
     }
+
+    @Test
+    void subagentRun_selectsMasterTabWhenMasterOutputsTokensAgain() {
+        Intent intent = new Intent(null);
+        assertNull(intent.runs());
+
+        // Master agent starts with no tabs initially
+        intent.appendRun(null, "Thinking...");
+        assertNull(intent.runs());
+
+        // Master agent starts a subagent
+        intent.beginRun("run-1", "Explore Code", "Guido");
+        assertNotNull(intent.runs());
+        assertEquals(2, intent.runs().getTabCount());
+        // Subagent tab is selected
+        assertEquals(1, intent.runs().getSelectedIndex());
+        assertEquals("Explore Code", intent.runs().getTitleAt(1));
+        assertEquals("Guido", intent.runs().getTitleAt(0));
+
+        // Subagent streams tokens
+        intent.appendRun("run-1", "Exploring...");
+        assertEquals(1, intent.runs().getSelectedIndex());
+
+        // Subagent finishes - master agent tab is not selected yet
+        intent.finishRun("run-1", "Finished");
+        assertEquals(1, intent.runs().getSelectedIndex());
+
+        // Master agent starts outputting tokens again - master tab is selected
+        intent.appendRun(null, "Based on my findings...");
+        assertEquals(0, intent.runs().getSelectedIndex());
+
+        // User switches to subagent tab while master is outputting tokens
+        intent.runs().setSelectedIndex(1);
+        assertEquals(1, intent.runs().getSelectedIndex());
+
+        // Subsequent master agent tokens do not forcibly snap back
+        intent.appendRun(null, " here are more details.");
+        assertEquals(1, intent.runs().getSelectedIndex());
+
+        // Another subagent starts
+        intent.beginRun("run-2", "Run Tests", "Guido");
+        assertEquals(3, intent.runs().getTabCount());
+        assertEquals(2, intent.runs().getSelectedIndex());
+
+        // Subagent finishes
+        intent.finishRun("run-2", "Finished");
+        assertEquals(2, intent.runs().getSelectedIndex());
+
+        // Master outputs tokens again -> selects master tab
+        intent.appendRun(null, "Tests completed.");
+        assertEquals(0, intent.runs().getSelectedIndex());
+    }
 }

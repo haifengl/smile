@@ -90,6 +90,7 @@ public class Intent extends JPanel {
     private JTabbedPane runs;
     private final Map<String, JPanel> runPanes = new LinkedHashMap<>();
     private final Map<String, OutputArea> runOutputs = new LinkedHashMap<>();
+    private boolean selectMasterOnNextOutput;
 
     /**
      * Constructor.
@@ -587,6 +588,7 @@ public class Intent extends JPanel {
             if (index >= 0) {
                 runs.setSelectedIndex(index);
             }
+            selectMasterOnNextOutput = true;
             return;
         }
 
@@ -616,6 +618,7 @@ public class Intent extends JPanel {
         int index = runs.getTabCount() - 1;
         runs.setToolTipTextAt(index, "Running");
         runs.setSelectedIndex(index);
+        selectMasterOnNextOutput = true;
         outputPane.revalidate();
         outputPane.repaint();
     }
@@ -644,11 +647,36 @@ public class Intent extends JPanel {
     }
 
     /**
+     * Returns the tabbed pane for subagent runs, or null if no subagent has run.
+     * @return the tabbed pane for runs.
+     */
+    JTabbedPane runs() {
+        return runs;
+    }
+
+    /**
+     * Selects the master agent tab in the output pane if subagent tabs exist.
+     */
+    public void selectMasterRun() {
+        if (runs != null && runs.getTabCount() > 0) {
+            JPanel parent = runPanes.get("");
+            int index = parent != null ? runTabIndex(parent) : 0;
+            if (index >= 0 && index < runs.getTabCount() && runs.getSelectedIndex() != index) {
+                runs.setSelectedIndex(index);
+            }
+        }
+    }
+
+    /**
      * Appends text to the parent output or to one subagent tab.
      * @param runId null for the parent turn.
      * @param chunk the text to append.
      */
     public void appendRun(String runId, String chunk) {
+        if (selectMasterOnNextOutput && (runId == null || runId.isEmpty())) {
+            selectMasterOnNextOutput = false;
+            selectMasterRun();
+        }
         OutputArea area = runId == null || runs == null ? output : runOutputs.get(runId);
         if (area == null) {
             area = output;
@@ -673,6 +701,7 @@ public class Intent extends JPanel {
         if (index >= 0) {
             runs.setToolTipTextAt(index, tooltip);
         }
+        selectMasterOnNextOutput = true;
     }
 
     /**
