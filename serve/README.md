@@ -910,6 +910,13 @@ the local **`me`** account so dev workflows work without OAuth.
 
 #### Authentication
 
+The authentication endpoints manage user identity specifically for conversation
+history and personal settings. Note that this is a session-cookie identity
+mechanism intended for personal use and UI convenience, not an enterprise
+authentication or authorization system: enterprise access control belongs to the
+API gateway layer, and ML/ONNX inference endpoints are intentionally unauthenticated
+at the engine level.
+
 | Endpoint | Description |
 |---|---|
 | `GET /api/v1/auth/me` | Current user (`logged_in`, `user` profile) or guest |
