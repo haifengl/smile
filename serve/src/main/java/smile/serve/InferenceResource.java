@@ -20,7 +20,6 @@ package smile.serve;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -35,6 +34,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.json.JsonObject;
 import org.jboss.resteasy.reactive.RestStreamElementType;
+import smile.model.Prediction;
 
 /**
  * REST resource exposing the classic SMILE model inference API at
@@ -56,9 +56,6 @@ public class InferenceResource {
     @Inject
     InferenceService service;
 
-    @Inject
-    ObjectMapper objectMapper;
-
     /**
      * Returns the metadata of a single model.
      *
@@ -78,15 +75,15 @@ public class InferenceResource {
      * @param explainQuery optional query parameter {@code ?explain=true}.
      * @param id           the model ID.
      * @param request      JSON object whose keys are feature names and optional {@code enableExplanations}.
-     * @return the inference response with prediction and optional probabilities and explanations.
+     * @return the prediction with optional probabilities and explanations.
      */
     @POST
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public InferenceResponse predict(@QueryParam("explain") boolean explainQuery,
-                                     @PathParam("id") String id,
-                                     JsonObject request) {
+    public Prediction predict(@QueryParam("explain") boolean explainQuery,
+                              @PathParam("id") String id,
+                              JsonObject request) {
         boolean explain = explainQuery || Boolean.TRUE.equals(request != null ? request.getBoolean("enableExplanations") : null);
         return service.predict(id, request, explain);
     }
@@ -102,7 +99,7 @@ public class InferenceResource {
      * @param contentType  the MIME type of each input line.
      * @param id           the model ID.
      * @param input        the request body input stream.
-     * @return a reactive stream of JSON inference result strings.
+     * @return a reactive stream of JSON prediction strings.
      */
     @POST
     @Path("/{id}/stream")
@@ -123,7 +120,7 @@ public class InferenceResource {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         if (!line.isBlank()) {
-                            InferenceResponse response;
+                            Prediction response;
                             if (json) {
                                 var jsonObject = new JsonObject(line);
                                 boolean explain = explainQuery || Boolean.TRUE.equals(jsonObject.getBoolean("enableExplanations"));
@@ -131,7 +128,7 @@ public class InferenceResource {
                             } else {
                                 response = model.predict(line, explainQuery);
                             }
-                            emitter.emit(objectMapper.writeValueAsString(response));
+                            emitter.emit(response.toJson());
                         }
                     }
                     emitter.complete();
