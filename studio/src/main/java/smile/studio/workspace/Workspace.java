@@ -120,6 +120,7 @@ public class Workspace extends JSplitPane {
 
         Agent dataScientist = initDataScientist(cwd);
         Agent productManager = initProductManager(cwd);
+        Agent desktopOperator = initDesktopOperator(cwd);
         coders.put("Java", initJavaCoder(cwd));
         coders.put("Python", initPythonCoder(cwd));
         fileExplorer = new FileExplorer(cwd);
@@ -159,6 +160,7 @@ public class Workspace extends JSplitPane {
         openAgent("\uD83D\uDCD0 Ada the Architect", architect, "ada", architectCLI(architect));
         openAgent("☕ James the Java Guru", coders.get("Java"), "james", javaCoderCLI(coders.get("Java")));
         openAgent("\uD83D\uDC0D Guido the Pythonista", coders.get("Python"), "guido", pythonCoderCLI(coders.get("Python")));
+        openAgent("\uD83D\uDDA5\uFE0F Chuck the Desktop Operator", desktopOperator, "chuck", desktopOperatorCLI(desktopOperator));
 
         project.setLeftComponent(explorerTabs);
         project.setRightComponent(notebookTabs);
@@ -235,6 +237,20 @@ public class Workspace extends JSplitPane {
             return agent;
         } catch (Exception ex) {
             logger.error("Failed to initialize architect agent: {}", ex.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Initializes the desktop operator agent.
+     */
+    private Agent initDesktopOperator(Path cwd) {
+        try {
+            Agent agent = new Agent(Agent.Spec.of("desktop-operator"), SmileStudio::llm, cwd);
+            applyDefaultModel(agent);
+            return agent;
+        } catch (Exception ex) {
+            logger.error("Failed to initialize desktop operator agent: {}", ex.getMessage());
         }
         return null;
     }
@@ -351,6 +367,20 @@ public class Workspace extends JSplitPane {
                         bundle.getString("Tips"),
                 MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
                         "\n\n" + bundle.getString("ArchitectOutput"));
+        return cli;
+    }
+
+    /**
+     * Creates a desktop operator agent cli.
+     */
+    private AgentCLI desktopOperatorCLI(Agent desktopOperator) {
+        var cli = new AgentCLI(desktopOperator, this);
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+                        bundle.getString("WelcomeSeparator") + '\n' +
+                        bundle.getString("DesktopOperatorWelcome") + "\n\n" +
+                        bundle.getString("Tips"),
+                MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
+                        "\n\n" + bundle.getString("DesktopOperatorOutput"));
         return cli;
     }
 
