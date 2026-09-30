@@ -298,12 +298,16 @@ double[] phi = rf.shap(testTuple);   // per-feature contributions
 |---|---|
 | `IsolationForest` | Random partitioning; anomaly score ∝ isolation path length |
 | `SVM` (one-class) | Hypersphere in kernel feature space |
+| `LOF` | Local reachability density ratio relative to k-nearest neighbors |
 
 ```java
+// Isolation Forest
 IsolationForest iforest = IsolationForest.fit(trainData, 100); // 100 trees
 double[] scores = iforest.score(testData);   // higher = more anomalous
-// extensionLevel = 0 → standard IsolationForest
-IsolationForest ext = IsolationForest.fit(trainData, 100, extensionLevel);
+
+// Local Outlier Factor (LOF)
+LOF<double[]> lof = LOF.fit(trainData, 20); // k = 20
+double[] lofScores = lof.score(testData);    // > 1.5 = local outlier
 ```
 
 📖 **Full guide:** [ANOMALY_DETECTION.md](ANOMALY_DETECTION.md)
