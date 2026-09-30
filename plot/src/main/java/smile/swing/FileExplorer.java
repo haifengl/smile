@@ -137,18 +137,21 @@ public class FileExplorer extends JTree
 
         // Create the watch service and register the root directory.
         WatchService ws = null;
-        Thread wt = null;
         try {
             ws = root.getFileSystem().newWatchService();
             register(rootNode, ws);
-            wt = Thread.ofVirtual()
-                    .name("FileExplorer-WatchService")
-                    .start(this::watchLoop);
         } catch (IOException e) {
             logger.error("Failed to create WatchService: ", e);
         }
-        watchService = ws;
-        watchThread  = wt;
+        this.watchService = ws;
+
+        Thread wt = null;
+        if (ws != null) {
+            wt = Thread.ofVirtual()
+                    .name("FileExplorer-WatchService")
+                    .start(this::watchLoop);
+        }
+        this.watchThread = wt;
     }
 
     // -------------------------------------------------------------------------
@@ -550,10 +553,14 @@ public class FileExplorer extends JTree
      * {@code ENTRY_CREATE} / {@code ENTRY_DELETE} event to the EDT.
      */
     private void watchLoop() {
+        WatchService ws = this.watchService;
+        if (ws == null) {
+            return;
+        }
         while (!Thread.currentThread().isInterrupted()) {
             WatchKey key;
             try {
-                key = watchService.take();
+                key = ws.take();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 break;

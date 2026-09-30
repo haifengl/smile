@@ -17,9 +17,13 @@
 package smile.util.ipynb;
 
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -58,15 +62,47 @@ public record JupyterNotebook(
      * @throws IOException when fails to read the file.
      */
     public static JupyterNotebook from(Path path) throws IOException {
-        return mapper.readValue(path, JupyterNotebook.class);
+        try {
+            return mapper.readValue(path, JupyterNotebook.class);
+        } catch (JacksonException e) {
+            throw new IOException("Failed to parse Jupyter notebook from " + path + ": " + e.getMessage(), e);
+        }
     }
 
     /**
-     * Writes the notebook to the specified file.
+     * Writes the notebook to the specified file safely. The content is first
+     * written to a temporary file in the same directory and then atomically
+     * moved to the target destination, ensuring the target file is not
+     * corrupted or truncated if serialization or I/O fails.
+     *
      * @param path the file path to write the notebook to.
      * @throws IOException when fails to write the file.
      */
     public void write(Path path) throws IOException {
-        mapper.writerWithDefaultPrettyPrinter().writeValue(path, this);
+        Path dir = path.toAbsolutePath().getParent();
+        if (dir == null || !Files.exists(dir)) {
+            try {
+                mapper.writerWithDefaultPrettyPrinter().writeValue(path, this);
+            } catch (JacksonException e) {
+                throw new IOException("Failed to serialize notebook to JSON: " + e.getMessage(), e);
+            }
+            return;
+        }
+
+        Path temp = Files.createTempFile(dir, ".ipynb-", ".tmp");
+        try {
+            try {
+                mapper.writerWithDefaultPrettyPrinter().writeValue(temp, this);
+            } catch (JacksonException e) {
+                throw new IOException("Failed to serialize notebook to JSON: " + e.getMessage(), e);
+            }
+            try {
+                Files.move(temp, path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(temp, path, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            Files.deleteIfExists(temp);
+        }
     }
 }

@@ -199,4 +199,37 @@ class NotebookTest {
             notebook.close();
         }
     }
+
+    @Test
+    void testCasNotebookSave(@TempDir Path tempDir) throws Exception {
+        Path casSource = Path.of("studio/src/universal/notebooks/cas.ipynb");
+        Path casCopy = tempDir.resolve("cas.ipynb");
+        Files.copy(casSource, casCopy);
+
+        Notebook notebook = new Notebook(casCopy, Map.of(), k -> {});
+        try {
+            assertTrue(notebook.getCellCount() > 0);
+            // Save the notebook
+            notebook.save();
+
+            var loaded = JupyterNotebook.from(casCopy);
+            assertEquals(notebook.getCellCount(), loaded.cells().size());
+        } finally {
+            notebook.close();
+        }
+    }
+
+    @Test
+    void testBrokenIpynbOpensWithStarterCell(@TempDir Path tempDir) throws Exception {
+        Path broken = tempDir.resolve("broken.ipynb");
+        Files.writeString(broken, "{\n  \"cells\" : [\n");
+
+        Notebook notebook = new Notebook(broken, Map.of(), k -> {});
+        try {
+            // Should not throw and should have initialized a starter cell
+            assertEquals(1, notebook.getCellCount());
+        } finally {
+            notebook.close();
+        }
+    }
 }

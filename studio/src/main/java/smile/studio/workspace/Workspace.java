@@ -128,7 +128,11 @@ public class Workspace extends JSplitPane {
         explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
 
         for (var file : getOpenFilePaths()) {
-            openFile(file);
+            try {
+                openFile(file);
+            } catch (Exception ex) {
+                logger.error("Failed to restore open file {}: {}", file, ex.getMessage());
+            }
         }
 
         // Open a default notebook if there is no previously opened file.
@@ -530,21 +534,29 @@ public class Workspace extends JSplitPane {
         }
 
         OpenFile openFile;
-        if (Arrays.asList(SMILE_FILE_EXTENSIONS).contains(Paths.getFileExtension(path))) {
-            openFile = new Notebook(path, coders, kernelExplorer::refresh);
-        } else if (!Paths.isBinary(path)) {
-            openFile = new Notepad(path);
-        } else {
-            var desktop = Desktop.getDesktop();
-            if (desktop.isSupported(Desktop.Action.OPEN)) {
-                try {
-                    desktop.open(path.toFile());
-                } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(this,
-                            "Failed to open: " + ex.getMessage(),
-                            "Error", JOptionPane.ERROR_MESSAGE);
+        try {
+            if (Arrays.asList(SMILE_FILE_EXTENSIONS).contains(Paths.getFileExtension(path))) {
+                openFile = new Notebook(path, coders, kernelExplorer::refresh);
+            } else if (!Paths.isBinary(path)) {
+                openFile = new Notepad(path);
+            } else {
+                var desktop = Desktop.getDesktop();
+                if (desktop.isSupported(Desktop.Action.OPEN)) {
+                    try {
+                        desktop.open(path.toFile());
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(this,
+                                "Failed to open: " + ex.getMessage(),
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                    }
                 }
+                return;
             }
+        } catch (Exception ex) {
+            logger.error("Failed to open file {}: {}", path, ex.getMessage());
+            JOptionPane.showMessageDialog(this,
+                    "Failed to open " + filename + ": " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
