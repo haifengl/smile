@@ -1,12 +1,14 @@
 # SMILE — Anomaly Detection
 
-The package `smile.anomaly` provides two main approaches for unsupervised and
+The package `smile.anomaly` provides three main approaches for unsupervised and
 semi-supervised anomaly detection:
 
 - **Isolation Forest** (`IsolationForest`) — tree-ensemble, unsupervised anomaly
   scoring for numeric tabular data.
 - **One-Class SVM** (`SVM<T>`) — kernel-based novelty detection that learns the
   support of a high-dimensional distribution.
+- **Local Outlier Factor** (`LOF<T>`) — density-based local outlier detection
+  comparing an observation's local density to its k-nearest neighbors.
 
 ---
 
@@ -25,13 +27,20 @@ semi-supervised anomaly detection:
    - [4.2 Hyperparameters](#42-hyperparameters)
    - [4.3 Batch Scoring and Prediction](#43-batch-scoring-and-prediction)
    - [4.4 Persistence](#44-persistence)
-5. [Score Conventions and Thresholding](#5-score-conventions-and-thresholding)
-6. [Validation and Error Handling](#6-validation-and-error-handling)
-7. [End-to-End Examples](#7-end-to-end-examples)
-   - [7.1 Isolation Forest with Extended Splits](#71-isolation-forest-with-extended-splits)
-   - [7.2 One-Class SVM with a Gaussian Kernel](#72-one-class-svm-with-a-gaussian-kernel)
-   - [7.3 Unsupervised Threshold Selection](#73-unsupervised-threshold-selection)
-8. [API Quick Reference](#8-api-quick-reference)
+5. [Local Outlier Factor (LOF)](#5-local-outlier-factor-lof)
+   - [5.1 Quick Start](#51-quick-start)
+   - [5.2 Hyperparameters](#52-hyperparameters)
+   - [5.3 Metric Spaces & Custom Neighborhood Search](#53-metric-spaces--custom-neighborhood-search)
+   - [5.4 Batch Scoring and Prediction](#54-batch-scoring-and-prediction)
+   - [5.5 Persistence](#55-persistence)
+6. [Score Conventions and Thresholding](#6-score-conventions-and-thresholding)
+7. [Validation and Error Handling](#7-validation-and-error-handling)
+8. [End-to-End Examples](#8-end-to-end-examples)
+   - [8.1 Isolation Forest with Extended Splits](#81-isolation-forest-with-extended-splits)
+   - [8.2 One-Class SVM with a Gaussian Kernel](#82-one-class-svm-with-a-gaussian-kernel)
+   - [8.3 Local Outlier Factor on Multi-Density Clusters](#83-local-outlier-factor-on-multi-density-clusters)
+   - [8.4 Unsupervised Threshold Selection](#84-unsupervised-threshold-selection)
+9. [API Quick Reference](#9-api-quick-reference)
 
 ---
 
@@ -43,8 +52,9 @@ Package: `smile.anomaly`
 |---|---|---|
 | `IsolationForest` | Random-partition tree ensemble | Higher → more anomalous |
 | `SVM<T>` | One-class support vector machine | Lower (negative) → more anomalous |
+| `LOF<T>` | Local reachability density ratio | Higher (>> 1.0) → more anomalous |
 
-Both classes are `Serializable` and support round-trip persistence via
+All three classes are `Serializable` and support round-trip persistence via
 `smile.io.Write.object` / `smile.io.Read.object`.
 
 ---
@@ -53,7 +63,7 @@ Both classes are `Serializable` and support round-trip persistence via
 
 **Use Isolation Forest when:**
 - Data is numeric tabular (`double[][]`).
-- You need a fast, scalable, unsupervised baseline.
+- You need a fast, scalable, unsupervised baseline for large datasets.
 - You want intuitive scores in `(0, 1]` where `> 0.5` roughly flags anomalies.
 - You want to experiment with extended hyperplanes via `extensionLevel`.
 
@@ -62,6 +72,15 @@ Both classes are `Serializable` and support round-trip persistence via
 - The training data is uncontaminated (no outliers) — the SVM learns a tight
   hypersphere around it.
 - Data size is moderate (kernel methods scale as O(n²) in memory/time).
+
+**Use Local Outlier Factor (LOF) when:**
+- Data contains clusters of **varying densities** (where global density or distance
+  methods fail because normal points in a sparse cluster have lower density than
+  outliers near a dense cluster).
+- You want a non-parametric, local density-relative score where ~1.0 denotes normal
+  inliers and values significantly above 1.0 (e.g., > 1.5) indicate local outliers.
+- You are working in metric spaces or moderate-sized feature sets where spatial
+  indexing (`KDTree`, `CoverTree`) delivers efficient neighbor queries.
 
 ---
 
@@ -260,12 +279,86 @@ SVM<double[]> loaded = (SVM<double[]>) Read.object(path);
 
 ---
 
-## 5) Score Conventions and Thresholding
+## 5) Local Outlier Factor (LOF)
+
+Class: `smile.anomaly.LOF<T>`
+
+### 5.1 Quick Start
+
+```java
+import smile.anomaly.LOF;
+
+double[][] train = {
+    {0.0, 0.0}, {0.1, -0.1}, {-0.05, 0.05},
+    {0.05, 0.08}, {-0.08, -0.03}, {0.02, 0.01},
+    {10.0, 10.0}, {10.5, 9.8}, {9.7, 10.2}, {10.1, 10.3}
+};
+
+// Fit LOF with neighborhood size k = 4
+LOF<double[]> lof = LOF.fit(train, 4);
+
+// In-sample training scores
+double[] inSampleScores = lof.scores();
+
+// Score new queries — ~1.0 means inlier, > 1.5 indicates local anomaly
+double inlierScore  = lof.score(new double[]{0.02, 0.01});  // ~1.0
+double outlierScore = lof.score(new double[]{0.80, 0.80});  // > 2.0 (near dense cluster)
+
+System.out.printf("inlier  LOF: %.4f%n", inlierScore);
+System.out.printf("outlier LOF: %.4f%n", outlierScore);
+
+// Predict with threshold
+boolean isAnomaly = lof.predict(new double[]{0.80, 0.80}, 1.5);
+```
+
+### 5.2 Hyperparameters
+
+Hyperparameters are encapsulated in `LOF.Options`:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `k` | `int` | `20` | Number of nearest neighbors defining the local neighborhood ($MinPts$). Must be $\ge 1$ and $< n$. |
+
+Rule of thumb for $k$:
+- Lower bound: $k > 10$ to remove undesirable statistical fluctuations.
+- Upper bound: $k < \text{minimum cluster size}$ so points inside a small cluster are not flagged as outliers. Typical default is $20$.
+
+### 5.3 Metric Spaces & Custom Neighborhood Search
+
+`LOF` supports arbitrary data types $T$:
+
+```java
+// With custom metric (e.g. Manhattan, Mahalanobis) using CoverTree:
+LOF<double[]> lofMetric = LOF.fit(data, new ManhattanDistance(), 15);
+
+// With custom nearest neighbor search:
+LOF<double[]> lofCustom = LOF.fit(data, nns, 15);
+```
+
+### 5.4 Batch Scoring and Prediction
+
+```java
+double[][] testPoints = ...;
+double[] batchScores = lof.score(testPoints);
+```
+
+### 5.5 Persistence
+
+```java
+Path path = Write.object(lof);
+@SuppressWarnings("unchecked")
+LOF<double[]> loaded = (LOF<double[]>) Read.object(path);
+```
+
+---
+
+## 6) Score Conventions and Thresholding
 
 | Model | `score()` return | Anomaly direction |
 |---|---|---|
 | `IsolationForest` | `(0, 1]` | Higher → anomaly |
 | `SVM` | any real (`f(x) − b`) | Lower (negative) → anomaly |
+| `LOF` | real $\ge 0$ | Higher ($\gg 1.0$) → anomaly |
 
 ### Data-driven threshold
 
@@ -273,8 +366,8 @@ When no labelled data is available, select a threshold from training scores
 using the expected contamination rate:
 
 ```java
-// IsolationForest — top `contamination` fraction flagged
-double[] scores = model.score(train);
+// IsolationForest or LOF — top `contamination` fraction flagged
+double[] scores = model.score(train); // or lof.scores()
 Arrays.sort(scores);
 double contamination = 0.05;                                // 5% outliers
 int    idx           = (int)((1.0 - contamination) * (scores.length - 1));
@@ -289,7 +382,7 @@ from the bottom (most-negative end), then use `score(x) < threshold`.
 
 ---
 
-## 6) Validation and Error Handling
+## 7) Validation and Error Handling
 
 ### `IsolationForest.fit`
 
@@ -301,12 +394,20 @@ from the bottom (most-negative end), then use `score(x) < threshold`.
 | `extensionLevel >= p` | `IllegalArgumentException` |
 | `subsample` not in `(0, 1)` | `IllegalArgumentException` (from `Options`) |
 
-### `IsolationForest.score`
+### `LOF.fit`
 
 | Condition | Exception |
 |---|---|
-| `x == null` | `IllegalArgumentException` |
-| `x.length != p` | `IllegalArgumentException` — message: `"Invalid input dimension: expected <p>, actual <n>"` |
+| `data == null \|\| data.length == 0` | `IllegalArgumentException` |
+| `k < 1` | `IllegalArgumentException` |
+| `k >= data.length` | `IllegalArgumentException` |
+
+### Scoring & Prediction
+
+| Condition | Exception |
+|---|---|
+| Query vector is `null` | `IllegalArgumentException` |
+| Vector dimension mismatch | `IllegalArgumentException` |
 
 ### `SVM.fit`
 
@@ -367,7 +468,28 @@ boolean anomaly = ocsvm.predict(testPoint, 0.0);
 System.out.printf("anomaly: %b  (score = %.4f)%n", anomaly, ocsvm.score(testPoint));
 ```
 
-### 7.3 Unsupervised Threshold Selection
+### 8.3 Local Outlier Factor on Multi-Density Clusters
+
+```java
+import smile.anomaly.LOF;
+
+double[][] data = loadMultiDensityData();
+
+// Fit LOF with neighborhood size k = 15
+LOF<double[]> lof = LOF.fit(data, 15);
+
+// Check in-sample scores
+double[] lofScores = lof.scores();
+
+// Predict outliers with score threshold > 1.5
+for (int i = 0; i < data.length; i++) {
+    if (lofScores[i] > 1.5) {
+        System.out.printf("Local outlier at index %d: LOF = %.4f%n", i, lofScores[i]);
+    }
+}
+```
+
+### 8.4 Unsupervised Threshold Selection
 
 ```java
 import smile.anomaly.IsolationForest;
@@ -394,7 +516,7 @@ for (double[] x : newBatch) {
 
 ---
 
-## 8) API Quick Reference
+## 9) API Quick Reference
 
 ```java
 // ── IsolationForest ──────────────────────────────────────────────────────────
@@ -438,6 +560,29 @@ double   model.score(T x)                                        // single sampl
 double[] model.score(T[] x)                                      // batch (parallel)
 boolean  model.predict(T x, double threshold)                    // true = anomaly
                                                                  // (score < threshold)
+
+
+// ── LOF (Local Outlier Factor) ───────────────────────────────────────────────
+
+// Training
+LOF<double[]> model = LOF.fit(double[][] data);                 // k=20, KDTree
+LOF<double[]> model = LOF.fit(double[][] data, int k);          // custom k, KDTree
+LOF<T>        model = LOF.fit(T[] data, Distance<T> dist, int k);// metric / linear
+LOF<T>        model = LOF.fit(T[] data, KNNSearch<T, T> nns, int k);
+
+// Options
+new LOF.Options()                                                // k=20
+new LOF.Options(int k)
+LOF.Options.of(Properties props)
+options.toProperties()
+
+// Inspection & Scoring (higher >> 1.0 = anomaly)
+int      model.k()                                               // neighborhood size
+double[] model.scores()                                          // in-sample scores
+double   model.score(T x)                                        // single sample
+double[] model.score(T[] x)                                      // batch (parallel)
+boolean  model.predict(T x, double threshold)                    // true = anomaly
+                                                                 // (score > threshold)
 ```
 
 ---
