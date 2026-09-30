@@ -172,4 +172,27 @@ public class JupyterNotebookTest {
             }
         }
     }
+
+    @Test
+    public void testCasNotebookRoundTrip(@TempDir Path tempDir) throws IOException {
+        Path casPath = Path.of("studio/src/universal/notebooks/cas.ipynb");
+        assertTrue(Files.exists(casPath));
+        var nb = JupyterNotebook.from(casPath);
+        assertNotNull(nb);
+        assertFalse(nb.cells().isEmpty());
+
+        Path out = tempDir.resolve("cas_out.ipynb");
+        nb.write(out);
+        assertTrue(Files.exists(out));
+
+        var loaded = JupyterNotebook.from(out);
+        assertEquals(nb.cells().size(), loaded.cells().size());
+    }
+
+    @Test
+    public void testInvalidJsonThrowsIOException(@TempDir Path tempDir) throws IOException {
+        Path broken = tempDir.resolve("broken.ipynb");
+        Files.writeString(broken, "{\n  \"cells\" : [\n");
+        assertThrows(IOException.class, () -> JupyterNotebook.from(broken));
+    }
 }

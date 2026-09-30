@@ -101,13 +101,9 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
         if (Files.exists(file) && Paths.getFileExtension(file).equals("ipynb")) {
             try {
                 ipynb = JupyterNotebook.from(file);
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(
-                        null,
-                        ex.getMessage(),
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
-                );
+            } catch (Exception ex) {
+                logger.error("Failed to read Jupyter notebook {}: {}", file, ex.getMessage());
+                showErrorMessage(ex.getMessage());
             }
         }
 
@@ -117,16 +113,12 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
         coder = coders.get(lang);
         initKernel();
 
-        if (Files.exists(file)) {
+        if (Files.exists(file) && (jupyter != null || !Paths.getFileExtension(file).equals("ipynb"))) {
             try {
                 loadCells(file);
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(
-                        null,
-                        bundle.getString("OpenNotebookErrorMessage") + ": " + ex.getMessage(),
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
-                );
+            } catch (Exception ex) {
+                logger.error("Failed to load notebook cells {}: {}", file, ex.getMessage());
+                showErrorMessage(bundle.getString("OpenNotebookErrorMessage") + ": " + ex.getMessage());
             }
         }
 
@@ -1106,6 +1098,20 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
                         this,
                         MessageFormat.format(bundle.getString("ReplaceCount"), replaced));
             }
+        }
+    }
+
+    /** Shows an error dialog on the EDT when not running in a headless or test environment. */
+    private static void showErrorMessage(String message) {
+        if (!GraphicsEnvironment.isHeadless() &&
+            Arrays.stream(Thread.currentThread().getStackTrace())
+                    .noneMatch(e -> e.getClassName().contains("org.junit") || e.getClassName().endsWith("Test"))) {
+            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                    null,
+                    message,
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            ));
         }
     }
 }
