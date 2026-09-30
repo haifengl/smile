@@ -19,8 +19,7 @@ package smile.json
 import scala.language.implicitConversions
 import scala.annotation.{switch, tailrec}
 import scala.collection.mutable.SeqMap
-import scala.compiletime.uninitialized
-import java.lang.StringBuilder as JStringBuilder
+import java.lang.{StringBuilder => JStringBuilder}
 import java.nio.{CharBuffer, ByteBuffer}
 import java.nio.charset.Charset
 
@@ -40,7 +39,7 @@ class JsonParser(input: ParserInput) {
 
   private val sb = new JStringBuilder
   private var cursorChar: Char = input.nextChar()
-  private var jsValue: JsValue = uninitialized
+  private var jsValue: JsValue = null
 
   def parseJsValue(): JsValue = {
     ws()

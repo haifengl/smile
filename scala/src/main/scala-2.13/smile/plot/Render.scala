@@ -18,7 +18,7 @@ package smile.plot
 
 import scala.language.experimental.macros
 import smile.plot.swing.{Canvas, MultiFigurePane}
-import smile.vega.VegaLite
+import smile.plot.vegalite.VegaLite
 
 /** Implicit renderers. */
 object Render {
