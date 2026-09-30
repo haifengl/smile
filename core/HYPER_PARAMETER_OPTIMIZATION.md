@@ -14,6 +14,7 @@
 - [Search Strategies](#search-strategies)
   - [Grid Search](#grid-search)
   - [Random Search](#random-search)
+  - [Bayesian Optimization](#bayesian-optimization)
   - [Choosing a Strategy](#choosing-a-strategy)
 - [Managing Parameters](#managing-parameters)
 - [Integration with SMILE Models](#integration-with-smile-models)
@@ -41,6 +42,7 @@ Key features:
 | Three value types | Discrete arrays, integer ranges, double ranges |
 | Grid search | Exhaustive Cartesian product, finite `Stream<Properties>` |
 | Random search | Infinite uniform-sample stream; use `.limit(n)` or `random(n)` |
+| Bayesian optimization | Gaussian Process surrogate + acquisition function (EI, UCB, PI) |
 | Insertion-order determinism | Parameters enumerated in registration order |
 | Input validation | Null/blank names, empty arrays, and invalid ranges are caught eagerly |
 
@@ -227,15 +229,66 @@ Each element is an independently sampled `Properties` where:
 > ⚠️ **Never call `.collect()` or `.count()` on the unbounded stream directly —
 > it will loop forever. Always chain `.limit(n)` or use `random(int n)`.**
 
+### Bayesian Optimization
+
+While grid search and random search evaluate candidate configurations passively without
+learning from previous trials, **Bayesian Optimization** is a sequential, closed-loop
+strategy. It builds a **Gaussian Process (GP)** surrogate model of the objective function
+and utilizes an **acquisition function** to balance exploration (sampling where uncertainty is
+high) and exploitation (sampling where the surrogate predicts high performance).
+
+```java
+import smile.hpo.Hyperparameters;
+import smile.hpo.BayesianOptimization;
+import smile.classification.RandomForest;
+import smile.validation.metric.Accuracy;
+
+var hp = new Hyperparameters()
+        .add("smile.random_forest.trees",     new int[]{50, 100, 200})
+        .add("smile.random_forest.max_depth", 3, 15, 1)
+        .add("smile.random_forest.node_size", 1, 10, 1);
+
+// Run 30 Bayesian optimization trials to maximize cross-validated accuracy
+BayesianOptimization.Result result = hp.bayes(props -> {
+    var model = RandomForest.fit(formula, train, RandomForest.Options.of(props));
+    return Accuracy.of(testy, model.predict(test));
+}, 30);
+
+System.out.printf("Best accuracy: %.4f%n", result.value());
+System.out.println("Best config:  " + result.best());
+```
+
+#### Acquisition Functions
+
+SMILE supports three acquisition functions via `BayesianOptimization.Acquisition`:
+
+| Acquisition Function | Formula / Principle | Best For |
+|---|---|---|
+| `EXPECTED_IMPROVEMENT` (Default) | $EI(x) = (\mu(x) - y^* - \xi)\Phi(z) + \sigma(x)\phi(z)$ | General-purpose HPO; proven sample efficiency |
+| `UPPER_CONFIDENCE_BOUND` | $UCB(x) = \mu(x) + \kappa \cdot \sigma(x)$ | Controllable exploration through $\kappa$ |
+| `PROBABILITY_OF_IMPROVEMENT` | $PI(x) = \Phi\left(\frac{\mu(x) - y^* - \xi}{\sigma(x)}\right)$ | Aggressive exploitation near the optimum |
+
+#### Customizing Bayesian Optimization
+
+You can configure trial budgets, optimization direction (minimization vs maximization),
+acquisition function, and kernels via `BayesianOptimization.Options`:
+
+```java
+var options = new BayesianOptimization.Options(40, false) // 40 trials, minimize loss/error
+        .withAcquisition(BayesianOptimization.Acquisition.EXPECTED_IMPROVEMENT, 0.01);
+
+var result = hp.bayes(props -> evaluateLoss(props), options);
+```
+
 ### Choosing a Strategy
 
-| Criterion | Grid Search | Random Search |
-|---|---|---|
-| Search space size | Small (< ~1 000) | Large or infinite |
-| Guarantees | Exhaustive coverage | Statistical coverage |
-| Redundant parameters | Wastes evaluations | Naturally avoids |
-| Parallelism | `.parallel()` safe | `.parallel()` safe |
-| Recommended | Feasibility checks, fine-tuning | Initial exploration |
+| Criterion | Grid Search | Random Search | Bayesian Optimization |
+|---|---|---|---|
+| Search space size | Small (< ~1 000) | Large or infinite | Moderate to complex |
+| Evaluation cost | Very cheap (< ms) | Cheap (< sec) | Expensive (seconds to minutes per fit) |
+| Sample efficiency | Low | Moderate | High (converges in far fewer trials) |
+| Parallelism | Embarrassingly parallel | Embarrassingly parallel | Sequential (each trial informs the next) |
+| Recommended | Feasibility checks, fine-tuning | Broad initial exploration | Costly training runs, tuning complex ensembles |
 
 Empirical research (Bergstra & Bengio, 2012) shows that random search is often more
 efficient than grid search when many hyperparameters are unimportant, because it avoids
@@ -478,14 +531,32 @@ All `add()` overloads:
 | `clear()` | Removes all parameters. Returns `this`. |
 | `size()` | Returns the number of registered parameters. |
 
-#### Search
+#### Search & Optimization
 
 | Method | Description |
 |---|---|
 | `grid()` | Finite `Stream<Properties>` — exhaustive Cartesian product. Throws `IllegalStateException` if empty. |
 | `random()` | **Infinite** `Stream<Properties>` — uniform random sampling. Throws `IllegalStateException` if empty. Must be followed by `.limit(n)`. |
 | `random(int n)` | Convenience: equivalent to `random().limit(n)`. Throws `IllegalArgumentException` if `n <= 0`. |
+| `bayes(objective, int maxTrials)` | Bayesian optimization to maximize objective function with default EI acquisition. |
+| `bayes(objective, int maxTrials, boolean maximize)` | Bayesian optimization with explicit maximization or minimization direction. |
+| `bayes(objective, Options options)` | Bayesian optimization with full options (custom acquisition, exploration trade-off, kernel). |
 
+### `BayesianOptimization` class
+
+#### Static Methods
+
+| Method | Description |
+|---|---|
+| `fit(hp, objective, int maxTrials)` | Runs Bayesian optimization on hyperparameter space to maximize objective. |
+| `fit(hp, objective, int maxTrials, boolean maximize)` | Runs Bayesian optimization with specified direction. |
+| `fit(hp, objective, Options options)` | Runs Bayesian optimization with customized `Options`. |
+
+#### Records
+
+- `BayesianOptimization.Result(Properties bestParameters, double bestValue, List<Trial> trials)`
+- `BayesianOptimization.Trial(Properties parameters, double value, int iteration)`
+- `BayesianOptimization.Options(int maxTrials, int initialTrials, boolean maximize, Acquisition acquisition, double exploration, MercerKernel<double[]> kernel)`
 
 ---
 

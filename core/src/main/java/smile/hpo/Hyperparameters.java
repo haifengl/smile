@@ -17,9 +17,11 @@
 package smile.hpo;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Stream;
 import smile.math.MathEx;
 
@@ -89,7 +91,7 @@ public class Hyperparameters {
      *              {@code <= end}).
      * @param step  a positive step size.
      */
-    private record IntRange(int start, int end, int step) {
+    record IntRange(int start, int end, int step) {
         public IntRange {
             if (start >= end) {
                 throw new IllegalArgumentException(
@@ -125,7 +127,7 @@ public class Hyperparameters {
      *              {@code <= end}).
      * @param step  a positive step size.
      */
-    private record DoubleRange(double start, double end, double step) {
+    record DoubleRange(double start, double end, double step) {
         public DoubleRange {
             if (start >= end) {
                 throw new IllegalArgumentException(
@@ -450,6 +452,49 @@ public class Hyperparameters {
             list.forEach(p -> params.setProperty(p.key(), p.value()));
             return params;
         });
+    }
+
+    /**
+     * Returns the registered hyperparameters map.
+     *
+     * @return the registered hyperparameters map.
+     */
+    Map<String, Object> parameters() {
+        return Collections.unmodifiableMap(parameters);
+    }
+
+    /**
+     * Executes Bayesian hyperparameter optimization to maximize an objective function.
+     *
+     * @param objective the objective function to evaluate each configuration.
+     * @param maxTrials the total number of evaluations to perform.
+     * @return the optimization result.
+     */
+    public BayesianOptimization.Result bayes(ToDoubleFunction<Properties> objective, int maxTrials) {
+        return BayesianOptimization.fit(this, objective, maxTrials);
+    }
+
+    /**
+     * Executes Bayesian hyperparameter optimization.
+     *
+     * @param objective the objective function to evaluate each configuration.
+     * @param maxTrials the total number of evaluations to perform.
+     * @param maximize  true to maximize the objective, false to minimize.
+     * @return the optimization result.
+     */
+    public BayesianOptimization.Result bayes(ToDoubleFunction<Properties> objective, int maxTrials, boolean maximize) {
+        return BayesianOptimization.fit(this, objective, maxTrials, maximize);
+    }
+
+    /**
+     * Executes Bayesian hyperparameter optimization with full options.
+     *
+     * @param objective the objective function to evaluate each configuration.
+     * @param options   the optimization options.
+     * @return the optimization result.
+     */
+    public BayesianOptimization.Result bayes(ToDoubleFunction<Properties> objective, BayesianOptimization.Options options) {
+        return BayesianOptimization.fit(this, objective, options);
     }
 
     /** Returns the list of {@link KeyValue} pairs for a single parameter entry. */
