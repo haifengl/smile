@@ -352,6 +352,40 @@ curl -X POST http://localhost:8080/api/v1/ml/models/iris_random_forest-1 \
 - `probabilities` — posterior class probabilities for **soft classifiers**
   (e.g. random forest, logistic regression). Absent for hard classifiers and
   regressors.
+- `explanations` — optional model explanation object (present when requested).
+
+#### Explanations (TreeSHAP)
+
+Explanations can be requested by passing `"enableExplanations": true` in the JSON body, or appending `?explain=true` to the URL.
+
+```shell
+curl -X POST "http://localhost:8080/api/v1/ml/models/iris_random_forest-1?explain=true" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sepallength": 5.1,
+    "sepalwidth":  3.5,
+    "petallength": 1.4,
+    "petalwidth":  0.2
+  }'
+```
+
+```json
+{
+  "prediction": 0,
+  "probabilities": [0.960, 0.021, 0.019],
+  "explanations": {
+    "shap": [
+      [0.012, -0.045, 0.123, -0.002],
+      [-0.034, 0.056, -0.210, 0.015],
+      [0.022, -0.011, 0.087, -0.013]
+    ]
+  }
+}
+```
+
+- For **tree classification models** (Random Forest, AdaBoost, Gradient Tree Boost, Decision Tree), `shap` is a 2D array of floats with dimension `[classes][features]`, formatted to 3 decimal places.
+- For **tree regression models**, `shap` is a 1D array of floats with dimension `[features]`.
+- For models that do not support SHAP, `shap` returns `"Not supported"`.
 
 **Error responses:**
 
@@ -364,7 +398,8 @@ curl -X POST http://localhost:8080/api/v1/ml/models/iris_random_forest-1 \
 
 Process many samples in a single request. The server returns results as a
 [Server-Sent Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events)
-stream — one `data:` line per input sample.
+stream emitting structured JSON objects — one `data:` line per input sample.
+Append `?explain=true` to include explanations in each streaming event.
 
 ```
 POST /api/v1/ml/models/{id}/stream
@@ -393,20 +428,20 @@ Where `iris.csv` might contain:
 5.8,2.7,4.1,1.0
 ```
 
-The response stream (SSE format):
+The response stream (SSE format emitting JSON payloads):
 
 ```
-data: 0 0.960 0.021 0.019
+data: {"prediction":0,"probabilities":[0.960,0.021,0.019]}
 
-data: 2 0.012 0.051 0.937
+data: {"prediction":2,"probabilities":[0.012,0.051,0.937]}
 
-data: 1 0.031 0.752 0.217
+data: {"prediction":1,"probabilities":[0.031,0.752,0.217]}
 ```
 
 #### JSON-lines mode (`application/json`)
 
 Each non-blank line must be a complete JSON object (one per line).
-This is more verbose but supports named fields in any order.
+This is more verbose but supports named fields in any order. Each sample can also independently include `"enableExplanations": true`.
 
 ```shell
 cat iris.jsonl | curl -X POST \
@@ -419,7 +454,7 @@ Where `iris.jsonl` contains:
 
 ```json
 {"sepallength":5.1,"sepalwidth":3.5,"petallength":1.4,"petalwidth":0.2}
-{"sepallength":6.7,"sepalwidth":3.0,"petallength":5.2,"petalwidth":2.3}
+{"sepallength":6.7,"sepalwidth":3.0,"petallength":5.2,"petalwidth":2.3,"enableExplanations":true}
 ```
 
 ### 5.5 Model IDs

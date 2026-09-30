@@ -25,27 +25,42 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 /**
  * The inference response containing a prediction and optional class
- * probability estimates for soft classification models.
+ * probability estimates for soft classification models and optional
+ * model explanations.
  *
- * @param prediction   the predicted value (class label or regression output).
+ * @param prediction    the predicted value (class label or regression output).
  * @param probabilities posteriori class probabilities for soft classifiers;
  *                      {@code null} for hard classifiers and regressors.
+ * @param explanations  model explanations (e.g. SHAP values); {@code null} when
+ *                      explanations were not requested.
  * @author Haifeng Li
  */
 public record InferenceResponse(
         Number prediction,
         @JsonInclude(JsonInclude.Include.NON_NULL)
         @JsonSerialize(using = ProbabilitySerializer.class)
-        double[] probabilities) {
+        double[] probabilities,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        Explanations explanations) {
 
     /**
-     * Constructs a response without probability estimates (hard classifier
+     * Constructs a response without probability estimates or explanations (hard classifier
      * or regressor output).
      *
      * @param prediction the predicted value.
      */
     public InferenceResponse(Number prediction) {
-        this(prediction, null);
+        this(prediction, null, null);
+    }
+
+    /**
+     * Constructs a response with probability estimates but without explanations.
+     *
+     * @param prediction    the predicted value.
+     * @param probabilities posteriori class probabilities.
+     */
+    public InferenceResponse(Number prediction, double[] probabilities) {
+        this(prediction, probabilities, null);
     }
 
     @Override

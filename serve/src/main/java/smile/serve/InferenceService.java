@@ -187,6 +187,21 @@ public class InferenceService implements OpenAiModelContributor {
      */
     public InferenceResponse predict(String modelId, JsonObject request)
             throws BadRequestException, NotFoundException {
-        return getModel(modelId).predict(request);
+        return predict(modelId, request, false);
+    }
+
+    /**
+     * Performs inference using JSON-encoded input with optional explanations.
+     *
+     * @param modelId the model ID.
+     * @param request the feature values as a JSON object.
+     * @param explain whether to generate model explanations.
+     * @return the inference result.
+     * @throws BadRequestException if the request body is malformed.
+     * @throws NotFoundException   if the model ID is unknown.
+     */
+    public InferenceResponse predict(String modelId, JsonObject request, boolean explain)
+            throws BadRequestException, NotFoundException {
+        return getModel(modelId).predict(request, explain);
     }
 }
