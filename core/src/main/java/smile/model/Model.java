@@ -25,6 +25,7 @@ import smile.classification.RBFNetwork;
 import smile.classification.RandomForest;
 import smile.classification.SVM;
 import smile.data.DataFrame;
+import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.regression.*;
@@ -93,6 +94,93 @@ public interface Model {
      */
     default void setTag(String key, String value) {
         tags().setProperty(key, value);
+    }
+
+    /**
+     * Returns true if this model supports SHAP feature explanations.
+     *
+     * @return true if SHAP explanations are supported.
+     */
+    default boolean supportsShap() {
+        return false;
+    }
+
+    /**
+     * Computes SHAP values for the input tuple.
+     *
+     * @param x the input tuple.
+     * @return the SHAP values (double[] for regression, double[][] for classification).
+     * @throws UnsupportedOperationException if SHAP explanations are not supported.
+     */
+    default Object shap(Tuple x) {
+        throw new UnsupportedOperationException("SHAP is not supported for algorithm: " + algorithm());
+    }
+
+    /**
+     * Performs inference on a single tuple.
+     *
+     * @param x           the input tuple.
+     * @param probability true to compute posterior probabilities for soft classifiers.
+     * @param explain     true to compute feature explanations.
+     * @return the prediction.
+     */
+    Prediction infer(Tuple x, boolean probability, boolean explain);
+
+    /**
+     * Performs inference on a single tuple without explanations.
+     *
+     * @param x           the input tuple.
+     * @param probability true to compute posterior probabilities for soft classifiers.
+     * @return the prediction.
+     */
+    default Prediction infer(Tuple x, boolean probability) {
+        return infer(x, probability, false);
+    }
+
+    /**
+     * Performs inference on a single tuple.
+     *
+     * @param x the input tuple.
+     * @return the prediction.
+     */
+    default Prediction infer(Tuple x) {
+        return infer(x, true, false);
+    }
+
+    /**
+     * Performs batch inference over a data frame.
+     *
+     * @param data        the input data frame.
+     * @param probability true to compute posterior probabilities for soft classifiers.
+     * @param explain     true to compute feature explanations.
+     * @return an array of predictions.
+     */
+    default Prediction[] infer(DataFrame data, boolean probability, boolean explain) {
+        formula().bind(data.schema());
+        return data.stream()
+                   .map(row -> infer(row, probability, explain))
+                   .toArray(Prediction[]::new);
+    }
+
+    /**
+     * Performs batch inference over a data frame without explanations.
+     *
+     * @param data        the input data frame.
+     * @param probability true to compute posterior probabilities for soft classifiers.
+     * @return an array of predictions.
+     */
+    default Prediction[] infer(DataFrame data, boolean probability) {
+        return infer(data, probability, false);
+    }
+
+    /**
+     * Performs batch inference over a data frame.
+     *
+     * @param data the input data frame.
+     * @return an array of predictions.
+     */
+    default Prediction[] infer(DataFrame data) {
+        return infer(data, true, false);
     }
 
     /**

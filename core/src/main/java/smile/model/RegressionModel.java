@@ -57,4 +57,50 @@ public record RegressionModel(String algorithm,
     public double predict(Tuple x) {
         return regression.predict(x);
     }
+
+    @Override
+    public boolean supportsShap() {
+        return regression instanceof smile.feature.importance.SHAP;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public double[] shap(Tuple x) {
+        if (regression instanceof smile.feature.importance.SHAP shap) {
+            return ((smile.feature.importance.SHAP<Tuple>) shap).shap(x);
+        }
+        throw new UnsupportedOperationException("SHAP is not supported for algorithm: " + algorithm);
+    }
+
+    @Override
+    public Prediction infer(Tuple x, boolean probability, boolean explain) {
+        double y = regression.predict(x);
+        Explanations explanations = null;
+        if (explain) {
+            if (supportsShap()) {
+                explanations = new Explanations(shap(x));
+            } else {
+                explanations = new Explanations("Not supported");
+            }
+        }
+        return new Prediction(y, null, explanations);
+    }
+
+    @Override
+    public Prediction[] infer(smile.data.DataFrame data, boolean probability, boolean explain) {
+        formula.bind(data.schema());
+        double[] pred = regression.predict(data);
+        int n = pred.length;
+        Prediction[] responses = new Prediction[n];
+        for (int i = 0; i < n; i++) {
+            Explanations explanations = null;
+            if (explain) {
+                explanations = supportsShap()
+                        ? new Explanations(shap(data.get(i)))
+                        : new Explanations("Not supported");
+            }
+            responses[i] = new Prediction(pred[i], null, explanations);
+        }
+        return responses;
+    }
 }

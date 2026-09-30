@@ -76,4 +76,83 @@ public record ClassificationModel(String algorithm,
     public int numClasses() {
         return classifier.numClasses();
     }
+
+    @Override
+    public boolean supportsShap() {
+        return classifier instanceof smile.feature.importance.SHAP;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public double[][] shap(Tuple x) {
+        if (classifier instanceof smile.feature.importance.SHAP shap) {
+            double[] raw = ((smile.feature.importance.SHAP<Tuple>) shap).shap(x);
+            int k = classifier.numClasses();
+            int p = raw.length / k;
+            double[][] reshaped = new double[k][p];
+            for (int j = 0; j < p; j++) {
+                for (int c = 0; c < k; c++) {
+                    reshaped[c][j] = raw[j * k + c];
+                }
+            }
+            return reshaped;
+        }
+        throw new UnsupportedOperationException("SHAP is not supported for algorithm: " + algorithm);
+    }
+
+    @Override
+    public Prediction infer(Tuple x, boolean probability, boolean explain) {
+        double[] posteriori = null;
+        int y;
+        if (probability && classifier.isSoft()) {
+            posteriori = new double[classifier.numClasses()];
+            y = classifier.predict(x, posteriori);
+        } else {
+            y = classifier.predict(x);
+        }
+
+        Explanations explanations = null;
+        if (explain) {
+            if (supportsShap()) {
+                explanations = new Explanations(shap(x));
+            } else {
+                explanations = new Explanations("Not supported");
+            }
+        }
+        return new Prediction(y, posteriori, explanations);
+    }
+
+    @Override
+    public Prediction[] infer(smile.data.DataFrame data, boolean probability, boolean explain) {
+        formula.bind(data.schema());
+        int n = data.size();
+        if (probability && classifier.isSoft()) {
+            var probList = new java.util.ArrayList<double[]>(n);
+            int[] pred = classifier.predict(data, probList);
+            Prediction[] responses = new Prediction[n];
+            for (int i = 0; i < n; i++) {
+                Explanations explanations = null;
+                if (explain) {
+                    explanations = supportsShap()
+                            ? new Explanations(shap(data.get(i)))
+                            : new Explanations("Not supported");
+                }
+                responses[i] = new Prediction(pred[i], probList.get(i), explanations);
+            }
+            return responses;
+        } else {
+            int[] pred = classifier.predict(data);
+            Prediction[] responses = new Prediction[n];
+            for (int i = 0; i < n; i++) {
+                Explanations explanations = null;
+                if (explain) {
+                    explanations = supportsShap()
+                            ? new Explanations(shap(data.get(i)))
+                            : new Explanations("Not supported");
+                }
+                responses[i] = new Prediction(pred[i], null, explanations);
+            }
+            return responses;
+        }
+    }
 }
