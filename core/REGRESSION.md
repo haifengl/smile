@@ -482,10 +482,15 @@ RegressionTree model = RegressionTree.fit(formula, data, props);
 
 | Property | Default | Description |
 |----------|---------|-------------|
-| `smile.cart.node.size` | `5` | Minimum leaf node size. |
-| `smile.cart.max.depth` | `20` | Maximum tree depth. |
+| `smile.cart.node_size` | `5` | Minimum leaf node size. |
+| `smile.cart.max_depth` | `20` | Maximum tree depth. |
 | `smile.cart.max.nodes` | `0` (unlimited) | Maximum leaf nodes. |
-| `smile.regression_tree.bins` | `-1` (auto) | Number of histogram bins for continuous features. |
+
+**System Properties.**
+
+| Property | Default | Description |
+|----------|---------|-------------|
+| `smile.regression_tree.bins` | `100` | Candidate split evaluation stride for continuous features (`step = max(1, n / bins)`). Setting `bins <= 10` evaluates all distinct values (exact split search). This is stride-based candidate subsampling, not histogram binning. |
 
 **API.**
 
@@ -592,6 +597,9 @@ int[][] test = model.test(testDf);      // [n_trees][n_samples]
 **Tuning.** Shrinkage and tree count are a trade-off: smaller shrinkage (`0.01–0.05`)
 usually gives the best results but requires more trees. Subsampling
 (`sampling.rate < 1.0`) adds stochasticity that reduces overfitting.
+Continuous feature candidate splits in base regression trees are controlled by the
+system property `smile.regression_tree.bins` (default `100`); setting `bins <= 10`
+evaluates all distinct feature values.
 
 ---
 
