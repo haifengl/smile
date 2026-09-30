@@ -20,21 +20,31 @@ package smile.serve;
 import java.io.IOException;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import io.quarkus.jackson.ObjectMapperCustomizer;
+import jakarta.inject.Singleton;
+import smile.model.Prediction;
 
 /**
- * Custom serializer for probability values.
+ * Configures Jackson in Quarkus to use {@link Prediction#toJson()}
+ * as the authoritative JSON serialization format.
+ *
+ * @author Haifeng Li
  */
-public class ProbabilitySerializer extends JsonSerializer<double[]> {
+@Singleton
+public class PredictionCustomizer implements ObjectMapperCustomizer {
 
     @Override
-    public void serialize(double[] probabilities, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-        gen.writeStartArray();
-        for (double prob : probabilities) {
-            // Use Locale.US to guarantee '.' as the decimal separator regardless
-            // of the JVM's default locale, producing valid JSON numbers.
-            gen.writeRawValue(String.format(java.util.Locale.US, "%.3f", prob));
-        }
-        gen.writeEndArray();
+    public void customize(ObjectMapper objectMapper) {
+        SimpleModule module = new SimpleModule();
+        module.addSerializer(Prediction.class, new JsonSerializer<>() {
+            @Override
+            public void serialize(Prediction value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                gen.writeRawValue(value.toJson());
+            }
+        });
+        objectMapper.registerModule(module);
     }
 }

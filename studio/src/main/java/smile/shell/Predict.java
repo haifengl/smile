@@ -43,38 +43,37 @@ public class Predict implements Callable<Integer> {
     private String format;
     @Option(names = {"-p", "--probability"}, description = "Compute posteriori probabilities for soft classifiers.")
     private boolean probability;
+    @Option(names = {"-e", "--explain"}, description = "Compute SHAP feature explanations (automatically enables JSON output).")
+    private boolean explain;
+    @Option(names = {"--json"}, description = "Output predictions as JSON lines.")
+    private boolean json;
 
     @Override
     public Integer call() throws Exception {
+        if (explain) {
+            json = true;
+        }
+
         var data = Read.data(file.getCanonicalPath(), format);
         var obj = Read.object(model.toPath());
-        if (obj instanceof ClassificationModel box) {
-            var classifier = box.classifier();
-            if (probability && classifier.isSoft()) {
-                var prob = new ArrayList<double[]>();
-                var pred = classifier.predict(data, prob);
-                for (int i = 0; i < pred.length; i++) {
-                    System.out.print(pred[i]);
-                    for (double p : prob.get(i)) {
-                        System.out.format(" %.4f", p);
-                    }
-                    System.out.println();
-                }
-            } else {
-                for (var pred : classifier.predict(data)) {
-                    System.out.println(pred);
+        if (obj instanceof Model m) {
+            if (explain && !m.supportsShap()) {
+                System.err.println("Error: Model algorithm '" + m.algorithm() + "' does not support SHAP explanations (only tree-based models are currently supported).");
+                return 1;
+            }
+
+            var predictions = m.infer(data, probability, explain);
+            for (var prediction : predictions) {
+                if (json) {
+                    System.out.println(prediction.toJson());
+                } else {
+                    System.out.println(prediction.toString());
                 }
             }
-        } else if (obj instanceof RegressionModel box) {
-            var regression = box.regression();
-            for (var pred : regression.predict(data)) {
-                System.out.println(Strings.format(pred));
-            }
+            return 0;
         } else {
             System.err.println(model.getName() + " doesn't contain a valid model.");
             return 1;
         }
-
-        return 0;
     }
 }
