@@ -129,10 +129,14 @@ cd myproject
                 Supports <code>.java</code>, <code>.jsh</code>, <code>.scala</code>,
                 <code>.sc</code>, <code>.py</code>, and <code>.ipynb</code> files.</td></tr>
         <tr><td><strong>AI Agent Panel</strong> (right)</td>
-            <td>Three built-in agents: <em>Clair the Analyst</em> (end-to-end ML),
-                <em>James the Java Guru</em> (Java/SMILE), and
-                <em>Guido the Pythonista</em> (Python). Supports slash commands,
-                shell execution, and long-term memory via <code>SMILE.md</code>.</td></tr>
+            <td>Seven built-in agents: <em>Frank the Chief of Staff</em> (coordination),
+                <em>Steve the Product Manager</em> (product),
+                <em>Clair the Analyst</em> (end-to-end ML),
+                <em>Ada the Architect</em> (system design),
+                <em>James the Java Guru</em> (Java/SMILE),
+                <em>Guido the Pythonista</em> (Python), and
+                <em>Chuck the Desktop Operator</em> (GUI automation). Supports slash
+                commands, shell execution, and long-term memory via <code>SMILE.md</code>.</td></tr>
         <tr><td><strong>Project Explorer</strong> (left)</td>
             <td>File tree of the current working directory.
                 Double-click any supported source file to open it in the notebook.</td></tr>
@@ -265,8 +269,9 @@ model.fit(X, y)
 
     <h2 id="studio-ai">AI Agents</h2>
 
-    <p>The right-hand <strong>Agent Panel</strong> ships with three built-in agents,
-       each in its own tab. Switch between them depending on the task:</p>
+    <p>The right-hand <strong>Agent Panel</strong> ships with seven built-in agents,
+       each in its own tab. They appear in the order Frank, Steve, Clair, Ada, James,
+       Guido, Chuck. Switch between them depending on the task:</p>
 
     <div class="table-responsive">
     <table class="table table-striped table-bordered">
@@ -276,17 +281,25 @@ model.fit(X, y)
       </colgroup>
       <thead><tr><th>Agent</th><th>Role</th></tr></thead>
       <tbody>
+        <tr><td style="white-space:nowrap;"><strong>Frank the Chief of Staff</strong></td>
+            <td>Strategic partner: prioritization, cross-agent coordination, status synthesis, and holding work to stated goals.</td></tr>
+        <tr><td style="white-space:nowrap;"><strong>Steve the Product Manager</strong></td>
+            <td>Frames objectives, user stories, experimentation hypotheses, and analytical roadmaps.</td></tr>
         <tr><td style="white-space:nowrap;"><strong>Clair the Analyst</strong></td>
             <td>End-to-end ML workflow: load data, visualize, train, evaluate, and serve models.</td></tr>
+        <tr><td style="white-space:nowrap;"><strong>Ada the Architect</strong></td>
+            <td>System design, domain decomposition, contracts, and non-functional requirements.</td></tr>
         <tr><td style="white-space:nowrap;"><strong>James the Java Guru</strong></td>
             <td>Java and SMILE API help: code generation, reviews, and notebook completion.</td></tr>
         <tr><td style="white-space:nowrap;"><strong>Guido the Pythonista</strong></td>
             <td>Python notebook assistance and data-science library guidance.</td></tr>
+        <tr><td style="white-space:nowrap;"><strong>Chuck the Desktop Operator</strong></td>
+            <td>Drives native GUI applications: navigation, screenshots, and on-screen verification.</td></tr>
       </tbody>
     </table>
     </div>
 
-    <p>All three require an AI provider (OpenAI, Anthropic, Google Gemini, Azure OpenAI,
+    <p>All seven require an AI provider (OpenAI, Anthropic, Google Gemini, Azure OpenAI,
        or Vertex AI) and API key under <strong>File &gt; Settings…</strong>.
        MCP (Model Context Protocol) servers can be wired in via
        <code>.smile/mcp.json</code> for extra tools.</p>
