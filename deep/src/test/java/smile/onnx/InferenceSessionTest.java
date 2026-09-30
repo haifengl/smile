@@ -610,6 +610,32 @@ public class InferenceSessionTest {
 
     @Test
     @Order(66)
+    @DisplayName("OrtValue string round-trip: fromStringArray / toStringArray")
+    void testOrtValueStringRoundTrip() {
+        String[] data  = { "alpha", "beta", "gamma", "hello world", "unicode: 🚀" };
+        long[]   shape = { 1, 5 };
+        try (OrtValue v = OrtValue.fromStringArray(data, shape)) {
+            TensorInfo ti = v.tensorInfo();
+            assertEquals(ElementType.STRING, ti.elementType());
+            assertArrayEquals(shape, ti.shape());
+            assertEquals(5L, ti.elementCount());
+            assertArrayEquals(data, v.toStringArray());
+        }
+
+        // Test 2D string tensor
+        String[] data2D = { "a", "b", "c", "d", "e", "f" };
+        long[] shape2D = { 2, 3 };
+        try (OrtValue v = OrtValue.fromStringArray(data2D, shape2D)) {
+            TensorInfo ti = v.tensorInfo();
+            assertEquals(ElementType.STRING, ti.elementType());
+            assertArrayEquals(shape2D, ti.shape());
+            assertEquals(6L, ti.elementCount());
+            assertArrayEquals(data2D, v.toStringArray());
+        }
+    }
+
+    @Test
+    @Order(67)
     @DisplayName("OrtValue: rank-1 single-element tensor")
     void testOrtValueScalarTensor() {
         float[] data  = { 42.0f };

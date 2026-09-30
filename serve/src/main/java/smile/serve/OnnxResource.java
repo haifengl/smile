@@ -49,19 +49,27 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
  *
  * <h2>Request format</h2>
  * <p>For single-shot inference, the request body is a JSON object mapping
- * each input name to a flat array of numeric values:
+ * each input name to a flat array of numeric or string values:
  * <pre>{@code
  * POST /api/v1/onnx/resnet50
  * Content-Type: application/json
  *
  * { "input": [0.1, 0.2, ..., 0.3] }
  * }</pre>
+ * or for models with string inputs:
+ * <pre>{@code
+ * POST /api/v1/onnx/text_classifier
+ * Content-Type: application/json
+ *
+ * { "text": ["positive", "neutral"] }
+ * }</pre>
  *
  * <p>For single-input models, CSV lines are also accepted via the
  * {@code /stream} endpoint with {@code Content-Type: text/plain}.
  *
  * <h2>Response format</h2>
- * <p>Responses are JSON objects mapping each output name to a flat array:
+ * <p>Responses are JSON objects mapping each output name to a flat array of
+ * numbers or strings:
  * <pre>{@code
  * { "output": [0.02, 0.95, 0.03] }
  * }</pre>
@@ -93,11 +101,11 @@ public class OnnxResource {
      * Runs a single inference with JSON-encoded inputs.
      *
      * <p>The request body must be a JSON object whose keys are the model's
-     * input names and whose values are flat JSON arrays of numbers.
+     * input names and whose values are flat JSON arrays of numbers or strings.
      *
      * @param id      the model ID.
-     * @param request JSON object mapping input names to flat numeric arrays.
-     * @return JSON object mapping output names to flat numeric arrays.
+     * @param request JSON object mapping input names to flat arrays.
+     * @return JSON object mapping output names to flat arrays.
      */
     @POST
     @Path("/{id}")
