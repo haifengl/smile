@@ -37,6 +37,7 @@ reduction, missing-value imputation, feature selection, and model explainability
    - [SignalNoiseRatio](#signalnoiseratio)
    - [FRegression](#fregression)
    - [InformationValue](#informationvalue)
+   - [EnsembleSelection](#ensembleselection)
    - [GAFE – Genetic Algorithm Feature Selection](#gafe--genetic-algorithm-feature-selection)
 6. [Feature Importance (`smile.feature.importance`)](#feature-importance)
    - [SHAP](#shap)
@@ -659,6 +660,39 @@ ColumnTransform woeTransform = ivs[0].encoder(); // access WoE encoder per featu
 
 **When to use:** credit scoring, fraud detection, and other binary outcome
 models where interpretable WoE-encoded features are needed.
+
+---
+
+### EnsembleSelection
+
+**Embedded feature selection** using tree ensemble models (`RandomForest`,
+`GradientTreeBoost`, `AdaBoost`). Ensemble methods measure feature importance by
+aggregating impurity reductions across all trees in the ensemble. Features that
+frequently yield large impurity reductions receive high importance scores.
+
+`EnsembleSelection` automatically fits a Random Forest (for classification or
+regression depending on the response type), or extracts rankings directly from an
+already trained ensemble model.
+
+```java
+// Automatic fit for classification or regression
+EnsembleSelection[] scores = EnsembleSelection.fit(df, "class");
+
+// Or extract from an existing fitted ensemble model
+RandomForest forest = RandomForest.fit(Formula.lhs("class"), df);
+EnsembleSelection[] scores = EnsembleSelection.of(forest);
+
+// Select top 10 features
+String[] top10 = EnsembleSelection.top(scores, 10);
+DataFrame selected = df.select(top10);
+
+// Select features with importance >= 0.05
+String[] aboveThreshold = EnsembleSelection.threshold(scores, 0.05);
+```
+
+**When to use:** when you need non-linear, interaction-aware feature ranking that
+captures complex feature interactions without assuming linear relationships. Fast
+and reliable for tabular datasets.
 
 ---
 
