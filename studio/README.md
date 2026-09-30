@@ -218,7 +218,7 @@ Previously opened notebooks are restored automatically at startup from `.smile/s
 | `.py` | Python | Multi-cell via `#--- CELL ---` separator |
 | `.ipynb` | Jupyter Notebook | Cells read from / written back to the JSON format |
 
-> **Jupyter compatibility:** When saving a `.ipynb` file, Studio writes back code cells, markdown cells, and raw cells. Cell outputs are not yet persisted to the `.ipynb` file.
+> **Jupyter compatibility:** When saving a `.ipynb` file, Studio writes back code cells, markdown cells, and raw cells along with cell execution counts, cell outputs, metadata, and attachments.
 
 ### 5.3 Cells
 

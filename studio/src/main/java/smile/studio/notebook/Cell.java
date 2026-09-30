@@ -36,6 +36,8 @@ import smile.studio.kernel.PostRunNavigation;
 import smile.studio.text.Markdown;
 import smile.studio.text.Monospaced;
 import smile.studio.text.OutputArea;
+import smile.util.ipynb.*;
+import tools.jackson.databind.JsonNode;
 import static org.fife.ui.rsyntaxtextarea.SyntaxConstants.*;
 
 /**
@@ -73,6 +75,14 @@ public class Cell extends JPanel {
     private volatile boolean isCoding = false;
     // null means never executed, otherwise shows the prompt number in title.
     private Integer executionCount = null;
+    /** The cell id in nbformat 5. */
+    private String id;
+    /** The cell metadata in nbformat. */
+    private CellMetadata metadata;
+    /** The outputs produced by executing the cell. */
+    private final List<Output> outputs = new ArrayList<>();
+    /** Inline attachments for markdown/raw cells. */
+    private Map<String, Map<String, JsonNode>> attachments;
 
     /**
      * Constructor.
@@ -144,7 +154,12 @@ public class Cell extends JPanel {
         collapseButton.addActionListener(e -> setCollapsed(!collapsed));
         upButton.addActionListener(e -> notebook.moveCellUp(this));
         downButton.addActionListener(e -> notebook.moveCellDown(this));
-        clearButton.addActionListener(e -> output.setText(""));
+        clearButton.addActionListener(e -> {
+            clearOutput();
+            if (SwingUtilities.getAncestorOfClass(Notebook.class, this) instanceof Notebook nb) {
+                nb.setSaved(false);
+            }
+        });
         deleteButton.addActionListener(e -> notebook.deleteCell(this));
 
         return header;
@@ -481,17 +496,32 @@ public class Cell extends JPanel {
         SwingUtilities.invokeLater(() -> {
             setRunning(true);
             editor().setPreferredRows();
-            add(output, BorderLayout.SOUTH);
+            if (output.getParent() == null) {
+                add(output, BorderLayout.SOUTH);
+            }
         });
 
+        int outputStart = 0;
         try {
             output().clear();
+            outputs.clear();
             ZonedDateTime start = ZonedDateTime.now();
             output().println("⏵ " + datetime.format(start) + " started");
+
+            outputStart = output.buffer().length();
 
             List<Object> values = new ArrayList<>();
             var code = editor().getText();
             boolean success = kernel.eval(code, values);
+
+            int outputEnd = output.buffer().length();
+            if (outputEnd > outputStart) {
+                String captured = output.buffer().substring(outputStart, outputEnd);
+                outputs.add(new StreamOutput(
+                        success ? "stdout" : "stderr",
+                        MultilineString.of(captured)
+                ));
+            }
 
             ZonedDateTime end = ZonedDateTime.now();
             Duration duration = Duration.between(start, end);
@@ -500,6 +530,20 @@ public class Cell extends JPanel {
         } catch (Throwable t) {
             output().println("✖ ERROR during execution: " + t);
             logger.error("Error during execution: {}", t.getMessage());
+            int outputEnd = output.buffer().length();
+            if (outputEnd > outputStart) {
+                String captured = output.buffer().substring(outputStart, outputEnd);
+                outputs.add(new StreamOutput(
+                        "stderr",
+                        MultilineString.of(captured)
+                ));
+            } else {
+                outputs.add(new ErrorOutput(
+                        t.getClass().getSimpleName(),
+                        t.getMessage() != null ? t.getMessage() : t.toString(),
+                        List.of()
+                ));
+            }
             return false;
         } finally {
             kernel.removeOutputArea();
@@ -624,10 +668,192 @@ public class Cell extends JPanel {
 
     /**
      * Sets the execution count of the cell and updates the title.
-     * @param count the execution count of the cell.
+     * @param count the execution count of the cell, or null if never executed.
      */
-    private void setExecutionCount(int count) {
+    public void setExecutionCount(Integer count) {
         executionCount = count;
-        setTitle("[" + count + "]");
+        setTitle(count == null ? "[ ]" : "[" + count + "]");
+    }
+
+    /**
+     * Clears the outputs of the cell.
+     */
+    public void clearOutput() {
+        output.clear();
+        outputs.clear();
+        setExecutionCount(null);
+        if (output.getParent() != null) {
+            remove(output);
+            revalidate();
+            repaint();
+        }
+    }
+
+    /**
+     * Returns the unique cell identifier.
+     * @return the cell id.
+     */
+    public String id() {
+        return id;
+    }
+
+    /**
+     * Sets the unique cell identifier.
+     * @param id the cell id.
+     */
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    /**
+     * Returns the cell metadata.
+     * @return the cell metadata.
+     */
+    public CellMetadata metadata() {
+        return metadata;
+    }
+
+    /**
+     * Sets the cell metadata.
+     * @param metadata the cell metadata.
+     */
+    public void setMetadata(CellMetadata metadata) {
+        this.metadata = metadata;
+    }
+
+    /**
+     * Returns the list of cell outputs.
+     * @return the cell outputs.
+     */
+    public List<Output> outputs() {
+        return Collections.unmodifiableList(outputs);
+    }
+
+    /**
+     * Sets the cell outputs and renders their text representation in the output area.
+     * @param outputs the cell outputs.
+     */
+    public void setOutputs(List<Output> outputs) {
+        this.outputs.clear();
+        if (outputs != null) {
+            this.outputs.addAll(outputs);
+        }
+
+        output.clear();
+        for (var o : this.outputs) {
+            renderOutput(o);
+        }
+
+        if (output.buffer().length() > 0) {
+            output.flush();
+            if (output.getParent() == null) {
+                add(output, BorderLayout.SOUTH);
+            }
+            revalidate();
+            repaint();
+        }
+    }
+
+    /**
+     * Renders an individual output into the output area.
+     * @param o the output to render.
+     */
+    private void renderOutput(Output o) {
+        switch (o) {
+            case StreamOutput stream -> {
+                if (stream.text() != null) {
+                    output.print(stream.text().value());
+                }
+            }
+            case ExecuteResultOutput result -> {
+                if (result.data() != null) {
+                    String text = extractText(result.data());
+                    if (text != null) {
+                        output.print(text);
+                        if (!text.endsWith("\n")) output.println();
+                    }
+                }
+            }
+            case DisplayDataOutput display -> {
+                if (display.data() != null) {
+                    String text = extractText(display.data());
+                    if (text != null) {
+                        output.print(text);
+                        if (!text.endsWith("\n")) output.println();
+                    }
+                }
+            }
+            case ErrorOutput error -> {
+                if (error.traceback() != null && !error.traceback().isEmpty()) {
+                    output.println(String.join("\n", error.traceback()));
+                } else {
+                    String msg = error.ename() != null ? error.ename() : "Error";
+                    if (error.evalue() != null && !error.evalue().isEmpty()) {
+                        msg += ": " + error.evalue();
+                    }
+                    output.println(msg);
+                }
+            }
+        }
+    }
+
+    /**
+     * Extracts readable text from a MIME bundle.
+     * @param data the MIME bundle.
+     * @return readable text, or null if no text representation.
+     */
+    private static String extractText(Map<String, JsonNode> data) {
+        if (data == null || data.isEmpty()) return null;
+        if (data.containsKey("text/plain")) {
+            return jsonNodeToString(data.get("text/plain"));
+        }
+        if (data.containsKey("text/markdown")) {
+            return jsonNodeToString(data.get("text/markdown"));
+        }
+        if (data.containsKey("text/html")) {
+            return jsonNodeToString(data.get("text/html"));
+        }
+        for (var key : data.keySet()) {
+            if (key.startsWith("image/")) {
+                return "[" + key + "]";
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Converts a JsonNode containing a string or string array into a String.
+     * @param node the JSON node.
+     * @return the string value.
+     */
+    private static String jsonNodeToString(JsonNode node) {
+        if (node == null) return null;
+        if (node.isString()) {
+            return node.asString();
+        }
+        if (node.isArray()) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < node.size(); i++) {
+                sb.append(node.get(i).asString());
+            }
+            return sb.toString();
+        }
+        return node.asString();
+    }
+
+    /**
+     * Returns the attachments map for markdown or raw cells.
+     * @return the attachments map.
+     */
+    public Map<String, Map<String, JsonNode>> attachments() {
+        return attachments;
+    }
+
+    /**
+     * Sets the attachments map for markdown or raw cells.
+     * @param attachments the attachments map.
+     */
+    public void setAttachments(Map<String, Map<String, JsonNode>> attachments) {
+        this.attachments = attachments;
     }
 }

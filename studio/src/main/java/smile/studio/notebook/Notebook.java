@@ -576,8 +576,25 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
      */
     private List<Cell> getJupyterCells(JupyterNotebook jupyter) throws IOException {
         List<Cell> cells = new ArrayList<>();
-        for (var cell : jupyter.cells()) {
-            cells.add(createCell(cell.source().value(), cell.cellType()));
+        for (var jupyterCell : jupyter.cells()) {
+            Cell cell = createCell(jupyterCell.source().value(), jupyterCell.cellType());
+            cell.setId(jupyterCell.id());
+            cell.setMetadata(jupyterCell.metadata());
+
+            if (jupyterCell instanceof smile.util.ipynb.CodeCell codeCell) {
+                if (codeCell.executionCount() != null) {
+                    cell.setExecutionCount(codeCell.executionCount());
+                    runCount = Math.max(runCount, codeCell.executionCount());
+                }
+                if (codeCell.outputs() != null && !codeCell.outputs().isEmpty()) {
+                    cell.setOutputs(codeCell.outputs());
+                }
+            } else if (jupyterCell instanceof smile.util.ipynb.MarkdownCell markdownCell) {
+                cell.setAttachments(markdownCell.attachments());
+            } else if (jupyterCell instanceof smile.util.ipynb.RawCell rawCell) {
+                cell.setAttachments(rawCell.attachments());
+            }
+            cells.add(cell);
         }
         return cells;
     }
@@ -619,8 +636,37 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
         }
 
         loadCells(file);
-        clearAllOutputs();
         setSaved(true);
+    }
+
+    /**
+     * Creates default metadata for a Jupyter notebook when no metadata is present.
+     * @return default notebook metadata.
+     */
+    private smile.util.ipynb.Metadata defaultIpynbMetadata() {
+        String langName = lang().toLowerCase();
+        var kernelSpec = switch (langName) {
+            case "scala" -> new smile.util.ipynb.KernelSpec("Scala", "scala", "scala");
+            case "kotlin" -> new smile.util.ipynb.KernelSpec("Kotlin", "kotlin", "kotlin");
+            case "python" -> new smile.util.ipynb.KernelSpec("Python 3", "python", "python3");
+            default -> new smile.util.ipynb.KernelSpec("Java", "java", "java");
+        };
+        var langInfo = new smile.util.ipynb.LanguageInfo(
+                langName,
+                null,
+                "text/x-" + langName,
+                switch (langName) {
+                    case "scala" -> ".scala";
+                    case "kotlin" -> ".kt";
+                    case "python" -> ".py";
+                    default -> ".java";
+                },
+                null,
+                null,
+                null,
+                null
+        );
+        return new smile.util.ipynb.Metadata(kernelSpec, langInfo, null, List.of(), null);
     }
 
     /**
@@ -629,35 +675,45 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
      * @throws IOException If an I/O error occurs.
      */
     private void saveAsIpynb() throws IOException {
+        var metadata = jupyter != null && jupyter.metadata() != null
+                ? jupyter.metadata()
+                : defaultIpynbMetadata();
+        int nbformat = jupyter != null ? jupyter.nbformat() : smile.util.ipynb.JupyterNotebook.NBFORMAT;
+        int nbformatMinor = jupyter != null ? jupyter.nbformatMinor() : smile.util.ipynb.JupyterNotebook.NBFORMAT_MINOR;
+
         List<smile.util.ipynb.Cell> cells = new ArrayList<>();
-        var notebook = new JupyterNotebook(cells, jupyter.metadata(), jupyter.nbformat(), jupyter.nbformatMinor());
+        var notebook = new smile.util.ipynb.JupyterNotebook(cells, metadata, nbformat, nbformatMinor);
         for (int i = 0; i < this.cells.getComponentCount(); i++) {
             var c = getCell(i);
+            String cellId = (c.id() != null && !c.id().isBlank()) ? c.id() : "cell-" + (i + 1);
+            var cellMeta = c.metadata() != null ? c.metadata() : new smile.util.ipynb.CellMetadata();
+
             var cell = switch (c.type()) {
                 case Code -> new smile.util.ipynb.CodeCell(
-                        "cell-" + (i + 1),
-                        new smile.util.ipynb.CellMetadata(),
-                        new smile.util.ipynb.MultilineString(List.of(c.editor().getText())),
-                        List.of(), // TODO: support outputs
+                        cellId,
+                        cellMeta,
+                        smile.util.ipynb.MultilineString.of(c.editor().getText()),
+                        new ArrayList<>(c.outputs()),
                         c.getExecutionCount()
                 );
                 case Markdown -> new smile.util.ipynb.MarkdownCell(
-                        "cell-" + (i + 1),
-                        new smile.util.ipynb.CellMetadata(),
-                        new smile.util.ipynb.MultilineString(List.of(c.editor().getText())),
-                        Map.of()
+                        cellId,
+                        cellMeta,
+                        smile.util.ipynb.MultilineString.of(c.editor().getText()),
+                        c.attachments() != null ? c.attachments() : Map.of()
                 );
                 case Raw -> new smile.util.ipynb.RawCell(
-                        "cell-" + (i + 1),
-                        new smile.util.ipynb.CellMetadata(),
-                        new smile.util.ipynb.MultilineString(List.of(c.editor().getText())),
-                        Map.of()
+                        cellId,
+                        cellMeta,
+                        smile.util.ipynb.MultilineString.of(c.editor().getText()),
+                        c.attachments() != null ? c.attachments() : Map.of()
                 );
             };
-            
+
             notebook.cells().add(cell);
         }
         notebook.write(file);
+        this.jupyter = notebook;
     }
 
     /**
@@ -877,6 +933,7 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
             protected void done() {
                 kernel.setRunning(false);
                 cell.output().highlight();
+                setSaved(false);
                 // Post-run actions
                 handlePostRunNav(cell, behavior);
                 postRunAction.accept(kernel);
@@ -935,6 +992,7 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
                 for (var cell : cells) {
                     cell.output().highlight();
                 }
+                setSaved(false);
                 postRunAction.accept(kernel);
             }
         };
@@ -990,8 +1048,9 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
      */
     public void clearAllOutputs() {
         for (int i = 0; i < cells.getComponentCount(); i++) {
-            getCell(i).output().setText("");
+            getCell(i).clearOutput();
         }
+        setSaved(false);
     }
 
     /**
