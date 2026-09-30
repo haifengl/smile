@@ -492,16 +492,19 @@ ConfusionMatrix cm = ConfusionMatrix.of(trueLabels, predictedLabels);
 | Bayesian optimization | Surrogate model (GP) + acquisition function |
 
 ```java
-HPO.Result result = HPO.randomSearch(50, params -> {
-    int ntrees   = params.getInt("ntrees");
-    int maxDepth = params.getInt("maxDepth");
-    RandomForest rf = RandomForest.fit(formula, trainDf,
-            new RandomForest.Options(ntrees, maxDepth));
-    return CrossValidation.classification(5, formula, trainDf,
-            (f, d) -> RandomForest.fit(f, d, new RandomForest.Options(ntrees, maxDepth)))
-            .accuracy();
-}, Map.of("ntrees",   HPO.range(50, 500),
-          "maxDepth", HPO.range(3, 20)));
+var hp = new Hyperparameters()
+        .add("smile.random_forest.trees",     new int[]{50, 100, 200})
+        .add("smile.random_forest.max_depth", 3, 15, 1)
+        .add("smile.random_forest.node_size", 1, 10, 1);
+
+// Bayesian optimization using Gaussian Process surrogate model (EI acquisition)
+BayesianOptimization.Result result = hp.bayes(props -> {
+    var model = RandomForest.fit(formula, trainDf, RandomForest.Options.of(props));
+    return Accuracy.of(testy, model.predict(testDf));
+}, 30);
+
+System.out.printf("Best accuracy: %.4f%n", result.value());
+System.out.println("Best config:  " + result.best());
 ```
 
 📖 **Full guide:** [HYPER_PARAMETER_OPTIMIZATION.md](HYPER_PARAMETER_OPTIMIZATION.md)
