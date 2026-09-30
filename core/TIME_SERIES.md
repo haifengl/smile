@@ -9,6 +9,7 @@ univariate time series. It covers four areas:
 | `BoxTest` | Portmanteau autocorrelation tests (Box–Pierce, Ljung–Box) |
 | `AR` | Autoregressive model AR(*p*) — Yule–Walker and OLS fitting |
 | `ARMA` | Autoregressive moving-average model ARMA(*p*, *q*) |
+| `ARIMA` | Autoregressive integrated moving-average model ARIMA(*p*, *d*, *q*) |
 
 ---
 
@@ -437,7 +438,94 @@ if (lb.pvalue < 0.05) {
 
 ---
 
-## 6. Workflow: Fitting an ARMA Model
+## 6. `ARIMA` — Autoregressive Integrated Moving-Average Model
+
+The ARIMA(*p*, *d*, *q*) model generalizes ARMA to non-stationary series by
+incorporating *d* degrees of differencing:
+
+```
+Φ(B)(1 - B)^d X_t = c + Θ(B)ε_t
+```
+
+where:
+* `(1 - B)^d X_t = Y_t` is the differenced stationary series.
+* `p` is the order of the AR component.
+* `d` is the differencing degree (`d=1` removes linear trend, `d=2` removes quadratic trend).
+* `q` is the order of the MA component.
+
+`ARIMA` handles differencing and recursive integration automatically: predictions
+are generated on the differenced scale and then inverted back layer-by-layer to the
+original scale of the series.
+
+### 6.1 Fitting an ARIMA model
+
+```java
+// Fit ARIMA(p, d, q) on the raw (non-stationary) series
+ARIMA model = ARIMA.fit(x, p, d, q);
+
+// Convenience overload for d = 0 (equivalent to ARMA(p, q))
+ARIMA model0 = ARIMA.fit(x, p, q);
+```
+
+When $d > 0$, `ARIMA` differences the series using `TimeSeries.diff(x, 1, d)` and
+fits the ARMA process on the stationary remainder.
+
+### 6.2 Parameter access and diagnostics
+
+```java
+int p        = model.p();           // AR order
+int d        = model.d();           // Differencing degree
+int q        = model.q();           // MA order
+double b     = model.intercept();   // Intercept / drift
+double[] ar  = model.ar();          // AR coefficients
+double[] ma  = model.ma();          // MA coefficients
+
+double[] fit  = model.fittedValues();  // On original scale
+double[] res  = model.residuals();     // On original scale
+double rss    = model.RSS();
+double var    = model.variance();
+double r2     = model.R2();
+double aic    = model.aic();           // Akaike Information Criterion
+double bic    = model.bic();           // Bayesian Information Criterion
+```
+
+### 6.3 Forecasting with integration
+
+```java
+// One-step-ahead forecast on original scale
+double next = model.forecast();
+
+// Multi-step ahead forecast on original scale
+double[] horizon = model.forecast(12); // next 12 steps
+```
+
+Multi-step forecasts invert the differencing equation layer-by-layer:
+$$\hat{D}_{k-1}[i] = \hat{D}_{k-1}[i-1] + \hat{D}_k[i]$$
+anchored at the last observed historical level, ensuring that trends are
+faithfully extrapolated.
+
+### 6.4 Full example — ARIMA(2, 1, 2) on Bitcoin prices
+
+```java
+var bitcoin = new BitcoinPrice();
+double[] logPrice = bitcoin.logPrice(); // Non-stationary series
+
+// Fit ARIMA(2, 1, 2) directly without manual differencing
+ARIMA model = ARIMA.fit(logPrice, 2, 1, 2);
+System.out.println(model); // AIC, BIC, variance, coefficients
+
+// Forecast next 5 days on original log-price scale
+double[] forecast = model.forecast(5);
+System.out.println("5-day forecast: " + Arrays.toString(forecast));
+
+// Diagnostic on residuals
+BoxTest lb = BoxTest.ljung(model.residuals(), 20);
+System.out.println(lb);
+```
+
+---
+
+## 7. Workflow: Fitting an ARMA or ARIMA Model
 
 ```
                        Raw series
@@ -497,29 +585,29 @@ stationary process simulator).
 
 ---
 
-## 7. Serialization
+## 8. Serialization
 
-Both `AR` and `ARMA` implement `java.io.Serializable` (`serialVersionUID = 2L`).
+`AR`, `ARMA`, and `ARIMA` implement `java.io.Serializable` (`serialVersionUID = 2L`).
 You can persist and restore models with standard Java serialization or any
 compatible framework.
 
 ```java
 // Save
-try (var out = new ObjectOutputStream(new FileOutputStream("ar6.ser"))) {
+try (var out = new ObjectOutputStream(new FileOutputStream("arima212.ser"))) {
     out.writeObject(model);
 }
 
 // Load
-AR loaded;
-try (var in = new ObjectInputStream(new FileInputStream("ar6.ser"))) {
-    loaded = (AR) in.readObject();
+ARIMA loaded;
+try (var in = new ObjectInputStream(new FileInputStream("arima212.ser"))) {
+    loaded = (ARIMA) in.readObject();
 }
 double nextForecast = loaded.forecast();
 ```
 
 ---
 
-## 8. Quick-reference API
+## 9. Quick-reference API
 
 ### `TimeSeries`
 
@@ -560,6 +648,9 @@ double    variance()
 int       df()
 double    R2()
 double    adjustedR2()
+double    logLikelihood()
+double    aic()
+double    bic()
 double[][] ttest()      // null if stderr=false or Yule-Walker
 double    forecast()
 double[]  forecast(int l)
@@ -582,14 +673,45 @@ double    variance()
 int       df()
 double    R2()
 double    adjustedR2()
+double    logLikelihood()
+double    aic()
+double    bic()
 double[][] ttest()      // (p+q) × 4; rows 0..p-1 = AR, rows p..p+q-1 = MA
 double    forecast()
 double[]  forecast(int l)
 ```
 
+### `ARIMA`
+
+```java
+static ARIMA fit(double[] x, int p, int d, int q)
+static ARIMA fit(double[] x, int p, int q)            // d = 0
+
+int       p()
+int       d()
+int       q()
+double    intercept()
+double[]  ar()
+double[]  ma()
+double[]  fittedValues()                              // on original scale
+double[]  residuals()                                 // on original scale
+double    RSS()
+double    variance()
+int       df()
+double    R2()
+double    adjustedR2()
+double    logLikelihood()
+double    aic()
+double    bic()
+double[][] ttest()
+double    forecast()                                  // on original scale
+double[]  forecast(int l)                             // on original scale (integrated)
+ARMA      arma()                                      // underlying fitted ARMA model
+```
+
 ---
 
-## 9. Common Pitfalls
+## 10. Common Pitfalls
 
 **Fitting on a non-stationary series**  
 Applying `AR.ols` or `ARMA.fit` directly to a trending or seasonal series
