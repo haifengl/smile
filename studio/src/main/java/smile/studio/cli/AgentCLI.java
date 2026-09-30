@@ -252,7 +252,7 @@ public class AgentCLI extends JPanel {
                             compactAt = resolved.model().compactThreshold();
                         }
                     }
-                    if (!alreadyCompacted && totalTokens > compactAt && activeIntent != null) {
+                    if (!alreadyCompacted && (totalTokens > compactAt || (totalTokens > 0 && outputTokens == 0)) && activeIntent != null) {
                         if (compactContinuations >= 2) {
                             compactContinuations = 0;
                             activeIntent.output().append("\n\n[The conversation is still too long after compaction, so the task was not resumed.]\n");
