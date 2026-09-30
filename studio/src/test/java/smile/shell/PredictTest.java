@@ -229,6 +229,81 @@ public class PredictTest {
     }
 
     // ------------------------------------------------------------------
+    // JSON and Explainability output
+    // ------------------------------------------------------------------
+
+    @Test
+    public void testPredictWithJsonFlag() throws Exception {
+        System.out.println("Predict: --json flag produces JSON lines");
+        Path model = trainClassifier("random-forest", "--trees", "10");
+        outCapture.reset();
+
+        int exit = new CommandLine(new Predict()).execute(
+            IRIS_ARFF.toString(), "--model", model.toString(), "--json"
+        );
+        assertEquals(0, exit);
+
+        String[] lines = outCapture.toString().trim().split("\\r?\\n");
+        assertEquals(150, lines.length);
+        for (String line : lines) {
+            assertTrue(line.startsWith("{\"prediction\":"), "Line should start with {\"prediction\":: " + line);
+        }
+    }
+
+    @Test
+    public void testPredictWithExplainFlag() throws Exception {
+        System.out.println("Predict: --explain flag auto-enables JSON and outputs SHAP");
+        Path model = trainClassifier("random-forest", "--trees", "10");
+        outCapture.reset();
+
+        int exit = new CommandLine(new Predict()).execute(
+            IRIS_ARFF.toString(), "--model", model.toString(), "--explain"
+        );
+        assertEquals(0, exit);
+
+        String[] lines = outCapture.toString().trim().split("\\r?\\n");
+        assertEquals(150, lines.length);
+        for (String line : lines) {
+            assertTrue(line.contains("\"prediction\":"), "Line should contain prediction: " + line);
+            assertTrue(line.contains("\"explanations\":{\"shap\":[["), "Line should contain 2D shap matrix: " + line);
+        }
+    }
+
+    @Test
+    public void testPredictWithProbabilityAndExplain() throws Exception {
+        System.out.println("Predict: -p -e outputs prediction, probabilities, and explanations in JSON");
+        Path model = trainClassifier("random-forest", "--trees", "10");
+        outCapture.reset();
+
+        int exit = new CommandLine(new Predict()).execute(
+            IRIS_ARFF.toString(), "--model", model.toString(), "-p", "-e"
+        );
+        assertEquals(0, exit);
+
+        String[] lines = outCapture.toString().trim().split("\\r?\\n");
+        assertEquals(150, lines.length);
+        for (String line : lines) {
+            assertTrue(line.contains("\"prediction\":"), "Line should contain prediction: " + line);
+            assertTrue(line.contains("\"probabilities\":["), "Line should contain probabilities: " + line);
+            assertTrue(line.contains("\"explanations\":{\"shap\":[["), "Line should contain explanations: " + line);
+        }
+    }
+
+    @Test
+    public void testPredictExplainOnUnsupportedModelFails() throws Exception {
+        System.out.println("Predict: --explain on unsupported model fails with exit code 1");
+        Path model = trainRegressor("ols");
+        errCapture.reset();
+
+        int exit = new CommandLine(new Predict()).execute(
+            LONGLEY_ARFF.toString(), "--model", model.toString(), "--explain"
+        );
+        assertEquals(1, exit, "Should exit with 1 when model does not support explanations");
+        String err = errCapture.toString();
+        assertTrue(err.contains("does not support SHAP explanations"), "Error should mention unsupported SHAP: " + err);
+    }
+
+    // ------------------------------------------------------------------
     // Error handling
     // ------------------------------------------------------------------
 

@@ -589,6 +589,8 @@ one prediction per line to `stdout`.
 | `--model <file>` | `-m` | ✔ | Saved model file (`.sml`) |
 | `--format <fmt>` | | | Data file format (see §8) |
 | `--probability` | `-p` | | Append posterior probabilities for soft classifiers |
+| `--explain` | `-e` | | Compute SHAP feature explanations (automatically enables `--json`) |
+| `--json` | | | Output predictions as JSON lines matching SMILE Serve format |
 
 ### Output Format
 
@@ -623,6 +625,19 @@ Iris-versicolor 0.0200 0.8512 0.1288
 …
 ```
 
+**JSON lines mode (`--json` or `--explain`)** — one JSON object per line matching the SMILE Serve `InferenceResponse` format:
+
+```json
+{"prediction":0}
+{"prediction":0,"probabilities":[0.982,0.018,0.000]}
+{"prediction":0,"probabilities":[0.982,0.018,0.000],"explanations":{"shap":[[0.142,-0.051,0.812,0.003],[...],[...]]}}
+```
+
+- With `--explain`, `--json` is enabled automatically.
+- For classification models, `explanations.shap` is a 2D matrix of dimensions `[numClasses][numFeatures]`.
+- For regression models, `explanations.shap` is a 1D array of dimensions `[numFeatures]`.
+- Tree-based models (`random-forest`, `gradient-boost`, `ada-boost`, `cart`) support SHAP explanations. If `--explain` is used on an unsupported model, the command exits with code 1 and prints an error message.
+
 ### Redirecting Output
 
 ```bash
@@ -631,6 +646,9 @@ smile predict test.arff --model model.sml > predictions.txt
 
 # Pass probabilities through a downstream tool
 smile predict test.csv --model model.sml --probability | cut -d' ' -f2-
+
+# Parse JSON predictions and explanations with jq
+smile predict test.csv --model model.sml --explain | jq '.explanations.shap'
 ```
 
 ---
@@ -961,7 +979,7 @@ ROUTING
   smile shell  [args]             → JShell REPL
   smile scala  [args]             → Scala 3 REPL
   smile train  -d FILE -m MODEL <algo> [algo-opts]
-  smile predict FILE -m MODEL [-p]
+  smile predict FILE -m MODEL [-p] [-e] [--json]
   smile serve  --model MODEL [--host H] [--port P]
 
 CLASSIFICATION ALGORITHMS

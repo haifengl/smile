@@ -36,6 +36,7 @@ import jakarta.ws.rs.NotFoundException;
 import org.jboss.logging.Logger;
 import smile.io.Read;
 import smile.model.Model;
+import smile.model.Prediction;
 import smile.serve.model.ModelObject;
 import smile.serve.model.OpenAiModelContributor;
 import smile.serve.model.SmileModelDetails;
@@ -185,7 +186,7 @@ public class InferenceService implements OpenAiModelContributor {
      * @throws BadRequestException if the request body is malformed.
      * @throws NotFoundException   if the model ID is unknown.
      */
-    public InferenceResponse predict(String modelId, JsonObject request)
+    public Prediction predict(String modelId, JsonObject request)
             throws BadRequestException, NotFoundException {
         return predict(modelId, request, false);
     }
@@ -200,7 +201,7 @@ public class InferenceService implements OpenAiModelContributor {
      * @throws BadRequestException if the request body is malformed.
      * @throws NotFoundException   if the model ID is unknown.
      */
-    public InferenceResponse predict(String modelId, JsonObject request, boolean explain)
+    public Prediction predict(String modelId, JsonObject request, boolean explain)
             throws BadRequestException, NotFoundException {
         return getModel(modelId).predict(request, explain);
     }
