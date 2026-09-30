@@ -82,7 +82,7 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
         } else {
             Thread.ofVirtual().name("spelling-dict-loader").start(() -> {
                 try {
-                    File zip = Path.of(System.getProperty("smile.home"))
+                    File zip = Path.of(System.getProperty("smile.home", "."))
                             .resolve("data", "eng_dic.zip")
                             .toFile();
                     dict = SpellingParser.createEnglishSpellingParser(zip, true, false);

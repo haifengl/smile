@@ -136,22 +136,24 @@ public class Workspace extends JSplitPane {
             }
         }
 
-        // Open a default notebook if there is no previously opened file.
+        // Open default files (Welcome and Release Notes) if there are no previously opened files.
         if (fileWatcher.files().isEmpty()) {
-            openFile(cwd.resolve("Untitled.jsh"));
-            // Initialized as true so that we won't try to save sample code.
-            // Delay 200ms so that it be called after DocumentUpdate events.
-            Timer timer = new Timer(200, e -> openFiles.stream()
-                    .filter(Notebook.class::isInstance)
-                    .map(Notebook.class::cast)
-                    .findFirst()
-                    .ifPresent(notebook -> notebook.setSaved(true)));
-            timer.setRepeats(false); // Ensures the action only runs once
-            timer.start();
-        }
+            Path welcome = resolveHomeFile("Welcome");
+            Path releaseNotes = resolveHomeFile("Release Notes");
 
-        for (var openFile : openFiles) {
-            notebookTabs.addTab(openFile.getFile().getFileName().toString(), (Component) openFile);
+            if (Files.exists(welcome)) {
+                openFile(welcome);
+            }
+            if (Files.exists(releaseNotes)) {
+                openFile(releaseNotes);
+            }
+
+            if (Files.exists(welcome)) {
+                OpenFile welcomeFile = openFileIndex.get(welcome.toAbsolutePath().normalize().toString());
+                if (welcomeFile != null) {
+                    notebookTabs.setSelectedComponent((Component) welcomeFile);
+                }
+            }
         }
 
         Agent architect = initArchitect(cwd);
@@ -488,6 +490,31 @@ public class Workspace extends JSplitPane {
         }
 
         return files;
+    }
+
+    /**
+     * Resolves a file from the SMILE home directory, with fallback to universal resources
+     * for development and testing environments.
+     *
+     * @param name the file name (e.g., "Welcome", "Release Notes").
+     * @return the resolved path, or the default smile.home path if not found.
+     */
+    public static Path resolveHomeFile(String name) {
+        String homeProp = System.getProperty("smile.home");
+        Path home = homeProp != null ? Path.of(homeProp) : Path.of(".");
+        Path file = home.resolve(name);
+        if (Files.exists(file)) return file;
+        Path md = home.resolve(name + ".md");
+        if (Files.exists(md)) return md;
+        Path universal = home.resolve("studio/src/universal").resolve(name);
+        if (Files.exists(universal)) return universal;
+        Path universalMd = home.resolve("studio/src/universal").resolve(name + ".md");
+        if (Files.exists(universalMd)) return universalMd;
+        Path rootUniversal = Path.of("studio/src/universal", name);
+        if (Files.exists(rootUniversal)) return rootUniversal;
+        Path rootUniversalMd = Path.of("studio/src/universal", name + ".md");
+        if (Files.exists(rootUniversalMd)) return rootUniversalMd;
+        return file;
     }
 
     /**

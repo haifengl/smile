@@ -1,0 +1,72 @@
+# SMILE 7.0.0 Release Notes
+
+Welcome to **SMILE 7.0.0**! This release introduces the Desktop Operator agent, native Kotlin notebook scripting, comprehensive time series modeling (ARIMA & ARMA), Local Outlier Factor anomaly detection, unit-hypercube hyperparameter optimization, and major stability enhancements across Studio.
+
+---
+
+## ✨ New Features
+
+- **🖥️ Desktop Operator Agent (Chuck)**:
+  - Added `@chuck`, a specialized desktop operator agent that assists with GUI automation, application inspection, and desktop tasks.
+
+- **🚀 Kotlin Scripting Notebook Kernel**:
+  - Full support for interactive Kotlin notebooks (`.kts`) powered by the Kotlin Custom Scripting Host API.
+  - Seamless access to all SMILE algorithms and Kotlin extension APIs.
+
+- **📈 Time Series Analysis (ARIMA & ARMA)**:
+  - Implemented `smile.timeseries.ARIMA` supporting arbitrary order differencing, stationary transformation, and recursive multi-step forecasting.
+  - Added model selection diagnostics: Gaussian log-likelihood, AIC, BIC, RSS, and coefficient $t$-test tables.
+  - Added pure MA fitting via Hannan-Rissanen stage-2 least squares in `smile.timeseries.ARMA`.
+
+- **🎯 Hyperparameter Optimization (HPO)**:
+  - Added `smile.hpo.ParameterSpace` supporting continuous, integer, and discrete parameters normalized into a unit hypercube $[0, 1]^d$.
+  - Generates uniform random candidates and local perturbations around elite candidates for optimization loops.
+
+- **🔍 Anomaly Detection (LOF)**:
+  - Added Local Outlier Factor (`smile.anomaly.LOF<T>`) for density-based local outlier and anomaly detection with metric spaces.
+
+- **🌲 Tree Ensemble Feature Selection**:
+  - Introduced `smile.feature.selection.EnsembleSelection` to easily extract, rank, and threshold feature importance scores from fitted Random Forest, Gradient Tree Boost, and Decision Tree models.
+
+- **👋 Interactive Welcome & Release Notes**:
+  - Replaced the default blank untitled file on startup with informative, interactive `Welcome` tutorial and `Release Notes` tabs.
+
+---
+
+## 🔧 Improvements
+
+- **Multi-Model AI Management**:
+  - Centralized LLM services via `LlmServices`, allowing per-agent model selection and reasoning effort customization directly from the UI.
+
+- **AST-Aware Scala 3 Statement Evaluation**:
+  - Upgraded `ScalaKernel` to use Scala 3's parser to split statements into complete AST blocks, ensuring multi-line classes, functions, and heavy computations run reliably to completion.
+
+- **Atomic Jupyter Notebook Persistence**:
+  - Updated `JupyterNotebook` serialization to write through temporary files before atomically moving into place, preventing file truncation or corruption.
+
+- **Polyglot API Surface**:
+  - Expanded Scala and Kotlin idiomatic shims for `smile.anomaly`, `smile.timeseries`, and `smile.hpo` with full parameter defaults.
+
+---
+
+## 🐛 Bug Fixes
+
+- **Jackson JSON Type Conflicts**:
+  - Fixed polymorphic type ID conflicts in `base/smile.util.ipynb` when serializing and deserializing Jupyter notebook cells and outputs.
+
+- **REPL Output Streaming Synchronization**:
+  - Resolved a race condition where output streaming could lag behind prompt notifications during rapid REPL resets.
+
+- **macOS Metal Rendering Pipeline Stability**:
+  - Addressed display sleep/wake native crash issues in Java 2D on macOS Metal display links.
+
+- **External File Change Detection**:
+  - Files modified on disk with no in-memory edits are now reloaded cleanly without intrusive confirmation prompts.
+
+---
+
+## Getting Help & Feedback
+
+- Read the **Welcome** tab for a quick tutorial on Studio features and keyboard shortcuts.
+- Check the official documentation: [https://haifengl.github.io/](https://haifengl.github.io/)
+- Report issues and join discussions on GitHub: [https://github.com/haifengl/smile](https://github.com/haifengl/smile)

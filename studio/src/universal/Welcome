@@ -1,0 +1,175 @@
+# Welcome to SMILE Studio
+
+**SMILE Studio** is an agentic IDE for data science, machine learning, and high-performance JVM/Python development. It brings together interactive polyglot notebooks, a collaborative multi-agent AI team, live runtime explorers, and rich visualization in a unified desktop workspace.
+
+---
+
+## 1. Quick Start
+
+1. **Explore the Workspace**: The left pane shows your **Project Explorer** and **Kernel Explorer**; the center pane hosts your **Notebooks** and **Text Editors**; the right pane is home to your **AI Agent Team**.
+2. **Run Your First Code**:
+   - Click **File > New** (or press `Ctrl+N` / `Cmd+N`) to open a fresh Java notebook.
+   - Type an expression (e.g., `var x = 42; x * 2`) and press `Shift+Enter` to run the cell.
+3. **Engage with AI Agents**:
+   - Switch to the **📊 Clair** tab on the right and type `/help` or `/init` to set up your project.
+   - Ask Clair to load a dataset, build a model, or visualize patterns.
+4. **Browse Existing Notebooks**:
+   - In the Project Explorer, open the `notebooks/` directory to view sample workflows for classification, regression, clustering, Vega-Lite/Swing plots, and more.
+
+---
+
+## 2. Workspace Layout
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  Menu Bar:  File  |  Cell  |  Find  |  Help                                 │
+│  Toolbar:   [New] [Open] [Save] [Save As] | [Add Cell] [Run] [Clear] …      │
+├──────────────────────────────┬──────────────────────────────────────────────┤
+│  Explorer Tabs               │  Notebook & Editor Tabs                      │
+│  ┌──────────┬──────────┐     │  ┌─────────────┬─────────────┐               │
+│  │ Project  │  Kernel  │     │  │ Welcome     │ Release ... │               │
+│  └──────────┴──────────┘     │  └─────────────┴─────────────┘               │
+│                              │                                              │
+│  • Project Explorer:         │  Interactive multi-language notebook cells   │
+│    Directory tree & files    │  and syntax-highlighted code/text editor     │
+│                              │                                              │
+│  • Kernel Explorer:          ├──────────────────────────────────────────────┤
+│    Live variables, models,   │  AI Agent Team                               │
+│    and inference services    │  📊 Clair | 🎯 Steve | 📐 Ada | ☕ James     │
+│                              │  🐍 Guido | 🖥️ Chuck                         │
+├──────────────────────────────┴──────────────────────────────────────────────┤
+│  Status Bar: [LSP / Kernel Status]                    [Heap Memory  |  CPU] │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+- **Project Explorer**: Navigate your workspace files. Double-click any notebook (`.ipynb`, `.jsh`, `.sc`, `.kts`, `.py`) or text file (`.md`, `.java`, `.csv`, `.json`, `.sql`) to open.
+- **Kernel Explorer**: Inspect in-memory variables created in your active notebook, inspect trained models, and launch one-click REST inference services.
+- **Center Editor Area**: Houses tabbed notebooks and Notepad document editors.
+- **AI Agent Panel**: Chat with specialized domain agents, execute slash commands, and automate tasks.
+- **Status Bar**: Displays background language server status (JDT LS, Ty), kernel states, and JVM heap / CPU utilization.
+
+---
+
+## 3. Interactive Polyglot Notebooks
+
+SMILE Studio natively supports four first-class execution environments:
+
+| Language | Extension | Execution Engine | Highlights |
+|----------|-----------|------------------|------------|
+| **Java** | `.jsh` | JShell (Java 25) | Fast JVM REPL, full SMILE library imports, SIMD vectorization |
+| **Scala** | `.sc` | Scala 3 REPL | Clean functional syntax, concise DSL for formulas and matrix math |
+| **Kotlin** | `.kts` | Kotlin Scripting Host | Idiomatic Kotlin data science bindings and extension functions |
+| **Python** | `.py`, `.ipynb` | IPython / Jupyter | Standard Jupyter interoperability, PyTorch, pandas, scikit-learn |
+
+### Running Cells & Shortcuts
+- `Shift + Enter`: Execute the focused cell and advance focus to the next cell.
+- `Ctrl + Enter` (or `Cmd + Enter` on macOS): Execute the focused cell in place without advancing.
+- `Tab`: Trigger context-aware AI code completion inside notebook editors.
+- **Cell Controls**: Each cell has a top toolbar with Run (`▶`), Run & Advance (`⏭`), Cell Type selector (Code / Markdown), Move Up (`↑`), Move Down (`↓`), Clear Output (`🧹`), and Delete (`⌦`).
+
+### Saving and Auto-Save
+- Save notebooks manually via `Ctrl+S` / `Cmd+S` or **File > Save**.
+- Toggle **File > Auto Save** to automatically save open files every 60 seconds.
+- External file modifications on disk are automatically detected and reloaded safely.
+
+---
+
+## 4. Machine Learning & Data Science with SMILE
+
+SMILE (Statistical Machine Intelligence and Learning Engine) provides state-of-the-art ML algorithms designed for high performance and clean API ergonomics:
+
+### In-Memory DataFrames & Formulas
+```java
+// Read CSV, ARFF, Parquet, JSON, Arrow, Avro, or SQL tables
+var iris = Read.arff(System.getProperty("smile.home") + "/data/weka/iris.arff");
+System.out.println(iris.structure());
+
+// Declarative modeling formula
+var formula = Formula.lhs("class");
+```
+
+### Classification & Regression
+```java
+// Train Random Forest classifier
+var model = RandomForest.fit(formula, iris);
+System.out.println(model.metrics());
+
+// Feature importance
+for (var imp : model.importance()) {
+    System.out.printf("%s: %.4f%n", imp.name(), imp.score());
+}
+```
+
+### High-Performance Visualization
+- **Swing Desktop Plots**: `ScatterPlot.of(...)`, `LinePlot.of(...)`, `BoxPlot.of(...)`, `Histogram.of(...)`. Call `show(plot.figure())` to open an interactive Swing plot window.
+- **Vega-Lite Browser Plots**: `BarPlot`, `Heatmap`, `DensityPlot`, `BubblePlot`, `SplomPlot`. Automatically rendered in your default browser.
+
+---
+
+## 5. Your AI Agent Team
+
+SMILE Studio embeds a team of specialized AI agents running in the right panel:
+
+### 1. 📊 Clair the Data Scientist (`@clair`)
+- Your partner for machine learning, statistical modeling, feature engineering, and data analysis.
+- Can autonomously run ablation studies, explore datasets, fit models, and diagnose errors.
+
+### 2. ☕ James the Java Guru (`@james`)
+- JVM specialist who assists with modern Java 25 idioms, Foreign Function & Memory API (FFM), concurrency, and SMILE API integration.
+
+### 3. 🐍 Guido the Pythonista (`@guido`)
+- Python data science expert for scripting, notebook workflows, PyTorch, and interoperability.
+
+### 4. 📐 Ada the Architect (`@ada`)
+- Software architect for system design, pipeline decomposition, non-functional requirements, and clean architectural contracts.
+
+### 5. 🎯 Steve the Product Manager (`@steve`)
+- Helps frame project objectives, user stories, experimentation hypotheses, and analytical roadmaps.
+
+### 6. 🖥️ Chuck the Desktop Operator (`@chuck`)
+- Desktop automation operator capable of driving GUI interactions, taking screenshots, and inspecting applications.
+
+### Working with Agents
+- **Prompt Execution**: Press `Ctrl + Enter` (or `Cmd + Enter`) in the agent input box to send your prompt.
+- **Slash Commands**: Type `/` to access built-in skills:
+  - `/help`: List all available slash commands and agent skills.
+  - `/init`: Analyze the current workspace and generate `SMILE.md` instructions.
+  - `/automl`: Trigger automated machine learning workflows.
+- **Shell Commands**: Prefix any prompt with `!` (e.g., `!git status` or `!ls -la`) to execute shell commands directly in your workspace.
+- **Model Selection & Reasoning Effort**: Select your preferred AI model and reasoning effort from the dropdown controls at the bottom of the agent pane.
+
+---
+
+## 6. Document Editing with Notepad
+
+Double-clicking any non-notebook text file in the Project Explorer opens it in the built-in **Notepad**:
+- Full syntax highlighting for Markdown (`.md`), Java (`.java`), Python (`.py`), SQL (`.sql`), Scala (`.sc`), Kotlin (`.kt`), Shell (`.sh`), JSON, YAML, and CSV.
+- Integrated spell checker with English dictionary.
+- Code folding, occurrence marking, and fast Find & Replace (`Ctrl+F` / `Ctrl+H`).
+
+---
+
+## 7. Keyboard Shortcuts Reference
+
+| Shortcut (Win / Linux) | Shortcut (macOS) | Action |
+|------------------------|------------------|--------|
+| `Ctrl + N` | `Cmd + N` | New Notebook |
+| `Ctrl + O` | `Cmd + O` | Open File |
+| `Ctrl + S` | `Cmd + S` | Save Active File |
+| `Ctrl + Shift + S` | `Cmd + Shift + S` | Save As… |
+| `Ctrl + F` | `Cmd + F` | Find in Document |
+| `Ctrl + H` | `Cmd + H` | Replace in Document |
+| `Shift + Enter` | `Shift + Enter` | Run Cell and Advance |
+| `Ctrl + Enter` | `Cmd + Enter` | Run Cell in Place / Submit Agent Prompt |
+| `Tab` | `Tab` | AI Code Completion (Notebook) |
+| `Ctrl + Space` | `Cmd + Space` | Slash Command Hints (Agent CLI) |
+| `Ctrl + =` / `Ctrl + -` | `Cmd + =` / `Cmd + -` | Increase / Decrease Font Size |
+
+---
+
+## 8. Where to Learn More
+
+- Check out **Release Notes** in the adjacent tab for details on the latest features and improvements.
+- Visit the sample notebooks under `notebooks/` in your SMILE installation directory.
+- Explore the SMILE documentation and tutorials online at [https://haifengl.github.io/](https://haifengl.github.io/).
+- Use the **Help > JavaDocs** and **Help > Tutorials** menu options for instant access to API documentation.
