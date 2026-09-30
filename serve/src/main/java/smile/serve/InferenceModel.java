@@ -22,6 +22,7 @@ import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.BadRequestException;
 import smile.data.Tuple;
 import smile.data.type.StructType;
+import smile.feature.importance.SHAP;
 import smile.io.Paths;
 import smile.model.*;
 
@@ -83,13 +84,64 @@ public class InferenceModel {
     }
 
     /**
+     * Returns true if the underlying model supports SHAP feature attributions.
+     *
+     * @return true if SHAP is supported.
+     */
+    public boolean supportsShap() {
+        return (model instanceof ClassificationModel cm && cm.classifier() instanceof SHAP)
+                || (model instanceof RegressionModel rm && rm.regression() instanceof SHAP);
+    }
+
+    /**
+     * Calculates SHAP values for an input tuple.
+     *
+     * @param x the input tuple.
+     * @return {@code double[]} for regression, or {@code double[k][p]} for classification.
+     * @throws UnsupportedOperationException if SHAP is not supported.
+     */
+    @SuppressWarnings("unchecked")
+    public Object shap(Tuple x) {
+        if (model instanceof ClassificationModel cm && cm.classifier() instanceof SHAP<?> s) {
+            double[] raw = ((SHAP<Tuple>) s).shap(x);
+            int k = cm.numClasses();
+            int p = model.schema().length();
+            if (raw.length == p * k) {
+                double[][] reshaped = new double[k][p];
+                for (int c = 0; c < k; c++) {
+                    for (int j = 0; j < p; j++) {
+                        reshaped[c][j] = raw[j * k + c];
+                    }
+                }
+                return reshaped;
+            }
+            return raw;
+        } else if (model instanceof RegressionModel rm && rm.regression() instanceof SHAP<?> s) {
+            return ((SHAP<Tuple>) s).shap(x);
+        }
+        throw new UnsupportedOperationException("Model does not support SHAP: " + id);
+    }
+
+    /**
      * Performs inference using generic JSON input.
      * @param request the input data as a Map.
      * @return the inference result.
      * @throws BadRequestException if invalid request.
      */
     public InferenceResponse predict(JsonObject request) throws BadRequestException {
-        return predict(json(request));
+        return predict(request, false);
+    }
+
+    /**
+     * Performs inference using generic JSON input with optional explanations.
+     *
+     * @param request the input data as a Map.
+     * @param explain whether to generate model explanations.
+     * @return the inference result.
+     * @throws BadRequestException if invalid request.
+     */
+    public InferenceResponse predict(JsonObject request, boolean explain) throws BadRequestException {
+        return predict(json(request), explain);
     }
 
     /**
@@ -99,7 +151,19 @@ public class InferenceModel {
      * @throws BadRequestException if invalid request.
      */
     public InferenceResponse predict(String request) throws BadRequestException {
-        return predict(csv(request));
+        return predict(request, false);
+    }
+
+    /**
+     * Performs inference using CSV input with optional explanations.
+     *
+     * @param request the input data in CSV format.
+     * @param explain whether to generate model explanations.
+     * @return the inference result.
+     * @throws BadRequestException if invalid request.
+     */
+    public InferenceResponse predict(String request, boolean explain) throws BadRequestException {
+        return predict(csv(request), explain);
     }
 
     /**
@@ -108,6 +172,17 @@ public class InferenceModel {
      * @return the inference result.
      */
     public InferenceResponse predict(Tuple x) {
+        return predict(x, false);
+    }
+
+    /**
+     * Performs inference with optional explanations.
+     *
+     * @param x the input tuple.
+     * @param explain whether to generate model explanations.
+     * @return the inference result.
+     */
+    public InferenceResponse predict(Tuple x, boolean explain) {
         double[] probabilities = null;
         Number y = switch (model) {
             case ClassificationModel m -> {
@@ -121,7 +196,16 @@ public class InferenceModel {
             case RegressionModel m -> m.predict(x);
             default -> 0;
         };
-        return new InferenceResponse(y, probabilities);
+
+        Explanations explanations = null;
+        if (explain) {
+            if (supportsShap()) {
+                explanations = new Explanations(shap(x));
+            } else {
+                explanations = new Explanations("Not supported");
+            }
+        }
+        return new InferenceResponse(y, probabilities, explanations);
     }
 
     /**
