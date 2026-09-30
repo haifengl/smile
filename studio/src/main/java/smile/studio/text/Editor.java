@@ -136,6 +136,11 @@ public class Editor extends ThemedTextArea {
      * @return the syntax style for the file, or {@code SYNTAX_STYLE_NONE} if unknown.
      */
     public static String probeSyntaxStyle(Path file) {
+        var fileName = file.getFileName() != null ? file.getFileName().toString() : "";
+        if (fileName.equalsIgnoreCase("Welcome") || fileName.equalsIgnoreCase("Release Notes")) {
+            return SYNTAX_STYLE_MARKDOWN;
+        }
+
         return switch (Paths.getFileExtension(file)) {
             case "md" -> SYNTAX_STYLE_MARKDOWN;
             case "java" -> SYNTAX_STYLE_JAVA;
