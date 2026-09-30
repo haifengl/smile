@@ -20,6 +20,8 @@ import java.lang.foreign.Arena;
 import java.lang.foreign.MemoryLayout;
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;
+import java.util.Arrays;
+import java.util.Objects;
 import smile.onnx.foreign.OrtApi;
 import smile.onnx.foreign.onnxruntime_c_api_h;
 import smile.tensor.DenseMatrix;
@@ -181,6 +183,79 @@ public class OrtValue implements AutoCloseable {
             mem.set(ValueLayout.JAVA_BYTE, i, data[i] ? (byte) 1 : (byte) 0);
         }
         return createWithData(arena, mem, data.length, shape, ElementType.BOOL);
+    }
+
+    /**
+     * Creates an OrtValue string tensor backed by a copy of the given
+     * {@code String[]} array (STRING element type).
+     *
+     * <p>Each string in the array is copied into the tensor as a UTF-8 encoded
+     * string in native memory.
+     *
+     * @param data  the string values.
+     * @param shape the tensor dimensions; the product must equal
+     *              {@code data.length}.
+     * @return a new OrtValue owning the tensor data.
+     */
+    public static OrtValue fromStringArray(String[] data, long[] shape) {
+        Objects.requireNonNull(data, "data must not be null");
+        Objects.requireNonNull(shape, "shape must not be null");
+        long expected = 1;
+        for (long dim : shape) {
+            if (dim < 0) {
+                throw new IllegalArgumentException("Shape dimensions must be non-negative: " + Arrays.toString(shape));
+            }
+            expected *= dim;
+        }
+        if (expected != data.length) {
+            throw new IllegalArgumentException(
+                    "Shape " + Arrays.toString(shape) + " product (" + expected +
+                    ") does not match array length (" + data.length + ")");
+        }
+
+        MemorySegment api = OrtRuntime.api();
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment pAlloc = arena.allocate(onnxruntime_c_api_h.C_POINTER);
+            MemorySegment st = OrtApi.GetAllocatorWithDefaultOptions.invoke(
+                    OrtApi.GetAllocatorWithDefaultOptions(api), pAlloc);
+            OrtRuntime.checkStatus(api, st);
+            MemorySegment allocator = pAlloc.get(onnxruntime_c_api_h.C_POINTER, 0);
+
+            MemorySegment shapeSeg = arena.allocate(
+                    MemoryLayout.sequenceLayout(shape.length, ValueLayout.JAVA_LONG));
+            for (int i = 0; i < shape.length; i++) {
+                shapeSeg.setAtIndex(ValueLayout.JAVA_LONG, i, shape[i]);
+            }
+
+            MemorySegment pValue = arena.allocate(onnxruntime_c_api_h.C_POINTER);
+            st = OrtApi.CreateTensorAsOrtValue.invoke(
+                    OrtApi.CreateTensorAsOrtValue(api),
+                    allocator, shapeSeg, shape.length,
+                    ElementType.STRING.value(), pValue);
+            OrtRuntime.checkStatus(api, st);
+
+            MemorySegment handle = pValue.get(onnxruntime_c_api_h.C_POINTER, 0);
+            try {
+                MemorySegment strPtrs = data.length > 0
+                        ? arena.allocate(MemoryLayout.sequenceLayout(data.length, onnxruntime_c_api_h.C_POINTER))
+                        : MemorySegment.NULL;
+                for (int i = 0; i < data.length; i++) {
+                    String s = (data[i] != null) ? data[i] : "";
+                    MemorySegment strSeg = arena.allocateFrom(s);
+                    strPtrs.setAtIndex(onnxruntime_c_api_h.C_POINTER, i, strSeg);
+                }
+
+                st = OrtApi.FillStringTensor.invoke(
+                        OrtApi.FillStringTensor(api),
+                        handle, strPtrs, data.length);
+                OrtRuntime.checkStatus(api, st);
+
+                return new OrtValue(handle, true);
+            } catch (Throwable t) {
+                OrtApi.ReleaseValue.invoke(OrtApi.ReleaseValue(api), handle);
+                throw t;
+            }
+        }
     }
 
     /**

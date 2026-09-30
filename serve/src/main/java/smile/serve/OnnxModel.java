@@ -38,21 +38,28 @@ import smile.onnx.TensorInfo;
  * <h2>Input format</h2>
  * <p>Each request body (for single-shot inference) is a JSON object whose
  * keys are the model's input names and whose values are flat JSON arrays of
- * numbers. For example:
+ * numbers or strings. For example:
  * <pre>{@code
  * {
  *   "input": [1.0, 2.0, 3.0, 4.0]
+ * }
+ * }</pre>
+ * or for string inputs:
+ * <pre>{@code
+ * {
+ *   "category": ["red", "blue", "green"]
  * }
  * }</pre>
  * The model's declared input shape is used to construct the OrtValue tensor;
  * dynamic dimensions ({@code -1}) are inferred from the supplied array length.
  *
  * <p>For single-input models a CSV line is also accepted: each comma-separated
- * float value is treated as one element of the first input tensor.
+ * value is treated as one element of the first input tensor (parsed as strings
+ * if the model input expects {@code STRING}, or as floats otherwise).
  *
  * <h2>Output format</h2>
  * <p>The response is a JSON object whose keys are the model's output names and
- * whose values are flat JSON arrays of numbers, e.g.:
+ * whose values are flat JSON arrays of numbers or strings, e.g.:
  * <pre>{@code
  * {
  *   "output": [0.1, 0.7, 0.2]
@@ -207,24 +214,36 @@ public class OnnxModel implements AutoCloseable {
             throw new BadRequestException("Model has no inputs");
         }
 
-        // Parse the CSV as float values
-        String[] tokens = line.split(",", -1);
-        float[] data = new float[tokens.length];
-        try {
-            for (int i = 0; i < tokens.length; i++) {
-                data[i] = Float.parseFloat(tokens[i].trim());
-            }
-        } catch (NumberFormatException ex) {
-            throw new BadRequestException("Failed to parse CSV: " + ex.getMessage());
-        }
-
         // Use the first input node only
         NodeInfo firstInput = inputInfos.getFirst();
         TensorInfo ti = firstInput.tensorInfo();
-        long[] shape = resolveShape(ti, data.length);
+        ElementType elemType = (ti != null) ? ti.elementType() : ElementType.FLOAT;
+
+        String[] tokens = line.split(",", -1);
+        long[] shape = resolveShape(ti, tokens.length);
 
         Map<String, OrtValue> inputs = new LinkedHashMap<>();
-        try (OrtValue input = OrtValue.fromFloatArray(data, shape)) {
+        OrtValue input;
+        if (elemType == ElementType.STRING) {
+            String[] data = new String[tokens.length];
+            for (int i = 0; i < tokens.length; i++) {
+                data[i] = tokens[i].trim();
+            }
+            input = OrtValue.fromStringArray(data, shape);
+        } else {
+            // Parse the CSV as float values
+            float[] data = new float[tokens.length];
+            try {
+                for (int i = 0; i < tokens.length; i++) {
+                    data[i] = Float.parseFloat(tokens[i].trim());
+                }
+            } catch (NumberFormatException ex) {
+                throw new BadRequestException("Failed to parse CSV: " + ex.getMessage());
+            }
+            input = OrtValue.fromFloatArray(data, shape);
+        }
+
+        try (input) {
             inputs.put(firstInput.name(), input);
 
             // If the model has more than one input, add empty placeholders
@@ -284,6 +303,14 @@ public class OnnxModel implements AutoCloseable {
                 byte[] data = new byte[n];
                 for (int i = 0; i < n; i++) data[i] = ((Number) arr.getValue(i)).byteValue();
                 yield OrtValue.fromByteArray(data, shape);
+            }
+            case STRING -> {
+                String[] data = new String[n];
+                for (int i = 0; i < n; i++) {
+                    Object val = arr.getValue(i);
+                    data[i] = (val != null) ? val.toString() : "";
+                }
+                yield OrtValue.fromStringArray(data, shape);
             }
             default -> {
                 // Fallback: treat as float
@@ -354,9 +381,10 @@ public class OnnxModel implements AutoCloseable {
     }
 
     /**
-     * Flattens a tensor {@link OrtValue} into a {@link JsonArray} of numbers.
-     * Supports {@code FLOAT}, {@code DOUBLE}, {@code INT32}, {@code INT64},
-     * {@code INT8}, {@code UINT8}, and {@code BOOL} element types.
+     * Flattens a tensor {@link OrtValue} into a {@link JsonArray} of numbers
+     * or strings. Supports {@code FLOAT}, {@code DOUBLE}, {@code INT32},
+     * {@code INT64}, {@code INT8}, {@code UINT8}, {@code BOOL}, and
+     * {@code STRING} element types.
      *
      * <p>Note: ImageNet classifiers typically emit <em>raw logits</em>. Apply
      * {@code MathEx.softmax} (as in {@code InferenceSessionTest}) if you need
@@ -375,6 +403,7 @@ public class OnnxModel implements AutoCloseable {
             case INT64 -> { for (long v : value.toLongArray())      arr.add(v); }
             case INT8  -> { for (byte v : value.toByteArray())      arr.add(v); }
             case UINT8, BOOL -> { for (byte v : value.toByteArray()) arr.add(Byte.toUnsignedInt(v)); }
+            case STRING -> { for (String s : value.toStringArray()) arr.add(s); }
             default    -> { for (float v : value.toFloatArray())    arr.add(v); }
         }
         return arr;

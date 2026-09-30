@@ -539,7 +539,7 @@ Content-Type: application/json
 ```
 
 The request body is a JSON object mapping each **input name** to a **flat
-JSON array** of numbers. The server constructs the required ORT tensor from the
+JSON array** of numbers or strings. The server constructs the required ORT tensor from the
 declared element type and shape.
 
 **Example — image classification (resnet50, 1×3×224×224 = 150528 floats):**
@@ -557,7 +557,7 @@ declared). When posting tensors yourself, use the same layout and
 normalization the model was trained with.
 
 Response — a JSON object mapping each **output name** to a flat array of
-**raw logits** (not probabilities). ImageNet classifiers from the ONNX Model
+**raw logits** (not probabilities) or strings. ImageNet classifiers from the ONNX Model
 Zoo typically omit a Softmax node; apply `MathEx.softmax` before interpreting
 scores as class probabilities (same as `InferenceSessionTest` in `core`).
 
@@ -579,6 +579,17 @@ curl -X POST http://localhost:8080/api/v1/onnx/bert_classifier \
   }'
 ```
 
+**String input model example (e.g. scikit-learn pipeline with categorical string features or text inputs):**
+
+```shell
+curl -X POST http://localhost:8080/api/v1/onnx/pipeline_classifier \
+  -H "Content-Type: application/json" \
+  -d '{
+    "category": ["electronics", "apparel"],
+    "rating":   [4.5, 3.0]
+  }'
+```
+
 **Supported input element types:**
 
 | ONNX type | JSON values | ORT type |
@@ -588,12 +599,13 @@ curl -X POST http://localhost:8080/api/v1/onnx/bert_classifier \
 | `INT32` | integers | `int[]` |
 | `INT64` | integers | `long[]` |
 | `INT8` / `UINT8` / `BOOL` | integers (0/1 for bool) | `byte[]` |
+| `STRING` | strings | `String[]` |
 
 **Error responses:**
 
 | HTTP | Cause |
 |---|---|
-| `400 Bad Request` | Missing input, wrong element count, non-numeric values |
+| `400 Bad Request` | Missing input, wrong element count, type mismatch |
 | `404 Not Found` | Unknown model ID |
 
 ### 6.4 Streaming Inference
