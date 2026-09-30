@@ -118,6 +118,7 @@ public class Workspace extends JSplitPane {
         this.fileChooser = new SystemFileChooser();
         fileChooser.setCurrentDirectory(cwd.toFile());
 
+        Agent chiefOfStaff = initChiefOfStaff(cwd);
         Agent dataScientist = initDataScientist(cwd);
         Agent productManager = initProductManager(cwd);
         Agent desktopOperator = initDesktopOperator(cwd);
@@ -157,8 +158,9 @@ public class Workspace extends JSplitPane {
         }
 
         Agent architect = initArchitect(cwd);
-        openAgent("📊 Clair the Data Scientist", dataScientist, "clair", dataScientistCLI(dataScientist));
+        openAgent("\uD83E\uDD1D Frank the Chief of Staff", chiefOfStaff, "frank", chiefOfStaffCLI(chiefOfStaff));
         openAgent("\uD83C\uDFAF Steve the Product Manager", productManager, "steve", productManagerCLI(productManager));
+        openAgent("📊 Clair the Data Scientist", dataScientist, "clair", dataScientistCLI(dataScientist));
         openAgent("\uD83D\uDCD0 Ada the Architect", architect, "ada", architectCLI(architect));
         openAgent("☕ James the Java Guru", coders.get("Java"), "james", javaCoderCLI(coders.get("Java")));
         openAgent("\uD83D\uDC0D Guido the Pythonista", coders.get("Python"), "guido", pythonCoderCLI(coders.get("Python")));
@@ -199,6 +201,20 @@ public class Workspace extends JSplitPane {
                 }
             }
         });
+    }
+
+    /**
+     * Initializes the chief of staff agent.
+     */
+    private Agent initChiefOfStaff(Path cwd) {
+        try {
+            Agent agent = new Agent(Agent.Spec.of("chief-of-staff"), SmileStudio::llm, cwd);
+            applyDefaultModel(agent);
+            return agent;
+        } catch (Exception ex) {
+            logger.error("Failed to initialize chief of staff agent: {}", ex.getMessage());
+        }
+        return null;
     }
 
     /**
@@ -326,6 +342,21 @@ public class Workspace extends JSplitPane {
             });
         }
         agentTabs.addTab(title, cli);
+    }
+
+    /**
+     * Creates a chief of staff agent cli.
+     */
+    private AgentCLI chiefOfStaffCLI(Agent chiefOfStaff) {
+        var cli = new AgentCLI(chiefOfStaff, this);
+
+        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+                        bundle.getString("WelcomeSeparator") + '\n' +
+                        bundle.getString("ChiefOfStaffWelcome") + "\n\n" +
+                        bundle.getString("Tips"),
+                MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
+                        "\n\n" + bundle.getString("ChiefOfStaffOutput"));
+        return cli;
     }
 
     /**

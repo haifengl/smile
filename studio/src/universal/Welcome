@@ -35,8 +35,8 @@
 │                              │                                              │
 │  • Kernel Explorer:          ├──────────────────────────────────────────────┤
 │    Live variables, models,   │  AI Agent Team                               │
-│    and inference services    │  📊 Clair | 🎯 Steve | 📐 Ada | ☕ James     │
-│                              │  🐍 Guido | 🖥️ Chuck                         │
+│    and inference services    │  🤝 Frank | 🎯 Steve | 📊 Clair | 📐 Ada     │
+│                              │  ☕ James | 🐍 Guido | 🖥️ Chuck              │
 ├──────────────────────────────┴──────────────────────────────────────────────┤
 │  Status Bar: [LSP / Kernel Status]                    [Heap Memory  |  CPU] │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -110,23 +110,26 @@ for (var imp : model.importance()) {
 
 SMILE Studio embeds a team of specialized AI agents running in the right panel:
 
-### 1. 📊 Clair the Data Scientist (`@clair`)
+### 1. 🤝 Frank the Chief of Staff (`@frank`)
+- Strategic partner who prioritizes what deserves your attention, coordinates the agent team, and holds work to your stated goals.
+
+### 2. 🎯 Steve the Product Manager (`@steve`)
+- Helps frame project objectives, user stories, experimentation hypotheses, and analytical roadmaps.
+
+### 3. 📊 Clair the Data Scientist (`@clair`)
 - Your partner for machine learning, statistical modeling, feature engineering, and data analysis.
 - Can autonomously run ablation studies, explore datasets, fit models, and diagnose errors.
-
-### 2. ☕ James the Java Guru (`@james`)
-- JVM specialist who assists with modern Java 25 idioms, Foreign Function & Memory API (FFM), concurrency, and SMILE API integration.
-
-### 3. 🐍 Guido the Pythonista (`@guido`)
-- Python data science expert for scripting, notebook workflows, PyTorch, and interoperability.
 
 ### 4. 📐 Ada the Architect (`@ada`)
 - Software architect for system design, pipeline decomposition, non-functional requirements, and clean architectural contracts.
 
-### 5. 🎯 Steve the Product Manager (`@steve`)
-- Helps frame project objectives, user stories, experimentation hypotheses, and analytical roadmaps.
+### 5. ☕ James the Java Guru (`@james`)
+- JVM specialist who assists with modern Java 25 idioms, Foreign Function & Memory API (FFM), concurrency, and SMILE API integration.
 
-### 6. 🖥️ Chuck the Desktop Operator (`@chuck`)
+### 6. 🐍 Guido the Pythonista (`@guido`)
+- Python data science expert for scripting, notebook workflows, PyTorch, and interoperability.
+
+### 7. 🖥️ Chuck the Desktop Operator (`@chuck`)
 - Desktop automation operator capable of driving GUI interactions, taking screenshots, and inspecting applications.
 
 ### Working with Agents

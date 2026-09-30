@@ -32,15 +32,19 @@
    - 8.2 [Saving Models](#82-saving-models)
    - 8.3 [Starting an Inference Service](#83-starting-an-inference-service)
 9. [AI Agent Panel](#9-ai-agent-panel)
-   - 9.1 [Clair the Analyst](#91-clair-the-analyst)
-   - 9.2 [James the Java Guru](#92-james-the-java-guru)
-   - 9.3 [Guido the Pythonista](#93-guido-the-pythonista)
-   - 9.4 [Intent Types](#94-intent-types)
-   - 9.5 [Slash Commands](#95-slash-commands)
-   - 9.6 [Shell Commands](#96-shell-commands)
-   - 9.7 [Long-Term Memory (SMILE.md)](#97-long-term-memory-smilemd)
-   - 9.8 [Reasoning Effort](#98-reasoning-effort)
-   - 9.9 [Auto-Compact](#99-auto-compact)
+   - 9.1 [Frank the Chief of Staff](#91-frank-the-chief-of-staff)
+   - 9.2 [Steve the Product Manager](#92-steve-the-product-manager)
+   - 9.3 [Clair the Analyst](#93-clair-the-analyst)
+   - 9.4 [Ada the Architect](#94-ada-the-architect)
+   - 9.5 [James the Java Guru](#95-james-the-java-guru)
+   - 9.6 [Guido the Pythonista](#96-guido-the-pythonista)
+   - 9.7 [Chuck the Desktop Operator](#97-chuck-the-desktop-operator)
+   - 9.8 [Intent Types](#98-intent-types)
+   - 9.9 [Slash Commands](#99-slash-commands)
+   - 9.10 [Shell Commands](#910-shell-commands)
+   - 9.11 [Long-Term Memory (SMILE.md)](#911-long-term-memory-smilemd)
+   - 9.12 [Reasoning Effort](#912-reasoning-effort)
+   - 9.13 [Auto-Compact](#913-auto-compact)
 10. [Notepad](#10-notepad)
 11. [Settings — AI Service Configuration](#11-settings--ai-service-configuration)
 12. [Status Bar](#12-status-bar)
@@ -123,28 +127,28 @@ out what you want to do in natural language!
 ## 3. Application Layout
 
 ```
-┌─────────────────────────────────────────────────────────────────────┐
-│  Menu Bar:  File  |  Cell  |  Help                                  │
-│  Toolbar:  [New] [Open] [Save] [SaveAs] | [AddCell] [Run] [Clear]   │
-│             [Restart] [Stop]                                        │
-├──────────────────────────────┬──────────────────────────────────────┤
-│  Explorer Tabs               │  Agent Tabs                          │
-│  ┌──────────┬──────────┐     │  📊 Clair | ☕ James | 🐍 Guido     │
-│  │ Project  │  Kernel  │     │                                      │
-│  └──────────┴──────────┘     │  [Intent input / conversation area]  │
-│                              │                                      │
-│  File tree / Variable tree   ├──────────────────────────────────────┤
-│                              │  Notebook Tabs                       │
-│                              │  ┌─────────────────────────────────┐ │
-│                              │  │  Cell 1: [▶][⏭][▾][↑][↓][🧹][⌦]│ │
-│                              │  │  [code editor]                  │ │
-│                              │  │  [output area]                  │ │
-│                              │  ├─────────────────────────────────┤ │
-│                              │  │  Cell 2 …                       │ │
-│                              │  └─────────────────────────────────┘ │
-├──────────────────────────────┴──────────────────────────────────────┤
-│  Status Bar:  [status message]         [Heap: 512 MB  CPU: 12%]     │
-└─────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────┐
+│  Menu Bar:  File  |  Cell  |  Help                                        │
+│  Toolbar:  [New] [Open] [Save] [SaveAs] | [AddCell] [Run] [Clear]         │
+│             [Restart] [Stop]                                              │
+├──────────────────────────────┬────────────────────────────────────────────┤
+│  Explorer Tabs               │  Agent Tabs                                │
+│  ┌──────────┬──────────┐     │  🤝 Frank | 🎯 Steve | 📊 Clair | 📐 Ada   │
+│  │ Project  │  Kernel  │     │  ☕ James | 🐍 Guido | 🖥️ Chuck            │
+│  └──────────┴──────────┘     │  [Intent input / conversation area]        │
+│                              │                                            │
+│  File tree / Variable tree   ├────────────────────────────────────────────┤
+│                              │  Notebook Tabs                             │
+│                              │  ┌─────────────────────────────────┐       │
+│                              │  │  Cell 1: [▶][⏭][▾][↑][↓][🧹][⌦]│       │
+│                              │  │  [code editor]                  │       │
+│                              │  │  [output area]                  │       │
+│                              │  ├─────────────────────────────────┤       │
+│                              │  │  Cell 2 …                       │       │
+│                              │  └─────────────────────────────────┘       │
+├──────────────────────────────┴────────────────────────────────────────────┤
+│  Status Bar:  [status message]         [Heap: 512 MB  CPU: 12%]           │
+└───────────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Left split** – Project explorer (top) / Kernel explorer (bottom), switchable by tab.
@@ -437,9 +441,37 @@ Double-click a **Services** leaf node to open the **Start Service** dialog, whic
 
 ## 9. AI Agent Panel
 
-The right panel hosts three AI agents, each in its own tab. All agents require an AI service to be configured (see [Section 11](#11-settings--ai-service-configuration)).
+The right panel hosts the AI agents, each in its own tab. The tabs appear in the order
+**Frank**, **Steve**, **Clair**, **Ada**, **James**, **Guido**, **Chuck** — Frank, the
+chief of staff, leads the strip. All agents require an AI service to be configured
+(see [Section 11](#11-settings--ai-service-configuration)).
 
-### 9.1 Clair the Analyst
+### 9.1 Frank the Chief of Staff
+
+> 🤝 *Frank the Chief of Staff* — strategic partner and cross-agent coordinator
+
+Frank sits closest to you and keeps the whole picture in view:
+
+- Prioritizing what deserves your attention and defending the priority order
+- Coordinating cross-functional initiatives across the other agents
+- Turning raw inputs into a short brief: what matters, why, and who acts
+- Holding work accountable to the goals you committed to
+
+### 9.2 Steve the Product Manager
+
+> 🎯 *Steve the Product Manager* — product strategy and prioritization
+
+Steve frames the problem before it is built:
+
+- Opportunity mapping and problem validation
+- User interviews and Jobs-to-Be-Done analysis
+- Competitor analysis and product positioning
+- PRDs, feature prioritization, and scope cutting
+- Metrics frameworks, experiment design, and launch plans
+
+When the requirements are settled, Steve hands off to Ada for architecture design.
+
+### 9.3 Clair the Analyst
 
 > 📊 *Clair the Analyst* — end-to-end ML/AI assistant
 
@@ -451,7 +483,21 @@ Clair handles the complete data science workflow:
 - Model training, evaluation, and ensembling
 - Inference server management
 
-### 9.2 James the Java Guru
+### 9.4 Ada the Architect
+
+> 📐 *Ada the Architect* — software architecture and system design
+
+Ada turns requirements into a buildable design:
+
+- Feasibility and constraint analysis
+- Domain design, decomposition, and contract design
+- Functional design and non-functional requirements
+- Architecture decision records (ADRs)
+- Units generation and work breakdown
+
+When the design is settled, Ada hands off to the developer agents for implementation.
+
+### 9.5 James the Java Guru
 
 > ☕ *James the Java Guru* — Java programming assistant
 
@@ -461,7 +507,7 @@ James helps with Java and SMILE-specific code:
 - Reviewing and explaining Java code
 - SMILE API guidance
 
-### 9.3 Guido the Pythonista
+### 9.6 Guido the Pythonista
 
 > 🐍 *Guido the Pythonista* — Python programming assistant
 
@@ -470,7 +516,20 @@ Guido assists with Python notebooks:
 - Code completion and generation
 - Python data science library guidance
 
-### 9.4 Intent Types
+### 9.7 Chuck the Desktop Operator
+
+> 🖥️ *Chuck the Desktop Operator* — desktop and GUI automation
+
+Chuck drives what has no command line:
+
+- Operating native applications through the GUI
+- Navigating installers, wizards, and dialogs step by step
+- Filling in forms and reading information that is only on screen
+- Verifying each step with a screenshot before moving on
+
+Chuck confirms before any action that is hard to undo, and never types secrets without consent.
+
+### 9.8 Intent Types
 
 Each intent (conversation turn) has a **type selector** in the footer:
 
@@ -483,7 +542,7 @@ Each intent (conversation turn) has a **type selector** in the footer:
 
 Switch the intent type using the combo box, or use the shortcuts below.
 
-### 9.5 Slash Commands
+### 9.9 Slash Commands
 
 Type `/` followed by a command name and press `Ctrl + Enter`:
 
@@ -508,11 +567,11 @@ Additional custom slash commands can be defined as agent skills in `SMILE.md`.
 
 **Hint window:** As you type a slash command, a hint tooltip appears showing the expected arguments.
 
-### 9.6 Shell Commands
+### 9.10 Shell Commands
 
 Set the intent type to **Shell** (or prefix your input with `!`) and enter any shell command. On Windows, commands run through `powershell.exe -Command`; on Unix/macOS, through `bash -c`. The output is streamed in real time to the output area. A **Stop** button appears to forcibly terminate long-running processes.
 
-### 9.7 Long-Term Memory (SMILE.md)
+### 9.11 Long-Term Memory (SMILE.md)
 
 Agents can maintain long-term, project-specific context stored in `SMILE.md` within the current working directory. This file is automatically loaded into the agent's system prompt. Use `/memory add` or `/memory edit` to update it.
 
@@ -522,7 +581,7 @@ Agents can maintain long-term, project-specific context stored in `SMILE.md` wit
 ```
 Clair's `/init` skill creates a `SMILE.md` file by analysing the project and recording its structure, key decisions, and preferences.
 
-### 9.8 Reasoning Effort
+### 9.12 Reasoning Effort
 
 Each intent input shows a **Reasoning Effort** combo box. The available levels depend on the configured LLM:
 
@@ -539,7 +598,7 @@ If a reply still stops at the output limit, the next attempt uses reasoning effo
 
 Thinking tokens stay out of the output panel unless the system property `smile.agent.show-thinking` is `true`. A long chain of thought would otherwise bury the answer.
 
-### 9.9 Auto-Compact
+### 9.13 Auto-Compact
 
 Auto-compact runs `/compact` before the assumed context window is full. OpenAI, Anthropic, and Gemini assume a **1,000,000** token window and compact after **900,000** tokens. An OpenAI-compatible server (a local or on-prem model) assumes a **200,000** token window and compacts after **180,000** tokens, because the inference engine often sets a smaller limit than the weights allow. Set the system property `smile.agent.auto-compact` to use one token threshold for every provider.
 
