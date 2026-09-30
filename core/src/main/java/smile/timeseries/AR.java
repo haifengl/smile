@@ -149,6 +149,18 @@ public class AR implements Serializable {
      * extra variables are included in the model.
      */
     private final double adjustedR2;
+    /**
+     * Log-likelihood under Gaussian errors.
+     */
+    private final double logLikelihood;
+    /**
+     * Akaike information criterion.
+     */
+    private final double aic;
+    /**
+     * Bayesian information criterion.
+     */
+    private final double bic;
 
     /**
      * Constructor.
@@ -189,7 +201,12 @@ public class AR implements Serializable {
         variance = RSS / df;
 
         R2 = 1.0 - RSS / TSS;
-        adjustedR2 = 1.0 - ((1 - R2) * (n-1) / (n-p));
+        adjustedR2 = (n > p + 1) ? 1.0 - ((1 - R2) * (n-1) / (n-p)) : R2;
+
+        int k = p + (b != 0.0 ? 1 : 0);
+        logLikelihood = -0.5 * n * (Math.log(2 * Math.PI) + 1.0 + Math.log(RSS / n));
+        aic = 2 * k - 2 * logLikelihood;
+        bic = k * Math.log(n) - 2 * logLikelihood;
     }
 
     /** Returns the least squares design matrix. */
@@ -335,6 +352,30 @@ public class AR implements Serializable {
      */
     public double adjustedR2() {
         return adjustedR2;
+    }
+
+    /**
+     * Returns the log-likelihood of model.
+     * @return the log-likelihood of model.
+     */
+    public double logLikelihood() {
+        return logLikelihood;
+    }
+
+    /**
+     * Returns the Akaike information criterion (AIC).
+     * @return the AIC.
+     */
+    public double aic() {
+        return aic;
+    }
+
+    /**
+     * Returns the Bayesian information criterion (BIC).
+     * @return the BIC.
+     */
+    public double bic() {
+        return bic;
     }
 
     /**
@@ -504,6 +545,7 @@ public class AR implements Serializable {
 
         builder.append(String.format("%nResidual  variance: %.4f on %5d degrees of freedom%n", variance, df));
         builder.append(String.format("Multiple R-squared: %.4f, Adjusted R-squared: %.4f%n", R2, adjustedR2));
+        builder.append(String.format("AIC: %.4f, BIC: %.4f%n", aic, bic));
 
         return builder.toString();
     }

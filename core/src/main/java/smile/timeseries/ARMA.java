@@ -119,6 +119,18 @@ public class ARMA implements Serializable {
      * extra variables are included in the model.
      */
     private final double adjustedR2;
+    /**
+     * Log-likelihood under Gaussian errors.
+     */
+    private final double logLikelihood;
+    /**
+     * Akaike information criterion.
+     */
+    private final double aic;
+    /**
+     * Bayesian information criterion.
+     */
+    private final double bic;
 
     /**
      * Constructor.
@@ -160,7 +172,12 @@ public class ARMA implements Serializable {
         variance = RSS / df;
 
         R2 = 1.0 - RSS / TSS;
-        adjustedR2 = 1.0 - ((1 - R2) * (n-1) / (n-p));
+        adjustedR2 = (n > p + 1) ? 1.0 - ((1 - R2) * (n-1) / (n-p)) : R2;
+
+        int k = p + q + 1;
+        logLikelihood = -0.5 * n * (Math.log(2 * Math.PI) + 1.0 + Math.log(RSS / n));
+        aic = 2 * k - 2 * logLikelihood;
+        bic = k * Math.log(n) - 2 * logLikelihood;
     }
 
     /**
@@ -303,6 +320,30 @@ public class ARMA implements Serializable {
     }
 
     /**
+     * Returns the log-likelihood of model.
+     * @return the log-likelihood of model.
+     */
+    public double logLikelihood() {
+        return logLikelihood;
+    }
+
+    /**
+     * Returns the Akaike information criterion (AIC).
+     * @return the AIC.
+     */
+    public double aic() {
+        return aic;
+    }
+
+    /**
+     * Returns the Bayesian information criterion (BIC).
+     * @return the BIC.
+     */
+    public double bic() {
+        return bic;
+    }
+
+    /**
      * Fits an ARMA model with Hannan-Rissanen algorithm.
      *
      * @param x the time series.
@@ -369,6 +410,73 @@ public class ARMA implements Serializable {
         model.ttest = ttest;
 
         for (int i = 0; i < p+q; i++) {
+            ttest[i][0] = arma.get(i);
+            double se = error * Math.sqrt(inv.get(i, i));
+            ttest[i][1] = se;
+            double t = arma.get(i) / se;
+            ttest[i][2] = t;
+            ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
+        }
+
+        return model;
+    }
+
+    /**
+     * Fits a moving-average MA(q) model with Hannan-Rissanen algorithm.
+     *
+     * @param x the time series.
+     * @param q the order of MA.
+     * @return the model.
+     */
+    static ARMA ma(double[] x, int q) {
+        if (q <= 0 || q >= x.length) {
+            throw new IllegalArgumentException("Invalid order q = " + q);
+        }
+
+        int m = q + 20;
+        int k = q;
+        int n = x.length - m - k;
+        if (n <= 0) {
+            throw new IllegalArgumentException(String.format(
+                    "Time series is too short for MA(%d): length=%d, required>%d", q, x.length, m + k));
+        }
+
+        AR arm = AR.fit(x, m);
+        double[] a = new double[x.length];
+        System.arraycopy(arm.residuals(), 0, a, m, a.length - m);
+
+        double[] y = Arrays.copyOfRange(x, m+k, x.length);
+        DenseMatrix X = DenseMatrix.zeros(Float64, n, q+1);
+        for (int j = 0; j < q; j++) {
+            for (int i = 0; i < n; i++) {
+                X.set(i, j, a[m+k+i-j-1]);
+            }
+        }
+
+        for (int i = 0; i < n; i++) {
+            X.set(i, q, 1.0);
+        }
+
+        SVD svd = X.copy().svd();
+        Vector arma = svd.solve(y);
+        double[] fittedValues = X.mv(arma).toArray(new double[0]);
+        for (int j = 0; j < n; j++) {
+            a[m+k+j] = x[m+k+j] - fittedValues[j];
+        }
+
+        double[] ar = new double[0];
+        double[] ma = arma.slice(0, q).toArray(new double[q]);
+        ARMA model = new ARMA(x, ar, ma, arma.get(q), fittedValues, Arrays.copyOfRange(a, m+k, x.length));
+
+        Cholesky cholesky = X.ata().cholesky();
+        DenseMatrix inv = cholesky.inverse();
+
+        int df = model.df;
+        double error = Math.sqrt(model.variance);
+        double[][] ttest = new double[q][4];
+        model.ttest = ttest;
+
+        for (int i = 0; i < q; i++) {
             ttest[i][0] = arma.get(i);
             double se = error * Math.sqrt(inv.get(i, i));
             ttest[i][1] = se;
@@ -449,7 +557,9 @@ public class ARMA implements Serializable {
             }
 
             for (int i = 0; i < ttest.length; i++) {
-                builder.append(String.format("%s[-%d]\t    %10.4f %10.4f %10.4f %10.4f %s%n", i < p ? "ar" : "ma", i+1, ttest[i][0], ttest[i][1], ttest[i][2], ttest[i][3], Hypothesis.significance(ttest[i][3])));
+                String name = i < p ? "ar" : "ma";
+                int lag = i < p ? (i + 1) : (i - p + 1);
+                builder.append(String.format("%s[-%d]\t    %10.4f %10.4f %10.4f %10.4f %s%n", name, lag, ttest[i][0], ttest[i][1], ttest[i][2], ttest[i][3], Hypothesis.significance(ttest[i][3])));
             }
 
             builder.append("---------------------------------------------------------------------\n");
@@ -470,6 +580,7 @@ public class ARMA implements Serializable {
 
         builder.append(String.format("%nResidual  variance: %.4f on %5d degrees of freedom%n", variance, df));
         builder.append(String.format("Multiple R-squared: %.4f, Adjusted R-squared: %.4f%n", R2, adjustedR2));
+        builder.append(String.format("AIC: %.4f, BIC: %.4f%n", aic, bic));
 
         return builder.toString();
     }
