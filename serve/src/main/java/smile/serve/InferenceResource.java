@@ -20,6 +20,7 @@ package smile.serve;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -28,6 +29,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
@@ -54,6 +56,9 @@ public class InferenceResource {
     @Inject
     InferenceService service;
 
+    @Inject
+    ObjectMapper objectMapper;
+
     /**
      * Returns the metadata of a single model.
      *
@@ -68,18 +73,22 @@ public class InferenceResource {
     }
 
     /**
-     * Performs a single inference on JSON-encoded feature values.
+     * Performs a single inference on JSON-encoded feature values with optional explanations.
      *
-     * @param id      the model ID.
-     * @param request JSON object whose keys are feature names.
-     * @return the inference response with prediction and optional probabilities.
+     * @param explainQuery optional query parameter {@code ?explain=true}.
+     * @param id           the model ID.
+     * @param request      JSON object whose keys are feature names and optional {@code enableExplanations}.
+     * @return the inference response with prediction and optional probabilities and explanations.
      */
     @POST
     @Path("/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public InferenceResponse predict(@PathParam("id") String id, JsonObject request) {
-        return service.predict(id, request);
+    public InferenceResponse predict(@QueryParam("explain") boolean explainQuery,
+                                     @PathParam("id") String id,
+                                     JsonObject request) {
+        boolean explain = explainQuery || Boolean.TRUE.equals(request != null ? request.getBoolean("enableExplanations") : null);
+        return service.predict(id, request, explain);
     }
 
     /**
@@ -87,18 +96,21 @@ public class InferenceResource {
      * Each non-blank line is treated as a separate sample:
      * either a JSON object (if {@code Content-Type: application/json}) or
      * a comma-separated row of values (if {@code Content-Type: text/plain}).
-     * Results are emitted as a server-sent stream of plain-text lines.
+     * Results are emitted as a server-sent stream of JSON objects.
      *
-     * @param contentType the MIME type of each input line.
-     * @param id          the model ID.
-     * @param input       the request body input stream.
-     * @return a reactive stream of inference result strings.
+     * @param explainQuery optional query parameter {@code ?explain=true}.
+     * @param contentType  the MIME type of each input line.
+     * @param id           the model ID.
+     * @param input        the request body input stream.
+     * @return a reactive stream of JSON inference result strings.
      */
     @POST
     @Path("/{id}/stream")
     @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Produces(MediaType.SERVER_SENT_EVENTS)
     @RestStreamElementType(MediaType.TEXT_PLAIN)
-    public Multi<String> stream(@HeaderParam("Content-Type") String contentType,
+    public Multi<String> stream(@QueryParam("explain") boolean explainQuery,
+                                @HeaderParam("Content-Type") String contentType,
                                 @PathParam("id") String id,
                                 InputStream input) {
         var model = service.getModel(id);
@@ -111,8 +123,15 @@ public class InferenceResource {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         if (!line.isBlank()) {
-                            var response = json ? model.predict(new JsonObject(line)) : model.predict(line);
-                            emitter.emit(response.toString());
+                            InferenceResponse response;
+                            if (json) {
+                                var jsonObject = new JsonObject(line);
+                                boolean explain = explainQuery || Boolean.TRUE.equals(jsonObject.getBoolean("enableExplanations"));
+                                response = model.predict(jsonObject, explain);
+                            } else {
+                                response = model.predict(line, explainQuery);
+                            }
+                            emitter.emit(objectMapper.writeValueAsString(response));
                         }
                     }
                     emitter.complete();

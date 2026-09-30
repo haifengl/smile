@@ -33,7 +33,11 @@ public interface CUDA {
      * @return true if CUDA is available.
      */
     static boolean isAvailable() {
-        return smile_cuda_is_available() != 0;
+        try {
+            return smile_cuda_is_available() != 0;
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     /**

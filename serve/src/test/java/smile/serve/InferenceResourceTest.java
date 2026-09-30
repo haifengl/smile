@@ -19,11 +19,21 @@ package smile.serve;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import java.nio.file.Path;
+import java.util.Properties;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import smile.classification.DataFrameClassifier;
+import smile.data.Tuple;
+import smile.data.formula.Formula;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
+import smile.model.ClassificationModel;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.hasSize;
 /**
  * Integration tests for {@link InferenceResource}.
  *
@@ -146,11 +156,8 @@ public class InferenceResourceTest {
      * POST /ml/models/{id}/stream with a CSV body should stream one result per
      * non-blank input line.
      *
-     * <p>The endpoint uses SSE (server-sent events) so each emitted item is
+     * <p>The endpoint uses SSE (server-sent events) emitting structured JSON objects
      * prefixed with {@code "data:"} by the Quarkus RESTEasy Reactive runtime.
-     * Each data value begins with a space (added by the resource to prevent
-     * SSE clients eating the first character) followed by the predicted class
-     * digit and optional probabilities.
      */
     @Test
     public void testStreamCsvReturnsPredictions() {
@@ -166,18 +173,18 @@ public class InferenceResourceTest {
             .then()
                 .statusCode(200)
                 .extract().body().asString();
-        // Filter to non-blank lines; each SSE chunk looks like "data: <prediction>"
+        // Filter to non-blank lines; each SSE chunk looks like "data: <json>"
         var dataLines = body.lines()
                 .filter(l -> !l.isBlank() && l.startsWith("data:"))
                 .toList();
         Assertions.assertEquals(3, dataLines.size(),
                 "Expected 3 SSE data lines but got: " + body);
-        // Each "data:" line must carry a digit (the class label) after the "data: " prefix
+        // Each "data:" line must carry a JSON object with prediction and probabilities
         for (var line : dataLines) {
             String payload = line.substring("data:".length()).trim();
             Assertions.assertTrue(
-                    Character.isDigit(payload.charAt(0)),
-                    "Expected prediction digit at start of payload: " + payload);
+                    payload.startsWith("{") && payload.contains("\"prediction\":"),
+                    "Expected prediction JSON object in payload: " + payload);
         }
     }
     /**
@@ -268,5 +275,133 @@ public class InferenceResourceTest {
             .when().post("/api/v1/ml/models/ghost-model-1/stream")
             .then()
                 .statusCode(404);
+    }
+
+    // --------------------------------------------------------------- explanations (SHAP)
+    /**
+     * POST /ml/models/{id} with enableExplanations: true in JSON payload returns SHAP values.
+     */
+    @Test
+    public void testPredictJsonWithExplanationsPayload() {
+        var request = "{\"petallength\":5.1,\"petalwidth\":3.5,\"sepallength\":1.4,\"sepalwidth\":0.2,\"enableExplanations\":true}";
+        given()
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when().post("/api/v1/ml/models/iris_random_forest-1")
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("prediction", notNullValue())
+                .body("probabilities", notNullValue())
+                .body("explanations", notNullValue())
+                .body("explanations.shap", hasSize(3))
+                .body("explanations.shap[0]", hasSize(4))
+                .body("explanations.shap[1]", hasSize(4))
+                .body("explanations.shap[2]", hasSize(4));
+    }
+
+    /**
+     * POST /ml/models/{id}?explain=true returns SHAP values.
+     */
+    @Test
+    public void testPredictJsonWithExplainQueryParam() {
+        var request = "{\"petallength\":5.1,\"petalwidth\":3.5,\"sepallength\":1.4,\"sepalwidth\":0.2}";
+        given()
+            .contentType(ContentType.JSON)
+            .body(request)
+            .when().post("/api/v1/ml/models/iris_random_forest-1?explain=true")
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("prediction", notNullValue())
+                .body("explanations.shap", hasSize(3))
+                .body("explanations.shap[0]", hasSize(4));
+    }
+
+    /**
+     * POST /ml/models/{id}/stream?explain=true with CSV input returns SHAP values in SSE events.
+     */
+    @Test
+    public void testStreamCsvWithExplainQueryParam() {
+        var csvBody = "5.1,3.5,1.4,0.2\n6.7,3.0,5.2,2.3\n";
+        String body = given()
+            .contentType(ContentType.TEXT)
+            .body(csvBody)
+            .when().post("/api/v1/ml/models/iris_random_forest-1/stream?explain=true")
+            .then()
+                .statusCode(200)
+                .extract().body().asString();
+
+        var dataLines = body.lines()
+                .filter(l -> !l.isBlank() && l.startsWith("data:"))
+                .toList();
+        Assertions.assertEquals(2, dataLines.size());
+        for (var line : dataLines) {
+            String payload = line.substring("data:".length()).trim();
+            Assertions.assertTrue(payload.contains("\"explanations\":{\"shap\":["),
+                    "Expected explanations in payload: " + payload);
+        }
+    }
+
+    /**
+     * POST /ml/models/{id}/stream with JSON-lines containing enableExplanations returns SHAP values.
+     */
+    @Test
+    public void testStreamJsonLinesWithExplanations() {
+        var jsonLines = "{\"petallength\":5.1,\"petalwidth\":3.5,\"sepallength\":1.4,\"sepalwidth\":0.2,\"enableExplanations\":true}\n"
+                + "{\"petallength\":6.7,\"petalwidth\":3.0,\"sepallength\":5.2,\"sepalwidth\":2.3}\n";
+        String body = given()
+            .contentType(ContentType.JSON)
+            .body(jsonLines)
+            .when().post("/api/v1/ml/models/iris_random_forest-1/stream")
+            .then()
+                .statusCode(200)
+                .extract().body().asString();
+
+        var dataLines = body.lines()
+                .filter(l -> !l.isBlank() && l.startsWith("data:"))
+                .toList();
+        Assertions.assertEquals(2, dataLines.size());
+        // First line requested explanations
+        String first = dataLines.get(0).substring("data:".length()).trim();
+        Assertions.assertTrue(first.contains("\"explanations\":{\"shap\":["),
+                "Expected explanations in first payload: " + first);
+        // Second line did not request explanations
+        String second = dataLines.get(1).substring("data:".length()).trim();
+        Assertions.assertFalse(second.contains("\"explanations\""),
+                "Did not expect explanations in second payload: " + second);
+    }
+
+    /**
+     * Verifies that models not supporting SHAP return "Not supported".
+     */
+    @Test
+    public void testExplanationsUnsupportedModel() {
+        var schema = new StructType(
+                new StructField("x1", DataTypes.DoubleType),
+                new StructField("x2", DataTypes.DoubleType)
+        );
+        var formula = Formula.lhs("y");
+        DataFrameClassifier dummyClassifier = new DataFrameClassifier() {
+            @Override
+            public Formula formula() { return formula; }
+            @Override
+            public StructType schema() { return schema; }
+            @Override
+            public int predict(Tuple x) { return 1; }
+            @Override
+            public int numClasses() { return 2; }
+            @Override
+            public int[] classes() { return new int[]{0, 1}; }
+        };
+        var model = new ClassificationModel("dummy", schema, formula, dummyClassifier,
+                null, null, null, new Properties());
+        var inferenceModel = new InferenceModel(model, Path.of("dummy.sml"));
+        Assertions.assertFalse(inferenceModel.supportsShap());
+
+        var input = Tuple.of(schema, new Object[]{1.0, 2.0});
+        var response = inferenceModel.predict(input, true);
+        Assertions.assertNotNull(response.explanations());
+        Assertions.assertEquals("Not supported", response.explanations().shap());
     }
 }
