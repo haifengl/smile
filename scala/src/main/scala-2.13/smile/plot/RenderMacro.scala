@@ -20,7 +20,7 @@ import scala.language.experimental.macros
 import scala.reflect.macros.whitebox
 import scala.util.Try
 import smile.plot.swing.Canvas
-import smile.vega.VegaLite
+import smile.plot.vegalite.VegaLite
 
 /** Guess the notebook environment. */
 class RenderMacro(val c: whitebox.Context) {
