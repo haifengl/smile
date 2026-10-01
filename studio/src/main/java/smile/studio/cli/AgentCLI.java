@@ -35,7 +35,9 @@ import java.util.concurrent.TimeUnit;
 import com.formdev.flatlaf.util.SystemInfo;
 import ioa.agent.AgentListener;
 import ioa.agent.AgentRequest;
+import ioa.agent.AgentRequestQueue;
 import ioa.agent.Context;
+import ioa.agent.QueuedRequest;
 import ioa.llm.Conversation;
 import ioa.llm.Message;
 import ioa.llm.Role;
@@ -69,10 +71,15 @@ public class AgentCLI extends JPanel {
     private final Workspace workspace;
     /** The reasoning effort level. {@code default} sends nothing, so the server uses its own budget. */
     private String reasoningEffort = LLM.DEFAULT_REASONING_EFFORT;
-    /** The intent whose parent turn is showing, or the next user prompt. */
+    /** The intent whose turn is running, or null when idle. Set only by onStarted. */
     private Intent activeIntent;
-    /** Intents waiting for their queued turn to start, in queue order. */
-    private final ArrayDeque<Intent> pendingTurns = new ArrayDeque<>();
+    /**
+     * Waiting intents keyed by the session queue id assigned on accept. A queued
+     * intent is not the active intent, so a running turn's output never leaks into it.
+     */
+    private final Map<String, Intent> queuedIntents = new HashMap<>();
+    /** The id currently being re-opened for editing, so its cancel is not shown as one. */
+    private String editingId;
     /**
      * Set when auto-compact interrupted a task. After the summary is stored,
      * that same turn continues on the compacted context.
@@ -128,19 +135,11 @@ public class AgentCLI extends JPanel {
     private AgentListener sessionListener() {
         return new AgentListener() {
             @Override
-            public void onQueued(AgentRequest request) {
-                if (request.kind() == AgentRequest.Kind.NOTICE) {
-                    return;
-                }
-                onEdtNow(() -> {
-                    if (request.from() == null || request.from().isBlank()) {
-                        if (activeIntent != null) {
-                            pendingTurns.addLast(activeIntent);
-                        }
-                    } else {
-                        pendingTurns.addLast(openRequest(request.modelPrompt()));
-                    }
-                });
+            public void onQueueChanged(AgentRequestQueue.Event event) {
+                // Always defer: a local submit binds its id right after accept returns,
+                // and accept fires ENQUEUED before returning. Deferring guarantees the
+                // binding is in place before the ENQUEUED handler runs.
+                SwingUtilities.invokeLater(() -> onQueueEvent(event));
             }
 
             @Override
@@ -150,28 +149,15 @@ public class AgentCLI extends JPanel {
 
             @Override
             public void onSkipped(AgentRequest request, String reason) {
-                onEdtNow(() -> {
-                    Intent intent = pendingTurns.pollFirst();
-                    if (intent == null) {
-                        intent = openRequest("");
-                    }
-                    intent.output().append(reason);
-                    intent.setProgress(false);
-                });
+                // The SKIPPED queue event renders the reason; nothing to add here.
             }
 
             @Override
             public void onStarted(String runId, String label) {
                 onEdtNow(() -> {
                     if (runId == null) {
-                        Intent intent = pendingTurns.pollFirst();
-                        if (intent != null) {
-                            activeIntent = intent;
-                        }
-                        if (activeIntent != null) {
-                            activeIntent.setProgress(true);
-                            activeIntent.setStatus("Thinking...");
-                        }
+                        // A top-level turn started; onQueueEvent(STARTED) promotes the
+                        // matching intent to activeIntent and re-arms the progress bar.
                         return;
                     }
                     if (activeIntent != null) {
@@ -292,6 +278,121 @@ public class AgentCLI extends JPanel {
                 });
             }
         };
+    }
+
+    /**
+     * Renders one queue change on the EDT. The session owns queue state; this method
+     * only reflects it. It is id-keyed, so it never guesses which intent a turn belongs
+     * to from arrival order.
+     */
+    private void onQueueEvent(AgentRequestQueue.Event event) {
+        QueuedRequest item = event.item();
+        String id = item.id();
+        switch (event.action()) {
+            case ENQUEUED -> {
+                Intent intent = queuedIntents.get(id);
+                if (intent == null) {
+                    // Not a local submit we bound already: it arrived from a peer agent.
+                    intent = openRequest(item.request().modelPrompt());
+                    queuedIntents.put(id, intent);
+                }
+                wireQueueControls(intent, id, item);
+                intent.showQueued(event.position(), event.size());
+                showQueueDepth(event.size());
+            }
+            case STARTED -> {
+                Intent intent = queuedIntents.remove(id);
+                if (intent != null) {
+                    activeIntent = intent;
+                }
+                if (activeIntent != null) {
+                    activeIntent.clearQueued();
+                    activeIntent.setProgress(true);
+                    activeIntent.setStatus("Thinking...");
+                }
+                showQueueDepth(event.size());
+            }
+            case CANCELLED, SKIPPED -> {
+                boolean editing = id.equals(editingId);
+                editingId = null;
+                Intent intent = queuedIntents.remove(id);
+                if (intent != null) {
+                    intent.clearQueued();
+                    intent.setProgress(false);
+                    if (!editing) {
+                        // An edit already re-opened the composer; only a real cancel or a
+                        // skip prints a reason.
+                        intent.output().append(event.action() == AgentRequestQueue.Action.CANCELLED
+                                ? Intent.queuedMessage("CancelledQueued")
+                                : event.item().request().task());
+                    }
+                }
+                showQueueDepth(event.size());
+            }
+            case REORDERED -> {
+                for (QueuedRequest waiting : agent.session().queued()) {
+                    Intent intent = queuedIntents.get(waiting.id());
+                    if (intent != null) {
+                        intent.showQueued(agent.session().queuePosition(waiting.id()),
+                                agent.session().queued().size());
+                    }
+                }
+                showQueueDepth(event.size());
+            }
+            case NOTICE -> { /* shown via onNotice */ }
+        }
+    }
+
+    /** Wires cancel/edit/reorder on a waiting intent. Edit is offered only for local prompts. */
+    private void wireQueueControls(Intent intent, String id, QueuedRequest item) {
+        boolean local = item.request().from() == null || item.request().from().isBlank();
+        int position = agent.session().queuePosition(id);
+        int size = agent.session().queued().size();
+        Runnable moveUp = () -> agent.session().move(id, -1);
+        Runnable moveDown = () -> agent.session().move(id, 1);
+        Runnable edit = local ? () -> editQueued(id) : null;
+        intent.setQueueControls(() -> agent.session().cancel(id), edit, moveUp, moveDown);
+        intent.setQueueControlsEnabled(position > 1, position < size);
+    }
+
+    /**
+     * Shows the total number of waiting requests in the composer status line. The
+     * composer is the trailing editable intent, not the running turn, so this never
+     * clobbers the running turn's own status.
+     */
+    private void showQueueDepth(int size) {
+        Intent composer = composerIntent();
+        if (composer == null) {
+            return;
+        }
+        composer.setStatus(size > 0 ? Intent.queuedMessage("QueueDepth", size) : "");
+    }
+
+    /** Returns the trailing editable composer intent, or null if there is none. */
+    private Intent composerIntent() {
+        for (int i = intents.getComponentCount() - 1; i >= 0; i--) {
+            if (intents.getComponent(i) instanceof Intent intent && intent.editor().isEditable()) {
+                return intent;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Removes a queued request and returns its intent to the composer for editing. The
+     * cancel drives the same CANCELLED path as the cancel button (the event handler
+     * clears the badge and drops the id from the map); this only re-enables the editor.
+     */
+    private void editQueued(String id) {
+        Intent intent = queuedIntents.get(id);
+        if (intent == null) {
+            return;
+        }
+        // Mark it so the CANCELLED handler re-opens it instead of reporting a cancel.
+        editingId = id;
+        agent.session().cancel(id);
+        intent.setEditable(true);
+        SwingUtilities.invokeLater(() -> intent.editor().requestFocusInWindow());
     }
 
     private void onEdt(Runnable action) {
@@ -988,12 +1089,20 @@ public class AgentCLI extends JPanel {
         }
         agent.conversation().params().setProperty(LLM.MODEL, available.model().id());
 
-        activeIntent = intent;
+        // Do NOT set activeIntent here. A submitted turn is queued, not running; only
+        // the STARTED queue event promotes it. Setting it now would let a running turn's
+        // output stream into this newly queued intent.
         agent.conversation().params().setProperty(LLM.INTERRUPTED, "false");
         intent.setStopAction(() -> agent.conversation().params().setProperty(LLM.INTERRUPTED, "true"));
-        agent.session().accept(
+
+        var result = agent.session().accept(
                 AgentRequest.fromUser(agent.session().callName(), prompt),
                 available.client(),
                 available.model());
+        if (result.ok()) {
+            // Bind the id before the deferred ENQUEUED handler runs so it updates this
+            // intent instead of opening a second one.
+            queuedIntents.put(result.id(), intent);
+        }
     }
 }
