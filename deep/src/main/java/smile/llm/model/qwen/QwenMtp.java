@@ -23,6 +23,7 @@ import smile.deep.layer.EmbeddingLayer;
 import smile.deep.layer.LayerBlock;
 import smile.deep.layer.LinearLayer;
 import smile.deep.tensor.Device;
+import smile.deep.tensor.Index;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.cache.KvCacheLayout;
@@ -271,6 +272,102 @@ public class QwenMtp extends LayerBlock {
         }
     }
 
+    /**
+     * History-aware MTP step: fuses {@code m} consecutive positions
+     * {@code [startPos, startPos+m)} of one request, writes their K/V into the
+     * (persistent, request-bound) MTP KV pool, and attends over the request's
+     * <em>entire</em> MTP history {@code [0, startPos+m)} — unlike
+     * {@link #draftStep}, whose per-round pool only ever contains the current
+     * round's own draft positions (so the head never sees the prompt).
+     *
+     * <p>Position {@code i}'s input is {@code (token t_{i+1}, backbone hidden h_i)}
+     * and is stored at RoPE/KV position {@code i}, matching vLLM's Qwen3.5 MTP
+     * proposer. The caller must have activated the MTP pool for the request.
+     * Always refreshes {@link #lastDraftHidden()} with the last row's post-norm
+     * hidden {@code [1, 1, D]} (the next chained draft step's input).
+     *
+     * @param tokens     next-token ids {@code [1, m]} (int64, on this device).
+     * @param hidden     backbone/MTP hidden {@code [1, m, D]}.
+     * @param startPos   absolute position of the first row.
+     * @param wantLogits whether to score the last row with the shared LM head.
+     * @return float logits {@code [1, 1, V]} for the last row, or {@code null}.
+     */
+    public Tensor absorb(Tensor tokens, Tensor hidden, int startPos, boolean wantLogits) {
+        if (tokEmbeddings == null || lmHead == null || rope == null) {
+            throw new IllegalStateException("MTP shared bindings not installed; call bindShared");
+        }
+        if (kvCachePool == null) {
+            throw new IllegalStateException("MTP KV pool not installed; call setKvCachePool");
+        }
+        int m = (int) tokens.shape()[1];
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            Tensor embed = tokEmbeddings.forward(tokens);
+            Tensor hNorm = preFcNormHidden.forward(hidden);
+            Tensor eNorm = preFcNormEmbedding.forward(embed);
+            Tensor fused = PartialRotaryEncoding.concatLast(eNorm, hNorm);
+            Tensor h = fc.forward(fused);
+
+            Tensor cos;
+            Tensor sin;
+            try (var pos = Index.slice(startPos, startPos + m)) {
+                cos = rope.cos().get(pos);
+                sin = rope.sin().get(pos);
+            }
+            Tensor mask = null;
+            if (m > 1) {
+                var maskOpts = new Tensor.Options()
+                        .device(h.device()).dtype(ScalarType.Float).requireGradients(false);
+                mask = Tensor.zeros(maskOpts, m, m).fill_(Float.NEGATIVE_INFINITY);
+                mask.triu_(1);
+                if (startPos > 0) {
+                    try (var zeros = Tensor.zeros(maskOpts, m, startPos)) {
+                        Tensor prev = mask;
+                        mask = Tensor.hstack(zeros, prev);
+                        prev.close();
+                    }
+                }
+                if (mask.dtype() != h.dtype()) {
+                    Tensor maskF = mask;
+                    mask = maskF.to(h.dtype());
+                    maskF.close();
+                }
+            }
+            int[] start = {startPos};
+            for (QwenBlock layer : layers) {
+                Tensor next = layer.forward(h, start, cos, sin, mask);
+                h.close();
+                h = next;
+            }
+            Tensor normalized = norm.forward(h);
+            h.close();
+
+            Tensor lastRow;
+            try (var last = Index.slice(m - 1, m)) {
+                lastRow = normalized.get(Index.Colon, last);
+            }
+            if (lastDraftHidden != null) {
+                lastDraftHidden.close();
+            }
+            lastDraftHidden = lastRow.copy();
+            lastDraftHidden.detachFromScopes();
+
+            Tensor logits = null;
+            if (wantLogits) {
+                Tensor logitsF = lmHead.forward(lastRow);
+                logits = logitsF.to(ScalarType.Float);
+                if (logits != logitsF) {
+                    logitsF.close();
+                }
+                logits.promoteToParent();
+            }
+            return logits;
+        } finally {
+            Tensor.pop();
+        }
+    }
+
     /** Last MTP hidden (pre-lm-head) from {@link #draftStep}; owned by this module. */
     Tensor lastDraftHidden;
 
@@ -308,6 +405,14 @@ public class QwenMtp extends LayerBlock {
         int cap = Math.max(1, draftWindow + 1);
         kvCachePool.unbindRequests();
         kvCachePool.bindRequests(Math.max(1, batchSize), cap);
+    }
+
+    /** Drops the chained draft hidden (history-aware path keeps the KV pool bound). */
+    public void clearDraftHidden() {
+        if (lastDraftHidden != null) {
+            lastDraftHidden.close();
+            lastDraftHidden = null;
+        }
     }
 
     /** Releases MTP draft KV after a speculative round. */

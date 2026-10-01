@@ -2213,10 +2213,10 @@ static torch::Tensor gated_delta_recurrent_libtorch(
     return out;
 }
 
-ST_Tensor smile_recurrent_gated_delta_rule(
+static ST_Tensor recurrent_gated_delta_impl(
         ST_Tensor query, ST_Tensor key, ST_Tensor value,
         ST_Tensor g, ST_Tensor beta, ST_Tensor state,
-        int qk_l2norm) {
+        int qk_l2norm, ST_Tensor *ckpts, int n_ckpt) {
     if (!query || !key || !value || !g || !beta || !state) {
         set_error("smile_recurrent_gated_delta_rule: null tensor");
         return nullptr;
@@ -2280,6 +2280,23 @@ ST_Tensor smile_recurrent_gated_delta_rule(
                 cudaDeviceGetAttribute(&smem_limit, cudaDevAttrMaxSharedMemoryPerBlock, dev);
             }
             bool fused_ok = false;
+            GatedDeltaCkpt ck{};
+            if (ckpts != nullptr && n_ckpt > 0) {
+                if (n_ckpt > kGatedDeltaMaxCkpt || n_ckpt > S) {
+                    set_error("smile_recurrent_gated_delta_rule_ckpt: bad checkpoint count");
+                    return nullptr;
+                }
+                ck.n = n_ckpt;
+                for (int i = 0; i < n_ckpt; ++i) {
+                    if (!ckpts[i] || ckpts[i]->t.scalar_type() != c10::ScalarType::Float
+                            || !ckpts[i]->t.is_contiguous() || ckpts[i]->t.device() != q.device()
+                            || ckpts[i]->t.numel() < st.numel()) {
+                        set_error("smile_recurrent_gated_delta_rule_ckpt: invalid checkpoint tensor");
+                        return nullptr;
+                    }
+                    ck.ptr[i] = ckpts[i]->t.data_ptr<float>();
+                }
+            }
             if (smem <= static_cast<size_t>(smem_limit)) {
                 // Kernel applies exp(g), Q scale, and optional Q/K L2-norm.
                 int rc = smile_gated_delta_recurrent_cuda(
@@ -2293,7 +2310,8 @@ ST_Tensor smile_recurrent_gated_delta_rule(
                         B, H, S, Kdim, Vdim,
                         scale,
                         qk_l2norm,
-                        stream);
+                        stream,
+                        ck.n > 0 ? &ck : nullptr);
                 fused_ok = (rc == 0);
             }
             if (!fused_ok) {
@@ -2307,6 +2325,12 @@ ST_Tensor smile_recurrent_gated_delta_rule(
                     snprintf(reason, sizeof(reason), "%s",
                              (err && err[0]) ? err : "fused kernel launch failed");
                 }
+                if (ck.n > 0) {
+                    // Checkpoints are only produced by the fused kernel; the caller
+                    // falls back to its per-position loop.
+                    set_error(reason);
+                    return nullptr;
+                }
                 warn_gated_delta_libtorch_once(reason);
                 if (qk_l2norm) {
                     q = l2norm_last(q);
@@ -2317,6 +2341,10 @@ ST_Tensor smile_recurrent_gated_delta_rule(
         } else
 #endif
         {
+            if (ckpts != nullptr && n_ckpt > 0) {
+                set_error("smile_recurrent_gated_delta_rule_ckpt: CUDA only");
+                return nullptr;
+            }
             if (qk_l2norm) {
                 q = l2norm_last(q);
                 k = l2norm_last(k);
@@ -2332,6 +2360,118 @@ ST_Tensor smile_recurrent_gated_delta_rule(
             out = out_f.transpose(1, 2).contiguous().to(q0.scalar_type());
         }
         return new ST_Tensor_{ out };
+    ST_TRY_END
+    return nullptr;
+}
+
+ST_Tensor smile_recurrent_gated_delta_rule(
+        ST_Tensor query, ST_Tensor key, ST_Tensor value,
+        ST_Tensor g, ST_Tensor beta, ST_Tensor state,
+        int qk_l2norm) {
+    return recurrent_gated_delta_impl(query, key, value, g, beta, state, qk_l2norm, nullptr, 0);
+}
+
+ST_Tensor smile_recurrent_gated_delta_rule_ckpt(
+        ST_Tensor query, ST_Tensor key, ST_Tensor value,
+        ST_Tensor g, ST_Tensor beta, ST_Tensor state,
+        int qk_l2norm, ST_Tensor *ckpts, int n_ckpt) {
+    return recurrent_gated_delta_impl(query, key, value, g, beta, state, qk_l2norm, ckpts, n_ckpt);
+}
+
+ST_Tensor smile_gated_delta_verify_window(
+        ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor conv_weight,
+        ST_Tensor g, ST_Tensor beta, ST_Tensor rec_state,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim,
+        int qk_l2norm,
+        ST_Tensor *conv_ckpts, ST_Tensor *rec_ckpts, int n_ckpt) {
+    if (!hidden || !conv_state || !conv_weight || !g || !beta || !rec_state
+            || !conv_ckpts || !rec_ckpts || n_ckpt < 1) {
+        set_error("smile_gated_delta_verify_window: null argument");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+#ifdef USE_CUDA
+        auto h = hidden->t;          // [B,S,C]
+        auto cst = conv_state->t;    // [B,C,K-1]
+        auto rst = rec_state->t;     // [B,Hv,Dk,Dv] float
+        if (!h.is_cuda() || h.dim() != 3 || cst.dim() != 3 || rst.dim() != 4
+                || !h.is_contiguous() || !cst.is_contiguous() || !rst.is_contiguous()
+                || rst.scalar_type() != c10::ScalarType::Float
+                || cst.scalar_type() != h.scalar_type()) {
+            set_error("smile_gated_delta_verify_window: unsupported layout/dtype");
+            return nullptr;
+        }
+        const int64_t B = h.size(0), S = h.size(1), C = h.size(2);
+        const int64_t K = conv_weight->t.size(-1);
+        const int64_t Hv = num_v_heads;
+        if (n_ckpt != S || S > kGatedDeltaMaxCkpt || cst.size(0) != B || cst.size(1) != C
+                || cst.size(2) != K - 1 || rst.size(0) != B || rst.size(1) != Hv
+                || rst.size(2) != head_k_dim || rst.size(3) != head_v_dim) {
+            set_error("smile_gated_delta_verify_window: shape mismatch");
+            return nullptr;
+        }
+        GatedDeltaDtype dt;
+        switch (h.scalar_type()) {
+            case c10::ScalarType::Float: dt = GatedDeltaDtype::kFloat; break;
+            case c10::ScalarType::BFloat16: dt = GatedDeltaDtype::kBFloat16; break;
+            case c10::ScalarType::Half: dt = GatedDeltaDtype::kHalf; break;
+            default:
+                set_error("smile_gated_delta_verify_window: unsupported dtype");
+                return nullptr;
+        }
+        auto w = conv_weight->t.reshape({C, K}).contiguous().to(h.scalar_type());
+        GatedDeltaConvCkpt cck{};
+        GatedDeltaCkpt rck{};
+        cck.n = rck.n = static_cast<int>(n_ckpt);
+        for (int i = 0; i < n_ckpt; ++i) {
+            if (!conv_ckpts[i] || !rec_ckpts[i]) {
+                set_error("smile_gated_delta_verify_window: null checkpoint");
+                return nullptr;
+            }
+            auto &ct = conv_ckpts[i]->t;
+            auto &rt = rec_ckpts[i]->t;
+            if (!ct.is_contiguous() || ct.scalar_type() != h.scalar_type() || ct.numel() < cst.numel()
+                    || !rt.is_contiguous() || rt.scalar_type() != c10::ScalarType::Float
+                    || rt.numel() < rst.numel()) {
+                set_error("smile_gated_delta_verify_window: invalid checkpoint tensor");
+                return nullptr;
+            }
+            cck.ptr[i] = ct.data_ptr();
+            rck.ptr[i] = rt.data_ptr<float>();
+        }
+        c10::cuda::CUDAGuard guard(h.device());
+        cudaStream_t stream = at::cuda::getCurrentCUDAStream(h.device().index()).stream();
+        auto fopt = h.options().dtype(c10::ScalarType::Float);
+        auto q = torch::empty({B, Hv, S, (int64_t)head_k_dim}, fopt);
+        auto k = torch::empty({B, Hv, S, (int64_t)head_k_dim}, fopt);
+        auto v = torch::empty({B, Hv, S, (int64_t)head_v_dim}, fopt);
+        int rc = smile_causal_conv1d_window_split_qkv_cuda(
+                h.data_ptr(), cst.data_ptr(), w.data_ptr(), dt,
+                q.data_ptr<float>(), k.data_ptr<float>(), v.data_ptr<float>(),
+                B, C, K, S, num_k_heads, num_v_heads, head_k_dim, head_v_dim,
+                &cck, stream);
+        if (rc != 0) {
+            set_error(smile_gated_delta_last_error());
+            return nullptr;
+        }
+        auto gf = g->t.to(c10::ScalarType::Float).transpose(1, 2).contiguous();
+        auto bf = beta->t.to(c10::ScalarType::Float).transpose(1, 2).contiguous();
+        auto out_f = torch::empty({B, Hv, S, (int64_t)head_v_dim}, fopt);
+        const float scale = 1.0f / std::sqrt(static_cast<float>(head_k_dim));
+        rc = smile_gated_delta_recurrent_cuda(
+                q.data_ptr<float>(), k.data_ptr<float>(), v.data_ptr<float>(),
+                gf.data_ptr<float>(), bf.data_ptr<float>(), rst.data_ptr<float>(),
+                out_f.data_ptr<float>(), B, Hv, S, head_k_dim, head_v_dim,
+                scale, qk_l2norm, stream, &rck);
+        if (rc != 0) {
+            set_error(smile_gated_delta_last_error());
+            return nullptr;
+        }
+        return new ST_Tensor_{ out_f.transpose(1, 2).contiguous().to(h.scalar_type()) };
+#else
+        set_error("smile_gated_delta_verify_window: CUDA only");
+        return nullptr;
+#endif
     ST_TRY_END
     return nullptr;
 }

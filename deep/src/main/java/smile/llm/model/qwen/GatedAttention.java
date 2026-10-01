@@ -222,6 +222,22 @@ public class GatedAttention implements Attention {
     }
 
     /**
+     * Kill switch for running small multi-token windows (MTP verify, tiny prefill tails)
+     * through FlashInfer's paged prefill kernel eagerly. The generic eager path
+     * (gather the whole KV history, GQA-expand it, SDPA, plus three device-to-host
+     * syncs per layer) is O(context) per layer; the kernel reads pages in place.
+     * {@code SMILE_VERIFY_FLASHINFER_EAGER=0} restores the generic path.
+     */
+    private static final boolean EAGER_VERIFY_KERNEL =
+            !"0".equals(System.getenv("SMILE_VERIFY_FLASHINFER_EAGER"));
+
+    private boolean eagerVerifyKernel(int seqlen) {
+        return EAGER_VERIFY_KERNEL && cachePool.verifyWindowKernel() && seqlen > 1 && seqlen <= 8
+                && smile.torch.Native.hasFlashInferAttentionVerify()
+                && cachePool.flashInferWorkspace() != null;
+    }
+
+    /**
      * Forward with HuggingFace-style partial RoPE cos/sin tables.
      *
      * @param x        hidden states {@code [B, S, D]}.
@@ -325,7 +341,7 @@ public class GatedAttention implements Attention {
             Tensor attn;
             if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
                 FlashInferKvMetadata meta = cachePool.sharedFlashInferMetadata(cacheLen);
-                if (cachePool.verifyGraphBuffers()) {
+                if (cachePool.verifyGraphBuffers() || eagerVerifyKernel(seqlen)) {
                     // Graph-capturable verify kernel: causal masking is the kernel's
                     // own compile-time MaskMode::kCausal (Stage 1/2 validated
                     // equivalent to the additive continuation-window mask below), so

@@ -419,6 +419,30 @@ final class GatedDeltaRule {
                 query, key, value, g, beta, initialState, outputState, qkL2norm);
     }
 
+    /**
+     * Whole-window fused recurrent rule that also writes the state after each
+     * step into {@code ckpts[t]} (one kernel launch; CUDA + float pool state only).
+     *
+     * @return {@code [B,S,H,Dv]} output in the query dtype, or {@code null} when
+     *         the native entry point is unavailable (caller must use a per-step loop).
+     */
+    static Tensor recurrentGatedDeltaRuleCkpt(
+            Tensor query, Tensor key, Tensor value, Tensor g, Tensor beta,
+            Tensor state, boolean qkL2norm, Tensor[] ckpts) {
+        if (state == null || state.dtype() != ScalarType.Float || !state.device().isCUDA()) {
+            return null;
+        }
+        state.detachFromScopes();
+        Tensor out = smile.torch.Native.recurrentGatedDeltaRuleCkpt(
+                query, key, value, g, beta, state, qkL2norm, ckpts);
+        if (out != null && out.dtype() != query.dtype()) {
+            Tensor cast = out.to(query.dtype());
+            out.close();
+            out = cast;
+        }
+        return out;
+    }
+
     /** Java reference implementation (CPU tests / native fallback). */
     static smile.util.Tuple2<Tensor, Tensor> recurrentGatedDeltaRuleJava(
             Tensor query, Tensor key, Tensor value, Tensor g, Tensor beta,
