@@ -83,11 +83,22 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      * Kill switch for the checkpoint-replay verify-window fix: on a partial
      * MTP accept, restore a per-position DeltaNet checkpoint retained during
      * the primary verify forward instead of a second full-window forward.
-     * Default off until real-traffic validation; mirrors the single-flag
-     * design of {@code SMILE_VERIFY_CUDA_GRAPH} / {@code SMILE_DECODE_CUDA_GRAPH}.
+     * Default on (validated 2026-10-01: removes the ~26 ms second forward per
+     * partial accept, +17% tok/s over plain decode); set
+     * {@code SMILE_MTP_VERIFY_CHECKPOINT_REPLAY=0} to restore the second-forward path.
      */
     private static final boolean MTP_VERIFY_CHECKPOINT_REPLAY =
-            "1".equals(System.getenv("SMILE_MTP_VERIFY_CHECKPOINT_REPLAY"));
+            !"0".equals(System.getenv("SMILE_MTP_VERIFY_CHECKPOINT_REPLAY"));
+
+    /**
+     * Kill switch for the history-aware MTP draft head (default on). The
+     * head's attention layer must see the request's whole prefix, exactly like
+     * vLLM's Qwen3.5 MTP proposer (prompt positions are absorbed into a
+     * persistent MTP KV cache during prefill; accepted verify rows are
+     * absorbed on the next draft). {@code SMILE_MTP_HISTORY=0} restores the
+     * legacy per-round, context-free draft head for A/B comparison.
+     */
+    private static final boolean MTP_HISTORY = !"0".equals(System.getenv("SMILE_MTP_HISTORY"));
 
     private static final Pattern HF_LAYER_WEIGHT = Pattern.compile(
             "^model\\.layers\\.(\\d+)\\.(self_attn|linear_attn|mlp|input_layernorm|post_attention_layernorm)\\.(.+)$");
@@ -306,6 +317,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      */
     public void setSpeculativeEnabled(boolean enabled) {
         this.speculativeEnabled = enabled;
+        if (enabled) {
+            ensureMtpHistoryPools();
+        }
     }
 
     /**
@@ -1813,6 +1827,342 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         }
     }
 
+    /**
+     * Per-request state of the history-aware MTP draft head. Invariant while
+     * {@link #valid}: MTP KV holds positions {@code [0, filled)}, and
+     * {@code pending} holds backbone hidden rows for positions
+     * {@code [filled, filled + rows)} (one {@code [rows, D]} tensor per TP
+     * rank) whose "next token" inputs are {@code priorTokens} (all rows but
+     * the last) plus the caller's {@code lastToken}.
+     */
+    private static final class MtpHistory {
+        int filled;
+        int[] priorTokens = new int[0];
+        Tensor[] pending;
+        boolean valid = true;
+
+        int pendingRows() {
+            return pending == null ? 0 : (int) pending[0].shape()[0];
+        }
+
+        void closePending() {
+            if (pending != null) {
+                for (Tensor t : pending) {
+                    if (t != null) {
+                        t.close();
+                    }
+                }
+                pending = null;
+            }
+            priorTokens = new int[0];
+        }
+
+        void setPending(Tensor[] rows, int[] prior) {
+            closePending();
+            pending = rows;
+            priorTokens = prior;
+        }
+
+        void invalidate() {
+            valid = false;
+            closePending();
+        }
+    }
+
+    /** Request id to MTP draft-head history (single-request speculation path). */
+    private final Map<Integer, MtpHistory> mtpHistory = new ConcurrentHashMap<>();
+    private boolean mtpHistoryPoolsReady;
+
+    /** Test hook: whether {@code requestId} still has a consistent MTP history. */
+    boolean mtpHistoryValid(int requestId) {
+        MtpHistory st = mtpHistory.get(requestId);
+        return st != null && st.valid;
+    }
+
+    /** True when persistent MTP history pools exist on every rank. */
+    private boolean mtpHistoryActive() {
+        return MTP_HISTORY && mtpHistoryPoolsReady && isSpeculativeEnabled();
+    }
+
+    /**
+     * Allocates the persistent MTP KV pools (once speculation is turned on).
+     * Failure to allocate disables history (and therefore MTP speculation,
+     * which is context-free garbage without it) rather than failing load.
+     */
+    private synchronized void ensureMtpHistoryPools() {
+        if (!MTP_HISTORY || mtpHistoryPoolsReady) {
+            return;
+        }
+        for (QwenModel m : models) {
+            if (m.mtp() == null || m.kvCachePool() == null) {
+                return;
+            }
+        }
+        try {
+            for (QwenModel m : models) {
+                KvCachePool main = m.kvCachePool();
+                KvCachePool pool = KvCachePool.forMtpHistory(
+                        m.mtp().kvCacheLayout(), m.device(), main.keyCache().dtype(),
+                        main.pageSize(), main.numSlots());
+                m.mtp().setKvCachePool(pool, true);
+                logger.info("tpRank={}: MTP history KvCachePool slots={}", m.tpRank(), pool.numSlots());
+            }
+            mtpHistoryPoolsReady = true;
+        } catch (RuntimeException e) {
+            logger.warn("MTP history KV pool allocation failed; speculation falls back to plain decode: {}",
+                    e.getMessage());
+        }
+    }
+
+    /** Binds the same request id in every rank's MTP history pool (best effort). */
+    private void bindMtpHistory(int id, int[] prompt, int totalCapacity) {
+        if (isSpeculativeEnabled()) {
+            ensureMtpHistoryPools();
+        }
+        if (!mtpHistoryActive()) {
+            return;
+        }
+        try {
+            for (QwenModel m : models) {
+                int local = m.mtp().kvCachePool().bindRequest(prompt, totalCapacity);
+                if (local != id) {
+                    throw new IllegalStateException("MTP request id mismatch: main=" + id + " mtp=" + local);
+                }
+            }
+        } catch (RuntimeException e) {
+            logger.warn("MTP history bind failed for request {} (no speculation): {}", id, e.getMessage());
+            for (QwenModel m : models) {
+                if (m.mtp() != null && m.mtp().kvCachePool() != null) {
+                    m.mtp().kvCachePool().unbindRequest(id);
+                }
+            }
+        }
+    }
+
+    private void releaseMtpHistory(int requestId) {
+        MtpHistory st = mtpHistory.remove(requestId);
+        if (st != null) {
+            st.invalidate();
+        }
+        if (MTP_HISTORY && mtpHistoryPoolsReady) {
+            for (QwenModel m : models) {
+                if (m.mtp() != null && m.mtp().kvCachePool() != null) {
+                    m.mtp().kvCachePool().unbindRequest(requestId);
+                }
+            }
+        }
+    }
+
+    /** Runs {@code task} on every TP rank (own thread/ParallelState per rank when TP). */
+    private Tensor[] runOnRanks(java.util.function.IntFunction<Tensor> task) {
+        Tensor[] out = new Tensor[models.length];
+        if (models.length == 1) {
+            try (var guard = Tensor.noGradGuard()) {
+                out[0] = task.apply(0);
+            }
+            return out;
+        }
+        List<Future<Tensor>> futures = new ArrayList<>(models.length);
+        for (int rank = 0; rank < models.length; rank++) {
+            final int r = rank;
+            futures.add(tpExecutor.submit(() -> {
+                ParallelState.setCurrent(tpGroup.state(r));
+                try (var guard = Tensor.noGradGuard()) {
+                    return task.apply(r);
+                } finally {
+                    ParallelState.clearCurrent();
+                }
+            }));
+        }
+        try {
+            for (int r = 0; r < models.length; r++) {
+                out[r] = futures.get(r).get();
+            }
+        } catch (Exception e) {
+            for (Tensor t : out) {
+                if (t != null) {
+                    t.close();
+                }
+            }
+            throw new RuntimeException("TP MTP step failed", e);
+        }
+        return out;
+    }
+
+    /**
+     * One history-aware MTP forward over {@code hidden} ({@code [1, m, D]} per
+     * rank) at positions {@code [startPos, startPos+m)}; returns per-rank last-row
+     * logits when {@code wantLogits}, else {@code null} entries.
+     */
+    private Tensor[] mtpAbsorb(int[] nextTokens, Tensor[] hidden, int startPos, boolean wantLogits) {
+        int m = nextTokens.length;
+        long[] tl = new long[m];
+        for (int i = 0; i < m; i++) {
+            tl[i] = nextTokens[i];
+        }
+        return runOnRanks(r -> {
+            Tensor tokT = Tensor.of(tl).reshape(1, m);
+            Tensor dev = tokT.to(models[r].device());
+            try {
+                return models[r].mtp().absorb(dev, hidden[r], startPos, wantLogits);
+            } finally {
+                if (dev != tokT) {
+                    dev.close();
+                }
+                tokT.close();
+            }
+        });
+    }
+
+    private void activateMtpPools(int requestId) {
+        for (QwenModel m : models) {
+            m.mtp().kvCachePool().activateStep(requestId);
+        }
+    }
+
+    /** Views per-rank {@code [rows, D]} tensors as {@code [1, rows, D]}. */
+    private static Tensor[] asBatchOne(Tensor[] rows) {
+        Tensor[] out = new Tensor[rows.length];
+        for (int r = 0; r < rows.length; r++) {
+            long[] sh = rows[r].shape();
+            out[r] = rows[r].reshape(1, sh[0], sh[1]);
+        }
+        return out;
+    }
+
+    private static void closeAll(Tensor[] ts) {
+        for (Tensor t : ts) {
+            if (t != null) {
+                t.close();
+            }
+        }
+    }
+
+    /**
+     * Absorbs one prefill chunk {@code [from, to)} into the MTP history: every
+     * position whose "next token" is already known gets its MTP K/V written;
+     * at most one trailing row (waiting for the first generated token) stays
+     * pending. Called right after the chunk's backbone forward (which retained
+     * the chunk's hidden rows via {@code captureWindowHidden}).
+     */
+    private void mtpAbsorbPrefill(int requestId, int[] prompt, int from, int to) {
+        MtpHistory st;
+        if (from == 0) {
+            st = new MtpHistory();
+            MtpHistory old = mtpHistory.put(requestId, st);
+            if (old != null) {
+                old.invalidate();
+            }
+        } else {
+            st = mtpHistory.get(requestId);
+        }
+        if (st == null || !st.valid) {
+            return;
+        }
+        try {
+            int oldRows = st.pendingRows();
+            int newRows = to - from;
+            if (st.filled + oldRows != from || models[0].windowHidden() == null
+                    || !models[0].mtp().kvCachePool().isBound(requestId)) {
+                st.invalidate();
+                return;
+            }
+            int total = oldRows + newRows;
+            int process = to < prompt.length ? total : total - 1;
+            activateMtpPools(requestId);
+            int pos = st.filled;
+            if (oldRows == 1 && process >= 1) {
+                Tensor[] h = asBatchOne(st.pending);
+                try {
+                    mtpAbsorb(new int[]{prompt[pos + 1]}, h, pos, false);
+                } finally {
+                    closeAll(h);
+                }
+                pos++;
+            }
+            int chunkRows = process - oldRows;
+            if (chunkRows > 0) {
+                Tensor[] h = new Tensor[models.length];
+                for (int r = 0; r < models.length; r++) {
+                    try (var sl = Index.slice(0, chunkRows)) {
+                        h[r] = models[r].windowHidden().get(Index.Colon, sl);
+                    }
+                }
+                try {
+                    mtpAbsorb(Arrays.copyOfRange(prompt, pos + 1, pos + 1 + chunkRows), h, pos, false);
+                } finally {
+                    closeAll(h);
+                }
+            }
+            if (process < total) {
+                Tensor[] rows = new Tensor[models.length];
+                for (int r = 0; r < models.length; r++) {
+                    rows[r] = models[r].copyWindowHiddenRows(newRows - 1, 1);
+                }
+                st.setPending(rows, new int[0]);
+            } else {
+                st.closePending();
+            }
+            st.filled += process;
+        } catch (RuntimeException e) {
+            st.invalidate();
+            throw e;
+        }
+    }
+
+    /**
+     * History-aware greedy drafts: step 0 absorbs every committed-but-pending
+     * row (prefill tail or last round's accepted rows) and predicts the next
+     * token; later steps chain the MTP hidden. Returns {@code null} when the
+     * request has no consistent history (caller falls back to plain decode).
+     */
+    private int[] draftGreedyHistory(int requestId, int lastToken, int lastPos, int n) {
+        MtpHistory st = mtpHistory.get(requestId);
+        if (st == null || !st.valid || st.pending == null) {
+            return null;
+        }
+        int rows = st.pendingRows();
+        if (st.filled + rows != lastPos || st.priorTokens.length != rows - 1
+                || !models[0].mtp().kvCachePool().isBound(requestId)) {
+            st.invalidate();
+            return null;
+        }
+        int[] tokens0 = Arrays.copyOf(st.priorTokens, rows);
+        tokens0[rows - 1] = lastToken;
+        int[] drafts = new int[n];
+        try {
+            activateMtpPools(requestId);
+            Tensor[] h0 = asBatchOne(st.pending);
+            Tensor[] logits;
+            try {
+                logits = mtpAbsorb(tokens0, h0, st.filled, true);
+            } finally {
+                closeAll(h0);
+            }
+            drafts[0] = smile.llm.engine.Sampling.sampleGreedyTokenId(logits[0]);
+            closeAll(logits);
+            st.filled = lastPos;
+            st.closePending();
+            for (int d = 1; d < n; d++) {
+                Tensor[] hidden = new Tensor[models.length];
+                for (int r = 0; r < models.length; r++) {
+                    hidden[r] = models[r].mtp().lastDraftHidden();
+                }
+                logits = mtpAbsorb(new int[]{drafts[d - 1]}, hidden, lastPos - 1 + d, true);
+                drafts[d] = smile.llm.engine.Sampling.sampleGreedyTokenId(logits[0]);
+                closeAll(logits);
+            }
+        } catch (RuntimeException e) {
+            st.invalidate();
+            throw e;
+        } finally {
+            for (QwenModel m : models) {
+                m.mtp().clearDraftHidden();
+            }
+        }
+        return drafts;
+    }
+
     @Override
     public int bind(int[] prompt, int totalCapacity) {
         disablePrefixReuseForHybrid();
@@ -1840,6 +2190,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 m.mtpAnchorPool().bindRequest(id);
             }
         }
+        bindMtpHistory(id, prompt, totalCapacity);
         return id;
     }
 
@@ -2070,7 +2421,23 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 for (int r = 0; r < models.length; r++) {
                     tokenShards[r] = Tensor.of(window).reshape(1, window.length).to(models[r].device());
                 }
-                Tensor[] logits = forwardWindow(tokenShards, from, tpExecutor, false);
+                boolean history = mtpHistoryActive()
+                        && models[0].mtp().kvCachePool().isBound(requestId);
+                if (history) {
+                    for (QwenModel m : models) {
+                        m.setCaptureWindowHidden(true);
+                    }
+                }
+                Tensor[] logits;
+                try {
+                    logits = forwardWindow(tokenShards, from, tpExecutor, false);
+                } finally {
+                    if (history) {
+                        for (QwenModel m : models) {
+                            m.setCaptureWindowHidden(false);
+                        }
+                    }
+                }
                 for (Tensor t : tokenShards) {
                     t.close();
                 }
@@ -2080,6 +2447,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                     }
                 }
                 scatterMtpAnchor(new int[]{requestId});
+                if (history) {
+                    mtpAbsorbPrefill(requestId, prompt, from, to);
+                }
                 if (to < prompt.length) {
                     for (Tensor l : logits) {
                         if (l != null) {
@@ -2536,7 +2906,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         if (n < 1) {
             throw new IllegalArgumentException("numDrafts must be >= 1");
         }
-        if (b > 1 && allAnchorsReady(requestIds)) {
+        if (b > 1 && !mtpHistoryActive() && allAnchorsReady(requestIds)) {
             return speculateBatch(requestIds, lastTokens, positions, n, temperature, topp);
         }
         int[][] out = new int[b][];
@@ -2581,6 +2951,24 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         // Window verify: one target forward over [lastToken] + drafts (vLLM-style).
         int n = Math.max(1, numDrafts);
+        if (mtpHistoryActive()) {
+            long tDraft = System.nanoTime();
+            int[] drafts = draftGreedyHistory(requestId, lastToken, lastPos, n);
+            if (drafts == null) {
+                // No consistent MTP history for this request (multimodal, mid-stream
+                // enable, plain-decode gap, KV-bind failure): plain decode is exact.
+                try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
+                        new int[]{lastPos})) {
+                    return new int[]{sampleTargetId(logits, temperature, topp)};
+                }
+            }
+            speculativeDraftNanos.addAndGet(System.nanoTime() - tDraft);
+            SpeculativeDecoding.AcceptResult accept = verifyWindowOnline(
+                    requestId, lastToken, lastPos, drafts, temperature, topp);
+            recordSpeculativeRound(n, accept.numDraftAccepted());
+            logVerify(n, accept.numDraftAccepted(), accept.bonusToken());
+            return accept.acceptedTokens();
+        }
         long tBookkeeping = System.nanoTime();
         for (QwenModel m : models) {
             if (m.mtp() != null) {
@@ -2711,9 +3099,21 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         if (checkpointReplay) {
             setVerifyWindowActive(true);
         }
+        // History-aware MTP: retain the window's post-norm hidden rows so the accepted
+        // prefix can be absorbed into the draft head's KV on the next draft.
+        MtpHistory hist = mtpHistory.get(requestId);
+        boolean captureHidden = hist != null && hist.valid && hist.pending == null
+                && hist.filled == lastPos;
+        if (captureHidden) {
+            for (QwenModel m : models) {
+                m.setCaptureWindowHidden(true);
+            }
+        }
         long tVerify = System.nanoTime();
+        Tensor logits = null;
         int[] targetSamples;
-        try (Tensor logits = forwardVerifyWindow(requestId, window, lastPos, false)) {
+        try {
+            logits = forwardVerifyWindow(requestId, window, lastPos, false);
             speculativeTargetForwards.incrementAndGet();
             targetSamples = sampleTargetWindow(logits, temperature, topp);
             speculativeVerifyNanos.addAndGet(System.nanoTime() - tVerify);
@@ -2721,6 +3121,22 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             if (checkpointReplay) {
                 setVerifyWindowActive(false);
             }
+            if (captureHidden) {
+                for (QwenModel m : models) {
+                    m.setCaptureWindowHidden(false);
+                }
+            }
+        }
+        try {
+            // Outside the timed region and outside verifyWindowActive: this
+            // diagnostic's own extra eager forward must never be counted as
+            // real verify cost, and must not re-enter GatedDeltaNet's
+            // per-position checkpoint-replay loop (it would overwrite the
+            // real per-position checkpoints restoreDeltaNetCheckpointAtWindowPosition
+            // depends on below with values from this redundant forward).
+            debugDiffVerifyGraphVsEager(requestId, window, lastPos, logits, n);
+        } finally {
+            logits.close();
         }
         if (targetSamples.length != n + 1) {
             throw new IllegalStateException(
@@ -2729,6 +3145,22 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         SpeculativeDecoding.AcceptResult accept = SpeculativeDecoding.acceptGreedy(drafts, targetSamples);
         int r = accept.numDraftAccepted();
+        if (captureHidden) {
+            // Rows 0..r are the committed positions lastPos..lastPos+r; their next
+            // tokens are drafts[0..r-1] and (supplied next round) the bonus token.
+            Tensor[] rows = new Tensor[models.length];
+            boolean ok = true;
+            for (int i = 0; i < models.length; i++) {
+                rows[i] = models[i].copyWindowHiddenRows(0, r + 1);
+                ok &= rows[i] != null;
+            }
+            if (ok) {
+                hist.setPending(rows, Arrays.copyOf(drafts, r));
+            } else {
+                closeAll(rows);
+                hist.invalidate();
+            }
+        }
         int writtenEnd = lastPos + n + 1;
         int sealedLen = lastPos + 1 + r;
         tBookkeeping = System.nanoTime();
@@ -2952,6 +3384,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         for (int r = 0; r < models.length; r++) {
             shards[r] = Tensor.of(toks).reshape(1, toks.length).to(models[r].device());
         }
+        for (QwenModel m : models) {
+            if (m.kvCachePool() != null) {
+                m.kvCachePool().setVerifyWindowKernel(true);
+            }
+        }
         try {
             // scatter=true (DeltaNet replay) discards logits; skip the vocab-sized
             // lm_head projection on every replayed position and only score the last.
@@ -2969,6 +3406,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             Tensor[] logits = forwardWindowVerify(shards, startPos, tpExecutor);
             return ownedVerifyWindowLogits(logits);
         } finally {
+            for (QwenModel m : models) {
+                if (m.kvCachePool() != null) {
+                    m.kvCachePool().setVerifyWindowKernel(false);
+                }
+            }
             for (Tensor t : shards) {
                 if (t != null) {
                     t.close();
@@ -3058,10 +3500,18 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      * verify loop. Falls back to the plain 1-slot sizing when the checkpoint-
      * replay kill switch is off, so the old second-forward path is unaffected.
      *
+     * <p>When {@link VerifyCudaGraph#debugDiff()} is also on, reserves one
+     * extra slot beyond this (index {@code numDrafts + 2}, or {@code 1} when
+     * checkpoint-replay is off) as {@link #debugDiffVerifyGraphVsEager}'s own
+     * scratch slot — sized here, up front, since growing the slot count
+     * elsewhere wipes every existing slot to zero.
+     *
      * @param numDrafts number of draft tokens in this round ({@code n}).
      */
     private void saveDeltaNetCheckpoint(int numDrafts) {
-        saveDeltaNetCheckpointSlots(MTP_VERIFY_CHECKPOINT_REPLAY ? numDrafts + 2 : 1);
+        int base = MTP_VERIFY_CHECKPOINT_REPLAY ? numDrafts + 2 : 1;
+        boolean debugDiff = VerifyCudaGraph.enabled() && VerifyCudaGraph.debugDiff();
+        saveDeltaNetCheckpointSlots(debugDiff ? base + 1 : base);
     }
 
     private void saveDeltaNetCheckpointSlots(int slots) {
@@ -3109,6 +3559,153 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 pool.restoreCheckpoint(r + 1);
             }
             m.setMtpAnchorAtWindowPosition(r);
+        }
+    }
+
+    /**
+     * Diagnostic only ({@link VerifyCudaGraph#debugDiff()}): recomputes the
+     * identical verify window via a direct, graph-bypassing eager
+     * {@code model.forward(tokens, startPos, true)} call (never
+     * {@code forwardVerifyGraph}) and logs the numeric gap against
+     * {@code graphLogits} — the graph path's own output. Doubles verify cost
+     * every round; stashes/restores DeltaNet state around the extra call
+     * using a scratch checkpoint slot one past whatever
+     * {@link #saveDeltaNetCheckpoint} sized for this round, so this never
+     * perturbs the real checkpoint-replay state the graph path's own
+     * trajectory depends on.
+     *
+     * <p>Re-added 2026-09-30 to chase a real-hardware, non-deterministic
+     * verify CUDA graph corruption bug (see CLAUDE.md) — mirrors the
+     * original mechanism (removed when checkpoint-replay landed) that first
+     * surfaced verify-graph's numeric divergence from eager on real traffic.
+     *
+     * @param requestId   owning request (for log correlation).
+     * @param window      the exact verify window tokens (lastToken + drafts).
+     * @param startPos    absolute position of {@code window[0]}.
+     * @param graphLogits the graph path's own output logits (not closed here).
+     * @param numDrafts   draft count for this round, matching
+     *                    {@link #saveDeltaNetCheckpoint}'s own sizing.
+     */
+    private void debugDiffVerifyGraphVsEager(int requestId, int[] window, int startPos,
+                                              Tensor graphLogits, int numDrafts) {
+        if (!VerifyCudaGraph.enabled() || !VerifyCudaGraph.debugDiff()) {
+            return;
+        }
+        int scratchSlot = MTP_VERIFY_CHECKPOINT_REPLAY ? numDrafts + 2 : 1;
+        // Slot count is sized once, up front, by saveDeltaNetCheckpoint's own
+        // ensureSpeculativeCheckpoints call for this round — never here:
+        // growing the slot count wipes every slot to zero, which would
+        // destroy the real per-position checkpoints the caller depends on.
+        for (QwenModel m : models) {
+            DeltaNetStatePool pool = m.deltaNetStatePool();
+            if (pool != null && pool.boundBatch() > 0) {
+                pool.saveCheckpoint(scratchSlot);
+                pool.restoreCheckpoint(0);
+            }
+        }
+        long[] toks = new long[window.length];
+        for (int i = 0; i < window.length; i++) {
+            toks[i] = window[i];
+        }
+        Tensor[] shards = new Tensor[models.length];
+        Tensor[] eager = new Tensor[models.length];
+        // capturePreNormHidden (inside forward()) mutates each model's
+        // lastPreNormHidden IN PLACE (same persistent buffer, copy-only) --
+        // the next round's draftGreedy reads that same field, so the extra
+        // eager forward below must not be allowed to leave its own value
+        // there. Stash the real (graph-path) value now, restore it after.
+        Tensor[] savedHidden = new Tensor[models.length];
+        try {
+            for (int r = 0; r < models.length; r++) {
+                Tensor h = models[r].lastPreNormHidden();
+                if (h != null) {
+                    savedHidden[r] = h.copy();
+                    savedHidden[r].detachFromScopes();
+                }
+            }
+            for (int r = 0; r < models.length; r++) {
+                shards[r] = Tensor.of(toks).reshape(1, toks.length).to(models[r].device());
+            }
+            if (models.length == 1) {
+                eager[0] = models[0].forward(shards[0], startPos, true);
+            } else {
+                List<Future<Tensor>> futures = new ArrayList<>(models.length);
+                for (int r = 0; r < models.length; r++) {
+                    final int rank = r;
+                    futures.add(tpExecutor.submit(() -> {
+                        ParallelState.setCurrent(tpGroup.state(rank));
+                        try (var guard = Tensor.noGradGuard()) {
+                            return models[rank].forward(shards[rank], startPos, true);
+                        } finally {
+                            ParallelState.clearCurrent();
+                        }
+                    }));
+                }
+                for (int r = 0; r < models.length; r++) {
+                    eager[r] = futures.get(r).get();
+                }
+            }
+            float[][] graphRows = logitsRowsToFloat(graphLogits);
+            float[][] eagerRows = logitsRowsToFloat(eager[0]);
+            float maxAbs = 0f;
+            int mismatches = 0;
+            int rows = Math.min(graphRows.length, eagerRows.length);
+            for (int i = 0; i < rows; i++) {
+                float[] g = graphRows[i];
+                float[] e = eagerRows[i];
+                int cols = Math.min(g.length, e.length);
+                int gArg = 0;
+                int eArg = 0;
+                for (int j = 1; j < cols; j++) {
+                    if (g[j] > g[gArg]) {
+                        gArg = j;
+                    }
+                    if (e[j] > e[eArg]) {
+                        eArg = j;
+                    }
+                }
+                if (gArg != eArg) {
+                    mismatches++;
+                }
+                for (int j = 0; j < cols; j++) {
+                    maxAbs = Math.max(maxAbs, Math.abs(g[j] - e[j]));
+                }
+            }
+            logger.info("verify-graph debug diff: requestId={} startPos={} maxAbs={} argmaxMismatch={}/{}",
+                    requestId, startPos, maxAbs, mismatches, rows);
+            if (mismatches > 0) {
+                logger.warn("verify-graph debug diff: requestId={} startPos={} ARGMAX MISMATCH "
+                        + "({}/{} rows) — graph replay disagrees with the eager reference",
+                        requestId, startPos, mismatches, rows);
+            }
+        } catch (Exception e) {
+            logger.warn("verify-graph debug diff failed: {}", e.getMessage());
+        } finally {
+            for (Tensor t : shards) {
+                if (t != null) {
+                    t.close();
+                }
+            }
+            for (Tensor t : eager) {
+                if (t != null) {
+                    t.close();
+                }
+            }
+            for (int r = 0; r < models.length; r++) {
+                if (savedHidden[r] != null) {
+                    Tensor h = models[r].lastPreNormHidden();
+                    if (h != null) {
+                        smile.torch.Native.copy_(h, savedHidden[r]);
+                    }
+                    savedHidden[r].close();
+                }
+            }
+            for (QwenModel m : models) {
+                DeltaNetStatePool pool = m.deltaNetStatePool();
+                if (pool != null && pool.boundBatch() > 0) {
+                    pool.restoreCheckpoint(scratchSlot);
+                }
+            }
         }
     }
 
@@ -3652,6 +4249,16 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         if (lastTokens.length != b || positions.length != b || b == 0) {
             throw new IllegalArgumentException("decodeStep batch sizes must match and be non-empty");
         }
+        if (!mtpHistory.isEmpty()) {
+            // A plain decode step advances the backbone without feeding the MTP
+            // head, leaving a gap in its history; stop speculating this request.
+            for (int id : requestIds) {
+                MtpHistory st = mtpHistory.get(id);
+                if (st != null) {
+                    st.invalidate();
+                }
+            }
+        }
         int[] ropePos = Arrays.copyOf(positions, b);
         for (int i = 0; i < b; i++) {
             Integer delta = ropeDeltaByRequest.get(requestIds[i]);
@@ -3736,6 +4343,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     @Override
     public void finish(int requestId, int[] sequenceTokens) {
         ropeDeltaByRequest.remove(requestId);
+        releaseMtpHistory(requestId);
         for (QwenModel m : models) {
             if (m.kvCachePool() != null) {
                 m.kvCachePool().finishRequest(requestId, sequenceTokens);
@@ -3752,6 +4360,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     @Override
     public void evict(int requestId) {
         ropeDeltaByRequest.remove(requestId);
+        releaseMtpHistory(requestId);
         for (QwenModel m : models) {
             if (m.kvCachePool() != null) {
                 m.kvCachePool().unbindRequest(requestId);

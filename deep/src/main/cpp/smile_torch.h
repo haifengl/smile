@@ -1040,6 +1040,35 @@ SMILE_API ST_Tensor smile_recurrent_gated_delta_rule(
         int qk_l2norm);
 
 /**
+ * Same as {@link smile_recurrent_gated_delta_rule} but also writes the state
+ * after step {@code t} into {@code ckpts[t]} (float, contiguous, at least as
+ * large as {@code state}) for {@code t < n_ckpt}. One launch for a whole MTP
+ * verify window. CUDA fused kernel only (returns null with an error otherwise);
+ * {@code n_ckpt <= 8} and {@code n_ckpt <= S}.
+ */
+SMILE_API ST_Tensor smile_recurrent_gated_delta_rule_ckpt(
+        ST_Tensor query, ST_Tensor key, ST_Tensor value,
+        ST_Tensor g, ST_Tensor beta, ST_Tensor state,
+        int qk_l2norm, ST_Tensor *ckpts, int n_ckpt);
+
+/**
+ * MTP verify window in two launches: fused depthwise causal conv1d + SiLU + QKV
+ * split + head repeat over {@code hidden} {@code [B,S,C]} (rolls {@code conv_state}
+ * in place, writes the conv state after each position to {@code conv_ckpts[t]}),
+ * then the fused recurrent gated delta rule (updates {@code rec_state} in place,
+ * writes the state after each position to {@code rec_ckpts[t]}). {@code g}/{@code beta}
+ * are {@code [B,S,Hv]}. Returns the core output {@code [B,S,Hv,Dv]} in
+ * {@code hidden}'s dtype, or null (error set) if unsupported — in which case no
+ * state was modified. CUDA only; {@code n_ckpt == S <= 8}.
+ */
+SMILE_API ST_Tensor smile_gated_delta_verify_window(
+        ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor conv_weight,
+        ST_Tensor g, ST_Tensor beta, ST_Tensor rec_state,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim,
+        int qk_l2norm,
+        ST_Tensor *conv_ckpts, ST_Tensor *rec_ckpts, int n_ckpt);
+
+/**
  * Fused decay gate {@code g = -exp(A_log) * softplus(a + dt_bias)}.
  * Returns float {@code [B,S,H]} (or broadcast-compatible shape of {@code a}).
  */
