@@ -55,8 +55,19 @@ public class arpack_h {
         };
     }
 
-    static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.libraryLookup(System.mapLibraryName("arpack"), LIBRARY_ARENA)
-            .or(SymbolLookup.loaderLookup())
+    // HAND-EDITED (re-apply after regeneration — see base/README.md).
+    // Load libarpack by absolute path before initializing the lookup, mirroring
+    // smile.onnx.OrtRuntime. The generated bare-name libraryLookup("arpack")
+    // calls dlopen without consulting java.library.path, and macOS SIP strips
+    // DYLD_* from the JVM launcher, so a Homebrew install would otherwise only
+    // be found when the working directory (or an injected DYLD_LIBRARY_PATH)
+    // happens to contain it. The absolute-path load binds the image, and
+    // loaderLookup then resolves the symbols from it.
+    static {
+        smile.linalg.NativeLibrary.ensureArpackLoaded();
+    }
+
+    static final SymbolLookup SYMBOL_LOOKUP = SymbolLookup.loaderLookup()
             .or(Linker.nativeLinker().defaultLookup());
 
     public static final ValueLayout.OfBoolean C_BOOL = ValueLayout.JAVA_BOOLEAN;
