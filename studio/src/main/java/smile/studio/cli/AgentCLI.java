@@ -80,6 +80,8 @@ public class AgentCLI extends JPanel {
     private final Map<String, Intent> queuedIntents = new HashMap<>();
     /** The id currently being re-opened for editing, so its cancel is not shown as one. */
     private String editingId;
+    /** Output that arrived before its turn was promoted; flushed on STARTED. */
+    private final StringBuilder pendingOutput = new StringBuilder();
     /**
      * Set when auto-compact interrupted a task. After the summary is stored,
      * that same turn continues on the compacted context.
@@ -127,6 +129,10 @@ public class AgentCLI extends JPanel {
                     agent.conversation().params().setProperty(LLM.MODEL, def.model().id());
                 }
             }
+            // Deliver queue events on the EDT. This is what makes the id returned by
+            // accept(...) bind before the deferred ENQUEUED event runs, and it keeps
+            // ENQUEUED ahead of STARTED (a single invokeLater queue is FIFO).
+            agent.session().setEventDispatcher(SwingUtilities::invokeLater);
             agent.session().addListener(sessionListener());
         }
     }
@@ -136,10 +142,8 @@ public class AgentCLI extends JPanel {
         return new AgentListener() {
             @Override
             public void onQueueChanged(AgentRequestQueue.Event event) {
-                // Always defer: a local submit binds its id right after accept returns,
-                // and accept fires ENQUEUED before returning. Deferring guarantees the
-                // binding is in place before the ENQUEUED handler runs.
-                SwingUtilities.invokeLater(() -> onQueueEvent(event));
+                // Already delivered on the EDT by the session dispatcher, so run inline.
+                onQueueEvent(event);
             }
 
             @Override
@@ -171,6 +175,11 @@ public class AgentCLI extends JPanel {
                 onEdt(() -> {
                     if (activeIntent != null) {
                         activeIntent.appendRun(runId, chunk);
+                    } else if (runId == null) {
+                        // A synchronous LLM can stream before STARTED is delivered. Hold
+                        // the chunk and flush it once the turn is promoted, so the first
+                        // tokens are not dropped.
+                        pendingOutput.append(chunk);
                     }
                 });
             }
@@ -309,6 +318,11 @@ public class AgentCLI extends JPanel {
                     activeIntent.clearQueued();
                     activeIntent.setProgress(true);
                     activeIntent.setStatus("Thinking...");
+                    // Flush output that arrived before this turn was promoted.
+                    if (!pendingOutput.isEmpty()) {
+                        activeIntent.appendRun(null, pendingOutput.toString());
+                        pendingOutput.setLength(0);
+                    }
                 }
                 showQueueDepth(event.size());
             }

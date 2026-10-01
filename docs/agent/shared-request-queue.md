@@ -169,10 +169,9 @@ Internals (unchanged semantics): `ArrayDeque<QueuedRequest> waiting`, one `runni
 reference guarded by a private lock, `pump()` starts the head only when idle. Ids are
 `UUID`-derived short strings (stable across the item's life).
 
-`enqueue` **does not** synchronously invoke observers before returning if that would race
-the caller; the observer contract is documented as "may be delivered asynchronously" (see
-4.5). The session delivers them on the caller's thread today; Studio wraps them with
-`SwingUtilities.invokeLater`.
+`enqueue` assigns the id and the session fires `ENQUEUED` **before** `accept` returns it.
+Delivery goes through the session's event dispatcher (see 4.5), so a host can guarantee the
+caller binds the id before `ENQUEUED` runs by installing a deferring dispatcher.
 
 ### 4.3 `AgentSession` changes
 
@@ -181,7 +180,8 @@ the caller; the observer contract is documented as "may be delivered asynchronou
   carrying the queue id. The one-arg `accept(AgentRequest)` keeps its error-string contract
   for `AgentEndpoint` and delegates to it.
 - `start(String prompt)` returns `EnqueueResult`.
-- New: `cancel(String id)`, `move(String id, int delta)`, `queued()` (snapshot).
+- New: `cancel(String id)`, `move(String id, int delta)`, `queued()` (snapshot),
+  `queuePosition(String id)`, and `setEventDispatcher(Consumer<Runnable>)` (section 4.5).
 - `isBusy()` keeps meaning "running or waiting".
 - `skipExpired` and the expiry-notice path stay; they now emit `SKIPPED`/`NOTICE` events.
 
@@ -203,14 +203,34 @@ default void onQueueChanged(AgentRequestQueue.Event event) { }
 Rationale for keeping the old callbacks: `Workspace` and existing tests use them; the
 change stays additive, which keeps the cross-repo blast radius small.
 
-### 4.5 Ordering contract (why it works)
+### 4.5 Ordering contract and the event dispatcher (option A+B)
 
-`enqueue` returns the id; the caller can bind UI state (id → `Intent`) synchronously before
-any observer runs, **provided** observers are marshalled asynchronously. The session
-therefore invokes observers via `SwingUtilities`-free "dispatch later" only in the sense
-that Studio's listener wraps them with `invokeLater`; `../ioa` itself just calls
-`onQueueChanged` on the enqueuing thread. Studio's binding tolerates both orders: an event
-for an unknown id creates a row, an event for a known id updates it (section 5.2).
+The race: `accept`/`start` fire `ENQUEUED` on the caller's thread *before* returning the id,
+so a consumer that handles events inline sees `ENQUEUED` while its `id → row` map is still
+empty, and an unknown-id rule that creates a row then produces a duplicate. A second window
+opens if the consumer delivers `ENQUEUED` and `STARTED` through different queues and
+`STARTED` overtakes `ENQUEUED`.
+
+Two mechanisms close it:
+
+- **A — dispatcher.** `AgentSession.setEventDispatcher(Consumer<Runnable>)` routes every
+  `onQueueChanged` through a caller-supplied dispatcher; the default runs inline (unchanged
+  for headless callers and tests). A host installs a deferring, FIFO dispatcher —
+  `SwingUtilities::invokeLater` in Studio — so events are delivered after `accept` returns
+  and `ENQUEUED` stays ahead of `STARTED`.
+- **B — ENQUEUED is authoritative.** A consumer must tolerate an unknown id and create on
+  `ENQUEUED`, so a consumer that does *not* defer degrades to correctness instead of
+  duplication. Documented on `AgentListener.onQueueChanged`.
+
+Studio does both: it binds `result.id()` synchronously after `accept` (an optimization) and
+sets the dispatcher (the guarantee). Ordering the turn itself relies on `STARTED` being
+fired before `agent.stream` is invoked; since both happen on the caller thread (or, with a
+dispatcher, on the dispatcher thread in order), `STARTED` precedes the first `onNext`. Studio
+additionally buffers any `onNext` that arrives before promotion, so a synchronous LLM cannot
+drop the first tokens.
+
+`onQueueChanged` is the only callback routed through the dispatcher; the coarse `onQueued`
+and the stream callbacks keep their own threads.
 
 ## 5. Proposed design — Studio UI
 
@@ -399,7 +419,10 @@ Either way, add a regression test using the exact failing payload (section 8).
 - `AgentSessionTest` (extend): `accept(...)` returns a non-null id; a second enqueue while
   the first runs does not start until the first completes (existing
   `queuedRequestsStartOneAtATime` still passes); cancelling a peer's waiting task delivers a
-  NOTICE to the sender; `onQueueChanged` fires with the expected action/position.
+  NOTICE to the sender; `onQueueChanged` fires with the expected action/position;
+  `eventDispatcherDefersQueueEventsUntilAfterAcceptReturns` pins option A (nothing is
+  delivered before `start` returns, then `ENQUEUED` precedes `STARTED`); and
+  `startedEventPrecedesTurnOutput` pins the ordering that protects the first tokens.
 - `AskUserQuestionToolTest` (extend): a `Question` deserialized from
   `{"choices":[{"label":"A","description":"b"},{"label":"B"}]}` yields
   `["A","B"]`; the string form still yields `["A","B"]`; mixed forms work.
@@ -440,10 +463,19 @@ Decisions taken during review:
   `AgentEndpoint` interface keeps its string error for external callers and delegates.
 - **Peer requests are cancel/reorder-only.** Edit is offered only for local user prompts.
 - **Position label wording.** `Queued · 2 of 3` (`{0} of {1}`).
+- **Event ordering addressed (A+B).** A `setEventDispatcher` hook (A) plus "ENQUEUED is
+  authoritative" (B) replace the old assumption that a consumer marshals events itself. See
+  4.5.
 
 Remaining risks:
 
-- **Observer threading.** The doc assumes Studio marshals queue events with
-  `invokeLater`. If a future front-end binds synchronously in the same call, the enqueue
-  event can arrive before the id → intent binding. The `unknown id ⇒ create row` rule keeps
-  that correct but could briefly show a duplicate; acceptable, and noted.
+- **Dispatcher must be FIFO.** Option A only preserves `ENQUEUED` → `STARTED` ordering if
+  the installed dispatcher preserves task order. `invokeLater` on one EDT does; a
+  concurrent executor would not. Documented on `setEventDispatcher`.
+- **`studio/` test execution.** After the A+B changes, `sbt` could not run the suite: a
+  stale `sbt` held the per-user boot-server pipe, and the refreshed `sbt` runs kept pulling
+  in the whole suite and hanging on the WIP `ScalaKernelTest#testTsneScript`. `IntentTest`
+  was instead compiled fresh against the new `ioa` jar and the updated resource bundles and
+  executed with a small standalone runner: **19/19 pass**, including `queueKeysExistInEveryLocale`
+  and the queue-badge/controls tests. A single `sbt studio/test` once no other sbt is active
+  is still worth doing for the rest of the module.
