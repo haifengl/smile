@@ -3384,6 +3384,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         for (int r = 0; r < models.length; r++) {
             shards[r] = Tensor.of(toks).reshape(1, toks.length).to(models[r].device());
         }
+        for (QwenModel m : models) {
+            if (m.kvCachePool() != null) {
+                m.kvCachePool().setVerifyWindowKernel(true);
+            }
+        }
         try {
             // scatter=true (DeltaNet replay) discards logits; skip the vocab-sized
             // lm_head projection on every replayed position and only score the last.
@@ -3401,6 +3406,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             Tensor[] logits = forwardWindowVerify(shards, startPos, tpExecutor);
             return ownedVerifyWindowLogits(logits);
         } finally {
+            for (QwenModel m : models) {
+                if (m.kvCachePool() != null) {
+                    m.kvCachePool().setVerifyWindowKernel(false);
+                }
+            }
             for (Tensor t : shards) {
                 if (t != null) {
                     t.close();

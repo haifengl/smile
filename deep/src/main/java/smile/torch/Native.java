@@ -154,6 +154,24 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.JAVA_INT));
+        /** Optional (newer libsmile_torch): fused recurrent rule that also emits per-step states. */
+        static final MethodHandle RECURRENT_GATED_DELTA_CKPT = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_recurrent_gated_delta_rule_ckpt")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        /** Optional (newer libsmile_torch): fused conv+recurrent MTP verify window with checkpoints. */
+        static final MethodHandle GATED_DELTA_VERIFY_WINDOW = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_gated_delta_verify_window")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
         static final MethodHandle SOFTPLUS = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_torch_softplus")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -918,6 +936,104 @@ public final class Native {
     }
 
     /**
+     * Whether {@link #gatedDeltaVerifyWindow} is available in the loaded native library.
+     *
+     * @return {@code true} when the symbol resolved.
+     */
+    public static boolean hasGatedDeltaVerifyWindow() {
+        return Bindings.GATED_DELTA_VERIFY_WINDOW != null;
+    }
+
+    /**
+     * Fused MTP verify window for one DeltaNet layer: conv + SiLU + QKV split in one
+     * kernel (rolls {@code convState}, emits per-position conv checkpoints) followed by
+     * the fused recurrent rule (updates {@code recState}, emits per-position state
+     * checkpoints). CUDA only.
+     *
+     * @param hidden   pre-conv QKV projection {@code [B, S, C]} (contiguous).
+     * @param g        decay gate {@code [B, S, Hv]}.
+     * @param beta     input gate {@code [B, S, Hv]}.
+     * @return core output {@code [B, S, Hv, Dv]} in {@code hidden}'s dtype, or {@code null}
+     *         when unsupported (nothing modified) so the caller can use another path.
+     */
+    public static Tensor gatedDeltaVerifyWindow(
+            Tensor hidden, Tensor convState, Tensor convWeight, Tensor g, Tensor beta,
+            Tensor recState, int numKHeads, int numVHeads, int headKDim, int headVDim,
+            boolean qkL2norm, Tensor[] convCkpts, Tensor[] recCkpts) {
+        if (Bindings.GATED_DELTA_VERIFY_WINDOW == null) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            int n = recCkpts.length;
+            MemorySegment convArr = arena.allocate(ValueLayout.ADDRESS, n);
+            MemorySegment recArr = arena.allocate(ValueLayout.ADDRESS, n);
+            for (int i = 0; i < n; i++) {
+                convArr.setAtIndex(ValueLayout.ADDRESS, i, convCkpts[i].handle());
+                recArr.setAtIndex(ValueLayout.ADDRESS, i, recCkpts[i].handle());
+            }
+            MemorySegment out;
+            try {
+                out = (MemorySegment) Bindings.GATED_DELTA_VERIFY_WINDOW.invokeExact(
+                        hidden.handle(), convState.handle(), convWeight.handle(),
+                        g.handle(), beta.handle(), recState.handle(),
+                        numKHeads, numVHeads, headKDim, headVDim, qkL2norm ? 1 : 0,
+                        convArr, recArr, n);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (out == null || out.address() == 0) {
+                return null;
+            }
+            return new Tensor(out);
+        }
+    }
+
+    /**
+     * Whether {@link #recurrentGatedDeltaRuleCkpt} is available in the loaded native library.
+     *
+     * @return {@code true} when the symbol resolved.
+     */
+    public static boolean hasRecurrentGatedDeltaRuleCkpt() {
+        return Bindings.RECURRENT_GATED_DELTA_CKPT != null;
+    }
+
+    /**
+     * Fused recurrent gated delta rule over a whole window that also writes the
+     * state after step {@code t} into {@code ckpts[t]} (CUDA only). Mutates
+     * {@code state} to the end-of-window state.
+     *
+     * @param ckpts float, contiguous per-step state sinks (at least as large as {@code state}).
+     * @return output {@code [B,S,H,Dv]} (caller owns), or {@code null} when unavailable
+     *         (older library or non-fused fallback) so the caller can use a per-position loop.
+     */
+    public static Tensor recurrentGatedDeltaRuleCkpt(
+            Tensor query, Tensor key, Tensor value,
+            Tensor g, Tensor beta, Tensor state, boolean qkL2norm, Tensor[] ckpts) {
+        if (Bindings.RECURRENT_GATED_DELTA_CKPT == null) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment arr = arena.allocate(ValueLayout.ADDRESS, ckpts.length);
+            for (int i = 0; i < ckpts.length; i++) {
+                arr.setAtIndex(ValueLayout.ADDRESS, i, ckpts[i].handle());
+            }
+            MemorySegment out;
+            try {
+                out = (MemorySegment) Bindings.RECURRENT_GATED_DELTA_CKPT.invokeExact(
+                        query.handle(), key.handle(), value.handle(),
+                        g.handle(), beta.handle(), state.handle(),
+                        qkL2norm ? 1 : 0, arr, ckpts.length);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (out == null || out.address() == 0) {
+                return null;
+            }
+            return new Tensor(out);
+        }
+    }
+
+    /**
      * Native {@code torch::softplus}. Returns {@code null} when the symbol is
      * missing (older {@code libsmile_torch}).
      */
@@ -1472,6 +1588,15 @@ public final class Native {
             throw new RuntimeException(lastError().isEmpty() ? t.getMessage() : lastError(), t);
         }
         return new Tensor(check(out));
+    }
+
+    /**
+     * Whether the FlashInfer paged-prefill verify entry point is linked.
+     *
+     * @return {@code true} when {@link #flashInferAttentionVerifyGraph} can be called.
+     */
+    public static boolean hasFlashInferAttentionVerify() {
+        return Bindings.FLASHINFER_PAGED_VERIFY != null;
     }
 
     /**
