@@ -12,6 +12,8 @@
 #ifdef USE_CUDA
 
 #include <cuda_runtime.h>
+#include <cuda_bf16.h>
+#include <cuda_fp16.h>
 #include <cstdint>
 #include <string>
 
@@ -35,7 +37,8 @@ __global__ void gated_delta_recurrent_kernel(
         float *__restrict__ out,
         int64_t B, int64_t H, int64_t S, int64_t K, int64_t V,
         float scale,
-        int qk_l2norm) {
+        int qk_l2norm,
+        GatedDeltaCkpt ckpt) {
     const int64_t bh = blockIdx.x;
     if (bh >= B * H) return;
     const int64_t b = bh / H;
@@ -155,6 +158,13 @@ __global__ void gated_delta_recurrent_kernel(
         for (int64_t vv = tid; vv < V; vv += nthreads) {
             out_t[vv] = s_y[vv];
         }
+        // Per-step state snapshot (checkpoint-replay for MTP verify windows).
+        if (t < ckpt.n && ckpt.ptr[t] != nullptr) {
+            float *ck_bh = ckpt.ptr[t] + ((b * H + h) * K) * V;
+            for (int64_t i = tid; i < K * V; i += nthreads) {
+                ck_bh[i] = s_state[i];
+            }
+        }
         __syncthreads();
     }
 
@@ -173,8 +183,17 @@ int smile_gated_delta_recurrent_cuda(
         int64_t B, int64_t H, int64_t S, int64_t K, int64_t V,
         float scale,
         int qk_l2norm,
-        void *cuda_stream) {
+        void *cuda_stream,
+        const GatedDeltaCkpt *ckpt_in) {
     g_gated_delta_error.clear();
+    GatedDeltaCkpt ckpt{};
+    if (ckpt_in != nullptr) {
+        if (ckpt_in->n < 0 || ckpt_in->n > kGatedDeltaMaxCkpt) {
+            g_gated_delta_error = "gated_delta: too many checkpoint slots";
+            return -1;
+        }
+        ckpt = *ckpt_in;
+    }
     if (K > kMaxKV || V > kMaxKV) {
         g_gated_delta_error = "gated_delta: head dim exceeds kernel limit";
         return -1;
@@ -217,7 +236,7 @@ int smile_gated_delta_recurrent_cuda(
     }
 
     gated_delta_recurrent_kernel<<<static_cast<unsigned>(blocks), threads, smem, stream>>>(
-            q, k, v, g, beta, state, out, B, H, S, K, V, scale, qk_l2norm);
+            q, k, v, g, beta, state, out, B, H, S, K, V, scale, qk_l2norm, ckpt);
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         g_gated_delta_error = cudaGetErrorString(err);
@@ -392,6 +411,147 @@ int smile_causal_conv1d_update_split_qkv_cuda(
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         g_gated_delta_error = cudaGetErrorString(err);
+        return -1;
+    }
+    return 0;
+}
+
+namespace {
+
+__device__ __forceinline__ float ld_f(float x) { return x; }
+__device__ __forceinline__ float ld_f(__nv_bfloat16 x) { return __bfloat162float(x); }
+__device__ __forceinline__ float ld_f(__half x) { return __half2float(x); }
+template <typename T> __device__ __forceinline__ T st_t(float x);
+template <> __device__ __forceinline__ float st_t<float>(float x) { return x; }
+template <> __device__ __forceinline__ __nv_bfloat16 st_t<__nv_bfloat16>(float x) { return __float2bfloat16(x); }
+template <> __device__ __forceinline__ __half st_t<__half>(float x) { return __float2half(x); }
+
+/** One thread per (b,c); loops over the S window positions with the conv window in registers. */
+template <typename T>
+__global__ void causal_conv1d_window_split_qkv_kernel(
+        const T *__restrict__ x,
+        T *__restrict__ state,
+        const T *__restrict__ w,
+        float *__restrict__ q,
+        float *__restrict__ k,
+        float *__restrict__ v,
+        GatedDeltaConvCkpt ck,
+        int64_t B, int64_t C, int64_t K, int64_t S,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim) {
+    const int64_t idx = static_cast<int64_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+    if (idx >= B * C) return;
+    const int64_t b = idx / C;
+    const int64_t c = idx - b * C;
+    const int sl = static_cast<int>(K - 1);
+
+    T *st_bc = state + idx * sl;
+    float win[16];
+    float wc[16];
+    for (int j = 0; j < sl; ++j) win[j] = ld_f(st_bc[j]);
+    for (int j = 0; j < K; ++j) wc[j] = ld_f(w[c * K + j]);
+
+    const int key_dim = num_k_heads * head_k_dim;
+    const int rep = num_v_heads / num_k_heads;
+
+    for (int64_t t = 0; t < S; ++t) {
+        const float xv = ld_f(x[(b * S + t) * C + c]);
+        float acc = xv * wc[sl];
+        for (int j = 0; j < sl; ++j) acc += win[j] * wc[j];
+        const float sig = 1.f / (1.f + expf(-acc));
+        // Round through the activation dtype like the per-token decode path
+        // (which materializes bf16/half q/k/v before the recurrent rule).
+        const float val = ld_f(st_t<T>(acc * sig));
+
+        if (c < key_dim) {
+            const int h = static_cast<int>(c / head_k_dim);
+            const int d = static_cast<int>(c % head_k_dim);
+            for (int r = 0; r < rep; ++r) {
+                q[(((b * num_v_heads) + h * rep + r) * S + t) * head_k_dim + d] = val;
+            }
+        } else if (c < 2 * key_dim) {
+            const int64_t cc = c - key_dim;
+            const int h = static_cast<int>(cc / head_k_dim);
+            const int d = static_cast<int>(cc % head_k_dim);
+            for (int r = 0; r < rep; ++r) {
+                k[(((b * num_v_heads) + h * rep + r) * S + t) * head_k_dim + d] = val;
+            }
+        } else {
+            const int64_t cc = c - 2 * key_dim;
+            const int h = static_cast<int>(cc / head_v_dim);
+            const int d = static_cast<int>(cc % head_v_dim);
+            v[(((b * num_v_heads) + h) * S + t) * head_v_dim + d] = val;
+        }
+
+        for (int j = 0; j + 1 < sl; ++j) win[j] = win[j + 1];
+        if (sl > 0) win[sl - 1] = xv;
+        if (t < ck.n && ck.ptr[t] != nullptr) {
+            T *cp = static_cast<T *>(ck.ptr[t]) + idx * sl;
+            for (int j = 0; j < sl; ++j) cp[j] = st_t<T>(win[j]);
+        }
+    }
+    for (int j = 0; j < sl; ++j) st_bc[j] = st_t<T>(win[j]);
+}
+
+template <typename T>
+int launch_conv_window(
+        const void *x, void *state, const void *w,
+        float *q, float *k, float *v, const GatedDeltaConvCkpt &ck,
+        int64_t B, int64_t C, int64_t K, int64_t S,
+        int hk, int hv, int dk, int dv, cudaStream_t stream) {
+    const int64_t n = B * C;
+    const int threads = 256;
+    const int blocks = static_cast<int>((n + threads - 1) / threads);
+    causal_conv1d_window_split_qkv_kernel<T><<<blocks, threads, 0, stream>>>(
+            static_cast<const T *>(x), static_cast<T *>(state), static_cast<const T *>(w),
+            q, k, v, ck, B, C, K, S, hk, hv, dk, dv);
+    return cudaGetLastError() == cudaSuccess ? 0 : -1;
+}
+
+} // namespace
+
+int smile_causal_conv1d_window_split_qkv_cuda(
+        const void *x, void *state, const void *w, GatedDeltaDtype dtype,
+        float *q, float *k, float *v,
+        int64_t B, int64_t C, int64_t K, int64_t S,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim,
+        const GatedDeltaConvCkpt *ckpt,
+        void *cuda_stream) {
+    g_gated_delta_error.clear();
+    if (B < 1 || C < 1 || K < 1 || K > 16 || S < 1
+            || num_k_heads < 1 || num_v_heads < 1 || head_k_dim < 1 || head_v_dim < 1
+            || num_v_heads % num_k_heads != 0
+            || C != 2LL * num_k_heads * head_k_dim + static_cast<int64_t>(num_v_heads) * head_v_dim) {
+        g_gated_delta_error = "causal_conv1d_window_split_qkv: invalid shape";
+        return -1;
+    }
+    GatedDeltaConvCkpt ck{};
+    if (ckpt != nullptr) {
+        if (ckpt->n < 0 || ckpt->n > kGatedDeltaMaxCkpt) {
+            g_gated_delta_error = "causal_conv1d_window_split_qkv: too many checkpoints";
+            return -1;
+        }
+        ck = *ckpt;
+    }
+    cudaStream_t stream = cuda_stream
+            ? static_cast<cudaStream_t>(cuda_stream)
+            : static_cast<cudaStream_t>(0);
+    int rc;
+    switch (dtype) {
+        case GatedDeltaDtype::kFloat:
+            rc = launch_conv_window<float>(x, state, w, q, k, v, ck, B, C, K, S,
+                    num_k_heads, num_v_heads, head_k_dim, head_v_dim, stream);
+            break;
+        case GatedDeltaDtype::kBFloat16:
+            rc = launch_conv_window<__nv_bfloat16>(x, state, w, q, k, v, ck, B, C, K, S,
+                    num_k_heads, num_v_heads, head_k_dim, head_v_dim, stream);
+            break;
+        default:
+            rc = launch_conv_window<__half>(x, state, w, q, k, v, ck, B, C, K, S,
+                    num_k_heads, num_v_heads, head_k_dim, head_v_dim, stream);
+            break;
+    }
+    if (rc != 0) {
+        g_gated_delta_error = cudaGetErrorString(cudaGetLastError());
         return -1;
     }
     return 0;

@@ -74,6 +74,20 @@ public final class FlashInferWorkspace implements AutoCloseable {
     }
 
     /**
+     * Clears the cached verify-graph (SMILE_VERIFY_CUDA_GRAPH) prefill plan only.
+     * Must be called whenever the KV CSR tensors are rebuilt: the native plan
+     * cache's pointer-identity fast path skips comparing {@code kv_indptr}
+     * contents, and the caching allocator routinely hands the rebuilt tensor
+     * the freed tensor's address, so without this a stale plan (old page count)
+     * is silently reused for the new, larger bucket.
+     */
+    public void invalidateVerifyRuntimeCache() {
+        if (handle != null && handle.address() != 0) {
+            Native.flashInferWorkspaceInvalidateVerifyRuntimeCache(handle);
+        }
+    }
+
+    /**
      * Clears prefill gather caches only; decode-plan cache may remain when still valid.
      */
     public void invalidatePrefillRuntimeCache() {
