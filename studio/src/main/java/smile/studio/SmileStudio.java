@@ -889,8 +889,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         // Creating and showing GUI in EDT.
         SwingUtilities.invokeLater(() -> {
             if (args != null && args.length > 0) {
-                for (var arg : args) System.err.println(arg);
-                logger.warn("Smile Studio doesn't take arguments. Please start Smile Studio in your project directory.");
+                logger.warn("Smile Studio doesn't take arguments: {}", String.join(" ", args));
             }
             createAndShowGUI();
         });
