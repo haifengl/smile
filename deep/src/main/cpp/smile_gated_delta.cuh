@@ -23,6 +23,19 @@
  * @param qk_l2norm non-zero to L2-normalize Q/K in-kernel along the last dim.
  * @return 0 on success, non-zero on CUDA error (message via smile_last_error).
  */
+/** Max window length whose per-step states can be emitted in one launch. */
+constexpr int kGatedDeltaMaxCkpt = 8;
+
+/**
+ * Optional per-step state sinks: when {@code ckpt != nullptr}, the state after
+ * step {@code t} is also written to {@code ckpt[t]} (float {@code [B,H,K,V]},
+ * same layout as {@code state}) for {@code t < n_ckpt}.
+ */
+struct GatedDeltaCkpt {
+    float *ptr[kGatedDeltaMaxCkpt];
+    int n;
+};
+
 int smile_gated_delta_recurrent_cuda(
         const float *q, const float *k, const float *v,
         const float *g, const float *beta,
@@ -30,10 +43,37 @@ int smile_gated_delta_recurrent_cuda(
         int64_t B, int64_t H, int64_t S, int64_t K, int64_t V,
         float scale,
         int qk_l2norm,
-        void *cuda_stream /* cudaStream_t, may be null = default */);
+        void *cuda_stream /* cudaStream_t, may be null = default */,
+        const GatedDeltaCkpt *ckpt = nullptr);
 
 /** Last CUDA gated-delta error message (valid until next call). */
 extern "C" const char *smile_gated_delta_last_error(void);
+
+/** Element dtype of the conv window kernel's activations / state / weights. */
+enum class GatedDeltaDtype { kFloat = 0, kBFloat16 = 1, kHalf = 2 };
+
+/** Per-position conv state sinks ({@code [rows, C, K-1]}, element type = dtype). */
+struct GatedDeltaConvCkpt {
+    void *ptr[kGatedDeltaMaxCkpt];
+    int n;
+};
+
+/**
+ * Whole-window depthwise causal conv1d + SiLU + QKV split + K/V head repeat for
+ * an MTP verify window. {@code x} is {@code [B,S,C]}; {@code state} is
+ * {@code [B,C,K-1]} (rolled in place to the end-of-window state); outputs are
+ * float, already laid out {@code [B,Hv,S,D]} for the recurrent kernel, rounded
+ * through the activation dtype exactly like the per-token decode path. When
+ * {@code ckpt != nullptr}, the conv state after position {@code t} is also
+ * written to {@code ckpt->ptr[t]}.
+ */
+int smile_causal_conv1d_window_split_qkv_cuda(
+        const void *x, void *state, const void *w, GatedDeltaDtype dtype,
+        float *q, float *k, float *v,
+        int64_t B, int64_t C, int64_t K, int64_t S,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim,
+        const GatedDeltaConvCkpt *ckpt,
+        void *cuda_stream);
 
 /**
  * Decode {@code L==1} depthwise causal conv1d update.

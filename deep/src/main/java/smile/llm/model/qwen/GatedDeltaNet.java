@@ -256,7 +256,13 @@ public class GatedDeltaNet {
         // of the batched S>1 path, so a partial-accept reject can restore a
         // retained per-position checkpoint instead of a second full forward.
         // Decode (S=1), prefill, and every other call site never set this flag.
-        boolean verifyLoop = hasActiveState && seqLen > 1 && statePool.verifyWindowActive();
+        boolean verifyWindow = hasActiveState && seqLen > 1 && statePool.verifyWindowActive();
+        // Whole-window fast path: one conv update + one fused recurrent launch that
+        // snapshots the state after every position (instead of ~15 small launches
+        // per position). Falls back to the per-position loop below whenever the
+        // native entry point / CUDA / checkpoint buffers are not usable.
+        boolean batchedVerify = verifyWindow && canBatchVerifyWindow(x, batch, seqLen);
+        boolean verifyLoop = verifyWindow && !batchedVerify;
 
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
@@ -281,6 +287,27 @@ public class GatedDeltaNet {
             }
 
             Tensor convState = statePool != null ? statePool.activeConv(linearLayerId) : null;
+            // Fused path: gates first (independent of conv), then conv+recurrent+checkpoints
+            // in two native launches. Returns null (nothing modified) when unsupported.
+            Tensor fusedCore = null;
+            Tensor[] fusedGates = null;
+            if (batchedVerify && convState != null && smile.torch.Native.hasGatedDeltaVerifyWindow()) {
+                ensureFloatCaches();
+                fusedGates = GatedDeltaRule.computeBetaAndDecayGate(a, b, aLogF, dtBiasF);
+                fusedCore = fusedVerifyWindow(mixedRaw, convState, fusedGates, batch, seqLen);
+                if (fusedCore != null) {
+                    a.close();
+                    b.close();
+                    mixed.close();
+                    mixedRaw.close();
+                    fusedGates[0].close();
+                    fusedGates[1].close();
+                    fusedGates = null;
+                }
+            }
+            if (batchedVerify && fusedCore == null) {
+                saveWindowConvCheckpoints(mixed, convState, batch, seqLen);
+            }
             Tensor query = null;
             Tensor key = null;
             Tensor value = null;
@@ -302,7 +329,7 @@ public class GatedDeltaNet {
                     value = qkv[2];
                 }
             }
-            if (!verifyLoop && query == null) {
+            if (!verifyLoop && fusedCore == null && query == null) {
                 // S>1 with an active pool (MTP verify) must use Update so the
                 // prior K-1 conv context is applied; Prefill pads with zeros.
                 mixedConvBase = hasActiveState && convState != null
@@ -345,19 +372,27 @@ public class GatedDeltaNet {
                 tMark = System.nanoTime();
             }
 
-            ensureFloatCaches();
-            Tensor[] gates = GatedDeltaRule.computeBetaAndDecayGate(a, b, aLogF, dtBiasF);
-            Tensor g = gates[0];
-            Tensor beta = gates[1];
-            a.close();
-            b.close();
+            Tensor g = null;
+            Tensor beta = null;
+            if (fusedCore == null) {
+                ensureFloatCaches();
+                Tensor[] gates = fusedGates != null
+                        ? fusedGates
+                        : GatedDeltaRule.computeBetaAndDecayGate(a, b, aLogF, dtBiasF);
+                g = gates[0];
+                beta = gates[1];
+                a.close();
+                b.close();
+            }
             if (profile) {
                 smile.llm.engine.DecodeForwardProfile.addDeltaGate(System.nanoTime() - tMark);
                 tMark = System.nanoTime();
             }
 
             Tensor core;
-            if (verifyLoop) {
+            if (fusedCore != null) {
+                core = fusedCore;
+            } else if (verifyLoop) {
                 core = forwardVerifyWindowLoop(mixed, convState, g, beta, batch, seqLen);
                 mixed.close();
                 mixedRaw.close();
@@ -365,8 +400,26 @@ public class GatedDeltaNet {
                 beta.close();
             } else {
                 Tensor initState = statePool != null ? statePool.activeRecurrent(linearLayerId) : null;
-                var result = GatedDeltaRule.recurrentGatedDeltaRule(
-                        query, key, value, g, beta, initState, statePool != null, true);
+                smile.util.Tuple2<Tensor, Tensor> result;
+                if (batchedVerify) {
+                    Tensor[] ckpts = new Tensor[seqLen];
+                    for (int t = 0; t < seqLen; t++) {
+                        ckpts[t] = statePool.speculativeRecurrentSlot(t + 1, linearLayerId);
+                    }
+                    Tensor core0 = GatedDeltaRule.recurrentGatedDeltaRuleCkpt(
+                            query, key, value, g, beta, initState, true, ckpts);
+                    if (core0 == null) {
+                        // Conv state was already rolled for this window, so the per-position
+                        // loop can no longer be used; a silent fallback would leave stale
+                        // checkpoints for partial-accept restore.
+                        throw new IllegalStateException(
+                                "fused checkpoint-emitting recurrent rule failed for verify window");
+                    }
+                    result = new smile.util.Tuple2<>(core0, null);
+                } else {
+                    result = GatedDeltaRule.recurrentGatedDeltaRule(
+                            query, key, value, g, beta, initState, statePool != null, true);
+                }
                 query.close();
                 key.close();
                 value.close();
@@ -416,6 +469,90 @@ public class GatedDeltaNet {
             return out;
         } finally {
             Tensor.pop();
+        }
+    }
+
+    /**
+     * Two-launch fused verify window (conv+split+recurrent, per-position checkpoints).
+     *
+     * @return core {@code [B, S, Hv, Dv]}, or {@code null} when unsupported (state untouched).
+     */
+    private Tensor fusedVerifyWindow(Tensor mixedRaw, Tensor convState, Tensor[] gates,
+                                     int batch, int seqLen) {
+        // Layout/dtype validation lives in the native op (returns null, state untouched).
+        Tensor recState = statePool.activeRecurrent(linearLayerId);
+        if (recState == null) {
+            return null;
+        }
+        Tensor[] convCk = new Tensor[seqLen];
+        Tensor[] recCk = new Tensor[seqLen];
+        for (int t = 0; t < seqLen; t++) {
+            convCk[t] = statePool.speculativeConvSlot(t + 1, linearLayerId);
+            recCk[t] = statePool.speculativeRecurrentSlot(t + 1, linearLayerId);
+        }
+        recState.detachFromScopes();
+        return smile.torch.Native.gatedDeltaVerifyWindow(
+                mixedRaw, convState, conv1dWeight, gates[0], gates[1], recState,
+                numKHeads, numVHeads, headKDim, headVDim, true, convCk, recCk);
+    }
+
+    /** Whether the whole-window checkpointing fast path applies to this verify forward. */
+    private boolean canBatchVerifyWindow(Tensor x, int batch, int seqLen) {
+        if (!x.device().isCUDA() || !smile.torch.Native.hasRecurrentGatedDeltaRuleCkpt()
+                || seqLen > 8 || statePool == null
+                || !statePool.hasSpeculativeCheckpoints(seqLen + 1, batch)) {
+            return false;
+        }
+        for (int t = 0; t < seqLen; t++) {
+            Tensor ck = statePool.speculativeRecurrentSlot(t + 1, linearLayerId);
+            if (ck == null || ck.dtype() != smile.deep.tensor.ScalarType.Float) {
+                return false;
+            }
+            Tensor cc = statePool.speculativeConvSlot(t + 1, linearLayerId);
+            Tensor live = statePool.activeConv(linearLayerId);
+            if ((cc == null) != (live == null) || (cc != null && cc.dtype() != x.dtype())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Writes the conv left-context checkpoints for slots {@code 1..S}: slot
+     * {@code t+1} holds the last {@code K-1} <em>pre-conv</em> inputs after
+     * consuming window positions {@code 0..t}, i.e. columns
+     * {@code [t+1, t+K)} of {@code concat(oldState, mixed)}. Must run before
+     * the window's conv update rolls {@code convState} in place.
+     *
+     * @param mixed     pre-conv QKV projection {@code [B, C, S]}.
+     * @param convState live conv left-context {@code [B, C, K-1]} (not yet rolled).
+     */
+    private void saveWindowConvCheckpoints(Tensor mixed, Tensor convState, int batch, int seqLen) {
+        if (convState == null) {
+            return;
+        }
+        int keep = (int) convState.shape()[2]; // K-1
+        try (var rows = Index.slice(0, batch)) {
+            for (int t = 0; t < seqLen; t++) {
+                Tensor full = statePool.speculativeConvSlot(t + 1, linearLayerId);
+                try (Tensor dst = full.get(rows)) {
+                    int consumed = t + 1;
+                    int fromMixed = Math.min(consumed, keep);
+                    int fromOld = keep - fromMixed;
+                    if (fromOld > 0) {
+                        try (var srcSpan = Index.slice(consumed, keep);
+                             var dstSpan = Index.slice(0, fromOld);
+                             Tensor src = convState.get(Index.Colon, Index.Colon, srcSpan)) {
+                            dst.put_(src, Index.Colon, Index.Colon, dstSpan);
+                        }
+                    }
+                    try (var srcSpan = Index.slice(consumed - fromMixed, consumed);
+                         var dstSpan = Index.slice(fromOld, keep);
+                         Tensor src = mixed.get(Index.Colon, Index.Colon, srcSpan)) {
+                        dst.put_(src, Index.Colon, Index.Colon, dstSpan);
+                    }
+                }
+            }
         }
     }
 
