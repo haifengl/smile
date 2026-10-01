@@ -9,7 +9,7 @@ that brings together three complementary inference capabilities on the JVM:
 
 | Capability | API prefix | Description                                                    |
 |---|---|----------------------------------------------------------------|
-| **Classic ML** | `/api/v1/ml/models` | Serialized SMILE models (`.sml`) — classifiers and regressors |
+| **Classic ML** | `/api/v1/smile` | Serialized SMILE models (`.sml`) — classifiers and regressors |
 | **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`)                    |
 | **LLM Chat** | `/api/v1/chat`, `/api/v1/models` | OpenAI-compatible chat completions and model list/retrieve |
 
@@ -288,13 +288,13 @@ Returns the algorithm name, input schema, and tags for a model.
 Use `GET /api/v1/models` to discover loaded model IDs.
 
 ```
-GET /api/v1/ml/models/{id}
+GET /api/v1/smile/{id}
 ```
 
 **Example:**
 
 ```shell
-curl http://localhost:8080/api/v1/ml/models/iris_random_forest-1
+curl http://localhost:8080/api/v1/smile/iris_random_forest-1
 ```
 
 ```json
@@ -321,7 +321,7 @@ is the **column order** used by the CSV streaming endpoint.
 Send one sample as a JSON object and receive the prediction synchronously.
 
 ```
-POST /api/v1/ml/models/{id}
+POST /api/v1/smile/{id}
 Content-Type: application/json
 ```
 
@@ -331,7 +331,7 @@ defined in the model schema. **All non-nullable fields are required.**
 **Classification example (iris):**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/ml/models/iris_random_forest-1 \
+curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1 \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -359,7 +359,7 @@ curl -X POST http://localhost:8080/api/v1/ml/models/iris_random_forest-1 \
 Explanations can be requested by passing `"enableExplanations": true` in the JSON body, or appending `?explain=true` to the URL.
 
 ```shell
-curl -X POST "http://localhost:8080/api/v1/ml/models/iris_random_forest-1?explain=true" \
+curl -X POST "http://localhost:8080/api/v1/smile/iris_random_forest-1?explain=true" \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -402,7 +402,7 @@ stream emitting structured JSON objects — one `data:` line per input sample.
 Append `?explain=true` to include explanations in each streaming event.
 
 ```
-POST /api/v1/ml/models/{id}/stream
+POST /api/v1/smile/{id}/stream
 Content-Type: text/plain          ← CSV mode
 Content-Type: application/json   ← JSON-lines mode
 ```
@@ -411,13 +411,13 @@ Content-Type: application/json   ← JSON-lines mode
 
 Each non-blank line is a comma-separated row of feature values in the **same
 column order as the model schema** (alphabetical by field name, as shown by
-`GET /api/v1/ml/models/{id}`).
+`GET /api/v1/smile/{id}`).
 
 ```shell
 cat iris.csv | curl -X POST \
   -H "Content-Type: text/plain" \
   --data-binary @- \
-  http://localhost:8080/api/v1/ml/models/iris_random_forest-1/stream
+  http://localhost:8080/api/v1/smile/iris_random_forest-1/stream
 ```
 
 Where `iris.csv` might contain:
@@ -447,7 +447,7 @@ This is more verbose but supports named fields in any order. Each sample can als
 cat iris.jsonl | curl -X POST \
   -H "Content-Type: application/json" \
   --data-binary @- \
-  http://localhost:8080/api/v1/ml/models/iris_random_forest-1/stream
+  http://localhost:8080/api/v1/smile/iris_random_forest-1/stream
 ```
 
 Where `iris.jsonl` contains:
@@ -693,7 +693,7 @@ and SMILE {@code .sml} models
 ([List models](https://developers.openai.com/api/reference/resources/models/methods/list)).
 
 Inference still uses type-specific paths:
-`/api/v1/chat/completions`, `/api/v1/onnx/{id}`, `/api/v1/ml/models/{id}`.
+`/api/v1/chat/completions`, `/api/v1/onnx/{id}`, `/api/v1/smile/{id}`.
 
 ```shell
 curl http://localhost:8080/api/v1/models
@@ -754,7 +754,7 @@ OpenAI-compatible
 [retrieve model](https://developers.openai.com/api/reference/resources/models/methods/retrieve).
 Returns the same base `ModelObject` fields as list entries, plus an optional
 type-specific detail block. Does **not** run inference — use
-`/chat/completions`, `/onnx/{id}`, or `/ml/models/{id}` for that.
+`/chat/completions`, `/onnx/{id}`, or `/smile/{id}` for that.
 
 Ids may contain slashes (e.g. Hugging Face repo ids).
 
@@ -1166,28 +1166,28 @@ The test class `InferenceResourceTest` covers:
 
 | Test | Endpoint | Scenario |
 |---|---|---|
-| `testGetModelMetadata` | `GET /ml/models/{id}` | Returns algorithm, schema, and nullability |
-| `testGetUnknownModelReturns404` | `GET /ml/models/{id}` | 404 for unknown ID |
-| `testPredictJsonReturnsPredictionAndProbabilities` | `POST /ml/models/{id}` | Correct label + probabilities |
-| `testPredictJsonWithZeroFeaturesReturnsValidPrediction` | `POST /ml/models/{id}` | Edge case: all-zero features |
-| `testPredictJsonMissingFieldReturns400` | `POST /ml/models/{id}` | 400 for missing field |
-| `testPredictUnknownModelReturns404` | `POST /ml/models/{id}` | 404 for unknown model |
-| `testStreamCsvReturnsPredictions` | `POST /ml/models/{id}/stream` | 3 CSV rows → 3 SSE data lines |
-| `testStreamJsonLinesReturnsPredictions` | `POST /ml/models/{id}/stream` | 2 JSON-lines → 2 SSE data lines |
-| `testStreamCsvTooFewColumnsEmitsNoPredictions` | `POST /ml/models/{id}/stream` | Bad CSV closes stream |
-| `testStreamUnknownModelReturns404` | `POST /ml/models/{id}/stream` | 404 before stream starts |
+| `testGetModelMetadata` | `GET /smile/{id}` | Returns algorithm, schema, and nullability |
+| `testGetUnknownModelReturns404` | `GET /smile/{id}` | 404 for unknown ID |
+| `testPredictJsonReturnsPredictionAndProbabilities` | `POST /smile/{id}` | Correct label + probabilities |
+| `testPredictJsonWithZeroFeaturesReturnsValidPrediction` | `POST /smile/{id}` | Edge case: all-zero features |
+| `testPredictJsonMissingFieldReturns400` | `POST /smile/{id}` | 400 for missing field |
+| `testPredictUnknownModelReturns404` | `POST /smile/{id}` | 404 for unknown model |
+| `testStreamCsvReturnsPredictions` | `POST /smile/{id}/stream` | 3 CSV rows → 3 SSE data lines |
+| `testStreamJsonLinesReturnsPredictions` | `POST /smile/{id}/stream` | 2 JSON-lines → 2 SSE data lines |
+| `testStreamCsvTooFewColumnsEmitsNoPredictions` | `POST /smile/{id}/stream` | Bad CSV closes stream |
+| `testStreamUnknownModelReturns404` | `POST /smile/{id}/stream` | 404 before stream starts |
 
 ---
 
 ## API Quick Reference
 
-### Classic ML — `/api/v1/ml/models`
+### Classic ML — `/api/v1/smile`
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/ml/models/{id}` | Get model metadata and schema |
-| `POST` | `/ml/models/{id}` | Single JSON inference |
-| `POST` | `/ml/models/{id}/stream` | Streaming CSV or JSON-lines inference |
+| `GET` | `/smile/{id}` | Get model metadata and schema |
+| `POST` | `/smile/{id}` | Single JSON inference |
+| `POST` | `/smile/{id}/stream` | Streaming CSV or JSON-lines inference |
 
 ### ONNX — `/api/v1/onnx`
 
