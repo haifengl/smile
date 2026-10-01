@@ -14,7 +14,7 @@ that brings together three complementary inference capabilities on the JVM:
 
 | Capability | API prefix  | Description |
 |---|----------------------|-------------|
-| **Classic ML** | `/api/v1/ml/models` | Serialized SMILE models (`.sml`) — classifiers and regressors |
+| **Classic ML** | `/api/v1/smile` | Serialized SMILE models (`.sml`) — classifiers and regressors |
 | **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`) |
 | **LLM Chat** | `/api/v1/chat/completions` | OpenAI-compatible chat completions |
 

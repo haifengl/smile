@@ -26,7 +26,7 @@ title: SMILE - Serve
       <tbody>
         <tr>
           <td><strong>Classic ML</strong></td>
-          <td><code>/api/v1/ml/models</code></td>
+          <td><code>/api/v1/smile</code></td>
           <td>Serialized SMILE models (<code>.sml</code>) — classifiers and regressors</td>
         </tr>
         <tr>
@@ -191,7 +191,7 @@ java \
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/ml/models/iris_random_forest-1</code></pre>
+  <pre class="playground-source language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/smile/iris_random_forest-1</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
@@ -209,7 +209,7 @@ java \
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/ml/models/iris_random_forest-1 \
+  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1 \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -250,7 +250,7 @@ java \
   <pre class="playground-source language-bash"><code class="language-bash">cat iris.csv | curl -X POST \
   -H "Content-Type: text/plain" \
   --data-binary @- \
-  http://localhost:8080/api/v1/ml/models/iris_random_forest-1/stream</code></pre>
+  http://localhost:8080/api/v1/smile/iris_random_forest-1/stream</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 

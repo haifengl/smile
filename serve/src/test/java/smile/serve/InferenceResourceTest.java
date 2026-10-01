@@ -45,7 +45,7 @@ import static org.hamcrest.Matchers.hasSize;
 public class InferenceResourceTest {
     // --------------------------------------------------------------- get metadata
     /**
-     * GET /ml/models/{id} should return the full metadata for a known model.
+     * GET /smile/{id} should return the full metadata for a known model.
      */
     @Test
     public void testGetModelMetadata() {
@@ -53,7 +53,7 @@ public class InferenceResourceTest {
         // When fetching its metadata
         // Then the response contains algorithm, schema and tags
         given()
-            .when().get("/api/v1/ml/models/iris_random_forest-1")
+            .when().get("/api/v1/smile/iris_random_forest-1")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -67,7 +67,7 @@ public class InferenceResourceTest {
                 .body("schema.sepallength.type", is("float"));
     }
     /**
-     * GET /ml/models/{id} for an unknown model should return HTTP 404.
+     * GET /smile/{id} for an unknown model should return HTTP 404.
      */
     @Test
     public void testGetUnknownModelReturns404() {
@@ -75,13 +75,13 @@ public class InferenceResourceTest {
         // When fetching its metadata
         // Then the response is 404
         given()
-            .when().get("/api/v1/ml/models/nonexistent-1")
+            .when().get("/api/v1/smile/nonexistent-1")
             .then()
                 .statusCode(404);
     }
     // --------------------------------------------------------------- predict (JSON)
     /**
-     * POST /ml/models/{id} with a valid JSON body should return a prediction and
+     * POST /smile/{id} with a valid JSON body should return a prediction and
      * posterior probabilities for a soft classifier.
      */
     @Test
@@ -94,14 +94,14 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/api/v1/ml/models/iris_random_forest-1")
+            .when().post("/api/v1/smile/iris_random_forest-1")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
                 .body(is(expected));
     }
     /**
-     * POST /ml/models/{id} with all-zero features should still return a valid
+     * POST /smile/{id} with all-zero features should still return a valid
      * prediction (boundary / edge-case input).
      */
     @Test
@@ -113,14 +113,14 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/api/v1/ml/models/iris_random_forest-1")
+            .when().post("/api/v1/smile/iris_random_forest-1")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
                 .body("prediction", notNullValue());
     }
     /**
-     * POST /ml/models/{id} with a missing required field should return HTTP 400.
+     * POST /smile/{id} with a missing required field should return HTTP 400.
      */
     @Test
     public void testPredictJsonMissingFieldReturns400() {
@@ -131,12 +131,12 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/api/v1/ml/models/iris_random_forest-1")
+            .when().post("/api/v1/smile/iris_random_forest-1")
             .then()
                 .statusCode(400);
     }
     /**
-     * POST /ml/models/{id} for an unknown model ID should return HTTP 404.
+     * POST /smile/{id} for an unknown model ID should return HTTP 404.
      */
     @Test
     public void testPredictUnknownModelReturns404() {
@@ -147,13 +147,13 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/api/v1/ml/models/unknown-model-1")
+            .when().post("/api/v1/smile/unknown-model-1")
             .then()
                 .statusCode(404);
     }
     // --------------------------------------------------------------- stream (CSV)
     /**
-     * POST /ml/models/{id}/stream with a CSV body should stream one result per
+     * POST /smile/{id}/stream with a CSV body should stream one result per
      * non-blank input line.
      *
      * <p>The endpoint uses SSE (server-sent events) emitting structured JSON objects
@@ -169,7 +169,7 @@ public class InferenceResourceTest {
         String body = given()
             .contentType(ContentType.TEXT)
             .body(csvBody)
-            .when().post("/api/v1/ml/models/iris_random_forest-1/stream")
+            .when().post("/api/v1/smile/iris_random_forest-1/stream")
             .then()
                 .statusCode(200)
                 .extract().body().asString();
@@ -188,7 +188,7 @@ public class InferenceResourceTest {
         }
     }
     /**
-     * POST /ml/models/{id}/stream with a JSON-lines body should stream one result
+     * POST /smile/{id}/stream with a JSON-lines body should stream one result
      * per non-blank JSON object.
      */
     @Test
@@ -201,7 +201,7 @@ public class InferenceResourceTest {
         String body = given()
             .contentType(ContentType.JSON)
             .body(jsonLines)
-            .when().post("/api/v1/ml/models/iris_random_forest-1/stream")
+            .when().post("/api/v1/smile/iris_random_forest-1/stream")
             .then()
                 .statusCode(200)
                 .extract().body().asString();
@@ -212,7 +212,7 @@ public class InferenceResourceTest {
                 "Expected 2 SSE data lines but got: " + body);
     }
     /**
-     * POST /ml/models/{id}/stream with a CSV that has too few columns will fail
+     * POST /smile/{id}/stream with a CSV that has too few columns will fail
      * mid-stream. Because HTTP headers are committed before the stream body
      * is sent, the status code is 200 but the connection is closed early by
      * the server without emitting any {@code data:} lines.
@@ -232,7 +232,7 @@ public class InferenceResourceTest {
             String body = given()
                 .contentType(ContentType.TEXT)
                 .body(badCsv)
-                .when().post("/api/v1/ml/models/iris_random_forest-1/stream")
+                .when().post("/api/v1/smile/iris_random_forest-1/stream")
                 .then()
                 .extract().body().asString();
             // If we get a body at all, it must contain no valid data lines.
@@ -261,7 +261,7 @@ public class InferenceResourceTest {
         }
     }
     /**
-     * POST /ml/models/{id}/stream for an unknown model should return HTTP 404
+     * POST /smile/{id}/stream for an unknown model should return HTTP 404
      * before any stream is established.
      */
     @Test
@@ -272,14 +272,14 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.TEXT)
             .body("5.1,3.5,1.4,0.2\n")
-            .when().post("/api/v1/ml/models/ghost-model-1/stream")
+            .when().post("/api/v1/smile/ghost-model-1/stream")
             .then()
                 .statusCode(404);
     }
 
     // --------------------------------------------------------------- explanations (SHAP)
     /**
-     * POST /ml/models/{id} with enableExplanations: true in JSON payload returns SHAP values.
+     * POST /smile/{id} with enableExplanations: true in JSON payload returns SHAP values.
      */
     @Test
     public void testPredictJsonWithExplanationsPayload() {
@@ -287,7 +287,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/api/v1/ml/models/iris_random_forest-1")
+            .when().post("/api/v1/smile/iris_random_forest-1")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -301,7 +301,7 @@ public class InferenceResourceTest {
     }
 
     /**
-     * POST /ml/models/{id}?explain=true returns SHAP values.
+     * POST /smile/{id}?explain=true returns SHAP values.
      */
     @Test
     public void testPredictJsonWithExplainQueryParam() {
@@ -309,7 +309,7 @@ public class InferenceResourceTest {
         given()
             .contentType(ContentType.JSON)
             .body(request)
-            .when().post("/api/v1/ml/models/iris_random_forest-1?explain=true")
+            .when().post("/api/v1/smile/iris_random_forest-1?explain=true")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -319,7 +319,7 @@ public class InferenceResourceTest {
     }
 
     /**
-     * POST /ml/models/{id}/stream?explain=true with CSV input returns SHAP values in SSE events.
+     * POST /smile/{id}/stream?explain=true with CSV input returns SHAP values in SSE events.
      */
     @Test
     public void testStreamCsvWithExplainQueryParam() {
@@ -327,7 +327,7 @@ public class InferenceResourceTest {
         String body = given()
             .contentType(ContentType.TEXT)
             .body(csvBody)
-            .when().post("/api/v1/ml/models/iris_random_forest-1/stream?explain=true")
+            .when().post("/api/v1/smile/iris_random_forest-1/stream?explain=true")
             .then()
                 .statusCode(200)
                 .extract().body().asString();
@@ -344,7 +344,7 @@ public class InferenceResourceTest {
     }
 
     /**
-     * POST /ml/models/{id}/stream with JSON-lines containing enableExplanations returns SHAP values.
+     * POST /smile/{id}/stream with JSON-lines containing enableExplanations returns SHAP values.
      */
     @Test
     public void testStreamJsonLinesWithExplanations() {
@@ -353,7 +353,7 @@ public class InferenceResourceTest {
         String body = given()
             .contentType(ContentType.JSON)
             .body(jsonLines)
-            .when().post("/api/v1/ml/models/iris_random_forest-1/stream")
+            .when().post("/api/v1/smile/iris_random_forest-1/stream")
             .then()
                 .statusCode(200)
                 .extract().body().asString();

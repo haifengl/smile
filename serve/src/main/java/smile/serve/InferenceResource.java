@@ -38,19 +38,19 @@ import smile.model.Prediction;
 
 /**
  * REST resource exposing the classic SMILE model inference API at
- * {@code /api/v1/ml/models}.
+ * {@code /api/v1/smile}.
  *
  * <ul>
- *   <li>{@code GET  /ml/models/{id}}      – retrieve model metadata.</li>
- *   <li>{@code POST /ml/models/{id}}      – single JSON inference request.</li>
- *   <li>{@code POST /ml/models/{id}/stream} – streaming inference (JSON lines or CSV).</li>
+ *   <li>{@code GET  /smile/{id}}        – retrieve model metadata.</li>
+ *   <li>{@code POST /smile/{id}}        – single JSON inference request.</li>
+ *   <li>{@code POST /smile/{id}/stream} – streaming inference (JSON lines or CSV).</li>
  * </ul>
  *
  * <p>The unified model catalog is {@code GET /api/v1/models}.
  *
  * @author Haifeng Li
  */
-@Path("/ml/models")
+@Path("/smile")
 public class InferenceResource {
 
     @Inject

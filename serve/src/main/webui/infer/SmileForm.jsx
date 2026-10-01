@@ -102,7 +102,7 @@ function SmileForm({ modelId }) {
     setStartedAt(null);
     setFinishedAt(null);
 
-    fetch(`/api/v1/ml/models/${modelId}`)
+    fetch(`/api/v1/smile/${modelId}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error("Failed to fetch model schema");
@@ -177,7 +177,7 @@ function SmileForm({ modelId }) {
     }
     setSubmitError(null);
     beginRun();
-    fetch(`/api/v1/ml/models/${modelId}`, {
+    fetch(`/api/v1/smile/${modelId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
@@ -234,7 +234,7 @@ function SmileForm({ modelId }) {
         throw new Error("File has no data rows");
       }
 
-      const res = await fetch(`/api/v1/ml/models/${modelId}/stream`, {
+      const res = await fetch(`/api/v1/smile/${modelId}/stream`, {
         method: "POST",
         headers: { "Content-Type": contentType },
         body,
