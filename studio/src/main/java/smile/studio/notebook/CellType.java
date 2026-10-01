@@ -1,18 +1,19 @@
 /*
- * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ * Copyright (c) 2026 Haifeng Li. All rights reserved.
  *
- * SMILE Studio is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * SPDX-License-Identifier: BUSL-1.1
  *
- * SMILE Studio is distributed in the hope that it will be useful,
- * WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * This software is licensed under the Business Source License version 1.1 (BSL 1.1).
+ * Use of this work is governed by the BSL 1.1 terms and conditions set forth in
+ * the studio/LICENSE file (or LICENSE file in standalone distributions) and at
+ * https://mariadb.com/bsl11.
  *
- * You should have received a copy of the GNU General Public License
- * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
+ * Use of this work is strictly for evaluation and/or non-production purposes.
+ * For commercial production use, please contact sales@aihalo.dev.
+ *
+ * Effective on the Change Date (four years from the first publication of this
+ * version), this file automatically converts to the GNU Affero General Public
+ * License version 3.0 (AGPLv3) or later.
  */
 package smile.studio.notebook;
 
