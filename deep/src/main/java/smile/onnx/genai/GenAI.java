@@ -16,11 +16,8 @@
  */
 package smile.onnx.genai;
 
-import java.io.File;
 import java.lang.foreign.Arena;
-import java.lang.foreign.MemorySegment;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import smile.onnx.NativeLibrary;
 import smile.onnx.genai.foreign.ort_genai_c_h;
 
 /**
@@ -39,12 +36,12 @@ public final class GenAI {
      * Directory containing {@code onnxruntime} (system property
      * {@code onnxruntime.native.path}).
      */
-    public static final String ORT_NATIVE_PATH_PROPERTY = "onnxruntime.native.path";
+    public static final String ORT_NATIVE_PATH_PROPERTY = NativeLibrary.ORT_NATIVE_PATH_PROPERTY;
     /**
      * Directory containing {@code onnxruntime-genai} (system property
      * {@code onnxruntime-genai.native.path}).
      */
-    public static final String GENAI_NATIVE_PATH_PROPERTY = "onnxruntime-genai.native.path";
+    public static final String GENAI_NATIVE_PATH_PROPERTY = NativeLibrary.GENAI_NATIVE_PATH_PROPERTY;
     /**
      * Execution-provider preference: {@code auto} (default), {@code cuda},
      * {@code npu}, {@code ryzenai}/{@code hybrid}, {@code openvino}, {@code qnn},
@@ -198,25 +195,7 @@ public final class GenAI {
      * @return absolute path, or {@code null}.
      */
     static String findLibraryFile(String bareName) {
-        preloadNatives();
-        String mapped = System.mapLibraryName(bareName);
-        for (String dir : new String[]{ortNativeDir, genaiNativeDir}) {
-            if (dir == null) {
-                continue;
-            }
-            Path path = Path.of(dir, mapped);
-            if (Files.isRegularFile(path)) {
-                return path.toAbsolutePath().toString();
-            }
-        }
-        String onPath = findOnLibraryPath(mapped);
-        if (onPath != null) {
-            Path path = Path.of(onPath, mapped);
-            if (Files.isRegularFile(path)) {
-                return path.toAbsolutePath().toString();
-            }
-        }
-        return null;
+        return NativeLibrary.findLibraryFile(bareName);
     }
     /**
      * Returns whether the {@code onnxruntime-genai} native library can be loaded.
@@ -299,95 +278,21 @@ public final class GenAI {
             return;
         }
         preloaded = true;
-        String ortDir = firstNonBlank(
-                System.getProperty(ORT_NATIVE_PATH_PROPERTY),
-                System.getenv("ONNXRUNTIME_NATIVE_PATH"),
-                findOnLibraryPath(System.mapLibraryName("onnxruntime")));
-        String genaiDir = firstNonBlank(
-                System.getProperty(GENAI_NATIVE_PATH_PROPERTY),
-                System.getenv("ONNXRUNTIME_GENAI_NATIVE_PATH"),
-                findOnLibraryPath(System.mapLibraryName("onnxruntime-genai")));
-        // Load ORT before GenAI so GenAI's dependency resolves to the same copy.
-        // Do not System.load CUDA/NPU EP DLLs here — presence checks gate Model.open.
-        if (ortDir != null) {
-            ortNativeDir = ortDir;
-            loadIfExists(ortDir, System.mapLibraryName("onnxruntime"));
-        }
-        if (genaiDir != null) {
-            genaiNativeDir = genaiDir;
-            loadIfExists(genaiDir, System.mapLibraryName("onnxruntime-genai"));
-        }
-    }
-
-    /**
-     * Finds a directory on the OS library search path that contains {@code fileName}.
-     * Skips {@code System32} / {@code SysWOW64} so a stale system ORT does not win.
-     *
-     * <p>Searches {@code PATH}, {@code LD_LIBRARY_PATH}, and {@code DYLD_LIBRARY_PATH}
-     * (whichever are set). Do not short-circuit on the first non-empty variable —
-     * Linux CI typically puts pip natives only on {@code LD_LIBRARY_PATH} while
-     * {@code PATH} is always set.
-     *
-     * @param fileName mapped library file name (e.g. {@code onnxruntime-genai.dll}).
-     * @return directory path, or {@code null} if not found.
-     */
-    private static String findOnLibraryPath(String fileName) {
-        for (String pathEnv : new String[]{
-                System.getenv("PATH"),
-                System.getenv("LD_LIBRARY_PATH"),
-                System.getenv("DYLD_LIBRARY_PATH")}) {
-            if (pathEnv == null || pathEnv.isBlank()) {
-                continue;
-            }
-            String sep = pathEnv.indexOf(';') >= 0 ? ";" : File.pathSeparator;
-            for (String dir : pathEnv.split(java.util.regex.Pattern.quote(sep))) {
-                if (dir == null || dir.isBlank()) {
-                    continue;
-                }
-                Path directory = Path.of(dir.trim());
-                String name = directory.getFileName() != null
-                        ? directory.getFileName().toString()
-                        : "";
-                if (name.equalsIgnoreCase("System32") || name.equalsIgnoreCase("SysWOW64")) {
-                    continue;
-                }
-                Path lib = directory.resolve(fileName);
-                if (Files.isRegularFile(lib)) {
-                    return directory.toAbsolutePath().toString();
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Loads {@code dir/fileName} via {@link System#load(String)} when the file exists.
-     *
-     * @return {@code true} if the library file existed and was loaded.
-     */
-    private static boolean loadIfExists(String dir, String fileName) {
-        Path path = Path.of(dir, fileName);
-        if (!Files.isRegularFile(path)) {
-            return false;
-        }
-        try {
-            System.load(path.toAbsolutePath().toString());
-            return true;
-        } catch (UnsatisfiedLinkError e) {
-            return false;
-        }
-    }
-
-    private static String firstNonBlank(String... values) {
-        if (values == null) {
-            return null;
-        }
-        for (String v : values) {
-            if (v != null && !v.isBlank()) {
-                return v;
-            }
-        }
-        return null;
+        // Resolve the directories, then load ORT before GenAI so GenAI's own
+        // dependency resolves to the same copy. Do not System.load CUDA/NPU EP
+        // DLLs here — presence checks gate Model.open.
+        ortNativeDir = NativeLibrary.resolveDir(
+                ORT_NATIVE_PATH_PROPERTY, NativeLibrary.ORT_NATIVE_PATH_ENV,
+                NativeLibrary.ORT_LIBRARY);
+        genaiNativeDir = NativeLibrary.resolveDir(
+                GENAI_NATIVE_PATH_PROPERTY, NativeLibrary.GENAI_NATIVE_PATH_ENV,
+                NativeLibrary.GENAI_LIBRARY);
+        NativeLibrary.ensureLoaded(
+                ORT_NATIVE_PATH_PROPERTY, NativeLibrary.ORT_NATIVE_PATH_ENV,
+                NativeLibrary.ORT_LIBRARY);
+        NativeLibrary.ensureLoaded(
+                GENAI_NATIVE_PATH_PROPERTY, NativeLibrary.GENAI_NATIVE_PATH_ENV,
+                NativeLibrary.GENAI_LIBRARY);
     }
 
     /**

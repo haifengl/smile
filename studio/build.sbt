@@ -81,6 +81,12 @@ bashScriptExtraDefines ++= Seq(
   // so without this Scala notebooks only work on Windows.
   """export PATH="${app_home}:${PATH}"""",
   """source "$SMILE_HOME/venv/bin/activate"""",
+  // Point the JVM at the venv's onnxruntime. The generated FFM bindings load
+  // by bare name, which on Windows would let a stale C:\Windows\System32
+  // copy win; an explicit absolute-path property makes the intended copy load
+  // first. See smile.onnx.NativeLibrary.
+  """ONNX_CAPI=$(ls -d "${SMILE_HOME}"/venv/lib/python*/site-packages/onnxruntime/capi 2>/dev/null | head -n 1)""",
+  """if [ -n "$ONNX_CAPI" ]; then addJava "-Donnxruntime.native.path=$ONNX_CAPI"; fi""",
   """export LD_LIBRARY_PATH=${app_home}/../venv/Lib/site-packages/torch/lib:${app_home}/../venv/Lib/site-packages/onnxruntime/capi:$LD_LIBRARY_PATH"""
 )
 
@@ -102,7 +108,11 @@ batScriptExtraDefines ++= Seq(
   // activate.bat will set PATH with %PATH%, which is processed during parsing
   // and thus does not include the new entries. We need to set PATH afterward
   // to make sure the new entries are included.
-  """set "PATH=%~dp0;%APP_HOME%\venv\Lib\site-packages\torch\lib;!PATH!""""
+  """set "PATH=%~dp0;%APP_HOME%\venv\Lib\site-packages\torch\lib;!PATH!"""",
+  // Point the JVM at the venv's onnxruntime. Without this, the FFM bindings
+  // load by bare name and a stale C:\Windows\System32\onnxruntime.dll wins the
+  // DLL search order over the pip-installed copy. See smile.onnx.NativeLibrary.
+  """if exist "%APP_HOME%\venv\Lib\site-packages\onnxruntime\capi" call :add_java "-Donnxruntime.native.path=%APP_HOME%\venv\Lib\site-packages\onnxruntime\capi""""
 )
 
 libraryDependencies ++= Seq(
