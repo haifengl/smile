@@ -578,6 +578,56 @@ public class QwenModel extends LayerBlock {
         }
     }
 
+    /**
+     * When {@code true}, every {@link #forward(Tensor, int, boolean)} /
+     * verify-graph forward retains its full post-final-norm window hidden
+     * {@code [B, S, D]} in {@link #verifyWindowNormalizedBuf}, independent of
+     * checkpoint-replay. Used to feed the MTP head's persistent history
+     * (prefill chunks and accepted verify rows).
+     */
+    volatile boolean captureWindowHidden;
+
+    /**
+     * Enables or disables full-window hidden capture (see {@link #captureWindowHidden}).
+     *
+     * @param enabled whether to capture.
+     */
+    void setCaptureWindowHidden(boolean enabled) {
+        this.captureWindowHidden = enabled;
+    }
+
+    /**
+     * Returns the retained window hidden {@code [1, S, D]} from the last
+     * capturing forward, or {@code null}. Owned by this model; do not close.
+     *
+     * @return retained window hidden.
+     */
+    Tensor windowHidden() {
+        return verifyWindowNormalizedBuf;
+    }
+
+    /**
+     * Copies rows {@code [from, from+count)} of the retained window hidden
+     * (batch row 0) into a fresh detached {@code [count, D]} tensor.
+     *
+     * @param from  first window row to keep.
+     * @param count number of rows to keep.
+     * @return owned copy, or {@code null} when nothing was captured.
+     */
+    Tensor copyWindowHiddenRows(int from, int count) {
+        if (verifyWindowNormalizedBuf == null) {
+            return null;
+        }
+        long dim = verifyWindowNormalizedBuf.shape()[2];
+        try (var row0 = Index.of(0); var rows = Index.slice(from, from + count);
+             Tensor sliced = verifyWindowNormalizedBuf.get(row0, rows);
+             Tensor flat = sliced.reshape(count, dim)) {
+            Tensor out = flat.copy();
+            out.detachFromScopes();
+            return out;
+        }
+    }
+
     /** Allocates the retained per-position verify-window hidden buffer (shape/device/dtype change only). */
     private void ensureVerifyWindowNormalizedBuf(Tensor prototype) {
         if (verifyWindowNormalizedBuf != null
@@ -716,7 +766,8 @@ public class QwenModel extends LayerBlock {
                 // MTP expects the backbone hidden that feeds the LM head (post-final-norm),
                 // matching vLLM/SGLang Qwen3.5 MTP.
                 capturePreNormHidden(normalized);
-                if (deltaNetStatePool != null && deltaNetStatePool.verifyWindowActive()) {
+                if (captureWindowHidden
+                        || (deltaNetStatePool != null && deltaNetStatePool.verifyWindowActive())) {
                     ensureVerifyWindowNormalizedBuf(normalized);
                     smile.torch.Native.copy_(verifyWindowNormalizedBuf, normalized);
                 }
@@ -1681,7 +1732,8 @@ public class QwenModel extends LayerBlock {
             h.close();
             if (mtp != null) {
                 capturePreNormHidden(normalized);
-                if (deltaNetStatePool != null && deltaNetStatePool.verifyWindowActive()) {
+                if (captureWindowHidden
+                        || (deltaNetStatePool != null && deltaNetStatePool.verifyWindowActive())) {
                     ensureVerifyWindowNormalizedBuf(normalized);
                     smile.torch.Native.copy_(verifyWindowNormalizedBuf, normalized);
                 }

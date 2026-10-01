@@ -571,6 +571,46 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * Creates the MTP draft head's <em>persistent</em>, request-bound KV pool
+     * (one logical sequence history per bound request, like the main pool but
+     * for the draft layer(s) only). Slot count mirrors the main pool's
+     * ({@code wantSlots}) so any request the main pool can hold fits here,
+     * capped to half of the currently free device memory so it can never
+     * starve the working set. Prefix reuse is off (the draft history is
+     * rebuilt from hidden states, not from radix pages).
+     *
+     * @param layout    MTP cache layout (draft layers / local KV heads / head dim).
+     * @param device    compute device.
+     * @param dtype     element dtype (the model's real KV cache dtype).
+     * @param pageSize  tokens per page (the main pool's page size).
+     * @param wantSlots desired slot count (typically the main pool's {@link #numSlots()}).
+     * @return the MTP history pool.
+     * @throws IllegalStateException if not even one page fits.
+     */
+    public static KvCachePool forMtpHistory(KvCacheLayout layout, Device device, ScalarType dtype,
+                                            int pageSize, int wantSlots) {
+        long bytesPerSlot = 2L * layout.numLayers() * layout.numKvHeads()
+                * layout.headDim() * elementSize(dtype);
+        long slots = wantSlots;
+        if (device.isCUDA()) {
+            try {
+                long free = smile.torch.Native.cudaMemGetInfo(device.index())[0];
+                slots = Math.min(slots, (long) (free * 0.5 / bytesPerSlot));
+            } catch (RuntimeException e) {
+                // keep wantSlots
+            }
+        }
+        slots = slots / pageSize * pageSize;
+        if (slots < pageSize) {
+            throw new IllegalStateException("not enough free memory for the MTP history KV pool");
+        }
+        KvCachePool pool = new KvCachePool(layout.numLayers(), (int) slots, layout.numKvHeads(),
+                layout.headDim(), pageSize, device, dtype);
+        pool.setPrefixReuseEnabled(false);
+        return pool;
+    }
+
+    /**
      * Returns the embedded radix tree used for prefix sharing.
      * @return the radix tree.
      */
@@ -1128,6 +1168,16 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * Returns whether {@code requestId} currently has a multi-request binding.
+     *
+     * @param requestId id returned by {@link #bindRequest}.
+     * @return {@code true} when bound.
+     */
+    public boolean isBound(int requestId) {
+        return bindings.containsKey(requestId);
+    }
+
+    /**
      * Page-aligned matched prefix length for a multi-request binding.
      *
      * @param requestId id returned by {@link #bindRequest}.
@@ -1542,6 +1592,7 @@ public class KvCachePool implements AutoCloseable {
     public void clearStepFlashInferMetadata() {
         if (flashInferWorkspace != null) {
             flashInferWorkspace.invalidateRuntimeCache();
+            flashInferWorkspace.invalidateVerifyRuntimeCache();
         }
         if (stepFlashInferMeta != null) {
             stepFlashInferMeta.close();
