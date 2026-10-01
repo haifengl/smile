@@ -811,6 +811,49 @@ JetBrains Mono is installed as the default monospaced font via `FlatJetBrainsMon
 | `~/.smile/mcp.json` | User-level MCP server definitions |
 | `.smile/mcp.json` (cwd) | Project-level MCP server definitions |
 | Java `Preferences` node | AI service keys, selected theme, auto-save flag, Markdown font size |
+| `$SMILE_HOME/conf/smile.ini` | JVM options applied to every launch (see below) |
+
+### JVM Options (`conf/smile.ini`)
+
+The `conf/smile.ini` file holds JVM options that the `smile` / `smile.bat` launcher
+passes to every launch — they apply to all Studio subcommands, not just the GUI.
+Each line is one option. JVM and garbage-collector flags take a `-J` prefix, but
+**system properties must be written in the plain `-Dname=value` form** (no `-J`):
+
+```ini
+# System property — plain -D form, no -J prefix
+-Dsmile.agent.max-output-tokens=16384
+
+# JVM flag — -J prefix is stripped by the launcher
+-J-XX:+UseStringDeduplication
+-J-XX:MaxRAMPercentage=75
+```
+
+> **Always use `-Dname=value` for system properties.** The two launchers handle
+> the `-J`-prefixed form of a property inconsistently, and no single `-J` form
+> works on both:
+>
+> - **Windows** (`smile.bat`): the launcher feeds the file through `call`, and
+>   `cmd.exe` splits `call` arguments on `=` as well as on spaces. A line like
+>   `-J-Dcomputer.enabled=true` reaches the JVM as `-Dcomputer.enabled` (empty
+>   value — `System.getProperty` returns `""`) and leaves a stray `true` as an
+>   application argument. The option silently does nothing.
+> - **macOS / Linux** (`smile`): the bash launcher splits only on whitespace, so
+>   the bare `-J-Dname=value` works there — but it does **not** strip quotes.
+>   Quoting the token to work around Windows (as in `"-J-Dcomputer.enabled=true"`)
+>   makes bash pass the literal quoted string through as an application argument,
+>   which breaks on macOS.
+>
+> The plain `-Dname=value` form has neither problem: both launchers recognize the
+> `-D…` prefix and forward the whole token verbatim. This is the form
+> `smile -Dkey=val` already documents.
+>
+> `-XX:name=value` flags (e.g. `-J-XX:MaxRAMPercentage=75`) are unaffected and
+> keep their `-J` prefix on both platforms. See
+> [CLI.md §9](CLI.md#9-jvm-tuning-confsmileini) for the full set of default flags.
+
+> **Note:** options in `conf/smile.ini` are read once, at process start. Edit the
+> file and restart Studio for a change to take effect.
 
 ---
 
