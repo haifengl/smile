@@ -152,6 +152,83 @@ class IntentTest {
     }
 
     @Test
+    void stopButton_hiddenUntilStopActionIsSet() {
+        Intent intent = new Intent(null);
+        assertFalse(intent.stopButton().isVisible());
+    }
+
+    @Test
+    void setStopAction_showsAndEnablesStopButton() {
+        Intent intent = new Intent(null);
+        intent.setStopAction(() -> null);
+
+        assertTrue(intent.stopButton().isVisible());
+        assertTrue(intent.stopButton().isEnabled());
+    }
+
+    @Test
+    void clickingStop_disablesButtonAndFreezesProgressBarAndRunsActionImmediately() {
+        Intent intent = new Intent(null);
+        int[] calls = {0};
+        intent.setProgress(true);
+        intent.setStopAction(() -> {
+            calls[0]++;
+            return null;
+        });
+
+        intent.onStopClicked();
+
+        assertEquals(1, calls[0], "stop action should run on the first click");
+        assertFalse(intent.stopButton().isEnabled(), "button must be disabled after a cancel");
+        assertFalse(intent.progressBar().isIndeterminate(),
+                "progress bar must stop animating as immediate feedback");
+    }
+
+    @Test
+    void clickingStopTwice_runsActionOnlyOnce() {
+        Intent intent = new Intent(null);
+        int[] calls = {0};
+        intent.setStopAction(() -> {
+            calls[0]++;
+            return null;
+        });
+
+        intent.onStopClicked();
+        intent.onStopClicked();
+
+        assertEquals(1, calls[0], "a second click while cancelling must be ignored");
+    }
+
+    @Test
+    void newTurn_afterCancel_reArmsStopButton() {
+        Intent intent = new Intent(null);
+        intent.setProgress(true);
+        intent.setStopAction(() -> null);
+        intent.onStopClicked();
+        assertFalse(intent.stopButton().isEnabled());
+
+        // A new turn begins: cancel is reset.
+        intent.setProgress(true);
+        intent.setStopAction(() -> null);
+
+        assertTrue(intent.stopButton().isEnabled(),
+                "starting a new turn must re-enable a stop button disabled by a previous cancel");
+        assertTrue(intent.progressBar().isIndeterminate(),
+                "starting a new turn must resume progress animation");
+    }
+
+    @Test
+    void clearingProgress_marksTurnIdle() {
+        Intent intent = new Intent(null);
+        intent.setProgress(true);
+        intent.setStopAction(() -> null);
+
+        intent.setProgress(false);
+
+        assertFalse(intent.progressBar().isEnabled());
+    }
+
+    @Test
     void subagentRun_selectsMasterTabWhenMasterOutputsTokensAgain() {
         Intent intent = new Intent(null);
         assertNull(intent.runs());
