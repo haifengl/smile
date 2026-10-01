@@ -41,9 +41,23 @@ import static smile.linalg.arpack.arpack_h.*;
  *
  * @author Haifeng Li
  */
-public interface ARPACK {
+public final class ARPACK {
+    /** Not instantiable. */
+    private ARPACK() {}
+
+    static {
+        // Load libarpack by absolute path as early as possible — before any
+        // arpack_h symbol is touched — so the native library is bound even when
+        // the JVM is launched through the macOS /usr/bin/java stub, where SIP
+        // strips DYLD_LIBRARY_PATH. The binding itself repeats this preload
+        // (see smile.linalg.arpack.arpack_h), which is what makes the symbol
+        // lookup resolve; this call additionally guarantees the load happens at
+        // the first touch of ARPACK rather than at the first native call.
+        smile.linalg.NativeLibrary.ensureArpackLoaded();
+    }
+
     /** Which eigenvalues of symmetric matrix to compute. */
-    enum SymmOption {
+    public enum SymmOption {
         /**
          * The largest algebraic eigenvalues.
          */
@@ -69,7 +83,7 @@ public interface ARPACK {
     }
 
     /** Which eigenvalues of asymmetric matrix to compute. */
-    enum AsymmOption {
+    public enum AsymmOption {
         /**
          * The eigenvalues largest in magnitude.
          */
@@ -104,7 +118,7 @@ public interface ARPACK {
      * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      * @return the eigen decomposition.
      */
-    static EVD syev(Matrix A, SymmOption which, int nev) {
+    public static EVD syev(Matrix A, SymmOption which, int nev) {
         return syev(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6);
     }
 
@@ -118,7 +132,7 @@ public interface ARPACK {
      * @param tol the stopping criterion.
      * @return the eigen decomposition.
      */
-    static EVD syev(Matrix A, SymmOption which, int nev, int ncv, double tol) {
+    public static EVD syev(Matrix A, SymmOption which, int nev, int ncv, double tol) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
@@ -224,7 +238,7 @@ public interface ARPACK {
      * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      * @return the eigen decomposition.
      */
-    static EVD eigen(Matrix A, AsymmOption which, int nev) {
+    public static EVD eigen(Matrix A, AsymmOption which, int nev) {
         return eigen(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6);
     }
 
@@ -238,7 +252,7 @@ public interface ARPACK {
      * @param tol the stopping criterion.
      * @return the eigen decomposition.
      */
-    static EVD eigen(Matrix A, AsymmOption which, int nev, int ncv, double tol) {
+    public static EVD eigen(Matrix A, AsymmOption which, int nev, int ncv, double tol) {
         if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
@@ -352,7 +366,7 @@ public interface ARPACK {
      * @param k the number of singular triples to compute.
      * @return the singular value decomposition.
      */
-    static SVD svd(Matrix A, int k) {
+    public static SVD svd(Matrix A, int k) {
         return svd(A, k, Math.min(3 * k, Math.min(A.nrow(), A.ncol())), 1E-6);
     }
 
@@ -365,7 +379,7 @@ public interface ARPACK {
      * @param tol the stopping criterion.
      * @return the singular value decomposition.
      */
-    static SVD svd(Matrix A, int k, int ncv, double tol) {
+    public static SVD svd(Matrix A, int k, int ncv, double tol) {
         int m = A.nrow();
         int n = A.ncol();
 
