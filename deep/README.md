@@ -66,14 +66,25 @@ Runtime requirements:
 - Java 25 or newer.
 - The native `smile_torch` shared library and its LibTorch dependencies must be
   discoverable by the platform loader:
-  - **Windows:** `PATH`
+  - **Windows:** `PATH` (the FFM bindings load by bare name, so a stale copy in
+    `System32` can win the DLL search order; `smile.onnx.NativeLibrary` preloads
+    the intended copy by absolute path first).
   - **Linux:** `LD_LIBRARY_PATH`
-  - **macOS:** `DYLD_LIBRARY_PATH`
+  - **macOS:** do **not** rely on `DYLD_LIBRARY_PATH`. The FFM bindings call
+    `dlopen` on a bare name via `SymbolLookup.libraryLookup`, which ignores
+    `java.library.path` and `LD_LIBRARY_PATH`; and macOS System Integrity
+    Protection (SIP) strips `DYLD_*` variables when the JVM is started through
+    the `/usr/bin/java` stub, so dyld never sees them. Smile Studio and the
+    launcher instead preload these natives by absolute path
+    (`smile.onnx.NativeLibrary`, and the macOS block in the launcher/predef).
 - For ONNX inference (`smile.onnx`), the ONNX Runtime shared library
-  (`onnxruntime.dll` / `libonnxruntime.so` / `libonnxruntime.dylib`) must also
-  be on the OS library search path ([ORT releases](https://github.com/microsoft/onnxruntime/releases)).
-- For ONNX GenAI (`smile.onnx.genai`), also place `onnxruntime-genai` on the
-  library path ([GenAI releases](https://github.com/microsoft/onnxruntime-genai/releases)).
+  (`onnxruntime.dll` / `libonnxruntime.so` / `libonnxruntime.dylib`) is resolved
+  by `smile.onnx.NativeLibrary` from, in order: the `onnxruntime.native.path`
+  system property, the `ONNXRUNTIME_NATIVE_PATH` environment variable, then the
+  OS library search path ([ORT releases](https://github.com/microsoft/onnxruntime/releases)).
+- For ONNX GenAI (`smile.onnx.genai`), place `onnxruntime-genai` likewise and
+  point `onnxruntime-genai.native.path` / `ONNXRUNTIME_GENAI_NATIVE_PATH` at it
+  ([GenAI releases](https://github.com/microsoft/onnxruntime-genai/releases)).
 - When launching outside Gradle or Smile Studio, enable FFM access explicitly:
 
 ```text
@@ -733,8 +744,9 @@ Streaming disconnect calls {@code GenerationHandle.abort()}, which cooperatively
 decode between steps and frees KV.
 
 > **Note:** GPU inference requires the CUDA-enabled LibTorch libraries to be
-> discoverable on the platform loader path (`PATH`, `LD_LIBRARY_PATH`, or
-> `DYLD_LIBRARY_PATH`, depending on the OS).
+> discoverable on the platform loader path (`PATH` on Windows,
+> `LD_LIBRARY_PATH` on Linux; on macOS they are preloaded by absolute path —
+> see the runtime requirements above for why `DYLD_LIBRARY_PATH` is not usable).
 > On Ampere or newer hardware, the model is loaded in BFloat16; on older GPUs,
 > Float16 is used.  CPU inference runs in Float32.
 
