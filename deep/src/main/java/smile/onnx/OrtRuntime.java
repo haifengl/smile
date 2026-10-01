@@ -40,6 +40,14 @@ final class OrtRuntime {
     private static final MemorySegment ORT_API;
 
     static {
+        // Load the intended onnxruntime by absolute path BEFORE touching the
+        // generated bindings below: their SymbolLookup resolves the library by
+        // bare name, which on Windows would otherwise let a stale
+        // C:\Windows\System32\onnxruntime.dll win the DLL search order.
+        NativeLibrary.ensureLoaded(
+                NativeLibrary.ORT_NATIVE_PATH_PROPERTY,
+                NativeLibrary.ORT_NATIVE_PATH_ENV,
+                NativeLibrary.ORT_LIBRARY);
         try {
             // OrtGetApiBase() returns a const OrtApiBase* (pointer value)
             MemorySegment apiBase = onnxruntime_c_api_h.OrtGetApiBase();
