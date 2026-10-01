@@ -503,6 +503,43 @@ public class DeltaNetStatePool implements AutoCloseable {
     }
 
     /**
+     * Returns checkpoint {@code slot}'s full recurrent tensor for a linear layer
+     * ({@code [rows, H, K, V]}, float, contiguous), or {@code null} when absent.
+     *
+     * @param slot    checkpoint index.
+     * @param layerId ordinal among linear-attention layers.
+     * @return the checkpoint tensor (owned by the pool; do not close), or {@code null}.
+     */
+    public Tensor speculativeRecurrentSlot(int slot, int layerId) {
+        if (speculativeRecurrent == null || slot < 0 || slot >= speculativeSlots) {
+            return null;
+        }
+        return speculativeRecurrent[slot][layerId];
+    }
+
+    /**
+     * Returns checkpoint {@code slot}'s full conv tensor for a linear layer
+     * ({@code [rows, C, K-1]}), or {@code null} when absent.
+     *
+     * @param slot    checkpoint index.
+     * @param layerId ordinal among linear-attention layers.
+     * @return the checkpoint tensor (owned by the pool; do not close), or {@code null}.
+     */
+    public Tensor speculativeConvSlot(int slot, int layerId) {
+        if (speculativeConv == null || slot < 0 || slot >= speculativeSlots) {
+            return null;
+        }
+        return speculativeConv[slot][layerId];
+    }
+
+    /** Whether per-step checkpoints for {@code slots} slots and {@code rows} rows are allocated. */
+    public boolean hasSpeculativeCheckpoints(int slots, int rows) {
+        return speculativeRecurrent != null && speculativeSlots >= slots
+                && speculativeBatchCapacity >= rows;
+    }
+
+
+    /**
      * Copies active working rows {@code [0, boundBatch)} for a single
      * linear-attention layer into checkpoint {@code slot}.
      *

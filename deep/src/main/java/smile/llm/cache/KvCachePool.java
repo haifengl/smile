@@ -194,6 +194,13 @@ public class KvCachePool implements AutoCloseable {
      * contaminate the decode graph path.
      */
     private boolean verifyGraphBuffers;
+    /**
+     * True only while an MTP verify-window forward runs: lets small multi-token
+     * attention calls use FlashInfer's paged prefill kernel eagerly. Ordinary
+     * prefill (including tiny chunk tails) must keep the generic path so its
+     * numerics stay bit-identical to plain decode's.
+     */
+    private volatile boolean verifyWindowKernel;
     /** Reused flat KV slot index {@code [batch*windowLen]} for graph verify {@link #put}. */
     private Tensor verifyKvIndexBuf;
     /** Reused query-side CSR {@code [batch+1]} for the graph verify kernel; rebuilt only on a {@code (batch,windowLen)} bucket change. */
@@ -684,6 +691,24 @@ public class KvCachePool implements AutoCloseable {
      */
     public void setVerifyGraphBuffers(boolean enabled) {
         verifyGraphBuffers = enabled;
+    }
+
+    /**
+     * Enables or disables eager FlashInfer prefill attention for verify windows.
+     *
+     * @param enabled whether a verify-window forward is in progress.
+     */
+    public void setVerifyWindowKernel(boolean enabled) {
+        verifyWindowKernel = enabled;
+    }
+
+    /**
+     * Returns whether a verify-window forward is in progress (see {@link #setVerifyWindowKernel}).
+     *
+     * @return {@code true} during a verify-window forward.
+     */
+    public boolean verifyWindowKernel() {
+        return verifyWindowKernel;
     }
 
     /**
