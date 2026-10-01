@@ -85,6 +85,8 @@ public class Intent extends JPanel {
     private final JPanel progressPane = new JPanel(new FlowLayout(FlowLayout.RIGHT));
     private final JProgressBar progress = new JProgressBar();
     private final JButton stopButton = new JButton("❌");
+    /** The action that interrupts the current turn, or null when idle. */
+    private Callable<?> stopAction;
     // Output pane. Subagent runs are tabs inside this pane.
     private final JPanel outputPane = new JPanel();
     private OutputArea output = createOutputArea();
@@ -160,6 +162,7 @@ public class Intent extends JPanel {
         status.setHorizontalAlignment(SwingConstants.LEFT);
         stopButton.setVisible(false);
         stopButton.setToolTipText(bundle.getString("Stop"));
+        stopButton.addActionListener(e -> onStopClicked());
         progress.putClientProperty("JProgressBar.largeHeight", true);
         progressPane.setOpaque(false);
         progressPane.add(progress);
@@ -462,27 +465,58 @@ public class Intent extends JPanel {
     }
 
     /**
-     * Sets the stop action for the intent.
+     * Sets the stop action for the intent and arms the stop button for a new turn.
+     * <p>The action is stored rather than wired to a fresh listener each turn, so
+     * listeners do not accumulate and the button is re-enabled after a previous
+     * cancel disabled it.
      * @param stop the lambda to stop execution.
      */
     public <T> void setStopAction(Callable<T> stop) {
+        stopAction = stop;
+        stopButton.setEnabled(true);
         stopButton.setVisible(true);
+        stopButton.setText("❌");
+        stopButton.setToolTipText(bundle.getString("Stop"));
         progressPane.revalidate();
         footer.revalidate();
         footer.repaint();
-        stopButton.addActionListener(e -> {
-            try {
-                stop.call();
-                stopButton.setEnabled(false);
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(
-                        Intent.this,
-                        ex.getMessage(),
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE
-                );
-            }
-        });
+    }
+
+    /**
+     * Handles a click on the stop button. Gives immediate feedback by freezing
+     * the progress bar and disabling the button before the stop action runs,
+     * since the underlying cancellation is cooperative and may take a while.
+     * <p>Package-private for testing.
+     */
+    void onStopClicked() {
+        Callable<?> action = stopAction;
+        // A disabled button means a cancel is already in flight; ignore the click.
+        if (action == null || !stopButton.isEnabled()) {
+            return;
+        }
+        // Immediate feedback: the progress bar stops animating and the button
+        // is disabled so a second click cannot queue another cancel.
+        progress.setIndeterminate(false);
+        progress.setEnabled(false);
+        stopButton.setEnabled(false);
+        stopButton.setText("…");
+        stopButton.setToolTipText(bundle.getString("Cancelling"));
+        setStatus(bundle.getString("Cancelling"));
+        try {
+            action.call();
+        } catch (Exception ex) {
+            // The cancel could not be delivered; restore the button so the user
+            // can retry instead of being left with a dead control.
+            stopButton.setEnabled(true);
+            stopButton.setText("❌");
+            stopButton.setToolTipText(bundle.getString("Stop"));
+            JOptionPane.showMessageDialog(
+                    Intent.this,
+                    ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
     }
 
     /** Creates an output area. */
@@ -790,19 +824,43 @@ public class Intent extends JPanel {
 
     /**
      * Turns on/off the progress bar.
+     * <p>Turning it on marks the start of a turn and resets the stop button, so a
+     * button disabled by a previous cancel becomes usable again.
      */
     public void setProgress(boolean on) {
         if (on) {
             progress.setIndeterminate(true);
             progress.setEnabled(true);
-            footer.add(progressPane, BorderLayout.EAST);
+            stopButton.setText("❌");
+            stopButton.setToolTipText(bundle.getString("Stop"));
+            stopButton.setEnabled(true);
+            if (progressPane.getParent() != footer) {
+                footer.add(progressPane, BorderLayout.EAST);
+            }
         } else {
             progress.setIndeterminate(false);
             progress.setEnabled(false);
             footer.remove(progressPane);
+            stopAction = null;
         }
         footer.revalidate();
         footer.repaint();
+    }
+
+    /**
+     * Returns the stop button. Package-private for testing.
+     * @return the stop button.
+     */
+    JButton stopButton() {
+        return stopButton;
+    }
+
+    /**
+     * Returns the progress bar. Package-private for testing.
+     * @return the progress bar.
+     */
+    JProgressBar progressBar() {
+        return progress;
     }
 
     /**
