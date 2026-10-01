@@ -79,7 +79,10 @@ path\to\smile\bin\smile.bat [command] [options]
 ```
 
 The launcher reads JVM options from `conf/smile.ini` before forwarding the
-remaining arguments to `smile.Main`.
+remaining arguments to `smile.Main`. See
+[§9](#9-jvm-tuning-confsmileini) for how to add your own properties correctly —
+system properties must use the plain `-Dname=value` form, because the two
+launchers handle the `-J-Dname=value` form differently.
 
 ---
 
@@ -775,6 +778,41 @@ Key settings to adjust:
 | Reproducible GC pauses | Keep `-J-XX:+UseZGC` |
 | Enable large TLB pages | Uncomment `-J-XX:+UseLargePages -J-XX:LargePageSizeInBytes=2M` (needs root) |
 | Reduce GC pressure | Set `-J-Xms` closer to `-J-Xmx` |
+
+### Adding your own properties
+
+Append one option per line. JVM flags use a `-J` prefix; **system properties use
+the plain `-Dname=value` form** (no `-J`):
+
+```ini
+# System property — plain -D form, no -J prefix
+-Dsmile.agent.max-output-tokens=16384
+
+# JVM flag — -J prefix is stripped by the launcher
+-J-XX:+UseStringDeduplication
+```
+
+> **Use `-Dname=value`, not `-J-Dname=value`, for system properties.** The
+> launchers disagree on the `-J` form, so no single `-J` spelling works on both
+> platforms:
+>
+> - **Windows** (`smile.bat`): the file is fed through `call`, and `cmd.exe`
+>   splits `call` arguments on `=` as well as on spaces. `-J-Dcomputer.enabled=true`
+>   therefore reaches the JVM as `-Dcomputer.enabled` with an **empty** value
+>   (`System.getProperty` returns `""`) and leaves a stray `true` as an
+>   application argument — the option silently does nothing.
+> - **macOS / Linux** (`smile`): the bash launcher splits on whitespace only, so
+>   the bare `-J-Dname=value` works there — but it does not strip quotes. Quoting
+>   the token for Windows (`"-J-Dcomputer.enabled=true"`) makes bash forward the
+>   literal quoted string as an application argument, which is wrong.
+>
+> The plain `-Dname=value` form is the one spelling both launchers recognize and
+> forward verbatim (it is the same form `smile -Dkey=val` documents). Use it for
+> every system property.
+>
+> `-XX:name=value` flags (e.g. `-J-XX:MaxRAMPercentage=75`) and simple flags
+> (e.g. `-J-Xss4M`, `-J-XX:+UseZGC`) are unaffected and keep their `-J` prefix on
+> both platforms.
 
 ---
 
