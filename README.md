@@ -278,9 +278,18 @@ sudo apt install libopenblas-dev libarpack2-dev
 **macOS (Homebrew)**
 ```shell
 brew install arpack
-# If macOS SIP strips DYLD_LIBRARY_PATH, create a symlink to the dylib in your working dir:
-ln -s /opt/homebrew/lib/libarpack.dylib .
 ```
+Do **not** rely on `DYLD_LIBRARY_PATH`: macOS System Integrity Protection (SIP)
+strips `DYLD_*` variables when the JVM is started through the `/usr/bin/java`
+stub, so dyld never sees them. SMILE reaches `libarpack` through the FFM
+bindings, whose `SymbolLookup.libraryLookup("arpack")` calls `dlopen` on the bare
+name `libarpack.dylib`; this does **not** consult `java.library.path`, so
+`-Djava.library.path=...` and `LD_LIBRARY_PATH` have no effect either. SMILE
+therefore preloads the library by absolute path through
+`smile.linalg.NativeLibrary`, which finds it under `/opt/homebrew/lib` or
+`/usr/local/lib` with no copy or symlink. To point it somewhere else, set the
+`arpack.native.path` system property or the `ARPACK_NATIVE_PATH` environment
+variable.
 
 **Windows** — pre-built DLLs are included in the `bin/` directory of the
 [release package](https://github.com/haifengl/smile/releases).
