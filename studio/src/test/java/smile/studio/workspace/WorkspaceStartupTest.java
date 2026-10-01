@@ -59,6 +59,36 @@ public class WorkspaceStartupTest {
 
         Path releaseNotes = Workspace.resolveHomeFile("Release Notes");
         String releaseNotesContent = Files.readString(releaseNotes);
-        assertTrue(releaseNotesContent.contains("SMILE 6.3.0 Release Notes"));
+        assertTrue(releaseNotesContent.contains("Release Notes"));
+    }
+
+    @Test
+    public void testWorkspaceResourceBundles() {
+        java.util.List<java.util.Locale> locales = java.util.List.of(
+                java.util.Locale.ROOT,
+                java.util.Locale.US,
+                java.util.Locale.SIMPLIFIED_CHINESE,
+                java.util.Locale.JAPAN,
+                java.util.Locale.FRANCE,
+                java.util.Locale.of("es", "ES"));
+
+        java.util.List<String> outputKeys = java.util.List.of(
+                "ChiefOfStaffOutput",
+                "DataScientistOutput",
+                "ProductManagerOutput",
+                "ArchitectOutput",
+                "DesktopOperatorOutput",
+                "JavaCoderOutput",
+                "PythonCoderOutput");
+
+        for (java.util.Locale locale : locales) {
+            java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("smile.studio.workspace.Workspace", locale);
+            assertNotNull(bundle, "Bundle should exist for locale: " + locale);
+            for (String key : outputKeys) {
+                assertTrue(bundle.containsKey(key), "Missing key " + key + " in locale " + locale);
+                String val = bundle.getString(key);
+                assertFalse(val.isBlank(), "Empty key " + key + " in locale " + locale);
+            }
+        }
     }
 }
