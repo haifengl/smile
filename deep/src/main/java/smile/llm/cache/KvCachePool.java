@@ -1850,8 +1850,15 @@ public class KvCachePool implements AutoCloseable {
      * @return CSR metadata reused for all attention layers in this step.
      */
     public FlashInferKvMetadata sharedFlashInferMetadata(int length) {
+        // The cached CSR is keyed by length AND batch size. Length alone is not enough: after a
+        // single-request round the cache still holds a batch-1 table, and a batched round whose
+        // rows share that length (the legacy MTP draft pool always sees lengths 1,2,3,... on
+        // every row) would be handed it -- FlashInfer's planner then reads past the table and
+        // divides by zero (SIGFPE) or faults.
         if (stepFlashInferMeta != null && stepFlashInferLengths == null
-                && stepFlashInferUniformLen == length) {
+                && stepFlashInferUniformLen == length
+                && (requestSlots == null
+                    || stepFlashInferMeta.pagedKvLastPageLen().shape()[0] == requestSlots.length)) {
             return stepFlashInferMeta;
         }
         if (stepFlashInferMeta != null && stepFlashInferLengths == null
@@ -2433,6 +2440,8 @@ public class KvCachePool implements AutoCloseable {
 
     /** Clears multi-request map and exclusive legacy binding. */
     private void releaseAllBindings() {
+        // Any cached per-step CSR describes the bindings being released.
+        clearStepFlashInferMetadata();
         for (RequestBinding binding : bindings.values()) {
             freeBindingResources(binding, true);
         }
