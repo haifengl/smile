@@ -23,6 +23,8 @@ import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Cohort isolation of {@link DeltaNetStatePool}: activating one set of requests packs their state
@@ -132,6 +134,55 @@ public class DeltaNetStatePoolCohortTest {
             assertEquals(35f, readRecurrent(p, 3, 0), 1e-4);
             assertEquals(15f, readRecurrent(p, 1, 0), 1e-4);
             assertEquals(20f, readRecurrent(p, 2, 0), 1e-4, "bystander request 2 must be untouched");
+        }
+    }
+
+    private static float workingValue(DeltaNetStatePool p, int layer, int row) {
+        try (var r = Index.of(row); Tensor t = p.activeRecurrent(layer).get(r);
+             Tensor flat = t.reshape(-1); Tensor first = flat.get(Index.of(0))) {
+            return first.floatValue();
+        }
+    }
+
+    @Test
+    public void testGivenLeanCheckpointRangeWhenRestoredPerRowThenStoredSlotsRestoreAndOthersAreLeftAlone() {
+        try (DeltaNetStatePool p = pool()) {
+            int[] ids = {11, 12, 13};
+            for (int id : ids) {
+                p.bindRequest(id);
+                fill(p, id, id);               // rows hold 11, 12, 13
+            }
+            p.activateStep(11, 12, 13);
+            // Only slots 1..2 get storage (a window of 3 positions): slot 0 and slot 3 have none.
+            assertTrue(p.ensureSpeculativeCheckpointRange(1, 2));
+            assertEquals(0L, p.speculativeCheckpointGrowthBytes(1, 2, 3), "already sufficient");
+            assertTrue(p.speculativeCheckpointGrowthBytes(0, 3, 3) > 0, "a full range needs more");
+            assertEquals(2 * p.speculativeCheckpointBytes(1, 3), p.speculativeCheckpointBytes(2, 3));
+
+            p.saveCheckpoint(0);               // no storage: silently nothing to keep
+            p.saveCheckpoint(1);               // state after position 0: 11, 12, 13
+            for (int l = 0; l < 2; l++) {
+                p.activeRecurrent(l).add_(100.0);
+                p.activeConv(l).add_(100.0);
+            }
+            p.saveCheckpoint(2);               // state after position 1: 111, 112, 113
+            for (int l = 0; l < 2; l++) {
+                p.activeRecurrent(l).add_(100.0);
+                p.activeConv(l).add_(100.0);
+            }
+            p.saveCheckpoint(3);               // no storage either; working state = end of window 211..213
+            assertThrows(IllegalStateException.class, () -> p.restoreCheckpoint(0));
+            assertThrows(IllegalStateException.class, () -> p.restoreCheckpoint(3));
+
+            // Row 0 accepted position 0 (restore slot 1), row 1 accepted position 1 (slot 2), row 2
+            // accepted everything: its working state is already the end state, so leave it alone.
+            p.restoreCheckpointPerRow(new int[]{1, 2, -1});
+            for (int l = 0; l < 2; l++) {
+                assertEquals(11f, workingValue(p, l, 0), 1e-4, "row 0 restored from slot 1");
+                assertEquals(112f, workingValue(p, l, 1), 1e-4, "row 1 restored from slot 2");
+                assertEquals(213f, workingValue(p, l, 2), 1e-4, "row 2 untouched (full accept)");
+            }
+            assertThrows(IllegalStateException.class, () -> p.restoreCheckpointPerRow(new int[]{0, 1, 2}));
         }
     }
 }

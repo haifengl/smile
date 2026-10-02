@@ -2404,7 +2404,7 @@ ST_Tensor smile_gated_delta_verify_window(
         const int64_t B = h.size(0), S = h.size(1), C = h.size(2);
         const int64_t K = conv_weight->t.size(-1);
         const int64_t Hv = num_v_heads;
-        if (n_ckpt != S || S > kGatedDeltaMaxCkpt || cst.size(0) != B || cst.size(1) != C
+        if (n_ckpt < 1 || n_ckpt > S || S > kGatedDeltaMaxCkpt || cst.size(0) != B || cst.size(1) != C
                 || cst.size(2) != K - 1 || rst.size(0) != B || rst.size(1) != Hv
                 || rst.size(2) != head_k_dim || rst.size(3) != head_v_dim) {
             set_error("smile_gated_delta_verify_window: shape mismatch");

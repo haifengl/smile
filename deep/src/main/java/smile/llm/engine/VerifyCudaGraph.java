@@ -86,6 +86,32 @@ public final class VerifyCudaGraph {
     }
 
     /**
+     * Whether ragged (per-row positions, batch &gt; 1) windows may use the verify graph.
+     * On by default with the verify graph; {@code SMILE_VERIFY_CUDA_GRAPH_RAGGED=0} disables.
+     *
+     * @return {@code true} when ragged batched graphs are enabled.
+     */
+    public static boolean raggedEnabled() {
+        return enabled() && !"0".equals(System.getenv("SMILE_VERIFY_CUDA_GRAPH_RAGGED"));
+    }
+
+    /**
+     * Largest batch that uses a verify graph (each captured batch size keeps its own activation
+     * pool, which at large batches competes with the DeltaNet checkpoint buffers for GPU memory).
+     * Override with {@code SMILE_VERIFY_CUDA_GRAPH_MAX_BATCH}.
+     *
+     * @return maximum batch size eligible for graph capture.
+     */
+    public static int maxBatch() {
+        String v = System.getenv("SMILE_VERIFY_CUDA_GRAPH_MAX_BATCH");
+        try {
+            return v == null ? 16 : Integer.parseInt(v.trim());
+        } catch (NumberFormatException e) {
+            return 16;
+        }
+    }
+
+    /**
      * Returns whether this verify step is eligible for CUDA graph capture/replay.
      *
      * @param startPositions per-row KV window start positions.

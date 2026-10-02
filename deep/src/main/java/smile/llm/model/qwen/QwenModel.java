@@ -1514,6 +1514,23 @@ public class QwenModel extends LayerBlock {
      * @return logits in float32 {@code [B, S, V]} (graph path returns persistent buffer).
      */
     public Tensor forwardVerifyGraph(Tensor tokens, int startPos) {
+        int[] startPositions = new int[(int) tokens.shape()[0]];
+        Arrays.fill(startPositions, startPos);
+        return forwardVerifyGraph(tokens, startPositions);
+    }
+
+    /**
+     * Ragged form of {@link #forwardVerifyGraph(Tensor, int)}: the {@code B} rows (concurrent
+     * requests) may be at different absolute positions. One graph is captured per
+     * {@code (batch, windowLen)}; per-row positions, RoPE rows, KV write slots and the page-table
+     * CSR are rewritten in place before each replay. Falls back to the eager path when graphs are
+     * unavailable.
+     *
+     * @param tokens         token ids {@code [B, S]}.
+     * @param startPositions KV write position of each row's first window token.
+     * @return logits in float32 {@code [B, S, V]} (the graph path returns a persistent buffer).
+     */
+    public Tensor forwardVerifyGraph(Tensor tokens, int[] startPositions) {
         // The device check matters beyond the obvious: SMILE_VERIFY_CUDA_GRAPH=1 is set
         // for the whole :deep test module (Stage 1/2's GPU-only tests self-skip via
         // assumeTrue(cudaAvailable())), so VerifyCudaGraph.enabled() alone (native
@@ -1521,25 +1538,30 @@ public class QwenModel extends LayerBlock {
         // CPU-only QwenWindowVerifyTest suite — this must never reach
         // VerifyCudaGraphSession.tryCreate() -> Native.cudaGraphCreate() without an
         // actual CUDA device.
-        if (!VerifyCudaGraph.enabled() || kvCachePool == null || !tokens.device().isCUDA()
-                || AttentionBackends.current() != AttentionBackend.FLASHINFER) {
-            return forward(tokens, startPos, true);
-        }
         int batch = (int) tokens.shape()[0];
         int windowLen = (int) tokens.shape()[1];
-        int[] startPositions = new int[batch];
-        Arrays.fill(startPositions, startPos);
-        if (!VerifyCudaGraph.canGraphVerify(startPositions)) {
-            return forward(tokens, startPos, true);
+        boolean uniform = true;
+        for (int i = 1; i < batch; i++) {
+            uniform &= startPositions[i] == startPositions[0];
+        }
+        if (!VerifyCudaGraph.enabled() || kvCachePool == null || !tokens.device().isCUDA()
+                || AttentionBackends.current() != AttentionBackend.FLASHINFER
+                || (!uniform && !VerifyCudaGraph.raggedEnabled())
+                || batch > VerifyCudaGraph.maxBatch()) {
+            return verifyFallback(tokens, startPositions, uniform);
         }
         if (verifyGraphSession == null) {
             verifyGraphSession = VerifyCudaGraphSession.tryCreate();
         }
         if (verifyGraphSession == null) {
-            return forward(tokens, startPos, true);
+            return verifyFallback(tokens, startPositions, uniform);
         }
+        final int startPos = startPositions[0];
 
-        int cacheLen = startPos + windowLen;
+        int[] cacheLengths = new int[batch];
+        for (int i = 0; i < batch; i++) {
+            cacheLengths[i] = startPositions[i] + windowLen;
+        }
         // The graph no longer depends on the KV page count: its CSR has a fixed address
         // (rewritten in place) and the verify plan is independent of KV length (split-KV
         // disabled under SMILE_VERIFY_CUDA_GRAPH), so the bucket key is (batch, windowLen).
@@ -1550,15 +1572,15 @@ public class QwenModel extends LayerBlock {
         try {
             ensureVerifyGraphTokenBuf(tokens.device(), batch, windowLen, tokens.dtype());
             smile.torch.Native.copy_(verifyGraphTokenBuf, tokens);
-            ensureVerifyGraphRoPEBuffers(tokens.device(), windowLen);
-            prepareVerifyGraphInputs(startPos, windowLen, cacheLen, batch);
+            ensureVerifyGraphRoPEBuffers(tokens.device(), batch, windowLen);
+            prepareVerifyGraphInputs(startPositions, windowLen, cacheLengths);
             if (kvCachePool.consumeVerifyGraphMetaRealloc()) {
                 // The persistent CSR moved (batch change / larger request capacity): any
                 // captured graph still points at the freed tensors.
                 invalidateVerifyCudaGraphs();
                 verifyGraphSession = VerifyCudaGraphSession.tryCreate();
                 if (verifyGraphSession == null) {
-                    return forward(tokens, startPos, true);
+                    return verifyFallback(tokens, startPositions, uniform);
                 }
             }
 
@@ -1628,7 +1650,7 @@ public class QwenModel extends LayerBlock {
                     }
                     verifyGraphLogitsOut = null;
                     kvCachePool.setVerifyGraphBuffers(false);
-                    return forward(tokens, startPos, true);
+                    return verifyFallback(tokens, startPositions, uniform);
                 }
             }
 
@@ -1654,18 +1676,26 @@ public class QwenModel extends LayerBlock {
      * @return owned logits.
      */
     public Tensor forwardVerifyGraphCodeEager(Tensor tokens, int startPos) {
+        int[] startPositions = new int[(int) tokens.shape()[0]];
+        Arrays.fill(startPositions, startPos);
+        return forwardVerifyGraphCodeEager(tokens, startPositions);
+    }
+
+    /** Ragged form of {@link #forwardVerifyGraphCodeEager(Tensor, int)}. */
+    public Tensor forwardVerifyGraphCodeEager(Tensor tokens, int[] startPositions) {
         int batch = (int) tokens.shape()[0];
         int windowLen = (int) tokens.shape()[1];
-        int[] startPositions = new int[batch];
-        Arrays.fill(startPositions, startPos);
-        int cacheLen = startPos + windowLen;
+        int[] cacheLengths = new int[batch];
+        for (int i = 0; i < batch; i++) {
+            cacheLengths[i] = startPositions[i] + windowLen;
+        }
         ensureLastPreNormHiddenCapacity(batch);
         kvCachePool.setVerifyGraphBuffers(true);
         try {
             ensureVerifyGraphTokenBuf(tokens.device(), batch, windowLen, tokens.dtype());
             smile.torch.Native.copy_(verifyGraphTokenBuf, tokens);
-            ensureVerifyGraphRoPEBuffers(tokens.device(), windowLen);
-            prepareVerifyGraphInputs(startPos, windowLen, cacheLen, batch);
+            ensureVerifyGraphRoPEBuffers(tokens.device(), batch, windowLen);
+            prepareVerifyGraphInputs(startPositions, windowLen, cacheLengths);
             Tensor raw = forwardVerifyGraphCore(
                     verifyGraphTokenBuf, startPositions, verifyGraphCosBuf, verifyGraphSinBuf, null);
             Tensor out = raw.copy();
@@ -1674,6 +1704,19 @@ public class QwenModel extends LayerBlock {
         } finally {
             kvCachePool.setVerifyGraphBuffers(false);
         }
+    }
+
+    /** Eager verify when the graph path is unavailable. */
+    private Tensor verifyFallback(Tensor tokens, int[] startPositions, boolean uniform) {
+        if (uniform && startPositions.length == 1) {
+            return forward(tokens, startPositions[0], true);
+        }
+        int windowLen = (int) tokens.shape()[1];
+        int[] cacheLengths = new int[startPositions.length];
+        for (int i = 0; i < cacheLengths.length; i++) {
+            cacheLengths[i] = startPositions[i] + windowLen;
+        }
+        return forwardBatchedVerify(tokens, startPositions, cacheLengths);
     }
 
     private static final boolean VGRAPH_TRACE = "1".equals(System.getenv("SMILE_VERIFY_GRAPH_TRACE"));
@@ -1757,8 +1800,14 @@ public class QwenModel extends LayerBlock {
         verifyGraphTokenBuf.detachFromScopes();
     }
 
-    private void ensureVerifyGraphRoPEBuffers(Device device, int windowLen) {
-        if (verifyGraphCosBuf != null && verifyGraphCosBuf.shape()[0] == windowLen) {
+    /**
+     * Allocates the graph's RoPE tables: shared {@code [S, R]} for a single row, per-row
+     * {@code [B, S, R]} for a batch (rows are at different positions).
+     */
+    private void ensureVerifyGraphRoPEBuffers(Device device, int batch, int windowLen) {
+        long[] want = batch == 1 ? new long[]{windowLen, params.rotaryDim()}
+                : new long[]{batch, windowLen, params.rotaryDim()};
+        if (verifyGraphCosBuf != null && Arrays.equals(verifyGraphCosBuf.shape(), want)) {
             return;
         }
         if (verifyGraphCosBuf != null) {
@@ -1769,10 +1818,9 @@ public class QwenModel extends LayerBlock {
             verifyGraphSinBuf.close();
             verifyGraphSinBuf = null;
         }
-        int rotaryDim = params.rotaryDim();
         var opts = new Tensor.Options().device(device).dtype(ScalarType.Float);
-        verifyGraphCosBuf = Tensor.zeros(opts, windowLen, rotaryDim);
-        verifyGraphSinBuf = Tensor.zeros(opts, windowLen, rotaryDim);
+        verifyGraphCosBuf = Tensor.zeros(opts, want);
+        verifyGraphSinBuf = Tensor.zeros(opts, want);
         verifyGraphCosBuf.detachFromScopes();
         verifyGraphSinBuf.detachFromScopes();
     }
@@ -1793,12 +1841,15 @@ public class QwenModel extends LayerBlock {
         verifyGraphLogitsBuf.detachFromScopes();
     }
 
-    private void prepareVerifyGraphInputs(int startPos, int windowLen, int cacheLen, int batch) {
-        PartialRotaryEncoding.gatherWindowInto(rope.cos(), startPos, windowLen, verifyGraphCosBuf);
-        PartialRotaryEncoding.gatherWindowInto(rope.sin(), startPos, windowLen, verifyGraphSinBuf);
-        int[] startPositions = new int[batch];
-        Arrays.fill(startPositions, startPos);
-        kvCachePool.prepareVerifyGraphStep(cacheLen, startPositions, windowLen);
+    private void prepareVerifyGraphInputs(int[] startPositions, int windowLen, int[] cacheLengths) {
+        if (startPositions.length == 1) {
+            PartialRotaryEncoding.gatherWindowInto(rope.cos(), startPositions[0], windowLen, verifyGraphCosBuf);
+            PartialRotaryEncoding.gatherWindowInto(rope.sin(), startPositions[0], windowLen, verifyGraphSinBuf);
+        } else {
+            PartialRotaryEncoding.gatherWindowInto(rope.cos(), startPositions, windowLen, verifyGraphCosBuf);
+            PartialRotaryEncoding.gatherWindowInto(rope.sin(), startPositions, windowLen, verifyGraphSinBuf);
+        }
+        kvCachePool.prepareVerifyGraphStepRagged(cacheLengths, startPositions, windowLen);
     }
 
     /**

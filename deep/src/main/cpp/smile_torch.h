@@ -1059,7 +1059,8 @@ SMILE_API ST_Tensor smile_recurrent_gated_delta_rule_ckpt(
  * writes the state after each position to {@code rec_ckpts[t]}). {@code g}/{@code beta}
  * are {@code [B,S,Hv]}. Returns the core output {@code [B,S,Hv,Dv]} in
  * {@code hidden}'s dtype, or null (error set) if unsupported — in which case no
- * state was modified. CUDA only; {@code n_ckpt == S <= 8}.
+ * state was modified. CUDA only; {@code 1 <= n_ckpt <= S <= 8} (checkpoints are written for the
+ * first {@code n_ckpt} positions; the last position's state is the final {@code rec_state}).
  */
 SMILE_API ST_Tensor smile_gated_delta_verify_window(
         ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor conv_weight,
