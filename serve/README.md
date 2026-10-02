@@ -146,7 +146,7 @@ decode). **MTP is a latency feature for low concurrency**: it speeds up a lone
 request about 2-3x, and it automatically stays out of the way once several
 requests are active.
 
-Setup: BF16, TP=4 on A100 40 GB, greedy, `speculative-tokens=2`, prompt
+Setup: BF16, TP=4 on A100 40 GB, greedy, `speculative-tokens=2` (the default depth of 3 measures the same or slightly better), prompt
 "What is the history of China?", 512 new tokens, warm run, wall time including
 prefill.
 
@@ -197,15 +197,15 @@ requests on a 40 GB GPU; for larger cohorts lower `smile.chat.mem-fraction-stati
 do not fit, the engine logs one warning and serves that cohort with plain batched decode
 instead of failing requests (throughput is then within ~12% of plain decode).
 
-Recommendation: enable `smile.chat.speculative=true` for any Qwen3.5/3.8 deployment with MTP
-weights; budget the memory above if you run more than ~30 concurrent requests.
+Speculation is on by default for Qwen3.5/3.8 checkpoints with MTP weights; budget the memory
+above if you run more than ~30 concurrent requests, or set `smile.chat.speculative=false`.
 
 Controls (all default to the values that were benchmarked):
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `smile.chat.speculative` | `false` | Enable MTP speculation (Qwen3.5/3.8 checkpoints with MTP weights). |
-| `smile.chat.speculative-tokens` | `2` | Draft depth; 2 is the benchmarked setting. Depth 3 was slower with the old context-free head and has not been re-measured. |
+| `smile.chat.speculative` | `true` | MTP speculation for Qwen3.5/3.8 checkpoints with MTP weights (ignored for other models). Set `false` to disable. |
+| `smile.chat.speculative-tokens` | `0` (model default; 3 for Qwen3.8-27B) | Draft depth. Measured aggregate tok/s at 1 / 8 / 16 requests: depth 1: 47 / 203 / 387; depth 2: 53 / 216-236 / 408-441; depth 3 (default): 55 / 232 / 446; depth 4: 54 / 241 / 439. Depths 2-4 are within noise; depth 1 is slower. |
 | `smile.chat.speculative-max-concurrency` | `0` (= `max-batch-size`) | Requests that may speculate at once. A request keeps its speculation slot for its whole life; requests beyond the limit use batched plain decode. Speculating only part of a large cohort is slower than all or none, so leave unlimited unless you need to bound checkpoint memory. |
 | `SMILE_VERIFY_CUDA_GRAPH` | on | Capture the verify forward as one CUDA graph (one capture per session). `0` disables. |
 | `SMILE_MTP_HISTORY` | on | Draft head keeps a persistent per-request KV of the whole prefix (prompt and accepted tokens). `0` restores the context-free legacy head (about half the accept rate). |
