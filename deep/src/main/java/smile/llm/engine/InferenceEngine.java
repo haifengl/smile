@@ -387,6 +387,7 @@ public final class InferenceEngine implements AutoCloseable {
                 if (anyPrefilling()) {
                     runPrefills();
                 }
+                assignSpeculationSlots();
                 runSpeculateStep();
                 runDecodeStep();
             } catch (InterruptedException e) {
@@ -711,16 +712,10 @@ public final class InferenceEngine implements AutoCloseable {
     }
 
     private void runSpeculateStep() {
-        if (speculativeEligibleCount() > maxSpeculativeConcurrency) {
-            // Above the concurrency limit, per-request eager draft/verify rounds
-            // would serialize what runDecodeStep's single batched forward can
-            // process together; defer every speculative-flagged request to plain
-            // decode this tick instead (see maxSpeculativeConcurrency).
-            return;
-        }
         List<Active> speculative = new ArrayList<>();
         for (Active a : active) {
-            if (a.phase == Phase.DECODING && !a.handle.isAborted() && a.request.speculative()) {
+            if (a.phase == Phase.DECODING && !a.handle.isAborted() && a.request.speculative()
+                    && a.speculating) {
                 speculative.add(a);
                 if (speculative.size() >= maxDecodeBatch) {
                     break;
@@ -902,11 +897,10 @@ public final class InferenceEngine implements AutoCloseable {
         // speculative concurrency exceeded the limit this tick, runSpeculateStep
         // skipped every speculative-flagged request untouched, so pick them up
         // here instead (batched with everyone else) rather than stalling a tick.
-        boolean speculativeDemoted = speculativeEligibleCount() > maxSpeculativeConcurrency;
         List<Active> decoding = new ArrayList<>();
         for (Active a : active) {
             boolean eligible = a.phase == Phase.DECODING && !a.handle.isAborted()
-                    && (!a.request.speculative() || speculativeDemoted);
+                    && (!a.request.speculative() || !a.speculating);
             if (eligible) {
                 decoding.add(a);
                 if (decoding.size() >= maxDecodeBatch) {
@@ -1066,22 +1060,30 @@ public final class InferenceEngine implements AutoCloseable {
     }
 
     /**
-     * Counts currently-decoding, non-aborted, speculative-flagged requests.
-     * Computed independently (not cached) by both {@link #runSpeculateStep}
-     * and {@link #runDecodeStep} in the same tick: {@code runSpeculateStep}
-     * only ever removes/finishes requests when it actually runs the
-     * speculative cohort (count {@code <= maxSpeculativeConcurrency}), in
-     * which case a fresh count afterward can only be {@code <=} the limit
-     * too, so both methods agree on whether this tick demoted speculation.
+     * Gives each speculative-flagged request, in arrival order, a sticky speculation slot while
+     * fewer than {@link #maxSpeculativeConcurrency} requests hold one; later arrivals use batched
+     * plain decode for their whole life. Slots are sticky because a request that takes even one
+     * plain decode step loses its MTP draft history (see {@code Qwen.decodeStep}), so rotating
+     * requests in and out of speculation would silently end it for all of them; a slot is freed
+     * when its holder finishes and goes to the next request that reaches decode.
      */
-    private int speculativeEligibleCount() {
-        int n = 0;
+    private void assignSpeculationSlots() {
+        int held = 0;
         for (Active a : active) {
-            if (a.phase == Phase.DECODING && !a.handle.isAborted() && a.request.speculative()) {
-                n++;
+            if (a.specAssigned && a.speculating && a.phase != Phase.DONE && !a.handle.isAborted()) {
+                held++;
             }
         }
-        return n;
+        for (Active a : active) {
+            if (a.specAssigned || a.phase != Phase.DECODING || !a.request.speculative()) {
+                continue;
+            }
+            a.specAssigned = true;
+            if (held < maxSpeculativeConcurrency) {
+                a.speculating = true;
+                held++;
+            }
+        }
     }
 
     private void sampleAndAppend(Active a, Tensor logitsRow) {
@@ -1302,6 +1304,10 @@ public final class InferenceEngine implements AutoCloseable {
         final GenerationRequest request;
         final int[] prompt;
         int kvRequestId;
+        /** Whether the sticky speculation slot decision has been made (see assignSpeculationSlots). */
+        boolean specAssigned;
+        /** Holds one of the {@code maxSpeculativeConcurrency} speculation slots for its whole life. */
+        boolean speculating;
         int prefillFrom;
         final int promptLen;
         final int maxGenLen;

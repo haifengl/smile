@@ -229,24 +229,29 @@ public interface ChatServiceConfig {
     int speculativeTokens();
 
     /**
-     * Max concurrently-decoding requests at which MTP speculation still runs.
-     * Native speculation now batches every eligible request's draft+verify
-     * round into a single forward when their sampling params (temperature,
-     * top-p, seed) match and each has room for the cohort's draft window
-     * (falls back to one-request-at-a-time for any request that doesn't fit
-     * either condition, with no regression versus the unbatched path).
-     * Above this limit, speculative-flagged requests fall back to plain
-     * batched decode for that tick so peak throughput under load cannot
-     * regress below the non-speculative baseline. Default {@code 1}
-     * (speculation only when there is a single decoding stream); raise this
-     * only after confirming with your own throughput measurements that
-     * speculation still wins at higher concurrency on your hardware — this
-     * default is intentionally conservative pending that real-hardware
-     * validation, even though batching removes the sequential-forwards cost
-     * that originally motivated capping it at {@code 1}.
+     * Maximum number of requests that speculate (MTP draft + verify) at the same time.
+     * Speculating requests are drafted and verified together as one batched forward per
+     * round, each keeping its own persistent draft-head context; every other request uses
+     * plain batched decode. A request holds a speculation slot for its whole life (a slot is
+     * handed to the next arrival when its holder finishes), so under load the first
+     * {@code N} requests speculate and later ones simply decode normally (with the limit at
+     * {@code 0}, all of them speculate).
+     *
+     * <p>Batched speculation was measured faster than plain decode at every concurrency
+     * tested (1.1x-1.35x aggregate from 2 to 48 concurrent requests, 2x for one request on
+     * Qwen3.8-27B, TP=4, A100 40 GB). Each speculating request additionally costs roughly
+     * 0.15 GB of DeltaNet checkpoint memory per GPU for a 27B hybrid model, so raising this
+     * toward {@code max-batch-size} on a nearly fully reserved GPU needs a lower
+     * {@code smile.chat.mem-fraction-static} (the engine falls back to plain decode, with a
+     * warning, if the checkpoint buffers do not fit).
+     *
+     * <p>{@code 0} (the default) means no limit beyond {@code max-batch-size}: every request
+     * speculates, which measured best at high concurrency (speculating only part of a large
+     * cohort forfeits the batching efficiency plain decode has there). Set a positive value to
+     * bound the DeltaNet checkpoint memory, or {@code 1} to speculate only for a lone request.
      *
      * <p>Property: {@code smile.chat.speculative-max-concurrency}.
      */
-    @WithDefault("1")
+    @WithDefault("0")
     int speculativeMaxConcurrency();
 }

@@ -175,7 +175,7 @@ public class InferenceEngineTest {
     /**
      * CPU step-API stub that returns peaked logits so greedy sampling is deterministic.
      */
-    static final class StepStub implements ModelExecutor {
+    static class StepStub implements ModelExecutor {
         final AtomicInteger nextId = new AtomicInteger(1);
         final AtomicInteger bound = new AtomicInteger();
         final AtomicInteger maxConcurrentBound = new AtomicInteger();
@@ -408,5 +408,55 @@ public class InferenceEngineTest {
         }
         @Override public void finish(int requestId, int[] sequenceTokens) {}
         @Override public void evict(int requestId) {}
+    }
+
+    /** StepStub that records which requests go through speculation and which through plain decode. */
+    static final class SpecStub extends StepStub {
+        final java.util.Set<Integer> speculated = java.util.concurrent.ConcurrentHashMap.newKeySet();
+        final java.util.Set<Integer> plainDecoded = java.util.concurrent.ConcurrentHashMap.newKeySet();
+        final java.util.Set<Integer> bothDecodedAndSpeculatedInOneStep = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+        @Override
+        public int[][] speculateStep(int[] requestIds, int[] lastTokens, int[] positions,
+                                     int numDrafts, double temperature, double topp) {
+            int[][] out = new int[requestIds.length][];
+            for (int i = 0; i < requestIds.length; i++) {
+                speculated.add(requestIds[i]);
+                out[i] = new int[]{9, 9};
+            }
+            return out;
+        }
+
+        @Override
+        public smile.deep.tensor.Tensor decodeStep(int[] requestIds, int[] lastTokens, int[] positions) {
+            for (int id : requestIds) {
+                plainDecoded.add(id);
+            }
+            return super.decodeStep(requestIds, lastTokens, positions);
+        }
+    }
+
+    @Test
+    public void testGivenMoreSpeculativeRequestsThanSlotsWhenRunThenFirstKSpeculateStickilyAndRestDecodePlain()
+            throws Exception {
+        // Given – 2 speculation slots, 4 speculative-flagged requests, all in flight together
+        SpecStub stub = new SpecStub();
+        try (var engine = new InferenceEngine(stub, 4, 4, 64, 5_000, 300L)) {
+            engine.setMaxSpeculativeConcurrency(2);
+            var handles = new java.util.ArrayList<GenerationHandle>();
+            for (int i = 0; i < 4; i++) {
+                handles.add(engine.submit(GenerationRequest.ofTokens(
+                        new int[]{1, 2, 3}, 12, 0.0, 0.9, false, 0, null, null, true, 2)));
+            }
+            for (var h : handles) {
+                h.future().get(10, TimeUnit.SECONDS);
+            }
+            // Then – only the first two admitted requests ever speculated; the other two were
+            // served entirely by plain batched decode (a speculating request may still take a
+            // plain step for its last token or two, when no full draft window fits).
+            assertEquals(java.util.Set.of(1, 2), stub.speculated, "speculated=" + stub.speculated);
+            assertTrue(stub.plainDecoded.containsAll(java.util.Set.of(3, 4)),
+                    "non-slot requests must be plain-decoded: " + stub.plainDecoded);
+        }
     }
 }
