@@ -1,10 +1,28 @@
-# Studio
-.smile
-log
+# Smile Studio
+/.smile/
+/log/
+
+# Agent tool workspace
+.playwright-cli/
+
+# JDTLS (or Eclipse JDT)
+bin/
+!/bin/
+!/studio/src/universal/bin/
+
+# Secrets
+.certs/
+.env*
+*.cer
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
 
 # Agent scratch state
 /docs
-/.provenance
 
 # Class and package files
 *.class
@@ -27,6 +45,7 @@ hs_err_pid*
 # studio/build.sbt sets JAVA_HOME=%APP_HOME%\jbr for the Windows launcher;
 # it is not built or downloaded by anything here, so do not commit it.
 /studio/src/universal/jbr
+/studio/src/universal/jdtls
 
 # Clojure
 .nrepl-port
@@ -65,7 +84,6 @@ build/
 .settings/
 .cache-main
 .cache-tests
-bin/
 
 # IntelliJ
 .idea
@@ -89,16 +107,8 @@ nb-configuration.xml
 *.orig
 *.rej
 
-# Local environment
-.env
-
 # Python virtual environment
 venv
 
 # Plugin directory
 /.quarkus/cli/plugins/
-
-# TLS Certificates
-*.cer
-*.key
-.certs/
