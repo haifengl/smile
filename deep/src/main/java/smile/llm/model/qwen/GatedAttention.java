@@ -601,7 +601,12 @@ public class GatedAttention implements Attention {
             }
             double scale = 1.0 / Math.sqrt(headDim);
             Tensor qT = qRope.transpose(1, 2);
-            FlashInferKvMetadata meta = cachePool.sharedFlashInferMetadata(cacheLens);
+            // Graph mode (capture/warmup/replay): fixed-address ragged CSR rewritten in place by
+            // KvCachePool.prepareVerifyGraphStepRagged, and the graph-private plan scratch.
+            boolean graph = cachePool.verifyGraphBuffers();
+            FlashInferKvMetadata meta = graph
+                    ? cachePool.verifyGraphMetadata()
+                    : cachePool.sharedFlashInferMetadata(cacheLens);
             Tensor qoIndptr = cachePool.verifyQoIndptrBuf(batchSize, seqlen);
             // startPos/cacheLen args below are unused placeholders for this call —
             // Native.flashInferAttentionVerifyGraph reads only kvMetadata/seqLen/
@@ -611,7 +616,9 @@ public class GatedAttention implements Attention {
                     numHeads, numKvHeads, headDim,
                     kvLayerId, 0, seqlen, 0,
                     cachePool, meta, cachePool.flashInferWorkspace());
-            Tensor attn = Native.flashInferAttentionVerifyEager(qT, ctx, qoIndptr);
+            Tensor attn = graph
+                    ? Native.flashInferAttentionVerifyGraph(qT, ctx, qoIndptr)
+                    : Native.flashInferAttentionVerifyEager(qT, ctx, qoIndptr);
 
             Tensor attnT = attn.transpose(1, 2);
             Tensor attnC = attnT.contiguous();

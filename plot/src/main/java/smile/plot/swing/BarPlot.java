@@ -145,10 +145,14 @@ public class BarPlot extends Plot {
         Bar[] bars = new Bar[n];
         Legend[] legends = new Legend[n];
         for (int i = 0; i < n; i++) {
-            double[][] x = new double[data[i].length][2];
-            for (int j = 0; j < x.length; j++) {
-                x[j][0] = j + (i+1) * width;
-                x[j][1] = data[i][j];
+            // Shift each group to the right of the previous one so that the
+            // bars of a group sit side by side within a single category slot.
+            double offset = (i + 1) * width;
+            double[] values = data[i];
+            double[][] x = new double[values.length][2];
+            for (int j = 0; j < values.length; j++) {
+                x[j][0] = offset + j;
+                x[j][1] = values[j];
             }
 
             Color color = Palette.get(i);
