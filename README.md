@@ -129,7 +129,9 @@ the module overview, or drill into individual topic guides.
 
 | Document | Topics |
 |---|---|
-| [README](deep/README.md) | Full deep-learning & LLM user guide (tensors, layers, loss, optimizer, EfficientNet, LLaMA, ONNX) |
+| [README](deep/README.md) | Core deep-learning guide (tensors, layers, loss, optimizer, model, metrics, data loading) |
+| [LLM.md](deep/LLM.md) | `smile.llm` — tokenizer, LLaMA-3, Qwen3.5, inference engine, KV cache, quantization, tensor parallelism |
+| [VISION.md](deep/VISION.md) | `smile.vision` — transforms, `ImageDataset`, EfficientNet-V2, ImageNet labels |
 | [ONNX.md](deep/ONNX.md) | ONNX Runtime inference (`smile.onnx`) — sessions, tensors, execution providers |
 | [ONNX_GENAI.md](deep/ONNX_GENAI.md) | ONNX Runtime GenAI (`smile.onnx.genai`) — generate loop, chat model, multimodal |
 
@@ -141,13 +143,20 @@ The `deep/README.md` covers:
 - **`smile.deep.Optimizer`** — SGD, Adam, AdamW, RMSprop
 - **`smile.deep.Model`** — Abstract base class + training loop
 - **`smile.deep.metric`** — Accuracy, Precision, Recall, F1Score with macro/micro/weighted averaging
-- **`smile.llm`** — `Message`, `Role`, `FinishReason`, `ChatCompletion` records; sinusoidal & RoPE positional encodings
+- **`smile.deep.Dataset`** — Dataset interface, `DataSampler`, `SampleBatch`
+
+The `deep/LLM.md` covers:
+- **`smile.llm`** — `Message`, `Role`, `FinishReason`, `ChatCompletion`, `ChatOptions`, `LanguageModel`
 - **`smile.llm.tokenizer`** — `Tokenizer` interface, `Tiktoken` BPE implementation (LLaMA-3 compatible)
-- **`smile.llm.model.llama`** — Full LLaMA-3 stack: `Llama.build()`, `generate()`, `chat()`, streaming via `SubmissionPublisher`
+- **`smile.llm.model.llama`** — Full LLaMA-3 stack: `Llama.build()`, `generate()`, `chat()`, streaming
+- **`smile.llm.model.qwen`** — Qwen3.5 hybrid stack (Gated DeltaNet + gated attention), MTP, vision tower
+- **`smile.llm.engine`** — Continuous-batching `InferenceEngine`, `GenerationRequest`/`GenerationHandle`, speculative decoding
+- **`smile.llm.cache`** — Paged `KvCachePool`, `RadixCache` prefix reuse
+- **`smile.llm.quant`** / **`smile.llm.parallel`** — FP8/NVFP4/Marlin quantization, tensor parallelism
+
+The `deep/VISION.md` covers:
 - **`smile.vision`** — `VisionModel`, `ImageDataset`, `EfficientNet.V2S/M/L()` pretrained models, ImageNet labels
 - **`smile.vision.transform`** — `Transform` interface, `ImageClassification` pipeline, resize/crop/toTensor helpers
-- **`smile.onnx`** — ONNX Runtime inference via Panama FFM (`InferenceSession`, `OrtValue`, CUDA/TensorRT EPs)
-- **`smile.onnx.genai`** — ONNX Runtime GenAI (`SimpleGenAI`, `GenAiChatModel` / `LanguageModel`)
 
 ### `nlp/` — Natural Language Processing
 > Text normalization, tokenization, POS tagging, stemming, relevance ranking
@@ -318,7 +327,9 @@ int label = forest.predict(data.get(0));
 System.out.println("Predicted class: " + label);
 ```
 
-For deep learning and LLM examples, see [deep/README.md](deep/README.md).
+For deep learning examples, see [deep/README.md](deep/README.md); for LLM and
+computer-vision examples, see [deep/LLM.md](deep/LLM.md) and
+[deep/VISION.md](deep/VISION.md).
 For visualization examples, see [plot/README.md](plot/README.md).
 
 ---
