@@ -10,25 +10,33 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 fi
 
 sbt clean
-rm -rf doc/*
+rm -rf target/docs
 rm -rf website/_site/api
 sbt unidoc
-mv target/javaunidoc doc/java
+mkdir -p target/docs
+# sbt 2.x writes unidoc output under target/out/jvm/scala-<version>/<project>/javaunidoc
+# (sbt 1.x used target/javaunidoc), so locate it instead of hardcoding the path.
+UNIDOC_DIR=$(find target/out -type d -path '*/smile/javaunidoc' -print -quit)
+if [[ -z "$UNIDOC_DIR" ]]; then
+    echo "ERROR: unidoc output not found under target/out" >&2
+    exit 1
+fi
+mv "$UNIDOC_DIR" target/docs/java
 
 sbt json/doc
-find doc/json -name '*.html' -exec bin/gtag.sh {} \;
+find target/docs/json -name '*.html' -exec bin/gtag.sh {} \;
 
 sbt scala/doc
-find doc/scala -name '*.html' -exec bin/gtag.sh {} \;
+find target/docs/scala -name '*.html' -exec bin/gtag.sh {} \;
 
 ./gradlew :kotlin:dokkaGenerate
-find doc/kotlin -name '*.html' -exec bin/gtag.sh {} \;
+find target/docs/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
 cd website
 npm install
 npm run deploy
 mkdir -p _site/api
-mv ../doc/* _site/api/
+mv ../target/docs/* _site/api/
 
 # build binary package
 cd ..
@@ -73,9 +81,9 @@ while true; do
             ./lein deploy clojars
 
             cd ..
-            find doc/clojure -name '*.html' -exec tidy -m {} \;
-            find doc/clojure -name '*.html' -exec bin/gtag.sh {} \;
-            mv doc/clojure website/_site/api/
+            find target/docs/clojure -name '*.html' -exec tidy -m {} \;
+            find target/docs/clojure -name '*.html' -exec bin/gtag.sh {} \;
+            mv target/docs/clojure website/_site/api/
 
             break;;
         [Nn]* ) break;;

@@ -38,6 +38,6 @@ dokka {
         }
     }
     dokkaPublications.html {
-        outputDirectory.set(layout.buildDirectory.dir("../../doc/kotlin"))
+        outputDirectory.set(layout.buildDirectory.dir("../../target/docs/kotlin"))
     }
 }

@@ -4,6 +4,7 @@ log
 
 # Agent scratch state
 /docs
+/.provenance
 
 # Class and package files
 *.class
@@ -46,7 +47,6 @@ node_modules
 .DS_Store
 
 # Generated
-/doc
 /website/_site/
 /serve/src/main/resources/META-INF/resources/
 /serve/src/main/webui/dist/
