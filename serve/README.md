@@ -212,6 +212,8 @@ Controls (all default to the values that were benchmarked):
 | `SMILE_VERIFY_CUDA_GRAPH` | on | Capture the verify forward as one CUDA graph (one capture per session). `0` disables. |
 | `SMILE_MTP_HISTORY` | on | Draft head keeps a persistent per-request KV of the whole prefix (prompt and accepted tokens). `0` restores the context-free legacy head (about half the accept rate). |
 | `SMILE_MTP_VERIFY_CHECKPOINT_REPLAY` | on | On a partial accept, restore the DeltaNet state saved during the verify pass instead of running a second forward. `0` disables. |
+| `SMILE_VERIFY_CUDA_GRAPH_RAGGED` | on | Also graph cohorts of 2+ requests at different positions. `0` limits the graph to a lone request (or equal positions). |
+| `SMILE_VERIFY_CUDA_GRAPH_MAX_BATCH` | `16` | Largest cohort that uses a verify graph. |
 | `SMILE_VERIFY_FLASHINFER_EAGER` | on | Use FlashInfer's paged prefill kernel for verify windows when the graph is not replaying. `0` disables. |
 
 Notes and limits:
@@ -222,9 +224,13 @@ Notes and limits:
   decode step (for example it holds no speculation slot, or the cohort did not
   fit in memory) simply continues with plain decode: output is unaffected, it
   just stops speculating.
-- Speculating requests drafted and verified together run eagerly (the verify
-  CUDA graph covers a lone request); the decode CUDA graph is not used while
-  any request is speculating.
+- Cohorts of up to 16 speculating requests replay a verify CUDA graph keyed by batch
+  size (rows may sit at different positions; positions, RoPE rows, KV slots and the page
+  table are rewritten in place before each replay, one ~10 ms capture per batch size).
+  Larger cohorts verify eagerly because each captured batch size keeps its own activation
+  pool. Same-session A/B against the eager batched verify (512 tokens): 4 requests 145 -> 176
+  tok/s, 8 requests 255 -> 331, 16 requests 461 -> 498. The decode CUDA graph is not used
+  while any request is speculating.
 - The chat endpoint returns the final answer without the model's hidden
   reasoning. When comparing a speculative and a plain response at a short
   `max_tokens`, differences can appear from the first visible character only

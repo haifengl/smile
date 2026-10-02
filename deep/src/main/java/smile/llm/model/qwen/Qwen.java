@@ -2649,10 +2649,12 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      */
     private Tensor[] forwardWindowVerifyBatch(Tensor[] tokenShards, int[] startPositions,
                                               int[] cacheLengths, ExecutorService pool) {
+        // Goes through QwenModel.forwardVerifyGraph(tokens, int[]): replays the ragged batched verify
+        // graph when enabled, otherwise the eager ragged path (forwardBatchedVerify).
         Tensor[] logits = new Tensor[models.length];
         if (models.length == 1) {
-            logits[0] = models[0].forwardBatchedVerify(tokenShards[0], startPositions, cacheLengths);
-            return logits;
+            logits[0] = models[0].forwardVerifyGraph(tokenShards[0], startPositions);
+            return new Tensor[]{ownedVerifyWindowLogits(logits)};
         }
         List<Future<Tensor>> futures = new ArrayList<>(models.length);
         for (int r = 0; r < models.length; r++) {
@@ -2660,8 +2662,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             futures.add(pool.submit(() -> {
                 ParallelState.setCurrent(tpGroup.state(rank));
                 try (var guard = Tensor.noGradGuard()) {
-                    return models[rank].forwardBatchedVerify(
-                            tokenShards[rank], startPositions, cacheLengths);
+                    return models[rank].forwardVerifyGraph(tokenShards[rank], startPositions);
                 } finally {
                     ParallelState.clearCurrent();
                 }
@@ -2673,13 +2674,13 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         } catch (Exception e) {
             for (Tensor l : logits) {
-                if (l != null) {
+                if (l != null && !VerifyCudaGraph.persistentLogits()) {
                     l.close();
                 }
             }
             throw new RuntimeException("TP batched verify forward failed", e);
         }
-        return logits;
+        return new Tensor[]{ownedVerifyWindowLogits(logits)};
     }
 
     /**
@@ -3696,12 +3697,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         try {
             Tensor[] logits = forwardWindowVerifyBatch(tokenShards, startPositions, cacheLengths, tpExecutor);
             speculativeTargetForwards.incrementAndGet();
-            try (Tensor owned = logits[0].copy()) {
-                for (Tensor l : logits) {
-                    if (l != null) {
-                        l.close();
-                    }
-                }
+            try (Tensor owned = logits[0]) { // already an owned copy
                 long vocab = owned.shape()[owned.dim() - 1];
                 try (Tensor flat = owned.reshape(b * windowLen, vocab)) {
                     int[] flatSamples = sampleTargetRows(flat, windowLen, temps, topps);
@@ -4418,12 +4414,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         }
         try {
             Tensor[] logits = forwardWindowVerifyBatch(tokenShards, startPositions, cacheLengths, tpExecutor);
-            try (Tensor owned = logits[0].copy()) {
-                for (Tensor l : logits) {
-                    if (l != null) {
-                        l.close();
-                    }
-                }
+            try (Tensor owned = logits[0]) { // already an owned copy
                 long vocab = owned.shape()[owned.dim() - 1];
                 try (Tensor flat = owned.reshape((long) b * s, vocab)) {
                     int[] flatArgmax = smile.llm.engine.Sampling.sampleGreedyTokenIds(flat);

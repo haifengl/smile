@@ -226,6 +226,31 @@ public final class PartialRotaryEncoding {
     }
 
     /**
+     * Per-row form of {@link #gatherWindowInto(Tensor, int, int, Tensor)} for a ragged batched
+     * verify graph: writes each row's window into a stable {@code [B, S, R]} buffer in place.
+     *
+     * @param table          {@code [maxPos, rotaryDim]} table.
+     * @param startPositions absolute position of each row's first window token.
+     * @param windowLen      positions per row.
+     * @param out            destination {@code [B, windowLen, rotaryDim]} (stable address).
+     */
+    public static void gatherWindowInto(Tensor table, int[] startPositions, int windowLen, Tensor out) {
+        int b = startPositions.length;
+        int[] flat = new int[b * windowLen];
+        for (int row = 0; row < b; row++) {
+            for (int i = 0; i < windowLen; i++) {
+                flat[row * windowLen + i] = startPositions[row] + i;
+            }
+        }
+        long rotaryDim = table.shape()[1];
+        try (var idx = Index.of(flat);
+             Tensor rows = table.get(idx);
+             Tensor shaped = rows.reshape(b, windowLen, rotaryDim)) {
+            Native.copy_(out, shaped);
+        }
+    }
+
+    /**
      * Gathers a per-row contiguous window of RoPE rows, for a batched verify
      * step where concurrent requests are at different absolute positions
      * (unlike {@link #gatherWindowInto}, which broadcasts one shared window
