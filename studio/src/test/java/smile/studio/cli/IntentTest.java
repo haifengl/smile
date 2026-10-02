@@ -277,6 +277,19 @@ class IntentTest {
     }
 
     @Test
+    void showQueued_statusReadsQueued_notThinking() {
+        Intent intent = new Intent(null);
+        // run() sets "Thinking..." at submit time, before the request is queued.
+        intent.setStatus("Thinking...");
+
+        intent.showQueued(1, 2);
+
+        assertEquals("Queued", intent.status().getText(),
+                "a waiting request must not claim it is thinking");
+        assertNull(intent.status().getToolTipText());
+    }
+
+    @Test
     void setProgress_trueClearsTheQueueBadge() {
         Intent intent = new Intent(null);
         intent.showQueued(1, 1);
