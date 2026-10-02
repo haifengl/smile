@@ -43,7 +43,23 @@ Universal / mappings ++= {
       fileRef -> s"serve/$cleanPath"
     }
 
-  // 3. Filter and map resources using PluginCompat.toFileRefsMapping
+  // 3. Bundle the JetBrains Runtime (JBR) that the Windows launcher runs via
+  // `set JAVA_HOME=%APP_HOME%\jbr`. It must be copied whole: a partial JBR still
+  // starts, because java.exe only needs lib/jvm.cfg, but then fails at first use
+  // on lib/tzdb.dat and lib/tzmappings ("can't open .../tzmappings"). The
+  // directory is a gitignored release input, like the bundled JBR under
+  // studio/src/universal, not something this build produces.
+  val jbrDir = rootDir / "studio" / "src" / "universal" / "jbr"
+  val jbrMappings = PluginCompat.toFileRefsMapping(directory(jbrDir))
+    .map { case (fileRef, path) =>
+      // Normalize native Windows backslashes to universal forward slashes
+      val universalPath = path.replace('\\', '/')
+      // directory() includes "jbr/" in the path, strip it for clean mappings
+      val cleanPath = universalPath.stripPrefix("jbr/")
+      fileRef -> s"jbr/$cleanPath"
+    }
+
+  // 4. Filter and map resources using PluginCompat.toFileRefsMapping
   val dataDir = rootDir / "base" / "src" / "test" / "resources" / "data"
   val dataPrefixes = Set("mnist", "usps", "sqlite", "kylo", "weka", "libsvm", "regression", "sas", "stat", "sparse", "matrix")
 
@@ -55,7 +71,7 @@ Universal / mappings ++= {
     .filter { case (_, cleanPath) => dataPrefixes.exists(cleanPath.startsWith) }
     .map { case (fileRef, cleanPath) => fileRef -> s"data/$cleanPath" }
 
-  rootFiles ++ serveAppMappings ++ dataMappings
+  rootFiles ++ serveAppMappings ++ jbrMappings ++ dataMappings
 }
 
 // dealing with long classpaths
