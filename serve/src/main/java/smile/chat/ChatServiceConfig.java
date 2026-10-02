@@ -214,7 +214,7 @@ public interface ChatServiceConfig {
      * Enable native MTP speculative decoding for Qwen3.5/3.8 when MTP weights are present
      * (ignored, with an info message, for every other model). On by default: it is lossless
      * up to bf16 near-tie flips, about 2x faster for a lone request, and 1.1-1.4x faster in
-     * aggregate up to 48 concurrent requests. It costs about 0.15 GB of GPU memory per
+     * aggregate up to 48 concurrent requests. It costs about 0.1 GB of GPU memory per
      * speculating request; see {@link #speculativeMaxConcurrency()}. Set to {@code false} to
      * use plain decoding only.
      *
@@ -244,7 +244,7 @@ public interface ChatServiceConfig {
      * <p>Batched speculation was measured faster than plain decode at every concurrency
      * tested (1.1x-1.35x aggregate from 2 to 48 concurrent requests, 2x for one request on
      * Qwen3.8-27B, TP=4, A100 40 GB). Each speculating request additionally costs roughly
-     * 0.15 GB of DeltaNet checkpoint memory per GPU for a 27B hybrid model, so raising this
+     * 0.1 GB of DeltaNet checkpoint memory per GPU for a 27B hybrid model, so raising this
      * toward {@code max-batch-size} on a nearly fully reserved GPU needs a lower
      * {@code smile.chat.mem-fraction-static} (the engine falls back to plain decode, with a
      * warning, if the checkpoint buffers do not fit).

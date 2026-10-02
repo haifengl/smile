@@ -523,6 +523,9 @@ public class DeltaNetStatePool implements AutoCloseable {
     private Tensor[] speculativeRecurrentBig;
     private Tensor[] speculativeConvBig;
     private int speculativeSlots;
+    /** Inclusive range of slots that have storage (see {@link #ensureSpeculativeCheckpointRange}). */
+    private int ckptFirstSlot;
+    private int ckptLastSlot = -1;
     /** Row capacity of speculative checkpoint tensors (not {@link #maxBatchSize}). */
     private int speculativeBatchCapacity;
 
@@ -559,13 +562,26 @@ public class DeltaNetStatePool implements AutoCloseable {
      * @return extra bytes needed.
      */
     public long speculativeCheckpointGrowthBytes(int numSlots, int rows) {
+        return speculativeCheckpointGrowthBytes(0, numSlots - 1, rows);
+    }
+
+    /**
+     * Additional device bytes {@link #ensureSpeculativeCheckpointRange} would have to allocate for
+     * slots {@code firstSlot..lastSlot} of {@code max(1, rows)} rows (0 when already sufficient).
+     *
+     * @param firstSlot first slot required.
+     * @param lastSlot  last slot required.
+     * @param rows      batch rows required.
+     * @return extra bytes needed.
+     */
+    public long speculativeCheckpointGrowthBytes(int firstSlot, int lastSlot, int rows) {
         int r = Math.max(1, rows);
-        if (speculativeRecurrent != null && speculativeSlots >= numSlots && speculativeBatchCapacity >= r) {
+        if (hasSpeculativeRange(firstSlot, lastSlot, r)) {
             return 0L;
         }
-        long have = speculativeRecurrent == null
-                ? 0L : speculativeCheckpointBytes(speculativeSlots, speculativeBatchCapacity);
-        return Math.max(0L, speculativeCheckpointBytes(numSlots, r) - have);
+        long have = speculativeRecurrent == null ? 0L
+                : speculativeCheckpointBytes(ckptLastSlot - ckptFirstSlot + 1, speculativeBatchCapacity);
+        return Math.max(0L, speculativeCheckpointBytes(lastSlot - firstSlot + 1, r) - have);
     }
 
     /**
@@ -590,13 +606,35 @@ public class DeltaNetStatePool implements AutoCloseable {
         if (numSlots < 1) {
             throw new IllegalArgumentException("numSlots must be >= 1");
         }
+        return ensureSpeculativeCheckpointRange(0, numSlots - 1);
+    }
+
+    /**
+     * Allocates checkpoint slots {@code firstSlot..lastSlot} (inclusive) only, for {@code max(1,
+     * boundBatch)} rows. Slot numbers keep their meaning ("state after window position
+     * {@code slot-1}", slot 0 = pre-window), but slots outside the range have no storage: a save to
+     * one is a no-op and a restore from one is an error. In checkpoint-replay mode only slots
+     * {@code 1..n} are ever restored from (slot 0 is never read, and the last slot equals the
+     * working state), so allocating just those cuts the memory by {@code 2/(n+2)}.
+     *
+     * @param firstSlot first slot to store.
+     * @param lastSlot  last slot to store.
+     * @return {@code true} if this call reallocated (see {@link #ensureSpeculativeCheckpoints}).
+     */
+    public boolean ensureSpeculativeCheckpointRange(int firstSlot, int lastSlot) {
+        if (firstSlot < 0 || lastSlot < firstSlot) {
+            throw new IllegalArgumentException("invalid checkpoint slot range " + firstSlot + ".." + lastSlot);
+        }
         int rows = Math.max(1, boundBatch);
-        if (speculativeRecurrent != null
-                && speculativeSlots >= numSlots
+        if (speculativeRecurrent != null && ckptFirstSlot <= firstSlot && ckptLastSlot >= lastSlot
                 && speculativeBatchCapacity >= rows) {
             return false;
         }
         closeSpeculativeCheckpoints();
+        int numSlots = lastSlot + 1;
+        int stored = lastSlot - firstSlot + 1;
+        ckptFirstSlot = firstSlot;
+        ckptLastSlot = lastSlot;
         speculativeSlots = numSlots;
         speculativeBatchCapacity = rows;
         speculativeRecurrent = new Tensor[numSlots][numLinearLayers];
@@ -608,15 +646,15 @@ public class DeltaNetStatePool implements AutoCloseable {
         var convOpts = new Tensor.Options()
                 .device(device).dtype(convDtype).requireGradients(false);
         for (int i = 0; i < numLinearLayers; i++) {
-            speculativeRecurrentBig[i] = Tensor.zeros(recurrentOpts, numSlots, rows, numVHeads,
+            speculativeRecurrentBig[i] = Tensor.zeros(recurrentOpts, stored, rows, numVHeads,
                     keyHeadDim, valueHeadDim);
             speculativeRecurrentBig[i].detachFromScopes();
             if (convStateLen > 0) {
-                speculativeConvBig[i] = Tensor.zeros(convOpts, numSlots, rows, convDim, convStateLen);
+                speculativeConvBig[i] = Tensor.zeros(convOpts, stored, rows, convDim, convStateLen);
                 speculativeConvBig[i].detachFromScopes();
             }
-            for (int s = 0; s < numSlots; s++) {
-                try (var slotIdx = Index.of(s)) {
+            for (int s = firstSlot; s <= lastSlot; s++) {
+                try (var slotIdx = Index.of(s - firstSlot)) {
                     speculativeRecurrent[s][i] = speculativeRecurrentBig[i].get(slotIdx);
                     speculativeRecurrent[s][i].detachFromScopes();
                     if (convStateLen > 0) {
@@ -627,6 +665,12 @@ public class DeltaNetStatePool implements AutoCloseable {
             }
         }
         return true;
+    }
+
+    /** Whether checkpoint slots {@code firstSlot..lastSlot} are stored for at least {@code rows} rows. */
+    public boolean hasSpeculativeRange(int firstSlot, int lastSlot, int rows) {
+        return speculativeRecurrent != null && ckptFirstSlot <= firstSlot && ckptLastSlot >= lastSlot
+                && speculativeBatchCapacity >= rows;
     }
 
     /**
@@ -677,25 +721,64 @@ public class DeltaNetStatePool implements AutoCloseable {
                     + ") must equal boundBatch (" + b + ")");
         }
         // One gather per layer and tensor instead of a copy per (row, layer): row r takes slot
-        // slots[r] of the {@code [slots, rows, ...]} backing tensor, i.e. flat row
-        // slot * rowCapacity + r of its {@code [slots * rows, ...]} view.
+        // slots[r] of the {@code [stored, rows, ...]} backing tensor, i.e. flat row
+        // (slot - firstSlot) * rowCapacity + r of its {@code [stored * rows, ...]} view. A row whose
+        // slot is negative is left untouched (a fully accepted row's working state is already the
+        // end-of-window state, which is why its last slot is never stored).
         long[] flat = new long[b];
+        long[] rowIdx = new long[b];
+        int n = 0;
         for (int row = 0; row < b; row++) {
             int slot = slots[row];
-            if (slot < 0 || slot >= speculativeSlots) {
-                throw new IllegalStateException("speculative checkpoint slot out of range: " + slot);
+            if (slot < 0) {
+                continue;
             }
-            flat[row] = (long) slot * speculativeBatchCapacity + row;
+            if (slot < ckptFirstSlot || slot > ckptLastSlot) {
+                throw new IllegalStateException("speculative checkpoint slot " + slot
+                        + " has no storage (stored " + ckptFirstSlot + ".." + ckptLastSlot + ")");
+            }
+            flat[n] = (long) (slot - ckptFirstSlot) * speculativeBatchCapacity + row;
+            rowIdx[n] = row;
+            n++;
         }
-        try (Tensor idxCpu = Tensor.of(flat);
-             Tensor idx = idxCpu.to(device);
-             var span = Index.slice(0, b)) {
-            for (int i = 0; i < numLinearLayers; i++) {
-                restoreGathered(speculativeRecurrentBig[i], recurrent[i], idx, span);
-                if (conv[i] != null && speculativeConvBig[i] != null) {
-                    restoreGathered(speculativeConvBig[i], conv[i], idx, span);
+        if (n == 0) {
+            return;
+        }
+        if (n == b) {
+            try (Tensor idxCpu = Tensor.of(flat);
+                 Tensor idx = idxCpu.to(device);
+                 var span = Index.slice(0, b)) {
+                for (int i = 0; i < numLinearLayers; i++) {
+                    restoreGathered(speculativeRecurrentBig[i], recurrent[i], idx, span);
+                    if (conv[i] != null && speculativeConvBig[i] != null) {
+                        restoreGathered(speculativeConvBig[i], conv[i], idx, span);
+                    }
                 }
             }
+            return;
+        }
+        try (Tensor idxCpu = Tensor.of(java.util.Arrays.copyOf(flat, n));
+             Tensor idx = idxCpu.to(device);
+             Tensor rowsCpu = Tensor.of(java.util.Arrays.copyOf(rowIdx, n));
+             Tensor rows = rowsCpu.to(device)) {
+            for (int i = 0; i < numLinearLayers; i++) {
+                restoreRows(speculativeRecurrentBig[i], recurrent[i], idx, rows);
+                if (conv[i] != null && speculativeConvBig[i] != null) {
+                    restoreRows(speculativeConvBig[i], conv[i], idx, rows);
+                }
+            }
+        }
+    }
+
+    /** {@code working[rows] = big_flat[idx]} for a subset of rows. */
+    private void restoreRows(Tensor big, Tensor working, Tensor idx, Tensor rows) {
+        long[] shape = big.shape();
+        long[] flatShape = new long[shape.length - 1];
+        flatShape[0] = shape[0] * shape[1];
+        System.arraycopy(shape, 2, flatShape, 1, shape.length - 2);
+        try (Tensor flatView = big.reshape(flatShape);
+             Tensor gathered = flatView.get(idx)) {
+            working.put_(gathered, rows);
         }
     }
 
@@ -743,8 +826,7 @@ public class DeltaNetStatePool implements AutoCloseable {
 
     /** Whether per-step checkpoints for {@code slots} slots and {@code rows} rows are allocated. */
     public boolean hasSpeculativeCheckpoints(int slots, int rows) {
-        return speculativeRecurrent != null && speculativeSlots >= slots
-                && speculativeBatchCapacity >= rows;
+        return hasSpeculativeRange(0, slots - 1, rows);
     }
 
 
@@ -762,8 +844,11 @@ public class DeltaNetStatePool implements AutoCloseable {
      * @param layerId ordinal among linear-attention layers.
      */
     public void saveCheckpointForLayer(int slot, int layerId) {
-        if (speculativeRecurrent == null || slot < 0 || slot >= speculativeSlots) {
+        if (speculativeRecurrent == null || slot < 0) {
             throw new IllegalStateException("speculative checkpoint slot out of range: " + slot);
+        }
+        if (slot < ckptFirstSlot || slot > ckptLastSlot) {
+            return; // no storage for this slot in a lean allocation
         }
         int b = boundBatch;
         if (b <= 0) {
@@ -789,8 +874,15 @@ public class DeltaNetStatePool implements AutoCloseable {
     }
 
     private void copyActiveToSlot(int slot, boolean save) {
-        if (speculativeRecurrent == null || slot < 0 || slot >= speculativeSlots) {
+        if (speculativeRecurrent == null || slot < 0) {
             throw new IllegalStateException("speculative checkpoint slot out of range: " + slot);
+        }
+        if (slot < ckptFirstSlot || slot > ckptLastSlot) {
+            if (save) {
+                return; // slot has no storage in a lean allocation: nothing to keep
+            }
+            throw new IllegalStateException("speculative checkpoint slot " + slot + " has no storage (stored "
+                    + ckptFirstSlot + ".." + ckptLastSlot + ")");
         }
         int b = boundBatch;
         if (b <= 0) {
@@ -864,6 +956,8 @@ public class DeltaNetStatePool implements AutoCloseable {
         speculativeConv = null;
         speculativeSlots = 0;
         speculativeBatchCapacity = 0;
+        ckptFirstSlot = 0;
+        ckptLastSlot = -1;
     }
 
     /**
