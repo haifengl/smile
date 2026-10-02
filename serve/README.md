@@ -135,6 +135,98 @@ per-request generation stays ~17 tok/s with the batch saturated. Qwen AWQ via
 `compressed-tensors` / Marlin is not supported yet (detector currently treats
 cards such as `cyankiwi/Qwen3.8-27B-AWQ-INT4` as dense).
 
+### Qwen3.8 27B with MTP speculative decoding
+
+Qwen3.5/3.8 checkpoints ship a native multi-token-prediction (MTP) head. With
+`smile.chat.speculative=true` the engine drafts `speculative-tokens` tokens with
+that head and verifies them in one target forward pass; accepted tokens are
+byte-for-byte what greedy decoding would have produced (the output is lossless,
+up to rare bf16 near-tie flips between a 3-token window and single-token
+decode). **MTP is a latency feature for low concurrency**: it speeds up a lone
+request about 2-3x, and it automatically stays out of the way once several
+requests are active.
+
+Setup: BF16, TP=4 on A100 40 GB, greedy, `speculative-tokens=2`, prompt
+"What is the history of China?", 512 new tokens, warm run, wall time including
+prefill.
+
+| Single request | Throughput | Verify forward / round | Draft accept rate |
+|---|---|---|---|
+| Plain decode | 18.7 tok/s | n/a | n/a |
+| MTP + persistent draft context (+ checkpoint replay) | 23 tok/s | 91 ms | ~73 % |
+| + fused DeltaNet window + FlashInfer verify attention | 38 tok/s | 49 ms | ~75 % |
+| + verify CUDA graph (default) | **52.8 tok/s (2.8x plain)** | **~32 ms** | ~77 % |
+
+Before the draft head received its prefix context (it only saw the current
+round's own draft tokens), MTP was ~15 % *slower* than plain decode with a
+~50 % accept rate (27.5 vs 32.5 tok/s in an earlier measurement on a quieter
+system; absolute numbers differ between sessions, compare within a table).
+
+A round (draft + one verify + bookkeeping) takes ~48 ms and commits 2.5 tokens
+on average (mean accepted draft depth 1.5 of 2). Throughput gains hold at long
+context (6.6k-token prompt, 256 new tokens: 16.7 s with the verify graph vs
+26.5 s plain).
+
+**Concurrency.** Aggregate throughput (tok/s, 256 new tokens, identical prompts,
+decode CUDA graph on, `max-batch-size=48`, `admit-coalesce-ms=50`):
+
+| Active requests | Plain decode | `speculative=true` (default `speculative-max-concurrency=1`) | `speculative-max-concurrency=4` |
+|---|---|---|---|
+| 1 | 26 | **51** | 51 |
+| 2 | 51 | 51 | 47 |
+| 4 | 98 | 97 | 44 |
+| 8 | 192 | 189 | n/a |
+| 16 | 346 | 340 | n/a |
+| 48 | 678 | 634 | n/a |
+
+At 48 active requests, MTP does not change throughput (with 512 new tokens:
+737 tok/s plain vs 756 speculative, ~15.6 tok/s per request; the 256-token
+rows above are within the same ~8 % run-to-run noise): with the default limit the engine detects more than one active
+request and runs everyone through the batched plain decode path. **Do not raise
+`smile.chat.speculative-max-concurrency`**: speculation verifies one request at a
+time, so above one request the serial verify rounds are slower than batched
+decode (row above), and batched speculation is not enabled (see below).
+
+Recommendation: enable `smile.chat.speculative=true` for interactive or
+single-tenant deployments; it is harmless on busy servers because it yields to
+batched decode as soon as a second request is active.
+
+Controls (all default to the values that were benchmarked):
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `smile.chat.speculative` | `false` | Enable MTP speculation (Qwen3.5/3.8 checkpoints with MTP weights). |
+| `smile.chat.speculative-tokens` | `2` | Draft depth; 2 is the benchmarked setting. Depth 3 was slower with the old context-free head and has not been re-measured. |
+| `smile.chat.speculative-max-concurrency` | `1` | Requests allowed to speculate at once; above this, all requests use batched plain decode. Leave at `1`. |
+| `SMILE_VERIFY_CUDA_GRAPH` | on | Capture the verify forward as one CUDA graph (one capture per session). `0` disables. |
+| `SMILE_MTP_HISTORY` | on | Draft head keeps a persistent per-request KV of the whole prefix (prompt and accepted tokens). `0` restores the context-free legacy head (about half the accept rate). |
+| `SMILE_MTP_VERIFY_CHECKPOINT_REPLAY` | on | On a partial accept, restore the DeltaNet state saved during the verify pass instead of running a second forward. `0` disables. |
+| `SMILE_VERIFY_FLASHINFER_EAGER` | on | Use FlashInfer's paged prefill kernel for verify windows when the graph is not replaying. `0` disables. |
+
+Notes and limits:
+
+- The MTP draft head's KV cache is a second, request-bound pool sized like the
+  main pool (capped at half of the free device memory when it is created, at
+  first use). A request that cannot get one, is multimodal, or takes a plain
+  decode step (for example it was demoted when a second request arrived) simply
+  continues with plain decode: output is unaffected, it just stops speculating.
+- Batched speculation across several requests is **not** enabled: the earlier
+  batched implementation showed silent corruption and a native crash at
+  concurrency above one and was never re-validated (see the
+  `speculative-max-concurrency` note above).
+- The chat endpoint returns the final answer without the model's hidden
+  reasoning. When comparing a speculative and a plain response at a short
+  `max_tokens`, differences can appear from the first visible character only
+  because the token limit falls before/after the end of the hidden reasoning;
+  compare at a limit inside the reasoning, or at a long limit.
+- Capture happens once per `(batch, window length)`; the 2-token verify window
+  at the very end of a request triggers one extra capture (~0.1 s).
+- Troubleshooting: `SMILE_DECODE_PROFILE=1` adds a per-round breakdown to the
+  `MTP verify:` log line; `SMILE_VERIFY_CUDA_GRAPH_DEBUG_DIFF=1` (diagnostic,
+  doubles verify cost) logs the numeric gap between graph replay and an eager
+  reference every round; `SMILE_VERIFY_GRAPH_TRACE=1` logs each round's
+  replay / warmup / capture decision.
+
 ---
 
 ## 3. Building and Running
