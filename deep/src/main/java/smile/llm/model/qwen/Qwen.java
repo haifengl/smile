@@ -2899,6 +2899,40 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     /**
      * Samples one target id per window position from logits {@code [1,S,V]} or {@code [S,V]}.
      */
+    /**
+     * Samples one token per logits row where request {@code i} owns rows
+     * {@code [i*perRequest, (i+1)*perRequest)} and has its own temperature / top-p. Requests that
+     * share parameters are sampled together; the common all-equal case is a single call.
+     */
+    private int[] sampleTargetRows(Tensor flatLogits, int perRequest, double[] temps, double[] topps) {
+        int b = temps.length;
+        boolean uniform = true;
+        for (int i = 1; i < b; i++) {
+            if (temps[i] != temps[0] || topps[i] != topps[0]) {
+                uniform = false;
+                break;
+            }
+        }
+        if (uniform) {
+            return Sampling.sampleTokenIds(flatLogits, temps[0], topps[0]);
+        }
+        int[] out = new int[b * perRequest];
+        boolean[] done = new boolean[b];
+        for (int i = 0; i < b; i++) {
+            if (done[i]) {
+                continue;
+            }
+            int[] ids = Sampling.sampleTokenIds(flatLogits, temps[i], topps[i]);
+            for (int j = i; j < b; j++) {
+                if (!done[j] && temps[j] == temps[i] && topps[j] == topps[i]) {
+                    System.arraycopy(ids, j * perRequest, out, j * perRequest, perRequest);
+                    done[j] = true;
+                }
+            }
+        }
+        return out;
+    }
+
     private int[] sampleTargetWindow(Tensor logits, double temperature, double topp) {
         Tensor flat = logits;
         boolean closeFlat = false;
@@ -2921,6 +2955,32 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     @Override
     public int[][] speculateStep(int[] requestIds, int[] lastTokens, int[] positions,
+                                 int numDrafts, double[] temperatures, double[] topps) {
+        if (!isSpeculativeEnabled()) {
+            throw new UnsupportedOperationException("MTP speculation not available");
+        }
+        int b = requestIds.length;
+        if (lastTokens.length != b || positions.length != b || temperatures.length != b
+                || topps.length != b || b == 0) {
+            throw new IllegalArgumentException("speculateStep batch sizes must match");
+        }
+        int n = params.resolveNumSpeculativeTokens(numDrafts);
+        if (n < 1) {
+            throw new IllegalArgumentException("numDrafts must be >= 1");
+        }
+        if (b > 1 && mtpHistoryActive()) {
+            return speculateBatchHistory(requestIds, lastTokens, positions, n, temperatures, topps);
+        }
+        int[][] out = new int[b][];
+        for (int i = 0; i < b; i++) {
+            out[i] = speculateStep(new int[]{requestIds[i]}, new int[]{lastTokens[i]},
+                    new int[]{positions[i]}, numDrafts, temperatures[i], topps[i])[0];
+        }
+        return out;
+    }
+
+    @Override
+    public int[][] speculateStep(int[] requestIds, int[] lastTokens, int[] positions,
                                  int numDrafts, double temperature, double topp) {
         if (!isSpeculativeEnabled()) {
             throw new UnsupportedOperationException("MTP speculation not available");
@@ -2937,7 +2997,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             throw new IllegalArgumentException("numDrafts must be >= 1");
         }
         if (b > 1 && mtpHistoryActive()) {
-            return speculateBatchHistory(requestIds, lastTokens, positions, n, temperature, topp);
+            double[] temps = new double[b];
+            double[] topps = new double[b];
+            Arrays.fill(temps, temperature);
+            Arrays.fill(topps, topp);
+            return speculateBatchHistory(requestIds, lastTokens, positions, n, temps, topps);
         }
         if (b > 1 && allAnchorsReady(requestIds)) {
             return speculateBatch(requestIds, lastTokens, positions, n, temperature, topp);
@@ -3235,7 +3299,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      * verify CUDA graph); two or more usable rows draft and verify together.
      */
     private int[][] speculateBatchHistory(int[] requestIds, int[] lastTokens, int[] lastPositions,
-                                          int n, double temperature, double topp) {
+                                          int n, double[] temps, double[] topps) {
         int b = requestIds.length;
         int[][] out = new int[b][];
         List<Integer> good = new ArrayList<>();
@@ -3248,14 +3312,18 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             int[] ids = new int[bad.size()];
             int[] toks = new int[bad.size()];
             int[] pos = new int[bad.size()];
+            double[] bt = new double[bad.size()];
+            double[] bp = new double[bad.size()];
             for (int k = 0; k < ids.length; k++) {
                 int i = bad.get(k);
                 ids[k] = requestIds[i];
                 toks[k] = lastTokens[i];
                 pos[k] = lastPositions[i];
+                bt[k] = temps[i];
+                bp[k] = topps[i];
             }
             try (Tensor logits = decodeStep(ids, toks, pos)) {
-                int[] sampled = sampleTargetWindow(logits, temperature, topp);
+                int[] sampled = sampleTargetRows(logits, 1, bt, bp);
                 for (int k = 0; k < ids.length; k++) {
                     out[bad.get(k)] = new int[]{sampled[k]};
                 }
@@ -3264,17 +3332,21 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         if (good.size() == 1) {
             int i = good.get(0);
             out[i] = speculateOneRequest(requestIds[i], lastTokens[i], lastPositions[i], n,
-                    temperature, topp);
+                    temps[i], topps[i]);
         } else if (good.size() > 1) {
             int g = good.size();
             int[] ids = new int[g];
             int[] toks = new int[g];
             int[] pos = new int[g];
+            double[] gt = new double[g];
+            double[] gp = new double[g];
             for (int k = 0; k < g; k++) {
                 int i = good.get(k);
                 ids[k] = requestIds[i];
                 toks[k] = lastTokens[i];
                 pos[k] = lastPositions[i];
+                gt[k] = temps[i];
+                gp[k] = topps[i];
             }
             long tDraft = System.nanoTime();
             int[][] drafts = draftGreedyHistoryBatch(ids, toks, pos, n);
@@ -3283,7 +3355,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             long verify0 = speculativeVerifyNanos.get();
             long book0 = speculativeBookkeepingNanos.get();
             SpeculativeDecoding.AcceptResult[] accepts = verifyWindowOnlineBatch(
-                    ids, toks, pos, drafts, temperature, topp);
+                    ids, toks, pos, drafts, gt, gp);
             recordBatchRound(g, draftNs, speculativeVerifyNanos.get() - verify0,
                     speculativeBookkeepingNanos.get() - book0);
             for (int k = 0; k < g; k++) {
@@ -3576,6 +3648,16 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     private SpeculativeDecoding.AcceptResult[] verifyWindowOnlineBatch(
             int[] requestIds, int[] lastTokens, int[] lastPositions, int[][] drafts,
             double temperature, double topp) {
+        double[] temps = new double[requestIds.length];
+        double[] topps = new double[requestIds.length];
+        Arrays.fill(temps, temperature);
+        Arrays.fill(topps, topp);
+        return verifyWindowOnlineBatch(requestIds, lastTokens, lastPositions, drafts, temps, topps);
+    }
+
+    private SpeculativeDecoding.AcceptResult[] verifyWindowOnlineBatch(
+            int[] requestIds, int[] lastTokens, int[] lastPositions, int[][] drafts,
+            double[] temps, double[] topps) {
         int b = requestIds.length;
         int n = drafts[0].length;
         int windowLen = n + 1;
@@ -3622,7 +3704,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 }
                 long vocab = owned.shape()[owned.dim() - 1];
                 try (Tensor flat = owned.reshape(b * windowLen, vocab)) {
-                    int[] flatSamples = sampleTargetWindow(flat, temperature, topp);
+                    int[] flatSamples = sampleTargetRows(flat, windowLen, temps, topps);
                     for (int i = 0; i < b; i++) {
                         System.arraycopy(flatSamples, i * windowLen, targetSamples[i], 0, windowLen);
                     }

@@ -735,17 +735,16 @@ public final class InferenceEngine implements AutoCloseable {
             }
         }
 
-        // Batch together every cohort member that shares sampling params with
-        // the rest (mirrors runDecodeStep's own uniformSampling gate for its
-        // batched-vs-per-row sample split) and has room for the cohort's full
-        // draft window; everyone else falls back to the proven per-request
-        // path unchanged, so batching here is purely additive.
+        // Batch together every cohort member that has room for the cohort's full draft
+        // window (sampling parameters may differ per request: they are applied per row when
+        // the verify window is sampled); a request without that room takes the per-request
+        // path.
         int maxDrafts = Math.max(1, n > 0 ? n : 3);
         List<Active> batch = new ArrayList<>();
         List<Active> singles = new ArrayList<>();
-        boolean uniform = speculative.size() > 1 && uniformSampling(speculative);
+        boolean batchable = speculative.size() > 1;
         for (Active a : speculative) {
-            if (uniform) {
+            if (batchable) {
                 int remaining = Math.min(a.maxGenLen - a.completion.size(),
                         a.totalCapacity - a.promptLen - a.completion.size());
                 if (remaining >= 1 && remaining - 1 >= maxDrafts) {
@@ -813,12 +812,7 @@ public final class InferenceEngine implements AutoCloseable {
             if (accepted == null || accepted.length == 0 || accepted[0] == null) {
                 return;
             }
-            for (int tok : accepted[0]) {
-                if (a.phase != Phase.DECODING) {
-                    break;
-                }
-                appendToken(a, tok);
-            }
+            emitAccepted(a, accepted[0]);
         } catch (UnsupportedOperationException unsupported) {
             // No MTP head — one plain decode step for this request.
             logger.debug("speculateStep unsupported; plain decode: {}",
@@ -851,33 +845,30 @@ public final class InferenceEngine implements AutoCloseable {
         int[] requestIds = new int[b];
         int[] lastTokens = new int[b];
         int[] positions = new int[b];
+        double[] temperatures = new double[b];
+        double[] topps = new double[b];
         for (int i = 0; i < b; i++) {
             Active a = batch.get(i);
             requestIds[i] = a.kvRequestId;
             lastTokens[i] = a.lastToken;
             positions[i] = a.promptLen + a.completion.size() - 1;
+            temperatures[i] = a.temperature;
+            topps[i] = a.topp;
         }
-        Active first = batch.get(0);
         long t0 = System.nanoTime();
         try {
             int[][] accepted = executor.speculateStep(
-                    requestIds, lastTokens, positions, maxDrafts, first.temperature, first.topp);
+                    requestIds, lastTokens, positions, maxDrafts, temperatures, topps);
             long decodeMs = (System.nanoTime() - t0) / 1_000_000L;
             decodeMsTotal.addAndGet(decodeMs);
             if (accepted == null) {
                 return;
             }
             for (int i = 0; i < b; i++) {
-                Active a = batch.get(i);
                 if (i >= accepted.length || accepted[i] == null) {
                     continue;
                 }
-                for (int tok : accepted[i]) {
-                    if (a.phase != Phase.DECODING) {
-                        break;
-                    }
-                    appendToken(a, tok);
-                }
+                emitAccepted(batch.get(i), accepted[i]);
             }
         } catch (UnsupportedOperationException unsupported) {
             logger.debug("speculateStep (batched) unsupported; falling back per-request: {}",
@@ -1067,6 +1058,16 @@ public final class InferenceEngine implements AutoCloseable {
      * requests in and out of speculation would silently end it for all of them; a slot is freed
      * when its holder finishes and goes to the next request that reaches decode.
      */
+    /**
+     * Whether a speculative-flagged request may actually speculate. A sampled request with a fixed
+     * seed (temperature &gt; 0, seed != 0) is excluded: plain decode seeds the RNG at its first token so
+     * it is reproducible, which a speculative round (it consumes the RNG differently) cannot honour.
+     * Greedy requests ignore the seed.
+     */
+    private static boolean speculationAllowed(Active a) {
+        return !(a.seed != 0 && a.temperature > 0);
+    }
+
     private void assignSpeculationSlots() {
         int held = 0;
         for (Active a : active) {
@@ -1079,7 +1080,7 @@ public final class InferenceEngine implements AutoCloseable {
                 continue;
             }
             a.specAssigned = true;
-            if (held < maxSpeculativeConcurrency) {
+            if (speculationAllowed(a) && held < maxSpeculativeConcurrency) {
                 a.speculating = true;
                 held++;
             }
@@ -1100,6 +1101,35 @@ public final class InferenceEngine implements AutoCloseable {
             }
         }
         appendToken(a, token);
+    }
+
+    /**
+     * Delivers the tokens a speculative round accepted for one request, isolating that request:
+     * a client that disconnected mid-round (its response publisher is closed, so delivering throws)
+     * or any other per-request emission failure ends only that request, never the whole cohort.
+     * Mirrors the per-row handling in {@link #runDecodeStep}.
+     */
+    private void emitAccepted(Active a, int[] tokens) {
+        if (a.phase != Phase.DECODING) {
+            return;
+        }
+        if (a.handle.isAborted()) {
+            safeEvict(a);
+            a.phase = Phase.DONE;
+            completeCancel(a);
+            inFlight.decrementAndGet();
+            return;
+        }
+        try {
+            for (int tok : tokens) {
+                if (a.phase != Phase.DECODING) {
+                    break;
+                }
+                appendToken(a, tok);
+            }
+        } catch (Throwable t) {
+            failActive(a, t);
+        }
     }
 
     private void appendToken(Active a, int token) {
