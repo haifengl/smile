@@ -16,48 +16,70 @@
  */
 package smile.validation;
 
-import java.util.Arrays;
-import smile.math.MathEx;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Tests for grouped cross-validation, where samples that share a group label
+ * must never be split across the training and testing parts of a fold.
  *
- * @author Nejc Ilenic
+ * @author Haifeng Li
  */
 public class GroupKFoldTest {
+    /**
+     * Group labels of ten samples drawn from three distinct groups.
+     */
+    private static final int[] GROUP = {2, 2, 0, 0, 0, 1, 1, 2, 1, 2};
 
     @Test
-    public void testNoGroupsInSameFold() {
+    public void givenGroupedSamples_whenSplitting_thenNoGroupSpansTrainAndTest() {
+        // Given ten samples that belong to three distinct groups.
         int k = 3;
-        int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
 
-        Bag[] bags = CrossValidation.nonoverlap(groups, k);
+        // When splitting the samples into k folds.
+        Bag[] bags = CrossValidation.nonoverlap(GROUP, k);
 
-        for (int i = 0; i < k; i++) {
-            int[] train = MathEx.unique(Arrays.stream(bags[i].samples()).map(x -> groups[x]).toArray());
-            int[] test = MathEx.unique(Arrays.stream(bags[i].oob()).map(x -> groups[x]).toArray());
-
-            boolean anyTrainGroupInTestFold = Arrays.stream(train)
-                    .anyMatch(trainGroup -> Arrays.stream(test).anyMatch(testGroup -> trainGroup == testGroup));
-
-            assertFalse(anyTrainGroupInTestFold);
+        // Then each group is confined to a single fold, i.e. the group labels
+        // observed in the training part and in the testing part of a fold are
+        // disjoint.
+        assertEquals(k, bags.length);
+        for (Bag bag : bags) {
+            Set<Integer> trainGroups = groupLabels(bag.samples());
+            Set<Integer> testGroups = groupLabels(bag.oob());
+            assertTrue(Collections.disjoint(trainGroups, testGroups),
+                    "A group appears in both the training and testing part of a fold.");
         }
     }
 
     @Test
-    public void testInvalidKParameter() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            int[] groups = new int[]{1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
-            CrossValidation.nonoverlap(groups, -1);
-        });
+    public void givenNonPositiveK_whenSplitting_thenThrowIllegalArgumentException() {
+        // Given a non-positive number of folds.
+        // When splitting the samples.
+        // Then an IllegalArgumentException is thrown.
+        assertThrows(IllegalArgumentException.class, () -> CrossValidation.nonoverlap(GROUP, -1));
     }
 
     @Test
-    public void testInvalidGroupsKParameters() {
-        assertThrows(IllegalArgumentException.class, () -> {
-            int[] groups = new int[]{1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
-            CrossValidation.nonoverlap(groups, 4);
-        });
+    public void givenMoreFoldsThanGroups_whenSplitting_thenThrowIllegalArgumentException() {
+        // Given more folds than there are distinct groups.
+        // When splitting the samples.
+        // Then an IllegalArgumentException is thrown.
+        assertThrows(IllegalArgumentException.class, () -> CrossValidation.nonoverlap(GROUP, 4));
+    }
+
+    /**
+     * Returns the distinct group labels of the given sample indices.
+     * @param samples the sample indices.
+     * @return the distinct group labels.
+     */
+    private static Set<Integer> groupLabels(int[] samples) {
+        Set<Integer> labels = new HashSet<>();
+        for (int sample : samples) {
+            labels.add(GROUP[sample]);
+        }
+        return labels;
     }
 }

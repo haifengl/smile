@@ -32,22 +32,21 @@ public class SimpleNormalizerTest {
     @Test
     public void testNormalize() {
         System.out.println("normalize text");
-        String text = "\t\u00A0THE BIG RIPOFF\n\n"
-                + "Mr. John B. Smith bought cheapsite.com for 1.5 million dollars,\n\r"
-                + "i.e. he paid far too much for it.\n\n"
-                + "Did he mind?\n\r"
+        String text = "\u00A0The QUICK \uFB01x\n\n"
+                + "Dr. Jane Q. Doe paid 2.5 million dollars for it,\n\r"
+                + "i.e. she paid far too much.\n\n"
+                + "Was she upset?\n\r"
                 + "   \t     \n"
-                + "Adam Jones Jr. thinks \u201Che\u0301\u201D didn\u2019t.    \n\r\n"
+                + "Tom Smith Jr. said \u201Cno\u201D she didn\u2019t.    \n\r\n"
                 + "......\n"
-                + "In any case, this isn't true... Well, with a probability of .9 it isn't. ";
+                + "Either way, this isn\u2019t over\u2014but it\u2019s close. Well, with a probability of .8 it isn\u2019t. ";
 
-        String expected = "THE BIG RIPOFF "
-                + "Mr. John B. Smith bought cheapsite.com for 1.5 million dollars, "
-                + "i.e. he paid far too much for it. "
-                + "Did he mind? "
-                + "Adam Jones Jr. thinks \"hé\" didn't. "
+        String expected = "The QUICK fix Dr. Jane Q. Doe paid 2.5 million dollars for it, "
+                + "i.e. she paid far too much. "
+                + "Was she upset? "
+                + "Tom Smith Jr. said \"no\" she didn't. "
                 + "...... "
-                + "In any case, this isn't true... Well, with a probability of .9 it isn't.";
+                + "Either way, this isn't over--but it's close. Well, with a probability of .8 it isn't.";
 
         assertEquals(expected, normalizer.normalize(text));
     }
