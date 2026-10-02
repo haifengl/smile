@@ -244,6 +244,27 @@ class IntentTest {
             "Queued", "QueuedPosition", "CancelQueued", "EditQueued",
             "MoveQueuedUp", "MoveQueuedDown", "CancelledQueued", "QueueDepth");
 
+    /** Keys the cancel path reads: the terminal status, the confirm dialog, and its title. */
+    private static final List<String> CANCEL_KEYS = List.of(
+            "Cancelled", "ConfirmDropQueue", "CancelConfirmTitle");
+
+    @Test
+    void cancelKeysExistInEveryLocale() {
+        ResourceBundle base = ResourceBundle.getBundle(Intent.class.getName(), Locale.ROOT);
+        for (String key : CANCEL_KEYS) {
+            assertTrue(base.containsKey(key), "base Intent bundle is missing key: " + key);
+        }
+        for (Locale locale : QUEUE_LOCALES) {
+            ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), locale);
+            for (String key : CANCEL_KEYS) {
+                assertTrue(bundle.containsKey(key),
+                        locale + " Intent bundle is missing key: " + key);
+                assertFalse(bundle.getString(key).isBlank(),
+                        locale + " Intent bundle has a blank value for key: " + key);
+            }
+        }
+    }
+
     @Test
     void queueKeysExistInEveryLocale() {
         ResourceBundle base = ResourceBundle.getBundle(Intent.class.getName(), Locale.ROOT);

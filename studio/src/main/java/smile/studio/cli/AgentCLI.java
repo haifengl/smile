@@ -74,6 +74,12 @@ public class AgentCLI extends JPanel {
     private String reasoningEffort = LLM.DEFAULT_REASONING_EFFORT;
     /** The intent whose turn is running, or null when idle. Set only by onStarted. */
     private Intent activeIntent;
+    /** The queue id of the running turn, or null when idle. Used to mark a cancelled turn. */
+    private String activeTurnId;
+    /** The id of the running turn the user asked to cancel, or null when no cancel is pending. */
+    private String cancelledTurnId;
+    /** Guards the cancel handler so a second click cannot stack a confirm dialog. */
+    private boolean cancelling;
     /**
      * Waiting intents keyed by the session queue id assigned on accept. A queued
      * intent is not the active intent, so a running turn's output never leaks into it.
@@ -232,10 +238,16 @@ public class AgentCLI extends JPanel {
                     }
                     if (activeIntent != null) {
                         activeIntent.setProgress(false);
-                        if (outputTokens > 0) {
+                        // A turn the user cancelled ends in a distinct terminal state rather
+                        // than reporting token counts it never finished producing.
+                        if (activeTurnId != null && activeTurnId.equals(cancelledTurnId)) {
+                            activeIntent.setStatus(Intent.queuedMessage("Cancelled"));
+                        } else if (outputTokens > 0) {
                             activeIntent.setStatus(outputTokens + " output tokens");
                         }
                     }
+                    activeTurnId = null;
+                    cancelledTurnId = null;
                     boolean alreadyCompacted = "true".equals(agent.conversation().params().getProperty(LLM.COMPACTED));
                     agent.conversation().params().remove(LLM.COMPACTED);
                     if (continueAfterCompact) {
@@ -324,6 +336,7 @@ public class AgentCLI extends JPanel {
                 Intent intent = queuedIntents.remove(id);
                 if (intent != null) {
                     activeIntent = intent;
+                    activeTurnId = id;
                 }
                 if (activeIntent != null) {
                     activeIntent.clearQueued();
@@ -1212,8 +1225,10 @@ public class AgentCLI extends JPanel {
         // Do NOT set activeIntent here. A submitted turn is queued, not running; only
         // the STARTED queue event promotes it. Setting it now would let a running turn's
         // output stream into this newly queued intent.
-        agent.conversation().params().setProperty(LLM.INTERRUPTED, "false");
-        intent.setStopAction(() -> agent.conversation().params().setProperty(LLM.INTERRUPTED, "true"));
+        intent.setStopAction(() -> {
+            cancelTurn();
+            return null;
+        });
 
         var result = agent.session().accept(
                 AgentRequest.fromUser(agent.session().callName(), prompt),
@@ -1224,5 +1239,50 @@ public class AgentCLI extends JPanel {
             // intent instead of opening a second one.
             queuedIntents.put(result.id(), intent);
         }
+    }
+
+    /**
+     * Cancels the running turn, and asks whether to drop the requests still waiting
+     * behind it. The interrupt flag makes the runtime abort the in-flight stream and
+     * stop running subagents; dropping the queue is a separate, destructive choice the
+     * user confirms.
+     */
+    private void cancelTurn() {
+        if (cancelling) {
+            return;
+        }
+        cancelling = true;
+        try {
+            String turnId = activeTurnId;
+            agent.conversation().params().setProperty(LLM.INTERRUPTED, "true");
+            if (turnId != null) {
+                cancelledTurnId = turnId;
+            }
+            boolean drop = false;
+            if (!agent.session().queued().isEmpty()) {
+                drop = openConfirm(bundle.getString("CancelConfirmTitle"),
+                        Intent.queuedMessage("ConfirmDropQueue", agent.session().queued().size()));
+            }
+            if (drop) {
+                for (QueuedRequest waiting : List.copyOf(agent.session().queued())) {
+                    agent.session().cancel(waiting.id());
+                }
+            }
+        } finally {
+            cancelling = false;
+        }
+    }
+
+    /** Shows a modal Yes/No dialog and returns true when the user chose Yes. */
+    private boolean openConfirm(String title, String message) {
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        if (owner == null || !owner.isDisplayable()) {
+            // No visible window (headless or a detached tab). Default to the safe,
+            // non-destructive choice: keep the queued work.
+            return false;
+        }
+        int choice = JOptionPane.showConfirmDialog(owner, message, title,
+                JOptionPane.YES_NO_OPTION, JOptionPane.WARNING_MESSAGE);
+        return choice == JOptionPane.YES_OPTION;
     }
 }
