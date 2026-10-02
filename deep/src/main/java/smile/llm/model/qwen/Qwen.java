@@ -1864,6 +1864,13 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         }
 
         void invalidate() {
+            invalidate("unspecified");
+        }
+
+        void invalidate(String reason) {
+            if (valid) {
+                logger.info("MTP history invalidated (request falls back to plain decode): {}", reason);
+            }
             valid = false;
             closePending();
         }
@@ -2051,7 +2058,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             st = new MtpHistory();
             MtpHistory old = mtpHistory.put(requestId, st);
             if (old != null) {
-                old.invalidate();
+                old.invalidate("replaced by a new prefill of the same request id");
             }
         } else {
             st = mtpHistory.get(requestId);
@@ -2064,7 +2071,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             int newRows = to - from;
             if (st.filled + oldRows != from || models[0].windowHidden() == null
                     || !models[0].mtp().kvCachePool().isBound(requestId)) {
-                st.invalidate();
+                st.invalidate("prefill chunk start does not match filled+pending, or no window hidden, or MTP KV not bound");
                 return;
             }
             int total = oldRows + newRows;
@@ -2105,7 +2112,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
             st.filled += process;
         } catch (RuntimeException e) {
-            st.invalidate();
+            st.invalidate("prefill absorb threw");
             throw e;
         }
     }
@@ -2124,7 +2131,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         int rows = st.pendingRows();
         if (st.filled + rows != lastPos || st.priorTokens.length != rows - 1
                 || !models[0].mtp().kvCachePool().isBound(requestId)) {
-            st.invalidate();
+            st.invalidate("draft precondition failed: filled+pending != lastPos or priorTokens/KV-bind mismatch");
             return null;
         }
         int[] tokens0 = Arrays.copyOf(st.priorTokens, rows);
@@ -2153,7 +2160,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 closeAll(logits);
             }
         } catch (RuntimeException e) {
-            st.invalidate();
+            st.invalidate("draft absorb threw");
             throw e;
         } finally {
             for (QwenModel m : models) {
@@ -3158,7 +3165,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 hist.setPending(rows, Arrays.copyOf(drafts, r));
             } else {
                 closeAll(rows);
-                hist.invalidate();
+                hist.invalidate("no window hidden captured during verify");
             }
         }
         int writtenEnd = lastPos + n + 1;
@@ -3645,6 +3652,70 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                     eager[r] = futures.get(r).get();
                 }
             }
+            // Second reference: the exact captured code run eagerly (same kernels, no graph).
+            // Restore the pre-round DeltaNet state first (the generic reference above advanced it).
+            for (QwenModel m : models) {
+                DeltaNetStatePool pool = m.deltaNetStatePool();
+                if (pool != null && pool.boundBatch() > 0) {
+                    pool.restoreCheckpoint(0);
+                }
+            }
+            Tensor[] same = new Tensor[models.length];
+            // Same DeltaNet mode as the graph run (fused checkpoint-emitting window op), so the
+            // two computations are op-for-op identical. It rewrites checkpoint slots 1..S with
+            // values that must equal the graph run's own (diagnostic only).
+            if (MTP_VERIFY_CHECKPOINT_REPLAY) {
+                setVerifyWindowActive(true);
+            }
+            try {
+                if (models.length == 1) {
+                    same[0] = models[0].forwardVerifyGraphCodeEager(shards[0], startPos);
+                } else {
+                    List<Future<Tensor>> futures = new ArrayList<>(models.length);
+                    for (int r = 0; r < models.length; r++) {
+                        final int rank = r;
+                        futures.add(tpExecutor.submit(() -> {
+                            ParallelState.setCurrent(tpGroup.state(rank));
+                            try (var guard = Tensor.noGradGuard()) {
+                                return models[rank].forwardVerifyGraphCodeEager(shards[rank], startPos);
+                            } finally {
+                                ParallelState.clearCurrent();
+                            }
+                        }));
+                    }
+                    for (int r = 0; r < models.length; r++) {
+                        same[r] = futures.get(r).get();
+                    }
+                }
+                float[][] gRows = logitsRowsToFloat(graphLogits);
+                float[][] sRows = logitsRowsToFloat(same[0]);
+                float sameMax = 0f;
+                int sameMismatch = 0;
+                for (int i = 0; i < Math.min(gRows.length, sRows.length); i++) {
+                    int ga = 0;
+                    int sa = 0;
+                    for (int j = 0; j < Math.min(gRows[i].length, sRows[i].length); j++) {
+                        if (gRows[i][j] > gRows[i][ga]) {
+                            ga = j;
+                        }
+                        if (sRows[i][j] > sRows[i][sa]) {
+                            sa = j;
+                        }
+                        sameMax = Math.max(sameMax, Math.abs(gRows[i][j] - sRows[i][j]));
+                    }
+                    if (ga != sa) {
+                        sameMismatch++;
+                    }
+                }
+                logger.info("verify-graph debug diff (same-kernels eager): requestId={} startPos={} "
+                        + "maxAbs={} argmaxMismatch={}/{}", requestId, startPos, sameMax,
+                        sameMismatch, Math.min(gRows.length, sRows.length));
+            } finally {
+                if (MTP_VERIFY_CHECKPOINT_REPLAY) {
+                    setVerifyWindowActive(false);
+                }
+                closeAll(same);
+            }
             float[][] graphRows = logitsRowsToFloat(graphLogits);
             float[][] eagerRows = logitsRowsToFloat(eager[0]);
             float maxAbs = 0f;
@@ -3742,11 +3813,10 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             KvCachePool pool = m.kvCachePool();
             if (pool != null) {
                 pool.activateStep(requestId);
-                boolean bumped = pool.truncateTo(sealedLen, writtenEnd);
+                // A CSR rebuild no longer invalidates the verify graph: it reads its own
+                // fixed-address CSR (KvCachePool.verifyGraphMetadata).
+                pool.truncateTo(sealedLen, writtenEnd);
                 m.invalidateDecodeCudaGraphs();
-                if (!bumped) {
-                    m.invalidateVerifyCudaGraphs();
-                }
             }
         }
     }
@@ -3755,11 +3825,10 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         for (QwenModel m : models) {
             KvCachePool pool = m.kvCachePool();
             if (pool != null) {
-                boolean bumped = pool.truncateTo(sealedLen, writtenEnd);
+                // A CSR rebuild no longer invalidates the verify graph: it reads its own
+                // fixed-address CSR (KvCachePool.verifyGraphMetadata).
+                pool.truncateTo(sealedLen, writtenEnd);
                 m.invalidateDecodeCudaGraphs();
-                if (!bumped) {
-                    m.invalidateVerifyCudaGraphs();
-                }
             }
         }
     }
@@ -4255,7 +4324,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             for (int id : requestIds) {
                 MtpHistory st = mtpHistory.get(id);
                 if (st != null) {
-                    st.invalidate();
+                    st.invalidate("plain decodeStep gap");
                 }
             }
         }

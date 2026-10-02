@@ -194,6 +194,11 @@ public class KvCachePool implements AutoCloseable {
      * contaminate the decode graph path.
      */
     private boolean verifyGraphBuffers;
+    /** Fixed-address CSR for the verify CUDA graph (rewritten in place each round). */
+    private FlashInferKvMetadata verifyGraphMeta;
+    private int verifyGraphMetaBatch = -1;
+    private int verifyGraphMetaCapacityPages = -1;
+    private boolean verifyGraphMetaRealloc;
     /**
      * True only while an MTP verify-window forward runs: lets small multi-token
      * attention calls use FlashInfer's paged prefill kernel eagerly. Ordinary
@@ -882,8 +887,8 @@ public class KvCachePool implements AutoCloseable {
         if (windowLen < 1) {
             throw new IllegalArgumentException("windowLen must be >= 1");
         }
-        sharedFlashInferMetadata(cacheLen);
         int batch = startPositions.length;
+        prepareVerifyGraphMetadata(cacheLen, batch);
         ensureVerifyKvIndexBuf(batch, windowLen);
         long[] flat = new long[batch * windowLen];
         for (int b = 0; b < batch; b++) {
@@ -902,7 +907,107 @@ public class KvCachePool implements AutoCloseable {
                 smile.torch.Native.copy_(verifyKvIndexBuf, cpu);
             }
         }
-        bumpUniformFlashInferMetadata(cacheLen, batch);
+    }
+
+    /**
+     * Rewrites the verify CUDA graph's own CSR page table in place for a uniform
+     * {@code cacheLen}. The tensors keep a fixed address for as long as the batch
+     * size and the request capacity are unchanged, so a single captured graph
+     * stays valid across every page-count change (the previous per-step CSR was
+     * rebuilt at a new address whenever the page count grew, forcing a new
+     * warmup + capture roughly every {@code pageSize} tokens).
+     *
+     * @param cacheLen inclusive cache length for every row.
+     * @param batch    active batch size.
+     */
+    private void prepareVerifyGraphMetadata(int cacheLen, int batch) {
+        ensureBound();
+        if (requestSlots.length != batch) {
+            throw new IllegalStateException("verify graph batch " + batch
+                    + " != bound batch " + requestSlots.length);
+        }
+        int capacityPages = Integer.MAX_VALUE;
+        for (int b = 0; b < batch; b++) {
+            if (cacheLen > requestSlots[b].length) {
+                throw new IllegalArgumentException("KV FlashInfer length out of range: " + cacheLen);
+            }
+            capacityPages = Math.min(capacityPages, (requestSlots[b].length + pageSize - 1) / pageSize);
+        }
+        int nPages = (cacheLen + pageSize - 1) / pageSize;
+        if (verifyGraphMeta == null || verifyGraphMetaBatch != batch
+                || verifyGraphMetaCapacityPages < capacityPages) {
+            if (verifyGraphMeta != null) {
+                verifyGraphMeta.close();
+            }
+            var opts = new Tensor.Options().device(device).dtype(ScalarType.Int32);
+            Tensor indptr = Tensor.zeros(opts, batch + 1);
+            Tensor indices = Tensor.zeros(opts, (long) batch * capacityPages);
+            Tensor last = Tensor.zeros(opts, batch);
+            indptr.detachFromScopes();
+            indices.detachFromScopes();
+            last.detachFromScopes();
+            verifyGraphMeta = new FlashInferKvMetadata(indptr, indices, last, pageSize);
+            verifyGraphMetaBatch = batch;
+            verifyGraphMetaCapacityPages = capacityPages;
+            verifyGraphMetaRealloc = true;
+        }
+        int rem = cacheLen % pageSize;
+        int lastLen = rem == 0 ? pageSize : rem;
+        int[] indptrArr = new int[batch + 1];
+        int[] lastArr = new int[batch];
+        int[] flat = new int[batch * nPages];
+        int cursor = 0;
+        for (int b = 0; b < batch; b++) {
+            indptrArr[b] = b * nPages;
+            lastArr[b] = lastLen;
+            long[] slots = requestSlots[b];
+            for (int p = 0; p < nPages; p++) {
+                flat[cursor++] = (int) (slots[p * pageSize] / pageSize);
+            }
+        }
+        indptrArr[batch] = batch * nPages;
+        copyIntsInto(verifyGraphMeta.pagedKvIndptr(), indptrArr);
+        copyIntsInto(verifyGraphMeta.pagedKvLastPageLen(), lastArr);
+        copyIntsInto(verifyGraphMeta.pagedKvIndices(), flat);
+    }
+
+    /** Copies {@code values} into the leading elements of an int32 device (or CPU) tensor. */
+    private void copyIntsInto(Tensor dst, int[] values) {
+        if (values.length == 0) {
+            return;
+        }
+        try (Tensor cpu = Tensor.of(values);
+             Tensor src = device.isCUDA() ? cpu.to(device) : cpu.copy();
+             var span = Index.slice(0, values.length);
+             Tensor view = dst.get(span)) {
+            smile.torch.Native.copy_(view, src);
+        }
+    }
+
+    /**
+     * Returns the verify CUDA graph's fixed-address CSR (valid after
+     * {@link #prepareVerifyGraphStep(int, int[], int)}); do not close.
+     *
+     * @return persistent verify-graph CSR metadata.
+     */
+    public FlashInferKvMetadata verifyGraphMetadata() {
+        if (verifyGraphMeta == null) {
+            throw new IllegalStateException("verify graph metadata not prepared");
+        }
+        return verifyGraphMeta;
+    }
+
+    /**
+     * Returns and clears whether {@link #verifyGraphMetadata()} was reallocated (new
+     * addresses) since the last call; a captured graph referencing the old
+     * tensors must then be discarded.
+     *
+     * @return {@code true} when the persistent CSR tensors were replaced.
+     */
+    public boolean consumeVerifyGraphMetaRealloc() {
+        boolean r = verifyGraphMetaRealloc;
+        verifyGraphMetaRealloc = false;
+        return r;
     }
 
     /**
@@ -1617,7 +1722,13 @@ public class KvCachePool implements AutoCloseable {
     public void clearStepFlashInferMetadata() {
         if (flashInferWorkspace != null) {
             flashInferWorkspace.invalidateRuntimeCache();
-            flashInferWorkspace.invalidateVerifyRuntimeCache();
+            // The verify plan is content-independent (split-KV disabled) and the graph reads its own
+            // fixed-address CSR when the verify CUDA graph is on, so clearing it here would only
+            // break the warmup -> capture handshake ("plan not warmed"). Without the graph the plan
+            // may split on KV length and be matched by tensor address, which a rebuilt CSR can reuse.
+            if (!smile.llm.engine.VerifyCudaGraph.enabled()) {
+                flashInferWorkspace.invalidateVerifyRuntimeCache();
+            }
         }
         if (stepFlashInferMeta != null) {
             stepFlashInferMeta.close();
