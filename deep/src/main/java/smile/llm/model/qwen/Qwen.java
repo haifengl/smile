@@ -3097,7 +3097,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             if (pool == null) {
                 continue;
             }
-            long need = pool.speculativeCheckpointGrowthBytes(numDrafts + 2, rows);
+            long need = pool.speculativeCheckpointGrowthBytes(1, numDrafts, rows);
             if (need == 0L) {
                 continue;
             }
@@ -3114,7 +3114,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                                     + "checkpoints ({} rows, {} slots) but only {} MiB is free; using plain "
                                     + "batched decode for such cohorts. Lower smile.chat.mem-fraction-static "
                                     + "or smile.chat.speculative-max-concurrency.",
-                            need >> 20, rows, numDrafts + 2, free >> 20);
+                            need >> 20, rows, numDrafts, free >> 20);
                 }
                 return false;
             }
@@ -3664,7 +3664,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         long tBookkeeping = System.nanoTime();
         activatePools(requestIds);
-        saveDeltaNetCheckpointSlots(n + 2);
+        ensureLeanDeltaNetCheckpoints(n);
         speculativeBookkeepingNanos.addAndGet(System.nanoTime() - tBookkeeping);
 
         int[] startPositions = lastPositions.clone();
@@ -3756,7 +3756,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             if (KvCachePool.zeroRejectedKv()) {
                 truncateKv(requestIds[i], sealedLen, writtenEnd);
             }
-            restoreSlots[i] = r + 1;
+            // A fully accepted row's working state already is the end-of-window state, and that
+            // slot is not stored (lean checkpoints): -1 = leave the row as it is.
+            restoreSlots[i] = r < n ? r + 1 : -1;
             anchorPositions[i] = r;
             if (r < n) {
                 anyPartial = true;
@@ -3990,9 +3992,33 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      * @param numDrafts number of draft tokens in this round ({@code n}).
      */
     private void saveDeltaNetCheckpoint(int numDrafts) {
-        int base = MTP_VERIFY_CHECKPOINT_REPLAY ? numDrafts + 2 : 1;
         boolean debugDiff = VerifyCudaGraph.enabled() && VerifyCudaGraph.debugDiff();
+        if (MTP_VERIFY_CHECKPOINT_REPLAY && !debugDiff) {
+            ensureLeanDeltaNetCheckpoints(numDrafts);
+            return;
+        }
+        int base = MTP_VERIFY_CHECKPOINT_REPLAY ? numDrafts + 2 : 1;
         saveDeltaNetCheckpointSlots(debugDiff ? base + 1 : base);
+    }
+
+    /**
+     * Checkpoint-replay storage for a window of {@code numDrafts + 1} positions: only slots
+     * {@code 1..numDrafts} are ever restored from (a partial accept at position {@code r < numDrafts}
+     * restores slot {@code r+1}; a full accept keeps the working state, which already is the
+     * end-of-window state; the pre-window slot 0 is never read), so only those are allocated
+     * and no pre-window copy is made. Saves {@code 2/(numDrafts+2)} of the checkpoint memory and
+     * one copy per layer per round.
+     */
+    private void ensureLeanDeltaNetCheckpoints(int numDrafts) {
+        for (QwenModel m : models) {
+            DeltaNetStatePool pool = m.deltaNetStatePool();
+            if (pool != null && pool.boundBatch() > 0
+                    && pool.ensureSpeculativeCheckpointRange(1, numDrafts)) {
+                // Same hazard as saveDeltaNetCheckpointSlots: a captured verify graph references the
+                // freed checkpoint tensors.
+                m.invalidateVerifyCudaGraphs();
+            }
+        }
     }
 
     private void saveDeltaNetCheckpointSlots(int slots) {

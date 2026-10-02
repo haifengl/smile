@@ -402,8 +402,13 @@ public class GatedDeltaNet {
                 Tensor initState = statePool != null ? statePool.activeRecurrent(linearLayerId) : null;
                 smile.util.Tuple2<Tensor, Tensor> result;
                 if (batchedVerify) {
-                    Tensor[] ckpts = new Tensor[seqLen];
-                    for (int t = 0; t < seqLen; t++) {
+                    int stored = 0;
+                    while (stored < seqLen
+                            && statePool.speculativeRecurrentSlot(stored + 1, linearLayerId) != null) {
+                        stored++;
+                    }
+                    Tensor[] ckpts = new Tensor[stored];
+                    for (int t = 0; t < stored; t++) {
                         ckpts[t] = statePool.speculativeRecurrentSlot(t + 1, linearLayerId);
                     }
                     Tensor core0 = GatedDeltaRule.recurrentGatedDeltaRuleCkpt(
@@ -484,9 +489,18 @@ public class GatedDeltaNet {
         if (recState == null) {
             return null;
         }
-        Tensor[] convCk = new Tensor[seqLen];
-        Tensor[] recCk = new Tensor[seqLen];
-        for (int t = 0; t < seqLen; t++) {
+        // One checkpoint per stored slot starting at slot 1 (seqLen-1 of them in a lean allocation,
+        // seqLen when the final slot is stored too).
+        int stored = 0;
+        while (stored < seqLen && statePool.speculativeRecurrentSlot(stored + 1, linearLayerId) != null) {
+            stored++;
+        }
+        if (stored < seqLen - 1) {
+            return null;
+        }
+        Tensor[] convCk = new Tensor[stored];
+        Tensor[] recCk = new Tensor[stored];
+        for (int t = 0; t < stored; t++) {
             convCk[t] = statePool.speculativeConvSlot(t + 1, linearLayerId);
             recCk[t] = statePool.speculativeRecurrentSlot(t + 1, linearLayerId);
         }
@@ -499,11 +513,13 @@ public class GatedDeltaNet {
     /** Whether the whole-window checkpointing fast path applies to this verify forward. */
     private boolean canBatchVerifyWindow(Tensor x, int batch, int seqLen) {
         if (!x.device().isCUDA() || !smile.torch.Native.hasRecurrentGatedDeltaRuleCkpt()
-                || seqLen > 8 || statePool == null
-                || !statePool.hasSpeculativeCheckpoints(seqLen + 1, batch)) {
+                || seqLen > 8 || seqLen < 2 || statePool == null
+                || !statePool.hasSpeculativeRange(1, seqLen - 1, batch)) {
             return false;
         }
-        for (int t = 0; t < seqLen; t++) {
+        // Slots 1..seqLen-1 are the ones a partial accept restores from; the last position's state
+        // is the working state itself, so its checkpoint (slot seqLen) is optional.
+        for (int t = 0; t < seqLen - 1; t++) {
             Tensor ck = statePool.speculativeRecurrentSlot(t + 1, linearLayerId);
             if (ck == null || ck.dtype() != smile.deep.tensor.ScalarType.Float) {
                 return false;
@@ -535,6 +551,9 @@ public class GatedDeltaNet {
         try (var rows = Index.slice(0, batch)) {
             for (int t = 0; t < seqLen; t++) {
                 Tensor full = statePool.speculativeConvSlot(t + 1, linearLayerId);
+                if (full == null) {
+                    continue; // lean allocation: the last position's slot is not stored
+                }
                 try (Tensor dst = full.get(rows)) {
                     int consumed = t + 1;
                     int fromMixed = Math.min(consumed, keep);
