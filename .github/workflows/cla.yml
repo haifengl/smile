@@ -31,6 +31,6 @@ jobs:
           path-to-document: 'https://github.com/${{ github.repository }}/blob/master/CLA.md'
           # Branch where the signatures JSON file will be stored
           branch: 'master'
-          allowlist: haifengl,bot*,dependabot[bot],*[bot]
+          allowlist: haifengl,kklioss,bot*,dependabot[bot],*[bot]
           # Do not lock PRs after merge so discussions can continue
           lock-pullrequest-aftermerge: false
