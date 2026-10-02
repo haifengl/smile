@@ -40,7 +40,11 @@ import smile.torch.Native;
  * @author Haifeng Li
  */
 public final class VerifyCudaGraph {
-    private static final boolean ENABLED = "1".equals(System.getenv("SMILE_VERIFY_CUDA_GRAPH"));
+    /**
+     * Default on (bit-exact with eager over 1300+ real-traffic rounds and 2.8x plain-decode
+     * throughput, 2026-10-02); {@code SMILE_VERIFY_CUDA_GRAPH=0} disables.
+     */
+    private static final boolean ENABLED = !"0".equals(System.getenv("SMILE_VERIFY_CUDA_GRAPH"));
     private static final boolean AVAILABLE = Native.cudaGraphAvailable();
     /**
      * Diagnostic only (never enabled by default, doubles verify cost every
