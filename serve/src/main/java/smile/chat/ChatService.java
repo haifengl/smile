@@ -364,12 +364,23 @@ public class ChatService implements OpenAiModelContributor {
     }
 
     /**
+     * Rows of DeltaNet checkpoint memory to reserve at load for batched MTP speculation (0 when off).
+     */
+    static int speculativeRows(ChatServiceConfig config) {
+        if (!config.speculative()) {
+            return 0;
+        }
+        int limit = config.speculativeMaxConcurrency();
+        return limit > 0 ? Math.min(limit, config.maxBatchSize()) : config.maxBatchSize();
+    }
+
+    /**
      * Applies MTP speculative decoding knobs to Qwen when present.
      */
     static void applySpeculative(LanguageModel model, boolean enabled, int numTokens) {
         if (model instanceof Qwen qwen) {
-            qwen.setSpeculativeEnabled(enabled);
             qwen.setNumSpeculativeTokens(numTokens);
+            qwen.setSpeculativeEnabled(enabled);
             if (enabled && qwen.isSpeculativeEnabled()) {
                 logger.infof("MTP speculative decoding enabled (drafts=%d)",
                         qwen.numSpeculativeTokens());
@@ -730,7 +741,8 @@ public class ChatService implements OpenAiModelContributor {
                 smile.llm.quant.QuantBackendOverride.set(config.quantization());
                 return Qwen.build(localPath.toString(),
                         config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
-                        memFraction, kvDtype, pageSize, parallel, config.modelLoaderThreads());
+                        memFraction, kvDtype, pageSize, parallel, config.modelLoaderThreads(),
+                        speculativeRows(config), config.speculativeTokens());
             } finally {
                 smile.llm.quant.QuantBackendOverride.clear();
             }
@@ -877,7 +889,7 @@ public class ChatService implements OpenAiModelContributor {
                 return Qwen.build(checkpointDir,
                         config.maxBatchSize(), config.maxSeqLen(), parallel.devices()[0],
                         memFractionStatic, kvCacheDtype, pageSize, parallel,
-                        config.modelLoaderThreads());
+                        config.modelLoaderThreads(), speculativeRows(config), config.speculativeTokens());
             } finally {
                 smile.llm.quant.QuantBackendOverride.clear();
             }

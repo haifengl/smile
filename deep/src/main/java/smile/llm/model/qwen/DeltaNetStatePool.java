@@ -622,10 +622,24 @@ public class DeltaNetStatePool implements AutoCloseable {
      * @return {@code true} if this call reallocated (see {@link #ensureSpeculativeCheckpoints}).
      */
     public boolean ensureSpeculativeCheckpointRange(int firstSlot, int lastSlot) {
+        return ensureSpeculativeCheckpointRange(firstSlot, lastSlot, Math.max(1, boundBatch));
+    }
+
+    /**
+     * Allocates checkpoint slots {@code firstSlot..lastSlot} for an explicit number of rows, so the
+     * memory can be reserved at startup (before the KV pool is sized) instead of being grown on demand
+     * once the GPU is nearly full.
+     *
+     * @param firstSlot first slot to store.
+     * @param lastSlot  last slot to store.
+     * @param rows      batch rows to provision.
+     * @return {@code true} if this call reallocated.
+     */
+    public boolean ensureSpeculativeCheckpointRange(int firstSlot, int lastSlot, int rows) {
         if (firstSlot < 0 || lastSlot < firstSlot) {
             throw new IllegalArgumentException("invalid checkpoint slot range " + firstSlot + ".." + lastSlot);
         }
-        int rows = Math.max(1, boundBatch);
+        rows = Math.max(1, rows);
         if (speculativeRecurrent != null && ckptFirstSlot <= firstSlot && ckptLastSlot >= lastSlot
                 && speculativeBatchCapacity >= rows) {
             return false;

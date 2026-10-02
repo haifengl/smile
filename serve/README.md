@@ -191,13 +191,15 @@ diverges from the same prompts run alone at the same places a speculative batch 
 
 **Memory.** Each speculating request needs DeltaNet checkpoint buffers: about 0.04 GB per GPU
 per draft slot for a 27B hybrid model, i.e. ~0.11 GB at the default depth 3 (~0.075 GB at
-depth 2), allocated on demand for the largest cohort seen. Only the slots a partial accept can
-restore from are stored (positions `1..depth`; the pre-window copy and the final position are
-not needed), which is what lets all 48 requests speculate within the default
-`mem-fraction-static=0.85`. If a larger cohort or a smaller GPU does not leave room, the engine
-logs one warning and serves that cohort with plain batched decode instead of failing requests
-(within ~12% of plain decode); lower `smile.chat.mem-fraction-static` or bound the cohort with
-`smile.chat.speculative-max-concurrency` in that case.
+depth 2), reserved at load for `min(max-batch-size, speculative-max-concurrency)` rows, before the KV pool is
+sized, so the KV budget already excludes it (48 rows at depth 3 = ~5.3 GB per GPU on a 27B hybrid
+model; it shrinks the KV pool, e.g. from ~734k to ~455k token slots on 40 GB GPUs at
+`mem-fraction-static=0.85`). Only the slots a partial accept can restore from are stored (positions
+`1..depth`; the pre-window copy and the final position are not needed). A cohort larger than the
+reservation (only possible after a depth change) is still checked at run time and, if it does not
+fit, the engine logs one warning and serves it with plain batched decode instead of failing
+requests. To keep more KV, lower `smile.chat.speculative-max-concurrency` (smaller reservation) or
+set `smile.chat.speculative=false`.
 
 Speculation is on by default for Qwen3.5/3.8 checkpoints with MTP weights; budget the memory
 above on small GPUs or very large batches, or set `smile.chat.speculative=false`.
