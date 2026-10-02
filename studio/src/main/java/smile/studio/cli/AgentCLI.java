@@ -926,10 +926,8 @@ public class AgentCLI extends JPanel {
 
         Intent current = null;
         StringBuilder body = new StringBuilder();
-        for (Message message : agent.conversation().messages()) {
-            if (!(message.content() instanceof String text) || text.isBlank()) {
-                continue;
-            }
+        for (Message message : transcript(agent.conversation().messages())) {
+            String text = (String) message.content();
             if (message.role() == Role.user) {
                 flushHistory(current, body);
                 current = historyIntent(text);
@@ -959,6 +957,28 @@ public class AgentCLI extends JPanel {
                 bar.setValue(bar.getMaximum());
             }
         });
+    }
+
+    /**
+     * Selects the messages worth showing in the resumed transcript: the user's
+     * prompts and the assistant's text. Tool calls, including their full output,
+     * system messages, and error markers are dropped. They are the bulk of a long
+     * session and add little to a quick recap, while the agent still has the
+     * complete history in its conversation. Kept package-private and pure so the
+     * selection and ordering can be tested without a live agent.
+     * @param messages the full conversation history, in order.
+     * @return the user and assistant text messages, in order.
+     */
+    static List<Message> transcript(List<Message> messages) {
+        List<Message> shown = new ArrayList<>();
+        for (Message message : messages) {
+            if (message.role() == Role.user || message.role() == Role.assistant) {
+                if (message.content() instanceof String text && !text.isBlank()) {
+                    shown.add(message);
+                }
+            }
+        }
+        return shown;
     }
 
     private Intent historyIntent(String prompt) {
