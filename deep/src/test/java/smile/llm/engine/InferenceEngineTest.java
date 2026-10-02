@@ -414,7 +414,14 @@ public class InferenceEngineTest {
     static final class SpecStub extends StepStub {
         final java.util.Set<Integer> speculated = java.util.concurrent.ConcurrentHashMap.newKeySet();
         final java.util.Set<Integer> plainDecoded = java.util.concurrent.ConcurrentHashMap.newKeySet();
-        final java.util.Set<Integer> bothDecodedAndSpeculatedInOneStep = java.util.concurrent.ConcurrentHashMap.newKeySet();
+        final java.util.Map<Integer, Integer> firstPromptToken = new java.util.concurrent.ConcurrentHashMap<>();
+
+        @Override
+        public int bind(int[] prompt, int totalCapacity) {
+            int id = super.bind(prompt, totalCapacity);
+            firstPromptToken.put(id, prompt[0]);
+            return id;
+        }
 
         @Override
         public int[][] speculateStep(int[] requestIds, int[] lastTokens, int[] positions,
@@ -457,6 +464,70 @@ public class InferenceEngineTest {
             assertEquals(java.util.Set.of(1, 2), stub.speculated, "speculated=" + stub.speculated);
             assertTrue(stub.plainDecoded.containsAll(java.util.Set.of(3, 4)),
                     "non-slot requests must be plain-decoded: " + stub.plainDecoded);
+        }
+    }
+
+    @Test
+    public void testGivenSeededSampledRequestWhenSpeculativeThenItDecodesPlainWhileGreedyOnesSpeculate()
+            throws Exception {
+        SpecStub stub = new SpecStub();
+        try (var engine = new InferenceEngine(stub, 4, 4, 64, 5_000, 300L)) {
+            engine.setMaxSpeculativeConcurrency(4);
+            // The seeded sampled request is the one whose prompt starts with token 7.
+            var h1 = engine.submit(GenerationRequest.ofTokens(
+                    new int[]{1, 2, 3}, 12, 0.0, 0.9, false, 0, null, null, true, 2));
+            var h2 = engine.submit(GenerationRequest.ofTokens(
+                    new int[]{7, 2, 3}, 12, 0.7, 0.9, false, 1234, null, null, true, 2));
+            var h3 = engine.submit(GenerationRequest.ofTokens(
+                    new int[]{4, 2, 3}, 12, 0.0, 0.9, false, 0, null, null, true, 2));
+            h1.future().get(10, TimeUnit.SECONDS);
+            h2.future().get(10, TimeUnit.SECONDS);
+            h3.future().get(10, TimeUnit.SECONDS);
+            assertEquals(2, stub.speculated.size(), "speculated=" + stub.speculated);
+            for (int id : stub.speculated) {
+                assertNotEquals(7, stub.firstPromptToken.get(id),
+                        "the seeded sampled request must never speculate");
+            }
+            for (int id : stub.firstPromptToken.keySet()) {
+                if (stub.firstPromptToken.get(id) == 7) {
+                    assertTrue(stub.plainDecoded.contains(id), "seeded request must plain-decode");
+                }
+            }
+        }
+    }
+
+    @Test
+    public void testGivenOneRequestWhoseDeliveryFailsWhenSpeculativeBatchThenOthersStillComplete()
+            throws Exception {
+        // A disconnected client closes its response publisher, so delivering its next token throws
+        // ("Closed"). That must end only that request, not every request in the speculative batch.
+        SpecStub stub = new SpecStub();
+        try (var engine = new InferenceEngine(stub, 4, 4, 64, 5_000, 300L)) {
+            engine.setMaxSpeculativeConcurrency(4);
+            // Healthy through prefill (call 1) and the start of speculation, then the client
+            // "disconnects": delivery fails inside a speculative round (call 3 and later).
+            final AtomicInteger delivered = new AtomicInteger();
+            GenerationListener broken = new GenerationListener() {
+                @Override
+                public void onGeneratedTokens(int count) {
+                    if (delivered.incrementAndGet() >= 3) {
+                        throw new IllegalStateException("Closed");
+                    }
+                }
+            };
+            var good1 = engine.submit(GenerationRequest.ofTokens(
+                    new int[]{1, 2, 3}, 20, 0.0, 0.9, false, 0, null, null, true, 2));
+            var bad = engine.submit(GenerationRequest.ofTokens(
+                    new int[]{4, 2, 3}, 20, 0.0, 0.9, false, 0, broken, null, true, 2));
+            var good2 = engine.submit(GenerationRequest.ofTokens(
+                    new int[]{5, 2, 3}, 20, 0.0, 0.9, false, 0, null, null, true, 2));
+            assertNotNull(good1.future().get(10, TimeUnit.SECONDS), "first healthy request must complete");
+            assertNotNull(good2.future().get(10, TimeUnit.SECONDS), "second healthy request must complete");
+            assertFalse(good1.future().isCompletedExceptionally());
+            assertFalse(good2.future().isCompletedExceptionally());
+            assertTrue(bad.future().isCompletedExceptionally()
+                            || bad.future().get(10, TimeUnit.SECONDS) != null,
+                    "the broken request must terminate on its own");
         }
     }
 }
