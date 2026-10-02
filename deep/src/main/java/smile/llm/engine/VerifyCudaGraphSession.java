@@ -45,6 +45,12 @@ public final class VerifyCudaGraphSession implements AutoCloseable {
     private static final Set<Long> CAPTURE_LOGGED = ConcurrentHashMap.newKeySet();
     private static final Set<Long> REPLAY_LOGGED = ConcurrentHashMap.newKeySet();
 
+    /** Diagnostic counters (process-wide): bucket resets, eager warmup steps, captures. */
+    public static final java.util.concurrent.atomic.AtomicInteger RESETS = new java.util.concurrent.atomic.AtomicInteger();
+    public static final java.util.concurrent.atomic.AtomicInteger WARMUPS = new java.util.concurrent.atomic.AtomicInteger();
+    public static final java.util.concurrent.atomic.AtomicInteger CAPTURES = new java.util.concurrent.atomic.AtomicInteger();
+    public static final java.util.concurrent.atomic.AtomicInteger CLOSES = new java.util.concurrent.atomic.AtomicInteger();
+
     private MemorySegment handle;
     private int capturedBatch = -1;
     private int capturedWindowLen = -1;
@@ -117,12 +123,14 @@ public final class VerifyCudaGraphSession implements AutoCloseable {
                         tpRank, batch, windowLen, numPages, total);
             }
             warmupRemaining--;
+            WARMUPS.incrementAndGet();
             return false;
         }
         return true;
     }
 
     private void resetForNewBucket(int batch, int windowLen, int numPages) {
+        RESETS.incrementAndGet();
         ready = false;
         capturing = false;
         capturedBatch = batch;
@@ -141,6 +149,7 @@ public final class VerifyCudaGraphSession implements AutoCloseable {
         if (handle == null || handle.address() == 0) {
             return false;
         }
+        CAPTURES.incrementAndGet();
         Native.cudaGraphCaptureBegin(handle, deviceIndex);
         capturing = true;
         captureBeginNs = System.nanoTime();
@@ -234,6 +243,7 @@ public final class VerifyCudaGraphSession implements AutoCloseable {
 
     @Override
     public void close() {
+        CLOSES.incrementAndGet();
         if (handle != null && handle.address() != 0) {
             Native.cudaGraphDestroy(handle);
             handle = MemorySegment.NULL;

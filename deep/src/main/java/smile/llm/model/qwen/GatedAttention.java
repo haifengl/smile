@@ -340,7 +340,13 @@ public class GatedAttention implements Attention {
             Tensor qT = qRope.transpose(1, 2);
             Tensor attn;
             if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
-                FlashInferKvMetadata meta = cachePool.sharedFlashInferMetadata(cacheLen);
+                // Verify-graph mode reads a fixed-address CSR that is rewritten in place each
+                // round (see KvCachePool.prepareVerifyGraphStep), so one captured graph is valid
+                // for every page count; building the per-step CSR here would also allocate and
+                // H2D-copy inside capture.
+                FlashInferKvMetadata meta = cachePool.verifyGraphBuffers()
+                        ? cachePool.verifyGraphMetadata()
+                        : cachePool.sharedFlashInferMetadata(cacheLen);
                 if (cachePool.verifyGraphBuffers() || eagerVerifyKernel(seqlen)) {
                     // Graph-capturable verify kernel: causal masking is the kernel's
                     // own compile-time MaskMode::kCausal (Stage 1/2 validated

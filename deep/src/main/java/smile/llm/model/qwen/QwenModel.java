@@ -141,6 +141,16 @@ public class QwenModel extends LayerBlock {
      * {@code r} here instead of a second full-window forward.
      */
     Tensor verifyWindowNormalizedBuf;
+    /**
+     * Stable destination for the verify CUDA graph's window-hidden copy. Deliberately separate
+     * from {@link #verifyWindowNormalizedBuf}: ordinary prefill and non-graph verify reallocate
+     * that buffer for every chunk shape, which would leave a captured graph writing into a freed
+     * address (the next round would then read a stale/garbage hidden and the MTP draft quality
+     * collapses without any visible error). Only reallocated on shape change outside capture.
+     */
+    Tensor verifyGraphHiddenBuf;
+    /** Which buffer holds the latest window hidden: the graph's (true) or the generic one (false). */
+    volatile boolean windowHiddenFromGraph;
 
     /**
      * Constructs the module graph on CPU. Call {@link #to(Device)} after weight
@@ -490,47 +500,6 @@ public class QwenModel extends LayerBlock {
     }
 
     /**
-     * Pre-sizes {@link #verifyWindowNormalizedBuf} to {@code [batch,
-     * windowLen, dim]} while it is still safe to reallocate — must be called
-     * strictly before the caller raises {@code kvCachePool.setVerifyGraphBuffers}
-     * for this tick, mirroring {@link #ensureLastPreNormHiddenCapacity}'s own
-     * rationale for the verify graph's other stable buffers.
-     *
-     * <p>Unlike {@link #ensureLastPreNormHiddenCapacity}'s guarded field,
-     * {@link #ensureVerifyWindowNormalizedBuf} has no graph-mode awareness at
-     * all — it unconditionally closes and reallocates on any shape change.
-     * A verify round whose {@code (batch, windowLen)} shape first differs
-     * from whatever shape last wrote this buffer (e.g. switching between the
-     * single-request graph-captured path at {@code batch=1} and the batched
-     * eager path at {@code batch>1} across rounds for the same model
-     * instance — both of which set {@code verifyWindowActive} and so both
-     * write this buffer) would otherwise free/reallocate it right as this
-     * tick's graph capture/warmup window is active: a genuine memory-safety
-     * hazard for anything a captured graph may still reference on replay,
-     * not merely a stale value like the {@code lastPreNormHidden} case.
-     *
-     * @param batch     target row count for this tick.
-     * @param windowLen target verify window length for this tick.
-     */
-    void ensureVerifyWindowNormalizedBufCapacity(int batch, int windowLen) {
-        if (mtp == null || verifyWindowNormalizedBuf == null) {
-            return;
-        }
-        long[] shape = verifyWindowNormalizedBuf.shape();
-        if (shape[0] == batch && shape[1] == windowLen) {
-            return;
-        }
-        long dim = shape[2];
-        Tensor resized = Tensor.zeros(
-                new Tensor.Options().device(verifyWindowNormalizedBuf.device())
-                        .dtype(verifyWindowNormalizedBuf.dtype()).requireGradients(false),
-                batch, windowLen, dim);
-        resized.detachFromScopes();
-        verifyWindowNormalizedBuf.close();
-        verifyWindowNormalizedBuf = resized;
-    }
-
-    /**
      * On a partial MTP accept at window position {@code r} (checkpoint-replay
      * path), restores the MTP anchor from the per-position hidden retained in
      * {@link #verifyWindowNormalizedBuf} instead of a second full-window
@@ -539,10 +508,11 @@ public class QwenModel extends LayerBlock {
      * @param r accepted window position (0-indexed).
      */
     public void setMtpAnchorAtWindowPosition(int r) {
-        if (mtp == null || verifyWindowNormalizedBuf == null) {
+        Tensor hidden = activeWindowHidden();
+        if (mtp == null || hidden == null) {
             return;
         }
-        try (var idx = Index.of(r); Tensor row = verifyWindowNormalizedBuf.get(Index.Colon, idx)) {
+        try (var idx = Index.of(r); Tensor row = hidden.get(Index.Colon, idx)) {
             setLastPreNormHiddenRow(row);
         }
     }
@@ -556,19 +526,20 @@ public class QwenModel extends LayerBlock {
      * @param positions accepted window position per row (0-indexed), length {@code B}.
      */
     public void setMtpAnchorAtWindowPositions(int[] positions) {
-        if (mtp == null || verifyWindowNormalizedBuf == null) {
+        Tensor hidden = activeWindowHidden();
+        if (mtp == null || hidden == null) {
             return;
         }
         int b = positions.length;
-        long dim = verifyWindowNormalizedBuf.shape()[2];
+        long dim = hidden.shape()[2];
         Tensor gathered = Tensor.zeros(
-                new Tensor.Options().device(verifyWindowNormalizedBuf.device())
-                        .dtype(verifyWindowNormalizedBuf.dtype()).requireGradients(false),
+                new Tensor.Options().device(hidden.device())
+                        .dtype(hidden.dtype()).requireGradients(false),
                 b, dim);
         try {
             for (int i = 0; i < b; i++) {
                 try (var rowIdx = Index.of(i); var posIdx = Index.of(positions[i]);
-                     Tensor src = verifyWindowNormalizedBuf.get(rowIdx, posIdx)) {
+                     Tensor src = hidden.get(rowIdx, posIdx)) {
                     gathered.put_(src, Index.of(i), Index.Colon);
                 }
             }
@@ -603,7 +574,12 @@ public class QwenModel extends LayerBlock {
      * @return retained window hidden.
      */
     Tensor windowHidden() {
-        return verifyWindowNormalizedBuf;
+        return activeWindowHidden();
+    }
+
+    /** The buffer holding the most recent window hidden (graph-owned or generic). */
+    private Tensor activeWindowHidden() {
+        return windowHiddenFromGraph ? verifyGraphHiddenBuf : verifyWindowNormalizedBuf;
     }
 
     /**
@@ -615,17 +591,36 @@ public class QwenModel extends LayerBlock {
      * @return owned copy, or {@code null} when nothing was captured.
      */
     Tensor copyWindowHiddenRows(int from, int count) {
-        if (verifyWindowNormalizedBuf == null) {
+        Tensor hidden = activeWindowHidden();
+        if (hidden == null) {
             return null;
         }
-        long dim = verifyWindowNormalizedBuf.shape()[2];
+        long dim = hidden.shape()[2];
         try (var row0 = Index.of(0); var rows = Index.slice(from, from + count);
-             Tensor sliced = verifyWindowNormalizedBuf.get(row0, rows);
+             Tensor sliced = hidden.get(row0, rows);
              Tensor flat = sliced.reshape(count, dim)) {
             Tensor out = flat.copy();
             out.detachFromScopes();
             return out;
         }
+    }
+
+    /** Allocates the verify graph's stable window-hidden buffer (shape/device/dtype change only). */
+    private void ensureVerifyGraphHiddenBuf(Tensor prototype) {
+        if (verifyGraphHiddenBuf != null
+                && java.util.Arrays.equals(verifyGraphHiddenBuf.shape(), prototype.shape())
+                && verifyGraphHiddenBuf.dtype() == prototype.dtype()
+                && verifyGraphHiddenBuf.device().index() == prototype.device().index()) {
+            return;
+        }
+        if (verifyGraphHiddenBuf != null) {
+            verifyGraphHiddenBuf.close();
+            verifyGraphHiddenBuf = null;
+        }
+        verifyGraphHiddenBuf = Tensor.zeros(
+                new Tensor.Options().device(prototype.device()).dtype(prototype.dtype()),
+                prototype.shape());
+        verifyGraphHiddenBuf.detachFromScopes();
     }
 
     /** Allocates the retained per-position verify-window hidden buffer (shape/device/dtype change only). */
@@ -770,6 +765,7 @@ public class QwenModel extends LayerBlock {
                         || (deltaNetStatePool != null && deltaNetStatePool.verifyWindowActive())) {
                     ensureVerifyWindowNormalizedBuf(normalized);
                     smile.torch.Native.copy_(verifyWindowNormalizedBuf, normalized);
+                    windowHiddenFromGraph = false;
                 }
             }
             // mask is independently allocated; free before the vocab-sized lm_head.
@@ -1514,25 +1510,41 @@ public class QwenModel extends LayerBlock {
         }
 
         int cacheLen = startPos + windowLen;
-        int numPages = kvCachePool.numPagesForLength(cacheLen);
+        // The graph no longer depends on the KV page count: its CSR has a fixed address
+        // (rewritten in place) and the verify plan is independent of KV length (split-KV
+        // disabled under SMILE_VERIFY_CUDA_GRAPH), so the bucket key is (batch, windowLen).
+        final int numPages = 0;
 
         ensureLastPreNormHiddenCapacity(batch);
-        ensureVerifyWindowNormalizedBufCapacity(batch, windowLen);
         kvCachePool.setVerifyGraphBuffers(true);
         try {
             ensureVerifyGraphTokenBuf(tokens.device(), batch, windowLen, tokens.dtype());
             smile.torch.Native.copy_(verifyGraphTokenBuf, tokens);
             ensureVerifyGraphRoPEBuffers(tokens.device(), windowLen);
             prepareVerifyGraphInputs(startPos, windowLen, cacheLen, batch);
+            if (kvCachePool.consumeVerifyGraphMetaRealloc()) {
+                // The persistent CSR moved (batch change / larger request capacity): any
+                // captured graph still points at the freed tensors.
+                invalidateVerifyCudaGraphs();
+                verifyGraphSession = VerifyCudaGraphSession.tryCreate();
+                if (verifyGraphSession == null) {
+                    return forward(tokens, startPos, true);
+                }
+            }
 
             if (verifyGraphSession.canReplay(batch, windowLen, numPages)) {
+                long tReplay = System.nanoTime();
                 verifyGraphSession.replay(tpRank);
+                windowHiddenFromGraph = true;
+                recordVerifyReplayNs(System.nanoTime() - tReplay);
+                vtrace("REPLAY", startPos, numPages);
                 VerifyCudaGraph.markPersistentLogits(true);
                 return verifyGraphLogitsBuf;
             }
 
             boolean shouldCaptureNow =
                     verifyGraphSession.shouldCapture(batch, windowLen, numPages, tpRank);
+            vtrace(shouldCaptureNow ? "CAPTURE" : "EAGER(warmup)", startPos, numPages);
             if (VerifyCudaGraph.captureEnabled() && shouldCaptureNow) {
                 if (verifyGraphLogitsBuf == null) {
                     throw new IllegalStateException(
@@ -1564,6 +1576,7 @@ public class QwenModel extends LayerBlock {
                         // (stale/garbage) — the capture round must explicitly replay once to
                         // actually produce this round's real result.
                         verifyGraphSession.replay(tpRank);
+                        windowHiddenFromGraph = true;
                         VerifyCudaGraph.markPersistentLogits(true);
                         return verifyGraphLogitsBuf;
                     }
@@ -1599,6 +1612,65 @@ public class QwenModel extends LayerBlock {
         }
     }
 
+    /**
+     * Diagnostic only: runs the exact code a verify CUDA graph captures
+     * ({@link #forwardVerifyGraphCore} with the graph-mode stable buffers and
+     * FlashInfer verify kernel) <em>eagerly</em>, so replay output can be compared
+     * against identical kernels with no graph involved. Returns an owned copy of
+     * the float logits {@code [B, S, V]}.
+     *
+     * @param tokens   window token ids {@code [B, S]}.
+     * @param startPos cache start position.
+     * @return owned logits.
+     */
+    public Tensor forwardVerifyGraphCodeEager(Tensor tokens, int startPos) {
+        int batch = (int) tokens.shape()[0];
+        int windowLen = (int) tokens.shape()[1];
+        int[] startPositions = new int[batch];
+        Arrays.fill(startPositions, startPos);
+        int cacheLen = startPos + windowLen;
+        ensureLastPreNormHiddenCapacity(batch);
+        kvCachePool.setVerifyGraphBuffers(true);
+        try {
+            ensureVerifyGraphTokenBuf(tokens.device(), batch, windowLen, tokens.dtype());
+            smile.torch.Native.copy_(verifyGraphTokenBuf, tokens);
+            ensureVerifyGraphRoPEBuffers(tokens.device(), windowLen);
+            prepareVerifyGraphInputs(startPos, windowLen, cacheLen, batch);
+            Tensor raw = forwardVerifyGraphCore(
+                    verifyGraphTokenBuf, startPositions, verifyGraphCosBuf, verifyGraphSinBuf, null);
+            Tensor out = raw.copy();
+            raw.close();
+            return out;
+        } finally {
+            kvCachePool.setVerifyGraphBuffers(false);
+        }
+    }
+
+    private static final boolean VGRAPH_TRACE = "1".equals(System.getenv("SMILE_VERIFY_GRAPH_TRACE"));
+
+    private void vtrace(String action, int startPos, int numPages) {
+        if (VGRAPH_TRACE && tpRank == 0) {
+            logger.info("vgraph startPos={} pages={} {}", startPos, numPages, action);
+        }
+    }
+
+    private long verifyReplayNs;
+    private int verifyReplayCount;
+
+    /** Running mean of verify-graph replay time (replay includes a device sync), logged every 100 replays. */
+    private void recordVerifyReplayNs(long ns) {
+        verifyReplayNs += ns;
+        if (++verifyReplayCount % 100 == 0 && logger.isInfoEnabled()) {
+            logger.info("tpRank={}: verify CUDA graph replay mean {} ms over {} replays "
+                    + "(all ranks so far: resets={} warmups={} captures={} closes={})",
+                    tpRank, String.format("%.2f", verifyReplayNs / 1e6 / verifyReplayCount), verifyReplayCount,
+                    smile.llm.engine.VerifyCudaGraphSession.RESETS.get(),
+                    smile.llm.engine.VerifyCudaGraphSession.WARMUPS.get(),
+                    smile.llm.engine.VerifyCudaGraphSession.CAPTURES.get(),
+                    smile.llm.engine.VerifyCudaGraphSession.CLOSES.get());
+        }
+    }
+
     /** Releases verify CUDA graph resources for this rank. */
     public void closeVerifyGraph() {
         invalidateVerifyCudaGraphs();
@@ -1618,6 +1690,10 @@ public class QwenModel extends LayerBlock {
             verifyGraphLogitsBuf.close();
             verifyGraphLogitsBuf = null;
         }
+        if (verifyGraphHiddenBuf != null) {
+            verifyGraphHiddenBuf.close();
+            verifyGraphHiddenBuf = null;
+        }
         verifyGraphLogitsOut = null;
     }
 
@@ -1629,6 +1705,7 @@ public class QwenModel extends LayerBlock {
      */
     public void invalidateVerifyCudaGraphs() {
         if (verifyGraphSession != null) {
+            vtrace("INVALIDATE", -1, -1);
             verifyGraphSession.close();
             verifyGraphSession = null;
         }
@@ -1732,10 +1809,18 @@ public class QwenModel extends LayerBlock {
             h.close();
             if (mtp != null) {
                 capturePreNormHidden(normalized);
-                if (captureWindowHidden
+                if (kvCachePool != null && kvCachePool.verifyGraphBuffers()) {
+                    // Graph mode: unconditional (capture and replay must agree) copy into the
+                    // graph's own stable buffer; allocation only happens on the eager warmup
+                    // rounds that precede capture (shape is fixed per session).
+                    ensureVerifyGraphHiddenBuf(normalized);
+                    smile.torch.Native.copy_(verifyGraphHiddenBuf, normalized);
+                    windowHiddenFromGraph = true;
+                } else if (captureWindowHidden
                         || (deltaNetStatePool != null && deltaNetStatePool.verifyWindowActive())) {
                     ensureVerifyWindowNormalizedBuf(normalized);
                     smile.torch.Native.copy_(verifyWindowNormalizedBuf, normalized);
+                    windowHiddenFromGraph = false;
                 }
             }
             long tHead = profile ? System.nanoTime() : 0L;
