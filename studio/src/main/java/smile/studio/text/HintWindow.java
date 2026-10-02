@@ -64,10 +64,8 @@ public class HintWindow extends JWindow {
                 if (e.getKeyCode() == KeyEvent.VK_SPACE) {
                     try {
                         int dot = editor.getCaretPosition();
-                        int line = SmileUtilities.getLineOfOffset(editor, dot);
-                        int start = SmileUtilities.getOffsetOfLine(editor, line);
-                        String lead = editor.getText(start, dot).trim();
-                        String hint = hints.get(lead);
+                        String lead = leadingText(editor, dot).trim();
+                        String hint = hintFor(hints, lead);
                         if (Strings.isNullOrBlank(hint)) {
                             setVisible(false);
                         } else {
@@ -94,6 +92,53 @@ public class HintWindow extends JWindow {
     }
 
     /**
+     * Returns the text on the caret's line, from the start of the line up to the caret.
+     * This is the candidate trigger word for a hint (for example {@code /memory}).
+     * <p>{@link JTextComponent#getText(int, int)} takes a length, not an end offset, so
+     * the range is {@code [start, dot)} -- not {@code [start, start + dot)}, which reads
+     * past the end of the document and throws {@link BadLocationException}. Package-private
+     * for testing.
+     * @param editor the text component.
+     * @param dot the caret position.
+     * @return the line prefix from the line start up to the caret.
+     */
+    static String leadingText(JTextComponent editor, int dot) throws BadLocationException {
+        int line = SmileUtilities.getLineOfOffset(editor, dot);
+        int start = SmileUtilities.getOffsetOfLine(editor, line);
+        // The range never includes the line's newline: a newline sits at the start
+        // offset of the following line, and the caret's line begins after it.
+        return editor.getText(start, dot - start);
+    }
+
+    /**
+     * Resolves the hint for the text typed so far on the line. Matches the longest
+     * trigger that is a prefix of the text, so an argument typed after a command keeps
+     * its hint: {@code "/memory"} matches while typing {@code /memory add}, and
+     * {@code "/memory add"} takes over once the full argument is present. An exact key
+     * still wins. Matching the longest prefix rather than the first also keeps Map
+     * iteration order irrelevant. Package-private for testing.
+     * @param hints the trigger-to-hint map.
+     * @param text the line text up to the caret.
+     * @return the hint, or null when no trigger matches.
+     */
+    static String hintFor(Map<String, String> hints, String text) {
+        if (text.isEmpty()) {
+            return null;
+        }
+        String best = null;
+        for (Map.Entry<String, String> entry : hints.entrySet()) {
+            String trigger = entry.getKey();
+            if (text.equals(trigger)) {
+                return entry.getValue();
+            }
+            if (text.startsWith(trigger) && (best == null || trigger.length() > best.length())) {
+                best = trigger;
+            }
+        }
+        return best == null ? null : hints.get(best);
+    }
+
+    /**
      * Shows the hint window at the caret position of text component.
      * @param editor the text component.
      * @param hint the hint message.
@@ -103,7 +148,12 @@ public class HintWindow extends JWindow {
         try {
             // Get the pixel coordinates of the caret position
             var rect = editor.modelToView2D(dot);
-            if (rect == null) return;
+            if (rect == null) {
+                // modelToView2D returns null when the caret cannot be mapped (for
+                // example the component is not yet displayed); nothing to anchor to.
+                setVisible(false);
+                return;
+            }
 
             // Position the hint window relative to the JTextComponent
             Point locationOnScreen = editor.getLocationOnScreen();

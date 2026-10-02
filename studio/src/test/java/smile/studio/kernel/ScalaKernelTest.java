@@ -24,20 +24,17 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.*;
 import smile.studio.text.OutputArea;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Tests for {@link ScalaKernel}.
  *
- * <p>The kernel drives {@code scala-cli repl} as a subprocess, so these tests
- * are integration-level and require {@code scala-cli} on the {@code PATH}.
- * They are tagged {@code integration} because scala-cli may download the Scala
- * compiler on first use, which makes a cold run take minutes, and because the
- * binary is not part of the build — CI runs without it and excludes the tag.
- * When scala-cli is absent the tests also skip cleanly via
- * {@link org.junit.jupiter.api.Assumptions#assumeTrue(boolean)}, so a plain
- * local run does not fail just because the tool is missing. The process is
- * started once for the whole class, as startup is expensive.
+ * <p>The kernel launches {@code dotty.tools.repl.Main} in a child JVM and drives
+ * it over stdin/stdout, so these tests are integration-level: they spawn a real
+ * Scala 3 REPL process and evaluate real SMILE scripts. They are tagged
+ * {@code integration} because starting the REPL and running the example scripts
+ * is slow, and CI runs Gradle only (Studio is an sbt module), so the tag keeps
+ * them off the default fast path. The process is started once for the whole
+ * class, as startup is expensive.
  *
  * @author Haifeng Li
  */
@@ -49,7 +46,6 @@ public class ScalaKernelTest {
 
     @BeforeAll
     public static void setUpClass() {
-        assumeTrue(scalaCliAvailable(), "scala-cli is not installed; skipping ScalaKernel tests");
         output = new OutputArea();
         kernel = new ScalaKernel();
         kernel.setOutputArea(output);
@@ -76,26 +72,6 @@ public class ScalaKernelTest {
      */
     private boolean evalSucceeds(String code) {
         return kernel.eval(code, new ArrayList<>());
-    }
-
-    /**
-     * Returns whether scala-cli can be launched.
-     * @return true if scala-cli is on the PATH.
-     */
-    private static boolean scalaCliAvailable() {
-        try {
-            Process process = new ProcessBuilder("scala-cli", "version")
-                    .redirectErrorStream(true)
-                    .redirectOutput(ProcessBuilder.Redirect.DISCARD)
-                    .start();
-            if (!process.waitFor(3, TimeUnit.MINUTES)) {
-                process.destroyForcibly();
-                return false;
-            }
-            return process.exitValue() == 0;
-        } catch (IOException | InterruptedException ex) {
-            return false;
-        }
     }
 
     // ------------------------------------------------------------------
@@ -217,7 +193,10 @@ public class ScalaKernelTest {
     public void testTsneScript() throws IOException {
         System.out.println("ScalaKernel: run tsne.sc example");
         String code = java.nio.file.Files.readString(java.nio.file.Path.of("studio/src/universal/examples/tsne.sc"));
-        assertTrue(evalSucceeds(code), "tsne.sc should evaluate without errors");
+        // Drop the trailing canvas.window() call: it opens a Swing window, which
+        // hangs a headless test JVM. The script's variables are what we assert on.
+        String snippet = code.substring(0, code.indexOf("canvas.window()"));
+        assertTrue(evalSucceeds(snippet), "tsne.sc should evaluate without errors");
         var names = kernel.variables().stream().map(Variable::name).toList();
         assertTrue(names.contains("model"), "model variable should be bound");
         assertTrue(names.contains("canvas"), "canvas variable should be bound");
@@ -367,8 +346,8 @@ public class ScalaKernelTest {
         System.out.println("ScalaKernel: the output area has no ANSI escape codes");
         output.clear();
         evalSucceeds("println(\"plain text\")");
-        // scala-cli emits ANSI colors on some diagnostics even with
-        // --color never, so the kernel must strip them.
+        // The REPL may emit ANSI colors on some diagnostics even with
+        // -color never, so the kernel must strip them.
         assertFalse(output.buffer().toString().contains("\u001B["),
                 "ANSI escape sequences must be stripped from the output");
     }
@@ -452,5 +431,9 @@ public class ScalaKernelTest {
     public void testStopDoesNotThrow() {
         System.out.println("ScalaKernel: stop() does not throw");
         assertDoesNotThrow(() -> kernel.stop());
+        // stop() writes a raw Ctrl-C byte to the REPL's stdin. When no snippet
+        // is running that byte lingers in the input buffer and corrupts the
+        // next line, so restart to hand the remaining tests a clean session.
+        kernel.restart();
     }
 }

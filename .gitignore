@@ -1,5 +1,9 @@
+# Studio
 .smile
 log
+
+# Agent scratch state
+/docs
 
 # Class and package files
 *.class
@@ -15,8 +19,13 @@ hs_err_pid*
 /model
 **/*.db
 
-# Native library
+# LibTorch library
 /deep/libtorch
+
+# Bundled JetBrains Runtime (Windows x86-64), a Studio release input.
+# studio/build.sbt sets JAVA_HOME=%APP_HOME%\jbr for the Windows launcher;
+# it is not built or downloaded by anything here, so do not commit it.
+/studio/src/universal/jbr
 
 # Clojure
 .nrepl-port

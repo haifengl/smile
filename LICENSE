@@ -18,10 +18,14 @@ The core mathematical and machine learning libraries (including `base`, `core`,
      of the GPLv3 as published by the Free Software Foundation.
 
   b) Commercial / OEM License:
-     If you use SMILE libraries in proprietary applications, internal enterprise
-     services, SaaS backends, or commercial products without disclosing your
-     source code under GPLv3, you must obtain a commercial license from
-     HALO.AI, LLC.
+     If you distribute or embed SMILE libraries within proprietary software,
+     appliances, client-side applications, or commercial products without
+     licensing your combined work under GPLv3, you must purchase a commercial
+     OEM license from HALO.AI, LLC.
+
+     Commercial licenses are also available for organizations that require
+     commercial indemnity, enterprise support, guaranteed CVE resolution
+     windows, or whose internal policies restrict the use of GPL-licensed software.
 
 ==============================================================================
 2. SMILE Serve (Dual License: AGPLv3 / Commercial Enterprise)
@@ -31,20 +35,18 @@ SMILE Serve (`serve`) is the high-throughput, low-latency JVM inference platform
 and model serving runtime, dual-licensed under:
 
   a) GNU Affero General Public License version 3 (AGPLv3):
-     Free for open-source systems and applications where the surrounding network
-     service and infrastructure are disclosed under AGPLv3. In accordance
-     with Section 13 of the AGPLv3, if you modify the software or incorporate
-     it into a service accessible over a computer network (e.g., SaaS, cloud APIs,
-     or internal microservices), you must make the complete corresponding source
-     code available to all network users under the AGPLv3.
+     Free for open-source systems and applications. In accordance with Section 13
+     of the AGPLv3, if you modify the software and allow users to interact with
+     it remotely over a network, you must make the Corresponding Source of your
+     modified version available to all users under the AGPLv3.
      Learn more: https://www.gnu.org/licenses/agpl-3.0.html
 
   b) Commercial Enterprise Runtime License:
-     Enterprises deploying SMILE Serve in production microservices, high-volume
-     streaming architectures (Kafka/Flink), or cloud clusters without AGPLv3
-     disclosure requirements must obtain an Enterprise Runtime License.
-     Enterprise licenses include high-availability clustering, zero-GC optimizations,
-     dedicated SLAs, CVE hotfix guarantees, and legal indemnification.
+     For enterprises that operate SMILE Serve in commercial environments without
+     AGPLv3 copyleft obligations, or that require enterprise platform capabilities
+     (such as high-availability clustering, zero-GC execution, custom SLAs,
+     and enterprise support), a Commercial Enterprise Runtime License is required
+     from HALO.AI, LLC.
 
 ==============================================================================
 3. SMILE Studio (Business Source License 1.1 / Commercial)
