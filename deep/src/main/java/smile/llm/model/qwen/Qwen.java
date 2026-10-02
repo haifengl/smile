@@ -605,6 +605,24 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
                              double memFractionStatic, String kvCacheDtype, int pageSize,
                              ParallelConfig parallel, int modelLoaderThreads) throws IOException {
+        return build(checkpointDir, maxBatchSize, maxSeqLen, deviceId, memFractionStatic, kvCacheDtype,
+                pageSize, parallel, modelLoaderThreads, 0, 0);
+    }
+
+    /**
+     * Like the overload above, additionally reserving DeltaNet checkpoint memory for batched MTP
+     * speculation <em>before</em> the KV pool is sized, so the KV budget accounts for it and a large
+     * speculating cohort never has to fall back to plain decode for lack of memory.
+     *
+     * @param speculativeRows  rows (concurrently speculating requests) to provision; {@code 0} reserves nothing.
+     * @param speculativeDepth draft depth to provision for; {@code <= 0} uses the model default.
+     * @throws IOException if the checkpoint cannot be read.
+     * @return a loaded Qwen model.
+     */
+    public static Qwen build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte deviceId,
+                             double memFractionStatic, String kvCacheDtype, int pageSize,
+                             ParallelConfig parallel, int modelLoaderThreads,
+                             int speculativeRows, int speculativeDepth) throws IOException {
         File dir = new File(checkpointDir);
         if (!dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory not found: " + checkpointDir);
@@ -734,7 +752,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         // Phase C: DeltaNet GPU swap + KV pool (after weights for mem-fraction).
         long tFinalize = System.currentTimeMillis();
         if (parallelConfig.tpSize() == 1) {
-            finalizeRank(models[0], memFractionStatic, cacheDtype, pageSize);
+            finalizeRank(models[0], memFractionStatic, cacheDtype, pageSize, speculativeRows, speculativeDepth);
         } else {
             ExecutorService pool = Executors.newFixedThreadPool(parallelConfig.tpSize());
             try {
@@ -742,7 +760,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 for (int r = 0; r < parallelConfig.tpSize(); r++) {
                     final int rank = r;
                     futures.add(pool.submit(() -> finalizeRank(
-                            models[rank], memFractionStatic, cacheDtype, pageSize)));
+                            models[rank], memFractionStatic, cacheDtype, pageSize,
+                            speculativeRows, speculativeDepth)));
                 }
                 for (Future<?> f : futures) {
                     f.get();
@@ -832,7 +851,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      * After weights: move DeltaNet state to GPU (when using mem-fraction) and allocate KV.
      */
     private static void finalizeRank(QwenModel model, double memFractionStatic,
-                                     ScalarType cacheDtype, int pageSize) {
+                                     ScalarType cacheDtype, int pageSize,
+                                     int speculativeRows, int speculativeDepth) {
         int rank = model.shard() != null ? model.shard().tpRank() : 0;
         Device device = model.device();
         QwenModelArgs modelArgs = model.params();
@@ -864,6 +884,15 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             if (previous != null) previous.close();
             logger.info("tpRank={}: DeltaNetStatePool (GPU) in {} ms",
                     rank, System.currentTimeMillis() - t0);
+            int depth = modelArgs.resolveNumSpeculativeTokens(speculativeDepth);
+            if (speculativeRows > 0 && depth > 0 && model.mtp() != null) {
+                // Reserved before the KV pool is sized so the static KV budget (total*fraction - used)
+                // already excludes it.
+                int rows = Math.min(speculativeRows, modelArgs.maxBatchSize());
+                gpuState.ensureSpeculativeCheckpointRange(1, depth, rows);
+                logger.info("tpRank={}: reserved {} MiB of DeltaNet checkpoints for {} speculating rows (depth {})",
+                        rank, gpuState.speculativeCheckpointBytes(depth, rows) >> 20, rows, depth);
+            }
         }
         if (modelArgs.numFullAttentionLayers() > 0) {
             long t0 = System.currentTimeMillis();
