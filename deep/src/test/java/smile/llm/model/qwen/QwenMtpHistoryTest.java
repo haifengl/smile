@@ -205,4 +205,73 @@ public class QwenMtpHistoryTest {
         spec.evict(rs);
         plain.evict(rp);
     }
+
+    /**
+     * Batched speculation (two requests with identical prompts, hence equal positions so the CPU
+     * torch-native backend can run them) must emit exactly what plain greedy decode emits, row by
+     * row, over many rounds; the histories of both rows must stay valid throughout.
+     */
+    @Test
+    public void testGivenCohortOfTwoWhenBatchedSpeculateThenLosslessAndHistoryUsed() {
+        QwenModelArgs args = args();
+        long seed = 9191L;
+        smile.torch.smile_torch_h.smile_manual_seed(seed);
+        Qwen spec = new Qwen("tiny-batch-spec", tinyModel(args), tinyTokenizer(), args);
+        smile.torch.smile_torch_h.smile_manual_seed(seed);
+        Qwen plain = new Qwen("tiny-batch-plain", tinyModel(args), tinyTokenizer(), args);
+
+        int[] prompt = new int[20];
+        for (int i = 0; i < prompt.length; i++) {
+            prompt[i] = 1 + (i * 3) % 60;
+        }
+        int[] rs = {spec.bind(prompt, 400), spec.bind(prompt, 400)};
+        int rp = plain.bind(prompt, 400);
+        int[] first = new int[2];
+        for (int k = 0; k < 2; k++) {
+            try (Tensor l = spec.prefillChunk(rs[k], prompt, 0, prompt.length)) {
+                first[k] = smile.llm.engine.Sampling.sampleGreedyTokenId(l);
+            }
+        }
+        int firstPlain;
+        try (Tensor l = plain.prefillChunk(rp, prompt, 0, prompt.length)) {
+            firstPlain = smile.llm.engine.Sampling.sampleGreedyTokenId(l);
+        }
+        assertEquals(firstPlain, first[0]);
+        assertEquals(firstPlain, first[1]);
+
+        int[] pos = {prompt.length, prompt.length};
+        int[] tok = {first[0], first[1]};
+        List<List<Integer>> specTokens = List.of(new ArrayList<>(), new ArrayList<>());
+        specTokens.get(0).add(first[0]);
+        specTokens.get(1).add(first[1]);
+        for (int round = 0; round < 40; round++) {
+            int[][] out = spec.speculateStep(rs.clone(), tok.clone(), pos.clone(), 2, 0.0, 1.0);
+            for (int k = 0; k < 2; k++) {
+                assertTrue(spec.mtpHistoryValid(rs[k]), "row " + k + " history must stay valid at round " + round);
+                for (int t : out[k]) {
+                    specTokens.get(k).add(t);
+                }
+                pos[k] += out[k].length;
+                tok[k] = out[k][out[k].length - 1];
+            }
+            assertEquals(pos[0], pos[1], "identical prompts must stay in lock step");
+        }
+        List<Integer> plainTokens = new ArrayList<>();
+        plainTokens.add(firstPlain);
+        int posP = prompt.length;
+        int tokP = firstPlain;
+        while (plainTokens.size() < specTokens.get(0).size()) {
+            try (Tensor logits = plain.decodeStep(new int[]{rp}, new int[]{tokP}, new int[]{posP})) {
+                int t = smile.llm.engine.Sampling.sampleGreedyTokenId(logits);
+                plainTokens.add(t);
+                posP++;
+                tokP = t;
+            }
+        }
+        assertEquals(plainTokens, specTokens.get(0));
+        assertEquals(plainTokens, specTokens.get(1));
+        spec.evict(rs[0]);
+        spec.evict(rs[1]);
+        plain.evict(rp);
+    }
 }

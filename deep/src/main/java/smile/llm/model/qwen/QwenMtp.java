@@ -407,6 +407,111 @@ public class QwenMtp extends LayerBlock {
         kvCachePool.bindRequests(Math.max(1, batchSize), cap);
     }
 
+    /**
+     * Batched, history-aware MTP step for a cohort of concurrent requests, each at its own
+     * absolute position. Writes K/V for every column of every row into the persistent
+     * request-bound pool and attends over each row's whole history, like {@link #absorb}.
+     *
+     * <p>Rows are padded to a common width {@code S}: row {@code i} has {@code lastRealRow[i]+1}
+     * real columns (positions {@code startPositions[i]..}) followed by dummy columns. Dummy
+     * columns come <em>after</em> the real ones, so causal attention keeps real columns
+     * unaffected; their K/V lands in the row's speculative region (past its committed
+     * history) and is overwritten before it can be read. The logits and chained hidden are
+     * taken at each row's last real column.
+     *
+     * @param tokens         next-token ids {@code [B, S]} (int64, on this device).
+     * @param hidden         backbone/MTP hidden {@code [B, S, D]}.
+     * @param startPositions absolute KV/RoPE position of column 0, per row.
+     * @param lastRealRow    index of each row's last real column, in {@code [0, S)}.
+     * @return float logits {@code [B, 1, V]} for each row's last real column. The chained
+     *         hidden {@code [B, 1, D]} is available from {@link #lastDraftHidden()}.
+     */
+    public Tensor absorbBatch(Tensor tokens, Tensor hidden, int[] startPositions, int[] lastRealRow) {
+        if (tokEmbeddings == null || lmHead == null || rope == null) {
+            throw new IllegalStateException("MTP shared bindings not installed; call bindShared");
+        }
+        if (kvCachePool == null) {
+            throw new IllegalStateException("MTP KV pool not installed; call setKvCachePool");
+        }
+        int b = (int) tokens.shape()[0];
+        int s = (int) tokens.shape()[1];
+        if (startPositions.length != b || lastRealRow.length != b) {
+            throw new IllegalArgumentException("per-row arrays must match batch size " + b);
+        }
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        try {
+            Tensor embed = tokEmbeddings.forward(tokens);
+            Tensor hNorm = preFcNormHidden.forward(hidden);
+            Tensor eNorm = preFcNormEmbedding.forward(embed);
+            Tensor fused = PartialRotaryEncoding.concatLast(eNorm, hNorm);
+            Tensor h = fc.forward(fused);
+
+            Tensor cos = PartialRotaryEncoding.gatherWindow(rope.cos(), startPositions, s);
+            Tensor sin = PartialRotaryEncoding.gatherWindow(rope.sin(), startPositions, s);
+            // The attention layer's ragged path (rows at different positions) ignores the mask and
+            // uses the kernel's own causal mode, but when every row happens to share a position it
+            // takes the uniform path, which needs an explicit dense causal mask for S > 1.
+            Tensor mask = null;
+            if (s > 1) {
+                var maskOpts = new Tensor.Options()
+                        .device(h.device()).dtype(ScalarType.Float).requireGradients(false);
+                mask = Tensor.zeros(maskOpts, s, s).fill_(Float.NEGATIVE_INFINITY);
+                mask.triu_(1);
+                if (startPositions[0] > 0) {
+                    try (var zeros = Tensor.zeros(maskOpts, s, startPositions[0])) {
+                        Tensor prev = mask;
+                        mask = Tensor.hstack(zeros, prev);
+                        prev.close();
+                    }
+                }
+                if (mask.dtype() != h.dtype()) {
+                    Tensor maskF = mask;
+                    mask = maskF.to(h.dtype());
+                    maskF.close();
+                }
+            }
+            for (QwenBlock layer : layers) {
+                Tensor next = layer.forward(h, startPositions, cos, sin, mask);
+                h.close();
+                h = next;
+            }
+            Tensor normalized = norm.forward(h);
+            h.close();
+
+            Tensor lastRows;
+            if (s == 1) {
+                lastRows = normalized;
+            } else {
+                int[] flatIdx = new int[b];
+                for (int i = 0; i < b; i++) {
+                    flatIdx[i] = i * s + lastRealRow[i];
+                }
+                long dim = normalized.shape()[2];
+                try (Tensor flat = normalized.reshape((long) b * s, dim);
+                     var idx = Index.of(flatIdx);
+                     Tensor picked = flat.get(idx)) {
+                    lastRows = picked.reshape(b, 1, dim);
+                }
+            }
+            if (lastDraftHidden != null) {
+                lastDraftHidden.close();
+            }
+            lastDraftHidden = lastRows.copy();
+            lastDraftHidden.detachFromScopes();
+
+            Tensor logitsF = lmHead.forward(lastRows);
+            Tensor logits = logitsF.to(ScalarType.Float);
+            if (logits != logitsF) {
+                logitsF.close();
+            }
+            logits.promoteToParent();
+            return logits;
+        } finally {
+            Tensor.pop();
+        }
+    }
+
     /** Drops the chained draft hidden (history-aware path keeps the KV pool bound). */
     public void clearDraftHidden() {
         if (lastDraftHidden != null) {

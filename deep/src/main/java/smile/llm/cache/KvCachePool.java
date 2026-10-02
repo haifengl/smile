@@ -209,9 +209,13 @@ public class KvCachePool implements AutoCloseable {
     /** Reused flat KV slot index {@code [batch*windowLen]} for graph verify {@link #put}. */
     private Tensor verifyKvIndexBuf;
     /** Reused query-side CSR {@code [batch+1]} for the graph verify kernel; rebuilt only on a {@code (batch,windowLen)} bucket change. */
-    private Tensor verifyQoIndptrBuf;
-    private int verifyQoIndptrBatch = -1;
-    private int verifyQoIndptrWindowLen = -1;
+    /**
+     * Query-side CSR tensors, one per {@code (batch, windowLen)} shape, never freed or replaced
+     * while the pool lives. A captured verify graph bakes the address of the one it used, so
+     * building a different shape (a batched round after a single-request round) must not
+     * release it. Tiny (batch+1 ints each) and bounded by the distinct shapes ever used.
+     */
+    private final Map<Long, Tensor> verifyQoIndptrBufs = new java.util.HashMap<>();
 
     /** Scratch slot indices for next-bucket graph prefetch (isolated from live requests). */
     private long[] prefetchSlots;
@@ -1082,9 +1086,10 @@ public class KvCachePool implements AutoCloseable {
      * @return query-side CSR tensor; do not close (owned by the pool).
      */
     public Tensor verifyQoIndptrBuf(int batch, int windowLen) {
-        if (verifyQoIndptrBuf != null && verifyQoIndptrBatch == batch
-                && verifyQoIndptrWindowLen == windowLen) {
-            return verifyQoIndptrBuf;
+        long key = ((long) batch << 32) | (windowLen & 0xffffffffL);
+        Tensor cached = verifyQoIndptrBufs.get(key);
+        if (cached != null) {
+            return cached;
         }
         int[] vals = new int[batch + 1];
         for (int b = 0; b <= batch; b++) {
@@ -1099,15 +1104,9 @@ public class KvCachePool implements AutoCloseable {
             fresh = Tensor.of(vals);
         }
         fresh.detachFromScopes();
-        if (verifyQoIndptrBuf != null) {
-            verifyQoIndptrBuf.close();
-        }
-        verifyQoIndptrBuf = fresh;
-        verifyQoIndptrBatch = batch;
-        verifyQoIndptrWindowLen = windowLen;
-        return verifyQoIndptrBuf;
+        verifyQoIndptrBufs.put(key, fresh);
+        return fresh;
     }
-
     /**
      * Capacity reserved for the currently bound request, or {@code 0} if none.
      * Generation must not access positions {@code >=} this value.
@@ -1822,6 +1821,24 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * Whether a rejected speculative tail is explicitly zeroed in every layer. Off by default:
+     * attention (FlashInfer and the torch-native path alike) only ever reads positions below the
+     * sealed length, and the next window overwrites the tail before the length grows past it, so
+     * the zeroing was pure defence-in-depth costing a handful of index-put kernels per layer per
+     * row per round. {@code SMILE_MTP_ZERO_REJECTED_KV=1} restores it.
+     */
+    static final boolean ZERO_REJECTED_KV = "1".equals(System.getenv("SMILE_MTP_ZERO_REJECTED_KV"));
+
+    /**
+     * Whether rejected speculative tails are zeroed (see {@link #ZERO_REJECTED_KV}).
+     *
+     * @return {@code true} when zeroing is enabled.
+     */
+    public static boolean zeroRejectedKv() {
+        return ZERO_REJECTED_KV;
+    }
+
+    /**
      * After a speculative window write of length {@code writtenEnd}, seal
      * attention to {@code sealedLen} and zero the rejected tail
      * {@code [sealedLen, writtenEnd)}. Does not free pages or shrink capacity.
@@ -1836,7 +1853,7 @@ public class KvCachePool implements AutoCloseable {
             throw new IllegalArgumentException(
                     "writtenEnd must be >= sealedLen");
         }
-        if (writtenEnd > sealedLen) {
+        if (ZERO_REJECTED_KV && writtenEnd > sealedLen) {
             invalidateRange(sealedLen, writtenEnd);
         }
         return sealLength(sealedLen);
@@ -2246,6 +2263,14 @@ public class KvCachePool implements AutoCloseable {
     @Override
     public void close() {
         releaseAllBindings();
+        for (Tensor t : verifyQoIndptrBufs.values()) {
+            t.close();
+        }
+        verifyQoIndptrBufs.clear();
+        if (verifyGraphMeta != null) {
+            verifyGraphMeta.close();
+            verifyGraphMeta = null;
+        }
         radix.reset();
         if (flashInferWorkspace != null) {
             flashInferWorkspace.close();

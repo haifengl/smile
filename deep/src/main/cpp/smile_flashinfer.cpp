@@ -22,6 +22,8 @@ struct ST_FlashInferWorkspace_ {
     int device_index = 0;
     int64_t workspace_bytes = 0;
     void *runtime_cache = nullptr;
+    /** Plan cache for eager (non-graph) verify attention; see verify_eager_* below. */
+    void *eager_runtime_cache = nullptr;
 #ifdef USE_CUDA
     at::Tensor float_workspace;   // uint8 — shared by decode DecodePlan + ordinary prefill
     at::Tensor int_workspace;     // uint8 device
@@ -34,6 +36,15 @@ struct ST_FlashInferWorkspace_ {
     at::Tensor verify_float_workspace;
     at::Tensor verify_int_workspace;
     at::Tensor verify_pinned_int_workspace;
+    // A third scratch for verify attention that is NOT bound to a CUDA graph (eager
+    // verify windows, batched/ragged verify). A captured verify graph bakes plan arrays
+    // (request/tile indices, padded batch size) living in verify_int_workspace; an eager
+    // PrefillPlan for a different (batch, qo_len) shape written to those same bytes
+    // would silently corrupt the next graph replay. Keeping eager plans elsewhere makes
+    // the graph's scratch private to graph-mode calls.
+    at::Tensor verify_eager_float_workspace;
+    at::Tensor verify_eager_int_workspace;
+    at::Tensor verify_eager_pinned_int_workspace;
 #endif
 };
 
@@ -122,6 +133,11 @@ ST_FlashInferWorkspace smile_flashinfer_workspace_create(
         ws->verify_pinned_int_workspace = at::empty(
                 {kVerifyIntBytes},
                 at::TensorOptions().dtype(at::kByte).pinned_memory(true));
+        ws->verify_eager_float_workspace = at::empty({kVerifyFloatBytes}, opts);
+        ws->verify_eager_int_workspace = at::empty({kVerifyIntBytes}, opts);
+        ws->verify_eager_pinned_int_workspace = at::empty(
+                {kVerifyIntBytes},
+                at::TensorOptions().dtype(at::kByte).pinned_memory(true));
         return ws;
     } catch (const std::exception &ex) {
         smile_torch_set_error(ex.what());
@@ -141,6 +157,10 @@ void smile_flashinfer_workspace_free(ST_FlashInferWorkspace ws) {
         if (ws->runtime_cache != nullptr) {
             smile_flashinfer_runtime_cache_free(ws->runtime_cache);
             ws->runtime_cache = nullptr;
+        }
+        if (ws->eager_runtime_cache != nullptr) {
+            smile_flashinfer_runtime_cache_free(ws->eager_runtime_cache);
+            ws->eager_runtime_cache = nullptr;
         }
 #endif
         delete ws;
@@ -171,6 +191,9 @@ void smile_flashinfer_workspace_invalidate_verify_runtime_cache(ST_FlashInferWor
 #if defined(USE_CUDA) && defined(USE_FLASHINFER)
     if (ws != nullptr && ws->runtime_cache != nullptr) {
         smile_flashinfer_runtime_cache_invalidate_verify(ws->runtime_cache);
+    }
+    if (ws != nullptr && ws->eager_runtime_cache != nullptr) {
+        smile_flashinfer_runtime_cache_invalidate_verify(ws->eager_runtime_cache);
     }
 #else
     (void)ws;
@@ -214,5 +237,23 @@ int smile_flashinfer_workspace_get_verify_tensors(
     *int_ws = &ws->verify_int_workspace;
     *pinned_ws = &ws->verify_pinned_int_workspace;
     return 0;
+}
+
+int smile_flashinfer_workspace_get_verify_eager_tensors(
+        ST_FlashInferWorkspace ws,
+        at::Tensor **float_ws,
+        at::Tensor **int_ws,
+        at::Tensor **pinned_ws) {
+    if (ws == nullptr || float_ws == nullptr || int_ws == nullptr || pinned_ws == nullptr) {
+        return -1;
+    }
+    *float_ws = &ws->verify_eager_float_workspace;
+    *int_ws = &ws->verify_eager_int_workspace;
+    *pinned_ws = &ws->verify_eager_pinned_int_workspace;
+    return 0;
+}
+
+void **smile_flashinfer_workspace_eager_runtime_cache_slot(ST_FlashInferWorkspace ws) {
+    return ws == nullptr ? nullptr : &ws->eager_runtime_cache;
 }
 #endif

@@ -275,6 +275,19 @@ public final class Native {
          * causal paged attention (see smile_flashinfer_paged_attention_verify_cuda).
          * Isolated sibling of FLASHINFER_PAGED; not on the live verify path yet.
          */
+        /** Optional (newer libsmile_torch): verify attention planned into the eager scratch. */
+        static final MethodHandle FLASHINFER_PAGED_VERIFY_EAGER = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_flashinfer_paged_attention_verify_eager")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE,
+                        ValueLayout.JAVA_FLOAT, ValueLayout.JAVA_FLOAT,
+                        ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
         static final MethodHandle FLASHINFER_PAGED_VERIFY = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_flashinfer_paged_attention_verify")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -1619,7 +1632,29 @@ public final class Native {
     public static Tensor flashInferAttentionVerifyGraph(Tensor query,
                                                          smile.llm.attention.AttentionContext ctx,
                                                          Tensor qoIndptr) {
-        if (Bindings.FLASHINFER_PAGED_VERIFY == null) {
+        return flashInferAttentionVerifyImpl(query, ctx, qoIndptr, false);
+    }
+
+    /**
+     * Verify attention for calls that are <em>not</em> part of a CUDA graph bucket (eager
+     * verify windows, batched/ragged verify). Plans into a scratch workspace disjoint from
+     * {@link #flashInferAttentionVerifyGraph}'s, so a captured graph's baked plan arrays can
+     * never be overwritten by an eager plan of a different shape. Falls back to the graph
+     * entry point on an older native library.
+     */
+    public static Tensor flashInferAttentionVerifyEager(Tensor query,
+                                                         smile.llm.attention.AttentionContext ctx,
+                                                         Tensor qoIndptr) {
+        return flashInferAttentionVerifyImpl(query, ctx, qoIndptr, true);
+    }
+
+    private static Tensor flashInferAttentionVerifyImpl(Tensor query,
+                                                        smile.llm.attention.AttentionContext ctx,
+                                                        Tensor qoIndptr, boolean eagerScratch) {
+        java.lang.invoke.MethodHandle handle = eagerScratch && Bindings.FLASHINFER_PAGED_VERIFY_EAGER != null
+                ? Bindings.FLASHINFER_PAGED_VERIFY_EAGER
+                : Bindings.FLASHINFER_PAGED_VERIFY;
+        if (handle == null) {
             throw new IllegalStateException(
                     "smile_flashinfer_paged_attention_verify not in libsmile_torch");
         }
@@ -1634,7 +1669,7 @@ public final class Native {
              Tensor layerV = pool.valueCache().get(layerIdx)) {
             MemorySegment out;
             try {
-                out = (MemorySegment) Bindings.FLASHINFER_PAGED_VERIFY.invokeExact(
+                out = (MemorySegment) handle.invokeExact(
                         query.handle(),
                         layerK.handle(),
                         layerV.handle(),

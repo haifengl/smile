@@ -358,7 +358,12 @@ public class GatedAttention implements Attention {
                             numHeads, numKvHeads, headDim,
                             kvLayerId, startPos, seqlen, cacheLen,
                             cachePool, meta, cachePool.flashInferWorkspace());
-                    attn = smile.torch.Native.flashInferAttentionVerifyGraph(qT, ctx, qoIndptr);
+                    // Graph-bound calls (capture, warmup, replay) plan into the graph's private
+                    // scratch; every other verify window uses the eager scratch so its plan can
+                    // never overwrite bytes a captured graph reads.
+                    attn = cachePool.verifyGraphBuffers()
+                            ? smile.torch.Native.flashInferAttentionVerifyGraph(qT, ctx, qoIndptr)
+                            : smile.torch.Native.flashInferAttentionVerifyEager(qT, ctx, qoIndptr);
                 } else {
                     var ctx = AttentionContext.paged(
                             scale, false,
@@ -606,7 +611,7 @@ public class GatedAttention implements Attention {
                     numHeads, numKvHeads, headDim,
                     kvLayerId, 0, seqlen, 0,
                     cachePool, meta, cachePool.flashInferWorkspace());
-            Tensor attn = Native.flashInferAttentionVerifyGraph(qT, ctx, qoIndptr);
+            Tensor attn = Native.flashInferAttentionVerifyEager(qT, ctx, qoIndptr);
 
             Tensor attnT = attn.transpose(1, 2);
             Tensor attnC = attnT.contiguous();

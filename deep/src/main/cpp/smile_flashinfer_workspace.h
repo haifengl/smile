@@ -39,5 +39,21 @@ int smile_flashinfer_workspace_get_verify_tensors(
         at::Tensor **int_ws,
         at::Tensor **pinned_ws);
 
+/**
+ * Scratch for verify attention calls that are not bound to a CUDA graph (eager verify
+ * windows, batched/ragged verify). Disjoint from
+ * {@link #smile_flashinfer_workspace_get_verify_tensors}: a captured verify graph reads
+ * plan arrays from that region, which an eager plan of another shape must not overwrite.
+ * @return 0 on success, -1 if {@code ws} is null.
+ */
+int smile_flashinfer_workspace_get_verify_eager_tensors(
+        ST_FlashInferWorkspace ws,
+        at::Tensor **float_ws,
+        at::Tensor **int_ws,
+        at::Tensor **pinned_ws);
+
+/** @return address of the eager-verify plan-cache slot (may be null). */
+void **smile_flashinfer_workspace_eager_runtime_cache_slot(ST_FlashInferWorkspace ws);
+
 /** @return address of the workspace runtime-cache slot (may be null). */
 void **smile_flashinfer_workspace_runtime_cache_slot(ST_FlashInferWorkspace ws);
