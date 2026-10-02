@@ -893,6 +893,11 @@ public class KvCachePool implements AutoCloseable {
         }
         int batch = startPositions.length;
         prepareVerifyGraphMetadata(cacheLen, batch);
+        writeVerifyKvIndex(startPositions, windowLen);
+    }
+
+    private void writeVerifyKvIndex(int[] startPositions, int windowLen) {
+        int batch = startPositions.length;
         ensureVerifyKvIndexBuf(batch, windowLen);
         long[] flat = new long[batch * windowLen];
         for (int b = 0; b < batch; b++) {
@@ -914,6 +919,24 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * Ragged form of {@link #prepareVerifyGraphStep(int, int[], int)}: rows (concurrent requests)
+     * may be at different cache lengths. Rewrites the graph's fixed-address CSR and KV write index.
+     *
+     * @param cacheLengths   inclusive cache length per batch row.
+     * @param startPositions KV write position of each row's first window token.
+     * @param windowLen      tokens written per row.
+     */
+    public void prepareVerifyGraphStepRagged(int[] cacheLengths, int[] startPositions, int windowLen) {
+        if (startPositions == null || startPositions.length == 0
+                || cacheLengths == null || cacheLengths.length != startPositions.length) {
+            throw new IllegalArgumentException("cacheLengths/startPositions must be non-empty and equal length");
+        }
+        int batch = startPositions.length;
+        prepareVerifyGraphMetadata(cacheLengths, batch);
+        writeVerifyKvIndex(startPositions, windowLen);
+    }
+
+    /**
      * Rewrites the verify CUDA graph's own CSR page table in place for a uniform
      * {@code cacheLen}. The tensors keep a fixed address for as long as the batch
      * size and the request capacity are unchanged, so a single captured graph
@@ -925,19 +948,31 @@ public class KvCachePool implements AutoCloseable {
      * @param batch    active batch size.
      */
     private void prepareVerifyGraphMetadata(int cacheLen, int batch) {
+        int[] lens = new int[batch];
+        Arrays.fill(lens, cacheLen);
+        prepareVerifyGraphMetadata(lens, batch);
+    }
+
+    /**
+     * Ragged form of {@link #prepareVerifyGraphMetadata(int, int)}: each row has its own inclusive
+     * cache length, so the CSR indptr is non-uniform. The tensors still keep a fixed address while
+     * the batch size and the largest request reservation are unchanged.
+     */
+    private void prepareVerifyGraphMetadata(int[] cacheLens, int batch) {
         ensureBound();
         if (requestSlots.length != batch) {
             throw new IllegalStateException("verify graph batch " + batch
                     + " != bound batch " + requestSlots.length);
         }
-        int capacityPages = Integer.MAX_VALUE;
+        int capacityPages = 0;
+        int total = 0;
         for (int b = 0; b < batch; b++) {
-            if (cacheLen > requestSlots[b].length) {
-                throw new IllegalArgumentException("KV FlashInfer length out of range: " + cacheLen);
+            if (cacheLens[b] > requestSlots[b].length) {
+                throw new IllegalArgumentException("KV FlashInfer length out of range: " + cacheLens[b]);
             }
-            capacityPages = Math.min(capacityPages, (requestSlots[b].length + pageSize - 1) / pageSize);
+            capacityPages = Math.max(capacityPages, (requestSlots[b].length + pageSize - 1) / pageSize);
+            total += (cacheLens[b] + pageSize - 1) / pageSize;
         }
-        int nPages = (cacheLen + pageSize - 1) / pageSize;
         if (verifyGraphMeta == null || verifyGraphMetaBatch != batch
                 || verifyGraphMetaCapacityPages < capacityPages) {
             if (verifyGraphMeta != null) {
@@ -955,21 +990,21 @@ public class KvCachePool implements AutoCloseable {
             verifyGraphMetaCapacityPages = capacityPages;
             verifyGraphMetaRealloc = true;
         }
-        int rem = cacheLen % pageSize;
-        int lastLen = rem == 0 ? pageSize : rem;
         int[] indptrArr = new int[batch + 1];
         int[] lastArr = new int[batch];
-        int[] flat = new int[batch * nPages];
+        int[] flat = new int[total];
         int cursor = 0;
         for (int b = 0; b < batch; b++) {
-            indptrArr[b] = b * nPages;
-            lastArr[b] = lastLen;
+            indptrArr[b] = cursor;
+            int nPages = (cacheLens[b] + pageSize - 1) / pageSize;
+            int rem = cacheLens[b] % pageSize;
+            lastArr[b] = rem == 0 ? pageSize : rem;
             long[] slots = requestSlots[b];
             for (int p = 0; p < nPages; p++) {
                 flat[cursor++] = (int) (slots[p * pageSize] / pageSize);
             }
         }
-        indptrArr[batch] = batch * nPages;
+        indptrArr[batch] = cursor;
         copyIntsInto(verifyGraphMeta.pagedKvIndptr(), indptrArr);
         copyIntsInto(verifyGraphMeta.pagedKvLastPageLen(), lastArr);
         copyIntsInto(verifyGraphMeta.pagedKvIndices(), flat);
