@@ -1879,6 +1879,18 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
     /** Request id to MTP draft-head history (single-request speculation path). */
     private final Map<Integer, MtpHistory> mtpHistory = new ConcurrentHashMap<>();
     private boolean mtpHistoryPoolsReady;
+    /** Per-instance switch (defaults to {@link #MTP_HISTORY}); tests of the legacy anchor path turn it off. */
+    private volatile boolean mtpHistoryEnabled = MTP_HISTORY;
+
+    /**
+     * Test hook: selects the legacy shared-anchor MTP head for this instance. Must be called before
+     * the first {@link #bind} (history pools and the anchor-capture switch are set up there).
+     *
+     * @param enabled {@code false} to use the legacy context-free head.
+     */
+    void setMtpHistoryEnabledForTesting(boolean enabled) {
+        this.mtpHistoryEnabled = enabled;
+    }
 
     /** Test hook: whether {@code requestId} still has a consistent MTP history. */
     boolean mtpHistoryValid(int requestId) {
@@ -1888,7 +1900,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     /** True when persistent MTP history pools exist on every rank. */
     private boolean mtpHistoryActive() {
-        return MTP_HISTORY && mtpHistoryPoolsReady && isSpeculativeEnabled();
+        return mtpHistoryEnabled && mtpHistoryPoolsReady && isSpeculativeEnabled();
     }
 
     /**
@@ -1897,7 +1909,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      * which is context-free garbage without it) rather than failing load.
      */
     private synchronized void ensureMtpHistoryPools() {
-        if (!MTP_HISTORY || mtpHistoryPoolsReady) {
+        if (!mtpHistoryEnabled || mtpHistoryPoolsReady) {
             return;
         }
         for (QwenModel m : models) {
@@ -1913,6 +1925,13 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                         main.pageSize(), main.numSlots());
                 m.mtp().setKvCachePool(pool, true);
                 logger.info("tpRank={}: MTP history KvCachePool slots={}", m.tpRank(), pool.numSlots());
+            }
+            // History mode never reads the shared single-buffer anchor; stop capturing it (it is
+            // a buffer CUDA graphs bake in and batched rounds would reallocate).
+            for (QwenModel m : models) {
+                m.setSkipAnchorCapture(true);
+                m.invalidateVerifyCudaGraphs();
+                m.invalidateDecodeCudaGraphs();
             }
             mtpHistoryPoolsReady = true;
         } catch (RuntimeException e) {
@@ -1951,7 +1970,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         if (st != null) {
             st.invalidate();
         }
-        if (MTP_HISTORY && mtpHistoryPoolsReady) {
+        if (mtpHistoryEnabled && mtpHistoryPoolsReady) {
             for (QwenModel m : models) {
                 if (m.mtp() != null && m.mtp().kvCachePool() != null) {
                     m.mtp().kvCachePool().unbindRequest(requestId);
@@ -2021,9 +2040,9 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         });
     }
 
-    private void activateMtpPools(int requestId) {
+    private void activateMtpPools(int... requestIds) {
         for (QwenModel m : models) {
-            m.mtp().kvCachePool().activateStep(requestId);
+            m.mtp().kvCachePool().activateStep(requestIds);
         }
     }
 
@@ -2671,7 +2690,11 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                                       ExecutorService pool) {
         Tensor[] logits = new Tensor[models.length];
         long t0 = System.nanoTime();
-        boolean graph = DecodeCudaGraph.canGraphDecode(cachePositions);
+        // While any request speculates, its rounds rebuild the shared per-step KV metadata and drop
+        // decode graphs every tick; a plain-decode group sharing the engine would then re-capture
+        // its decode graph on every tick (a ~4x throughput collapse measured at 32 concurrent
+        // requests with 16 speculating). Run that group eagerly instead.
+        boolean graph = DecodeCudaGraph.canGraphDecode(cachePositions) && !anySpeculatingRequest();
         boolean profile = DecodeForwardProfile.enabled();
         DecodeForwardProfile.Snapshot merged = profile ? new DecodeForwardProfile.Snapshot() : null;
         if (models.length == 1) {
@@ -2913,7 +2936,10 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         if (n < 1) {
             throw new IllegalArgumentException("numDrafts must be >= 1");
         }
-        if (b > 1 && !mtpHistoryActive() && allAnchorsReady(requestIds)) {
+        if (b > 1 && mtpHistoryActive()) {
+            return speculateBatchHistory(requestIds, lastTokens, positions, n, temperature, topp);
+        }
+        if (b > 1 && allAnchorsReady(requestIds)) {
             return speculateBatch(requestIds, lastTokens, positions, n, temperature, topp);
         }
         int[][] out = new int[b][];
@@ -2945,19 +2971,344 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         return true;
     }
 
-    private int[] speculateOneRequest(int requestId, int lastToken, int lastPos, int numDrafts,
-                                      double temperature, double topp) {
-        MtpAnchorPool anchorPool = models[0].mtpAnchorPool();
-        if (models[0].mtp() == null || anchorPool == null || !anchorPool.hasRow(requestId)) {
-            try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
-                    new int[]{lastPos})) {
-                int tok = sampleTargetId(logits, temperature, topp);
-                return new int[]{tok};
+    private long batchRounds;
+    private long batchRows;
+    private long batchDraftNs;
+    private long batchVerifyNs;
+    private long batchBookkeepingNs;
+    private long batchRestoreNs;
+    private long batchScatterNs;
+
+    /** Per-component mean cost of a batched speculative round, logged every 25 rounds. */
+    private void recordBatchRound(int rows, long draftNs, long verifyNs, long bookkeepingNs) {
+        batchRounds++;
+        batchRows += rows;
+        batchDraftNs += draftNs;
+        batchVerifyNs += verifyNs;
+        batchBookkeepingNs += bookkeepingNs;
+        if (batchRounds % 25 == 0 && logger.isInfoEnabled()) {
+            logger.info("MTP batch: rounds={} meanRows={} draft={}ms verifyForward={}ms bookkeeping={}ms"
+                            + " (of which checkpointRestore={}ms deltaScatter={}ms)",
+                    batchRounds, String.format("%.1f", (double) batchRows / batchRounds),
+                    String.format("%.1f", batchDraftNs / 1e6 / batchRounds),
+                    String.format("%.1f", batchVerifyNs / 1e6 / batchRounds),
+                    String.format("%.1f", batchBookkeepingNs / 1e6 / batchRounds),
+                    String.format("%.1f", batchRestoreNs / 1e6 / batchRounds),
+                    String.format("%.1f", batchScatterNs / 1e6 / batchRounds));
+        }
+    }
+
+    private boolean checkpointWarned;
+
+    /**
+     * Whether the DeltaNet checkpoint buffers a batched round of {@code rows} rows needs can be
+     * allocated. They cost about 0.15 GB per row per GPU for a 27B hybrid model (slots x layers x
+     * recurrent+conv state), so a large cohort on a nearly fully reserved GPU can run out of memory;
+     * failing every request in the cohort for that is far worse than one plain batched step.
+     */
+    private boolean checkpointsFit(int numDrafts, int rows) {
+        // A failed check is sticky for a few seconds: the engine keeps offering the same cohort
+        // every tick, and re-querying free memory (plus a cache flush) per tick would cost more
+        // than the plain decode step the cohort falls back to.
+        long now = System.nanoTime();
+        if (now < checkpointRetryAfterNs && rows >= checkpointFailedRows) {
+            return false;
+        }
+        boolean fits = checkpointsFitNow(numDrafts, rows);
+        if (fits) {
+            checkpointRetryAfterNs = 0L;
+        } else {
+            checkpointRetryAfterNs = now + 5_000_000_000L;
+            checkpointFailedRows = rows;
+        }
+        return fits;
+    }
+
+    private long checkpointRetryAfterNs;
+    private int checkpointFailedRows = Integer.MAX_VALUE;
+
+    private boolean checkpointsFitNow(int numDrafts, int rows) {
+        for (QwenModel m : models) {
+            DeltaNetStatePool pool = m.deltaNetStatePool();
+            if (pool == null) {
+                continue;
+            }
+            long need = pool.speculativeCheckpointGrowthBytes(numDrafts + 2, rows);
+            if (need == 0L) {
+                continue;
+            }
+            long margin = 512L << 20;
+            long free = freeDeviceBytes(m);
+            if (free >= 0 && free < need + margin) {
+                m.device().emptyCache();
+                free = freeDeviceBytes(m);
+            }
+            if (free >= 0 && free < need + margin) {
+                if (!checkpointWarned) {
+                    checkpointWarned = true;
+                    logger.warn("Batched MTP speculation needs {} MiB more GPU memory for DeltaNet "
+                                    + "checkpoints ({} rows, {} slots) but only {} MiB is free; using plain "
+                                    + "batched decode for such cohorts. Lower smile.chat.mem-fraction-static "
+                                    + "or smile.chat.speculative-max-concurrency.",
+                            need >> 20, rows, numDrafts + 2, free >> 20);
+                }
+                return false;
             }
         }
+        return true;
+    }
 
+    private static long freeDeviceBytes(QwenModel m) {
+        if (!m.device().isCUDA()) {
+            return -1L;
+        }
+        try {
+            return smile.torch.Native.cudaMemGetInfo(m.device().index())[0];
+        } catch (RuntimeException e) {
+            return -1L;
+        }
+    }
+
+    /** True while at least one live request has a valid MTP history (i.e. may be speculating). */
+    private boolean anySpeculatingRequest() {
+        if (mtpHistory.isEmpty()) {
+            return false;
+        }
+        for (MtpHistory st : mtpHistory.values()) {
+            if (st.valid) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** True when {@code requestId} has a consistent, ready-to-draft MTP history at {@code lastPos}. */
+    private boolean historyUsable(int requestId, int lastPos) {
+        MtpHistory st = mtpHistory.get(requestId);
+        if (st == null || !st.valid || st.pending == null) {
+            return false;
+        }
+        int rows = st.pendingRows();
+        return st.filled + rows == lastPos && st.priorTokens.length == rows - 1
+                && models[0].mtp().kvCachePool().isBound(requestId);
+    }
+
+    /**
+     * Keeps at most {@code keep} pending rows for a request by absorbing the oldest surplus
+     * rows into its MTP KV on the single-request path (a request that sat out several rounds
+     * can have more pending rows than the batched step's window is wide).
+     */
+    private void trimPending(int requestId, MtpHistory st, int keep) {
+        int rows = st.pendingRows();
+        if (rows <= keep) {
+            return;
+        }
+        int excess = rows - keep;
+        try {
+            activateMtpPools(requestId);
+            Tensor[] head = new Tensor[models.length];
+            Tensor[] tail = new Tensor[models.length];
+            for (int r = 0; r < models.length; r++) {
+                try (var h = Index.slice(0, excess); var t = Index.slice(excess, rows)) {
+                    head[r] = st.pending[r].get(h);
+                    Tensor tv = st.pending[r].get(t);
+                    tail[r] = tv.copy();
+                    tail[r].detachFromScopes();
+                    tv.close();
+                }
+            }
+            Tensor[] h3 = asBatchOne(head);
+            try {
+                mtpAbsorb(Arrays.copyOf(st.priorTokens, excess), h3, st.filled, false);
+            } finally {
+                closeAll(h3);
+                closeAll(head);
+            }
+            st.filled += excess;
+            st.setPending(tail, Arrays.copyOfRange(st.priorTokens, excess, st.priorTokens.length));
+        } catch (RuntimeException e) {
+            st.invalidate("trimming surplus pending rows threw");
+            throw e;
+        }
+    }
+
+    /**
+     * History-aware drafts for a cohort. Step 0 absorbs every row's pending committed positions
+     * in one ragged forward (rows padded with dummy columns after their last real one) and
+     * predicts each row's next token; steps 1..n-1 chain one token per row at
+     * {@code lastPos-1+d}. All rows must satisfy {@link #historyUsable}.
+     */
+    private int[][] draftGreedyHistoryBatch(int[] requestIds, int[] lastTokens, int[] lastPos, int n) {
+        int b = requestIds.length;
+        int s = n + 1;
+        MtpHistory[] sts = new MtpHistory[b];
+        int[] startPos = new int[b];
+        int[] lastReal = new int[b];
+        long[] tokLongs = new long[b * s];
+        for (int i = 0; i < b; i++) {
+            MtpHistory st = mtpHistory.get(requestIds[i]);
+            sts[i] = st;
+            trimPending(requestIds[i], st, s);
+            int m = st.pendingRows();
+            startPos[i] = st.filled;
+            lastReal[i] = m - 1;
+            for (int j = 0; j < m - 1; j++) {
+                tokLongs[i * s + j] = st.priorTokens[j];
+            }
+            tokLongs[i * s + m - 1] = lastTokens[i];
+        }
+        int[][] drafts = new int[b][n];
+        try {
+            activateMtpPools(requestIds);
+            long dim = sts[0].pending[0].shape()[1];
+            Tensor[] logits = runOnRanks(r -> {
+                Tensor tokT = Tensor.of(tokLongs).reshape(b, s);
+                Tensor dev = tokT.to(models[r].device());
+                Tensor hid = Tensor.zeros(new Tensor.Options().device(dev.device())
+                        .dtype(sts[0].pending[r].dtype()).requireGradients(false), b, s, dim);
+                try {
+                    for (int i = 0; i < b; i++) {
+                        try (var bi = Index.of(i); var sl = Index.slice(0, sts[i].pendingRows())) {
+                            hid.put_(sts[i].pending[r], bi, sl, Index.Colon);
+                        }
+                    }
+                    return models[r].mtp().absorbBatch(dev, hid, startPos, lastReal);
+                } finally {
+                    hid.close();
+                    if (dev != tokT) {
+                        dev.close();
+                    }
+                    tokT.close();
+                }
+            });
+            int[] d0 = smile.llm.engine.Sampling.sampleGreedyTokenIds(logits[0]);
+            closeAll(logits);
+            for (int i = 0; i < b; i++) {
+                drafts[i][0] = d0[i];
+                sts[i].filled = lastPos[i];
+                sts[i].closePending();
+            }
+            for (int d = 1; d < n; d++) {
+                final int step = d;
+                long[] tl = new long[b];
+                int[] pos = new int[b];
+                for (int i = 0; i < b; i++) {
+                    tl[i] = drafts[i][step - 1];
+                    pos[i] = lastPos[i] - 1 + step;
+                }
+                int[] zeros = new int[b];
+                Tensor[] lg = runOnRanks(r -> {
+                    Tensor tokT = Tensor.of(tl).reshape(b, 1);
+                    Tensor dev = tokT.to(models[r].device());
+                    try {
+                        return models[r].mtp().absorbBatch(dev, models[r].mtp().lastDraftHidden(), pos, zeros);
+                    } finally {
+                        if (dev != tokT) {
+                            dev.close();
+                        }
+                        tokT.close();
+                    }
+                });
+                int[] di = smile.llm.engine.Sampling.sampleGreedyTokenIds(lg[0]);
+                closeAll(lg);
+                for (int i = 0; i < b; i++) {
+                    drafts[i][step] = di[i];
+                }
+            }
+        } catch (RuntimeException e) {
+            for (MtpHistory st : sts) {
+                st.invalidate("batched draft threw");
+            }
+            throw e;
+        } finally {
+            for (QwenModel m : models) {
+                m.mtp().clearDraftHidden();
+            }
+        }
+        return drafts;
+    }
+
+    /**
+     * Batched speculation for a cohort using each request's persistent MTP history. Rows whose
+     * history is unusable (multimodal, KV-bind failure, an earlier plain-decode gap) take one
+     * batched plain decode step instead; a lone usable row uses the single-request path (and its
+     * verify CUDA graph); two or more usable rows draft and verify together.
+     */
+    private int[][] speculateBatchHistory(int[] requestIds, int[] lastTokens, int[] lastPositions,
+                                          int n, double temperature, double topp) {
+        int b = requestIds.length;
+        int[][] out = new int[b][];
+        List<Integer> good = new ArrayList<>();
+        List<Integer> bad = new ArrayList<>();
+        boolean fits = b < 2 || checkpointsFit(n, b);
+        for (int i = 0; i < b; i++) {
+            (fits && historyUsable(requestIds[i], lastPositions[i]) ? good : bad).add(i);
+        }
+        if (!bad.isEmpty()) {
+            int[] ids = new int[bad.size()];
+            int[] toks = new int[bad.size()];
+            int[] pos = new int[bad.size()];
+            for (int k = 0; k < ids.length; k++) {
+                int i = bad.get(k);
+                ids[k] = requestIds[i];
+                toks[k] = lastTokens[i];
+                pos[k] = lastPositions[i];
+            }
+            try (Tensor logits = decodeStep(ids, toks, pos)) {
+                int[] sampled = sampleTargetWindow(logits, temperature, topp);
+                for (int k = 0; k < ids.length; k++) {
+                    out[bad.get(k)] = new int[]{sampled[k]};
+                }
+            }
+        }
+        if (good.size() == 1) {
+            int i = good.get(0);
+            out[i] = speculateOneRequest(requestIds[i], lastTokens[i], lastPositions[i], n,
+                    temperature, topp);
+        } else if (good.size() > 1) {
+            int g = good.size();
+            int[] ids = new int[g];
+            int[] toks = new int[g];
+            int[] pos = new int[g];
+            for (int k = 0; k < g; k++) {
+                int i = good.get(k);
+                ids[k] = requestIds[i];
+                toks[k] = lastTokens[i];
+                pos[k] = lastPositions[i];
+            }
+            long tDraft = System.nanoTime();
+            int[][] drafts = draftGreedyHistoryBatch(ids, toks, pos, n);
+            long draftNs = System.nanoTime() - tDraft;
+            speculativeDraftNanos.addAndGet(draftNs);
+            long verify0 = speculativeVerifyNanos.get();
+            long book0 = speculativeBookkeepingNanos.get();
+            SpeculativeDecoding.AcceptResult[] accepts = verifyWindowOnlineBatch(
+                    ids, toks, pos, drafts, temperature, topp);
+            recordBatchRound(g, draftNs, speculativeVerifyNanos.get() - verify0,
+                    speculativeBookkeepingNanos.get() - book0);
+            for (int k = 0; k < g; k++) {
+                recordSpeculativeRound(n, accepts[k].numDraftAccepted());
+                out[good.get(k)] = accepts[k].acceptedTokens();
+            }
+            logVerify(n, accepts[0].numDraftAccepted(), accepts[0].bonusToken());
+        }
+        return out;
+    }
+
+    private int[] speculateOneRequest(int requestId, int lastToken, int lastPos, int numDrafts,
+                                      double temperature, double topp) {
         // Window verify: one target forward over [lastToken] + drafts (vLLM-style).
         int n = Math.max(1, numDrafts);
+        if (!mtpHistoryActive()) {
+            MtpAnchorPool anchorPool = models[0].mtpAnchorPool();
+            if (models[0].mtp() == null || anchorPool == null || !anchorPool.hasRow(requestId)) {
+                try (Tensor logits = decodeStep(new int[]{requestId}, new int[]{lastToken},
+                        new int[]{lastPos})) {
+                    int tok = sampleTargetId(logits, temperature, topp);
+                    return new int[]{tok};
+                }
+            }
+        }
         if (mtpHistoryActive()) {
             long tDraft = System.nanoTime();
             int[] drafts = draftGreedyHistory(requestId, lastToken, lastPos, n);
@@ -3245,6 +3596,14 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             }
         }
 
+        // History-aware MTP: rows whose draft consumed their pending hidden rows keep the verify
+        // window's hidden so the accepted prefix can be absorbed on their next draft.
+        boolean historyMode = mtpHistoryActive();
+        boolean[] hist = new boolean[b];
+        for (int i = 0; i < b && historyMode; i++) {
+            MtpHistory st = mtpHistory.get(requestIds[i]);
+            hist[i] = st != null && st.valid && st.pending == null && st.filled == lastPositions[i];
+        }
         setVerifyWindowActive(true);
         long tVerify = System.nanoTime();
         Tensor[] tokenShards = new Tensor[models.length];
@@ -3294,26 +3653,59 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         for (int i = 0; i < b; i++) {
             results[i] = SpeculativeDecoding.acceptGreedy(drafts[i], targetSamples[i]);
             int r = results[i].numDraftAccepted();
+            if (hist[i]) {
+                // Rows 0..r of this request's window are its newly committed positions.
+                MtpHistory st = mtpHistory.get(requestIds[i]);
+                Tensor[] rows = new Tensor[models.length];
+                boolean ok = true;
+                for (int m = 0; m < models.length; m++) {
+                    rows[m] = models[m].copyWindowHiddenRows(i, 0, r + 1);
+                    ok &= rows[m] != null;
+                }
+                if (ok) {
+                    st.setPending(rows, Arrays.copyOf(drafts[i], r));
+                } else {
+                    closeAll(rows);
+                    st.invalidate("no window hidden captured during batched verify");
+                }
+            }
             int writtenEnd = lastPositions[i] + windowLen;
             int sealedLen = lastPositions[i] + 1 + r;
-            truncateKv(requestIds[i], sealedLen, writtenEnd);
+            if (KvCachePool.zeroRejectedKv()) {
+                truncateKv(requestIds[i], sealedLen, writtenEnd);
+            }
             restoreSlots[i] = r + 1;
             anchorPositions[i] = r;
             if (r < n) {
                 anyPartial = true;
             }
         }
+        if (!KvCachePool.zeroRejectedKv()) {
+            // No per-row KV work is needed any more (attention is bounded by the committed
+            // length); the only thing a KV change must still do is drop decode CUDA graphs.
+            for (QwenModel m : models) {
+                m.invalidateDecodeCudaGraphs();
+            }
+        }
+        long tRestore = System.nanoTime();
         if (anyPartial) {
             for (QwenModel m : models) {
                 DeltaNetStatePool pool = m.deltaNetStatePool();
                 if (pool != null && pool.boundBatch() > 0) {
                     pool.restoreCheckpointPerRow(restoreSlots);
                 }
-                m.setMtpAnchorAtWindowPositions(anchorPositions.clone());
+                if (!historyMode) {
+                    m.setMtpAnchorAtWindowPositions(anchorPositions.clone());
+                }
             }
         }
+        long tScatter = System.nanoTime();
+        batchRestoreNs += tScatter - tRestore;
         scatterDeltaNet();
-        scatterMtpAnchor(requestIds);
+        batchScatterNs += System.nanoTime() - tScatter;
+        if (!historyMode) {
+            scatterMtpAnchor(requestIds);
+        }
         speculativeBookkeepingNanos.addAndGet(System.nanoTime() - tBookkeeping);
         return results;
     }

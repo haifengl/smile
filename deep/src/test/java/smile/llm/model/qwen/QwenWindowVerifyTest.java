@@ -187,6 +187,7 @@ public class QwenWindowVerifyTest {
                 1, 3);
         QwenModel model = tinyModel(args);
         Qwen qwen = new Qwen("tiny-mtp-anchor-isolation", model, tinyTokenizer(), args);
+        qwen.setMtpHistoryEnabledForTesting(false); // exercises the legacy shared-anchor path
 
         int[] promptA = pageAlignedPrompt();
         int requestA = qwen.bind(promptA, 32);
@@ -591,10 +592,12 @@ public class QwenWindowVerifyTest {
         smile.torch.smile_torch_h.smile_manual_seed(seed);
         QwenModel modelRef = tinyModel(args);
         Qwen qwenRef = new Qwen("tiny-batch-ref", modelRef, tinyTokenizer(), args);
+        qwenRef.setMtpHistoryEnabledForTesting(false); // exercises the legacy shared-anchor path
 
         smile.torch.smile_torch_h.smile_manual_seed(seed);
         QwenModel modelBatch = tinyModel(args);
         Qwen qwenBatch = new Qwen("tiny-batch-subject", modelBatch, tinyTokenizer(), args);
+        qwenBatch.setMtpHistoryEnabledForTesting(false); // exercises the legacy shared-anchor path
 
         // Same length (-> same lastPos) so both rows share one absolute
         // position: GatedAttention's full-attention layer only has a ragged

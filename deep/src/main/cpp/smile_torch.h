@@ -1290,6 +1290,29 @@ SMILE_API ST_Tensor smile_flashinfer_paged_attention_verify(
         ST_FlashInferWorkspace workspace);
 
 /**
+ * Same as {@link smile_flashinfer_paged_attention_verify} but plans into a scratch workspace
+ * and plan cache that is disjoint from the one a captured verify CUDA graph reads. Use for
+ * every verify-attention call that is not part of (or warming up) a graph bucket.
+ */
+SMILE_API ST_Tensor smile_flashinfer_paged_attention_verify_eager(
+        ST_Tensor query,
+        ST_Tensor k_cache,
+        ST_Tensor v_cache,
+        ST_Tensor qo_indptr,
+        ST_Tensor kv_indptr,
+        ST_Tensor kv_indices,
+        ST_Tensor kv_last_page_len,
+        int page_size,
+        int num_kv_heads,
+        int head_dim,
+        int qo_len,
+        double scale,
+        float k_scale,
+        float v_scale,
+        int is_causal,
+        ST_FlashInferWorkspace workspace);
+
+/**
  * Ragged contiguous self-attention (vision tower / varlen prefill).
  *
  * @param query   {@code [N, H, D]} NHD layout

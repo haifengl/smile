@@ -551,7 +551,7 @@ public class KvCachePoolTest {
     }
 
     @Test
-    public void testGivenSpeculativeWindowWhenTruncateToThenSealsLengthAndZerosTail() {
+    public void testGivenSpeculativeWindowWhenTruncateToThenSealsLengthAndTailZeroingIsOptIn() {
         // Given – pageSize 16 so a mid-page reject must shrink last_page_len
         try (var pool = new KvCachePool(2, 64, 2, 16, 16, Device.CPU(), ScalarType.Float)) {
             pool.setPrefixReuseEnabled(false);
@@ -572,13 +572,25 @@ public class KvCachePoolTest {
             assertEquals(1, meta.pagedKvLastPageLen().intArray()[0]);
             assertSame(meta, pool.sharedFlashInferMetadata(17));
 
+            // Zeroing the rejected tail is opt-in (SMILE_MTP_ZERO_REJECTED_KV=1): attention is
+            // bounded by the sealed length, so by default truncateTo leaves the tail untouched.
             var cached = pool.get(0, 20);
             assertEquals(1.0f, cached._1().getFloat(0, 16, 0, 0), 1e-5);
-            assertEquals(0.0f, cached._1().getFloat(0, 17, 0, 0), 1e-5);
-            assertEquals(0.0f, cached._1().getFloat(0, 19, 0, 0), 1e-5);
-            assertEquals(0.0f, cached._2().getFloat(0, 18, 0, 0), 1e-5);
+            float expectedTail = KvCachePool.zeroRejectedKv() ? 0.0f : 1.0f;
+            assertEquals(expectedTail, cached._1().getFloat(0, 17, 0, 0), 1e-5);
+            assertEquals(expectedTail, cached._1().getFloat(0, 19, 0, 0), 1e-5);
             cached._1().close();
             cached._2().close();
+
+            // An explicit invalidateRange still zeroes the tail in every layer.
+            pool.invalidateRange(17, 20);
+            var zeroed = pool.get(1, 20);
+            assertEquals(1.0f, zeroed._1().getFloat(0, 16, 0, 0), 1e-5);
+            assertEquals(0.0f, zeroed._1().getFloat(0, 17, 0, 0), 1e-5);
+            assertEquals(0.0f, zeroed._1().getFloat(0, 19, 0, 0), 1e-5);
+            assertEquals(0.0f, zeroed._2().getFloat(0, 18, 0, 0), 1e-5);
+            zeroed._1().close();
+            zeroed._2().close();
             k.close();
             v.close();
         }

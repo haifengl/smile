@@ -394,7 +394,7 @@ public class QwenModel extends LayerBlock {
      *               or {@code [B, D]}.
      */
     void capturePreNormHidden(Tensor hidden) {
-        if (mtp == null || hidden == null) {
+        if (mtp == null || hidden == null || skipAnchorCapture) {
             return;
         }
         Tensor row = hidden;
@@ -509,7 +509,7 @@ public class QwenModel extends LayerBlock {
      */
     public void setMtpAnchorAtWindowPosition(int r) {
         Tensor hidden = activeWindowHidden();
-        if (mtp == null || hidden == null) {
+        if (mtp == null || hidden == null || skipAnchorCapture) {
             return;
         }
         try (var idx = Index.of(r); Tensor row = hidden.get(Index.Colon, idx)) {
@@ -527,7 +527,7 @@ public class QwenModel extends LayerBlock {
      */
     public void setMtpAnchorAtWindowPositions(int[] positions) {
         Tensor hidden = activeWindowHidden();
-        if (mtp == null || hidden == null) {
+        if (mtp == null || hidden == null || skipAnchorCapture) {
             return;
         }
         int b = positions.length;
@@ -557,6 +557,23 @@ public class QwenModel extends LayerBlock {
      * (prefill chunks and accepted verify rows).
      */
     volatile boolean captureWindowHidden;
+
+    /**
+     * When {@code true}, {@link #capturePreNormHidden} is a no-op. The history-aware MTP draft head
+     * takes its hidden rows from the retained window hidden (prefill chunks / verify windows), never
+     * from this shared single-buffer anchor; leaving the capture on would only keep a buffer that
+     * CUDA graphs bake in and batched rounds reallocate (use-after-free on the next replay).
+     */
+    volatile boolean skipAnchorCapture;
+
+    /**
+     * Enables or disables the legacy shared-anchor capture (see {@link #skipAnchorCapture}).
+     *
+     * @param skip whether to skip capturing the shared anchor.
+     */
+    void setSkipAnchorCapture(boolean skip) {
+        this.skipAnchorCapture = skip;
+    }
 
     /**
      * Enables or disables full-window hidden capture (see {@link #captureWindowHidden}).
@@ -591,12 +608,25 @@ public class QwenModel extends LayerBlock {
      * @return owned copy, or {@code null} when nothing was captured.
      */
     Tensor copyWindowHiddenRows(int from, int count) {
+        return copyWindowHiddenRows(0, from, count);
+    }
+
+    /**
+     * Copies window rows {@code [from, from+count)} of batch row {@code batchRow} of the retained
+     * window hidden into a fresh detached {@code [count, D]} tensor.
+     *
+     * @param batchRow batch row of the retained window.
+     * @param from     first window position to keep.
+     * @param count    number of positions to keep.
+     * @return owned copy, or {@code null} when nothing was captured.
+     */
+    Tensor copyWindowHiddenRows(int batchRow, int from, int count) {
         Tensor hidden = activeWindowHidden();
-        if (hidden == null) {
+        if (hidden == null || batchRow >= hidden.shape()[0]) {
             return null;
         }
         long dim = hidden.shape()[2];
-        try (var row0 = Index.of(0); var rows = Index.slice(from, from + count);
+        try (var row0 = Index.of(batchRow); var rows = Index.slice(from, from + count);
              Tensor sliced = hidden.get(row0, rows);
              Tensor flat = sliced.reshape(count, dim)) {
             Tensor out = flat.copy();
@@ -1859,7 +1889,10 @@ public class QwenModel extends LayerBlock {
             throw new IllegalStateException("KV cache pool not installed");
         }
         int windowLen = (int) tokens.shape()[1];
-        kvCachePool.prepareVerifyGraphStep(cacheLengths, startPositions, windowLen);
+        // No prepareVerifyGraphStep here: this forward is never graph-captured (verifyGraphBuffers
+        // stays false, so KvCachePool.put builds its slot index on the fly and the attention layer
+        // builds its own ragged CSR). Calling it resized the shared verifyKvIndexBuf, which a
+        // captured single-request verify graph has baked in (use-after-free on its next replay).
         Tensor cos = PartialRotaryEncoding.gatherWindow(rope.cos(), startPositions, windowLen);
         Tensor sin = PartialRotaryEncoding.gatherWindow(rope.sin(), startPositions, windowLen);
         // forwardVerifyGraphCore relies on the FlashInfer kernel's own

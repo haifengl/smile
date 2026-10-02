@@ -2948,7 +2948,8 @@ ST_Tensor smile_flashinfer_paged_attention(
 #endif
 }
 
-ST_Tensor smile_flashinfer_paged_attention_verify(
+static ST_Tensor flashinfer_paged_attention_verify_impl(
+        bool eager_scratch,
         ST_Tensor query,
         ST_Tensor k_cache,
         ST_Tensor v_cache,
@@ -2987,12 +2988,18 @@ ST_Tensor smile_flashinfer_paged_attention_verify(
         // see smile_flashinfer_workspace_get_verify_tensors's doc comment: sharing
         // scratch with decode's DecodePlan let verify's eager PrefillPlan calls
         // clobber a live SMILE_DECODE_CUDA_GRAPH-captured graph's plan data.
-        if (smile_flashinfer_workspace_get_verify_tensors(
-                workspace, &float_ws, &int_ws, &pinned_ws) != 0) {
+        const int ws_rc = eager_scratch
+                ? smile_flashinfer_workspace_get_verify_eager_tensors(
+                        workspace, &float_ws, &int_ws, &pinned_ws)
+                : smile_flashinfer_workspace_get_verify_tensors(
+                        workspace, &float_ws, &int_ws, &pinned_ws);
+        if (ws_rc != 0) {
             set_error("smile_flashinfer_paged_attention_verify: invalid workspace");
             return nullptr;
         }
-        void **runtime_cache = smile_flashinfer_workspace_runtime_cache_slot(workspace);
+        void **runtime_cache = eager_scratch
+                ? smile_flashinfer_workspace_eager_runtime_cache_slot(workspace)
+                : smile_flashinfer_workspace_runtime_cache_slot(workspace);
         int rc = smile_flashinfer_paged_attention_verify_cuda(
                 q, k_cache->t, v_cache->t,
                 qo_indptr->t, kv_indptr->t, kv_indices->t, kv_last_page_len->t,
@@ -3019,6 +3026,28 @@ ST_Tensor smile_flashinfer_paged_attention_verify(
 #  endif
     return nullptr;
 #endif
+}
+
+ST_Tensor smile_flashinfer_paged_attention_verify(
+        ST_Tensor query, ST_Tensor k_cache, ST_Tensor v_cache, ST_Tensor qo_indptr,
+        ST_Tensor kv_indptr, ST_Tensor kv_indices, ST_Tensor kv_last_page_len,
+        int page_size, int num_kv_heads, int head_dim, int qo_len, double scale,
+        float k_scale, float v_scale, int is_causal, ST_FlashInferWorkspace workspace) {
+    return flashinfer_paged_attention_verify_impl(
+            /*eager_scratch=*/false, query, k_cache, v_cache, qo_indptr, kv_indptr, kv_indices,
+            kv_last_page_len, page_size, num_kv_heads, head_dim, qo_len, scale, k_scale, v_scale,
+            is_causal, workspace);
+}
+
+ST_Tensor smile_flashinfer_paged_attention_verify_eager(
+        ST_Tensor query, ST_Tensor k_cache, ST_Tensor v_cache, ST_Tensor qo_indptr,
+        ST_Tensor kv_indptr, ST_Tensor kv_indices, ST_Tensor kv_last_page_len,
+        int page_size, int num_kv_heads, int head_dim, int qo_len, double scale,
+        float k_scale, float v_scale, int is_causal, ST_FlashInferWorkspace workspace) {
+    return flashinfer_paged_attention_verify_impl(
+            /*eager_scratch=*/true, query, k_cache, v_cache, qo_indptr, kv_indptr, kv_indices,
+            kv_last_page_len, page_size, num_kv_heads, head_dim, qo_len, scale, k_scale, v_scale,
+            is_causal, workspace);
 }
 
 ST_Tensor smile_flashinfer_ragged_attention(
