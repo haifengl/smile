@@ -32,6 +32,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import com.formdev.flatlaf.util.SystemInfo;
 import ioa.agent.AgentListener;
 import ioa.agent.AgentRequest;
@@ -80,6 +81,15 @@ public class AgentCLI extends JPanel {
     private final Map<String, Intent> queuedIntents = new HashMap<>();
     /** The id currently being re-opened for editing, so its cancel is not shown as one. */
     private String editingId;
+    /**
+     * The composer the user types into: the single editable intent, kept at the end of
+     * the conversation. Every other intent is read-only history. Tracked explicitly so
+     * the composer is reused rather than duplicated when it must be re-created (after a
+     * resume rebuilds the transcript) or refilled (after editing a queued request).
+     */
+    private Intent composer;
+    /** Guards {@link #ensureComposer()} so a concurrent caller does not add two. */
+    private final AtomicBoolean buildingComposer = new AtomicBoolean();
     /** Output that arrived before its turn was promoted; flushed on STARTED. */
     private final StringBuilder pendingOutput = new StringBuilder();
     /**
@@ -119,7 +129,8 @@ public class AgentCLI extends JPanel {
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
-        intents.add(new Intent(this));
+        composer = new Intent(this);
+        intents.add(composer);
         intents.add(Box.createVerticalGlue());
         if (agent != null) {
             var def = SmileStudio.llmServices().defaultModel();
@@ -375,27 +386,21 @@ public class AgentCLI extends JPanel {
      * clobbers the running turn's own status.
      */
     private void showQueueDepth(int size) {
-        Intent composer = composerIntent();
-        if (composer == null) {
+        if (composer == null || composer.getParent() != intents) {
             return;
         }
         composer.setStatus(size > 0 ? Intent.queuedMessage("QueueDepth", size) : "");
     }
 
-    /** Returns the trailing editable composer intent, or null if there is none. */
-    private Intent composerIntent() {
-        for (int i = intents.getComponentCount() - 1; i >= 0; i--) {
-            if (intents.getComponent(i) instanceof Intent intent && intent.editor().isEditable()) {
-                return intent;
-            }
-        }
-        return null;
-    }
-
     /**
-     * Removes a queued request and returns its intent to the composer for editing. The
+     * Removes a queued request and returns its prompt to the composer for editing. The
      * cancel drives the same CANCELLED path as the cancel button (the event handler
-     * clears the badge and drops the id from the map); this only re-enables the editor.
+     * clears the badge and drops the id from the map).
+     * <p>The prompt is folded into the existing composer rather than turning the queued
+     * widget editable in place. A second editable intent would leave two composers in
+     * the tab -- the one the user types into plus the edited one -- and every later
+     * submit would append yet another. The queued widget is dropped and the composer
+     * takes over with the prompt loaded and the caret at its end.
      */
     private void editQueued(String id) {
         Intent intent = queuedIntents.get(id);
@@ -405,8 +410,24 @@ public class AgentCLI extends JPanel {
         // Mark it so the CANCELLED handler re-opens it instead of reporting a cancel.
         editingId = id;
         agent.session().cancel(id);
-        intent.setEditable(true);
-        SwingUtilities.invokeLater(() -> intent.editor().requestFocusInWindow());
+        String text = intent.editor().getText();
+        // Run on the EDT after the CANCELLED event, so the queued widget is already
+        // un-badged when it is removed.
+        SwingUtilities.invokeLater(() -> {
+            intents.remove(intent);
+            Intent target = composerOrCreate();
+            if (target == null) {
+                intents.revalidate();
+                return;
+            }
+            target.editor().setText(text);
+            target.editor().setCaretPosition(text.length());
+            target.setEditable(true);
+            composer = target;
+            intents.revalidate();
+            intents.repaint();
+            target.editor().requestFocusInWindow();
+        });
     }
 
     private void onEdt(Runnable action) {
@@ -469,6 +490,32 @@ public class AgentCLI extends JPanel {
     }
 
     /**
+     * Returns the editable intents in the conversation. Normally there is exactly one:
+     * the composer at the end. Package-private for testing.
+     * @return the editable intents, in order.
+     */
+    List<Intent> composers() {
+        List<Intent> editable = new ArrayList<>();
+        for (Component component : intents.getComponents()) {
+            if (component instanceof Intent intent && intent.editor().isEditable()) {
+                editable.add(intent);
+            }
+        }
+        return editable;
+    }
+
+    /** Returns the conversation's intents in order. Package-private for testing. */
+    List<Intent> intentList() {
+        List<Intent> all = new ArrayList<>();
+        for (Component component : intents.getComponents()) {
+            if (component instanceof Intent intent) {
+                all.add(intent);
+            }
+        }
+        return all;
+    }
+
+    /**
      * Returns the agent.
      * @return the agent.
      */
@@ -511,9 +558,44 @@ public class AgentCLI extends JPanel {
 
     /** Append a new intent box, keeping it as the last intent in the conversation. */
     public void addIntent() {
-        Intent intent = new Intent(this);
-        intents.add(intent, composerIndex());
-        SwingUtilities.invokeLater(() -> intent.editor().requestFocusInWindow());
+        ensureComposer();
+    }
+
+    /**
+     * Makes sure the conversation has exactly one editable composer, at the end.
+     * <p>If the tracked composer is still editable and in the panel, it stays; a repeat
+     * call is a no-op. Otherwise (after a resume cleared it, for example) a fresh one is
+     * appended. Repeated calls therefore do not stack a second editable intent -- the
+     * bug that left two active widgets in a tab.
+     */
+    private void ensureComposer() {
+        if (!buildingComposer.compareAndSet(false, true)) {
+            return;
+        }
+        try {
+            if (composer != null && composer.editor().isEditable()
+                    && composer.getParent() == intents) {
+                return;
+            }
+            Intent intent = new Intent(this);
+            intents.add(intent, composerIndex());
+            composer = intent;
+            SwingUtilities.invokeLater(() -> intent.editor().requestFocusInWindow());
+        } finally {
+            buildingComposer.set(false);
+        }
+    }
+
+    /**
+     * Returns the composer the user types into, creating one if the conversation has
+     * none (for example after {@link #showResumedSession} rebuilt the transcript).
+     * @return the composer, or null when there is no agent.
+     */
+    private Intent composerOrCreate() {
+        if (composer == null || !composer.editor().isEditable() || composer.getParent() != intents) {
+            ensureComposer();
+        }
+        return composer;
     }
 
     /**
@@ -920,6 +1002,10 @@ public class AgentCLI extends JPanel {
             }
         }
         intents.removeAll();
+        // The old composer was removed with everything else; forget it so the next
+        // addIntent()/composerOrCreate() builds a fresh one instead of reusing a widget
+        // that is no longer in the panel.
+        composer = null;
         for (Intent banner : banners) {
             intents.add(banner);
         }

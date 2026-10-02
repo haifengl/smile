@@ -69,4 +69,22 @@ class AgentCLITest {
 
         assertEquals(List.of("first", "second", "third", "fourth"), contents);
     }
+
+    @Test
+    void addIntentReusesTheExistingComposerInsteadOfStacking() {
+        // Regression: repeated addIntent() calls used to append a fresh editable intent
+        // each time, so a tab could end up with two active Intent widgets.
+        AgentCLI cli = new AgentCLI(null, null);
+        assertEquals(1, cli.composers().size(), "a new CLI starts with one composer");
+
+        cli.addIntent();
+        cli.addIntent();
+
+        assertEquals(1, cli.composers().size(),
+                "addIntent() must not add a second editable intent");
+        // The single composer stays last, above the trailing glue.
+        List<Intent> all = cli.intentList();
+        assertTrue(all.get(all.size() - 1).editor().isEditable(),
+                "the composer must remain the last intent");
+    }
 }
