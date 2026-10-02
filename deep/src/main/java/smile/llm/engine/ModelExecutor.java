@@ -197,6 +197,36 @@ public interface ModelExecutor {
     }
 
     /**
+     * Same as {@link #speculateStep(int[], int[], int[], int, double, double)} with per-request
+     * sampling parameters, so a cohort whose requests sample differently is still verified in one
+     * batched forward. The default delegates to the scalar overload when every request shares the
+     * same parameters and otherwise runs the requests one at a time.
+     *
+     * @param temperatures per-request sampling temperature (verify).
+     * @param topps        per-request nucleus top-p (verify).
+     * @return accepted token ids per request (each length {@code >= 1}; caller owns arrays).
+     */
+    default int[][] speculateStep(int[] requestIds, int[] lastTokens, int[] positions,
+                                  int numDrafts, double[] temperatures, double[] topps) {
+        boolean uniform = true;
+        for (int i = 1; i < requestIds.length; i++) {
+            if (temperatures[i] != temperatures[0] || topps[i] != topps[0]) {
+                uniform = false;
+                break;
+            }
+        }
+        if (uniform) {
+            return speculateStep(requestIds, lastTokens, positions, numDrafts, temperatures[0], topps[0]);
+        }
+        int[][] out = new int[requestIds.length][];
+        for (int i = 0; i < requestIds.length; i++) {
+            out[i] = speculateStep(new int[]{requestIds[i]}, new int[]{lastTokens[i]},
+                    new int[]{positions[i]}, numDrafts, temperatures[i], topps[i])[0];
+        }
+        return out;
+    }
+
+    /**
      * Advances pending decode-graph prefetch when the scheduler is idle but KV
      * remains bound (e.g. between continuous-batching waves).
      */
