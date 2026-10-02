@@ -146,7 +146,7 @@ decode). **MTP is a latency feature for low concurrency**: it speeds up a lone
 request about 2-3x, and it automatically stays out of the way once several
 requests are active.
 
-Setup: BF16, TP=4 on A100 40 GB, greedy, `speculative-tokens=2`, prompt
+Setup: BF16, TP=4 on A100 40 GB, greedy, `speculative-tokens=2` (the default depth of 3 measures the same or slightly better), prompt
 "What is the history of China?", 512 new tokens, warm run, wall time including
 prefill.
 
@@ -170,8 +170,8 @@ context (6.6k-token prompt, 256 new tokens: 16.7 s with the verify graph vs
 **Concurrency.** Speculating requests are drafted and verified together as one batched
 round, each with its own persistent draft context, so the gain holds well beyond a single
 request. Aggregate throughput (tok/s, 512 new tokens, identical prompts, decode CUDA graph
-on, `max-batch-size=48`, `admit-coalesce-ms=50`, BF16 TP=4 on A100 40 GB; the last two rows
-use `mem-fraction-static=0.75`, see the memory note below):
+on, `max-batch-size=48`, `admit-coalesce-ms=50`, BF16 TP=4 on A100 40 GB, default
+`mem-fraction-static=0.85`):
 
 | Active requests | Plain decode | `speculative=true` | Speedup |
 |---|---|---|---|
@@ -180,8 +180,8 @@ use `mem-fraction-static=0.75`, see the memory note below):
 | 4 | 94 | 121 | 1.3x |
 | 8 | 187 | 216-236 | 1.2x |
 | 16 | 335 | 408-441 | 1.2-1.3x |
-| 32 | 484 | **667** (0.75) | 1.4x |
-| 48 | 688-702 | **778-828** (0.75) | 1.1-1.2x |
+| 32 | 484 | **694** | 1.4x |
+| 48 | 688-702 | **811** | 1.15x |
 
 Per-request speed at 16 requests is ~26-28 tok/s versus ~21 for plain decode. A batched
 round of 16 requests takes ~80 ms (draft ~8 ms, verify forward ~52 ms, bookkeeping ~14-19 ms)
@@ -189,27 +189,33 @@ and commits ~2.5 tokens per request. Outputs match plain decode for the same pro
 bf16 near-tie flips: plain decode itself is not batch-invariant, and a plain batch of 8
 diverges from the same prompts run alone at the same places a speculative batch does.
 
-**Memory.** Each speculating request needs ~0.15 GB per GPU for a 27B hybrid model (DeltaNet
-checkpoints: `(draft depth + 2)` slots x layers x recurrent+conv state), allocated on demand
-for the largest cohort seen. With the default `mem-fraction-static=0.85` that fits roughly 30
-requests on a 40 GB GPU; for larger cohorts lower `smile.chat.mem-fraction-static` (0.75 ran
-48 requests) or bound the cohort with `smile.chat.speculative-max-concurrency`. If the buffers
-do not fit, the engine logs one warning and serves that cohort with plain batched decode
-instead of failing requests (throughput is then within ~12% of plain decode).
+**Memory.** Each speculating request needs DeltaNet checkpoint buffers: about 0.04 GB per GPU
+per draft slot for a 27B hybrid model, i.e. ~0.11 GB at the default depth 3 (~0.075 GB at
+depth 2), reserved at load for `min(max-batch-size, speculative-max-concurrency)` rows, before the KV pool is
+sized, so the KV budget already excludes it (48 rows at depth 3 = ~5.3 GB per GPU on a 27B hybrid
+model; it shrinks the KV pool, e.g. from ~734k to ~455k token slots on 40 GB GPUs at
+`mem-fraction-static=0.85`). Only the slots a partial accept can restore from are stored (positions
+`1..depth`; the pre-window copy and the final position are not needed). A cohort larger than the
+reservation (only possible after a depth change) is still checked at run time and, if it does not
+fit, the engine logs one warning and serves it with plain batched decode instead of failing
+requests. To keep more KV, lower `smile.chat.speculative-max-concurrency` (smaller reservation) or
+set `smile.chat.speculative=false`.
 
-Recommendation: enable `smile.chat.speculative=true` for any Qwen3.5/3.8 deployment with MTP
-weights; budget the memory above if you run more than ~30 concurrent requests.
+Speculation is on by default for Qwen3.5/3.8 checkpoints with MTP weights; budget the memory
+above on small GPUs or very large batches, or set `smile.chat.speculative=false`.
 
 Controls (all default to the values that were benchmarked):
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `smile.chat.speculative` | `false` | Enable MTP speculation (Qwen3.5/3.8 checkpoints with MTP weights). |
-| `smile.chat.speculative-tokens` | `2` | Draft depth; 2 is the benchmarked setting. Depth 3 was slower with the old context-free head and has not been re-measured. |
+| `smile.chat.speculative` | `true` | MTP speculation for Qwen3.5/3.8 checkpoints with MTP weights (ignored for other models). Set `false` to disable. |
+| `smile.chat.speculative-tokens` | `0` (model default; 3 for Qwen3.8-27B) | Draft depth. Measured aggregate tok/s at 1 / 8 / 16 requests: depth 1: 47 / 203 / 387; depth 2: 53 / 216-236 / 408-441; depth 3 (default): 55 / 232 / 446; depth 4: 54 / 241 / 439. Depths 2-4 are within noise; depth 1 is slower. |
 | `smile.chat.speculative-max-concurrency` | `0` (= `max-batch-size`) | Requests that may speculate at once. A request keeps its speculation slot for its whole life; requests beyond the limit use batched plain decode. Speculating only part of a large cohort is slower than all or none, so leave unlimited unless you need to bound checkpoint memory. |
 | `SMILE_VERIFY_CUDA_GRAPH` | on | Capture the verify forward as one CUDA graph (one capture per session). `0` disables. |
 | `SMILE_MTP_HISTORY` | on | Draft head keeps a persistent per-request KV of the whole prefix (prompt and accepted tokens). `0` restores the context-free legacy head (about half the accept rate). |
 | `SMILE_MTP_VERIFY_CHECKPOINT_REPLAY` | on | On a partial accept, restore the DeltaNet state saved during the verify pass instead of running a second forward. `0` disables. |
+| `SMILE_VERIFY_CUDA_GRAPH_RAGGED` | on | Also graph cohorts of 2+ requests at different positions. `0` limits the graph to a lone request (or equal positions). |
+| `SMILE_VERIFY_CUDA_GRAPH_MAX_BATCH` | `16` | Largest cohort that uses a verify graph. |
 | `SMILE_VERIFY_FLASHINFER_EAGER` | on | Use FlashInfer's paged prefill kernel for verify windows when the graph is not replaying. `0` disables. |
 
 Notes and limits:
@@ -220,9 +226,13 @@ Notes and limits:
   decode step (for example it holds no speculation slot, or the cohort did not
   fit in memory) simply continues with plain decode: output is unaffected, it
   just stops speculating.
-- Speculating requests drafted and verified together run eagerly (the verify
-  CUDA graph covers a lone request); the decode CUDA graph is not used while
-  any request is speculating.
+- Cohorts of up to 16 speculating requests replay a verify CUDA graph keyed by batch
+  size (rows may sit at different positions; positions, RoPE rows, KV slots and the page
+  table are rewritten in place before each replay, one ~10 ms capture per batch size).
+  Larger cohorts verify eagerly because each captured batch size keeps its own activation
+  pool. Same-session A/B against the eager batched verify (512 tokens): 4 requests 145 -> 176
+  tok/s, 8 requests 255 -> 331, 16 requests 461 -> 498. The decode CUDA graph is not used
+  while any request is speculating.
 - The chat endpoint returns the final answer without the model's hidden
   reasoning. When comparing a speculative and a plain response at a short
   `max_tokens`, differences can appear from the first visible character only
