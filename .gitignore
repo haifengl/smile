@@ -4,6 +4,7 @@ log
 
 # Agent scratch state
 /docs
+/.provenance
 
 # Class and package files
 *.class
