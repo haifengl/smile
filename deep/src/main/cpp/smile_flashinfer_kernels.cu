@@ -203,7 +203,8 @@ static bool verify_cuda_graph_env() {
     static int cached = -1;
     if (cached < 0) {
         const char *env = std::getenv("SMILE_VERIFY_CUDA_GRAPH");
-        cached = (env != nullptr && env[0] == '1' && env[1] == '\0') ? 1 : 0;
+        // Default on; SMILE_VERIFY_CUDA_GRAPH=0 disables (must match VerifyCudaGraph.java).
+        cached = (env != nullptr && env[0] == '0' && env[1] == '\0') ? 0 : 1;
     }
     return cached != 0;
 }
@@ -813,7 +814,12 @@ int run_batch_prefill_capturable(
                     sizeof(DType),
                     /*window_left=*/-1,
                     /*fixed_split_size=*/-1,
-                    /*disable_split_kv=*/false,
+                    // With SMILE_VERIFY_CUDA_GRAPH on, one captured graph must stay valid for
+                    // every KV length: split-KV would make the plan (chunk size, tile list,
+                    // merge indptr) depend on the page count. Without splitting, the plan
+                    // depends only on (batch, qo_len), and the kernel reads the real KV
+                    // length from the CSR tensors at run time.
+                    /*disable_split_kv=*/verify_cuda_graph_env(),
                     /*num_colocated_ctas=*/0,
                     /*uniform_q_len=*/qo_len,
                     stream,
