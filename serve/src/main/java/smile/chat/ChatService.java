@@ -374,7 +374,8 @@ public class ChatService implements OpenAiModelContributor {
                 logger.infof("MTP speculative decoding enabled (drafts=%d)",
                         qwen.numSpeculativeTokens());
             } else if (enabled) {
-                logger.warnf("smile.chat.speculative=true but checkpoint has no MTP weights");
+                logger.infof("MTP speculative decoding is on but this checkpoint has no MTP weights; "
+                        + "using plain decoding");
             }
         }
     }
