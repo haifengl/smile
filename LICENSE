@@ -1,5 +1,10 @@
 Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
 
+Licensing authority. SMILE is authored by, and its copyright is held by, Haifeng Li
+(the "Licensor"). Commercial and OEM licenses are granted by the Licensor and are
+obtained through HALO.AI, LLC, the Licensor's authorized licensing agent and
+reseller (the "Commercial Agent"; sales@aihalo.dev).
+
 SMILE employs a modern multi-product licensing model designed to support
 free academic and open-source collaboration while offering commercial licensing
 and enterprise support for proprietary and mission-critical deployments.
@@ -20,8 +25,8 @@ The core mathematical and machine learning libraries (including `base`, `core`,
   b) Commercial / OEM License:
      If you distribute or embed SMILE libraries within proprietary software,
      appliances, client-side applications, or commercial products without
-     licensing your combined work under GPLv3, you must purchase a commercial
-     OEM license from HALO.AI, LLC.
+     licensing your combined work under GPLv3, you must obtain a commercial
+     OEM license through the Commercial Agent.
 
      Commercial licenses are also available for organizations that require
      commercial indemnity, enterprise support, guaranteed CVE resolution
@@ -46,7 +51,7 @@ and model serving runtime, dual-licensed under:
      AGPLv3 copyleft obligations, or that require enterprise platform capabilities
      (such as high-availability clustering, zero-GC execution, custom SLAs,
      and enterprise support), a Commercial Enterprise Runtime License is required
-     from HALO.AI, LLC.
+     and must be obtained through the Commercial Agent.
 
 ==============================================================================
 3. SMILE Studio (Business Source License 1.1 / Commercial)
@@ -60,7 +65,7 @@ environment licensed under the Business Source License 1.1 (BSL 1.1).
     exporting serialized model packages.
   - Commercial & Production Use: Use of SMILE Studio within commercial
     organizations beyond evaluation, or redistribution as part of a commercial
-    product, requires a paid commercial license from HALO.AI, LLC.
+    product, requires a paid commercial license obtained through the Commercial Agent.
   - Change License: After four (4) years from the release date of each respective
     version, that version automatically converts to the GNU Affero General Public
     License version 3.0 (AGPLv3) or later.
@@ -69,7 +74,7 @@ environment licensed under the Business Source License 1.1 (BSL 1.1).
 Commercial Licensing, Procurement, and Support
 ==============================================================================
 
-A commercial license from HALO.AI, LLC grants you:
+A commercial license from the Licensor grants you:
   - Complete freedom from GPLv3, AGPLv3 network-copyleft and BSL restrictions.
   - Full legal rights to embed SMILE in proprietary products and cloud services
     without any obligation to publish your source code or model weights.
