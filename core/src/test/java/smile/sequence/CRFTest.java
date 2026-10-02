@@ -82,10 +82,10 @@ public class CRFTest {
             }
         }
 
-        System.out.format("Protein error (forward-backward) is %d of %d%n", error, n);
-        System.out.format("Protein error (forward-backward) rate = %.2f%%%n", 100.0 * error / n);
-        System.out.format("Protein error (Viterbi) is %d of %d%n", viterbiError, n);
-        System.out.format("Protein error (Viterbi) rate = %.2f%%%n", 100.0 * viterbiError / n);
+        System.out.printf("Protein forward-backward: %d mislabeled of %d (%.2f%%)%n",
+                error, n, 100.0 * error / n);
+        System.out.printf("Protein Viterbi: %d mislabeled of %d (%.2f%%)%n",
+                viterbiError, n, 100.0 * viterbiError / n);
         assertEquals(1235, error);
         assertEquals(1320, viterbiError);
     }

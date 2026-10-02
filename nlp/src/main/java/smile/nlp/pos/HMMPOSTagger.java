@@ -254,22 +254,19 @@ public class HMMPOSTagger implements POSTagger, Serializable {
      * @return the model.
      */
     public static HMMPOSTagger fit(String[][] sentences, PennTreebankPOS[][] labels) {
-        int index = 1;
-        int suffixIndex = 0;
         Map<String, Integer> symbol = new HashMap<>();
         Map<String, Integer> suffix = new HashMap<>();
         for (String[] sentence : sentences) {
             for (String word : sentence) {
-                Integer sym = symbol.get(word);
-                if (sym == null) {
-                    symbol.put(word, index++);
+                if (!symbol.containsKey(word)) {
+                    // Symbol indices start at 1; index 0 is reserved for unknown words.
+                    symbol.put(word, symbol.size() + 1);
                 }
 
                 if (word.length() > 2) {
                     String s = word.substring(word.length() - 2);
-                    sym = suffix.get(s);
-                    if (sym == null) {
-                        suffix.put(s, suffixIndex++);
+                    if (!suffix.containsKey(s)) {
+                        suffix.put(s, suffix.size());
                     }
                 }
             }
@@ -399,24 +396,20 @@ public class HMMPOSTagger implements POSTagger, Serializable {
      * @param args the command line arguments.
      */
     public static void main(String[] args) {
-        List<String[]> sentences = new ArrayList<>();
-        List<PennTreebankPOS[]> labels = new ArrayList<>();
-        
+        var sentences = new ArrayList<String[]>();
+        var labels = new ArrayList<PennTreebankPOS[]>();
+
         read("nlp/src/test/resources/data/PennTreebank/PennTreebank2/TAGGED/POS/WSJ", sentences, labels);
         read("nlp/src/test/resources/data/PennTreebank/PennTreebank2/TAGGED/POS/BROWN", sentences, labels);
-        
-        String[][] x = sentences.toArray(new String[sentences.size()][]);
-        PennTreebankPOS[][] y = labels.toArray(new PennTreebankPOS[labels.size()][]);
-        
+
+        String[][] x = sentences.toArray(String[][]::new);
+        PennTreebankPOS[][] y = labels.toArray(PennTreebankPOS[][]::new);
+
         HMMPOSTagger tagger = HMMPOSTagger.fit(x, y);
 
-        try {
-            FileOutputStream fos = new FileOutputStream("hmm-pos-tagger.sml");
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
+        try (var oos = new ObjectOutputStream(new FileOutputStream("hmm-pos-tagger.sml"))) {
             oos.writeObject(tagger);
-            oos.flush();
-            oos.close();
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             logger.error("Failed to save HMM POS model", ex);
         }
     }
