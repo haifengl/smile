@@ -151,6 +151,8 @@ public class DeltaNetStatePool implements AutoCloseable {
         if (batchSize < 1 || batchSize > maxBatchSize) {
             throw new IllegalArgumentException("batchSize out of range: " + batchSize);
         }
+        displacedRows = new int[0];
+        activeIdentity = true;
         this.boundBatch = batchSize;
         this.activeHomeRows = new int[batchSize];
         for (int i = 0; i < batchSize; i++) {
@@ -205,6 +207,15 @@ public class DeltaNetStatePool implements AutoCloseable {
     /**
      * Packs bound request rows into working slots {@code [0, B)} for a forward.
      *
+     * <p>Working slots are the same storage as the first {@code B} home rows, so packing has to be
+     * careful in two ways. First, all sources are read before any is written (a sequential
+     * home-to-slot copy corrupts the cohort itself when homes are not in ascending order, e.g. once
+     * freed rows have been reused by later requests). Second, any live request outside the cohort
+     * whose home row lies in {@code [0, B)} is stashed and put back by {@link #scatterActive}, so a
+     * forward over one cohort never disturbs another's state (a speculating group and a plain-decode
+     * group alternate within one engine tick, for example). When the cohort already occupies rows
+     * {@code 0..B-1} in order nothing is copied.
+     *
      * @param requestIds bound request ids (order = batch).
      */
     public void activateStep(int... requestIds) {
@@ -214,22 +225,149 @@ public class DeltaNetStatePool implements AutoCloseable {
         if (requestIds.length > maxBatchSize) {
             throw new IllegalArgumentException("activate batch exceeds maxBatchSize");
         }
-        int[] homes = new int[requestIds.length];
-        for (int i = 0; i < requestIds.length; i++) {
+        // A previous non-identity activation that was never scattered still has bystander rows
+        // parked in the stash: put them back first (its cohort updates stay unwritten, as before).
+        restoreDisplaced();
+        int b = requestIds.length;
+        int[] homes = new int[b];
+        BitSet cohort = new BitSet(maxBatchSize);
+        boolean identity = true;
+        for (int i = 0; i < b; i++) {
             Integer row = requestRows.get(requestIds[i]);
             if (row == null) {
                 throw new IllegalArgumentException("Unknown DeltaNet request id: " + requestIds[i]);
             }
             homes[i] = row;
+            identity &= row == i;
+            if (cohort.get(row)) {
+                throw new IllegalArgumentException("duplicate DeltaNet request id in cohort");
+            }
+            cohort.set(row);
         }
-        // Gather home → working [0, B).
-        for (int i = 0; i < homes.length; i++) {
-            if (homes[i] != i) {
-                copyRow(homes[i], i);
+        if (!identity) {
+            int k = 0;
+            int[] displaced = new int[b];
+            for (int r = 0; r < b; r++) {
+                if (!freeRows.get(r) && !cohort.get(r)) {
+                    displaced[k++] = r;
+                }
+            }
+            if (k > 0) {
+                ensureStash(k);
+                try (Tensor src = Tensor.of(toLongs(displaced, k)).to(device)) {
+                    for (int l = 0; l < numLinearLayers; l++) {
+                        stashRows(recurrent[l], stashRecurrent[l], src, k);
+                        if (conv[l] != null) {
+                            stashRows(conv[l], stashConv[l], src, k);
+                        }
+                    }
+                }
+            }
+            this.displacedRows = java.util.Arrays.copyOf(displaced, k);
+            try (Tensor idx = Tensor.of(toLongs(homes, b)).to(device);
+                 var span = Index.slice(0, b)) {
+                for (int l = 0; l < numLinearLayers; l++) {
+                    packRows(recurrent[l], idx, span);
+                    if (conv[l] != null) {
+                        packRows(conv[l], idx, span);
+                    }
+                }
             }
         }
+        this.activeIdentity = identity;
         this.activeHomeRows = homes;
-        this.boundBatch = homes.length;
+        this.boundBatch = b;
+    }
+
+    private static long[] toLongs(int[] values, int n) {
+        long[] out = new long[n];
+        for (int i = 0; i < n; i++) {
+            out[i] = values[i];
+        }
+        return out;
+    }
+
+    /** Gathers rows {@code idx} of {@code t} (a full read before any write) into rows {@code [0, b)}. */
+    private void packRows(Tensor t, Tensor idx, Index span) {
+        try (Tensor gathered = t.get(idx);
+             Tensor dst = t.get(span)) {
+            smile.torch.Native.copy_(dst, gathered);
+        }
+    }
+
+    /** {@code stash[0:k] = t[rows]}. */
+    private void stashRows(Tensor t, Tensor stash, Tensor rows, int k) {
+        try (Tensor gathered = t.get(rows);
+             var span = Index.slice(0, k);
+             Tensor dst = stash.get(span)) {
+            smile.torch.Native.copy_(dst, gathered);
+        }
+    }
+
+    /** Parked copies of bystander rows displaced by a non-identity activation. */
+    private Tensor[] stashRecurrent;
+    private Tensor[] stashConv;
+    private int stashCapacity;
+    private int[] displacedRows = new int[0];
+    private boolean activeIdentity = true;
+
+    private void ensureStash(int rows) {
+        if (stashRecurrent != null && stashCapacity >= rows) {
+            return;
+        }
+        closeStash();
+        int cap = Math.min(maxBatchSize, Math.max(rows, 4));
+        stashRecurrent = new Tensor[numLinearLayers];
+        stashConv = new Tensor[numLinearLayers];
+        var ropts = new Tensor.Options().device(device).dtype(recurrentDtype).requireGradients(false);
+        var copts = new Tensor.Options().device(device).dtype(convDtype).requireGradients(false);
+        for (int l = 0; l < numLinearLayers; l++) {
+            stashRecurrent[l] = Tensor.zeros(ropts, cap, numVHeads, keyHeadDim, valueHeadDim);
+            stashRecurrent[l].detachFromScopes();
+            if (convStateLen > 0) {
+                stashConv[l] = Tensor.zeros(copts, cap, convDim, convStateLen);
+                stashConv[l].detachFromScopes();
+            }
+        }
+        stashCapacity = cap;
+    }
+
+    private void closeStash() {
+        if (stashRecurrent != null) {
+            for (int l = 0; l < numLinearLayers; l++) {
+                if (stashRecurrent[l] != null) {
+                    stashRecurrent[l].close();
+                }
+                if (stashConv != null && stashConv[l] != null) {
+                    stashConv[l].close();
+                }
+            }
+        }
+        stashRecurrent = null;
+        stashConv = null;
+        stashCapacity = 0;
+    }
+
+    /** Puts the stashed bystander rows back at their home rows. */
+    private void restoreDisplaced() {
+        int k = displacedRows.length;
+        if (k == 0) {
+            return;
+        }
+        try (Tensor rows = Tensor.of(toLongs(displacedRows, k)).to(device);
+             var span = Index.slice(0, k)) {
+            for (int l = 0; l < numLinearLayers; l++) {
+                try (Tensor src = stashRecurrent[l].get(span)) {
+                    recurrent[l].put_(src, rows);
+                }
+                if (conv[l] != null && stashConv[l] != null) {
+                    try (Tensor src = stashConv[l].get(span)) {
+                        conv[l].put_(src, rows);
+                    }
+                }
+            }
+        }
+        displacedRows = new int[0];
     }
 
     /**
@@ -256,14 +394,30 @@ public class DeltaNetStatePool implements AutoCloseable {
      * Call after every forward that used {@link #activateStep}.
      */
     public void scatterActive() {
-        if (activeHomeRows == null || activeHomeRows.length == 0) {
+        if (activeHomeRows == null || activeHomeRows.length == 0 || activeIdentity) {
             return;
         }
-        for (int i = 0; i < activeHomeRows.length; i++) {
-            int home = activeHomeRows[i];
-            if (home != i) {
-                copyRow(i, home);
+        int b = activeHomeRows.length;
+        // Snapshot every working row before writing any home (homes and working rows overlap).
+        // Bystander rows displaced by this activation stay stashed until the next activateStep
+        // puts them back: restoring them here would overwrite the working rows a follow-up
+        // forward on the same activation still needs.
+        try (Tensor homes = Tensor.of(toLongs(activeHomeRows, b)).to(device);
+             var span = Index.slice(0, b)) {
+            for (int l = 0; l < numLinearLayers; l++) {
+                scatterRows(recurrent[l], homes, span);
+                if (conv[l] != null) {
+                    scatterRows(conv[l], homes, span);
+                }
             }
+        }
+        activeIdentity = true; // cohort states are now committed to their homes
+    }
+
+    private void scatterRows(Tensor t, Tensor homes, Index span) {
+        try (Tensor working = t.get(span);
+             Tensor snapshot = working.copy()) {
+            t.put_(snapshot, homes);
         }
     }
 
@@ -282,24 +436,6 @@ public class DeltaNetStatePool implements AutoCloseable {
         }
     }
 
-    private void copyRow(int from, int to) {
-        if (from == to) {
-            return;
-        }
-        try (var src = Index.of(from);
-             var dst = Index.of(to)) {
-            for (int i = 0; i < numLinearLayers; i++) {
-                try (Tensor s = recurrent[i].get(src)) {
-                    recurrent[i].put_(s, dst);
-                }
-                if (conv[i] != null) {
-                    try (Tensor s = conv[i].get(src)) {
-                        conv[i].put_(s, dst);
-                    }
-                }
-            }
-        }
-    }
 
     /** Lazily allocated backups for {@link #withPreservedActive}. */
     private Tensor[] recurrentBackup;
@@ -378,9 +514,59 @@ public class DeltaNetStatePool implements AutoCloseable {
     /** Speculative-verify checkpoints: {@code [slot][layer]} over active working rows. */
     private Tensor[][] speculativeRecurrent;
     private Tensor[][] speculativeConv;
+    /**
+     * Backing storage for the checkpoints: one {@code [slots, rows, ...]} tensor per linear layer.
+     * {@link #speculativeRecurrent}{@code [s][i]} is the contiguous view of slot {@code s}, so the
+     * per-slot users (fused verify kernels, save/restore of one slot) are unchanged, while a
+     * per-row restore across different slots becomes a single gather per layer.
+     */
+    private Tensor[] speculativeRecurrentBig;
+    private Tensor[] speculativeConvBig;
     private int speculativeSlots;
     /** Row capacity of speculative checkpoint tensors (not {@link #maxBatchSize}). */
     private int speculativeBatchCapacity;
+
+    /**
+     * Device bytes of the speculative checkpoint buffers for {@code numSlots} slots of {@code rows}
+     * rows each (all linear layers, recurrent plus conv state).
+     *
+     * @param numSlots checkpoint slots.
+     * @param rows     batch rows per slot.
+     * @return bytes the buffers occupy on this pool's device.
+     */
+    public long speculativeCheckpointBytes(int numSlots, int rows) {
+        long recurrent = (long) numVHeads * keyHeadDim * valueHeadDim * elementBytes(recurrentDtype);
+        long convBytes = convStateLen > 0
+                ? (long) convDim * convStateLen * elementBytes(convDtype) : 0L;
+        return (long) numSlots * rows * numLinearLayers * (recurrent + convBytes);
+    }
+
+    private static int elementBytes(ScalarType t) {
+        return switch (t) {
+            case Float, Int32 -> 4;
+            case Double, Int64 -> 8;
+            case Half, BFloat16, Int16 -> 2;
+            default -> 1;
+        };
+    }
+
+    /**
+     * Additional device bytes {@link #ensureSpeculativeCheckpoints} would have to allocate for
+     * {@code numSlots} x {@code max(1, rows)} (0 when the existing buffers already suffice).
+     *
+     * @param numSlots checkpoint slots required.
+     * @param rows     batch rows required.
+     * @return extra bytes needed.
+     */
+    public long speculativeCheckpointGrowthBytes(int numSlots, int rows) {
+        int r = Math.max(1, rows);
+        if (speculativeRecurrent != null && speculativeSlots >= numSlots && speculativeBatchCapacity >= r) {
+            return 0L;
+        }
+        long have = speculativeRecurrent == null
+                ? 0L : speculativeCheckpointBytes(speculativeSlots, speculativeBatchCapacity);
+        return Math.max(0L, speculativeCheckpointBytes(numSlots, r) - have);
+    }
 
     /**
      * Ensures {@code numSlots} mid-verify checkpoint buffers sized for the
@@ -415,18 +601,28 @@ public class DeltaNetStatePool implements AutoCloseable {
         speculativeBatchCapacity = rows;
         speculativeRecurrent = new Tensor[numSlots][numLinearLayers];
         speculativeConv = new Tensor[numSlots][numLinearLayers];
+        speculativeRecurrentBig = new Tensor[numLinearLayers];
+        speculativeConvBig = new Tensor[numLinearLayers];
         var recurrentOpts = new Tensor.Options()
                 .device(device).dtype(recurrentDtype).requireGradients(false);
         var convOpts = new Tensor.Options()
                 .device(device).dtype(convDtype).requireGradients(false);
-        for (int s = 0; s < numSlots; s++) {
-            for (int i = 0; i < numLinearLayers; i++) {
-                speculativeRecurrent[s][i] = Tensor.zeros(recurrentOpts, rows, numVHeads,
-                        keyHeadDim, valueHeadDim);
-                speculativeRecurrent[s][i].detachFromScopes();
-                if (convStateLen > 0) {
-                    speculativeConv[s][i] = Tensor.zeros(convOpts, rows, convDim, convStateLen);
-                    speculativeConv[s][i].detachFromScopes();
+        for (int i = 0; i < numLinearLayers; i++) {
+            speculativeRecurrentBig[i] = Tensor.zeros(recurrentOpts, numSlots, rows, numVHeads,
+                    keyHeadDim, valueHeadDim);
+            speculativeRecurrentBig[i].detachFromScopes();
+            if (convStateLen > 0) {
+                speculativeConvBig[i] = Tensor.zeros(convOpts, numSlots, rows, convDim, convStateLen);
+                speculativeConvBig[i].detachFromScopes();
+            }
+            for (int s = 0; s < numSlots; s++) {
+                try (var slotIdx = Index.of(s)) {
+                    speculativeRecurrent[s][i] = speculativeRecurrentBig[i].get(slotIdx);
+                    speculativeRecurrent[s][i].detachFromScopes();
+                    if (convStateLen > 0) {
+                        speculativeConv[s][i] = speculativeConvBig[i].get(slotIdx);
+                        speculativeConv[s][i].detachFromScopes();
+                    }
                 }
             }
         }
@@ -480,25 +676,38 @@ public class DeltaNetStatePool implements AutoCloseable {
             throw new IllegalArgumentException("slots length (" + slots.length
                     + ") must equal boundBatch (" + b + ")");
         }
+        // One gather per layer and tensor instead of a copy per (row, layer): row r takes slot
+        // slots[r] of the {@code [slots, rows, ...]} backing tensor, i.e. flat row
+        // slot * rowCapacity + r of its {@code [slots * rows, ...]} view.
+        long[] flat = new long[b];
         for (int row = 0; row < b; row++) {
             int slot = slots[row];
             if (slot < 0 || slot >= speculativeSlots) {
                 throw new IllegalStateException("speculative checkpoint slot out of range: " + slot);
             }
-            try (var r = Index.of(row)) {
-                for (int i = 0; i < numLinearLayers; i++) {
-                    try (Tensor src = speculativeRecurrent[slot][i].get(r);
-                         Tensor dst = recurrent[i].get(r)) {
-                        smile.torch.Native.copy_(dst, src);
-                    }
-                    if (conv[i] != null && speculativeConv[slot][i] != null) {
-                        try (Tensor src = speculativeConv[slot][i].get(r);
-                             Tensor dst = conv[i].get(r)) {
-                            smile.torch.Native.copy_(dst, src);
-                        }
-                    }
+            flat[row] = (long) slot * speculativeBatchCapacity + row;
+        }
+        try (Tensor idxCpu = Tensor.of(flat);
+             Tensor idx = idxCpu.to(device);
+             var span = Index.slice(0, b)) {
+            for (int i = 0; i < numLinearLayers; i++) {
+                restoreGathered(speculativeRecurrentBig[i], recurrent[i], idx, span);
+                if (conv[i] != null && speculativeConvBig[i] != null) {
+                    restoreGathered(speculativeConvBig[i], conv[i], idx, span);
                 }
             }
+        }
+    }
+
+    private void restoreGathered(Tensor big, Tensor working, Tensor idx, Index span) {
+        long[] shape = big.shape();
+        long[] flatShape = new long[shape.length - 1];
+        flatShape[0] = shape[0] * shape[1];
+        System.arraycopy(shape, 2, flatShape, 1, shape.length - 2);
+        try (Tensor flatView = big.reshape(flatShape);
+             Tensor gathered = flatView.get(idx);
+             Tensor dst = working.get(span)) {
+            smile.torch.Native.copy_(dst, gathered);
         }
     }
 
@@ -635,6 +844,22 @@ public class DeltaNetStatePool implements AutoCloseable {
                 }
             }
         }
+        if (speculativeRecurrentBig != null) {
+            for (Tensor t : speculativeRecurrentBig) {
+                if (t != null) {
+                    t.close();
+                }
+            }
+            speculativeRecurrentBig = null;
+        }
+        if (speculativeConvBig != null) {
+            for (Tensor t : speculativeConvBig) {
+                if (t != null) {
+                    t.close();
+                }
+            }
+            speculativeConvBig = null;
+        }
         speculativeRecurrent = null;
         speculativeConv = null;
         speculativeSlots = 0;
@@ -645,6 +870,8 @@ public class DeltaNetStatePool implements AutoCloseable {
      * Clears the active-request binding after exclusive generate finishes.
      */
     public void unbind() {
+        displacedRows = new int[0];
+        activeIdentity = true;
         this.boundBatch = 0;
         this.activeHomeRows = new int[0];
         requestRows.clear();
