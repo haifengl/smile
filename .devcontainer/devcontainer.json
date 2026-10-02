@@ -1,38 +1,48 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/java
 {
-	"name": "Java",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/java:dev-25-jdk-trixie",
+  "name": "Java",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "image": "mcr.microsoft.com/devcontainers/java:dev-25-jdk-trixie",
 
-	"features": {
-		"ghcr.io/devcontainers/features/java:1": {
-			"version": "25",
-			"installMaven": "false",
-			"installGradle": "true"
-		},
-		"ghcr.io/devcontainers-extra/features/sbt-sdkman:2": {
-			"version": "latest"
-		},
-		"ghcr.io/devcontainers/features/node:2": {}
-	},
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "25",
+      "installMaven": "false",
+      "installGradle": "true"
+    },
+    "ghcr.io/devcontainers-extra/features/sbt-sdkman:2": {},
+    "ghcr.io/devcontainers/features/node:2": {}
+  },
 
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// web/11ty: 3000
-	// serve/akka: 3801
-	// chat/vite: 4173
-	"forwardPorts": [3000, 3801, 4173],
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // web/11ty: 3000
+  // serve/akka: 3801
+  // chat/vite: 4173
+  "forwardPorts": [3000, 3801, 4173],
 
-	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "bash bin/setup.sh",
+  // Use 'postCreateCommand' to run commands after the container is created.
+  "postCreateCommand": "bash bin/setup.sh",
 
-	// Configure tool-specific properties.
-	// "customizations": {},
+  // Configure tool-specific properties.
+  "customizations": {
+    // IDE Experience and Performance
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",      // Standard Java Support
+        "scalameta.metals",              // Advanced sbt / Scala support
+        "ms-azuretools.vscode-docker"    // Local container inspection
+      ]
+    }
+  },
+  "runArgs": [
+    "--init" // Ensures zombie processes from active build tool runners are reaped correctly on host environments
+  ]
 
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  // "remoteUser": "root"
 
-	"remoteEnv": {
-		"OMP_NUM_THREADS": "1"
-	}
+  "remoteEnv": {
+    "OMP_NUM_THREADS": "1"
+  }
 }
