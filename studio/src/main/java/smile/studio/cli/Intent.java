@@ -19,6 +19,7 @@ package smile.studio.cli;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -87,6 +88,13 @@ public class Intent extends JPanel {
     private final JButton stopButton = new JButton("❌");
     /** The action that interrupts the current turn, or null when idle. */
     private Callable<?> stopAction;
+    // Right side for the queue state and controls while the request waits.
+    private final JPanel queuePane = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+    private final JLabel queueBadge = new JLabel();
+    private final JButton editQueuedButton = new JButton("✏️");
+    private final JButton moveUpButton = new JButton("⬆️");
+    private final JButton moveDownButton = new JButton("⬇️");
+    private final JButton cancelQueuedButton = new JButton("❌");
     // Output pane. Subagent runs are tabs inside this pane.
     private final JPanel outputPane = new JPanel();
     private OutputArea output = createOutputArea();
@@ -169,6 +177,8 @@ public class Intent extends JPanel {
         progressPane.add(Box.createHorizontalStrut(10));
         progressPane.add(stopButton);
 
+        initQueuePane();
+
         initIntentTypeComboBox();
         footer.setLayout(new BorderLayout());
         footer.setOpaque(false);
@@ -190,6 +200,109 @@ public class Intent extends JPanel {
         inputPane.add(sidebar, BorderLayout.WEST);
         inputPane.add(editor, BorderLayout.CENTER);
         inputPane.add(footer, BorderLayout.SOUTH);
+    }
+
+    /**
+     * Initializes the queue pane shown in the footer while this request waits for its
+     * turn. It is mutually exclusive with the progress pane: a waiting request is not
+     * running, so it shows a queue badge and controls instead of the progress bar.
+     */
+    private void initQueuePane() {
+        queuePane.setOpaque(false);
+        queuePane.setVisible(false);
+        queueBadge.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 8));
+
+        for (JButton button : new JButton[] {
+                editQueuedButton, moveUpButton, moveDownButton, cancelQueuedButton }) {
+            button.setMargin(new Insets(0, 4, 0, 4));
+            button.setFocusable(false);
+            button.putClientProperty("JButton.buttonType", "toolBarButton");
+        }
+        editQueuedButton.setToolTipText(bundle.getString("EditQueued"));
+        moveUpButton.setToolTipText(bundle.getString("MoveQueuedUp"));
+        moveDownButton.setToolTipText(bundle.getString("MoveQueuedDown"));
+        cancelQueuedButton.setToolTipText(bundle.getString("CancelQueued"));
+
+        queuePane.add(queueBadge);
+        queuePane.add(editQueuedButton);
+        queuePane.add(moveUpButton);
+        queuePane.add(moveDownButton);
+        queuePane.add(cancelQueuedButton);
+    }
+
+    /**
+     * Marks this intent as waiting in the queue and shows its controls.
+     * <p>Shows the 1-based position and the queue depth in the footer, and hides the
+     * progress pane. The caller wires the four controls after this call.
+     * @param position the 1-based position in the waiting list.
+     * @param size the number of waiting items.
+     */
+    public void showQueued(int position, int size) {
+        queueBadge.setText(MessageFormat.format(bundle.getString("QueuedPosition"), position, size));
+        // A waiting request has not started, so its status must not read "Thinking..."
+        // (which run() sets at submit time). It becomes "Thinking..." again on STARTED.
+        status.setText(bundle.getString("Queued"));
+        status.setToolTipText(null);
+        queuePane.setVisible(true);
+        // A waiting request is not running: stop the progress animation and drop the pane.
+        progress.setIndeterminate(false);
+        progress.setEnabled(false);
+        if (progressPane.getParent() == footer) {
+            footer.remove(progressPane);
+        }
+        if (queuePane.getParent() != footer) {
+            footer.add(queuePane, BorderLayout.EAST);
+        }
+        footer.revalidate();
+        footer.repaint();
+    }
+
+    /**
+     * Removes the queue badge and controls, returning the footer to its idle look.
+     */
+    public void clearQueued() {
+        queuePane.setVisible(false);
+        if (queuePane.getParent() == footer) {
+            footer.remove(queuePane);
+        }
+        footer.revalidate();
+        footer.repaint();
+    }
+
+    /**
+     * Wires the queue controls. A null action hides that control, so a peer request can
+     * be cancel/reorder-only while a local prompt also offers edit.
+     * @param cancel the cancel action, or null to hide it.
+     * @param edit the edit action, or null to hide it.
+     * @param moveUp the move-up action, or null to hide it.
+     * @param moveDown the move-down action, or null to hide it.
+     */
+    public void setQueueControls(Runnable cancel, Runnable edit, Runnable moveUp, Runnable moveDown) {
+        wire(editQueuedButton, edit);
+        wire(moveUpButton, moveUp);
+        wire(moveDownButton, moveDown);
+        wire(cancelQueuedButton, cancel);
+    }
+
+    /**
+     * Enables or disables the reorder controls based on the item's position.
+     * @param canMoveUp true when the item is not already first.
+     * @param canMoveDown true when the item is not already last.
+     */
+    public void setQueueControlsEnabled(boolean canMoveUp, boolean canMoveDown) {
+        moveUpButton.setEnabled(canMoveUp);
+        moveDownButton.setEnabled(canMoveDown);
+    }
+
+    /** Replaces a button's action, or hides the button when the action is null. */
+    private static void wire(JButton button, Runnable action) {
+        for (var listener : button.getActionListeners()) {
+            button.removeActionListener(listener);
+        }
+        button.setVisible(action != null);
+        if (action != null) {
+            button.addActionListener(e -> action.run());
+        }
     }
 
     /** Initializes the reasoning effort combo box. */
@@ -829,6 +942,8 @@ public class Intent extends JPanel {
      */
     public void setProgress(boolean on) {
         if (on) {
+            // A running turn is no longer waiting, so its queue badge and controls go away.
+            clearQueued();
             progress.setIndeterminate(true);
             progress.setEnabled(true);
             stopButton.setText("❌");
@@ -864,6 +979,54 @@ public class Intent extends JPanel {
     }
 
     /**
+     * Returns the queue badge label. Package-private for testing.
+     * @return the queue badge label.
+     */
+    JLabel queueBadge() {
+        return queueBadge;
+    }
+
+    /**
+     * Returns the queue controls pane. Package-private for testing.
+     * @return the queue controls pane.
+     */
+    JPanel queuePane() {
+        return queuePane;
+    }
+
+    /**
+     * Returns the edit-queued button. Package-private for testing.
+     * @return the edit button.
+     */
+    JButton editQueuedButton() {
+        return editQueuedButton;
+    }
+
+    /**
+     * Returns the move-up button. Package-private for testing.
+     * @return the move-up button.
+     */
+    JButton moveUpButton() {
+        return moveUpButton;
+    }
+
+    /**
+     * Returns the move-down button. Package-private for testing.
+     * @return the move-down button.
+     */
+    JButton moveDownButton() {
+        return moveDownButton;
+    }
+
+    /**
+     * Returns the cancel-queued button. Package-private for testing.
+     * @return the cancel button.
+     */
+    JButton cancelQueuedButton() {
+        return cancelQueuedButton;
+    }
+
+    /**
      * Returns the indicator component.
      * @return the indicator component.
      */
@@ -894,5 +1057,17 @@ public class Intent extends JPanel {
     static FlatLineBorder createRoundBorder() {
         return new FlatLineBorder(new Insets(5, 5, 5, 5),
                 borderColor, 1, 20);
+    }
+
+    /**
+     * Returns a localized queue string from this widget's bundle, so callers outside
+     * this class (the queue rendering in {@link AgentCLI}) share the same translations.
+     * @param key the bundle key.
+     * @param args optional {@link MessageFormat} arguments.
+     * @return the localized message.
+     */
+    static String queuedMessage(String key, Object... args) {
+        String value = bundle.getString(key);
+        return args.length == 0 ? value : MessageFormat.format(value, args);
     }
 }

@@ -17,6 +17,9 @@
  */
 package smile.studio.cli;
 
+import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.prefs.Preferences;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -226,6 +229,135 @@ class IntentTest {
         intent.setProgress(false);
 
         assertFalse(intent.progressBar().isEnabled());
+    }
+
+    /** Every locale that ships an Intent bundle. */
+    private static final List<Locale> QUEUE_LOCALES = List.of(
+            Locale.US,
+            Locale.SIMPLIFIED_CHINESE,
+            Locale.JAPAN,
+            Locale.FRANCE,
+            Locale.of("es", "ES"));
+
+    /** Keys the queue badge and controls read at runtime. */
+    private static final List<String> QUEUE_KEYS = List.of(
+            "Queued", "QueuedPosition", "CancelQueued", "EditQueued",
+            "MoveQueuedUp", "MoveQueuedDown", "CancelledQueued", "QueueDepth");
+
+    /** Keys the cancel path reads: the terminal status, the confirm dialog, and its title. */
+    private static final List<String> CANCEL_KEYS = List.of(
+            "Cancelled", "ConfirmDropQueue", "CancelConfirmTitle");
+
+    @Test
+    void cancelKeysExistInEveryLocale() {
+        ResourceBundle base = ResourceBundle.getBundle(Intent.class.getName(), Locale.ROOT);
+        for (String key : CANCEL_KEYS) {
+            assertTrue(base.containsKey(key), "base Intent bundle is missing key: " + key);
+        }
+        for (Locale locale : QUEUE_LOCALES) {
+            ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), locale);
+            for (String key : CANCEL_KEYS) {
+                assertTrue(bundle.containsKey(key),
+                        locale + " Intent bundle is missing key: " + key);
+                assertFalse(bundle.getString(key).isBlank(),
+                        locale + " Intent bundle has a blank value for key: " + key);
+            }
+        }
+    }
+
+    @Test
+    void queueKeysExistInEveryLocale() {
+        ResourceBundle base = ResourceBundle.getBundle(Intent.class.getName(), Locale.ROOT);
+        for (String key : QUEUE_KEYS) {
+            assertTrue(base.containsKey(key), "base Intent bundle is missing key: " + key);
+        }
+        for (Locale locale : QUEUE_LOCALES) {
+            ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), locale);
+            for (String key : QUEUE_KEYS) {
+                assertTrue(bundle.containsKey(key),
+                        locale + " Intent bundle is missing key: " + key);
+                assertFalse(bundle.getString(key).isBlank(),
+                        locale + " Intent bundle has a blank value for key: " + key);
+            }
+        }
+    }
+
+    @Test
+    void showQueued_displaysBadgeAndHidesProgress() {
+        Intent intent = new Intent(null);
+        intent.setProgress(true);
+
+        intent.showQueued(2, 3);
+
+        assertTrue(intent.queuePane().isVisible(), "queue pane must show while waiting");
+        assertTrue(intent.queueBadge().getText().contains("2"),
+                "badge must show the 1-based position");
+        assertTrue(intent.queueBadge().getText().contains("3"),
+                "badge must show the queue depth");
+        assertFalse(intent.progressBar().isEnabled(), "a waiting request is not running");
+    }
+
+    @Test
+    void showQueued_statusReadsQueued_notThinking() {
+        Intent intent = new Intent(null);
+        // run() sets "Thinking..." at submit time, before the request is queued.
+        intent.setStatus("Thinking...");
+
+        intent.showQueued(1, 2);
+
+        assertEquals("Queued", intent.status().getText(),
+                "a waiting request must not claim it is thinking");
+        assertNull(intent.status().getToolTipText());
+    }
+
+    @Test
+    void setProgress_trueClearsTheQueueBadge() {
+        Intent intent = new Intent(null);
+        intent.showQueued(1, 1);
+        assertTrue(intent.queuePane().isVisible());
+
+        intent.setProgress(true);
+
+        assertFalse(intent.queuePane().isVisible(),
+                "starting a turn must remove the queue badge");
+    }
+
+    @Test
+    void setQueueControls_hidesEditForPeerRequestsAndEnablesArrowsByPosition() {
+        Intent intent = new Intent(null);
+        intent.showQueued(2, 3);
+
+        // Local prompt: edit offered.
+        intent.setQueueControls(() -> {}, () -> {}, () -> {}, () -> {});
+        intent.setQueueControlsEnabled(true, true);
+        assertTrue(intent.editQueuedButton().isVisible());
+        assertTrue(intent.moveUpButton().isEnabled());
+        assertTrue(intent.moveDownButton().isEnabled());
+
+        // Peer request: edit hidden.
+        intent.setQueueControls(() -> {}, null, () -> {}, () -> {});
+        assertFalse(intent.editQueuedButton().isVisible(),
+                "edit must not be offered for a peer request");
+
+        // At the head: move-up disabled.
+        intent.setQueueControlsEnabled(false, true);
+        assertFalse(intent.moveUpButton().isEnabled());
+    }
+
+    @Test
+    void queueControlsInvokeTheirActions() {
+        Intent intent = new Intent(null);
+        intent.showQueued(1, 2);
+        int[] hits = {0, 0, 0, 0};
+        intent.setQueueControls(() -> hits[0]++, () -> hits[1]++,
+                () -> hits[2]++, () -> hits[3]++);
+
+        intent.cancelQueuedButton().doClick();
+        intent.editQueuedButton().doClick();
+        intent.moveUpButton().doClick();
+        intent.moveDownButton().doClick();
+
+        assertArrayEquals(new int[] {1, 1, 1, 1}, hits);
     }
 
     @Test
