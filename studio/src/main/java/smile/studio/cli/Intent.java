@@ -239,6 +239,10 @@ public class Intent extends JPanel {
      */
     public void showQueued(int position, int size) {
         queueBadge.setText(MessageFormat.format(bundle.getString("QueuedPosition"), position, size));
+        // A waiting request has not started, so its status must not read "Thinking..."
+        // (which run() sets at submit time). It becomes "Thinking..." again on STARTED.
+        status.setText(bundle.getString("Queued"));
+        status.setToolTipText(null);
         queuePane.setVisible(true);
         // A waiting request is not running: stop the progress animation and drop the pane.
         progress.setIndeterminate(false);
