@@ -2,6 +2,9 @@
 .smile
 log
 
+# Agent scratch state
+/docs
+
 # Class and package files
 *.class
 *.jar
