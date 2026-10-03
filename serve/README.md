@@ -19,7 +19,10 @@ A React-based web UI is bundled and served from the same process.
 
 ## Table of Contents
 
-1. [Quick Start with Docker](#1-quick-start-with-docker)
+1. [Quick Start](#1-quick-start)
+   - [Run with Docker](#11-run-with-docker)
+   - [GPU Build & Run](#12-gpu-build--run)
+   - [Test Run a Model](#13-test-run-a-model)
 2. [LLM Decode Benchmarks](#2-llm-decode-benchmarks)
 3. [Building and Running](#3-building-and-running)
    - [Dev Mode](#31-dev-mode)
@@ -50,7 +53,9 @@ A React-based web UI is bundled and served from the same process.
 
 ---
 
-## 1. Quick Start with Docker
+## 1. Quick Start
+
+### 1.1 Run with Docker
 
 The fastest way to run SMILE Serve is via the pre-built Docker image.
 Mount a local directory containing your model files and map the port:
@@ -66,7 +71,7 @@ The service starts on port 8080 inside the container (mapped to 8888 on the host
 Place your `.sml` and `.onnx` model files in `/path/to/model/folder`; they are
 discovered automatically at startup.
 
-### 1.1 GPU Build & Run
+### 1.2 GPU Build & Run
 
 Build the JVM+GPU image from source and run it with CUDA graph decode enabled.
 To enable Google login, add `-Dsmile.auth.google.client-id=...
@@ -98,6 +103,22 @@ sudo docker run -i --rm --gpus all -p 8888:8080 \
   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,4,6,7 -Dsmile.chat.max-batch-size=48 -Dquarkus.log.level=INFO -XX:ErrorFile=/model/hs_err_%p.log -Dsmile.chat.admit-coalesce-ms=50 -Dsmile.chat.speculative=true -Dsmile.chat.speculative-tokens=2" \
   -u root -v "/raid/llm/model":/model quarkus/smile-serve-gpu
 ```
+
+### 1.3 Test Run a Model
+
+You can quickly test run a model in development mode using the Gradle wrapper:
+
+```shell
+./gradlew :serve:quarkusDev "-Dsmile.chat.model=microsoft/Phi-3-mini-4k-instruct-onnx"
+```
+
+The service starts in dev mode on port 8888 (with live reload enabled and the
+Quarkus Dev UI accessible at <http://localhost:8888/q/dev/>).
+
+Refer to [deep/README.md](../deep/README.md#prerequisites--dependencies) for how
+to setup Prerequisites & Dependencies. For this example, you should have ONNX
+Runtime and ONNX-GENAI native libraries installed and configured; see
+[deep/ONNX_GENAI.md](../deep/ONNX_GENAI.md) for details.
 
 ---
 
