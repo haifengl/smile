@@ -15,7 +15,12 @@ packageDescription :=
     |for the JVM. SMILE Studio is an agentic IDE for data science.
     |""".stripMargin
 
-import com.typesafe.sbt.packager.PluginCompat
+// sbt-native-packager 1.12.0 moved the file-ref helpers (toFileRef,
+// toFileRefsMapping, ...) out of com.typesafe.sbt.packager.PluginCompat into
+// sbtcompat.PluginCompat, provided by the sbt2-compat dependency. The new
+// signatures take the FileConverter as an implicit/using parameter, which the
+// `implicit val converter` below supplies.
+import sbtcompat.PluginCompat
 import com.typesafe.sbt.packager.MappingsHelper.*
 
 Universal / mappings ++= {
