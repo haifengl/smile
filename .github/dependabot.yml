@@ -21,4 +21,4 @@ updates:
    ignore:
      - package-name: "org.gradle.*"           # Ignores core Gradle plugins and tooling
      - package-name: "org.jetbrains.kotlin.*" # Ignores Kotlin Gradle/compiler plugins
-
+     - package-name: "org.jetbrains.dokka.*"
