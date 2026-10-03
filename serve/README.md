@@ -81,7 +81,7 @@ out of shell history / `docker inspect` by sourcing them from environment
 variables rather than inlining literals.
 
 ```shell
-./gradlew :serve:build
+./gradlew :serve:build "-Dquarkus.profile=default"
 sudo docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t quarkus/smile-serve-gpu .
 sudo docker run -i --rm --gpus all -p 8888:8080 \
   -e SMILE_DECODE_CUDA_GRAPH=1 \
@@ -90,6 +90,16 @@ sudo docker run -i --rm --gpus all -p 8888:8080 \
   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,4,6,7 -Dsmile.chat.max-batch-size=48 -Dquarkus.log.level=INFO -XX:ErrorFile=/model/hs_err_%p.log -Dsmile.chat.admit-coalesce-ms=50 -Dsmile.chat.speculative=true -Dsmile.chat.speculative-tokens=2" \
   -u root -v "/raid/llm/model":/model quarkus/smile-serve-gpu
 ```
+
+> **Database Profile & Dependencies:**
+> Building with `"-Dquarkus.profile=default"` configures the build to use an
+> embedded H2 database (`jdbc:h2:file:/model/smile_serve`), minimizing runtime
+> dependencies by storing conversation history directly inside the mounted model
+> directory. This is best for personal, local development, or standalone testing.
+>
+> If you want to build an image for production usage, remove this option or use
+> `"-Dquarkus.profile=prod"`. Under the `prod` profile, `SMILE Serve` will use
+> `PostgreSQL`, which requires running an additional `PostgreSQL` container.
 
 Debug variant (adds `CUDA_LAUNCH_BLOCKING=1` for synchronous CUDA error
 reporting; slower, use only when diagnosing a CUDA graph issue):
@@ -102,6 +112,90 @@ sudo docker run -i --rm --gpus all -p 8888:8080 \
   -e CUDA_LAUNCH_BLOCKING=1 \
   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,4,6,7 -Dsmile.chat.max-batch-size=48 -Dquarkus.log.level=INFO -XX:ErrorFile=/model/hs_err_%p.log -Dsmile.chat.admit-coalesce-ms=50 -Dsmile.chat.speculative=true -Dsmile.chat.speculative-tokens=2" \
   -u root -v "/raid/llm/model":/model quarkus/smile-serve-gpu
+```
+
+#### Running with PostgreSQL in Kubernetes
+
+When deploying in production with `"-Dquarkus.profile=prod"`, you can run
+`smile-serve` and `postgresql` together in a single Kubernetes Pod so they
+share the network namespace (`localhost`):
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: smile-serve
+  labels:
+    app: smile-serve
+spec:
+  containers:
+    - name: smile-serve
+      image: quarkus/smile-serve-gpu:latest
+      ports:
+        - containerPort: 8080
+          name: http
+      env:
+        - name: SMILE_DB_HOST
+          value: "localhost"
+        - name: SMILE_DB_PORT
+          value: "5432"
+        - name: SMILE_DB_NAME
+          value: "smile_serve"
+        - name: SMILE_DB_USER
+          value: "smile"
+        - name: SMILE_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: smile-db-secret
+              key: password
+        - name: SMILE_DECODE_CUDA_GRAPH
+          value: "1"
+        - name: JAVA_OPTS_APPEND
+          value: >-
+            -Dsmile.chat.model=Qwen/Qwen3.8-27B
+            -Dsmile.chat.devices=0
+            -Dsmile.chat.max-batch-size=16
+            -Dquarkus.log.level=INFO
+      resources:
+        limits:
+          nvidia.com/gpu: "1"
+      volumeMounts:
+        - name: model-storage
+          mountPath: /model
+
+    - name: postgresql
+      image: postgres:17-alpine
+      ports:
+        - containerPort: 5432
+          name: postgres
+      env:
+        - name: POSTGRES_DB
+          value: "smile_serve"
+        - name: POSTGRES_USER
+          value: "smile"
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: smile-db-secret
+              key: password
+      resources:
+        requests:
+          cpu: "250m"
+          memory: "512Mi"
+        limits:
+          cpu: "1"
+          memory: "2Gi"
+      volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+
+  volumes:
+    - name: model-storage
+      persistentVolumeClaim:
+        claimName: smile-model-pvc
+    - name: postgres-data
+      persistentVolumeClaim:
+        claimName: smile-postgres-pvc
 ```
 
 ### 1.3 Test Run a Model
