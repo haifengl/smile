@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build --emptyOutDir",
+    "postbuild": "node postbuild.js",
     "preview": "vite preview --host",
     "test": "node --test infer/imagenetTopK.test.js"
   },
