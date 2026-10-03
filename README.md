@@ -1,6 +1,7 @@
 # Statistical Machine Intelligence & Learning Engine <img align="left" width="40" src="/website/src/images/smile.png" alt="SMILE">
 [![Maven Central](https://img.shields.io/maven-central/v/com.github.haifengl/smile-core)](https://central.sonatype.com/artifact/com.github.haifengl/smile-core)
 [![CI](https://github.com/haifengl/smile/actions/workflows/ci.yml/badge.svg)](https://github.com/haifengl/smile/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/haifengl/smile/actions/workflows/codeql.yml/badge.svg)](https://github.com/haifengl/smile/actions/workflows/codeql.yml)
 
 SMILE (Statistical Machine Intelligence & Learning Engine) is a comprehensive,
 high-performance machine learning framework for the JVM. SMILE v5+ requires
