@@ -34,3 +34,5 @@ jobs:
           allowlist: haifengl,bot*,dependabot[bot],*[bot]
           # Do not lock PRs after merge so discussions can continue
           lock-pullrequest-aftermerge: false
+          # Fixes the GraphQL PR-lookup failure when signing retroactively inside an Issue thread
+          empty-commit-status: true
