@@ -661,12 +661,12 @@ rp.apply(new Array[Double](1000)).length</code></pre>
       </code></pre>
     </div>
     <div id="pg-12-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.feature.extraction.RandomProjection
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.feature.extraction.randomProjection
 import smile.math.MathEx
 
 MathEx.setSeed(19650218)
-val rp = RandomProjection.of(1000, 50)
-val rps = RandomProjection.sparse(1000, 50)
+val rp = randomProjection(1000, 50)                 // dense
+val rps = randomProjection(1000, 50, sparse = true)  // sparse
 rp.apply(DoubleArray(1000)).size</code></pre>
       <pre class="playground-output" aria-label="Expected output"><code>
 50
@@ -706,10 +706,12 @@ val bow = new BagOfWords((s: String) =&gt; s.toLowerCase.split("\\s+"), vocabula
 bow.apply("SMILE feature learning")</code></pre>
     </div>
     <div id="pg-13-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.feature.extraction.BagOfWords
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.feature.extraction.bagOfWords
 
 val vocabulary = arrayOf("smile", "feature", "learning")
-val bow = BagOfWords({ it.lowercase().split(Regex("\\s+")).toTypedArray() }, vocabulary)
+val bow = bagOfWords(vocabulary) {
+    it.lowercase().split(Regex("\\s+")).toTypedArray()
+}
 bow.apply("SMILE feature learning")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
@@ -760,16 +762,18 @@ hash.apply("student yes balance high")</code></pre>
     </div>
     <div id="pg-14-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.datasets.Default
-import smile.feature.extraction.BinaryEncoder
-import smile.feature.extraction.HashEncoder
-import smile.feature.extraction.SparseEncoder
+import smile.feature.extraction.binaryEncoder
+import smile.feature.extraction.hashEncoder
+import smile.feature.extraction.sparseEncoder
 
 val data = Default().data()
-val binary = BinaryEncoder(data.schema(), "student")
+val binary = data.binaryEncoder("student")
 val idx = binary.apply(data.get(0))
-val sparse = SparseEncoder(data.schema())
+val sparse = data.sparseEncoder()
 val sa = sparse.apply(data.get(0))
-val hash = HashEncoder({ it.lowercase().split(Regex("\\s+")).toTypedArray() }, 1 shl 16)
+val hash = hashEncoder(1 shl 16) {
+    it.lowercase().split(Regex("\\s+")).toTypedArray()
+}
 hash.apply("student yes balance high")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>

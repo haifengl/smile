@@ -11,8 +11,9 @@ title: SMILE - Anomaly Detection
 
     <h2 id="overview" class="title">Overview</h2>
 
-    <p>The package <a href="api/java/smile/anomaly/package-summary.html"><code>smile.anomaly</code></a> provides two main approaches for unsupervised and semi-supervised anomaly detection:</p>
+    <p>The package <a href="api/java/smile/anomaly/package-summary.html"><code>smile.anomaly</code></a> provides unsupervised and semi-supervised anomaly detection. Scala and Kotlin expose package-level helpers (<code>isolationforest</code> / <code>isolationForest</code>, <code>lof</code>, <code>ocsvm</code>) with the same defaults as the Java <code>Options</code> constructors.</p>
     <p><strong>Isolation Forest</strong> (<code>IsolationForest</code>) — a tree-ensemble, unsupervised anomaly scorer for numeric tabular data.</p>
+    <p><strong>Local Outlier Factor</strong> (<code>LOF&lt;T&gt;</code>) — density-based local outlier detection via reachability ratios.</p>
     <p><strong>One-Class SVM</strong> (<code>SVM&lt;T&gt;</code>) — kernel-based novelty detection that learns the support of a high-dimensional distribution.</p>
 
     <div class="table-responsive">
@@ -20,17 +21,19 @@ title: SMILE - Anomaly Detection
             <thead><tr><th>Class</th><th>Algorithm</th><th>Score direction</th></tr></thead>
             <tbody>
             <tr><td><code>IsolationForest</code></td><td>Random-partition tree ensemble</td><td>Higher → more anomalous</td></tr>
+            <tr><td><code>LOF&lt;T&gt;</code></td><td>Local reachability density ratio</td><td>Higher (≫ 1) → more anomalous</td></tr>
             <tr><td><code>SVM&lt;T&gt;</code></td><td>One-class support vector machine</td><td>Lower (negative) → more anomalous</td></tr>
             </tbody>
         </table>
     </div>
 
-    <p>Both classes are <code>Serializable</code> and support round-trip persistence via <code>smile.io.Write.object</code> / <code>smile.io.Read.object</code>.</p>
+    <p>All classes are <code>Serializable</code> and support round-trip persistence via <code>smile.io.Write.object</code> / <code>smile.io.Read.object</code>.</p>
 
 
-    <h2 id="when-to-use" class="title">Algorithm Selection Guide</h2>
+    <h2 id="when-to-use" class="title">When to Use Which Method</h2>
 
     <p><strong>Use Isolation Forest when</strong> the data is numeric tabular (<code>double[][]</code>), you need a fast scalable unsupervised baseline, you want intuitive scores in <code>(0, 1]</code> where values above roughly <code>0.5</code> flag anomalies, or you want to experiment with extended hyperplanes via <code>extensionLevel</code>.</p>
+    <p><strong>Use LOF when</strong> anomalies are local — points that are sparse relative to a nearby denser neighborhood — or when clusters have very different densities so a global threshold fails.</p>
     <p><strong>Use One-Class SVM when</strong> you need flexible non-linear normality boundaries via custom kernels, the training data is uncontaminated (no outliers — the SVM learns a tight hypersphere around it), and the data size is moderate (kernel methods scale as O(n²) in memory and time).</p>
 
 
@@ -74,14 +77,14 @@ outlier score ≈ 0.82
       </code></pre>
     </div>
     <div id="pg-1-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly.IsolationForest
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly._
 
 val train = Array(
   Array(0.0, 0.0), Array(0.1, -0.1), Array(-0.05, 0.05),
   Array(0.05, 0.08), Array(-0.08, -0.03)
 )
 
-val model = IsolationForest.fit(train)
+val model = isolationforest(train)
 val inlierScore  = model.score(Array(0.02, 0.01))
 val outlierScore = model.score(Array(6.0, -6.0))
 println(f"inlier  score = $inlierScore%.4f")
@@ -92,7 +95,7 @@ outlier score ≈ 0.82
       </code></pre>
     </div>
     <div id="pg-1-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.IsolationForest
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.isolationForest
 
 val train = arrayOf(
     doubleArrayOf(0.0, 0.0), doubleArrayOf(0.1, -0.1),
@@ -100,7 +103,7 @@ val train = arrayOf(
     doubleArrayOf(-0.08, -0.03)
 )
 
-val model = IsolationForest.fit(train)
+val model = isolationForest(train)
 val inlierScore  = model.score(doubleArrayOf(0.02, 0.01))
 val outlierScore = model.score(doubleArrayOf(6.0, -6.0))
 println("inlier  score = %.4f".format(inlierScore))
@@ -157,23 +160,26 @@ var loaded = IsolationForest.Options.of(props);
 assert options.equals(loaded);</code></pre>
     </div>
     <div id="pg-2-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly.IsolationForest
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly._
 
 val train: Array[Array[Double]] = ??? // your data
-val options = new IsolationForest.Options(200, 0, 0.7, 0)
-val model = IsolationForest.fit(train, options)
+val model = isolationforest(train, trees = 200, maxDepth = 0,
+  subsample = 0.7, extensionLevel = 0)
 
+val options = new IsolationForest.Options(200, 0, 0.7, 0)
 val props = options.toProperties
 val loaded = IsolationForest.Options.of(props)
 assert(options == loaded)</code></pre>
     </div>
     <div id="pg-2-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.IsolationForest
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.isolationForest
+import smile.anomaly.IsolationForest
 
 val train: Array&lt;DoubleArray&gt; = TODO() // your data
-val options = IsolationForest.Options(200, 0, 0.7, 0)
-val model = IsolationForest.fit(train, options)
+val model = isolationForest(train, trees = 200, maxDepth = 0,
+    subsample = 0.7, extensionLevel = 0)
 
+val options = IsolationForest.Options(200, 0, 0.7, 0)
 val props = options.toProperties()
 val loaded = IsolationForest.Options.of(props)
 check(options == loaded)</code></pre>
@@ -226,13 +232,13 @@ System.out.println(ext.extensionLevel()); // 1</code></pre>
       </code></pre>
     </div>
     <div id="pg-3-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly.IsolationForest
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly._
 
 val data: Array[Array[Double]] = ??? // p = 2
-val std = IsolationForest.fit(data, new IsolationForest.Options(100, 0, 0.7, 0))
+val std = isolationforest(data, extensionLevel = 0)
 println(std.extensionLevel) // 0
 
-val ext = IsolationForest.fit(data, new IsolationForest.Options(100, 0, 0.7, 1))
+val ext = isolationforest(data, extensionLevel = 1)
 println(ext.extensionLevel) // 1</code></pre>
       <pre class="playground-output" aria-label="Expected output"><code>
 0
@@ -240,13 +246,13 @@ println(ext.extensionLevel) // 1</code></pre>
       </code></pre>
     </div>
     <div id="pg-3-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.IsolationForest
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.isolationForest
 
 val data: Array&lt;DoubleArray&gt; = TODO() // p = 2
-val std = IsolationForest.fit(data, IsolationForest.Options(100, 0, 0.7, 0))
+val std = isolationForest(data, extensionLevel = 0)
 println(std.extensionLevel()) // 0
 
-val ext = IsolationForest.fit(data, IsolationForest.Options(100, 0, 0.7, 1))
+val ext = isolationForest(data, extensionLevel = 1)
 println(ext.extensionLevel()) // 1</code></pre>
       <pre class="playground-output" aria-label="Expected output"><code>
 0
@@ -327,12 +333,9 @@ val loaded = Read.object(path) as IsolationForest</code></pre>
 </div>
 
 
-    <h2 id="one-class-svm" class="title">One-Class SVM</h2>
+    <h2 id="lof" class="title">Local Outlier Factor (LOF)</h2>
 
-    <p>Class: <code>smile.anomaly.SVM&lt;T&gt;</code> (extends <code>smile.model.svm.KernelMachine&lt;T&gt;</code>). One-class SVM identifies a hypersphere that encloses the training distribution. It is sensitive to outliers — prefer clean training data for novelty detection.</p>
-
-
-    <h3 id="svm-quick-start">Quick Start</h3>
+    <p>Class: <code>smile.anomaly.LOF&lt;T&gt;</code>. LOF compares the local reachability density of a point to that of its neighbors. Scores near 1 are typical inliers; scores much larger than 1 indicate local outliers. Scala/Kotlin: <code>lof(x, k = 20)</code>.</p>
 
 
     <div class="code-playground glass" data-lang="java">
@@ -345,6 +348,61 @@ val loaded = Read.object(path) as IsolationForest</code></pre>
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-6-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.anomaly.LOF;
+
+double[][] train = {
+    {0.0, 0.0}, {0.1, -0.1}, {-0.05, 0.05},
+    {0.05, 0.08}, {-0.08, -0.03}, {5.0, 5.0}
+};
+LOF&lt;double[]&gt; model = LOF.fit(train, 4);
+System.out.printf("inlier  LOF = %.4f%n", model.score(train[0]));
+System.out.printf("outlier LOF = %.4f%n", model.score(train[5]));</code></pre>
+    </div>
+    <div id="pg-6-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly._
+
+val train = Array(
+  Array(0.0, 0.0), Array(0.1, -0.1), Array(-0.05, 0.05),
+  Array(0.05, 0.08), Array(-0.08, -0.03), Array(5.0, 5.0))
+val model = lof(train, k = 4)
+println(f"inlier  LOF = ${model.score(train(0))}%.4f")
+println(f"outlier LOF = ${model.score(train(5))}%.4f")</code></pre>
+    </div>
+    <div id="pg-6-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.lof
+
+val train = arrayOf(
+    doubleArrayOf(0.0, 0.0), doubleArrayOf(0.1, -0.1),
+    doubleArrayOf(-0.05, 0.05), doubleArrayOf(0.05, 0.08),
+    doubleArrayOf(-0.08, -0.03), doubleArrayOf(5.0, 5.0))
+val model = lof(train, k = 4)
+println("inlier  LOF = %.4f".format(model.score(train[0])))
+println("outlier LOF = %.4f".format(model.score(train[5])))</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Optional metric and custom neighbor-search overloads: <code>lof(x, distance, k)</code> and <code>lof(x, nns, k)</code>.</p>
+
+
+    <h2 id="one-class-svm" class="title">One-Class SVM</h2>
+
+    <p>Class: <code>smile.anomaly.SVM&lt;T&gt;</code> (extends <code>smile.model.svm.KernelMachine&lt;T&gt;</code>). One-class SVM identifies a hypersphere that encloses the training distribution. It is sensitive to outliers — prefer clean training data for novelty detection.</p>
+
+
+    <h3 id="svm-quick-start">Quick Start</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-7-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import smile.anomaly.SVM;
 import smile.math.kernel.GaussianKernel;
 
@@ -370,8 +428,8 @@ inlier  score ≈ 0.45
 outlier score ≈ −0.72
       </code></pre>
     </div>
-    <div id="pg-6-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly.SVM
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly._
 import smile.math.kernel.GaussianKernel
 
 val train = Array(
@@ -379,11 +437,7 @@ val train = Array(
   Array(0.05, 0.08), Array(-0.08, -0.03)
 )
 
-val model = SVM.fit(
-  train,
-  new GaussianKernel(1.0),
-  new SVM.Options(0.2, 1E-3)
-)
+val model = ocsvm(train, new GaussianKernel(1.0), nu = 0.2, tol = 1E-3)
 val inlierScore  = model.score(Array(0.02, 0.01))
 val outlierScore = model.score(Array(4.0, -4.0))
 println(f"inlier  score = $inlierScore%.4f")
@@ -393,8 +447,8 @@ inlier  score ≈ 0.45
 outlier score ≈ −0.72
       </code></pre>
     </div>
-    <div id="pg-6-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.SVM
+    <div id="pg-7-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.ocsvm
 import smile.math.kernel.GaussianKernel
 
 val train = arrayOf(
@@ -403,11 +457,7 @@ val train = arrayOf(
     doubleArrayOf(-0.08, -0.03)
 )
 
-val model = SVM.fit(
-    train,
-    GaussianKernel(1.0),
-    SVM.Options(0.2, 1E-3)
-)
+val model = ocsvm(train, GaussianKernel(1.0), nu = 0.2, tol = 1E-3)
 val inlierScore  = model.score(doubleArrayOf(0.02, 0.01))
 val outlierScore = model.score(doubleArrayOf(4.0, -4.0))
 println("inlier  score = %.4f".format(inlierScore))
@@ -425,7 +475,7 @@ outlier score ≈ −0.72
 
     <h3 id="svm-options">Options</h3>
 
-    <p>Hyperparameters are fields of the nested <code>SVM.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). Fit with <code>SVM.fit(x, kernel)</code> or <code>SVM.fit(x, kernel, options)</code>.</p>
+    <p>Hyperparameters are fields of the nested <code>SVM.Options</code> record. Pass an <code>Options</code> instance to <code>fit</code>, or a <code>java.util.Properties</code> map using the keys below (<code>Options.toProperties()</code> / <code>Options.of(props)</code> round-trip). Java: <code>SVM.fit(x, kernel[, options])</code>. Scala/Kotlin: <code>ocsvm(x, kernel, nu = 0.5, tol = 1E-3)</code>.</p>
 
     <dl class="options-dl">
         <dt><code>nu</code><br><code>smile.svm.nu</code></dt>
@@ -433,27 +483,6 @@ outlier score ≈ −0.72
         <dt><code>tol</code><br><code>smile.svm.tolerance</code></dt>
         <dd>Solver convergence tolerance (must be &gt; 0; default <code>1E-3</code>).</dd>
     </dl>
-
-
-    <div class="code-playground glass" data-lang="java">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-java"><code class="language-java">import smile.anomaly.SVM;
-import java.util.Properties;
-
-var opts = new SVM.Options(0.1, 1E-4); // 10% contamination budget
-Properties props = opts.toProperties();
-SVM.Options loaded = SVM.Options.of(props);
-assert opts.equals(loaded);</code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
-
-
-    <h3 id="svm-batch">Batch Scoring and Prediction</h3>
 
 
     <div class="code-playground glass" data-lang="java">
@@ -466,6 +495,50 @@ assert opts.equals(loaded);</code></pre>
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-8-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.anomaly.SVM;
+import java.util.Properties;
+
+var opts = new SVM.Options(0.1, 1E-4); // 10% contamination budget
+Properties props = opts.toProperties();
+SVM.Options loaded = SVM.Options.of(props);
+assert opts.equals(loaded);</code></pre>
+    </div>
+    <div id="pg-8-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly._
+import smile.math.kernel.GaussianKernel
+
+val model = ocsvm(train, new GaussianKernel(1.0), nu = 0.1, tol = 1E-4)
+val opts = new SVM.Options(0.1, 1E-4)
+val loaded = SVM.Options.of(opts.toProperties)
+assert(opts == loaded)</code></pre>
+    </div>
+    <div id="pg-8-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.ocsvm
+import smile.anomaly.SVM
+import smile.math.kernel.GaussianKernel
+
+val model = ocsvm(train, GaussianKernel(1.0), nu = 0.1, tol = 1E-4)
+val opts = SVM.Options(0.1, 1E-4)
+val loaded = SVM.Options.of(opts.toProperties())
+check(opts == loaded)</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="svm-batch">Batch Scoring and Prediction</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-9-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-9-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-9-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-9-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">// Batch score — runs in parallel
 double[] scores = model.score(batchSamples);
 
@@ -473,11 +546,11 @@ double[] scores = model.score(batchSamples);
 // threshold = 0.0 uses the natural SVM decision boundary
 boolean isAnomaly = model.predict(x, 0.0);</code></pre>
     </div>
-    <div id="pg-8-1" class="hero-pane" hidden>
+    <div id="pg-9-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">val scores = model.score(batchSamples)
 val isAnomaly = model.predict(x, 0.0)</code></pre>
     </div>
-    <div id="pg-8-2" class="hero-pane" hidden>
+    <div id="pg-9-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">val scores = model.score(batchSamples)
 val isAnomaly = model.predict(x, 0.0)</code></pre>
     </div>
@@ -492,18 +565,38 @@ val isAnomaly = model.predict(x, 0.0)</code></pre>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">Java</span>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-10-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-10-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-10-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">import smile.io.Read;
+    <div id="pg-10-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.io.Read;
 import smile.io.Write;
 import java.nio.file.Path;
 
 Path path = Write.object(model);
 @SuppressWarnings("unchecked")
 SVM&lt;double[]&gt; loaded = (SVM&lt;double[]&gt;) Read.object(path);</code></pre>
+    </div>
+    <div id="pg-10-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.io.{Read, Write}
+import smile.anomaly.SVM
+
+val path = Write.object(model)
+val loaded = Read.object(path).asInstanceOf[SVM[Array[Double]]]</code></pre>
+    </div>
+    <div id="pg-10-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.io.Read
+import smile.io.Write
+import smile.anomaly.SVM
+
+val path = Write.object(model)
+@Suppress("UNCHECKED_CAST")
+val loaded = Read.object(path) as SVM&lt;DoubleArray&gt;</code></pre>
+    </div>
   <div class="playground-editor" hidden></div>
 </div>
 
@@ -528,14 +621,14 @@ SVM&lt;double[]&gt; loaded = (SVM&lt;double[]&gt;) Read.object(path);</code></pr
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-10-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-10-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-10-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-11-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-10-0" class="hero-pane">
+    <div id="pg-11-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import smile.anomaly.IsolationForest;
 import java.util.Arrays;
 
@@ -548,7 +641,7 @@ double threshold = scores[idx];
 
 boolean flag = model.predict(xNew, threshold);</code></pre>
     </div>
-    <div id="pg-10-1" class="hero-pane" hidden>
+    <div id="pg-11-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly.IsolationForest
 import java.util.Arrays
 
@@ -559,7 +652,7 @@ val idx = ((1.0 - contamination) * (scores.length - 1)).toInt
 val threshold = scores(idx)
 val flag = model.predict(xNew, threshold)</code></pre>
     </div>
-    <div id="pg-10-2" class="hero-pane" hidden>
+    <div id="pg-11-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.IsolationForest
 import java.util.Arrays
 
@@ -632,14 +725,14 @@ val flag = model.predict(xNew, threshold)</code></pre>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-11-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-11-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-11-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-12-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-11-0" class="hero-pane">
+    <div id="pg-12-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import smile.anomaly.IsolationForest;
 import smile.math.MathEx;
 import java.util.Arrays;
@@ -659,15 +752,15 @@ long anomalyCount = Arrays.stream(scores).filter(s -&gt; s &gt; 0.6).count();
 System.out.printf("anomalies (threshold 0.6): %d / %d%n",
     anomalyCount, train.length);</code></pre>
     </div>
-    <div id="pg-11-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly.IsolationForest
+    <div id="pg-12-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly._
 import smile.math.MathEx
 
 MathEx.setSeed(42L)
 val train = loadNumericData() // your 3-D data
 
-val options = new IsolationForest.Options(256, 0, 0.6, 2)
-val forest = IsolationForest.fit(train, options)
+val forest = isolationforest(train, trees = 256, subsample = 0.6,
+  extensionLevel = 2)
 println("trees          : " + forest.size)
 println("extension level: " + forest.extensionLevel)
 
@@ -675,15 +768,15 @@ val scores = forest.score(train)
 val anomalyCount = scores.count(_ &gt; 0.6)
 println(s"anomalies (threshold 0.6): $anomalyCount / ${train.length}")</code></pre>
     </div>
-    <div id="pg-11-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.IsolationForest
+    <div id="pg-12-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.isolationForest
 import smile.math.MathEx
 
 MathEx.setSeed(42L)
 val train = loadNumericData() // your 3-D data
 
-val options = IsolationForest.Options(256, 0, 0.6, 2)
-val forest = IsolationForest.fit(train, options)
+val forest = isolationForest(train, trees = 256, subsample = 0.6,
+    extensionLevel = 2)
 println("trees          : ${forest.size()}")
 println("extension level: ${forest.extensionLevel()}")
 
@@ -700,14 +793,14 @@ println("anomalies (threshold 0.6): $anomalyCount / ${train.size}")</code></pre>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-12-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-12-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-12-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-13-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-13-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-13-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-12-0" class="hero-pane">
+    <div id="pg-13-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import smile.anomaly.SVM;
 import smile.math.kernel.GaussianKernel;
 
@@ -724,33 +817,25 @@ boolean anomaly = ocsvm.predict(testPoint, 0.0);
 System.out.printf("anomaly: %b  (score = %.4f)%n",
     anomaly, ocsvm.score(testPoint));</code></pre>
     </div>
-    <div id="pg-12-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly.SVM
+    <div id="pg-13-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly._
 import smile.math.kernel.GaussianKernel
 
 val train = loadCleanData() // no outliers in training set
-val ocsvm = SVM.fit(
-  train,
-  new GaussianKernel(0.5),
-  new SVM.Options(0.1, 1E-3)
-)
+val model = ocsvm(train, new GaussianKernel(0.5), nu = 0.1)
 val testPoint = Array(1.2, -0.7, 0.3)
-val anomaly = ocsvm.predict(testPoint, 0.0)
-println(f"anomaly: $anomaly  (score = ${ocsvm.score(testPoint)}%.4f)")</code></pre>
+val anomaly = model.predict(testPoint, 0.0)
+println(f"anomaly: $anomaly  (score = ${model.score(testPoint)}%.4f)")</code></pre>
     </div>
-    <div id="pg-12-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.SVM
+    <div id="pg-13-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.ocsvm
 import smile.math.kernel.GaussianKernel
 
 val train = loadCleanData() // no outliers in training set
-val ocsvm = SVM.fit(
-    train,
-    GaussianKernel(0.5),
-    SVM.Options(0.1, 1E-3)
-)
+val model = ocsvm(train, GaussianKernel(0.5), nu = 0.1)
 val testPoint = doubleArrayOf(1.2, -0.7, 0.3)
-val anomaly = ocsvm.predict(testPoint, 0.0)
-println("anomaly: $anomaly  (score = %.4f)".format(ocsvm.score(testPoint)))</code></pre>
+val anomaly = model.predict(testPoint, 0.0)
+println("anomaly: $anomaly  (score = %.4f)".format(model.score(testPoint)))</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
@@ -761,14 +846,14 @@ println("anomaly: $anomaly  (score = %.4f)".format(ocsvm.score(testPoint)))</cod
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-13-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-13-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-13-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-14-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-14-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-14-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-13-0" class="hero-pane">
+    <div id="pg-14-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import smile.anomaly.IsolationForest;
 import java.util.Arrays;
 
@@ -789,12 +874,12 @@ for (double[] x : newBatch) {
     }
 }</code></pre>
     </div>
-    <div id="pg-13-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly.IsolationForest
+    <div id="pg-14-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.anomaly._
 import java.util.Arrays
 
 val data = loadData()
-val model = IsolationForest.fit(data)
+val model = isolationforest(data)
 val trainScores = model.score(data)
 Arrays.sort(trainScores)
 
@@ -807,12 +892,12 @@ for (x &lt;- loadNewData()) {
     println("ANOMALY detected: " + Arrays.toString(x))
 }</code></pre>
     </div>
-    <div id="pg-13-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.IsolationForest
+    <div id="pg-14-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.anomaly.isolationForest
 import java.util.Arrays
 
 val data = loadData()
-val model = IsolationForest.fit(data)
+val model = isolationForest(data)
 val trainScores = model.score(data)
 Arrays.sort(trainScores)
 

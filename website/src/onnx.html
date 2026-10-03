@@ -1,0 +1,623 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - ONNX
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 order-md-first">
+    <h1 id="onnx-top" class="title">ONNX</h1>
+
+
+    <h2 id="overview" class="title">Overview</h2>
+
+    <p>The <code>smile.onnx</code> module provides an idiomatic Java API for running ONNX models with the <a href="https://onnxruntime.ai/">ONNX Runtime</a> inference engine. It wraps the ORT C API through Panama FFM (<code>smile.onnx.foreign</code>); applications use only the high-level classes described here.</p>
+    <p>Shared tensor / deep-learning APIs live on <a href="deep-learning.html">Deep Learning</a>. HTTP serving of <code>.onnx</code> models is covered on <a href="serve.html">SMILE Serve</a>.</p>
+
+                <pre class="language-text"><code>┌──────────────────────────────────────┐
+│           Your Application           │
+├──────────────────────────────────────┤
+│          smile.onnx                  │
+│  InferenceSession  OrtValue  ...     │
+├──────────────────────────────────────┤
+│   smile.onnx.foreign  (Panama FFM)   │
+├──────────────────────────────────────┤
+│    onnxruntime shared library        │
+└──────────────────────────────────────┘</code></pre>
+
+
+    <h2 id="prerequisites" class="title">Prerequisites</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Requirement</th><th>Minimum</th></tr></thead>
+            <tbody>
+            <tr><td>Java</td><td>22+ (Panama FFM; SMILE targets Java 25)</td></tr>
+            <tr><td>ONNX Runtime native library</td><td>1.18+ (API version 22)</td></tr>
+            <tr><td>JVM flag</td><td><code>--enable-native-access=ALL-UNNAMED</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>Download pre-built packages from the <a href="https://github.com/microsoft/onnxruntime/releases">ORT releases page</a> and place <code>libonnxruntime.so</code> / <code>libonnxruntime.dylib</code> / <code>onnxruntime.dll</code> on the OS library search path:</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash"># Linux
+export LD_LIBRARY_PATH=/path/to/onnxruntime/lib:$LD_LIBRARY_PATH
+
+# macOS
+export DYLD_LIBRARY_PATH=/path/to/onnxruntime/lib:$DYLD_LIBRARY_PATH
+
+# Windows (PowerShell)
+$env:PATH = "C:\path\to\onnxruntime\lib;" + $env:PATH
+
+java --enable-native-access=ALL-UNNAMED -jar myapp.jar</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="package-structure" class="title">Package Structure</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class / enum</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>InferenceSession</code></td><td>Loads a model and runs inference</td></tr>
+            <tr><td><code>OrtValue</code></td><td>Tensor container (input and output)</td></tr>
+            <tr><td><code>SessionOptions</code></td><td>Configures a session before loading</td></tr>
+            <tr><td><code>RunOptions</code></td><td>Configures a single inference run</td></tr>
+            <tr><td><code>Environment</code></td><td>Shared OrtEnv (thread pools, logging)</td></tr>
+            <tr><td><code>ModelMetadata</code></td><td>Producer, version, custom metadata</td></tr>
+            <tr><td><code>NodeInfo</code> / <code>TensorInfo</code></td><td>Name, type, and shape for a node</td></tr>
+            <tr><td><code>ElementType</code> / <code>OnnxType</code></td><td>Tensor element types and value kinds</td></tr>
+            <tr><td><code>GraphOptimizationLevel</code> / <code>ExecutionMode</code></td><td>Optimization and execution mode enums</td></tr>
+            <tr><td><code>LoggingLevel</code> / <code>OnnxException</code></td><td>ORT logging severity and errors</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2 id="quick-start" class="title">Quick Start</h2>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+import java.util.Map;
+
+// 1. Load the model
+try (var session = InferenceSession.create("resnet50.onnx")) {
+
+    // 2. Inspect inputs
+    session.inputNames().forEach(System.out::println);
+    // → "data"
+
+    // 3. Build an input tensor  (batch=1, channels=3, height=224, width=224)
+    float[] pixels = preprocessImage(...);   // your image preprocessing
+    long[]  shape  = { 1, 3, 224, 224 };
+
+    try (OrtValue input = OrtValue.fromFloatArray(pixels, shape)) {
+
+        // 4. Run inference
+        OrtValue[] outputs = session.run(Map.of("data", input));
+
+        // 5. Read the result
+        float[] scores = outputs[0].toFloatArray();
+        int classId = argmax(scores);
+        System.out.println("Predicted class: " + classId);
+
+        // 6. Release output tensors
+        for (OrtValue v : outputs) v.close();
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="inference-session" class="title">InferenceSession</h2>
+
+    <p><code>InferenceSession</code> loads an ONNX model, optimizes its graph, and executes inference. It implements <code>AutoCloseable</code> — always use try-with-resources or call <code>close()</code>. <code>run</code> is thread-safe; multiple threads may call it concurrently on the same session.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+// From a file path (default options)
+InferenceSession session = InferenceSession.create("model.onnx");
+
+// From a file path with custom options
+try (var opts = new SessionOptions()) {
+    opts.setIntraOpNumThreads(4)
+        .setGraphOptimizationLevel(GraphOptimizationLevel.ENABLE_ALL);
+    session = InferenceSession.create("model.onnx", opts);
+}
+
+// From a byte array (database / JAR resource)
+byte[] modelBytes = Files.readAllBytes(Path.of("model.onnx"));
+session = InferenceSession.create(modelBytes);
+
+// Run all outputs (most common)
+OrtValue[] outputs = session.run(inputs);
+
+// Selected outputs + per-call options
+try (var runOpts = new RunOptions()) {
+    runOpts.setLogTag("my-run");
+    outputs = session.run(inputs, new String[]{"output_0"}, runOpts);
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="ortvalue" class="title">OrtValue — Tensors</h2>
+
+    <p><code>OrtValue</code> wraps an ORT tensor with Java-friendly factories and extractors. It implements <code>AutoCloseable</code>. Shape is a <code>long[]</code>; <code>-1</code> means a dynamic dimension.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.OrtValue;
+import smile.onnx.TensorInfo;
+import smile.onnx.ElementType;
+import smile.onnx.OnnxType;
+import java.util.Arrays;
+
+// Create from Java arrays
+OrtValue v = OrtValue.fromFloatArray(
+        new float[]{1f, 2f, 3f, 4f}, new long[]{2, 2});
+OrtValue d = OrtValue.fromDoubleArray(new double[]{1.0, 2.0}, new long[]{2});
+OrtValue i = OrtValue.fromIntArray(new int[]{10, 20}, new long[]{2});
+OrtValue l = OrtValue.fromLongArray(new long[]{100L, 200L}, new long[]{2});
+
+// Extract / inspect outputs
+TensorInfo ti = outputs[0].tensorInfo();
+System.out.println(ti.elementType());           // e.g. FLOAT
+System.out.println(Arrays.toString(ti.shape())); // e.g. [1, 1000]
+float[] scores = outputs[0].toFloatArray();
+
+OnnxType kind = outputs[0].onnxType();   // TENSOR, SEQUENCE, MAP, …
+boolean isDynamic = ti.isDynamic();</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="session-options" class="title">SessionOptions</h2>
+
+    <p><code>SessionOptions</code> is a fluent builder for session-level configuration. Close it after the session is created.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+
+try (var opts = new SessionOptions()) {
+    // Thread counts (0 = let ORT decide)
+    opts.setIntraOpNumThreads(4)   // within one operator
+        .setInterOpNumThreads(2);  // across independent ops
+
+    opts.setGraphOptimizationLevel(GraphOptimizationLevel.ENABLE_ALL);
+    opts.setOptimizedModelFilePath("resnet50_opt.onnx");
+
+    opts.setExecutionMode(ExecutionMode.SEQUENTIAL); // default
+    // opts.setExecutionMode(ExecutionMode.PARALLEL);
+
+    opts.enableCpuMemArena();
+    opts.setLogId("my-session");
+    opts.setLogSeverityLevel(LoggingLevel.WARNING);
+
+    opts.appendCudaExecutionProvider(0);
+    opts.addConfigEntry("session.disable_prepacking", "1");
+
+    try (var session = InferenceSession.create("model.onnx", opts)) {
+        // ...
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>GraphOptimizationLevel</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>DISABLE_ALL</code></td><td>No optimizations; useful for debugging</td></tr>
+            <tr><td><code>ENABLE_BASIC</code></td><td>Constant folding, redundant node elimination</td></tr>
+            <tr><td><code>ENABLE_EXTENDED</code></td><td>Complex operator fusions</td></tr>
+            <tr><td><code>ENABLE_LAYOUT</code></td><td>Memory layout transformations</td></tr>
+            <tr><td><code>ENABLE_ALL</code></td><td>All optimizations (recommended for production)</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>ExecutionMode</th><th>When to use</th></tr></thead>
+            <tbody>
+            <tr><td><code>SEQUENTIAL</code></td><td>Low-latency single-request serving (default)</td></tr>
+            <tr><td><code>PARALLEL</code></td><td>High-throughput batch workloads with parallelizable subgraphs</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2 id="run-options" class="title">RunOptions</h2>
+
+    <p><code>RunOptions</code> configures a single <code>session.run()</code> call. <code>setTerminate()</code> signals ORT to abort the current run (useful for request timeouts).</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+import java.util.concurrent.*;
+
+try (var runOpts = new RunOptions()) {
+    runOpts.setLogTag("request-42")
+           .setLogSeverityLevel(LoggingLevel.WARNING);
+
+    OrtValue[] outputs = session.run(inputs, outputNames, runOpts);
+}
+
+// Cancel from another thread
+var runOpts = new RunOptions();
+scheduler.schedule(() -&gt; runOpts.setTerminate(), 5, TimeUnit.SECONDS);
+try {
+    OrtValue[] outputs = session.run(inputs, outputNames, runOpts);
+} catch (OnnxException ex) {
+    System.out.println("Run was cancelled: " + ex.getMessage());
+} finally {
+    runOpts.close();
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="environment" class="title">Environment</h2>
+
+    <p>By default each <code>InferenceSession.create(…)</code> creates a private <code>OrtEnv</code>. When you have multiple sessions in the same process, share one <code>Environment</code> to reduce thread-pool overhead.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+import java.util.List;
+
+try (var env = new Environment(LoggingLevel.WARNING, "my-app")) {
+    try (var s1 = env.createSession("model_a.onnx");
+         var s2 = env.createSession("model_b.onnx");
+         var s3 = env.createSession("model_c.onnx")) {
+        // All sessions share the same OrtEnv thread pools
+    }
+}
+
+System.out.println(Environment.buildInfo());
+List&lt;String&gt; providers = Environment.availableProviders();
+// e.g. ["CPUExecutionProvider", "CUDAExecutionProvider"]
+
+env.setLoggingLevel(LoggingLevel.VERBOSE);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="introspection" class="title">Model Introspection</h2>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+import java.util.Arrays;
+
+try (var session = InferenceSession.create("model.onnx")) {
+    System.out.println("Inputs  (" + session.inputCount() + "):");
+    for (NodeInfo ni : session.inputInfos()) {
+        System.out.println("  " + ni.name() + " : " + ni.onnxType());
+        if (ni.isTensor()) {
+            TensorInfo ti = ni.tensorInfo();
+            System.out.println("    element type : " + ti.elementType());
+            System.out.println("    shape        : " + Arrays.toString(ti.shape()));
+            System.out.println("    dynamic?     : " + ti.isDynamic());
+        }
+    }
+
+    ModelMetadata meta = session.metadata();
+    System.out.println("Producer : " + meta.producerName());
+    System.out.println("Graph    : " + meta.graphName());
+    System.out.println("Version  : " + meta.version());
+    System.out.println("Custom   : " + meta.customMetadata());
+}</code></pre>
+      <pre class="playground-output" aria-label="Expected output"><code>
+Inputs  (1):
+  data : TENSOR
+    element type : FLOAT
+    shape        : [-1, 3, 224, 224]
+    dynamic?     : true
+      </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="data-types" class="title">Data Types</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>ElementType</th><th>Java</th><th>Notes</th></tr></thead>
+            <tbody>
+            <tr><td><code>FLOAT</code> / <code>DOUBLE</code></td><td><code>float</code> / <code>double</code></td><td>IEEE 754</td></tr>
+            <tr><td><code>INT8</code> … <code>INT64</code></td><td><code>byte</code> … <code>long</code></td><td>Signed integers</td></tr>
+            <tr><td><code>UINT8</code> … <code>UINT64</code></td><td>same widths</td><td>Use unsigned helpers in Java</td></tr>
+            <tr><td><code>BOOL</code></td><td><code>byte</code></td><td>Stored as 0 / 1</td></tr>
+            <tr><td><code>STRING</code></td><td><code>String</code></td><td>UTF-8</td></tr>
+            <tr><td><code>FLOAT16</code> / <code>BFLOAT16</code> / …</td><td>—</td><td>No direct Java primitive mapping</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p><code>OnnxType</code> describes the kind of an <code>OrtValue</code>: <code>TENSOR</code>, <code>SEQUENCE</code>, <code>MAP</code>, <code>SPARSE_TENSOR</code>, <code>OPTIONAL</code>, <code>OPAQUE</code>.</p>
+
+
+    <h2 id="execution-providers" class="title">Execution Providers</h2>
+
+    <p>Execution providers offload work to GPUs or accelerators. Configure them on <code>SessionOptions</code>; ORT tries them in registration order and falls back to CPU. Register GPU providers <strong>before</strong> relying on CPU (CPU is always available).</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+import java.util.Map;
+
+try (var opts = new SessionOptions()) {
+    opts.appendCudaExecutionProvider(0);
+    opts.appendTensorRTExecutionProvider(0);
+    opts.appendRocmExecutionProvider(0);
+    opts.appendDirectMLExecutionProvider(0);   // Windows GPU
+    opts.appendCoreMLExecutionProvider(Map.of(
+            "ModelFormat", "MLProgram",
+            "MLComputeUnits", "ALL"));
+    opts.appendVitisAiExecutionProvider(Map.of(
+            "cache_dir", "C:\\temp\\vaip_cache",
+            "log_level", "info"));
+
+    try (var session = InferenceSession.create("model.onnx", opts)) {
+        // Runs on the first available registered provider
+    }
+}
+
+System.out.println(Environment.availableProviders());</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="errors-resources" class="title">Errors, Resources &amp; Logging</h2>
+
+    <p>ORT errors surface as unchecked <code>OnnxException</code> with an ORT error code. Always close <code>InferenceSession</code>, <code>OrtValue</code>, <code>SessionOptions</code>, <code>RunOptions</code>, and <code>Environment</code> (try-with-resources). Session logging uses <code>SessionOptions.setLogSeverityLevel</code>; process-wide logging uses <code>Environment</code> / <code>LoggingLevel</code>.</p>
+
+
+    <h2 id="performance" class="title">Performance Tuning</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Concern</th><th>Recommendation</th></tr></thead>
+            <tbody>
+            <tr><td>First-load latency</td><td><code>ENABLE_ALL</code> + <code>setOptimizedModelFilePath</code></td></tr>
+            <tr><td>Throughput</td><td><code>ExecutionMode.PARALLEL</code> + <code>setInterOpNumThreads</code></td></tr>
+            <tr><td>Latency</td><td><code>SEQUENTIAL</code> (default) + <code>setIntraOpNumThreads</code></td></tr>
+            <tr><td>Many models</td><td>Share one <code>Environment</code></td></tr>
+            <tr><td>Memory</td><td><code>disableCpuMemArena()</code> / <code>disableMemPattern()</code></td></tr>
+            <tr><td>Benchmarking</td><td><code>enableProfiling("profile_run")</code> → Chrome trace</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2 id="tutorials" class="title">Tutorials</h2>
+
+
+    <h3 id="tutorial-resnet">Image Classification with ResNet-50</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+import java.util.Map;
+
+float[] pixels = preprocess("cat.jpg", 224, 224);  // NCHW float[1*3*224*224]
+long[] shape = {1, 3, 224, 224};
+
+try (var session = InferenceSession.create("resnet50.onnx");
+     OrtValue input = OrtValue.fromFloatArray(pixels, shape)) {
+
+    System.out.println("Input  : " + session.inputInfos().getFirst());
+    System.out.println("Output : " + session.outputInfos().getFirst());
+
+    String inputName = session.inputNames().getFirst();
+    OrtValue[] outputs = session.run(Map.of(inputName, input));
+    try {
+        float[] logits = outputs[0].toFloatArray();
+        int classId = argmax(softmax(logits));
+        System.out.printf("Predicted class: %d%n", classId);
+    } finally {
+        for (OrtValue v : outputs) v.close();
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="tutorial-bert">NLP with a BERT Tokenizer Model</h3>
+
+    <p>Many NLP models take <code>INT64</code> input IDs. Pass tokenized text as long tensors:</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+import java.util.*;
+
+try (var session = InferenceSession.create("bert-base-uncased.onnx")) {
+    for (NodeInfo ni : session.inputInfos()) {
+        System.out.println(ni.name() + " -&gt; " + ni.tensorInfo());
+    }
+
+    int batchSize = 1, seqLen = 128;
+    long[] inputIds = new long[batchSize * seqLen];
+    long[] attentionMask = new long[batchSize * seqLen];
+    long[] tokenTypeIds = new long[batchSize * seqLen];
+    Arrays.fill(attentionMask, 1L);
+    long[] shape = {batchSize, seqLen};
+
+    try (OrtValue ids = OrtValue.fromLongArray(inputIds, shape);
+         OrtValue mask = OrtValue.fromLongArray(attentionMask, shape);
+         OrtValue types = OrtValue.fromLongArray(tokenTypeIds, shape)) {
+
+        Map&lt;String, OrtValue&gt; inputs = Map.of(
+                "input_ids", ids,
+                "attention_mask", mask,
+                "token_type_ids", types);
+        OrtValue[] outputs = session.run(inputs);
+        try {
+            float[] hidden = outputs[0].toFloatArray();
+            System.out.println("Hidden state size: " + hidden.length);
+        } finally {
+            for (OrtValue v : outputs) v.close();
+        }
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="tutorial-env">Sharing an Environment across Sessions</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+
+try (var env = new Environment(LoggingLevel.WARNING, "model-server")) {
+    System.out.println("ORT build : " + Environment.buildInfo());
+    System.out.println("Providers : " + Environment.availableProviders());
+
+    try (var opts = new SessionOptions()) {
+        opts.setGraphOptimizationLevel(GraphOptimizationLevel.ENABLE_ALL)
+            .setIntraOpNumThreads(4);
+
+        try (InferenceSession detector = env.createSession("detector.onnx", opts);
+             InferenceSession classifier = env.createSession("classifier.onnx", opts)) {
+            // Both sessions share the OrtEnv thread pools
+        }
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="tutorial-cuda">GPU Inference with CUDA</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.*;
+
+try (var opts = new SessionOptions()) {
+    opts.appendCudaExecutionProvider(0)
+        .setGraphOptimizationLevel(GraphOptimizationLevel.ENABLE_ALL);
+
+    try (var session = InferenceSession.create("model.onnx", opts)) {
+        // Prefer CUDA when the provider is compiled into ORT
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Additional recipes in the module guide cover loading a model from a JAR resource, enabling Chrome-trace profiling with <code>enableProfiling</code>, and cancelling long-running inference via <code>RunOptions.setTerminate()</code>.</p>
+
+
+    <h2 id="serving" class="title">Serving</h2>
+
+    <p>SMILE Serve loads <code>.onnx</code> files from <code>smile.onnx.model</code> and exposes <code>/api/v1/onnx/{id}</code>. See <a href="serve.html#onnx">SMILE Serve — ONNX Inference</a>.</p>
+
+
+    <h2 id="see-also" class="title">See Also</h2>
+
+    <ul>
+        <li><a href="deep-learning.html">Deep Learning</a> — LibTorch, layers, training; overview of <code>smile.onnx</code> in the module map</li>
+        <li><a href="computer-vision.html">Computer Vision</a> — EfficientNet / ImageNet pipelines (native LibTorch path)</li>
+        <li><a href="onnx-genai.html">ONNX GenAI</a> — generative AI token loop and <code>GenAiChatModel</code></li>
+        <li><a href="serve.html">SMILE Serve</a> — production HTTP API for ONNX models</li>
+    </ul>
+
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="computer-vision.html" title="Previous Section: Computer Vision"><span>Computer Vision</span></a>
+        <a class="btn-next-text" href="onnx-genai.html" title="Next Section: ONNX GenAI"><span>ONNX GenAI</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>

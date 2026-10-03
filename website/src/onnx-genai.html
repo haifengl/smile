@@ -1,0 +1,372 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - ONNX GenAI
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 order-md-first">
+    <h1 id="onnx-genai-top" class="title">ONNX GenAI</h1>
+
+
+    <h2 id="overview" class="title">Overview</h2>
+
+    <p>The <code>smile.onnx.genai</code> package provides idiomatic Java wrappers over the <a href="https://onnxruntime.ai/docs/genai/">ONNX Runtime GenAI</a> C API, built on Panama FFM bindings in <code>smile.onnx.genai.foreign</code>.</p>
+    <p>GenAI has <strong>no one-shot <code>generate()</code></strong>: the loop is <code>AppendTokens</code> → <code>while (!IsDone) GenerateNextToken</code>. This package mirrors that contract and adds a <code>LanguageModel</code> adapter for smile-serve wiring.</p>
+    <p>Classical ONNX inference (<code>InferenceSession</code>) is covered on <a href="onnx.html">ONNX</a>. Chat HTTP serving is on <a href="serve.html">SMILE Serve</a>.</p>
+
+
+    <h2 id="prerequisites" class="title">Prerequisites</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Requirement</th><th>Notes</th></tr></thead>
+            <tbody>
+            <tr><td>Java</td><td>25 (project standard) with Panama FFM</td></tr>
+            <tr><td>Native libs</td><td><code>onnxruntime</code> + <code>onnxruntime-genai</code>; set <code>ONNXRUNTIME_NATIVE_PATH</code> / <code>ONNXRUNTIME_GENAI_NATIVE_PATH</code></td></tr>
+            <tr><td>JVM flag</td><td><code>--enable-native-access=ALL-UNNAMED</code> (Gradle test/run already set this)</td></tr>
+            <tr><td>Model</td><td>A GenAI model directory with <code>genai_config.json</code> (e.g. Phi-3 CPU)</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>Download GenAI binaries from the <a href="https://github.com/microsoft/onnxruntime-genai/releases">onnxruntime-genai releases</a> and ORT from the <a href="https://github.com/microsoft/onnxruntime/releases">onnxruntime releases</a>.</p>
+
+
+    <h3 id="native-libraries">Native libraries</h3>
+
+    <p>Both shared libraries must be loadable. With pip (<code>onnxruntime-genai-cuda</code> / <code>onnxruntime-genai</code>), typical Windows locations are:</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Library</th><th>Directory</th></tr></thead>
+            <tbody>
+            <tr><td><code>onnxruntime.dll</code></td><td><code>…\site-packages\onnxruntime\capi</code></td></tr>
+            <tr><td><code>onnxruntime-genai.dll</code></td><td><code>…\site-packages\onnxruntime_genai</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p><strong>Use environment variables</strong> (recommended). <code>GenAI</code> preloads these DLLs by absolute path before FFM lookup, which also avoids an older <code>C:\Windows\System32\onnxruntime.dll</code> winning the Windows search order:</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Variable</th><th>Meaning</th></tr></thead>
+            <tbody>
+            <tr><td><code>ONNXRUNTIME_NATIVE_PATH</code></td><td>Directory containing <code>onnxruntime</code> (e.g. pip <code>capi</code>)</td></tr>
+            <tr><td><code>ONNXRUNTIME_GENAI_NATIVE_PATH</code></td><td>Directory containing <code>onnxruntime-genai</code></td></tr>
+            <tr><td><code>SMILE_ONNX_GENAI_MODEL</code></td><td>GenAI model directory (<code>genai_config.json</code>); needed for native model tests</td></tr>
+            <tr><td><code>SMILE_ONNX_GENAI_PROVIDER</code></td><td><code>auto</code> (default cascade), <code>cuda</code>, <code>npu</code>, <code>ryzenai</code>/<code>hybrid</code>, <code>openvino</code>, <code>qnn</code>, <code>dml</code>/<code>directml</code>, or <code>cpu</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="code-playground glass" data-lang="powershell">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">PowerShell</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-powershell"><code class="language-powershell">$ort = "$env:LOCALAPPDATA\Python\pythoncore-3.14-64\Lib\site-packages\onnxruntime\capi"
+$genai = "$env:LOCALAPPDATA\Python\pythoncore-3.14-64\Lib\site-packages\onnxruntime_genai"
+$model = "C:\path\to\phi3-mini-4k-instruct\cpu_and_mobile\cpu-int4-rtn-block-32-acc-level-4"
+
+$env:ONNXRUNTIME_NATIVE_PATH = $ort
+$env:ONNXRUNTIME_GENAI_NATIVE_PATH = $genai
+$env:SMILE_ONNX_GENAI_MODEL = $model
+# optional: $env:SMILE_ONNX_GENAI_PROVIDER = "auto"   # or "cuda" / "cpu"</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p><code>Model.open</code> / <code>SimpleGenAI.open</code> / <code>GenAiChatModel.open</code> run an accelerator cascade when preference is <code>auto</code>: <strong>CUDA → RyzenAI → OpenVINO NPU → QNN → DirectML (Windows) → CPU</strong>. Each step is attempted only when matching EP natives are present; Java failures fall through. On non-Windows, DirectML is skipped automatically. Classical <strong>Vitis AI</strong> (general ONNX on AMD NPU) is configured on <code>smile.onnx.SessionOptions</code>, not via this GenAI preference. <code>Model.of</code> always uses <code>genai_config.json</code> providers unchanged.</p>
+    <p>Check availability:</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">if (!GenAI.available()) {
+    // natives missing — skip or fail fast
+}
+GenAI.init(); // throws GenAIException with install hints if load fails</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="package-map" class="title">Package Map</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>GenAI</code></td><td>Load probe, telemetry, logging, <code>shutdown()</code></td></tr>
+            <tr><td><code>GenAIException</code></td><td>Unchecked native / wrapper errors</td></tr>
+            <tr><td><code>Config</code></td><td>Providers + JSON overlay</td></tr>
+            <tr><td><code>Model</code></td><td>Loaded GenAI model</td></tr>
+            <tr><td><code>Tokenizer</code> / <code>TokenizerStream</code></td><td>Encode / decode / chat template / streaming decode</td></tr>
+            <tr><td><code>Sequences</code></td><td>Batch of token-id sequences</td></tr>
+            <tr><td><code>GeneratorParams</code></td><td>Search options (<code>max_length</code>, <code>temperature</code>, …)</td></tr>
+            <tr><td><code>Generator</code></td><td>Token loop (<code>Iterable&lt;Integer&gt;</code>)</td></tr>
+            <tr><td><code>SimpleGenAI</code></td><td>Convenience prompt → text (+ optional <code>Consumer&lt;String&gt;</code>)</td></tr>
+            <tr><td><code>Tensor</code> / <code>NamedTensors</code></td><td>Inputs for <code>Generator.setInputs</code></td></tr>
+            <tr><td><code>Images</code> / <code>Audios</code> / <code>MultiModalProcessor</code></td><td>Vision / audio path</td></tr>
+            <tr><td><code>Adapters</code></td><td>LoRA load / activate</td></tr>
+            <tr><td><code>GenAiChatModel</code></td><td><code>smile.llm.LanguageModel</code> adapter</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2 id="quick-start" class="title">Quick Start</h2>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.onnx.genai.*;
+
+try (var genai = SimpleGenAI.of("models/phi-3-mini-4k-instruct-cpu")) {
+    try (var params = genai.createGeneratorParams()) {
+        params.setSearchOption("max_length", 256)
+              .setSearchOption("temperature", 0.8);
+        String reply = genai.generate(params, "Write a haiku about Java.", System.out::print);
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Canonical low-level loop:</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">try (var model = Model.of(modelDir);
+     var tokenizer = model.createTokenizer();
+     var params = model.createGeneratorParams();
+     var generator = Generator.of(model, params);
+     var stream = tokenizer.createStream()) {
+    params.setSearchOption("max_length", 128);
+    generator.appendTokens(tokenizer.encodeToArray(prompt));
+    while (!generator.isDone()) {
+        generator.generateNextToken();
+        System.out.print(stream.decode(generator.getLastToken(0)));
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="chat-serve" class="title">Chat / Serve Seam (<code>GenAiChatModel</code>)</h2>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">try (var chat = GenAiChatModel.of("models/phi-3-mini-4k-instruct-cpu")) {
+    var completion = chat.chat(
+            new Message[]{ new Message(Role.user, "Hello!") },
+            64, 0.7, 0.9, false, 0,
+            new GenerationListener() {
+                @Override public void onText(String chunk) {
+                    System.out.print(chunk);
+                }
+            },
+            null);
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p><code>GenAiChatModel</code>:</p>
+
+    <ul>
+        <li><code>family()</code> → <code>"onnx/genai"</code></li>
+        <li>Builds GenAI chat-template JSON from <code>smile.llm.Message[]</code> (including <code>tools</code>)</li>
+        <li>Streams via <code>GenerationListener.onText</code>; strips <code>&lt;think&gt;…&lt;/think&gt;</code> and reports <code>onThinkingTokens</code> while streaming</li>
+        <li>Honors <code>BooleanSupplier cancelRequested</code> between tokens</li>
+        <li>Multimodal: local image/audio file paths through <code>MultiModalProcessor</code></li>
+        <li>Final content is sanitized with <code>AssistantTextSanitizer</code> (also via serve’s <code>ToolCallPostProcessor</code> for structured <code>tool_calls</code>)</li>
+    </ul>
+
+
+    <h3 id="serve-oga">smile-serve OGA fallback</h3>
+
+    <p><code>ChatService</code> keeps Torch for <strong>CUDA + builtin Llama/Qwen</strong>. Otherwise it tries ORT GenAI:</p>
+
+    <ol>
+        <li>Local / HF snapshot with <code>genai_config.json</code> (repo root <strong>or</strong> nested under provider folders such as <code>cuda/cuda-int4-rtn-block-32/</code>, as in <code>microsoft/Phi-3-mini-4k-instruct-onnx</code>) → <code>GenAiChatModel.open</code>. Nested packages are picked to match <code>GenAI.resolveOliveTarget()</code> (CUDA / DML / CPU).</li>
+        <li>Else a prior Olive cache hit under <code>{SMILE_CACHE}/olive/...</code> → open</li>
+        <li>Else chat stays unavailable (HTTP 503)</li>
+    </ol>
+
+    <p><strong>Serve does not run Olive at startup.</strong> <code>olive optimize</code> (int4/GPTQ) can take hours; convert offline with <code>smile.chat.Olive.resolveOrConvert</code> / the <code>olive_cli.py</code> bootstrap, then restart serve (same HF id finds the cache, or point <code>smile.chat.model</code> at the GenAI output directory).</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Artifact</th><th>Location</th><th>Override</th></tr></thead>
+            <tbody>
+            <tr><td>HF checkpoints / GenAI-ready repos</td><td>Hub cache (<code>HF_HOME</code> / <code>HF_HUB_CACHE</code>)</td><td>same as <code>huggingface_hub</code></td></tr>
+            <tr><td>Olive-converted GenAI</td><td><code>{SMILE_CACHE}/olive/...</code></td><td><code>smile.chat.oga.cache-dir</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>Serve config (<code>smile.chat.oga.*</code>): <code>enabled</code>, <code>precision</code> (<code>auto</code> = cascade default; Olive <code>optimize</code> clamps unsupported values such as <code>fp8</code> → <code>int4</code>), <code>cache-dir</code>, <code>olive-command</code>, optional <code>device</code> / <code>provider</code>. Offline Olive <code>optimize --device</code>/<code>--provider</code> follow <code>GenAI.resolveOliveTarget()</code> (same EP cascade as <code>Model.open</code>, honor <code>SMILE_ONNX_GENAI_PROVIDER</code>); DirectML is remapped to CPU for the Olive CLI because <code>optimize</code> does not list <code>DmlExecutionProvider</code>. If Olive fails while registering an unused ORT EP (common on Windows when the CUDA wheel ships <code>onnxruntime_providers_tensorrt.dll</code> but TensorRT/<code>nvinfer</code> is not installed), the offline launcher uses a Python bootstrap that only registers EPs Olive explicitly requested, and may still retry with <code>CPUExecutionProvider</code>. Override the interpreter with <code>SMILE_OLIVE_PYTHON</code>. Conversion uses <code>--exporter model_builder</code> (GenAI-ready output). Runtime load still uses <code>GenAiChatModel.open</code> / the GenAI EP cascade.</p>
+    <p>Olive’s Python env needs a full toolchain for <code>optimize</code> (especially int4/GPTQ calibration). Typical install:</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">pip install "olive-ai[gpu]" datasets
+# or CPU: pip install olive-ai datasets</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Missing <code>datasets</code> fails mid-run with <code>ModuleNotFoundError: No module named 'datasets'</code>.</p>
+    <p><strong>Tools I/O (Phase 1):</strong> OpenAI <code>tools</code> reach the GenAI chat template; completions are post-processed to structured <code>tool_calls</code> (<code>JsonToolCallParser</code> / Qwen3 XML). No agent loop / tool execution.</p>
+    <p><strong>Multimodal (Phase 2):</strong> serve materializes data-URL / HTTP media to temp files (<code>GenAiMediaMaterializer</code>) before <code>GenAiChatModel</code> multimodal chat.</p>
+    <p>Continuous batching / GenAI <code>OgaEngine</code> remains out of scope.</p>
+
+
+    <h2 id="providers" class="title">CUDA / NPU Providers</h2>
+
+    <p><code>Model.open</code> cascade (<code>SMILE_ONNX_GENAI_PROVIDER=auto</code>):</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">try (var model = Model.open(modelDir)) {
+    // model.provider() is cuda | ryzenai | openvino | qnn | dml | default
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Preference</th><th>Behavior</th></tr></thead>
+            <tbody>
+            <tr><td><code>auto</code></td><td>CUDA → RyzenAI → OpenVINO NPU → QNN → DirectML (Windows) → CPU</td></tr>
+            <tr><td><code>cuda</code> / <code>gpu</code></td><td>CUDA only (throw if fails)</td></tr>
+            <tr><td><code>npu</code></td><td>Skip CUDA; try RyzenAI → OpenVINO → QNN</td></tr>
+            <tr><td><code>ryzenai</code> / <code>hybrid</code></td><td>AMD OGA RyzenAI only (hybrid or NPU-only <strong>model</strong> determines mode)</td></tr>
+            <tr><td><code>openvino</code></td><td>OpenVINO with <code>device_type=NPU</code></td></tr>
+            <tr><td><code>qnn</code></td><td>Qualcomm QNN</td></tr>
+            <tr><td><code>dml</code> / <code>directml</code></td><td>Windows DirectML only (throw if fails / not Windows)</td></tr>
+            <tr><td><code>cpu</code></td><td>No accelerator attempts (CI)</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p><strong>AMD Ryzen AI (LLMs):</strong> hybrid (NPU+iGPU) vs NPU-only is which model package you load (AMD HF hybrid vs NPU collections). Needs <code>onnxruntime-genai-directml-ryzenai</code> (or Ryzen AI MSI), NPU drivers, and a GPU driver for hybrid.</p>
+    <p><strong>Windows DirectML:</strong> general GPU via <code>onnxruntime_providers_dml</code> (iGPU/dGPU). Tried on <code>auto</code> after NPU candidates and before CPU; inactive off Windows.</p>
+    <p><strong>AMD Vitis AI (general ONNX on NPU):</strong> use <code>smile.onnx.SessionOptions.appendVitisAiExecutionProvider()</code> — not this GenAI cascade.</p>
+    <p><strong>Out of scope for GenAI cascade:</strong> ROCm/MIGraphX, NvTensorRtRtx (TensorRT-RTX).</p>
+    <p>Or set GenAI providers explicitly:</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">try (var config = Config.of(modelDir)) {
+    config.clearProviders()
+          .appendProvider("cuda")
+          .setProviderOption("cuda", "device_id", "0");
+    try (var model = Model.of(config)) {
+        // ...
+    }
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="tests" class="title">Tests</h2>
+
+    <p>Unit tests under <code>deep/src/test/java/smile/onnx/genai/</code>:</p>
+
+    <ul>
+        <li><code>GenAIExceptionTest</code> / <code>GenAIProviderPreferenceTest</code> — no natives required</li>
+        <li><code>GenAINativeTest</code> — needs natives; model tests need <code>SMILE_ONNX_GENAI_MODEL</code></li>
+    </ul>
+
+    <p>GitHub Actions (<code>.github/workflows/ci.yml</code>) installs CPU <code>onnxruntime</code> / <code>onnxruntime-genai</code>, sets <code>ONNXRUNTIME_NATIVE_PATH</code> / <code>ONNXRUNTIME_GENAI_NATIVE_PATH</code>, and forces <code>SMILE_ONNX_GENAI_PROVIDER=cpu</code> (runners have no GPU). Without <code>SMILE_ONNX_GENAI_MODEL</code>, model cases are skipped; <code>sequencesRoundTrip</code> still runs when natives load.</p>
+    <p>Set the environment variables in the shell, then run tests. Both sbt and Gradle fork the test JVM and inherit these variables. Tests call <code>Model.open</code>, so they pick up CUDA when the GenAI CUDA EP works and otherwise use CPU:</p>
+
+
+    <div class="code-playground glass" data-lang="powershell">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">PowerShell</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-powershell"><code class="language-powershell">$env:ONNXRUNTIME_NATIVE_PATH = $ort
+$env:ONNXRUNTIME_GENAI_NATIVE_PATH = $genai
+$env:SMILE_ONNX_GENAI_MODEL = $model
+# $env:SMILE_ONNX_GENAI_PROVIDER = "auto"  # default; use "cpu" to force CPU
+
+# If you change SMILE_* after a prior Gradle run, avoid a stale configuration-cache
+# entry that pinned the old env:
+#   ./gradlew --no-configuration-cache :deep:test --tests "smile.onnx.genai.*"
+sbt "deep/testOnly smile.onnx.genai.*"
+# or
+./gradlew :deep:test --tests "smile.onnx.genai.*"</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Do <strong>not</strong> pass native/model settings as <code>sbt "-D…"</code> or <code>sbt "-J-D…"</code> — those do not configure the forked test JVM reliably (and <code>-J-D</code> fails under sbt 2).</p>
+    <p>Without <code>SMILE_ONNX_GENAI_MODEL</code>, only library-level checks run. Point it at a <strong>real</strong> GenAI model directory (e.g. Phi-3 CPU) for full generate smokes. Tiny onnxruntime-genai fixtures under <code>test/models/</code> (Identity <code>dummy_*.onnx</code>) only support load / tokenize / create-generator, not a full decode loop.</p>
+
+
+    <h2 id="shutdown" class="title">Shutdown</h2>
+
+    <p>Call <code>GenAI.shutdown()</code> only after every GenAI <code>AutoCloseable</code> is closed. The next GenAI API call re-initializes the library.</p>
+
+
+    <h2 id="see-also" class="title">See Also</h2>
+
+    <ul>
+        <li><a href="onnx.html">ONNX</a> — classical <code>InferenceSession</code> / execution providers</li>
+        <li><a href="llm.html">Large Language Models</a> — <code>LanguageModel</code> API and LibTorch path</li>
+        <li><a href="serve.html">SMILE Serve</a> — chat HTTP API and OGA fallback</li>
+    </ul>
+
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="onnx.html" title="Previous Section: ONNX"><span>ONNX</span></a>
+        <a class="btn-next-text" href="serve.html" title="Next Section: SMILE Serve"><span>SMILE Serve</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
