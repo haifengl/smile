@@ -17,7 +17,8 @@
  */
 package smile.studio.kernel;
 
-import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -30,22 +31,79 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>The kernel launches {@code dotty.tools.repl.Main} in a child JVM and drives
  * it over stdin/stdout, so these tests are integration-level: they spawn a real
- * Scala 3 REPL process and evaluate real SMILE scripts. They are tagged
- * {@code integration} because starting the REPL and running the example scripts
- * is slow, and CI runs Gradle only (Studio is an sbt module), so the tag keeps
- * them off the default fast path. The process is started once for the whole
- * class, as startup is expensive.
+ * Scala 3 REPL process and evaluate real Scala snippets. They are tagged
+ * {@code integration} because starting the REPL is slow, and CI runs Gradle only
+ * (Studio is an sbt module), so the tag keeps them off the default fast path.
+ * The process is started once for the whole class, as startup is expensive.
+ *
+ * <p>Every snippet is hard-coded in this class as a text block rather than read
+ * from a {@code .sc} example file. The examples under
+ * {@code studio/src/universal/examples} are user-facing and may drift from what
+ * these tests assert; inlining the snippets keeps the tests self-contained and
+ * lets them use small synthetic data that finishes in seconds instead of the
+ * minutes the full examples take.
  *
  * @author Haifeng Li
  */
-@Tag("integration")
-@Timeout(value = 20, unit = TimeUnit.MINUTES)
 public class ScalaKernelTest {
+    /**
+     * A t-SNE snippet on 200 synthetic points. It mirrors the shape of the
+     * {@code tsne.sc} example (fit a model, then plot its coordinates) but uses
+     * a small in-memory data set and the minimum 250 iterations, so it finishes
+     * in seconds. It deliberately stops short of {@code canvas.window()}, which
+     * would open a Swing window and hang a headless test JVM.
+     */
+    private static final String TSNE_SNIPPET = """
+            import smile.manifold.*
+            import smile.plot.swing.*
+            val X = Array.tabulate(200, 10)((i, j) => math.sin(i * 0.1 + j) + math.cos(j * 0.3))
+            val model = tsne(X, 2, 20, 200, 12, 250)
+            val canvas = plot(model.coordinates(), '*')
+            """;
+
+    /**
+     * A classification snippet on 200 synthetic two-class samples. It mirrors
+     * the shape of the {@code usps.sc} example (read train/test frames, build a
+     * formula, validate a random forest) but uses a tiny in-memory data set and
+     * a 5-tree forest, so it finishes in seconds.
+     */
+    private static final String CLASSIFICATION_SNIPPET = """
+            import smile.*
+            import smile.data.*
+            import smile.data.formula.*
+            import smile.data.vector.*
+            import smile.classification.*
+            import smile.validation.*
+
+            val rng = new java.util.Random(42)
+            val n = 200
+            val x = Array.tabulate(n, 4)((i, j) => rng.nextGaussian() + (if (i % 2 == 0) 1.0 else -1.0))
+            val y = Array.tabulate(n)(i => i % 2)
+            val zipTrain = DataFrame.of(x, "x1", "x2", "x3", "x4").merge(new DataFrame(new IntVector("class", y)))
+            val zipTest = zipTrain
+            val formula: Formula = "class" ~ "."
+            val metrics = validate.classification(formula, zipTrain, zipTest) { (formula, data) =>
+              randomForest(formula, data, ntrees = 5)
+            }
+            """;
+
     private static ScalaKernel kernel;
     private static OutputArea output;
+    private static String originalSmileHome;
 
     @BeforeAll
     public static void setUpClass() {
+        // The child REPL inherits smile.home from this JVM and resolves test
+        // data through smile.io.Paths. Another test in the same forked JVM
+        // (smile.MainTest) may have set smile.home to ".", which makes
+        // Paths.getTestData resolve to ./data/... and the snippets fail with
+        // NoSuchFileException. Point it at the real test resources first.
+        originalSmileHome = System.getProperty("smile.home");
+        Path resources = Path.of("base", "src", "test", "resources").toAbsolutePath();
+        if (Files.isDirectory(resources.resolve("data"))) {
+            System.setProperty("smile.home", resources.toString());
+        }
+
         output = new OutputArea();
         kernel = new ScalaKernel();
         kernel.setOutputArea(output);
@@ -55,6 +113,11 @@ public class ScalaKernelTest {
     public static void tearDownClass() {
         if (kernel != null) {
             kernel.close();
+        }
+        if (originalSmileHome == null) {
+            System.clearProperty("smile.home");
+        } else {
+            System.setProperty("smile.home", originalSmileHome);
         }
     }
 
@@ -72,6 +135,14 @@ public class ScalaKernelTest {
      */
     private boolean evalSucceeds(String code) {
         return kernel.eval(code, new ArrayList<>());
+    }
+
+    /**
+     * Returns the names of the variables currently bound in the session.
+     * @return the variable names.
+     */
+    private List<String> variableNames() {
+        return kernel.variables().stream().map(Variable::name).toList();
     }
 
     // ------------------------------------------------------------------
@@ -167,14 +238,14 @@ public class ScalaKernelTest {
     public void testSmileClassesAreResolvable() {
         System.out.println("ScalaKernel: the SMILE libraries are on the script classpath");
         // The kernel passes the application classpath to the REPL, so the
-        // SMILE API must be visible to Scala scripts.
+        // SMILE API must be visible to Scala snippets.
         assertTrue(evalSucceeds("import smile.math.MathEx"));
         assertTrue(evalSucceeds("MathEx.log2(8.0)"));
     }
 
     @Test
     public void testSmileDataFrameInScript() {
-        System.out.println("ScalaKernel: a SMILE DataFrame can be created in a script");
+        System.out.println("ScalaKernel: a SMILE DataFrame can be created in a snippet");
         assertTrue(evalSucceeds("import smile.data.DataFrame"));
         assertTrue(evalSucceeds(
                 "val df = DataFrame.of(Array(Array(1.0, 2.0), Array(3.0, 4.0)), \"x\", \"y\")"));
@@ -183,32 +254,30 @@ public class ScalaKernelTest {
 
     @Test
     public void testSmileReadCsvInScript() {
-        System.out.println("ScalaKernel: smile.read.csv can be invoked in a script");
+        System.out.println("ScalaKernel: smile.read.csv can be invoked in a snippet");
         assertTrue(evalSucceeds(
                 "val df = smile.read.csv(smile.io.Paths.getTestData(\"mnist/mnist2500_X.txt\").toString, delimiter=\" \", header=false)"));
         assertTrue(evalSucceeds("df.nrow() == 2500"));
     }
 
     @Test
-    public void testTsneScript() throws IOException {
-        System.out.println("ScalaKernel: run tsne.sc example");
-        String code = java.nio.file.Files.readString(java.nio.file.Path.of("studio/src/universal/examples/tsne.sc"));
-        // Drop the trailing canvas.window() call: it opens a Swing window, which
-        // hangs a headless test JVM. The script's variables are what we assert on.
-        String snippet = code.substring(0, code.indexOf("canvas.window()"));
-        assertTrue(evalSucceeds(snippet), "tsne.sc should evaluate without errors");
-        var names = kernel.variables().stream().map(Variable::name).toList();
+    @Tag("integration")
+    @Timeout(value = 1, unit = TimeUnit.MINUTES)
+    public void testTsneSnippet() {
+        System.out.println("ScalaKernel: run an inline t-SNE snippet");
+        assertTrue(evalSucceeds(TSNE_SNIPPET), "the t-SNE snippet should evaluate without errors");
+        var names = variableNames();
         assertTrue(names.contains("model"), "model variable should be bound");
         assertTrue(names.contains("canvas"), "canvas variable should be bound");
     }
 
     @Test
-    public void testUspsScript() throws IOException {
-        System.out.println("ScalaKernel: run usps.sc example");
-        String code = java.nio.file.Files.readString(java.nio.file.Path.of("studio/src/universal/examples/usps.sc"));
-        String snippet = code.substring(0, code.indexOf("// Gradient Tree Boost"));
-        assertTrue(evalSucceeds(snippet), "usps.sc should evaluate without errors");
-        var names = kernel.variables().stream().map(Variable::name).toList();
+    @Tag("integration")
+    @Timeout(value = 1, unit = TimeUnit.MINUTES)
+    public void testClassificationSnippet() {
+        System.out.println("ScalaKernel: run an inline classification snippet");
+        assertTrue(evalSucceeds(CLASSIFICATION_SNIPPET), "the classification snippet should evaluate without errors");
+        var names = variableNames();
         assertTrue(names.contains("zipTrain"), "zipTrain variable should be bound");
         assertTrue(names.contains("zipTest"), "zipTest variable should be bound");
         assertTrue(names.contains("metrics"), "metrics variable should be bound");
@@ -279,7 +348,7 @@ public class ScalaKernelTest {
         System.out.println("ScalaKernel: stop sending following code on compilation error");
         output.clear();
         assertFalse(evalSucceeds("val beforeErr = 100\nnoSuchFunction()\nval afterErr = 200"));
-        var names = kernel.variables().stream().map(Variable::name).toList();
+        var names = variableNames();
         assertTrue(names.contains("beforeErr"), "Code before error should be evaluated");
         assertFalse(names.contains("afterErr"), "Code after error must not be evaluated");
         assertFalse(output.buffer().toString().contains("afterErr = 200"),
@@ -293,7 +362,7 @@ public class ScalaKernelTest {
         System.out.println("ScalaKernel: stop sending following code on runtime error");
         output.clear();
         assertFalse(evalSucceeds("val beforeBoom = 300\n1 / 0\nval afterBoom = 400"));
-        var names = kernel.variables().stream().map(Variable::name).toList();
+        var names = variableNames();
         assertTrue(names.contains("beforeBoom"), "Code before error should be evaluated");
         assertFalse(names.contains("afterBoom"), "Code after error must not be evaluated");
         assertFalse(output.buffer().toString().contains("afterBoom = 400"),
@@ -361,7 +430,7 @@ public class ScalaKernelTest {
         System.out.println("ScalaKernel: variables() reflects declared variables");
         assertTrue(evalSucceeds("val pi = 3.14"));
         assertTrue(evalSucceeds("val greeting = \"SMILE\""));
-        var names = kernel.variables().stream().map(Variable::name).toList();
+        var names = variableNames();
         assertTrue(names.contains("pi"), "pi should be listed");
         assertTrue(names.contains("greeting"), "greeting should be listed");
     }
@@ -370,7 +439,7 @@ public class ScalaKernelTest {
     public void testVariablesExcludeSyntheticResults() {
         System.out.println("ScalaKernel: variables() excludes the synthetic res<N> fields");
         assertTrue(evalSucceeds("1 + 1"));
-        var names = kernel.variables().stream().map(Variable::name).toList();
+        var names = variableNames();
         assertTrue(names.stream().noneMatch(n -> n.startsWith("res")),
                 "The synthetic res<N> fields must not be listed");
     }
