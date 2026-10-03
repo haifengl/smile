@@ -107,6 +107,11 @@ public class Workspace extends JSplitPane {
      * File-change watcher — single source of truth for the set of open files.
      */
     private final OpenFileWatcher fileWatcher = new OpenFileWatcher(List.of(), this::handleFileChanged);
+    /**
+     * Idle-triggered auto saver. {@code fileWatcher} is assigned above, so its
+     * supplier is safe to capture here.
+     */
+    private final AutoSaver autoSaver = new AutoSaver(this::openFiles, this::autoSave);
 
     /**
      * Constructor.
@@ -559,6 +564,32 @@ public class Workspace extends JSplitPane {
     }
 
     /**
+     * Returns the workspace's auto saver, which the application toggles from the
+     * Auto Save menu item.
+     *
+     * @return the auto saver.
+     */
+    public AutoSaver autoSaver() {
+        return autoSaver;
+    }
+
+    /**
+     * Persists one file without a Save-As prompt, suppressing the failed-save
+     * dialog that the interactive {@link #saveFile(OpenFile, boolean)} shows.
+     * Failures are logged because the auto save runs unattended.
+     *
+     * @param openFile the file to save.
+     */
+    private void autoSave(OpenFile openFile) {
+        try {
+            openFile.save();
+            fileWatcher.recordModTime(openFile.getFile().toAbsolutePath().normalize());
+        } catch (IOException ex) {
+            logger.warn("Auto save failed for {}: {}", openFile.getFile(), ex.getMessage());
+        }
+    }
+
+    /**
      * Returns the opened notebooks.
      *
      * @return the opened notebooks.
@@ -648,6 +679,9 @@ public class Workspace extends JSplitPane {
                     "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
+
+        // Route edits to the auto saver so it can schedule a debounced save.
+        openFile.setChangeListener(autoSaver::documentChanged);
 
         notebookTabs.addTab(filename, (Component) openFile);
         notebookTabs.setSelectedComponent((Component) openFile);

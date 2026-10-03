@@ -170,7 +170,7 @@ The divider positions are persisted and restored between sessions.
 | **Open…** | Open an existing notebook or script file |
 | **Save** | Save the currently active notebook |
 | **Save As…** | Save the active notebook to a new path |
-| **Auto Save** | Toggle periodic auto-save (every 60 seconds) |
+| **Auto Save** | Toggle auto-save (idle-triggered, with a 60-second fallback) |
 | **Settings…** | Open the AI service configuration dialog |
 | **Exit** | Close all open notebooks (with save prompts) and quit |
 
@@ -297,7 +297,7 @@ The generation context includes the text of the previous cell and the existing c
 
 ### 5.8 Auto-Save
 
-Enable **File > Auto Save** to automatically save all open notebooks that have unsaved changes every **60 seconds**. Only notebooks that have been previously saved to a file (i.e., have an associated path) are auto-saved; new `Untitled` notebooks are not.
+Enable **File > Auto Save** to automatically save every open file that has unsaved changes. Saving is **idle-triggered**: a few seconds after you stop editing (a change restarts a short debounce), the file is written. A repeating **60-second** tick remains as a safety net, bounding the worst-case data loss. Only files that have a path on disk are auto-saved; new `Untitled` notebooks are not. The setting is remembered across restarts.
 
 ### 5.9 External File Changes
 

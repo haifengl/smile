@@ -81,6 +81,8 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
     private int runCount = 0;
     private Path file;
     private boolean saved = true;
+    /** Notified on every document change, used to schedule a debounced auto save. */
+    private Runnable changeListener;
 
     /**
      * Constructor.
@@ -742,13 +744,24 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
     }
 
     @Override
+    public void setChangeListener(Runnable listener) {
+        this.changeListener = listener;
+    }
+
+    @Override
     public void insertUpdate(DocumentEvent e) {
         setSaved(false);
+        if (changeListener != null) {
+            changeListener.run();
+        }
     }
 
     @Override
     public void removeUpdate(DocumentEvent e) {
         setSaved(false);
+        if (changeListener != null) {
+            changeListener.run();
+        }
     }
 
     @Override

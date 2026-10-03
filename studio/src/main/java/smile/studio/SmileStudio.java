@@ -25,7 +25,6 @@ import java.awt.event.WindowEvent;
 import java.awt.image.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
-import javax.swing.Timer;
 import java.io.*;
 import java.net.URI;
 import java.nio.file.Files;
@@ -91,8 +90,10 @@ public class SmileStudio extends JFrame implements SearchListener {
         // Initialize LLM clients on the EDT so error dialogs run on the right thread.
         llmServices.reload(prefs);
 
-        // Assign workspace before initMenuAndToolBar() so that AutoSaveAction's
-        // timer callback (which captures workspace) is never handed a null reference.
+        // Assign workspace before initMenuAndToolBar() so that AutoSaveAction,
+        // whose timer lives on the workspace's auto saver, is never handed a null
+        // reference — including from the deferred doClick() that restores the
+        // persisted menu state.
         Path cwd = Path.of(System.getProperty("user.dir"));
         workspace = new Workspace(cwd);
         initMenuAndToolBar();
@@ -183,7 +184,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                     }
                 }
 
-                if (autoSaveAction != null) autoSaveAction.timer.stop();
+                workspace.autoSaver().stop();
                 workspace.shutdown();
                 System.exit(0);
             }
@@ -495,13 +496,6 @@ public class SmileStudio extends JFrame implements SearchListener {
         static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/refresh.png")));
         static final ImageIcon icon16 = scaleImageIcon(icon, 16);
         static final ImageIcon icon24 = scaleImageIcon(icon, 24);
-        final Timer timer = new Timer(60000, e -> {
-            for (var openFile : workspace.openFiles()) {
-                if (openFile.getFile() != null && !openFile.isSaved()) {
-                    workspace.saveFile(openFile, false);
-                }
-            }
-        });
 
         public AutoSaveAction() {
             super(bundle.getString("AutoSave"));
@@ -512,7 +506,6 @@ public class SmileStudio extends JFrame implements SearchListener {
                 putValue(SMALL_ICON, icon16);
                 putValue(LARGE_ICON_KEY, icon24);
             }
-            timer.setInitialDelay(1000);
         }
 
         @Override
@@ -520,9 +513,9 @@ public class SmileStudio extends JFrame implements SearchListener {
             if (e.getSource() instanceof JCheckBoxMenuItem autoSave) {
                 prefs.putBoolean(AUTO_SAVE_KEY, autoSave.isSelected());
                 if (autoSave.isSelected()) {
-                    timer.start();
+                    workspace.autoSaver().start();
                 } else {
-                    timer.stop();
+                    workspace.autoSaver().stop();
                 }
             }
         }

@@ -48,6 +48,15 @@ public interface OpenFile extends SearchListener {
     void setFile(Path file);
 
     /**
+     * Sets the callback invoked whenever the document changes, so that the
+     * workspace can schedule a debounced auto save. The callback runs on the
+     * event dispatch thread. Passing {@code null} clears it.
+     *
+     * @param listener the change listener, or {@code null} to clear it.
+     */
+    void setChangeListener(Runnable listener);
+
+    /**
      * Returns true if there are no unsaved changes.
      *
      * @return true if there are no unsaved changes.
