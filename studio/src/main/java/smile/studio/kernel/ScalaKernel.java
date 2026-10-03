@@ -185,7 +185,12 @@ public class ScalaKernel extends Kernel<String> {
             }
             variables.clear();
 
-            pump = new Thread(this::pump, "scala-repl-output");
+            // Bind the pump to this process instance. A previous session's pump
+            // may still be draining its (now destroyed) stream; without the
+            // identity check it would set the shared eof flag after the new
+            // session started and make the next eval look like a crash.
+            Process repl = process;
+            pump = new Thread(() -> pump(repl), "scala-repl-output");
             pump.setDaemon(true);
             pump.start();
 
@@ -461,15 +466,21 @@ public class ScalaKernel extends Kernel<String> {
     /**
      * Reads the process output, streams it to the cell, and records it for
      * consumption by {@link #eval}.
+     *
+     * @param repl the REPL process whose output this pump drains.
      */
-    private void pump() {
+    private void pump(Process repl) {
         char[] buffer = new char[512];
-        try (var reader = new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)) {
+        try (var reader = new InputStreamReader(repl.getInputStream(), StandardCharsets.UTF_8)) {
             int count;
             while ((count = reader.read(buffer)) >= 0) {
                 String text = new String(buffer, 0, count);
                 display(text);
                 synchronized (lock) {
+                    // Drop output from a pump whose session has been replaced.
+                    if (process != repl) {
+                        break;
+                    }
                     pending.append(text);
                     lock.notifyAll();
                 }
@@ -478,8 +489,12 @@ public class ScalaKernel extends Kernel<String> {
             logger.warn("Scala REPL output stream closed: {}", ex.getMessage());
         } finally {
             synchronized (lock) {
-                eof = true;
-                lock.notifyAll();
+                // Only the pump of the current session may signal EOF. A stale
+                // pump from a replaced session must not clobber the new one.
+                if (process == repl) {
+                    eof = true;
+                    lock.notifyAll();
+                }
             }
         }
     }
