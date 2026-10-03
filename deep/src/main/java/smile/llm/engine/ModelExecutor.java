@@ -202,6 +202,10 @@ public interface ModelExecutor {
      * batched forward. The default delegates to the scalar overload when every request shares the
      * same parameters and otherwise runs the requests one at a time.
      *
+     * @param requestIds   active KV request ids (order = batch).
+     * @param lastTokens   last committed token per request.
+     * @param positions    absolute position of {@code lastTokens[i]} (write of next is {@code +1}).
+     * @param numDrafts    draft depth (same for every request in this call).
      * @param temperatures per-request sampling temperature (verify).
      * @param topps        per-request nucleus top-p (verify).
      * @return accepted token ids per request (each length {@code >= 1}; caller owns arrays).

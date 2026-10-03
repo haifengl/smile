@@ -681,7 +681,14 @@ public class DeltaNetStatePool implements AutoCloseable {
         return true;
     }
 
-    /** Whether checkpoint slots {@code firstSlot..lastSlot} are stored for at least {@code rows} rows. */
+    /**
+     * Whether checkpoint slots {@code firstSlot..lastSlot} are stored for at least {@code rows} rows.
+     *
+     * @param firstSlot first checkpoint slot of the range (inclusive).
+     * @param lastSlot  last checkpoint slot of the range (inclusive).
+     * @param rows      minimum number of rows the checkpoints must cover.
+     * @return {@code true} if the range is fully stored with at least {@code rows} rows.
+     */
     public boolean hasSpeculativeRange(int firstSlot, int lastSlot, int rows) {
         return speculativeRecurrent != null && ckptFirstSlot <= firstSlot && ckptLastSlot >= lastSlot
                 && speculativeBatchCapacity >= rows;
@@ -838,7 +845,13 @@ public class DeltaNetStatePool implements AutoCloseable {
         return speculativeConv[slot][layerId];
     }
 
-    /** Whether per-step checkpoints for {@code slots} slots and {@code rows} rows are allocated. */
+    /**
+     * Whether per-step checkpoints for {@code slots} slots and {@code rows} rows are allocated.
+     *
+     * @param slots number of checkpoint slots to check.
+     * @param rows  minimum number of rows the checkpoints must cover.
+     * @return {@code true} if checkpoints for {@code slots} slots and {@code rows} rows are allocated.
+     */
     public boolean hasSpeculativeCheckpoints(int slots, int rows) {
         return hasSpeculativeRange(0, slots - 1, rows);
     }
