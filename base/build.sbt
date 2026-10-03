@@ -7,7 +7,7 @@ libraryDependencies ++= {
   Seq(
     "tools.jackson.core" % "jackson-databind" % "3.2.3",
     "org.apache.commons" % "commons-csv" % "1.14.1",
-    "org.duckdb"         % "duckdb_jdbc" % "1.5.5.1",
+    "org.duckdb"         % "duckdb_jdbc" % "1.5.6.0",
     "org.apache.arrow"   % "arrow-dataset" % arrowV % Provided,
     "org.apache.arrow"   % "arrow-memory-unsafe" % arrowV % Provided,
    ("org.apache.avro"    % "avro" % "1.12.2" % Provided).exclude("org.slf4j", "slf4j-log4j12"),
