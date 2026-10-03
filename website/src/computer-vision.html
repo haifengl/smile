@@ -1,0 +1,283 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - Computer Vision
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 order-md-first">
+    <h1 id="cv-top" class="title">Computer Vision</h1>
+
+
+    <h2 id="overview" class="title">Overview</h2>
+
+    <p>The <code>smile.vision</code> package provides image-classification pipelines on top of the <a href="deep-learning.html"><code>smile.deep</code></a> layer stack: image transforms, a folder-per-class image dataset, the EfficientNet-V2 architecture with pretrained factory methods, and the ImageNet label tables.</p>
+    <p>Runtime requirements (LibTorch / <code>smile_torch</code>, FFM flags) match <a href="deep-learning.html#prerequisites">Deep Learning — Prerequisites</a>.</p>
+
+
+    <h2 id="package-map" class="title">Package Map</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Package / type</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>transform/</code></td><td><code>Transform</code> interface and <code>ImageClassification</code> pipeline</td></tr>
+            <tr><td><code>layer/</code></td><td>Vision blocks: <code>MBConv</code>, <code>FusedMBConv</code>, <code>Conv2dNormActivation</code>, <code>SqueezeExcitation</code>, <code>StochasticDepth</code></td></tr>
+            <tr><td><code>EfficientNet</code></td><td>EfficientNet-V2 architecture + pretrained factories</td></tr>
+            <tr><td><code>VisionModel</code></td><td><code>Model</code> subclass coupling a <code>LayerBlock</code> with a <code>Transform</code></td></tr>
+            <tr><td><code>ImageDataset</code></td><td>Folder-per-class dataset with background prefetch</td></tr>
+            <tr><td><code>ImageNet</code></td><td>1000-class ImageNet labels / folders + utilities</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2 id="transforms" class="title">Image Transforms</h2>
+
+    <p><code>Transform</code> is a functional interface that converts one or more <code>BufferedImage</code> objects into a 4-D <code>[N, C, H, W]</code> float tensor suitable for a vision model. The standard ImageNet pipeline is <code>Transform.classification(crop, resize)</code>: resize the shorter side, centre-crop, then normalize with ImageNet mean/std.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import java.awt.image.BufferedImage;
+import java.io.File;
+import javax.imageio.ImageIO;
+import smile.deep.tensor.Tensor;
+import smile.vision.transform.Transform;
+import smile.vision.transform.ImageClassification;
+
+// Standard ImageNet preprocessing:
+//   resize shorter side → 384, centre-crop to 384×384,
+//   normalize with ImageNet mean/std
+Transform t = Transform.classification(384, 384);
+
+// Custom crop / resize / normalisation
+Transform custom = new ImageClassification(
+        /*cropSize=*/  224,
+        /*resizeSize=*/ 256,
+        /*mean=*/  new float[]{0.5f, 0.5f, 0.5f},
+        /*std=*/   new float[]{0.5f, 0.5f, 0.5f},
+        /*hints=*/ java.awt.Image.SCALE_SMOOTH
+);
+
+BufferedImage img = ImageIO.read(new File("cat.jpg"));
+try (Tensor batch = t.forward(img)) {
+    // batch shape: [1, 3, 384, 384]
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Default ImageNet statistics are available as constants, and the interface exposes resize / crop helpers plus <code>Transform.toTensor</code>:</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import java.awt.Image;
+import java.awt.image.BufferedImage;
+import smile.deep.tensor.Tensor;
+import smile.vision.transform.Transform;
+
+float[] mean = Transform.DEFAULT_MEAN;  // {0.485f, 0.456f, 0.406f}
+float[] std  = Transform.DEFAULT_STD;   // {0.229f, 0.224f, 0.225f}
+
+// Resize keeping aspect ratio (shorter side → size)
+BufferedImage resized = transform.resize(image, 256, Image.SCALE_SMOOTH);
+
+// Centre-crop to square
+BufferedImage cropped = transform.crop(resized, 224, false);  // shallow
+BufferedImage deep    = transform.crop(resized, 224, true);   // deep copy
+
+// Image array → float32 [N,C,H,W] tensor (values in [0,1])
+Tensor tensor = Transform.toTensor(images);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="dataset" class="title">Image Dataset</h2>
+
+    <p><code>ImageDataset</code> implements <code>Dataset&lt;SampleBatch&gt;</code> and reads images from a <strong>folder-per-class</strong> directory structure:</p>
+
+              <pre class="language-text"><code>root/
+dog/
+  dog001.jpg
+  dog002.jpg
+cat/
+  cat001.jpg</code></pre>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.SampleBatch;
+import smile.deep.tensor.Tensor;
+import smile.vision.ImageDataset;
+import smile.vision.ImageNet;
+import smile.vision.transform.Transform;
+
+Transform t = Transform.classification(224, 224);
+
+// targetTransform maps a class-folder name to an integer label
+ImageDataset ds = new ImageDataset(
+        "data/train",
+        /*batch=*/ 32,
+        t,
+        ImageNet.INSTANCE::targetTransform
+);
+
+for (SampleBatch batch : ds) {
+    Tensor images = batch.data();    // [32, 3, 224, 224]
+    Tensor labels = batch.target();  // [32]
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Image loading runs on a background platform thread and is prefetched into a bounded queue (capacity 100), so the training loop is never blocked waiting for I/O.</p>
+
+
+    <h2 id="efficientnet" class="title">EfficientNet</h2>
+
+    <p><code>EfficientNet</code> extends <code>LayerBlock</code> and implements EfficientNet-V2. Three pretrained <code>VisionModel</code> variants are available as static factory methods:</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Factory</th><th>Variant</th><th>Input size</th><th>Parameters</th></tr></thead>
+            <tbody>
+            <tr><td><code>EfficientNet.V2S()</code></td><td>EfficientNet-V2-S</td><td>384 × 384</td><td>~21 M</td></tr>
+            <tr><td><code>EfficientNet.V2M()</code></td><td>EfficientNet-V2-M</td><td>480 × 480</td><td>~54 M</td></tr>
+            <tr><td><code>EfficientNet.V2L()</code></td><td>EfficientNet-V2-L</td><td>480 × 480</td><td>~119 M</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import java.awt.image.BufferedImage;
+import java.io.File;
+import javax.imageio.ImageIO;
+import smile.deep.tensor.Tensor;
+import smile.vision.EfficientNet;
+import smile.vision.ImageNet;
+import smile.vision.VisionModel;
+
+// Load pretrained weights from the default path
+VisionModel model = EfficientNet.V2S();
+
+// Or specify a custom checkpoint path
+VisionModel model2 = EfficientNet.V2S("checkpoints/efficientnet_v2_s.pt");
+
+BufferedImage img = ImageIO.read(new File("dog.jpg"));
+try (Tensor logits = model.forward(img)) {          // shape [1, 1000]
+    Tensor probs = logits.softmax(1);
+    int classIdx = probs.argmax(1, false).intValue();
+    System.out.println(ImageNet.INSTANCE.labels()[classIdx]);
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p><code>VisionModel.forward(BufferedImage...)</code> automatically applies the model’s associated <code>Transform</code>, so you never need to preprocess images manually.</p>
+
+
+    <h3 id="custom-arch">Custom Architecture</h3>
+
+    <p>The <code>EfficientNet</code> constructor accepts an <code>MBConvConfig[]</code> array to define a custom architecture, with fine-grained control over each inverted-residual stage. Vision-specific blocks live in <code>smile.vision.layer</code>: <code>MBConv</code>, <code>FusedMBConv</code>, <code>Conv2dNormActivation</code>, <code>SqueezeExcitation</code>, and <code>StochasticDepth</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.vision.EfficientNet;
+import smile.vision.layer.MBConvConfig;
+
+MBConvConfig[] config = {
+    MBConvConfig.FusedMBConv(/*expandRatio=*/1, /*kernel=*/3, /*stride=*/1,
+                              /*inCh=*/24, /*outCh=*/24, /*numLayers=*/2),
+    MBConvConfig.MBConv(4, 3, 2, 24, 48, 4),
+    // ... more stages
+};
+
+EfficientNet net = new EfficientNet(
+        config,
+        /*dropout=*/          0.2,
+        /*stochasticDepth=*/  0.2,
+        /*numClasses=*/       1000,
+        /*lastChannel=*/      1280,
+        /*normLayer=*/        null   // defaults to BatchNorm2d
+);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="imagenet" class="title">ImageNet Labels</h2>
+
+    <p><code>ImageNet</code> is an interface with two 1000-element string arrays and utilities for mapping between class indices and human-readable labels. Use <code>ImageNet.INSTANCE</code> as the concrete implementation.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.vision.ImageNet;
+
+ImageNet inet = ImageNet.INSTANCE;
+
+// Human-readable label strings ("Egyptian cat", "labrador", …)
+String[] labels  = inet.labels();
+
+// Folder names used in the ILSVRC validation set ("n02124075", …)
+String[] folders = inet.folders();
+
+// Look up a label by index
+String label = inet.labelOf(282);     // e.g. "tiger cat"
+
+// Map a folder name to a label
+String name  = inet.classify("n02124075");
+
+// Map a folder name to a class index (useful as targetTransform)
+int index    = inet.targetTransform("n02124075");</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="see-also" class="title">See Also</h2>
+
+    <ul>
+        <li><a href="deep-learning.html">Deep Learning</a> — tensors, layers, training loops, ONNX</li>
+        <li><a href="llm.html">Large Language Models</a> — decoder LLMs on the same LibTorch bridge</li>
+        <li><a href="serve.html">SMILE Serve</a> — production inference server</li>
+    </ul>
+
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="llm.html" title="Previous Section: Large Language Models"><span>Large Language Models</span></a>
+        <a class="btn-next-text" href="onnx.html" title="Next Section: ONNX"><span>ONNX</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>

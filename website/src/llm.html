@@ -1,35 +1,65 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: SMILE - LLM
+title: SMILE - Large Language Models
 ---
 {% include "toc.njk" %}
 
 <div class="col-md-9 order-md-first">
-
     <h1 id="llm-top" class="title">Large Language Models</h1>
 
-    <p>A large language model (LLM) is a computational model notable for its ability
-        to achieve general-purpose language generation and other NLP tasks such as
-        classification. Transformer, the state-of-the-art LLM architecture, is based on
-        the multi-head attention mechanism. Text is converted to numerical
-        representations called tokens, and each token is converted into a vector
-        via looking up from a word embedding table. At each layer, each token is
-        then contextualized within the scope of the context window with other
-        (unmasked) tokens via a parallel multi-head softmax-based attention mechanism
-        allowing the signal for key tokens to be amplified and less important tokens
-        to be diminished. GPTs (Generative pre-trained transformers) are based on
-        the decoder-only transformer architecture. Each generation of GPT models
-        is significantly more capable than the previous, due to increased model size
-        (number of trainable parameters) and larger training data.</p>
 
-    <h2 id="llama" class="title">Llama 3.1</h2>
+    <h2 id="overview" class="title">Overview</h2>
 
-    <p>SMILE provides an inference implementation of
-        <a href="https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct">Llama 3.1</a>
-        from Meta AI. To build a model instance, call <code>Llama.build()</code> with the
-        Hugging Face checkpoint directory, the tokenizer model file path, maximum batch size,
-        maximum sequence length, and CUDA device id:</p>
+    <p>The <code>smile.llm</code> package provides building blocks and complete inference stacks for decoder-only LLMs on the same FFM-backed LibTorch bridge as <a href="deep-learning.html"><code>smile.deep</code></a>. It ships a LLaMA-3 implementation, a Qwen3.5 hybrid stack (Gated DeltaNet + gated full attention), a tiktoken BPE tokenizer, a continuous-batching inference engine, KV-cache / radix prefix reuse, weight quantization, and tensor parallelism.</p>
+    <p>For the shared tensor / layer API see <a href="deep-learning.html">Deep Learning</a>. Production HTTP serving (OpenAI-compatible chat, tool calling, web UI) is covered on <a href="serve.html">SMILE Serve</a>.</p>
+
+
+    <h2 id="prerequisites" class="title">Prerequisites</h2>
+
+    <p><code>smile.llm</code> uses the same native stack as <code>smile.deep</code>: the <code>smile_torch</code> shared library and LibTorch must be discoverable by the platform loader, and FFM access must be enabled (<code>--enable-native-access=ALL-UNNAMED</code>). See <a href="deep-learning.html#prerequisites">Deep Learning — Prerequisites</a> for per-platform details.</p>
+    <p>GPU inference needs CUDA-enabled LibTorch. On Ampere or newer hardware models load in BFloat16; older GPUs use Float16. CPU inference runs in Float32.</p>
+
+
+    <h2 id="package-map" class="title">Package Map</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Package / type</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>Role</code>, <code>Message</code>, <code>ContentPart</code>, …</td><td>Chat dialog types (text + multimodal parts, tool fields)</td></tr>
+            <tr><td><code>ChatCompletion</code>, <code>ChatOptions</code>, <code>FinishReason</code></td><td>Inference results and per-request tool-calling options</td></tr>
+            <tr><td><code>LanguageModel</code></td><td>Common façade: <code>encodeChat</code>, <code>generate</code>, <code>chat</code></td></tr>
+            <tr><td><code>tokenizer/</code></td><td>Tokenizer interface + Tiktoken (BPE) / HuggingFace vocab</td></tr>
+            <tr><td><code>transformer/</code></td><td>Shared primitives: Attention, FeedForward, RoPE</td></tr>
+            <tr><td><code>model/llama/</code></td><td>LLaMA-3: <code>Llama</code>, GQA, blocks, args</td></tr>
+            <tr><td><code>model/qwen/</code></td><td>Qwen3.5 hybrid text stack + vision tower</td></tr>
+            <tr><td><code>engine/</code></td><td>Continuous-batching runtime, speculative decoding</td></tr>
+            <tr><td><code>cache/</code></td><td>Paged KV pool + radix prefix reuse</td></tr>
+            <tr><td><code>attention/</code>, <code>quant/</code>, <code>parallel/</code></td><td>Backends, weight quantization, tensor parallelism</td></tr>
+            <tr><td><code>template/</code>, <code>tool/</code></td><td>Chat templates and tool-call parsers</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2 id="core-types" class="title">Core Types</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Type</th><th>Kind</th><th>Purpose</th></tr></thead>
+            <tbody>
+            <tr><td><code>Role</code></td><td>enum</td><td><code>system</code>, <code>user</code>, <code>assistant</code>, <code>tool</code></td></tr>
+            <tr><td><code>Message</code></td><td>record</td><td>Dialog turn — role + ordered <code>ContentPart</code>s, optional tool fields</td></tr>
+            <tr><td><code>ContentPart</code></td><td>sealed interface</td><td><code>TextPart</code>, <code>ImageUrlPart</code>, <code>VideoUrlPart</code>, <code>AudioUrlPart</code></td></tr>
+            <tr><td><code>FinishReason</code></td><td>enum</td><td><code>stop</code>, <code>length</code>, <code>tool_calls</code></td></tr>
+            <tr><td><code>ChatCompletion</code></td><td>record</td><td>Result — text, tokens, log-probs, finish reason, tool calls</td></tr>
+            <tr><td><code>ChatOptions</code></td><td>record</td><td>Per-request tools / <code>toolChoice</code> / parallel tool calls</td></tr>
+            <tr><td><code>LanguageModel</code></td><td>interface</td><td>Single-prompt façade for chat-capable decoder LLMs</td></tr>
+            </tbody>
+        </table>
+    </div>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -38,24 +68,220 @@ title: SMILE - LLM
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">
-import smile.llm.model.llama.Llama;
+  <pre class="playground-source language-java"><code class="language-java">import smile.llm.Message;
+import smile.llm.ChatCompletion;
+
+Message[] dialog = {
+    Message.system("You are a helpful assistant."),
+    Message.user("What is the capital of France?")
+};
+
+ChatCompletion reply = llama.chat(dialog, 256, 0.6, 0.9, false, 0L, null);
+System.out.println(reply.content());   // "The capital of France is Paris."
+System.out.println(reply.reason());    // FinishReason.stop</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p><code>Message</code> also carries multimodal parts and tool fields. Concurrent multi-request scheduling belongs in <code>InferenceEngine</code>, not on <code>LanguageModel</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.llm.Message;
+import smile.llm.Role;
+import smile.llm.TextPart;
+import smile.llm.ImageUrlPart;
+import java.util.List;
+
+// Multimodal turn: text interleaved with an image
+Message turn = new Message(Role.user, List.of(
+        new TextPart("What is in this picture?"),
+        new ImageUrlPart("https://example.com/cat.jpg")));
+
+// Assistant tool call + tool result
+Message call   = new Message(Role.assistant, List.of(),
+        List.of(toolCall), null, null);
+Message result = new Message(Role.tool, "{\"temp\": 21}",
+        null, toolCall.id(), null);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Passing a non-null <code>cancelRequested</code> <code>BooleanSupplier</code> enables cooperative cancel: the implementation checks it between decode steps and throws <code>CancellationException</code> when it returns <code>true</code> (KV is still unbound in <code>finally</code>).</p>
+
+
+    <h2 id="tokenizer" class="title">Tokenizer</h2>
+
+    <p><code>Tokenizer</code> is the encode/decode interface. <code>Tiktoken</code> is the BPE implementation compatible with OpenAI’s tiktoken (used by LLaMA-3). <code>HuggingFaceBpeVocab</code> loads a HuggingFace <code>tokenizer.json</code> into the same representation.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.llm.tokenizer.Tiktoken;
+
+Tiktoken tok = new Tiktoken(
+        pattern,           // regex splitting pattern
+        specialTokens,     // map of special-token string → rank
+        ranks,             // merged BPE vocabulary (bytes → rank)
+        bosId, eosId       // BOS / EOS token IDs
+);
+
+int[] ids = tok.encode("Hello, world!", true, true);  // BOS+EOS
+String text = tok.decode(ids);
+int vocab = tok.size();</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <ul>
+        <li>BPE merge-table look-ups for regular tokens</li>
+        <li>Special-token injection with a separate regex guard</li>
+        <li>UTF-8-safe decoding (strict <code>tryDecode</code> throws <code>CharacterCodingException</code> on invalid bytes)</li>
+    </ul>
+
+
+    <h2 id="positional" class="title">Positional Encodings</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Algorithm</th><th>Used by</th></tr></thead>
+            <tbody>
+            <tr><td><code>PositionalEncoding</code></td><td>Sinusoidal (sin/cos, fixed)</td><td>Original Transformer</td></tr>
+            <tr><td><code>RotaryPositionalEncoding</code></td><td>RoPE (complex-number rotation)</td><td>LLaMA</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>Qwen3.5 uses partial / interleaved multi-axis RoPE (<code>InterleavedMRope</code>, <code>PartialRotaryEncoding</code>) for multimodal positions.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.deep.tensor.Tensor;
+import smile.llm.transformer.PositionalEncoding;
+import smile.llm.transformer.RotaryPositionalEncoding;
+
+PositionalEncoding pe = new PositionalEncoding(512, 2048);
+Tensor out = pe.forward(embeddingTensor);   // adds positional signal
+
+RotaryPositionalEncoding rope =
+        new RotaryPositionalEncoding(headDim, maxSeqLen);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="transformer" class="title">Transformer Primitives</h2>
+
+    <p><code>smile.llm.transformer</code> holds shared blocks reused by both model families:</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>Attention</code></td><td>Scalar-dot-product attention over the selected backend</td></tr>
+            <tr><td><code>FeedForward</code></td><td>SwiGLU-style MLP block</td></tr>
+            <tr><td><code>PositionalEncoding</code></td><td>Sinusoidal encoding</td></tr>
+            <tr><td><code>RotaryPositionalEncoding</code></td><td>RoPE</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2 id="llama" class="title">LLaMA</h2>
+
+    <p>A full LLaMA-3 inference implementation in <code>smile.llm.model.llama</code>. High-level entry point: <code>Llama</code> with <code>build()</code>, <code>generate()</code>, and <code>chat()</code>.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>LlamaModelArgs</code></td><td>Hyperparameters from <code>params.json</code> / HF <code>config.json</code></td></tr>
+            <tr><td><code>LlamaModel</code></td><td>Embedding + N × <code>LlamaBlock</code> + output projection</td></tr>
+            <tr><td><code>LlamaBlock</code></td><td>Decoder block: GQA + FeedForward + RMS norms</td></tr>
+            <tr><td><code>GroupedQueryAttention</code></td><td>Grouped-query attention with KV-cache and RoPE</td></tr>
+            <tr><td><code>Llama</code></td><td>High-level entry — load, generate, chat</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h3 id="llama-load">Loading a Checkpoint</h3>
+
+    <p><code>Llama.build</code> supports two on-disk layouts: <strong>Meta</strong> (<code>params.json</code> plus <code>consolidated.*.pt</code> shards) and <strong>HuggingFace</strong> (<code>config.json</code> plus <code>*.safetensors</code>, optionally indexed by <code>model.safetensors.index.json</code>). Overloads accept <code>memFractionStatic</code> (SGLang-style static-region fraction for weights + KV) and a KV-cache dtype override.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.llm.model.llama.Llama;
+
+// Loads params.json / config.json + checkpoint weights
+Llama llama = Llama.build(
+        "model/Meta-Llama-3-8B-Instruct",
+        "model/Meta-Llama-3-8B-Instruct/tokenizer.model",
+        /*maxBatchSize=*/ 4,
+        /*maxSeqLen=*/    2048,
+        /*deviceId=*/     (byte) 0           // CUDA:0; -1 for CPU
+);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="llama-generate">Generation and Chat</h3>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.llm.ChatCompletion;
 import smile.llm.Message;
 
-var llama = Llama.build(
-    "model/Llama-3.1-8B-Instruct",
-    "model/Llama-3.1-8B-Instruct/original/tokenizer.model",
-    /*maxBatchSize=*/ 4,
-    /*maxSeqLen=*/    8192,
-    /*deviceId=*/     (byte) 0    // CUDA:0
-);
-          </code></pre>
+// Raw token IDs
+int[] prompt = llama.tokenizer.encode("Once upon a time", true, false);
+ChatCompletion result = llama.generate(
+        prompt, /*maxGenLen=*/ 200, /*temperature=*/ 0.6,
+        /*topp=*/ 0.9, /*logprobs=*/ false, /*seed=*/ 42L,
+        /*listener=*/ null);
+System.out.println(result.content());
+
+// Dialog format
+ChatCompletion reply = llama.chat(
+        new Message[]{
+            Message.system("Be concise."),
+            Message.user("Explain RoPE in one sentence.")
+        },
+        /*maxGenLen=*/ 128, /*temperature=*/ 0.7, /*topp=*/ 0.9,
+        /*logprobs=*/ false, /*seed=*/ 0L, /*listener=*/ null);
+System.out.println(reply.content());</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>For a pretrained model, call <code>generate()</code> with a batch of prompts to
-        generate text. For fine-tuned chat models, call <code>chat()</code> to generate
-        conversation responses.</p>
+
+    <h3 id="llama-stream">Streaming</h3>
+
+    <p>Pass a <code>GenerationListener</code> to receive text chunks as they are produced. Serve wires this through <code>GenerationListeners.toPublisher</code>.</p>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -64,37 +290,37 @@ var llama = Llama.build(
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">
-var reply = llama.chat(
-    new Message[]{
-        Message.system("You are a helpful assistant."),
-        Message.user("Explain gradient descent in one paragraph.")
-    },
-    /*maxGenLen=*/ 256,
-    /*temperature=*/ 0.7,
-    /*topp=*/ 0.9,
-    /*logprobs=*/ false,
-    /*seed=*/ 0L,
-    /*listener=*/ null,
-    /*cancelRequested=*/ null
-);
+  <pre class="playground-source language-java"><code class="language-java">import smile.llm.GenerationListener;
 
-System.out.println(reply.content());
-          </code></pre>
+GenerationListener listener = new GenerationListener() {
+    @Override public void onText(String chunk) {
+        System.out.print(chunk);
+    }
+};
+int[] prompt = llama.tokenizer.encode("Tell me a joke", true, false);
+llama.generate(prompt, 200, 0.8, 0.95, false, 0L, listener);</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>For streaming output, pass a <code>GenerationListener</code> that receives tokens
-       as they are generated. The <code>cancelRequested</code> supplier can signal
-       early termination.</p>
 
-    <h2 id="qwen" class="title">Qwen3</h2>
+    <h2 id="qwen" class="title">Qwen3.5</h2>
 
-    <p>SMILE also supports <a href="https://huggingface.co/Qwen/Qwen3.8-27B">Qwen3</a>
-        models, including the hybrid Qwen3.5 architecture (Gated DeltaNet + full attention).
-        Qwen checkpoints use a Hugging Face <code>tokenizer.json</code> instead of a
-        SentencePiece <code>tokenizer.model</code>, so <code>Qwen.build()</code> takes
-        only the checkpoint directory (the tokenizer is resolved automatically).</p>
+    <p><code>Qwen</code> implements the Qwen3.5 hybrid text stack: efficient linear attention (<code>GatedDeltaNet</code>) for most layers and full gated attention for the rest, with optional sparse MoE, a unified thinking / non-thinking mode, and a native vision tower for multimodal input. Checkpoints use HuggingFace <code>tokenizer.json</code> (resolved automatically from the checkpoint directory).</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Class</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>QwenModelArgs</code></td><td>Hyperparameters from <code>config.json</code></td></tr>
+            <tr><td><code>QwenModel</code> / <code>QwenBlock</code></td><td>Top-level decoder and per-layer block</td></tr>
+            <tr><td><code>GatedDeltaNet</code> / <code>GatedAttention</code></td><td>Linear vs full gated attention cores</td></tr>
+            <tr><td><code>QwenMtp</code></td><td>Multi-token-prediction head (speculative decoding)</td></tr>
+            <tr><td><code>QwenVisionTower</code> / <code>QwenVlProcessor</code></td><td>Vision encoder and image/video preprocessing</td></tr>
+            <tr><td><code>Qwen</code></td><td>High-level entry — <code>build()</code>, <code>generate()</code>, <code>chat()</code>, <code>complete()</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
@@ -103,51 +329,281 @@ System.out.println(reply.content());
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-java"><code class="language-java">
+  <pre class="playground-source language-java"><code class="language-java">import smile.llm.model.qwen.Qwen;
+import smile.llm.ChatCompletion;
+import smile.llm.Message;
+
+Qwen qwen = Qwen.build(
+        "model/Qwen3.5-8B",
+        /*maxBatchSize=*/ 4,
+        /*maxSeqLen=*/    4096,   // &lt;= 0 uses the config value
+        /*deviceId=*/     (byte) 0
+);
+
+ChatCompletion out = qwen.complete(
+        "Write a haiku about the sea.", 64, 0.7, 0.9, false, 0L, null);
+
+ChatCompletion reply = qwen.chat(
+        new Message[]{
+            Message.system("You are a helpful assistant."),
+            Message.user("What are the key differences between Java and Kotlin?")
+        },
+        /*maxGenLen=*/ 512, /*temperature=*/ 0.7, /*topp=*/ 0.9,
+        /*logprobs=*/ false, /*seed=*/ 0L, /*listener=*/ null);
+System.out.println(reply.content());</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Overloads add <code>memFractionStatic</code>, a KV-cache dtype override, KV page size, <code>ParallelConfig</code> (tensor parallelism), and safetensors loader thread count. Speculative decoding (MTP) is enabled by default when MTP weights are present; prefix replay for hybrid models must be opted into explicitly:</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">qwen.setSpeculativeEnabled(true);    // native MTP draft/verify
+qwen.setPrefixReplayEnabled(true);   // radix prefix + DeltaNet restore</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="engine" class="title">Inference Engine</h2>
+
+    <p><code>InferenceEngine</code> is the continuous-batching runtime used by serve. It admits work up to <code>maxInFlight</code> while KV pages are free (<strong>Fluid Injection</strong>), prefills (optionally chunked under a token budget), then runs a batched <code>decodeStep</code> over all decoding requests. <code>GenerationHandle.abort()</code> performs <strong>Instant Eviction</strong> of queued and in-flight KV.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Type</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>InferenceEngine</code></td><td>Scheduler + worker; <code>submit(...)</code> → <code>GenerationHandle</code></td></tr>
+            <tr><td><code>ModelExecutor</code></td><td>Low-level <code>bind</code> / <code>prefill</code> / <code>decodeStep</code> (implemented by Llama / Qwen)</td></tr>
+            <tr><td><code>GenerationRequest</code></td><td>One job: tokens or dialog, sampling, optional multimodal / tools</td></tr>
+            <tr><td><code>GenerationHandle</code></td><td>In-flight handle: <code>future()</code>, <code>abort()</code></td></tr>
+            <tr><td><code>SpeculativeDecoding</code></td><td>MTP draft / verify helpers</td></tr>
+            <tr><td><code>Sampling</code></td><td>Temperature / top-p sampling</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.llm.engine.InferenceEngine;
+import smile.llm.engine.GenerationRequest;
+import smile.llm.engine.GenerationHandle;
+import smile.llm.ChatCompletion;
+
+try (var engine = new InferenceEngine(llama, /*maxInFlight=*/ 8)) {
+    GenerationHandle handle = engine.submit(
+            GenerationRequest.ofTokens(
+                    prompt, 256, 0.6, 0.9, false, 0L, listener));
+    ChatCompletion reply = handle.future().join();
+}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Runtime introspection: <code>queueSize()</code>, <code>inFlight()</code>, <code>kvFreeSlots()</code>, <code>kvFreePages()</code>, <code>activeDecodeCount()</code>, and cumulative timing counters (<code>queueWaitMsTotal()</code>, <code>prefillMsTotal()</code>, <code>decodeMsTotal()</code>). Serve uses one prompt per <code>GenerationRequest</code> with <code>smile.chat.max-batch-size</code> as the in-flight cap; streaming disconnect calls <code>GenerationHandle.abort()</code>.</p>
+
+
+    <h2 id="kv-cache" class="title">KV Cache &amp; Radix Prefix Reuse</h2>
+
+    <p><code>KvCachePool</code> is a paged KV-cache allocator. Pages are the unit of allocation (<code>DEFAULT_PAGE_SIZE = 16</code> tokens). <code>RadixCache</code> organizes cached prefixes in a compressed radix tree so shared system prompts and conversation histories are computed once and reused across requests.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Type</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>KvCachePool</code></td><td>Paged KV storage; <code>bind</code> / <code>put</code> / <code>get</code> / <code>finishRequest</code></td></tr>
+            <tr><td><code>RadixCache</code></td><td>Longest-prefix match / insert over token sequences</td></tr>
+            <tr><td><code>KvCacheLayout</code></td><td>Layer / head / dim layout descriptor</td></tr>
+            <tr><td><code>FlashInferKvMetadata</code></td><td>CSR metadata for the FlashInfer attention path</td></tr>
+            <tr><td><code>KvCacheExhaustedException</code></td><td>Thrown when no free pages remain</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.llm.cache.KvCachePool;
+import smile.torch.ScalarType;
+
+KvCachePool.StaticKvBudget budget =
+        KvCachePool.computeStaticKvBudget(...);
+KvCachePool pool = KvCachePool.allocate(
+        layout, device, ScalarType.BFloat16, budget);
+pool.setPrefixReuseEnabled(true);   // radix match/insert</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Prefix reuse is enabled per model via <code>Llama.setPrefixReuseEnabled(...)</code> / <code>Qwen.setPrefixReplayEnabled(...)</code>.</p>
+
+
+    <h2 id="attention" class="title">Attention Backends</h2>
+
+    <p><code>AttentionBackends.install(...)</code> selects the process-wide attention kernel at chat-service startup:</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Backend</th><th>Notes</th></tr></thead>
+            <tbody>
+            <tr><td><code>TORCH_NATIVE</code></td><td>Default; pure LibTorch attention</td></tr>
+            <tr><td><code>FLASHINFER</code></td><td>Requires <code>libsmile_torch</code> built with <code>USE_FLASHINFER</code>; falls back to <code>TORCH_NATIVE</code> with a warning when unavailable</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.llm.attention.AttentionBackends;
+import smile.llm.attention.AttentionBackend;
+
+AttentionBackends.install(AttentionBackend.FLASHINFER);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="quantization" class="title">Quantization</h2>
+
+    <p>Weight-quantization backends for memory- and bandwidth-bound inference. The checkpoint format is detected automatically and resolved to a GEMM backend:</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>QuantFormat</th><th>Meaning</th></tr></thead>
+            <tbody>
+            <tr><td><code>DENSE</code></td><td>Dense BF16 / FP16 / FP32 weights</td></tr>
+            <tr><td><code>FP8</code></td><td>Native FP8 (e4m3 / e5m2) weights + scales</td></tr>
+            <tr><td><code>NVFP4</code></td><td>Native NVFP4 weights (Blackwell)</td></tr>
+            <tr><td><code>GPTQ</code></td><td>HuggingFace GPTQ INT4</td></tr>
+            <tr><td><code>AWQ</code></td><td>HuggingFace AWQ INT4</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.llm.quant.QuantPolicy;
+
+QuantPolicy.Resolved resolved =
+        QuantPolicy.resolve(checkpointDir, device, backendOverride);
+// resolved.format()  → QuantFormat
+// resolved.backend() → WeightGemmBackend
+//                    (FP8 / NVFP4 primary, Marlin Ampere failover)</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p><code>QuantLinearFactory</code> builds the appropriate linear layer (<code>Fp8Linear</code>, <code>Fp8BlockLinear</code>, <code>Nvfp4Linear</code>, <code>MarlinLinear</code>) for the resolved format. Native FP8 checkpoints (e.g. <code>Qwen/Qwen3.8-27B-FP8</code>) need Hopper+ GPUs (sm_90+).</p>
+
+
+    <h2 id="tensor-parallel" class="title">Tensor Parallelism</h2>
+
+    <p>In-process tensor parallelism for multi-GPU inference. Pipeline axes are reserved for future multi-node PP.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Type</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>ParallelConfig</code></td><td><code>(tpSize, ppSize, dpSize, devices)</code>; <code>single(...)</code>, <code>tensorParallel(...)</code></td></tr>
+            <tr><td><code>TensorParallelGroup</code></td><td>Rank group + collective ops</td></tr>
+            <tr><td><code>ColumnParallelLinear</code> / <code>RowParallelLinear</code></td><td>Sharded linear layers</td></tr>
+            <tr><td><code>WeightSharding</code> / <code>TensorShardSpec</code></td><td>Weight partitioning</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.llm.parallel.ParallelConfig;
 import smile.llm.model.qwen.Qwen;
-import smile.llm.Message;
 
-var qwen = Qwen.build(
-    "model/Qwen3.8-27B",
-    /*maxBatchSize=*/ 4,
-    /*maxSeqLen=*/    8192,
-    /*deviceId=*/     (byte) 0    // CUDA:0
-);
-
-var reply = qwen.chat(
-    new Message[]{
-        Message.system("You are a helpful assistant."),
-        Message.user("What are the key differences between Java and Kotlin?")
-    },
-    /*maxGenLen=*/ 512,
-    /*temperature=*/ 0.7,
-    /*topp=*/ 0.9,
-    /*logprobs=*/ false,
-    /*seed=*/ 0L,
-    /*listener=*/ null,
-    /*cancelRequested=*/ null
-);
-
-System.out.println(reply.content());
-          </code></pre>
+ParallelConfig tp = ParallelConfig.tensorParallel((byte) 0, (byte) 1);
+Qwen qwen = Qwen.build(dir, /*maxBatchSize=*/ 8, /*maxSeqLen=*/ 8192,
+        (byte) 0, /*memFractionStatic=*/ 0.85, "bfloat16", tp);</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>For multi-GPU tensor parallelism, use the overloads that accept a
-       <code>ParallelConfig</code>. Native FP8 quantization
-       (e.g. <code>Qwen/Qwen3.8-27B-FP8</code>) is supported on Hopper+ GPUs (sm_90+).</p>
+
+    <h2 id="tools" class="title">Tool Calling &amp; Chat Templates</h2>
+
+    <p><code>ChatOptions</code> carries the tools and selection policy for a request; the model injects them into the chat template and parses tool calls out of the output.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Java</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-java"><code class="language-java">import smile.llm.ChatOptions;
+import smile.llm.ToolDefinition;
+import smile.llm.FunctionDefinition;
+import smile.llm.ToolChoice;
+
+ChatOptions options = new ChatOptions(
+        new ToolDefinition[]{ new ToolDefinition(new FunctionDefinition(
+                "get_weather", "Get the current weather", parametersSchema)) },
+        ToolChoice.AUTO,
+        /*parallelToolCalls=*/ true);
+
+int[] prompt = model.encodeChat(dialog, options);</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Type</th><th>Role</th></tr></thead>
+            <tbody>
+            <tr><td><code>ChatTemplate</code></td><td>Interface for model-specific prompt formatting</td></tr>
+            <tr><td><code>Qwen3ChatTemplate</code></td><td>Qwen3 template (thinking / non-thinking, tools)</td></tr>
+            <tr><td><code>ToolCallParser</code></td><td>Interface for parsing tool calls from generated text</td></tr>
+            <tr><td><code>JsonToolCallParser</code> / <code>Qwen3XmlToolCallParser</code></td><td>Concrete parsers</td></tr>
+            <tr><td><code>AssistantTextSanitizer</code></td><td>Strips tool-call markup from assistant text</td></tr>
+            </tbody>
+        </table>
+    </div>
+
 
     <h2 id="serving" class="title">Serving</h2>
 
-    <p>SMILE Serve is a production Quarkus inference server for classic ML, ONNX, and
-        OpenAI-compatible LLM chat — with a bundled React web UI. See the
-        <a href="serve.html">SMILE Serve</a> page for Docker quick start, configuration,
-        OpenAI-compatible chat completions (including Qwen3+ tool calling), and the web UI.</p>
+    <p>SMILE Serve is a production Quarkus inference server for classic ML, ONNX, and OpenAI-compatible LLM chat — with a bundled React web UI. See the <a href="serve.html">SMILE Serve</a> page for Docker quick start, configuration, OpenAI-compatible chat completions (including Qwen3+ tool calling), and the web UI.</p>
+
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
         <a class="btn-prev-text" href="manifold.html" title="Previous Section: Manifold Learning"><span>Manifold Learning</span></a>
-        <a class="btn-next-text" href="serve.html" title="Next Section: SMILE Serve"><span>SMILE Serve</span></a>
+        <a class="btn-next-text" href="computer-vision.html" title="Next Section: Computer Vision"><span>Computer Vision</span></a>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>

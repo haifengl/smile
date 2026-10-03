@@ -6,49 +6,29 @@ title: SMILE - Serve
 {% include "toc.njk" %}
 
 <div class="col-md-9 order-md-first">
-
     <h1 id="serve-top" class="title">SMILE Serve</h1>
 
-    <p>SMILE Serve is a production-ready inference server built on
-        <a href="https://quarkus.io/" target="_blank" rel="noopener">Quarkus</a>.
-        It exposes three complementary inference capabilities on the JVM through a unified
-        REST API and bundles a React web UI in the same process.</p>
+
+    <h2 id="overview" class="title">Overview</h2>
+
+    <p>SMILE Serve is a production-ready inference server built on <a href="https://quarkus.io/" target="_blank" rel="noopener">Quarkus</a> that brings together three complementary inference capabilities on the JVM. A React-based web UI is bundled and served from the same process.</p>
 
     <div class="table-responsive">
-    <table>
-      <thead>
-        <tr>
-          <th>Capability</th>
-          <th>API prefix</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>Classic ML</strong></td>
-          <td><code>/api/v1/smile</code></td>
-          <td>Serialized SMILE models (<code>.sml</code>) — classifiers and regressors</td>
-        </tr>
-        <tr>
-          <td><strong>ONNX Runtime</strong></td>
-          <td><code>/api/v1/onnx</code></td>
-          <td>Any model in the ONNX open format (<code>.onnx</code>)</td>
-        </tr>
-        <tr>
-          <td><strong>LLM Chat</strong></td>
-          <td><code>/api/v1/chat</code>, <code>/api/v1/models</code></td>
-          <td>OpenAI-compatible chat completions and model list/retrieve</td>
-        </tr>
-      </tbody>
-    </table>
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Capability</th><th>API prefix</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><strong>Classic ML</strong></td><td><code>/api/v1/smile</code></td><td>Serialized SMILE models (<code>.sml</code>) — classifiers and regressors</td></tr>
+            <tr><td><strong>ONNX Runtime</strong></td><td><code>/api/v1/onnx</code></td><td>Any model in the ONNX open format (<code>.onnx</code>)</td></tr>
+            <tr><td><strong>LLM Chat</strong></td><td><code>/api/v1/chat</code>, <code>/api/v1/models</code></td><td>OpenAI-compatible chat completions and model list/retrieve</td></tr>
+            </tbody>
+        </table>
     </div>
 
-    <h2 id="quick-start">Quick Start</h2>
 
-    <h3 id="docker">Docker</h3>
+    <h2 id="quick-start" class="title">Quick Start with Docker</h2>
 
-    <p>The fastest way to run SMILE Serve is via the pre-built Docker image.
-        Mount a local directory containing your model files and map the port:</p>
+    <p>The fastest way to run SMILE Serve is via the pre-built Docker image. Mount a local directory containing your model files and map the port:</p>
+
 
     <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
@@ -64,14 +44,167 @@ title: SMILE - Serve
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The service listens on port 8080 inside the container (8888 on the host).
-        Place <code>.sml</code> and <code>.onnx</code> model files in the mounted folder;
-        they are discovered automatically at startup.</p>
+    <p>The service starts on port 8080 inside the container (mapped to 8888 on the host). Place your <code>.sml</code> and <code>.onnx</code> model files in <code>/path/to/model/folder</code>; they are discovered automatically at startup.</p>
+
+
+    <h3 id="gpu-build-run">GPU Build &amp; Run</h3>
+
+    <p>Build the JVM+GPU image from source and run it with CUDA graph decode enabled. To enable Google login, add <code>-Dsmile.auth.google.client-id=...</code> <code>-Dsmile.auth.google.client-secret=...</code> <code>-Dsmile.auth.google.redirect-uri=...</code> to <code>JAVA_OPTS_APPEND</code> yourself (see <a href="#authentication">Authentication</a>); keep those values out of shell history / <code>docker inspect</code> by sourcing them from environment variables rather than inlining literals.</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">./gradlew :serve:build
+sudo docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t quarkus/smile-serve-gpu .
+sudo docker run -i --rm --gpus all -p 8888:8080 \
+  -e SMILE_DECODE_CUDA_GRAPH=1 \
+  -e SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE=0 \
+  -e SMILE_VERIFY_CUDA_GRAPH=1 \
+  -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,4,6,7 -Dsmile.chat.max-batch-size=48 -Dquarkus.log.level=INFO -XX:ErrorFile=/model/hs_err_%p.log -Dsmile.chat.admit-coalesce-ms=50 -Dsmile.chat.speculative=true -Dsmile.chat.speculative-tokens=2" \
+  -u root -v "/raid/llm/model":/model quarkus/smile-serve-gpu</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Debug variant (adds <code>CUDA_LAUNCH_BLOCKING=1</code> for synchronous CUDA error reporting; slower, use only when diagnosing a CUDA graph issue):</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">sudo docker run -i --rm --gpus all -p 8888:8080 \
+  -e SMILE_DECODE_CUDA_GRAPH=1 \
+  -e SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE=0 \
+  -e SMILE_VERIFY_CUDA_GRAPH=1 \
+  -e CUDA_LAUNCH_BLOCKING=1 \
+  -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,4,6,7 -Dsmile.chat.max-batch-size=48 -Dquarkus.log.level=INFO -XX:ErrorFile=/model/hs_err_%p.log -Dsmile.chat.admit-coalesce-ms=50 -Dsmile.chat.speculative=true -Dsmile.chat.speculative-tokens=2" \
+  -u root -v "/raid/llm/model":/model quarkus/smile-serve-gpu</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="benchmarks" class="title">LLM Decode Benchmarks</h2>
+
+    <p>Steady-state continuous-batching decode on NVIDIA A100 with FlashInfer, <code>smile.chat.max-batch-size=48</code>, <code>max_tokens: 512</code>, greedy sampling (<code>temperature: 0</code>), and a uniform decode cohort (<code>smile.chat.admit-coalesce-ms=50</code> for parallel load tests). <strong>Step</strong> is engine decode-step throughput (<code>batch / step_ms</code>); <strong>aggregate</strong> is <code>AggregateTokenThroughput</code> over a ~3 s window (includes streaming / logging overhead).</p>
+
+
+    <h3 id="llama-31-8b">Llama 3.1 8B Instruct</h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Checkpoint</th><th>Weight path</th><th>Step</th><th>Aggregate</th><th>Step time</th><th>Forward / sample</th></tr></thead>
+            <tbody>
+            <tr><td><a href="https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct">meta-llama/Llama-3.1-8B-Instruct</a></td><td>BF16 dense</td><td><strong>2087 tok/s</strong></td><td>~2036 tok/s</td><td>23 ms</td><td>22 / 1 ms</td></tr>
+            <tr><td><a href="https://huggingface.co/hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4">hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4</a></td><td>AWQ INT4 (Marlin)</td><td><strong>2667 tok/s</strong></td><td>~2543 tok/s</td><td>18 ms</td><td>17 / 0 ms</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>Both runs used a full batch of 48 active requests at locked positions (e.g. <code>positions=[417..417]</code>). AWQ is ~28% faster at the same concurrency; lighter weights also leave more free KV slots for longer context.</p>
+
+
+    <h3 id="qwen38-27b">Qwen3.8 27B</h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Checkpoint</th><th>Setup</th><th>Step</th><th>Aggregate</th><th>Step time</th><th>Forward / sample</th></tr></thead>
+            <tbody>
+            <tr><td><a href="https://huggingface.co/Qwen/Qwen3.8-27B">Qwen/Qwen3.8-27B</a></td><td>BF16, TP=4</td><td><strong>906 tok/s</strong></td><td>~896 tok/s</td><td>53 ms</td><td>51 / 1 ms</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>Hybrid Qwen3.5 stack (Gated DeltaNet + full attention) at the same concurrency and locked positions (e.g. <code>positions=[466..466]</code>). Absolute throughput is lower than 8B Llama as expected for a ~27B hybrid model across four GPUs; per-request generation stays ~17 tok/s with the batch saturated. Qwen AWQ via <code>compressed-tensors</code> / Marlin is not supported yet (detector currently treats cards such as <code>cyankiwi/Qwen3.8-27B-AWQ-INT4</code> as dense).</p>
+
+
+    <h3 id="mtp-speculative">Qwen3.8 27B with MTP speculative decoding</h3>
+
+    <p>Qwen3.5/3.8 checkpoints ship a native multi-token-prediction (MTP) head. With <code>smile.chat.speculative=true</code> the engine drafts <code>speculative-tokens</code> tokens with that head and verifies them in one target forward pass; accepted tokens are byte-for-byte what greedy decoding would have produced (the output is lossless, up to rare bf16 near-tie flips between a 3-token window and single-token decode). <strong>MTP is a latency feature for low concurrency</strong>: it speeds up a lone request about 2-3x, and it automatically stays out of the way once several requests are active.</p>
+    <p>Setup: BF16, TP=4 on A100 40 GB, greedy, <code>speculative-tokens=2</code> (the default depth of 3 measures the same or slightly better), prompt "What is the history of China?", 512 new tokens, warm run, wall time including prefill.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Single request</th><th>Throughput</th><th>Verify forward / round</th><th>Draft accept rate</th></tr></thead>
+            <tbody>
+            <tr><td>Plain decode</td><td>18.7 tok/s</td><td>n/a</td><td>n/a</td></tr>
+            <tr><td>MTP + persistent draft context (+ checkpoint replay)</td><td>23 tok/s</td><td>91 ms</td><td>~73 %</td></tr>
+            <tr><td>+ fused DeltaNet window + FlashInfer verify attention</td><td>38 tok/s</td><td>49 ms</td><td>~75 %</td></tr>
+            <tr><td>+ verify CUDA graph (default)</td><td><strong>52.8 tok/s (2.8x plain)</strong></td><td><strong>~32 ms</strong></td><td>~77 %</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>Before the draft head received its prefix context (it only saw the current round's own draft tokens), MTP was ~15 % <em>slower</em> than plain decode with a ~50 % accept rate (27.5 vs 32.5 tok/s in an earlier measurement on a quieter system; absolute numbers differ between sessions, compare within a table).</p>
+    <p>A round (draft + one verify + bookkeeping) takes ~48 ms and commits 2.5 tokens on average (mean accepted draft depth 1.5 of 2). Throughput gains hold at long context (6.6k-token prompt, 256 new tokens: 16.7 s with the verify graph vs 26.5 s plain).</p>
+
+    <p><strong>Concurrency.</strong> Speculating requests are drafted and verified together as one batched round, each with its own persistent draft context, so the gain holds well beyond a single request. Aggregate throughput (tok/s, 512 new tokens, identical prompts, decode CUDA graph on, <code>max-batch-size=48</code>, <code>admit-coalesce-ms=50</code>, BF16 TP=4 on A100 40 GB, default <code>mem-fraction-static=0.85</code>):</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Active requests</th><th>Plain decode</th><th><code>speculative=true</code></th><th>Speedup</th></tr></thead>
+            <tbody>
+            <tr><td>1</td><td>25</td><td><strong>53</strong></td><td>2.1x</td></tr>
+            <tr><td>2</td><td>48</td><td>62</td><td>1.3x</td></tr>
+            <tr><td>4</td><td>94</td><td>121</td><td>1.3x</td></tr>
+            <tr><td>8</td><td>187</td><td>216-236</td><td>1.2x</td></tr>
+            <tr><td>16</td><td>335</td><td>408-441</td><td>1.2-1.3x</td></tr>
+            <tr><td>32</td><td>484</td><td><strong>694</strong></td><td>1.4x</td></tr>
+            <tr><td>48</td><td>688-702</td><td><strong>811</strong></td><td>1.15x</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>Per-request speed at 16 requests is ~26-28 tok/s versus ~21 for plain decode. A batched round of 16 requests takes ~80 ms (draft ~8 ms, verify forward ~52 ms, bookkeeping ~14-19 ms) and commits ~2.5 tokens per request. Outputs match plain decode for the same prompt up to bf16 near-tie flips: plain decode itself is not batch-invariant, and a plain batch of 8 diverges from the same prompts run alone at the same places a speculative batch does.</p>
+    <p><strong>Memory.</strong> Each speculating request needs DeltaNet checkpoint buffers: about 0.04 GB per GPU per draft slot for a 27B hybrid model, i.e. ~0.11 GB at the default depth 3 (~0.075 GB at depth 2), reserved at load for <code>min(max-batch-size, speculative-max-concurrency)</code> rows, before the KV pool is sized, so the KV budget already excludes it (48 rows at depth 3 = ~5.3 GB per GPU on a 27B hybrid model; it shrinks the KV pool, e.g. from ~734k to ~455k token slots on 40 GB GPUs at <code>mem-fraction-static=0.85</code>). Only the slots a partial accept can restore from are stored (positions <code>1..depth</code>; the pre-window copy and the final position are not needed). A cohort larger than the reservation (only possible after a depth change) is still checked at run time and, if it does not fit, the engine logs one warning and serves it with plain batched decode instead of failing requests. To keep more KV, lower <code>smile.chat.speculative-max-concurrency</code> (smaller reservation) or set <code>smile.chat.speculative=false</code>.</p>
+    <p>Speculation is on by default for Qwen3.5/3.8 checkpoints with MTP weights; budget the memory above on small GPUs or very large batches, or set <code>smile.chat.speculative=false</code>.</p>
+
+    <p>Controls (all default to the values that were benchmarked):</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Setting</th><th>Default</th><th>Meaning</th></tr></thead>
+            <tbody>
+            <tr><td><code>smile.chat.speculative</code></td><td><code>true</code></td><td>MTP speculation for Qwen3.5/3.8 checkpoints with MTP weights (ignored for other models). Set <code>false</code> to disable.</td></tr>
+            <tr><td><code>smile.chat.speculative-tokens</code></td><td><code>0</code> (model default; 3 for Qwen3.8-27B)</td><td>Draft depth. Measured aggregate tok/s at 1 / 8 / 16 requests: depth 1: 47 / 203 / 387; depth 2: 53 / 216-236 / 408-441; depth 3 (default): 55 / 232 / 446; depth 4: 54 / 241 / 439. Depths 2-4 are within noise; depth 1 is slower.</td></tr>
+            <tr><td><code>smile.chat.speculative-max-concurrency</code></td><td><code>0</code> (= <code>max-batch-size</code>)</td><td>Requests that may speculate at once. A request keeps its speculation slot for its whole life; requests beyond the limit use batched plain decode. Speculating only part of a large cohort is slower than all or none, so leave unlimited unless you need to bound checkpoint memory.</td></tr>
+            <tr><td><code>SMILE_VERIFY_CUDA_GRAPH</code></td><td>on</td><td>Capture the verify forward as one CUDA graph (one capture per session). <code>0</code> disables.</td></tr>
+            <tr><td><code>SMILE_MTP_HISTORY</code></td><td>on</td><td>Draft head keeps a persistent per-request KV of the whole prefix (prompt and accepted tokens). <code>0</code> restores the context-free legacy head (about half the accept rate).</td></tr>
+            <tr><td><code>SMILE_MTP_VERIFY_CHECKPOINT_REPLAY</code></td><td>on</td><td>On a partial accept, restore the DeltaNet state saved during the verify pass instead of running a second forward. <code>0</code> disables.</td></tr>
+            <tr><td><code>SMILE_VERIFY_CUDA_GRAPH_RAGGED</code></td><td>on</td><td>Also graph cohorts of 2+ requests at different positions. <code>0</code> limits the graph to a lone request (or equal positions).</td></tr>
+            <tr><td><code>SMILE_VERIFY_CUDA_GRAPH_MAX_BATCH</code></td><td><code>16</code></td><td>Largest cohort that uses a verify graph.</td></tr>
+            <tr><td><code>SMILE_VERIFY_FLASHINFER_EAGER</code></td><td>on</td><td>Use FlashInfer's paged prefill kernel for verify windows when the graph is not replaying. <code>0</code> disables.</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>Notes and limits:</p>
+
+    <ul>
+        <li>The MTP draft head's KV cache is a second, request-bound pool sized like the main pool (capped at half of the free device memory when it is created, at first use). A request that cannot get one, is multimodal, or takes a plain decode step (for example it holds no speculation slot, or the cohort did not fit in memory) simply continues with plain decode: output is unaffected, it just stops speculating.</li>
+        <li>Cohorts of up to 16 speculating requests replay a verify CUDA graph keyed by batch size (rows may sit at different positions; positions, RoPE rows, KV slots and the page table are rewritten in place before each replay, one ~10 ms capture per batch size). Larger cohorts verify eagerly because each captured batch size keeps its own activation pool. Same-session A/B against the eager batched verify (512 tokens): 4 requests 145 → 176 tok/s, 8 requests 255 → 331, 16 requests 461 → 498. The decode CUDA graph is not used while any request is speculating.</li>
+        <li>The chat endpoint returns the final answer without the model's hidden reasoning. When comparing a speculative and a plain response at a short <code>max_tokens</code>, differences can appear from the first visible character only because the token limit falls before/after the end of the hidden reasoning; compare at a limit inside the reasoning, or at a long limit.</li>
+        <li>Capture happens once per <code>(batch, window length)</code>; the 2-token verify window at the very end of a request triggers one extra capture (~0.1 s).</li>
+        <li>Troubleshooting: <code>SMILE_DECODE_PROFILE=1</code> adds a per-round breakdown to the <code>MTP verify:</code> log line; <code>SMILE_VERIFY_CUDA_GRAPH_DEBUG_DIFF=1</code> (diagnostic, doubles verify cost) logs the numeric gap between graph replay and an eager reference every round; <code>SMILE_VERIFY_GRAPH_TRACE=1</code> logs each round's replay / warmup / capture decision.</li>
+    </ul>
+
+
+    <h2 id="building" class="title">Building and Running</h2>
+
+    <p>All commands use the Gradle wrapper from the project root.</p>
+
 
     <h3 id="dev-mode">Dev Mode</h3>
 
-    <p>From the project root, start Quarkus live-reload dev mode (HTTP port defaults to
-        <strong>8888</strong> in the <code>%dev</code> profile):</p>
+    <p>Live-reload development mode — changes to Java sources are reflected without restarting. The Quarkus Dev UI is available at <a href="http://localhost:8888/q/dev/">http://localhost:8888/q/dev/</a>.</p>
+
 
     <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
@@ -85,12 +218,11 @@ title: SMILE - Serve
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The Quarkus Dev UI is available at <a href="http://localhost:8888/q/dev/">localhost:8888/q/dev/</a>.
-        The React dev server runs on port 5173 and proxies API requests to the backend.</p>
+    <p>The <code>--add-opens</code> flags are required by ONNX Runtime's Foreign Function Interface. The dev-mode HTTP port defaults to <strong>8888</strong> (configured via <code>%dev.quarkus.http.port</code>).</p>
 
-    <h3 id="packaging">Packaging</h3>
 
-    <p>Build a layered Quarkus application:</p>
+    <h3 id="packaging-as-a-jar">Packaging as a JAR</h3>
+
 
     <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
@@ -99,23 +231,75 @@ title: SMILE - Serve
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-bash"><code class="language-bash">./gradlew :serve:build
+  <pre class="playground-source language-bash"><code class="language-bash">./gradlew :serve:build</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
+    <p>This produces a Quarkus layered application in <code>build/quarkus-app/</code>. The entry point is <code>build/quarkus-app/quarkus-run.jar</code>; the dependencies live in <code>build/quarkus-app/lib/</code> and must be distributed together.</p>
+    <p>Run it with:</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">java \
+  --add-opens java.base/java.lang=ALL-UNNAMED \
+  --add-opens java.base/java.nio=ALL-UNNAMED \
+  --enable-native-access ALL-UNNAMED \
+  -jar build/quarkus-app/quarkus-run.jar</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>To run on a custom port:</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">java \
+  --add-opens java.base/java.lang=ALL-UNNAMED \
+  --add-opens java.base/java.nio=ALL-UNNAMED \
+  --enable-native-access ALL-UNNAMED \
+  -Dquarkus.http.port=3801 \
+  -jar build/quarkus-app/quarkus-run.jar</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="uber-jar">Uber-JAR</h3>
+
+    <p>A single self-contained JAR (slower to start, simpler to deploy):</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">./gradlew :serve:build -Dquarkus.package.jar.type=uber-jar
 java \
   --add-opens java.base/java.lang=ALL-UNNAMED \
   --add-opens java.base/java.nio=ALL-UNNAMED \
   --enable-native-access ALL-UNNAMED \
-  -jar serve/build/quarkus-app/quarkus-run.jar</code></pre>
+  -jar build/smile-serve-runner.jar</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>For a single uber-JAR or GraalVM native executable, see the
-        <a href="https://github.com/haifengl/smile/blob/master/serve/README.md#2-building-and-running" target="_blank" rel="noopener">full user guide</a>.</p>
 
-    <h2 id="configuration">Configuration</h2>
+    <h3 id="native-executable">Native Executable</h3>
 
-    <p>Configuration lives in <code>serve/src/main/resources/application.properties</code>.
-        Override at runtime with <code>-D</code> system properties, for example:</p>
+    <p>Compile to a native binary with GraalVM (sub-millisecond startup, lower memory):</p>
+
 
     <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
@@ -124,65 +308,111 @@ java \
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-bash"><code class="language-bash">java ... -Dsmile.serve.model=/data/models -jar quarkus-run.jar</code></pre>
+  <pre class="playground-source language-bash"><code class="language-bash">./gradlew :serve:build -Dquarkus.native.enabled=true
+./build/smile-serve-*-runner</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
+    <p>Without a local GraalVM installation, use a Docker-based build:</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">./gradlew :serve:build \
+  -Dquarkus.native.enabled=true \
+  -Dquarkus.native.container-build=true</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>See the <a href="https://quarkus.io/guides/gradle-tooling" target="_blank" rel="noopener">Quarkus native build guide</a> for details.</p>
+
+
+    <h2 id="configuration" class="title">Configuration Reference</h2>
+
+    <p>Configuration is managed in <code>src/main/resources/application.properties</code>. Quarkus profile prefixes (<code>%dev.</code>, <code>%test.</code>) override the base values in the corresponding profiles.</p>
+
     <div class="table-responsive">
-    <table>
-      <thead>
-        <tr>
-          <th>Property</th>
-          <th>Default</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>quarkus.http.port</code></td>
-          <td><code>8080</code></td>
-          <td>HTTP listen port (<code>%dev</code> default: <code>8888</code>)</td>
-        </tr>
-        <tr>
-          <td><code>smile.serve.model</code></td>
-          <td><code>../model</code></td>
-          <td>Path to a <code>.sml</code> file or directory of SMILE models</td>
-        </tr>
-        <tr>
-          <td><code>smile.onnx.model</code></td>
-          <td><code>../model</code></td>
-          <td>Path to a <code>.onnx</code> file or directory of ONNX models</td>
-        </tr>
-        <tr>
-          <td><code>smile.chat.model</code></td>
-          <td><code>../model/Llama3.1-8B-Instruct</code></td>
-          <td>Local Hugging Face checkpoint directory, or Hugging Face repo id</td>
-        </tr>
-        <tr>
-          <td><code>smile.chat.max-seq-len</code></td>
-          <td><code>0</code> (auto)</td>
-          <td>Max context length (prompt + output); <code>0</code> uses model config</td>
-        </tr>
-        <tr>
-          <td><code>smile.chat.devices</code></td>
-          <td><code>0</code></td>
-          <td>CUDA device index, or comma-separated list for tensor parallelism</td>
-        </tr>
-      </tbody>
-    </table>
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Property</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>quarkus.http.port</code></td><td><code>8080</code></td><td>HTTP listen port (<code>%dev</code> default: <code>8888</code>)</td></tr>
+            <tr><td><code>quarkus.rest.path</code></td><td><code>/api/v1</code></td><td>Global REST path prefix</td></tr>
+            <tr><td><code>smile.serve.model</code></td><td><code>../model</code></td><td>Path to a <code>.sml</code> file or directory of <code>.sml</code> files</td></tr>
+            <tr><td><code>smile.onnx.model</code></td><td><code>../model</code></td><td>Path to a <code>.onnx</code> file or directory of <code>.onnx</code> files</td></tr>
+            <tr><td><code>smile.chat.model</code></td><td><code>../model/Llama3.1-8B-Instruct</code></td><td>Local HF-layout checkpoint directory, or Hugging Face repo id (<code>owner/name</code>). Tokenizer is resolved next to the checkpoint (<code>original/tokenizer.model</code>, <code>tokenizer.model</code>, or HF <code>tokenizer.json</code> for AWQ/GPTQ cards)</td></tr>
+            <tr><td><code>smile.chat.max-seq-len</code></td><td><code>0</code> (auto)</td><td>Max context (prompt+output), like vLLM <code>--max-model-len</code> / SGLang <code>--context-length</code>. <code>&lt;=0</code> uses <code>max_position_embeddings</code> from the model config; set explicitly (e.g. <code>8192</code>) to cap large-window models such as Qwen3.5</td></tr>
+            <tr><td><code>smile.chat.max-batch-size</code></td><td><code>1</code></td><td>Max in-flight chat generations (<code>InferenceEngine</code> Fluid Injection cap). Values <code>&gt;1</code> enable continuous batching. A waiting request is admitted only when free KV can reserve its full <code>prompt + max_tokens</code> window (capped by <code>max-seq-len</code>); otherwise it stays queued.</td></tr>
+            <tr><td><code>smile.chat.max-decode-batch</code></td><td><code>0</code> (same as max-batch-size)</td><td>Cap on requests per GPU <code>decodeStep</code>; <code>0</code> means use <code>max-batch-size</code></td></tr>
+            <tr><td><code>smile.chat.prefill-token-budget</code></td><td><code>2048</code></td><td>Max prompt tokens prefilled per scheduler tick (chunked prefill so long prompts do not stall decode)</td></tr>
+            <tr><td><code>smile.chat.admission-timeout-ms</code></td><td><code>120000</code></td><td>Max ms a job may wait for KV admission before failing (<code>0</code> = wait until Instant Eviction frees capacity)</td></tr>
+            <tr><td><code>smile.chat.admit-coalesce-ms</code></td><td><code>0</code></td><td>When idle, delay first admission up to this many ms so a parallel burst can fill the queue; stops early once <code>queued &gt;= max-batch-size</code>. <code>0</code> disables (default). Use e.g. <code>50</code> for <code>curl --parallel</code> load tests</td></tr>
+            <tr><td><code>smile.chat.mem-fraction-static</code></td><td><code>0.85</code></td><td>SGLang <code>--mem-fraction-static</code>: fraction <code>y</code> of <strong>total</strong> GPU memory for the static region (weights + DeltaNet + KV). Leaves ~(1−y)×total free for activations (plus a small soft margin). Idle use near <code>y×total</code> is expected. Short-prompt OOM usually means activation peak/leak during forward — try <code>0.75</code> and/or a lower <code>max-seq-len</code> on 40GB TP=2 Qwen desktops. Pool is static (no per-request growth); when free KV is exhausted, generation stops early with partial output (<code>finish_reason=length</code>)</td></tr>
+            <tr><td><code>smile.chat.model-loader-threads</code></td><td><code>0</code> (auto)</td><td>Concurrent safetensors shard readers. Each worker loads one shard to CPU then fans out to TP ranks. Peak host RAM ≈ <code>threads × shard size</code>. <code>0</code> = <code>min(8, CPUs)</code>, capped by number of shard files. Use <code>1</code>–<code>2</code> on RAM-tight desktops</td></tr>
+            <tr><td><code>smile.chat.devices</code></td><td><code>0</code></td><td>CUDA device index, or comma-separated TP list (<code>0,7</code>). <code>%dev</code> default: <code>7</code></td></tr>
+            <tr><td><code>smile.chat.tensor-parallel-size</code></td><td><code>1</code></td><td>TP world size; with a single <code>devices</code> entry expands to consecutive GPUs</td></tr>
+            <tr><td><code>smile.chat.pipeline-parallel-size</code></td><td><code>1</code></td><td>Must stay <code>1</code> until multi-node PP</td></tr>
+            <tr><td><code>smile.chat.kv-cache.dtype</code></td><td><em>(unset)</em></td><td>KV-cache element dtype (<code>bfloat16</code>, <code>float16</code>, <code>float32</code>, <code>fp8_e4m3</code>, <code>fp8_e5m2</code>, …). When unset, uses <code>torch_dtype</code> from the model <code>config.json</code>. Set <code>fp8_e4m3</code> for ~2× KV capacity (longer context); attention dequants to BF16/FP16. Independent of weight quant.</td></tr>
+            <tr><td><code>smile.chat.quantization</code></td><td><code>auto</code></td><td>Weight GEMM: <code>auto</code> / <code>dense</code> / <code>fp8</code> / <code>nvfp4</code> / <code>marlin</code>. <code>auto</code> selects FP8/NVFP4 on Hopper/Blackwell for native checkpoints, Marlin on Ampere/Ada for GPTQ/AWQ. GPTQ/AWQ on Hopper+ fails fast (no silent Marlin). <strong>Qwen hybrid:</strong> native FP8 (e.g. Qwen3.8-FP8) on H100+ (<code>sm_90+</code>) uses block-128 <code>weight_scale_inv</code> via LibTorch <code>_scaled_mm_v2</code> (<code>Fp8BlockLinear</code>); rebuild <code>libsmile_torch</code> after pulling. Vision tower and <code>lm_head</code> stay BF16. A100 still fails fast on native FP8 Qwen. GPTQ/AWQ/Marlin for Qwen remain unsupported. Marlin AWQ/GPTQ install batch-reads each safetensors shard once and packs linears in parallel (direct int4→Marlin, no FP16 round-trip); expect on the order of tens of seconds for 8B AWQ on A100 rather than multi-minute phase-1 loads. GPTQ act-order (<code>g_idx</code>) is rejected.</td></tr>
+            <tr><td><code>smile.chat.kv-cache.page-size</code></td><td><code>16</code></td><td>Tokens per radix / KV pool page (prefix match and insert are page-aligned)</td></tr>
+            <tr><td><code>smile.chat.kv-cache.prefix-reuse</code></td><td><code>true</code></td><td>Match/insert prompts in the radix KV tree (SGLang-style). Hybrid Qwen also needs <code>hybrid-prefix-replay</code></td></tr>
+            <tr><td><code>smile.chat.kv-cache.hybrid-prefix-replay</code></td><td><code>true</code></td><td>On a hybrid Qwen prefix hit, replay the matched prefix to restore DeltaNet state while sharing KV pages. Set <code>false</code> to force-disable hybrid prefix reuse</td></tr>
+            <tr><td><code>smile.chat.oga.enabled</code></td><td><code>true</code></td><td>When Torch path is not selected, try ORT GenAI for GenAI-ready models (incl. nested HF packages / Olive cache)</td></tr>
+            <tr><td><code>smile.chat.oga.precision</code></td><td><em>(auto)</em></td><td>Cache-key / offline Olive <code>optimize --precision</code>; empty/<code>auto</code> uses cascade default (<code>int4</code> — <code>optimize</code> does not accept <code>fp8</code>)</td></tr>
+            <tr><td><code>smile.chat.oga.cache-dir</code></td><td><code>{SMILE_CACHE}/olive</code></td><td>Olive output cache root (never writes into <code>HF_HOME</code> hub trees); serve opens hits at startup</td></tr>
+            <tr><td><code>smile.chat.oga.olive-command</code></td><td><code>olive</code></td><td>Olive CLI executable for <strong>offline</strong> conversion only (not run at startup)</td></tr>
+            <tr><td><code>smile.chat.oga.device</code> / <code>provider</code></td><td><em>(cascade)</em></td><td>Optional Olive overrides for offline convert / cache key; default from <code>GenAI.resolveOliveTarget()</code></td></tr>
+            <tr><td><code>quarkus.datasource.db-kind</code></td><td><code>postgresql</code></td><td>Database backend for chat history</td></tr>
+            <tr><td><code>quarkus.datasource.jdbc.url</code></td><td><code>jdbc:postgresql://localhost:5432/smile</code></td><td>JDBC connection URL</td></tr>
+            <tr><td><code>quarkus.hibernate-orm.active</code></td><td><code>false</code></td><td>Enable ORM (set <code>true</code> when database is available)</td></tr>
+            </tbody>
+        </table>
     </div>
 
-    <p>See the
-        <a href="https://github.com/haifengl/smile/blob/master/serve/README.md#3-configuration-reference" target="_blank" rel="noopener">configuration reference</a>
-        for KV-cache, batching, memory fraction, and database settings.</p>
+    <p><strong>Override at runtime</strong> with <code>-D</code> system properties, for example:</p>
 
-    <h2 id="classic-ml">Classic ML Inference</h2>
 
-    <p>At startup, SMILE Serve scans <code>smile.serve.model</code> and loads every
-        <code>.sml</code> file. Each model carries its trained algorithm, input feature schema,
-        and optional metadata tags.</p>
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">java ... -Dsmile.serve.model=/data/models/rf_classifier.sml -jar quarkus-run.jar</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
-    <h3 id="ml-metadata">Model metadata</h3>
+
+    <h2 id="classic-ml" class="title">Classic ML Inference API</h2>
+
+
+    <h3 id="model-format">Model Format</h3>
+
+    <p>Classic ML models are serialized Java objects saved in <code>.sml</code> files by the SMILE <code>smile.model.Model</code> framework. They carry:</p>
+
+    <ul>
+        <li>The trained algorithm (random forest, SVM, gradient boost, etc.)</li>
+        <li>The input feature schema (field names and data types)</li>
+        <li>Training / validation metrics</li>
+        <li>Optional metadata tags (<code>id</code>, <code>version</code>, user-defined properties)</li>
+    </ul>
+
+    <p>At startup, <code>InferenceService</code> scans the path specified by the property <code>smile.serve.model</code>. If the path is a regular <code>.sml</code> file only that model is loaded; if it is a directory every <code>.sml</code> file in the directory is loaded.</p>
+
+
+    <h3 id="get-metadata">Get Model Metadata</h3>
+
+    <p>Returns the algorithm name, input schema, and tags for a model. Use <code>GET /api/v1/models</code> to discover loaded model IDs.</p>
+
+    <pre class="language-text"><code class="language-text">GET /api/v1/smile/{id}</code></pre>
+
+    <p><strong>Example:</strong></p>
+
 
     <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
@@ -195,12 +425,31 @@ java \
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Returns the algorithm name, input schema (field names and types), and tags.
-        Use <code>GET /api/v1/models</code> to list all loaded model IDs.</p>
+    <pre class="language-json"><code class="language-json">{
+  "id": "iris_random_forest-1",
+  "algorithm": "random-forest",
+  "schema": {
+    "petallength": { "type": "float", "nullable": false },
+    "petalwidth":  { "type": "float", "nullable": false },
+    "sepallength": { "type": "float", "nullable": false },
+    "sepalwidth":  { "type": "float", "nullable": false }
+  },
+  "tags": {
+    "smile.random_forest.trees": "200"
+  }
+}</code></pre>
 
-    <h3 id="ml-inference">Single inference</h3>
+    <p>The <code>schema</code> object lists every input feature in alphabetical order — this is the <strong>column order</strong> used by the CSV streaming endpoint.</p>
 
-    <p>Send one sample as a flat JSON object whose keys match the model schema:</p>
+
+    <h3 id="single-inference">Single Inference (JSON)</h3>
+
+    <pre class="language-text"><code class="language-text">POST /api/v1/smile/{id}
+Content-Type: application/json</code></pre>
+
+    <p>The request body is a flat JSON object whose keys are the feature names defined in the model schema. <strong>All non-nullable fields are required.</strong></p>
+    <p><strong>Classification example (iris):</strong></p>
+
 
     <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
@@ -220,25 +469,85 @@ java \
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Response:</p>
+    <pre class="language-json"><code class="language-json">{
+  "prediction": 0,
+  "probabilities": [0.960, 0.021, 0.019]
+}</code></pre>
 
-    <div class="code-playground glass" data-lang="json">
+    <ul>
+        <li><code>prediction</code> — the predicted class label (integer) or regression value (float).</li>
+        <li><code>probabilities</code> — posterior class probabilities for <strong>soft classifiers</strong> (e.g. random forest, logistic regression). Absent for hard classifiers and regressors.</li>
+        <li><code>explanations</code> — optional model explanation object (present when requested).</li>
+    </ul>
+
+
+    <h3 id="explanations">Explanations (TreeSHAP)</h3>
+
+    <p>Explanations can be requested by passing <code>"enableExplanations": true</code> in the JSON body, or appending <code>?explain=true</code> to the URL.</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
-    <span class="lang-tab is-active">JSON</span>
+    <span class="lang-tab is-active">Bash</span>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-json"><code class="language-json">{
-  "prediction": 0,
-  "probabilities": [0.960, 0.021, 0.019]
-}</code></pre>
+  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST "http://localhost:8080/api/v1/smile/iris_random_forest-1?explain=true" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sepallength": 5.1,
+    "sepalwidth":  3.5,
+    "petallength": 1.4,
+    "petalwidth":  0.2
+  }'</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <h3 id="ml-streaming">Streaming inference</h3>
+    <pre class="language-json"><code class="language-json">{
+  "prediction": 0,
+  "probabilities": [0.960, 0.021, 0.019],
+  "explanations": {
+    "shap": [
+      [0.012, -0.045, 0.123, -0.002],
+      [-0.034, 0.056, -0.210, 0.015],
+      [0.022, -0.011, 0.087, -0.013]
+    ]
+  }
+}</code></pre>
 
-    <p>Process many samples via Server-Sent Events:</p>
+    <ul>
+        <li>For <strong>tree classification models</strong> (Random Forest, AdaBoost, Gradient Tree Boost, Decision Tree), <code>shap</code> is a 2D array of floats with dimension <code>[classes][features]</code>, formatted to 3 decimal places.</li>
+        <li>For <strong>tree regression models</strong>, <code>shap</code> is a 1D array of floats with dimension <code>[features]</code>.</li>
+        <li>For models that do not support SHAP, <code>shap</code> returns <code>"Not supported"</code>.</li>
+    </ul>
+
+    <p><strong>Error responses:</strong></p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>HTTP</th><th>Cause</th></tr></thead>
+            <tbody>
+            <tr><td><code>400 Bad Request</code></td><td>Missing required field, or malformed JSON</td></tr>
+            <tr><td><code>404 Not Found</code></td><td>Unknown model ID</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h3 id="streaming-inference">Streaming Inference (CSV / JSON-lines)</h3>
+
+    <p>Process many samples in a single request. The server returns results as a <a href="https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events" target="_blank" rel="noopener">Server-Sent Events</a> stream emitting structured JSON objects — one <code>data:</code> line per input sample. Append <code>?explain=true</code> to include explanations in each streaming event.</p>
+
+    <pre class="language-text"><code class="language-text">POST /api/v1/smile/{id}/stream
+Content-Type: text/plain          ← CSV mode
+Content-Type: application/json   ← JSON-lines mode</code></pre>
+
+
+    <h3 id="csv-mode">CSV mode (<code>text/plain</code>)</h3>
+
+    <p>Each non-blank line is a comma-separated row of feature values in the <strong>same column order as the model schema</strong> (alphabetical by field name, as shown by <code>GET /api/v1/smile/{id}</code>).</p>
+
 
     <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
@@ -254,16 +563,68 @@ java \
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>CSV rows follow the column order shown in the model schema (alphabetical by field name).
-        JSON-lines mode (<code>Content-Type: application/json</code>) accepts one JSON object per line.</p>
+    <p>Where <code>iris.csv</code> might contain:</p>
 
-    <h2 id="onnx">ONNX Inference</h2>
+    <pre class="language-text"><code class="language-text">5.1,3.5,1.4,0.2
+6.7,3.0,5.2,2.3
+5.8,2.7,4.1,1.0</code></pre>
 
-    <p>ONNX models are loaded from <code>smile.onnx.model</code>. The model ID is the file name
-        without the <code>.onnx</code> extension. The ONNX Runtime native library must be on the
-        OS library search path.</p>
+    <p>The response stream (SSE format emitting JSON payloads):</p>
 
-    <h3 id="onnx-info">Model info</h3>
+    <pre class="language-text"><code class="language-text">data: {"prediction":0,"probabilities":[0.960,0.021,0.019]}
+
+data: {"prediction":2,"probabilities":[0.012,0.051,0.937]}
+
+data: {"prediction":1,"probabilities":[0.031,0.752,0.217]}</code></pre>
+
+
+    <h3 id="json-lines-mode">JSON-lines mode (<code>application/json</code>)</h3>
+
+    <p>Each non-blank line must be a complete JSON object (one per line). This is more verbose but supports named fields in any order. Each sample can also independently include <code>"enableExplanations": true</code>.</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">cat iris.jsonl | curl -X POST \
+  -H "Content-Type: application/json" \
+  --data-binary @- \
+  http://localhost:8080/api/v1/smile/iris_random_forest-1/stream</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Where <code>iris.jsonl</code> contains:</p>
+
+    <pre class="language-json"><code class="language-json">{"sepallength":5.1,"sepalwidth":3.5,"petallength":1.4,"petalwidth":0.2}
+{"sepallength":6.7,"sepalwidth":3.0,"petallength":5.2,"petalwidth":2.3,"enableExplanations":true}</code></pre>
+
+
+    <h3 id="model-ids">Model IDs</h3>
+
+    <p>A model's ID is constructed as <code>&lt;name&gt;-&lt;version&gt;</code> from the model's embedded metadata tags (<code>smile.model.Model.ID</code> and <code>smile.model.Model.VERSION</code>). If those tags are absent, the file name stem is used as the name and <code>"1"</code> as the version. For example, a file named <code>iris_random_forest.sml</code> with no ID tag gets the ID <code>iris_random_forest-1</code>.</p>
+
+
+    <h2 id="onnx-api" class="title">ONNX Inference API</h2>
+
+    <p>The ONNX endpoint exposes any model in the <a href="https://onnx.ai/" target="_blank" rel="noopener">ONNX open format</a> through SMILE's native ONNX Runtime binding (<code>smile.onnx</code>). This covers models exported from PyTorch, TensorFlow, scikit-learn (via <code>sklearn-onnx</code>), and many other frameworks. Classical ONNX inference is documented on <a href="onnx.html">ONNX</a>.</p>
+
+
+    <h3 id="onnx-model-format">Model Format</h3>
+
+    <p>At startup, <code>OnnxService</code> scans the folder specified by the property <code>smile.onnx.model</code>. Every <code>.onnx</code> file found is loaded into an <code>InferenceSession</code>. The model ID is the file name without the <code>.onnx</code> extension (e.g., <code>resnet50.onnx</code> → ID <code>resnet50</code>).</p>
+    <p><strong>Native library:</strong> the ONNX Runtime shared library (<code>libonnxruntime.so</code> / <code>libonnxruntime.dylib</code> / <code>onnxruntime.dll</code>) must be on the OS library search path, and the JVM must include <code>--enable-native-access=ALL-UNNAMED</code>. If the library is missing, startup continues without ONNX models (endpoints return 404) rather than aborting the whole serve process. Download pre-built binaries from the <a href="https://github.com/microsoft/onnxruntime/releases" target="_blank" rel="noopener">ORT releases</a> page.</p>
+
+
+    <h3 id="onnx-get-info">Get ONNX Model Info</h3>
+
+    <p>Returns graph metadata and the typed, shaped input/output node descriptors. Use <code>GET /api/v1/models</code> to discover loaded model IDs.</p>
+
+    <pre class="language-text"><code class="language-text">GET /api/v1/onnx/{id}</code></pre>
+
 
     <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
@@ -276,10 +637,41 @@ java \
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Returns input/output tensor names, element types, and shapes (a <code>-1</code> dimension
-        is dynamic).</p>
+    <pre class="language-json"><code class="language-json">{
+  "id": "resnet50",
+  "graphName": "ResNet50",
+  "description": "Image classification model",
+  "version": 1,
+  "inputs": [
+    {
+      "name": "input",
+      "onnxType": "TENSOR",
+      "elementType": "FLOAT",
+      "shape": [1, 3, 224, 224]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "output",
+      "onnxType": "TENSOR",
+      "elementType": "FLOAT",
+      "shape": [1, 1000]
+    }
+  ],
+  "customMeta": {}
+}</code></pre>
 
-    <h3 id="onnx-inference">Single inference</h3>
+    <p>A shape value of <code>-1</code> means that dimension is <strong>dynamic</strong> (determined at inference time from the input data).</p>
+
+
+    <h3 id="onnx-single-inference">Single Inference (JSON)</h3>
+
+    <pre class="language-text"><code class="language-text">POST /api/v1/onnx/{id}
+Content-Type: application/json</code></pre>
+
+    <p>The request body is a JSON object mapping each <strong>input name</strong> to a <strong>flat JSON array</strong> of numbers or strings. The server constructs the required ORT tensor from the declared element type and shape.</p>
+    <p><strong>Example — image classification (resnet50, 1×3×224×224 = 150528 floats):</strong></p>
+
 
     <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
@@ -288,23 +680,161 @@ java \
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/onnx/my_classifier \
+  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/onnx/resnet50 \
   -H "Content-Type: application/json" \
-  -d '{"input": [1.0, 2.0, 3.0, 4.0]}'</code></pre>
+  -d '{"input": [0.485, 0.456, 0.406, ...]}'</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>The request body maps each input name to a flat JSON array of numbers. Streaming endpoints
-        mirror the classic ML API (<code>POST /api/v1/onnx/{id}/stream</code>).</p>
+    <p>The Infer UI image path resizes to the model's H×W, scales to <code>[0, 1]</code>, then applies ImageNet channel normalization <code>(x - mean) / std</code> with <code>mean=[0.485, 0.456, 0.406]</code>, <code>std=[0.229, 0.224, 0.225]</code> (NCHW or NHWC as declared). When posting tensors yourself, use the same layout and normalization the model was trained with.</p>
+    <p>Response — a JSON object mapping each <strong>output name</strong> to a flat array of <strong>raw logits</strong> (not probabilities) or strings. ImageNet classifiers from the ONNX Model Zoo typically omit a Softmax node; apply <code>MathEx.softmax</code> before interpreting scores as class probabilities (same as <code>InferenceSessionTest</code> in <code>core</code>).</p>
 
-    <h2 id="llm-chat">LLM Chat</h2>
+    <pre class="language-json"><code class="language-json">{
+  "output": [0.001, 0.002, 0.872, 0.003, ...]
+}</code></pre>
 
-    <p>SMILE Serve includes native
-        <a href="llm.html">Llama inference</a> with an OpenAI-compatible chat API.
-        If <code>smile.chat.model</code> is not available, chat endpoints return
-        <strong>HTTP 503</strong>.</p>
+    <p><strong>Multi-input model example:</strong></p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/onnx/bert_classifier \
+  -H "Content-Type: application/json" \
+  -d '{
+    "input_ids":      [101, 2054, 2003, 1996, 3007, 1997, 2605, 1029, 102],
+    "attention_mask": [1,   1,    1,    1,    1,    1,    1,    1,    1  ],
+    "token_type_ids": [0,   0,    0,    0,    0,    0,    0,    0,    0  ]
+  }'</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p><strong>String input model example</strong> (e.g. scikit-learn pipeline with categorical string features or text inputs):</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/onnx/pipeline_classifier \
+  -H "Content-Type: application/json" \
+  -d '{
+    "category": ["electronics", "apparel"],
+    "rating":   [4.5, 3.0]
+  }'</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p><strong>Supported input element types:</strong></p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>ONNX type</th><th>JSON values</th><th>ORT type</th></tr></thead>
+            <tbody>
+            <tr><td><code>FLOAT</code></td><td>numbers</td><td><code>float[]</code></td></tr>
+            <tr><td><code>DOUBLE</code></td><td>numbers</td><td><code>double[]</code></td></tr>
+            <tr><td><code>INT32</code></td><td>integers</td><td><code>int[]</code></td></tr>
+            <tr><td><code>INT64</code></td><td>integers</td><td><code>long[]</code></td></tr>
+            <tr><td><code>INT8</code> / <code>UINT8</code> / <code>BOOL</code></td><td>integers (0/1 for bool)</td><td><code>byte[]</code></td></tr>
+            <tr><td><code>STRING</code></td><td>strings</td><td><code>String[]</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p><strong>Error responses:</strong></p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>HTTP</th><th>Cause</th></tr></thead>
+            <tbody>
+            <tr><td><code>400 Bad Request</code></td><td>Missing input, wrong element count, type mismatch</td></tr>
+            <tr><td><code>404 Not Found</code></td><td>Unknown model ID</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h3 id="onnx-streaming">Streaming Inference</h3>
+
+    <p>Identical in structure to the classic ML streaming endpoint but returns JSON objects:</p>
+
+    <pre class="language-text"><code class="language-text">POST /api/v1/onnx/{id}/stream
+Content-Type: text/plain          ← CSV floats for single-input models
+Content-Type: application/json   ← JSON-lines for multi-input models</code></pre>
+
+    <p><strong>CSV (single-input models only):</strong></p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">cat features.csv | curl -X POST \
+  -H "Content-Type: text/plain" \
+  --data-binary @- \
+  http://localhost:8080/api/v1/onnx/my_classifier/stream</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Each response line is a compact JSON object:</p>
+
+    <pre class="language-text"><code class="language-text">data: {"output":[0.02,0.95,0.03]}
+
+data: {"output":[0.88,0.07,0.05]}</code></pre>
+
+    <p><strong>JSON-lines (any number of inputs):</strong></p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">cat samples.jsonl | curl -X POST \
+  -H "Content-Type: application/json" \
+  --data-binary @- \
+  http://localhost:8080/api/v1/onnx/bert_classifier/stream</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="shape-resolution">Tensor Types and Shape Resolution</h3>
+
+    <p>The server automatically resolves the ORT tensor shape from the model's declared input shape and the actual array length:</p>
+
+    <ul>
+        <li><strong>Fully static shape</strong> (no <code>-1</code> dimensions) — the array length must exactly match the product of all dimensions. A mismatch returns HTTP 400.</li>
+        <li><strong>Single dynamic dimension</strong> — the unknown dimension is inferred as <code>arrayLength / product(staticDimensions)</code>. For example, a declared shape <code>[-1, 3, 224, 224]</code> with 150528 elements resolves to <code>[1, 3, 224, 224]</code>.</li>
+        <li><strong>Multiple dynamic dimensions</strong> — the shape is set to <code>[1, arrayLength]</code>.</li>
+        <li><strong>No shape info</strong> — the shape is set to <code>[1, arrayLength]</code>.</li>
+    </ul>
+
+
+    <h2 id="llm-chat" class="title">LLM Chat API</h2>
+
+    <p>SMILE Serve includes a Java implementation of <a href="llm.html">Large Language Models</a> for on-premise LLM inference. The chat API is designed to be compatible with the OpenAI Chat Completions interface.</p>
+    <p>The LLM is optional: if the path specified by the property <code>smile.chat.model</code> does not exist on the file system (and cannot be resolved via Hugging Face / OGA), <code>ChatService</code> starts in an <em>unavailable</em> state and every request to the chat endpoints returns <strong>HTTP 503 Service Unavailable</strong>.</p>
+    <p><strong>Backend selection:</strong> with CUDA and a builtin Llama/Qwen checkpoint, serve uses the Torch path + continuous batching. Otherwise it falls back to ONNX Runtime GenAI (<code>GenAiChatModel</code>) when the model is already GenAI-ready (<code>genai_config.json</code> at the repo root or under provider folders such as <code>cuda/cuda-int4-…/</code>, or a prior Olive cache under <code>{SMILE_CACHE}/olive</code>). Serve does <strong>not</strong> run Olive at startup — convert offline with <code>smile.chat.Olive</code> (see <code>smile.chat.oga.*</code>). Tools input / structured <code>tool_calls</code> output work on the serial GenAI path; multimodal GenAI materializes media to temp files. See <a href="onnx-genai.html">ONNX GenAI</a>.</p>
+
 
     <h3 id="list-models">List models</h3>
+
+    <pre class="language-text"><code class="language-text">GET /api/v1/models</code></pre>
+
+    <p>OpenAI-compatible catalog of <strong>all</strong> loaded models — chat LLMs, ONNX graphs, and SMILE <code>.sml</code> models. Inference still uses type-specific paths: <code>/api/v1/chat/completions</code>, <code>/api/v1/onnx/{id}</code>, <code>/api/v1/smile/{id}</code>.</p>
+
 
     <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
@@ -317,10 +847,73 @@ java \
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Returns an OpenAI-compatible catalog of all loaded models — LLMs, ONNX graphs, and
-        SMILE <code>.sml</code> models. Inference still uses type-specific paths.</p>
+    <pre class="language-json"><code class="language-json">{
+  "object": "list",
+  "data": [
+    {
+      "id": "meta-llama/Llama-3.1-8B-Instruct",
+      "object": "model",
+      "created": 1741900000,
+      "owned_by": "meta-llama",
+      "shutdown_date": null,
+      "kind": "LLM"
+    },
+    {
+      "id": "iris_random_forest-1",
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "Unknown",
+      "shutdown_date": null,
+      "kind": "random-forest"
+    },
+    {
+      "id": "resnet50",
+      "object": "model",
+      "created": 1710000000,
+      "owned_by": "Unknown",
+      "shutdown_date": null,
+      "kind": "ONNX"
+    }
+  ]
+}</code></pre>
 
-    <h3 id="chat-completions">Chat completions</h3>
+    <p><code>kind</code> values:</p>
+
+    <ul>
+        <li><strong><code>LLM</code></strong> — chat / completion models</li>
+        <li><strong><code>ONNX</code></strong> — ONNX Runtime graphs</li>
+        <li><strong>SMILE algorithm name</strong> — e.g. <code>random-forest</code>, <code>cart</code>, <code>logistic</code> (from the <code>.sml</code> model)</li>
+    </ul>
+
+    <p><code>owned_by</code> rules:</p>
+
+    <ul>
+        <li><strong>Chat (HF):</strong> first segment of the repo id (<code>meta-llama/...</code> → <code>meta-llama</code>)</li>
+        <li><strong>Chat (local):</strong> first segment of <code>Llama.family()</code> (<code>meta/llama3</code> → <code>meta</code>)</li>
+        <li><strong>SMILE <code>.sml</code>:</strong> tag <code>author</code>, else <code>owner</code>; otherwise <code>Unknown</code></li>
+        <li><strong>ONNX:</strong> custom metadata <code>author</code>/<code>owner</code> when present; otherwise <code>Unknown</code></li>
+    </ul>
+
+
+    <h3 id="retrieve-model">Retrieve model</h3>
+
+    <pre class="language-text"><code class="language-text">GET /api/v1/models/{id}</code></pre>
+
+    <p>OpenAI-compatible retrieve model. Returns the same base <code>ModelObject</code> fields as list entries, plus an optional type-specific detail block. Does <strong>not</strong> run inference — use <code>/chat/completions</code>, <code>/onnx/{id}</code>, or <code>/smile/{id}</code> for that. Ids may contain slashes (e.g. Hugging Face repo ids).</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th><code>kind</code></th><th>Extra field</th><th>Contents</th></tr></thead>
+            <tbody>
+            <tr><td>SMILE algorithm</td><td><code>smile</code></td><td><code>formula</code>, <code>schema</code>, <code>tags</code>, <code>train</code> / <code>validation</code> / <code>test</code> metrics (finite values only)</td></tr>
+            <tr><td><code>ONNX</code></td><td><code>onnx</code></td><td>producer, domain, graph info, I/O shapes, custom metadata from the <code>.onnx</code> file</td></tr>
+            <tr><td><code>LLM</code></td><td><code>llm</code></td><td>family, source (<code>local</code>/<code>huggingface</code>), architecture from <code>config.json</code> / <code>params.json</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>List responses omit <code>smile</code> / <code>onnx</code> / <code>llm</code> so the catalog stays lean.</p>
+
 
     <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
@@ -329,25 +922,71 @@ java \
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "meta-llama/Llama-3.1-8B-Instruct",
-    "messages": [{"role": "user", "content": "What is SMILE?"}],
-    "stream": true
-  }'</code></pre>
+  <pre class="playground-source language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/models/iris_random_forest-1</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Set <code>"stream": true</code> for token-by-token Server-Sent Events output.
-        Conversation history can be persisted when a database is configured — see below.</p>
+    <pre class="language-json"><code class="language-json">{
+  "id": "iris_random_forest-1",
+  "object": "model",
+  "created": 1710000000,
+  "owned_by": "Unknown",
+  "shutdown_date": null,
+  "kind": "random-forest",
+  "smile": {
+    "formula": "class ~ .",
+    "schema": {
+      "petallength": { "type": "float", "nullable": false }
+    },
+    "tags": {},
+    "train": {
+      "accuracy": 0.97,
+      "size": 150
+    },
+    "validation": null,
+    "test": null
+  }
+}</code></pre>
 
-    <h3 id="tool-calling">Tool calling (Qwen3+)</h3>
 
-    <p>For Qwen3 / Qwen3.5 / Qwen3.8 models, pass OpenAI-style <code>tools</code> and
-        receive <code>finish_reason: "tool_calls"</code> with structured
-        <code>message.tool_calls</code>. Clients execute tools locally and continue with
-        <code>role: "tool"</code> messages.</p>
+    <h3 id="chat-completions">Chat Completions</h3>
+
+    <pre class="language-text"><code class="language-text">POST /api/v1/chat/completions
+Content-Type: application/json</code></pre>
+
+    <p>Tokens are streamed back as Server-Sent Events when <code>stream</code> is true, or returned as a single OpenAI <code>chat.completion</code> JSON object when <code>stream</code> is false or omitted (OpenAI default). The conversation (user message + assistant reply) is automatically persisted to the configured database after generation finishes.</p>
+    <p>Serve runs an <code>InferenceEngine</code> continuous-batching loop (Fluid Injection admission, chunked prefill, batched decode, Instant Eviction on abort). Offline library callers may still use <code>LanguageModel.generate</code>; HTTP chat always goes through the engine. Client disconnect on an SSE stream aborts the <code>GenerationHandle</code>, which Instant-Evicts that request's KV pages without stopping peer in-flight generations.</p>
+
+    <p><strong>Request body fields (<code>snake_case</code>):</strong></p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>model</code></td><td><code>string</code></td><td>loaded model</td><td>Must match the loaded model id when set (HF repo id or local directory name); omit/empty to use the loaded model</td></tr>
+            <tr><td><code>messages</code></td><td><code>Message[]</code></td><td><em>required</em></td><td>Ordered dialog turns</td></tr>
+            <tr><td><code>conversation</code></td><td><code>string</code></td><td><code>null</code></td><td>Existing conversation id (<code>conv_&lt;n&gt;</code>) to append to</td></tr>
+            <tr><td><code>max_tokens</code></td><td><code>int</code></td><td>remaining context</td><td>Max new tokens (legacy OpenAI name). Default: <code>max-model-len − prompt_len</code></td></tr>
+            <tr><td><code>max_completion_tokens</code></td><td><code>int</code></td><td>—</td><td>Alias for <code>max_tokens</code>; takes precedence when set</td></tr>
+            <tr><td><code>temperature</code></td><td><code>double</code></td><td><code>0.6</code></td><td>Sampling temperature (higher = more random)</td></tr>
+            <tr><td><code>top_p</code></td><td><code>double</code></td><td><code>0.9</code></td><td>Nucleus-sampling threshold</td></tr>
+            <tr><td><code>logprobs</code></td><td><code>boolean</code></td><td><code>false</code></td><td>Include log-probabilities</td></tr>
+            <tr><td><code>seed</code></td><td><code>long</code></td><td><code>0</code></td><td>Random seed (0 = non-deterministic)</td></tr>
+            <tr><td><code>stream</code></td><td><code>boolean</code></td><td><code>false</code></td><td><code>true</code> → SSE chunks; <code>false</code>/omitted → single <code>chat.completion</code> JSON</td></tr>
+            <tr><td><code>tools</code></td><td><code>array</code></td><td>—</td><td>OpenAI tool definitions (<code>type: function</code>) for Qwen3 / Qwen3.5 / Qwen3.8</td></tr>
+            <tr><td><code>tool_choice</code></td><td><code>string|object</code></td><td><code>auto</code></td><td><code>auto</code> / <code>none</code> / <code>required</code> / <code>{"type":"function","function":{"name":"…"}}</code></td></tr>
+            <tr><td><code>parallel_tool_calls</code></td><td><code>boolean</code></td><td><code>true</code></td><td>Allow multiple tool calls in one assistant turn</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>Each <code>Message</code> has a <code>role</code> (<code>system</code>, <code>user</code>, <code>assistant</code>, or <code>tool</code>) and <code>content</code>. Assistant turns may include <code>tool_calls</code>; tool-result turns use <code>role: "tool"</code> and <code>tool_call_id</code>. Legacy <code>"ipython"</code> is accepted as an alias for <code>"tool"</code>.</p>
+
+
+    <h3 id="tool-calling">Tool calling (Qwen3 / Qwen3.5 / Qwen3.8)</h3>
+
+    <p>OpenAI-compatible tool calling is supported for latest Qwen checkpoints (XML <code>&lt;tool_call&gt;</code> format). Clients run tools locally and continue the dialog:</p>
+
 
     <div class="code-playground glass" data-lang="bash">
   <div class="playground-toolbar">
@@ -356,18 +995,18 @@ java \
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/chat/completions \
+  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
-    "messages": [{"role": "user", "content": "Weather in SF?"}],
+    "messages": [{"role": "user", "content": "What is the weather in SF?"}],
     "tools": [{
       "type": "function",
       "function": {
         "name": "get_current_temperature",
-        "description": "Get temperature",
+        "description": "Get temperature for a location",
         "parameters": {
           "type": "object",
-          "properties": {"location": {"type": "string"}},
+          "properties": {"location": {"type": "string"{{ '}}' }},
           "required": ["location"]
         }
       }
@@ -377,56 +1016,304 @@ java \
   <div class="playground-editor" hidden></div>
 </div>
 
-    <h2 id="web-ui">Web UI</h2>
+    <p>A successful tool-call response uses <code>finish_reason: "tool_calls"</code> and <code>message.tool_calls[]</code>. Append tool results as <code>{"role":"tool","tool_call_id":"…","content":"…"}</code> and call again for the final answer. Streaming (v1) buffers the completion and replays <code>delta.tool_calls</code> at the end (not token-true XML streaming).</p>
+    <p>Smoke test with the OpenAI Python SDK:</p>
 
-    <p>A React web interface is bundled via
-        <a href="https://quarkiverse.github.io/quarkiverse-docs/quarkus-quinoa/dev/" target="_blank" rel="noopener">Quarkus Quinoa</a>
-        and served from the root URL:</p>
 
-    <ul>
-      <li><strong>Inference UI</strong> (<code>/infer</code>) — sidebar lists chat, SMILE
-          (<code>.sml</code>), and ONNX (<code>.onnx</code>) models. Selecting a chat model
-          embeds the chat module in the right pane; SMILE models get a schema-driven form;
-          ONNX models get a numeric or image-upload form.</li>
-      <li><strong>Chat UI</strong> (<code>/chat</code>) — standalone chat with streaming tokens
-          and Markdown/math rendering.</li>
-    </ul>
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">python serve/scripts/test_tool_calling.py --base-url http://localhost:8888/api/v1</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
-    <h2 id="database">Database</h2>
+    <p><strong>Streaming example (<code>stream: true</code>):</strong></p>
 
-    <p>Chat conversation history requires a relational database. ML and ONNX inference work
-        without a database.</p>
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -N \
+  -d '{
+    "stream": true,
+    "messages": [
+      {"role": "system",  "content": "You are a helpful assistant."},
+      {"role": "user",    "content": "What is the capital of France?"}
+    ],
+    "max_tokens": 256,
+    "temperature": 0.7
+  }'</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>The response is an SSE stream of OpenAI-shaped <code>chat.completion.chunk</code> JSON events, terminated by <code>data: [DONE]</code>.</p>
+
+    <p><strong>Non-streaming example (<code>stream</code> omitted or <code>false</code>):</strong></p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messages": [
+      {"role": "user", "content": "What is the capital of France?"}
+    ],
+    "max_completion_tokens": 256
+  }'</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <pre class="language-json"><code class="language-json">{
+  "id": "chatcmpl-...",
+  "object": "chat.completion",
+  "created": 1741900000,
+  "model": "meta-llama/Llama-3.1-8B-Instruct",
+  "choices": [
+    {
+      "index": 0,
+      "message": { "role": "assistant", "content": "Paris." },
+      "logprobs": null,
+      "finish_reason": "stop"
+    }
+  ],
+  "usage": {
+    "prompt_tokens": 20,
+    "completion_tokens": 3,
+    "total_tokens": 23
+  }
+}</code></pre>
+
+    <p><strong>Example — continue a previous conversation:</strong></p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST http://localhost:8080/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -N \
+  -d '{
+    "conversation": 42,
+    "messages": [
+      {"role": "user", "content": "What about Germany?"}
+    ]
+  }'</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="conversation-history">Conversation History API</h3>
+
+    <p>Chat history is stored in a relational database (PostgreSQL in production, H2 in dev mode). The API base path is <code>/api/v1/conversations</code>.</p>
+    <p>Conversations are <strong>scoped to authenticated users</strong>. Guests (no session) may still create conversations and chat, but those rows are tied to client IP and do not appear in the sidebar list until the user signs in (recent guest threads from the same IP within 24 hours are merged on login).</p>
+    <p>On <strong><code>localhost</code> or <code>127.0.0.1</code></strong> (any port), the server auto-logs you in as the local <strong><code>me</code></strong> account so dev workflows work without OAuth.</p>
+
+
+    <h3 id="authentication">Authentication</h3>
+
+    <p>The authentication endpoints manage user identity specifically for conversation history and personal settings. Note that this is a session-cookie identity mechanism intended for personal use and UI convenience, not an enterprise authentication or authorization system: enterprise access control belongs to the API gateway layer, and ML/ONNX inference endpoints are intentionally unauthenticated at the engine level.</p>
 
     <div class="table-responsive">
-    <table>
-      <thead>
-        <tr>
-          <th>Profile</th>
-          <th>Backend</th>
-          <th>URL</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Production</td>
-          <td>PostgreSQL</td>
-          <td><code>jdbc:postgresql://localhost:5432/smile</code></td>
-        </tr>
-        <tr>
-          <td>Dev</td>
-          <td>SQLite</td>
-          <td><code>jdbc:sqlite:./smile_serve.db</code></td>
-        </tr>
-        <tr>
-          <td>Test</td>
-          <td>H2 (in-memory)</td>
-          <td><code>jdbc:h2:mem:test</code></td>
-        </tr>
-      </tbody>
-    </table>
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Endpoint</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>GET /api/v1/auth/me</code></td><td>Current user (<code>logged_in</code>, <code>user</code> profile) or guest</td></tr>
+            <tr><td><code>GET /api/v1/auth/login/google</code></td><td>Redirect to Google OAuth (requires config below)</td></tr>
+            <tr><td><code>GET /api/v1/auth/callback/google</code></td><td>OAuth callback (sets session cookie)</td></tr>
+            <tr><td><code>POST /api/v1/auth/logout</code></td><td>Clear session</td></tr>
+            <tr><td><code>GET /api/v1/users/me</code></td><td>Profile (authenticated)</td></tr>
+            <tr><td><code>PATCH /api/v1/users/me</code></td><td>Update display name, avatar URL, personal instructions</td></tr>
+            </tbody>
+        </table>
     </div>
 
-    <p>Enable ORM in production:</p>
+    <p>Configure Google login in <code>application.properties</code> (or env):</p>
+
+
+    <div class="code-playground glass" data-lang="properties">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Properties</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-properties"><code class="language-properties">smile.auth.google.client-id=${GOOGLE_CLIENT_ID}
+smile.auth.google.client-secret=${GOOGLE_CLIENT_SECRET}
+# Optional; default is {origin}/api/v1/auth/callback/google
+# smile.auth.google.redirect-uri=https://your-host/api/v1/auth/callback/google
+smile.auth.session-secret=${SMILE_SESSION_SECRET}</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>Register the redirect URI in Google Cloud Console. <strong>Personal instructions</strong> from the user profile are injected as the chat system prompt when logged in.</p>
+    <p>Create, retrieve, update, and delete follow the OpenAI Conversations shapes. Conversation ids are strings of the form <code>conv_&lt;n&gt;</code>. List, <code>PATCH</code> (title/pin), and <code>GET .../items</code> are SMILE extensions.</p>
+
+
+    <h3 id="list-conversations">List conversations (SMILE extension, requires login)</h3>
+
+    <pre class="language-text"><code class="language-text">GET /api/v1/conversations?pageIndex=0&amp;pageSize=25&amp;q=search&amp;pinned=true</code></pre>
+
+    <p>Returns the signed-in user's conversations (title, pinned, updated_at). Search matches <strong>title and message content</strong>.</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl "http://localhost:8080/api/v1/conversations?pageSize=10"</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="create-conversation">Create a conversation</h3>
+
+    <pre class="language-text"><code class="language-text">POST /api/v1/conversations
+Content-Type: application/json</code></pre>
+
+    <p>Optional body fields: <code>metadata</code> (≤16 string pairs) and <code>items</code> (≤20 message items with <code>role</code> + text <code>content</code>).</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/conversations \
+  -H "Content-Type: application/json" \
+  -d '{"metadata":{"topic":"demo"},"items":[{"type":"message","role":"user","content":"Hello!"}]}'</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <pre class="language-json"><code class="language-json">{
+  "id": "conv_1",
+  "object": "conversation",
+  "created_at": 1741900000,
+  "metadata": {"topic": "demo"}
+}</code></pre>
+
+
+    <h3 id="retrieve-conversation">Retrieve a conversation</h3>
+
+    <pre class="language-text"><code class="language-text">GET /api/v1/conversations/{conversation_id}</code></pre>
+
+
+    <h3 id="update-conversation">Update a conversation</h3>
+
+    <pre class="language-text"><code class="language-text">POST /api/v1/conversations/{conversation_id}
+Content-Type: application/json</code></pre>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/conversations/conv_1 \
+  -H "Content-Type: application/json" \
+  -d '{"metadata":{"topic":"project-x"{{ '}}' }}'</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h3 id="patch-conversation">Patch sidebar fields (SMILE extension, requires ownership)</h3>
+
+    <pre class="language-text"><code class="language-text">PATCH /api/v1/conversations/{conversation_id}
+Content-Type: application/json
+
+{"title": "My chat", "pinned": true}</code></pre>
+
+
+    <h3 id="delete-conversation">Delete a conversation</h3>
+
+    <pre class="language-text"><code class="language-text">DELETE /api/v1/conversations/{conversation_id}</code></pre>
+
+    <pre class="language-json"><code class="language-json">{
+  "id": "conv_1",
+  "object": "conversation.deleted",
+  "deleted": true
+}</code></pre>
+
+
+    <h3 id="get-items">Get conversation messages (SMILE extension)</h3>
+
+    <pre class="language-text"><code class="language-text">GET /api/v1/conversations/{conversation_id}/items?pageIndex=0&amp;pageSize=25</code></pre>
+
+    <p>Returns the individual message turns (<code>role</code> + <code>content</code> + <code>createdAt</code>) in chronological order.</p>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl http://localhost:8080/api/v1/conversations/conv_42/items</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <pre class="language-json"><code class="language-json">[
+  { "id": 1, "conversationId": 42, "role": "user",      "content": "What is the capital of France?", "createdAt": "2026-04-15T10:00:00Z" },
+  { "id": 2, "conversationId": 42, "role": "assistant", "content": "The capital of France is Paris.", "createdAt": "2026-04-15T10:00:02Z" }
+]</code></pre>
+
+
+    <h2 id="web-ui" class="title">Web UI</h2>
+
+    <p>A React-based web interface is bundled via <a href="https://quarkiverse.github.io/quarkiverse-docs/quarkus-quinoa/dev/" target="_blank" rel="noopener">Quarkus Quinoa</a>. It is served from the root URL and provides:</p>
+
+    <ul>
+        <li><strong>Inference UI</strong> (<code>/infer</code>) — unified model shell: <strong>collapsible</strong> sidebar lists <strong>chat</strong>, <strong>SMILE</strong> (<code>.sml</code>), and <strong>ONNX</strong> (<code>.onnx</code>) models. Selecting a chat model embeds the chat module with a <strong>collapsible right nav</strong> (history, login, settings). SMILE models get a schema-driven form; ONNX models get a numeric form from tensor shapes, or an image upload when a 4-D vision-like input is detected (overrideable).</li>
+        <li><strong>Chat UI</strong> (<code>/chat</code>) — standalone chat with the same <strong>right nav panel</strong> (New Chat always available; history/login/settings when signed in). Streaming tokens, Markdown/math. On localhost, you are auto-signed-in as <strong><code>me</code></strong>.</li>
+    </ul>
+
+    <p>In dev mode the React development server runs on port <strong>5173</strong> and requests are proxied to the Quarkus backend. The production build (<code>dist/</code>) is served statically by the Quarkus process.</p>
+
+
+    <h2 id="database" class="title">Database</h2>
+
+    <p>Chat conversation history requires a relational database.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Profile</th><th>Backend</th><th>URL</th></tr></thead>
+            <tbody>
+            <tr><td>Production</td><td>PostgreSQL</td><td><code>jdbc:postgresql://localhost:5432/smile</code></td></tr>
+            <tr><td>Dev</td><td>SQLite</td><td><code>jdbc:sqlite:./smile_serve.db</code></td></tr>
+            <tr><td>Test</td><td>H2 (in-memory)</td><td><code>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</code></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>To enable the database in production set:</p>
+
 
     <div class="code-playground glass" data-lang="properties">
   <div class="playground-toolbar">
@@ -441,16 +1328,133 @@ quarkus.datasource.password=&lt;password&gt;</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
-    <h2 id="further-reading">Further Reading</h2>
+    <p>Hibernate ORM uses <code>drop-and-create</code> by default. Change the strategy in production to <code>update</code> or <code>validate</code>:</p>
 
-    <p>The
-        <a href="https://github.com/haifengl/smile/blob/master/serve/README.md" target="_blank" rel="noopener">SMILE Serve user guide</a>
-        in the repository covers streaming formats, conversation history API, native builds,
-        tensor shape resolution, and the full configuration reference.</p>
+
+    <div class="code-playground glass" data-lang="properties">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Properties</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-properties"><code class="language-properties">quarkus.hibernate-orm.schema-management.strategy=update</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>The database is <strong>not required</strong> for the ML or ONNX inference endpoints — only for chat conversation persistence.</p>
+
+
+    <h2 id="testing" class="title">Testing</h2>
+
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">./gradlew :serve:test</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p>The test profile (<code>%test.*</code>) configures the service with:</p>
+
+    <ul>
+        <li>An in-memory H2 database (no external database required).</li>
+        <li>A pre-trained iris random forest model from <code>serve/src/test/resources/model/iris_random_forest.sml</code>.</li>
+        <li>The ONNX model path also pointed at the test resources directory (no <code>.onnx</code> files present by default, so <code>OnnxService</code> starts empty).</li>
+        <li>The chat model path set to a non-existent path so <code>ChatService</code> starts gracefully unavailable without attempting to load a GPU model.</li>
+    </ul>
+
+    <p>The test class <code>InferenceResourceTest</code> covers:</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Test</th><th>Endpoint</th><th>Scenario</th></tr></thead>
+            <tbody>
+            <tr><td><code>testGetModelMetadata</code></td><td><code>GET /smile/{id}</code></td><td>Returns algorithm, schema, and nullability</td></tr>
+            <tr><td><code>testGetUnknownModelReturns404</code></td><td><code>GET /smile/{id}</code></td><td>404 for unknown ID</td></tr>
+            <tr><td><code>testPredictJsonReturnsPredictionAndProbabilities</code></td><td><code>POST /smile/{id}</code></td><td>Correct label + probabilities</td></tr>
+            <tr><td><code>testPredictJsonWithZeroFeaturesReturnsValidPrediction</code></td><td><code>POST /smile/{id}</code></td><td>Edge case: all-zero features</td></tr>
+            <tr><td><code>testPredictJsonMissingFieldReturns400</code></td><td><code>POST /smile/{id}</code></td><td>400 for missing field</td></tr>
+            <tr><td><code>testPredictUnknownModelReturns404</code></td><td><code>POST /smile/{id}</code></td><td>404 for unknown model</td></tr>
+            <tr><td><code>testStreamCsvReturnsPredictions</code></td><td><code>POST /smile/{id}/stream</code></td><td>3 CSV rows → 3 SSE data lines</td></tr>
+            <tr><td><code>testStreamJsonLinesReturnsPredictions</code></td><td><code>POST /smile/{id}/stream</code></td><td>2 JSON-lines → 2 SSE data lines</td></tr>
+            <tr><td><code>testStreamCsvTooFewColumnsEmitsNoPredictions</code></td><td><code>POST /smile/{id}/stream</code></td><td>Bad CSV closes stream</td></tr>
+            <tr><td><code>testStreamUnknownModelReturns404</code></td><td><code>POST /smile/{id}/stream</code></td><td>404 before stream starts</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2 id="api-quick-reference" class="title">API Quick Reference</h2>
+
+
+    <h3 id="classic-ml-endpoints">Classic ML — <code>/api/v1/smile</code></h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>GET</code></td><td><code>/smile/{id}</code></td><td>Get model metadata and schema</td></tr>
+            <tr><td><code>POST</code></td><td><code>/smile/{id}</code></td><td>Single JSON inference</td></tr>
+            <tr><td><code>POST</code></td><td><code>/smile/{id}/stream</code></td><td>Streaming CSV or JSON-lines inference</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h3 id="onnx-endpoints">ONNX — <code>/api/v1/onnx</code></h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>GET</code></td><td><code>/onnx/{id}</code></td><td>Get graph info, input/output shapes</td></tr>
+            <tr><td><code>POST</code></td><td><code>/onnx/{id}</code></td><td>Single JSON inference</td></tr>
+            <tr><td><code>POST</code></td><td><code>/onnx/{id}/stream</code></td><td>Streaming CSV or JSON-lines inference</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h3 id="chat-endpoints">Chat — <code>/api/v1/models</code>, <code>/api/v1/chat</code>, <code>/api/v1/conversations</code></h3>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>GET</code></td><td><code>/models</code></td><td>List all loaded models — chat, ONNX, SMILE (OpenAI-compatible)</td></tr>
+            <tr><td><code>GET</code></td><td><code>/models/{id}</code></td><td>Retrieve a model by id (OpenAI-compatible)</td></tr>
+            <tr><td><code>POST</code></td><td><code>/chat/completions</code></td><td>Chat completion — SSE when <code>stream: true</code>, JSON when <code>stream: false</code></td></tr>
+            <tr><td><code>GET</code></td><td><code>/conversations</code></td><td>List conversations (paginated; SMILE extension)</td></tr>
+            <tr><td><code>GET</code></td><td><code>/conversations/{conversation_id}</code></td><td>Retrieve conversation (OpenAI-compatible)</td></tr>
+            <tr><td><code>POST</code></td><td><code>/conversations</code></td><td>Create conversation (OpenAI-compatible)</td></tr>
+            <tr><td><code>POST</code></td><td><code>/conversations/{conversation_id}</code></td><td>Update conversation metadata (OpenAI-compatible)</td></tr>
+            <tr><td><code>DELETE</code></td><td><code>/conversations/{conversation_id}</code></td><td>Delete conversation (OpenAI-compatible)</td></tr>
+            <tr><td><code>GET</code></td><td><code>/conversations/{conversation_id}/items</code></td><td>List message turns (paginated; SMILE extension)</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <h2 id="see-also" class="title">See Also</h2>
+
+    <ul>
+        <li><a href="llm.html">Large Language Models</a> — <code>LanguageModel</code> API and LibTorch path</li>
+        <li><a href="onnx.html">ONNX</a> — classical <code>InferenceSession</code> / execution providers</li>
+        <li><a href="onnx-genai.html">ONNX GenAI</a> — ORT GenAI bindings and OGA fallback</li>
+        <li><a href="deep-learning.html">Deep Learning</a> — neural network training and inference</li>
+    </ul>
+
+    <p>For the absolute latest details, see the <a href="https://github.com/haifengl/smile/blob/master/serve/README.md" target="_blank" rel="noopener">SMILE Serve user guide</a> in the repository.</p>
+
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
-        <a class="btn-prev-text" href="llm.html" title="Previous Section: Large Language Model"><span>Large Language Model</span></a>
+        <a class="btn-prev-text" href="onnx-genai.html" title="Previous Section: ONNX GenAI"><span>ONNX GenAI</span></a>
         <a class="btn-next-text" href="linear-algebra.html" title="Next Section: Linear Algebra"><span>Linear Algebra</span></a>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
