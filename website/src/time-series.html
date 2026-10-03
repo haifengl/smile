@@ -9,7 +9,7 @@ title: SMILE - Time Series Analysis
     <h1 id="timeseries-top" class="title">Time Series Analysis</h1>
 
     <p>The <code>smile.timeseries</code> package models and forecasts univariate time series. It supplies diagnostics and transformations alongside autoregressive and autoregressive moving-average models.</p>
-    <p>The examples use the Java APIs directly from Java, Scala, and Kotlin. Financial examples start from <code>smile.datasets.BitcoinPrice</code>, take its log closing prices, and difference them into log returns.</p>
+    <p>Java examples call the static factories on <code>TimeSeries</code>, <code>AR</code>, <code>ARMA</code>, and <code>BoxTest</code>. Scala and Kotlin prefer package helpers such as <code>diff</code>, <code>diffStages</code>, <code>acf</code>, <code>ar</code>, and <code>ljungBox</code>. Financial examples start from <code>smile.datasets.BitcoinPrice</code>, take its log closing prices, and difference them into log returns.</p>
 
 <div class="table-responsive">
     <table class="table table-striped table-bordered">
@@ -102,14 +102,14 @@ System.out.printf("cov1=%.2f acf1=%.4f pacf2=%.4f%n",
     </div>
     <div id="pg-1-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import java.util.Arrays
-import smile.timeseries.TimeSeries
+import smile.timeseries._
 
 val x = Array(1.0, 2.0, 4.0, 8.0, 16.0)
-val d = TimeSeries.diff(x, 1, 2)
+val d = diffStages(x, 1, 2)
 println(Arrays.toString(d(0)))
 println(Arrays.toString(d(1)))
-println(f"cov1=${TimeSeries.cov(x, 1)}%.2f " +
-  f"acf1=${TimeSeries.acf(x, 1)}%.4f pacf2=${TimeSeries.pacf(x, 2)}%.4f")</code></pre>
+println(f"cov1=${cov(x, 1)}%.2f " +
+  f"acf1=${acf(x, 1)}%.4f pacf2=${pacf(x, 2)}%.4f")</code></pre>
       <pre class="playground-output" aria-label="Expected output"><code>
 [1.0, 2.0, 4.0, 8.0]
 [1.0, 2.0, 4.0]
@@ -117,14 +117,14 @@ println(f"cov1=${TimeSeries.cov(x, 1)}%.2f " +
     </div>
     <div id="pg-1-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Arrays
-import smile.timeseries.TimeSeries
+import smile.timeseries.*
 
 val x = doubleArrayOf(1.0, 2.0, 4.0, 8.0, 16.0)
-val d = TimeSeries.diff(x, 1, 2)
+val d = x.diffStages(1, 2)
 println(Arrays.toString(d[0]))
 println(Arrays.toString(d[1]))
 println("cov1=%.2f acf1=%.4f pacf2=%.4f".format(
-    TimeSeries.cov(x, 1), TimeSeries.acf(x, 1), TimeSeries.pacf(x, 2)))</code></pre>
+    x.cov(1), x.acf(1), x.pacf(2)))</code></pre>
       <pre class="playground-output" aria-label="Expected output"><code>
 [1.0, 2.0, 4.0, 8.0]
 [1.0, 2.0, 4.0]
@@ -163,25 +163,25 @@ System.out.println(ljung)
 System.out.println(ljung.pvalue &gt; 0.05)</code></pre>
     </div>
     <div id="pg-2-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">import smile.timeseries.BoxTest
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.timeseries._
 
 val residuals = Array(
   0.12, -0.08, 0.03, 0.14, -0.11, 0.02, -0.04, 0.09,
   -0.06, 0.01, 0.05, -0.10, 0.07, -0.02, 0.04, -0.03)
-val pierce = BoxTest.pierce(residuals, 5)
-val ljung = BoxTest.ljung(residuals, 5)
+val pierce = boxPierce(residuals, 5)
+val ljung = ljungBox(residuals, 5)
 println(pierce)
 println(ljung)
 println(ljung.pvalue &gt; 0.05)</code></pre>
     </div>
     <div id="pg-2-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.timeseries.BoxTest
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.timeseries.*
 
 val residuals = doubleArrayOf(
     0.12, -0.08, 0.03, 0.14, -0.11, 0.02, -0.04, 0.09,
     -0.06, 0.01, 0.05, -0.10, 0.07, -0.02, 0.04, -0.03)
-val pierce = BoxTest.pierce(residuals, 5)
-val ljung = BoxTest.ljung(residuals, 5)
+val pierce = residuals.boxPierce(5)
+val ljung = residuals.ljungBox(5)
 println(pierce)
 println(ljung)
 println(ljung.pvalue &gt; 0.05)</code></pre>
@@ -247,35 +247,33 @@ System.out.println(yw.ttest() == null)</code></pre>
     <div id="pg-3-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import java.util.Arrays
 import smile.datasets.BitcoinPrice
-import smile.timeseries.{AR, BoxTest, TimeSeries}
+import smile.timeseries._
 
 val bitcoin = new BitcoinPrice()
-val returns = TimeSeries.diff(bitcoin.logPrice, 1)
-val yw = AR.fit(returns, 6)
+val returns = diff(bitcoin.logPrice, 1)
+val yw = ar(returns, 6)
 val ols = AR.ols(returns, 6)
 
 println(s"p=${ols.p} intercept=${ols.intercept} R2=${ols.R2}")
 println(Arrays.toString(ols.ar))
 println(Arrays.toString(ols.forecast(5)))
-println(BoxTest.ljung(ols.residuals, 20))
+println(ljungBox(ols.residuals, 20))
 println(yw.ttest == null)</code></pre>
     </div>
     <div id="pg-3-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Arrays
 import smile.datasets.BitcoinPrice
-import smile.timeseries.AR
-import smile.timeseries.BoxTest
-import smile.timeseries.TimeSeries
+import smile.timeseries.*
 
 val bitcoin = BitcoinPrice()
-val returns = TimeSeries.diff(bitcoin.logPrice(), 1)
-val yw = AR.fit(returns, 6)
+val returns = bitcoin.logPrice().diff(1)
+val yw = ar(returns, 6)
 val ols = AR.ols(returns, 6)
 
 println("p=${ols.p()} intercept=${ols.intercept()} R2=${ols.R2()}")
 println(Arrays.toString(ols.ar()))
 println(Arrays.toString(ols.forecast(5)))
-println(BoxTest.ljung(ols.residuals(), 20))
+println(ols.residuals().ljungBox(20))
 println(yw.ttest() == null)</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
@@ -319,32 +317,30 @@ System.out.println(BoxTest.ljung(model.residuals(), 20))</code></pre>
     <div id="pg-4-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import java.util.Arrays
 import smile.datasets.BitcoinPrice
-import smile.timeseries.{ARMA, BoxTest, TimeSeries}
+import smile.timeseries._
 
-val returns = TimeSeries.diff(new BitcoinPrice().logPrice, 1)
-val model = ARMA.fit(returns, 6, 3)
+val returns = diff(new BitcoinPrice().logPrice, 1)
+val model = arma(returns, 6, 3)
 println(s"ARMA(${model.p},${model.q}), variance=${model.variance}")
 println(Arrays.toString(model.ar))
 println(Arrays.toString(model.ma))
 println(model.forecast)
 println(Arrays.toString(model.forecast(3)))
-println(BoxTest.ljung(model.residuals, 20))</code></pre>
+println(ljungBox(model.residuals, 20))</code></pre>
     </div>
     <div id="pg-4-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Arrays
 import smile.datasets.BitcoinPrice
-import smile.timeseries.ARMA
-import smile.timeseries.BoxTest
-import smile.timeseries.TimeSeries
+import smile.timeseries.*
 
-val returns = TimeSeries.diff(BitcoinPrice().logPrice(), 1)
-val model = ARMA.fit(returns, 6, 3)
+val returns = BitcoinPrice().logPrice().diff(1)
+val model = arma(returns, 6, 3)
 println("ARMA(${model.p()},${model.q()}), variance=${model.variance()}")
 println(Arrays.toString(model.ar()))
 println(Arrays.toString(model.ma()))
 println(model.forecast())
 println(Arrays.toString(model.forecast(3)))
-println(BoxTest.ljung(model.residuals(), 20))</code></pre>
+println(model.residuals().ljungBox(20))</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>

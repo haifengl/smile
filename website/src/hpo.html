@@ -49,22 +49,23 @@ var hp = new Hyperparameters()
     .add("smile.svm.C", new double[] {0.01, 0.1, 1.0, 10.0});</code></pre>
     </div>
     <div id="pg-1-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">import smile.hpo.Hyperparameters
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.hpo._
 
-val hp = new Hyperparameters()
+val hp = hyperparameters
   .add("smile.random_forest.trees", 100)
   .add("smile.random_forest.mtry", Array(2, 3, 4))
   .add("smile.random_forest.max_nodes", 100, 300, 50)
   .add("smile.svm.C", Array(0.01, 0.1, 1.0, 10.0))</code></pre>
     </div>
     <div id="pg-1-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.hpo.Hyperparameters
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.hpo.hyperparameters
 
-val hp = Hyperparameters()
-    .add("smile.random_forest.trees", 100)
-    .add("smile.random_forest.mtry", intArrayOf(2, 3, 4))
-    .add("smile.random_forest.max_nodes", 100, 300, 50)
-    .add("smile.svm.C", doubleArrayOf(0.01, 0.1, 1.0, 10.0))</code></pre>
+val hp = hyperparameters {
+    add("smile.random_forest.trees", 100)
+    add("smile.random_forest.mtry", intArrayOf(2, 3, 4))
+    add("smile.random_forest.max_nodes", 100, 300, 50)
+    add("smile.svm.C", doubleArrayOf(0.01, 0.1, 1.0, 10.0))
+}</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
@@ -114,19 +115,19 @@ System.out.printf("Best accuracy: %.2f%%%n", 100.0 * best[0]);</code></pre>
     <div id="pg-2-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.classification.RandomForest
 import smile.datasets.ImageSegmentation
-import smile.hpo.Hyperparameters
+import smile.hpo._
 import smile.validation.metric.Accuracy
 
 val segment = new ImageSegmentation()
-val hp = new Hyperparameters()
+val hp = hyperparameters
   .add("smile.random_forest.trees", 100)
   .add("smile.random_forest.mtry", Array(2, 3, 4))
   .add("smile.random_forest.max_nodes", 100, 300, 50)
 
-println(s"Configurations: ${hp.grid.count}")
+println(s"Configurations: ${hp.gridSeq.size}")
 var best = 0.0
 var bestProps: java.util.Properties = null
-hp.grid.forEach { props =&gt;
+hp.gridSeq.foreach { props =&gt;
   val model = RandomForest.fit(segment.formula, segment.train, props)
   val accuracy = Accuracy.of(segment.testy, model.predict(segment.test))
   if (accuracy &gt; best) { best = accuracy; bestProps = props }
@@ -137,19 +138,21 @@ println(f"Best accuracy: ${100.0 * best}%.2f%%")</code></pre>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
 import smile.classification.RandomForest
 import smile.datasets.ImageSegmentation
-import smile.hpo.Hyperparameters
+import smile.hpo.gridSequence
+import smile.hpo.hyperparameters
 import smile.validation.metric.Accuracy
 
 val segment = ImageSegmentation()
-val hp = Hyperparameters()
-    .add("smile.random_forest.trees", 100)
-    .add("smile.random_forest.mtry", intArrayOf(2, 3, 4))
-    .add("smile.random_forest.max_nodes", 100, 300, 50)
+val hp = hyperparameters {
+    add("smile.random_forest.trees", 100)
+    add("smile.random_forest.mtry", intArrayOf(2, 3, 4))
+    add("smile.random_forest.max_nodes", 100, 300, 50)
+}
 
-println("Configurations: ${hp.grid().count()}")
+println("Configurations: ${hp.gridSequence().count()}")
 var best = 0.0
 var bestProps: Properties? = null
-hp.grid().forEach { props -&gt;
+hp.gridSequence().forEach { props -&gt;
     val model = RandomForest.fit(segment.formula(), segment.train(), props)
     val accuracy = Accuracy.of(segment.testy(), model.predict(segment.test()))
     if (accuracy &gt; best) { best = accuracy; bestProps = props }
@@ -196,40 +199,40 @@ hp.random().limit(20).forEach(props -&gt; {
     <div id="pg-3-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.classification.RandomForest
 import smile.datasets.ImageSegmentation
-import smile.hpo.Hyperparameters
+import smile.hpo._
 import smile.validation.metric.Accuracy
 
 val segment = new ImageSegmentation()
-val hp = new Hyperparameters()
+val hp = hyperparameters
   .add("smile.random_forest.trees", Array(100, 200, 500))
   .add("smile.random_forest.mtry", 2, 18)
   .add("smile.random_forest.max_nodes", 50, 500)
 
-hp.random.limit(20).forEach { props =&gt;
+hp.randomSeq(20).foreach { props =&gt;
   val model = RandomForest.fit(segment.formula, segment.train, props)
   val accuracy = Accuracy.of(segment.testy, model.predict(segment.test))
   println(f"$accuracy%.4f  $props")
-}
-// Equivalent finite stream: hp.random(20)</code></pre>
+}</code></pre>
     </div>
     <div id="pg-3-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.classification.RandomForest
 import smile.datasets.ImageSegmentation
-import smile.hpo.Hyperparameters
+import smile.hpo.hyperparameters
+import smile.hpo.randomSequence
 import smile.validation.metric.Accuracy
 
 val segment = ImageSegmentation()
-val hp = Hyperparameters()
-    .add("smile.random_forest.trees", intArrayOf(100, 200, 500))
-    .add("smile.random_forest.mtry", 2, 18)
-    .add("smile.random_forest.max_nodes", 50, 500)
+val hp = hyperparameters {
+    add("smile.random_forest.trees", intArrayOf(100, 200, 500))
+    add("smile.random_forest.mtry", 2, 18)
+    add("smile.random_forest.max_nodes", 50, 500)
+}
 
-hp.random().limit(20).forEach { props -&gt;
+hp.randomSequence(20).forEach { props -&gt;
     val model = RandomForest.fit(segment.formula(), segment.train(), props)
     val accuracy = Accuracy.of(segment.testy(), model.predict(segment.test()))
     println("%.4f  %s".format(accuracy, props))
-}
-// Equivalent finite stream: hp.random(20)</code></pre>
+}</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
@@ -261,9 +264,9 @@ hp.remove("smile.random_forest.mtry");
 hp.clear();</code></pre>
     </div>
     <div id="pg-4-1" class="hero-pane" hidden>
-      <pre class="playground-source language-scala"><code class="language-scala">import smile.hpo.Hyperparameters
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.hpo._
 
-val hp = new Hyperparameters()
+val hp = hyperparameters
   .add("smile.random_forest.trees", 100)
   .add("smile.random_forest.mtry", Array(2, 3))
 hp.add("smile.random_forest.trees", Array(100, 200, 500))
@@ -272,11 +275,12 @@ hp.remove("smile.random_forest.mtry")
 hp.clear()</code></pre>
     </div>
     <div id="pg-4-2" class="hero-pane" hidden>
-      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.hpo.Hyperparameters
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.hpo.hyperparameters
 
-val hp = Hyperparameters()
-    .add("smile.random_forest.trees", 100)
-    .add("smile.random_forest.mtry", intArrayOf(2, 3))
+val hp = hyperparameters {
+    add("smile.random_forest.trees", 100)
+    add("smile.random_forest.mtry", intArrayOf(2, 3))
+}
 hp.add("smile.random_forest.trees", intArrayOf(100, 200, 500))
 println(hp.size()) // 2
 hp.remove("smile.random_forest.mtry")
@@ -318,32 +322,34 @@ hp.random(12).forEach(props -&gt;
     <div id="pg-5-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.classification.GradientTreeBoost
 import smile.datasets.Iris
-import smile.hpo.Hyperparameters
+import smile.hpo._
 
 val iris = new Iris()
-val hp = new Hyperparameters()
+val hp = hyperparameters
   .add("smile.gradient_boost.trees", Array(100, 200))
   .add("smile.gradient_boost.max_depth", Array(4, 6, 8))
   .add("smile.gradient_boost.shrinkage", Array(0.05, 0.1, 0.2))
   .add("smile.gradient_boost.sampling_rate", Array(0.7, 0.8, 1.0))
 
-hp.random(12).forEach { props =&gt;
+hp.randomSeq(12).foreach { props =&gt;
   GradientTreeBoost.fit(iris.formula, iris.data, props)
 }</code></pre>
     </div>
     <div id="pg-5-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.classification.GradientTreeBoost
 import smile.datasets.Iris
-import smile.hpo.Hyperparameters
+import smile.hpo.hyperparameters
+import smile.hpo.randomSequence
 
 val iris = Iris()
-val hp = Hyperparameters()
-    .add("smile.gradient_boost.trees", intArrayOf(100, 200))
-    .add("smile.gradient_boost.max_depth", intArrayOf(4, 6, 8))
-    .add("smile.gradient_boost.shrinkage", doubleArrayOf(0.05, 0.1, 0.2))
-    .add("smile.gradient_boost.sampling_rate", doubleArrayOf(0.7, 0.8, 1.0))
+val hp = hyperparameters {
+    add("smile.gradient_boost.trees", intArrayOf(100, 200))
+    add("smile.gradient_boost.max_depth", intArrayOf(4, 6, 8))
+    add("smile.gradient_boost.shrinkage", doubleArrayOf(0.05, 0.1, 0.2))
+    add("smile.gradient_boost.sampling_rate", doubleArrayOf(0.7, 0.8, 1.0))
+}
 
-hp.random(12).forEach { props -&gt;
+hp.randomSequence(12).forEach { props -&gt;
     GradientTreeBoost.fit(iris.formula(), iris.data(), props)
 }</code></pre>
     </div>
@@ -390,17 +396,17 @@ System.out.printf("Best CV accuracy: %.4f%n", best);</code></pre>
     <div id="pg-6-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import smile.classification.RandomForest
 import smile.datasets.Iris
-import smile.hpo.Hyperparameters
+import smile.hpo._
 import smile.validation.CrossValidation
 
 val iris = new Iris()
-val hp = new Hyperparameters()
+val hp = hyperparameters
   .add("smile.random_forest.trees", Array(100, 200))
   .add("smile.random_forest.max_nodes", Array(10, 20, 40))
 var best = 0.0
 var bestProps: java.util.Properties = null
 
-hp.grid.forEach { props =&gt;
+hp.gridSeq.foreach { props =&gt;
   val cv = CrossValidation.classification(5, iris.formula, iris.data,
     (formula, data) =&gt; RandomForest.fit(formula, data, props))
   val accuracy = cv.avg.accuracy
@@ -412,17 +418,19 @@ println(f"Best CV accuracy: $best%.4f")</code></pre>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.util.Properties
 import smile.classification.RandomForest
 import smile.datasets.Iris
-import smile.hpo.Hyperparameters
+import smile.hpo.gridSequence
+import smile.hpo.hyperparameters
 import smile.validation.CrossValidation
 
 val iris = Iris()
-val hp = Hyperparameters()
-    .add("smile.random_forest.trees", intArrayOf(100, 200))
-    .add("smile.random_forest.max_nodes", intArrayOf(10, 20, 40))
+val hp = hyperparameters {
+    add("smile.random_forest.trees", intArrayOf(100, 200))
+    add("smile.random_forest.max_nodes", intArrayOf(10, 20, 40))
+}
 var best = 0.0
 var bestProps: Properties? = null
 
-hp.grid().forEach { props -&gt;
+hp.gridSequence().forEach { props -&gt;
     val cv = CrossValidation.classification(5, iris.formula(), iris.data()) {
         formula, data -&gt; RandomForest.fit(formula, data, props)
     }
@@ -430,6 +438,74 @@ hp.grid().forEach { props -&gt;
     if (accuracy &gt; best) { best = accuracy; bestProps = props }
 }
 println("Best CV accuracy: %.4f".format(best))</code></pre>
+    </div>
+  <div class="playground-editor" hidden></div>
+</div>
+
+
+    <h2 id="bayesian-optimization" class="title">Bayesian Optimization</h2>
+
+    <p>When evaluations are expensive, Bayesian optimization builds a Gaussian-process surrogate and chooses the next trial with an acquisition function. Pass a search space and an objective that maps each <code>Properties</code> configuration to a scalar score. Set <code>maximize = false</code> to minimize.</p>
+
+
+    <div class="code-playground glass" data-lang="java">
+  <div class="playground-toolbar">
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-7-2">Kotlin</button>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+    <div id="pg-7-0" class="hero-pane">
+      <pre class="playground-source language-java"><code class="language-java">import smile.hpo.Hyperparameters;
+
+var hp = new Hyperparameters()
+    .add("x1", -5.0, 5.0)
+    .add("x2", -5.0, 5.0);
+
+var result = hp.bayes(props -&gt; {
+    double x1 = Double.parseDouble(props.getProperty("x1"));
+    double x2 = Double.parseDouble(props.getProperty("x2"));
+    return x1 * x1 + x2 * x2;
+}, 10, false);
+
+System.out.println(result);
+System.out.println("Best value: " + result.bestValue());</code></pre>
+    </div>
+    <div id="pg-7-1" class="hero-pane" hidden>
+      <pre class="playground-source language-scala"><code class="language-scala">import smile.hpo._
+
+val hp = hyperparameters
+  .add("x1", -5.0, 5.0)
+  .add("x2", -5.0, 5.0)
+
+val result = bayes(hp, maxTrials = 10, maximize = false) { props =&gt;
+  val x1 = props.getProperty("x1").toDouble
+  val x2 = props.getProperty("x2").toDouble
+  x1 * x1 + x2 * x2
+}
+
+println(result)
+println(s"Best value: ${result.bestValue}")</code></pre>
+    </div>
+    <div id="pg-7-2" class="hero-pane" hidden>
+      <pre class="playground-source language-kotlin"><code class="language-kotlin">import smile.hpo.bayes
+import smile.hpo.hyperparameters
+
+val hp = hyperparameters {
+    add("x1", -5.0, 5.0)
+    add("x2", -5.0, 5.0)
+}
+
+val result = hp.bayes(maxTrials = 10, maximize = false) { props -&gt;
+    val x1 = props.getProperty("x1").toDouble()
+    val x2 = props.getProperty("x2").toDouble()
+    x1 * x1 + x2 * x2
+}
+
+println(result)
+println("Best value: ${result.bestValue}")</code></pre>
     </div>
   <div class="playground-editor" hidden></div>
 </div>
@@ -455,14 +531,14 @@ println("Best CV accuracy: %.4f".format(best))</code></pre>
 
     <div class="code-playground glass" data-lang="java">
   <div class="playground-toolbar">
-    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-7-0">Java</button>
-    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-7-1">Scala</button>
-    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-7-2">Kotlin</button>
+    <button type="button" class="lang-tab is-active" data-lang="java" data-pane="pg-8-0">Java</button>
+    <button type="button" class="lang-tab" data-lang="scala" data-pane="pg-8-1">Scala</button>
+    <button type="button" class="lang-tab" data-lang="kotlin" data-pane="pg-8-2">Kotlin</button>
     <span class="toolbar-spacer"></span>
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-    <div id="pg-7-0" class="hero-pane">
+    <div id="pg-8-0" class="hero-pane">
       <pre class="playground-source language-java"><code class="language-java">import java.io.FileOutputStream;
 import java.util.Properties;
 
@@ -471,7 +547,7 @@ try (var out = new FileOutputStream("best.properties")) {
     bestProps.store(out, "Best hyperparameters");
 }</code></pre>
     </div>
-    <div id="pg-7-1" class="hero-pane" hidden>
+    <div id="pg-8-1" class="hero-pane" hidden>
       <pre class="playground-source language-scala"><code class="language-scala">import java.io.FileOutputStream
 import java.util.Properties
 
@@ -480,7 +556,7 @@ val out = new FileOutputStream("best.properties")
 try bestProps.store(out, "Best hyperparameters")
 finally out.close()</code></pre>
     </div>
-    <div id="pg-7-2" class="hero-pane" hidden>
+    <div id="pg-8-2" class="hero-pane" hidden>
       <pre class="playground-source language-kotlin"><code class="language-kotlin">import java.io.FileOutputStream
 import java.util.Properties
 
