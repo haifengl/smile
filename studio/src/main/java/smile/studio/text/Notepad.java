@@ -62,6 +62,8 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
     private final FindToolBar findToolBar = new FindToolBar(this);
     private final ReplaceToolBar replaceToolBar = new ReplaceToolBar(this);
     private boolean changed = false;
+    /** Notified on every document change, used to schedule a debounced auto save. */
+    private Runnable changeListener;
 
     /**
      * Constructor.
@@ -301,6 +303,11 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
         return !changed;
     }
 
+    @Override
+    public void setChangeListener(Runnable listener) {
+        this.changeListener = listener;
+    }
+
     /**
      * Closes the autocomplete provider.
      */
@@ -312,11 +319,17 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
     @Override
     public void insertUpdate(DocumentEvent e) {
         changed = true;
+        if (changeListener != null) {
+            changeListener.run();
+        }
     }
 
     @Override
     public void removeUpdate(DocumentEvent e) {
         changed = true;
+        if (changeListener != null) {
+            changeListener.run();
+        }
     }
 
     @Override
