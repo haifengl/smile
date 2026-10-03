@@ -614,6 +614,17 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      * speculation <em>before</em> the KV pool is sized, so the KV budget accounts for it and a large
      * speculating cohort never has to fall back to plain decode for lack of memory.
      *
+     * @param checkpointDir      directory containing {@code config.json} and weights.
+     * @param maxBatchSize       maximum batch size for inference.
+     * @param maxSeqLen          maximum sequence length; {@code <= 0} uses the config value.
+     * @param deviceId           CUDA device id, or negative for CPU.
+     * @param memFractionStatic  static-region fraction of total GPU memory (SGLang-style);
+     *                           {@code <=0} keeps test sizing.
+     * @param kvCacheDtype       optional KV dtype override.
+     * @param pageSize           tokens per radix / KV pool page ({@code >= 1}).
+     * @param parallel           {@link ParallelConfig#tensorParallel} for multi-GPU; {@code ppSize} must be 1.
+     * @param modelLoaderThreads safetensors loader threads; {@code 0} = auto
+     *                           ({@link SafeTensorsLoaderThreads#resolve}).
      * @param speculativeRows  rows (concurrently speculating requests) to provision; {@code 0} reserves nothing.
      * @param speculativeDepth draft depth to provision for; {@code <= 0} uses the model default.
      * @throws IOException if the checkpoint cannot be read.

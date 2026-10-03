@@ -45,10 +45,13 @@ public final class VerifyCudaGraphSession implements AutoCloseable {
     private static final Set<Long> CAPTURE_LOGGED = ConcurrentHashMap.newKeySet();
     private static final Set<Long> REPLAY_LOGGED = ConcurrentHashMap.newKeySet();
 
-    /** Diagnostic counters (process-wide): bucket resets, eager warmup steps, captures. */
+    /** Diagnostic counter (process-wide): bucket resets. */
     public static final java.util.concurrent.atomic.AtomicInteger RESETS = new java.util.concurrent.atomic.AtomicInteger();
+    /** Diagnostic counter (process-wide): eager warmup steps. */
     public static final java.util.concurrent.atomic.AtomicInteger WARMUPS = new java.util.concurrent.atomic.AtomicInteger();
+    /** Diagnostic counter (process-wide): graph captures. */
     public static final java.util.concurrent.atomic.AtomicInteger CAPTURES = new java.util.concurrent.atomic.AtomicInteger();
+    /** Diagnostic counter (process-wide): session closes. */
     public static final java.util.concurrent.atomic.AtomicInteger CLOSES = new java.util.concurrent.atomic.AtomicInteger();
 
     private MemorySegment handle;

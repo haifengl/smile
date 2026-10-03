@@ -1681,7 +1681,13 @@ public class QwenModel extends LayerBlock {
         return forwardVerifyGraphCodeEager(tokens, startPositions);
     }
 
-    /** Ragged form of {@link #forwardVerifyGraphCodeEager(Tensor, int)}. */
+    /**
+     * Ragged form of {@link #forwardVerifyGraphCodeEager(Tensor, int)}.
+     *
+     * @param tokens         window token ids {@code [B, S]}.
+     * @param startPositions per-row cache start position, length {@code B}.
+     * @return owned logits.
+     */
     public Tensor forwardVerifyGraphCodeEager(Tensor tokens, int[] startPositions) {
         int batch = (int) tokens.shape()[0];
         int windowLen = (int) tokens.shape()[1];
