@@ -94,6 +94,10 @@ public class Serve implements Callable<Integer> {
             description = "Max prompt tokens prefilled per scheduler tick (default: 2048).")
     Integer prefillBudget;
 
+    @Option(names = {"--model-loader-threads"},
+            description = "Number of background threads to download and load models (0 = auto).")
+    Integer modelLoaderThreads;
+
     @Option(names = {"--mem-fraction-static"},
             description = "Fraction of GPU memory for static weights + DeltaNet + KV cache (default: 0.85).")
     Double memFractionStatic;
@@ -306,6 +310,9 @@ public class Serve implements Callable<Integer> {
         }
         if (prefillBudget != null && prefillBudget > 0) {
             command.add("-Dsmile.chat.prefill-token-budget=" + prefillBudget);
+        }
+        if (modelLoaderThreads != null && modelLoaderThreads >= 0) {
+            command.add("-Dsmile.chat.model-loader-threads=" + modelLoaderThreads);
         }
         if (memFractionStatic != null && memFractionStatic > 0) {
             command.add("-Dsmile.chat.mem-fraction-static=" + memFractionStatic);

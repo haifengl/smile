@@ -29,6 +29,11 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.HexFormat;
 import java.util.Optional;
 import java.util.UUID;
@@ -176,6 +181,163 @@ public class HuggingFaceHub {
     }
 
     /**
+     * Resolves the download concurrency level.
+     *
+     * @param configured the requested concurrency (0 = auto).
+     * @param numFiles   the number of files to download.
+     * @return the resolved number of threads (at least 1 if {@code numFiles > 0}).
+     */
+    public static int resolveConcurrency(int configured, int numFiles) {
+        if (configured < 0) {
+            throw new IllegalArgumentException("threads must be >= 0 (0 = auto), got " + configured);
+        }
+        if (numFiles <= 0) {
+            return 0;
+        }
+        int auto = Math.min(8, Math.max(1, Runtime.getRuntime().availableProcessors()));
+        int threads = configured > 0 ? configured : auto;
+        return Math.max(1, Math.min(threads, numFiles));
+    }
+
+    /**
+     * Downloads multiple files concurrently from a Hugging Face Hub repository and caches them
+     * locally.
+     *
+     * @param repoId    the repository identifier in {@code owner/name} format.
+     * @param filenames the collection of filenames to download.
+     * @return map of filename to local cached {@link Path}.
+     * @throws IOException if any download fails.
+     */
+    public static Map<String, Path> downloadFiles(String repoId, Collection<String> filenames) throws IOException {
+        return downloadFiles(repoId, filenames, 0, false);
+    }
+
+    /**
+     * Downloads multiple files concurrently from a Hugging Face Hub repository and caches them
+     * locally.
+     *
+     * @param repoId    the repository identifier in {@code owner/name} format.
+     * @param filenames the collection of filenames to download.
+     * @param threads   the number of concurrent threads (0 = auto).
+     * @return map of filename to local cached {@link Path}.
+     * @throws IOException if any download fails.
+     */
+    public static Map<String, Path> downloadFiles(String repoId, Collection<String> filenames, int threads) throws IOException {
+        return downloadFiles(repoId, filenames, threads, false);
+    }
+
+    /**
+     * Downloads multiple files concurrently from a Hugging Face Hub repository and caches them
+     * locally.
+     *
+     * @param repoId        the repository identifier in {@code owner/name} format.
+     * @param filenames     the collection of filenames to download.
+     * @param threads       the number of concurrent threads (0 = auto).
+     * @param ignoreMissing when {@code true}, missing files (HTTP 404 / {@link FileNotFoundException})
+     *                      are ignored and excluded from the returned map.
+     * @return map of filename to local cached {@link Path}.
+     * @throws IOException if any download fails (or if a missing file occurs and {@code ignoreMissing} is false).
+     */
+    public static Map<String, Path> downloadFiles(String repoId,
+                                                  Collection<String> filenames,
+                                                  int threads,
+                                                  boolean ignoreMissing) throws IOException {
+        return downloadFiles(repoId, filenames, RepoType.MODEL, "main", null, null, false, false, threads, ignoreMissing);
+    }
+
+    /**
+     * Downloads multiple files concurrently from a Hugging Face Hub repository and caches them
+     * locally.
+     *
+     * @param repoId          the repository identifier ({@code "owner/name"}).
+     * @param filenames       the collection of filenames to download.
+     * @param repoType        the repository type ({@link RepoType#MODEL}, {@link RepoType#DATASET}, or {@link RepoType#SPACE}).
+     * @param revision        the git revision to download from.
+     * @param subfolder       an optional subdirectory prefix prepended to filenames.
+     * @param cacheDir        override for the local cache root directory.
+     * @param forceDownload   when {@code true}, bypass the local cache and always re-download.
+     * @param localFilesOnly  when {@code true}, raise an exception instead of making network requests.
+     * @param threads         the number of concurrent threads (0 = auto).
+     * @param ignoreMissing   when {@code true}, missing files are ignored and excluded from the returned map.
+     * @return map of filename to local cached {@link Path}.
+     * @throws IOException if a download fails.
+     */
+    public static Map<String, Path> downloadFiles(String repoId,
+                                                  Collection<String> filenames,
+                                                  RepoType repoType,
+                                                  String revision,
+                                                  String subfolder,
+                                                  Path cacheDir,
+                                                  boolean forceDownload,
+                                                  boolean localFilesOnly,
+                                                  int threads,
+                                                  boolean ignoreMissing) throws IOException {
+        if (repoId == null || repoId.isBlank()) throw new IllegalArgumentException("repoId must not be blank");
+        if (filenames == null || filenames.isEmpty()) return Map.of();
+
+        List<String> fileList = new ArrayList<>();
+        for (String f : filenames) {
+            if (f != null && !f.isBlank()) {
+                fileList.add(f);
+            }
+        }
+        if (fileList.isEmpty()) {
+            return Map.of();
+        }
+
+        int poolSize = resolveConcurrency(threads, fileList.size());
+        if (poolSize <= 1) {
+            Map<String, Path> results = new LinkedHashMap<>();
+            for (String file : fileList) {
+                try {
+                    Path path = download(repoId, file, repoType, revision, subfolder, cacheDir, forceDownload, localFilesOnly);
+                    results.put(file, path);
+                } catch (FileNotFoundException e) {
+                    if (ignoreMissing) {
+                        logger.warn("Optional file missing on {}: {}", repoId, file);
+                    } else {
+                        throw e;
+                    }
+                }
+            }
+            return results;
+        }
+
+        logger.info("Downloading {} file(s) from {} with {} threads", fileList.size(), repoId, poolSize);
+        ExecutorService pool = Executors.newFixedThreadPool(poolSize,
+                Thread.ofPlatform().name("hf-download-", 0).daemon().factory());
+        try {
+            Map<String, Future<Path>> futures = new LinkedHashMap<>();
+            for (String file : fileList) {
+                futures.put(file, pool.submit(() -> download(repoId, file, repoType, revision, subfolder, cacheDir, forceDownload, localFilesOnly)));
+            }
+            Map<String, Path> results = new LinkedHashMap<>();
+            for (Map.Entry<String, Future<Path>> entry : futures.entrySet()) {
+                String file = entry.getKey();
+                try {
+                    results.put(file, entry.getValue().get());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Download interrupted for: " + repoId + "/" + file, e);
+                } catch (ExecutionException e) {
+                    Throwable cause = e.getCause() != null ? e.getCause() : e;
+                    if (ignoreMissing && cause instanceof FileNotFoundException) {
+                        logger.warn("Optional file missing on {}: {}", repoId, file);
+                        continue;
+                    }
+                    if (cause instanceof IOException ioe) {
+                        throw ioe;
+                    }
+                    throw new IOException("Download failed for " + repoId + "/" + file, cause);
+                }
+            }
+            return results;
+        } finally {
+            pool.shutdownNow();
+        }
+    }
+
+    /**
      * Downloads a single file from a Hugging Face Hub repository and caches it
      * locally. The function checks for the HF_TOKEN environment variable or
      * HUGGING_FACE_HUB_TOKEN system property. If neither is set, it checks
@@ -310,7 +472,7 @@ public class HuggingFaceHub {
                     if (found.isPresent()) return found.get();
                 }
             }
-            throw new IOException("File '%s' is not in the local cache and localFilesOnly=true.".formatted(resolvedFilename));
+            throw new FileNotFoundException("File '%s' is not in the local cache and localFilesOnly=true.".formatted(resolvedFilename));
         }
 
         // ================================================================
@@ -843,7 +1005,7 @@ public class HuggingFaceHub {
                     if (found.isPresent()) return found.get();
                 }
             }
-            throw new IOException("File '%s' is not in the local cache and localFilesOnly=true.".formatted(resolvedFilename));
+            throw new FileNotFoundException("File '%s' is not in the local cache and localFilesOnly=true.".formatted(resolvedFilename));
         }
 
         HttpRequest.Builder headBuilder = buildRequest(fileUrl, token)
