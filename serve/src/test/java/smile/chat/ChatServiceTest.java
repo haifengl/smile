@@ -30,9 +30,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Tests for graceful chat-service failover when no LLM is configured.
  *
- * <p>The {@code %test} profile points {@code smile.chat.model} at a missing
- * local path so {@link ChatService} starts unavailable without contacting
- * Hugging Face Hub.
+ * <p>When no {@code smile.chat.model} is configured, {@link ChatService} starts
+ * in an unavailable state without contacting Hugging Face Hub or failing startup.
  *
  * @author Haifeng Li
  */
@@ -43,11 +42,13 @@ public class ChatServiceTest {
     ChatService chatService;
 
     @Test
-    public void testGivenMissingLocalModelWhenStartedThenChatServiceIsUnavailable() {
-        // Given %test.smile.chat.model points at a non-existent path
+    public void testGivenNoConfiguredModelWhenStartedThenChatServiceIsUnavailable() {
+        // Given no smile.chat.model configured
         // When the application starts
         // Then chat stays unavailable (no HF download attempted)
         assertFalse(chatService.isAvailable());
+        assertEquals("unknown", chatService.modelName());
+        assertTrue(chatService.listOpenAiModels().isEmpty());
     }
 
     @Test

@@ -35,10 +35,11 @@ import io.smallrye.config.WithDefault;
 @ConfigMapping(prefix = "smile.chat")
 public interface ChatServiceConfig {
     /**
-     * Local HF-layout checkpoint directory, or a Hugging Face repository id
-     * ({@code owner/name}).
+     * Optional local HF-layout checkpoint directory, or a Hugging Face repository id
+     * ({@code owner/name}). When omitted or blank, no chat model is loaded and the
+     * chat completions API remains unavailable (HTTP 503).
      */
-    String model();
+    Optional<String> model();
 
     /**
      * Maximum sequence length in tokens (prompt + output), analogous to vLLM
