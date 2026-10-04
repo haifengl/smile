@@ -22,11 +22,23 @@ Download GenAI binaries from the
 [onnxruntime-genai releases](https://github.com/microsoft/onnxruntime-genai/releases)
 and ORT from the
 [onnxruntime releases](https://github.com/microsoft/onnxruntime/releases).
+Alternatively, install via pip depending on the desired hardware acceleration:
+
+```bash
+# CPU
+pip install onnxruntime-genai
+
+# CUDA
+pip install onnxruntime-genai-cuda
+
+# DirectML (Windows only)
+pip install onnxruntime-genai-directml
+```
 
 ### Native libraries
 
-Both shared libraries must be loadable. With pip (`onnxruntime-genai-cuda` /
-`onnxruntime-genai`), typical Windows locations are:
+Both shared libraries must be loadable. With pip (`onnxruntime-genai`,
+`onnxruntime-genai-cuda`, or `onnxruntime-genai-directml`), typical Windows locations are:
 
 | Library | Directory |
 |---|---|
