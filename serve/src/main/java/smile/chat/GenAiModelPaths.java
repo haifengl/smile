@@ -94,6 +94,11 @@ public final class GenAiModelPaths {
      * @return GenAI model dir, or empty when not GenAI-ready.
      */
     public static Optional<Path> resolveGenAiReady(String modelSpec) {
+        int threads = Integer.getInteger("smile.chat.model-loader-threads", 0);
+        return resolveGenAiReady(modelSpec, threads);
+    }
+
+    public static Optional<Path> resolveGenAiReady(String modelSpec, int modelLoaderThreads) {
         if (modelSpec == null || modelSpec.isBlank()) {
             return Optional.empty();
         }
@@ -111,7 +116,7 @@ public final class GenAiModelPaths {
         if (!ChatService.looksLikeHuggingFaceRepoId(modelSpec)) {
             return Optional.empty();
         }
-        return resolveHfGenAiReady(modelSpec);
+        return resolveHfGenAiReady(modelSpec, modelLoaderThreads);
     }
 
     /**
@@ -134,12 +139,12 @@ public final class GenAiModelPaths {
         }
     }
 
-    private static Optional<Path> resolveHfGenAiReady(String repoId) {
+    private static Optional<Path> resolveHfGenAiReady(String repoId, int modelLoaderThreads) {
         // 1) Root genai_config.json
         try {
             Path cfg = HuggingFaceHub.download(repoId, "genai_config.json");
             Path root = cfg.getParent();
-            downloadCompanions(repoId, "", root, Files.readString(cfg));
+            downloadCompanions(repoId, "", root, Files.readString(cfg), modelLoaderThreads);
             if (isGenAiCheckpoint(root)) {
                 logger.infof("HF GenAI-ready snapshot: %s", root);
                 return Optional.of(root);
@@ -166,7 +171,7 @@ public final class GenAiModelPaths {
         try {
             Path cfg = HuggingFaceHub.download(repoId, relativeCfg);
             Path root = cfg.getParent();
-            downloadCompanions(repoId, relativeDir, root, Files.readString(cfg));
+            downloadCompanions(repoId, relativeDir, root, Files.readString(cfg), modelLoaderThreads);
             if (isGenAiCheckpoint(root)) {
                 logger.infof("HF GenAI-ready nested snapshot (%s): %s", relativeDir, root);
                 return Optional.of(root);
@@ -267,7 +272,7 @@ public final class GenAiModelPaths {
     }
 
     private static void downloadCompanions(String repoId, String relativeDir, Path root,
-                                           String genaiJson) {
+                                           String genaiJson, int modelLoaderThreads) {
         Set<String> files = new LinkedHashSet<>();
         Matcher m = FILENAME.matcher(genaiJson);
         while (m.find()) {
@@ -284,6 +289,7 @@ public final class GenAiModelPaths {
         }
         files.addAll(extras);
         String prefix = relativeDir == null || relativeDir.isBlank() ? "" : relativeDir + "/";
+        List<String> repoPaths = new ArrayList<>();
         for (String file : files) {
             if (file == null || file.isBlank()) {
                 continue;
@@ -294,11 +300,13 @@ public final class GenAiModelPaths {
             }
             // Filenames in genai_config are relative to the package directory.
             String repoPath = file.contains("/") ? file : prefix + file;
+            repoPaths.add(repoPath);
+        }
+        if (!repoPaths.isEmpty()) {
             try {
-                HuggingFaceHub.download(repoId, repoPath);
+                HuggingFaceHub.downloadFiles(repoId, repoPaths, modelLoaderThreads, true);
             } catch (IOException e) {
-                logger.debugf("Optional GenAI companion missing %s/%s: %s",
-                        repoId, repoPath, e.getMessage());
+                logger.warnf(e, "Failed downloading GenAI companions for %s", repoId);
             }
         }
     }

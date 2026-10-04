@@ -19,6 +19,8 @@ package smile.util;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -217,6 +219,124 @@ public class HuggingFaceHubTest {
     /**
      * Verifies that invalid arguments throw {@link IllegalArgumentException}.
      */
+    @Test
+    public void testResolveConcurrency() {
+        assertEquals(0, HuggingFaceHub.resolveConcurrency(0, 0));
+        assertEquals(0, HuggingFaceHub.resolveConcurrency(4, 0));
+        assertEquals(1, HuggingFaceHub.resolveConcurrency(0, 1));
+        assertEquals(2, HuggingFaceHub.resolveConcurrency(2, 10));
+        assertEquals(3, HuggingFaceHub.resolveConcurrency(10, 3));
+        assertThrows(IllegalArgumentException.class,
+                () -> HuggingFaceHub.resolveConcurrency(-1, 5));
+    }
+
+    @Test
+    public void testDownloadFiles_invalidArgs() {
+        assertThrows(IllegalArgumentException.class,
+                () -> HuggingFaceHub.downloadFiles(null, List.of("file.txt")));
+        assertThrows(IllegalArgumentException.class,
+                () -> HuggingFaceHub.downloadFiles("", List.of("file.txt")));
+    }
+
+    @Test
+    public void testDownloadFiles_emptyCollectionReturnsEmptyMap() throws Exception {
+        Map<String, Path> result = HuggingFaceHub.downloadFiles("owner/model", List.of());
+        assertTrue(result.isEmpty());
+        Map<String, Path> resultNull = HuggingFaceHub.downloadFiles("owner/model", null);
+        assertTrue(resultNull.isEmpty());
+    }
+
+    @Test
+    public void testDownloadFiles_cachedHits() throws Exception {
+        Path cacheDir = Files.createTempDirectory("smile-hf-cache-");
+        try {
+            String repoId = "owner/mymodel";
+            String commitHash = "b".repeat(40);
+
+            Path repoCache = cacheDir.resolve("models--owner--mymodel");
+            Path blobsDir = repoCache.resolve("blobs");
+            Path snapshotsDir = repoCache.resolve("snapshots").resolve(commitHash);
+            Path refsDir = repoCache.resolve("refs");
+            Files.createDirectories(blobsDir);
+            Files.createDirectories(snapshotsDir);
+            Files.createDirectories(refsDir);
+
+            Files.writeString(snapshotsDir.resolve("model.onnx"), "fake-onnx", StandardCharsets.UTF_8);
+            Files.writeString(snapshotsDir.resolve("tokenizer.json"), "fake-tok", StandardCharsets.UTF_8);
+            Files.writeString(refsDir.resolve("main"), commitHash, StandardCharsets.UTF_8);
+
+            Map<String, Path> result = HuggingFaceHub.downloadFiles(
+                    repoId,
+                    List.of("model.onnx", "tokenizer.json"),
+                    HuggingFaceHub.RepoType.MODEL,
+                    "main",
+                    null,
+                    cacheDir,
+                    false,
+                    true,
+                    2,
+                    false);
+
+            assertEquals(2, result.size());
+            assertEquals(snapshotsDir.resolve("model.onnx"), result.get("model.onnx"));
+            assertEquals(snapshotsDir.resolve("tokenizer.json"), result.get("tokenizer.json"));
+        } finally {
+            deleteRecursively(cacheDir);
+        }
+    }
+
+    @Test
+    public void testDownloadFiles_ignoreMissing() throws Exception {
+        Path cacheDir = Files.createTempDirectory("smile-hf-cache-");
+        try {
+            String repoId = "owner/mymodel";
+            String commitHash = "c".repeat(40);
+
+            Path repoCache = cacheDir.resolve("models--owner--mymodel");
+            Path blobsDir = repoCache.resolve("blobs");
+            Path snapshotsDir = repoCache.resolve("snapshots").resolve(commitHash);
+            Path refsDir = repoCache.resolve("refs");
+            Files.createDirectories(blobsDir);
+            Files.createDirectories(snapshotsDir);
+            Files.createDirectories(refsDir);
+
+            Files.writeString(snapshotsDir.resolve("model.onnx"), "fake-onnx", StandardCharsets.UTF_8);
+            Files.writeString(refsDir.resolve("main"), commitHash, StandardCharsets.UTF_8);
+
+            // "missing.txt" is not in cache; with ignoreMissing=true it should skip missing.txt
+            Map<String, Path> result = HuggingFaceHub.downloadFiles(
+                    repoId,
+                    List.of("model.onnx", "missing.txt"),
+                    HuggingFaceHub.RepoType.MODEL,
+                    "main",
+                    null,
+                    cacheDir,
+                    false,
+                    true,
+                    2,
+                    true);
+
+            assertEquals(1, result.size());
+            assertEquals(snapshotsDir.resolve("model.onnx"), result.get("model.onnx"));
+            assertFalse(result.containsKey("missing.txt"));
+
+            // With ignoreMissing=false, it must throw IOException
+            assertThrows(IOException.class, () -> HuggingFaceHub.downloadFiles(
+                    repoId,
+                    List.of("model.onnx", "missing.txt"),
+                    HuggingFaceHub.RepoType.MODEL,
+                    "main",
+                    null,
+                    cacheDir,
+                    false,
+                    true,
+                    2,
+                    false));
+        } finally {
+            deleteRecursively(cacheDir);
+        }
+    }
+
     @Test
     public void testDownload_invalidArgs() {
         assertThrows(IllegalArgumentException.class,

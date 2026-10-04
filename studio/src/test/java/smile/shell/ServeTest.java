@@ -115,6 +115,7 @@ public class ServeTest {
                 "--max-decode-batch", "16",
                 "--max-seq-len", "8192",
                 "--prefill-budget", "4096",
+                "--model-loader-threads", "4",
                 "--mem-fraction-static", "0.75",
                 "--attention", "flashinfer",
                 "--quantization", "fp8"
@@ -127,6 +128,7 @@ public class ServeTest {
         assertTrue(command.contains("-Dsmile.chat.max-decode-batch=16"));
         assertTrue(command.contains("-Dsmile.chat.max-seq-len=8192"));
         assertTrue(command.contains("-Dsmile.chat.prefill-token-budget=4096"));
+        assertTrue(command.contains("-Dsmile.chat.model-loader-threads=4"));
         assertTrue(command.contains("-Dsmile.chat.mem-fraction-static=0.75"));
         assertTrue(command.contains("-Dsmile.chat.attention-backend=flashinfer"));
         assertTrue(command.contains("-Dsmile.chat.quantization=fp8"));

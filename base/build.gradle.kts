@@ -10,7 +10,7 @@ dependencies {
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     implementation("com.epam:parso:2.0.14") // SAS7BDAT
     implementation("org.apache.avro:avro:1.12.2") { exclude("org.slf4j", "slf4j-log4j12") }
-    implementation("org.xerial.snappy:snappy-java:1.1.10.8")
+    implementation("org.xerial.snappy:snappy-java:1.1.10.10")
     testRuntimeOnly(libs.sqlite)
 }
 

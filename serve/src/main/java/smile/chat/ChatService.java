@@ -25,11 +25,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.SubmissionPublisher;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.Startup;
@@ -162,7 +160,7 @@ public class ChatService implements OpenAiModelContributor {
                     logger.infof("Non-builtin architecture with CUDA; trying OGA fallback for '%s'",
                             modelSpec);
                 }
-                loadOgaModel(modelSpec, oga);
+                loadOgaModel(modelSpec, oga, config.modelLoaderThreads());
             } else {
                 logger.warnf("Chat model '%s' not loaded (oga disabled and Torch path not selected)",
                         modelSpec);
@@ -222,10 +220,10 @@ public class ChatService implements OpenAiModelContributor {
         finishModelSetup(config, kvCache);
     }
 
-    private void loadOgaModel(String modelSpec, OgaChatConfig oga) throws Exception {
+    private void loadOgaModel(String modelSpec, OgaChatConfig oga, int modelLoaderThreads) throws Exception {
         // Serve never runs Olive at startup (conversion can take hours). Open only
         // GenAI-ready trees: HF/local (incl. nested packages) or a prior Olive cache.
-        Path genAiDir = GenAiModelPaths.resolveGenAiReady(modelSpec)
+        Path genAiDir = GenAiModelPaths.resolveGenAiReady(modelSpec, modelLoaderThreads)
                 .or(() -> Olive.resolveCached(modelSpec, oga))
                 .orElse(null);
         if (genAiDir == null) {
@@ -914,7 +912,7 @@ public class ChatService implements OpenAiModelContributor {
 
         Path checkpoint = Path.of(checkpointDir);
         if (isQwenCheckpoint(checkpoint)) {
-            resolveHuggingFaceQwenTokenizer(repoId);
+            resolveHuggingFaceQwenTokenizer(repoId, config.modelLoaderThreads());
             var parallel = parallelConfig(config);
             try {
                 smile.llm.quant.QuantBackendOverride.set(config.quantization());
@@ -942,73 +940,26 @@ public class ChatService implements OpenAiModelContributor {
      * Downloads Qwen tokenizer files ({@code tokenizer.json}, and optionally
      * {@code vocab.json}/{@code merges.txt}).
      */
-    private void resolveHuggingFaceQwenTokenizer(String repoId) throws IOException {
+    private void resolveHuggingFaceQwenTokenizer(String repoId, int modelLoaderThreads) throws IOException {
         String[] candidates = {"tokenizer.json", "vocab.json", "merges.txt"};
-        boolean any = false;
-        for (String name : candidates) {
-            try {
-                Path path = HuggingFaceHub.download(repoId, name);
-                logger.infof("Downloaded tokenizer file: %s", path);
-                any = true;
-            } catch (Exception ex) {
-                logger.debugf("Optional tokenizer file %s not found in %s", name, repoId);
-            }
-        }
-        if (!any) {
+        Map<String, Path> downloaded = HuggingFaceHub.downloadFiles(repoId, List.of(candidates), modelLoaderThreads, true);
+        if (downloaded.isEmpty()) {
             throw new IOException("No Qwen tokenizer files found in Hugging Face repository: " + repoId);
+        }
+        for (var entry : downloaded.entrySet()) {
+            logger.infof("Downloaded tokenizer file: %s", entry.getValue());
         }
     }
 
     /**
-     * Downloads safetensors shards concurrently. Thread count matches
-     * {@link ChatServiceConfig#modelLoaderThreads()} via
-     * {@link SafeTensorsLoaderThreads#resolve(int, int)}.
+     * Downloads safetensors shards concurrently.
      */
     private void downloadSafeTensorShards(String repoId, Set<String> shards, int modelLoaderThreads)
             throws IOException {
         if (shards == null || shards.isEmpty()) {
             return;
         }
-        List<String> shardList = new ArrayList<>(shards);
-        int threads = SafeTensorsLoaderThreads.resolve(modelLoaderThreads, shardList.size());
-        logger.infof("Downloading %d safetensors shard(s) with threads=%d (configured=%d)",
-                shardList.size(), threads, modelLoaderThreads);
-
-        if (threads <= 1 || shardList.size() == 1) {
-            for (String shard : shardList) {
-                logger.infof("Downloading safetensors shard: %s", shard);
-                HuggingFaceHub.download(repoId, shard);
-            }
-            return;
-        }
-
-        ExecutorService pool = Executors.newFixedThreadPool(threads);
-        try {
-            List<Future<?>> futures = new ArrayList<>(shardList.size());
-            for (String shard : shardList) {
-                futures.add(pool.submit(() -> {
-                    try {
-                        logger.infof("Downloading safetensors shard: %s", shard);
-                        HuggingFaceHub.download(repoId, shard);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }));
-            }
-            for (Future<?> f : futures) {
-                try {
-                    f.get();
-                } catch (Exception e) {
-                    Throwable c = e.getCause() != null ? e.getCause() : e;
-                    if (c instanceof RuntimeException re && re.getCause() instanceof IOException ioe) {
-                        throw ioe;
-                    }
-                    throw new IOException("Safetensors shard download failed", e);
-                }
-            }
-        } finally {
-            pool.shutdownNow();
-        }
+        HuggingFaceHub.downloadFiles(repoId, shards, modelLoaderThreads);
     }
 
     /**

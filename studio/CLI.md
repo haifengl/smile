@@ -699,6 +699,7 @@ A bundled React-based Web UI is served from `http://<host>:<port>/` (`/infer` an
 | `--max-decode-batch <n>` | `0` | Cap on requests per GPU decode step (`0` = same as max-batch-size) |
 | `--max-seq-len <n>` | `0` | Maximum context length in tokens (`0` = auto from model config) |
 | `--prefill-budget <n>` | `2048` | Max prompt tokens prefilled per scheduler tick |
+| `--model-loader-threads <n>` | `0` | Background worker threads to download and load models (`0` = auto) |
 | `--mem-fraction-static <f>` | `0.85` | Fraction of GPU memory reserved for weights, KV cache, and static pools |
 | `--attention <backend>` | `flashinfer` | Attention kernel backend (`flashinfer` or `torch_native`) |
 | `--quantization <mode>` | `auto` | Weight GEMM quantization (`auto`, `dense`, `fp8`, `nvfp4`, `marlin`) |

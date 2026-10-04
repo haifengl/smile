@@ -19,8 +19,8 @@ dependencies {
     implementation("io.quarkus:quarkus-hibernate-orm-panache")
     implementation("io.quarkus:quarkus-jdbc-postgresql")
     implementation("io.quarkus:quarkus-jdbc-h2")
-    implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.9.1")
-    implementation(platform("software.amazon.awssdk:bom:2.55.4"))
+    implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.9.2")
+    implementation(platform("software.amazon.awssdk:bom:2.55.11"))
     implementation("software.amazon.awssdk:s3")
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-test-h2")
@@ -51,4 +51,3 @@ tasks.withType<JavaCompile> {
 tasks.withType<Javadoc> {
     enabled = false
 }
-
