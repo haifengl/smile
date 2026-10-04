@@ -11,7 +11,7 @@ val quarkusPlatformVersion = extra["quarkusPlatformVersion"] as String
 dependencies {
     implementation(project(":core"))
     implementation(project(":deep"))
-    implementation(enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
+    implementation(platform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}"))
     implementation("io.quarkus:quarkus-rest")
     implementation("io.quarkus:quarkus-rest-jackson")
     implementation("io.quarkus:quarkus-arc")
