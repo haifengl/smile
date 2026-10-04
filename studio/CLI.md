@@ -710,7 +710,7 @@ A bundled React-based Web UI is served from `http://<host>:<port>/` (`/infer` an
 
 | Option | Default | Description |
 |---|---|---|
-| `--kv-dtype <type>` | _(auto)_ | KV-cache element dtype (`bfloat16`, `float16`, `fp8_e4m3`, `fp8_e5m2`) |
+| `--kv-dtype <type>` | `auto` | KV-cache element dtype (`auto`, `bfloat16`, `float16`, `float32`, `fp8_e4m3`, `fp8_e5m2`) |
 | `--kv-page-size <n>` | `16` | Tokens per radix KV pool page |
 | `--prefix-reuse` / `--no-prefix-reuse` | `true` | Enable or disable radix KV prefix cache reuse |
 | `--oga` / `--no-oga` | `true` | Enable or disable ONNX Runtime GenAI fallback when CUDA/Torch is not selected |

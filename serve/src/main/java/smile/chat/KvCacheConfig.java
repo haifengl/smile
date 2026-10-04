@@ -17,7 +17,6 @@
  */
 package smile.chat;
 
-import java.util.Optional;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
 
@@ -36,13 +35,14 @@ import io.smallrye.config.WithDefault;
 public interface KvCacheConfig {
     /**
      * Element dtype for key/value activations in the shared KV cache pool
-     * (e.g. {@code bfloat16}, {@code float16}, {@code fp8_e4m3}, {@code fp8_e5m2}).
+     * (e.g. {@code auto}, {@code bfloat16}, {@code float16}, {@code fp8_e4m3}, {@code fp8_e5m2}).
      *
-     * <p>When unset, the engine uses {@code torch_dtype} from the model's
+     * <p>When unset or set to {@code auto}, the engine uses {@code torch_dtype} from the model's
      * {@code config.json}, falling back to the CUDA compute dtype
      * ({@code bfloat16} when supported, otherwise {@code float16}).
      */
-    Optional<String> dtype();
+    @WithDefault("auto")
+    String dtype();
 
     /**
      * Tokens per radix / KV pool page (SGLang-style page granularity).

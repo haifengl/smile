@@ -122,8 +122,8 @@ public class Serve implements Callable<Integer> {
     // KV Cache options (smile.chat.kv-cache.*)
     // -------------------------------------------------------------------------
     @Option(names = {"--kv-dtype"},
-            description = "KV-cache element dtype: bfloat16, float16, float32, fp8_e4m3, fp8_e5m2.")
-    String kvDtype;
+            description = "KV-cache element dtype: auto, bfloat16, float16, float32, fp8_e4m3, fp8_e5m2 (default: auto).")
+    String kvDtype = "auto";
 
     @Option(names = {"--kv-page-size"},
             description = "Tokens per KV pool page (default: 16).")

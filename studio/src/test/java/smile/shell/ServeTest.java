@@ -41,6 +41,7 @@ public class ServeTest {
         assertTrue(command.contains("-Dquarkus.http.port=8888"));
         assertTrue(command.contains("-Dquarkus.log.level=INFO"));
         assertTrue(command.contains("-Dsmile.chat.devices=0"));
+        assertTrue(command.contains("-Dsmile.chat.kv-cache.dtype=auto"));
         assertTrue(command.contains("-jar"));
     }
 
@@ -162,6 +163,11 @@ public class ServeTest {
         assertTrue(command.contains("-Dsmile.chat.kv-cache.dtype=fp8_e4m3"));
         assertTrue(command.contains("-Dsmile.chat.kv-cache.page-size=32"));
         assertTrue(command.contains("-Dsmile.chat.kv-cache.prefix-reuse=false"));
+
+        Serve serveAuto = new Serve();
+        new CommandLine(serveAuto).parseArgs("--kv-dtype", "auto");
+        List<String> commandAuto = serveAuto.buildCommand();
+        assertTrue(commandAuto.contains("-Dsmile.chat.kv-cache.dtype=auto"));
     }
 
     @Test
