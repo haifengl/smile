@@ -659,51 +659,122 @@ smile predict test.csv --model model.sml --explain | jq '.explanations.shap'
 ## 7. Online Serving (`smile serve`)
 
 ```
-smile serve --model <path> [options]
+smile serve [model-options] [server-options] [llm-options]
 ```
 
-Launches a Quarkus-based HTTP prediction server.  The server reads the model
-from `<path>` at startup and exposes a REST endpoint for real-time inference.
+Launches the high-performance Quarkus-based SMILE Serve HTTP inference server.
+The server brings together three complementary inference capabilities in a single process:
+- **Classic ML** (`/api/v1/smile`, `/api/v1/ml/models`) — serialized SMILE models (`.sml`)
+- **ONNX Runtime** (`/api/v1/onnx`) — open neural network format (`.onnx`)
+- **LLM Chat** (`/api/v1/chat/completions`, `/api/v1/models`) — OpenAI-compatible chat completions and model catalog with continuous batching or ONNX Runtime GenAI
+
+A bundled React-based Web UI is served from `http://<host>:<port>/` (`/infer` and `/chat`).
 
 ### Options
 
-| Option | Required | Default | Description |
+#### Model Options
+
+| Option | Short | Description |
+|---|---|---|
+| `--model <path>` | `-m` | Model file or folder (loads `.sml`, `.onnx` if present, or HF repo ID) |
+| `--sml-model <path>` | | Path to SMILE model file or folder (`smile.serve.model`) |
+| `--onnx-model <path>` | | Path to ONNX model file or folder (`smile.onnx.model`) |
+| `--chat-model <model>`, `--llm <model>` | | Local checkpoint folder or Hugging Face repo ID (`smile.chat.model`) |
+
+#### Server & Network Options
+
+| Option | Short | Default | Description |
 |---|---|---|---|
-| `--model <path>` | ✔ | — | Model file or folder |
-| `--host <addr>` | | `0.0.0.0` | Network interface to bind |
-| `--port <n>` | | `8080` | HTTP port |
+| `--host <addr>` | | `localhost` | Network interface to bind (`quarkus.http.host`) |
+| `--port <n>` | `-p` | `8888` | HTTP port (`quarkus.http.port`) |
+| `--log-level <lvl>` | | `INFO` | Logging level (`INFO`, `DEBUG`, `WARN`, `ERROR`) |
+
+#### LLM Chat & Hardware Knobs (`smile.chat.*`)
+
+| Option | Default | Description |
+|---|---|---|
+| `--devices <list>` | `0` | CUDA device index or comma-separated TP list (e.g. `0` or `0,7`) |
+| `--tp-size <n>`, `--tensor-parallel-size <n>` | `1` | Tensor-parallel world size |
+| `--max-batch-size <n>` | `16` | Maximum in-flight requests for continuous batching |
+| `--max-decode-batch <n>` | `0` | Cap on requests per GPU decode step (`0` = same as max-batch-size) |
+| `--max-seq-len <n>` | `0` | Maximum context length in tokens (`0` = auto from model config) |
+| `--prefill-budget <n>` | `2048` | Max prompt tokens prefilled per scheduler tick |
+| `--mem-fraction-static <f>` | `0.85` | Fraction of GPU memory reserved for weights, KV cache, and static pools |
+| `--attention <backend>` | `flashinfer` | Attention kernel backend (`flashinfer` or `torch_native`) |
+| `--quantization <mode>` | `auto` | Weight GEMM quantization (`auto`, `dense`, `fp8`, `nvfp4`, `marlin`) |
+| `--speculative` / `--no-speculative` | `true` | Enable or disable native MTP speculative decoding (Qwen models) |
+| `--speculative-tokens <n>` | `0` | Draft depth for MTP speculative decoding (`0` = model default) |
+| `--speculative-concurrency <n>` | `0` | Maximum concurrent speculating requests (`0` = unlimited) |
+
+#### KV Cache & ONNX GenAI Fallback
+
+| Option | Default | Description |
+|---|---|---|
+| `--kv-dtype <type>` | _(auto)_ | KV-cache element dtype (`bfloat16`, `float16`, `fp8_e4m3`, `fp8_e5m2`) |
+| `--kv-page-size <n>` | `16` | Tokens per radix KV pool page |
+| `--prefix-reuse` / `--no-prefix-reuse` | `true` | Enable or disable radix KV prefix cache reuse |
+| `--oga` / `--no-oga` | `true` | Enable or disable ONNX Runtime GenAI fallback when CUDA/Torch is not selected |
+| `--oga-provider <ep>` | `auto` | GenAI execution provider (`auto`, `cuda`, `dml`, `cpu`, `npu`, `ryzenai`, `openvino`, `qnn`) |
+| `--oga-precision <prec>` | `auto` | GenAI precision override (`auto`, `int4`) |
+
+#### Database, Storage & Passthrough
+
+| Option | Description |
+|---|---|
+| `--db-url <url>` | JDBC connection URL for conversation history (`quarkus.datasource.jdbc.url`) |
+| `--db-kind <kind>` | Database kind (`h2` or `postgresql`) |
+| `--blob-path <path>` | Local storage directory for multimedia blobs (`smile.blob.local.path`) |
+| `-D<key>=<value>` | Pass an arbitrary system property directly to the server process |
+| `-J<jvm-arg>`, `--jvm-arg <arg>` | Pass a JVM argument to the server process (e.g. `-J-Xmx16g`) |
 
 ### How It Works
 
-`Serve` spawns a new JVM process running
-`serve/quarkus-run.jar` (found under `$smile.home/serve/`) and passes the
-model path and network settings as system properties:
+`Serve` launches `serve/quarkus-run.jar` under `$SMILE_HOME` with Panama Foreign Function & Memory flags:
 
 ```
--Dsmile.serve.model=<path>
--Dquarkus.http.host=<host>
--Dquarkus.http.port=<port>
+--add-opens java.base/java.lang=ALL-UNNAMED
+--add-opens java.base/java.nio=ALL-UNNAMED
+--enable-native-access ALL-UNNAMED
 ```
 
-The spawned process inherits stdin/stdout/stderr (`inheritIO()`), so logs
-appear on the terminal.  The launcher waits for the child process to exit.
+Configured arguments are mapped directly to Quarkus and SMILE system properties. The process inherits `stdin`/`stdout`/`stderr` (`inheritIO()`), streaming server logs to the console.
 
-### Example
+### Examples
 
+**1. Serve a classic ML model:**
 ```bash
-# Train a model
-smile train -d iris.arff -m iris.sml random-forest --trees 200
-
-# Serve it
 smile serve --model iris.sml --port 9090
 ```
 
-Once started, send a prediction request:
-
+**2. Serve an ONNX model:**
 ```bash
-curl -X POST http://localhost:9090/predict \
+smile serve --onnx-model resnet50.onnx --port 8888
+```
+
+**3. Serve an LLM with ONNX Runtime GenAI (e.g. DirectML / CPU / CUDA):**
+```bash
+smile serve --llm microsoft/Phi-3-mini-4k-instruct-onnx --port 8888
+```
+
+**4. Serve a large language model with continuous batching & multi-GPU:**
+```bash
+smile serve --llm Qwen/Qwen3.8-27B --devices 0,1 --tp-size 2 --max-batch-size 32
+```
+
+**5. Querying the endpoints:**
+```bash
+# Model catalog (OpenAI-compatible)
+curl http://localhost:8888/api/v1/models
+
+# Classic ML inference
+curl -X POST http://localhost:8888/api/v1/ml/models/iris_random_forest-1 \
      -H "Content-Type: application/json" \
      -d '{"sepallength":5.1,"sepalwidth":3.5,"petallength":1.4,"petalwidth":0.2}'
+
+# Chat completion (OpenAI-compatible)
+curl -X POST http://localhost:8888/api/v1/chat/completions \
+     -H "Content-Type: application/json" \
+     -d '{"model":"microsoft/Phi-3-mini-4k-instruct-onnx","messages":[{"role":"user","content":"Hello!"}]}'
 ```
 
 ---
@@ -924,20 +995,28 @@ smile train \
 ### 10.4 Online Prediction Service
 
 ```bash
-# Train
+# Train a model
 smile train -d iris.arff -m iris.sml random-forest --trees 200
 
-# Serve on port 8080 (all interfaces)
+# Serve classic ML model on port 8888 (localhost)
 smile serve --model iris.sml
 
 # Serve on a specific interface and port
-smile serve --model iris.sml --host 127.0.0.1 --port 9090
+smile serve --model iris.sml --host 0.0.0.0 --port 9090
 
-# Query (after server is up)
-curl http://localhost:9090/predict \
+# Query classic ML prediction (after server is up)
+curl -X POST http://localhost:9090/api/v1/ml/models/iris_random_forest-1 \
   -H "Content-Type: application/json" \
   -d '{"sepallength":6.3,"sepalwidth":2.5,"petallength":5.0,"petalwidth":1.9}'
-# → "Iris-virginica"
+# → {"prediction":2}
+
+# Serve an LLM chat model
+smile serve --llm microsoft/Phi-3-mini-4k-instruct-onnx
+
+# Query chat completion (OpenAI compatible)
+curl -X POST http://localhost:8888/api/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"microsoft/Phi-3-mini-4k-instruct-onnx","messages":[{"role":"user","content":"Hello!"}]}'
 ```
 
 ### 10.5 Interactive Java Shell Session
@@ -1018,7 +1097,7 @@ ROUTING
   smile scala  [args]             → Scala 3 REPL
   smile train  -d FILE -m MODEL <algo> [algo-opts]
   smile predict FILE -m MODEL [-p] [-e] [--json]
-  smile serve  --model MODEL [--host H] [--port P]
+  smile serve  [-m MODEL] [--onnx-model O] [--llm CHAT] [--port P]
 
 CLASSIFICATION ALGORITHMS
   random-forest  gradient-boost  ada-boost  cart
