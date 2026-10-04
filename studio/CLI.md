@@ -754,7 +754,7 @@ smile serve --onnx-model resnet50.onnx --port 8888
 
 **3. Serve an LLM with ONNX Runtime GenAI (e.g. DirectML / CPU / CUDA):**
 ```bash
-smile serve --llm microsoft/Phi-3-mini-4k-instruct-onnx --port 8888
+smile serve --llm microsoft/Phi-4-mini-instruct-onnx --port 8888
 ```
 
 **4. Serve a large language model with continuous batching & multi-GPU:**
@@ -775,7 +775,7 @@ curl -X POST http://localhost:8888/api/v1/ml/models/iris_random_forest-1 \
 # Chat completion (OpenAI-compatible)
 curl -X POST http://localhost:8888/api/v1/chat/completions \
      -H "Content-Type: application/json" \
-     -d '{"model":"microsoft/Phi-3-mini-4k-instruct-onnx","messages":[{"role":"user","content":"Hello!"}]}'
+     -d '{"model":"microsoft/Phi-4-mini-instruct-onnx","messages":[{"role":"user","content":"Hello!"}]}'
 ```
 
 ---
@@ -1012,12 +1012,12 @@ curl -X POST http://localhost:9090/api/v1/ml/models/iris_random_forest-1 \
 # → {"prediction":2}
 
 # Serve an LLM chat model
-smile serve --llm microsoft/Phi-3-mini-4k-instruct-onnx
+smile serve --llm microsoft/Phi-4-mini-instruct-onnx
 
 # Query chat completion (OpenAI compatible)
 curl -X POST http://localhost:8888/api/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model":"microsoft/Phi-3-mini-4k-instruct-onnx","messages":[{"role":"user","content":"Hello!"}]}'
+  -d '{"model":"microsoft/Phi-4-mini-instruct-onnx","messages":[{"role":"user","content":"Hello!"}]}'
 ```
 
 ### 10.5 Interactive Java Shell Session

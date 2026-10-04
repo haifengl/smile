@@ -271,7 +271,7 @@ public class Serve implements Callable<Integer> {
             } else if (model.endsWith(".sml")) {
                 if (resolvedSml == null) resolvedSml = model;
             } else if (!Files.exists(p) && model.contains("/")) {
-                // Hugging Face repository ID (e.g. microsoft/Phi-3-mini-4k-instruct-onnx)
+                // Hugging Face repository ID (e.g. microsoft/Phi-4-mini-instruct-onnx)
                 if (resolvedChat == null) resolvedChat = model;
             } else if (Files.isDirectory(p) && Files.isRegularFile(p.resolve("genai_config.json"))) {
                 // GenAI model directory

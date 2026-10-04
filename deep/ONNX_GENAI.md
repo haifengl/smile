@@ -161,7 +161,7 @@ ORT GenAI:
 
 1. Local / HF snapshot with `genai_config.json` (repo root **or** nested under
    provider folders such as `cuda/cuda-int4-rtn-block-32/`, as in
-   `microsoft/Phi-3-mini-4k-instruct-onnx`) → `GenAiChatModel.open`.
+   `microsoft/Phi-4-mini-instruct-onnx`) → `GenAiChatModel.open`.
    Nested packages are picked to match `GenAI.resolveOliveTarget()` (CUDA / DML / CPU).
 2. Else a prior Olive cache hit under `{SMILE_CACHE}/olive/...` → open
 3. Else chat stays unavailable (HTTP 503)

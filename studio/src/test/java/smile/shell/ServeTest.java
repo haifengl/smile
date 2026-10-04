@@ -72,9 +72,9 @@ public class ServeTest {
     @Test
     public void testChatModelOption() {
         Serve serve = new Serve();
-        new CommandLine(serve).parseArgs("--llm", "microsoft/Phi-3-mini-4k-instruct-onnx");
+        new CommandLine(serve).parseArgs("--llm", "microsoft/Phi-4-mini-instruct-onnx");
         List<String> command = serve.buildCommand();
-        assertTrue(command.contains("-Dsmile.chat.model=microsoft/Phi-3-mini-4k-instruct-onnx"));
+        assertTrue(command.contains("-Dsmile.chat.model=microsoft/Phi-4-mini-instruct-onnx"));
 
         Serve serve2 = new Serve();
         new CommandLine(serve2).parseArgs("--chat-model", "Qwen/Qwen3.8-27B");

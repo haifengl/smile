@@ -33,7 +33,7 @@ import smile.util.HuggingFaceHub;
 /**
  * Locates GenAI-ready model directories (local or Hugging Face snapshot).
  *
- * <p>Vendor ONNX GenAI packages (e.g. {@code microsoft/Phi-3-mini-4k-instruct-onnx})
+ * <p>Vendor ONNX GenAI packages (e.g. {@code microsoft/Phi-4-mini-instruct-onnx})
  * often nest {@code genai_config.json} under provider folders such as
  * {@code cuda/cuda-int4-rtn-block-32/}. Those are opened directly — Olive is not
  * used (there are no PyTorch weights to convert).
