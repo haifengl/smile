@@ -212,7 +212,7 @@ try (var genai = SimpleGenAI.of("models/phi-3-mini-4k-instruct-cpu")) {
     <p><code>ChatService</code> keeps Torch for <strong>CUDA + builtin Llama/Qwen</strong>. Otherwise it tries ORT GenAI:</p>
 
     <ol>
-        <li>Local / HF snapshot with <code>genai_config.json</code> (repo root <strong>or</strong> nested under provider folders such as <code>cuda/cuda-int4-rtn-block-32/</code>, as in <code>microsoft/Phi-3-mini-4k-instruct-onnx</code>) → <code>GenAiChatModel.open</code>. Nested packages are picked to match <code>GenAI.resolveOliveTarget()</code> (CUDA / DML / CPU).</li>
+        <li>Local / HF snapshot with <code>genai_config.json</code> (repo root <strong>or</strong> nested under provider folders such as <code>cuda/cuda-int4-rtn-block-32/</code>, as in <code>microsoft/Phi-4-mini-instruct-onnx</code>) → <code>GenAiChatModel.open</code>. Nested packages are picked to match <code>GenAI.resolveOliveTarget()</code> (CUDA / DML / CPU).</li>
         <li>Else a prior Olive cache hit under <code>{SMILE_CACHE}/olive/...</code> → open</li>
         <li>Else chat stays unavailable (HTTP 503)</li>
     </ol>

@@ -203,7 +203,7 @@ spec:
 You can quickly test run a model in development mode using the Gradle wrapper:
 
 ```shell
-./gradlew :serve:quarkusDev "-Dsmile.chat.model=microsoft/Phi-3-mini-4k-instruct-onnx"
+./gradlew :serve:quarkusDev "-Dsmile.chat.model=microsoft/Phi-4-mini-instruct-onnx"
 ```
 
 The service starts in dev mode on port 8888 (with live reload enabled and the
