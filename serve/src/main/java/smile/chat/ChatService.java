@@ -44,7 +44,6 @@ import smile.llm.attention.AttentionBackend;
 import smile.llm.attention.AttentionBackends;
 import smile.llm.attention.FlashInferArtifacts;
 import smile.llm.engine.DecodeCudaGraph;
-import smile.llm.checkpoint.SafeTensorsLoaderThreads;
 import smile.llm.model.llama.*;
 import smile.llm.model.qwen.Qwen;
 import smile.onnx.genai.GenAI;
