@@ -136,7 +136,13 @@ public class ChatService implements OpenAiModelContributor {
         } catch (IllegalStateException ignored) {
             // JVM already shutting down
         }
-        String modelSpec = config.model();
+        Optional<String> maybeModel = config.model().filter(s -> !s.isBlank());
+        if (maybeModel.isEmpty()) {
+            logger.info("No chat model configured (smile.chat.model is not set); chat completions will return HTTP 503");
+            this.modelId = "unknown";
+            return;
+        }
+        String modelSpec = maybeModel.get();
         this.modelId = publicModelId(modelSpec);
         try {
             long cudaDevices = CUDA.isAvailable() ? CUDA.deviceCount() : 0L;
@@ -208,7 +214,7 @@ public class ChatService implements OpenAiModelContributor {
             source = "local";
             createdAt = Instant.now().getEpochSecond();
         } else if (looksLikeHuggingFaceRepoId(modelSpec)) {
-            model = loadFromHuggingFace(config, memFraction, kvDtype, pageSize);
+            model = loadFromHuggingFace(config, modelSpec, memFraction, kvDtype, pageSize);
             ownedBy = ModelObject.ownedByFromHuggingFaceId(modelSpec);
             source = "huggingface";
             createdAt = Instant.now().getEpochSecond();
@@ -425,7 +431,11 @@ public class ChatService implements OpenAiModelContributor {
      */
     static void logQuantBackend(LanguageModel model, ChatServiceConfig config, KvCacheConfig kvCache) {
         try {
-            Path dir = Path.of(config.model());
+            String modelPath = config.model().orElse(null);
+            if (modelPath == null || modelPath.isBlank()) {
+                return;
+            }
+            Path dir = Path.of(modelPath);
             if (!Files.isDirectory(dir)) {
                 logger.infof("Weight quant: backend config=%s (checkpoint path not local; "
                                 + "format detection at load)",
@@ -897,9 +907,9 @@ public class ChatService implements OpenAiModelContributor {
      * @return the loaded language model.
      * @throws Exception if a required file cannot be downloaded or the model fails to load.
      */
-    private LanguageModel loadFromHuggingFace(ChatServiceConfig config, double memFractionStatic,
+    private LanguageModel loadFromHuggingFace(ChatServiceConfig config, String repoId,
+                                              double memFractionStatic,
                                               String kvCacheDtype, int pageSize) throws Exception {
-        String repoId = config.model();
         logger.infof("Model directory '%s' not found locally. Downloading from Hugging Face Hub...", repoId);
 
         Path configPath = HuggingFaceHub.download(repoId, "config.json");
