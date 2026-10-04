@@ -186,7 +186,30 @@ public class Serve implements Callable<Integer> {
 
         List<String> command = buildCommand();
         var process = new ProcessBuilder(command).inheritIO().start();
-        return process.waitFor();
+        Thread shutdownHook = new Thread(() -> {
+            if (process.isAlive()) {
+                try {
+                    // Give child process time to shut down gracefully on its own SIGINT
+                    process.waitFor(10, java.util.concurrent.TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    process.destroy();
+                }
+            }
+        }, "serve-launcher-shutdown");
+        try {
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+        } catch (IllegalStateException ignored) {
+            // JVM already shutting down
+        }
+        try {
+            return process.waitFor();
+        } finally {
+            try {
+                Runtime.getRuntime().removeShutdownHook(shutdownHook);
+            } catch (IllegalStateException ignored) {
+                // Already shutting down
+            }
+        }
     }
 
     /**

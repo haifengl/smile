@@ -31,10 +31,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.SubmissionPublisher;
+import io.quarkus.runtime.ShutdownEvent;
+import io.quarkus.runtime.Startup;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
-import io.quarkus.runtime.Startup;
 import org.jboss.logging.Logger;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -47,6 +49,7 @@ import smile.llm.engine.DecodeCudaGraph;
 import smile.llm.checkpoint.SafeTensorsLoaderThreads;
 import smile.llm.model.llama.*;
 import smile.llm.model.qwen.Qwen;
+import smile.onnx.genai.GenAI;
 import smile.onnx.genai.GenAISupportedModels;
 import smile.onnx.genai.GenAiChatModel;
 import smile.serve.model.LlmModelDetails;
@@ -107,6 +110,8 @@ public class ChatService implements OpenAiModelContributor {
     private final boolean speculative;
     /** Draft depth override ({@code 0} = model default). */
     private final int speculativeTokens;
+    /** JVM shutdown hook ensuring clean cleanup of native resources on exit. */
+    private final Thread shutdownHook = new Thread(this::shutdown, "chat-service-shutdown");
 
     /**
      * Loads the LLM upon application start.
@@ -129,6 +134,11 @@ public class ChatService implements OpenAiModelContributor {
         this.mediaService = mediaService;
         this.speculative = config.speculative();
         this.speculativeTokens = config.speculativeTokens();
+        try {
+            Runtime.getRuntime().addShutdownHook(shutdownHook);
+        } catch (IllegalStateException ignored) {
+            // JVM already shutting down
+        }
         String modelSpec = config.model();
         this.modelId = publicModelId(modelSpec);
         try {
@@ -325,10 +335,23 @@ public class ChatService implements OpenAiModelContributor {
                 .orElse(false);
     }
 
+    void onStop(@Observes ShutdownEvent event) {
+        shutdown();
+    }
+
     @PreDestroy
-    void shutdown() {
+    synchronized void shutdown() {
+        try {
+            Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        } catch (IllegalStateException ignored) {
+            // JVM is in process of shutting down
+        }
         if (engine != null) {
-            engine.close();
+            try {
+                engine.close();
+            } catch (Exception e) {
+                logger.warnf(e, "Failed to close inference engine");
+            }
             engine = null;
         }
         if (model instanceof AutoCloseable closeable) {
@@ -339,6 +362,12 @@ public class ChatService implements OpenAiModelContributor {
             }
         }
         model = null;
+
+        try {
+            GenAI.shutdown();
+        } catch (Throwable t) {
+            logger.debugf(t, "GenAI shutdown failed");
+        }
     }
 
     /**
