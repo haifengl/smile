@@ -190,7 +190,10 @@ public class ChatService implements OpenAiModelContributor {
         logger.infof("Decode CUDA graph: %s",
                 DecodeCudaGraph.enabled() ? "enabled" : "disabled");
         double memFraction = config.memFractionStatic();
-        String kvDtype = kvCache.dtype().orElse(null);
+        String rawKvDtype = kvCache.dtype();
+        String kvDtype = (rawKvDtype == null || rawKvDtype.isBlank() || "auto".equalsIgnoreCase(rawKvDtype.trim()))
+                ? null
+                : rawKvDtype.trim();
         int pageSize = kvCache.pageSize();
         if (localDir) {
             model = loadFromLocal(localPath, config, memFraction, kvDtype, pageSize);
@@ -418,7 +421,7 @@ public class ChatService implements OpenAiModelContributor {
                     format, backend,
                     backend.isFailover() ? "failover" : (backend.isPrimary() ? "primary" : "dense"),
                     cc[0], cc[1],
-                    kvCache.dtype().orElse("<default>"));
+                    kvCache.dtype());
         } catch (Exception e) {
             logger.warnf(e, "Weight quant backend probe failed (model still usable if dense)");
         }
