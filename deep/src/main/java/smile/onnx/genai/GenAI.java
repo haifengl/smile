@@ -335,14 +335,28 @@ public final class GenAI {
     }
 
     /**
+     * Returns whether the GenAI library has been initialized in this process.
+     *
+     * @return {@code true} if initialized, {@code false} otherwise.
+     */
+    public static boolean isInitialized() {
+        return Boolean.TRUE.equals(available);
+    }
+
+    /**
      * Tears down GenAI globals. Destroy every GenAI object before calling this.
+     * Safe to call multiple times or when GenAI was never initialized.
      *
      * <p>After shutdown, the next GenAI API call re-initializes the library.
      */
-    public static void shutdown() {
-        if (!available()) {
+    public static synchronized void shutdown() {
+        if (!Boolean.TRUE.equals(available)) {
             return;
         }
-        ort_genai_c_h.OgaShutdown.makeInvoker().apply();
+        try {
+            ort_genai_c_h.OgaShutdown.makeInvoker().apply();
+        } finally {
+            available = null;
+        }
     }
 }
