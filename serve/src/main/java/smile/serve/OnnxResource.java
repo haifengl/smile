@@ -20,29 +20,39 @@ package smile.serve;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Map;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.web.RoutingContext;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
 /**
- * REST resource exposing the ONNX model inference API at
+ * REST resource exposing the ONNX model inference and control API at
  * {@code /api/v1/onnx}.
  *
  * <ul>
  *   <li>{@code GET  /onnx/{id}}          – retrieve ONNX model metadata.</li>
+ *   <li>{@code GET  /onnx/{id}/health}   – inspect model operational status.</li>
+ *   <li>{@code GET  /onnx/{id}/metrics}  – inspect inference throughput and latency metrics.</li>
  *   <li>{@code POST /onnx/{id}}          – single JSON inference request.</li>
  *   <li>{@code POST /onnx/{id}/stream}   – streaming inference (JSON lines
  *       or CSV text for single-input models).</li>
+ *   <li>{@code POST /onnx/{id}/reload}   – reload ONNX model from disk (localhost only).</li>
+ *   <li>{@code POST /onnx/{id}/unload}   – unload ONNX model from memory (localhost only).</li>
  * </ul>
  *
  * <p>The unified model catalog is {@code GET /api/v1/models}.
@@ -82,6 +92,9 @@ public class OnnxResource {
     @Inject
     OnnxService service;
 
+    @Inject
+    RoutingContext routingContext;
+
     /**
      * Returns the metadata of a single ONNX model, including its graph name,
      * version, input/output node descriptors, and any custom metadata embedded
@@ -95,6 +108,81 @@ public class OnnxResource {
     @Produces(MediaType.APPLICATION_JSON)
     public OnnxModelInfo info(@PathParam("id") String id) {
         return service.getModel(id).info();
+    }
+
+    /**
+     * Returns the health and readiness status of an ONNX model.
+     *
+     * @param id the model ID.
+     * @return health status JSON object.
+     */
+    @GET
+    @Path("/{id}/health")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> health(@PathParam("id") String id) {
+        var model = service.getModel(id);
+        return Map.of(
+                "id", model.id(),
+                "status", model.state().name(),
+                "in_flight_requests", model.metrics().inFlightRequests(),
+                "uptime_seconds", model.metrics().uptimeSeconds()
+        );
+    }
+
+    /**
+     * Returns operational metrics, throughput, and latency statistics for an ONNX model.
+     *
+     * @param id the model ID.
+     * @return model metrics.
+     */
+    @GET
+    @Path("/{id}/metrics")
+    @Produces(MediaType.APPLICATION_JSON)
+    public ModelMetrics metrics(@PathParam("id") String id) {
+        return service.getModel(id).metrics();
+    }
+
+    /**
+     * Reloads an ONNX model from disk into active memory. Accessible only from localhost.
+     *
+     * @param id the model ID.
+     * @return reload confirmation.
+     */
+    @POST
+    @Path("/{id}/reload")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> reload(@PathParam("id") String id) {
+        LocalhostGuard.requireLocalhost(routingContext);
+        var reloaded = service.reloadModel(id);
+        return Map.of(
+                "status", "reloaded",
+                "id", reloaded.id(),
+                "path", reloaded.path().toString(),
+                "timestamp", Instant.now().getEpochSecond()
+        );
+    }
+
+    /**
+     * Unloads an ONNX model from active memory, gracefully waiting for in-flight requests.
+     * Accessible only from localhost.
+     *
+     * @param id          the model ID.
+     * @param timeoutSecs grace period in seconds to wait for in-flight requests (default: 10s).
+     * @return unload confirmation.
+     */
+    @POST
+    @Path("/{id}/unload")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> unload(@PathParam("id") String id,
+                                      @QueryParam("timeout") @DefaultValue("10") long timeoutSecs) {
+        LocalhostGuard.requireLocalhost(routingContext);
+        boolean drained = service.unloadModel(id, Duration.ofSeconds(Math.max(1, timeoutSecs)));
+        return Map.of(
+                "status", "unloaded",
+                "id", id,
+                "drained", drained,
+                "timestamp", Instant.now().getEpochSecond()
+        );
     }
 
     /**

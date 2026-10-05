@@ -20,6 +20,7 @@ package smile.serve;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +33,7 @@ import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
 import org.jboss.logging.Logger;
 import smile.onnx.InferenceSession;
@@ -59,6 +61,7 @@ public class OnnxService implements OpenAiModelContributor {
     private static final Logger logger = Logger.getLogger(OnnxService.class);
     /** Loaded models, keyed by model ID. Sorted for stable list order. */
     private final Map<String, OnnxModel> models = Collections.synchronizedSortedMap(new TreeMap<>());
+    private final Map<String, Path> modelPaths = Collections.synchronizedMap(new TreeMap<>());
 
     /**
      * Loads ONNX models upon application start.
@@ -94,6 +97,7 @@ public class OnnxService implements OpenAiModelContributor {
             var session = InferenceSession.create(path.toString());
             var model = new OnnxModel(id, path, session);
             models.put(id, model);
+            modelPaths.put(id, path);
             logger.infof("ONNX model '%s' loaded successfully (inputs=%s, outputs=%s)",
                     id, session.inputNames(), session.outputNames());
         } catch (Throwable ex) {
@@ -192,6 +196,59 @@ public class OnnxService implements OpenAiModelContributor {
     public JsonObject predict(String modelId, JsonObject request)
             throws BadRequestException, NotFoundException {
         return getModel(modelId).predict(request);
+    }
+
+    /**
+     * Reloads an ONNX model from its backing file on disk.
+     * If the model was previously unloaded, it is reloaded from its known file path.
+     *
+     * @param id the model ID.
+     * @return the reloaded ONNX model.
+     * @throws NotFoundException if the model or its file does not exist.
+     * @throws InternalServerErrorException if recreating the session fails.
+     */
+    public OnnxModel reloadModel(String id) throws NotFoundException, InternalServerErrorException {
+        Path path = modelPaths.get(id);
+        if (path == null) {
+            OnnxModel existing = models.get(id);
+            if (existing != null) {
+                path = existing.path();
+            }
+        }
+        if (path == null || !Files.isRegularFile(path)) {
+            throw new NotFoundException("ONNX model file not found on disk: " + path);
+        }
+        try {
+            logger.infof("Reloading ONNX model '%s' from '%s'", id, path);
+            var session = InferenceSession.create(path.toString());
+            var reloaded = new OnnxModel(id, path, session);
+            OnnxModel old = models.put(id, reloaded);
+            modelPaths.put(id, path);
+            if (old != null) {
+                old.close();
+            }
+            logger.infof("ONNX model '%s' reloaded successfully", id);
+            return reloaded;
+        } catch (Exception ex) {
+            logger.errorf(ex, "Failed to reload ONNX model '%s' from '%s'", id, path);
+            throw new InternalServerErrorException("Failed to reload ONNX model: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Gracefully unloads an ONNX model from active memory, waiting for in-flight requests.
+     *
+     * @param id           the model ID.
+     * @param graceTimeout max duration to wait for in-flight requests.
+     * @return {@code true} if all in-flight requests completed before timeout.
+     * @throws NotFoundException if the model is not found.
+     */
+    public boolean unloadModel(String id, Duration graceTimeout) throws NotFoundException {
+        OnnxModel existing = getModel(id);
+        boolean drained = existing.unload(graceTimeout);
+        models.remove(id);
+        logger.infof("ONNX model '%s' unloaded (drained in-flight: %s)", id, drained);
+        return drained;
     }
 }
 
