@@ -53,6 +53,17 @@ public class LocalhostGuardTest {
         assertThrows(ForbiddenException.class, () -> LocalhostGuard.requireLocalhost(ctx));
     }
 
+    @Test
+    public void testLocalhostFilterDelegatesToGuard() {
+        LocalhostFilter filter = new LocalhostFilter();
+
+        filter.routingContext = mockRoutingContext("127.0.0.1");
+        assertDoesNotThrow(() -> filter.filter(null));
+
+        filter.routingContext = mockRoutingContext("10.0.0.2");
+        assertThrows(ForbiddenException.class, () -> filter.filter(null));
+    }
+
     private static RoutingContext mockRoutingContext(String remoteHost) {
         SocketAddress socketAddress = (SocketAddress) Proxy.newProxyInstance(
                 SocketAddress.class.getClassLoader(),

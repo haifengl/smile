@@ -37,7 +37,6 @@ import jakarta.ws.rs.core.MediaType;
 import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.web.RoutingContext;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 
 /**
@@ -91,9 +90,6 @@ public class OnnxResource {
 
     @Inject
     OnnxService service;
-
-    @Inject
-    RoutingContext routingContext;
 
     /**
      * Returns the metadata of a single ONNX model, including its graph name,
@@ -150,9 +146,9 @@ public class OnnxResource {
      */
     @POST
     @Path("/{id}/reload")
+    @LocalhostOnly
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Object> reload(@PathParam("id") String id) {
-        LocalhostGuard.requireLocalhost(routingContext);
         var reloaded = service.reloadModel(id);
         return Map.of(
                 "status", "reloaded",
@@ -172,10 +168,10 @@ public class OnnxResource {
      */
     @POST
     @Path("/{id}/unload")
+    @LocalhostOnly
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Object> unload(@PathParam("id") String id,
                                       @QueryParam("timeout") @DefaultValue("10") long timeoutSecs) {
-        LocalhostGuard.requireLocalhost(routingContext);
         boolean drained = service.unloadModel(id, Duration.ofSeconds(Math.max(1, timeoutSecs)));
         return Map.of(
                 "status", "unloaded",
