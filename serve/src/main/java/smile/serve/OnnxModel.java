@@ -18,12 +18,15 @@
 package smile.serve;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ServiceUnavailableException;
 import smile.serve.model.OnnxModelDetails;
 import smile.onnx.ElementType;
 import smile.onnx.InferenceSession;
@@ -70,6 +73,13 @@ import smile.onnx.TensorInfo;
  */
 public class OnnxModel implements AutoCloseable {
 
+    /** Lifecycle state of the model. */
+    public enum State {
+        ACTIVE,
+        UNLOADING,
+        UNLOADED
+    }
+
     /** The model ID (file stem). */
     private final String id;
     /** The model file path. */
@@ -78,6 +88,8 @@ public class OnnxModel implements AutoCloseable {
     private final InferenceSession session;
     /** Cached metadata DTO. */
     private final OnnxModelInfo info;
+    private final AtomicReference<State> state = new AtomicReference<>(State.ACTIVE);
+    private final ModelMetrics metrics = new ModelMetrics();
 
     /**
      * Constructs an {@code OnnxModel} from an open session.
@@ -105,6 +117,45 @@ public class OnnxModel implements AutoCloseable {
                 inputs,
                 outputs,
                 onnxMeta.customMetadata());
+    }
+
+    /**
+     * Returns the current lifecycle state of the model.
+     * @return model lifecycle state.
+     */
+    public State state() {
+        return state.get();
+    }
+
+    /**
+     * Returns the operational metrics for this model.
+     * @return model metrics.
+     */
+    public ModelMetrics metrics() {
+        return metrics;
+    }
+
+    /**
+     * Initiates graceful unload of this model, waiting for in-flight requests to complete.
+     *
+     * @param timeout max duration to wait for in-flight requests.
+     * @return {@code true} if all in-flight requests drained before timeout.
+     */
+    public boolean unload(Duration timeout) {
+        state.set(State.UNLOADING);
+        long deadline = System.currentTimeMillis() + timeout.toMillis();
+        while (metrics.inFlightRequests() > 0 && System.currentTimeMillis() < deadline) {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        boolean drained = (metrics.inFlightRequests() == 0);
+        state.set(State.UNLOADED);
+        close();
+        return drained;
     }
 
     /**
@@ -162,7 +213,12 @@ public class OnnxModel implements AutoCloseable {
      */
     public JsonObject predict(JsonObject request) throws BadRequestException {
         if (request == null) throw new BadRequestException("Request body must not be null");
+        if (state.get() != State.ACTIVE) {
+            throw new ServiceUnavailableException("ONNX model " + id + " is " + state.get().name().toLowerCase());
+        }
 
+        long start = metrics.startExecution();
+        boolean success = false;
         List<NodeInfo> inputInfos = session.inputInfos();
         Map<String, OrtValue> inputs = new LinkedHashMap<>(inputInfos.size());
 
@@ -178,12 +234,18 @@ public class OnnxModel implements AutoCloseable {
 
             OrtValue[] outputs = session.run(inputs);
             try {
-                return ortValuesToJson(session.outputInfos(), outputs);
+                JsonObject result = ortValuesToJson(session.outputInfos(), outputs);
+                success = true;
+                return result;
             } finally {
                 for (var v : outputs) v.close();
             }
         } finally {
-            for (var v : inputs.values()) v.close();
+            try {
+                for (var v : inputs.values()) v.close();
+            } finally {
+                metrics.finishExecution(start, success);
+            }
         }
     }
 
@@ -208,59 +270,70 @@ public class OnnxModel implements AutoCloseable {
         if (line == null || line.isBlank()) {
             throw new BadRequestException("CSV line must not be blank");
         }
-
-        List<NodeInfo> inputInfos = session.inputInfos();
-        if (inputInfos.isEmpty()) {
-            throw new BadRequestException("Model has no inputs");
+        if (state.get() != State.ACTIVE) {
+            throw new ServiceUnavailableException("ONNX model " + id + " is " + state.get().name().toLowerCase());
         }
 
-        // Use the first input node only
-        NodeInfo firstInput = inputInfos.getFirst();
-        TensorInfo ti = firstInput.tensorInfo();
-        ElementType elemType = (ti != null) ? ti.elementType() : ElementType.FLOAT;
-
-        String[] tokens = line.split(",", -1);
-        long[] shape = resolveShape(ti, tokens.length);
-
-        Map<String, OrtValue> inputs = new LinkedHashMap<>();
-        OrtValue input;
-        if (elemType == ElementType.STRING) {
-            String[] data = new String[tokens.length];
-            for (int i = 0; i < tokens.length; i++) {
-                data[i] = tokens[i].trim();
+        long start = metrics.startExecution();
+        boolean success = false;
+        try {
+            List<NodeInfo> inputInfos = session.inputInfos();
+            if (inputInfos.isEmpty()) {
+                throw new BadRequestException("Model has no inputs");
             }
-            input = OrtValue.fromStringArray(data, shape);
-        } else {
-            // Parse the CSV as float values
-            float[] data = new float[tokens.length];
-            try {
+
+            // Use the first input node only
+            NodeInfo firstInput = inputInfos.getFirst();
+            TensorInfo ti = firstInput.tensorInfo();
+            ElementType elemType = (ti != null) ? ti.elementType() : ElementType.FLOAT;
+
+            String[] tokens = line.split(",", -1);
+            long[] shape = resolveShape(ti, tokens.length);
+
+            Map<String, OrtValue> inputs = new LinkedHashMap<>();
+            OrtValue input;
+            if (elemType == ElementType.STRING) {
+                String[] data = new String[tokens.length];
                 for (int i = 0; i < tokens.length; i++) {
-                    data[i] = Float.parseFloat(tokens[i].trim());
+                    data[i] = tokens[i].trim();
                 }
-            } catch (NumberFormatException ex) {
-                throw new BadRequestException("Failed to parse CSV: " + ex.getMessage());
-            }
-            input = OrtValue.fromFloatArray(data, shape);
-        }
-
-        try (input) {
-            inputs.put(firstInput.name(), input);
-
-            // If the model has more than one input, add empty placeholders
-            // for any remaining static-shape inputs (advanced use-cases
-            // should use the JSON endpoint instead).
-            if (inputInfos.size() > 1) {
-                throw new BadRequestException(
-                        "CSV input is only supported for single-input models. "
-                        + "Use the JSON endpoint for multi-input models.");
+                input = OrtValue.fromStringArray(data, shape);
+            } else {
+                // Parse the CSV as float values
+                float[] data = new float[tokens.length];
+                try {
+                    for (int i = 0; i < tokens.length; i++) {
+                        data[i] = Float.parseFloat(tokens[i].trim());
+                    }
+                } catch (NumberFormatException ex) {
+                    throw new BadRequestException("Failed to parse CSV: " + ex.getMessage());
+                }
+                input = OrtValue.fromFloatArray(data, shape);
             }
 
-            OrtValue[] outputs = session.run(inputs);
-            try {
-                return ortValuesToJson(session.outputInfos(), outputs);
-            } finally {
-                for (var v : outputs) v.close();
+            try (input) {
+                inputs.put(firstInput.name(), input);
+
+                // If the model has more than one input, add empty placeholders
+                // for any remaining static-shape inputs (advanced use-cases
+                // should use the JSON endpoint instead).
+                if (inputInfos.size() > 1) {
+                    throw new BadRequestException(
+                            "CSV input is only supported for single-input models. "
+                            + "Use the JSON endpoint for multi-input models.");
+                }
+
+                OrtValue[] outputs = session.run(inputs);
+                try {
+                    JsonObject result = ortValuesToJson(session.outputInfos(), outputs);
+                    success = true;
+                    return result;
+                } finally {
+                    for (var v : outputs) v.close();
+                }
             }
+        } finally {
+            metrics.finishExecution(start, success);
         }
     }
 
