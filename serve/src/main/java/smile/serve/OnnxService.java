@@ -33,8 +33,10 @@ import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 import smile.onnx.InferenceSession;
 import smile.io.Paths;
@@ -249,6 +251,68 @@ public class OnnxService implements OpenAiModelContributor {
         models.remove(id);
         logger.infof("ONNX model '%s' unloaded (drained in-flight: %s)", id, drained);
         return drained;
+    }
+
+    /**
+     * Dynamically loads an ONNX model or directory of models from disk into active memory.
+     * Rejects with 409 Conflict if any model with the same ID is already loaded.
+     *
+     * @param path file or directory path.
+     * @return list of newly loaded ONNX models.
+     * @throws NotFoundException if path does not exist.
+     * @throws ClientErrorException if model with same ID is already loaded.
+     * @throws BadRequestException if the file is invalid.
+     */
+    public List<OnnxModel> load(Path path) throws NotFoundException, ClientErrorException, BadRequestException {
+        Path absPath = path.toAbsolutePath().normalize();
+        if (!Files.exists(absPath)) {
+            throw new NotFoundException("Path does not exist: " + path);
+        }
+        List<Path> onnxFiles = new ArrayList<>();
+        if (Files.isRegularFile(absPath)) {
+            if (!absPath.toString().endsWith(".onnx")) {
+                throw new BadRequestException("Not a .onnx file: " + path);
+            }
+            onnxFiles.add(absPath);
+        } else if (Files.isDirectory(absPath)) {
+            try (Stream<Path> stream = Files.list(absPath)) {
+                stream.filter(f -> Files.isRegularFile(f) && f.toString().endsWith(".onnx"))
+                      .forEach(onnxFiles::add);
+            } catch (IOException e) {
+                throw new BadRequestException("Failed to read directory: " + path, e);
+            }
+        }
+        if (onnxFiles.isEmpty()) {
+            throw new BadRequestException("No .onnx models found at: " + path);
+        }
+
+        List<OnnxModel> loaded = new ArrayList<>();
+        for (Path file : onnxFiles) {
+            String id = Paths.getFileName(file);
+            if (models.containsKey(id)) {
+                throw new ClientErrorException(
+                        "ONNX model '" + id + "' is already loaded. Use POST /api/v1/onnx/" + id + "/reload to refresh it, or unload it first.",
+                        Response.Status.CONFLICT);
+            }
+            try {
+                var session = InferenceSession.create(file.toString());
+                var model = new OnnxModel(id, file, session);
+                loaded.add(model);
+            } catch (Throwable ex) {
+                // If any session failed, close already opened ones in this batch
+                for (var m : loaded) {
+                    m.close();
+                }
+                throw new BadRequestException("Failed to load ONNX model from " + file + ": " + ex.getMessage(), ex);
+            }
+        }
+
+        for (OnnxModel model : loaded) {
+            models.put(model.id(), model);
+            modelPaths.put(model.id(), model.path());
+            logger.infof("Dynamically loaded ONNX model '%s' from '%s'", model.id(), model.path());
+        }
+        return loaded;
     }
 }
 
