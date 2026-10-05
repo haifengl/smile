@@ -50,6 +50,7 @@
 12. [Status Bar](#12-status-bar)
 13. [Font Size](#13-font-size)
 14. [MCP (Model Context Protocol) Integration](#14-mcp-model-context-protocol-integration)
+    - 14.1 [Web Search](#141-web-search)
 15. [LSP (Language Server Protocol) Integration](#15-lsp-language-server-protocol-integration)
 16. [Themes / Look-and-Feel](#16-themes--look-and-feel)
 17. [Keyboard Shortcuts Reference](#17-keyboard-shortcuts-reference)
@@ -744,8 +745,10 @@ All three files are loaded if they exist; tools from all connected servers becom
 
 **Example `mcp.json`:**
 
-> **Note:** the top-level key is `servers`, not `mcpServers`. A file using
-> `mcpServers` is parsed without error but its servers are silently ignored.
+> **Note:** the top-level key is `servers` (VS Code). The alias `mcpServers`
+> (Claude Desktop and most other harnesses) is also accepted, so an existing
+> `mcp.json` from another tool can be read as-is. Java-style `//` and `/* */`
+> comments are permitted, so a server can be commented out rather than deleted.
 
 ```json
 {
@@ -762,6 +765,78 @@ All three files are loaded if they exist; tools from all connected servers becom
   }
 }
 ```
+
+### 14.1 Web Search
+
+SMILE Studio can search the web in two ways, and it prefers the provider's
+native search to save context space:
+
+| Provider | Web search | Setup |
+|----------|-----------|-------|
+| **OpenAI** | Built-in (server-side) | None — the model searches natively |
+| **Anthropic** (managed service) | Built-in (server-side) | None |
+| **Google Gemini** | Built-in (server-side) | None |
+| **OpenAI-compatible** (`ChatCompletions`) | `WebSearch` tool (SerpApi) | Set `SERPAPI_KEY` |
+| **Anthropic** (self-hosted base URL) | `WebSearch` tool (SerpApi) | Set `SERPAPI_KEY` |
+
+When a provider has native search, the `WebSearch` tool is **not** added to the
+conversation, and any MCP server tagged with `x-smile-provides: ["web-search"]`
+is skipped — its tools are not advertised to the model. This keeps the context
+window small. The server stays connected, so a tool call that still arrives is
+served normally.
+
+#### SerpApi (client-side `WebSearch` tool)
+
+The `WebSearch` tool is backed by [SerpApi](https://serpapi.com/). It needs an
+API key in the `SERPAPI_KEY` environment variable:
+
+```shell
+# macOS / Linux
+export SERPAPI_KEY="your_api_key"
+
+# Windows (PowerShell)
+$env:SERPAPI_KEY = "your_api_key"
+```
+
+Get a key from the [SerpApi dashboard](https://serpapi.com/dashboard). SerpApi
+offers a **free plan with 250 searches per month** (50 per hour), which is
+usually enough for personal desktop use. Paid plans start at $25/month for
+1,000 searches. Only successful searches count toward the quota.
+
+If `SERPAPI_KEY` is missing or rejected, the tool returns an error and the agent
+falls back to an Exa MCP server if one is configured (see below). If neither is
+available, the agent tells you that web search is unavailable rather than
+fabricating results.
+
+#### Exa MCP server (alternative)
+
+[Exa](https://exa.ai/) provides a hosted MCP server with `web_search_exa` and
+`web_fetch_exa` tools. Add it to `mcp.json`:
+
+```json
+{
+  "servers": {
+    "exa": {
+      "type": "streamable-http",
+      "url": "https://mcp.exa.ai/mcp",
+      "x-smile-provides": ["web-search"]
+    }
+  }
+}
+```
+
+Exa works anonymously with rate limits. For higher limits, sign in with OAuth
+(most clients prompt automatically) or pass an API key from the
+[Exa dashboard](https://dashboard.exa.ai/api-keys) as `?exaApiKey=…` on the URL
+or an `Authorization: Bearer …` header. The free tier includes **$10 of credits
+per month** plus a $10 onboarding bonus.
+
+> **`x-smile-provides` is a SMILE extension, not a standard MCP field.** It
+> declares the capabilities a server offers so Studio can omit its tools when
+> the provider already covers them natively. The `x-` prefix avoids a collision
+> with a future standard field, and other MCP clients ignore the key. The only
+> tag defined today is `web-search`. Omit the field to always advertise the
+> server's tools.
 
 ---
 
@@ -948,6 +1023,23 @@ does not start, check the application log; errors are also shown briefly in the 
 ### AI features not working (Tab completion, code generation, agents)
 
 Open **File > Settings…** and verify your AI provider credentials. Check the status bar for initialization errors. Ensure network access to the provider's API endpoint is available.
+
+### Web search fails
+
+The root cause depends on the provider (see [§14.1](#141-web-search)):
+
+- **OpenAI / Anthropic (managed) / Gemini** — search is built in; a failure is
+  usually a network or provider-side issue, not a missing key.
+- **OpenAI-compatible or self-hosted Anthropic** — the `WebSearch` tool needs
+  `SERPAPI_KEY`. If it is unset, the agent reports that web search is
+  unavailable. Set the variable (see [§14.1](#141-web-search)) and restart
+  Studio so the process picks it up. A rejected or exhausted key is reported
+  separately.
+- **Exa MCP server** — if `web_search_exa` returns an auth or rate-limit error,
+  sign in with OAuth or add an Exa API key. Anonymous access is rate-limited.
+
+If neither the `WebSearch` tool nor an Exa MCP server is available, the agent
+tells you that web search is unavailable instead of fabricating results.
 
 ### Notebook not saving
 
