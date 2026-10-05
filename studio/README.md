@@ -843,6 +843,56 @@ per month** plus a $10 onboarding bonus.
 > tag defined today is `web-search`. Omit the field to always advertise the
 > server's tools.
 
+### 14.2 Per-agent MCP scoping
+
+By default every connected server's tools are advertised to every agent. When
+there are many servers, that wastes context space, and not every agent needs
+every server. The `x-smile-agents` key scopes a server to a set of agents:
+
+```json
+{
+  "servers": {
+    "exa": {
+      "type": "streamable-http",
+      "url": "https://mcp.exa.ai/mcp",
+      "x-smile-agents": ["java-coder", "pythonista"]
+    },
+    "bigquery": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@toolbox-sdk/server", "--prebuilt=bigquery"],
+      "x-smile-agents": ["*", "!desktop-operator"]
+    }
+  }
+}
+```
+
+- **Value** — an array of agent **spec names** (the `name` in `AGENT.md`, e.g.
+  `java-coder`, `pythonista`, `chief-of-staff`), not the call names shown in the
+  UI (`james`, `guido`, `frank`). The wildcard `*` means all agents; `!name`
+  excludes an agent. An exclusion always wins, so `["*", "!desktop-operator"]`
+  exposes the server to every agent except `desktop-operator`.
+- **Effect** — a server whose scope does not include the calling agent is skipped
+  when building the request, and a tool call for it is refused without contacting
+  the server. The server stays connected.
+- **Absent or empty** — the server is exposed to every agent (backward
+  compatible).
+
+> **Why this exists.** When you write an agent's `AGENT.md`, you do not know
+> which MCP servers will be available at runtime — servers are configured per
+> machine and per project, and the person authoring the spec is usually not the
+> person running it. So the agent-side `mcpServers:` allowlist is hardly useful
+> in practice. `x-smile-agents` puts the scope on the side that *does* know the
+> runtime: the user configuring the machine. The agent spec stays portable; the
+> deployment decides exposure.
+
+> **`x-smile-agents` is a SMILE extension, not a standard MCP field.** The `x-`
+> prefix avoids a collision with a future standard field, and other MCP clients
+> ignore the key. A bare `agents` key is **not** read.
+
+The scope is an **intersection** with the agent-side `mcpServers:` allowlist in
+`AGENT.md`: a server reaches an agent only if both agree.
+
 ---
 
 ## 15. LSP (Language Server Protocol) Integration
