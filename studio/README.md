@@ -435,7 +435,62 @@ Double-click a **Models** leaf node to open a **Save dialog**. Studio serializes
 
 ### 8.3 Starting an Inference Service
 
-Double-click a **Services** leaf node to open the **Start Service** dialog, which configures and launches a REST inference server for the saved model.
+Studio runs **one** inference service for the whole session, no matter how many
+models you train. The **Services** node contains a single **Inference Service**
+child; every saved model appears beneath it as a load candidate.
+
+- **Double-click the Inference Service node** to open the **Start Service**
+  dialog (host and port) and launch the service. The service starts empty.
+- **Double-click a saved model** to load it into the running service, starting
+  the service first if it is not already running. Loading a second model reuses
+  the same JVM and port.
+
+Models are loaded through `POST /api/v1/models/load`, so one process serves many
+models instead of one process per model.
+
+### 8.4 Inference Menu
+
+The **Inference** menu manages the service lifecycle:
+
+| Item | Action |
+|------|--------|
+| **Start Inference Service** | Start the service using the configured host and port |
+| **Stop Inference Service** | Stop the service and release its resources |
+| **Restart Inference Service** | Stop, then start again |
+| **Health** | Open `/q/health` in the browser |
+| **Metrics** | Open `/q/metrics` (Prometheus) in the browser |
+| **Open Web UI** | Open the service's web interface |
+
+### 8.5 Inference Server Configuration
+
+The service can start automatically when Studio starts. Configure it in
+`studio.json`, read from `$SMILE_HOME/conf/studio.json` or `~/.smile/studio.json`
+(system-wide only — the project-local `./.smile/studio.json` is deliberately not
+consulted, because a server binding is machine-wide):
+
+```json
+{
+  "inferenceServer": {
+    "autoStart": false,
+    "host": "localhost",
+    "port": 8888,
+    "modelPath": "./model"
+  }
+}
+```
+
+| Field | Default | Meaning |
+|-------|---------|---------|
+| `autoStart` | `false` | Start the service when Studio starts |
+| `host` | `localhost` | Bind host (loopback keeps the `@LocalhostOnly` management APIs reachable) |
+| `port` | `8888` | HTTP port |
+| `modelPath` | `./model` | A model file or directory to load at startup, relative to the working directory |
+
+`modelPath` defaults to `./model` — the project folder Studio is launched from,
+which is also where the agents look for `input/` and `output/`. The service is
+started only when `autoStart` is `true` **and** `modelPath` exists on disk; a
+project with no `model/` directory is left alone, and you can start the service
+later from the **Inference** menu or by double-clicking a model in the Kernel tree.
 
 ---
 
