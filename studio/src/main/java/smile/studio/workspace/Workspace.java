@@ -79,6 +79,10 @@ public class Workspace extends JSplitPane {
      */
     private final JTabbedPane agentTabs = new JTabbedPane();
     /**
+     * Outstanding questions per agent CLI, used to mark its tab until answered.
+     */
+    private final Map<AgentCLI, Integer> pendingQuestions = new IdentityHashMap<>();
+    /**
      * The opened files, notebooks and plain text alike.
      */
     private final List<OpenFile> openFiles = new ArrayList<>();
@@ -334,7 +338,10 @@ public class Workspace extends JSplitPane {
 
     /**
      * Registers a top-level agent under its call-out name and shows its tab.
-     * A queued request selects that tab so the turn's progress is visible.
+     * A queued request selects that tab so the turn's progress is visible. A
+     * question selects it too and marks the tab, so an agent that blocks on user
+     * input is brought to front even when the user has switched to another
+     * agent's tab, and stays marked until answered.
      */
     private void openAgent(String title, Agent agent, String name, AgentCLI cli) {
         if (agent != null) {
@@ -345,9 +352,65 @@ public class Workspace extends JSplitPane {
                 public void onQueued(ioa.agent.AgentRequest request) {
                     SwingUtilities.invokeLater(() -> agentTabs.setSelectedComponent(cli));
                 }
+
+                @Override
+                public void onQuestion(String runId, ioa.llm.tool.Question question) {
+                    SwingUtilities.invokeLater(() -> {
+                        markQuestionPending(title, cli, question);
+                        agentTabs.setSelectedComponent(cli);
+                    });
+                }
             });
         }
         agentTabs.addTab(title, cli);
+    }
+
+    /**
+     * Marks an agent's tab while it waits on a question, and registers a
+     * completion callback that clears the mark when the question is answered or
+     * cancelled. The callback fires on the thread that completes the answer, so
+     * it re-enters the event dispatch thread before touching Swing.
+     *
+     * @param title the tab's base title.
+     * @param cli the agent's CLI, i.e. the tab component.
+     * @param question the question the agent is waiting on.
+     */
+    private void markQuestionPending(String title, AgentCLI cli, ioa.llm.tool.Question question) {
+        pendingQuestions.merge(cli, 1, Integer::sum);
+        int index = indexOfAgent(cli);
+        if (index >= 0) {
+            agentTabs.setTitleAt(index, title + "  \u2753");
+        }
+        question.ask().whenComplete((answer, error) ->
+                SwingUtilities.invokeLater(() -> clearQuestionPending(title, cli)));
+    }
+
+    /**
+     * Clears one pending question from an agent's tab, restoring the base title
+     * once no question remains outstanding for that agent.
+     *
+     * @param title the tab's base title.
+     * @param cli the agent's CLI, i.e. the tab component.
+     */
+    private void clearQuestionPending(String title, AgentCLI cli) {
+        int remaining = pendingQuestions.merge(cli, -1, Integer::sum);
+        if (remaining <= 0) {
+            pendingQuestions.remove(cli);
+            int index = indexOfAgent(cli);
+            if (index >= 0) {
+                agentTabs.setTitleAt(index, title);
+            }
+        }
+    }
+
+    /**
+     * Returns the index of an agent's tab, or -1 if it is no longer installed.
+     *
+     * @param cli the agent's CLI, i.e. the tab component.
+     * @return the tab index, or -1 when the tab is absent.
+     */
+    private int indexOfAgent(AgentCLI cli) {
+        return agentTabs.indexOfComponent(cli);
     }
 
     /**

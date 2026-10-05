@@ -502,6 +502,11 @@ The right panel hosts the AI agents, each in its own tab. The tabs appear in the
 chief of staff, leads the strip. All agents require an AI service to be configured
 (see [Section 11](#11-settings--ai-service-configuration)).
 
+When an agent needs an answer from you, its tab is selected automatically and marked with
+a **❓** — so an agent that blocks on input brings itself to the front even if you have
+switched to another agent's tab, and stays marked until the question is answered or
+cancelled.
+
 ### 9.1 Frank the Chief of Staff
 
 > 🤝 *Frank the Chief of Staff* — strategic partner and cross-agent coordinator
