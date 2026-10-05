@@ -20,6 +20,7 @@ import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import jakarta.interceptor.Interceptor;
 import org.jboss.logging.Logger;
+import smile.serve.InferenceServiceConfig;
 
 /**
  * Aggregates every {@link OpenAiModelContributor} into a single catalog.
@@ -31,17 +32,44 @@ public class ModelCatalog {
     @Inject
     Instance<OpenAiModelContributor> contributors;
 
+    @Inject
+    InferenceServiceConfig config;
+
     /**
      * Checks on startup that at least one model has been loaded; otherwise
      * exits gracefully.
      *
+     * <p>When {@code smile.serve.allow-empty=true} the service stays up with an
+     * empty catalog so models can be loaded later through
+     * {@code POST /api/v1/models/load}. Without this, a dynamic-load client
+     * (Studio) would race the exit: it starts the service empty and loads a
+     * model immediately after, but the service would already have shut down.
+     *
      * @param event the startup event.
      */
     void onStart(@Observes @Priority(Interceptor.Priority.PLATFORM_BEFORE) StartupEvent event) {
-        if (isEmpty()) {
+        if (shouldExitOnEmptyStartup(isEmpty(), config.allowEmpty())) {
             logger.warn("No model found or loaded successfully at startup. Exiting service...");
             Quarkus.asyncExit();
+        } else if (isEmpty()) {
+            logger.info("No model loaded at startup; waiting for dynamic loads "
+                    + "(smile.serve.allow-empty=true)");
         }
+    }
+
+    /**
+     * Decides whether an empty catalog at startup should terminate the service.
+     *
+     * <p>Extracted as a pure function so the policy is unit-testable: the
+     * {@code Quarkus.asyncExit()} it guards cannot be observed from a
+     * {@code @QuarkusTest}, because test mode keeps the HTTP server alive.
+     *
+     * @param isEmpty    whether no model is loaded.
+     * @param allowEmpty whether {@code smile.serve.allow-empty} is set.
+     * @return {@code true} when the service should exit.
+     */
+    static boolean shouldExitOnEmptyStartup(boolean isEmpty, boolean allowEmpty) {
+        return isEmpty && !allowEmpty;
     }
 
     /**

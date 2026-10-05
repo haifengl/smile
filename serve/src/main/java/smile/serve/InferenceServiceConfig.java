@@ -18,6 +18,7 @@
 package smile.serve;
 
 import io.smallrye.config.ConfigMapping;
+import io.smallrye.config.WithDefault;
 
 /**
  * The inference service configuration.
@@ -28,4 +29,18 @@ import io.smallrye.config.ConfigMapping;
 public interface InferenceServiceConfig {
     /** The location of pre-trained model(s) for inference. */
     String model();
+
+    /**
+     * Whether the service may start with no model loaded.
+     *
+     * <p>Defaults to {@code false}: a standalone {@code smile serve} that finds
+     * no model exits at startup rather than idling with nothing to serve. Set
+     * {@code smile.serve.allow-empty=true} for dynamic-load mode, where models
+     * arrive later via {@code POST /api/v1/models/load} — Studio starts the
+     * service this way so one process can serve many models.
+     *
+     * @return {@code true} when an empty catalog is permitted at startup.
+     */
+    @WithDefault("false")
+    boolean allowEmpty();
 }

@@ -1,0 +1,8 @@
+{
+  "inferenceServer": {
+    "autoStart": false,
+    "host": "localhost",
+    "port": 8888,
+    "modelPath": "./model"
+  }
+}

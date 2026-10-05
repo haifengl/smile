@@ -24,14 +24,11 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.net.URI;
-import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import jdk.jshell.VarSnippet;
-import smile.studio.ProcessFrame;
 import smile.studio.kernel.Kernel;
 import smile.studio.kernel.Variable;
 import static smile.swing.SmileUtilities.scaleImageIcon;
@@ -50,6 +47,9 @@ public class KernelExplorer extends JPanel {
     private final DefaultMutableTreeNode matrix = new DefaultMutableTreeNode(bundle.getString("Matrix"));
     private final DefaultMutableTreeNode models = new DefaultMutableTreeNode(bundle.getString("Models"));
     private final DefaultMutableTreeNode services = new DefaultMutableTreeNode(bundle.getString("Services"));
+    /** The single inference service node under {@link #services}. */
+    private final DefaultMutableTreeNode serviceNode =
+            new DefaultMutableTreeNode(new ServeService(StudioConfig.DEFAULT_HOST, StudioConfig.DEFAULT_PORT));
     private static final ImageIcon matrixIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(KernelExplorer.class.getResource("images/matrix.png"))), 24);
     private static final ImageIcon modelIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(KernelExplorer.class.getResource("images/model.png"))), 24);
     private static final ImageIcon serverIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(KernelExplorer.class.getResource("images/server.png"))), 24);
@@ -90,6 +90,8 @@ public class KernelExplorer extends JPanel {
         treeModel.insertNodeInto(matrix, root, root.getChildCount());
         treeModel.insertNodeInto(models, root, root.getChildCount());
         treeModel.insertNodeInto(services, root, root.getChildCount());
+        // One shared inference service; saved models are added as its children.
+        treeModel.insertNodeInto(serviceNode, services, services.getChildCount());
 
         // Allow one selection at a time.
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
@@ -115,6 +117,10 @@ public class KernelExplorer extends JPanel {
                     setIcon(modelIcon);
                 } else if (node == services) {
                     setIcon(serverIcon);
+                } else if (object instanceof ServeService service) {
+                    setIcon(serverIcon);
+                    setText(bundle.getString("InferenceService"));
+                    setToolTipText(service.host() + ":" + service.port());
                 } else if (object instanceof VarSnippet snippet) {
                     setText(snippet.name());
                     setToolTipText(snippet.source().trim());
@@ -135,6 +141,15 @@ public class KernelExplorer extends JPanel {
                     TreePath treePath = tree.getPathForLocation(e.getX(), e.getY());
                     if (treePath != null) {
                         DefaultMutableTreeNode node = (DefaultMutableTreeNode) treePath.getLastPathComponent();
+                        // The service node is not a leaf once models are added, so it
+                        // is handled before the leaf guard below.
+                        if (node == serviceNode) {
+                            StartServiceDialog dialog = new StartServiceDialog(
+                                    SwingUtilities.getWindowAncestor(KernelExplorer.this),
+                                    (ServeService) serviceNode.getUserObject());
+                            dialog.setVisible(true);
+                            return;
+                        }
                         if (node.isLeaf()) {
                             if (kernel == null) return;
                             var parent = node.getParent();
@@ -168,17 +183,17 @@ public class KernelExplorer extends JPanel {
                                         var schema = kernel.eval(name + ".schema();");
                                         if (schema != null) {
                                             var serviceNode = new DefaultMutableTreeNode(new PersistedModel(name, schema.toString(), path));
-                                            treeModel.insertNodeInto(serviceNode, services, services.getChildCount());
-                                            tree.expandPath(new TreePath(new Object[]{root, services}));
+                                            treeModel.insertNodeInto(serviceNode, KernelExplorer.this.serviceNode, KernelExplorer.this.serviceNode.getChildCount());
+                                            tree.expandPath(new TreePath(new Object[]{root, services, KernelExplorer.this.serviceNode}));
                                         }
                                     }
                                 }
                                 // Restore the original dialog title after the file chooser is closed
                                 fileChooser.setDialogTitle(title);
-                            } else if (parent == services) {
-                                PersistedModel service = (PersistedModel) node.getUserObject();
-                                StartServiceDialog dialog = new StartServiceDialog(SwingUtilities.getWindowAncestor(KernelExplorer.this), service);
-                                dialog.setVisible(true);
+                            } else if (parent == serviceNode) {
+                                // Double-click a saved model: start the service if needed, then load it.
+                                var model = (PersistedModel) node.getUserObject();
+                                loadModel(model);
                             }
                         }
                     }
@@ -240,20 +255,62 @@ public class KernelExplorer extends JPanel {
         }
     }
 
+    /**
+     * Loads a saved model into the shared inference service, starting the
+     * service first if it is not running. Runs off the EDT because both the
+     * start (readiness wait) and the load call block.
+     *
+     * @param model the saved model to load.
+     */
+    private void loadModel(PersistedModel model) {
+        var service = (ServeService) serviceNode.getUserObject();
+        Thread.ofPlatform().name("serve-load-model").daemon(true).start(() -> {
+            try {
+                var manager = ServeManager.getInstance();
+                if (!manager.isRunning() && !manager.start(service.host(), service.port())) {
+                    showError(bundle.getString("ServiceStartFailed"));
+                    return;
+                }
+                manager.loadModel(model.path());
+                SwingUtilities.invokeLater(() -> tree.repaint());
+            } catch (Exception ex) {
+                logger.error("Failed to load model '{}': {}", model.name(), ex.getMessage());
+                showError(ex.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Shows an error dialog on the EDT.
+     *
+     * @param message the message.
+     */
+    private void showError(String message) {
+        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                SwingUtilities.getWindowAncestor(KernelExplorer.this),
+                message,
+                bundle.getString("Error"),
+                JOptionPane.ERROR_MESSAGE));
+    }
+
     /** The dialog to start model inference service. */
     static class StartServiceDialog extends JDialog {
         private final JTextField hostField = new JTextField(25);
         private final JTextField portField = new JTextField(25);
-        private final PersistedModel model;
 
         /**
          * Constructor.
+         *
+         * @param owner   the owner window.
+         * @param service the current service settings, used to prefill the fields.
          */
-        public StartServiceDialog(Window owner, PersistedModel model) {
+        public StartServiceDialog(Window owner, ServeService service) {
             super(owner, bundle.getString("StartServiceDialogTitle"));
-            this.model = model;
             setDefaultCloseOperation(DISPOSE_ON_CLOSE);
             setLayout(new BorderLayout());
+
+            hostField.setText(service.host());
+            portField.setText(String.valueOf(service.port()));
 
             JLabel hostLabel = new JLabel(bundle.getString("Host"));
             JLabel portLabel = new JLabel(bundle.getString("Port"));
@@ -300,31 +357,24 @@ public class KernelExplorer extends JPanel {
 
             okButton.addActionListener((e) -> {
                 dispose();
-                ProcessFrame frame = new ProcessFrame(1000);
-                frame.setTitle(model.name());
-
-                String home = System.getProperty("smile.home", ".");
-                String host = hostField.getText();
-                String port = portField.getText();
-                // jvm options should be before -jar argument
-                frame.start( "java",
-                        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-                        "--add-opens", "java.base/java.nio=ALL-UNNAMED",
-                        "--enable-native-access", "ALL-UNNAMED",
-                        "-Dsmile.serve.model=" + model.path(),
-                        "-Dquarkus.http.host=" + host,
-                        "-Dquarkus.http.port=" + port,
-                        "-jar", Path.of(home, "serve", "quarkus-run.jar").normalize().toString());
-                frame.setVisible(true);
-
+                String host = hostField.getText().isBlank() ? StudioConfig.DEFAULT_HOST : hostField.getText().trim();
+                int port;
                 try {
-                    // Use the Java Desktop API to open the service UI in the default browser
-                    if (Desktop.isDesktopSupported()) {
-                        Desktop.getDesktop().browse(new URI("http://" + host + ":" + port));
-                    }
-                } catch (Exception ex) {
-                    logger.error("Failed to open browser: {}", ex.getMessage());
+                    port = Integer.parseInt(portField.getText().trim());
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, bundle.getString("InvalidPort"),
+                            bundle.getString("Error"), JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
+
+                Thread.ofPlatform().name("serve-start").daemon(true).start(() -> {
+                    if (!ServeManager.getInstance().start(host, port)) {
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                                getOwner(),
+                                bundle.getString("ServiceStartFailed"),
+                                bundle.getString("Error"), JOptionPane.ERROR_MESSAGE));
+                    }
+                });
             });
 
             cancelButton.addActionListener((e) -> dispose());

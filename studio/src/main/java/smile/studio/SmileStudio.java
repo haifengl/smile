@@ -44,6 +44,8 @@ import org.fife.rsta.ui.search.SearchEvent;
 import org.fife.rsta.ui.search.SearchListener;
 import org.fife.ui.rtextarea.SearchContext;
 import smile.studio.workspace.OpenFile;
+import smile.studio.workspace.ServeManager;
+import smile.studio.workspace.StudioConfig;
 import smile.studio.workspace.Workspace;
 import smile.swing.Button;
 import smile.studio.notebook.Cell;
@@ -165,6 +167,32 @@ public class SmileStudio extends JFrame implements SearchListener {
                 logger.error("Failed to start MCP services: {}", ex.getMessage());
             }
         });
+
+        // Optionally start the shared inference service (conf/studio.json).
+        // Only start when there is actually a model to serve: a service with an
+        // empty catalog has nothing to do, and the user can start it later from
+        // the Inference menu or by double-clicking a model in the Kernel tree.
+        var inference = StudioConfig.inferenceServer();
+        if (inference.autoStart()) {
+            var modelPath = Path.of(inference.modelPath());
+            if (!Files.exists(modelPath)) {
+                logger.info("Not auto-starting the inference service: model path '{}' does not exist",
+                        modelPath);
+            } else {
+                Thread.ofPlatform().name("serve-autostart").daemon(true).start(() -> {
+                    var manager = ServeManager.getInstance();
+                    if (!manager.start(inference.host(), inference.port())) {
+                        logger.error("Failed to auto-start the inference service");
+                        return;
+                    }
+                    try {
+                        manager.loadModel(inference.modelPath());
+                    } catch (Exception ex) {
+                        logger.error("Failed to load model '{}': {}", inference.modelPath(), ex.getMessage());
+                    }
+                });
+            }
+        }
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -377,6 +405,16 @@ public class SmileStudio extends JFrame implements SearchListener {
         findMenu.add(new JMenuItem(new ShowFindDialogAction()));
         findMenu.add(new JMenuItem(new ShowReplaceDialogAction()));
         menuBar.add(findMenu);
+
+        JMenu inferenceMenu = new JMenu(bundle.getString("Inference"));
+        inferenceMenu.add(new JMenuItem(new StartInferenceAction()));
+        inferenceMenu.add(new JMenuItem(new StopInferenceAction()));
+        inferenceMenu.add(new JMenuItem(new RestartInferenceAction()));
+        inferenceMenu.addSeparator();
+        inferenceMenu.add(new JMenuItem(new InferenceHealthAction()));
+        inferenceMenu.add(new JMenuItem(new InferenceMetricsAction()));
+        inferenceMenu.add(new JMenuItem(new OpenInferenceUiAction()));
+        menuBar.add(inferenceMenu);
 
         JMenu helpMenu = new JMenu(bundle.getString("Help"));
         helpMenu.add(new JMenuItem(new TutorialAction()));
@@ -606,6 +644,116 @@ public class SmileStudio extends JFrame implements SearchListener {
                 workspace.restart();
                 statusBar.setStatus(bundle.getString("RestartKernelDone"));
             }
+        }
+    }
+
+    /** Starts the shared inference service on a background thread. */
+    private class StartInferenceAction extends AbstractAction {
+        public StartInferenceAction() {
+            super(bundle.getString("StartInference"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            var config = StudioConfig.inferenceServer();
+            Thread.ofPlatform().name("serve-start").daemon(true).start(() -> {
+                boolean ok = ServeManager.getInstance().start(config.host(), config.port());
+                SwingUtilities.invokeLater(() -> statusBar.setStatus(ok
+                        ? java.text.MessageFormat.format(bundle.getString("InferenceStarted"),
+                                ServeManager.getInstance().baseUrl())
+                        : bundle.getString("InferenceStartFailed")));
+            });
+        }
+    }
+
+    /** Stops the shared inference service. */
+    private class StopInferenceAction extends AbstractAction {
+        public StopInferenceAction() {
+            super(bundle.getString("StopInference"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            ServeManager.getInstance().stop();
+            statusBar.setStatus(bundle.getString("InferenceStopped"));
+        }
+    }
+
+    /** Restarts the shared inference service. */
+    private class RestartInferenceAction extends AbstractAction {
+        public RestartInferenceAction() {
+            super(bundle.getString("RestartInference"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            var config = StudioConfig.inferenceServer();
+            Thread.ofPlatform().name("serve-restart").daemon(true).start(() -> {
+                var manager = ServeManager.getInstance();
+                manager.stop();
+                boolean ok = manager.start(config.host(), config.port());
+                SwingUtilities.invokeLater(() -> statusBar.setStatus(ok
+                        ? java.text.MessageFormat.format(bundle.getString("InferenceStarted"),
+                                manager.baseUrl())
+                        : bundle.getString("InferenceStartFailed")));
+            });
+        }
+    }
+
+    /** Opens the inference service health endpoint in the browser. */
+    private class InferenceHealthAction extends AbstractAction {
+        public InferenceHealthAction() {
+            super(bundle.getString("InferenceHealth"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            openInferencePage("/q/health");
+        }
+    }
+
+    /** Opens the inference service metrics endpoint in the browser. */
+    private class InferenceMetricsAction extends AbstractAction {
+        public InferenceMetricsAction() {
+            super(bundle.getString("InferenceMetrics"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            openInferencePage("/q/metrics");
+        }
+    }
+
+    /** Opens the inference service web UI in the browser. */
+    private class OpenInferenceUiAction extends AbstractAction {
+        public OpenInferenceUiAction() {
+            super(bundle.getString("OpenInferenceUI"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            openInferencePage("");
+        }
+    }
+
+    /**
+     * Opens a path on the running inference service in the default browser.
+     *
+     * @param path the path to append to the base URL (may be empty).
+     */
+    private void openInferencePage(String path) {
+        String base = ServeManager.getInstance().baseUrl();
+        if (base == null) {
+            JOptionPane.showMessageDialog(this, bundle.getString("InferenceNotRunning"),
+                    bundle.getString("Inference"), JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        try {
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().browse(URI.create(base + path));
+            }
+        } catch (Exception ex) {
+            logger.error("Failed to open browser: {}", ex.getMessage());
         }
     }
 

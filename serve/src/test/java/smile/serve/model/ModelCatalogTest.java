@@ -9,8 +9,6 @@
 package smile.serve.model;
 
 import java.lang.reflect.Proxy;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import io.quarkus.runtime.StartupEvent;
@@ -18,11 +16,14 @@ import io.quarkus.test.junit.QuarkusTest;
 import jakarta.enterprise.inject.Instance;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
+import smile.serve.InferenceServiceConfig;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Tests for {@link ModelCatalog}.
+ *
+ * @author Haifeng Li
  */
 @QuarkusTest
 public class ModelCatalogTest {
@@ -40,6 +41,8 @@ public class ModelCatalogTest {
     public void testGivenNoContributorsWhenCheckedThenIsEmpty() {
         ModelCatalog catalog = new ModelCatalog();
         catalog.contributors = instanceOf(List.of());
+        // allow-empty keeps onStart from calling Quarkus.asyncExit() in test mode.
+        catalog.config = configOf(true);
 
         assertTrue(catalog.isEmpty());
         assertTrue(catalog.list().isEmpty());
@@ -72,6 +75,33 @@ public class ModelCatalogTest {
         assertFalse(catalog.find("other", false).isPresent());
     }
 
+    // ------------------------------------------------------------------
+    // Empty-catalog startup policy (smile.serve.allow-empty)
+    //
+    // The policy is tested directly rather than through the HTTP surface:
+    // Quarkus.asyncExit() does not tear down the server in test mode, so an
+    // integration test cannot observe the exit and would pass either way.
+    // ------------------------------------------------------------------
+
+    @Test
+    public void testExitsWhenEmptyAndNotAllowed() {
+        // Then: a standalone serve with no model fails fast.
+        assertTrue(ModelCatalog.shouldExitOnEmptyStartup(true, false));
+    }
+
+    @Test
+    public void testStaysUpWhenEmptyButAllowed() {
+        // Then: dynamic-load mode keeps the service alive for later loads.
+        assertFalse(ModelCatalog.shouldExitOnEmptyStartup(true, true));
+    }
+
+    @Test
+    public void testStaysUpWhenModelLoaded() {
+        // Then: a loaded model never triggers the exit, regardless of the flag.
+        assertFalse(ModelCatalog.shouldExitOnEmptyStartup(false, false));
+        assertFalse(ModelCatalog.shouldExitOnEmptyStartup(false, true));
+    }
+
     @SuppressWarnings("unchecked")
     private static Instance<OpenAiModelContributor> instanceOf(List<OpenAiModelContributor> items) {
         return (Instance<OpenAiModelContributor>) Proxy.newProxyInstance(
@@ -84,5 +114,19 @@ public class ModelCatalogTest {
                     throw new UnsupportedOperationException(method.getName());
                 }
         );
+    }
+
+    private static InferenceServiceConfig configOf(boolean allowEmpty) {
+        return new InferenceServiceConfig() {
+            @Override
+            public String model() {
+                return "";
+            }
+
+            @Override
+            public boolean allowEmpty() {
+                return allowEmpty;
+            }
+        };
     }
 }

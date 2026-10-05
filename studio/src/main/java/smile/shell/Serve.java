@@ -384,7 +384,12 @@ public class Serve implements Callable<Integer> {
         return command;
     }
 
-    static String javaExecutable() {
+    /**
+     * Returns the {@code java} executable of the current JVM.
+     *
+     * @return the path to the java executable, or {@code "java"} as a fallback.
+     */
+    public static String javaExecutable() {
         String javaHome = System.getProperty("java.home");
         if (javaHome != null && !javaHome.isBlank()) {
             boolean isWindows = System.getProperty("os.name", "").toLowerCase().contains("win");
@@ -396,7 +401,13 @@ public class Serve implements Callable<Integer> {
         return "java";
     }
 
-    static Path findQuarkusJar(String home) {
+    /**
+     * Locates the SMILE Serve Quarkus runner JAR under {@code $SMILE_HOME}.
+     *
+     * @param home the SMILE home directory.
+     * @return the resolved JAR path (which may not exist).
+     */
+    public static Path findQuarkusJar(String home) {
         Path homePath = (home != null && !home.isBlank()) ? Path.of(home) : Path.of(".");
         Path[] candidates = {
                 homePath.resolve("serve").resolve("quarkus-run.jar"),
