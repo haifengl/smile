@@ -12,7 +12,7 @@ import io.quarkus.runtime.StartupEvent;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
+import smile.serve.model.ModelCatalog;
 
 /**
  * Ensures the local {@code me} account exists at startup.
@@ -26,8 +26,13 @@ public class UserBootstrap {
     @Inject
     UserCache userCache;
 
-    @Transactional
+    @Inject
+    ModelCatalog modelCatalog;
+
     void onStart(@Observes StartupEvent event) {
+        if (modelCatalog.isEmpty()) {
+            return;
+        }
         userCache.register(userService.findOrCreateMe());
     }
 }
