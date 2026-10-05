@@ -23,6 +23,7 @@ A React-based web UI is bundled and served from the same process.
    - [Run with Docker](#11-run-with-docker)
    - [GPU Build & Run](#12-gpu-build--run)
    - [Test Run a Model](#13-test-run-a-model)
+   - [Server Liveness Probe](#14-server-liveness-probe)
 2. [LLM Decode Benchmarks](#2-llm-decode-benchmarks)
 3. [Building and Running](#3-building-and-running)
    - [Dev Mode](#31-dev-mode)
@@ -36,17 +37,22 @@ A React-based web UI is bundled and served from the same process.
    - [Single Inference (JSON)](#53-single-inference-json)
    - [Streaming Inference (CSV / JSON-lines)](#54-streaming-inference-csv--json-lines)
    - [Model IDs](#55-model-ids)
+   - [Model Health and Metrics](#56-model-health-and-metrics)
+   - [Model Lifecycle Control (Reload & Unload)](#57-model-lifecycle-control-reload--unload)
 6. [ONNX Inference API](#6-onnx-inference-api)
    - [Model Format](#61-model-format)
    - [Get ONNX Model Info](#62-get-onnx-model-info)
    - [Single Inference (JSON)](#63-single-inference-json)
    - [Streaming Inference](#64-streaming-inference)
    - [Tensor Types and Shape Resolution](#65-tensor-types-and-shape-resolution)
+   - [ONNX Model Health and Metrics](#66-onnx-model-health-and-metrics)
+   - [ONNX Model Lifecycle Control (Reload & Unload)](#67-onnx-model-lifecycle-control-reload--unload)
 7. [LLM Chat API](#7-llm-chat-api)
    - [List models](#71-list-models)
    - [Retrieve model](#72-retrieve-model)
-   - [Chat Completions](#73-chat-completions)
-   - [Conversation History API](#74-conversation-history-api)
+   - [Dynamic Model Loading](#73-dynamic-model-loading)
+   - [Chat Completions](#74-chat-completions)
+   - [Conversation History API](#75-conversation-history-api)
 8. [Web UI](#8-web-ui)
 9. [Database](#9-database)
 10. [Testing](#10-testing)
@@ -156,6 +162,12 @@ spec:
             -Dsmile.chat.devices=0
             -Dsmile.chat.max-batch-size=16
             -Dquarkus.log.level=INFO
+      livenessProbe:
+        httpGet:
+          path: /api/v1/health
+          port: 8080
+        initialDelaySeconds: 15
+        periodSeconds: 10
       resources:
         limits:
           nvidia.com/gpu: "1"
@@ -213,6 +225,32 @@ Refer to [deep/README.md](../deep/README.md#prerequisites--dependencies) for how
 to setup Prerequisites & Dependencies. For this example, you should have ONNX
 Runtime and ONNX-GENAI native libraries installed and configured; see
 [deep/ONNX_GENAI.md](../deep/ONNX_GENAI.md) for details.
+
+### 1.4 Server Liveness Probe
+
+SMILE Serve provides a lightweight liveness endpoint to confirm that the HTTP
+server process is alive and responsive:
+
+```
+GET /api/v1/health
+HEAD /api/v1/health
+```
+
+**Example:**
+
+```shell
+curl http://localhost:8080/api/v1/health
+```
+
+```json
+{
+  "status": "UP"
+}
+```
+
+This endpoint responds with `200 OK` without loading or querying models. It is
+ideal for container orchestrators (such as Kubernetes `livenessProbe`) to detect
+deadlocks and trigger container restarts.
 
 ---
 
@@ -691,6 +729,117 @@ If those tags are absent, the file name stem is used as the name and `"1"` as
 the version. For example, a file named `iris_random_forest.sml` with no ID
 tag gets the ID `iris_random_forest-1`.
 
+### 5.6 Model Health and Metrics
+
+Inspect the operational health, in-flight request concurrency, throughput, and
+inference latency of a loaded SMILE model.
+
+#### Health status
+
+```
+GET /api/v1/smile/{id}/health
+```
+
+```shell
+curl http://localhost:8080/api/v1/smile/iris_random_forest-1/health
+```
+
+```json
+{
+  "id": "iris_random_forest-1",
+  "status": "ACTIVE",
+  "in_flight_requests": 0,
+  "uptime_seconds": 182
+}
+```
+
+- `status`: `ACTIVE`, `UNLOADING`, or `UNLOADED`. When `UNLOADING` or `UNLOADED`, incoming requests receive `503 Service Unavailable`.
+- `in_flight_requests`: Number of active inference calls currently executing against this model.
+- `uptime_seconds`: Time elapsed since the model was loaded.
+
+#### Metrics and latency
+
+```
+GET /api/v1/smile/{id}/metrics
+```
+
+```shell
+curl http://localhost:8080/api/v1/smile/iris_random_forest-1/metrics
+```
+
+```json
+{
+  "loaded_at": 1728087200,
+  "uptime_seconds": 182,
+  "in_flight_requests": 0,
+  "total_requests": 340,
+  "successful_requests": 340,
+  "failed_requests": 0,
+  "throughput_qps": 1.87,
+  "mean_latency_ms": 0.42,
+  "min_latency_ms": 0.15,
+  "max_latency_ms": 4.12
+}
+```
+
+### 5.7 Model Lifecycle Control (Reload & Unload)
+
+Administrative endpoints for reloading or unloading models are restricted to
+`localhost` (`127.0.0.1` / `::1`) via `@LocalhostOnly` to prevent unauthorized
+remote manipulation. Non-localhost requests are rejected with **HTTP 403 Forbidden**.
+
+#### Reload model from disk
+
+Reloads the model from its backing `.sml` file on disk. If the file was updated,
+the new model atomically replaces the active instance. If the model was previously
+unloaded, it is restored into active memory:
+
+```
+POST /api/v1/smile/{id}/reload
+```
+
+```shell
+curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1/reload
+```
+
+```json
+{
+  "status": "reloaded",
+  "id": "iris_random_forest-1",
+  "path": "/model/iris_random_forest.sml",
+  "algorithm": "random-forest",
+  "timestamp": 1728087382
+}
+```
+
+#### Unload model from memory
+
+Removes a model from active memory to free RAM. The service transitions the
+model state to `UNLOADING`, stops accepting new requests (returning `503`), and
+gracefully waits for in-flight requests to finish:
+
+```
+POST /api/v1/smile/{id}/unload?timeout=10
+```
+
+- `timeout` *(optional, default `10`)*: Maximum seconds to wait for active in-flight requests to complete.
+
+```shell
+curl -X POST "http://localhost:8080/api/v1/smile/iris_random_forest-1/unload?timeout=5"
+```
+
+```json
+{
+  "status": "unloaded",
+  "id": "iris_random_forest-1",
+  "drained": true,
+  "timestamp": 1728087400
+}
+```
+
+After unloading, subsequent inference requests to this model ID return **HTTP 404 Not Found**.
+The model can be brought back into memory at any time by calling `/reload` or `/models/load`.
+
 ---
 
 ## 6. ONNX Inference API
@@ -884,6 +1033,107 @@ declared input shape and the actual array length:
 - **Multiple dynamic dimensions** — the shape is set to `[1, arrayLength]`.
 - **No shape info** — the shape is set to `[1, arrayLength]`.
 
+### 6.6 ONNX Model Health and Metrics
+
+Inspect the operational state, active in-flight count, and execution performance
+of an ONNX model.
+
+#### Health status
+
+```
+GET /api/v1/onnx/{id}/health
+```
+
+```shell
+curl http://localhost:8080/api/v1/onnx/resnet50/health
+```
+
+```json
+{
+  "id": "resnet50",
+  "status": "ACTIVE",
+  "in_flight_requests": 0,
+  "uptime_seconds": 95
+}
+```
+
+#### Metrics and latency
+
+```
+GET /api/v1/onnx/{id}/metrics
+```
+
+```shell
+curl http://localhost:8080/api/v1/onnx/resnet50/metrics
+```
+
+```json
+{
+  "loaded_at": 1728087210,
+  "uptime_seconds": 95,
+  "in_flight_requests": 0,
+  "total_requests": 512,
+  "successful_requests": 512,
+  "failed_requests": 0,
+  "throughput_qps": 5.38,
+  "mean_latency_ms": 2.14,
+  "min_latency_ms": 1.82,
+  "max_latency_ms": 8.65
+}
+```
+
+### 6.7 ONNX Model Lifecycle Control (Reload & Unload)
+
+Like the SMILE model control endpoints, ONNX model administrative endpoints are
+restricted to `localhost` (`127.0.0.1` / `::1`) via `@LocalhostOnly`. Remote
+calls return **HTTP 403 Forbidden**.
+
+#### Reload ONNX model from disk
+
+Re-opens and reconstructs the native ONNX Runtime `InferenceSession` from the
+backing `.onnx` file on disk, atomically updating the model and closing the old
+session:
+
+```
+POST /api/v1/onnx/{id}/reload
+```
+
+```shell
+curl -X POST http://localhost:8080/api/v1/onnx/resnet50/reload
+```
+
+```json
+{
+  "status": "reloaded",
+  "id": "resnet50",
+  "path": "/model/resnet50.onnx",
+  "timestamp": 1728087450
+}
+```
+
+#### Unload ONNX model from memory
+
+Transitions the model to `UNLOADING`, waits for any active inference runs to
+drain, closes the native session to free native memory/GPU resources, and removes
+it from active memory:
+
+```
+POST /api/v1/onnx/{id}/unload?timeout=10
+```
+
+```shell
+curl -X POST "http://localhost:8080/api/v1/onnx/resnet50/unload?timeout=5"
+```
+
+```json
+{
+  "status": "unloaded",
+  "id": "resnet50",
+  "drained": true,
+  "timestamp": 1728087460
+}
+```
+
 ---
 
 ## 7. LLM Chat API
@@ -1020,7 +1270,107 @@ curl http://localhost:8080/api/v1/models/iris_random_forest-1
 }
 ```
 
-### 7.3 Chat Completions
+### 7.3 Dynamic Model Loading
+
+Load a new model from disk or Hugging Face Hub dynamically into active memory
+without restarting the server process:
+
+```
+POST /api/v1/models/load
+Content-Type: application/json
+```
+
+This endpoint is restricted to `localhost` (`127.0.0.1` / `::1`) via `@LocalhostOnly`.
+Remote requests return **HTTP 403 Forbidden**.
+
+#### Request body fields
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `model` | `string` | **Yes** | Local file or directory path, or Hugging Face repo ID (`owner/name`) |
+| `kind` | `string` | No (default `auto`) | Model kind: `sml` / `smile`, `onnx`, `llm` / `chat`, or `auto` |
+| `config` | `object` | No | Serving configuration overrides (chat and ONNX GenAI models only) |
+
+#### Conflict handling (409 Conflict)
+
+To maintain a clean API contract without overlapping responsibilities, `POST /api/v1/models/load`
+strictly rejects any model whose ID is already loaded in active memory with **HTTP 409 Conflict**:
+
+```json
+{
+  "error": "Model 'iris_random_forest-1' is already loaded. Use POST /api/v1/smile/iris_random_forest-1/reload to refresh it, or unload it first."
+}
+```
+
+#### Examples
+
+**1. Load a SMILE `.sml` model:**
+
+```shell
+curl -X POST http://localhost:8080/api/v1/models/load \
+  -H "Content-Type: application/json" \
+  -d '{"model": "/model/iris_random_forest.sml", "kind": "smile"}'
+```
+
+```json
+{
+  "status": "loaded",
+  "kind": "sml",
+  "model": "/model/iris_random_forest.sml",
+  "ids": ["iris_random_forest-1"],
+  "id": "iris_random_forest-1",
+  "algorithm": "random-forest"
+}
+```
+
+**2. Load an ONNX model:**
+
+```shell
+curl -X POST http://localhost:8080/api/v1/models/load \
+  -H "Content-Type: application/json" \
+  -d '{"model": "/model/resnet50.onnx", "kind": "onnx"}'
+```
+
+```json
+{
+  "status": "loaded",
+  "kind": "onnx",
+  "model": "/model/resnet50.onnx",
+  "ids": ["resnet50"],
+  "id": "resnet50"
+}
+```
+
+**3. Load a Chat / LLM model with configuration overrides:**
+
+```shell
+curl -X POST http://localhost:8080/api/v1/models/load \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "microsoft/Phi-4-mini-instruct-onnx",
+    "kind": "chat",
+    "config": {
+      "devices": "0",
+      "max_batch_size": 8,
+      "max_seq_len": 4096
+    }
+  }'
+```
+
+```json
+{
+  "status": "loaded",
+  "id": "microsoft/Phi-4-mini-instruct-onnx",
+  "kind": "LLM",
+  "model": "microsoft/Phi-4-mini-instruct-onnx",
+  "source": "huggingface",
+  "devices": "0",
+  "max_batch_size": 8,
+  "max_seq_len": 4096
+}
+```
+
+### 7.4 Chat Completions
 
 ```
 POST /api/v1/chat/completions
@@ -1168,7 +1518,7 @@ curl -X POST http://localhost:8080/api/v1/chat/completions \
   }'
 ```
 
-### 7.4 Conversation History API
+### 7.5 Conversation History API
 
 Chat history is stored in a relational database (PostgreSQL in production,
 H2 in dev mode). The API base path is `/api/v1/conversations`.
@@ -1407,21 +1757,36 @@ The test class `InferenceResourceTest` covers:
 
 ## API Quick Reference
 
+### System & Health — `/api/v1`
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/health` | Server liveness probe (`{"status":"UP"}`) for Kubernetes liveness checks |
+| `POST` | `/models/load` | Dynamically load a model (.sml, .onnx, or LLM) into active memory (localhost only) |
+
 ### Classic ML — `/api/v1/smile`
 
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/smile/{id}` | Get model metadata and schema |
+| `GET` | `/smile/{id}/health` | Model health status and active request count |
+| `GET` | `/smile/{id}/metrics` | Model metrics, throughput (QPS), and latency statistics |
 | `POST` | `/smile/{id}` | Single JSON inference |
 | `POST` | `/smile/{id}/stream` | Streaming CSV or JSON-lines inference |
+| `POST` | `/smile/{id}/reload` | Reload model from disk (localhost only) |
+| `POST` | `/smile/{id}/unload` | Gracefully unload model from memory (localhost only) |
 
 ### ONNX — `/api/v1/onnx`
 
 | Method | Path | Description |
 |---|---|---|
 | `GET` | `/onnx/{id}` | Get graph info, input/output shapes |
+| `GET` | `/onnx/{id}/health` | ONNX model health status and active request count |
+| `GET` | `/onnx/{id}/metrics` | ONNX model metrics, throughput (QPS), and latency statistics |
 | `POST` | `/onnx/{id}` | Single JSON inference |
 | `POST` | `/onnx/{id}/stream` | Streaming CSV or JSON-lines inference |
+| `POST` | `/onnx/{id}/reload` | Reload ONNX model from disk (localhost only) |
+| `POST` | `/onnx/{id}/unload` | Gracefully unload ONNX model from memory (localhost only) |
 
 ### Chat — `/api/v1/models`, `/api/v1/chat`, `/api/v1/conversations`
 
