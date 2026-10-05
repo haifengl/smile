@@ -144,7 +144,7 @@ libraryDependencies ++= Seq(
   "com.anthropic"     % "anthropic-java"     % "2.68.0",
   "com.google.genai"  % "google-genai"       % "1.75.0",
   "org.commonmark"    % "commonmark"         % "0.30.0",
-  "org.xhtmlrenderer" % "flying-saucer-core" % "10.5.0",
+  "org.xhtmlrenderer" % "flying-saucer-core" % "10.6.0",
   "org.eclipse.lsp4j" % "org.eclipse.lsp4j"  % "1.0.0",
   "com.fifesoft"      % "rsyntaxtextarea"    % "4.0.1",
   "com.fifesoft"      % "rstaui"             % "3.3.2",
@@ -184,8 +184,8 @@ libraryDependencies ++= {
     "org.apache.arrow"   % "arrow-dataset"       % arrowV,
     "org.apache.arrow"   % "arrow-memory-unsafe" % arrowV,
    ("org.apache.avro"    % "avro"                % "1.12.2").exclude("org.slf4j", "slf4j-log4j12"),
-    "org.xerial.snappy"  % "snappy-java"         % "1.1.10.8", // for avro
-    "com.epam"           % "parso"               % "2.0.14"    // SAS7BDAT
+    "org.xerial.snappy"  % "snappy-java"         % "1.1.10.10", // for avro
+    "com.epam"           % "parso"               % "2.0.14"     // SAS7BDAT
   )
 }
 
