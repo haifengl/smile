@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import smile.shell.Serve;
 import smile.studio.ProcessFrame;
 
@@ -43,6 +44,9 @@ public final class ServeManager {
     private static final long READY_POLL_MS = 500L;
 
     private static final ServeManager INSTANCE = new ServeManager();
+
+    /** Guards one-time registration of the {@code serve-manager-shutdown} hook. */
+    private final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
 
     private Process process;
     private ProcessFrame frame;
@@ -132,7 +136,12 @@ public final class ServeManager {
         frame.setVisible(true);
         process = frame.getProcess();
 
-        Runtime.getRuntime().addShutdownHook(new Thread(this::stop, "serve-manager-shutdown"));
+        // Register the shutdown hook once for the singleton's lifetime. The hook
+        // calls stop(), which is idempotent and reads the current process field,
+        // so a single hook covers every start/restart cycle.
+        if (shutdownHookRegistered.compareAndSet(false, true)) {
+            Runtime.getRuntime().addShutdownHook(new Thread(this::stop, "serve-manager-shutdown"));
+        }
         return awaitReady();
     }
 
@@ -212,6 +221,10 @@ public final class ServeManager {
      */
     public synchronized void stop() {
         if (process != null && process.isAlive()) {
+            // serve runs the Quarkus app in-process (the direct child JVM) and does
+            // not fork a persistent grandchild, so destroy() reaping the direct child
+            // is sufficient. If serve ever forks a persistent helper, this must become
+            // a process-tree kill.
             process.destroy();
         }
         process = null;
