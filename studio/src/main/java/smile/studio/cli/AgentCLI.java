@@ -464,6 +464,29 @@ public class AgentCLI extends JPanel {
     }
 
     /**
+     * Scrolls the conversation to the bottom so a just-appended turn is visible
+     * without the user having to drag the scrollbar.
+     * <p>Adding an {@link Intent} grows the {@code BoxLayout} panel but touches
+     * neither the caret nor the outer scrollbar, so nothing scrolls on its own.
+     * The view only reaches the bottom when output tokens make the caret follow
+     * the text -- the delay this method removes. Called when a submit appends a
+     * turn, before any output has streamed.
+     * <p>The scroll is deferred with {@link SwingUtilities#invokeLater} so the
+     * pending layout pass has resized the viewport and the scrollbar's maximum
+     * reflects the new content; scrolling in the same frame would clamp to the
+     * old maximum and stop short.
+     */
+    private void scrollToBottom() {
+        SwingUtilities.invokeLater(() -> {
+            JScrollPane scroll = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, intents);
+            if (scroll != null) {
+                JScrollBar bar = scroll.getVerticalScrollBar();
+                bar.setValue(bar.getMaximum());
+            }
+        });
+    }
+
+    /**
      * Inserts a read-only intent for work that arrived from another agent
      * or as a notice, just above the empty composer. Keeping the composer as
      * the last intent lets the user find it easily to type a new prompt.
@@ -476,6 +499,7 @@ public class AgentCLI extends JPanel {
         intent.setEditable(false);
         intents.add(intent, composerIndex());
         intents.revalidate();
+        scrollToBottom();
         return intent;
     }
 
@@ -593,6 +617,10 @@ public class AgentCLI extends JPanel {
             Intent intent = new Intent(this);
             intents.add(intent, composerIndex());
             composer = intent;
+            intents.revalidate();
+            // The new composer sits below the submitted turn; keep it in view so the
+            // user can see where to type the next prompt.
+            scrollToBottom();
             SwingUtilities.invokeLater(() -> intent.editor().requestFocusInWindow());
         } finally {
             buildingComposer.set(false);
@@ -1049,13 +1077,7 @@ public class AgentCLI extends JPanel {
         intents.revalidate();
         revalidate();
         intents.repaint();
-        SwingUtilities.invokeLater(() -> {
-            JScrollPane scroll = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, intents);
-            if (scroll != null) {
-                JScrollBar bar = scroll.getVerticalScrollBar();
-                bar.setValue(bar.getMaximum());
-            }
-        });
+        scrollToBottom();
     }
 
     /**
