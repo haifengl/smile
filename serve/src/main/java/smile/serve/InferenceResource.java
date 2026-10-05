@@ -47,7 +47,6 @@ import smile.model.Prediction;
  * <ul>
  *   <li>{@code GET  /smile/{id}}         – retrieve model metadata.</li>
  *   <li>{@code GET  /smile/{id}/health}  – inspect model operational status.</li>
- *   <li>{@code GET  /smile/{id}/metrics} – inspect inference throughput and latency metrics.</li>
  *   <li>{@code POST /smile/{id}}         – single JSON inference request.</li>
  *   <li>{@code POST /smile/{id}/stream}  – streaming inference (JSON lines or CSV).</li>
  *   <li>{@code POST /smile/{id}/reload}  – reload model from disk (localhost only).</li>
@@ -94,19 +93,6 @@ public class InferenceResource {
                 "in_flight_requests", model.metrics().inFlightRequests(),
                 "uptime_seconds", model.metrics().uptimeSeconds()
         );
-    }
-
-    /**
-     * Returns operational metrics, throughput, and latency statistics for a model.
-     *
-     * @param id the model ID.
-     * @return model metrics.
-     */
-    @GET
-    @Path("/{id}/metrics")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ModelMetrics metrics(@PathParam("id") String id) {
-        return service.getModel(id).metrics();
     }
 
     /**

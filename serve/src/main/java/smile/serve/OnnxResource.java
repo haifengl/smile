@@ -46,7 +46,6 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
  * <ul>
  *   <li>{@code GET  /onnx/{id}}          – retrieve ONNX model metadata.</li>
  *   <li>{@code GET  /onnx/{id}/health}   – inspect model operational status.</li>
- *   <li>{@code GET  /onnx/{id}/metrics}  – inspect inference throughput and latency metrics.</li>
  *   <li>{@code POST /onnx/{id}}          – single JSON inference request.</li>
  *   <li>{@code POST /onnx/{id}/stream}   – streaming inference (JSON lines
  *       or CSV text for single-input models).</li>
@@ -123,19 +122,6 @@ public class OnnxResource {
                 "in_flight_requests", model.metrics().inFlightRequests(),
                 "uptime_seconds", model.metrics().uptimeSeconds()
         );
-    }
-
-    /**
-     * Returns operational metrics, throughput, and latency statistics for an ONNX model.
-     *
-     * @param id the model ID.
-     * @return model metrics.
-     */
-    @GET
-    @Path("/{id}/metrics")
-    @Produces(MediaType.APPLICATION_JSON)
-    public ModelMetrics metrics(@PathParam("id") String id) {
-        return service.getModel(id).metrics();
     }
 
     /**

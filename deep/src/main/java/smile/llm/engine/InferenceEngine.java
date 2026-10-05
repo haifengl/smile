@@ -277,6 +277,17 @@ public final class InferenceEngine implements AutoCloseable {
     }
 
     /**
+     * Returns the primary KV cache pool, or {@code null} when the model has no
+     * full-attention layers. Exposed for observability (KV usage / prefix-cache
+     * counters).
+     *
+     * @return KV cache pool, or {@code null}.
+     */
+    public KvCachePool kvCachePool() {
+        return executor.kvCachePool();
+    }
+
+    /**
      * Returns active decode requests on the last tick (approx).
      *
      * @return approximate active decode count.

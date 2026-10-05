@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 /**
  * Integration tests for {@link OnnxResource}.
@@ -46,19 +45,6 @@ public class OnnxResourceTest {
                 .body("status", is("ACTIVE"))
                 .body("in_flight_requests", is(0))
                 .body("uptime_seconds", notNullValue());
-    }
-
-    @Test
-    public void testGetOnnxModelMetrics() {
-        given()
-            .when().get("/api/v1/onnx/squeezenet/metrics")
-            .then()
-                .statusCode(200)
-                .contentType(ContentType.JSON)
-                .body("total_requests", notNullValue())
-                .body("successful_requests", notNullValue())
-                .body("in_flight_requests", is(0))
-                .body("uptime_seconds", greaterThanOrEqualTo(0));
     }
 
     @Test
