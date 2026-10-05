@@ -23,7 +23,7 @@ A React-based web UI is bundled and served from the same process.
    - [Run with Docker](#11-run-with-docker)
    - [GPU Build & Run](#12-gpu-build--run)
    - [Test Run a Model](#13-test-run-a-model)
-   - [Server Liveness Probe](#14-server-liveness-probe)
+   - [Health and Metrics Endpoints](#14-health-and-metrics-endpoints)
 2. [LLM Decode Benchmarks](#2-llm-decode-benchmarks)
 3. [Building and Running](#3-building-and-running)
    - [Dev Mode](#31-dev-mode)
@@ -53,6 +53,7 @@ A React-based web UI is bundled and served from the same process.
    - [Dynamic Model Loading](#73-dynamic-model-loading)
    - [Chat Completions](#74-chat-completions)
    - [Conversation History API](#75-conversation-history-api)
+   - [LLM Serving Metrics](#76-llm-serving-metrics)
 8. [Web UI](#8-web-ui)
 9. [Database](#9-database)
 10. [Testing](#10-testing)
@@ -164,7 +165,13 @@ spec:
             -Dquarkus.log.level=INFO
       livenessProbe:
         httpGet:
-          path: /api/v1/health
+          path: /q/health/live
+          port: 8080
+        initialDelaySeconds: 15
+        periodSeconds: 10
+      readinessProbe:
+        httpGet:
+          path: /q/health/ready
           port: 8080
         initialDelaySeconds: 15
         periodSeconds: 10
@@ -226,31 +233,53 @@ to setup Prerequisites & Dependencies. For this example, you should have ONNX
 Runtime and ONNX-GENAI native libraries installed and configured; see
 [deep/ONNX_GENAI.md](../deep/ONNX_GENAI.md) for details.
 
-### 1.4 Server Liveness Probe
+### 1.4 Health and Metrics Endpoints
 
-SMILE Serve provides a lightweight liveness endpoint to confirm that the HTTP
-server process is alive and responsive:
+Operational endpoints follow the Quarkus `/q/` convention, separate from the
+business API under `/api/v1`. They are provided by the SmallRye Health and
+Micrometer extensions.
+
+**Health** (SmallRye Health / MicroProfile Health):
 
 ```
-GET /api/v1/health
-HEAD /api/v1/health
+GET /q/health          # aggregate of all checks
+GET /q/health/live     # liveness  — process is up
+GET /q/health/ready    # readiness — ready to serve requests
+GET /q/health/started  # startup   — application has started
 ```
 
 **Example:**
 
 ```shell
-curl http://localhost:8080/api/v1/health
+curl http://localhost:8080/q/health
 ```
 
 ```json
 {
-  "status": "UP"
+  "status": "UP",
+  "checks": [
+    { "name": "smile-serve-liveness", "status": "UP" },
+    { "name": "smile-serve-readiness", "status": "UP",
+      "data": { "smile_models": 1, "onnx_models": 1 } }
+  ]
 }
 ```
 
-This endpoint responds with `200 OK` without loading or querying models. It is
-ideal for container orchestrators (such as Kubernetes `livenessProbe`) to detect
-deadlocks and trigger container restarts.
+The liveness check never touches model state, so a failed model load does not
+trigger a container restart. The readiness check reports the loaded model
+counts. Use `/q/health/live` for Kubernetes `livenessProbe` and
+`/q/health/ready` for `readinessProbe`.
+
+**Metrics** (Micrometer, Prometheus text format):
+
+```
+GET /q/metrics
+```
+
+A single scrape target covers every model — classic SMILE, ONNX, and LLM — so
+DevOps does not need per-model URLs. See
+[§5.6](#56-model-health-and-metrics) and [§6.6](#66-onnx-model-health-and-metrics)
+for the per-model series, and [§7](#7-llm-serving-metrics) for the LLM series.
 
 ---
 
@@ -759,28 +788,27 @@ curl http://localhost:8080/api/v1/smile/iris_random_forest-1/health
 
 #### Metrics and latency
 
-```
-GET /api/v1/smile/{id}/metrics
-```
+Per-model metrics are exposed through the unified Prometheus endpoint
+`GET /q/metrics` (see [§1.4](#14-health-and-metrics-endpoints)), not a
+per-model JSON endpoint. Every series carries a `model_id` label.
 
 ```shell
-curl http://localhost:8080/api/v1/smile/iris_random_forest-1/metrics
+curl http://localhost:8080/q/metrics | grep 'serve_smile_.*iris_random_forest-1'
 ```
 
-```json
-{
-  "loaded_at": 1728087200,
-  "uptime_seconds": 182,
-  "in_flight_requests": 0,
-  "total_requests": 340,
-  "successful_requests": 340,
-  "failed_requests": 0,
-  "throughput_qps": 1.87,
-  "mean_latency_ms": 0.42,
-  "min_latency_ms": 0.15,
-  "max_latency_ms": 4.12
-}
-```
+| Metric | Type | Description |
+|---|---|---|
+| `serve_smile_requests_total` | counter | Total inference requests |
+| `serve_smile_failed_requests_total` | counter | Failed inference requests |
+| `serve_smile_successful_requests` | gauge | Successful inference requests |
+| `serve_smile_in_flight_requests` | gauge | In-flight inference requests |
+| `serve_smile_uptime_seconds` | gauge | Seconds since the model was loaded |
+| `serve_smile_throughput_requests_per_second` | gauge | Average requests per second since load |
+| `serve_smile_mean_latency_seconds` | gauge | Mean inference latency |
+| `serve_smile_min_latency_seconds` | gauge | Minimum inference latency |
+| `serve_smile_max_latency_seconds` | gauge | Maximum inference latency |
+
+ONNX models expose the same set under the `serve_onnx_*` namespace.
 
 ### 5.7 Model Lifecycle Control (Reload & Unload)
 
@@ -1059,28 +1087,25 @@ curl http://localhost:8080/api/v1/onnx/resnet50/health
 
 #### Metrics and latency
 
-```
-GET /api/v1/onnx/{id}/metrics
-```
+Per-model metrics are exposed through the unified Prometheus endpoint
+`GET /q/metrics` (see [§1.4](#14-health-and-metrics-endpoints)), not a
+per-model JSON endpoint. Every series carries a `model_id` label.
 
 ```shell
-curl http://localhost:8080/api/v1/onnx/resnet50/metrics
+curl http://localhost:8080/q/metrics | grep 'serve_onnx_.*resnet50'
 ```
 
-```json
-{
-  "loaded_at": 1728087210,
-  "uptime_seconds": 95,
-  "in_flight_requests": 0,
-  "total_requests": 512,
-  "successful_requests": 512,
-  "failed_requests": 0,
-  "throughput_qps": 5.38,
-  "mean_latency_ms": 2.14,
-  "min_latency_ms": 1.82,
-  "max_latency_ms": 8.65
-}
-```
+| Metric | Type | Description |
+|---|---|---|
+| `serve_onnx_requests_total` | counter | Total inference requests |
+| `serve_onnx_failed_requests_total` | counter | Failed inference requests |
+| `serve_onnx_successful_requests` | gauge | Successful inference requests |
+| `serve_onnx_in_flight_requests` | gauge | In-flight inference requests |
+| `serve_onnx_uptime_seconds` | gauge | Seconds since the model was loaded |
+| `serve_onnx_throughput_requests_per_second` | gauge | Average requests per second since load |
+| `serve_onnx_mean_latency_seconds` | gauge | Mean inference latency |
+| `serve_onnx_min_latency_seconds` | gauge | Minimum inference latency |
+| `serve_onnx_max_latency_seconds` | gauge | Maximum inference latency |
 
 ### 6.7 ONNX Model Lifecycle Control (Reload & Unload)
 
@@ -1669,6 +1694,42 @@ curl http://localhost:8080/api/v1/conversations/conv_42/items
 
 ---
 
+### 7.6 LLM Serving Metrics
+
+LLM serving metrics are exposed through the unified Prometheus endpoint
+`GET /q/metrics` (see [§1.4](#14-health-and-metrics-endpoints)). Every series
+carries a `model_id` label (the public chat model id, or `unknown` when no model
+is loaded). The names follow the Prometheus convention: `_total` counters and
+seconds-based histograms.
+
+```shell
+curl http://localhost:8080/q/metrics | grep '^serve_llm_'
+```
+
+| Metric | Type | Description |
+|---|---|---|
+| `serve_llm_num_requests_running` | gauge | Chat requests currently running |
+| `serve_llm_num_requests_waiting` | gauge | Chat requests waiting for admission |
+| `serve_llm_kv_cache_usage_ratio` | gauge | Fraction of KV cache pages in use |
+| `serve_llm_prefix_cache_queries_total` | counter | Prompt tokens offered to the prefix cache |
+| `serve_llm_prefix_cache_hits_total` | counter | Prompt tokens served from the prefix cache |
+| `serve_llm_prompt_tokens_total` | counter | Total prompt tokens processed |
+| `serve_llm_generation_tokens_total` | counter | Total generated tokens |
+| `serve_llm_request_success_total` | counter | Successful requests, by `finished_reason` |
+| `serve_llm_request_prompt_tokens` | histogram | Prompt token count per request |
+| `serve_llm_request_generation_tokens` | histogram | Generated token count per request |
+| `serve_llm_time_to_first_token_seconds` | histogram | Time to first token |
+| `serve_llm_inter_token_latency_seconds` | histogram | Inter-token latency |
+| `serve_llm_request_time_per_output_token_seconds` | histogram | Mean time per output token |
+| `serve_llm_e2e_request_latency_seconds` | histogram | End-to-end request latency |
+| `serve_llm_request_prefill_time_seconds` | histogram | Prefill time (request start to first token) |
+| `serve_llm_request_decode_time_seconds` | histogram | Decode time (first token to completion) |
+
+The `serve_llm_request_success_total` counter is labelled by `finished_reason`
+(`stop`, `length`, or `tool_calls`).
+
+---
+
 ## 8. Web UI
 
 A React-based web interface is bundled via [Quarkus Quinoa](https://quarkiverse.github.io/quarkiverse-docs/quarkus-quinoa/dev/).
@@ -1761,8 +1822,17 @@ The test class `InferenceResourceTest` covers:
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/health` | Server liveness probe (`{"status":"UP"}`) for Kubernetes liveness checks |
 | `POST` | `/models/load` | Dynamically load a model (.sml, .onnx, or LLM) into active memory (localhost only) |
+
+### Operational — `/q`
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/q/health` | Aggregate health check (SmallRye Health) |
+| `GET` | `/q/health/live` | Liveness probe for Kubernetes `livenessProbe` |
+| `GET` | `/q/health/ready` | Readiness probe for Kubernetes `readinessProbe` |
+| `GET` | `/q/health/started` | Startup probe |
+| `GET` | `/q/metrics` | Prometheus scrape endpoint (all models) |
 
 ### Classic ML — `/api/v1/smile`
 
@@ -1770,7 +1840,6 @@ The test class `InferenceResourceTest` covers:
 |---|---|---|
 | `GET` | `/smile/{id}` | Get model metadata and schema |
 | `GET` | `/smile/{id}/health` | Model health status and active request count |
-| `GET` | `/smile/{id}/metrics` | Model metrics, throughput (QPS), and latency statistics |
 | `POST` | `/smile/{id}` | Single JSON inference |
 | `POST` | `/smile/{id}/stream` | Streaming CSV or JSON-lines inference |
 | `POST` | `/smile/{id}/reload` | Reload model from disk (localhost only) |
@@ -1782,7 +1851,6 @@ The test class `InferenceResourceTest` covers:
 |---|---|---|
 | `GET` | `/onnx/{id}` | Get graph info, input/output shapes |
 | `GET` | `/onnx/{id}/health` | ONNX model health status and active request count |
-| `GET` | `/onnx/{id}/metrics` | ONNX model metrics, throughput (QPS), and latency statistics |
 | `POST` | `/onnx/{id}` | Single JSON inference |
 | `POST` | `/onnx/{id}/stream` | Streaming CSV or JSON-lines inference |
 | `POST` | `/onnx/{id}/reload` | Reload ONNX model from disk (localhost only) |

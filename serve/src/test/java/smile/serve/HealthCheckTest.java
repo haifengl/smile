@@ -16,15 +16,15 @@ import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 
 /**
- * Integration tests for {@link HealthResource}.
+ * Integration tests for the SmallRye Health probes exposed under {@code /q/health}.
  */
 @QuarkusTest
-public class HealthResourceTest {
+public class HealthCheckTest {
 
     @Test
-    public void testGetHealthLivenessProbe() {
+    public void testHealthAggregate() {
         given()
-            .when().get("/api/v1/health")
+            .when().get("/q/health")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -32,10 +32,22 @@ public class HealthResourceTest {
     }
 
     @Test
-    public void testHeadHealthLivenessProbe() {
+    public void testLivenessProbe() {
         given()
-            .when().head("/api/v1/health")
+            .when().get("/q/health/live")
             .then()
-                .statusCode(200);
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("status", is("UP"));
+    }
+
+    @Test
+    public void testReadinessProbe() {
+        given()
+            .when().get("/q/health/ready")
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("status", is("UP"));
     }
 }

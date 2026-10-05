@@ -405,7 +405,7 @@ public class InferenceResourceTest {
         Assertions.assertEquals("Not supported", response.explanations().shap());
     }
 
-    // --------------------------------------------------------------- health & metrics
+    // --------------------------------------------------------------- health
     @Test
     public void testGetModelHealth() {
         given()
@@ -417,27 +417,6 @@ public class InferenceResourceTest {
                 .body("status", is("ACTIVE"))
                 .body("in_flight_requests", is(0))
                 .body("uptime_seconds", notNullValue());
-    }
-
-    @Test
-    public void testGetModelMetrics() {
-        // Trigger a prediction first
-        given()
-            .contentType(ContentType.JSON)
-            .body("{\"petallength\":1.4,\"petalwidth\":0.2,\"sepallength\":5.1,\"sepalwidth\":3.5}")
-            .when().post("/api/v1/smile/iris_random_forest-1")
-            .then()
-                .statusCode(200);
-
-        given()
-            .when().get("/api/v1/smile/iris_random_forest-1/metrics")
-            .then()
-                .statusCode(200)
-                .contentType(ContentType.JSON)
-                .body("total_requests", notNullValue())
-                .body("successful_requests", notNullValue())
-                .body("in_flight_requests", is(0))
-                .body("mean_latency_ms", notNullValue());
     }
 
     // --------------------------------------------------------------- reload & unload

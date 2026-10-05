@@ -109,6 +109,8 @@ public class ChatService implements OpenAiModelContributor {
     private volatile String source;
     /** Resolves internal media URLs to data URLs for VL inference. */
     private final MediaService mediaService;
+    /** Prometheus meters for LLM serving. */
+    private final LlmMetrics llmMetrics;
     /** Native MTP speculation (from {@code smile.chat.speculative}). */
     private volatile boolean speculative;
     /** Draft depth override ({@code 0} = model default). */
@@ -137,11 +139,12 @@ public class ChatService implements OpenAiModelContributor {
      */
     @Inject
     public ChatService(ChatServiceConfig config, KvCacheConfig kvCache, MediaService mediaService,
-                       OgaChatConfig oga) {
+                       OgaChatConfig oga, LlmMetrics llmMetrics) {
         this.config = config;
         this.kvCache = kvCache;
         this.oga = oga;
         this.mediaService = mediaService;
+        this.llmMetrics = llmMetrics;
         this.speculative = config.speculative();
         this.speculativeTokens = config.speculativeTokens();
         try {
@@ -395,10 +398,12 @@ public class ChatService implements OpenAiModelContributor {
             logger.warnf("Chat model %s does not implement ModelExecutor; "
                     + "continuous batching unavailable", modelId);
         }
+        llmMetrics.bind(modelId, engine);
     }
 
     private void finishModelSetupForGenAi() {
         // GenAI: no prefix reuse / speculative / InferenceEngine.
+        llmMetrics.bind(modelId, null);
     }
 
     /**
@@ -462,6 +467,7 @@ public class ChatService implements OpenAiModelContributor {
             }
         }
         model = null;
+        llmMetrics.unbind();
 
         try {
             GenAI.shutdown();
@@ -760,8 +766,10 @@ public class ChatService implements OpenAiModelContributor {
         smile.llm.engine.GenerationRequest genReq = null;
         int promptLen = 0;
         var throughput = new TokenThroughputLogger(aggregateThroughput);
+        var llmListener = new LlmMetricsListener(llmMetrics);
         var listener = GenerationListeners.compose(
                 throughput,
+                llmListener,
                 publisher != null ? GenerationListeners.toPublisher(publisher) : null);
         try {
             if (hasMedia) {
@@ -815,6 +823,7 @@ public class ChatService implements OpenAiModelContributor {
                     engine.kvFreeSlots());
             handle.future().whenComplete((r, t) -> {
                 throughput.finish();
+                recordCompletion(llmListener, r, t);
                 logger.infof(
                         "Engine stats: requestId=%d queueWaitMsTotal=%d prefillMsTotal=%d "
                                 + "decodeMsTotal=%d kvFreePages=%d inFlight=%d queueSize=%d",
@@ -860,8 +869,45 @@ public class ChatService implements OpenAiModelContributor {
             future.completeExceptionally(t);
         } finally {
             throughput.finish();
+            recordCompletion(llmListener, null, null);
         }
         return handle;
+    }
+
+    /**
+     * Records the end-of-request LLM metrics from the per-request listener.
+     *
+     * @param listener the per-request metrics listener.
+     * @param result   the completion result, or {@code null} on failure.
+     * @param error    the failure, or {@code null} on success.
+     */
+    private void recordCompletion(LlmMetricsListener listener, ChatCompletion result, Throwable error) {
+        int prompt = listener.promptTokens();
+        int generated = listener.generatedTokens();
+        if (result != null) {
+            if (result.promptTokens() != null && result.promptTokens().length > 0) {
+                prompt = result.promptTokens().length;
+            }
+            if (result.completionTokens() != null && result.completionTokens().length > 0) {
+                generated = result.completionTokens().length;
+            }
+        }
+        llmMetrics.recordPromptTokens(prompt);
+        llmMetrics.recordGenerationTokens(generated);
+
+        long elapsed = listener.elapsedNanos();
+        llmMetrics.recordDuration("e2e_request_latency", elapsed);
+        long ttft = listener.timeToFirstTokenNanos();
+        if (ttft >= 0L) {
+            llmMetrics.recordDuration("request_prefill_time", ttft);
+            llmMetrics.recordDuration("request_decode_time", Math.max(0L, elapsed - ttft));
+        }
+        if (generated > 0) {
+            llmMetrics.recordDuration("request_time_per_output_token", elapsed / generated);
+        }
+        if (error == null && result != null) {
+            llmMetrics.recordSuccess(result.reason());
+        }
     }
 
     /**
