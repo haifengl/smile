@@ -20,6 +20,7 @@ package smile.serve;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +33,7 @@ import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
 import org.jboss.logging.Logger;
 import smile.io.Read;
@@ -58,6 +60,7 @@ public class InferenceService implements OpenAiModelContributor {
     private static final Logger logger = Logger.getLogger(InferenceService.class);
     /** Loaded models, keyed by {@code <id>-<version>}. Sorted for stable list order. */
     private final Map<String, InferenceModel> models = Collections.synchronizedSortedMap(new TreeMap<>());
+    private final Map<String, Path> modelPaths = Collections.synchronizedMap(new TreeMap<>());
 
     /**
      * Loads ML models upon application start.
@@ -94,6 +97,7 @@ public class InferenceService implements OpenAiModelContributor {
             if (obj instanceof Model m) {
                 var model = new InferenceModel(m, path);
                 models.put(model.id(), model);
+                modelPaths.put(model.id(), path);
                 logger.infof("Model '%s' loaded successfully", model.id());
             } else {
                 logger.errorf("'%s' does not contain a valid SMILE model (got %s)",
@@ -204,5 +208,59 @@ public class InferenceService implements OpenAiModelContributor {
     public Prediction predict(String modelId, JsonObject request, boolean explain)
             throws BadRequestException, NotFoundException {
         return getModel(modelId).predict(request, explain);
+    }
+
+    /**
+     * Reloads a model from its backing file on disk.
+     * If the model was previously unloaded, it is reloaded from its known file path.
+     *
+     * @param id the model ID.
+     * @return the reloaded inference model.
+     * @throws NotFoundException if the model or its file does not exist.
+     * @throws InternalServerErrorException if the file fails to deserialize.
+     */
+    public InferenceModel reloadModel(String id) throws NotFoundException, InternalServerErrorException {
+        Path path = modelPaths.get(id);
+        if (path == null) {
+            InferenceModel existing = models.get(id);
+            if (existing != null) {
+                path = existing.path();
+            }
+        }
+        if (path == null || !Files.isRegularFile(path)) {
+            throw new NotFoundException("Model file not found on disk: " + path);
+        }
+        try {
+            logger.infof("Reloading model '%s' from '%s'", id, path);
+            var obj = Read.object(path);
+            if (obj instanceof Model m) {
+                var reloaded = new InferenceModel(m, path);
+                models.put(reloaded.id(), reloaded);
+                modelPaths.put(reloaded.id(), path);
+                logger.infof("Model '%s' reloaded successfully", reloaded.id());
+                return reloaded;
+            } else {
+                throw new InternalServerErrorException("File does not contain a valid SMILE model: " + path);
+            }
+        } catch (Exception ex) {
+            logger.errorf(ex, "Failed to reload model '%s' from '%s'", id, path);
+            throw new InternalServerErrorException("Failed to reload model: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Gracefully unloads a model from active memory, waiting for in-flight requests to complete.
+     *
+     * @param id           the model ID.
+     * @param graceTimeout max duration to wait for in-flight requests.
+     * @return {@code true} if all in-flight requests completed before timeout.
+     * @throws NotFoundException if the model is not found.
+     */
+    public boolean unloadModel(String id, Duration graceTimeout) throws NotFoundException {
+        InferenceModel existing = getModel(id);
+        boolean drained = existing.unload(graceTimeout);
+        models.remove(id);
+        logger.infof("Model '%s' unloaded (drained in-flight: %s)", id, drained);
+        return drained;
     }
 }

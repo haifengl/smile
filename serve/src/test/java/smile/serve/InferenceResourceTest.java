@@ -404,4 +404,85 @@ public class InferenceResourceTest {
         Assertions.assertNotNull(response.explanations());
         Assertions.assertEquals("Not supported", response.explanations().shap());
     }
+
+    // --------------------------------------------------------------- health & metrics
+    @Test
+    public void testGetModelHealth() {
+        given()
+            .when().get("/api/v1/smile/iris_random_forest-1/health")
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("id", is("iris_random_forest-1"))
+                .body("status", is("ACTIVE"))
+                .body("in_flight_requests", is(0))
+                .body("uptime_seconds", notNullValue());
+    }
+
+    @Test
+    public void testGetModelMetrics() {
+        // Trigger a prediction first
+        given()
+            .contentType(ContentType.JSON)
+            .body("{\"petallength\":1.4,\"petalwidth\":0.2,\"sepallength\":5.1,\"sepalwidth\":3.5}")
+            .when().post("/api/v1/smile/iris_random_forest-1")
+            .then()
+                .statusCode(200);
+
+        given()
+            .when().get("/api/v1/smile/iris_random_forest-1/metrics")
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("total_requests", notNullValue())
+                .body("successful_requests", notNullValue())
+                .body("in_flight_requests", is(0))
+                .body("mean_latency_ms", notNullValue());
+    }
+
+    // --------------------------------------------------------------- reload & unload
+    @Test
+    public void testReloadModel() {
+        given()
+            .when().post("/api/v1/smile/iris_random_forest-1/reload")
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("status", is("reloaded"))
+                .body("id", is("iris_random_forest-1"))
+                .body("algorithm", is("random-forest"));
+    }
+
+    @Test
+    public void testUnloadAndReloadModel() {
+        // Unload the model
+        given()
+            .when().post("/api/v1/smile/iris_random_forest-1/unload?timeout=5")
+            .then()
+                .statusCode(200)
+                .contentType(ContentType.JSON)
+                .body("status", is("unloaded"))
+                .body("id", is("iris_random_forest-1"))
+                .body("drained", is(true));
+
+        // Subsequent requests should return 404
+        given()
+            .when().get("/api/v1/smile/iris_random_forest-1")
+            .then()
+                .statusCode(404);
+
+        // Reload unloaded model from disk should restore it
+        given()
+            .when().post("/api/v1/smile/iris_random_forest-1/reload")
+            .then()
+                .statusCode(200)
+                .body("status", is("reloaded"))
+                .body("id", is("iris_random_forest-1"));
+
+        // Verify model is accessible again
+        given()
+            .when().get("/api/v1/smile/iris_random_forest-1")
+            .then()
+                .statusCode(200);
+    }
 }

@@ -18,23 +18,36 @@
 package smile.serve;
 
 import java.nio.file.Path;
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicReference;
 import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ServiceUnavailableException;
 import smile.data.Tuple;
 import smile.data.type.StructType;
 import smile.io.Paths;
 import smile.model.*;
 
 /**
- * The metadata of model.
+ * The metadata and runtime wrapper of a loaded SMILE model.
  *
  * @author Haifeng Li
  */
 public class InferenceModel {
+
+    /** Lifecycle state of the model. */
+    public enum State {
+        ACTIVE,
+        UNLOADING,
+        UNLOADED
+    }
+
     private final String id;
     private final Model model;
     private final Path path;
     private final boolean isSoft;
+    private final AtomicReference<State> state = new AtomicReference<>(State.ACTIVE);
+    private final ModelMetrics metrics = new ModelMetrics();
 
     /** Constructor. */
     public InferenceModel(Model model, Path path) {
@@ -47,6 +60,44 @@ public class InferenceModel {
         } else {
             isSoft = false;
         }
+    }
+
+    /**
+     * Returns the current lifecycle state of the model.
+     * @return model lifecycle state.
+     */
+    public State state() {
+        return state.get();
+    }
+
+    /**
+     * Returns the operational metrics for this model.
+     * @return model metrics.
+     */
+    public ModelMetrics metrics() {
+        return metrics;
+    }
+
+    /**
+     * Initiates graceful unload of this model, waiting for in-flight requests to complete.
+     *
+     * @param timeout max duration to wait for in-flight requests.
+     * @return {@code true} if all in-flight requests drained before timeout.
+     */
+    public boolean unload(Duration timeout) {
+        state.set(State.UNLOADING);
+        long deadline = System.currentTimeMillis() + timeout.toMillis();
+        while (metrics.inFlightRequests() > 0 && System.currentTimeMillis() < deadline) {
+            try {
+                Thread.sleep(20);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        boolean drained = (metrics.inFlightRequests() == 0);
+        state.set(State.UNLOADED);
+        return drained;
     }
 
     /**
@@ -163,7 +214,18 @@ public class InferenceModel {
      * @return the inference result.
      */
     public Prediction predict(Tuple x, boolean explain) {
-        return model.infer(x, isSoft, explain);
+        if (state.get() != State.ACTIVE) {
+            throw new ServiceUnavailableException("Model " + id + " is " + state.get().name().toLowerCase());
+        }
+        long start = metrics.startExecution();
+        boolean success = false;
+        try {
+            Prediction p = model.infer(x, isSoft, explain);
+            success = true;
+            return p;
+        } finally {
+            metrics.finishExecution(start, success);
+        }
     }
 
     /**
