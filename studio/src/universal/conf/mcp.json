@@ -1,5 +1,9 @@
 {
   "servers": {
-
+    "exa": {
+      "type": "streamable-http",
+      "url": "https://mcp.exa.ai/mcp",
+      "x-smile-provides": ["web-search"]
+    }
   }
 }
