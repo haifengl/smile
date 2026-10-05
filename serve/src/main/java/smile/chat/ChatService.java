@@ -21,8 +21,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -31,10 +33,14 @@ import java.util.Set;
 import java.util.concurrent.SubmissionPublisher;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.Startup;
+import io.vertx.core.json.JsonObject;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -85,28 +91,32 @@ public class ChatService implements OpenAiModelContributor {
     private static final Logger logger = Logger.getLogger(ChatService.class);
 
     /** The loaded LLM; {@code null} when the model failed to load. */
-    private LanguageModel model;
+    private volatile LanguageModel model;
     /** Request-oriented runtime; {@code null} when no model is loaded. */
-    private smile.llm.engine.InferenceEngine engine;
+    private volatile smile.llm.engine.InferenceEngine engine;
     /** Process-wide tok/s across all in-flight chat generations. */
     private final AggregateTokenThroughput aggregateThroughput = new AggregateTokenThroughput();
     /**
      * Public model id exposed by the chat API (HF repo id or local directory
      * name). Independent of family-prefixed {@code toString()} labels.
      */
-    private final String modelId;
+    private volatile String modelId = "unknown";
     /** OpenAI {@code owned_by} value for the loaded model. */
-    private String ownedBy = ModelObject.UNKNOWN_OWNER;
+    private volatile String ownedBy = ModelObject.UNKNOWN_OWNER;
     /** Unix epoch seconds when the model finished loading. */
-    private long createdAt;
+    private volatile long createdAt;
     /** {@code "huggingface"} or {@code "local"} when a model is loaded. */
-    private String source;
+    private volatile String source;
     /** Resolves internal media URLs to data URLs for VL inference. */
     private final MediaService mediaService;
     /** Native MTP speculation (from {@code smile.chat.speculative}). */
-    private final boolean speculative;
+    private volatile boolean speculative;
     /** Draft depth override ({@code 0} = model default). */
-    private final int speculativeTokens;
+    private volatile int speculativeTokens;
+    /** Injected configuration objects. */
+    private final ChatServiceConfig config;
+    private final KvCacheConfig kvCache;
+    private final OgaChatConfig oga;
     /** JVM shutdown hook ensuring clean cleanup of native resources on exit. */
     private final Thread shutdownHook = new Thread(this::shutdown, "chat-service-shutdown");
 
@@ -128,6 +138,9 @@ public class ChatService implements OpenAiModelContributor {
     @Inject
     public ChatService(ChatServiceConfig config, KvCacheConfig kvCache, MediaService mediaService,
                        OgaChatConfig oga) {
+        this.config = config;
+        this.kvCache = kvCache;
+        this.oga = oga;
         this.mediaService = mediaService;
         this.speculative = config.speculative();
         this.speculativeTokens = config.speculativeTokens();
@@ -143,33 +156,8 @@ public class ChatService implements OpenAiModelContributor {
             return;
         }
         String modelSpec = maybeModel.get();
-        this.modelId = publicModelId(modelSpec);
         try {
-            long cudaDevices = CUDA.isAvailable() ? CUDA.deviceCount() : 0L;
-            Path localPath = Path.of(modelSpec);
-            boolean localDir = Files.isDirectory(localPath);
-            boolean preferTorch = cudaDevices >= 1L
-                    && ((localDir && isBuiltinTorchCheckpoint(localPath))
-                    || (!localDir && looksLikeHuggingFaceRepoId(modelSpec)
-                    && isBuiltinTorchFamily(modelSpec)));
-
-            if (preferTorch) {
-                logger.infof("CUDA devices detected: %d; loading builtin Torch chat model '%s'",
-                        cudaDevices, modelSpec);
-                loadTorchModel(config, kvCache, modelSpec, localPath, localDir);
-            } else if (oga.enabled()) {
-                if (cudaDevices < 1L) {
-                    logger.infof("No CUDA (or non-builtin architecture); trying OGA fallback for '%s'",
-                            modelSpec);
-                } else {
-                    logger.infof("Non-builtin architecture with CUDA; trying OGA fallback for '%s'",
-                            modelSpec);
-                }
-                loadOgaModel(modelSpec, oga, config.modelLoaderThreads());
-            } else {
-                logger.warnf("Chat model '%s' not loaded (oga disabled and Torch path not selected)",
-                        modelSpec);
-            }
+            loadInternal(modelSpec, config, kvCache);
         } catch (Exception ex) {
             // Keep the service up in an unavailable state so classic ML / ONNX
             // endpoints still work; chat requests return HTTP 503.
@@ -177,7 +165,116 @@ public class ChatService implements OpenAiModelContributor {
                     modelSpec);
             model = null;
             engine = null;
+            modelId = "unknown";
         }
+    }
+
+    private void loadInternal(String modelSpec, ChatServiceConfig effConfig, KvCacheConfig effKvCache) throws Exception {
+        this.modelId = publicModelId(modelSpec);
+        this.speculative = effConfig.speculative();
+        this.speculativeTokens = effConfig.speculativeTokens();
+
+        long cudaDevices = CUDA.isAvailable() ? CUDA.deviceCount() : 0L;
+        Path localPath = Path.of(modelSpec);
+        boolean localDir = Files.isDirectory(localPath);
+        boolean preferTorch = cudaDevices >= 1L
+                && ((localDir && isBuiltinTorchCheckpoint(localPath))
+                || (!localDir && looksLikeHuggingFaceRepoId(modelSpec)
+                && isBuiltinTorchFamily(modelSpec)));
+
+        if (preferTorch) {
+            logger.infof("CUDA devices detected: %d; loading builtin Torch chat model '%s'",
+                    cudaDevices, modelSpec);
+            loadTorchModel(effConfig, effKvCache, modelSpec, localPath, localDir);
+        } else if (oga.enabled()) {
+            if (cudaDevices < 1L) {
+                logger.infof("No CUDA (or non-builtin architecture); trying OGA fallback for '%s'",
+                        modelSpec);
+            } else {
+                logger.infof("Non-builtin architecture with CUDA; trying OGA fallback for '%s'",
+                        modelSpec);
+            }
+            loadOgaModel(modelSpec, oga, effConfig.modelLoaderThreads());
+        } else {
+            logger.warnf("Chat model '%s' not loaded (oga disabled and Torch path not selected)",
+                    modelSpec);
+            throw new BadRequestException("Cannot load model '" + modelSpec + "': no suitable Torch/CUDA or ONNX Runtime GenAI provider available");
+        }
+    }
+
+    /**
+     * Dynamically loads a chat model with optional serving configuration overrides.
+     * If a model with the same ID is already loaded, fails with 409 Conflict.
+     *
+     * @param modelSpec model repository ID or local path.
+     * @param overrides optional JSON configuration overrides.
+     * @return model loading details.
+     * @throws ClientErrorException if model with same ID is already loaded.
+     * @throws BadRequestException if loading fails.
+     */
+    public synchronized Map<String, Object> load(String modelSpec, JsonObject overrides) throws ClientErrorException, BadRequestException {
+        if (modelSpec == null || modelSpec.isBlank()) {
+            throw new BadRequestException("Model spec must not be blank");
+        }
+        String targetModelId = publicModelId(modelSpec);
+        if (isAvailable() && targetModelId.equals(modelId)) {
+            throw new ClientErrorException(
+                    "Chat model '" + modelId + "' is already loaded. Use POST /api/v1/models/load with a different model, or unload it first.",
+                    Response.Status.CONFLICT);
+        }
+
+        if (isAvailable()) {
+            logger.infof("Unloading currently active chat model '%s' before loading '%s'", modelId, targetModelId);
+            shutdown();
+        }
+
+        ChatServiceConfig effConfig = DynamicChatConfig.overlay(config, modelSpec, overrides);
+        KvCacheConfig effKvCache = DynamicChatConfig.overlay(kvCache, overrides);
+
+        try {
+            loadInternal(modelSpec, effConfig, effKvCache);
+            if (model == null) {
+                throw new BadRequestException("Model '" + modelSpec + "' could not be loaded: no valid checkpoint or GenAI model found");
+            }
+        } catch (Exception ex) {
+            logger.errorf(ex, "Failed to dynamically load chat model '%s'", modelSpec);
+            shutdown();
+            modelId = "unknown";
+            if (ex instanceof ClientErrorException cee) {
+                throw cee;
+            }
+            if (ex instanceof BadRequestException bre) {
+                throw bre;
+            }
+            throw new BadRequestException("Failed to load chat model '" + modelSpec + "': " + ex.getMessage(), ex);
+        }
+
+        Map<String, Object> details = new LinkedHashMap<>();
+        details.put("status", "loaded");
+        details.put("id", modelId);
+        details.put("kind", ModelObject.KIND_LLM);
+        details.put("model", modelSpec);
+        details.put("source", source);
+        details.put("devices", effConfig.devices());
+        details.put("max_batch_size", effConfig.maxBatchSize());
+        details.put("max_seq_len", model != null ? model.maxSeqLen() : effConfig.maxSeqLen());
+        return details;
+    }
+
+    /**
+     * Unloads the active chat model, freeing GPU and native resources.
+     *
+     * @param timeout grace duration.
+     * @return {@code true} when unloaded.
+     */
+    public synchronized boolean unload(Duration timeout) {
+        if (!isAvailable()) {
+            return true;
+        }
+        logger.infof("Unloading chat model '%s'", modelId);
+        shutdown();
+        modelId = "unknown";
+        return true;
     }
 
     private void loadTorchModel(ChatServiceConfig config, KvCacheConfig kvCache,
@@ -503,7 +600,7 @@ public class ChatService implements OpenAiModelContributor {
      * @param spec the configured {@code smile.chat.model} value.
      * @return {@code true} if the value should be resolved via Hugging Face Hub.
      */
-    static boolean looksLikeHuggingFaceRepoId(String spec) {
+    public static boolean looksLikeHuggingFaceRepoId(String spec) {
         if (spec == null || spec.isBlank()) return false;
         String s = spec.trim();
         if (s.startsWith("/") || s.startsWith(".") || s.contains("\\") || s.contains(":")) {

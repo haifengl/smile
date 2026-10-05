@@ -33,8 +33,10 @@ import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.ClientErrorException;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 import smile.io.Read;
 import smile.model.Model;
@@ -262,5 +264,63 @@ public class InferenceService implements OpenAiModelContributor {
         models.remove(id);
         logger.infof("Model '%s' unloaded (drained in-flight: %s)", id, drained);
         return drained;
+    }
+
+    /**
+     * Dynamically loads a model or directory of models from disk into active memory.
+     * Rejects with 409 Conflict if any model with the same ID is already loaded.
+     *
+     * @param path file or directory path.
+     * @return list of newly loaded inference models.
+     * @throws NotFoundException if path does not exist.
+     * @throws ClientErrorException if model with same ID is already loaded.
+     * @throws BadRequestException if the file is invalid.
+     */
+    public List<InferenceModel> load(Path path) throws NotFoundException, ClientErrorException, BadRequestException {
+        Path absPath = path.toAbsolutePath().normalize();
+        if (!Files.exists(absPath)) {
+            throw new NotFoundException("Path does not exist: " + path);
+        }
+        List<Path> smlFiles = new ArrayList<>();
+        if (Files.isRegularFile(absPath)) {
+            smlFiles.add(absPath);
+        } else if (Files.isDirectory(absPath)) {
+            try (Stream<Path> stream = Files.list(absPath)) {
+                stream.filter(f -> Files.isRegularFile(f) && f.toString().endsWith(".sml"))
+                      .forEach(smlFiles::add);
+            } catch (IOException e) {
+                throw new BadRequestException("Failed to read directory: " + path, e);
+            }
+        }
+        if (smlFiles.isEmpty()) {
+            throw new BadRequestException("No .sml models found at: " + path);
+        }
+
+        List<InferenceModel> loaded = new ArrayList<>();
+        for (Path file : smlFiles) {
+            Object obj;
+            try {
+                obj = Read.object(file);
+            } catch (Exception e) {
+                throw new BadRequestException("Failed to read model from " + file + ": " + e.getMessage(), e);
+            }
+            if (!(obj instanceof Model m)) {
+                throw new BadRequestException("File does not contain a valid SMILE model: " + file);
+            }
+            var model = new InferenceModel(m, file);
+            if (models.containsKey(model.id())) {
+                throw new ClientErrorException(
+                        "Model '" + model.id() + "' is already loaded. Use POST /api/v1/smile/" + model.id() + "/reload to refresh it, or unload it first.",
+                        Response.Status.CONFLICT);
+            }
+            loaded.add(model);
+        }
+
+        for (InferenceModel model : loaded) {
+            models.put(model.id(), model);
+            modelPaths.put(model.id(), model.path());
+            logger.infof("Dynamically loaded model '%s' from '%s'", model.id(), model.path());
+        }
+        return loaded;
     }
 }

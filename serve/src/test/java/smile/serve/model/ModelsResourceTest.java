@@ -102,4 +102,127 @@ public class ModelsResourceTest {
         assertEquals("bob", ModelObject.ownedByFromMap(Map.of("Owner", "bob")));
         assertEquals("Unknown", ModelObject.ownedByFromMap(Map.of()));
     }
+
+    // --------------------------------------------------------------- POST /models/load
+
+    @Test
+    public void testGivenAlreadyLoadedModelWhenLoadThenReturns409Conflict() {
+        // iris_random_forest-1 is already loaded at startup
+        given()
+            .contentType(io.restassured.http.ContentType.JSON)
+            .body("{\"model\":\"serve/src/test/resources/model/iris_random_forest.sml\"}")
+            .when().post("/api/v1/models/load")
+            .then()
+                .statusCode(409);
+    }
+
+    @Test
+    public void testGivenBlankModelWhenLoadThenReturns400BadRequest() {
+        given()
+            .contentType(io.restassured.http.ContentType.JSON)
+            .body("{\"model\":\"   \"}")
+            .when().post("/api/v1/models/load")
+            .then()
+                .statusCode(400);
+
+        given()
+            .contentType(io.restassured.http.ContentType.JSON)
+            .body("{\"kind\":\"sml\"}")
+            .when().post("/api/v1/models/load")
+            .then()
+                .statusCode(400);
+    }
+
+    @Test
+    public void testGivenNonExistentModelWhenLoadThenReturns404NotFound() {
+        given()
+            .contentType(io.restassured.http.ContentType.JSON)
+            .body("{\"model\":\"serve/src/test/resources/model/non_existent.sml\",\"kind\":\"sml\"}")
+            .when().post("/api/v1/models/load")
+            .then()
+                .statusCode(404);
+    }
+
+    @Test
+    public void testGivenUnloadedModelWhenDynamicLoadWithSmileAliasThenSucceeds() {
+        // Unload iris_random_forest-1
+        given()
+            .when().post("/api/v1/smile/iris_random_forest-1/unload?timeout=5")
+            .then()
+                .statusCode(200);
+
+        // Dynamically load using kind="smile"
+        given()
+            .contentType(io.restassured.http.ContentType.JSON)
+            .body("{\"model\":\"serve/src/test/resources/model/iris_random_forest.sml\",\"kind\":\"smile\"}")
+            .when().post("/api/v1/models/load")
+            .then()
+                .statusCode(200)
+                .body("status", equalTo("loaded"))
+                .body("id", equalTo("iris_random_forest-1"))
+                .body("kind", equalTo("sml"));
+
+        // Loading again returns 409 Conflict
+        given()
+            .contentType(io.restassured.http.ContentType.JSON)
+            .body("{\"model\":\"serve/src/test/resources/model/iris_random_forest.sml\",\"kind\":\"sml\"}")
+            .when().post("/api/v1/models/load")
+            .then()
+                .statusCode(409);
+    }
+
+    @Test
+    public void testGivenUnloadedOnnxWhenDynamicLoadThenSucceeds() {
+        // Unload squeezenet if loaded
+        given()
+            .when().post("/api/v1/onnx/squeezenet/unload?timeout=5")
+            .then();
+
+        // Dynamically load using kind="onnx"
+        given()
+            .contentType(io.restassured.http.ContentType.JSON)
+            .body("{\"model\":\"serve/src/test/resources/model/squeezenet.onnx\",\"kind\":\"onnx\"}")
+            .when().post("/api/v1/models/load")
+            .then()
+                .statusCode(200)
+                .body("status", equalTo("loaded"))
+                .body("id", equalTo("squeezenet"))
+                .body("kind", equalTo("onnx"));
+
+        // Loading again returns 409 Conflict
+        given()
+            .contentType(io.restassured.http.ContentType.JSON)
+            .body("{\"model\":\"serve/src/test/resources/model/squeezenet.onnx\"}")
+            .when().post("/api/v1/models/load")
+            .then()
+                .statusCode(409);
+    }
+
+    @Test
+    public void testGivenUnsupportedKindWhenLoadThenReturns400BadRequest() {
+        given()
+            .contentType(io.restassured.http.ContentType.JSON)
+            .body("{\"model\":\"dummy\",\"kind\":\"unsupported\"}")
+            .when().post("/api/v1/models/load")
+            .then()
+                .statusCode(400);
+    }
+
+    @Test
+    public void testGivenNonExistentChatModelWhenLoadThenFailsGracefully() {
+        // kind="chat" or kind="llm" with non-existent path
+        given()
+            .contentType(io.restassured.http.ContentType.JSON)
+            .body("{\"model\":\"serve/src/test/resources/no-such-model\",\"kind\":\"chat\",\"config\":{\"max_batch_size\":8}}")
+            .when().post("/api/v1/models/load")
+            .then()
+                .statusCode(400);
+
+        given()
+            .contentType(io.restassured.http.ContentType.JSON)
+            .body("{\"model\":\"serve/src/test/resources/no-such-model\",\"kind\":\"llm\",\"config\":{\"devices\":\"0\"}}")
+            .when().post("/api/v1/models/load")
+            .then()
+                .statusCode(400);
+    }
 }
