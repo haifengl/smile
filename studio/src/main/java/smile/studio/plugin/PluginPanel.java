@@ -70,6 +70,7 @@ public final class PluginPanel extends JDialog {
     private final JList<InstalledRow> installedList = new JList<>(installedModel);
     private final DefaultListModel<String> marketplaceModel = new DefaultListModel<>();
     private final JList<String> marketplaceList = new JList<>(marketplaceModel);
+    private final JLabel discoverHint = new JLabel();
     private final JTextArea details = new JTextArea(8, 40);
     private final JTextArea errors = new JTextArea(16, 60);
 
@@ -105,6 +106,11 @@ public final class PluginPanel extends JDialog {
         refresh();
         setSize(new Dimension(820, 560));
         setLocationRelativeTo(owner);
+
+        // Seed the built-in marketplaces (the official Anthropic catalog by default)
+        // on a background thread so the dialog paints immediately. Seeding is
+        // one-time and only touches the network if a known marketplace is missing.
+        seedDefaultMarketplaces();
     }
 
     // ------------------------------------------------------------------
@@ -122,6 +128,8 @@ public final class PluginPanel extends JDialog {
         JButton install = new JButton(bundle.getString("Install"));
         install.addActionListener(e -> installSelected());
 
+        discoverHint.setForeground(java.awt.Color.GRAY);
+
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                 new JScrollPane(discoverList), new JScrollPane(details));
         split.setResizeWeight(0.5);
@@ -129,9 +137,34 @@ public final class PluginPanel extends JDialog {
         JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         south.add(install);
         JPanel panel = new JPanel(new BorderLayout());
+        panel.add(discoverHint, BorderLayout.NORTH);
         panel.add(split, BorderLayout.CENTER);
         panel.add(south, BorderLayout.SOUTH);
         return panel;
+    }
+
+    /**
+     * Seeds the built-in marketplaces off the event thread. The service add may
+     * fetch over the network (a git clone of the Anthropic marketplace on first
+     * run), so it must not block the EDT. When something was seeded, the lists are
+     * reloaded so the Discover tab fills in without the user reopening the dialog.
+     */
+    private void seedDefaultMarketplaces() {
+        new SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() {
+                return service.ensureDefaultMarketplaces();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    refresh();
+                } catch (Exception ex) {
+                    // refresh() is defensive; nothing actionable here.
+                }
+            }
+        }.execute();
     }
 
     private void showCatalogDetails(CatalogRow row) {
@@ -320,6 +353,7 @@ public final class PluginPanel extends JDialog {
         for (var entry : service.catalog()) {
             discoverModel.addElement(new CatalogRow(entry.marketplace(), entry));
         }
+        updateDiscoverHint();
 
         installedModel.clear();
         for (var plugin : service.installed()) {
@@ -343,6 +377,18 @@ public final class PluginPanel extends JDialog {
             }
         }
         errors.setText(sb.isEmpty() ? "No dropped or degraded components." : sb.toString());
+    }
+
+    /**
+     * Shows a hint above the Discover list when it is empty, so a first-run user
+     * with no marketplace knows how to get one instead of staring at a blank list.
+     */
+    private void updateDiscoverHint() {
+        if (discoverModel.isEmpty()) {
+            discoverHint.setText(bundle.getString("DiscoverHint"));
+        } else {
+            discoverHint.setText(" ");
+        }
     }
 
     /** Shows an operation's result, listing any caveats. */

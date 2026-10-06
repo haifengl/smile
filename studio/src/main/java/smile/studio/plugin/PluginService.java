@@ -18,9 +18,11 @@
 package smile.studio.plugin;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import smile.studio.workspace.StudioConfig;
 
 /**
  * The facade the UI and the CLI both drive. Every operation returns text meant for
@@ -39,18 +41,21 @@ import java.util.Locale;
  * @author Haifeng Li
  */
 public final class PluginService {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PluginService.class);
     private final PluginHome home;
     private final MarketplaceRegistry registry;
     private final PluginStateStore state;
     private final PluginInstaller installer;
     private final Path cwd;
+    /** The marketplaces {@link #ensureDefaultMarketplaces} seeds; injectable for tests. */
+    private final List<PluginDefaults.Known> seeds;
 
     /**
      * Constructor.
      * @param cwd the project working directory.
      */
     public PluginService(Path cwd) {
-        this(new PluginHome(), cwd, Path.of(System.getProperty("user.home")));
+        this(new PluginHome(), cwd, Path.of(System.getProperty("user.home")), StudioConfig.plugins());
     }
 
     /**
@@ -60,9 +65,43 @@ public final class PluginService {
      * @param userHome the user home for the user scope.
      */
     PluginService(PluginHome home, Path cwd, Path userHome) {
+        this(home, cwd, userHome, StudioConfig.DEFAULT_PLUGINS);
+    }
+
+    /**
+     * Constructor with an explicit policy, for tests. The seeds are derived from the
+     * policy, so a test can seed a local marketplace by naming it in
+     * {@code plugins.marketplaces}.
+     *
+     * @param home the plugin home.
+     * @param cwd the project working directory.
+     * @param userHome the user home for the user scope.
+     * @param policy the marketplace policy from {@code studio.json}.
+     */
+    PluginService(PluginHome home, Path cwd, Path userHome, StudioConfig.Plugins policy) {
         this.cwd = cwd;
         this.home = home;
-        this.registry = new MarketplaceRegistry(home);
+        this.seeds = PluginDefaults.seeds(policy.marketplaces());
+        this.registry = new MarketplaceRegistry(home, policy);
+        this.state = new PluginStateStore(cwd, userHome);
+        this.installer = new PluginInstaller(home, registry, state, cwd);
+    }
+
+    /**
+     * Constructor with everything injectable, for tests.
+     * @param home the plugin home.
+     * @param cwd the project working directory.
+     * @param userHome the user home for the user scope.
+     * @param policy the marketplace policy from {@code studio.json}.
+     * @param seeds the marketplaces to seed on first open.
+     */
+    PluginService(PluginHome home, Path cwd, Path userHome,
+                  StudioConfig.Plugins policy,
+                  List<PluginDefaults.Known> seeds) {
+        this.cwd = cwd;
+        this.home = home;
+        this.seeds = seeds == null ? List.of() : List.copyOf(seeds);
+        this.registry = new MarketplaceRegistry(home, policy);
         this.state = new PluginStateStore(cwd, userHome);
         this.installer = new PluginInstaller(home, registry, state, cwd);
     }
@@ -96,6 +135,50 @@ public final class PluginService {
         } catch (IOException ex) {
             return "Error: " + ex.getMessage();
         }
+    }
+
+    /**
+     * Ensures the built-in marketplaces exist, so a first-run user has a catalog to
+     * explore. Called when the panel opens, not at Studio startup, so no network
+     * fetch happens unless the user is actually looking at plugins.
+     *
+     * <p>The add is one-time: a marker under the plugin home records that the seed
+     * ran, so a network failure does not turn every panel open into a retry. Seeding
+     * is skipped entirely once the marker exists or the marketplace is already
+     * registered. Each seed is an {@linkplain MarketplaceRegistry#addImplicit
+     * implicit add}, so only trusted sources (the built-in known defaults, or a
+     * source listed in {@code plugins.allowMarketplaces}) are ever fetched.
+     *
+     * @return a human-readable summary of what was seeded, or an empty string when
+     *         nothing was added.
+     */
+    public String ensureDefaultMarketplaces() {
+        Path marker = home.seededMarker();
+        if (Files.exists(marker)) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (PluginDefaults.Known known : seeds) {
+            if (registry.find(known.name()).isPresent()) {
+                continue;
+            }
+            try {
+                var registered = registry.addImplicit(known.source());
+                sb.append("Added marketplace '").append(registered.name()).append("' (")
+                  .append(registered.manifest().plugins().size()).append(" plugins).\n");
+            } catch (IOException ex) {
+                // A first-run seed failing (offline, git absent) is not an error the
+                // user needs to act on; record it and let them add manually.
+                logger.debug("Could not seed marketplace {}: {}", known.source(), ex.getMessage());
+            }
+        }
+        try {
+            Files.createDirectories(marker.getParent());
+            Files.writeString(marker, "seeded\n");
+        } catch (IOException ex) {
+            logger.warn("Could not write plugin seed marker {}: {}", marker, ex.getMessage());
+        }
+        return sb.toString();
     }
 
     /**
