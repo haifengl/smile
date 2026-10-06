@@ -25,7 +25,8 @@ import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import smile.swing.Button;
 import smile.swing.Table;
-import static smile.swing.SmileUtilities.scaleImageIcon;
+import smile.swing.SmileUtilities.ActionIcons;
+import static smile.swing.SmileUtilities.loadActionIcons;
 
 /**
  * Interactive view of a mathematical plot. For both 2D and 3D plot,
@@ -426,13 +427,11 @@ public class Canvas extends JComponent implements ComponentListener,
     }
 
     private class ZoomInAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/zoom-in.png")));
-        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
-        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
+        static final ActionIcons icons = loadActionIcons(Canvas.class, "images/zoom-in.png");
 
         public ZoomInAction() {
-            super("Zoom In", icon16);
-            putValue(LARGE_ICON_KEY, icon24);
+            super("Zoom In", icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -442,13 +441,11 @@ public class Canvas extends JComponent implements ComponentListener,
     }
 
     private class ZoomOutAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/zoom-out.png")));
-        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
-        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
+        static final ActionIcons icons = loadActionIcons(Canvas.class, "images/zoom-out.png");
 
         public ZoomOutAction() {
-            super("Zoom Out", icon16);
-            putValue(LARGE_ICON_KEY, icon24);
+            super("Zoom Out", icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -458,13 +455,11 @@ public class Canvas extends JComponent implements ComponentListener,
     }
 
     private class ResetAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/reset.png")));
-        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
-        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
+        static final ActionIcons icons = loadActionIcons(Canvas.class, "images/reset.png");
 
         public ResetAction() {
-            super("Reset", icon16);
-            putValue(LARGE_ICON_KEY, icon24);
+            super("Reset", icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -474,13 +469,11 @@ public class Canvas extends JComponent implements ComponentListener,
     }
 
     private class EnlargePlotAreaAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/enlarge.png")));
-        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
-        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
+        static final ActionIcons icons = loadActionIcons(Canvas.class, "images/enlarge.png");
 
         public EnlargePlotAreaAction() {
-            super("Enlarge", icon16);
-            putValue(LARGE_ICON_KEY, icon24);
+            super("Enlarge", icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -502,13 +495,11 @@ public class Canvas extends JComponent implements ComponentListener,
     }
 
     private class ShrinkPlotAreaAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/shrink.png")));
-        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
-        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
+        static final ActionIcons icons = loadActionIcons(Canvas.class, "images/shrink.png");
 
         public ShrinkPlotAreaAction() {
-            super("Shrink", icon16);
-            putValue(LARGE_ICON_KEY, icon24);
+            super("Shrink", icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -620,12 +611,10 @@ public class Canvas extends JComponent implements ComponentListener,
     }
 
     private class PropertyAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(Canvas.class.getResource("images/property.png")));
-        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
-        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
+        static final ActionIcons icons = loadActionIcons(Canvas.class, "images/property.png");
         public PropertyAction() {
-            super("Properties", icon16);
-            putValue(LARGE_ICON_KEY, icon24);
+            super("Properties", icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override

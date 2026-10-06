@@ -20,14 +20,14 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.text.MessageFormat;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.ResourceBundle;
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.AbstractTableModel;
 import smile.swing.Button;
-import static smile.swing.SmileUtilities.scaleImageIcon;
+import smile.swing.SmileUtilities.ActionIcons;
+import static smile.swing.SmileUtilities.loadActionIcons;
 
 /**
  * A table model that performs "paging" of its data. This model
@@ -322,13 +322,11 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
     
     class PageDownAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("images/forward.png")));
-        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
-        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
+        static final ActionIcons icons = loadActionIcons(PageTableModel.class, "images/forward.png");
 
         public PageDownAction() {
-            super("Next Page", icon16);
-            putValue(LARGE_ICON_KEY, icon24);
+            super("Next Page", icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -339,13 +337,11 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
     
     class PageUpAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("images/back.png")));
-        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
-        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
+        static final ActionIcons icons = loadActionIcons(PageTableModel.class, "images/back.png");
 
         public PageUpAction() {
-            super("Previous Page", icon16);
-            putValue(LARGE_ICON_KEY, icon24);
+            super("Previous Page", icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -356,13 +352,11 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
     
     class FirstPageAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("images/double-left.png")));
-        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
-        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
+        static final ActionIcons icons = loadActionIcons(PageTableModel.class, "images/double-left.png");
 
         public FirstPageAction() {
-            super("First Page", icon16);
-            putValue(LARGE_ICON_KEY, icon24);
+            super("First Page", icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -373,13 +367,11 @@ public abstract class PageTableModel extends AbstractTableModel {
     }
     
     class LastPageAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(PageTableModel.class.getResource("images/double-right.png")));
-        static final ImageIcon icon16 = scaleImageIcon(icon, 16);
-        static final ImageIcon icon24 = scaleImageIcon(icon, 24);
+        static final ActionIcons icons = loadActionIcons(PageTableModel.class, "images/double-right.png");
 
         public LastPageAction() {
-            super("Last Page", icon16);
-            putValue(LARGE_ICON_KEY, icon24);
+            super("Last Page", icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override

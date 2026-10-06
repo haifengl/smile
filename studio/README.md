@@ -173,6 +173,7 @@ The divider positions are persisted and restored between sessions.
 | **Save As…** | Save the active notebook to a new path |
 | **Auto Save** | Toggle auto-save (idle-triggered, with a 60-second fallback) |
 | **Settings…** | Open the AI service configuration dialog |
+| **Plugins…** | Open the plugin marketplace dialog |
 | **Exit** | Close all open notebooks (with save prompts) and quit |
 
 ### Cell Menu
@@ -496,7 +497,7 @@ later from the **Inference** menu or by double-clicking a model in the Kernel tr
 ### 8.6 Plugin Marketplace Configuration
 
 SMILE ships no plugin marketplace of its own. The `/plugin` panel (also
-**File → Plugins**) seeds installed marketplaces the first time it is opened, so a
+**File → Plugins…**) seeds installed marketplaces the first time it is opened, so a
 fresh Studio has a catalog to browse. By default it seeds the official Anthropic
 marketplace — `anthropics/claude-plugins-official`, the same one Claude Code adds on
 first start. The fetch runs on a background thread and only when you open the panel;
