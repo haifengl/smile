@@ -29,6 +29,7 @@ import java.util.Objects;
 import java.util.ResourceBundle;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import jdk.jshell.VarSnippet;
+import smile.studio.StudioConfig;
 import smile.studio.kernel.Kernel;
 import smile.studio.kernel.Variable;
 import static smile.swing.SmileUtilities.scaleImageIcon;

@@ -22,7 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
-import smile.studio.workspace.StudioConfig;
+import smile.studio.StudioConfig;
 
 /**
  * The facade the UI and the CLI both drive. Every operation returns text meant for

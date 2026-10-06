@@ -45,7 +45,6 @@ import org.fife.rsta.ui.search.SearchListener;
 import org.fife.ui.rtextarea.SearchContext;
 import smile.studio.workspace.OpenFile;
 import smile.studio.workspace.ServeManager;
-import smile.studio.workspace.StudioConfig;
 import smile.studio.workspace.Workspace;
 import smile.swing.Button;
 import smile.studio.notebook.Cell;
