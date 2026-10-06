@@ -869,7 +869,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                     message,
                     bundle.getString("About"),
                     JOptionPane.INFORMATION_MESSAGE,
-                    frameIcons.size() > 4 ? new ImageIcon(frameIcons.get(4)) : null);
+                    frameIcons.size() > 5 ? new ImageIcon(frameIcons.get(5)) : null);
         }
     }
 
