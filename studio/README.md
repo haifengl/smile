@@ -493,6 +493,34 @@ started only when `autoStart` is `true` **and** `modelPath` exists on disk; a
 project with no `model/` directory is left alone, and you can start the service
 later from the **Inference** menu or by double-clicking a model in the Kernel tree.
 
+### 8.6 Plugin Marketplace Configuration
+
+SMILE ships no plugin marketplace of its own. The `/plugin` panel (also
+**File → Plugins**) seeds installed marketplaces the first time it is opened, so a
+fresh Studio has a catalog to browse. By default it seeds the official Anthropic
+marketplace — `anthropics/claude-plugins-official`, the same one Claude Code adds on
+first start. The fetch runs on a background thread and only when you open the panel;
+nothing touches the network at startup.
+
+The `plugins` object in `studio.json` names the marketplaces to seed:
+
+```json
+{
+  "plugins": {
+    "marketplaces": [ "anthropics/claude-plugins-official" ]
+  }
+}
+```
+
+| Field | Default | Meaning |
+|-------|---------|---------|
+| `marketplaces` | `[ "anthropics/claude-plugins-official" ]` | Sources registered on the panel's first open. Leave empty for the built-in default. Each entry may be a local path, an `owner/repo`, or a git URL. |
+
+An explicit add — `/plugin marketplace add <source>`, or the **Add Marketplace**
+field in the panel — is always permitted, because you typed the source yourself. The
+`marketplaces` list only controls the *implicit* first-run seed (ADR-008: no silent
+network for an arbitrary source).
+
 ---
 
 ## 9. AI Agent Panel

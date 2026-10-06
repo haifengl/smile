@@ -72,6 +72,16 @@ final class PluginHome {
         return root.resolve("marketplaces.json");
     }
 
+    /**
+     * Returns the marker file recording that the first-run marketplace seed has
+     * completed. Its presence stops the Discover panel re-attempting a network
+     * fetch every time it is opened.
+     * @return the seed-marker file.
+     */
+    Path seededMarker() {
+        return root.resolve(".seeded");
+    }
+
     /** @return the directory holding every installed plugin. */
     Path installedRoot() {
         return root.resolve("installed");

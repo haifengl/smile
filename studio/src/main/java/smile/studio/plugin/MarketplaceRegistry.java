@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import smile.studio.workspace.StudioConfig;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
@@ -44,13 +45,24 @@ public final class MarketplaceRegistry {
 
     private final PluginHome home;
     private final Fetcher fetcher;
+    private final StudioConfig.Plugins policy;
 
     /**
      * Constructor.
      * @param home the plugin home.
      */
     public MarketplaceRegistry(PluginHome home) {
+        this(home, StudioConfig.plugins());
+    }
+
+    /**
+     * Constructor with an explicit policy, for tests.
+     * @param home the plugin home.
+     * @param policy the marketplace policy from {@code studio.json}.
+     */
+    MarketplaceRegistry(PluginHome home, StudioConfig.Plugins policy) {
         this.home = home;
+        this.policy = policy;
         this.fetcher = new Fetcher();
     }
 
@@ -66,12 +78,42 @@ public final class MarketplaceRegistry {
     /**
      * Registers a marketplace by source string, fetching and reading its manifest.
      *
+     * <p>This is the explicit path — the user typed the source — so no allowlist
+     * check applies. The implicit first-run seed goes through
+     * {@link #addImplicit(String)} instead.
+     *
      * @param sourceText the source, in the {@code /plugin marketplace add} shorthand.
      * @return the registered marketplace.
      * @throws IOException if the source cannot be resolved or its manifest is invalid.
      */
     public Registered add(String sourceText) throws IOException {
+        return add(sourceText, false);
+    }
+
+    /**
+     * Registers a marketplace that Studio is adding on the user's behalf, such as
+     * the official Anthropic marketplace seeded on first open.
+     *
+     * <p>Because the fetch happens without an explicit user action, the source must
+     * be trusted: it has to be one of the built-in known defaults or one of the
+     * sources named by {@code plugins.marketplaces} in {@code studio.json}. Any
+     * other source is refused rather than fetched (ADR-008 — no silent network for
+     * an arbitrary source).
+     *
+     * @param sourceText the source to seed.
+     * @return the registered marketplace.
+     * @throws IOException if the source is not trusted, cannot be resolved, or has
+     *                     an invalid manifest.
+     */
+    public Registered addImplicit(String sourceText) throws IOException {
+        return add(sourceText, true);
+    }
+
+    private Registered add(String sourceText, boolean implicit) throws IOException {
         MarketplaceSource source = MarketplaceSource.parse(sourceText);
+        if (implicit && !PluginDefaults.isTrustedSource(sourceText, policy.marketplaces())) {
+            throw new IOException("Marketplace source is not one of plugins.marketplaces: " + sourceText);
+        }
         Path root = fetcher.marketplaceRoot(source, home.cache());
         MarketplaceManifest manifest = MarketplaceManifest.from(root);
 

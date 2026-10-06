@@ -137,4 +137,48 @@ public class StudioConfigTest {
             Files.deleteIfExists(local);
         }
     }
+
+    @Test
+    public void testParsePluginsMarketplaces(@TempDir Path dir) throws IOException {
+        // Given: a studio.json naming marketplaces to seed.
+        Path file = dir.resolve("studio.json");
+        Files.writeString(file, """
+                {
+                  "plugins": {
+                    "marketplaces": [ "anthropics/claude-plugins-official", "  acme/plugins  " ]
+                  }
+                }
+                """);
+
+        // When
+        var plugins = StudioConfig.parsePlugins(file);
+
+        // Then: entries are trimmed and matched, and anything else is not listed.
+        assertTrue(plugins.allows("anthropics/claude-plugins-official"));
+        assertTrue(plugins.allows("acme/plugins"));
+        assertFalse(plugins.allows("evil/market"));
+        assertFalse(plugins.allows(null));
+    }
+
+    @Test
+    public void testParsePluginsWithoutKey(@TempDir Path dir) throws IOException {
+        // Given: a studio.json with no plugins object.
+        Path file = dir.resolve("studio.json");
+        Files.writeString(file, "{\"inferenceServer\":{\"port\":8888}}");
+
+        // When
+        var plugins = StudioConfig.parsePlugins(file);
+
+        // Then: the default policy names no marketplaces (the built-in default is
+        // used by the seed logic, not by this config record).
+        assertTrue(plugins.marketplaces().isEmpty());
+        assertFalse(plugins.allows("anthropics/claude-plugins-official"));
+    }
+
+    @Test
+    public void testDefaultPluginsPolicy() {
+        // Then
+        assertTrue(StudioConfig.DEFAULT_PLUGINS.marketplaces().isEmpty());
+        assertFalse(StudioConfig.DEFAULT_PLUGINS.allows("anything"));
+    }
 }
