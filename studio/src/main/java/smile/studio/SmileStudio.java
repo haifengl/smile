@@ -636,8 +636,10 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     /** Starts the shared inference service on a background thread. */
     private class StartInferenceAction extends AbstractAction {
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/start.png");
         public StartInferenceAction() {
-            super(bundle.getString("StartInference"));
+            super(bundle.getString("StartInference"), icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -655,8 +657,10 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     /** Stops the shared inference service. */
     private class StopInferenceAction extends AbstractAction {
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/stop.png");
         public StopInferenceAction() {
-            super(bundle.getString("StopInference"));
+            super(bundle.getString("StopInference"), icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -668,8 +672,10 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     /** Restarts the shared inference service. */
     private class RestartInferenceAction extends AbstractAction {
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/restart.png");
         public RestartInferenceAction() {
-            super(bundle.getString("RestartInference"));
+            super(bundle.getString("RestartInference"), icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -689,8 +695,10 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     /** Opens the inference service health endpoint in the browser. */
     private class InferenceHealthAction extends AbstractAction {
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/health.png");
         public InferenceHealthAction() {
-            super(bundle.getString("InferenceHealth"));
+            super(bundle.getString("InferenceHealth"), icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -701,8 +709,10 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     /** Opens the inference service metrics endpoint in the browser. */
     private class InferenceMetricsAction extends AbstractAction {
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/metrics.png");
         public InferenceMetricsAction() {
-            super(bundle.getString("InferenceMetrics"));
+            super(bundle.getString("InferenceMetrics"), icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -713,8 +723,10 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     /** Opens the inference service web UI in the browser. */
     private class OpenInferenceUiAction extends AbstractAction {
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/web-ui.png");
         public OpenInferenceUiAction() {
-            super(bundle.getString("OpenInferenceUI"));
+            super(bundle.getString("OpenInferenceUI"), icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
