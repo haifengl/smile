@@ -48,12 +48,13 @@ A React-based web UI is bundled and served from the same process.
    - [ONNX Model Health and Metrics](#66-onnx-model-health-and-metrics)
    - [ONNX Model Lifecycle Control (Reload & Unload)](#67-onnx-model-lifecycle-control-reload--unload)
 7. [LLM Chat API](#7-llm-chat-api)
-   - [List models](#71-list-models)
-   - [Retrieve model](#72-retrieve-model)
-   - [Dynamic Model Loading](#73-dynamic-model-loading)
-   - [Chat Completions](#74-chat-completions)
-   - [Conversation History API](#75-conversation-history-api)
-   - [LLM Serving Metrics](#76-llm-serving-metrics)
+   - [Supported Models](#71-supported-models)
+   - [List models](#72-list-models)
+   - [Retrieve model](#73-retrieve-model)
+   - [Dynamic Model Loading](#74-dynamic-model-loading)
+   - [Chat Completions](#75-chat-completions)
+   - [Conversation History API](#76-conversation-history-api)
+   - [LLM Serving Metrics](#77-llm-serving-metrics)
 8. [Web UI](#8-web-ui)
 9. [Database](#9-database)
 10. [Testing](#10-testing)
@@ -83,7 +84,7 @@ discovered automatically at startup.
 Build the JVM+GPU image from source and run it with CUDA graph decode enabled.
 To enable Google login, add `-Dsmile.auth.google.client-id=...
 -Dsmile.auth.google.client-secret=... -Dsmile.auth.google.redirect-uri=...` to
-`JAVA_OPTS_APPEND` yourself (see [§7.4](#authentication)); keep those values
+`JAVA_OPTS_APPEND` yourself (see [§7.6](#authentication)); keep those values
 out of shell history / `docker inspect` by sourcing them from environment
 variables rather than inlining literals.
 
@@ -279,7 +280,7 @@ GET /q/metrics
 A single scrape target covers every model — classic SMILE, ONNX, and LLM — so
 DevOps does not need per-model URLs. See
 [§5.6](#56-model-health-and-metrics) and [§6.6](#66-onnx-model-health-and-metrics)
-for the per-model series, and [§7](#7-llm-serving-metrics) for the LLM series.
+for the per-model series, and [§7](#7-llm-chat-api) for the LLM series.
 
 ---
 
@@ -1183,7 +1184,83 @@ does **not** run Olive at startup — convert offline with `smile.chat.Olive`
 the serial GenAI path; multimodal GenAI materializes media to temp files. See
 [deep/ONNX_GENAI.md](../deep/ONNX_GENAI.md).
 
-### 7.1 List models
+There are therefore two ways to run a chat model:
+
+- **Native (LibTorch) path** — the built-in `smile.llm` implementations of
+  **Llama-3.1** and **Qwen3.5/3.8** (Gated DeltaNet hybrid), with continuous
+  batching, KV-cache prefix reuse, quantization, tensor parallelism, and MTP
+  speculative decoding. Use this when your checkpoint is one of those families
+  and you have CUDA GPUs.
+- **ONNX Runtime GenAI path** — any model already packaged for ONNX Runtime
+  GenAI (a directory containing `genai_config.json`). This is how you serve
+  **every other model family** (Phi, Mistral, Gemma, Granite, gpt-oss, …)
+  without a SMILE-native implementation, on CPU, CUDA, DirectML, or the NPU
+  execution providers.
+
+### 7.1 Supported Models
+
+The native path covers **Llama-3.1** and **Qwen3.5/3.8** checkpoints (see
+[§2](#2-llm-decode-benchmarks) for benchmarks and
+[deep/LLM.md](../deep/LLM.md) for the implementation). Every other family is
+served through ONNX Runtime GenAI and requires only a GenAI-ready package —
+either published on the Hugging Face Hub, converted offline with Olive
+(`smile.chat.Olive`; see [deep/ONNX_GENAI.md](../deep/ONNX_GENAI.md)), or built
+with the ONNX Runtime GenAI
+[model builder](https://github.com/microsoft/onnxruntime-genai/tree/main/src/python/py/models).
+
+Pass any of these Hugging Face repo ids (or a local directory) straight to
+`smile.chat.model`:
+
+```shell
+./gradlew :serve:quarkusDev "-Dsmile.chat.model=microsoft/Phi-4-mini-instruct-onnx"
+```
+
+**Language models** (decoder-only). The GenAI runtime dispatches on the
+architecture recorded in `genai_config.json`; the checkpoint below is a
+known-good, GenAI-ready package for each family.
+
+| Family | ONNX Runtime GenAI architecture | Example GenAI-ready checkpoint |
+|---|---|---|
+| Phi (3 / 3.5 / 4) | `phi3` | [microsoft/Phi-4-mini-instruct-onnx](https://huggingface.co/microsoft/Phi-4-mini-instruct-onnx), [microsoft/Phi-3.5-mini-instruct-onnx](https://huggingface.co/microsoft/Phi-3.5-mini-instruct-onnx), [microsoft/phi-4-onnx](https://huggingface.co/microsoft/phi-4-onnx) |
+| Phi reasoning | `phi3` | [microsoft/Phi-4-reasoning-onnx](https://huggingface.co/microsoft/Phi-4-reasoning-onnx), [microsoft/Phi-4-mini-reasoning-onnx](https://huggingface.co/microsoft/Phi-4-mini-reasoning-onnx) |
+| Llama (2 / 3 / 3.1 / 3.2) | `llama` | [onnx-community/Llama-3.2-3B-Instruct-GENAI-ONNX](https://huggingface.co/onnx-community/Llama-3.2-3B-Instruct-GENAI-ONNX) |
+| Mistral | `mistral` | [onnx-community/Mistral-7B-Instruct-v0.3](https://huggingface.co/onnx-community/Mistral-7B-Instruct-v0.3), [microsoft/mistral-7b-instruct-v0.2-ONNX](https://huggingface.co/microsoft/mistral-7b-instruct-v0.2-ONNX) |
+| Qwen (2.5 / 3 / 3.5 / 3.6) | `qwen2` / `qwen3` | [onnx-community/Qwen3-1.7B-ONNX](https://huggingface.co/onnx-community/Qwen3-1.7B-ONNX), [onnx-community/Qwen3.6-27B-Onnx](https://huggingface.co/onnx-community/Qwen3.6-27B-Onnx) |
+| Gemma (2 / 3) | `gemma2` / `gemma3` | [Arm/gemma-3-1b-instruct-onnx-genai-int4-emb-int8](https://huggingface.co/Arm/gemma-3-1b-instruct-onnx-genai-int4-emb-int8) |
+| Granite (3.x / 4.x) | `granite` | [onnx-community/Granite-4.1-3b-Onnx](https://huggingface.co/onnx-community/Granite-4.1-3b-Onnx), [onnx-community/Granite-4.1-8b-Onnx](https://huggingface.co/onnx-community/Granite-4.1-8b-Onnx) |
+| gpt-oss | `gpt_oss` | [onnx-community/gpt-oss-20b-ONNX](https://huggingface.co/onnx-community/gpt-oss-20b-ONNX) |
+| DeepSeek (R1 distill) | `deepseek` | [onnxruntime/DeepSeek-R1-Distill-ONNX](https://huggingface.co/onnxruntime/DeepSeek-R1-Distill-ONNX) |
+| InternLM2 | `internlm2` | [onnx-community/InternLM2-ONNX](https://huggingface.co/onnx-community/InternLM2-ONNX) |
+| ChatGLM (2 / 3) | `chatglm` | [amd/chatglm3-6b-onnx-ryzenai-npu](https://huggingface.co/amd/chatglm3-6b-onnx-ryzenai-npu) |
+| Nemotron | `nemotron` | [onnx-community/Nemotron-Cascade-8B](https://huggingface.co/onnx-community/Nemotron-Cascade-8B), [onnx-community/OpenReasoning-Nemotron-7B](https://huggingface.co/onnx-community/OpenReasoning-Nemotron-7B) |
+| ERNIE 4.5 | `ernie4_5` | [Prince-1/ERNIE-4.5-0.3B-Onnx](https://huggingface.co/Prince-1/ERNIE-4.5-0.3B-Onnx) |
+| Fara | `fara` | [onnx-community/Fara-7B-Onnx](https://huggingface.co/onnx-community/Fara-7B-Onnx) |
+| SmolLM3 | `smollm3` | (build from [HuggingFaceTB/SmolLM3-3B](https://huggingface.co/HuggingFaceTB/SmolLM3-3B) with the model builder) |
+
+**Vision-language models.** `GenAiChatModel` accepts local image/audio paths
+through `MultiModalProcessor`; serve materializes data-URL / HTTP media to temp
+files first.
+
+| Family | ONNX Runtime GenAI architecture | Example GenAI-ready checkpoint |
+|---|---|---|
+| Phi-3 Vision / Phi-4 multimodal | `phi3v` | [microsoft/Phi-3.5-vision-instruct-onnx](https://huggingface.co/microsoft/Phi-3.5-vision-instruct-onnx), [microsoft/Phi-4-multimodal-instruct-onnx](https://huggingface.co/microsoft/Phi-4-multimodal-instruct-onnx) |
+| Qwen-VL / Qwen2.5-VL / Qwen3-VL | `qwen2_vl` | (build with the model builder from the Qwen VL checkpoints) |
+
+**Audio models.** Whisper speech recognition is supported by the runtime;
+select it outside the chat API (the chat endpoint is text-only).
+
+| Family | ONNX Runtime GenAI architecture | Example GenAI-ready checkpoint |
+|---|---|---|
+| Whisper | `whisper` | [tonythethompson/Whisper-Tiny-GenAI-ONNX](https://huggingface.co/tonythethompson/Whisper-Tiny-GenAI-ONNX), [tonythethompson/whisper-large-v3-genai](https://huggingface.co/tonythethompson/whisper-large-v3-genai) |
+
+> The architecture list mirrors the upstream ONNX Runtime GenAI
+> [supported models](https://microsoft-onnxruntime-genai-88.mintlify.app/concepts/models#language-models)
+> and model-builder support matrix; the checkpoint ids are Hub repositories that
+> ship `genai_config.json`. Star counts, file layouts, and provider folders vary
+> per repo — `GenAiModelPaths` auto-detects the nested package
+> (CUDA / DirectML / CPU) that matches your execution provider.
+
+### 7.2 List models
 
 ```
 GET /api/v1/models
@@ -1245,7 +1322,7 @@ curl http://localhost:8080/api/v1/models
 - **SMILE `.sml`:** tag `author`, else `owner`; otherwise `Unknown`
 - **ONNX:** custom metadata `author`/`owner` when present; otherwise `Unknown`
 
-### 7.2 Retrieve model
+### 7.3 Retrieve model
 
 ```
 GET /api/v1/models/{id}
@@ -1295,7 +1372,7 @@ curl http://localhost:8080/api/v1/models/iris_random_forest-1
 }
 ```
 
-### 7.3 Dynamic Model Loading
+### 7.4 Dynamic Model Loading
 
 Load a new model from disk or Hugging Face Hub dynamically into active memory
 without restarting the server process:
@@ -1395,7 +1472,7 @@ curl -X POST http://localhost:8080/api/v1/models/load \
 }
 ```
 
-### 7.4 Chat Completions
+### 7.5 Chat Completions
 
 ```
 POST /api/v1/chat/completions
@@ -1543,7 +1620,7 @@ curl -X POST http://localhost:8080/api/v1/chat/completions \
   }'
 ```
 
-### 7.5 Conversation History API
+### 7.6 Conversation History API
 
 Chat history is stored in a relational database (PostgreSQL in production,
 H2 in dev mode). The API base path is `/api/v1/conversations`.
@@ -1694,7 +1771,7 @@ curl http://localhost:8080/api/v1/conversations/conv_42/items
 
 ---
 
-### 7.6 LLM Serving Metrics
+### 7.7 LLM Serving Metrics
 
 LLM serving metrics are exposed through the unified Prometheus endpoint
 `GET /q/metrics` (see [§1.4](#14-health-and-metrics-endpoints)). Every series

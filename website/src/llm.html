@@ -597,7 +597,9 @@ int[] prompt = model.encodeChat(dialog, options);</code></pre>
 
     <h2 id="serving" class="title">Serving</h2>
 
-    <p>SMILE Serve is a production Quarkus inference server for classic ML, ONNX, and OpenAI-compatible LLM chat — with a bundled React web UI. See the <a href="serve.html">SMILE Serve</a> page for Docker quick start, configuration, OpenAI-compatible chat completions (including Qwen3+ tool calling), and the web UI.</p>
+    <p>SMILE Serve is a production Quarkus inference server for classic ML, ONNX, and OpenAI-compatible LLM chat — with a bundled React web UI. See the <a href="serve.html">SMILE Serve</a> page for Docker quick start, configuration, OpenAI-compatible chat completions (including Qwen3+ tool calling), the <a href="serve.html#supported-models">supported models</a>, and the web UI.</p>
+
+    <p>The <code>smile.llm</code> package ships native implementations of <strong>Llama-3.1</strong> and <strong>Qwen3.5/3.8</strong>. All other model families — Phi, Mistral, Gemma, Granite, gpt-oss, DeepSeek, and more — are served through ONNX Runtime GenAI from a <code>genai_config.json</code> package; the full list of supported architectures and GenAI-ready checkpoints is on the <a href="serve.html#supported-models">SMILE Serve</a> and <a href="onnx-genai.html#supported-models">ONNX GenAI</a> pages.</p>
 
 
     <div id="btnv">

@@ -9,6 +9,46 @@ contract and adds a `LanguageModel` adapter for future smile-serve wiring.
 
 ---
 
+## Supported models
+
+The runtime loads any model directory that carries a `genai_config.json` and
+dispatches on the architecture recorded there. The families below match the
+upstream ONNX Runtime GenAI
+[supported-model list](https://microsoft-onnxruntime-genai-88.mintlify.app/concepts/models#language-models)
+and [model builder](https://github.com/microsoft/onnxruntime-genai/tree/main/src/python/py/models);
+the checkpoint listed for each is a known-good, GenAI-ready Hub repository.
+
+SMILE's own [native `smile.llm` implementations](LLM.md) cover **Llama-3.1**
+and **Qwen3.5/3.8** separately — every other family runs through this package.
+
+| Family | GenAI architecture | Example GenAI-ready checkpoint |
+|---|---|---|
+| Phi (3 / 3.5 / 4) | `phi3` | [microsoft/Phi-4-mini-instruct-onnx](https://huggingface.co/microsoft/Phi-4-mini-instruct-onnx), [microsoft/Phi-3.5-mini-instruct-onnx](https://huggingface.co/microsoft/Phi-3.5-mini-instruct-onnx), [microsoft/phi-4-onnx](https://huggingface.co/microsoft/phi-4-onnx) |
+| Phi reasoning | `phi3` | [microsoft/Phi-4-reasoning-onnx](https://huggingface.co/microsoft/Phi-4-reasoning-onnx), [microsoft/Phi-4-mini-reasoning-onnx](https://huggingface.co/microsoft/Phi-4-mini-reasoning-onnx) |
+| Llama (2 / 3 / 3.1 / 3.2) | `llama` | [onnx-community/Llama-3.2-3B-Instruct-GENAI-ONNX](https://huggingface.co/onnx-community/Llama-3.2-3B-Instruct-GENAI-ONNX) |
+| Mistral | `mistral` | [onnx-community/Mistral-7B-Instruct-v0.3](https://huggingface.co/onnx-community/Mistral-7B-Instruct-v0.3), [microsoft/mistral-7b-instruct-v0.2-ONNX](https://huggingface.co/microsoft/mistral-7b-instruct-v0.2-ONNX) |
+| Qwen (2.5 / 3 / 3.5 / 3.6) | `qwen2` / `qwen3` | [onnx-community/Qwen3-1.7B-ONNX](https://huggingface.co/onnx-community/Qwen3-1.7B-ONNX), [onnx-community/Qwen3.6-27B-Onnx](https://huggingface.co/onnx-community/Qwen3.6-27B-Onnx) |
+| Gemma (2 / 3) | `gemma2` / `gemma3` | [Arm/gemma-3-1b-instruct-onnx-genai-int4-emb-int8](https://huggingface.co/Arm/gemma-3-1b-instruct-onnx-genai-int4-emb-int8) |
+| Granite (3.x / 4.x) | `granite` | [onnx-community/Granite-4.1-3b-Onnx](https://huggingface.co/onnx-community/Granite-4.1-3b-Onnx), [onnx-community/Granite-4.1-8b-Onnx](https://huggingface.co/onnx-community/Granite-4.1-8b-Onnx) |
+| gpt-oss | `gpt_oss` | [onnx-community/gpt-oss-20b-ONNX](https://huggingface.co/onnx-community/gpt-oss-20b-ONNX) |
+| DeepSeek (R1 distill) | `deepseek` | [onnxruntime/DeepSeek-R1-Distill-ONNX](https://huggingface.co/onnxruntime/DeepSeek-R1-Distill-ONNX) |
+| InternLM2 | `internlm2` | [onnx-community/InternLM2-ONNX](https://huggingface.co/onnx-community/InternLM2-ONNX) |
+| ChatGLM (2 / 3) | `chatglm` | [amd/chatglm3-6b-onnx-ryzenai-npu](https://huggingface.co/amd/chatglm3-6b-onnx-ryzenai-npu) |
+| Nemotron | `nemotron` | [onnx-community/Nemotron-Cascade-8B](https://huggingface.co/onnx-community/Nemotron-Cascade-8B), [onnx-community/OpenReasoning-Nemotron-7B](https://huggingface.co/onnx-community/OpenReasoning-Nemotron-7B) |
+| ERNIE 4.5 | `ernie4_5` | [Prince-1/ERNIE-4.5-0.3B-Onnx](https://huggingface.co/Prince-1/ERNIE-4.5-0.3B-Onnx) |
+| Fara | `fara` | [onnx-community/Fara-7B-Onnx](https://huggingface.co/onnx-community/Fara-7B-Onnx) |
+| SmolLM3 | `smollm3` | build from [HuggingFaceTB/SmolLM3-3B](https://huggingface.co/HuggingFaceTB/SmolLM3-3B) with the model builder |
+| Phi-3 Vision / Phi-4 multimodal | `phi3v` | [microsoft/Phi-3.5-vision-instruct-onnx](https://huggingface.co/microsoft/Phi-3.5-vision-instruct-onnx), [microsoft/Phi-4-multimodal-instruct-onnx](https://huggingface.co/microsoft/Phi-4-multimodal-instruct-onnx) |
+| Qwen-VL / Qwen2.5-VL / Qwen3-VL | `qwen2_vl` | build with the model builder from the Qwen VL checkpoints |
+| Whisper | `whisper` | [tonythethompson/Whisper-Tiny-GenAI-ONNX](https://huggingface.co/tonythethompson/Whisper-Tiny-GenAI-ONNX), [tonythethompson/whisper-large-v3-genai](https://huggingface.co/tonythethompson/whisper-large-v3-genai) |
+
+Vision-language and audio models use the `Images` / `Audios` /
+`MultiModalProcessor` path. File layouts and provider folders vary per repo —
+`Model.open` / `GenAiChatModel.open` auto-detect the nested package that matches
+your execution provider.
+
+---
+
 ## Prerequisites
 
 | Requirement | Notes |

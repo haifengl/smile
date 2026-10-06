@@ -828,6 +828,73 @@ data: {"output":[0.88,0.07,0.05]}</code></pre>
     <p>The LLM is optional: if the path specified by the property <code>smile.chat.model</code> does not exist on the file system (and cannot be resolved via Hugging Face / OGA), <code>ChatService</code> starts in an <em>unavailable</em> state and every request to the chat endpoints returns <strong>HTTP 503 Service Unavailable</strong>.</p>
     <p><strong>Backend selection:</strong> with CUDA and a builtin Llama/Qwen checkpoint, serve uses the Torch path + continuous batching. Otherwise it falls back to ONNX Runtime GenAI (<code>GenAiChatModel</code>) when the model is already GenAI-ready (<code>genai_config.json</code> at the repo root or under provider folders such as <code>cuda/cuda-int4-…/</code>, or a prior Olive cache under <code>{SMILE_CACHE}/olive</code>). Serve does <strong>not</strong> run Olive at startup — convert offline with <code>smile.chat.Olive</code> (see <code>smile.chat.oga.*</code>). Tools input / structured <code>tool_calls</code> output work on the serial GenAI path; multimodal GenAI materializes media to temp files. See <a href="onnx-genai.html">ONNX GenAI</a>.</p>
 
+    <p>There are therefore two ways to run a chat model — the <strong>native (LibTorch) path</strong> for the built-in <a href="llm.html">Llama-3.1 and Qwen3.5/3.8</a> implementations, and the <strong>ONNX Runtime GenAI path</strong> for every other family packaged as a GenAI-ready directory.</p>
+
+    <h3 id="supported-models">Supported Models</h3>
+
+    <p>The native path covers <strong>Llama-3.1</strong> and <strong>Qwen3.5/3.8</strong> checkpoints. Every other family is served through ONNX Runtime GenAI and needs only a GenAI-ready package — published on the Hugging Face Hub, converted offline with Olive (<code>smile.chat.Olive</code>, see <a href="onnx-genai.html">ONNX GenAI</a>), or built with the ONNX Runtime GenAI <a href="https://github.com/microsoft/onnxruntime-genai/tree/main/src/python/py/models" target="_blank" rel="noopener">model builder</a>. Pass any repo id below (or a local directory) to <code>smile.chat.model</code>:</p>
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">./gradlew :serve:quarkusDev "-Dsmile.chat.model=microsoft/Phi-4-mini-instruct-onnx"</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
+    <p><strong>Language models</strong> (decoder-only). The runtime dispatches on the architecture recorded in <code>genai_config.json</code>; the checkpoint listed for each family is a known-good, GenAI-ready Hub repository.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Family</th><th>GenAI architecture</th><th>Example GenAI-ready checkpoint</th></tr></thead>
+            <tbody>
+            <tr><td>Phi (3 / 3.5 / 4)</td><td><code>phi3</code></td><td><a href="https://huggingface.co/microsoft/Phi-4-mini-instruct-onnx" target="_blank" rel="noopener">microsoft/Phi-4-mini-instruct-onnx</a>, <a href="https://huggingface.co/microsoft/Phi-3.5-mini-instruct-onnx" target="_blank" rel="noopener">microsoft/Phi-3.5-mini-instruct-onnx</a>, <a href="https://huggingface.co/microsoft/phi-4-onnx" target="_blank" rel="noopener">microsoft/phi-4-onnx</a></td></tr>
+            <tr><td>Phi reasoning</td><td><code>phi3</code></td><td><a href="https://huggingface.co/microsoft/Phi-4-reasoning-onnx" target="_blank" rel="noopener">microsoft/Phi-4-reasoning-onnx</a>, <a href="https://huggingface.co/microsoft/Phi-4-mini-reasoning-onnx" target="_blank" rel="noopener">microsoft/Phi-4-mini-reasoning-onnx</a></td></tr>
+            <tr><td>Llama (2 / 3 / 3.1 / 3.2)</td><td><code>llama</code></td><td><a href="https://huggingface.co/onnx-community/Llama-3.2-3B-Instruct-GENAI-ONNX" target="_blank" rel="noopener">onnx-community/Llama-3.2-3B-Instruct-GENAI-ONNX</a></td></tr>
+            <tr><td>Mistral</td><td><code>mistral</code></td><td><a href="https://huggingface.co/onnx-community/Mistral-7B-Instruct-v0.3" target="_blank" rel="noopener">onnx-community/Mistral-7B-Instruct-v0.3</a>, <a href="https://huggingface.co/microsoft/mistral-7b-instruct-v0.2-ONNX" target="_blank" rel="noopener">microsoft/mistral-7b-instruct-v0.2-ONNX</a></td></tr>
+            <tr><td>Qwen (2.5 / 3 / 3.5 / 3.6)</td><td><code>qwen2</code> / <code>qwen3</code></td><td><a href="https://huggingface.co/onnx-community/Qwen3-1.7B-ONNX" target="_blank" rel="noopener">onnx-community/Qwen3-1.7B-ONNX</a>, <a href="https://huggingface.co/onnx-community/Qwen3.6-27B-Onnx" target="_blank" rel="noopener">onnx-community/Qwen3.6-27B-Onnx</a></td></tr>
+            <tr><td>Gemma (2 / 3)</td><td><code>gemma2</code> / <code>gemma3</code></td><td><a href="https://huggingface.co/Arm/gemma-3-1b-instruct-onnx-genai-int4-emb-int8" target="_blank" rel="noopener">Arm/gemma-3-1b-instruct-onnx-genai-int4-emb-int8</a></td></tr>
+            <tr><td>Granite (3.x / 4.x)</td><td><code>granite</code></td><td><a href="https://huggingface.co/onnx-community/Granite-4.1-3b-Onnx" target="_blank" rel="noopener">onnx-community/Granite-4.1-3b-Onnx</a>, <a href="https://huggingface.co/onnx-community/Granite-4.1-8b-Onnx" target="_blank" rel="noopener">onnx-community/Granite-4.1-8b-Onnx</a></td></tr>
+            <tr><td>gpt-oss</td><td><code>gpt_oss</code></td><td><a href="https://huggingface.co/onnx-community/gpt-oss-20b-ONNX" target="_blank" rel="noopener">onnx-community/gpt-oss-20b-ONNX</a></td></tr>
+            <tr><td>DeepSeek (R1 distill)</td><td><code>deepseek</code></td><td><a href="https://huggingface.co/onnxruntime/DeepSeek-R1-Distill-ONNX" target="_blank" rel="noopener">onnxruntime/DeepSeek-R1-Distill-ONNX</a></td></tr>
+            <tr><td>InternLM2</td><td><code>internlm2</code></td><td><a href="https://huggingface.co/onnx-community/InternLM2-ONNX" target="_blank" rel="noopener">onnx-community/InternLM2-ONNX</a></td></tr>
+            <tr><td>ChatGLM (2 / 3)</td><td><code>chatglm</code></td><td><a href="https://huggingface.co/amd/chatglm3-6b-onnx-ryzenai-npu" target="_blank" rel="noopener">amd/chatglm3-6b-onnx-ryzenai-npu</a></td></tr>
+            <tr><td>Nemotron</td><td><code>nemotron</code></td><td><a href="https://huggingface.co/onnx-community/Nemotron-Cascade-8B" target="_blank" rel="noopener">onnx-community/Nemotron-Cascade-8B</a>, <a href="https://huggingface.co/onnx-community/OpenReasoning-Nemotron-7B" target="_blank" rel="noopener">onnx-community/OpenReasoning-Nemotron-7B</a></td></tr>
+            <tr><td>ERNIE 4.5</td><td><code>ernie4_5</code></td><td><a href="https://huggingface.co/Prince-1/ERNIE-4.5-0.3B-Onnx" target="_blank" rel="noopener">Prince-1/ERNIE-4.5-0.3B-Onnx</a></td></tr>
+            <tr><td>Fara</td><td><code>fara</code></td><td><a href="https://huggingface.co/onnx-community/Fara-7B-Onnx" target="_blank" rel="noopener">onnx-community/Fara-7B-Onnx</a></td></tr>
+            <tr><td>SmolLM3</td><td><code>smollm3</code></td><td>build from <a href="https://huggingface.co/HuggingFaceTB/SmolLM3-3B" target="_blank" rel="noopener">HuggingFaceTB/SmolLM3-3B</a> with the model builder</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p><strong>Vision-language models.</strong> <code>GenAiChatModel</code> accepts local image/audio paths through <code>MultiModalProcessor</code>; serve materializes data-URL / HTTP media to temp files first.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Family</th><th>GenAI architecture</th><th>Example GenAI-ready checkpoint</th></tr></thead>
+            <tbody>
+            <tr><td>Phi-3 Vision / Phi-4 multimodal</td><td><code>phi3v</code></td><td><a href="https://huggingface.co/microsoft/Phi-3.5-vision-instruct-onnx" target="_blank" rel="noopener">microsoft/Phi-3.5-vision-instruct-onnx</a>, <a href="https://huggingface.co/microsoft/Phi-4-multimodal-instruct-onnx" target="_blank" rel="noopener">microsoft/Phi-4-multimodal-instruct-onnx</a></td></tr>
+            <tr><td>Qwen-VL / Qwen2.5-VL / Qwen3-VL</td><td><code>qwen2_vl</code></td><td>build with the model builder from the Qwen VL checkpoints</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p><strong>Audio models.</strong> Whisper speech recognition is supported by the runtime; select it outside the chat API (the chat endpoint is text-only).</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Family</th><th>GenAI architecture</th><th>Example GenAI-ready checkpoint</th></tr></thead>
+            <tbody>
+            <tr><td>Whisper</td><td><code>whisper</code></td><td><a href="https://huggingface.co/tonythethompson/Whisper-Tiny-GenAI-ONNX" target="_blank" rel="noopener">tonythethompson/Whisper-Tiny-GenAI-ONNX</a>, <a href="https://huggingface.co/tonythethompson/whisper-large-v3-genai" target="_blank" rel="noopener">tonythethompson/whisper-large-v3-genai</a></td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>The architecture list mirrors the upstream ONNX Runtime GenAI <a href="https://microsoft-onnxruntime-genai-88.mintlify.app/concepts/models#language-models" target="_blank" rel="noopener">supported models</a> and model-builder support matrix; the checkpoint ids are Hub repositories that ship <code>genai_config.json</code>. File layouts and provider folders vary per repo — <code>GenAiModelPaths</code> auto-detects the nested package (CUDA / DirectML / CPU) that matches your execution provider.</p>
+
 
     <h3 id="list-models">List models</h3>
 
