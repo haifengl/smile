@@ -176,6 +176,12 @@ public class Workspace extends JSplitPane {
         openAgent("\uD83D\uDC0D Guido the Pythonista", coders.get("Python"), "guido", pythonCoderCLI(coders.get("Python")));
         openAgent("\uD83D\uDDA5\uFE0F Chuck the Desktop Operator", desktopOperator, "chuck", desktopOperatorCLI(desktopOperator));
 
+        // Make installed plugins' skills invocable on every top-level agent. The
+        // skills are already translated to ioa's shape; adding them to each agent's
+        // conversation is all that is needed for /<skill> to run (ADR-004).
+        addPluginSkills(chiefOfStaff, dataScientist, productManager, architect,
+                desktopOperator, coders.get("Java"), coders.get("Python"));
+
         project.setLeftComponent(explorerTabs);
         project.setRightComponent(notebookTabs);
         project.setResizeWeight(0.2);
@@ -311,8 +317,7 @@ public class Workspace extends JSplitPane {
         return null;
     }
 
-    private static void applyDefaultModel(Agent agent) {
-        if (agent == null) {
+    private static void applyDefaultModel(Agent agent) {        if (agent == null) {
             return;
         }
         var def = SmileStudio.llmServices().defaultModel();
@@ -320,6 +325,29 @@ public class Workspace extends JSplitPane {
             String existing = agent.conversation().params().getProperty(ioa.llm.client.LLM.MODEL, "");
             if (existing == null || existing.isBlank()) {
                 agent.conversation().params().setProperty(ioa.llm.client.LLM.MODEL, def.model().id());
+            }
+        }
+    }
+
+    /**
+     * Adds every installed plugin's skills to each top-level agent, so a plugin's
+     * skills and translated commands are invocable as slash commands. A no-op when
+     * plugins were never bootstrapped (headless use).
+     *
+     * @param agents the agents to attach the skills to; null entries are skipped.
+     */
+    private static void addPluginSkills(Agent... agents) {
+        var loader = smile.studio.plugin.PluginLoader.shared();
+        if (loader == null) {
+            return;
+        }
+        var skills = loader.pluginSkills();
+        if (skills.isEmpty()) {
+            return;
+        }
+        for (Agent agent : agents) {
+            if (agent != null) {
+                agent.conversation().addSkills(skills);
             }
         }
     }

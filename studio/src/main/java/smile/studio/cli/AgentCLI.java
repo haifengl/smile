@@ -689,6 +689,7 @@ public class AgentCLI extends JPanel {
         hints.put("/train", "[ENTER for helps]");
         hints.put("/predict", "[ENTER for helps]");
         hints.put("/serve", "[ENTER for helps]");
+        hints.put("/plugin", "[marketplace|install|list|enable|disable|uninstall|mcp]");
 
         if (agent != null) {
             for (var skill : agent.skills()) {
@@ -803,6 +804,7 @@ public class AgentCLI extends JPanel {
                 case "resume" -> resume(intent.output());
                 case "compact" -> compact(instructions, intent);
                 case "plan" -> plan(args, instructions, intent.output());
+                case "plugin" -> plugin(args, intent.output());
                 default -> runSkill(args[0], instructions, intent);
             }
         } catch (Throwable t) {
@@ -846,7 +848,8 @@ public class AgentCLI extends JPanel {
                 /edit               Edit a file in a tab.
                 /train              Train a machine learning model
                 /predict            Run batch inference
-                /serve              Start an inference service""");
+                /serve              Start an inference service
+                /plugin             Manage plugins and marketplaces""");
 
         if (agent != null && agent.llm().isPresent()) {
             for (var skill : agent.skills()) {
@@ -883,9 +886,22 @@ public class AgentCLI extends JPanel {
         }
     }
 
+    /**
+     * Runs a plugin subcommand ({@code /plugin ...}). Plugin management is
+     * independent of the agent, so it does not require an AI service.
+     *
+     * @param args the arguments after {@code /plugin}.
+     * @param output the output area.
+     */
+    private void plugin(String[] args, OutputArea output) {
+        var service = new smile.studio.plugin.PluginService(
+                Path.of(System.getProperty("user.dir")));
+        var rest = java.util.Arrays.asList(args).subList(1, args.length);
+        output.setText(service.execute(rest));
+    }
+
     /** Executes memory commands. */
-    private void memory(String[] args, String instructions, Intent intent) throws IOException {
-        var output = intent.output();
+    private void memory(String[] args, String instructions, Intent intent) throws IOException {        var output = intent.output();
         if (!isAgentAvailable(output)) return;
 
         if (args.length < 2) {
