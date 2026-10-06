@@ -92,11 +92,8 @@ variables rather than inlining literals.
 ./gradlew :serve:build "-Dquarkus.profile=default"
 sudo docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t quarkus/smile-serve-gpu .
 sudo docker run -i --rm --gpus all -p 8888:8080 \
-  -e SMILE_DECODE_CUDA_GRAPH=1 \
-  -e SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE=0 \
-  -e SMILE_VERIFY_CUDA_GRAPH=1 \
-  -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,4,6,7 -Dsmile.chat.max-batch-size=48 -Dquarkus.log.level=INFO -XX:ErrorFile=/model/hs_err_%p.log -Dsmile.chat.admit-coalesce-ms=50 -Dsmile.chat.speculative=true -Dsmile.chat.speculative-tokens=2" \
-  -u root -v "/raid/llm/model":/model quarkus/smile-serve-gpu
+  -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0 -Dsmile.chat.max-batch-size=48 -XX:ErrorFile=/model/hs_err_%p.log" \
+  -u root -v "/llm/model":/model quarkus/smile-serve-gpu
 ```
 
 > **Database Profile & Dependencies:**
@@ -114,12 +111,9 @@ reporting; slower, use only when diagnosing a CUDA graph issue):
 
 ```shell
 sudo docker run -i --rm --gpus all -p 8888:8080 \
-  -e SMILE_DECODE_CUDA_GRAPH=1 \
-  -e SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE=0 \
-  -e SMILE_VERIFY_CUDA_GRAPH=1 \
   -e CUDA_LAUNCH_BLOCKING=1 \
-  -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,4,6,7 -Dsmile.chat.max-batch-size=48 -Dquarkus.log.level=INFO -XX:ErrorFile=/model/hs_err_%p.log -Dsmile.chat.admit-coalesce-ms=50 -Dsmile.chat.speculative=true -Dsmile.chat.speculative-tokens=2" \
-  -u root -v "/raid/llm/model":/model quarkus/smile-serve-gpu
+  -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0 -Dsmile.chat.max-batch-size=48 -XX:ErrorFile=/model/hs_err_%p.log" \
+  -u root -v "/llm/model":/model quarkus/smile-serve-gpu
 ```
 
 #### Running with PostgreSQL in Kubernetes
