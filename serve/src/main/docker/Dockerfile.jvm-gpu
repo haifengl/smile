@@ -139,7 +139,36 @@ RUN mkdir -p /opt/flashinfer/aot \
     && find /opt/flashinfer/aot -name '*.so' | head -5
 
 # -----------------------------------------------------------------------------
-# Stage 2: runtime image
+# Stage 2: fetch the onnxruntime-genai shared library from its pip wheel.
+# Python/pip stay in this stage; only the extracted libraries are copied on.
+# GENAI_VERSION is the onnxruntime-genai-cuda release (empty = latest); it must
+# be built against an ONNX Runtime ABI compatible with ORT_VERSION below, so pin
+# it once a combination has been validated.
+# -----------------------------------------------------------------------------
+FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu24.04 AS genai-builder
+
+ARG GENAI_VERSION=
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates \
+        python3 \
+        python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+# --no-deps: ONNX Runtime itself comes from the runtime stage, not from the
+# onnxruntime-gpu wheel dependency.
+RUN python3 -m pip install --no-cache-dir --break-system-packages --no-deps \
+        --target /opt/genai-wheel \
+        "onnxruntime-genai-cuda${GENAI_VERSION:+==${GENAI_VERSION}}" \
+    && mkdir -p /opt/onnxruntime-genai/lib \
+    && find /opt/genai-wheel/onnxruntime_genai -maxdepth 1 -name '*.so*' \
+        -exec cp -a {} /opt/onnxruntime-genai/lib/ \; \
+    && test -f /opt/onnxruntime-genai/lib/libonnxruntime-genai.so \
+    && ls -l /opt/onnxruntime-genai/lib
+
+# -----------------------------------------------------------------------------
+# Stage 3: runtime image
 # -----------------------------------------------------------------------------
 FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu24.04
 
@@ -190,8 +219,13 @@ RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/libtorch.zip \
     && unzip -q -o /tmp/libtorch.zip -d /usr/local \
     && rm -f /tmp/libtorch.zip
 
-# CUDA image already sets CUDA library paths; append ORT + LibTorch
-ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/libtorch/lib:/usr/lib/x86_64-linux-gnu/nvshmem/13${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+# ONNX Runtime GenAI (libonnxruntime-genai.so, from the stage-2 pip wheel)
+COPY --from=genai-builder /opt/onnxruntime-genai/lib /usr/local/onnxruntime-genai/lib
+ENV ONNXRUNTIME_NATIVE_PATH="/usr/local/onnxruntime/lib" \
+    ONNXRUNTIME_GENAI_NATIVE_PATH="/usr/local/onnxruntime-genai/lib"
+
+# CUDA image already sets CUDA library paths; append ORT + GenAI + LibTorch
+ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/onnxruntime-genai/lib:/usr/local/libtorch/lib:/usr/lib/x86_64-linux-gnu/nvshmem/13${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 # We make four distinct layers so if there are application changes the library layers can be re-used
 # IMPORTANT: serve/build/quarkus-app must be rebuilt on the host after Java changes:
