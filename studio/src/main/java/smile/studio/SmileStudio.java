@@ -149,6 +149,10 @@ public class SmileStudio extends JFrame implements SearchListener {
             });
         }
 
+        // Load enabled plugins before MCP starts: the loader stages subagents and
+        // computes the effective MCP fragment paths. It never runs plugin code.
+        var pluginLoader = smile.studio.plugin.PluginLoader.bootstrapShared(cwd);
+
         // Starts MCP services in background
         Thread.ofPlatform().name("mcp-service-starter").daemon(true).start(() -> {
             try {
@@ -159,6 +163,11 @@ public class SmileStudio extends JFrame implements SearchListener {
                 if (Files.exists(path)) MCP.connect(path, handler);
                 path = Path.of(System.getProperty("user.dir"), ".smile", "mcp.json");
                 if (Files.exists(path)) MCP.connect(path, handler);
+                // Plugin MCP servers: each fragment already carries `disabled: true`
+                // on every server the user has not opted into, so ioa skips them.
+                for (Path fragment : pluginLoader.mcpFragments()) {
+                    if (Files.exists(fragment)) MCP.connect(fragment, handler);
+                }
                 Runtime.getRuntime().addShutdownHook(new Thread(() -> {
                     logger.info("Shutting down MCP servers...");
                     MCP.close();
@@ -388,6 +397,8 @@ public class SmileStudio extends JFrame implements SearchListener {
         fileMenu.add(new JMenuItem(saveAsFile));
         fileMenu.add(autoSaveMenuItem);
         fileMenu.add(new JMenuItem(settings));
+        fileMenu.addSeparator();
+        fileMenu.add(new JMenuItem(new PluginsAction()));
         fileMenu.add(new JMenuItem(exit));
         menuBar.add(fileMenu);
 
@@ -464,8 +475,22 @@ public class SmileStudio extends JFrame implements SearchListener {
         opt.get().searchEvent(e);
     }
 
-    private class NewNotebookAction extends AbstractAction {
-        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/notebook.png")));
+    /** Opens the plugin marketplace panel. */
+    private class PluginsAction extends AbstractAction {
+        public PluginsAction() {
+            super(java.util.ResourceBundle.getBundle(
+                    "smile.studio.plugin.Plugin", java.util.Locale.getDefault()).getString("Plugins"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            var panel = new smile.studio.plugin.PluginPanel(
+                    SmileStudio.this, workspace.cwd());
+            panel.setVisible(true);
+        }
+    }
+
+    private class NewNotebookAction extends AbstractAction {        static final ImageIcon icon = new ImageIcon(Objects.requireNonNull(SmileStudio.class.getResource("images/notebook.png")));
         static final ImageIcon icon16 = scaleImageIcon(icon, 16);
         static final ImageIcon icon24 = scaleImageIcon(icon, 24);
         public NewNotebookAction() {
