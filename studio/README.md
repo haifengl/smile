@@ -697,7 +697,7 @@ When auto-compact finishes, the agent keeps only the summary and continues the t
 
 ## 10. Notepad
 
-The **Notepad** is a standalone text editor window opened for non-notebook files. It is accessible via:
+The **Notepad** is a text editor tab in the workspace, opened for non-notebook files. It is accessible via:
 
 - Double-clicking a non-binary, non-source file in the Project Explorer
 - The `/edit <file>` agent command
@@ -713,7 +713,6 @@ The **Notepad** is a standalone text editor window opened for non-notebook files
 | Spell checking | English spell checker loaded from `data/eng_dic.zip` |
 | Find / Replace | `Ctrl+F` (dialog), `Ctrl+Shift+F` (toolbar), `Ctrl+H` (replace dialog), `Ctrl+Shift+H` (replace toolbar) |
 | Go To Line | Available in the Search menu |
-| Error strip | Right-side gutter with error/warning markers |
 | Unsaved change tracking | Prompts before close |
 
 ---

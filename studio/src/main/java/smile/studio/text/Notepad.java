@@ -36,7 +36,6 @@ import org.fife.rsta.ui.search.ReplaceToolBar;
 import org.fife.rsta.ui.search.SearchEvent;
 import org.fife.rsta.ui.search.FindToolBar;
 import org.fife.ui.rsyntaxtextarea.spell.SpellingParser;
-import org.fife.ui.rsyntaxtextarea.ErrorStrip;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.fife.ui.rtextarea.SearchContext;
 import org.fife.ui.rtextarea.SearchEngine;
@@ -116,8 +115,12 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
         RTextScrollPane sp = new RTextScrollPane(editor);
         csp.add(sp);
 
-        ErrorStrip errorStrip = new ErrorStrip(editor);
-        add(errorStrip, BorderLayout.LINE_END);
+        // No ErrorStrip here: pinned to LINE_END it abutted the workspace split
+        // divider, doubling the apparent divider width and painting a light
+        // caret-marker bar at its top. Its notice threshold (WARNING) is also
+        // never met, since the only parser registered is the spell checker,
+        // which reports Level.INFO. The scroll pane's gutter already covers
+        // markers.
 
         editor.getDocument().addDocumentListener(this);
     }
