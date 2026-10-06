@@ -46,7 +46,8 @@ public class PluginResourceBundleTest {
             "Plugins", "Discover", "Installed", "Marketplaces", "Errors",
             "Install", "Uninstall", "Enable", "Disable", "AddMarketplace",
             "MCP", "RestartRequired",
-            "Close", "Remove", "Source", "MCPServers", "DiscoverHint");
+            "Close", "Remove", "Source", "MCPServers", "DiscoverHint",
+            "Catalog", "Details", "SelectHint");
 
     @Test
     public void testBaseBundleHasPluginKeys() {

@@ -18,6 +18,7 @@
 package smile.studio.plugin;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
@@ -71,7 +72,8 @@ public final class PluginPanel extends JDialog {
     private final DefaultListModel<String> marketplaceModel = new DefaultListModel<>();
     private final JList<String> marketplaceList = new JList<>(marketplaceModel);
     private final JLabel discoverHint = new JLabel();
-    private final JTextArea details = new JTextArea(8, 40);
+    private final JTextArea discoverDetails = new JTextArea(8, 40);
+    private final JTextArea installedDetails = new JTextArea(8, 40);
     private final JTextArea errors = new JTextArea(16, 60);
 
     /**
@@ -85,9 +87,8 @@ public final class PluginPanel extends JDialog {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        details.setEditable(false);
-        details.setLineWrap(true);
-        details.setWrapStyleWord(true);
+        configureDetails(discoverDetails);
+        configureDetails(installedDetails);
         errors.setEditable(false);
 
         JTabbedPane tabs = new JTabbedPane();
@@ -131,8 +132,10 @@ public final class PluginPanel extends JDialog {
         discoverHint.setForeground(java.awt.Color.GRAY);
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                new JScrollPane(discoverList), new JScrollPane(details));
+                titledScroll(discoverList, "Catalog"),
+                titledScroll(discoverDetails, "Details"));
         split.setResizeWeight(0.5);
+        split.setDividerLocation(0.5);
 
         JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         south.add(install);
@@ -141,6 +144,32 @@ public final class PluginPanel extends JDialog {
         panel.add(split, BorderLayout.CENTER);
         panel.add(south, BorderLayout.SOUTH);
         return panel;
+    }
+
+    /**
+     * Configures a read-only, line-wrapped text area used to render the details of a
+     * selected row.
+     *
+     * @param area the text area to configure.
+     */
+    private static void configureDetails(JTextArea area) {
+        area.setEditable(false);
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+    }
+
+    /**
+     * Wraps a component in a scroll pane carrying a titled border, so each half of a
+     * split pane states what it holds.
+     *
+     * @param view the component to scroll.
+     * @param titleKey the resource-bundle key for the border title.
+     * @return the titled scroll pane.
+     */
+    private static JScrollPane titledScroll(Component view, String titleKey) {
+        JScrollPane scroll = new JScrollPane(view);
+        scroll.setBorder(BorderFactory.createTitledBorder(bundle.getString(titleKey)));
+        return scroll;
     }
 
     /**
@@ -179,8 +208,18 @@ public final class PluginPanel extends JDialog {
             sb.append("  [refused: Studio never runs a command source]");
         }
         sb.append("\n\nInstalling adds its skills, subagents, and MCP servers as ioa content.");
-        details.setText(sb.toString());
-        details.setCaretPosition(0);
+        showDetails(discoverDetails, sb.toString());
+    }
+
+    /** Sets detail text and scrolls back to the top. */
+    private static void showDetails(JTextArea area, String text) {
+        area.setText(text);
+        area.setCaretPosition(0);
+    }
+
+    /** Shows the Discover hint in the details area when nothing is selected. */
+    private void detailsPlaceholder() {
+        showDetails(discoverDetails, bundle.getString("SelectHint"));
     }
 
     private void installSelected() {
@@ -216,8 +255,10 @@ public final class PluginPanel extends JDialog {
         mcpServers.addActionListener(e -> configureMcpServers());
 
         JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                new JScrollPane(installedList), new JScrollPane(details));
-        split.setResizeWeight(0.4);
+                titledScroll(installedList, "Installed"),
+                titledScroll(installedDetails, "Details"));
+        split.setResizeWeight(0.5);
+        split.setDividerLocation(0.5);
 
         JPanel south = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         south.add(toggle);
@@ -247,8 +288,12 @@ public final class PluginPanel extends JDialog {
                   .append(service.state().mcpEnabled(plugin.id(), server) ? "on" : "off").append('\n');
             }
         }
-        details.setText(sb.toString());
-        details.setCaretPosition(0);
+        showDetails(installedDetails, sb.toString());
+    }
+
+    /** Shows the selection hint in the Installed details area when nothing is selected. */
+    private void installedPlaceholder() {
+        showDetails(installedDetails, bundle.getString("SelectHint"));
     }
 
     private void toggleSelected() {
@@ -364,6 +409,10 @@ public final class PluginPanel extends JDialog {
         for (var marketplace : service.marketplaces()) {
             marketplaceModel.addElement(marketplace.name());
         }
+
+        // Rebuilding the models drops any selection, so restore the details placeholder.
+        if (discoverList.getSelectedValue() == null) detailsPlaceholder();
+        if (installedList.getSelectedValue() == null) installedPlaceholder();
 
         StringBuilder sb = new StringBuilder();
         for (var plugin : service.installed()) {
