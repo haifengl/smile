@@ -25,14 +25,14 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.ResourceBundle;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import jdk.jshell.VarSnippet;
 import smile.studio.StudioConfig;
 import smile.studio.kernel.Kernel;
 import smile.studio.kernel.Variable;
-import static smile.swing.SmileUtilities.scaleImageIcon;
+import static smile.swing.SmileUtilities.LARGE_ICON_SIZE;
+import static smile.swing.SmileUtilities.loadImageIcon;
 
 /**
  * A kernel workspace explorer.
@@ -51,10 +51,10 @@ public class KernelExplorer extends JPanel {
     /** The single inference service node under {@link #services}. */
     private final DefaultMutableTreeNode serviceNode =
             new DefaultMutableTreeNode(new ServeService(StudioConfig.DEFAULT_HOST, StudioConfig.DEFAULT_PORT));
-    private static final ImageIcon matrixIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(KernelExplorer.class.getResource("images/matrix.png"))), 24);
-    private static final ImageIcon modelIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(KernelExplorer.class.getResource("images/model.png"))), 24);
-    private static final ImageIcon serverIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(KernelExplorer.class.getResource("images/server.png"))), 24);
-    private static final ImageIcon tableIcon = scaleImageIcon(new ImageIcon(Objects.requireNonNull(KernelExplorer.class.getResource("images/table.png"))), 24);
+    private static final ImageIcon matrixIcon = loadImageIcon(KernelExplorer.class, "images/matrix.png", LARGE_ICON_SIZE);
+    private static final ImageIcon modelIcon = loadImageIcon(KernelExplorer.class, "images/model.png", LARGE_ICON_SIZE);
+    private static final ImageIcon serverIcon = loadImageIcon(KernelExplorer.class, "images/server.png", LARGE_ICON_SIZE);
+    private static final ImageIcon tableIcon = loadImageIcon(KernelExplorer.class, "images/table.png", LARGE_ICON_SIZE);
     /** Tree of workspace runtime information. */
     private final JTree tree = new JTree(root);
     /**
