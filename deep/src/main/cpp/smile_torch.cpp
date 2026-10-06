@@ -2719,7 +2719,6 @@ ST_Tensor smile_causal_conv1d_update(
         }
         auto B = h.size(0);
         auto C = h.size(1);
-        auto L = h.size(2);
         auto w = w0.dim() == 3 ? w0.reshape({C, w0.size(-1)}) : w0;
         if (w.dim() != 2 || w.size(0) != C) {
             set_error("smile_causal_conv1d_update: weight must be [C,K]");
@@ -2737,6 +2736,7 @@ ST_Tensor smile_causal_conv1d_update(
         }
 
 #ifdef USE_CUDA
+        auto L = h.size(2);
         // Fast path: decode S=1 fused CUDA kernel.
         if (h.is_cuda() && L == 1 && K >= 1 && K <= 16) {
             c10::cuda::CUDAGuard guard(h.device());

@@ -1,6 +1,6 @@
 # Keeps `docker build` context transfer fast for Dockerfiles whose context is
-# the repository root (Dockerfile.jvm-gpu, Dockerfile.gpu-test) and which
-# COPY broad parts of the repo. Dockerfile.jvm/.native/.native-micro use
+# the repository root (Dockerfile.jvm-gpu, Dockerfile.native, Dockerfile.gpu-test) and which
+# COPY broad parts of the repo. Dockerfile.jvm/.native-micro use
 # `serve/` as their own context root and are unaffected by this file.
 #
 # IMPORTANT: Dockerfile.jvm-gpu COPYs serve/build/quarkus-app/** (the host

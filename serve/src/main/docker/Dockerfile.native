@@ -17,29 +17,113 @@
 # <https://www.gnu.org/licenses/>.
 #
 
-# This Dockerfile is used in order to build a container that runs the Quarkus application in native (no JVM) mode.
+# This Dockerfile builds a CPU-only container that runs the Quarkus application in native (no JVM) mode.
+# It is a two-stage in-container build: the Mandrel/GraalVM toolchain, Gradle, Node.js, CMake and the
+# LibTorch/ONNX Runtime headers stay in the builder stage; the final image only has the native executable,
+# libsmile_torch.so and the shared libraries they load at runtime.
 #
-# Before building the container image run:
+# IMPORTANT: build context must be the repository root (not serve/), because Gradle builds all modules
+# (core, deep, ...) and CMake compiles deep/src/main/cpp. No host-side build step is required:
 #
-# ./gradlew build -Dquarkus.native.enabled=true
-#
-# Then, build the image with:
-#
-# docker build -f src/main/docker/Dockerfile.native -t quarkus/smile-serve .
+# docker build -f serve/src/main/docker/Dockerfile.native -t quarkus/smile-serve-native .
 #
 # Then run the container using:
 #
-# docker run -i --rm -p 8080:8080 quarkus/smile-serve
+# docker run -i --rm -p 8888:8080 -u root -v "$(pwd)/model":/model quarkus/smile-serve-native
 #
-# The ` registry.access.redhat.com/ubi9/ubi-minimal:9.7` base image is based on UBI 9.
-# To use UBI 8, switch to `quay.io/ubi8/ubi-minimal:8.10`.
+# The native build needs several GB of RAM; give Docker at least 8 GB.
+# You can pass extra Gradle arguments with --build-arg GRADLE_ARGS="...".
+#
 ###
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.7
-WORKDIR /work/
-RUN chown 1001 /work \
-    && chmod "g+rwX" /work \
-    && chown 1001:root /work
-COPY --chown=1001:root --chmod=0755 build/*-runner /work/application
+ARG MANDREL_BUILDER=quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-25
+ARG RUNTIME_BASE=registry.access.redhat.com/ubi10/ubi-minimal:10.0
+
+# -----------------------------------------------------------------------------
+# Stage 1: build libsmile_torch.so (CPU) and the native executable
+# -----------------------------------------------------------------------------
+FROM ${MANDREL_BUILDER} AS builder
+
+ARG TORCH_VERSION=2.14.1
+ARG ORT_VERSION=1.30.0
+ARG NODE_VERSION=24.11.0
+ARG GRADLE_ARGS=""
+
+USER root
+
+# Toolchain for libsmile_torch (cmake, g++) plus archive tools. Node.js is needed by Quinoa for the web UI.
+RUN microdnf install -y cmake gcc-c++ make unzip gzip tar xz findutils && microdnf clean all
+RUN curl -fsSL --retry 5 --retry-delay 10 "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
+    | tar -xJ -C /usr/local --strip-components=1
+
+# CPU LibTorch (headers for compiling libsmile_torch, libs copied to the runtime stage)
+RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/libtorch.zip \
+        "https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-${TORCH_VERSION}%2Bcpu.zip" \
+    && unzip -q -o /tmp/libtorch.zip -d /usr/local \
+    && rm -f /tmp/libtorch.zip
+
+# ONNX Runtime (libs copied to the runtime stage)
+RUN curl -fsSL --retry 5 --retry-delay 10 "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz" \
+    | tar -zx -C /usr/local/ \
+    && mv /usr/local/onnxruntime-linux-x64-${ORT_VERSION} /usr/local/onnxruntime
+
+# libsmile_torch.so against CPU LibTorch (CMake auto-disables the CUDA/FlashInfer sources)
+COPY deep/src/main/cpp /src/smile_torch
+RUN cmake -S /src/smile_torch -B /build/cpp \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DLIBTORCH_ROOT=/usr/local/libtorch \
+        -DSMILE_TORCH_USE_CUDA=OFF \
+        -DBUILD_TESTING=OFF \
+    && cmake --build /build/cpp --config Release --parallel "$(nproc)" \
+    && test -f /build/cpp/libsmile_torch.so
+
+# Native executable. Copy the whole repo (see .dockerignore) and build with the Gradle wrapper.
+WORKDIR /src
+COPY . /src
+RUN (cd serve/src/main/webui && npm install)
+RUN ./gradlew :serve:build -x test \
+        -Dquarkus.profile=default \
+        -Dquarkus.native.enabled=true \
+        -Dquarkus.package.jar.enabled=false \
+        ${GRADLE_ARGS} \
+    && cp serve/build/*-runner /tmp/application
+
+# -----------------------------------------------------------------------------
+# Stage 2: runtime image (no GraalVM, Gradle, Node.js, compilers or headers)
+# -----------------------------------------------------------------------------
+FROM ${RUNTIME_BASE}
+
+USER root
+
+# Install OpenBLAS for native BLAS support and libgomp for LibTorch/OpenMP
+RUN microdnf install -y openblas libgomp && microdnf clean all
+
+# As epel-release package is not available on this image and microdnf cannot install remote package,
+# we have to use curl and rpm to install it mannually.
+RUN curl -o /tmp/epel.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm \
+    && rpm -ivh /tmp/epel.rpm \
+    && rm /tmp/epel.rpm
+
+# Install flexiblas, which is needed by arpack
+RUN microdnf --enablerepo=ubi-10-codeready-builder-rpms install -y flexiblas-netlib && microdnf clean all
+RUN flexiblas default OPENBLAS-OPENMP
+# Somehow, arpack cannot find installed flexiblas, so we have to install arpack manually
+# without dependencies and then clean up the rpm file.
+RUN microdnf download arpack \
+    && rpm -i --nodeps arpack-*.rpm \
+    && rm -f arpack-*.rpm
+
+# Runtime libraries only (no headers, cmake files or static libs)
+COPY --from=builder /usr/local/onnxruntime/lib /usr/local/onnxruntime/lib
+COPY --from=builder /usr/local/libtorch/lib /usr/local/libtorch/lib
+
+WORKDIR /work
+COPY --from=builder --chown=1001:root --chmod=0755 /tmp/application /work/application
+COPY --from=builder --chown=1001:root /build/cpp/libsmile_torch.so /work/lib/libsmile_torch.so
+RUN chown 1001:root /work && chmod g+rwX /work
+
+# ORT + LibTorch + libsmile_torch.so
+ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/libtorch/lib:/work/lib"
+ENV HF_HOME="/model/huggingface"
 
 EXPOSE 8080
 USER 1001
