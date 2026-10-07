@@ -62,11 +62,8 @@ title: SMILE - Serve
   <pre class="playground-source language-bash"><code class="language-bash">./gradlew :serve:build
 sudo docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t quarkus/smile-serve-gpu .
 sudo docker run -i --rm --gpus all -p 8888:8080 \
-  -e SMILE_DECODE_CUDA_GRAPH=1 \
-  -e SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE=0 \
-  -e SMILE_VERIFY_CUDA_GRAPH=1 \
-  -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,4,6,7 -Dsmile.chat.max-batch-size=48 -Dquarkus.log.level=INFO -XX:ErrorFile=/model/hs_err_%p.log -Dsmile.chat.admit-coalesce-ms=50 -Dsmile.chat.speculative=true -Dsmile.chat.speculative-tokens=2" \
-  -u root -v "/raid/llm/model":/model quarkus/smile-serve-gpu</code></pre>
+  -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B" \
+  -u root -v "/llm/model":/model quarkus/smile-serve-gpu</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
@@ -81,12 +78,9 @@ sudo docker run -i --rm --gpus all -p 8888:8080 \
     {% include "components/playground-extra-actions.njk" %}
   </div>
   <pre class="playground-source language-bash"><code class="language-bash">sudo docker run -i --rm --gpus all -p 8888:8080 \
-  -e SMILE_DECODE_CUDA_GRAPH=1 \
-  -e SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE=0 \
-  -e SMILE_VERIFY_CUDA_GRAPH=1 \
   -e CUDA_LAUNCH_BLOCKING=1 \
-  -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,4,6,7 -Dsmile.chat.max-batch-size=48 -Dquarkus.log.level=INFO -XX:ErrorFile=/model/hs_err_%p.log -Dsmile.chat.admit-coalesce-ms=50 -Dsmile.chat.speculative=true -Dsmile.chat.speculative-tokens=2" \
-  -u root -v "/raid/llm/model":/model quarkus/smile-serve-gpu</code></pre>
+  -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B" \
+  -u root -v "/llm/model":/model quarkus/smile-serve-gpu</code></pre>
   <div class="playground-editor" hidden></div>
 </div>
 
