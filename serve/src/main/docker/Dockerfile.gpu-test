@@ -136,7 +136,7 @@ FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu24.04 AS gpu-test
 
 ARG TORCH_VERSION
 ARG CU_VERSION
-ARG ORT_VERSION=1.29.0
+ARG ORT_VERSION=1.30.0
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Same runtime CUDA extras as Dockerfile.jvm-gpu's final stage, plus a full
