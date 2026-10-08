@@ -73,6 +73,15 @@ public class WorkspaceStartupTest {
                 java.util.Locale.FRANCE,
                 java.util.Locale.of("es", "ES"));
 
+        java.util.List<String> agentNames = java.util.List.of(
+                "chief-of-staff",
+                "product-manager",
+                "data-scientist",
+                "architect",
+                "desktop-operator",
+                "java-coder",
+                "python-coder");
+
         java.util.List<String> outputKeys = java.util.List.of(
                 "ChiefOfStaffOutput",
                 "DataScientistOutput",
@@ -82,6 +91,22 @@ public class WorkspaceStartupTest {
                 "JavaCoderOutput",
                 "PythonCoderOutput");
 
+        java.util.List<String> welcomeKeys = java.util.List.of(
+                "ChiefOfStaffWelcome",
+                "DataScientistWelcome",
+                "ProductManagerWelcome",
+                "ArchitectWelcome",
+                "DesktopOperatorWelcome",
+                "JavaCoderWelcome",
+                "PythonCoderWelcome");
+
+        for (String name : agentNames) {
+            String prefix = Workspace.agentKeyPrefix(name);
+            assertTrue(welcomeKeys.contains(prefix + "Welcome"), "Unexpected welcome key for " + name);
+            assertTrue(outputKeys.contains(prefix + "Output"), "Unexpected output key for " + name);
+        }
+        assertEquals("PythonCoder", Workspace.agentKeyPrefix("pythonista"));
+
         for (java.util.Locale locale : locales) {
             java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle("smile.studio.workspace.Workspace", locale);
             assertNotNull(bundle, "Bundle should exist for locale: " + locale);
@@ -90,6 +115,12 @@ public class WorkspaceStartupTest {
                 String val = bundle.getString(key);
                 assertFalse(val.isBlank(), "Empty key " + key + " in locale " + locale);
             }
+            for (String key : welcomeKeys) {
+                assertTrue(bundle.containsKey(key), "Missing key " + key + " in locale " + locale);
+                String val = bundle.getString(key);
+                assertFalse(val.isBlank(), "Empty key " + key + " in locale " + locale);
+            }
+            assertTrue(bundle.containsKey("AgentWelcome"), "Missing AgentWelcome fallback in locale " + locale);
         }
     }
 }
