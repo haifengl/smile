@@ -54,10 +54,7 @@ import java.io.Serial;
 public class NaiveBayes extends AbstractClassifier<double[]> {
     @Serial
     private static final long serialVersionUID = 2L;
-
-    /**
-     * The number of classes.
-     */
+    /** The number of classes. */
     private final int k;
     /**
      * The number of independent variables.

@@ -59,14 +59,13 @@ public class NaiveBayesTest {
 
     @Test
     public void testIris() throws Exception {
-        System.out.println("Iris");
-
+        // Given
         var iris = new Iris();
         var data = iris.x();
         var label = iris.y();
         int p = data[0].length;
         int k = MathEx.max(label) + 1;
-
+        // When
         ClassificationMetrics metrics = LOOCV.classification(data, label, (x, y) -> {
             int n = x.length;
             double[] priori = new double[k];
