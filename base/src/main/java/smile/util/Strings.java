@@ -319,4 +319,46 @@ public interface Strings {
         String[] tokens = s.substring(1, s.length() - 1).split(",");
         return Arrays.stream(tokens).map(String::trim).mapToDouble(Double::parseDouble).toArray();
     }
+
+    /**
+     * Internal regex patterns for string normalization.
+     */
+    class NormalizerPatterns {
+        static final Pattern WHITESPACE = Pattern.compile("(?U)\\s+");
+        static final Pattern CONTROL_FORMAT_CHARS = Pattern.compile("[\\p{Cc}\\p{Cf}]");
+        static final Pattern DOUBLE_QUOTES = Pattern.compile("[\\u02BA\\u201C\\u201D\\u201E\\u201F\\u2033\\u2036\\u275D\\u275E\\u301D\\u301E\\u301F\\uFF02]");
+        static final Pattern SINGLE_QUOTES = Pattern.compile("[\\u0060\\u02BB\\u02BC\\u02BD\\u2018\\u2019\\u201A\\u201B\\u275B\\u275C]");
+        static final Pattern DASH = Pattern.compile("[\\u2012\\u2013\\u2014\\u2015\\u2053]");
+    }
+
+    /**
+     * Normalizes text to a canonical representation:
+     * <ul>
+     *   <li>Applies Unicode NFKC normalization.</li>
+     *   <li>Collapses Unicode whitespace sequences to a single space.</li>
+     *   <li>Strips control and format characters (\p{Cc}\p{Cf}).</li>
+     *   <li>Normalizes various typographic single quotes, double quotes, and dashes.</li>
+     *   <li>Trims leading and trailing whitespace.</li>
+     * </ul>
+     *
+     * @param text the text to normalize.
+     * @return the normalized text, or null if input is null.
+     */
+    static String normalize(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+
+        if (!java.text.Normalizer.isNormalized(text, java.text.Normalizer.Form.NFKC)) {
+            text = java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFKC);
+        }
+
+        text = NormalizerPatterns.WHITESPACE.matcher(text).replaceAll(" ");
+        text = NormalizerPatterns.CONTROL_FORMAT_CHARS.matcher(text).replaceAll("");
+        text = NormalizerPatterns.DOUBLE_QUOTES.matcher(text).replaceAll("\"");
+        text = NormalizerPatterns.SINGLE_QUOTES.matcher(text).replaceAll("'");
+        text = NormalizerPatterns.DASH.matcher(text).replaceAll("--");
+
+        return text.trim();
+    }
 }

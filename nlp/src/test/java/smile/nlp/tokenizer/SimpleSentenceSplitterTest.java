@@ -74,52 +74,9 @@ public class SimpleSentenceSplitterTest {
             "This last sentence has no period"
         };
 
-        SimpleSentenceSplitter instance = SimpleSentenceSplitter.getInstance();
-        String[] result = instance.split(text);
-        
-        assertEquals(expResult.length, result.length);
-        for (int i = 0; i < result.length; i++)
-            assertEquals(expResult[i], result[i]);
+        String[] actual = SimpleSentenceSplitter.getInstance().split(text);
+        assertArrayEquals(expResult, actual);
     }
-
-    /**
-     * Test of split method, of class SimpleSentenceSplitter.
-     */
-    @Test
-    public void testSplitUnicode() {
-        System.out.println("split with unicode chars");
-        String text = "THE BIG RIPOFF\n\n"
-                + "Mr. John B. Smith bought www.cheap.com for 1.5 million dollars, "
-                + "i.e. he paid far too much for it.Did he mind? "
-                + "Adam Jones Jr. thinks he didn't. In any case, this isn't true..."
-                + "Well, it isn't with a probability of .9.Right?"
-                + "Again, it isn't with a probability of .9 .Right?"
-                + "[This is bracketed sentence.] "
-                + "\"This is quoted sentence.\" "
-                + "This last sentence has no period";
-
-        String[] expResult = {
-                "THE BIG RIPOFF Mr. John B. Smith bought www.cheap.com for 1.5 million dollars, i.e. he paid far too much for it.",
-                "Did he mind?",
-                "Adam Jones Jr. thinks he didn't.",
-                "In any case, this isn't true...",
-                "Well, it isn't with a probability of .9.",
-                "Right?",
-                "Again, it isn't with a probability of .9.",
-                "Right?",
-                "[This is bracketed sentence.]",
-                "\"This is quoted sentence.\"",
-                "This last sentence has no period"
-        };
-
-        SimpleSentenceSplitter instance = SimpleSentenceSplitter.getInstance();
-        String[] result = instance.split(text);
-
-        assertEquals(expResult.length, result.length);
-        for (int i = 0; i < result.length; i++)
-            assertEquals(expResult[i], result[i]);
-    }
-
     /**
      * Test of split method, of class SimpleSentenceSplitter.
      */
@@ -196,5 +153,35 @@ public class SimpleSentenceSplitterTest {
         assertEquals(2, result.length);
         assertEquals("First sentence.", result[0]);
         assertEquals("Second sentence.", result[1]);
+    }
+
+    @Test
+    public void testSentenceSplitterUnicode() {
+        SimpleSentenceSplitter splitter = SimpleSentenceSplitter.getInstance();
+        String input = "NEWS BRIEF\n\n"
+                + "Dr. Jane A. Doe bought www.smile.org for 2.5 million dollars, "
+                + "i.e. she invested significantly in it.Did she succeed? "
+                + "Prof. Clark Jr. believes she did. In any case, this is promising..."
+                + "Well, it works with a probability of .8.Sure?"
+                + "Again, it works with a probability of .8 .Sure?"
+                + "[This is an informative bracketed note.] "
+                + "\"This is an important quote.\" "
+                + "The story continues without punctuation";
+
+        String[] expected = new String[] {
+                "NEWS BRIEF Dr. Jane A. Doe bought www.smile.org for 2.5 million dollars, i.e. she invested significantly in it.",
+                "Did she succeed?",
+                "Prof. Clark Jr. believes she did.",
+                "In any case, this is promising...",
+                "Well, it works with a probability of .8.",
+                "Sure?",
+                "Again, it works with a probability of .8.",
+                "Sure?",
+                "[This is an informative bracketed note.]",
+                "\"This is an important quote.\"",
+                "The story continues without punctuation"
+        };
+
+        assertArrayEquals(expected, splitter.split(input));
     }
 }
