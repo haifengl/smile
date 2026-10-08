@@ -47,6 +47,19 @@
     {{ content | safe }}
   </div>
   {% include "components/command-palette.njk" %}
+  <div id="contact-modal" class="contact-modal" hidden>
+    <div class="contact-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="contact-modal-title">
+      <div class="contact-modal-bar">
+        <p id="contact-modal-title" class="contact-modal-title">Contact Us</p>
+        <button type="button" class="icon-btn" data-contact-close aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="contact-modal-frame-clip">
+        <iframe class="contact-modal-frame" title="Contact form" data-src="https://docs.google.com/forms/d/e/1FAIpQLSe-r5s7DrzXchPUagg5_6mEp_p78zpWQk6A9Z9JxAikKIGxIQ/viewform?embedded=true">Loading…</iframe>
+      </div>
+    </div>
+  </div>
   <script src="js/vendor/prism/prism.min.js"></script>
   <script src="js/vendor/prism/prism-clike.min.js"></script>
   <script src="js/vendor/prism/prism-java.min.js"></script>
