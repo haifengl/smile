@@ -688,7 +688,6 @@ public class AgentCLI extends JPanel {
         hints.put("/edit", "[file path]");
         hints.put("/train", "[ENTER for helps]");
         hints.put("/predict", "[ENTER for helps]");
-        hints.put("/serve", "[ENTER for helps]");
         hints.put("/plugin", "[marketplace|install|list|enable|disable|uninstall|mcp]");
 
         if (agent != null) {
@@ -797,7 +796,7 @@ public class AgentCLI extends JPanel {
             switch (args[0]) {
                 case "help" -> help(intent.output());
                 case "edit" -> edit(args, intent.output());
-                case "train", "predict", "serve" -> runShellCommand(intent, IntentType.Command, instructions);
+                case "train", "predict" -> runShellCommand(intent, IntentType.Command, instructions);
                 case "memory" -> memory(args, instructions, intent);
                 case "system" -> showSystemPrompt(intent.output()); // for debugging
                 case "clear" -> clear(intent.output());
@@ -848,7 +847,6 @@ public class AgentCLI extends JPanel {
                 /edit               Edit a file in a tab.
                 /train              Train a machine learning model
                 /predict            Run batch inference
-                /serve              Start an inference service
                 /plugin             Manage plugins and marketplaces""");
 
         if (agent != null && agent.llm().isPresent()) {
