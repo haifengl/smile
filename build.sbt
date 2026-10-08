@@ -38,6 +38,10 @@ lazy val commonSettings = Seq(
     "-XX:+UseStringDeduplication",
     "--enable-native-access=ALL-UNNAMED",
     "--add-opens=java.base/java.nio=ALL-UNNAMED",
+    "--add-opens=java.base/sun.nio.ch=ALL-UNNAMED",
+    "--add-opens=java.base/java.lang=ALL-UNNAMED",
+    "--add-opens=java.base/java.lang.invoke=ALL-UNNAMED",
+    "--add-opens=java.base/java.util=ALL-UNNAMED",
     "-Dorg.slf4j.simpleLogger.defaultLogLevel=debug"
   ) ++ {
     // Forward only JVM system properties set via `sbt -J-Dkey=value` into the
@@ -231,8 +235,10 @@ lazy val scala = project.in(file("scala"))
   .dependsOn(core, nlp, plot, json)
 
 lazy val spark = project.in(file("spark"))
-  .settings(scalaSettings*)
-  .settings(scalaVersion := scala213)
+  .settings(javaSettings*)
+  .settings(
+    Test / javaOptions += "-Dorg.slf4j.simpleLogger.defaultLogLevel=warn"
+  )
   .dependsOn(core)
 
 lazy val kotlin = project.in(file("kotlin"))
