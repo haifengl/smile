@@ -1,23 +1,31 @@
 /*
  * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ *
  * SMILE is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * SMILE is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
 package smile.validation.metric;
+
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-/** Unit tests for Matthews correlation coefficient.
+
+/**
+ * Unit tests for Matthews correlation coefficient.
+ *
  * @author Haifeng Li
- **/
+ */
 public class MatthewsCorrelationTest {
+
     /** Builds truth/prediction arrays realizing a 2x2 confusion (tp, tn, fp, fn). */
     private static int[][] confusion(int tp, int tn, int fp, int fn) {
         int n = tp + tn + fp + fn;
@@ -66,36 +74,35 @@ public class MatthewsCorrelationTest {
         }
     }
 
-
     @Test
-    void testPerfectPositiveCorrelation() {
+    public void givenPerfectAgreement_whenMCCComputed_thenReturnsOne() {
         int[] truth = {1, 0, 1, 1, 0, 0, 1, 0};
         int[] prediction = {1, 0, 1, 1, 0, 0, 1, 0};
         assertEquals(1.0, MatthewsCorrelation.of(truth, prediction), 1E-10);
     }
 
     @Test
-    void testPerfectNegativeCorrelation() {
+    public void givenPerfectDisagreement_whenMCCComputed_thenReturnsMinusOne() {
         int[] truth = {1, 0, 1, 1, 0, 0, 1, 0};
         int[] prediction = {0, 1, 0, 0, 1, 1, 0, 1};
         assertEquals(-1.0, MatthewsCorrelation.of(truth, prediction), 1E-10);
     }
 
     @Test
-    void testUncorrelated() {
+    public void givenUncorrelatedPredictions_whenMCCComputed_thenReturnsZero() {
         int[] truth = {0, 0, 1, 1, 0, 0, 1, 1};
         int[] prediction = {0, 1, 0, 1, 0, 1, 0, 1};
         assertEquals(0.0, MatthewsCorrelation.of(truth, prediction), 1E-10);
     }
 
     @Test
-    void testKnownConfusion() {
+    public void givenKnownConfusion_whenMCCComputed_thenMatchesExpected() {
         int[][] c = confusion(40, 30, 20, 10);
         assertEquals(1.0 / Math.sqrt(6), MatthewsCorrelation.of(c[0], c[1]), 1E-9);
     }
 
     @Test
-    void testScoreAndToString() {
+    public void givenBinaryPredictions_whenScoreOrToStringCalled_thenReturnsExpected() {
         int[] truth = {1, 0, 1, 1, 0};
         int[] prediction = {1, 0, 1, 0, 0};
         MatthewsCorrelation mcc = new MatthewsCorrelation();
@@ -105,16 +112,16 @@ public class MatthewsCorrelationTest {
     }
 
     @Test
-    void testMismatchedLengths() {
+    public void givenMismatchedLengths_whenMCCComputed_thenThrowsException() {
         int[] truth = {1, 0, 1};
         int[] prediction = {1, 0};
         assertThrows(IllegalArgumentException.class, () -> MatthewsCorrelation.of(truth, prediction));
     }
 
     @Test
-    void testNonBinaryClassification() {
+    public void givenNonBinaryClassification_whenMCCComputed_thenThrowsException() {
         int[] truth = {0, 1, 2};
         int[] prediction = {0, 1, 2};
         assertThrows(IllegalArgumentException.class, () -> MatthewsCorrelation.of(truth, prediction));
     }
-} // class MatthewsCorrelationTest
+}
