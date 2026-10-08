@@ -17,9 +17,11 @@
 package smile.util;
 
 import java.text.DecimalFormat;
+import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static java.text.Normalizer.Form.NFKC;
 
 /**
  * String utility functions.
@@ -321,17 +323,6 @@ public interface Strings {
     }
 
     /**
-     * Internal regex patterns for string normalization.
-     */
-    class NormalizerPatterns {
-        static final Pattern WHITESPACE = Pattern.compile("(?U)\\s+");
-        static final Pattern CONTROL_FORMAT_CHARS = Pattern.compile("[\\p{Cc}\\p{Cf}]");
-        static final Pattern DOUBLE_QUOTES = Pattern.compile("[\\u02BA\\u201C\\u201D\\u201E\\u201F\\u2033\\u2036\\u275D\\u275E\\u301D\\u301E\\u301F\\uFF02]");
-        static final Pattern SINGLE_QUOTES = Pattern.compile("[\\u0060\\u02BB\\u02BC\\u02BD\\u2018\\u2019\\u201A\\u201B\\u275B\\u275C]");
-        static final Pattern DASH = Pattern.compile("[\\u2012\\u2013\\u2014\\u2015\\u2053]");
-    }
-
-    /**
      * Normalizes text to a canonical representation:
      * <ul>
      *   <li>Applies Unicode NFKC normalization.</li>
@@ -349,15 +340,15 @@ public interface Strings {
             return text;
         }
 
-        if (!java.text.Normalizer.isNormalized(text, java.text.Normalizer.Form.NFKC)) {
-            text = java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFKC);
+        if (!Normalizer.isNormalized(text, NFKC)) {
+            text = Normalizer.normalize(text, NFKC);
         }
 
-        text = NormalizerPatterns.WHITESPACE.matcher(text).replaceAll(" ");
-        text = NormalizerPatterns.CONTROL_FORMAT_CHARS.matcher(text).replaceAll("");
-        text = NormalizerPatterns.DOUBLE_QUOTES.matcher(text).replaceAll("\"");
-        text = NormalizerPatterns.SINGLE_QUOTES.matcher(text).replaceAll("'");
-        text = NormalizerPatterns.DASH.matcher(text).replaceAll("--");
+        text = NormalizePatterns.WHITESPACE.matcher(text).replaceAll(" ");
+        text = NormalizePatterns.CONTROL_FORMAT_CHARS.matcher(text).replaceAll("");
+        text = NormalizePatterns.DOUBLE_QUOTES.matcher(text).replaceAll("\"");
+        text = NormalizePatterns.SINGLE_QUOTES.matcher(text).replaceAll("'");
+        text = NormalizePatterns.DASH.matcher(text).replaceAll("--");
 
         return text.trim();
     }
