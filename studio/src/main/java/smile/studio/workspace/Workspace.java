@@ -100,7 +100,8 @@ public class Workspace extends JSplitPane {
      */
     private final KernelExplorer kernelExplorer;
     /**
-     * The coding agents for each programming language.
+     * The coding agents for each programming language, used for notebook code
+     * completion. They are background instances, not the panel agents.
      */
     private final Map<String, Coder> coders = new HashMap<>();
     /**
@@ -128,12 +129,13 @@ public class Workspace extends JSplitPane {
         this.fileChooser = new SystemFileChooser();
         fileChooser.setCurrentDirectory(cwd.toFile());
 
-        Agent chiefOfStaff = initChiefOfStaff(cwd);
-        Agent dataScientist = initDataScientist(cwd);
-        Agent productManager = initProductManager(cwd);
-        Agent desktopOperator = initDesktopOperator(cwd);
-        coders.put("Java", initJavaCoder(cwd));
-        coders.put("Python", initPythonCoder(cwd));
+        Agent chiefOfStaff = initAgent("chief-of-staff", cwd);
+        Agent dataScientist = initAgent("data-scientist", cwd);
+        Agent productManager = initAgent("product-manager", cwd);
+        Agent desktopOperator = initAgent("desktop-operator", cwd);
+        Agent architect = initAgent("architect", cwd);
+        Agent javaCoder = initAgent("java-coder", cwd);
+        Agent pythonCoder = initAgent("python-coder", cwd);
         fileExplorer = new FileExplorer(cwd);
         kernelExplorer = new KernelExplorer(fileChooser);
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
@@ -167,20 +169,25 @@ public class Workspace extends JSplitPane {
             }
         }
 
-        Agent architect = initArchitect(cwd);
-        openAgent("\uD83E\uDD1D Frank the Chief of Staff", chiefOfStaff, "frank", chiefOfStaffCLI(chiefOfStaff));
-        openAgent("\uD83C\uDFAF Steve the Product Manager", productManager, "steve", productManagerCLI(productManager));
-        openAgent("📊 Clair the Data Scientist", dataScientist, "clair", dataScientistCLI(dataScientist));
-        openAgent("\uD83D\uDCD0 Ada the Architect", architect, "ada", architectCLI(architect));
-        openAgent("☕ James the Java Guru", coders.get("Java"), "james", javaCoderCLI(coders.get("Java")));
-        openAgent("\uD83D\uDC0D Guido the Pythonista", coders.get("Python"), "guido", pythonCoderCLI(coders.get("Python")));
-        openAgent("\uD83D\uDDA5\uFE0F Chuck the Desktop Operator", desktopOperator, "chuck", desktopOperatorCLI(desktopOperator));
+        // Separate Coder instances for notebook code completion. They are not
+        // registered in the agent directory and never appear as tabs: the panel
+        // agents above answer @james/@guido, and these only serve complete/generate.
+        coders.put("Java", initCoder("java-coder", cwd));
+        coders.put("Python", initCoder("python-coder", cwd));
+
+        openAgent(chiefOfStaff, chiefOfStaffCLI(chiefOfStaff));
+        openAgent(productManager, productManagerCLI(productManager));
+        openAgent(dataScientist, dataScientistCLI(dataScientist));
+        openAgent(architect, architectCLI(architect));
+        openAgent(javaCoder, javaCoderCLI(javaCoder));
+        openAgent(pythonCoder, pythonCoderCLI(pythonCoder));
+        openAgent(desktopOperator, desktopOperatorCLI(desktopOperator));
 
         // Make installed plugins' skills invocable on every top-level agent. The
         // skills are already translated to ioa's shape; adding them to each agent's
         // conversation is all that is needed for /<skill> to run (ADR-004).
         addPluginSkills(chiefOfStaff, dataScientist, productManager, architect,
-                desktopOperator, coders.get("Java"), coders.get("Python"));
+                desktopOperator, javaCoder, pythonCoder);
 
         project.setLeftComponent(explorerTabs);
         project.setRightComponent(notebookTabs);
@@ -220,99 +227,41 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Initializes the chief of staff agent.
+     * Initializes a top-level agent from its spec name. The call-out name and
+     * tab title come from the spec's {@code callName} and {@code title}
+     * frontmatter, so a new agent needs no Studio-side wiring beyond a spec.
+     *
+     * @param name the agent spec name, e.g. {@code architect}.
+     * @param cwd the working directory for the agent.
+     * @return the agent, or null when its spec failed to load.
      */
-    private Agent initChiefOfStaff(Path cwd) {
+    private Agent initAgent(String name, Path cwd) {
         try {
-            Agent agent = new Agent(Agent.Spec.of("chief-of-staff"), SmileStudio::llm, cwd);
+            Agent agent = new Agent(Agent.Spec.of(name), SmileStudio::llm, cwd);
             applyDefaultModel(agent);
             return agent;
         } catch (Exception ex) {
-            logger.error("Failed to initialize chief of staff agent: {}", ex.getMessage());
+            logger.error("Failed to initialize agent {}: {}", name, ex.getMessage());
         }
         return null;
     }
 
     /**
-     * Initializes the data scientist agent.
+     * Initializes a background coder for notebook code completion. It is not
+     * registered in the agent directory: the panel agent with the same spec is
+     * the one peers address, and a second registration would replace it.
+     *
+     * @param name the agent spec name, e.g. {@code java-coder}.
+     * @param cwd the working directory for the coder.
+     * @return the coder, or null when its spec failed to load.
      */
-    private Agent initDataScientist(Path cwd) {
+    private Coder initCoder(String name, Path cwd) {
         try {
-            Agent agent = new Agent(Agent.Spec.of("data-scientist"), SmileStudio::llm, cwd);
-            applyDefaultModel(agent);
-            return agent;
-        } catch (Exception ex) {
-            logger.error("Failed to initialize data scientist agent: {}", ex.getMessage());
-        }
-        return null;
-    }
-
-    /**
-     * Initializes the product manager agent.
-     */
-    private Agent initProductManager(Path cwd) {
-        try {
-            Agent agent = new Agent(Agent.Spec.of("product-manager"), SmileStudio::llm, cwd);
-            applyDefaultModel(agent);
-            return agent;
-        } catch (Exception ex) {
-            logger.error("Failed to initialize Product Manager agent: {}", ex.getMessage());
-        }
-        return null;
-    }
-
-    /**
-     * Initializes the architect agent.
-     */
-    private Agent initArchitect(Path cwd) {
-        try {
-            Agent agent = new Agent(Agent.Spec.of("architect"), SmileStudio::llm, cwd);
-            applyDefaultModel(agent);
-            return agent;
-        } catch (Exception ex) {
-            logger.error("Failed to initialize architect agent: {}", ex.getMessage());
-        }
-        return null;
-    }
-
-    /**
-     * Initializes the desktop operator agent.
-     */
-    private Agent initDesktopOperator(Path cwd) {
-        try {
-            Agent agent = new Agent(Agent.Spec.of("desktop-operator"), SmileStudio::llm, cwd);
-            applyDefaultModel(agent);
-            return agent;
-        } catch (Exception ex) {
-            logger.error("Failed to initialize desktop operator agent: {}", ex.getMessage());
-        }
-        return null;
-    }
-
-    /**
-     * Initializes the Java coding agent.
-     */
-    private Coder initJavaCoder(Path cwd) {
-        try {
-            Coder coder = new Coder("java-coder", SmileStudio::llm, cwd);
+            Coder coder = new Coder(name, SmileStudio::llm, cwd, false);
             applyDefaultModel(coder);
             return coder;
         } catch (Exception ex) {
-            logger.error("Failed to initialize Java coding agent: {}", ex.getMessage());
-        }
-        return null;
-    }
-
-    /**
-     * Initializes the Python coding agent.
-     */
-    private Coder initPythonCoder(Path cwd) {
-        try {
-            Coder coder = new Coder("pythonista", SmileStudio::llm, cwd);
-            applyDefaultModel(coder);
-            return coder;
-        } catch (Exception ex) {
-            logger.error("Failed to initialize Python coding agent: {}", ex.getMessage());
+            logger.error("Failed to initialize coder {}: {}", name, ex.getMessage());
         }
         return null;
     }
@@ -365,31 +314,34 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Registers a top-level agent under its call-out name and shows its tab.
+     * Registers a top-level agent under its spec's call-out name and shows its
+     * tab, titled with the spec's display title. The session already carries the
+     * call-out name from the spec, so this only registers it in the directory.
      * A queued request selects that tab so the turn's progress is visible. A
      * question selects it too and marks the tab, so an agent that blocks on user
      * input is brought to front even when the user has switched to another
      * agent's tab, and stays marked until answered.
      */
-    private void openAgent(String title, Agent agent, String name, AgentCLI cli) {
-        if (agent != null) {
-            agent.session().setCallName(name);
-            ioa.agent.LocalAgentDirectory.shared().register(agent.session());
-            agent.session().addListener(new ioa.agent.AgentListener() {
-                @Override
-                public void onQueued(ioa.agent.AgentRequest request) {
-                    SwingUtilities.invokeLater(() -> agentTabs.setSelectedComponent(cli));
-                }
-
-                @Override
-                public void onQuestion(String runId, ioa.llm.tool.Question question) {
-                    SwingUtilities.invokeLater(() -> {
-                        markQuestionPending(title, cli, question);
-                        agentTabs.setSelectedComponent(cli);
-                    });
-                }
-            });
+    private void openAgent(Agent agent, AgentCLI cli) {
+        if (agent == null) {
+            return;
         }
+        String title = agent.spec().title();
+        ioa.agent.LocalAgentDirectory.shared().register(agent.session());
+        agent.session().addListener(new ioa.agent.AgentListener() {
+            @Override
+            public void onQueued(ioa.agent.AgentRequest request) {
+                SwingUtilities.invokeLater(() -> agentTabs.setSelectedComponent(cli));
+            }
+
+            @Override
+            public void onQuestion(String runId, ioa.llm.tool.Question question) {
+                SwingUtilities.invokeLater(() -> {
+                    markQuestionPending(title, cli, question);
+                    agentTabs.setSelectedComponent(cli);
+                });
+            }
+        });
         agentTabs.addTab(title, cli);
     }
 
@@ -517,8 +469,8 @@ public class Workspace extends JSplitPane {
     /**
      * Creates a Java coding agent cli.
      */
-    private AgentCLI javaCoderCLI(Coder coder) {
-        var cli = new AgentCLI(coder, this);
+    private AgentCLI javaCoderCLI(Agent javaCoder) {
+        var cli = new AgentCLI(javaCoder, this);
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
                         bundle.getString("JavaCoderWelcome") + "\n\n" +
@@ -531,8 +483,8 @@ public class Workspace extends JSplitPane {
     /**
      * Creates a Python coding agent cli.
      */
-    private AgentCLI pythonCoderCLI(Coder coder) {
-        var cli = new AgentCLI(coder, this);
+    private AgentCLI pythonCoderCLI(Agent pythonCoder) {
+        var cli = new AgentCLI(pythonCoder, this);
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
                         bundle.getString("PythonCoderWelcome") + "\n\n" +
