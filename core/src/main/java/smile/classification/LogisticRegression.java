@@ -796,7 +796,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * @return the learning rate parameter.
      */
     public double getLearningRate() {
-        return this.eta;
+        return eta;
     }
 
     /**

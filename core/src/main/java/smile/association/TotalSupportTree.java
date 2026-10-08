@@ -182,7 +182,7 @@ public class TotalSupportTree implements Iterable<ItemSet> {
         }
     }
 
-    /** 
+    /**
      * Returns the support value for the given item set.
      * @param itemset the given item set. The items in the set has to be in the
      * descending order according to their frequency.

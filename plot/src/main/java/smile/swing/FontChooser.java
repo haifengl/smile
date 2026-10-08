@@ -161,7 +161,7 @@ public class FontChooser extends JComponent {
 
     /**
      * Constructs a <code>FontChooser</code> object.
-     **/
+     */
     public FontChooser() {
         this(DEFAULT_FONT_SIZE_STRINGS);
     }
@@ -169,7 +169,7 @@ public class FontChooser extends JComponent {
     /**
      * Constructs a <code>FontChooser</code> object using the given font size array.
      * @param fontSizeStrings  the array of font size string.
-     **/
+     */
     public FontChooser(String[] fontSizeStrings) {
         if (fontSizeStrings == null) {
             fontSizeStrings = DEFAULT_FONT_SIZE_STRINGS;
@@ -290,7 +290,7 @@ public class FontChooser extends JComponent {
      * @return  the font family of the selected font.
      *
      * @see #setSelectedFontFamily
-     **/
+     */
     public String getSelectedFontFamily() {
         return getFontFamilyList().getSelectedValue();
     }
@@ -305,7 +305,7 @@ public class FontChooser extends JComponent {
      * @see java.awt.Font#BOLD
      * @see java.awt.Font#ITALIC
      * @see #setSelectedFontStyle
-     **/
+     */
     public int getSelectedFontStyle() {
         int index = getFontStyleList().getSelectedIndex();
         return FONT_STYLE_CODES[index];
@@ -316,7 +316,7 @@ public class FontChooser extends JComponent {
      * @return  the size of the selected font
      *
      * @see #setSelectedFontSize
-     **/
+     */
     public int getSelectedFontSize() {
         int fontSize;
         String fontSizeString = getFontSizeTextField().getText();
@@ -339,7 +339,7 @@ public class FontChooser extends JComponent {
      *
      * @see #setSelectedFont
      * @see java.awt.Font
-     **/
+     */
     public Font getSelectedFont() {
         return new Font(getSelectedFontFamily(), getSelectedFontStyle(), getSelectedFontSize());
     }
@@ -349,7 +349,7 @@ public class FontChooser extends JComponent {
      * @param name  the family name of the selected font. 
      * @return this object.
      * @see #getSelectedFontFamily
-     **/
+     */
     public FontChooser setSelectedFontFamily(String name) {
         String[] names = getFontFamilies();
         for (int i = 0; i < names.length; i++) {
@@ -373,7 +373,7 @@ public class FontChooser extends JComponent {
      * @see java.awt.Font#BOLD
      * @see java.awt.Font#ITALIC
      * @see #getSelectedFontStyle
-     **/
+     */
     public FontChooser setSelectedFontStyle(int style) {
         for (int i = 0; i < FONT_STYLE_CODES.length; i++) {
             if (FONT_STYLE_CODES[i] == style) {
@@ -390,7 +390,7 @@ public class FontChooser extends JComponent {
      * @param size the size of the selected font
      * @return this object.
      * @see #getSelectedFontSize
-     **/
+     */
     public FontChooser setSelectedFontSize(int size) {
         String sizeString = String.valueOf(size);
         for (int i = 0; i < this.fontSizeStrings.length; i++) {
@@ -410,7 +410,7 @@ public class FontChooser extends JComponent {
      * @return this object.
      * @see #getSelectedFont
      * @see java.awt.Font
-     **/
+     */
     public FontChooser setSelectedFont(Font font) {
         setSelectedFontFamily(font.getFamily());
         setSelectedFontStyle(font.getStyle());
