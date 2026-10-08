@@ -95,14 +95,10 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      */
     final double L;
 
-    /**
-     * Regularization factor.
-     */
+    /** L2 regularization penalty coefficient. */
     final double lambda;
 
-    /**
-     * learning rate for stochastic gradient descent.
-     */
+    /** Step size (learning rate) for stochastic gradient descent optimization. */
     double eta = 0.1;
 
     /**
@@ -780,13 +776,13 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
     }
 
     /**
-     * Sets the learning rate of stochastic gradient descent.
-     * It is a good practice to adapt the learning rate for
-     * different data sizes. For example, it is typical to
-     * set the learning rate to eta/n, where eta is in [0.1, 0.3]
-     * and n is the size of the training data.
+     * Sets the learning rate for stochastic gradient descent updates.
+     * <p>
+     * When training with online stochastic gradient descent, the learning rate
+     * can be tuned according to the sample size. Typically, the learning rate
+     * is set to {@code eta / n}, with {@code eta} in [0.1, 0.3].
      *
-     * @param rate the learning rate.
+     * @param rate the learning rate (must be positive).
      */
     public void setLearningRate(double rate) {
         if (rate <= 0.0) {
@@ -794,13 +790,13 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
         }
         this.eta = rate;
     }
-
     /**
-     * Returns the learning rate of stochastic gradient descent.
-     * @return the learning rate of stochastic gradient descent.
+     * Returns the current learning rate for stochastic gradient descent updates.
+     *
+     * @return the learning rate parameter.
      */
     public double getLearningRate() {
-        return eta;
+        return this.eta;
     }
 
     /**
