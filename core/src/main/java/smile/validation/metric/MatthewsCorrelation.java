@@ -19,14 +19,13 @@ package smile.validation.metric;
 import java.io.Serial;
 
 /**
- * Matthews correlation coefficient. The MCC is in essence a correlation
+ * Matthews correlation coefficient (MCC). The MCC is in essence a correlation
  * coefficient between the observed and predicted binary classifications.
  * It is considered as a balanced measure for binary classification,
- * even in unbalanced data sets. It  varies between -1 (perfect
- * disagreement) and +1 (perfect agreement). When it is 0,
- * the model is not better than random.
+ * even in unbalanced data sets. It varies between -1 (perfect disagreement)
+ * and +1 (perfect agreement). When it is 0, the model is not better than random.
  *
- * @author digital-thinking
+ * @author Haifeng Li
  */
 public class MatthewsCorrelation implements ClassificationMetric {
     @Serial
@@ -68,8 +67,8 @@ public class MatthewsCorrelation implements ClassificationMetric {
         long fp = matrix[0][1];
         long fn = matrix[1][0];
 
-        double numerator = tp * tn - fp * fn;
-        double denominator = Math.sqrt(tp + fp) * Math.sqrt(tp + fn) * Math.sqrt(tn + fp) * Math.sqrt(tn + fn);
+        double numerator = (double) tp * tn - (double) fp * fn;
+        double denominator = Math.sqrt((double) (tp + fp) * (tp + fn) * (tn + fp) * (tn + fn));
 
         // A zero marginal makes the denominator 0; MCC is 0 by convention.
         return denominator == 0.0 ? 0.0 : numerator / denominator;

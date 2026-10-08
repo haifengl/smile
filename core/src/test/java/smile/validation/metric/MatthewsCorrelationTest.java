@@ -16,63 +16,15 @@
  */
 package smile.validation.metric;
 
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
+ * Unit tests for Matthews correlation coefficient.
  *
- * @author digital-thinking
+ * @author Haifeng Li
  */
 public class MatthewsCorrelationTest {
-
-    public MatthewsCorrelationTest() {
-    }
-
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
-    @Test
-    public void test() {
-        System.out.println("MCC");
-        int[] truth = {
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        };
-        int[] prediction = {
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-        };
-
-        double expResult = 0.83068;
-        double result = MatthewsCorrelation.of(truth, prediction);
-        assertEquals(expResult, result, 1E-5);
-    }
-
-    @Test
-    public void test0(){
-        System.out.println("numerator = 0");
-        int[] truth = {0, 0, 0, 0, 1, 1, 1, 1};
-        int[] prediction = {0, 1, 0, 1, 0, 1, 0, 1};
-
-        double expResult = 0;
-        double result = MatthewsCorrelation.of(truth, prediction);
-        assertEquals(expResult, result, 1E-5);
-    }
 
     /** Builds truth/prediction arrays realizing a 2x2 confusion (tp, tn, fp, fn). */
     private static int[][] confusion(int tp, int tn, int fp, int fn) {
@@ -122,4 +74,54 @@ public class MatthewsCorrelationTest {
         }
     }
 
+    @Test
+    public void givenPerfectAgreement_whenMCCComputed_thenReturnsOne() {
+        int[] truth = {1, 0, 1, 1, 0, 0, 1, 0};
+        int[] prediction = {1, 0, 1, 1, 0, 0, 1, 0};
+        assertEquals(1.0, MatthewsCorrelation.of(truth, prediction), 1E-10);
+    }
+
+    @Test
+    public void givenPerfectDisagreement_whenMCCComputed_thenReturnsMinusOne() {
+        int[] truth = {1, 0, 1, 1, 0, 0, 1, 0};
+        int[] prediction = {0, 1, 0, 0, 1, 1, 0, 1};
+        assertEquals(-1.0, MatthewsCorrelation.of(truth, prediction), 1E-10);
+    }
+
+    @Test
+    public void givenUncorrelatedPredictions_whenMCCComputed_thenReturnsZero() {
+        int[] truth = {0, 0, 1, 1, 0, 0, 1, 1};
+        int[] prediction = {0, 1, 0, 1, 0, 1, 0, 1};
+        assertEquals(0.0, MatthewsCorrelation.of(truth, prediction), 1E-10);
+    }
+
+    @Test
+    public void givenKnownConfusion_whenMCCComputed_thenMatchesExpected() {
+        int[][] c = confusion(40, 30, 20, 10);
+        assertEquals(1.0 / Math.sqrt(6), MatthewsCorrelation.of(c[0], c[1]), 1E-9);
+    }
+
+    @Test
+    public void givenBinaryPredictions_whenScoreOrToStringCalled_thenReturnsExpected() {
+        int[] truth = {1, 0, 1, 1, 0};
+        int[] prediction = {1, 0, 1, 0, 0};
+        MatthewsCorrelation mcc = new MatthewsCorrelation();
+        assertEquals(mcc.score(truth, prediction), MatthewsCorrelation.of(truth, prediction), 1E-10);
+        assertEquals(MatthewsCorrelation.instance.score(truth, prediction), MatthewsCorrelation.of(truth, prediction), 1E-10);
+        assertEquals("MatthewsCorrelation", mcc.toString());
+    }
+
+    @Test
+    public void givenMismatchedLengths_whenMCCComputed_thenThrowsException() {
+        int[] truth = {1, 0, 1};
+        int[] prediction = {1, 0};
+        assertThrows(IllegalArgumentException.class, () -> MatthewsCorrelation.of(truth, prediction));
+    }
+
+    @Test
+    public void givenNonBinaryClassification_whenMCCComputed_thenThrowsException() {
+        int[] truth = {0, 1, 2};
+        int[] prediction = {0, 1, 2};
+        assertThrows(IllegalArgumentException.class, () -> MatthewsCorrelation.of(truth, prediction));
+    }
 }
