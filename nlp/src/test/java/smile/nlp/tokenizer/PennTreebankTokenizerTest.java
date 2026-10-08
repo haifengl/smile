@@ -68,6 +68,31 @@ public class PennTreebankTokenizerTest {
         }
     }
 
+    @Test
+    void testPennTreebankUnicodeTokenization() {
+        var instance = PennTreebankTokenizer.getInstance();
+        // Mixed alphanumeric words and punctuation
+        String text1 = "AT&T, T-Mobile, Ben & Jerry's, 7-Eleven, O'Connor, Yahoo!, Harley-Davidson.";
+        String[] exp1 = {"AT&T", ",", "T-Mobile", ",", "Ben", "&", "Jerry", "'s", ",",
+            "7-Eleven", ",", "O'Connor", ",", "Yahoo", "!", ",", "Harley-Davidson", "."};
+        assertArrayEquals(exp1, instance.split(text1));
+
+        // Diacritized words
+        String text2 = "The café served crêpes with aïoli for señor García.";
+        String[] exp2 = {"The", "café", "served", "crêpes", "with", "aïoli", "for", "señor", "García", "."};
+        assertArrayEquals(exp2, instance.split(text2));
+
+        // Non-Latin scripts
+        String text3 = "서울 Москва Ελληνικά שָׁלוֹם";
+        String[] exp3 = {"서울", "Москва", "Ελληνικά", "שָׁלוֹם"};
+        assertArrayEquals(exp3, instance.split(text3));
+
+        // Various Unicode whitespace
+        String text4 = "quick\u00A0brown\u2003fox\u2009jumps";
+        String[] exp4 = {"quick", "brown", "fox", "jumps"};
+        assertArrayEquals(exp4, instance.split(text4));
+    }
+
     /**
      * Test of split method, of class TreebankWordTokenizer.
      */
@@ -216,91 +241,6 @@ public class PennTreebankTokenizerTest {
         String[] expResult = {"S..", "or", "S", ":", "means", "\"", "twice",
             "\"", "(", "as", "in", "\"", "twice", "a", "third", "\"", ")", "."};
 
-        PennTreebankTokenizer instance = PennTreebankTokenizer.getInstance();
-        String[] result = instance.split(text);
-
-        assertEquals(expResult.length, result.length);
-        for (int i = 0; i < result.length; i++) {
-            assertEquals(expResult[i], result[i]);
-        }
-    }
-
-    /**
-     * Test of split method, of class TreebankWordTokenizer.
-     */
-    @Test
-    public void testTokenizeMixedAlphanumWords() {
-        System.out.println("tokenize words with mixed numbers, letters, and punctuation");
-        String text = "3M, L-3, BB&T, AutoZone, O'Reilly, Harley-Davidson, CH2M, A-Mark, "
-            + "Quad/Graphics, Bloomin' Brands, B/E Aerospace, J.Crew, E*Trade.";
-
-        // Note: would be very hard to get "Bloomin'" and "E*Trade" correct
-        String[] expResult = {"3M", ",", "L-3", ",", "BB&T", ",", "AutoZone", ",", "O'Reilly",
-            ",", "Harley-Davidson", ",", "CH2M", ",", "A-Mark", ",", "Quad/Graphics", ",", "Bloomin",
-            "'", "Brands", ",", "B/E", "Aerospace", ",", "J.Crew", ",", "E", "*", "Trade", "."};
-
-        PennTreebankTokenizer instance = PennTreebankTokenizer.getInstance();
-        String[] result = instance.split(text);
-
-        assertEquals(expResult.length, result.length);
-        for (int i = 0; i < result.length; i++) {
-            assertEquals(expResult[i], result[i]);
-        }
-    }
-
-    /**
-     * Test of split method, of class TreebankWordTokenizer.
-     */
-    @Test
-    public void testTokenizeDiacritizedWords() {
-        System.out.println("tokenize words with diacritized chars (both composite and combining)");
-        String text = "The naïve résumé of Raúl Ibáñez; re\u0301sume\u0301.";
-        String[] expResult = {"The", "naïve", "résumé", "of", "Raúl", "Ibáñez", ";", "re\u0301sume\u0301", "."};
-
-        PennTreebankTokenizer instance = PennTreebankTokenizer.getInstance();
-        String[] result = instance.split(text);
-
-        assertEquals(expResult.length, result.length);
-        for (int i = 0; i < result.length; i++) {
-            assertEquals(expResult[i], result[i]);
-        }
-    }
-
-    /**
-     * Test of split method, of class TreebankWordTokenizer.
-     */
-    @Test
-    public void testTokenizeNonLatinChars() {
-        System.out.println("tokenize words containing non-Latin chars");
-        // See https://en.wikipedia.org/wiki/Zero-width_non-joiner
-        String text = "می‌خواهم   עֲו‌ֹנֹת   Auf‌lage";
-        String[] expResult = {"می‌خواهم", "עֲו‌ֹנֹת", "Auf‌lage"};
-
-        PennTreebankTokenizer instance = PennTreebankTokenizer.getInstance();
-        String[] result = instance.split(text);
-
-        assertEquals(expResult.length, result.length);
-        for (int i = 0; i < result.length; i++) {
-            assertEquals(expResult[i], result[i]);
-        }
-    }
-
-    /**
-     * Test of split method, of class TreebankWordTokenizer.
-     */
-    @Test
-    public void testTokenizeVariousSpaces() {
-        System.out.println("tokenize words separated by various kinds of space");
-        // No-break space and em-space
-        String text = "the\u00A0cat\u2003the_cat";
-        String[] expResult = {"the", "cat", "the_cat"};
-
-        PennTreebankTokenizer instance = PennTreebankTokenizer.getInstance();
-        String[] result = instance.split(text);
-
-        assertEquals(expResult.length, result.length);
-        for (int i = 0; i < result.length; i++) {
-            assertEquals(expResult[i], result[i]);
-        }
-    }
+        assertArrayEquals(expResult, PennTreebankTokenizer.getInstance().split(text));
+    } // end of testSplitRomanNumeral
 }

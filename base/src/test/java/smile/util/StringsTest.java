@@ -142,4 +142,21 @@ public class StringsTest {
         assertThrows(IllegalArgumentException.class, () -> Strings.parseDoubleArray("1.0,2.0,3.0"));
         assertThrows(NumberFormatException.class, () -> Strings.parseDoubleArray("[a, b, c]"));
     }
+
+    @Test
+    void testNormalize() {
+        assertNull(Strings.normalize(null));
+        assertEquals("", Strings.normalize(""));
+        assertEquals("hello world", Strings.normalize("  hello   world  "));
+        // NFKC normalization (ligature fi)
+        assertEquals("fix", Strings.normalize("\uFB01x"));
+        // Typographic quotes
+        assertEquals("\"quoted\" and 'single'", Strings.normalize("\u201Cquoted\u201D and \u2018single\u2019"));
+        // Dashes
+        assertEquals("item 1--item 2", Strings.normalize("item 1\u2014item 2"));
+        // Control characters
+        assertEquals("clean text", Strings.normalize("clean\u0000\u0007 text"));
+        // Whitespace and newlines
+        assertEquals("line 1 line 2", Strings.normalize("line 1 \n\r\t  line 2"));
+    }
 }
