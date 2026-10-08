@@ -133,7 +133,7 @@ public class LogisticRegressionTest {
         error = Error.of(testy, prediction);
         System.out.println("Error after online update = " + error);
         assertEquals(39, error, 3);
-    } // testOnline
+    }
 
     @Test
     @Tag("integration")
@@ -170,5 +170,5 @@ public class LogisticRegressionTest {
 
         java.nio.file.Path temp = Write.object(model);
         Read.object(temp);
-    } // testUSPS
+    }
 }

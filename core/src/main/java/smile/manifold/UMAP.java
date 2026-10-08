@@ -1,37 +1,43 @@
 /*
  * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ *
  * SMILE is free software: you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
+ *
  * SMILE is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
-package smile.manifold; // Uniform Manifold Approximation and Projection
+package smile.manifold;
+
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.stream.IntStream; // Stream operations
+import java.util.stream.IntStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.feature.extraction.PCA;
 import smile.graph.AdjacencyList;
 import smile.graph.NearestNeighborGraph;
-import smile.math.LevenbergMarquardt; // Non-linear optimization
-import smile.math.MathEx; // Numerical mathematics
+import smile.math.LevenbergMarquardt;
+import smile.math.MathEx;
 import smile.math.distance.Metric;
-import smile.stat.distribution.GaussianDistribution; // Normal distribution
+import smile.stat.distribution.GaussianDistribution;
 import smile.tensor.ARPACK;
 import smile.tensor.DenseMatrix;
 import smile.tensor.EVD;
 import smile.tensor.SparseMatrix;
 import smile.util.function.DifferentiableMultivariateFunction;
-//
-/** Uniform Manifold Approximation and Projection (UMAP).
- * <p>UMAP is a nonlinear dimensionality reduction method designed for manifold
+
+/**
+ * Uniform Manifold Approximation and Projection (UMAP).
+ * <p>
+ * UMAP is a nonlinear dimensionality reduction method designed for manifold
  * visualization and unsupervised representation learning. It rests upon three
  * key assumptions:
  * <ul>
@@ -39,7 +45,8 @@ import smile.util.function.DifferentiableMultivariateFunction;
  *   <li>The local metric is approximately constant in local neighborhoods.</li>
  *   <li>The manifold is locally connected.</li>
  * </ul>
- * <p>From these topological assumptions, high-dimensional data is represented as a
+ * <p>
+ * From these topological assumptions, high-dimensional data is represented as a
  * weighted fuzzy simplicial set, and embedded into low dimensions by minimizing
  * cross-entropy via stochastic gradient descent.
  * <h3>References</h3>
@@ -48,19 +55,21 @@ import smile.util.function.DifferentiableMultivariateFunction;
  *       and Projection for Dimension Reduction. arXiv:1802.03426, 2018.</li>
  *   <li><a href="https://umap-learn.readthedocs.io/en/latest/how_umap_works.html">How UMAP Works</a></li>
  * </ul>
+ *
  * @see TSNE
  * @author Karl Li
  * @author Haifeng Li
- **/
+ */
 public class UMAP {
     private static final Logger logger = LoggerFactory.getLogger(UMAP.class);
     /** Threshold size for triggering approximate or sub-sampled operations. */
     private static final int LARGE_DATA_SIZE = 10000;
-    //
+
     /** Private constructor. */
     private UMAP() {}
-    //
-    /** UMAP hyperparameters.
+
+    /**
+     * UMAP hyperparameters.
      * @param k                 the number of nearest neighbors for local metric computation.
      * @param d                 the target embedding dimensionality.
      * @param epochs            the number of optimization epochs.
@@ -70,7 +79,7 @@ public class UMAP {
      * @param negativeSamples   the count of negative samples drawn per positive edge sample.
      * @param repulsionStrength weighting factor applied to negative sample repulsion.
      * @param localConnectivity the number of nearest neighbors assumed to be locally connected.
-     **/
+     */
     public record Options(int k, int d, int epochs, double learningRate,
                           double minDist, double spread, int negativeSamples,
                           double repulsionStrength, double localConnectivity) {
@@ -98,18 +107,20 @@ public class UMAP {
             if (localConnectivity <= 0.0) {
                 throw new IllegalArgumentException("Invalid localConnectivity: " + localConnectivity);
             }
-        } // Options constructor
+        }
 
-        /** Constructor with default parameters for a given neighborhood size k.
+        /**
+         * Constructor with default parameters for a given neighborhood size k.
          * @param k the number of nearest neighbors.
-         **/
+         */
         public Options(int k) {
             this(k, 2, 0, 1.0, 0.1, 1.0, 5, 1.0, 1.0);
         }
 
-        /** Returns hyperparameters as a Properties object.
+        /**
+         * Returns hyperparameters as a Properties object.
          * @return the hyperparameters properties.
-         **/
+         */
         public Properties toProperties() {
             Properties props = new Properties();
             props.setProperty("smile.umap.k", Integer.toString(k));
@@ -124,10 +135,11 @@ public class UMAP {
             return props;
         }
 
-        /** Parses hyperparameters from a Properties instance.
+        /**
+         * Parses hyperparameters from a Properties instance.
          * @param props configuration properties.
          * @return the parsed Options.
-         **/
+         */
         public static Options of(Properties props) {
             int k = Integer.parseInt(props.getProperty("smile.umap.k", "15"));
             int d = Integer.parseInt(props.getProperty("smile.umap.d", "2"));
@@ -141,41 +153,44 @@ public class UMAP {
             return new Options(k, d, epochs, learningRate, minDist, spread,
                     negativeSamples, repulsionStrength, localConnectivity);
         }
-    } // record Options
+    }
 
-    /** Executes UMAP on coordinate observations using Euclidean distance.
+    /**
+     * Executes UMAP on coordinate observations using Euclidean distance.
      * @param data    input observations.
      * @param options algorithm hyperparameters.
      * @return low-dimensional coordinates matrix.
-     **/
+     */
     public static double[][] fit(double[][] data, Options options) {
         NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE
                 ? NearestNeighborGraph.of(data, options.k)
                 : NearestNeighborGraph.descent(data, options.k);
         return fit(data, nng, options);
-    } // fit Euclidean
+    }
 
-    /** Executes UMAP with a custom metric distance function.
+    /**
+     * Executes UMAP with a custom metric distance function.
      * @param data     input observations.
      * @param distance distance metric.
      * @param options  algorithm hyperparameters.
      * @param <T>      point data type.
      * @return low-dimensional coordinates matrix.
-     **/
+     */
     public static <T> double[][] fit(T[] data, Metric<T> distance, Options options) {
         NearestNeighborGraph nng = data.length <= LARGE_DATA_SIZE
                 ? NearestNeighborGraph.of(data, distance, options.k)
                 : NearestNeighborGraph.descent(data, distance, options.k);
         return fit(data, nng, options);
-    } // fit custom metric
+    }
 
-    /** Executes UMAP using a precomputed nearest neighbor graph.
+    /**
+     * Executes UMAP using a precomputed nearest neighbor graph.
      * @param data    input observations.
      * @param nng     nearest neighbor graph.
      * @param options algorithm hyperparameters.
-     * @param <T>      point data type.
+     * @param <T>     point data type.
      * @return low-dimensional coordinates matrix.
-     **/
+     */
     public static <T> double[][] fit(T[] data, NearestNeighborGraph nng, Options options) {
         int d = options.d;
         int epochs = options.epochs;
@@ -220,14 +235,14 @@ public class UMAP {
         optimizeLayout(coordinates, curve, epochsPerSample, epochs,
                 options.learningRate, options.negativeSamples, options.repulsionStrength);
         return coordinates;
-    } // fit with graph
+    }
 
     /** Differentiable similarity function: psi(d) = 1 / (1 + a * d^(2b)). */
     private static final class Curve implements DifferentiableMultivariateFunction {
         @Override public double f(double[] x) {
             double a = x[0], exponent = x[1], d = x[2];
             return 1.0 / (1.0 + a * Math.pow(d, exponent));
-        } // f
+        }
 
         @Override public double g(double[] x, double[] grad) {
             double a = x[0], exponent = x[1], d = x[2];
@@ -238,38 +253,41 @@ public class UMAP {
             grad[0] = -dPow / denomSq;
             grad[1] = -(a * exponent * Math.log(d) * dPow) / denomSq;
             return 1.0 / denom;
-        } // g
-    } // class Curve
+        }
+    }
 
-    /** Fits the nonlinear curve parameters (a, b) approximating the exponential decay.
+    /**
+     * Fits the nonlinear curve parameters (a, b) approximating the exponential decay.
      * @param spread  scale of embedding.
      * @param minDist minimum distance between points.
      * @return fitted curve parameters [a, b].
-     **/
+     */
     private static double[] fitCurve(double spread, double minDist) {
         final int numPoints = 300;
         double[] x = new double[numPoints];
         double[] y = new double[numPoints];
         double step = (3.0 * spread) / numPoints;
 
+        // evaluate exponential decay points
         for (int i = 0; i < numPoints; i++) {
             double dist = (i + 1) * step;
             x[i] = dist;
             y[i] = dist < minDist ? 1.0 : Math.exp(-(dist - minDist) / spread);
-        } // evaluate exponential decay points
+        }
 
         double[] initialGuess = {0.5, 0.0};
         LevenbergMarquardt fit = LevenbergMarquardt.fit(new Curve(), x, y, initialGuess);
         double[] parameters = fit.parameters();
         parameters[1] *= 0.5;
         return parameters;
-    } // fitCurve
+    }
 
-    /** Constructs the fuzzy simplicial set across all observations.
+    /**
+     * Constructs the fuzzy simplicial set across all observations.
      * @param nng               nearest neighbor graph.
      * @param localConnectivity local connectivity scale factor.
      * @return fuzzy simplicial adjacency matrix.
-     **/
+     */
     private static SparseMatrix computeFuzzySimplicialSet(NearestNeighborGraph nng, double localConnectivity) {
         double[][] scales = smoothKnnDist(nng.distances(), nng.k(), 64, localConnectivity, 1.0);
         double[] sigma = scales[0];
@@ -279,6 +297,7 @@ public class UMAP {
         AdjacencyList directGraph = computeMembershipStrengths(nng, sigma, rho);
         AdjacencyList conormGraph = new AdjacencyList(n, false);
 
+        // combine fuzzy simplicial sets
         for (int u = 0; u < n; u++) {
             int src = u;
             directGraph.forEachEdge(src, (dst, weightA) -> {
@@ -286,11 +305,12 @@ public class UMAP {
                 double combined = weightA + weightB - (weightA * weightB);
                 conormGraph.setWeight(src, dst, combined);
             });
-        } // combine fuzzy simplicial sets
+        }
         return conormGraph.toMatrix();
-    } // computeFuzzySimplicialSet
+    }
 
-    /** Computes the continuous local metric bandwidth (sigma) and distance to nearest
+    /**
+     * Computes the continuous local metric bandwidth (sigma) and distance to nearest
      * neighbor (rho) via binary search.
      * @param distances         sorted distance matrix to nearest neighbors.
      * @param k                 target number of neighbors.
@@ -298,7 +318,7 @@ public class UMAP {
      * @param localConnectivity minimum connected neighbor count.
      * @param bandwidth         kernel bandwidth factor.
      * @return array containing [sigma, rho].
-     **/
+     */
     private static double[][] smoothKnnDist(double[][] distances, double k, int maxIter,
                                             double localConnectivity, double bandwidth) {
         final double TOLERANCE = 1E-5;
@@ -313,8 +333,9 @@ public class UMAP {
         for (double[] row : distances) {
             sumDistance += MathEx.sum(row);
             totalEntries += row.length;
-        } // compute average distance
+        }
         final double globalMeanDistance = sumDistance / totalEntries;
+
         // Parallel smooth knn distance evaluation
         IntStream.range(0, n).parallel().forEach(i -> {
             double[] row = distances[i];
@@ -334,6 +355,7 @@ public class UMAP {
             } else if (positiveDists.length > 0) {
                 rho[i] = MathEx.max(positiveDists);
             }
+
             // Binary search for local metric scale
             double low = 0.0, high = Double.POSITIVE_INFINITY, mid = 1.0;
             for (int iter = 0; iter < maxIter; iter++) {
@@ -341,20 +363,20 @@ public class UMAP {
                 for (int j = 1; j < row.length; j++) {
                     double diff = row[j] - rho[i];
                     pSum += (diff > 0.0) ? Math.exp(-diff / mid) : 1.0;
-                } // sum membership
+                }
 
                 if (Math.abs(pSum - targetCardinality) < TOLERANCE) {
                     break; // convergence met
-                } // tolerance check
+                }
 
                 if (pSum > targetCardinality) {
                     high = mid;
                     mid = 0.5 * (low + high);
-                } else { // adjust lower search bound
+                } else {
                     low = mid;
                     mid = Double.isInfinite(high) ? (mid * 2.0) : (0.5 * (low + high));
-                } // update search interval
-            } // binary search loop
+                }
+            }
 
             double minScale = (rho[i] > 0.0)
                     ? (MIN_DIST_SCALE * MathEx.mean(row))
@@ -362,7 +384,7 @@ public class UMAP {
             sigma[i] = Math.max(mid, minScale);
         });
         return new double[][]{sigma, rho};
-    } // smoothKnnDist
+    }
 
     /** Determines directional edge weights for the 1-skeleton of each local fuzzy simplicial set. */
     private static AdjacencyList computeMembershipStrengths(NearestNeighborGraph nng, double[] sigma, double[] rho) {
@@ -381,10 +403,10 @@ public class UMAP {
                 double dist = dists[j] - rhoI;
                 double weight = dist <= 0.0 ? 1.0 : Math.exp(-dist / sigmaI);
                 graph.setWeight(i, nbrs[j], weight);
-            } // edge loop
-        } // vertex loop
+            }
+        }
         return graph;
-    } // computeMembershipStrengths
+    }
 
     /** Generates uniformly distributed random coordinates in [-10, 10]. */
     private static double[][] randomLayout(int n, int d) {
@@ -392,15 +414,15 @@ public class UMAP {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < d; j++) {
                 coords[i][j] = MathEx.random(-10.0, 10.0);
-            } // dim
-        } // point
+            }
+        }
         return coords;
-    } // randomLayout
+    }
 
     /** Generates initial coordinates using Principal Component Analysis. */
     private static double[][] pcaLayout(double[][] data, int d) {
         return PCA.fit(data).getProjection(d).apply(data);
-    } // pcaLayout
+    }
 
     /** Computes initial coordinates using the normalized graph Laplacian. */
     private static double[][] spectralLayout(NearestNeighborGraph nng, int d) {
@@ -421,8 +443,8 @@ public class UMAP {
             for (int j = 0; j < nbrs.length; j++) {
                 double w = -degrees[i] * dists[j] * degrees[nbrs[j]];
                 laplacian.setWeight(i, nbrs[j], w);
-            } // nbrs
-        } // laplacian construction
+            }
+        }
 
         int k = d + 1;
         int numEigen = Math.min(2 * k + 1, (int) Math.sqrt(n));
@@ -438,10 +460,10 @@ public class UMAP {
             int col = vectors.ncol() - j - 2;
             for (int i = 0; i < n; i++) {
                 coordinates[i][j] = vectors.get(i, col);
-            } // row
-        } // col
+            }
+        }
         return coordinates;
-    } // spectralLayout
+    }
 
     /** Adds Gaussian jitter to scaled coordinates. */
     private static void noisyScale(double[][] coordinates, double scale, double noise) {
@@ -450,17 +472,17 @@ public class UMAP {
         for (double[] point : coordinates) {
             for (int j = 0; j < d; j++) {
                 maxCoord = Math.max(maxCoord, Math.abs(point[j]));
-            } // inner dim
-        } // outer points
+            }
+        }
         if (maxCoord <= 0.0) return;
         double factor = scale / maxCoord;
         GaussianDistribution normal = new GaussianDistribution(0.0, noise);
         for (double[] point : coordinates) {
             for (int j = 0; j < d; j++) {
                 point[j] = factor * point[j] + normal.rand();
-            } // jitter dim
-        } // jitter points
-    } // noisyScale
+            }
+        }
+    }
 
     /** Normalizes coordinates to fit within [0, scale]. */
     private static void normalize(double[][] coordinates, double scale) {
@@ -470,7 +492,7 @@ public class UMAP {
         double[] span = new double[d];
         for (int j = 0; j < d; j++) {
             span[j] = maxVal[j] - minVal[j];
-        } // span
+        }
 
         for (double[] point : coordinates) {
             for (int j = 0; j < d; j++) {
@@ -479,9 +501,9 @@ public class UMAP {
                 } else {
                     point[j] = scale * (point[j] - minVal[j]) / span[j];
                 }
-            } // dim
-        } // normalize
-    } // normalize
+            }
+        }
+    }
 
     /** Minimizes fuzzy set cross-entropy using stochastic gradient descent and negative sampling. */
     private static void optimizeLayout(double[][] embedding, double[] curve, SparseMatrix epochsPerSample,
@@ -511,8 +533,8 @@ public class UMAP {
                             double grad = clamp(gradFactor * (current[i] - target[i]));
                             current[i] += grad * currentLearningRate;
                             target[i] -= grad * currentLearningRate;
-                        } // apply attractive force
-                    } // attractive update
+                        }
+                    }
 
                     edge.update(edge.x + epochsPerSample.get(edgeIndex));
 
@@ -532,16 +554,16 @@ public class UMAP {
                         for (int i = 0; i < d; i++) {
                             double grad = (negGradFactor > 0.0) ? clamp(negGradFactor * (current[i] - negTarget[i])) : 4.0;
                             current[i] += grad * currentLearningRate;
-                        } // apply repulsion
-                    } // repulsive negative samples
+                        }
+                    }
 
                     epochNextNegativeSample.set(edgeIndex, epochNextNegativeSample.get(edgeIndex) + epochsPerNegativeSample.get(edgeIndex) * negCount);
-                } // active edge
-            } // all edges
+                }
+            }
             logger.info("The learning rate at {} iterations: {}", iter, currentLearningRate);
             currentLearningRate = initialAlpha * (1.0 - (double) iter / epochs);
-        } // epoch loop
-    } // optimizeLayout
+        }
+    }
 
     /** Calculates the sample spacing (epochs per sample) for each 1-simplex edge. */
     private static SparseMatrix computeEpochPerSample(SparseMatrix strength, int epochs) {
@@ -553,11 +575,12 @@ public class UMAP {
             } else {
                 entry.update(maxWeight / entry.x);
             }
-        }); // update weights
+        });
         return strength;
-    } // computeEpochPerSample
+    }
+
     /** Restricts values to the interval [-4.0, 4.0]. */
     private static double clamp(double val) {
         return Math.min(4.0, Math.max(val, -4.0));
-    } // clamp
-} // class UMAP
+    }
+}
