@@ -211,6 +211,56 @@
       });
   }
 
+  function initContactModal() {
+    var modal = document.getElementById('contact-modal');
+    if (!modal) return;
+
+    var frame = modal.querySelector('.contact-modal-frame');
+    var closeBtn = modal.querySelector('[data-contact-close]');
+    var lastFocus = null;
+
+    function open() {
+      lastFocus = document.activeElement;
+      if (frame && frame.dataset.src && !frame.getAttribute('src')) {
+        frame.src = frame.dataset.src;
+      }
+
+      var drawer = document.getElementById('mobile-drawer');
+      var menuBtn = document.getElementById('menu-toggle');
+      if (drawer) drawer.classList.remove('is-open');
+      if (menuBtn) {
+        menuBtn.setAttribute('aria-expanded', 'false');
+        menuBtn.setAttribute('aria-label', 'Open menu');
+      }
+
+      modal.hidden = false;
+      modal.classList.add('is-open');
+      document.body.classList.add('contact-open');
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function close() {
+      if (!modal.classList.contains('is-open')) return;
+      modal.classList.remove('is-open');
+      modal.hidden = true;
+      document.body.classList.remove('contact-open');
+      if (lastFocus && typeof lastFocus.focus === 'function') {
+        lastFocus.focus();
+      }
+    }
+
+    document.querySelectorAll('[data-contact-open]').forEach(function (btn) {
+      btn.addEventListener('click', open);
+    });
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    modal.addEventListener('click', function (event) {
+      if (event.target === modal) close();
+    });
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape') close();
+    });
+  }
+
   function initImageLightbox() {
     var images = document.querySelectorAll('img.enlarge');
     if (!images.length) return;
@@ -303,5 +353,6 @@
     initPrefetch();
     initCopyButtons();
     initImageLightbox();
+    initContactModal();
   });
 })();

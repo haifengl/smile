@@ -179,6 +179,11 @@
     align-items: center;
     gap: 0.4rem;
   }
+  .nav-contact { white-space: nowrap; }
+  .mobile-contact {
+    width: 100%;
+    margin-bottom: 0.75rem;
+  }
   .icon-btn {
     display: inline-flex;
     align-items: center;
@@ -787,6 +792,62 @@
     box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.45);
   }
   body.lightbox-open { overflow: hidden; }
+
+  .contact-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    background: rgba(15, 23, 42, 0.6);
+  }
+  .contact-modal.is-open { display: flex; }
+  .contact-modal-dialog {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 42rem;
+    height: min(90vh, 52rem);
+    background: var(--bg-elevated);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .contact-modal-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.7rem 0.7rem 0.7rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .contact-modal-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .contact-modal-frame-clip {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .contact-modal-frame {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    /* Taller than the clip so the Google Forms footer stays out of view. */
+    height: calc(100% + 4.5rem);
+    border: 0;
+    background: #fff;
+  }
+  body.contact-open { overflow: hidden; }
 
   .nav-tabs,
   .nav.nav-tabs {
