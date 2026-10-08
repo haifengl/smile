@@ -526,9 +526,14 @@ network for an arbitrary source).
 
 ## 9. AI Agent Panel
 
-The right panel hosts the AI agents, each in its own tab. The tabs appear in the order
-**Frank**, **Steve**, **Clair**, **Ada**, **James**, **Guido**, **Chuck** — Frank, the
-chief of staff, leads the strip. All agents require an AI service to be configured
+The right panel hosts the AI agents, each in its own tab. The panel is **loaded from
+the agent catalog** (`AgentCatalog` in the `ioa-agent` jar), not a hardcoded list: every
+agent under `ioa/agent` in the jar, then `$smile.home/agents`, then `~/.smile/agents`
+appears automatically, so a new agent needs no Studio-side change. The built-in tabs
+appear in the canonical workflow order — **Frank**, **Steve**, **Clair**, **Ada**,
+**James**, **Guido**, **Chuck** — followed by any user-defined agents. The base agent
+and subagents (`explore`, `general-purpose`, `plan`, and standalone `.md` files) are not
+shown: they are inherited or launched by the Task tool, not opened as tabs. All agents require an AI service to be configured
 (see [Section 11](#11-settings--ai-service-configuration)).
 
 When an agent needs an answer from you, its tab is selected automatically and marked with

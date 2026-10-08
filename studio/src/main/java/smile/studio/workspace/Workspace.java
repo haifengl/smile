@@ -79,6 +79,14 @@ public class Workspace extends JSplitPane {
      */
     private final JTabbedPane agentTabs = new JTabbedPane();
     /**
+     * Preferred order for agent tabs in Studio, aligned with the common user workflow:
+     * Chief of Staff -> Product Manager -> Data Scientist -> Architect -> Java Coder -> Python Coder -> Desktop Operator.
+     */
+    private static final List<String> TAB_ORDER = List.of(
+            "chief-of-staff", "product-manager", "data-scientist",
+            "architect", "java-coder", "python-coder", "desktop-operator"
+    );
+    /**
      * Outstanding questions per agent CLI, used to mark its tab until answered.
      */
     private final Map<AgentCLI, Integer> pendingQuestions = new IdentityHashMap<>();
@@ -129,13 +137,6 @@ public class Workspace extends JSplitPane {
         this.fileChooser = new SystemFileChooser();
         fileChooser.setCurrentDirectory(cwd.toFile());
 
-        Agent chiefOfStaff = initAgent("chief-of-staff", cwd);
-        Agent dataScientist = initAgent("data-scientist", cwd);
-        Agent productManager = initAgent("product-manager", cwd);
-        Agent desktopOperator = initAgent("desktop-operator", cwd);
-        Agent architect = initAgent("architect", cwd);
-        Agent javaCoder = initAgent("java-coder", cwd);
-        Agent pythonCoder = initAgent("python-coder", cwd);
         fileExplorer = new FileExplorer(cwd);
         kernelExplorer = new KernelExplorer(fileChooser);
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
@@ -171,23 +172,40 @@ public class Workspace extends JSplitPane {
 
         // Separate Coder instances for notebook code completion. They are not
         // registered in the agent directory and never appear as tabs: the panel
-        // agents above answer @james/@guido, and these only serve complete/generate.
+        // agents below answer @james/@guido, and these only serve complete/generate.
         coders.put("Java", initCoder("java-coder", cwd));
         coders.put("Python", initCoder("python-coder", cwd));
 
-        openAgent(chiefOfStaff, chiefOfStaffCLI(chiefOfStaff));
-        openAgent(productManager, productManagerCLI(productManager));
-        openAgent(dataScientist, dataScientistCLI(dataScientist));
-        openAgent(architect, architectCLI(architect));
-        openAgent(javaCoder, javaCoderCLI(javaCoder));
-        openAgent(pythonCoder, pythonCoderCLI(pythonCoder));
-        openAgent(desktopOperator, desktopOperatorCLI(desktopOperator));
+        // The panel is loaded from the agent catalog, not a hardcoded list, so a
+        // new agent under ioa/agent or $smile.home/agents appears with no change
+        // here. The catalog fails fast on a call-out name collision.
+        // Tabs are ordered according to the canonical user workflow.
+        List<Agent> panel = new ArrayList<>();
+        try {
+            var entries = new ArrayList<>(ioa.agent.AgentCatalog.load(cwd));
+            entries.sort((a, b) -> {
+                int ia = TAB_ORDER.indexOf(a.name());
+                int ib = TAB_ORDER.indexOf(b.name());
+                if (ia >= 0 && ib >= 0) return Integer.compare(ia, ib);
+                if (ia >= 0) return -1;
+                if (ib >= 0) return 1;
+                return a.name().compareTo(b.name());
+            });
+            for (var entry : entries) {
+                Agent agent = initAgent(entry.spec(), cwd);
+                if (agent != null) {
+                    panel.add(agent);
+                    openAgent(agent, agentCLI(agent));
+                }
+            }
+        } catch (Exception ex) {
+            logger.error("Failed to load the agent catalog: {}", ex.getMessage());
+        }
 
         // Make installed plugins' skills invocable on every top-level agent. The
         // skills are already translated to ioa's shape; adding them to each agent's
         // conversation is all that is needed for /<skill> to run (ADR-004).
-        addPluginSkills(chiefOfStaff, dataScientist, productManager, architect,
-                desktopOperator, javaCoder, pythonCoder);
+        addPluginSkills(panel.toArray(Agent[]::new));
 
         project.setLeftComponent(explorerTabs);
         project.setRightComponent(notebookTabs);
@@ -227,21 +245,21 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Initializes a top-level agent from its spec name. The call-out name and
+     * Initializes a top-level agent from its loaded spec. The call-out name and
      * tab title come from the spec's {@code callName} and {@code title}
      * frontmatter, so a new agent needs no Studio-side wiring beyond a spec.
      *
-     * @param name the agent spec name, e.g. {@code architect}.
+     * @param spec the agent specification.
      * @param cwd the working directory for the agent.
-     * @return the agent, or null when its spec failed to load.
+     * @return the agent, or null when it failed to initialize.
      */
-    private Agent initAgent(String name, Path cwd) {
+    private Agent initAgent(Agent.Spec spec, Path cwd) {
         try {
-            Agent agent = new Agent(Agent.Spec.of(name), SmileStudio::llm, cwd);
+            Agent agent = new Agent(spec, SmileStudio::llm, cwd);
             applyDefaultModel(agent);
             return agent;
         } catch (Exception ex) {
-            logger.error("Failed to initialize agent {}: {}", name, ex.getMessage());
+            logger.error("Failed to initialize agent {}: {}", spec.name(), ex.getMessage());
         }
         return null;
     }
@@ -394,103 +412,52 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Creates a chief of staff agent cli.
+     * Converts an agent spec name (e.g. {@code chief-of-staff}) to its resource bundle
+     * key prefix (e.g. {@code ChiefOfStaff}).
      */
-    private AgentCLI chiefOfStaffCLI(Agent chiefOfStaff) {
-        var cli = new AgentCLI(chiefOfStaff, this);
-
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
-                        bundle.getString("WelcomeSeparator") + '\n' +
-                        bundle.getString("ChiefOfStaffWelcome") + "\n\n" +
-                        bundle.getString("Tips"),
-                MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
-                        "\n\n" + bundle.getString("ChiefOfStaffOutput"));
-        return cli;
+    static String agentKeyPrefix(String name) {
+        if ("pythonista".equalsIgnoreCase(name)) {
+            return "PythonCoder";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (String word : name.split("[_-]+")) {
+            if (!word.isEmpty()) {
+                sb.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1));
+            }
+        }
+        return sb.toString();
     }
 
     /**
-     * Creates a data scientist agent cli.
+     * Creates an agent CLI with its welcome banner. If the resource bundle contains
+     * customized welcome and output messages for the agent, they are used; otherwise,
+     * the banner falls back to a generic greeting using the agent's title and description
+     * from its specification.
+     *
+     * @param agent the agent to open.
+     * @return the agent's CLI.
      */
-    private AgentCLI dataScientistCLI(Agent dataScientist) {
-        var cli = new AgentCLI(dataScientist, this);
+    private AgentCLI agentCLI(Agent agent) {
+        var cli = new AgentCLI(agent, this);
+        var spec = agent.spec();
+        String prefix = agentKeyPrefix(spec.name());
+        String welcomeKey = prefix + "Welcome";
+        String outputKey = prefix + "Output";
+
+        String welcome = bundle.containsKey(welcomeKey)
+                ? bundle.getString(welcomeKey)
+                : MessageFormat.format(bundle.getString("AgentWelcome"), spec.title());
+
+        String output = bundle.containsKey(outputKey)
+                ? bundle.getString(outputKey)
+                : spec.description();
 
         cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
-                        bundle.getString("DataScientistWelcome") + "\n\n" +
+                        welcome + "\n\n" +
                         bundle.getString("Tips"),
                 MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
-                        "\n\n" + bundle.getString("DataScientistOutput"));
-        return cli;
-    }
-
-    /**
-     * Creates a product manager agent cli.
-     */
-    private AgentCLI productManagerCLI(Agent productManager) {
-        var cli = new AgentCLI(productManager, this);
-
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
-                        bundle.getString("WelcomeSeparator") + '\n' +
-                        bundle.getString("ProductManagerWelcome") + "\n\n" +
-                        bundle.getString("Tips"),
-                MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
-                        "\n\n" + bundle.getString("ProductManagerOutput"));
-        return cli;
-    }
-
-    /**
-     * Creates the architect agent cli.
-     */
-    private AgentCLI architectCLI(Agent architect) {
-        var cli = new AgentCLI(architect, this);
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
-                        bundle.getString("WelcomeSeparator") + '\n' +
-                        bundle.getString("ArchitectWelcome") + "\n\n" +
-                        bundle.getString("Tips"),
-                MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
-                        "\n\n" + bundle.getString("ArchitectOutput"));
-        return cli;
-    }
-
-    /**
-     * Creates a desktop operator agent cli.
-     */
-    private AgentCLI desktopOperatorCLI(Agent desktopOperator) {
-        var cli = new AgentCLI(desktopOperator, this);
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
-                        bundle.getString("WelcomeSeparator") + '\n' +
-                        bundle.getString("DesktopOperatorWelcome") + "\n\n" +
-                        bundle.getString("Tips"),
-                MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
-                        "\n\n" + bundle.getString("DesktopOperatorOutput"));
-        return cli;
-    }
-
-    /**
-     * Creates a Java coding agent cli.
-     */
-    private AgentCLI javaCoderCLI(Agent javaCoder) {
-        var cli = new AgentCLI(javaCoder, this);
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
-                        bundle.getString("WelcomeSeparator") + '\n' +
-                        bundle.getString("JavaCoderWelcome") + "\n\n" +
-                        bundle.getString("Tips"),
-                MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
-                        "\n\n" + bundle.getString("JavaCoderOutput"));
-        return cli;
-    }
-
-    /**
-     * Creates a Python coding agent cli.
-     */
-    private AgentCLI pythonCoderCLI(Agent pythonCoder) {
-        var cli = new AgentCLI(pythonCoder, this);
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
-                        bundle.getString("WelcomeSeparator") + '\n' +
-                        bundle.getString("PythonCoderWelcome") + "\n\n" +
-                        bundle.getString("Tips"),
-                MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
-                        "\n\n" + bundle.getString("PythonCoderOutput"));
+                        "\n\n" + output);
         return cli;
     }
 
