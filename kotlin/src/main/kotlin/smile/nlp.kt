@@ -234,7 +234,7 @@ fun tfidf(bag: DoubleArray, n: Int, df: IntArray): DoubleArray {
  * </ul>
  */
 fun String.normalize(): String {
-    return smile.nlp.normalizer.SimpleNormalizer.getInstance().normalize(this)
+    return smile.util.Strings.normalize(this)
 }
 
 /**

@@ -19,7 +19,7 @@ title: SMILE - Natural Language Processing
             <thead><tr><th>Sub-package / Class</th><th>Description</th></tr></thead>
             <tbody>
             <tr><td><code>smile.nlp</code> (core)</td><td><code>Text</code>, <code>Corpus</code>, <code>SimpleCorpus</code>, <code>Bigram</code>, <code>NGram</code>, <code>Word2Vec</code></td></tr>
-            <tr><td><code>smile.nlp.normalizer</code></td><td>Unicode text normalization</td></tr>
+            <tr><td><code>smile.util.Strings</code></td><td>Unicode text normalization (<code>Strings.normalize</code>)</td></tr>
             <tr><td><code>smile.nlp.tokenizer</code></td><td>Paragraph, sentence, and word splitting</td></tr>
             <tr><td><code>smile.nlp.stemmer</code></td><td>Porter and Lancaster word stemmers</td></tr>
             <tr><td><code>smile.nlp.pos</code></td><td>Penn Treebank POS tagging (pretrained HMM)</td></tr>
@@ -46,13 +46,13 @@ title: SMILE - Natural Language Processing
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-1-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.normalizer.SimpleNormalizer;
+      <pre class="playground-source language-java"><code class="language-java">import smile.util.Strings;
 import smile.nlp.tokenizer.*;
 import smile.nlp.stemmer.PorterStemmer;
 import smile.nlp.pos.*;
 
 String raw = "Machine learning is a subfield of AI. Deep learning uses neural nets.";
-String text = SimpleNormalizer.getInstance().normalize(raw);
+String text = Strings.normalize(raw);
 
 var paragraphs = SimpleParagraphSplitter.getInstance();
 var sentences = SimpleSentenceSplitter.getInstance();
@@ -299,7 +299,7 @@ System.out.println(w2v.size() + " x " + w2v.dimension());</code></pre>
 
     <h2 id="normalizer" class="title">Normalizer</h2>
 
-    <p><code>SimpleNormalizer</code> is a thread-safe singleton that cleans heterogeneous Unicode before tokenization. Always normalize text from the web, PDFs, or user input to avoid spurious tokens from encoding variants.</p>
+    <p><code>Strings.normalize</code> cleans heterogeneous Unicode before tokenization. Always normalize text from the web, PDFs, or user input to avoid spurious tokens from encoding variants.</p>
 
     <div class="table-responsive">
         <table class="table table-striped table-bordered">
@@ -326,10 +326,9 @@ System.out.println(w2v.size() + " x " + w2v.dimension());</code></pre>
     {% include "components/playground-extra-actions.njk" %}
   </div>
     <div id="pg-6-0" class="hero-pane">
-      <pre class="playground-source language-java"><code class="language-java">import smile.nlp.normalizer.SimpleNormalizer;
+      <pre class="playground-source language-java"><code class="language-java">import smile.util.Strings;
 
-SimpleNormalizer norm = SimpleNormalizer.getInstance();
-String clean = norm.normalize("\u201CHello,\u201D   world\u2019s\u2026");
+String clean = Strings.normalize("\u201CHello,\u201D   world\u2019s\u2026");
 System.out.println(clean);</code></pre>
       <pre class="playground-output" aria-label="Expected output"><code>
 "Hello," world's...
@@ -1554,7 +1553,6 @@ smile.nlp
 ├── Bigram, NGram                        – collocation data records
 ├── Word2Vec                             – word embeddings (Word2vec / GloVe)
 │
-├── normalizer/   SimpleNormalizer
 ├── tokenizer/    Paragraph / Sentence / Word splitters
 ├── stemmer/      PorterStemmer, LancasterStemmer
 ├── pos/          HMMPOSTagger, PennTreebankPOS, RegexPOSTagger
