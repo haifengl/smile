@@ -325,7 +325,9 @@ public class AgentCLI extends JPanel {
                 Intent intent = queuedIntents.get(id);
                 if (intent == null) {
                     // Not a local submit we bound already: it arrived from a peer agent.
-                    intent = openRequest(item.request().modelPrompt());
+                    // prompt() renders a request or an event, so this stays null-safe if
+                    // an event ever reaches this session.
+                    intent = openRequest(item.prompt());
                     queuedIntents.put(id, intent);
                 }
                 wireQueueControls(intent, id, item);
@@ -359,10 +361,11 @@ public class AgentCLI extends JPanel {
                     intent.setProgress(false);
                     if (!editing) {
                         // An edit already re-opened the composer; only a real cancel or a
-                        // skip prints a reason.
+                        // skip prints a reason. An event has no task text, so fall back to
+                        // its subject.
                         intent.output().append(event.action() == AgentRequestQueue.Action.CANCELLED
                                 ? Intent.queuedMessage("CancelledQueued")
-                                : event.item().request().task());
+                                : item.isEvent() ? item.event().subject() : item.request().task());
                     }
                 }
                 showQueueDepth(event.size());
@@ -383,7 +386,9 @@ public class AgentCLI extends JPanel {
 
     /** Wires cancel/edit/reorder on a waiting intent. Edit is offered only for local prompts. */
     private void wireQueueControls(Intent intent, String id, QueuedRequest item) {
-        boolean local = item.request().from() == null || item.request().from().isBlank();
+        // from() is blank for an event, so an event would look "local" and be offered an
+        // edit that folds it into the composer as a user prompt. Exclude it explicitly.
+        boolean local = !item.isEvent() && item.from().isBlank();
         int position = agent.session().queuePosition(id);
         int size = agent.session().queued().size();
         Runnable moveUp = () -> agent.session().move(id, -1);
