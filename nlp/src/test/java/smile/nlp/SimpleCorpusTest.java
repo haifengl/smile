@@ -21,9 +21,9 @@ import java.util.Collections;
 import java.util.Iterator;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
-import smile.nlp.normalizer.SimpleNormalizer;
 import smile.nlp.relevance.BM25;
 import smile.nlp.relevance.Relevance;
+import smile.util.Strings;
 
 /**
  * Tests for {@link SimpleCorpus}.
@@ -206,7 +206,7 @@ public class SimpleCorpusTest {
                 + "15 percent carbon-dioxide reduction by 2025 should be adopted.";
 
         SimpleCorpus corpus = new SimpleCorpus();
-        var doc = corpus.doc(SimpleNormalizer.getInstance().normalize(content));
+        var doc = corpus.doc(Strings.normalize(content));
         corpus.add(doc);
         var bigrams = corpus.bigrams(10, 3) ;
         System.out.println("Bigrams :"+ bigrams);

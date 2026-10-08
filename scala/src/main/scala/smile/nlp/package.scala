@@ -228,9 +228,9 @@ package object nlp {
 package nlp {
   import tokenizer.{SimpleSentenceSplitter, SimpleTokenizer}
   import smile.nlp.dictionary.{EnglishPunctuations, EnglishStopWords}
-  import smile.nlp.normalizer.SimpleNormalizer
   import smile.nlp.pos.{HMMPOSTagger, PennTreebankPOS}
   import smile.nlp.stemmer.{PorterStemmer, Stemmer}
+  import smile.util.Strings
 
   private[nlp] class PimpedString(text: String) {
     val tokenizer = new SimpleTokenizer(true)
@@ -245,7 +245,7 @@ package nlp {
       * </ul>
       */
     def normalize: String = {
-      SimpleNormalizer.getInstance().normalize(text)
+      Strings.normalize(text)
     }
 
     /** Splits English text into sentences. Given an English text,

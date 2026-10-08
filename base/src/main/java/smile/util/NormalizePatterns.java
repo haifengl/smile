@@ -14,10 +14,19 @@
  * You should have received a copy of the GNU General Public License
  * along with SMILE. If not, see <https://www.gnu.org/licenses/>.
  */
+package smile.util;
+
+import java.util.regex.Pattern;
 
 /**
- * Text normalization.
+ * Regular expression patterns for text normalization.
  *
  * @author Haifeng Li
  */
-package smile.nlp.normalizer;
+interface NormalizePatterns {
+    Pattern WHITESPACE = Pattern.compile("\\s+", Pattern.UNICODE_CHARACTER_CLASS);
+    Pattern CONTROL_FORMAT_CHARS = Pattern.compile("[\\p{Cc}\\p{Cf}]");
+    Pattern DOUBLE_QUOTES = Pattern.compile("[\\u02BA\\u201C\\u201D\\u201E\\u201F\\u2033\\u2036\\u275D\\u275E\\u301D\\u301E\\u301F\\uFF02]");
+    Pattern SINGLE_QUOTES = Pattern.compile("[\\u0060\\u02BB\\u02BC\\u02BD\\u2018\\u2019\\u201A\\u201B\\u275B\\u275C]");
+    Pattern DASH = Pattern.compile("[\\u2012\\u2013\\u2014\\u2015\\u2053]");
+}

@@ -17,9 +17,11 @@
 package smile.util;
 
 import java.text.DecimalFormat;
+import java.text.Normalizer;
 import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static java.text.Normalizer.Form.NFKC;
 
 /**
  * String utility functions.
@@ -318,5 +320,36 @@ public interface Strings {
 
         String[] tokens = s.substring(1, s.length() - 1).split(",");
         return Arrays.stream(tokens).map(String::trim).mapToDouble(Double::parseDouble).toArray();
+    }
+
+    /**
+     * Normalizes text to a canonical representation:
+     * <ul>
+     *   <li>Applies Unicode NFKC normalization.</li>
+     *   <li>Collapses Unicode whitespace sequences to a single space.</li>
+     *   <li>Strips control and format characters (\p{Cc}\p{Cf}).</li>
+     *   <li>Normalizes various typographic single quotes, double quotes, and dashes.</li>
+     *   <li>Trims leading and trailing whitespace.</li>
+     * </ul>
+     *
+     * @param text the text to normalize.
+     * @return the normalized text, or null if input is null.
+     */
+    static String normalize(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+
+        if (!Normalizer.isNormalized(text, NFKC)) {
+            text = Normalizer.normalize(text, NFKC);
+        }
+
+        text = NormalizePatterns.WHITESPACE.matcher(text).replaceAll(" ");
+        text = NormalizePatterns.CONTROL_FORMAT_CHARS.matcher(text).replaceAll("");
+        text = NormalizePatterns.DOUBLE_QUOTES.matcher(text).replaceAll("\"");
+        text = NormalizePatterns.SINGLE_QUOTES.matcher(text).replaceAll("'");
+        text = NormalizePatterns.DASH.matcher(text).replaceAll("--");
+
+        return text.trim();
     }
 }
