@@ -413,9 +413,6 @@
   .bento-card { padding: 1.1rem 1.15rem; height: 100%; }
   .bento-card h3 { margin-top: 0; font-size: 1.05rem; }
   .bento-card p { color: var(--text-muted); font-size: 0.92rem; margin-bottom: 0.5rem; }
-  .bento-viz #vegalite { width: 100%; margin-top: 0.5rem; }
-  .bento-viz .vega-embed,
-  .bento-viz .vega-embed summary { width: 100%; }
   .stat-value {
     font-size: 1.75rem;
     font-weight: 700;
@@ -426,6 +423,7 @@
   .home-layout { display: grid; gap: 1.25rem; }
   @media (min-width: 992px) {
     .home-layout { grid-template-columns: minmax(0, 1fr) 18rem; }
+    .product-page .home-layout { grid-template-columns: minmax(0, 1fr); }
   }
 
   .algo-panel { padding: 1rem 1.1rem; }
@@ -435,6 +433,31 @@
   .algo-panel dd { margin: 0.25rem 0 0; font-size: 0.82rem; color: var(--text-muted); }
   .algo-panel dd a { color: var(--text-muted); }
   .algo-panel dd a:hover { color: var(--accent); }
+
+  @media (max-width: 991px) {
+    .page-rail { margin-top: 1.5rem; }
+  }
+  @media (min-width: 992px) {
+    .page-rail {
+      position: sticky;
+      top: 6.5rem;
+      max-height: calc(100vh - 7.5rem);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .page-rail .algo-panel {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .page-rail .algo-scroll {
+      overflow: auto;
+      min-height: 0;
+    }
+  }
 
   .code-playground {
     overflow: hidden;
