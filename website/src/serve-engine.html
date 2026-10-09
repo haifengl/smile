@@ -1,0 +1,115 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - Serve
+---
+
+<div class="col-md-9 order-md-first product-page">
+  <p class="page-kicker">Serve</p>
+  <h1 id="serve-engine">Inference on your machines.</h1>
+  <p class="lead">SMILE Serve is the inference runtime all you need. A commercial license covers production use without the AGPL network source offer.</p>
+  <p class="product-actions">
+    <a class="btn btn-accent" href="serve.html#quick-start">Start</a>
+    <a class="btn btn-quiet" href="license-serve.html">Read the license</a>
+  </p>
+
+  <h2 id="what-you-run">What you run</h2>
+  <p>Classic models, ONNX graphs, and chat run in the same process, on your machines and your network. A React UI is served from that process.</p>
+  <div class="bento">
+    <a class="bento-card glass bento-half" href="serve.html#classic-ml" style="text-decoration:none;color:inherit">
+      <h3>Classic ML</h3>
+      <p>Serialized SMILE models (<code>.sml</code>) — classifiers and regressors — behind <code>/api/v1/smile</code>.</p>
+    </a>
+    <a class="bento-card glass bento-half" href="serve.html#onnx-api" style="text-decoration:none;color:inherit">
+      <h3>ONNX Runtime</h3>
+      <p>Any model in the ONNX open format (<code>.onnx</code>), including computer vision, behind <code>/api/v1/onnx</code>.</p>
+    </a>
+    <a class="bento-card glass bento-half" href="serve.html#llm-chat" style="text-decoration:none;color:inherit">
+      <h3>LLM Chat</h3>
+      <p>OpenAI-compatible chat completions, tool calling, and conversation history behind <code>/api/v1/chat</code>.</p>
+    </a>
+    <a class="bento-card glass bento-half" href="serve.html#web-ui" style="text-decoration:none;color:inherit">
+      <h3>Web UI</h3>
+      <p>A bundled interface for chat, SMILE, and ONNX models, served from the same process.</p>
+    </a>
+  </div>
+
+  <div class="code-playground glass" data-lang="bash">
+    <div class="playground-toolbar">
+      <span class="lang-tab is-active">Bash</span>
+      <span class="toolbar-spacer"></span>
+      <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+      {% include "components/playground-extra-actions.njk" %}
+    </div>
+    <pre class="playground-source language-bash"><code class="language-bash">docker run -it \
+  -v /path/to/model/folder:/model \
+  -p 8888:8080 \
+  ghcr.io/haifengl/smile-serve:latest</code></pre>
+    <div class="playground-editor" hidden></div>
+  </div>
+
+  <h2 id="agent-loops">For agent loops</h2>
+  <p>While Chatbots optimize for high throughput and long context streaming, agentic workflows care about something different: TTFT (Time to First Token) on frequent short prompts, rapid tool-call latency, and predictable memory overhead when running parallel loops. Our Serve Engine is built for that: a fast first token, a fast tool round trip, and a memory budget reserved when the model loads.</p>
+  <div class="bento">
+    <div class="bento-card glass bento-third">
+      <h3>Tool results stay in the prefix</h3>
+      <p>A tool result extends the same context. The cache is not rebuilt, and it does not grow one unbounded copy at a time.</p>
+    </div>
+    <div class="bento-card glass bento-third">
+      <h3>Short turns are not held back</h3>
+      <p>A request is admitted when its own prompt and token window fit. An interactive loop is not stalled until a large cohort fills.</p>
+    </div>
+    <div class="bento-card glass bento-third">
+      <h3>Memory is reserved up front</h3>
+      <p>KV and speculation checkpoints are sized at load. A long session does not grow the pool one request at a time.</p>
+    </div>
+    <div class="bento-card glass bento-third">
+      <h3>The draft keeps its prefix</h3>
+      <p>The draft head holds the prefix instead of recomputing it every round.</p>
+    </div>
+    <div class="bento-card glass bento-third">
+      <h3>No second forward</h3>
+      <p>On a partial accept, saved DeltaNet state is restored instead of another forward pass.</p>
+    </div>
+    <div class="bento-card glass bento-third">
+      <h3>The gain holds in a full batch</h3>
+      <p>Other serving engines lose the speculative advantage as the batch fills. SMILE holds it.</p>
+    </div>
+  </div>
+
+  <h2 id="how-it-compares">How it compares</h2>
+  <div class="bento">
+    <div class="bento-card glass bento-third">
+      <h3>vLLM</h3>
+      <p>SMILE matches or slightly exceeds vLLM in raw decode throughput while outperforming it in speculative decoding scaling and hybrid architecture state management.</p>
+    </div>
+    <div class="bento-card glass bento-third">
+      <h3>SGLang</h3>
+      <p>SMILE achieves comparable token throughput and FlashInfer integration efficiency while offering a tighter execution pipeline for native speculative heads like MTP.</p>
+    </div>
+    <div class="bento-card glass bento-third">
+      <h3>TensorRT-LLM</h3>
+      <p>SMILE achieves TRT-LLM levels of low-level optimization (CUDA graphs for ragged verification batches, Marlin INT4 execution) without requiring heavy C++ compilation workflows or rigid engine builds.</p>
+    </div>
+  </div>
+</div>
+
+<div class="col-md-3 page-rail">
+  <aside class="algo-panel glass" aria-label="Endpoints">
+    <p class="toc-title">Endpoints</p>
+    <div class="algo-scroll">
+      <dl>
+        <dt><a href="serve.html#classic-ml">Classic ML</a></dt>
+        <dd><code>/api/v1/smile</code></dd>
+        <dt><a href="serve.html#onnx-api">ONNX Runtime</a></dt>
+        <dd><code>/api/v1/onnx</code></dd>
+        <dt><a href="serve.html#llm-chat">LLM Chat</a></dt>
+        <dd><code>/api/v1/chat</code></dd>
+        <dt><a href="serve.html#list-models">Models</a></dt>
+        <dd><code>/api/v1/models</code></dd>
+        <dt><a href="serve.html#overview">Metrics</a></dt>
+        <dd><code>/q/metrics</code></dd>
+      </dl>
+    </div>
+  </aside>
+</div>
