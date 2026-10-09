@@ -8,7 +8,7 @@ title: SMILE - Serve
 <div class="col-md-9 order-md-first">
     <p class="page-kicker">Serve</p>
     <h1 id="serve-top" class="title">Inference on your machines.</h1>
-    <p class="lead">SMILE Serve is the runtime you install. A commercial license covers production use without the AGPL network source offer. There is no uptime promise, because you operate it.</p>
+    <p class="lead">SMILE Serve is the inference runtime all you need. A commercial license covers production use without the AGPL network source offer.</p>
 
     <h2 id="overview" class="title">Overview</h2>
 
@@ -20,7 +20,9 @@ title: SMILE - Serve
             <tbody>
             <tr><td><strong>Classic ML</strong></td><td><code>/api/v1/smile</code></td><td>Serialized SMILE models (<code>.sml</code>) — classifiers and regressors</td></tr>
             <tr><td><strong>ONNX Runtime</strong></td><td><code>/api/v1/onnx</code></td><td>Any model in the ONNX open format (<code>.onnx</code>)</td></tr>
-            <tr><td><strong>LLM Chat</strong></td><td><code>/api/v1/chat</code>, <code>/api/v1/models</code></td><td>OpenAI-compatible chat completions and model list/retrieve</td></tr>
+            <tr><td><strong>LLM Chat</strong></td><td><code>/api/v1/chat</code></td><td>OpenAI-compatible chat completions</td></tr>
+            <tr><td><strong>Models</strong></td><td><code>/api/v1/models</code></td><td>OpenAI-compatible list and retrieve for every loaded model — chat, ONNX, and SMILE</td></tr>
+            <tr><td><strong>Metrics</strong></td><td><code>/q/metrics</code></td><td>Prometheus scrape for classic, ONNX, and LLM models</td></tr>
             </tbody>
         </table>
     </div>

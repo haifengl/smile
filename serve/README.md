@@ -11,7 +11,9 @@ that brings together three complementary inference capabilities on the JVM:
 |---|---|----------------------------------------------------------------|
 | **Classic ML** | `/api/v1/smile` | Serialized SMILE models (`.sml`) — classifiers and regressors |
 | **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`)                    |
-| **LLM Chat** | `/api/v1/chat`, `/api/v1/models` | OpenAI-compatible chat completions and model list/retrieve |
+| **LLM Chat** | `/api/v1/chat` | OpenAI-compatible chat completions |
+| **Models** | `/api/v1/models` | OpenAI-compatible list and retrieve for every loaded model — chat, ONNX, and SMILE |
+| **Metrics** | `/q/metrics` | Prometheus scrape for classic, ONNX, and LLM models |
 
 A React-based web UI is bundled and served from the same process.
 
