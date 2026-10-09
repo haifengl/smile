@@ -251,12 +251,24 @@
     font-weight: 500;
   }
   .nav-panel a:hover { color: var(--accent); text-decoration: none; }
-  .btn-ink {
-    background: var(--text);
-    color: var(--bg-base);
+  .btn-accent {
+    background: color-mix(in srgb, var(--accent) 22%, var(--bg-base));
+    color: #0f172a;
     border-radius: 999px;
   }
-  .btn-ink:hover { color: var(--bg-base); text-decoration: none; filter: brightness(1.08); }
+  .btn-accent:hover {
+    background: color-mix(in srgb, var(--accent) 34%, var(--bg-base));
+    color: #0f172a;
+    text-decoration: none;
+  }
+  [data-theme="dark"] .btn-accent {
+    background: color-mix(in srgb, var(--accent) 16%, var(--bg-base));
+    color: var(--text);
+  }
+  [data-theme="dark"] .btn-accent:hover {
+    background: color-mix(in srgb, var(--accent) 28%, var(--bg-base));
+    color: var(--text);
+  }
   .btn-quiet {
     background: color-mix(in srgb, var(--bg-elevated) 78%, transparent);
     color: var(--text);
@@ -265,7 +277,7 @@
   }
   .btn-quiet:hover { color: var(--text); text-decoration: none; border-color: var(--text); }
   @media (max-width: 1180px) {
-    .nav-actions .nav-demo { display: none; }
+    .nav-actions .nav-start { display: none; }
   }
   .drawer-label {
     margin: 0.7rem 0 0.15rem;
@@ -1125,8 +1137,8 @@
     line-height: 1.5;
   }
   .home a { color: inherit; }
-  .home a.btn-ink,
-  .home a.btn-ink:hover { color: var(--bg-base); }
+  .home a.btn-quiet,
+  .home a.btn-quiet:hover { color: var(--text); }
   .home-products a { display: inline-block; margin-top: 0.9rem; font-size: 14px; }
   .home a:hover { color: inherit; }
   .home-quotes {
