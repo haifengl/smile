@@ -45,6 +45,19 @@
   .col-md-9 ol { list-style: decimal; }
   .col-md-9 ul { list-style: disc; }
   .col-md-9 li { margin: 0.25rem 0; }
+  .col-md-9 blockquote {
+    margin: 0 0 1rem;
+    padding: 0.75rem 1rem;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+  .col-md-9 blockquote p:last-child { margin-bottom: 0; }
+  .col-md-9 ul.legal-clauses {
+    list-style: none;
+    padding-left: 0;
+  }
+  .col-md-9 ul.legal-clauses li { margin: 0.35rem 0; }
   :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 }
 
