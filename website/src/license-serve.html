@@ -1,0 +1,230 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - Serve Commercial License
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 order-md-first">
+<h1 id="smile-serve-commercial-enterprise-runtime-license-agreement">SMILE Serve — Commercial Enterprise Runtime License Agreement</h1>
+<p><strong>Version 1.0 · 8 October 2026</strong></p>
+<p>This is the standard form of the commercial runtime license for <strong>SMILE Serve</strong>.
+It becomes binding when an Order Form that names this version is signed. The Order
+Form's scope, fees, quantities, and support terms are incorporated into this
+Agreement.</p>
+<blockquote>
+<p><strong>Scope: self-hosted / on-premises software.</strong> The Customer installs and
+operates SMILE Serve in its own environments. The Licensor does not host the
+software, does not control its availability, and makes <strong>no availability or
+uptime commitment</strong> under this Agreement. What the Licensor commits to is
+<strong>support response and resolution targets</strong> (§5.3, §6.2). A hosted or managed
+offering, if the Licensor ever provides one, would be governed by a <strong>separate
+agreement</strong> (not this one), and only that agreement would carry an availability
+SLA and service credits.</p>
+</blockquote>
+<hr>
+<h2 id="parties">1. Parties</h2>
+<p>This Commercial Enterprise Runtime License Agreement (this &quot;<strong>Agreement</strong>&quot;) is
+between:</p>
+<ul>
+<li><strong>Haifeng Li</strong>, an individual, the author and copyright holder of SMILE Serve
+(the &quot;<strong>Licensor</strong>&quot;); and</li>
+<li><strong>the customer identified on the Order Form</strong> (the &quot;<strong>Customer</strong>&quot;).</li>
+</ul>
+<p>Commercial licenses are granted by the Licensor and administered by
+<strong>HALO.AI LLC</strong>, a New York limited liability company, as the Licensor's
+authorized licensing agent and reseller (the &quot;<strong>Commercial Agent</strong>&quot;).</p>
+<h2 id="definitions">2. Definitions</h2>
+<ul>
+<li><strong>&quot;Order Form&quot;</strong> — the ordering document (or online checkout) that references
+this Agreement and states the Customer, the licensed scope/quantities, fees,
+term, and support tier.</li>
+<li><strong>&quot;Licensed Product&quot;</strong> — <strong>SMILE Serve</strong>, the inference and model-serving
+runtime, including its components, APIs, and accompanying documentation, in the
+version/build listed on the Order Form.</li>
+<li><strong>&quot;Production Use&quot;</strong> — operation of the Licensed Product in a live environment
+to serve requests other than solely for evaluation, development, or testing.</li>
+<li><strong>&quot;Open Source Version&quot;</strong> — SMILE Serve as distributed by the Licensor under the
+GNU Affero General Public License v3. This Agreement does not govern the Open
+Source Version; the AGPLv3 does.</li>
+</ul>
+<h2 id="grant-of-license">3. Grant of License</h2>
+<p>3.1 <strong>Grant.</strong> Subject to the terms of this Agreement and payment of the Fees, the
+Licensor grants the Customer a <strong>worldwide, non-exclusive, non-transferable</strong>
+license, for the Term, to:</p>
+<ul class="legal-clauses">
+<li>(a) install, execute, and operate the Licensed Product for the Customer's <strong>internal and commercial Production Use</strong>, including to serve the Customer's own applications and its own customers;</li>
+<li>(b) make a reasonable number of copies for backup, failover, and disaster recovery, and to deploy in the Customer's environments (on-premises, cloud, or hybrid) within the scope licensed on the Order Form;</li>
+<li>(c) <strong>modify</strong> the Licensed Product for the Customer's internal use; and</li>
+</ul>
+<p>in each case <strong>free of the AGPLv3 Section 13 obligation</strong> to offer the
+Corresponding Source to users interacting with it over a network — which is the
+principal right this Agreement confers.</p>
+<p>3.2 <strong>Scope.</strong> The grant is limited to the quantities (e.g., node, vCPU, or
+instance limits) and environments stated on the Order Form, and to the Term.</p>
+<p>3.3 <strong>Affiliates and contractors.</strong> The Customer's Affiliates and contractors may
+use the Licensed Product for the Customer's benefit under this Agreement, provided
+the Customer is responsible for their compliance and their use counts toward the
+licensed scope.</p>
+<p>3.4 <strong>Enterprise platform capabilities.</strong> Features designated as enterprise
+capabilities on the Order Form — such as high-availability clustering, zero-GC
+execution, and enterprise management — are licensed only under this Agreement and
+are not part of the Open Source Version.</p>
+<p>3.5 <strong>The Open Source route remains available.</strong> Nothing in this Agreement
+restricts the Customer's rights under the Open Source Version, which the Customer
+may use instead under the AGPLv3.</p>
+<h2 id="ownership">4. Ownership</h2>
+<p>4.1 <strong>Reserved to the Licensor.</strong> The Licensed Product is licensed, not sold. All
+intellectual property rights in the Licensed Product are and remain the exclusive
+property of the Licensor <strong>and the Licensor's licensors</strong> — the Licensor owns the
+works he authored and is licensed to license third-party contributions to SMILE
+under the SMILE Contributor License Agreement. No title or ownership
+passes to the Customer.</p>
+<p>4.2 <strong>Customer's work.</strong> All intellectual property rights in the Customer's
+applications, data, models, and configurations, and in modifications the Customer
+makes to the Licensed Product, are and remain the Customer's. No rights in them
+are granted to the Licensor, except the limited right to use them as needed to
+provide support.</p>
+<p>4.3 <strong>Notices.</strong> The Customer may not remove or alter copyright, license, or
+attribution notices in the Licensed Product.</p>
+<h2 id="term-renewal-support">5. Term; Renewal; Support</h2>
+<p>5.1 <strong>Term.</strong> The license is granted for an initial term stated on the Order Form
+(default <strong>twelve (12) months</strong>) and <strong>automatically renews</strong> for successive
+twelve-month periods, unless either party gives written notice of non-renewal at
+least <strong>sixty (60) days</strong> before the end of the then-current period.</p>
+<p>5.2 <strong>Effect of non-renewal.</strong> On expiry, the Customer's right to operate the
+Licensed Product ends, and the Customer shall cease Production Use. The Customer
+may retain a copy solely to migrate off the Licensed Product for up to
+<strong>ninety (90) days</strong> after expiry.</p>
+<p>5.3 <strong>Support.</strong> During the Term, the Customer receives Support on the terms of
+the support tier stated on the Order Form or in the Licensor's current support
+policy referenced there. Support is measured by the Licensor's <strong>response and
+resolution targets</strong> for the Customer's issues; because the Customer operates the
+software, this Agreement makes <strong>no commitment about the availability or uptime</strong>
+of the Customer's deployment.</p>
+<h2 id="updates-support-and-cve-windows">6. Updates, Support, and CVE Windows</h2>
+<p>6.1 <strong>Updates.</strong> During the Term, the Customer receives Updates (bug and
+correctness fixes) and Upgrades (new features) to the Licensed Product as the
+Licensor makes them generally available, at no additional fee unless the Order
+Form says otherwise.</p>
+<p>6.2 <strong>Support.</strong> Support scope and response targets are as stated on the Order
+Form or in the Licensor's support policy referenced there.</p>
+<p>6.3 <strong>Guaranteed CVE resolution.</strong> For CVEs rated <strong>Critical</strong> or <strong>High</strong> that
+affect the Licensed Product, the Licensor will provide a fix or documented
+mitigation within the resolution window stated on the Order Form, provided the
+Customer's subscription is active and the Customer reports or the issue is
+publicly known.</p>
+<h2 id="fees-and-payment">7. Fees and Payment</h2>
+<p>7.1 <strong>Fees.</strong> Fees are stated on the Order Form and are <strong>annual</strong>. All amounts
+are in U.S. dollars unless the Order Form states otherwise.</p>
+<p>7.2 <strong>Taxes.</strong> Fees are exclusive of sales, use, value-added, withholding, and
+similar taxes, which are the Customer's responsibility (other than taxes on the
+Licensor's income).</p>
+<p>7.3 <strong>Payment terms.</strong> Invoiced amounts are due <strong>thirty (30) days</strong> from the
+invoice date. Late amounts accrue interest at <strong>1.0% per month</strong> or the maximum
+permitted by law, whichever is less.</p>
+<p>7.4 <strong>No refunds.</strong> Fees are non-refundable except as expressly stated in this
+Agreement.</p>
+<h2 id="warranties">8. Warranties</h2>
+<p>8.1 <strong>Authority.</strong> Subject to Section 8.3 and Section 9, the Licensor warrants
+that he has the right to grant the licenses in this Agreement, comprising his own
+authorship and the third-party contributions licensed to him under the SMILE Contributor License Agreement.</p>
+<p>8.2 <strong>Conformance.</strong> For <strong>ninety (90) days</strong> from delivery, the Licensed Product
+will substantially conform to its accompanying documentation. The Customer's
+exclusive remedy, and the Licensor's entire liability, for breach of this warranty
+is repair or replacement of the affected component, or refund of the Fees paid for
+it, at the Licensor's option.</p>
+<p>8.3 <strong>Title and non-infringement.</strong> <strong>The Licensor gives no warranty of title or
+non-infringement other than the indemnity in Section 9, which is the Customer's
+sole remedy for third-party intellectual-property claims.</strong></p>
+<p>8.4 <strong>Disclaimer.</strong> EXCEPT AS EXPRESSLY STATED ABOVE, THE LICENSED PRODUCT IS
+PROVIDED &quot;AS IS&quot;, AND THE LICENSOR DISCLAIMS ALL OTHER WARRANTIES, EXPRESS OR
+IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND
+NON-INFRINGEMENT.</p>
+<h2 id="intellectual-property-indemnity">9. Intellectual Property Indemnity</h2>
+<p>9.1 <strong>Indemnity.</strong> The Licensor shall defend the Customer against a third-party
+claim that the Licensed Product, <strong>as provided by the Licensor</strong> and used within
+the scope of this Agreement, infringes that third party's <strong>copyright or issued
+patent</strong>, and shall pay damages finally awarded by a court of competent
+jurisdiction, or amounts of a settlement the Licensor approves in writing, subject
+to Section 9.4 and the cap in Section 10.</p>
+<p>9.2 <strong>Conditions.</strong> The Customer must: notify the Licensor promptly in writing of
+the claim; give the Licensor sole control of the defense and settlement; provide
+reasonable cooperation and information; and make no admission or settlement without
+the Licensor's written consent.</p>
+<p>9.3 <strong>Exclusions.</strong> The indemnity does <strong>not</strong> apply to claims arising from:</p>
+<ul class="legal-clauses">
+<li>(a) the Customer's modifications to the Licensed Product, or the combination of the Licensed Product with any product, service, model, or data not provided by the Licensor;</li>
+<li>(b) use of the Licensed Product outside the scope of this Agreement, or in breach of it;</li>
+<li>(c) a version of the Licensed Product other than a current, non-EOL version provided by the Licensor;</li>
+<li>(d) the Customer's continued use after the Licensor has provided a non-infringing replacement or modification and the Customer could reasonably adopt it; or</li>
+<li>(e) the Customer's applications, models, or data, or third-party or open-source components the Customer combines with the Licensed Product.</li>
+</ul>
+<p>9.4 <strong>Sole remedy.</strong> At the Licensor's election and expense, the Licensor may:
+procure the right for the Customer to continue using the Licensed Product; replace
+or modify it so it is non-infringing; or, if neither is reasonably available,
+terminate this Agreement as to the affected component and refund prepaid, unused
+Fees for it. This Section 9.4 is the Licensor's sole obligation, and the Customer's
+sole remedy, for any third-party IP claim, in place of any other warranty or remedy
+of non-infringement.</p>
+<h2 id="limitation-of-liability">10. Limitation of Liability</h2>
+<p>10.1 <strong>Cap.</strong> EXCEPT FOR (i) BREACH OF CONFIDENTIALITY AND (ii) GROSS NEGLIGENCE OR
+WILLFUL MISCONDUCT, EACH PARTY'S AGGREGATE LIABILITY UNDER THIS AGREEMENT —
+<strong>INCLUDING ITS LIABILITY UNDER SECTION 9 (INDEMNITY)</strong> — SHALL NOT EXCEED THE
+<strong>TOTAL FEES PAID BY THE CUSTOMER IN THE TWELVE (12) MONTHS IMMEDIATELY PRECEDING
+THE EVENT GIVING RISE TO THE CLAIM</strong>.</p>
+<p>10.2 <strong>Consequential damages.</strong> NEITHER PARTY IS LIABLE FOR INDIRECT, INCIDENTAL,
+SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR FOR LOST PROFITS, REVENUE, DATA, OR
+GOODWILL, HOWEVER CAUSED.</p>
+<p>10.3 <strong>Support remedies.</strong> As this is self-hosted software, failure to meet a
+support response or resolution target is a service matter governed by the applicable
+support policy, and is not by itself a breach giving rise to termination or damages.</p>
+<p>10.4 <strong>Risk allocation.</strong> The parties acknowledge that these limits are part of the
+basis of the bargain and are reflected in the Fees.</p>
+<h2 id="termination">11. Termination</h2>
+<p>11.1 <strong>Termination for breach.</strong> Either party may terminate this Agreement if the
+other materially breaches and fails to cure within <strong>thirty (30) days</strong> of written
+notice.</p>
+<p>11.2 <strong>Effect of termination.</strong> On termination or expiry, the Customer shall cease
+Production Use of the Licensed Product, except for the <strong>ninety (90)-day</strong>
+migration period in Section 5.2.</p>
+<p>11.3 <strong>Survival.</strong> Sections 4, 7 (accrued fees), 9, 10, 12, and 13 survive.</p>
+<h2 id="confidentiality-audit">12. Confidentiality; Audit</h2>
+<p>12.1 <strong>Confidentiality.</strong> Each party shall protect the other's confidential
+information with at least reasonable care and use it only to perform this
+Agreement. This obligation survives for <strong>five (5) years</strong> (indefinitely for trade
+secrets).</p>
+<p>12.2 <strong>Audit.</strong> The Licensor may, no more than <strong>once per year</strong> and on reasonable
+notice, audit the Customer's deployment for compliance with the Order Form scope.
+Audits are at the Licensor's expense, subject to confidentiality, and require no
+access to the Customer's source code, models, or end-user data.</p>
+<h2 id="general">13. General</h2>
+<p>13.1 <strong>Governing law; venue.</strong> This Agreement is governed by the laws of the State
+of New York, without regard to conflict-of-laws rules, and the parties submit to the
+exclusive jurisdiction of the state and federal courts located in New York.</p>
+<p>13.2 <strong>Assignment.</strong> Neither party may assign this Agreement without the other's
+written consent, except to a successor in a merger or sale of substantially all
+assets, provided the successor assumes this Agreement.</p>
+<p>13.3 <strong>Survival of Customer rights on agency change.</strong> <strong>The Customer's
+rights under this Agreement are granted by the Licensor as the ultimate licensor
+and survive the termination of the Commercial Agent's authority and any
+dissolution of the Commercial Agent.</strong> The Commercial Agent's authority to grant
+licenses on the Licensor's behalf is documented in the Commercial Licensing Agency
+&amp; Reseller Agreement between the Licensor and the Commercial Agent.</p>
+<p>13.4 <strong>Notices.</strong> As stated on the Order Form, or to such other address as a party
+designates in writing. Notices by email are effective when acknowledged.</p>
+<p>13.5 <strong>Entire agreement.</strong> This Agreement, with the Order Form and any Schedules,
+is the entire agreement between the parties on its subject and supersedes prior
+discussions on it. It is not the entire agreement on the <em>ownership</em> of the SMILE
+works; that subject is governed by the agreement between the Licensor and the
+Commercial Agent.</p>
+<p>13.6 <strong>Amendment.</strong> Any amendment must be in writing and signed by both parties.</p>
+<p>13.7 <strong>Severability; counterparts.</strong> If any provision is held invalid, the
+remainder stays in effect. This Agreement may be executed in counterparts and by
+electronic signature.</p>
+<p>13.8 <strong>No third-party beneficiaries.</strong> Except for the Licensor's licensors as to
+Section 4, this Agreement confers no rights on any third party.</p>
+
+<p><a href="licensing.html">Commercial licensing</a></p>
+<p><button type="button" class="btn btn-primary" data-contact-open>Request a Demo</button></p>
+</div>
