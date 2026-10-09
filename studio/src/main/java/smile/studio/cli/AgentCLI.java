@@ -1218,26 +1218,16 @@ public class AgentCLI extends JPanel {
 
     /** Compacts conversation session by summarization. */
     private void compact(String instructions, Intent intent) {
-        var prompt = "";
-        try (var is = ioa.llm.Conversation.class.getResourceAsStream("/ioa/llm/compact.md")) {
-            if (is == null) {
-                logger.error("ioa.llm.compact not found.");
-            } else {
-                // Reads all bytes and converts them into a String using UTF-8 encoding
-                prompt = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            }
-        } catch (IOException ex) {
-            logger.error("Failed to read compact instructions: {}", ex.getMessage());
-        }
-
+        String extra = instructions == null ? "" : instructions.replaceFirst("^compact\\s*", "").trim();
+        var prompt = ioa.llm.Conversation.compactPrompt();
         if (prompt.isBlank()) {
             continueAfterCompact = false;
             logger.error("No compact instructions specified.");
             return;
         }
 
-        if (!instructions.isBlank()) {
-            prompt = prompt + "\n\n" + instructions;
+        if (!extra.isBlank()) {
+            prompt = prompt + "\n\n" + extra;
         }
 
         intent.setStatus("Compacting...");
