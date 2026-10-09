@@ -1,86 +1,81 @@
 <header class="site-header" id="site-header">
-  <div class="masthead">
-    <a href="index.html" class="masthead-link">
-      <img src="images/smile.png" alt="SMILE logo" class="masthead-logo">
-      <span class="tagline">SMILE — Statistical Machine Intelligence &amp; Learning Engine</span>
-    </a>
-  </div>
   <nav class="nav-bar" aria-label="Primary">
+    <a class="nav-word" href="index.html">SMILE</a>
     <ul class="nav-links">
       <li>
-        <button type="button" aria-expanded="false" aria-haspopup="true">Overview</button>
-        <ul class="nav-dropdown glass">
-          <li><a href="quickstart.html">Quick Start</a></li>
-          <li><a href="studio.html">SMILE Studio</a></li>
-          <li><a href="tutorial.html">Tutorial</a></li>
-          <li><a href="data.html">Data Processing</a></li>
-          <li><a href="data-io.html">Data Import and Export</a></li>
-          <li><a href="visualization.html">Data Visualization</a></li>
-          <li><a href="vegalite.html">Declarative Visualization</a></li>
-          <li><a href="faq.html">FAQ</a></li>
-          <li><a href="licensing.html">Licensing</a></li>
+        <button type="button" aria-expanded="false" aria-haspopup="true">Products</button>
+        <ul class="nav-dropdown">
+          <li><a href="libraries.html">Libraries</a></li>
+          <li><a href="serve.html">Serve</a></li>
+          <li><a href="studio.html">Studio</a></li>
         </ul>
       </li>
-      <li>
-        <button type="button" aria-expanded="false" aria-haspopup="true">Supervised Learning</button>
-        <ul class="nav-dropdown glass">
-          <li><a href="classification.html">Classification</a></li>
-          <li><a href="regression.html">Regression</a></li>
-          <li><a href="deep-learning.html">Deep Learning</a></li>
-          <li><a href="time-series.html">Time Series</a></li>
-          <li><a href="sequence-labeling.html">Sequence Labeling</a></li>
-          <li><a href="nlp.html">Natural Language Processing</a></li>
-          <li><a href="feature-engineering.html">Feature Engineering</a></li>
-          <li><a href="model-validation.html">Model Validation</a></li>
-          <li><a href="hpo.html">Hyperparameter Optimization</a></li>
-          <li><a href="training.html">Unified Training Interface</a></li>
-        </ul>
+      <li class="nav-docs">
+        <button type="button" aria-expanded="false" aria-haspopup="true">Docs</button>
+        <div class="nav-panel">
+          <div>
+            <p>Start</p>
+            <a href="quickstart.html">Quick Start</a>
+            <a href="tutorial.html">Tutorial</a>
+            <a href="data.html">Data Processing</a>
+            <a href="data-io.html">Data Import and Export</a>
+            <a href="visualization.html">Data Visualization</a>
+            <a href="vegalite.html">Declarative Visualization</a>
+            <a href="faq.html">FAQ</a>
+          </div>
+          <div>
+            <p>Supervised</p>
+            <a href="classification.html">Classification</a>
+            <a href="regression.html">Regression</a>
+            <a href="deep-learning.html">Deep Learning</a>
+            <a href="time-series.html">Time Series</a>
+            <a href="sequence-labeling.html">Sequence Labeling</a>
+            <a href="nlp.html">Natural Language Processing</a>
+            <a href="feature-engineering.html">Feature Engineering</a>
+            <a href="model-validation.html">Model Validation</a>
+            <a href="hpo.html">Hyperparameter Optimization</a>
+            <a href="training.html">Unified Training Interface</a>
+          </div>
+          <div>
+            <p>Unsupervised</p>
+            <a href="clustering.html">Clustering</a>
+            <a href="vector-quantization.html">Vector Quantization</a>
+            <a href="anomaly-detection.html">Anomaly Detection</a>
+            <a href="association-rule.html">Association Rule Mining</a>
+            <a href="mds.html">Multi-Dimensional Scaling</a>
+            <a href="manifold.html">Manifold Learning</a>
+          </div>
+          <div>
+            <p>GenAI</p>
+            <a href="llm.html">Large Language Models</a>
+            <a href="computer-vision.html">Computer Vision</a>
+            <a href="onnx.html">ONNX</a>
+            <a href="onnx-genai.html">ONNX GenAI</a>
+            <a href="serve.html">SMILE Serve</a>
+            <p>Math</p>
+            <a href="linear-algebra.html">Linear Algebra</a>
+            <a href="statistics.html">Statistics</a>
+            <a href="interpolation.html">Interpolation</a>
+            <a href="wavelet.html">Wavelet</a>
+            <a href="compressed-sensing.html">Compressed Sensing</a>
+            <a href="graph.html">Graph Data Structure</a>
+          </div>
+          <div>
+            <p>API</p>
+            <a href="api/java/index.html" target="_blank" rel="noopener">Java</a>
+            <a href="api/scala/index.html" target="_blank" rel="noopener">Scala</a>
+            <a href="api/kotlin/index.html" target="_blank" rel="noopener">Kotlin</a>
+            <a href="api/json/index.html" target="_blank" rel="noopener">JSON</a>
+            <a href="api/clojure/index.html" target="_blank" rel="noopener">Clojure</a>
+          </div>
+        </div>
       </li>
-      <li>
-        <button type="button" aria-expanded="false" aria-haspopup="true">Unsupervised Learning</button>
-        <ul class="nav-dropdown glass">
-          <li><a href="clustering.html">Clustering</a></li>
-          <li><a href="vector-quantization.html">Vector Quantization</a></li>
-          <li><a href="anomaly-detection.html">Anomaly Detection</a></li>
-          <li><a href="association-rule.html">Association Rule Mining</a></li>
-          <li><a href="mds.html">Multi-Dimensional Scaling</a></li>
-          <li><a href="manifold.html">Manifold Learning</a></li>
-        </ul>
-      </li>
-      <li>
-        <button type="button" aria-expanded="false" aria-haspopup="true">GenAI</button>
-        <ul class="nav-dropdown glass">
-          <li><a href="llm.html">Large Language Models</a></li>
-          <li><a href="computer-vision.html">Computer Vision</a></li>
-          <li><a href="onnx.html">ONNX</a></li>
-          <li><a href="onnx-genai.html">ONNX GenAI</a></li>
-          <li><a href="serve.html">SMILE Serve</a></li>
-        </ul>
-      </li>
-      <li>
-        <button type="button" aria-expanded="false" aria-haspopup="true">Math</button>
-        <ul class="nav-dropdown glass">
-          <li><a href="linear-algebra.html">Linear Algebra</a></li>
-          <li><a href="statistics.html">Statistics</a></li>
-          <li><a href="interpolation.html">Interpolation</a></li>
-          <li><a href="wavelet.html">Wavelet</a></li>
-          <li><a href="compressed-sensing.html">Compressed Sensing</a></li>
-          <li><a href="graph.html">Graph Data Structure</a></li>
-        </ul>
-      </li>
-      <li>
-        <button type="button" aria-expanded="false" aria-haspopup="true">API</button>
-        <ul class="nav-dropdown glass">
-          <li><a href="api/java/index.html" target="_blank" rel="noopener">Java</a></li>
-          <li><a href="api/scala/index.html" target="_blank" rel="noopener">Scala</a></li>
-          <li><a href="api/kotlin/index.html" target="_blank" rel="noopener">Kotlin</a></li>
-          <li><a href="api/json/index.html" target="_blank" rel="noopener">JSON</a></li>
-          <li><a href="api/clojure/index.html" target="_blank" rel="noopener">Clojure</a></li>
-        </ul>
-      </li>
+      <li><button type="button" data-contact-open>Enterprise</button></li>
+      <li><a href="licensing.html">Licensing</a></li>
     </ul>
     <div class="nav-actions">
-      <button type="button" class="btn btn-primary btn-sm nav-contact" data-contact-open>Contact Us</button>
+      <button type="button" class="btn btn-quiet nav-demo" data-contact-open>Get a demo</button>
+      <a class="btn btn-ink nav-start" href="quickstart.html">Start</a>
       <button type="button" class="icon-btn" id="search-toggle" aria-label="Open search" title="Search (⌘K)">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3-3"/></svg>
       </button>
@@ -91,19 +86,23 @@
     </div>
   </nav>
   <div class="mobile-drawer" id="mobile-drawer">
-    <button type="button" class="btn btn-primary mobile-contact" data-contact-open>Contact Us</button>
-    <details><summary>Overview</summary>
+    <button type="button" class="btn btn-ink mobile-contact" data-contact-open>Get a demo</button>
+    <a class="btn btn-quiet mobile-start" href="quickstart.html">Start</a>
+    <details><summary>Products</summary>
+      <a href="libraries.html">Libraries</a>
+      <a href="serve.html">Serve</a>
+      <a href="studio.html">Studio</a>
+    </details>
+    <details><summary>Docs</summary>
+      <p class="drawer-label">Start</p>
       <a href="quickstart.html">Quick Start</a>
-      <a href="studio.html">SMILE Studio</a>
       <a href="tutorial.html">Tutorial</a>
       <a href="data.html">Data Processing</a>
       <a href="data-io.html">Data Import and Export</a>
       <a href="visualization.html">Data Visualization</a>
       <a href="vegalite.html">Declarative Visualization</a>
       <a href="faq.html">FAQ</a>
-      <a href="licensing.html">Licensing</a>
-    </details>
-    <details><summary>Supervised Learning</summary>
+      <p class="drawer-label">Supervised</p>
       <a href="classification.html">Classification</a>
       <a href="regression.html">Regression</a>
       <a href="deep-learning.html">Deep Learning</a>
@@ -114,34 +113,34 @@
       <a href="model-validation.html">Model Validation</a>
       <a href="hpo.html">Hyperparameter Optimization</a>
       <a href="training.html">Unified Training Interface</a>
-    </details>
-    <details><summary>Unsupervised Learning</summary>
+      <p class="drawer-label">Unsupervised</p>
       <a href="clustering.html">Clustering</a>
       <a href="vector-quantization.html">Vector Quantization</a>
       <a href="anomaly-detection.html">Anomaly Detection</a>
       <a href="association-rule.html">Association Rule Mining</a>
       <a href="mds.html">Multi-Dimensional Scaling</a>
       <a href="manifold.html">Manifold Learning</a>
-    </details>
-    <details><summary>GenAI</summary>
-      <a href="llm.html">Large Language Model (LLM)</a>
+      <p class="drawer-label">GenAI</p>
+      <a href="llm.html">Large Language Models</a>
       <a href="computer-vision.html">Computer Vision</a>
       <a href="onnx.html">ONNX</a>
       <a href="onnx-genai.html">ONNX GenAI</a>
       <a href="serve.html">SMILE Serve</a>
-    </details>
-    <details><summary>Math</summary>
+      <p class="drawer-label">Math</p>
       <a href="linear-algebra.html">Linear Algebra</a>
       <a href="statistics.html">Statistics</a>
       <a href="interpolation.html">Interpolation</a>
       <a href="wavelet.html">Wavelet</a>
       <a href="compressed-sensing.html">Compressed Sensing</a>
       <a href="graph.html">Graph Data Structure</a>
-    </details>
-    <details><summary>API</summary>
+      <p class="drawer-label">API</p>
       <a href="api/java/index.html" target="_blank" rel="noopener">Java</a>
       <a href="api/scala/index.html" target="_blank" rel="noopener">Scala</a>
       <a href="api/kotlin/index.html" target="_blank" rel="noopener">Kotlin</a>
+      <a href="api/json/index.html" target="_blank" rel="noopener">JSON</a>
+      <a href="api/clojure/index.html" target="_blank" rel="noopener">Clojure</a>
     </details>
+    <button type="button" data-contact-open>Enterprise</button>
+    <a href="licensing.html">Licensing</a>
   </div>
 </header>
