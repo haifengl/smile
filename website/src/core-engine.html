@@ -1,0 +1,146 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - Core Engine
+---
+
+<div class="col-md-9 order-md-first product-page">
+  <p class="page-kicker">Core Engine</p>
+  <h1 id="core-engine">Embed it in the application.</h1>
+  <p class="lead">SMILE Core Engine is the set of algorithms you call from Java, Scala, or Kotlin. A commercial license covers proprietary distribution, without the GPLv3 source-disclosure obligation.</p>
+  <p class="product-actions">
+    <a class="btn btn-accent" href="quickstart.html">Start</a>
+    <a class="btn btn-quiet" href="license-libraries.html">Read the license</a>
+  </p>
+  <p>The license to keep shipping what was already built continues. Updates, support, and critical and high CVE windows are the annual maintenance term.</p>
+
+  <h2 id="what-you-embed">What you embed</h2>
+  <p>Classification, regression, clustering, deep learning, and the data layer live in the same process as the product. There is no separate service to operate.</p>
+  <div class="bento">
+    <a class="bento-card glass bento-half" href="nlp.html" style="text-decoration:none;color:inherit">
+      <h3>Classic ML &amp; NLP</h3>
+      <p>Hundreds of algorithms — classification, regression, clustering, manifold learning, and classic NLP — behind a clean API.</p>
+    </a>
+    <a class="bento-card glass bento-half" href="deep-learning.html" style="text-decoration:none;color:inherit">
+      <h3>Deep Learning</h3>
+      <p>Train and deploy neural nets on CPU or GPU. And an idiomatic Java API for running ONNX and ONNX-GenAI models.</p>
+    </a>
+    <a class="bento-card glass bento-half" href="llm.html" style="text-decoration:none;color:inherit">
+      <h3>Large Language Models</h3>
+      <p>Java-native LLM inference with tiktoken, RoPE, transformer primitives, KV cache management with Radix, quantization, tool calling, chat templates, and OpenAI-compatible REST server integration.</p>
+    </a>
+    <a class="bento-card glass bento-half" href="statistics.html" style="text-decoration:none;color:inherit">
+      <h3>Math, Statistics &amp; Graphs</h3>
+      <p>Dense and sparse matrices and tensors, matrix decompositions, statistical distributions, hypothesis tests, interpolation, wavelet, compressed sensing, and graph data structure.</p>
+    </a>
+  </div>
+
+  <div class="code-playground glass" data-lang="java">
+        <div class="playground-toolbar">
+          <button type="button" class="lang-tab is-active" data-lang="java" data-pane="hero-java">Java</button>
+          <button type="button" class="lang-tab" data-lang="scala" data-pane="hero-scala">Scala</button>
+          <button type="button" class="lang-tab" data-lang="kotlin" data-pane="hero-kotlin">Kotlin</button>
+          <span class="toolbar-spacer"></span>
+          <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+          {% include "components/playground-extra-actions.njk" %}
+        </div>
+        <div id="hero-java" class="hero-pane">
+          <pre class="playground-source language-java"><code class="language-java">var iris = Read.arff("iris.arff");
+var model = RandomForest.fit(Formula.lhs("class"), iris);
+System.out.println(model.metrics());
+System.out.println(model.predict(iris.get(0)));</code></pre>
+        </div>
+        <div id="hero-scala" class="hero-pane" hidden>
+          <pre class="playground-source language-scala"><code class="language-scala">val iris = read.arff("iris.arff")
+val model = randomForest("class" ~ ".", iris)
+println(model.metrics)
+println(model.predict(iris(0)))</code></pre>
+        </div>
+        <div id="hero-kotlin" class="hero-pane" hidden>
+          <pre class="playground-source language-kotlin"><code class="language-kotlin">val iris = read.arff("iris.arff")
+val model = randomForest(Formula.lhs("class"), iris)
+println(model.metrics())
+println(model.predict(iris[0]))</code></pre>
+        </div>
+        <div class="playground-editor" hidden></div>
+      </div>
+
+      <div class="bento">
+        <a class="bento-card glass bento-half" href="classification.html" style="text-decoration:none;color:inherit">
+          <h3>Speed</h3>
+          <p>Advanced data structures deliver state-of-the-art performance — often faster than R, Python, Spark, or H2O.</p>
+          <img src="images/benchm-ml.png" alt="Training time benchmark" style="width:100%;margin-top:0.75rem;border-radius:0.5rem">
+        </a>
+        <div class="bento-card glass bento-half">
+          <h3>Interactive visualization</h3>
+          <p>Interactive Swing plots and <a href="vegalite.html">Vega-Lite</a> charts in the browser.</p>
+          <img src="images/surface.png" alt="Shaded surface of a matrix" style="width:100%;margin-top:0.75rem;border-radius:0.5rem">
+        </div>
+      </div>
+</div>
+
+<div class="col-md-3 page-rail">
+  <aside class="algo-panel glass" aria-label="Built-in algorithms">
+    <p class="toc-title">Built-in Algorithms</p>
+    <div class="algo-scroll">
+      <dl>
+          <dt><a href="api/java/smile/llm/package-summary.html">Large Language Models</a></dt>
+          <dd>
+            <a href="api/java/smile/llm/LanguageModel.html">Language Model</a>,
+            <a href="api/java/smile/llm/model/llama/Llama.html">Llama</a>,
+            <a href="api/java/smile/llm/model/qwen/Qwen.html">Qwen</a>,
+            <a href="api/java/smile/llm/engine/InferenceEngine.html">Inference Engine</a>,
+            <a href="api/java/smile/llm/tokenizer/Tiktoken.html">Tiktoken</a>, etc.
+          </dd>
+          <dt><a href="api/java/smile/deep/package-summary.html">Deep Learning</a></dt>
+          <dd>
+            <a href="api/java/smile/deep/Model.html">Model</a>,
+            <a href="api/java/smile/deep/layer/Layer.html">Layers</a>,
+            <a href="api/java/smile/deep/tensor/Tensor.html">Tensor</a>,
+            <a href="api/java/smile/vision/EfficientNet.html">EfficientNet</a>, etc.
+          </dd>
+          <dt><a href="api/java/smile/classification/package-summary.html">Classification</a></dt>
+          <dd>
+            <a href="api/java/smile/classification/RandomForest.html">Random Forest</a>,
+            <a href="api/java/smile/classification/GradientTreeBoost.html">Gradient Boosting</a>,
+            <a href="api/java/smile/classification/SVM.html">SVM</a>,
+            <a href="api/java/smile/classification/LogisticRegression.html">Logistic Regression</a>, etc.
+          </dd>
+          <dt><a href="api/java/smile/regression/package-summary.html">Regression</a></dt>
+          <dd>
+            <a href="api/java/smile/regression/OLS.html">OLS</a>,
+            <a href="api/java/smile/regression/LASSO.html">LASSO</a>,
+            <a href="api/java/smile/regression/RandomForest.html">Random Forest</a>,
+            <a href="api/java/smile/regression/GaussianProcessRegression.html">Gaussian Process</a>, etc.
+          </dd>
+          <dt><a href="api/java/smile/clustering/package-summary.html">Clustering</a></dt>
+          <dd>
+            <a href="api/java/smile/clustering/KMeans.html">K-Means</a>,
+            <a href="api/java/smile/clustering/DBSCAN.html">DBSCAN</a>,
+            <a href="api/java/smile/clustering/HierarchicalClustering.html">Hierarchical</a>,
+            <a href="api/java/smile/clustering/SpectralClustering.html">Spectral</a>, etc.
+          </dd>
+          <dt><a href="api/java/smile/manifold/package-summary.html">Manifold Learning</a></dt>
+          <dd>
+            <a href="api/java/smile/manifold/UMAP.html">UMAP</a>,
+            <a href="api/java/smile/manifold/TSNE.html">t-SNE</a>,
+            <a href="api/java/smile/manifold/IsoMap.html">IsoMap</a>,
+            <a href="api/java/smile/manifold/LLE.html">LLE</a>, etc.
+          </dd>
+          <dt><a href="api/java/smile/nlp/package-summary.html">NLP</a></dt>
+          <dd>
+            <a href="api/java/smile/nlp/tokenizer/SimpleTokenizer.html">Tokenizer</a>,
+            <a href="api/java/smile/nlp/stemmer/PorterStemmer.html">Porter</a>,
+            <a href="api/java/smile/nlp/embedding/Word2Vec.html">Word2Vec</a>,
+            <a href="api/java/smile/nlp/relevance/BM25.html">BM25</a>, etc.
+          </dd>
+          <dt><a href="api/java/smile/math/matrix/package-summary.html">Linear Algebra</a></dt>
+          <dd>
+            <a href="api/java/smile/math/matrix/Matrix.html">Matrix</a>,
+            <a href="api/java/smile/math/matrix/SparseMatrix.html">Sparse</a>,
+            LU · SVD · EVD · QR, etc.
+          </dd>
+        </dl>
+    </div>
+  </aside>
+</div>

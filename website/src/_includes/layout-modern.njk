@@ -29,9 +29,22 @@
       }
     })();
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <script>
+    (function () {
+      var queued = [];
+      function stub() { queued.push(arguments); }
+      stub._smileQueue = true;
+      window.vegaEmbed = stub;
+      document.addEventListener('DOMContentLoaded', function () {
+        var embed = window.vegaEmbed;
+        if (typeof embed !== 'function' || embed._smileQueue) return;
+        queued.forEach(function (args) { embed.apply(window, args); });
+      });
+    })();
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -60,19 +73,19 @@
       </div>
     </div>
   </div>
-  <script src="js/vendor/prism/prism.min.js"></script>
-  <script src="js/vendor/prism/prism-clike.min.js"></script>
-  <script src="js/vendor/prism/prism-java.min.js"></script>
-  <script src="js/vendor/prism/prism-scala.min.js"></script>
-  <script src="js/vendor/prism/prism-kotlin.min.js"></script>
-  <script src="js/vendor/prism/prism-groovy.min.js"></script>
-  <script src="js/vendor/prism/prism-clojure.min.js"></script>
-  <script src="js/vendor/prism/prism-bash.min.js"></script>
-  <script src="js/vendor/prism/prism-markup.min.js"></script>
+  <script defer src="js/vendor/prism/prism.min.js"></script>
+  <script defer src="js/vendor/prism/prism-clike.min.js"></script>
+  <script defer src="js/vendor/prism/prism-java.min.js"></script>
+  <script defer src="js/vendor/prism/prism-scala.min.js"></script>
+  <script defer src="js/vendor/prism/prism-kotlin.min.js"></script>
+  <script defer src="js/vendor/prism/prism-groovy.min.js"></script>
+  <script defer src="js/vendor/prism/prism-clojure.min.js"></script>
+  <script defer src="js/vendor/prism/prism-bash.min.js"></script>
+  <script defer src="js/vendor/prism/prism-markup.min.js"></script>
   <script src="js/dedent.js"></script>
   <script src="js/toc.js"></script>
   <script src="js/site.js"></script>
-  <script src="js/search.js"></script>
+  <script defer src="js/search.js"></script>
   <script src="js/playground.js"></script>
 </body>
 </html>
