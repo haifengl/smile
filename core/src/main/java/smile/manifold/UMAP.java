@@ -49,7 +49,7 @@ import smile.util.function.DifferentiableMultivariateFunction;
  * From these topological assumptions, high-dimensional data is represented as a
  * weighted fuzzy simplicial set, and embedded into low dimensions by minimizing
  * cross-entropy via stochastic gradient descent.
- * <h3>References</h3>
+ * <h2>References</h2>
  * <ul>
  *   <li>L. McInnes, J. Healy, and J. Melville. UMAP: Uniform Manifold Approximation
  *       and Projection for Dimension Reduction. arXiv:1802.03426, 2018.</li>
