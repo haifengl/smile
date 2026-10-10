@@ -10,7 +10,7 @@ unmanagedSources / excludeFilter := (unmanagedSources / excludeFilter).value || 
 enablePlugins(KotlinPlugin)
 kotlinLib("stdlib")
 
-kotlinVersion := "2.4.20"
+kotlinVersion := "2.4.21"
 kotlincJvmTarget := "25"
 
 // The Kotlin scripting host API used by smile.studio.kernel.ScriptRunnerBridge.

@@ -140,14 +140,14 @@ libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-repl"        % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
   "ch.qos.logback"    % "logback-classic"    % "1.6.5",
-  "com.openai"        % "openai-java"        % "4.75.1",
-  "com.anthropic"     % "anthropic-java"     % "2.68.0",
-  "com.google.genai"  % "google-genai"       % "1.75.0",
+  "com.openai"        % "openai-java"        % "4.80.0",
+  "com.anthropic"     % "anthropic-java"     % "2.71.0",
+  "com.google.genai"  % "google-genai"       % "1.76.0",
   "org.commonmark"    % "commonmark"         % "0.30.0",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.6.0",
   "org.eclipse.lsp4j" % "org.eclipse.lsp4j"  % "1.0.0",
   "com.fifesoft"      % "rsyntaxtextarea"    % "4.0.1",
-  "com.fifesoft"      % "rstaui"             % "3.3.2",
+  "com.fifesoft"      % "rstaui"             % "4.0.0",
   "com.fifesoft"      % "spellchecker"       % "3.4.1",
   "com.formdev"       % "flatlaf"            % "3.7.2",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
@@ -157,14 +157,20 @@ libraryDependencies ++= Seq(
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "com.github.serpapi"          % "serpapi-java" % "1.2.0",
   "com.google.code.gson"        % "gson"         % "2.14.0", // evict older version used by serpapi
-  // Kotlin scripting host, required at runtime by KotlinKernel. The kotlin
-  // module compiles against these as Provided; the host supplies them.
-  // Keep in sync with the `kotlin` version in gradle/libs.versions.toml.
-  "org.jetbrains.kotlin" % "kotlin-scripting-jvm-host"    % "2.4.20",
-  "org.jetbrains.kotlin" % "kotlin-scripting-common"      % "2.4.20",
-  "org.jetbrains.kotlin" % "kotlin-scripting-jvm"         % "2.4.20",
-  "org.jetbrains.kotlin" % "kotlin-compiler-embeddable"   % "2.4.20"
 )
+
+// Kotlin scripting host, required at runtime by KotlinKernel. The kotlin
+// module compiles against these as Provided; the host supplies them.
+// Keep in sync with the `kotlin` version in gradle/libs.versions.toml.
+libraryDependencies ++= {
+  val kotlinV = "2.4.21"
+  Seq(
+    "org.jetbrains.kotlin" % "kotlin-scripting-jvm-host"    % kotlinV,
+    "org.jetbrains.kotlin" % "kotlin-scripting-common"      % kotlinV,
+    "org.jetbrains.kotlin" % "kotlin-scripting-jvm"         % kotlinV,
+    "org.jetbrains.kotlin" % "kotlin-compiler-embeddable"   % kotlinV
+  )
+}
 
 libraryDependencies ++= {
   val jacksonV = "3.2.3"
@@ -184,7 +190,7 @@ libraryDependencies ++= {
     "org.apache.arrow"   % "arrow-dataset"       % arrowV,
     "org.apache.arrow"   % "arrow-memory-unsafe" % arrowV,
    ("org.apache.avro"    % "avro"                % "1.12.2").exclude("org.slf4j", "slf4j-log4j12"),
-    "org.xerial.snappy"  % "snappy-java"         % "1.1.10.10", // for avro
+    "org.xerial.snappy"  % "snappy-java"         % "1.1.10.11", // for avro
     "com.epam"           % "parso"               % "2.0.14"     // SAS7BDAT
   )
 }
