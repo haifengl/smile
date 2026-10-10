@@ -39,10 +39,7 @@ class SmileRegressorTest {
 
     @BeforeAll
     static void setUp() {
-        spark = SparkSession.builder()
-                .master("local[*]")
-                .appName("SmileRegressorTest")
-                .getOrCreate();
+        spark = SparkTest.createSession("SmileRegressorTest");
     }
 
     @AfterAll
