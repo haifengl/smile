@@ -16,14 +16,11 @@
  */
 package smile.spark;
 
-import java.util.List;
 import org.apache.spark.ml.linalg.VectorUDT;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.junit.jupiter.api.Test;
-import smile.data.type.DataType;
 import smile.data.type.StructType;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class DataTypeUtilsTest {

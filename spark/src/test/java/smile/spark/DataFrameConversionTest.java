@@ -39,10 +39,7 @@ class DataFrameConversionTest {
 
     @BeforeAll
     static void setUp() {
-        spark = SparkSession.builder()
-                .master("local[*]")
-                .appName("DataFrameConversionTest")
-                .getOrCreate();
+        spark = SparkTest.createSession("DataFrameConversionTest");
     }
 
     @AfterAll

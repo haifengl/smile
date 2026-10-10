@@ -4,14 +4,10 @@ plugins {
 
 dependencies {
     api(project(":core"))
-    compileOnly(libs.spark.core)
-    compileOnly(libs.spark.sql)
-    compileOnly(libs.spark.mllib)
+    compileOnly(libs.bundles.spark)
     compileOnly(libs.hadoop.common)
 
-    testImplementation(libs.spark.core)
-    testImplementation(libs.spark.sql)
-    testImplementation(libs.spark.mllib)
+    testImplementation(libs.bundles.spark)
     testImplementation(libs.hadoop.common)
 }
 
