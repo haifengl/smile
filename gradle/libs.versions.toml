@@ -1,6 +1,6 @@
 [versions]
 arrow = "19.0.0"
-fastxml = "2.22.2"
+fastxml = "2.22.3"
 jackson = "3.2.3"
 jsonschema = "4.38.0"
 # Keep in sync with `kotlinVersion` in kotlin/build.sbt and the Kotlin
