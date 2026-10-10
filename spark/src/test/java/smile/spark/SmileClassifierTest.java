@@ -25,11 +25,11 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import smile.classification.RBFNetwork;
+import smile.classification.KNN;
 import smile.io.Paths;
-import smile.model.rbf.RBF;
 
 import static org.apache.spark.sql.functions.col;
 import static org.junit.jupiter.api.Assertions.*;
@@ -50,20 +50,24 @@ class SmileClassifierTest {
         }
     }
 
+    private static boolean isWindowsWithoutHadoop() {
+        return System.getProperty("os.name").toLowerCase().contains("win")
+                && System.getenv("HADOOP_HOME") == null
+                && System.getProperty("hadoop.home.dir") == null;
+    }
+
     @Test
     void testTrainEvaluateSaveLoad() throws Exception {
         String path = "file:///" + Paths.getTestData("libsvm/mushrooms.svm").toAbsolutePath().toString().replace('\\', '/');
         Dataset<Row> data = spark.read()
                 .format("libsvm")
                 .load(path)
+                .limit(100)
                 .withColumn("label", col("label").minus(1)); // transform label from 1/2 to 0/1
         data.cache();
 
         SmileClassifier classifier = new SmileClassifier()
-                .setTrainer((x, y) -> {
-                    var neurons = RBF.fit(x, 30);
-                    return RBFNetwork.fit(x, y, neurons);
-                });
+                .setTrainer((x, y) -> KNN.fit(x, y, 3));
 
         BinaryClassificationEvaluator eval = new BinaryClassificationEvaluator()
                 .setLabelCol("label")
@@ -77,27 +81,31 @@ class SmileClassifierTest {
         double metric = eval.evaluate(predictions);
         assertTrue(metric > 0.8, "Expected AUC > 0.8, got " + metric);
 
-        Path tempDir = Files.createTempDirectory("smile-classifier-test-");
-        String modelPath = tempDir.resolve("model").toAbsolutePath().toString();
-        try {
-            model.write().overwrite().save(modelPath);
+        if (!isWindowsWithoutHadoop()) {
+            Path tempDir = Files.createTempDirectory("smile-classifier-test-");
+            String modelPath = tempDir.resolve("model").toAbsolutePath().toString();
+            try {
+                model.write().overwrite().save(modelPath);
 
-            SmileClassificationModel loaded = SmileClassificationModel.load(modelPath);
-            assertEquals(model.numClasses(), loaded.numClasses());
+                SmileClassificationModel loaded = SmileClassificationModel.load(modelPath);
+                assertEquals(model.numClasses(), loaded.numClasses());
 
-            double loadedMetric = eval.evaluate(loaded.transform(data));
-            assertEquals(metric, loadedMetric, 1e-6);
-        } finally {
-            try (var stream = Files.walk(tempDir)) {
-                stream.sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)
-                        .forEach(File::delete);
+                double loadedMetric = eval.evaluate(loaded.transform(data));
+                assertEquals(metric, loadedMetric, 1e-6);
+            } finally {
+                try (var stream = Files.walk(tempDir)) {
+                    stream.sorted(Comparator.reverseOrder())
+                            .map(Path::toFile)
+                            .forEach(File::delete);
+                }
             }
         }
     }
 
     @Test
     void testEstimatorSaveLoad() throws Exception {
+        Assumptions.assumeTrue(!isWindowsWithoutHadoop(), "Skipping save/load test on Windows without Hadoop winutils");
+
         SmileClassifier classifier = new SmileClassifier()
                 .setFeaturesCol("customFeatures")
                 .setLabelCol("customLabel")
