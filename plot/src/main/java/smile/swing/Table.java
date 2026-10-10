@@ -40,7 +40,9 @@ import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
 
 import org.jdesktop.swingx.JXTable;
-import org.jdesktop.swingx.decorator.HighlighterFactory;
+import org.jdesktop.swingx.decorator.ColorHighlighter;
+import org.jdesktop.swingx.decorator.HighlightPredicate;
+import org.jdesktop.swingx.plaf.UIDependent;
 
 import smile.swing.table.ByteArrayCellRenderer;
 import smile.swing.table.ColorCellEditor;
@@ -144,6 +146,10 @@ public class Table extends JXTable {
      * Row header.
      */
     private RowHeader rowHeader;
+    /**
+     * Stripe highlighter for alternate rows.
+     */
+    private AlternateRowHighlighter stripeHighlighter;
 
     /**
      * Constructs a default JTable that is initialized with a default data
@@ -212,12 +218,92 @@ public class Table extends JXTable {
         setAutoResizeMode(AUTO_RESIZE_OFF);
         setCellSelectionEnabled(true);
         setColumnControlVisible(true);
-        setHighlighters(HighlighterFactory.createAlternateStriping());
+        stripeHighlighter = new AlternateRowHighlighter(this);
+        setHighlighters(stripeHighlighter);
         setSortOrderCycle(SortOrder.ASCENDING, SortOrder.DESCENDING, SortOrder.UNSORTED);
         TableCopyPasteAdapter.apply(this);
         getTableHeader().setDefaultRenderer(new MultiColumnSortTableHeaderCellRenderer());
         // workaround with table row filter to let it register to table changes
         firePropertyChange("model", getModel(), getModel());
+    }
+
+    @Override
+    public void updateUI() {
+        super.updateUI();
+        if (stripeHighlighter != null) {
+            stripeHighlighter.updateUI();
+        }
+    }
+
+    @Override
+    public void setBackground(Color color) {
+        super.setBackground(color);
+        if (stripeHighlighter != null) {
+            stripeHighlighter.updateUI();
+        }
+    }
+
+    /**
+     * Theme-aware alternate row stripe highlighter.
+     */
+    private static class AlternateRowHighlighter extends ColorHighlighter implements UIDependent {
+        private final JTable table;
+
+        AlternateRowHighlighter(JTable table) {
+            super(HighlightPredicate.ODD, null, null);
+            this.table = table;
+            updateUI();
+        }
+
+        @Override
+        public void updateUI() {
+            Color altBg = UIManager.getColor("Table.alternateRowColor");
+            if (altBg == null) {
+                Color bg = table != null ? table.getBackground() : null;
+                if (bg == null) {
+                    bg = UIManager.getColor("Table.background");
+                }
+                if (bg == null) {
+                    bg = Color.WHITE;
+                }
+                altBg = createAlternateRowColor(bg);
+            }
+            setBackground(altBg);
+        }
+    }
+
+    /**
+     * Computes an alternate row background color that is aesthetically harmonious
+     * and maintains high contrast with text in both light and dark themes.
+     *
+     * @param bg the base table background color.
+     * @return the alternate row background color.
+     */
+    public static Color createAlternateRowColor(Color bg) {
+        if (bg == null) {
+            return new Color(245, 245, 245);
+        }
+
+        // Relative luminance per ITU-R BT.709
+        double luminance = (0.2126 * bg.getRed() + 0.7152 * bg.getGreen() + 0.0722 * bg.getBlue()) / 255.0;
+
+        if (luminance < 0.5) {
+            // Dark theme: subtly lighten the background (~6% towards white) so that
+            // it provides visible zebra striping while keeping the dark background
+            // needed for high contrast against light text.
+            int r = Math.min(255, bg.getRed() + Math.max(10, (int) Math.round((255 - bg.getRed()) * 0.06)));
+            int g = Math.min(255, bg.getGreen() + Math.max(10, (int) Math.round((255 - bg.getGreen()) * 0.06)));
+            int b = Math.min(255, bg.getBlue() + Math.max(10, (int) Math.round((255 - bg.getBlue()) * 0.06)));
+            return new Color(r, g, b);
+        } else {
+            // Light theme: subtly darken the background (~4.5% towards black) so that
+            // it provides visible zebra striping while keeping the light background
+            // needed for high contrast against dark text.
+            int r = Math.max(0, bg.getRed() - Math.max(10, (int) Math.round(bg.getRed() * 0.045)));
+            int g = Math.max(0, bg.getGreen() - Math.max(10, (int) Math.round(bg.getGreen() * 0.045)));
+            int b = Math.max(0, bg.getBlue() - Math.max(10, (int) Math.round(bg.getBlue() * 0.045)));
+            return new Color(r, g, b);
+        }
     }
     
     @Override
