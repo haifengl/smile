@@ -1,0 +1,72 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - Studio
+---
+
+<div class="col-md-9 order-md-first product-page">
+  <p class="page-kicker">Agent Studio</p>
+  <h1 id="agent-studio">Explore it, one seat at a time.</h1>
+  <p class="lead">SMILE Studio is the agentic desktop IDE for data science. Free to evaluate. Annual seats cover production use.</p>
+  <p class="product-actions">
+    <a class="btn btn-accent" href="studio.html#studio-first">Start</a>
+    <a class="btn btn-quiet" href="license-studio.html">Read the license</a>
+  </p>
+
+  <h2 id="what-you-work-in">What you work in</h2>
+  <p>A notebook, an agent panel, and the project sit in one window on your machine. A fitted model leaves as a file you can serve.</p>
+  <div class="bento">
+    <a class="bento-card glass bento-half" href="studio.html#studio-notebook" style="text-decoration:none;color:inherit">
+      <h3>Notebook</h3>
+      <p>Java, Scala, and Python cells in one editor. A prompt field and Tab completion write code into the cell.</p>
+    </a>
+    <a class="bento-card glass bento-half" href="studio.html#studio-ai" style="text-decoration:none;color:inherit">
+      <h3>Agents</h3>
+      <p>Seven agents, each in its own tab, for analysis, Java, Python, product, architecture, coordination, and the desktop.</p>
+    </a>
+    <a class="bento-card glass bento-half" href="studio.html#studio-slash-clair" style="text-decoration:none;color:inherit">
+      <h3>AutoML</h3>
+      <p>Clair takes a data file through profiling, features, model selection, tuning, and evaluation. <code>/automl</code> runs that path end to end.</p>
+    </a>
+    <a class="bento-card glass bento-half" href="studio.html#studio-explorers" style="text-decoration:none;color:inherit">
+      <h3>Export</h3>
+      <p>Double-click a model in the kernel explorer to save a <code>.sml</code> file, or start a REST inference service for it.</p>
+    </a>
+  </div>
+
+  <div class="code-playground glass" data-lang="bash">
+    <div class="playground-toolbar">
+      <span class="lang-tab is-active">Bash</span>
+      <span class="toolbar-spacer"></span>
+      <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+      {% include "components/playground-extra-actions.njk" %}
+    </div>
+    <pre class="playground-source language-bash"><code class="language-bash">cd myproject
+/path/to/smile/bin/smile</code></pre>
+    <div class="playground-editor" hidden></div>
+  </div>
+</div>
+
+<div class="col-md-3 page-rail">
+  <aside class="algo-panel glass" aria-label="Agents">
+    <p class="toc-title">Agents</p>
+    <div class="algo-scroll">
+      <dl>
+        <dt><a href="studio.html#agent-frank">Frank</a></dt>
+        <dd>Chief of Staff. Priorities, coordination, and status.</dd>
+        <dt><a href="studio.html#agent-steve">Steve</a></dt>
+        <dd>Product Manager. Objectives, stories, and roadmaps.</dd>
+        <dt><a href="studio.html#agent-clair">Clair</a></dt>
+        <dd>Analyst. Load, visualize, train, evaluate, and serve.</dd>
+        <dt><a href="studio.html#agent-ada">Ada</a></dt>
+        <dd>Architect. System design and contracts.</dd>
+        <dt><a href="studio.html#agent-james">James</a></dt>
+        <dd>Java Guru. SMILE API, reviews, and notebook code.</dd>
+        <dt><a href="studio.html#agent-guido">Guido</a></dt>
+        <dd>Pythonista. Python notebooks and data-science libraries.</dd>
+        <dt><a href="studio.html#agent-chuck">Chuck</a></dt>
+        <dd>Desktop Operator. Native GUI applications on screen.</dd>
+      </dl>
+    </div>
+  </aside>
+</div>

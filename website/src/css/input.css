@@ -1180,13 +1180,18 @@
   .home-news span { color: var(--text-muted); margin-left: 0.35rem; }
   .home-place {
     margin: 0 0 0 auto;
-    padding-left: 1.25rem;
-    border-left: 1px solid var(--border);
+    display: flex;
+    align-items: center;
     color: var(--text-muted);
     font-size: 12px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     white-space: nowrap;
+  }
+  .home-place span + span {
+    margin-left: 0.85rem;
+    padding-left: 0.85rem;
+    border-left: 1px solid var(--border);
   }
   @media (max-width: 980px) {
     .home h1 { font-size: 16vw; }
