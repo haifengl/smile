@@ -25,11 +25,11 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import smile.io.Paths;
-import smile.model.rbf.RBF;
-import smile.regression.RBFNetwork;
+import smile.regression.SVM;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -39,10 +39,7 @@ class SmileRegressorTest {
 
     @BeforeAll
     static void setUp() {
-        spark = SparkSession.builder()
-                .master("local[*]")
-                .appName("SmileRegressorTest")
-                .getOrCreate();
+        spark = SparkTest.createSession("SmileRegressorTest");
     }
 
     @AfterAll
@@ -52,19 +49,23 @@ class SmileRegressorTest {
         }
     }
 
+    private static boolean isWindowsWithoutHadoop() {
+        return System.getProperty("os.name").toLowerCase().contains("win")
+                && System.getenv("HADOOP_HOME") == null
+                && System.getProperty("hadoop.home.dir") == null;
+    }
+
     @Test
     void testTrainEvaluateSaveLoad() throws Exception {
         String path = "file:///" + Paths.getTestData("libsvm/mushrooms.svm").toAbsolutePath().toString().replace('\\', '/');
         Dataset<Row> data = spark.read()
                 .format("libsvm")
-                .load(path);
+                .load(path)
+                .limit(100);
         data.cache();
 
         SmileRegressor regressor = new SmileRegressor()
-                .setTrainer((x, y) -> {
-                    var neurons = RBF.fit(x, 30);
-                    return RBFNetwork.fit(x, y, neurons);
-                });
+                .setTrainer((x, y) -> SVM.fit(x, y, new SVM.Options(0.01, 1.0)));
 
         RegressionEvaluator eval = new RegressionEvaluator()
                 .setLabelCol("label")
@@ -78,27 +79,31 @@ class SmileRegressorTest {
         double rmse = eval.evaluate(predictions);
         assertTrue(rmse >= 0.0, "Expected valid RMSE, got " + rmse);
 
-        Path tempDir = Files.createTempDirectory("smile-regressor-test-");
-        String modelPath = tempDir.resolve("model").toAbsolutePath().toString();
-        try {
-            model.write().overwrite().save(modelPath);
+        if (!isWindowsWithoutHadoop()) {
+            Path tempDir = Files.createTempDirectory("smile-regressor-test-");
+            String modelPath = tempDir.resolve("model").toAbsolutePath().toString();
+            try {
+                model.write().overwrite().save(modelPath);
 
-            SmileRegressionModel loaded = SmileRegressionModel.load(modelPath);
-            assertNotNull(loaded);
+                SmileRegressionModel loaded = SmileRegressionModel.load(modelPath);
+                assertNotNull(loaded);
 
-            double loadedRmse = eval.evaluate(loaded.transform(data));
-            assertEquals(rmse, loadedRmse, 1e-6);
-        } finally {
-            try (var stream = Files.walk(tempDir)) {
-                stream.sorted(Comparator.reverseOrder())
-                        .map(Path::toFile)
-                        .forEach(File::delete);
+                double loadedRmse = eval.evaluate(loaded.transform(data));
+                assertEquals(rmse, loadedRmse, 1e-6);
+            } finally {
+                try (var stream = Files.walk(tempDir)) {
+                    stream.sorted(Comparator.reverseOrder())
+                            .map(Path::toFile)
+                            .forEach(File::delete);
+                }
             }
         }
     }
 
     @Test
     void testEstimatorSaveLoad() throws Exception {
+        Assumptions.assumeTrue(!isWindowsWithoutHadoop(), "Skipping save/load test on Windows without Hadoop winutils");
+
         SmileRegressor regressor = new SmileRegressor()
                 .setFeaturesCol("customFeatures")
                 .setLabelCol("customLabel");

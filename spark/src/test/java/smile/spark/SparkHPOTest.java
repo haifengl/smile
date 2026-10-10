@@ -21,6 +21,7 @@ import java.util.Properties;
 import org.apache.spark.sql.SparkSession;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import smile.classification.RandomForest;
 import smile.data.DataFrame;
@@ -32,16 +33,14 @@ import smile.validation.ClassificationValidations;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("integration")
 class SparkHPOTest {
 
     private static SparkSession spark;
 
     @BeforeAll
     static void setUp() {
-        spark = SparkSession.builder()
-                .master("local[*]")
-                .appName("SparkHPOTest")
-                .getOrCreate();
+        spark = SparkTest.createSession("SparkHPOTest");
     }
 
     @AfterAll

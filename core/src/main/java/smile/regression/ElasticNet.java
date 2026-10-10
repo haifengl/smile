@@ -36,7 +36,7 @@ import smile.tensor.Vector;
  * L2 penalty guarantees a unique global minimum, the objective remains strictly
  * convex even when the feature matrix is not full rank.
  *
- * <h3>References</h3>
+ * <h2>References</h2>
  * <ul>
  *   <li>H. Zou and T. Hastie. Regularization and variable selection via the
  *       elastic net. <i>Journal of the Royal Statistical Society: Series B</i>,
