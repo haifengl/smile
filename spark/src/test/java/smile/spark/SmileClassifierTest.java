@@ -40,10 +40,7 @@ class SmileClassifierTest {
 
     @BeforeAll
     static void setUp() {
-        spark = SparkSession.builder()
-                .master("local[*]")
-                .appName("SmileClassifierTest")
-                .getOrCreate();
+        spark = SparkTest.createSession("SmileClassifierTest");
     }
 
     @AfterAll

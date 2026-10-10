@@ -40,10 +40,7 @@ class SparkHPOTest {
 
     @BeforeAll
     static void setUp() {
-        spark = SparkSession.builder()
-                .master("local[*]")
-                .appName("SparkHPOTest")
-                .getOrCreate();
+        spark = SparkTest.createSession("SparkHPOTest");
     }
 
     @AfterAll
