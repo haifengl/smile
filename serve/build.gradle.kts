@@ -26,7 +26,7 @@ dependencies {
     implementation("software.amazon.awssdk:s3")
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-test-h2")
-    testImplementation("io.rest-assured:rest-assured:6.0.1")
+    testImplementation("io.rest-assured:rest-assured:6.1.0")
 
     // JaCoCo aggregated report
     jacocoAggregation(project(":base"))

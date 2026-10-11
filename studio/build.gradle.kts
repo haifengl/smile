@@ -24,7 +24,7 @@ dependencies {
     implementation("com.openai:openai-java:4.80.0")
     implementation("com.anthropic:anthropic-java:2.71.0")
     implementation("com.google.genai:google-genai:1.76.0")
-    implementation("org.commonmark:commonmark:0.30.0")
+    implementation("org.commonmark:commonmark:0.30.1")
     implementation("org.xhtmlrenderer:flying-saucer-core:10.6.0")
     implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
     implementation("com.fifesoft:rsyntaxtextarea:4.0.1")
@@ -42,7 +42,7 @@ dependencies {
     implementation("org.apache.avro:avro:1.12.2") {
         exclude(group = "org.slf4j", module = "slf4j-log4j12")
     }
-    implementation("org.xerial.snappy:snappy-java:1.1.10.11") // for avro
+    implementation("org.xerial.snappy:snappy-java:1.1.10.12") // for avro
     implementation("com.epam:parso:2.0.14") // SAS7BDAT
 
     // local packages

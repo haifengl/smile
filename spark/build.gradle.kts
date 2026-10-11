@@ -5,10 +5,7 @@ plugins {
 dependencies {
     api(project(":core"))
     compileOnly(libs.bundles.spark)
-    compileOnly(libs.hadoop.common)
-
     testImplementation(libs.bundles.spark)
-    testImplementation(libs.hadoop.common)
 }
 
 tasks.named<Test>("test") {
