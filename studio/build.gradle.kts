@@ -144,15 +144,22 @@ tasks.withType<Javadoc> {
 val unixScriptContent = generateUnixScript().replace("\r\n", "\n")
 val windowsScriptContent = generateWindowsScript().replace("\r\n", "\n").replace("\n", "\r\n")
 
-tasks.named<CreateStartScripts>("startScripts") {
-    applicationName = "smile"
-    mainClass.set("smile.Main")
-    doLast {
-        val scriptsTask = this as CreateStartScripts
+class CustomizeStartScripts(
+    private val unixScriptContent: String,
+    private val windowsScriptContent: String
+) : Action<Task> {
+    override fun execute(task: Task) {
+        val scriptsTask = task as CreateStartScripts
         scriptsTask.unixScript.writeText(unixScriptContent)
         scriptsTask.unixScript.setExecutable(true, false)
         scriptsTask.windowsScript.writeText(windowsScriptContent)
     }
+}
+
+tasks.named<CreateStartScripts>("startScripts") {
+    applicationName = "smile"
+    mainClass.set("smile.Main")
+    doLast(CustomizeStartScripts(unixScriptContent, windowsScriptContent))
 }
 
 fun generateUnixScript(): String {
