@@ -1,50 +1,47 @@
 ---
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
-title: SMILE - Studio
+title: SMILE - Agent Studio
 ---
 
 <div class="col-md-9 order-md-first product-page">
   <p class="page-kicker">Agent Studio</p>
-  <h1 id="agent-studio">Explore it, one seat at a time.</h1>
-  <p class="lead">SMILE Studio is the agentic desktop IDE for data science. Free to evaluate. Annual seats cover production use.</p>
+  <h1 id="agent-studio">Hand it the data, the code, or the company.</h1>
+  <p class="lead">Agent Studio is a coding agent on your machine, an AutoML workplace that builds the models for <a href="serve-engine.html">Serve Engine</a>, and an operating system for startups. SMILE 7 was built here. HALO.AI runs in it. Free to evaluate. Annual seats cover production use.</p>
   <p class="product-actions">
     <a class="btn btn-accent" href="studio.html#studio-first">Start</a>
     <a class="btn btn-quiet" href="license-studio.html">Read the license</a>
   </p>
 
-  <h2 id="what-you-work-in">What you work in</h2>
-  <p>A notebook, an agent panel, and the project sit in one window on your machine. A fitted model leaves as a file you can serve.</p>
+  <h2 id="what-you-work-with">What you work with</h2>
   <div class="bento">
-    <a class="bento-card glass bento-half" href="studio.html#studio-notebook" style="text-decoration:none;color:inherit">
-      <h3>Notebook</h3>
-      <p>Java, Scala, and Python cells in one editor. A prompt field and Tab completion write code into the cell.</p>
-    </a>
-    <a class="bento-card glass bento-half" href="studio.html#studio-ai" style="text-decoration:none;color:inherit">
+    <div class="bento-card glass bento-half">
       <h3>Agents</h3>
-      <p>Seven agents, each in its own tab, for analysis, Java, Python, product, architecture, coordination, and the desktop.</p>
-    </a>
-    <a class="bento-card glass bento-half" href="studio.html#studio-slash-clair" style="text-decoration:none;color:inherit">
+      <p>Seven agents run a company from the idea to delivery. More are on the way. They are your coworkers, so the customer problem stays yours.</p>
+    </div>
+    <div class="bento-card glass bento-half">
       <h3>AutoML</h3>
-      <p>Clair takes a data file through profiling, features, model selection, tuning, and evaluation. <code>/automl</code> runs that path end to end.</p>
-    </a>
-    <a class="bento-card glass bento-half" href="studio.html#studio-explorers" style="text-decoration:none;color:inherit">
-      <h3>Export</h3>
-      <p>Double-click a model in the kernel explorer to save a <code>.sml</code> file, or start a REST inference service for it.</p>
-    </a>
+      <p>Clair drives the end to end AutoML process from exploration, features, model selection, tuning, to evaluation.</p>
+    </div>
+    <div class="bento-card glass bento-half">
+      <h3>Handoff</h3>
+      <p>A fitted model leaves as a <code>.sml</code> file and exports as an ONNX graph for Serve Engine. Run the model in your applications or in our Serve Engine on the edge.</p>
+    </div>
+    <div class="bento-card glass bento-half">
+      <h3>Notebook</h3>
+      <p>Java, Kotlin, Scala, and Python notebooks, where you audit the generated AutoML pipelines. Tab completion is there when you want to code.</p>
+    </div>
   </div>
 
-  <div class="code-playground glass" data-lang="bash">
-    <div class="playground-toolbar">
-      <span class="lang-tab is-active">Bash</span>
-      <span class="toolbar-spacer"></span>
-      <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-      {% include "components/playground-extra-actions.njk" %}
-    </div>
-    <pre class="playground-source language-bash"><code class="language-bash">cd myproject
-/path/to/smile/bin/smile</code></pre>
-    <div class="playground-editor" hidden></div>
-  </div>
+  <h2 id="the-model">A workplace that builds the model</h2>
+  <p>The coding work covers the project, the edits, the commands, and the tests, in the same class as Claude Code. Clair explores the data and builds the model, which can be hot-loaded into <a href="serve-engine.html">Serve Engine</a> from Studio. SMILE 7.0.0, including Studio itself, was built in this workplace.</p>
+
+  <h2 id="your-stack">Your provider and your language</h2>
+  <p>OpenAI, Anthropic, Google Gemini, Azure OpenAI, Vertex AI, or an OpenAI-compatible endpoint for an open-weight model. The key stays on your machine.</p>
+  <p>Notebooks and AutoML run in Java, Kotlin, Scala, and Python. When you prefer to write the code, the notebook is that path.</p>
+
+  <h2 id="the-company">Seven agents for the company</h2>
+  <p>Frank keeps the priorities. Steve holds the product. Clair builds the model. Ada holds the design. James writes Java. Guido writes Python. Chuck drives the desktop. We build and operate HALO.AI from this set.</p>
 </div>
 
 <div class="col-md-3 page-rail">
@@ -57,15 +54,15 @@ title: SMILE - Studio
         <dt><a href="studio.html#agent-steve">Steve</a></dt>
         <dd>Product Manager. Objectives, stories, and roadmaps.</dd>
         <dt><a href="studio.html#agent-clair">Clair</a></dt>
-        <dd>Analyst. Load, visualize, train, evaluate, and serve.</dd>
+        <dd>Data Scientist. Load, visualize, train, evaluate, and serve.</dd>
         <dt><a href="studio.html#agent-ada">Ada</a></dt>
-        <dd>Architect. System design and contracts.</dd>
+        <dd>Architect. System design and architecture decisions.</dd>
         <dt><a href="studio.html#agent-james">James</a></dt>
         <dd>Java Guru. SMILE API, reviews, and notebook code.</dd>
         <dt><a href="studio.html#agent-guido">Guido</a></dt>
         <dd>Pythonista. Python notebooks and data-science libraries.</dd>
         <dt><a href="studio.html#agent-chuck">Chuck</a></dt>
-        <dd>Desktop Operator. Native GUI applications on screen.</dd>
+        <dd>Desktop Operator. Operate and debug native GUI and web applications on screen.</dd>
       </dl>
     </div>
   </aside>
