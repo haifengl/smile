@@ -1312,8 +1312,6 @@
   .ent-points li:nth-child(even) { padding-left: 1.5rem; }
   .ent-points strong { display: block; margin-bottom: 0.3rem; font-size: 1.05rem; }
   .ent-points span { color: var(--text-muted); line-height: 1.5; }
-  .ent-bounds { display: grid; gap: 0.85rem; margin: 0; padding: 0; list-style: none; }
-  .ent-bounds li { margin: 0; max-width: 46rem; color: var(--text-muted); line-height: 1.5; }
   .ent-close {
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) auto;
