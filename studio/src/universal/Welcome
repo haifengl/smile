@@ -1,6 +1,8 @@
 # Welcome to SMILE Studio
 
-**SMILE Studio** is an agentic IDE for data science, machine learning, and high-performance JVM/Python development. It brings together interactive polyglot notebooks, a collaborative multi-agent AI team, live runtime explorers, and rich visualization in a unified desktop workspace.
+Hand it the data, the code, or the company.
+
+Agent Studio is a coding agent on your machine, an AutoML workplace that builds the models for Serve Engine, and an operating system for startups. SMILE 7 was built here. HALO.AI runs in it. Free to evaluate. Annual seats cover production use.
 
 ---
 
@@ -35,8 +37,8 @@
 │                              │                                              │
 │  • Kernel Explorer:          ├──────────────────────────────────────────────┤
 │    Live variables, models,   │  AI Agent Team                               │
-│    and inference services    │  🤝 Frank | 🎯 Steve | 📊 Clair | 📐 Ada     │
-│                              │  ☕ James | 🐍 Guido | 🖥️ Chuck              │
+│    and inference services    │  🤝 Frank | 🎯 Steve | 📊 Clair | 📐 Ada    │
+│                              │  ☕ James | 🐍 Guido | 🖥️ Chuck             │
 ├──────────────────────────────┴──────────────────────────────────────────────┤
 │  Status Bar: [LSP / Kernel Status]                    [Heap Memory  |  CPU] │
 └─────────────────────────────────────────────────────────────────────────────┘
