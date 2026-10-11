@@ -85,10 +85,15 @@ jobs:
       - name: Grant execute permission to Gradle wrapper
         run: chmod +x gradlew
 
+      # No SMILE_ONNX_GENAI_MODEL on runners: GenAINativeTest skips model cases and
+      # only exercises natives when ONNXRUNTIME_* paths are set (above).
       - name: Run unit tests (skip integration tests)
-        # No SMILE_ONNX_GENAI_MODEL on runners: GenAINativeTest skips model cases and
-        # only exercises natives when ONNXRUNTIME_* paths are set (above).
-        run: xvfb-run --auto-servernum ./gradlew test -DexcludeTags=integration --no-daemon
+        # Add global JVM arguments to the daemon to keep it small in CI environments
+        run: |
+          xvfb-run --auto-servernum ./gradlew test \
+            -Dorg.gradle.jvmargs="-Xmx1g -XX:MaxMetaspaceSize=384m" \
+            -DexcludeTags=integration \
+            --no-daemon
 
       - name: Upload test reports
         if: always()
