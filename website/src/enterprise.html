@@ -1,0 +1,84 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+title: SMILE - Enterprise
+---
+<div class="home ent">
+  <div class="ent-hero">
+    <h1>Edge AI<br>for Enterprise</h1>
+    <div>
+      <p class="ent-lead">HALO runs the model on the branch server, the payment terminal, the vehicle gateway, and the air-gapped node. SMILE Serve Engine is the runtime. The data stays where the decision is made.</p>
+      <div class="ent-actions">
+        <button type="button" class="btn btn-accent" data-contact-open>Request a pilot</button>
+        <a class="btn btn-quiet" href="serve-engine.html">See Serve Engine</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="home-proof">
+    <span>Java</span><span>ONNX</span><span>CPU</span><span>Air-gapped</span><span>Self-hosted</span>
+  </div>
+
+  <section class="ent-section" aria-labelledby="who">
+    <p class="ent-kicker">Who it is for</p>
+    <h2 id="who">The people who already run the edge.</h2>
+    <div class="ent-personas">
+      <article>
+        <h3>Payments and branches</h3>
+        <p>Authorization is already on a short clock. Score the transaction on the server that holds it, before cardholder data leaves the network that is allowed to see it.</p>
+      </article>
+      <article>
+        <h3>Fleet and telematics</h3>
+        <p>Driver and vehicle signals are scored in the cab. A summary comes back when the link is up. The raw stream does not ride the cellular bill.</p>
+      </article>
+      <article>
+        <h3>Sovereign systems</h3>
+        <p>The node keeps working with the network unplugged. The package is small enough to review, and the runtime does not fetch a model or a library from outside.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="ent-section" aria-labelledby="node">
+    <p class="ent-kicker">On the node</p>
+    <h2 id="node">A workload, not another platform to operate.</h2>
+    <ul class="ent-points">
+      <li>
+        <strong>One package</strong>
+        <span>JVM and ONNX in a runtime sized for a branch server or a gateway, on the CPU you already have. No discrete GPU.</span>
+      </li>
+      <li>
+        <strong>Scored in place</strong>
+        <span>Tabular models and vision run next to the event. A cloud round trip is no longer part of the decision.</span>
+      </li>
+      <li>
+        <strong>Explained where it ran</strong>
+        <span>A tree decision can carry a local explanation. The audit stays with the event, on the node.</span>
+      </li>
+      <li>
+        <strong>Still running when the link is down</strong>
+        <span>Inference continues. The log waits, encrypted, until the network returns. A new model can replace the old one without restarting the process.</span>
+      </li>
+    </ul>
+  </section>
+
+  <section class="ent-section" aria-labelledby="outside">
+    <p class="ent-kicker">What stays outside</p>
+    <h2 id="outside">HALO manages the model, not the box.</h2>
+    <ul class="ent-bounds">
+      <li>The operating system, the firmware, and the disk stay with the platform you already use.</li>
+      <li>Factory buses stay with the infrastructure partner. HALO is the inference workload on top.</li>
+      <li>Microcontrollers stay in their own category. This runtime starts at a gateway or a branch server.</li>
+    </ul>
+  </section>
+
+  <section class="ent-section" aria-labelledby="pilot">
+    <div class="ent-close">
+      <div>
+        <p class="ent-kicker">A 30-day pilot</p>
+        <h2 id="pilot">A few of your nodes, your models, your network.</h2>
+        <p>We package the models you already have, put the runtime next to the traffic, and measure a live score, a local explanation, a model swap, and a run with the network unplugged. Tell us where the nodes sit and what you score today.</p>
+      </div>
+      <button type="button" class="btn btn-accent" data-contact-open>Request a pilot</button>
+    </div>
+  </section>
+</div>
