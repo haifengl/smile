@@ -17,13 +17,15 @@ Always use the Gradle Wrapper (`./gradlew`) to ensure version consistency.
 - **Build specific module:** `./gradlew :<module-name>:build -x test`
 - **Run tests for a module:** `./gradlew :<module-name>:test`
 - **Run specific test:** `./gradlew test --tests "com.example.ClassName.methodName"`
+- **Run Studio application:** `./gradlew :studio:run`
+- **Stage Studio application:** `./gradlew :studio:stage` (installs to `studio/build/install/smile`)
 - **Run inference service:** `./gradlew :serve:quarkusDev --jvm-args="--add-opens java.base/java.lang=ALL-UNNAMED"`
 - **Clean all modules:** `./gradlew clean`
 - **Clean build:** `./gradlew clean build`
 - **Check dependency tree:** `./gradlew :<module-name>:dependencies`
 
 ### Studio and Scala Modules (sbt)
-Run sbt from the repository root: `studio` is a project of the root build, not a standalone build.
+Run sbt from the repository root: `studio` and the Scala modules are projects in the root build.
 
 - **Stage Studio:** `sbt studio/stage`
 - **Run staged Studio:** `target/out/jvm/scala-<version>/smile-studio/universal/stage/bin/smile`
@@ -33,15 +35,14 @@ Run sbt from the repository root: `studio` is a project of the root build, not a
 - **Publish locally:** `sbt publishM2`
 
 Studio gotchas:
-- Edit `studio/build.sbt` for Studio packaging; `studio/build.gradle.kts` is stale and unused. Shared settings come from the root `build.sbt` (`javaSettings ++ scalaSettings`, `.dependsOn(deep, scala)`).
+- `studio` can be built and packaged with either Gradle (`./gradlew :studio:stage`, `:studio:run`) or sbt (`sbt studio/stage`). Note that in Gradle test runs, `ScalaKernelTest` is filtered out because `scala` and `json` modules are built via sbt.
 - Staging bundles the Gradle-built Quarkus serve app and `base` test data, so run `./gradlew :serve:build` first.
-- CI runs Gradle only, so Studio changes need a local `sbt studio/test`.
 
 ## 🏗 Project Structure (Multi-Module)
 The project follows a hierarchical structure. Always check `base` before adding new utility classes.
 Each module below is marked with its build system.
 
-- `settings.gradle.kts`: Gradle module definitions (`studio` is intentionally excluded).
+- `settings.gradle.kts`: Gradle module definitions (`base`, `core`, `deep`, `nlp`, `plot`, `spark`, `kotlin`, `serve`, `studio`).
 - `build.sbt`: Root sbt build (Studio and Scala modules); `project/build.properties` pins the sbt 2.x version.
 - `gradle/libs.versions.toml`: Centralized dependency management (Version Catalog).
 - `buildSrc/`: Shared build logic across all modules, such as custom plugins, tasks, and configurations.
@@ -50,9 +51,10 @@ Each module below is marked with its build system.
 - `nlp/` (Gradle + sbt): Natural language process libraries.
 - `deep/` (Gradle + sbt): Deep learning libraries.
 - `plot/` (Gradle + sbt): Data visualization libraries.
+- `spark/` (Gradle + sbt): Apache Spark integration.
 - `kotlin/` (Gradle + sbt): Kotlin API with corresponding language paradigms.
-- `json/`, `scala/`, `spark/` (sbt): JSON, Scala, and Spark APIs.
-- `studio/` (sbt): SMILE Studio, the agentic data science IDE (`smile.Main`). UI, notebook, kernel, or agent-panel questions: `studio/README.md`. `smile` CLI subcommands, launcher flags, or packaging: `studio/CLI.md`.
+- `json/`, `scala/` (sbt): JSON and Scala APIs.
+- `studio/` (Gradle + sbt): SMILE Studio, the agentic data science IDE (`smile.Main`). UI, notebook, kernel, or agent-panel questions: `studio/README.md`. `smile` CLI subcommands, launcher flags, or packaging: `studio/CLI.md`.
 - `serve/` (Gradle): Machine learning inference service with Quarkus.
 
 ## 📝 Coding Standards

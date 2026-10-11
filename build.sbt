@@ -203,7 +203,7 @@ lazy val root = project.in(file("."))
   .settings(publish / skip := true)
   .settings(crossScalaVersions := Nil)
   .settings(
-    (JavaUnidoc / unidoc / unidocProjectFilter) := inAnyProject -- inProjects(json, scala, spark, kotlin, studio)
+    (JavaUnidoc / unidoc / unidocProjectFilter) := inAnyProject -- inProjects(json, scala, kotlin, studio)
   )
   .aggregate(core, base, nlp, deep, plot, json, scala, spark, kotlin, studio)
 
