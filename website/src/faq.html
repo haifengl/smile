@@ -2,36 +2,19 @@
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
 title: SMILE - FAQ
-version: "6.3.0"
+version: "7.0.0"
 ---
 {% include "toc.njk" %}
 
 <div class="col-md-9 order-md-first">
     <h1 id="faq-top" class="title">FAQ</h1>
 
-    <h2 class="question" id="cite">How should I cite SMILE?</h2>
-    <p class="answer">Please cite SMILE in your publications if it helps your research. Here is an example BibTeX entry:</p>
-    <div class="code-playground glass" data-lang="bibtex">
-  <div class="playground-toolbar">
-    <span class="lang-tab is-active">BibTeX</span>
-    <span class="toolbar-spacer"></span>
-    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
-    {% include "components/playground-extra-actions.njk" %}
-  </div>
-  <pre class="playground-source language-bibtex"><code class="language-bibtex">
-    @misc{Li2014SMILE,
-      title={SMILE: Statistical Machine Intelligence and Learning Engine},
-      author={Haifeng Li},
-      year={2014},
-      howpublished={\url{https://www.aihalo.dev/}},
-    }
-    </code></pre>
-  <div class="playground-editor" hidden></div>
-</div>
-
     <h2 class="question" id="java-version">Which Java version do I need?</h2>
     <p class="answer">
-        SMILE v5 and v6 require <strong>Java 25</strong>.
+        SMILE v5, v6, and v7 require <strong>Java 25</strong>.
+        SMILE v4.x requires <strong>Java 21</strong>. Stay on a 4.x release when the
+        project is still on Java 21.
+        Releases before v4 require <strong>Java 8</strong>.
         See <a href="quickstart.html">Quick Start</a> for install and build steps.
     </p>
 
@@ -136,17 +119,36 @@ libraryDependencies += "com.github.haifengl" % "smile-plot" % "{{ version }}"
         path for contributors is Gradle. See
         <a href="quickstart.html#build-from-source">Build from Source</a>.</p>
 
-    <h2 class="question" id="studio">What is SMILE Studio?</h2>
+    <h2 class="question" id="studio">What is Agent Studio?</h2>
     <p class="answer">
-        SMILE Studio is the desktop notebook IDE (agents, explorers, magics) that ships
-        in the release package. Launch with <code>./smile</code> after
-        <code>bin/setup</code>. See <a href="studio.html">SMILE Studio</a>.
+        <a href="agent-studio.html">Agent Studio</a> is the agentic desktop IDE for data science.
+        A notebook, an agent panel, and the project sit in one window on your machine.
+        Java, Scala, and Python cells share one editor. Seven agents cover analysis, Java,
+        Python, product, architecture, coordination, and the desktop. Clair, the analyst,
+        can take a data file through profiling, features, model selection, tuning, and
+        evaluation. A fitted model leaves as a <code>.sml</code> file, or you can start
+        a REST inference service for it from the kernel explorer.
+    </p>
+    <p>
+        It ships in the release package. Launch with <code>./smile</code> after
+        <code>bin/setup</code>. Free to evaluate. Annual seats cover production use.
+        See <a href="agent-studio.html">Agent Studio</a> for the product, and
+        <a href="studio.html">SMILE Studio</a> for the manual.
     </p>
 
-    <h2 class="question" id="serve">What is SMILE Serve?</h2>
+    <h2 class="question" id="serve">What is Serve Engine?</h2>
     <p class="answer">
-        SMILE Serve is the Quarkus inference service for classic ML models, ONNX, and
-        OpenAI-compatible LLM HTTP APIs. See <a href="serve.html">SMILE Serve</a>.
+        <a href="serve-engine.html">Serve Engine</a> is the inference runtime for classic
+        machine learning, computer vision, and LLMs. Serialized SMILE models
+        (<code>.sml</code>), ONNX graphs, and OpenAI-compatible chat run in the same
+        process, on your machines and your network. A web UI for chat, SMILE, and ONNX
+        is served from that process. Agent loops get a fast first token, a fast tool
+        round trip, and a memory budget reserved when the model loads.
+    </p>
+    <p>
+        Commercial licensing removes the AGPL restriction for production use.
+        See <a href="serve-engine.html">Serve Engine</a> for the product, and
+        <a href="serve.html">SMILE Serve</a> for the manual.
     </p>
 
     <h2 class="question" id="libtorch-ffm">LibTorch, GPU, and <code>java.library.path</code></h2>
@@ -286,5 +288,25 @@ ImageIO.write(image, "png", Path.of("headless.png").toFile())
         would require locks and hurt performance. Seeding every thread identically
         (for example in a random forest) would also destroy the intended randomness.
     </p>
+
+    <h2 class="question" id="cite">How should I cite SMILE?</h2>
+    <p class="answer">Please cite SMILE in your publications if it helps your research. Here is an example BibTeX entry:</p>
+    <div class="code-playground glass" data-lang="bibtex">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">BibTeX</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bibtex"><code class="language-bibtex">
+    @misc{Li2014SMILE,
+      title={SMILE: Statistical Machine Intelligence and Learning Engine},
+      author={Haifeng Li},
+      year={2014},
+      howpublished={\url{https://www.aihalo.dev/}},
+    }
+    </code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
 
 </div>
