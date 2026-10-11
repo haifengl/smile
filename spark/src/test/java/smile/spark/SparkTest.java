@@ -23,8 +23,8 @@ class SparkTest {
     /** Minimize footprint for GitHub Actions. */
     static final SparkConf conf = new SparkConf()
             .setMaster("local[1]") // Use a single thread to reduce memory overhead
-            .set("spark.driver.memory", "2g")
-            .set("spark.executor.memory", "1g")
+            .set("spark.driver.memory", "512m")
+            .set("spark.executor.memory", "512m")
             .set("spark.sql.shuffle.partitions", "2") // Prevents high-memory shuffles
             .set("spark.ui.enabled", "false");
 

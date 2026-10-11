@@ -43,6 +43,10 @@ cd ..
 ./gradlew :serve:build -Dquarkus.profile=default
 sbt studio/Universal/packageBin
 
+sbt json/copyJarToStudio
+sbt scala/copyJarToStudio
+./gradlew :studio:distZip
+
 while true; do
     read -p "Do you want to publish smile? (yes/no): " ans
     case $ans in
