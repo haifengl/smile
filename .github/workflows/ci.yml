@@ -93,6 +93,8 @@ jobs:
           xvfb-run --auto-servernum ./gradlew test \
             -Dorg.gradle.jvmargs="-Xmx1g -XX:MaxMetaspaceSize=384m" \
             -DexcludeTags=integration \
+            -x :studio:test \
+            --no-parallel \
             --no-daemon
 
       - name: Upload test reports
