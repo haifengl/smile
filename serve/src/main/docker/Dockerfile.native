@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU Affero General Public
 # License along with SMILE Serve. If not, see
 # <https://www.gnu.org/licenses/>.
-#
+####
 
+###
 # This Dockerfile builds a CPU-only container that runs the Quarkus application in native (no JVM) mode.
 # It is a two-stage in-container build: the Mandrel/GraalVM toolchain, Gradle, Node.js, CMake and the
 # LibTorch/ONNX Runtime headers stay in the builder stage; the final image only has the native executable,

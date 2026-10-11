@@ -15,8 +15,9 @@
 # You should have received a copy of the GNU Affero General Public
 # License along with SMILE Serve. If not, see
 # <https://www.gnu.org/licenses/>.
-#
+####
 
+###
 # This Dockerfile builds a GPU-enabled container that runs the Quarkus
 # smile-serve application in JVM mode on NVIDIA CUDA.
 #

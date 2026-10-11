@@ -16,7 +16,9 @@
 # License along with SMILE Serve. If not, see
 # <https://www.gnu.org/licenses/>.
 #
+####
 
+###
 # This Dockerfile is used in order to build a container that runs the Quarkus application in JVM mode
 #
 # Before building the container image run:
