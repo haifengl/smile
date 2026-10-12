@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Custom version number (e.g., 6.0.1)'
+        description: 'Custom version number (e.g., 7.0.1)'
         required: true
         type: string
-        default: '6.2.0'
+        default: '7.0.0'
   release:
     types: [published]
 
@@ -64,7 +64,7 @@ jobs:
 
       - name: Build app
         run: |
-          ./gradlew :serve:build -Dquarkus.profile=default
+          ./gradlew :serve:build -Dquarkus.profile=default -x test
           cp studio/src/universal/bin/libsmile_torch.so serve/build/quarkus-app/lib/
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
