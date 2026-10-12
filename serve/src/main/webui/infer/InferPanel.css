@@ -387,6 +387,43 @@
   word-break: break-word;
 }
 
+.infer-explain-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 7px;
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid #c7d2fe;
+  background-color: #e0e7ff;
+  color: #4338ca;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.infer-explain-btn:hover {
+  background-color: #c7d2fe;
+  color: #312e81;
+}
+
+.infer-explain-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #374151;
+  cursor: pointer;
+  user-select: none;
+}
+
+.infer-explain-toggle input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
 .onnx-form .model-meta h2 {
   margin: 0 0 4px;
 }

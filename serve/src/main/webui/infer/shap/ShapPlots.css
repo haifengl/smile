@@ -1,0 +1,132 @@
+/*
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ *
+ * SMILE Serve is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * SMILE Serve is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with SMILE Serve. If not, see
+ * <https://www.gnu.org/licenses/>.
+ */
+.shap-plot-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.shap-plot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 0 4px;
+}
+
+.shap-plot-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.shap-plot-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+  margin: 2px 0 0;
+}
+
+.shap-badge-base {
+  color: #4b5563;
+  font-weight: 600;
+}
+
+.shap-badge-pred {
+  color: #111827;
+  font-weight: 700;
+}
+
+.shap-svg-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.shap-plot-svg {
+  display: block;
+  user-select: none;
+}
+
+/* Tooltip */
+.shap-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(17, 24, 39, 0.92);
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  z-index: 100;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  white-space: nowrap;
+}
+
+/* Waterfall specifics */
+.shap-wf-bar-pos {
+  fill: #ff0051;
+  transition: opacity 0.15s ease;
+}
+
+.shap-wf-bar-neg {
+  fill: #008bfb;
+  transition: opacity 0.15s ease;
+}
+
+.shap-wf-bar-pos:hover,
+.shap-wf-bar-neg:hover {
+  opacity: 0.85;
+  cursor: pointer;
+}
+
+.shap-wf-connector {
+  stroke: #cbd5e1;
+  stroke-width: 1;
+  stroke-dasharray: 2, 2;
+}
+
+.shap-wf-grid {
+  stroke: #f1f5f9;
+  stroke-width: 1;
+}
+
+.shap-wf-axis {
+  stroke: #94a3b8;
+  stroke-width: 1;
+}
+
+.shap-wf-text-label {
+  font-size: 12px;
+  fill: #374151;
+}
+
+.shap-wf-text-val {
+  font-size: 11px;
+  fill: #6b7280;
+}
+
+.shap-wf-text-delta {
+  font-size: 11px;
+  font-weight: 500;
+}

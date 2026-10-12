@@ -79,6 +79,8 @@ export default function InferActionFooter({
   onStop,
   disabled = false,
   batchHint,
+  explain = false,
+  onExplainChange = null,
 }) {
   const fileMode = Boolean(file);
   const inputRef = useRef(null);
@@ -151,6 +153,18 @@ export default function InferActionFooter({
           <button type="button" className="infer-btn" onClick={onStop}>
             Stop
           </button>
+        )}
+
+        {onExplainChange && (
+          <label className="infer-explain-toggle" title="Compute SHAP feature explanations (TreeSHAP)">
+            <input
+              type="checkbox"
+              checked={explain}
+              onChange={(e) => onExplainChange(e.target.checked)}
+              disabled={disabled || streaming}
+            />
+            <span>Explain (SHAP)</span>
+          </label>
         )}
       </div>
     </div>
