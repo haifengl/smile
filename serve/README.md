@@ -520,6 +520,9 @@ Both Dockerfiles build in-container (context = repository root) and need no host
 Chat and auth endpoints return 404, and `POST /api/v1/models/load` with a chat model returns 503. The chat
 page of the web UI therefore shows errors; the SMILE and ONNX inference pages work.
 
+`native-micro` can be built smaller still with `--build-arg GRADLE_ARGS="-Dquarkus.native.additional-build-args-append=-Os"`
+(about 19 MB less, same startup time, but SHAP explanations run ~1.75x and LDA ~1.25x slower; plain tree prediction is unchanged).
+
 None of the images ship ARPACK (or FlexiBLAS/EPEL, which it needed): ARPACK is only used by fit-time code
 (`smile.manifold` and `SpectralClustering`), never by the model families `serve` loads, so inference never touches it.
 Native BLAS/LAPACK comes from OpenBLAS (`openblas-openmp`).
