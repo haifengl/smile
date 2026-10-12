@@ -37,7 +37,7 @@ Agent Studio is a coding agent on your machine, an AutoML workplace that builds 
 │                              │                                              │
 │  • Kernel Explorer:          ├──────────────────────────────────────────────┤
 │    Live variables, models,   │  AI Agent Team                               │
-│    and inference services    │  🤝 Frank | 🎯 Steve | 📊 Clair | 📐 Ada    │
+│    and inference services    │  👔 Frank | 🎯 Steve | 📊 Clair | 📐 Ada    │
 │                              │  ☕ James | 🐍 Guido | 🖥️ Chuck             │
 ├──────────────────────────────┴──────────────────────────────────────────────┤
 │  Status Bar: [LSP / Kernel Status]                    [Heap Memory  |  CPU] │
@@ -112,7 +112,7 @@ for (var imp : model.importance()) {
 
 SMILE Studio embeds a team of specialized AI agents running in the right panel:
 
-### 1. 🤝 Frank the Chief of Staff (`@frank`)
+### 1. 👔 Frank the Chief of Staff (`@frank`)
 - Strategic partner who prioritizes what deserves your attention, coordinates the agent team, and holds work to your stated goals.
 
 ### 2. 🎯 Steve the Product Manager (`@steve`)
