@@ -22,9 +22,9 @@ dependencies {
 // compile-only; a consumer that reads those formats provides the libraries itself.
 dependencies {
     testRuntimeOnly(libs.bundles.arrow)
-    testRuntimeOnly("com.epam:parso:2.0.14") // SAS7BDAT
-    testRuntimeOnly("org.apache.avro:avro:1.12.2") { exclude("org.slf4j", "slf4j-log4j12") }
-    testRuntimeOnly("org.xerial.snappy:snappy-java:1.1.10.12") // for avro
+    testRuntimeOnly(libs.parso) // SAS7BDAT
+    testRuntimeOnly(libs.avro) { exclude("org.slf4j", "slf4j-log4j12") }
+    testRuntimeOnly(libs.snappy) // for avro
 }
 
 // The Kotlin scripting host API is not needed at test time either, as the
