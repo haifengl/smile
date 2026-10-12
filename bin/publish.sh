@@ -40,7 +40,7 @@ mv ../target/docs/* _site/api/
 
 # build binary package
 cd ..
-./gradlew :serve:build -Dquarkus.profile=default
+./gradlew :serve:build -x test -Dquarkus.profile=default
 sbt studio/Universal/packageBin
 
 sbt json/copyJarToStudio
@@ -55,7 +55,6 @@ while true; do
 
             sbt ++2.13.18 scala/publishSigned
             sbt ++2.13.18 json/publishSigned
-            # sbt ++2.13.18 spark/publishSigned
             break;;
         [Nn]* ) exit 0;;
         * ) echo "Please answer yes or no.";;
