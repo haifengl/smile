@@ -187,6 +187,7 @@ libraryDependencies ++= {
 libraryDependencies ++= {
   val arrowV = "19.0.0"
   Seq(
+    "org.duckdb"         % "duckdb_jdbc"         % "1.5.6.0",    // smile.data.SQL, used by the agents
     "org.apache.arrow"   % "arrow-dataset"       % arrowV,
     "org.apache.arrow"   % "arrow-memory-unsafe" % arrowV,
    ("org.apache.avro"    % "avro"                % "1.12.2").exclude("org.slf4j", "slf4j-log4j12"),

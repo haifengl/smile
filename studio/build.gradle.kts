@@ -14,6 +14,7 @@ dependencies {
     implementation(libs.bundles.jackson)
     implementation(libs.bundles.jsonschema)
     implementation(libs.jsonschema.swagger)
+    implementation(libs.duckdb) // smile.data.SQL, used by the agents (e.g. AutoML)
     implementation(libs.bundles.arrow)
     implementation(libs.bundles.kotlin.scripting)
 
@@ -26,7 +27,7 @@ dependencies {
     implementation("com.google.genai:google-genai:1.76.0")
     implementation("org.commonmark:commonmark:0.30.1")
     implementation("org.xhtmlrenderer:flying-saucer-core:10.6.0")
-    implementation("org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0")
+    implementation(libs.lsp4j)
     implementation("com.fifesoft:rsyntaxtextarea:4.0.1")
     implementation("com.fifesoft:rstaui:4.0.0")
     implementation("com.fifesoft:spellchecker:3.4.1")
@@ -39,11 +40,11 @@ dependencies {
     implementation("com.github.serpapi:serpapi-java:1.2.0")
     implementation("com.google.code.gson:gson:2.14.0") // evict older version used by serpapi
 
-    implementation("org.apache.avro:avro:1.12.2") {
+    implementation(libs.avro) {
         exclude(group = "org.slf4j", module = "slf4j-log4j12")
     }
-    implementation("org.xerial.snappy:snappy-java:1.1.10.12") // for avro
-    implementation("com.epam:parso:2.0.14") // SAS7BDAT
+    implementation(libs.snappy) // for avro
+    implementation(libs.parso) // SAS7BDAT
 
     // local packages
     implementation(fileTree("lib") { include("*.jar") })
