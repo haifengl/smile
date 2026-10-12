@@ -507,6 +507,21 @@ Without a local GraalVM installation, use a Docker-based build:
 
 See the [Quarkus native build guide](https://quarkus.io/guides/gradle-tooling) for details.
 
+### Plugins
+
+Optional backends live in `serve-plugins/` and are chosen at build time with `-Pserve.plugins=<comma list>`
+(default: all; an empty value includes none). The backend itself is picked at runtime by config.
+
+| Plugin | Adds | Config |
+|---|---|---|
+| `blob-s3` | S3-compatible blob storage (AWS SDK v2) | `smile.blob.storage=s3`, `smile.blob.s3.bucket/region/endpoint/access-key/secret-key` |
+
+The JVM images include all plugins. Build native images with `-Pserve.plugins=` so the AWS SDK stays out of the
+executable; `smile.blob.storage` then supports only `local`, and any other value fails at startup.
+
+A plugin is a Gradle module under `serve-plugins/` that implements `smile.chat.blob.BlobStoreProvider` (from
+`blob-spi`) as an `@ApplicationScoped` bean and ships an empty `META-INF/beans.xml` so ArC indexes it.
+
 ---
 
 ## 4. Configuration Reference

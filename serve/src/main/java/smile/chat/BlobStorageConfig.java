@@ -25,16 +25,16 @@ import io.smallrye.config.WithName;
 /**
  * Multimedia blob storage configuration ({@code smile.blob.*}).
  *
- * <p>Default backend is local filesystem under {@link #localPath()}. Set
- * {@link #storage()} to {@code s3} and provide bucket/region (and optional
- * endpoint / static credentials) for S3-compatible object storage.
+ * <p>Default backend is local filesystem under {@link #localPath()}. Other backends
+ * (e.g. {@code s3}, configured under {@code smile.blob.s3.*}) are provided by
+ * plugin jars on the classpath; see {@code serve-plugins}.
  *
  * @author Haifeng Li
  */
 @ConfigMapping(prefix = "smile.blob")
 public interface BlobStorageConfig {
     /**
-     * Storage backend: {@code local} (default) or {@code s3}.
+     * Storage backend: {@code local} (default) or the name of a plugin backend such as {@code s3}.
      */
     @WithDefault("local")
     String storage();
@@ -45,29 +45,6 @@ public interface BlobStorageConfig {
     @WithDefault("/data/blob")
     @WithName("local.path")
     String localPath();
-
-    /** S3 bucket name (required when {@link #storage()} is {@code s3}). */
-    @WithName("s3.bucket")
-    Optional<String> s3Bucket();
-
-    /** AWS region (required when {@link #storage()} is {@code s3}). */
-    @WithName("s3.region")
-    Optional<String> s3Region();
-
-    /**
-     * Optional custom endpoint (MinIO / S3-compatible). When unset, the AWS
-     * regional endpoint is used.
-     */
-    @WithName("s3.endpoint")
-    Optional<String> s3Endpoint();
-
-    /** Optional static access key; when unset, the default AWS credential chain is used. */
-    @WithName("s3.access-key")
-    Optional<String> s3AccessKey();
-
-    /** Optional static secret key paired with {@link #s3AccessKey()}. */
-    @WithName("s3.secret-key")
-    Optional<String> s3SecretKey();
 
     /**
      * Maximum upload size in bytes (default 20 MiB).
