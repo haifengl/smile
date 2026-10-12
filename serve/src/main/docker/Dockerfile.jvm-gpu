@@ -182,13 +182,12 @@ ENV DEBIAN_FRONTEND=noninteractive \
     LANGUAGE=en_US:en \
     LC_ALL=C.UTF-8
 
-# OpenJDK 25, native BLAS/ARPACK, and tools to unpack LibTorch / ONNX Runtime.
-# On Ubuntu, libarpack2t64 links against OpenBLAS/LAPACK directly (no FlexiBLAS).
+# OpenJDK 25, native BLAS, and tools to unpack LibTorch / ONNX Runtime. ARPACK is deliberately absent:
+# only fit-time code (smile.manifold, SpectralClustering) uses it, never inference.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
         curl \
         gzip \
-        libarpack2t64 \
         libgomp1 \
         libopenblas0-pthread \
         libnccl2 \
