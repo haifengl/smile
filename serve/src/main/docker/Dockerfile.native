@@ -36,7 +36,7 @@
 # You can pass extra Gradle arguments with --build-arg GRADLE_ARGS="...".
 #
 ###
-ARG MANDREL_BUILDER=quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-25
+ARG MANDREL_BUILDER=quay.io/quarkus/ubi10-quarkus-mandrel-builder-image:jdk-25
 ARG RUNTIME_BASE=registry.access.redhat.com/ubi10/ubi-minimal:10.0
 
 # -----------------------------------------------------------------------------
@@ -120,6 +120,8 @@ RUN curl -o /tmp/epel.rpm https://dl.fedoraproject.org/pub/epel/epel-release-lat
 # Install flexiblas, which is needed by arpack
 RUN microdnf --enablerepo=ubi-10-codeready-builder-rpms install -y flexiblas-netlib && microdnf clean all
 RUN flexiblas default OPENBLAS-OPENMP
+# The app dlopens libopenblas.so (smile.lib.blas / smile.lib.lapack default), but the OpenMP build is named libopenblaso.
+RUN ln -s libopenblaso.so.0 /usr/lib64/libopenblas.so
 # Somehow, arpack cannot find installed flexiblas, so we have to install arpack manually
 # without dependencies and then clean up the rpm file.
 RUN microdnf download arpack \

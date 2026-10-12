@@ -5418,7 +5418,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jdouble",
@@ -5428,7 +5433,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jdouble",
@@ -5439,6 +5449,17 @@
    {
     "returnType": "jdouble",
     "parameterTypes": [
+     "void*"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
+   },
+   {
+    "returnType": "jdouble",
+    "parameterTypes": [
      "void*",
      "void*"
     ]
@@ -5447,9 +5468,26 @@
     "returnType": "jdouble",
     "parameterTypes": [
      "void*",
+     "void*"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
+   },
+   {
+    "returnType": "jdouble",
+    "parameterTypes": [
+     "void*",
      "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jdouble",
@@ -5458,7 +5496,12 @@
      "void*",
      "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jdouble",
@@ -5468,7 +5511,12 @@
      "void*",
      "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jdouble",
@@ -5479,7 +5527,12 @@
      "void*",
      "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jdouble",
@@ -5491,7 +5544,12 @@
      "void*",
      "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jdouble",
@@ -5504,7 +5562,12 @@
      "void*",
      "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jfloat",
@@ -5528,7 +5591,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jfloat",
@@ -5536,7 +5604,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jfloat",
@@ -5546,7 +5619,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jfloat",
@@ -5673,6 +5751,17 @@
    {
     "returnType": "jint",
     "parameterTypes": [
+     "void*"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
+   },
+   {
+    "returnType": "jint",
+    "parameterTypes": [
      "void*",
      "jint"
     ]
@@ -5811,6 +5900,18 @@
     "returnType": "jint",
     "parameterTypes": [
      "void*",
+     "void*"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
+   },
+   {
+    "returnType": "jint",
+    "parameterTypes": [
+     "void*",
      "void*",
      "jint"
     ]
@@ -5845,6 +5946,19 @@
     "parameterTypes": [
      "void*",
      "void*",
+     "void*"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
+   },
+   {
+    "returnType": "jint",
+    "parameterTypes": [
+     "void*",
+     "void*",
      "void*",
      "jlong",
      "jint"
@@ -5857,7 +5971,12 @@
      "void*",
      "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -5867,7 +5986,12 @@
      "void*",
      "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -5878,32 +6002,12 @@
      "void*",
      "void*",
      "void*"
-    ]
-   },
-   {
-    "returnType": "jint",
-    "parameterTypes": [
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*"
-    ]
-   },
-   {
-    "returnType": "jint",
-    "parameterTypes": [
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -5914,25 +6018,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
-   },
-   {
-    "returnType": "jint",
-    "parameterTypes": [
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -5944,11 +6036,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -5961,11 +6055,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -5979,11 +6075,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -5998,11 +6096,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -6018,11 +6118,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -6039,11 +6141,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -6061,34 +6165,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
-   },
-   {
-    "returnType": "jint",
-    "parameterTypes": [
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -6107,12 +6190,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -6132,12 +6216,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -6158,12 +6243,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -6185,12 +6271,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -6213,12 +6300,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -6242,12 +6330,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -6272,12 +6361,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -6303,12 +6393,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -6335,12 +6426,13 @@
      "void*",
      "void*",
      "void*",
-     "void*",
-     "void*",
-     "void*",
-     "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jint",
@@ -6368,13 +6460,160 @@
      "void*",
      "void*",
      "void*",
+     "void*"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
+   },
+   {
+    "returnType": "jint",
+    "parameterTypes": [
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
      "void*",
      "void*",
      "void*",
      "void*",
      "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
+   },
+   {
+    "returnType": "jint",
+    "parameterTypes": [
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
+   },
+   {
+    "returnType": "jint",
+    "parameterTypes": [
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
+   },
+   {
+    "returnType": "jint",
+    "parameterTypes": [
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*",
+     "void*"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jlong",
@@ -6392,7 +6631,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "jlong",
@@ -6491,7 +6735,12 @@
      "jdouble",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6503,7 +6752,12 @@
      "jdouble",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6514,7 +6768,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6523,7 +6782,12 @@
      "jfloat",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6535,7 +6799,12 @@
      "jfloat",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6546,7 +6815,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6560,7 +6834,12 @@
      "jdouble",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6572,7 +6851,12 @@
      "void*",
      "jint",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6585,7 +6869,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6601,7 +6890,12 @@
      "jdouble",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6615,7 +6909,12 @@
      "void*",
      "jint",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6630,7 +6929,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6645,7 +6949,12 @@
      "jdouble",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6659,7 +6968,12 @@
      "jfloat",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6671,7 +6985,12 @@
      "void*",
      "jint",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6684,7 +7003,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6700,7 +7024,12 @@
      "jfloat",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6714,7 +7043,12 @@
      "void*",
      "jint",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6729,7 +7063,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6744,7 +7083,12 @@
      "jfloat",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6757,7 +7101,12 @@
      "void*",
      "jint",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6771,7 +7120,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6788,7 +7142,12 @@
      "jdouble",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6801,7 +7160,12 @@
      "void*",
      "jint",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6815,7 +7179,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6832,7 +7201,12 @@
      "jfloat",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6848,64 +7222,16 @@
      "jdouble",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
     "parameterTypes": [
-     "jint",
-     "jint",
-     "jint",
-     "jint",
-     "jint",
-     "jdouble",
-     "void*",
-     "jint",
-     "void*",
-     "jint",
-     "jdouble",
-     "void*",
-     "jint"
-    ]
-   },
-   {
-    "returnType": "void",
-    "parameterTypes": [
-     "jint",
-     "jint",
-     "jint",
-     "jint",
-     "jint",
-     "jfloat",
-     "void*",
-     "jint",
-     "jfloat",
-     "void*",
-     "jint"
-    ]
-   },
-   {
-    "returnType": "void",
-    "parameterTypes": [
-     "jint",
-     "jint",
-     "jint",
-     "jint",
-     "jint",
-     "jfloat",
-     "void*",
-     "jint",
-     "void*",
-     "jint",
-     "jfloat",
-     "void*",
-     "jint"
-    ]
-   },
-   {
-    "returnType": "void",
-    "parameterTypes": [
-     "jint",
      "jint",
      "jint",
      "jint",
@@ -6919,7 +7245,80 @@
      "jdouble",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
+   },
+   {
+    "returnType": "void",
+    "parameterTypes": [
+     "jint",
+     "jint",
+     "jint",
+     "jint",
+     "jint",
+     "jfloat",
+     "void*",
+     "jint",
+     "jfloat",
+     "void*",
+     "jint"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
+   },
+   {
+    "returnType": "void",
+    "parameterTypes": [
+     "jint",
+     "jint",
+     "jint",
+     "jint",
+     "jint",
+     "jfloat",
+     "void*",
+     "jint",
+     "void*",
+     "jint",
+     "jfloat",
+     "void*",
+     "jint"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
+   },
+   {
+    "returnType": "void",
+    "parameterTypes": [
+     "jint",
+     "jint",
+     "jint",
+     "jint",
+     "jint",
+     "jint",
+     "jdouble",
+     "void*",
+     "jint",
+     "void*",
+     "jint",
+     "jdouble",
+     "void*",
+     "jint"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6938,7 +7337,12 @@
      "jfloat",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6955,7 +7359,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6972,7 +7381,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -6989,7 +7403,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7004,7 +7423,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7023,7 +7447,12 @@
      "void*",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7037,7 +7466,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7050,7 +7484,12 @@
      "void*",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7068,7 +7507,12 @@
      "jdouble",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7086,7 +7530,12 @@
      "jfloat",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7104,7 +7553,12 @@
      "void*",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7120,7 +7574,12 @@
      "void*",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7133,7 +7592,12 @@
      "void*",
      "jint",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7147,7 +7611,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7164,7 +7633,12 @@
      "void*",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7178,7 +7652,12 @@
      "void*",
      "jint",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7193,7 +7672,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7209,7 +7693,12 @@
      "void*",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7223,7 +7712,12 @@
      "void*",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7238,7 +7732,12 @@
      "void*",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7255,7 +7754,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7267,7 +7771,12 @@
      "jint",
      "jdouble",
      "jdouble"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7279,7 +7788,12 @@
      "jint",
      "jfloat",
      "jfloat"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7290,7 +7804,12 @@
      "void*",
      "jint",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7307,7 +7826,12 @@
      "void*",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7318,7 +7842,12 @@
      "jint",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7330,7 +7859,12 @@
      "void*",
      "void*",
      "jint"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7357,7 +7891,12 @@
      "void*",
      "jint",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7386,7 +7925,12 @@
      "jint",
      "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7413,7 +7957,12 @@
      "void*",
      "jint",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7442,7 +7991,12 @@
      "jint",
      "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7472,7 +8026,12 @@
      "void*",
      "jint",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7502,7 +8061,12 @@
      "void*",
      "jint",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7545,7 +8109,12 @@
      "void*",
      "jint",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7647,7 +8216,12 @@
      "void*",
      "jint",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7669,7 +8243,12 @@
      "jint",
      "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7690,7 +8269,12 @@
      "void*",
      "jint",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7712,7 +8296,12 @@
      "jint",
      "void*",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7744,10 +8333,28 @@
     "parameterTypes": [
      "void*",
      "void*",
+     "void*"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
+   },
+   {
+    "returnType": "void",
+    "parameterTypes": [
+     "void*",
+     "void*",
      "void*",
      "jdouble",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7757,7 +8364,12 @@
      "void*",
      "jfloat",
      "void*"
-    ]
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void",
@@ -7767,6 +8379,20 @@
      "void*",
      "void*"
     ]
+   },
+   {
+    "returnType": "void",
+    "parameterTypes": [
+     "void*",
+     "void*",
+     "void*",
+     "void*"
+    ],
+    "options": {
+     "critical": {
+      "allowHeapAccess": true
+     }
+    }
    },
    {
     "returnType": "void*",
