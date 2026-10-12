@@ -20,6 +20,7 @@ package smile.serve;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import smile.onnx.NodeInfo;
 import smile.onnx.TensorInfo;
 
@@ -37,6 +38,8 @@ import smile.onnx.TensorInfo;
  *
  * @author Haifeng Li
  */
+/* Jackson instantiates the array type while writing this record (not registered automatically in native mode). */
+@RegisterForReflection(targets = OnnxModelInfo.NodeDescriptor[].class)
 public record OnnxModelInfo(String id,
                              String graphName,
                              String description,
