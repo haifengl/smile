@@ -108,25 +108,11 @@ FROM ${RUNTIME_BASE}
 
 USER root
 
-# Install OpenBLAS for native BLAS support and libgomp for LibTorch/OpenMP
-RUN microdnf install -y openblas libgomp && microdnf clean all
-
-# As epel-release package is not available on this image and microdnf cannot install remote package,
-# we have to use curl and rpm to install it mannually.
-RUN curl -o /tmp/epel.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm \
-    && rpm -ivh /tmp/epel.rpm \
-    && rm /tmp/epel.rpm
-
-# Install flexiblas, which is needed by arpack
-RUN microdnf --enablerepo=ubi-10-codeready-builder-rpms install -y flexiblas-netlib && microdnf clean all
-RUN flexiblas default OPENBLAS-OPENMP
+# Install the OpenMP build of OpenBLAS (the ubi10 `openblas` package itself ships no libraries) for native BLAS/LAPACK and libgomp for LibTorch/OpenMP. ARPACK (and the FlexiBLAS/EPEL
+# packages it needs) is deliberately absent: only fit-time code (smile.manifold, SpectralClustering) uses it.
+RUN microdnf install -y openblas-openmp libgomp && microdnf clean all
 # The app dlopens libopenblas.so (smile.lib.blas / smile.lib.lapack default), but the OpenMP build is named libopenblaso.
 RUN ln -s libopenblaso.so.0 /usr/lib64/libopenblas.so
-# Somehow, arpack cannot find installed flexiblas, so we have to install arpack manually
-# without dependencies and then clean up the rpm file.
-RUN microdnf download arpack \
-    && rpm -i --nodeps arpack-*.rpm \
-    && rm -f arpack-*.rpm
 
 # Runtime libraries only (no headers, cmake files or static libs)
 COPY --from=builder /usr/local/onnxruntime/lib /usr/local/onnxruntime/lib

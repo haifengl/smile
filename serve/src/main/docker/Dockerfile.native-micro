@@ -36,7 +36,7 @@
 # docker run -i --rm -p 8888:8080 -u root -v "$(pwd)/model":/model quarkus/smile-serve-native-micro
 #
 # The runtime base is the Quarkus ubi10 micro image (no package manager); see the rtlibs stage for how the
-# BLAS/LAPACK/ARPACK libraries get in.
+# BLAS/LAPACK libraries get in.
 #
 # The native build needs several GB of RAM; give Docker at least 8 GB.
 # You can pass extra Gradle arguments with --build-arg GRADLE_ARGS="...".
@@ -82,7 +82,7 @@ RUN ./gradlew :serve:build -x test -Pserve.plugins= \
     && chmod 0755 /tmp/application
 
 # -----------------------------------------------------------------------------
-# Stage 2: collect BLAS/LAPACK/ARPACK shared libraries. The micro runtime image has no package manager, so
+# Stage 2: collect the BLAS/LAPACK shared libraries. The micro runtime image has no package manager, so
 # the libraries are installed here and only their files (plus shared-library dependencies the micro image
 # does not already provide) are copied over.
 # -----------------------------------------------------------------------------
@@ -92,48 +92,27 @@ FROM ${LIBS_BASE} AS rtlibs
 
 USER root
 
-# Install OpenBLAS for native BLAS support and libgomp for its OpenMP build
-RUN microdnf install -y openblas libgomp && microdnf clean all
-
-# As epel-release package is not available on this image and microdnf cannot install remote package,
-# we have to use curl and rpm to install it mannually.
-RUN curl -o /tmp/epel.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm \
-    && rpm -ivh /tmp/epel.rpm \
-    && rm /tmp/epel.rpm
-
-# Install flexiblas, which is needed by arpack
-RUN microdnf --enablerepo=ubi-10-codeready-builder-rpms install -y flexiblas-netlib && microdnf clean all
-RUN flexiblas default OPENBLAS-OPENMP
-# Somehow, arpack cannot find installed flexiblas, so we have to install arpack manually
-# without dependencies and then clean up the rpm file.
-RUN microdnf download arpack \
-    && rpm -i --nodeps arpack-*.rpm \
-    && rm -f arpack-*.rpm
+# Install the OpenMP build of OpenBLAS (the ubi10 `openblas` package itself ships no libraries) for native BLAS/LAPACK and libgomp for its OpenMP build. ARPACK (and the FlexiBLAS/EPEL
+# packages it needs) is deliberately absent: only fit-time code (smile.manifold, SpectralClustering) uses it.
+RUN microdnf install -y openblas-openmp libgomp && microdnf clean all
 
 # Files that the dependency scan below also inspects
 COPY --from=builder /usr/local/onnxruntime/lib /usr/local/onnxruntime/lib
 COPY --from=builder /tmp/application /tmp/application
 COPY --from=micro-ref /usr/lib64 /micro-lib64
 
-# /out mirrors the target filesystem: FlexiBLAS config and backends, the BLAS/LAPACK/ARPACK libraries, and every
-# library they (and the executable and ORT) link against that the micro image lacks.
+# /out mirrors the target filesystem: libopenblas (as the libopenblas.so name the app dlopens) plus every
+# shared library it, the executable and ORT link against that the micro image lacks.
 RUN set -eu; \
-    mkdir -p /out/usr/lib64/flexiblas /out/etc/flexiblasrc.d; \
-    cp -a /usr/lib64/flexiblas/. /out/usr/lib64/flexiblas/; \
-    cp -a /etc/flexiblasrc /out/etc/; \
-    cp -a /etc/flexiblasrc.d/. /out/etc/flexiblasrc.d/; \
-    for n in libarpack.so.2 libflexiblas.so.3 libflexiblas_api.so.3 libflexiblas_mgmt.so.3 libopenblaso.so.0; do \
-        cp -L "/usr/lib64/$n" "/out/usr/lib64/$n"; \
-    done; \
+    mkdir -p /out/usr/lib64; \
+    cp -L /usr/lib64/libopenblaso.so.0 /out/usr/lib64/libopenblaso.so.0; \
     ln -s libopenblaso.so.0 /out/usr/lib64/libopenblas.so; \
-    for f in /usr/lib64/flexiblas/*.so /usr/lib64/libarpack.so.2 /usr/lib64/libopenblaso.so.0 \
-             /usr/local/onnxruntime/lib/libonnxruntime.so \
-             /tmp/application; do \
+    for f in /usr/lib64/libopenblaso.so.0 /usr/local/onnxruntime/lib/libonnxruntime.so /tmp/application; do \
         ldd "$f"; \
     done | awk '/=> \//{print $1, $3}' | sort -u | while read -r name path; do \
         if [ ! -e "/micro-lib64/$name" ] && [ ! -e "/out/usr/lib64/$name" ]; then cp -L "$path" "/out/usr/lib64/$name"; fi; \
     done; \
-    ! ldd /usr/lib64/libarpack.so.2 /usr/lib64/libopenblaso.so.0 | grep -q "not found"
+    ! ldd /usr/lib64/libopenblaso.so.0 | grep -q "not found"
 
 # -----------------------------------------------------------------------------
 # Stage 3: runtime image (micro base: no package manager, GraalVM, Gradle, Node.js, compilers or headers)

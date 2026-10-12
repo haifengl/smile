@@ -513,12 +513,16 @@ Both Dockerfiles build in-container (context = repository root) and need no host
 
 | Dockerfile | Contents | Size |
 |---|---|---|
-| `Dockerfile.native` | Full CPU image: SMILE, ONNX, CPU chat (ONNX Runtime GenAI packages), auth and database, LibTorch | ~890 MB |
-| `Dockerfile.native-micro` | Inference only: SMILE and ONNX models plus the web UI's inference pages. No chat, auth/users, database, LibTorch or GenAI | ~225 MB |
+| `Dockerfile.native` | Full CPU image: SMILE, ONNX, CPU chat (ONNX Runtime GenAI packages), auth and database, LibTorch | ~830 MB |
+| `Dockerfile.native-micro` | Inference only: SMILE and ONNX models plus the web UI's inference pages. No chat, auth/users, database, LibTorch or GenAI | ~210 MB |
 
 `native-micro` builds with `-Dquarkus.profile=micro` (see the `%micro.*` block in `application.properties`).
 Chat and auth endpoints return 404, and `POST /api/v1/models/load` with a chat model returns 503. The chat
 page of the web UI therefore shows errors; the SMILE and ONNX inference pages work.
+
+None of the images ship ARPACK (or FlexiBLAS/EPEL, which it needed): ARPACK is only used by fit-time code
+(`smile.manifold` and `SpectralClustering`), never by the model families `serve` loads, so inference never touches it.
+Native BLAS/LAPACK comes from OpenBLAS (`openblas-openmp`).
 
 On CPU the chat engine only serves pre-converted ONNX Runtime GenAI packages (for example
 `microsoft/Phi-4-mini-instruct-onnx`); LibTorch chat requires CUDA.
