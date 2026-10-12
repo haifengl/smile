@@ -200,11 +200,18 @@
 
 .infer-primary-actions {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 8px;
   margin-top: 28px;
   padding-top: 20px;
   border-top: 1px solid #e5e7eb;
+}
+
+.infer-action-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .infer-error {
