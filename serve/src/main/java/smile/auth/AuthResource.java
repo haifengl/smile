@@ -27,10 +27,12 @@ import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.vertx.ext.web.RoutingContext;
 import org.jboss.logging.Logger;
 import smile.chat.blob.ClientIdentity;
+import io.quarkus.arc.profile.UnlessBuildProfile;
 
 /**
  * Authentication endpoints under {@code /api/v1/auth}.
  */
+@UnlessBuildProfile("micro")
 @Path("/auth")
 @RunOnVirtualThread
 @Produces(MediaType.APPLICATION_JSON)

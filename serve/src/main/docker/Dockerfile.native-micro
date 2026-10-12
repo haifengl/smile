@@ -18,9 +18,11 @@
 ####
 
 ###
-# Slim variant of Dockerfile.native: a CPU-only native image WITHOUT LibTorch and libsmile_torch.so.
-# It serves SMILE (.sml) models, ONNX models and ONNX Runtime GenAI chat packages; the LibTorch-based
-# deep-learning/LLM path needs CUDA anyway and is not available on CPU. Dockerfile.native is the full baseline.
+# Slim, inference-only variant of Dockerfile.native for resource-constrained systems that care about image
+# size and startup latency. It serves SMILE (.sml) and ONNX models and the web UI's inference pages, and leaves
+# out everything else: LibTorch/libsmile_torch.so, ONNX Runtime GenAI, and (via the `micro` Quarkus profile)
+# the chat stack, auth/users and the database (H2/PostgreSQL/Hibernate). Chat endpoints return 404, and
+# POST /api/v1/models/load with a chat model returns 503. Dockerfile.native is the full baseline.
 #
 # Two-stage in-container build: the Mandrel/GraalVM toolchain, Gradle and Node.js stay in the builder
 # stage; the final image only has the native executable and the shared libraries it loads at runtime.
@@ -52,8 +54,6 @@ FROM ${MANDREL_BUILDER} AS builder
 
 ARG ORT_VERSION=1.30.0
 ARG NODE_VERSION=24.11.0
-ARG GENAI_VERSION=0.17.0
-ARG GENAI_SHA256=482a17113556ff76c53820b801f391cdcbaac0b6c4089065182683c03fdbc8d9
 ARG GRADLE_ARGS=""
 
 USER root
@@ -68,22 +68,13 @@ RUN curl -fsSL --retry 5 --retry-delay 10 "https://github.com/microsoft/onnxrunt
     | tar -zx -C /usr/local/ \
     && mv /usr/local/onnxruntime-linux-x64-${ORT_VERSION} /usr/local/onnxruntime
 
-# ONNX Runtime GenAI (libonnxruntime-genai.so): the CPU chat path. Without CUDA the chat engine loads
-# pre-converted GenAI (ONNX) packages through it instead of LibTorch.
-RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/genai.tgz \
-        "https://github.com/microsoft/onnxruntime-genai/releases/download/v${GENAI_VERSION}/onnxruntime-genai-${GENAI_VERSION}-linux-x64.tar.gz" \
-    && echo "${GENAI_SHA256}  /tmp/genai.tgz" | sha256sum -c - \
-    && mkdir -p /usr/local/onnxruntime-genai \
-    && tar -zx -C /usr/local/onnxruntime-genai --strip-components=1 -f /tmp/genai.tgz \
-    && rm -f /tmp/genai.tgz
-
 # Native executable. Copy the whole repo (see .dockerignore) and build with the Gradle wrapper.
 WORKDIR /src
 COPY . /src
 RUN (cd serve/src/main/webui && npm install)
 # -Pserve.plugins= excludes optional plugins (blob-s3 / AWS SDK) from the native image.
 RUN ./gradlew :serve:build -x test -Pserve.plugins= \
-        -Dquarkus.profile=default \
+        -Dquarkus.profile=micro \
         -Dquarkus.native.enabled=true \
         -Dquarkus.package.jar.enabled=false \
         ${GRADLE_ARGS} \
@@ -121,12 +112,11 @@ RUN microdnf download arpack \
 
 # Files that the dependency scan below also inspects
 COPY --from=builder /usr/local/onnxruntime/lib /usr/local/onnxruntime/lib
-COPY --from=builder /usr/local/onnxruntime-genai/lib/libonnxruntime-genai.so /usr/local/onnxruntime-genai/lib/libonnxruntime-genai.so
 COPY --from=builder /tmp/application /tmp/application
 COPY --from=micro-ref /usr/lib64 /micro-lib64
 
 # /out mirrors the target filesystem: FlexiBLAS config and backends, the BLAS/LAPACK/ARPACK libraries, and every
-# library they (and the executable, ORT and ORT GenAI) link against that the micro image lacks.
+# library they (and the executable and ORT) link against that the micro image lacks.
 RUN set -eu; \
     mkdir -p /out/usr/lib64/flexiblas /out/etc/flexiblasrc.d; \
     cp -a /usr/lib64/flexiblas/. /out/usr/lib64/flexiblas/; \
@@ -137,7 +127,7 @@ RUN set -eu; \
     done; \
     ln -s libopenblaso.so.0 /out/usr/lib64/libopenblas.so; \
     for f in /usr/lib64/flexiblas/*.so /usr/lib64/libarpack.so.2 /usr/lib64/libopenblaso.so.0 \
-             /usr/local/onnxruntime/lib/libonnxruntime.so /usr/local/onnxruntime-genai/lib/libonnxruntime-genai.so \
+             /usr/local/onnxruntime/lib/libonnxruntime.so \
              /tmp/application; do \
         ldd "$f"; \
     done | awk '/=> \//{print $1, $3}' | sort -u | while read -r name path; do \
@@ -154,17 +144,15 @@ COPY --from=rtlibs /out/ /
 
 # Runtime libraries only (no headers, cmake files or static libs)
 COPY --from=builder /usr/local/onnxruntime/lib /usr/local/onnxruntime/lib
-COPY --from=builder /usr/local/onnxruntime-genai/lib/libonnxruntime-genai.so /usr/local/onnxruntime-genai/lib/libonnxruntime-genai.so
 
 # Create /work (owned by 1001) before the COPYs so no later layer has to chown/chmod the 148 MB executable.
 RUN mkdir -p /work/lib && chown -R 1001:root /work && chmod g+rwX /work
 WORKDIR /work
 COPY --from=builder --chown=1001:root /tmp/application /work/application
 
-# ORT + ORT GenAI
-ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/onnxruntime-genai/lib:/work/lib"
-ENV ONNXRUNTIME_NATIVE_PATH="/usr/local/onnxruntime/lib" \
-    ONNXRUNTIME_GENAI_NATIVE_PATH="/usr/local/onnxruntime-genai/lib"
+# ORT
+ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/work/lib"
+ENV ONNXRUNTIME_NATIVE_PATH="/usr/local/onnxruntime/lib"
 ENV HF_HOME="/model/huggingface"
 
 EXPOSE 8080

@@ -19,11 +19,14 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.enterprise.inject.Instance;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import smile.chat.ChatService;
 import smile.serve.InferenceModel;
@@ -57,8 +60,9 @@ public class ModelsResource {
     @Inject
     OnnxService onnxService;
 
+    /** Absent in builds that exclude the chat stack (e.g. the native-micro image). */
     @Inject
-    ChatService chatService;
+    Instance<ChatService> chatService;
 
     /**
      * Dynamically loads a model from disk or Hugging Face into active memory.
@@ -103,7 +107,7 @@ public class ModelsResource {
                 if (hasSmlFiles(p)) return loadSml(modelSpec);
                 if (hasOnnxFiles(p)) return loadOnnx(modelSpec);
             }
-            if (ChatService.looksLikeHuggingFaceRepoId(modelSpec)) {
+            if (ModelSpecs.looksLikeHuggingFaceRepoId(modelSpec)) {
                 return loadChat(modelSpec, request);
             }
             throw new BadRequestException("Unable to determine model kind for '" + modelSpec + "'. Specify 'kind' explicitly (sml, onnx, or llm).");
@@ -142,7 +146,10 @@ public class ModelsResource {
     }
 
     private Map<String, Object> loadChat(String modelSpec, JsonObject request) {
-        return chatService.load(modelSpec, request);
+        if (!chatService.isResolvable()) {
+            throw new WebApplicationException("Chat models are not supported in this build", Response.Status.SERVICE_UNAVAILABLE);
+        }
+        return chatService.get().load(modelSpec, request);
     }
 
     private static boolean hasSmlFiles(java.nio.file.Path dir) {

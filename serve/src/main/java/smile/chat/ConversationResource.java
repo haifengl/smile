@@ -42,6 +42,7 @@ import smile.chat.blob.ClientIdentity;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import smile.auth.AuthContext;
+import io.quarkus.arc.profile.UnlessBuildProfile;
 
 /**
  * REST resource for conversations at {@code /api/v1/conversations}.
@@ -53,6 +54,7 @@ import smile.auth.AuthContext;
  *
  * @author Haifeng Li
  */
+@UnlessBuildProfile("micro")
 @Path("/conversations")
 @RunOnVirtualThread
 @Produces(MediaType.APPLICATION_JSON)

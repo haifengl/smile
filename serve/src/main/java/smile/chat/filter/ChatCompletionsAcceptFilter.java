@@ -15,7 +15,7 @@
  * License along with SMILE Serve. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-package smile.chat;
+package smile.chat.filter;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -27,6 +27,7 @@ import jakarta.ws.rs.core.MediaType;
 import io.smallrye.mutiny.Uni;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import org.jboss.resteasy.reactive.server.ServerRequestFilter;
+import smile.chat.ChatCompletionsStreamFlag;
 
 /**
  * Rewrites {@code Accept} for {@code POST .../chat/completions} from the
@@ -35,6 +36,11 @@ import org.jboss.resteasy.reactive.server.ServerRequestFilter;
  * <p>OpenAI SDKs send {@code Accept: application/json} even when streaming.
  * The entity is read on a worker thread (event-loop safe), then restored for
  * JAX-RS deserialization.
+ *
+ * <p>This filter lives in its own package, outside the packages excluded from the {@code micro} profile
+ * ({@code smile.chat}, {@code smile.chat.blob}, {@code smile.auth}): Quarkus REST generates the filter from the
+ * {@code @ServerRequestFilter} method regardless of build-time conditions on the class, so it must stay a
+ * bean. It is a no-op for paths other than {@code chat/completions}.
  *
  * @author Haifeng Li
  */

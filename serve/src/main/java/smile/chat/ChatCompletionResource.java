@@ -48,6 +48,7 @@ import smile.llm.FinishReason;
 import smile.llm.Role;
 import smile.auth.AuthContext;
 import smile.chat.blob.ClientIdentity;
+import io.quarkus.arc.profile.UnlessBuildProfile;
 
 /**
  * REST resource exposing the OpenAI-compatible chat completion API at
@@ -56,12 +57,13 @@ import smile.chat.blob.ClientIdentity;
  * <p>When {@code stream} is true, the method returns a
  * {@link Multi} of SSE payloads directly (required for Quarkus SSE framing).
  * When {@code stream} is false or omitted (OpenAI default), a single
- * {@code chat.completion} JSON body is returned. {@link ChatCompletionsAcceptFilter}
+ * {@code chat.completion} JSON body is returned. {@link smile.chat.filter.ChatCompletionsAcceptFilter}
  * sets {@code Accept} from the body {@code stream} flag so the correct method is
  * selected even when clients send {@code Accept: application/json}.
  *
  * @author Haifeng Li
  */
+@UnlessBuildProfile("micro")
 @Path("/chat/completions")
 public class ChatCompletionResource {
 
