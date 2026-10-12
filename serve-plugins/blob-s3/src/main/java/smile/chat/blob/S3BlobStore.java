@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.jboss.logging.Logger;
-import smile.chat.BlobStorageConfig;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
@@ -54,28 +53,28 @@ public final class S3BlobStore implements BlobStore, AutoCloseable {
     private final String bucket;
 
     /**
-     * @param config blob storage configuration with S3 settings.
+     * @param config S3 settings.
      */
-    public S3BlobStore(BlobStorageConfig config) {
-        String bucketName = config.s3Bucket()
+    public S3BlobStore(S3Config config) {
+        String bucketName = config.bucket()
                 .filter(s -> !s.isBlank())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "smile.blob.s3.bucket is required when smile.blob.storage=s3"));
-        String region = config.s3Region()
+        String region = config.region()
                 .filter(s -> !s.isBlank())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "smile.blob.s3.region is required when smile.blob.storage=s3"));
 
         S3ClientBuilder builder = S3Client.builder().region(Region.of(region));
-        Optional<String> accessKey = config.s3AccessKey().filter(s -> !s.isBlank());
-        Optional<String> secretKey = config.s3SecretKey().filter(s -> !s.isBlank());
+        Optional<String> accessKey = config.accessKey().filter(s -> !s.isBlank());
+        Optional<String> secretKey = config.secretKey().filter(s -> !s.isBlank());
         if (accessKey.isPresent() && secretKey.isPresent()) {
             builder.credentialsProvider(StaticCredentialsProvider.create(
                     AwsBasicCredentials.create(accessKey.get(), secretKey.get())));
         } else {
             builder.credentialsProvider(DefaultCredentialsProvider.builder().build());
         }
-        config.s3Endpoint().filter(s -> !s.isBlank()).ifPresent(endpoint -> {
+        config.endpoint().filter(s -> !s.isBlank()).ifPresent(endpoint -> {
             builder.endpointOverride(URI.create(endpoint));
             builder.serviceConfiguration(S3Configuration.builder()
                     .pathStyleAccessEnabled(true)
@@ -85,7 +84,7 @@ public final class S3BlobStore implements BlobStore, AutoCloseable {
         this.client = builder.build();
         this.bucket = bucketName;
         logger.infof("S3 blob store bucket=%s region=%s endpoint=%s",
-                bucket, region, config.s3Endpoint().orElse("default"));
+                bucket, region, config.endpoint().orElse("default"));
     }
 
     @Override

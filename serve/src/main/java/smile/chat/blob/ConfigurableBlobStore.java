@@ -17,8 +17,10 @@
  */
 package smile.chat.blob;
 
-import java.nio.file.Path;
+import java.util.List;
 import jakarta.annotation.PreDestroy;
+import io.quarkus.arc.All;
+import io.quarkus.runtime.Startup;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
@@ -29,6 +31,7 @@ import smile.chat.BlobStorageConfig;
  *
  * @author Haifeng Li
  */
+@Startup
 @ApplicationScoped
 public class ConfigurableBlobStore implements BlobStore {
     private static final Logger logger = Logger.getLogger(ConfigurableBlobStore.class);
@@ -37,22 +40,21 @@ public class ConfigurableBlobStore implements BlobStore {
     private final AutoCloseable closeable;
 
     /**
-     * @param config blob storage configuration.
+     * @param config    blob storage configuration.
+     * @param providers all backends on the classpath (built-in plus plugins).
      */
     @Inject
-    public ConfigurableBlobStore(BlobStorageConfig config) {
-        String backend = config.storage() == null ? "local" : config.storage().trim();
-        if ("s3".equalsIgnoreCase(backend)) {
-            S3BlobStore s3 = new S3BlobStore(config);
-            this.delegate = s3;
-            this.closeable = s3;
-        } else {
-            if (!"local".equalsIgnoreCase(backend)) {
-                logger.warnf("Unknown smile.blob.storage=%s; falling back to local", backend);
-            }
-            this.delegate = new LocalBlobStore(Path.of(config.localPath()));
-            this.closeable = null;
-        }
+    public ConfigurableBlobStore(BlobStorageConfig config, @All List<BlobStoreProvider> providers) {
+        String backend = config.storage().trim();
+        BlobStoreProvider provider = providers.stream()
+                .filter(p -> p.name().equalsIgnoreCase(backend))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "smile.blob.storage=" + backend + " has no provider on the classpath; available: "
+                                + providers.stream().map(BlobStoreProvider::name).sorted().toList()));
+        this.delegate = provider.create();
+        this.closeable = delegate instanceof AutoCloseable c ? c : null;
+        logger.infof("Blob storage backend: %s", provider.name());
     }
 
     @Override

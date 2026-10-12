@@ -22,8 +22,15 @@ dependencies {
     implementation("io.quarkus:quarkus-jdbc-postgresql")
     implementation("io.quarkus:quarkus-jdbc-h2")
     implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.9.2")
-    implementation(platform("software.amazon.awssdk:bom:2.55.11"))
-    implementation("software.amazon.awssdk:s3")
+    implementation(project(":serve-plugins:blob-spi"))
+    // Optional plugins, chosen at build time: -Pserve.plugins=blob-s3,... (default: all; empty for native).
+    val availablePlugins = listOf("blob-s3")
+    val plugins = providers.gradleProperty("serve.plugins").orNull
+        ?.split(",")?.map(String::trim)?.filter(String::isNotEmpty) ?: availablePlugins
+    plugins.forEach {
+        require(it in availablePlugins) { "Unknown serve plugin '$it'; available: $availablePlugins" }
+        implementation(project(":serve-plugins:$it"))
+    }
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-test-h2")
     testImplementation("io.rest-assured:rest-assured:6.1.0")

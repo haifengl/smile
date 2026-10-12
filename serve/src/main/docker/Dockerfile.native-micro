@@ -25,7 +25,9 @@
 #
 # Before building the container image run:
 #
-# ./gradlew build -Dquarkus.native.enabled=true
+# ./gradlew :serve:build -Pserve.plugins= -Dquarkus.native.enabled=true
+#
+# (-Pserve.plugins= leaves out optional plugins such as blob-s3 and its AWS SDK, which keeps the native image small.)
 #
 # Then, build the image with:
 #

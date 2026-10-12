@@ -28,7 +28,7 @@
 # SafeTensors.java) is copied from serve/build/quarkus-app — so you MUST
 # rebuild Java on the host before docker build, or you will ship stale jars:
 #
-#   ./gradlew :serve:build
+#   ./gradlew :serve:build   (includes all serve-plugins, e.g. blob-s3; see -Pserve.plugins)
 #   docker build -f serve/src/main/docker/Dockerfile.jvm-gpu \
 #     -t quarkus/smile-serve-gpu .
 #
@@ -230,7 +230,7 @@ ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/onnxruntime-genai/lib
 
 # We make four distinct layers so if there are application changes the library layers can be re-used
 # IMPORTANT: serve/build/quarkus-app must be rebuilt on the host after Java changes:
-#   ./gradlew :serve:build
+#   ./gradlew :serve:build   (includes all serve-plugins, e.g. blob-s3; see -Pserve.plugins)
 COPY --chown=185:185 serve/build/quarkus-app/lib/ /deployments/lib/
 COPY --chown=185:185 serve/build/quarkus-app/*.jar /deployments/
 COPY --chown=185:185 serve/build/quarkus-app/app/ /deployments/app/

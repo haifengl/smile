@@ -81,12 +81,14 @@ RUN cmake -S /src/smile_torch -B /build/cpp \
 WORKDIR /src
 COPY . /src
 RUN (cd serve/src/main/webui && npm install)
-RUN ./gradlew :serve:build -x test \
+# -Pserve.plugins= excludes optional plugins (blob-s3 / AWS SDK) from the native image.
+RUN ./gradlew :serve:build -x test -Pserve.plugins= \
         -Dquarkus.profile=default \
         -Dquarkus.native.enabled=true \
         -Dquarkus.package.jar.enabled=false \
         ${GRADLE_ARGS} \
-    && cp serve/build/*-runner /tmp/application
+    && cp serve/build/*-runner /tmp/application \
+    && chmod 0755 /tmp/application
 
 # -----------------------------------------------------------------------------
 # Stage 2: runtime image (no GraalVM, Gradle, Node.js, compilers or headers)
@@ -117,10 +119,11 @@ RUN microdnf download arpack \
 COPY --from=builder /usr/local/onnxruntime/lib /usr/local/onnxruntime/lib
 COPY --from=builder /usr/local/libtorch/lib /usr/local/libtorch/lib
 
+# Create /work (owned by 1001) before the COPYs so no later layer has to chown/chmod the 148 MB executable.
+RUN mkdir -p /work/lib && chown -R 1001:root /work && chmod g+rwX /work
 WORKDIR /work
-COPY --from=builder --chown=1001:root --chmod=0755 /tmp/application /work/application
+COPY --from=builder --chown=1001:root /tmp/application /work/application
 COPY --from=builder --chown=1001:root /build/cpp/libsmile_torch.so /work/lib/libsmile_torch.so
-RUN chown 1001:root /work && chmod g+rwX /work
 
 # ORT + LibTorch + libsmile_torch.so
 ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/libtorch/lib:/work/lib"
