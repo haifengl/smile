@@ -41,6 +41,11 @@
 # The native build needs several GB of RAM; give Docker at least 8 GB.
 # You can pass extra Gradle arguments with --build-arg GRADLE_ARGS="...".
 #
+# Optional size trade-off: compiling for size (-Os) makes the image about 19 MB smaller (211 -> 192 MB) with the
+# same startup time, but compute-heavy paths run slower (SHAP explanations ~1.75x, LDA ~1.25x, plain tree
+# prediction unchanged). Opt in with:
+#   --build-arg GRADLE_ARGS="-Dquarkus.native.additional-build-args-append=-Os"
+#
 ###
 ARG MANDREL_BUILDER=quay.io/quarkus/ubi10-quarkus-mandrel-builder-image:jdk-25
 ARG RUNTIME_BASE=quay.io/quarkus/ubi10-quarkus-micro-image:2.0
