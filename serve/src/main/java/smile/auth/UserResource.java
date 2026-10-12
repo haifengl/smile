@@ -17,10 +17,12 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import io.smallrye.common.annotation.RunOnVirtualThread;
+import io.quarkus.arc.profile.UnlessBuildProfile;
 
 /**
  * User profile API at {@code /api/v1/users/me}.
  */
+@UnlessBuildProfile("micro")
 @Path("/users/me")
 @RunOnVirtualThread
 @Produces(MediaType.APPLICATION_JSON)

@@ -607,16 +607,7 @@ public class ChatService implements OpenAiModelContributor {
      * @return {@code true} if the value should be resolved via Hugging Face Hub.
      */
     public static boolean looksLikeHuggingFaceRepoId(String spec) {
-        if (spec == null || spec.isBlank()) return false;
-        String s = spec.trim();
-        if (s.startsWith("/") || s.startsWith(".") || s.contains("\\") || s.contains(":")) {
-            return false;
-        }
-        int slash = s.indexOf('/');
-        if (slash <= 0 || slash != s.lastIndexOf('/') || slash == s.length() - 1) {
-            return false;
-        }
-        return true;
+        return smile.serve.model.ModelSpecs.looksLikeHuggingFaceRepoId(spec);
     }
 
     /**

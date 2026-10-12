@@ -26,12 +26,14 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.inject.Inject;
 import io.smallrye.common.annotation.RunOnVirtualThread;
+import io.quarkus.arc.profile.UnlessBuildProfile;
 
 /**
  * Serves stored multimedia blobs at {@code /api/v1/media/{content_id}}.
  *
  * @author Haifeng Li
  */
+@UnlessBuildProfile("micro")
 @Path("/media")
 @RunOnVirtualThread
 public class MediaResource {

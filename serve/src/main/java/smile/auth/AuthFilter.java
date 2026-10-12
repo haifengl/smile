@@ -21,10 +21,12 @@ import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.ext.Provider;
 import smile.chat.blob.ClientIdentity;
 import io.vertx.ext.web.RoutingContext;
+import io.quarkus.arc.profile.UnlessBuildProfile;
 
 /**
  * Resolves the current user from a signed session cookie or localhost auto-login.
  */
+@UnlessBuildProfile("micro")
 @Provider
 @Priority(1000)
 public class AuthFilter implements ContainerRequestFilter, ContainerResponseFilter {

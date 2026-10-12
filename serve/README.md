@@ -507,6 +507,27 @@ Without a local GraalVM installation, use a Docker-based build:
 
 See the [Quarkus native build guide](https://quarkus.io/guides/gradle-tooling) for details.
 
+### Native image variants
+
+Both Dockerfiles build in-container (context = repository root) and need no host-side build:
+
+| Dockerfile | Contents | Size |
+|---|---|---|
+| `Dockerfile.native` | Full CPU image: SMILE, ONNX, CPU chat (ONNX Runtime GenAI packages), auth and database, LibTorch | ~890 MB |
+| `Dockerfile.native-micro` | Inference only: SMILE and ONNX models plus the web UI's inference pages. No chat, auth/users, database, LibTorch or GenAI | ~225 MB |
+
+`native-micro` builds with `-Dquarkus.profile=micro` (see the `%micro.*` block in `application.properties`).
+Chat and auth endpoints return 404, and `POST /api/v1/models/load` with a chat model returns 503. The chat
+page of the web UI therefore shows errors; the SMILE and ONNX inference pages work.
+
+On CPU the chat engine only serves pre-converted ONNX Runtime GenAI packages (for example
+`microsoft/Phi-4-mini-instruct-onnx`); LibTorch chat requires CUDA.
+
+GraalVM needs FFM, serialization and reflection metadata that the build cannot infer. It is generated into
+`serve/src/main/resources/META-INF/native-image/smile/serve/reachability-metadata.json` by
+`python3 serve/src/main/scripts/gen-ffm-metadata.py` (after `./gradlew :core:classes`); re-run it when the
+jextract bindings or serializable model classes change.
+
 ### Plugins
 
 Optional backends live in `serve-plugins/` and are chosen at build time with `-Pserve.plugins=<comma list>`
