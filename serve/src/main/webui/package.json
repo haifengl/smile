@@ -8,7 +8,7 @@
     "build": "vite build --emptyOutDir",
     "postbuild": "node postbuild.js",
     "preview": "vite preview --host",
-    "test": "node --test infer/imagenetTopK.test.js"
+    "test": "node --test infer/imagenetTopK.test.js infer/shap/shapUtils.test.js"
   },
   "dependencies": {
     "@rjsf/core": "^6.11.0",
