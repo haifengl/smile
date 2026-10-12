@@ -25,6 +25,7 @@ import smile.llm.ChatCompletion;
 import smile.llm.Message;
 import smile.llm.Role;
 import smile.llm.ToolCall;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * OpenAI wire-format chat message (response / request shape without multimodal parts).
@@ -35,6 +36,8 @@ import smile.llm.ToolCall;
  * @param toolCallId tool result id.
  * @param name       optional name.
  */
+/* Serialized by hand (ObjectMapper.writeValueAsString), so Quarkus does not register it for native reflection. */
+@RegisterForReflection
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ChatMessageObject(

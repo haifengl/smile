@@ -47,6 +47,8 @@ FROM ${MANDREL_BUILDER} AS builder
 ARG TORCH_VERSION=2.14.1
 ARG ORT_VERSION=1.30.0
 ARG NODE_VERSION=24.11.0
+ARG GENAI_VERSION=0.17.0
+ARG GENAI_SHA256=482a17113556ff76c53820b801f391cdcbaac0b6c4089065182683c03fdbc8d9
 ARG GRADLE_ARGS=""
 
 USER root
@@ -66,6 +68,15 @@ RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/libtorch.zip \
 RUN curl -fsSL --retry 5 --retry-delay 10 "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz" \
     | tar -zx -C /usr/local/ \
     && mv /usr/local/onnxruntime-linux-x64-${ORT_VERSION} /usr/local/onnxruntime
+
+# ONNX Runtime GenAI (libonnxruntime-genai.so): the CPU chat path. Without CUDA the chat engine loads
+# pre-converted GenAI (ONNX) packages through it instead of LibTorch.
+RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/genai.tgz \
+        "https://github.com/microsoft/onnxruntime-genai/releases/download/v${GENAI_VERSION}/onnxruntime-genai-${GENAI_VERSION}-linux-x64.tar.gz" \
+    && echo "${GENAI_SHA256}  /tmp/genai.tgz" | sha256sum -c - \
+    && mkdir -p /usr/local/onnxruntime-genai \
+    && tar -zx -C /usr/local/onnxruntime-genai --strip-components=1 -f /tmp/genai.tgz \
+    && rm -f /tmp/genai.tgz
 
 # libsmile_torch.so against CPU LibTorch (CMake auto-disables the CUDA/FlashInfer sources)
 COPY deep/src/main/cpp /src/smile_torch
@@ -117,6 +128,7 @@ RUN microdnf download arpack \
 
 # Runtime libraries only (no headers, cmake files or static libs)
 COPY --from=builder /usr/local/onnxruntime/lib /usr/local/onnxruntime/lib
+COPY --from=builder /usr/local/onnxruntime-genai/lib/libonnxruntime-genai.so /usr/local/onnxruntime-genai/lib/libonnxruntime-genai.so
 COPY --from=builder /usr/local/libtorch/lib /usr/local/libtorch/lib
 
 # Create /work (owned by 1001) before the COPYs so no later layer has to chown/chmod the 148 MB executable.
@@ -126,7 +138,9 @@ COPY --from=builder --chown=1001:root /tmp/application /work/application
 COPY --from=builder --chown=1001:root /build/cpp/libsmile_torch.so /work/lib/libsmile_torch.so
 
 # ORT + LibTorch + libsmile_torch.so
-ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/libtorch/lib:/work/lib"
+ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/onnxruntime-genai/lib:/usr/local/libtorch/lib:/work/lib"
+ENV ONNXRUNTIME_NATIVE_PATH="/usr/local/onnxruntime/lib" \
+    ONNXRUNTIME_GENAI_NATIVE_PATH="/usr/local/onnxruntime-genai/lib"
 ENV HF_HOME="/model/huggingface"
 
 EXPOSE 8080

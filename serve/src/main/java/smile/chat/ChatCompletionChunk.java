@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import smile.llm.FinishReason;
 import java.util.List;
+import io.quarkus.runtime.annotations.RegisterForReflection;
 
 /**
  * A single server-sent event chunk in a streaming OpenAI-compatible
@@ -40,6 +41,8 @@ import java.util.List;
  *
  * @author Haifeng Li
  */
+/* Serialized by hand (ObjectMapper.writeValueAsString), so Quarkus does not register it for native reflection. */
+@RegisterForReflection
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public record ChatCompletionChunk(
         String id,
