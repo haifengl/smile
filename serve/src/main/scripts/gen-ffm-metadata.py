@@ -33,7 +33,8 @@ def args_of(s, i):
         j += 1
     return s[i:j - 1]
 
-sigs = set()
+sigs = set()      # downcall signatures with their critical option
+all_sigs = set()  # plain signatures (upcalls)
 fn_types = set()   # callback interfaces resolved reflectively by jextract's upcallHandle(X.class, "apply", ...)
 unresolved = []
 
@@ -64,7 +65,8 @@ for base, dirs, files in os.walk(ROOT):
             if os.path.isdir(os.path.join(path.split('/src/main/java/')[0], 'build/classes')) and not class_exists(path, name):
                 unresolved.append((f, name))
             fn_types.add(name)
-        for m in re.finditer(r'FunctionDescriptor\.(of|ofVoid)\(', s):
+        matches = list(re.finditer(r'FunctionDescriptor\.(of|ofVoid)\(', s))
+        for i, m in enumerate(matches):
             parts = [p.strip() for p in re.split(r',\s*(?![^()]*\))', args_of(s, m.end())) if p.strip()]
             try:
                 leaves = [LEAF[re.split(r'[.]', p)[-1]] for p in parts]
@@ -74,9 +76,24 @@ for base, dirs, files in os.walk(ROOT):
                 ret, params = leaves[0], leaves[1:]
             else:
                 ret, params = 'void', leaves
-            sigs.add((ret, tuple(params)))
+            # jextract declares the descriptor and its downcallHandle(...) side by side; the Linker option
+            # (critical(true) = heap segments allowed, passed as Object+offset) changes the registered leaf type.
+            seg = s[m.end():matches[i + 1].start() if i + 1 < len(matches) else len(s)]
+            h = re.search(r'downcallHandle\(([^;]*)\);', seg)
+            opt = None
+            if h:
+                c = re.search(r'Linker\.Option\.critical\((true|false)\)', h.group(1))
+                if c:
+                    opt = 'heap' if c.group(1) == 'true' else 'critical'
+                if 'firstVariadicArg' in h.group(1) or 'captureCallState' in h.group(1):
+                    sys.exit(f'{f}: unsupported Linker option in {h.group(1)}')
+            sigs.add((ret, tuple(params), opt))
+            all_sigs.add((ret, tuple(params)))
 
-entries = [{'returnType': r, 'parameterTypes': list(p)} for r, p in sorted(sigs)]
+OPTS = {'heap': {'critical': {'allowHeapAccess': True}}, 'critical': {'critical': True}}
+down = [dict({'returnType': r, 'parameterTypes': list(p)}, **({'options': OPTS[o]} if o else {}))
+        for r, p, o in sorted(sigs, key=lambda x: (x[0], x[1], x[2] or ''))]
+entries = [{'returnType': r, 'parameterTypes': list(p)} for r, p in sorted(all_sigs)]
 # ---- Java serialization (.sml models) ----
 JDK_SERIALIZABLE = [
     'java.lang.String', 'java.lang.Number', 'java.lang.Integer', 'java.lang.Long', 'java.lang.Double',
@@ -151,9 +168,9 @@ meta = {'reflection': [{'type': t, 'allDeclaredMethods': True} for t in sorted(f
                           'allDeclaredMethods': True, 'allPublicMethods': True,
                           'allDeclaredFields': True, 'allPublicFields': True} for t in sorted(json_types)],
         'serialization': [{'type': t} for t in ser_types],
-        'foreign': {'downcalls': entries, 'upcalls': entries}}
+        'foreign': {'downcalls': down, 'upcalls': entries}}
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 with open(OUT, 'w') as fh:
     json.dump(meta, fh, indent=1)
     fh.write('\n')
-print(f'{len(json_types)} JSON types, {len(ser_types)} serialization types, {len(fn_types)} callback interfaces, {len(entries)} distinct signatures -> {os.path.relpath(OUT, ROOT)}')
+print(f'{len(json_types)} JSON types, {len(ser_types)} serialization types, {len(fn_types)} callback interfaces, {len(down)} downcall / {len(entries)} upcall signatures -> {os.path.relpath(OUT, ROOT)}')

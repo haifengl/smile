@@ -33,12 +33,17 @@
 #
 # docker run -i --rm -p 8888:8080 -u root -v "$(pwd)/model":/model quarkus/smile-serve-native-micro
 #
+# The runtime base is the Quarkus ubi10 micro image (no package manager); see the rtlibs stage for how the
+# BLAS/LAPACK/ARPACK libraries get in.
+#
 # The native build needs several GB of RAM; give Docker at least 8 GB.
 # You can pass extra Gradle arguments with --build-arg GRADLE_ARGS="...".
 #
 ###
-ARG MANDREL_BUILDER=quay.io/quarkus/ubi9-quarkus-mandrel-builder-image:jdk-25
-ARG RUNTIME_BASE=registry.access.redhat.com/ubi10/ubi-minimal:10.0
+ARG MANDREL_BUILDER=quay.io/quarkus/ubi10-quarkus-mandrel-builder-image:jdk-25
+ARG RUNTIME_BASE=quay.io/quarkus/ubi10-quarkus-micro-image:2.0
+# Only used to install the shared libraries that are copied into the micro runtime image.
+ARG LIBS_BASE=registry.access.redhat.com/ubi10/ubi-minimal:10.0
 
 # -----------------------------------------------------------------------------
 # Stage 1: build the native executable
@@ -86,9 +91,13 @@ RUN ./gradlew :serve:build -x test -Pserve.plugins= \
     && chmod 0755 /tmp/application
 
 # -----------------------------------------------------------------------------
-# Stage 2: runtime image (no GraalVM, Gradle, Node.js, compilers or headers)
+# Stage 2: collect BLAS/LAPACK/ARPACK shared libraries. The micro runtime image has no package manager, so
+# the libraries are installed here and only their files (plus shared-library dependencies the micro image
+# does not already provide) are copied over.
 # -----------------------------------------------------------------------------
-FROM ${RUNTIME_BASE}
+FROM ${RUNTIME_BASE} AS micro-ref
+
+FROM ${LIBS_BASE} AS rtlibs
 
 USER root
 
@@ -109,6 +118,39 @@ RUN flexiblas default OPENBLAS-OPENMP
 RUN microdnf download arpack \
     && rpm -i --nodeps arpack-*.rpm \
     && rm -f arpack-*.rpm
+
+# Files that the dependency scan below also inspects
+COPY --from=builder /usr/local/onnxruntime/lib /usr/local/onnxruntime/lib
+COPY --from=builder /usr/local/onnxruntime-genai/lib/libonnxruntime-genai.so /usr/local/onnxruntime-genai/lib/libonnxruntime-genai.so
+COPY --from=builder /tmp/application /tmp/application
+COPY --from=micro-ref /usr/lib64 /micro-lib64
+
+# /out mirrors the target filesystem: FlexiBLAS config and backends, the BLAS/LAPACK/ARPACK libraries, and every
+# library they (and the executable, ORT and ORT GenAI) link against that the micro image lacks.
+RUN set -eu; \
+    mkdir -p /out/usr/lib64/flexiblas /out/etc/flexiblasrc.d; \
+    cp -a /usr/lib64/flexiblas/. /out/usr/lib64/flexiblas/; \
+    cp -a /etc/flexiblasrc /out/etc/; \
+    cp -a /etc/flexiblasrc.d/. /out/etc/flexiblasrc.d/; \
+    for n in libarpack.so.2 libflexiblas.so.3 libflexiblas_api.so.3 libflexiblas_mgmt.so.3 libopenblaso.so.0; do \
+        cp -L "/usr/lib64/$n" "/out/usr/lib64/$n"; \
+    done; \
+    ln -s libopenblaso.so.0 /out/usr/lib64/libopenblas.so; \
+    for f in /usr/lib64/flexiblas/*.so /usr/lib64/libarpack.so.2 /usr/lib64/libopenblaso.so.0 \
+             /usr/local/onnxruntime/lib/libonnxruntime.so /usr/local/onnxruntime-genai/lib/libonnxruntime-genai.so \
+             /tmp/application; do \
+        ldd "$f"; \
+    done | awk '/=> \//{print $1, $3}' | sort -u | while read -r name path; do \
+        if [ ! -e "/micro-lib64/$name" ] && [ ! -e "/out/usr/lib64/$name" ]; then cp -L "$path" "/out/usr/lib64/$name"; fi; \
+    done; \
+    ! ldd /usr/lib64/libarpack.so.2 /usr/lib64/libopenblaso.so.0 | grep -q "not found"
+
+# -----------------------------------------------------------------------------
+# Stage 3: runtime image (micro base: no package manager, GraalVM, Gradle, Node.js, compilers or headers)
+# -----------------------------------------------------------------------------
+FROM ${RUNTIME_BASE}
+
+COPY --from=rtlibs /out/ /
 
 # Runtime libraries only (no headers, cmake files or static libs)
 COPY --from=builder /usr/local/onnxruntime/lib /usr/local/onnxruntime/lib
