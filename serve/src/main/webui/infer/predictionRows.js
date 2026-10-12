@@ -130,7 +130,7 @@ export function normalizePrediction(data) {
         }
         values[key] = value;
       }
-      return { values };
+      return { values, rawPrediction: data };
     }
     for (const [key, value] of Object.entries(data)) {
       values[key] = value;
@@ -138,7 +138,7 @@ export function normalizePrediction(data) {
     if (Object.keys(values).length === 0) {
       values.result = "";
     }
-    return { values };
+    return { values, rawPrediction: data };
   }
 
   return { values: { result: String(data) } };

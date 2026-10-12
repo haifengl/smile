@@ -78,6 +78,7 @@ function SmileForm({ modelId }) {
   const [submitError, setSubmitError] = useState(null);
   const [file, setFile] = useState(null);
   const [formData, setFormData] = useState({});
+  const [explain, setExplain] = useState(true);
   const [streaming, setStreaming] = useState(false);
   const [streamCount, setStreamCount] = useState(0);
   const [startedAt, setStartedAt] = useState(null);
@@ -144,12 +145,17 @@ function SmileForm({ modelId }) {
     }
   };
 
-  const appendRow = (entry) => {
+  const appendRow = (entry, inputData = null) => {
     const id = ++resultIdRef.current;
-    const normalized = entry.error
-      ? { id, values: {}, error: entry.error }
-      : { id, ...normalizePrediction(entry.data) };
-    setRows((prev) => [...prev, normalized]);
+    if (entry.error) {
+      setRows((prev) => [...prev, { id, values: {}, error: entry.error }]);
+      return;
+    }
+    const normalized = normalizePrediction(entry.data);
+    if (inputData && normalized.values) {
+      normalized.values.input = inputData;
+    }
+    setRows((prev) => [...prev, { id, ...normalized }]);
   };
 
   const beginRun = () => {
@@ -177,7 +183,11 @@ function SmileForm({ modelId }) {
     }
     setSubmitError(null);
     beginRun();
-    fetch(`/api/v1/smile/${modelId}`, {
+    const url = explain
+      ? `/api/v1/smile/${modelId}?explain=true`
+      : `/api/v1/smile/${modelId}`;
+
+    fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
@@ -189,7 +199,7 @@ function SmileForm({ modelId }) {
         return res.json();
       })
       .then((data) => {
-        appendRow({ data });
+        appendRow({ data }, formData);
         endRun();
       })
       .catch((err) => {
@@ -234,7 +244,11 @@ function SmileForm({ modelId }) {
         throw new Error("File has no data rows");
       }
 
-      const res = await fetch(`/api/v1/smile/${modelId}/stream`, {
+      const streamUrl = explain
+        ? `/api/v1/smile/${modelId}/stream?explain=true`
+        : `/api/v1/smile/${modelId}/stream`;
+
+      const res = await fetch(streamUrl, {
         method: "POST",
         headers: { "Content-Type": contentType },
         body,
@@ -301,6 +315,8 @@ function SmileForm({ modelId }) {
               streamCount={streamCount}
               onStop={() => abortRef.current?.abort()}
               disabled={streaming}
+              explain={explain}
+              onExplainChange={setExplain}
               batchHint={
                 <>
                   Upload CSV (column order:{" "}
@@ -320,6 +336,7 @@ function SmileForm({ modelId }) {
           streaming={streaming}
           startedAt={startedAt}
           finishedAt={finishedAt}
+          featureNames={keys}
           onClear={() => {
             setRows([]);
             setStartedAt(null);

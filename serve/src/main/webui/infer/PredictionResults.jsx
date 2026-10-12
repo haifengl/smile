@@ -23,6 +23,8 @@ import {
   isExpandableCell,
   rowsToCsv,
 } from "./predictionRows";
+import { extractShapMetadata } from "./shap/shapUtils";
+import ShapModal from "./shap/ShapModal";
 
 const ROW_HEIGHT = 34;
 const OVERSCAN = 12;
@@ -31,10 +33,11 @@ const OVERSCAN = 12;
  * Shared predictions pane: virtualized table, status line, copy/download CSV.
  *
  * @param {object} props
- * @param {Array<{ id: number, values: Record<string, *>, error?: string }>} props.rows
+ * @param {Array<{ id: number, values: Record<string, *>, rawPrediction?: *, error?: string }>} props.rows
  * @param {boolean} [props.streaming]
  * @param {number|null} [props.startedAt] epoch ms when the current run began
  * @param {number|null} [props.finishedAt] epoch ms when the run finished
+ * @param {string[]} [props.featureNames] schema feature names
  * @param {() => void} props.onClear
  */
 export default function PredictionResults({
@@ -42,12 +45,14 @@ export default function PredictionResults({
   streaming = false,
   startedAt = null,
   finishedAt = null,
+  featureNames = [],
   onClear,
 }) {
   const scrollRef = useRef(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(400);
   const [expandedId, setExpandedId] = useState(null);
+  const [shapRow, setShapRow] = useState(null);
   const [copied, setCopied] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
@@ -252,6 +257,8 @@ export default function PredictionResults({
                     const expandable = columns.some((col) =>
                       isExpandableCell(row.values?.[col])
                     );
+                    const shapMeta = extractShapMetadata(row.rawPrediction || row);
+
                     return (
                       <tr
                         key={row.id}
@@ -278,13 +285,28 @@ export default function PredictionResults({
                             {row.error}
                           </td>
                         ) : (
-                          columns.map((col) => {
+                          columns.map((col, cIdx) => {
                             const value = row.values?.[col];
                             const open =
                               expandedId === row.id && isExpandableCell(value);
+                            const isPredictionCol = col === "prediction" || cIdx === 0;
+
                             return (
                               <td key={col} title={formatCell(value, true)}>
                                 {formatCell(value, open)}
+                                {isPredictionCol && shapMeta.supported && (
+                                  <button
+                                    type="button"
+                                    className="infer-explain-btn"
+                                    title="View SHAP feature explanations (Waterfall, Force, Decision plots)"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setShapRow(row);
+                                    }}
+                                  >
+                                    SHAP
+                                  </button>
+                                )}
                               </td>
                             );
                           })
@@ -320,6 +342,14 @@ export default function PredictionResults({
             </div>
           )}
         </>
+      )}
+
+      {shapRow && (
+        <ShapModal
+          row={shapRow}
+          featureNames={featureNames}
+          onClose={() => setShapRow(null)}
+        />
       )}
     </aside>
   );
