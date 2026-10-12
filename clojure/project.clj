@@ -1,15 +1,15 @@
-(defproject org.clojars.haifengl/smile "6.3.0"
-  :description "Smile - Statistical Machine Intelligence and Learning Engine"
+(defproject org.clojars.haifengl/smile "7.0.0"
+  :description "SMILE - Statistical Machine Intelligence and Learning Engine"
   :url "https://www.aihalo.dev/"
   :scm {:name "git"
         :url "https://github.com/haifengl/smile"}
   :license {:name "GNU General Public License, Version 3"
             :url "https://opensource.org/licenses/GPL-3.0"}
   :dependencies [[org.clojure/clojure "1.12.5"]
-                 [com.github.haifengl/smile-core "6.3.0"]]
+                 [com.github.haifengl/smile-core "7.0.0"]]
   :plugins [[lein-codox "0.10.8"]]
   :codox {:doc-files ["README.md"]
-          :project {:name "Smile - Clojure" :description "Copyright © 2010-2026 Haifeng Li. All rights reserved. Use is subject to license terms."}
+          :project {:name "SMILE - Clojure" :description "Copyright © 2010-2026 Haifeng Li. All rights reserved. Use is subject to license terms."}
           :output-path "../target/docs/clojure"}
   :jvm-opts ["-XX:MaxRAMPercentage=75.0"
              "-XX:+UseStringDeduplication"
