@@ -79,6 +79,8 @@ export default function InferActionFooter({
   onStop,
   disabled = false,
   batchHint,
+  explain = false,
+  onExplainChange = null,
 }) {
   const fileMode = Boolean(file);
   const inputRef = useRef(null);
@@ -127,31 +129,45 @@ export default function InferActionFooter({
       </div>
 
       <div className="infer-primary-actions">
-        {fileMode ? (
-          <button
-            type="button"
-            className="infer-btn-run"
-            title={`Using ${file.name}`}
-            onClick={onRunFile}
-            disabled={disabled || streaming}
-          >
-            {streaming ? `Streaming… (${streamCount})` : "Run"}
-          </button>
-        ) : (
-          <button
-            type="submit"
-            className="infer-submit"
-            title="Using form"
-            disabled={disabled || streaming || !canSubmit}
-          >
-            Submit
-          </button>
+        {onExplainChange && (
+          <label className="infer-explain-toggle" title="Compute SHAP feature explanations (TreeSHAP)">
+            <input
+              type="checkbox"
+              checked={explain}
+              onChange={(e) => onExplainChange(e.target.checked)}
+              disabled={disabled || streaming}
+            />
+            <span>Explain (SHAP)</span>
+          </label>
         )}
-        {streaming && (
-          <button type="button" className="infer-btn" onClick={onStop}>
-            Stop
-          </button>
-        )}
+
+        <div className="infer-action-row">
+          {fileMode ? (
+            <button
+              type="button"
+              className="infer-btn-run"
+              title={`Using ${file.name}`}
+              onClick={onRunFile}
+              disabled={disabled || streaming}
+            >
+              {streaming ? `Streaming… (${streamCount})` : "Run"}
+            </button>
+          ) : (
+            <button
+              type="submit"
+              className="infer-submit"
+              title="Using form"
+              disabled={disabled || streaming || !canSubmit}
+            >
+              Submit
+            </button>
+          )}
+          {streaming && (
+            <button type="button" className="infer-btn" onClick={onStop}>
+              Stop
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

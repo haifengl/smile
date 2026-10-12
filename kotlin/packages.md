@@ -1,12 +1,12 @@
 # Module smile-kotlin
 
-[Smile (Statistical Machine Intelligence and Learning Engine)](https://www.aihalo.dev//)
+[SMILE (Statistical Machine Intelligence and Learning Engine)](https://www.aihalo.dev//)
 is a fast and comprehensive machine learning, NLP, linear algebra,
 graph, interpolation, and visualization system in Java and Scala.
 With advanced data structures and algorithms,
-Smile delivers state-of-art performance.
+SMILE delivers state-of-art performance.
 
-Smile covers every aspect of machine learning, including classification,
+SMILE covers every aspect of machine learning, including classification,
 regression, clustering, association rule mining, feature selection,
 manifold learning, multidimensional scaling, genetic algorithms,
 missing value imputation, efficient nearest neighbor search, etc.
