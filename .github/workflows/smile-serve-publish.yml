@@ -60,6 +60,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      # The GPU and native images build everything inside Docker (CUDA toolchain and LibTorch, GraalVM, Gradle caches),
+      # which together with the 16 GB GPU image does not fit in the ~14 GB a hosted runner has free. Delete the
+      # preinstalled toolchains this job does not use (and the pre-pulled Docker images) first.
+      - name: Free disk space
+        if: ${{ !matrix.host_build }}
+        run: |
+          df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL /usr/local/share/boost
+          sudo docker image prune --all --force
+          df -h /
+
       - name: Set up Java 25
         if: matrix.host_build
         uses: actions/setup-java@v5
