@@ -91,7 +91,6 @@ out of shell history / `docker inspect` by sourcing them from environment
 variables rather than inlining literals.
 
 ```shell
-./gradlew :serve:build "-Dquarkus.profile=default"
 sudo docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t quarkus/smile-serve-gpu .
 sudo docker run -i --rm --gpus all -p 8888:8080 \
   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0 -Dsmile.chat.max-batch-size=48 -XX:ErrorFile=/model/hs_err_%p.log" \
@@ -99,13 +98,14 @@ sudo docker run -i --rm --gpus all -p 8888:8080 \
 ```
 
 > **Database Profile & Dependencies:**
-> Building with `"-Dquarkus.profile=default"` configures the build to use an
+> The image builds the Quarkus app inside Docker with the `local` profile by
+> default (`--build-arg QUARKUS_PROFILE=local`), which configures it to use an
 > embedded H2 database (`jdbc:h2:file:/model/smile_serve`), minimizing runtime
 > dependencies by storing conversation history directly inside the mounted model
 > directory. This is best for personal, local development, or standalone testing.
 >
-> If you want to build an image for production usage, remove this option or use
-> `"-Dquarkus.profile=prod"`. Under the `prod` profile, `SMILE Serve` will use
+> If you want to build an image for production usage, pass
+> `--build-arg QUARKUS_PROFILE=prod`. Under the `prod` profile, `SMILE Serve` will use
 > `PostgreSQL`, which requires running an additional `PostgreSQL` container.
 
 Debug variant (adds `CUDA_LAUNCH_BLOCKING=1` for synchronous CUDA error
@@ -513,8 +513,21 @@ Both Dockerfiles build in-container (context = repository root) and need no host
 
 | Dockerfile | Contents | Size |
 |---|---|---|
-| `Dockerfile.native` | Full CPU image: SMILE, ONNX, CPU chat (ONNX Runtime GenAI packages), auth and database, LibTorch | ~830 MB |
-| `Dockerfile.native-micro` | Inference only: SMILE and ONNX models plus the web UI's inference pages. No chat, auth/users, database, LibTorch or GenAI | ~210 MB |
+| `Dockerfile.native` | Full CPU image: SMILE, ONNX, CPU chat (ONNX Runtime GenAI packages), auth and the embedded H2 database. No LibTorch | ~375 MB |
+| `Dockerfile.native-micro` | Inference only: SMILE and ONNX models plus the web UI's inference pages. No chat, auth/users, database, LibTorch or GenAI | ~205 MB |
+
+Both Dockerfiles build in-container with the `local` Quarkus profile by default (embedded H2 database, no
+PostgreSQL); override it with `--build-arg QUARKUS_PROFILE=prod` for `Dockerfile.native` (`native-micro` is always
+the inference-only `micro` profile, which has no database). The GPU image (`Dockerfile.jvm-gpu`) likewise builds the
+Quarkus app inside Docker and takes the same `QUARKUS_PROFILE` build argument. The profiles in
+`application.properties` are:
+
+| Profile | Use | Database |
+|---|---|---|
+| `local` | standalone deployments, the Docker images' default | embedded H2 file in the model directory |
+| `prod` | the default for a plain Gradle build | PostgreSQL |
+| `micro` | inference-only native image | none (no chat or auth) |
+| `dev` / `test` | `quarkusDev` / unit tests | H2 (file / in-memory) |
 
 `native-micro` builds with `-Dquarkus.profile=micro` (see the `%micro.*` block in `application.properties`).
 Chat and auth endpoints return 404, and `POST /api/v1/models/load` with a chat model returns 503. The chat

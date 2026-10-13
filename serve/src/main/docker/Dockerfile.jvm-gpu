@@ -23,14 +23,18 @@
 #
 # Base image: nvidia/cuda:13.2.0-*-ubuntu24.04 (Ubuntu 24.04 + CUDA 13.2)
 #
-# IMPORTANT: build context must be the repository root (not serve/).
-# Docker rebuilds only libsmile_torch.so. The Quarkus JVM app (including
-# SafeTensors.java) is copied from serve/build/quarkus-app — so you MUST
-# rebuild Java on the host before docker build, or you will ship stale jars:
+# IMPORTANT: build context must be the repository root (not serve/). The image is built entirely in Docker: one
+# stage compiles the Quarkus JVM app with Gradle, another compiles the CUDA libsmile_torch.so, and no host-side
+# build step is required:
 #
-#   ./gradlew :serve:build   (includes all serve-plugins, e.g. blob-s3; see -Pserve.plugins)
 #   docker build -f serve/src/main/docker/Dockerfile.jvm-gpu \
 #     -t quarkus/smile-serve-gpu .
+#
+# The Quarkus profile defaults to `local` (embedded H2 database, no PostgreSQL). Override it with, e.g.,
+#   --build-arg QUARKUS_PROFILE=prod
+# (the prod profile needs a PostgreSQL database; see serve/README.md). Extra Gradle arguments go in
+#   --build-arg GRADLE_ARGS="..."
+# All serve-plugins (e.g. blob-s3) are included unless GRADLE_ARGS says otherwise (-Pserve.plugins=...).
 #
 # Then run the container using (requires NVIDIA Container Toolkit).
 # For Qwen 27B BF16 on 2x 40GB GPUs:
@@ -53,9 +57,32 @@
 #   -u root -v "$(pwd)/model":/model quarkus/smile-serve-gpu
 #
 ###
+# Only used for its JDK 25 and package manager to build the Quarkus app; no GraalVM native build happens here.
+ARG MANDREL_BUILDER=quay.io/quarkus/ubi10-quarkus-mandrel-builder-image:jdk-25
 ARG CUDA_VERSION=13.2.0
 ARG TORCH_VERSION=2.14.1
 ARG CU_VERSION=132
+
+# -----------------------------------------------------------------------------
+# Stage 0: build the Quarkus JVM app (serve/build/quarkus-app) with the selected profile
+# -----------------------------------------------------------------------------
+FROM ${MANDREL_BUILDER} AS app-builder
+
+ARG NODE_VERSION=24.11.0
+ARG QUARKUS_PROFILE=local
+ARG GRADLE_ARGS=""
+
+USER root
+
+# Archive tools. Node.js is needed by Quinoa for the web UI.
+RUN microdnf install -y gzip tar xz findutils && microdnf clean all
+RUN curl -fsSL --retry 5 --retry-delay 10 "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
+    | tar -xJ -C /usr/local --strip-components=1
+
+WORKDIR /src
+COPY . /src
+RUN (cd serve/src/main/webui && npm install)
+RUN ./gradlew :serve:build -x test -Dquarkus.profile=${QUARKUS_PROFILE} ${GRADLE_ARGS}
 
 # -----------------------------------------------------------------------------
 # Stage 1: build libsmile_torch against CUDA LibTorch (needs Toolkit headers)
@@ -228,14 +255,12 @@ ENV ONNXRUNTIME_NATIVE_PATH="/usr/local/onnxruntime/lib" \
 ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/onnxruntime-genai/lib:/usr/local/libtorch/lib:/usr/lib/x86_64-linux-gnu/nvshmem/13${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 # We make four distinct layers so if there are application changes the library layers can be re-used
-# IMPORTANT: serve/build/quarkus-app must be rebuilt on the host after Java changes:
-#   ./gradlew :serve:build   (includes all serve-plugins, e.g. blob-s3; see -Pserve.plugins)
-COPY --chown=185:185 serve/build/quarkus-app/lib/ /deployments/lib/
-COPY --chown=185:185 serve/build/quarkus-app/*.jar /deployments/
-COPY --chown=185:185 serve/build/quarkus-app/app/ /deployments/app/
-COPY --chown=185:185 serve/build/quarkus-app/quarkus/ /deployments/quarkus/
+COPY --from=app-builder --chown=185:185 /src/serve/build/quarkus-app/lib/ /deployments/lib/
+COPY --from=app-builder --chown=185:185 /src/serve/build/quarkus-app/*.jar /deployments/
+COPY --from=app-builder --chown=185:185 /src/serve/build/quarkus-app/app/ /deployments/app/
+COPY --from=app-builder --chown=185:185 /src/serve/build/quarkus-app/quarkus/ /deployments/quarkus/
 
-# Replace any host-copied CPU stub with the CUDA-enabled library from stage 1
+# The CUDA-enabled libsmile_torch.so and FlashInfer AOT kernels from stage 1
 COPY --from=smile-torch-builder --chown=185:185 /build/cpp/libsmile_torch.so /deployments/lib/libsmile_torch.so
 COPY --from=smile-torch-builder --chown=185:185 /opt/flashinfer/aot /opt/flashinfer/aot
 

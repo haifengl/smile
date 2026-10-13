@@ -40,7 +40,7 @@ mv ../target/docs/* _site/api/
 
 # build binary package
 cd ..
-./gradlew :serve:build -x test -Dquarkus.profile=default
+./gradlew :serve:build -x test -Dquarkus.profile=local
 sbt studio/Universal/packageBin
 
 sbt json/copyJarToStudio

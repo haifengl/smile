@@ -1,12 +1,10 @@
 # Keeps `docker build` context transfer fast for Dockerfiles whose context is
 # the repository root (Dockerfile.jvm-gpu, Dockerfile.native, Dockerfile.gpu-test) and which
-# COPY broad parts of the repo. Dockerfile.jvm/.native-micro use
-# `serve/` as their own context root and are unaffected by this file.
+# COPY broad parts of the repo. Dockerfile.jvm uses
+# `serve/` as its own context root and is unaffected by this file.
 #
-# IMPORTANT: Dockerfile.jvm-gpu COPYs serve/build/quarkus-app/** (the host
-# `./gradlew :serve:build` output) — do NOT add a blanket **/build/ pattern
-# here, or that COPY breaks. Other modules' build/ output isn't read by any
-# repo-root-context Dockerfile, so those are excluded explicitly by name.
+# Host build output is not used by any repo-root-context Dockerfile (they all build in Docker), so each module's
+# build/ directory is excluded by name.
 .git/
 /base/build/
 /core/build/
@@ -16,6 +14,8 @@
 /kotlin/build/
 /buildSrc/build/
 /studio/build/
+/serve/build/
+/spark/build/
 
 **/node_modules/
 **/.gradle/
