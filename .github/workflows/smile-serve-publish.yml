@@ -87,7 +87,9 @@ jobs:
       - name: Build app
         if: matrix.host_build
         run: |
-          ./gradlew :serve:build -Dquarkus.profile=local -x test
+          # -Pserve.plugins= leaves out optional plugins such as blob-s3 (AWS SDK): the CPU JVM image is for small
+          # ONNX GenAI models; S3 media storage is for GPU chat, which Dockerfile.jvm-gpu includes.
+          ./gradlew :serve:build -Dquarkus.profile=local -Pserve.plugins= -x test
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}

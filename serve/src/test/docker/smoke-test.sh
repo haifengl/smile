@@ -3,7 +3,8 @@
 # Smoke test for a built smile-serve container image (any of the published flavors).
 #
 #   serve/src/test/docker/smoke-test.sh IMAGE [--flavor full|micro] [--port N] [--timeout SECONDS]
-#                                             [--chat-model SPEC] [--hf-home DIR] [--keep]
+#                                             [--chat-model SPEC] [--hf-home DIR]
+#                                             [--gpus SPEC] [--env KEY=VALUE]... [--keep]
 #
 # Starts IMAGE with a few tiny models (a random forest, LDA, and a logistic-regression ONNX model), waits for it to
 # become healthy and checks the API:
@@ -13,11 +14,16 @@
 #                completions, streaming and not (--hf-home is mounted as the Hugging Face cache)
 #   micro        chat and auth endpoints must NOT exist (404)
 #
+# --gpus SPEC passes `--gpus SPEC` to docker run (e.g. `device=1`); --env sets container environment variables, e.g.
+# SMILE_CHAT_DEVICES=0 to choose the GPU for chat (indexes are those the container sees).
+#
 # Examples:
 #   serve/src/test/docker/smoke-test.sh quarkus/smile-serve-native
 #   serve/src/test/docker/smoke-test.sh quarkus/smile-serve-native-micro --flavor micro
 #   serve/src/test/docker/smoke-test.sh quarkus/smile-serve-native --chat-model microsoft/Phi-4-mini-instruct-onnx \
 #       --hf-home /path/to/huggingface
+#   serve/src/test/docker/smoke-test.sh quarkus/smile-serve-gpu --gpus device=1 --env SMILE_CHAT_DEVICES=0 \
+#       --chat-model meta-llama/Llama-3.1-8B-Instruct --hf-home /path/to/huggingface --timeout 600
 #
 # Needs docker, curl and python3 on the host. Exit status is 0 only if every check passes.
 set -u
@@ -28,9 +34,11 @@ TIMEOUT=120
 CHAT_MODEL=
 HF_HOME_DIR=
 KEEP=0
+GPUS=
+ENVS=()
 IMAGE=${1:-}
 if [ -z "$IMAGE" ] || [ "${IMAGE#-}" != "$IMAGE" ]; then
-    sed -n '3,22p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '3,32p' "$0" | sed 's/^# \{0,1\}//'
     exit 2
 fi
 shift
@@ -41,6 +49,8 @@ while [ $# -gt 0 ]; do
         --timeout) TIMEOUT=$2; shift 2 ;;
         --chat-model) CHAT_MODEL=$2; shift 2 ;;
         --hf-home) HF_HOME_DIR=$2; shift 2 ;;
+        --gpus) GPUS=$2; shift 2 ;;
+        --env) ENVS+=("$2"); shift 2 ;;
         --keep) KEEP=1; shift ;;
         *) echo "unknown option: $1" >&2; exit 2 ;;
     esac
@@ -100,6 +110,8 @@ echo "== $IMAGE ($FLAVOR flavor) on port $PORT"
 RUN_ARGS=(-d --name "$NAME" -u root -p "$PORT:8080" -v "$WORK":/model)
 [ -n "$HF_HOME_DIR" ] && RUN_ARGS+=(-v "$HF_HOME_DIR":/model/huggingface:ro)
 [ -n "$CHAT_MODEL" ] && RUN_ARGS+=(-e "SMILE_CHAT_MODEL=$CHAT_MODEL")
+[ -n "$GPUS" ] && RUN_ARGS+=(--gpus "$GPUS")
+for e in "${ENVS[@]+"${ENVS[@]}"}"; do RUN_ARGS+=(-e "$e"); done
 if ! docker run "${RUN_ARGS[@]}" "$IMAGE" >/dev/null; then echo "could not start the container" >&2; exit 1; fi
 
 STARTED=0
