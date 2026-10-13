@@ -19,18 +19,36 @@ jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
     strategy:
+      # The images are independent; one failing (e.g. a native build running out of memory) must not cancel the rest.
+      fail-fast: false
       matrix:
         include:
+          # Dockerfile.jvm copies a host-built serve/build/quarkus-app (context ./serve), so it is the only
+          # entry that needs the host-side Java/Node/Gradle steps below.
           - image_name: smile-serve
             tag_suffix: ""
             dockerfile: ./serve/src/main/docker/Dockerfile.jvm
             context: ./serve
+            host_build: true
+          # The remaining images build everything inside Docker (repo root as context), with the `local`
+          # Quarkus profile by default.
           - image_name: smile-serve
             tag_suffix: "-gpu"
-            # Repo root: Dockerfile.jvm-gpu builds the Quarkus app (profile local by
-            # default) and compiles CUDA libsmile_torch in a multi-stage build.
             dockerfile: ./serve/src/main/docker/Dockerfile.jvm-gpu
             context: .
+            host_build: false
+          # Native executable, CPU-only: SMILE, ONNX, CPU chat, auth and the embedded H2 database.
+          - image_name: smile-serve
+            tag_suffix: "-native"
+            dockerfile: ./serve/src/main/docker/Dockerfile.native
+            context: .
+            host_build: false
+          # Native executable, inference-only (no chat, auth or database).
+          - image_name: smile-serve
+            tag_suffix: "-micro"
+            dockerfile: ./serve/src/main/docker/Dockerfile.native-micro
+            context: .
+            host_build: false
 
     permissions:
       contents: read
@@ -43,6 +61,7 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Set up Java 25
+        if: matrix.host_build
         uses: actions/setup-java@v5
         with:
           distribution: temurin
@@ -50,19 +69,23 @@ jobs:
           cache: gradle
 
       - name: Grant execute permission to Gradle wrapper
+        if: matrix.host_build
         run: chmod +x gradlew
 
       - name: Set up Node.js 24
+        if: matrix.host_build
         uses: actions/setup-node@v6
         with:
           node-version: 24
 
       - name: Run npm install for Quinoa
+        if: matrix.host_build
         run: |
           cd serve/src/main/webui
           npm install
 
       - name: Build app
+        if: matrix.host_build
         run: |
           ./gradlew :serve:build -Dquarkus.profile=local -x test
           cp studio/src/universal/bin/libsmile_torch.so serve/build/quarkus-app/lib/
