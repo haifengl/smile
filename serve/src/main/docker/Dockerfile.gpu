@@ -27,7 +27,7 @@
 # stage compiles the Quarkus JVM app with Gradle, another compiles the CUDA libsmile_torch.so, and no host-side
 # build step is required:
 #
-#   docker build -f serve/src/main/docker/Dockerfile.jvm-gpu \
+#   docker build -f serve/src/main/docker/Dockerfile.gpu \
 #     -t quarkus/smile-serve-gpu .
 #
 # The Quarkus profile defaults to `local` (embedded H2 database, no PostgreSQL). Override it with, e.g.,

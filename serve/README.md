@@ -147,7 +147,7 @@ out of shell history / `docker inspect` by sourcing them from environment
 variables rather than inlining literals.
 
 ```shell
-sudo docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t quarkus/smile-serve-gpu .
+sudo docker build -f serve/src/main/docker/Dockerfile.gpu -t quarkus/smile-serve-gpu .
 sudo docker run -i --rm --gpus all -p 8888:8080 \
   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0 -Dsmile.chat.max-batch-size=48 -XX:ErrorFile=/model/hs_err_%p.log" \
   -u root -v "/llm/model":/model quarkus/smile-serve-gpu
@@ -570,11 +570,11 @@ Both Dockerfiles build in-container (context = repository root) and need no host
 | Dockerfile | Contents | Size |
 |---|---|---|
 | `Dockerfile.native` | Full CPU image: SMILE, ONNX, CPU chat (ONNX Runtime GenAI packages), auth and the embedded H2 database. No LibTorch | ~375 MB |
-| `Dockerfile.native-micro` | Inference only: SMILE and ONNX models plus the web UI's inference pages. No chat, auth/users, database, LibTorch or GenAI | ~205 MB |
+| `Dockerfile.micro` | Inference only: SMILE and ONNX models plus the web UI's inference pages. No chat, auth/users, database, LibTorch or GenAI | ~205 MB |
 
 Both Dockerfiles build in-container with the `local` Quarkus profile by default (embedded H2 database, no
 PostgreSQL); override it with `--build-arg QUARKUS_PROFILE=prod` for `Dockerfile.native` (`native-micro` is always
-the inference-only `micro` profile, which has no database). The GPU image (`Dockerfile.jvm-gpu`) likewise builds the
+the inference-only `micro` profile, which has no database). The GPU image (`Dockerfile.gpu`) likewise builds the
 Quarkus app inside Docker and takes the same `QUARKUS_PROFILE` build argument. The profiles in
 `application.properties` are:
 

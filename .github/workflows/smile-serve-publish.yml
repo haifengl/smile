@@ -23,18 +23,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Dockerfile.jvm copies a host-built serve/build/quarkus-app (context ./serve), so it is the only
+          # Dockerfile copies a host-built serve/build/quarkus-app (context ./serve), so it is the only
           # entry that needs the host-side Java/Node/Gradle steps below.
           - image_name: smile-serve
             tag_suffix: ""
-            dockerfile: ./serve/src/main/docker/Dockerfile.jvm
+            dockerfile: ./serve/src/main/docker/Dockerfile
             context: ./serve
             host_build: true
           # The remaining images build everything inside Docker (repo root as context), with the `local`
           # Quarkus profile by default.
           - image_name: smile-serve
             tag_suffix: "-gpu"
-            dockerfile: ./serve/src/main/docker/Dockerfile.jvm-gpu
+            dockerfile: ./serve/src/main/docker/Dockerfile.gpu
             context: .
             host_build: false
           # Native executable, CPU-only: SMILE, ONNX, CPU chat, auth and the embedded H2 database.
@@ -46,7 +46,7 @@ jobs:
           # Native executable, inference-only (no chat, auth or database).
           - image_name: smile-serve
             tag_suffix: "-micro"
-            dockerfile: ./serve/src/main/docker/Dockerfile.native-micro
+            dockerfile: ./serve/src/main/docker/Dockerfile.micro
             context: .
             host_build: false
 
@@ -88,7 +88,7 @@ jobs:
         if: matrix.host_build
         run: |
           # -Pserve.plugins= leaves out optional plugins such as blob-s3 (AWS SDK): the CPU JVM image is for small
-          # ONNX GenAI models; S3 media storage is for GPU chat, which Dockerfile.jvm-gpu includes.
+          # ONNX GenAI models; S3 media storage is for GPU chat, which Dockerfile.gpu includes.
           ./gradlew :serve:build -Dquarkus.profile=local -Pserve.plugins= -x test
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}

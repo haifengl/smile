@@ -63,7 +63,7 @@ title: SMILE - Serve
     {% include "components/playground-extra-actions.njk" %}
   </div>
   <pre class="playground-source language-bash"><code class="language-bash">./gradlew :serve:build
-sudo docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t quarkus/smile-serve-gpu .
+sudo docker build -f serve/src/main/docker/Dockerfile.gpu -t quarkus/smile-serve-gpu .
 sudo docker run -i --rm --gpus all -p 8888:8080 \
   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B" \
   -u root -v "/llm/model":/model quarkus/smile-serve-gpu</code></pre>

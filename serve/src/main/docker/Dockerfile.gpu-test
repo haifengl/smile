@@ -21,7 +21,7 @@
 # This Dockerfile builds an image that runs the deep module's GPU-only tests
 # (SMILE_VERIFY_CUDA_GRAPH Stage 1/2: VerifyCudaGraphStage1KernelTest,
 # VerifyCudaGraphStage2CaptureReplayTest) against a freshly-compiled, real
-# CUDA libsmile_torch.so — the exact same native build Dockerfile.jvm-gpu
+# CUDA libsmile_torch.so — the exact same native build Dockerfile.gpu
 # produces.
 #
 # WHY A SEPARATE IMAGE/STEP: `docker build` has no GPU access in the normal
@@ -30,10 +30,10 @@
 # that needs no GPU, only network access for dependencies. The actual test
 # RUN (which does need the GPU) happens when you `docker run --gpus all` the
 # resulting image; see bin/gpu-test-and-build.sh for the one-command flow
-# that also chains into the existing Dockerfile.jvm-gpu build afterward.
+# that also chains into the existing Dockerfile.gpu build afterward.
 #
 # IMPORTANT: build context must be the repository root (same as
-# Dockerfile.jvm-gpu) — this Dockerfile COPIES the whole repo to compile the
+# Dockerfile.gpu) — this Dockerfile COPIES the whole repo to compile the
 # multi-module Gradle build (deep depends on base; buildSrc supplies the
 # shared conventions).
 #
@@ -53,7 +53,7 @@ ARG CU_VERSION=132
 
 # -----------------------------------------------------------------------------
 # Stage 1: build libsmile_torch against CUDA LibTorch — identical to
-# Dockerfile.jvm-gpu's smile-torch-builder stage (kept in sync manually; there
+# Dockerfile.gpu's smile-torch-builder stage (kept in sync manually; there
 # is no cross-Dockerfile stage sharing in classic `docker build`).
 # -----------------------------------------------------------------------------
 FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu24.04 AS smile-torch-builder
@@ -93,7 +93,7 @@ RUN test -d /src/smile_torch/third_party/flashinfer/include/flashinfer \
     && test -f /build/cpp/libsmile_torch.so
 
 # Bundle flashinfer-jit-cache AOT modules (open attention kernels; not cubin) —
-# copied from Dockerfile.jvm-gpu's smile-torch-builder stage. The runtime
+# copied from Dockerfile.gpu's smile-torch-builder stage. The runtime
 # entry point (smile_flashinfer_paged_attention_verify_cuda's PrefillPlan/
 # BatchPrefillWithPagedKVCacheDispatched call) needs these present at
 # FLASHINFER_AOT_DIR just like the production S==1 decode path does.
@@ -140,7 +140,7 @@ ARG CU_VERSION
 ARG ORT_VERSION=1.30.0
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Same runtime CUDA extras as Dockerfile.jvm-gpu's final stage, plus a full
+# Same runtime CUDA extras as Dockerfile.gpu's final stage, plus a full
 # JDK (not just a JRE) so Gradle can compile the test sources.
 RUN apt-get update && apt-get install -y --no-install-recommends \
         ca-certificates \
@@ -163,7 +163,7 @@ ENV PATH="${JAVA_HOME}/bin:${PATH}"
 # expect it at deep/libtorch/lib.
 COPY --from=smile-torch-builder /usr/local/libtorch /usr/local/libtorch
 
-# ONNX Runtime — same version/install as Dockerfile.jvm-gpu's final stage.
+# ONNX Runtime — same version/install as Dockerfile.gpu's final stage.
 # Originally omitted here (this image only ran the Stage 1/2 FlashInfer
 # tests, which never touch smile.onnx), but bin/gpu-test-and-build.sh now
 # runs the full :deep:test suite by default, which includes
@@ -178,7 +178,7 @@ RUN curl -fsSL "https://github.com/microsoft/onnxruntime/releases/download/v${OR
 # libnvshmem3-cuda-13 package installed above) — a versioned, non-standard
 # subdirectory the dynamic linker never searches by default. Confirmed via
 # `ldd libsmile_torch.so` => "libnvshmem_host.so.3 => not found" without this;
-# matches Dockerfile.jvm-gpu's runtime stage exactly.
+# matches Dockerfile.gpu's runtime stage exactly.
 ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/libtorch/lib:/usr/lib/x86_64-linux-gnu/nvshmem/13${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 WORKDIR /src

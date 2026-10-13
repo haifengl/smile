@@ -30,7 +30,7 @@
 #
 # Then, build the image with:
 #
-# docker build -f serve/src/main/docker/Dockerfile.jvm -t quarkus/smile-serve-jvm serve
+# docker build -f serve/src/main/docker/Dockerfile -t quarkus/smile-serve-jvm serve
 #
 # Then run the container using:
 #
@@ -122,7 +122,7 @@ RUN curl -L https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VE
     && mv /usr/local/onnxruntime-linux-x64-${ORT_VERSION} /usr/local/onnxruntime
 
 # Install ONNX Runtime GenAI (libonnxruntime-genai.so): the CPU chat path. Without CUDA the chat engine loads
-# pre-converted GenAI (ONNX) packages through it, not LibTorch (LibTorch chat needs a GPU: Dockerfile.jvm-gpu).
+# pre-converted GenAI (ONNX) packages through it, not LibTorch (LibTorch chat needs a GPU: Dockerfile.gpu).
 ARG GENAI_VERSION=0.17.0
 ARG GENAI_SHA256=482a17113556ff76c53820b801f391cdcbaac0b6c4089065182683c03fdbc8d9
 RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/genai.tgz \

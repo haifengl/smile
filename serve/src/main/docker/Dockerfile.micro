@@ -29,7 +29,7 @@
 #
 # IMPORTANT: build context must be the repository root (not serve/), because Gradle builds all modules:
 #
-# docker build -f serve/src/main/docker/Dockerfile.native-micro -t quarkus/smile-serve-native-micro .
+# docker build -f serve/src/main/docker/Dockerfile.micro -t quarkus/smile-serve-native-micro .
 #
 # Then run the container using:
 #
