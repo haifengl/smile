@@ -601,7 +601,7 @@ On CPU the chat engine only serves pre-converted ONNX Runtime GenAI packages (fo
 GraalVM needs FFM, serialization and reflection metadata that the build cannot infer. It is generated into
 `serve/src/main/resources/META-INF/native-image/smile/serve/reachability-metadata.json` by
 `python3 serve/src/main/scripts/gen-ffm-metadata.py` (after `./gradlew :core:classes`); re-run it when the
-jextract bindings or serializable model classes change.
+jextract bindings or serializable model classes change. Add `--check` to verify, without writing, that the committed file is up to date (non-zero exit if it is stale).
 
 ### Plugins
 

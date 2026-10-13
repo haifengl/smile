@@ -10,9 +10,13 @@ Re-run after regenerating any binding or adding/removing Serializable model clas
 (needs compiled classes: ./gradlew :core:classes):
 
     python3 serve/src/main/scripts/gen-ffm-metadata.py
+
+With --check nothing is written; the exit status is non-zero if the committed file differs from what would be
+generated (for CI or a pre-commit hook).
 """
 import json, os, re, subprocess, sys, tempfile
 
+CHECK = '--check' in sys.argv[1:]
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../..'))
 OUT = os.path.join(ROOT, 'serve/src/main/resources/META-INF/native-image/smile/serve/reachability-metadata.json')
 
@@ -169,8 +173,16 @@ meta = {'reflection': [{'type': t, 'allDeclaredMethods': True} for t in sorted(f
                           'allDeclaredFields': True, 'allPublicFields': True} for t in sorted(json_types)],
         'serialization': [{'type': t} for t in ser_types],
         'foreign': {'downcalls': down, 'upcalls': entries}}
-os.makedirs(os.path.dirname(OUT), exist_ok=True)
-with open(OUT, 'w') as fh:
-    json.dump(meta, fh, indent=1)
-    fh.write('\n')
-print(f'{len(json_types)} JSON types, {len(ser_types)} serialization types, {len(fn_types)} callback interfaces, {len(down)} downcall / {len(entries)} upcall signatures -> {os.path.relpath(OUT, ROOT)}')
+text = json.dumps(meta, indent=1) + '\n'
+summary = (f'{len(json_types)} JSON types, {len(ser_types)} serialization types, {len(fn_types)} callback interfaces, '
+           f'{len(down)} downcall / {len(entries)} upcall signatures')
+if CHECK:
+    current = open(OUT).read() if os.path.exists(OUT) else ''
+    if current != text:
+        sys.exit(f'{os.path.relpath(OUT, ROOT)} is stale; regenerate it with: python3 serve/src/main/scripts/gen-ffm-metadata.py')
+    print(f'up to date ({summary})')
+else:
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    with open(OUT, 'w') as fh:
+        fh.write(text)
+    print(f'{summary} -> {os.path.relpath(OUT, ROOT)}')
