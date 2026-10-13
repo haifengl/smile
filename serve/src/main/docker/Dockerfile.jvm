@@ -23,7 +23,8 @@
 #
 # Before building the container image run:
 #
-# ./gradlew :serve:build   (includes all serve-plugins, e.g. blob-s3; see -Pserve.plugins)
+# ./gradlew :serve:build -Dquarkus.profile=local   (embedded H2 database; omit the profile for PostgreSQL, i.e. `prod`.
+#                                                    Includes all serve-plugins, e.g. blob-s3; see -Pserve.plugins)
 # cp studio/src/universal/bin/libsmile_torch.so serve/build/quarkus-app/lib/
 #
 # Then, build the image with:
