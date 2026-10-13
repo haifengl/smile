@@ -228,6 +228,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         unzip \
     && rm -rf /var/lib/apt/lists/*
 
+# The app dlopens libopenblas.so (smile.lib.blas / smile.lib.lapack default), but Ubuntu's libopenblas0-pthread ships
+# only the versioned libopenblas.so.0, so BLAS-backed models (LDA, ...) fail with "Cannot open library: libopenblas.so".
+RUN ln -s libopenblas.so.0 /usr/lib/x86_64-linux-gnu/libopenblas.so && ldconfig
+
 ENV JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 

@@ -88,7 +88,6 @@ jobs:
         if: matrix.host_build
         run: |
           ./gradlew :serve:build -Dquarkus.profile=local -x test
-          cp studio/src/universal/bin/libsmile_torch.so serve/build/quarkus-app/lib/
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}

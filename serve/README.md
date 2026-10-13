@@ -81,15 +81,60 @@ The service starts on port 8080 inside the container (mapped to 8888 on the host
 Place your `.sml` and `.onnx` model files in `/path/to/model/folder`; they are
 discovered automatically at startup.
 
-The release workflow publishes four variants of the image under `ghcr.io/haifengl/smile-serve`; pick one with the
-tag suffix (for example `:latest-micro` or `:7.0.0-native`):
+#### Image flavors
 
-| Tag | Image | Dockerfile |
-|---|---|---|
-| `latest` | JVM, CPU | `Dockerfile.jvm` |
-| `latest-gpu` | JVM, NVIDIA GPU | `Dockerfile.jvm-gpu` |
-| `latest-native` | Native executable, CPU: SMILE, ONNX, CPU chat, auth | `Dockerfile.native` |
-| `latest-micro` | Native executable, inference only (SMILE + ONNX, no chat/auth/database) | `Dockerfile.native-micro` |
+The release workflow publishes four variants of the image to the GitHub Container Registry,
+`ghcr.io/haifengl/smile-serve`. Pick one with the tag suffix: `latest` or `7.0.0` for the JVM image,
+and e.g. `latest-micro` or `7.0.0-native` for the others.
+
+| Tag | Image | Chat | User accounts, conversations (database) | Size |
+|---|---|---|---|---|
+| `latest` | JVM (OpenJDK 25), CPU | CPU: ONNX Runtime GenAI packages | yes | 0.6 GB |
+| `latest-gpu` | JVM, NVIDIA CUDA | GPU: LibTorch (Llama, Qwen) and ONNX Runtime GenAI | yes | 16 GB |
+| `latest-native` | GraalVM native executable, CPU | CPU: ONNX Runtime GenAI packages | yes | 0.4 GB |
+| `latest-micro` | GraalVM native executable, CPU, inference only | none | none | 0.2 GB |
+
+All four serve SMILE (`.sml`) and ONNX models, the web UI, health probes (`/q/health`) and Prometheus metrics
+(`/q/metrics`). The published images use the `local` profile: users and conversation history are kept in an embedded
+H2 database file, `/model/smile_serve`, so mount `/model` read-write if you want them to survive restarts.
+User accounts exist only to scope conversation history and personal settings (optional Google login; automatic
+login on localhost; see [§7.6](#76-conversation-history-api)). The SMILE and ONNX inference endpoints are not
+authenticated in any flavor, so put the service behind an API gateway or reverse proxy if others can reach it. Memory and startup below were measured on x86-64 with three tiny
+models (a random forest, LDA and a small ONNX model), after startup had settled; your numbers depend on your models.
+
+| | `latest-micro` | `latest-native` | `latest` (JVM) | `latest-gpu` |
+|---|---|---|---|---|
+| Startup | 0.4 s | 0.5 s | 3.4 s | model load dominates |
+| Idle memory | ~80 MiB | ~115 MiB | ~600 MiB | |
+| With a 4.6 GB chat package (Phi-4-mini) | n/a | 8 s, 3 GiB | 11 s, 3.5 GiB | |
+| S3 blob storage plugin | no | no | yes | yes |
+| Needs | x86-64-v3 CPU | x86-64-v3 CPU | any x86-64 CPU | NVIDIA GPU, driver for CUDA 13.2, NVIDIA Container Toolkit |
+
+**`latest-micro`: inference only.** The smallest and fastest to start. It serves SMILE and ONNX models and the
+inference pages of the web UI; there is no chat, no user accounts or conversation history, and no database, so the
+chat and user endpoints return 404 (and loading a chat model returns 503). Best for resource-constrained or latency-sensitive deployments: edge devices,
+sidecars, serverless or scale-to-zero platforms, and fleets of many small replicas.
+
+**`latest-native`: the full feature set on CPU, as a native executable.** Adds user accounts, conversation storage
+(H2) and CPU chat, with about 5x less memory than the JVM image and sub-second startup (before a chat model loads). Chat on CPU serves pre-converted ONNX Runtime GenAI packages only, for example
+`-e SMILE_CHAT_MODEL=microsoft/Phi-4-mini-instruct-onnx`; Llama and Qwen checkpoints need the GPU image. There is no
+S3 blob storage, because the native build leaves out the AWS SDK. Best for a small single-node deployment with the web UI,
+and for CPU-only machines.
+
+**`latest`: the JVM image.** The same features as `latest-native` plus the optional plugins, notably S3-compatible
+blob storage for conversation media. The JIT-compiled JVM suits long-running services, is the most compatible
+(runs on any x86-64 CPU, with the usual JVM tooling), and uses far more memory: it sizes its heap to 80% of the container
+limit, so set a memory limit. Startup takes a few seconds. Best when you need S3, or want a conventional JVM
+deployment.
+
+**`latest-gpu`: LLM serving on NVIDIA GPUs.** Runs the LibTorch/CUDA engine for Llama and Qwen checkpoints with CUDA
+graphs, FlashInfer attention and tensor parallelism, plus everything the JVM image does. It needs an NVIDIA GPU, a driver
+that supports CUDA 13.2 and the NVIDIA Container Toolkit (`docker run --gpus all`). GPU memory is set by the model: for
+example Qwen 27B in BF16 needs two 40 GB GPUs. The image is large (about 16 GB) and startup is dominated by loading the
+model. See [§1.2](#12-gpu-build--run).
+
+Notes for all CPU images: they are `linux/amd64` only, and the native executables are compiled for x86-64-v3 (AVX2), so
+they do not run on CPUs without AVX2 (before Intel Haswell, 2013); use the JVM image there.
 
 ### 1.2 GPU Build & Run
 
@@ -1927,6 +1972,20 @@ for chat conversation persistence.
 ```shell
 ./gradlew :serve:test
 ```
+
+Container images can be smoke-tested after a build with `serve/src/test/docker/smoke-test.sh`. It starts the image
+with a few tiny models and checks health, Prometheus metrics, the web UI, SMILE prediction with SHAP, LDA (native
+BLAS/LAPACK), ONNX inference, the database-backed endpoints, and, optionally, CPU chat completions (streaming and not):
+
+```shell
+serve/src/test/docker/smoke-test.sh quarkus/smile-serve-native
+serve/src/test/docker/smoke-test.sh quarkus/smile-serve-native-micro --flavor micro
+serve/src/test/docker/smoke-test.sh quarkus/smile-serve-jvm \
+    --chat-model microsoft/Phi-4-mini-instruct-onnx --hf-home /path/to/huggingface
+```
+
+The `micro` flavor instead checks that the chat and auth endpoints are absent (404). The exit status is non-zero if any
+check fails. It needs docker, curl and python3 on the host; the GPU image is not covered.
 
 The test profile (`%test.*`) configures the service with:
 
