@@ -31,7 +31,7 @@ export default defineConfig({
   },
   plugins: [react()],
   preview: {
-    allowedHosts: ['smile-ai.org'],
+    allowedHosts: ['aihalo.dev'],
   },
   server: {
     cors: false,
