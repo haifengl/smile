@@ -84,6 +84,6 @@ docker run --rm --gpus all \
 echo "==> GPU tests passed (results in ${MODEL_DIR}/gpu-test-results). Continuing to the production image build."
 
 echo "==> [3/3] Building the production GPU image (the Quarkus app is built inside Docker; profile: local by default)..."
-docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t "${SERVE_TAG}" .
+docker build -f serve/src/main/docker/Dockerfile.gpu -t "${SERVE_TAG}" .
 
 echo "==> Done. Built ${SERVE_TAG}."

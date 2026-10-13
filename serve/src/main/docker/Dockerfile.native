@@ -20,8 +20,8 @@
 ###
 # This Dockerfile builds the full CPU-only container that runs the Quarkus application in native (no JVM) mode:
 # SMILE and ONNX inference, CPU chat (ONNX Runtime GenAI packages), auth/users and the embedded H2 database.
-# For an inference-only image see Dockerfile.native-micro. There is no LibTorch: without CUDA the chat engine only
-# serves ONNX Runtime GenAI packages, and LibTorch chat needs a GPU (Dockerfile.jvm-gpu).
+# For an inference-only image see Dockerfile.micro. There is no LibTorch: without CUDA the chat engine only
+# serves ONNX Runtime GenAI packages, and LibTorch chat needs a GPU (Dockerfile.gpu).
 #
 # It is a two-stage in-container build: the Mandrel/GraalVM toolchain, Gradle and Node.js stay in the builder
 # stage; the final image only has the native executable and the shared libraries it loads at runtime.
