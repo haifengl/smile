@@ -104,9 +104,9 @@ models (a random forest, LDA and a small ONNX model), after startup had settled;
 
 | | `latest-micro` | `latest-native` | `latest` (JVM) | `latest-gpu` |
 |---|---|---|---|---|
-| Startup | 0.4 s | 0.5 s | 3.4 s | model load dominates |
+| Startup (no chat model) | 0.4 s | 0.5 s | 3.4 s | 3.3 s |
 | Idle memory | ~80 MiB | ~115 MiB | ~600 MiB | |
-| With a 4.6 GB chat package (Phi-4-mini) | n/a | 8 s, 3 GiB | 11 s, 3.5 GiB | |
+| With a chat model loaded | n/a | 8 s, 3 GiB (Phi-4-mini, 4.6 GB package) | 11 s, 3.5 GiB (same) | 15 s, ~34 GiB of GPU memory (Llama-3.1-8B-Instruct, BF16, one GPU) |
 | S3 blob storage plugin | no | no | no | yes |
 | Needs | x86-64-v3 CPU | x86-64-v3 CPU | any x86-64 CPU | NVIDIA GPU, driver for CUDA 13.2, NVIDIA Container Toolkit |
 
