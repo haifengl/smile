@@ -81,6 +81,16 @@ The service starts on port 8080 inside the container (mapped to 8888 on the host
 Place your `.sml` and `.onnx` model files in `/path/to/model/folder`; they are
 discovered automatically at startup.
 
+The release workflow publishes four variants of the image under `ghcr.io/haifengl/smile-serve`; pick one with the
+tag suffix (for example `:latest-micro` or `:7.0.0-native`):
+
+| Tag | Image | Dockerfile |
+|---|---|---|
+| `latest` | JVM, CPU | `Dockerfile.jvm` |
+| `latest-gpu` | JVM, NVIDIA GPU | `Dockerfile.jvm-gpu` |
+| `latest-native` | Native executable, CPU: SMILE, ONNX, CPU chat, auth | `Dockerfile.native` |
+| `latest-micro` | Native executable, inference only (SMILE + ONNX, no chat/auth/database) | `Dockerfile.native-micro` |
+
 ### 1.2 GPU Build & Run
 
 Build the JVM+GPU image from source and run it with CUDA graph decode enabled.
