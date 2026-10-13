@@ -25,7 +25,6 @@
 #
 # ./gradlew :serve:build -Dquarkus.profile=local   (embedded H2 database; omit the profile for PostgreSQL, i.e. `prod`.
 #                                                    Includes all serve-plugins, e.g. blob-s3; see -Pserve.plugins)
-# cp studio/src/universal/bin/libsmile_torch.so serve/build/quarkus-app/lib/
 #
 # Then, build the image with:
 #
@@ -111,8 +110,8 @@ USER root
 RUN microdnf install -y openblas-openmp libgomp && microdnf clean all
 # The app dlopens libopenblas.so (smile.lib.blas / smile.lib.lapack default), but the OpenMP build is named libopenblaso.
 RUN ln -s libopenblaso.so.0 /usr/lib64/libopenblas.so
-# Install gzip and tar to extract LibTorch/ONNX library from the tarball
-RUN microdnf install -y unzip gzip tar && microdnf clean all
+# Install gzip and tar to extract the ONNX Runtime and ONNX Runtime GenAI tarballs
+RUN microdnf install -y gzip tar && microdnf clean all
 
 # Install ONNX Runtime
 ARG ORT_VERSION=1.30.0
@@ -120,12 +119,16 @@ RUN curl -L https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VE
     | tar -zxv -C /usr/local/ \
     && mv /usr/local/onnxruntime-linux-x64-${ORT_VERSION} /usr/local/onnxruntime
 
-# Install LibTorch
-ARG TORCH_VERSION=2.14.1
-RUN curl -fsSL --retry 5 --retry-delay 10 -o libtorch.zip \
-    "https://download.pytorch.org/libtorch/cpu/libtorch-shared-with-deps-${TORCH_VERSION}%2Bcpu.zip"
-RUN unzip -q -o libtorch.zip -d /usr/local
-RUN rm -f libtorch.zip
+# Install ONNX Runtime GenAI (libonnxruntime-genai.so): the CPU chat path. Without CUDA the chat engine loads
+# pre-converted GenAI (ONNX) packages through it, not LibTorch (LibTorch chat needs a GPU: Dockerfile.jvm-gpu).
+ARG GENAI_VERSION=0.17.0
+ARG GENAI_SHA256=482a17113556ff76c53820b801f391cdcbaac0b6c4089065182683c03fdbc8d9
+RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/genai.tgz \
+        "https://github.com/microsoft/onnxruntime-genai/releases/download/v${GENAI_VERSION}/onnxruntime-genai-${GENAI_VERSION}-linux-x64.tar.gz" \
+    && echo "${GENAI_SHA256}  /tmp/genai.tgz" | sha256sum -c - \
+    && mkdir -p /usr/local/onnxruntime-genai/lib \
+    && tar -zx -C /usr/local/onnxruntime-genai/lib --strip-components=2 --wildcards '*/lib/libonnxruntime-genai.so' -f /tmp/genai.tgz \
+    && rm -f /tmp/genai.tgz
 
 # We make four distinct layers so if there are application changes the library layers can be re-used
 COPY --chown=185 build/quarkus-app/lib/ /deployments/lib/
@@ -133,8 +136,10 @@ COPY --chown=185 build/quarkus-app/*.jar /deployments/
 COPY --chown=185 build/quarkus-app/app/ /deployments/app/
 COPY --chown=185 build/quarkus-app/quarkus/ /deployments/quarkus/
 
-# ORT + LibTorch + libsmile_torch.so (copied into /deployments/lib by the build workflow)
-ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/libtorch/lib:/deployments/lib"
+# ORT + ORT GenAI
+ENV LD_LIBRARY_PATH="/usr/local/onnxruntime/lib:/usr/local/onnxruntime-genai/lib:/deployments/lib"
+ENV ONNXRUNTIME_NATIVE_PATH="/usr/local/onnxruntime/lib" \
+    ONNXRUNTIME_GENAI_NATIVE_PATH="/usr/local/onnxruntime-genai/lib"
 
 EXPOSE 8080
 USER 185
