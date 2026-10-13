@@ -3,9 +3,8 @@
 # CPU-only test plus every GPU-only test, including the SMILE_VERIFY_CUDA_GRAPH
 # Stage 1/2/4/5 tests) against a freshly-compiled CUDA libsmile_torch.so,
 # then — only if they pass — builds the production smile-serve GPU image.
-# Collapses the previous two manual host-side steps (./gradlew :serve:build;
-# docker build -f Dockerfile.jvm-gpu) into one command, with a real-GPU test
-# gate in between (docker build alone has no GPU access, so tests can't run
+# Collapses the previous manual steps into one command, with a real-GPU test
+# gate before the image build (docker build alone has no GPU access, so tests can't run
 # there — see Dockerfile.gpu-test's header comment).
 #
 # Test results (JUnit XML + HTML reports) are copied to $MODEL_DIR (default
@@ -84,8 +83,7 @@ docker run --rm --gpus all \
 
 echo "==> GPU tests passed (results in ${MODEL_DIR}/gpu-test-results). Continuing to the production image build."
 
-echo "==> [3/3] Building serve jars and the production GPU image..."
-./gradlew :serve:build -Dquarkus.profile=default
+echo "==> [3/3] Building the production GPU image (the Quarkus app is built inside Docker; profile: local by default)..."
 docker build -f serve/src/main/docker/Dockerfile.jvm-gpu -t "${SERVE_TAG}" .
 
 echo "==> Done. Built ${SERVE_TAG}."

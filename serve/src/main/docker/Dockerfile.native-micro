@@ -35,8 +35,8 @@
 #
 # docker run -i --rm -p 8888:8080 -u root -v "$(pwd)/model":/model quarkus/smile-serve-native-micro
 #
-# The runtime base is the Quarkus ubi10 micro image (no package manager); see the rtlibs stage for how the
-# BLAS/LAPACK libraries get in.
+# The runtime base is the Quarkus ubi10 micro image (no package manager); see the end of the builder stage for how
+# the BLAS/LAPACK libraries get in.
 #
 # The native build needs several GB of RAM; give Docker at least 8 GB.
 # You can pass extra Gradle arguments with --build-arg GRADLE_ARGS="...".
@@ -49,11 +49,12 @@
 ###
 ARG MANDREL_BUILDER=quay.io/quarkus/ubi10-quarkus-mandrel-builder-image:jdk-25
 ARG RUNTIME_BASE=quay.io/quarkus/ubi10-quarkus-micro-image:2.0
-# Only used to install the shared libraries that are copied into the micro runtime image.
-ARG LIBS_BASE=registry.access.redhat.com/ubi10/ubi-minimal:10.0
+
+# What the micro runtime image already provides (glibc etc.), so that only missing libraries are copied into it.
+FROM ${RUNTIME_BASE} AS micro-ref
 
 # -----------------------------------------------------------------------------
-# Stage 1: build the native executable
+# Stage 1: build the native executable and collect the BLAS/LAPACK libraries it needs at runtime
 # -----------------------------------------------------------------------------
 FROM ${MANDREL_BUILDER} AS builder
 
@@ -64,7 +65,11 @@ ARG GRADLE_ARGS=""
 USER root
 
 # Archive tools. Node.js is needed by Quinoa for the web UI.
-RUN microdnf install -y gzip tar xz findutils && microdnf clean all
+# The OpenMP build of OpenBLAS (the ubi10 `openblas` package itself ships no libraries) and libgomp are installed here
+# only so that their files can be copied into the micro runtime image, which has no package manager. ARPACK (and
+# the FlexiBLAS/EPEL packages it needs) is deliberately absent: only fit-time code (smile.manifold,
+# SpectralClustering) uses it.
+RUN microdnf install -y gzip tar xz findutils openblas-openmp libgomp && microdnf clean all
 RUN curl -fsSL --retry 5 --retry-delay 10 "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
     | tar -xJ -C /usr/local --strip-components=1
 
@@ -86,28 +91,10 @@ RUN ./gradlew :serve:build -x test -Pserve.plugins= \
     && cp serve/build/*-runner /tmp/application \
     && chmod 0755 /tmp/application
 
-# -----------------------------------------------------------------------------
-# Stage 2: collect the BLAS/LAPACK shared libraries. The micro runtime image has no package manager, so
-# the libraries are installed here and only their files (plus shared-library dependencies the micro image
-# does not already provide) are copied over.
-# -----------------------------------------------------------------------------
-FROM ${RUNTIME_BASE} AS micro-ref
-
-FROM ${LIBS_BASE} AS rtlibs
-
-USER root
-
-# Install the OpenMP build of OpenBLAS (the ubi10 `openblas` package itself ships no libraries) for native BLAS/LAPACK and libgomp for its OpenMP build. ARPACK (and the FlexiBLAS/EPEL
-# packages it needs) is deliberately absent: only fit-time code (smile.manifold, SpectralClustering) uses it.
-RUN microdnf install -y openblas-openmp libgomp && microdnf clean all
-
-# Files that the dependency scan below also inspects
-COPY --from=builder /usr/local/onnxruntime/lib /usr/local/onnxruntime/lib
-COPY --from=builder /tmp/application /tmp/application
+# Collect the BLAS/LAPACK libraries for the micro runtime image. /out mirrors the target filesystem: libopenblas (as
+# the libopenblas.so name the app dlopens) plus every shared library it, the executable and ORT link against that
+# the micro image lacks (micro-ref, above, shows what it already provides).
 COPY --from=micro-ref /usr/lib64 /micro-lib64
-
-# /out mirrors the target filesystem: libopenblas (as the libopenblas.so name the app dlopens) plus every
-# shared library it, the executable and ORT link against that the micro image lacks.
 RUN set -eu; \
     mkdir -p /out/usr/lib64; \
     cp -L /usr/lib64/libopenblaso.so.0 /out/usr/lib64/libopenblaso.so.0; \
@@ -120,11 +107,11 @@ RUN set -eu; \
     ! ldd /usr/lib64/libopenblaso.so.0 | grep -q "not found"
 
 # -----------------------------------------------------------------------------
-# Stage 3: runtime image (micro base: no package manager, GraalVM, Gradle, Node.js, compilers or headers)
+# Stage 2: runtime image (micro base: no package manager, GraalVM, Gradle, Node.js, compilers or headers)
 # -----------------------------------------------------------------------------
 FROM ${RUNTIME_BASE}
 
-COPY --from=rtlibs /out/ /
+COPY --from=builder /out/ /
 
 # Runtime libraries only (no headers, cmake files or static libs)
 COPY --from=builder /usr/local/onnxruntime/lib /usr/local/onnxruntime/lib

@@ -27,8 +27,8 @@ jobs:
             context: ./serve
           - image_name: smile-serve
             tag_suffix: "-gpu"
-            # Repo root: Dockerfile.jvm-gpu compiles CUDA libsmile_torch in a
-            # multi-stage build and COPYs serve/build/quarkus-app from here.
+            # Repo root: Dockerfile.jvm-gpu builds the Quarkus app (profile local by
+            # default) and compiles CUDA libsmile_torch in a multi-stage build.
             dockerfile: ./serve/src/main/docker/Dockerfile.jvm-gpu
             context: .
 
@@ -64,7 +64,7 @@ jobs:
 
       - name: Build app
         run: |
-          ./gradlew :serve:build -Dquarkus.profile=default -x test
+          ./gradlew :serve:build -Dquarkus.profile=local -x test
           cp studio/src/universal/bin/libsmile_torch.so serve/build/quarkus-app/lib/
         env:
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
