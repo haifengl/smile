@@ -19,8 +19,15 @@ dependencies {
     implementation("io.quarkus:quarkus-smallrye-health")
     implementation("org.jboss.slf4j:slf4j-jboss-logmanager:2.1.0.Final")
     implementation("io.quarkus:quarkus-hibernate-orm-panache")
-    implementation("io.quarkus:quarkus-jdbc-postgresql")
     implementation("io.quarkus:quarkus-jdbc-h2")
+    val profiles = providers.systemProperty("quarkus.profile")
+        .orElse(providers.gradleProperty("quarkus.profile"))
+        .orElse(providers.environmentVariable("QUARKUS_PROFILE"))
+        .getOrElse("prod")
+        .split(",").map(String::trim).filter(String::isNotEmpty)
+    if ("prod" in profiles) {
+        implementation("io.quarkus:quarkus-jdbc-postgresql")
+    }
     implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.9.2")
     implementation(project(":serve-plugins:blob-spi"))
     // Optional plugins, chosen at build time: -Pserve.plugins=blob-s3,... (default: all; empty for native).
