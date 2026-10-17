@@ -80,11 +80,11 @@ public class Workspace extends JSplitPane {
     private final JTabbedPane agentTabs = new JTabbedPane();
     /**
      * Preferred order for agent tabs in Studio, aligned with the common user workflow:
-     * Chief of Staff -> Product Manager -> Data Scientist -> Architect -> Java Coder -> Python Coder -> Desktop Operator.
+     * Chief of Staff -> Product Manager -> Evangelist -> Sales -> Data Scientist -> Architect -> Java Coder -> Python Coder -> Desktop Operator.
      */
-    private static final List<String> TAB_ORDER = List.of(
-            "chief-of-staff", "product-manager", "data-scientist",
-            "architect", "java-coder", "python-coder", "desktop-operator"
+    static final List<String> TAB_ORDER = List.of(
+            "chief-of-staff", "product-manager", "evangelist", "sales",
+            "data-scientist", "architect", "java-coder", "python-coder", "desktop-operator"
     );
     /**
      * Outstanding questions per agent CLI, used to mark its tab until answered.

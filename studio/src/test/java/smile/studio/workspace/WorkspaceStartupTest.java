@@ -123,4 +123,20 @@ public class WorkspaceStartupTest {
             assertTrue(bundle.containsKey("AgentWelcome"), "Missing AgentWelcome fallback in locale " + locale);
         }
     }
+
+    @Test
+    public void testAgentTabOrder() {
+        assertEquals(
+                java.util.List.of(
+                        "chief-of-staff",
+                        "product-manager",
+                        "evangelist",
+                        "sales",
+                        "data-scientist",
+                        "architect",
+                        "java-coder",
+                        "python-coder",
+                        "desktop-operator"),
+                Workspace.TAB_ORDER);
+    }
 }
