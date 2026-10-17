@@ -21,10 +21,10 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 import smile.chat.blob.MediaUrls;
 import smile.llm.ContentPart;
 import smile.llm.ImageUrlPart;
@@ -77,7 +77,7 @@ public final class MessageContentCodec {
         }
         try {
             return MAPPER.writeValueAsString(array);
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new IllegalStateException("Failed to encode message content", e);
         }
     }
