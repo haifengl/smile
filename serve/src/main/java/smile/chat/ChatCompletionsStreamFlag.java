@@ -18,6 +18,7 @@
 package smile.chat;
 
 import java.nio.charset.StandardCharsets;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Parses the {@code stream} flag from a chat-completions JSON body.
@@ -25,6 +26,7 @@ import java.nio.charset.StandardCharsets;
  * @author Haifeng Li
  */
 public final class ChatCompletionsStreamFlag {
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private ChatCompletionsStreamFlag() {}
 
@@ -42,7 +44,7 @@ public final class ChatCompletionsStreamFlag {
         }
         String json = new String(body, StandardCharsets.UTF_8);
         try {
-            var node = new com.fasterxml.jackson.databind.ObjectMapper().readTree(json);
+            var node = MAPPER.readTree(json);
             var stream = node.get("stream");
             if (stream == null || stream.isNull()) {
                 return false;
@@ -50,8 +52,8 @@ public final class ChatCompletionsStreamFlag {
             if (stream.isBoolean()) {
                 return stream.booleanValue();
             }
-            if (stream.isTextual()) {
-                return stream.asText().equalsIgnoreCase("true");
+            if (stream.isString()) {
+                return stream.asString().equalsIgnoreCase("true");
             }
             return false;
         } catch (Exception e) {

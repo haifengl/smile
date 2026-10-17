@@ -17,9 +17,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jboss.logging.Logger;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Google OAuth 2.0 authorization-code flow (no Quarkus OIDC tenant required).
@@ -34,10 +34,8 @@ public class GoogleOAuthService {
     @Inject
     AuthConfig config;
 
-    @Inject
-    ObjectMapper objectMapper;
-
     private final HttpClient http = HttpClient.newHttpClient();
+    private final ObjectMapper mapper = new ObjectMapper();
 
     /** {@code true} when client id and secret are configured. */
     public boolean isEnabled() {
@@ -93,8 +91,8 @@ public class GoogleOAuthService {
                 LOG.warnf("Google token exchange failed: %s", tokenRes.body());
                 throw new IllegalStateException("Google token exchange failed");
             }
-            JsonNode tokenJson = objectMapper.readTree(tokenRes.body());
-            String accessToken = tokenJson.path("access_token").asText(null);
+            JsonNode tokenJson = mapper.readTree(tokenRes.body());
+            String accessToken = tokenJson.path("access_token").asString(null);
             if (accessToken == null || accessToken.isBlank()) {
                 throw new IllegalStateException("Missing access_token");
             }
@@ -108,12 +106,12 @@ public class GoogleOAuthService {
                 LOG.warnf("Google userinfo failed: %s", userRes.body());
                 throw new IllegalStateException("Google userinfo failed");
             }
-            JsonNode userJson = objectMapper.readTree(userRes.body());
+            JsonNode userJson = mapper.readTree(userRes.body());
             return new GoogleProfile(
-                    userJson.path("sub").asText(),
-                    userJson.path("email").asText(null),
-                    userJson.path("name").asText(null),
-                    userJson.path("picture").asText(null));
+                    userJson.path("sub").asString(),
+                    userJson.path("email").asString(null),
+                    userJson.path("name").asString(null),
+                    userJson.path("picture").asString(null));
         } catch (IllegalStateException e) {
             throw e;
         } catch (Exception e) {
