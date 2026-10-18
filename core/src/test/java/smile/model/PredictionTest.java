@@ -16,12 +16,22 @@
  */
 package smile.model;
 
+import java.nio.file.Path;
 import java.util.Properties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import smile.data.Tuple;
+import smile.data.formula.Formula;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 import smile.datasets.ImageSegmentation;
+import smile.datasets.Iris;
 import smile.datasets.ProstateCancer;
+import smile.io.Read;
+import smile.io.Write;
 import smile.math.MathEx;
+import smile.regression.DataFrameRegression;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -115,14 +125,77 @@ public class PredictionTest {
     }
 
     @Test
-    public void testUnsupportedModelExplain() throws Exception {
+    public void testNonTreeModelsAndSerializationExplain() throws Exception {
+        // Given: non-tree regression (ols, ridge) and classification (logistic, lda) models, including ensemble
         var prostate = new ProstateCancer();
         var params = new Properties();
-        var model = Model.regression("ols", prostate.formula(), prostate.train(), prostate.test(), params);
+        var olsModel = Model.regression("ols", prostate.formula(), prostate.train(), prostate.test(), params);
+        var ridgeEnsemble = Model.regression("ridge", prostate.formula(), prostate.train(), prostate.test(), params, 3, 1, true);
+
+        var iris = new Iris();
+        var logitModel = Model.classification("logistic", iris.formula(), iris.data(), null, params);
+        var ldaEnsemble = Model.classification("lda", iris.formula(), iris.data(), null, params, 3, 1, true);
+
+        // When: serialize and deserialize models via .sml
+        Path olsPath = Write.object(olsModel);
+        RegressionModel loadedOls = (RegressionModel) Read.object(olsPath);
+
+        Path logitPath = Write.object(logitModel);
+        ClassificationModel loadedLogit = (ClassificationModel) Read.object(logitPath);
+
+        // Then: all support SHAP and return valid explanations
+        assertTrue(loadedOls.supportsShap());
+        assertTrue(ridgeEnsemble.supportsShap());
+        assertTrue(loadedLogit.supportsShap());
+        assertTrue(ldaEnsemble.supportsShap());
+
+        var regRow = prostate.test().get(0);
+        var olsResp = loadedOls.infer(regRow, false, true);
+        assertNotNull(olsResp.explanations());
+        assertTrue(olsResp.explanations().shap() instanceof double[]);
+        assertEquals(loadedOls.schema().length(), ((double[]) olsResp.explanations().shap()).length);
+
+        var ensRegResp = ridgeEnsemble.infer(regRow, false, true);
+        assertTrue(ensRegResp.explanations().shap() instanceof double[]);
+        assertEquals(ridgeEnsemble.schema().length(), ((double[]) ensRegResp.explanations().shap()).length);
+
+        var clsRow = iris.data().get(0);
+        var logitResp = loadedLogit.infer(clsRow, true, true);
+        assertNotNull(logitResp.explanations());
+        assertTrue(logitResp.explanations().shap() instanceof double[][]);
+        double[][] logitShap = (double[][]) logitResp.explanations().shap();
+        assertEquals(loadedLogit.numClasses(), logitShap.length);
+        assertEquals(loadedLogit.schema().length(), logitShap[0].length);
+
+        var ensClsResp = ldaEnsemble.infer(clsRow, true, true);
+        assertTrue(ensClsResp.explanations().shap() instanceof double[][]);
+    }
+
+    @Test
+    public void testUnsupportedModelExplain() {
+        var schema = new StructType(new StructField("x1", DataTypes.DoubleType));
+        var formula = Formula.lhs("y");
+        DataFrameRegression stubRegression = new DataFrameRegression() {
+            @Override
+            public Formula formula() {
+                return formula;
+            }
+
+            @Override
+            public StructType schema() {
+                return schema;
+            }
+
+            @Override
+            public double predict(Tuple x) {
+                return 1.0;
+            }
+        };
+        var model = new RegressionModel("custom", schema, formula, stubRegression, null, null, null, new Properties());
 
         assertFalse(model.supportsShap());
 
-        var row = prostate.test().get(0);
+        var row = Tuple.of(schema, new Object[]{2.0});
         var resp = model.infer(row, false, true);
         assertNotNull(resp);
         assertNotNull(resp.explanations());

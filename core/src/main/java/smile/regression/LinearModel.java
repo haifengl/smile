@@ -21,7 +21,11 @@ import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
+import smile.data.measure.CategoricalMeasure;
+import smile.data.measure.Measure;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
+import smile.feature.importance.SHAP;
 import smile.math.MathEx;
 import smile.math.special.Beta;
 import smile.stat.Hypothesis;
@@ -56,7 +60,7 @@ import static smile.linalg.Transpose.*;
  *
  * @author Haifeng Li
  */
-public class LinearModel implements DataFrameRegression {
+public class LinearModel implements DataFrameRegression, SHAP<Tuple> {
     @Serial
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LinearModel.class);
@@ -89,6 +93,10 @@ public class LinearModel implements DataFrameRegression {
      * True if the linear weights w includes the intercept.
      */
     final boolean bias;
+    /**
+     * The column means of design matrix X.
+     */
+    final double[] mean;
     /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
@@ -167,6 +175,7 @@ public class LinearModel implements DataFrameRegression {
         this.w = w;
         this.b = b;
         this.bias = predictors[0].equals("Intercept");
+        this.mean = X.colMeans().toArray(new double[0]);
 
         int n = X.nrow();
         fittedValues = X.vector(n);
@@ -353,7 +362,41 @@ public class LinearModel implements DataFrameRegression {
 
     @Override
     public double predict(Tuple x) {
-        return predict(formula.x(x).toArray(false, CategoricalEncoder.DUMMY));
+        Tuple xt = x.schema().equals(schema) ? x : formula.x(x);
+        return predict(xt.toArray(false, CategoricalEncoder.DUMMY));
+    }
+
+    @Override
+    public double[] shap(Tuple x) {
+        Tuple xt = x.schema().equals(schema) ? x : formula.x(x);
+        double[] z = xt.toArray(false, CategoricalEncoder.DUMMY);
+        int m = schema.length();
+        double[] phi = new double[m];
+        int offset = bias ? 1 : 0;
+        int idx = 0;
+        for (int j = 0; j < m; j++) {
+            StructField field = schema.field(j);
+            Measure measure = field.measure();
+            int width = (measure instanceof CategoricalMeasure cat) ? cat.size() - 1 : 1;
+            double sum = 0.0;
+            for (int d = 0; d < width; d++) {
+                double xm = (mean != null && offset + idx < mean.length) ? mean[offset + idx] : 0.0;
+                sum += w.get(offset + idx) * (z[idx] - xm);
+                idx++;
+            }
+            phi[j] = sum;
+        }
+        return phi;
+    }
+
+    /**
+     * Returns the average of absolute SHAP values over a data frame.
+     * @param data the data frame.
+     * @return the average of absolute SHAP values.
+     */
+    public double[] shap(DataFrame data) {
+        formula.bind(data.schema());
+        return shap(data.stream().parallel());
     }
 
     @Override

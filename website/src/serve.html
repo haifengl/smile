@@ -478,7 +478,7 @@ Content-Type: application/json</code></pre>
     </ul>
 
 
-    <h3 id="explanations">Explanations (TreeSHAP)</h3>
+    <h3 id="explanations">Explanations (TreeSHAP &amp; KernelSHAP)</h3>
 
     <p>Explanations can be requested by passing <code>"enableExplanations": true</code> in the JSON body, or appending <code>?explain=true</code> to the URL.</p>
 
@@ -514,9 +514,9 @@ Content-Type: application/json</code></pre>
 }</code></pre>
 
     <ul>
-        <li>For <strong>tree classification models</strong> (Random Forest, AdaBoost, Gradient Tree Boost, Decision Tree), <code>shap</code> is a 2D array of floats with dimension <code>[classes][features]</code>, formatted to 3 decimal places.</li>
-        <li>For <strong>tree regression models</strong>, <code>shap</code> is a 1D array of floats with dimension <code>[features]</code>.</li>
-        <li>For models that do not support SHAP, <code>shap</code> returns <code>"Not supported"</code>.</li>
+        <li>For <strong>classification models</strong> (tree models via TreeSHAP, and non-tree classifiers via KernelSHAP), <code>shap</code> is a 2D array of floats with dimension <code>[classes][features]</code>, formatted to 3 decimal places.</li>
+        <li>For <strong>regression models</strong> (tree models via TreeSHAP, linear models, and non-tree regressors via KernelSHAP), <code>shap</code> is a 1D array of floats with dimension <code>[features]</code>.</li>
+        <li>For custom models that do not support SHAP, <code>shap</code> returns <code>"Not supported"</code>.</li>
     </ul>
 
     <p><strong>Error responses:</strong></p>
