@@ -103,7 +103,7 @@ public class MLPTest {
         });
 
         System.out.println(result);
-        assertEquals(expected, result.avg().rmse(), 1);
+        assertEquals(expected, result.avg().rmse(), Math.max(0.05 * expected, 1E-4));
     }
 
     @Test
