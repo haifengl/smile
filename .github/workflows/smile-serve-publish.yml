@@ -1,4 +1,4 @@
-name: Publish smile-serve Container Images
+name: Publish Serve Container Images
 
 on:
   workflow_dispatch:
