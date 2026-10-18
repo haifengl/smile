@@ -284,7 +284,7 @@ public class MLPTest {
         double[][] batchx = new double[batch][];
         int[] batchy = new int[batch];
         int error = 0;
-        for (int epoch = 1; epoch <= 5; epoch++) {
+        for (int epoch = 1; epoch <= 10; epoch++) {
             System.out.format("----- epoch %d -----%n", epoch);
             int[] permutation = MathEx.permutate(x.length);
             int i = 0;
