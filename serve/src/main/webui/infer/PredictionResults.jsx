@@ -53,7 +53,8 @@ export default function PredictionResults({
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(400);
   const [expandedId, setExpandedId] = useState(null);
-  const [shapRow, setShapRow] = useState(null);
+  const [selectedShapId, setSelectedShapId] = useState(null);
+  const [shapClosed, setShapClosed] = useState(false);
   const [copied, setCopied] = useState(false);
   const [now, setNow] = useState(() => Date.now());
 
@@ -61,6 +62,40 @@ export default function PredictionResults({
     const cols = collectColumns(rows);
     return cols.length > 0 ? cols : ["result"];
   }, [rows]);
+
+  const firstShapRow = useMemo(() => {
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r?.error && extractShapMetadata(r.rawPrediction || r).supported) {
+        return { row: r, index: i };
+      }
+    }
+    return null;
+  }, [rows]);
+
+  // Reset manual close and auto-select the first row with SHAP explanations when a new run starts
+  useEffect(() => {
+    if (rows.length === 0) {
+      setSelectedShapId(null);
+      setShapClosed(false);
+    }
+  }, [rows.length]);
+
+  useEffect(() => {
+    if (!shapClosed && firstShapRow) {
+      const currentExists =
+        selectedShapId != null &&
+        rows.some(
+          (r) =>
+            r.id === selectedShapId &&
+            !r.error &&
+            extractShapMetadata(r.rawPrediction || r).supported
+        );
+      if (!currentExists) {
+        setSelectedShapId(firstShapRow.row.id);
+      }
+    }
+  }, [firstShapRow, rows, selectedShapId, shapClosed]);
 
   useEffect(() => {
     if (!streaming || startedAt == null) {
@@ -167,6 +202,11 @@ export default function PredictionResults({
   };
 
   const expandedRow = expandedId != null ? rows.find((r) => r.id === expandedId) : null;
+  const activeShapIndex =
+    selectedShapId != null && !shapClosed
+      ? rows.findIndex((r) => r.id === selectedShapId)
+      : -1;
+  const activeShapRow = activeShapIndex >= 0 ? rows[activeShapIndex] : null;
 
   return (
     <aside className="infer-results" aria-live="polite">
@@ -259,25 +299,35 @@ export default function PredictionResults({
                       isExpandableCell(row.values?.[col])
                     );
                     const shapMeta = extractShapMetadata(row.rawPrediction || row);
+                    const clickable = !hasError && (expandable || shapMeta.supported);
+                    const isSelected =
+                      (!shapClosed && shapMeta.supported && selectedShapId === row.id) ||
+                      expandedId === row.id;
 
                     return (
                       <tr
                         key={row.id}
-                        className={
-                          hasError
-                            ? "infer-row-error"
-                            : expandable
-                              ? "infer-row-expandable"
-                              : undefined
-                        }
+                        className={[
+                          hasError ? "infer-row-error" : "",
+                          clickable ? "infer-row-expandable" : "",
+                          isSelected ? "infer-row-selected" : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ") || undefined}
                         style={{ height: ROW_HEIGHT }}
                         onClick={() => {
-                          if (!expandable && !hasError) {
+                          if (hasError) {
                             return;
                           }
-                          setExpandedId((prev) =>
-                            prev === row.id ? null : row.id
-                          );
+                          if (shapMeta.supported) {
+                            setShapClosed(false);
+                            setSelectedShapId(row.id);
+                          }
+                          if (expandable) {
+                            setExpandedId((prev) =>
+                              prev === row.id ? null : row.id
+                            );
+                          }
                         }}
                       >
                         <td className="infer-col-index">{index + 1}</td>
@@ -286,28 +336,14 @@ export default function PredictionResults({
                             {row.error}
                           </td>
                         ) : (
-                          columns.map((col, cIdx) => {
+                          columns.map((col) => {
                             const value = row.values?.[col];
                             const open =
                               expandedId === row.id && isExpandableCell(value);
-                            const isPredictionCol = col === "prediction" || cIdx === 0;
 
                             return (
                               <td key={col} title={formatCell(value, true)}>
                                 {formatCell(value, open)}
-                                {isPredictionCol && shapMeta.supported && (
-                                  <button
-                                    type="button"
-                                    className="infer-explain-btn"
-                                    title="View SHAP feature explanations (Waterfall, Force, Decision plots)"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setShapRow(row);
-                                    }}
-                                  >
-                                    SHAP
-                                  </button>
-                                )}
                               </td>
                             );
                           })
@@ -319,6 +355,19 @@ export default function PredictionResults({
               </table>
             </div>
           </div>
+
+          {activeShapRow && !activeShapRow.error && (
+            <ShapModal
+              row={activeShapRow}
+              rowNumber={activeShapIndex + 1}
+              featureNames={featureNames}
+              shapMethod={shapMethod}
+              onClose={() => {
+                setShapClosed(true);
+                setSelectedShapId(null);
+              }}
+            />
+          )}
 
           {expandedRow && !expandedRow.error && (
             <div className="infer-row-detail">
@@ -343,15 +392,6 @@ export default function PredictionResults({
             </div>
           )}
         </>
-      )}
-
-      {shapRow && (
-        <ShapModal
-          row={shapRow}
-          featureNames={featureNames}
-          shapMethod={shapMethod}
-          onClose={() => setShapRow(null)}
-        />
       )}
     </aside>
   );

@@ -15,7 +15,7 @@
  * License along with SMILE Serve. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-import React, { useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import WaterfallPlot from "./WaterfallPlot";
 import ForcePlot from "./ForcePlot";
 import DecisionPlot from "./DecisionPlot";
@@ -24,7 +24,8 @@ import { toPng } from "html-to-image";
 import "./ShapModal.css";
 
 /**
- * Dialog displaying interactive SHAP explanations with tabs for:
+ * Embedded bottom pane in the Predictions panel displaying interactive SHAP
+ * explanations with tabs for:
  * - Waterfall Plot
  * - Force Plot
  * - Decision Plot
@@ -34,11 +35,14 @@ import "./ShapModal.css";
  *
  * @param {object} props
  * @param {object|null} props.row the selected result row
+ * @param {number} [props.rowNumber] 1-based row number in the predictions table
  * @param {string[]} props.featureNames array of feature names
- * @param {() => void} props.onClose callback to close modal
+ * @param {string} [props.shapMethod] SHAP explainer method label
+ * @param {() => void} [props.onClose] optional callback to close pane
  */
 export default function ShapModal({
   row,
+  rowNumber,
   featureNames = [],
   shapMethod = "SHAP",
   onClose,
@@ -46,14 +50,15 @@ export default function ShapModal({
   const [activeTab, setActiveTab] = useState("waterfall"); // "waterfall" | "force" | "decision"
   const [targetClass, setTargetClass] = useState(0);
   const [topK, setTopK] = useState(10);
+  const [plotWidth, setPlotWidth] = useState(640);
   const plotRef = useRef(null);
 
   const meta = useMemo(() => {
-    return extractShapMetadata(row);
+    return extractShapMetadata(row?.rawPrediction || row);
   }, [row]);
 
-  // If row has prediction label, default targetClass to the predicted class
-  useMemo(() => {
+  // Default targetClass to the predicted class when the selected row changes
+  useEffect(() => {
     if (meta.isMultiClass && row?.values?.prediction != null) {
       const pred = Number(row.values.prediction);
       if (!Number.isNaN(pred) && pred >= 0 && pred < meta.numClasses) {
@@ -61,6 +66,24 @@ export default function ShapModal({
       }
     }
   }, [row, meta]);
+
+  // Measure available width so SVG plots fit cleanly inside the bottom pane
+  useEffect(() => {
+    const el = plotRef.current;
+    if (!el) {
+      return undefined;
+    }
+    const updateWidth = () => {
+      const w = el.clientWidth - 28;
+      if (w > 240) {
+        setPlotWidth(Math.max(420, Math.floor(w)));
+      }
+    };
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [row]);
 
   const explanation = useMemo(() => {
     if (!row) return null;
@@ -76,12 +99,14 @@ export default function ShapModal({
     return null;
   }
 
+  const displayRowNum = rowNumber ?? row.id ?? 1;
+
   const handleExportPng = async () => {
     if (!plotRef.current) return;
     try {
       const dataUrl = await toPng(plotRef.current, { backgroundColor: "#ffffff" });
       const link = document.createElement("a");
-      link.download = `shap-${activeTab}-row-${row.id || "1"}.png`;
+      link.download = `shap-${activeTab}-row-${displayRowNum}.png`;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -90,117 +115,118 @@ export default function ShapModal({
   };
 
   return (
-    <div className="shap-modal-backdrop" onClick={onClose}>
-      <div className="shap-modal-dialog" onClick={(e) => e.stopPropagation()}>
-        <div className="shap-modal-header">
-          <h3 className="shap-modal-title">
-            Feature Explanations ({shapMethod}) — Row #{row.id ?? 1}
-          </h3>
-          <button type="button" className="shap-modal-close" onClick={onClose}>
-            ✕
-          </button>
+    <div className="infer-shap-pane">
+      <div className="infer-shap-pane-header">
+        <div className="infer-shap-pane-title">
+          Feature Explanations ({shapMethod}) — Row #{displayRowNum}
         </div>
-
-        <div className="shap-modal-toolbar">
-          <div className="shap-plot-tabs">
-            <button
-              type="button"
-              className={`shap-tab-btn ${activeTab === "waterfall" ? "active" : ""}`}
-              onClick={() => setActiveTab("waterfall")}
-            >
-              Waterfall
-            </button>
-            <button
-              type="button"
-              className={`shap-tab-btn ${activeTab === "force" ? "active" : ""}`}
-              onClick={() => setActiveTab("force")}
-            >
-              Force
-            </button>
-            <button
-              type="button"
-              className={`shap-tab-btn ${activeTab === "decision" ? "active" : ""}`}
-              onClick={() => setActiveTab("decision")}
-            >
-              Decision
-            </button>
-          </div>
-
-          <div className="shap-controls-group">
-            {meta.isMultiClass && (
-              <label className="shap-control-item">
-                <span>Class:</span>
-                <select
-                  className="shap-select"
-                  value={targetClass}
-                  onChange={(e) => setTargetClass(Number(e.target.value))}
-                >
-                  {Array.from({ length: meta.numClasses }).map((_, c) => (
-                    <option key={c} value={c}>
-                      Class {c}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            <label className="shap-control-item">
-              <span>Top Features:</span>
-              <select
-                className="shap-select"
-                value={topK}
-                onChange={(e) => setTopK(Number(e.target.value))}
-              >
-                <option value={5}>Top 5</option>
-                <option value={10}>Top 10</option>
-                <option value={15}>Top 15</option>
-                <option value={20}>Top 20</option>
-                <option value={100}>All</option>
-              </select>
-            </label>
-          </div>
-        </div>
-
-        <div className="shap-modal-body" ref={plotRef}>
-          {activeTab === "waterfall" && (
-            <WaterfallPlot
-              baseValue={explanation.baseValue}
-              predictionValue={explanation.predictionValue}
-              features={explanation.features}
-              topK={topK}
-              width={780}
-            />
-          )}
-
-          {activeTab === "force" && (
-            <ForcePlot
-              baseValue={explanation.baseValue}
-              predictionValue={explanation.predictionValue}
-              features={explanation.features}
-              topK={topK}
-              width={780}
-            />
-          )}
-
-          {activeTab === "decision" && (
-            <DecisionPlot
-              baseValue={explanation.baseValue}
-              predictionValue={explanation.predictionValue}
-              features={explanation.features}
-              topK={topK}
-              width={780}
-            />
-          )}
-        </div>
-
-        <div className="shap-modal-footer">
-          <button type="button" className="infer-btn" onClick={handleExportPng}>
+        <div className="infer-shap-pane-actions">
+          <button
+            type="button"
+            className="infer-btn"
+            onClick={handleExportPng}
+            title="Export plot as PNG"
+          >
             Export PNG
           </button>
-          <button type="button" className="infer-btn" onClick={onClose}>
-            Close
+          {onClose && (
+            <button type="button" className="infer-btn" onClick={onClose}>
+              Close
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="shap-pane-toolbar">
+        <div className="shap-plot-tabs">
+          <button
+            type="button"
+            className={`shap-tab-btn ${activeTab === "waterfall" ? "active" : ""}`}
+            onClick={() => setActiveTab("waterfall")}
+          >
+            Waterfall
+          </button>
+          <button
+            type="button"
+            className={`shap-tab-btn ${activeTab === "force" ? "active" : ""}`}
+            onClick={() => setActiveTab("force")}
+          >
+            Force
+          </button>
+          <button
+            type="button"
+            className={`shap-tab-btn ${activeTab === "decision" ? "active" : ""}`}
+            onClick={() => setActiveTab("decision")}
+          >
+            Decision
           </button>
         </div>
+
+        <div className="shap-controls-group">
+          {meta.isMultiClass && (
+            <label className="shap-control-item">
+              <span>Class:</span>
+              <select
+                className="shap-select"
+                value={targetClass}
+                onChange={(e) => setTargetClass(Number(e.target.value))}
+              >
+                {Array.from({ length: meta.numClasses }).map((_, c) => (
+                  <option key={c} value={c}>
+                    Class {c}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          <label className="shap-control-item">
+            <span>Top Features:</span>
+            <select
+              className="shap-select"
+              value={topK}
+              onChange={(e) => setTopK(Number(e.target.value))}
+            >
+              <option value={5}>Top 5</option>
+              <option value={10}>Top 10</option>
+              <option value={15}>Top 15</option>
+              <option value={20}>Top 20</option>
+              <option value={100}>All</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div className="shap-pane-body" ref={plotRef}>
+        {activeTab === "waterfall" && (
+          <WaterfallPlot
+            baseValue={explanation.baseValue}
+            predictionValue={explanation.predictionValue}
+            features={explanation.features}
+            topK={topK}
+            width={plotWidth}
+          />
+        )}
+
+        {activeTab === "force" && (
+          <ForcePlot
+            baseValue={explanation.baseValue}
+            predictionValue={explanation.predictionValue}
+            features={explanation.features}
+            topK={topK}
+            width={plotWidth}
+          />
+        )}
+
+        {activeTab === "decision" && (
+          <DecisionPlot
+            baseValue={explanation.baseValue}
+            predictionValue={explanation.predictionValue}
+            features={explanation.features}
+            topK={topK}
+            width={plotWidth}
+          />
+        )}
       </div>
     </div>
   );
