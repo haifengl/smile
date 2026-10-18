@@ -353,6 +353,14 @@
   background: #f8fafc;
 }
 
+.infer-row-selected {
+  background: #eff6ff;
+}
+
+.infer-row-selected:hover {
+  background: #dbeafe;
+}
+
 .infer-row-error td {
   color: #b00020;
   background: #fef2f2;
