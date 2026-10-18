@@ -295,4 +295,99 @@ class Vector64 extends Vector {
 
         return y;
     }
+
+    @Override
+    public double asum() {
+        double s = 0.0;
+        for (int i = 0; i < length; i++) {
+            s += Math.abs(array[offset + i]);
+        }
+        return s;
+    }
+
+    @Override
+    public void axpy(double alpha, Vector x) {
+        if (x instanceof Vector64 v) {
+            if (length != v.length) {
+                throw new IllegalArgumentException("Different vector size: " + x.size());
+            }
+            if (alpha == 0.0) {
+                return;
+            }
+            double[] xa = v.array;
+            int xoff = v.offset;
+            for (int i = 0; i < length; i++) {
+                array[offset + i] += alpha * xa[xoff + i];
+            }
+        } else {
+            super.axpy(alpha, x);
+        }
+    }
+
+    @Override
+    public double dot(Vector x) {
+        if (x instanceof Vector64 v) {
+            if (length != v.length) {
+                throw new IllegalArgumentException("Different vector size: " + x.size());
+            }
+            double[] xa = v.array;
+            int xoff = v.offset;
+            double s = 0.0;
+            for (int i = 0; i < length; i++) {
+                s += array[offset + i] * xa[xoff + i];
+            }
+            return s;
+        }
+        return super.dot(x);
+    }
+
+    @Override
+    public double norm2() {
+        double s = 0.0;
+        for (int i = 0; i < length; i++) {
+            double v = array[offset + i];
+            s += v * v;
+        }
+        return Math.sqrt(s);
+    }
+
+    @Override
+    public Vector64 scale(double alpha) {
+        for (int i = 0; i < length; i++) {
+            array[offset + i] *= alpha;
+        }
+        return this;
+    }
+
+    @Override
+    public void swap(Vector x) {
+        if (x instanceof Vector64 v) {
+            if (length != v.length) {
+                throw new IllegalArgumentException("Different vector size: " + x.size());
+            }
+            double[] xa = v.array;
+            int xoff = v.offset;
+            for (int i = 0; i < length; i++) {
+                double t = array[offset + i];
+                array[offset + i] = xa[xoff + i];
+                xa[xoff + i] = t;
+            }
+        } else {
+            super.swap(x);
+        }
+    }
+
+    @Override
+    public int iamax() {
+        int idx = 0;
+        double max = 0.0;
+        for (int i = 0; i < length; i++) {
+            double a = Math.abs(array[offset + i]);
+            if (a > max) {
+                max = a;
+                idx = i;
+            }
+        }
+        return idx;
+    }
 }

@@ -18,6 +18,7 @@ package smile.tensor;
 
 import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
+import smile.linalg.NativeLibrary;
 import static smile.linalg.lapack.clapack_h.*;
 import static smile.linalg.Diag.*;
 import static smile.linalg.Side.*;
@@ -80,6 +81,10 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
      */
     public DenseMatrix Q() {
         DenseMatrix Q = qr.copy();
+        if (!NativeLibrary.isLapackAvailable()) {
+            JLapack.orgqr(Q, tau);
+            return Q;
+        }
         Vector work = Q.vector(qr.n);
         int[] m = { qr.m };
         int[] n = { qr.n };
@@ -146,6 +151,11 @@ public record QR(DenseMatrix qr, Vector tau) implements Serializable {
         }
         if (qr.m != B.m) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", qr.nrow(), qr.nrow(), B.nrow(), B.ncol()));
+        }
+
+        if (!NativeLibrary.isLapackAvailable()) {
+            JLapack.qrSolve(qr, tau, B);
+            return;
         }
 
         Vector work = qr.vector(1);

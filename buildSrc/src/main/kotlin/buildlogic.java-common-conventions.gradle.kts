@@ -66,4 +66,11 @@ tasks.named<Test>("test") {
     if (testNetwork.isPresent) {
         systemProperty("smile.test.network", testNetwork.get())
     }
+    val linalgBackend = providers.systemProperty("smile.linalg.backend")
+        .orElse(providers.gradleProperty("smile.linalg.backend"))
+        .orElse(providers.gradleProperty("linalgBackend"))
+        .orElse(providers.environmentVariable("SMILE_LINALG_BACKEND"))
+    if (linalgBackend.isPresent) {
+        systemProperty("smile.linalg.backend", linalgBackend.get())
+    }
 }

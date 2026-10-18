@@ -17,8 +17,11 @@
 package smile.tensor;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import smile.io.Read;
 import smile.io.Write;
+import smile.linalg.NativeLibrary;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static smile.linalg.UPLO.*;
@@ -55,23 +58,66 @@ public class SymmMatrixTest {
 
     @AfterEach
     public void tearDown() {
+        System.clearProperty(NativeLibrary.BACKEND_PROPERTY);
     }
 
-    @Test
-    public void testMv() throws Exception{
+    @ParameterizedTest
+    @ValueSource(strings = {"auto", "java"})
+    public void testMv(String backend) throws Exception {
         System.out.println("mv");
+        System.setProperty(NativeLibrary.BACKEND_PROPERTY, backend);
         Vector x = Vector.column(b);
         Vector y = a.mv(x);
         Vector y2 = symm.mv(x);
         assertEquals(y, y2);
     }
 
-    @Test
-    public void testSolve() {
+    @ParameterizedTest
+    @ValueSource(strings = {"auto", "java"})
+    public void testSolve(String backend) {
         System.out.println("solve");
+        System.setProperty(NativeLibrary.BACKEND_PROPERTY, backend);
         Vector y = a.copy().lu().solve(b);
         Vector y2 = symm.solve(b);
         assertEquals(y, y2);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"auto", "java"})
+    public void testUpperUploAndMatrixSolve(String backend) {
+        System.setProperty(NativeLibrary.BACKEND_PROPERTY, backend);
+        SymmMatrix upper = SymmMatrix.of(UPPER, A);
+        Vector x = Vector.column(b);
+        assertEquals(a.mv(x), upper.mv(x));
+        assertEquals(a.copy().lu().solve(b), upper.solve(b));
+
+        double[][] B = {
+                {0.5, 0.2},
+                {0.5, 0.8},
+                {0.5, 0.3}
+        };
+        DenseMatrix expected = DenseMatrix.of(B);
+        a.copy().lu().solve(expected);
+
+        DenseMatrix actualLower = DenseMatrix.of(B);
+        symm.solve(actualLower);
+        assertEquals(expected, actualLower);
+
+        DenseMatrix actualUpper = DenseMatrix.of(B);
+        upper.solve(actualUpper);
+        assertEquals(expected, actualUpper);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"auto", "java"})
+    public void testScale(String backend) {
+        System.setProperty(NativeLibrary.BACKEND_PROPERTY, backend);
+        SymmMatrix scaled = symm.copy().scale(2.0);
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                assertEquals(2.0 * A[i][j], scaled.get(i, j), 1E-10);
+            }
+        }
     }
 
     @Test

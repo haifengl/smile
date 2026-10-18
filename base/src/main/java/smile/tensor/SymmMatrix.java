@@ -196,6 +196,10 @@ public abstract class SymmMatrix implements Matrix, Serializable {
 
     @Override
     public SymmMatrix scale(double alpha) {
+        if (!NativeLibrary.isBlasAvailable()) {
+            JBlas.scal(this, alpha);
+            return this;
+        }
         switch(scalarType()) {
             case Float64 -> cblas_dscal((int) length(), alpha, memory, 1);
             case Float32 -> cblas_sscal((int) length(), (float) alpha, memory, 1);
@@ -254,6 +258,11 @@ public abstract class SymmMatrix implements Matrix, Serializable {
             throw new IllegalArgumentException("Incompatible ScalarType: " + scalarType() + " != " + y.scalarType());
         }
 
+        if (!NativeLibrary.isBlasAvailable()) {
+            JBlas.spmv(this, alpha, x, beta, y);
+            return;
+        }
+
         switch(scalarType()) {
             case Float64 -> cblas_dspmv(order().blas(), uplo.blas(), n, alpha, memory, x.memory, 1, beta, y.memory, 1);
             case Float32 -> cblas_sspmv(order().blas(), uplo.blas(), n, (float) alpha, memory, x.memory, 1, (float) beta, y.memory, 1);
@@ -297,6 +306,14 @@ public abstract class SymmMatrix implements Matrix, Serializable {
     public void solve(DenseMatrix B) {
         if (B.m != n) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", n, n, B.m, B.n));
+        }
+
+        if (!NativeLibrary.isLapackAvailable()) {
+            if (scalarType() != B.scalarType()) {
+                throw new IllegalArgumentException("Incompatible ScalarType: " + B.scalarType() + " != " + scalarType());
+            }
+            JLapack.spsv(this, B);
+            return;
         }
 
         SymmMatrix lu = copy();
