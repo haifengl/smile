@@ -102,8 +102,8 @@ json_check() {
 SAMPLE='{"sepallength":6.7,"sepalwidth":3.0,"petallength":5.2,"petalwidth":2.3}'
 JSON='Content-Type: application/json'
 
-# --- models: reuse the unit-test random forest, plus an LDA model and a tiny ONNX model
-cp "$HERE/../resources/model/iris_random_forest.sml" "$HERE/models/iris_lda.sml" "$HERE/models/logreg_iris.onnx" "$WORK/"
+# --- models: reuse the unit-test random forest, LDA, and logistic-regression ONNX models
+cp "$HERE/../resources/model/iris_random_forest.sml" "$HERE/../resources/model/iris_lda.sml" "$HERE/../resources/model/logreg_iris.onnx" "$WORK/"
 chmod -R a+rwX "$WORK"
 
 echo "== $IMAGE ($FLAVOR flavor) on port $PORT"

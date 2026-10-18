@@ -472,102 +472,87 @@ public class InferenceResourceTest {
      */
     @Test
     public void testKernelShapWithOptionalParameters() {
-        // Given: dynamically load the LDA model from serve/src/test/docker/models/iris_lda.sml
-        var ldaPath = Path.of("serve/src/test/docker/models/iris_lda.sml").toAbsolutePath().toString();
+        var sample = "{\"sepallength\":6.7,\"sepalwidth\":3.0,\"petallength\":5.2,\"petalwidth\":2.3}";
+
+        // 1. Default KernelSHAP via ?explain=true
         given()
             .contentType(ContentType.JSON)
-            .body(java.util.Map.of("model", ldaPath, "kind", "smile"))
-            .when().post("/api/v1/models/load")
+            .body(sample)
+            .when().post("/api/v1/smile/iris_lda-1?explain=true")
             .then()
                 .statusCode(200)
-                .body("id", is("iris_lda-1"))
-                .body("algorithm", is("lda"));
+                .body("prediction", is(2))
+                .body("explanations.shap", hasSize(3))
+                .body("explanations.shap[0]", hasSize(4));
 
-        try {
-            var sample = "{\"sepallength\":6.7,\"sepalwidth\":3.0,\"petallength\":5.2,\"petalwidth\":2.3}";
+        // 2. Custom samples and ridge via query parameters
+        given()
+            .contentType(ContentType.JSON)
+            .body(sample)
+            .when().post("/api/v1/smile/iris_lda-1?explain=true&samples=32&ridge=1e-4")
+            .then()
+                .statusCode(200)
+                .body("prediction", is(2))
+                .body("explanations.shap", hasSize(3))
+                .body("explanations.shap[0]", hasSize(4));
 
-            // 1. Default KernelSHAP via ?explain=true
-            given()
-                .contentType(ContentType.JSON)
-                .body(sample)
-                .when().post("/api/v1/smile/iris_lda-1?explain=true")
-                .then()
-                    .statusCode(200)
-                    .body("prediction", is(2))
-                    .body("explanations.shap", hasSize(3))
-                    .body("explanations.shap[0]", hasSize(4));
+        // 3. Custom shapSamples and shapRidge via JSON body
+        var jsonWithFlatOpts = "{\"sepallength\":6.7,\"sepalwidth\":3.0,\"petallength\":5.2,\"petalwidth\":2.3,"
+                + "\"enableExplanations\":true,\"shapSamples\":32,\"shapRidge\":1e-5}";
+        given()
+            .contentType(ContentType.JSON)
+            .body(jsonWithFlatOpts)
+            .when().post("/api/v1/smile/iris_lda-1")
+            .then()
+                .statusCode(200)
+                .body("prediction", is(2))
+                .body("explanations.shap", hasSize(3))
+                .body("explanations.shap[0]", hasSize(4));
 
-            // 2. Custom samples and ridge via query parameters
-            given()
-                .contentType(ContentType.JSON)
-                .body(sample)
-                .when().post("/api/v1/smile/iris_lda-1?explain=true&samples=32&ridge=1e-4")
-                .then()
-                    .statusCode(200)
-                    .body("prediction", is(2))
-                    .body("explanations.shap", hasSize(3))
-                    .body("explanations.shap[0]", hasSize(4));
+        // 4. Custom nested shap object in JSON body (also implicitly enables explanations)
+        var jsonWithNestedShap = "{\"sepallength\":6.7,\"sepalwidth\":3.0,\"petallength\":5.2,\"petalwidth\":2.3,"
+                + "\"shap\":{\"samples\":32,\"ridge\":1e-5}}";
+        given()
+            .contentType(ContentType.JSON)
+            .body(jsonWithNestedShap)
+            .when().post("/api/v1/smile/iris_lda-1")
+            .then()
+                .statusCode(200)
+                .body("prediction", is(2))
+                .body("explanations.shap", hasSize(3))
+                .body("explanations.shap[0]", hasSize(4));
 
-            // 3. Custom shapSamples and shapRidge via JSON body
-            var jsonWithFlatOpts = "{\"sepallength\":6.7,\"sepalwidth\":3.0,\"petallength\":5.2,\"petalwidth\":2.3,"
-                    + "\"enableExplanations\":true,\"shapSamples\":32,\"shapRidge\":1e-5}";
-            given()
-                .contentType(ContentType.JSON)
-                .body(jsonWithFlatOpts)
-                .when().post("/api/v1/smile/iris_lda-1")
-                .then()
-                    .statusCode(200)
-                    .body("prediction", is(2))
-                    .body("explanations.shap", hasSize(3))
-                    .body("explanations.shap[0]", hasSize(4));
-
-            // 4. Custom nested shap object in JSON body (also implicitly enables explanations)
-            var jsonWithNestedShap = "{\"sepallength\":6.7,\"sepalwidth\":3.0,\"petallength\":5.2,\"petalwidth\":2.3,"
-                    + "\"shap\":{\"samples\":32,\"ridge\":1e-5}}";
-            given()
-                .contentType(ContentType.JSON)
-                .body(jsonWithNestedShap)
-                .when().post("/api/v1/smile/iris_lda-1")
-                .then()
-                    .statusCode(200)
-                    .body("prediction", is(2))
-                    .body("explanations.shap", hasSize(3))
-                    .body("explanations.shap[0]", hasSize(4));
-
-            // 5. Streaming CSV with KernelSHAP query parameters
-            var csvBody = "5.1,3.5,1.4,0.2\n6.7,3.0,5.2,2.3\n";
-            String streamBody = given()
-                .contentType(ContentType.TEXT)
-                .body(csvBody)
-                .when().post("/api/v1/smile/iris_lda-1/stream?explain=true&samples=32&ridge=1e-5")
-                .then()
-                    .statusCode(200)
-                    .extract().body().asString();
-            var dataLines = streamBody.lines()
-                    .filter(l -> !l.isBlank() && l.startsWith("data:"))
-                    .toList();
-            Assertions.assertEquals(2, dataLines.size());
-            for (var line : dataLines) {
-                Assertions.assertTrue(line.contains("\"explanations\":{\"shap\":["),
-                        "Expected KernelSHAP explanations in stream line: " + line);
-            }
-
-            // 6. Invalid KernelSHAP parameters return 400 Bad Request
-            given()
-                .contentType(ContentType.JSON)
-                .body(sample)
-                .when().post("/api/v1/smile/iris_lda-1?explain=true&samples=-1")
-                .then()
-                    .statusCode(400);
-
-            given()
-                .contentType(ContentType.JSON)
-                .body(sample)
-                .when().post("/api/v1/smile/iris_lda-1?explain=true&ridge=-0.1")
-                .then()
-                    .statusCode(400);
-        } finally {
-            given().when().post("/api/v1/smile/iris_lda-1/unload?timeout=5");
+        // 5. Streaming CSV with KernelSHAP query parameters
+        var csvBody = "5.1,3.5,1.4,0.2\n6.7,3.0,5.2,2.3\n";
+        String streamBody = given()
+            .contentType(ContentType.TEXT)
+            .body(csvBody)
+            .when().post("/api/v1/smile/iris_lda-1/stream?explain=true&samples=32&ridge=1e-5")
+            .then()
+                .statusCode(200)
+                .extract().body().asString();
+        var dataLines = streamBody.lines()
+                .filter(l -> !l.isBlank() && l.startsWith("data:"))
+                .toList();
+        Assertions.assertEquals(2, dataLines.size());
+        for (var line : dataLines) {
+            Assertions.assertTrue(line.contains("\"explanations\":{\"shap\":["),
+                    "Expected KernelSHAP explanations in stream line: " + line);
         }
+
+        // 6. Invalid KernelSHAP parameters return 400 Bad Request
+        given()
+            .contentType(ContentType.JSON)
+            .body(sample)
+            .when().post("/api/v1/smile/iris_lda-1?explain=true&samples=-1")
+            .then()
+                .statusCode(400);
+
+        given()
+            .contentType(ContentType.JSON)
+            .body(sample)
+            .when().post("/api/v1/smile/iris_lda-1?explain=true&ridge=-0.1")
+            .then()
+                .statusCode(400);
     }
 }
