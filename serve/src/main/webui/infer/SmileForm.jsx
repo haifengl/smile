@@ -26,6 +26,11 @@ import {
   tryParseJson,
 } from "./inferStream";
 import { normalizePrediction } from "./predictionRows";
+import {
+  buildExplainUrl,
+  isKernelShapAlgorithm,
+  shapMethodForAlgorithm,
+} from "./shap/shapUtils";
 import PredictionResults from "./PredictionResults";
 import InferActionFooter from "./InferActionFooter";
 import "./InferPanel.css";
@@ -79,6 +84,8 @@ function SmileForm({ modelId }) {
   const [file, setFile] = useState(null);
   const [formData, setFormData] = useState({});
   const [explain, setExplain] = useState(true);
+  const [shapSamples, setShapSamples] = useState("");
+  const [shapRidge, setShapRidge] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [streamCount, setStreamCount] = useState(0);
   const [startedAt, setStartedAt] = useState(null);
@@ -183,9 +190,14 @@ function SmileForm({ modelId }) {
     }
     setSubmitError(null);
     beginRun();
-    const url = explain
-      ? `/api/v1/smile/${modelId}?explain=true`
-      : `/api/v1/smile/${modelId}`;
+    const shapOptions = isKernelShapAlgorithm(modelMeta?.algorithm)
+      ? { samples: shapSamples, ridge: shapRidge }
+      : null;
+    const url = buildExplainUrl(
+      `/api/v1/smile/${modelId}`,
+      explain,
+      shapOptions
+    );
 
     fetch(url, {
       method: "POST",
@@ -244,9 +256,14 @@ function SmileForm({ modelId }) {
         throw new Error("File has no data rows");
       }
 
-      const streamUrl = explain
-        ? `/api/v1/smile/${modelId}/stream?explain=true`
-        : `/api/v1/smile/${modelId}/stream`;
+      const shapOptions = isKernelShapAlgorithm(modelMeta?.algorithm)
+        ? { samples: shapSamples, ridge: shapRidge }
+        : null;
+      const streamUrl = buildExplainUrl(
+        `/api/v1/smile/${modelId}/stream`,
+        explain,
+        shapOptions
+      );
 
       const res = await fetch(streamUrl, {
         method: "POST",
@@ -291,6 +308,7 @@ function SmileForm({ modelId }) {
   if (!schema) return null;
 
   const keys = schemaKeys(modelMeta);
+  const shapMethod = shapMethodForAlgorithm(modelMeta?.algorithm);
 
   return (
     <div className="infer-form">
@@ -317,6 +335,11 @@ function SmileForm({ modelId }) {
               disabled={streaming}
               explain={explain}
               onExplainChange={setExplain}
+              shapMethod={shapMethod}
+              shapSamples={shapSamples}
+              onShapSamplesChange={setShapSamples}
+              shapRidge={shapRidge}
+              onShapRidgeChange={setShapRidge}
               batchHint={
                 <>
                   Upload CSV (column order:{" "}
@@ -337,6 +360,7 @@ function SmileForm({ modelId }) {
           startedAt={startedAt}
           finishedAt={finishedAt}
           featureNames={keys}
+          shapMethod={shapMethod}
           onClear={() => {
             setRows([]);
             setStartedAt(null);

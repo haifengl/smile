@@ -65,14 +65,39 @@ public interface SHAP<T> {
     double[] shap(T x);
 
     /**
+     * Returns the SHAP values with custom {@link KernelSHAP.Options}
+     * (ignored by exact explainers such as {@link TreeSHAP} and linear SHAP).
+     *
+     * @param x an instance.
+     * @param options the KernelSHAP options, or {@code null} to use default options.
+     * @return the SHAP values.
+     */
+    default double[] shap(T x, KernelSHAP.Options options) {
+        return shap(x);
+    }
+
+    /**
      * Returns the average of absolute SHAP values over a data set.
      * Returns an empty array when the stream contains no instances.
      * @param data the data set.
      * @return the average of absolute SHAP values over a data set.
      */
     default double[] shap(Stream<? extends T> data) {
+        return shap(data, null);
+    }
+
+    /**
+     * Returns the average of absolute SHAP values over a data set with custom
+     * {@link KernelSHAP.Options}. Returns an empty array when the stream contains
+     * no instances.
+     *
+     * @param data the data set.
+     * @param options the KernelSHAP options, or {@code null} to use default options.
+     * @return the average of absolute SHAP values over a data set.
+     */
+    default double[] shap(Stream<? extends T> data, KernelSHAP.Options options) {
         double[][] matrix = data.map(x -> {
-            double[] values = shap(x).clone();
+            double[] values = (options != null ? shap(x, options) : shap(x)).clone();
             for (int i = 0; i < values.length; i++)
                 values[i] = Math.abs(values[i]);
             return values;

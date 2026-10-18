@@ -791,11 +791,29 @@ curl -X POST "http://localhost:8080/api/v1/smile/iris_random_forest-1?explain=tr
 - For **regression models** (tree ensembles via TreeSHAP, linear models via exact linear SHAP, and Gaussian Process, MLP, SVM, RBF networks via KernelSHAP), `shap` is a 1D array of floats with dimension `[features]`.
 - For custom models that do not support SHAP, `shap` returns `"Not supported"`.
 
+For models using **KernelSHAP**, optional per-request parameters can be passed as query parameters (`?samples=N&ridge=R`) or in the JSON request body (`shapSamples`, `shapRidge`, or `"shap": {"samples": N, "ridge": R}`):
+
+| Query param | JSON field | Type | Default | Description |
+|---|---|---|---|---|
+| `samples` | `shapSamples` / `shap.samples` | `int` | `0` (auto: `2 * M + 2048`) | Maximum number of feature coalitions to evaluate per instance (`>= 0`). |
+| `ridge` | `shapRidge` / `shap.ridge` | `double` | `1e-8` | L2 regularization penalty for weighted least squares (`>= 0`, finite). |
+
+```shell
+curl -X POST "http://localhost:8080/api/v1/smile/iris_lda-1?explain=true&samples=256&ridge=1e-6" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sepallength": 5.1,
+    "sepalwidth":  3.5,
+    "petallength": 1.4,
+    "petalwidth":  0.2
+  }'
+```
+
 **Error responses:**
 
 | HTTP | Cause |
 |---|---|
-| `400 Bad Request` | Missing required field, or malformed JSON |
+| `400 Bad Request` | Missing required field, malformed JSON, or invalid SHAP parameters (`samples < 0` or `ridge < 0` / non-finite) |
 | `404 Not Found` | Unknown model ID |
 
 ### 5.4 Streaming Inference (CSV / JSON-lines)

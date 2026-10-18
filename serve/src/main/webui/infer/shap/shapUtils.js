@@ -16,6 +16,85 @@
  * <https://www.gnu.org/licenses/>.
  */
 
+const TREE_SHAP_ALGORITHMS = new Set([
+  "random-forest",
+  "gradient-boost",
+  "ada-boost",
+  "cart",
+]);
+
+const LINEAR_SHAP_ALGORITHMS = new Set([
+  "ols",
+  "lasso",
+  "elastic-net",
+  "ridge",
+]);
+
+/**
+ * Returns the SHAP method name ("TreeSHAP", "LinearSHAP", or "KernelSHAP")
+ * for a SMILE model algorithm name.
+ *
+ * @param {string|null|undefined} algorithm
+ * @returns {"TreeSHAP"|"LinearSHAP"|"KernelSHAP"}
+ */
+export function shapMethodForAlgorithm(algorithm) {
+  if (!algorithm || typeof algorithm !== "string") {
+    return "SHAP";
+  }
+  const normalized = algorithm.trim().toLowerCase();
+  if (TREE_SHAP_ALGORITHMS.has(normalized)) {
+    return "TreeSHAP";
+  }
+  if (LINEAR_SHAP_ALGORITHMS.has(normalized)) {
+    return "LinearSHAP";
+  }
+  return "KernelSHAP";
+}
+
+/**
+ * Returns true if the algorithm uses KernelSHAP (and therefore accepts
+ * optional coalition sample count and ridge regularization parameters).
+ *
+ * @param {string|null|undefined} algorithm
+ * @returns {boolean}
+ */
+export function isKernelShapAlgorithm(algorithm) {
+  return shapMethodForAlgorithm(algorithm) === "KernelSHAP";
+}
+
+/**
+ * Builds an inference or streaming URL with optional explain and KernelSHAP parameters.
+ *
+ * @param {string} baseUrl
+ * @param {boolean} explain
+ * @param {{ samples?: string|number, ridge?: string|number }|null} [shapOptions]
+ * @returns {string}
+ */
+export function buildExplainUrl(baseUrl, explain, shapOptions = null) {
+  if (!explain) {
+    return baseUrl;
+  }
+  const params = new URLSearchParams();
+  params.set("explain", "true");
+  if (shapOptions && typeof shapOptions === "object") {
+    const rawSamples = shapOptions.samples;
+    if (rawSamples != null && String(rawSamples).trim() !== "") {
+      const parsedSamples = Number(rawSamples);
+      if (Number.isInteger(parsedSamples) && parsedSamples >= 0) {
+        params.set("samples", String(parsedSamples));
+      }
+    }
+    const rawRidge = shapOptions.ridge;
+    if (rawRidge != null && String(rawRidge).trim() !== "") {
+      const parsedRidge = Number(rawRidge);
+      if (Number.isFinite(parsedRidge) && parsedRidge >= 0) {
+        params.set("ridge", String(parsedRidge));
+      }
+    }
+  }
+  return `${baseUrl}?${params.toString()}`;
+}
+
 /**
  * Normalizes SHAP explanations from server prediction responses.
  *

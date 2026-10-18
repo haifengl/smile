@@ -140,6 +140,9 @@ json_check  "random forest prediction with SHAP" \
 json_check  "LDA prediction (native BLAS/LAPACK)" \
     "d['prediction']==2 and abs(sum(d['probabilities'])-1)<0.01" \
     -X POST -H "$JSON" -d "$SAMPLE" "$API/smile/iris_lda-1"
+json_check  "LDA prediction with KernelSHAP" \
+    "d['prediction']==2 and d['explanations']['shap'] and len(d['explanations']['shap'])==3" \
+    -X POST -H "$JSON" -d "$SAMPLE" "$API/smile/iris_lda-1?explain=true&samples=32&ridge=1e-6"
 json_check  "ONNX model info" "d['id']=='logreg_iris' and d['inputs'][0]['name']=='float_input'" "$API/onnx/logreg_iris"
 json_check  "ONNX inference (ONNX Runtime)" "len(d['label'])==3" \
     -X POST -H "$JSON" -d '{"float_input":[1,2,3,4,5,6]}' "$API/onnx/logreg_iris"

@@ -117,6 +117,18 @@ public interface Model {
     }
 
     /**
+     * Computes SHAP values for the input tuple with custom {@link smile.feature.importance.KernelSHAP.Options}.
+     *
+     * @param x       the input tuple.
+     * @param options the KernelSHAP options, or {@code null} to use default options.
+     * @return the SHAP values (double[] for regression, double[][] for classification).
+     * @throws UnsupportedOperationException if SHAP explanations are not supported.
+     */
+    default Object shap(Tuple x, smile.feature.importance.KernelSHAP.Options options) {
+        return shap(x);
+    }
+
+    /**
      * Performs inference on a single tuple.
      *
      * @param x           the input tuple.
@@ -125,6 +137,19 @@ public interface Model {
      * @return the prediction.
      */
     Prediction infer(Tuple x, boolean probability, boolean explain);
+
+    /**
+     * Performs inference on a single tuple with custom {@link smile.feature.importance.KernelSHAP.Options}.
+     *
+     * @param x           the input tuple.
+     * @param probability true to compute posterior probabilities for soft classifiers.
+     * @param explain     true to compute feature explanations.
+     * @param options     optional KernelSHAP options (may be {@code null}).
+     * @return the prediction.
+     */
+    default Prediction infer(Tuple x, boolean probability, boolean explain, smile.feature.importance.KernelSHAP.Options options) {
+        return infer(x, probability, explain);
+    }
 
     /**
      * Performs inference on a single tuple without explanations.
@@ -156,9 +181,22 @@ public interface Model {
      * @return an array of predictions.
      */
     default Prediction[] infer(DataFrame data, boolean probability, boolean explain) {
+        return infer(data, probability, explain, null);
+    }
+
+    /**
+     * Performs batch inference over a data frame with custom {@link smile.feature.importance.KernelSHAP.Options}.
+     *
+     * @param data        the input data frame.
+     * @param probability true to compute posterior probabilities for soft classifiers.
+     * @param explain     true to compute feature explanations.
+     * @param options     optional KernelSHAP options (may be {@code null}).
+     * @return an array of predictions.
+     */
+    default Prediction[] infer(DataFrame data, boolean probability, boolean explain, smile.feature.importance.KernelSHAP.Options options) {
         formula().bind(data.schema());
         return data.stream()
-                   .map(row -> infer(row, probability, explain))
+                   .map(row -> infer(row, probability, explain, options))
                    .toArray(Prediction[]::new);
     }
 

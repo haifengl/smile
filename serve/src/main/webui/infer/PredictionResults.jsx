@@ -46,6 +46,7 @@ export default function PredictionResults({
   startedAt = null,
   finishedAt = null,
   featureNames = [],
+  shapMethod = "SHAP",
   onClear,
 }) {
   const scrollRef = useRef(null);
@@ -348,6 +349,7 @@ export default function PredictionResults({
         <ShapModal
           row={shapRow}
           featureNames={featureNames}
+          shapMethod={shapMethod}
           onClose={() => setShapRow(null)}
         />
       )}

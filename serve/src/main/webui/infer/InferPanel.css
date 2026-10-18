@@ -415,6 +415,13 @@
   color: #312e81;
 }
 
+.infer-explain-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
 .infer-explain-toggle {
   display: inline-flex;
   align-items: center;
@@ -429,6 +436,36 @@
   width: 15px;
   height: 15px;
   cursor: pointer;
+}
+
+.infer-kernel-shap-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.infer-shap-param {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.infer-shap-param input[type="number"] {
+  width: 90px;
+  padding: 4px 6px;
+  font-size: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #0f172a;
 }
 
 .onnx-form .model-meta h2 {

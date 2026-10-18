@@ -181,6 +181,12 @@ public interface DataFrameRegression extends Regression<Tuple> {
 
         @Override
         public double[] shap(Tuple x) {
+            return shap(x, null);
+        }
+
+        @Override
+        public double[] shap(Tuple x, KernelSHAP.Options options) {
+            KernelSHAP.Options opts = options != null ? options : shapOptions;
             if (bgVectors != null) {
                 KernelSHAP<double[]> exp = vectorExplainer;
                 if (exp == null) {
@@ -192,7 +198,7 @@ public interface DataFrameRegression extends Regression<Tuple> {
                         }
                     }
                 }
-                return exp.shap(vectorize(x));
+                return exp.shap(vectorize(x), opts);
             } else {
                 KernelSHAP<Tuple> exp = tupleExplainer;
                 if (exp == null) {
@@ -205,7 +211,7 @@ public interface DataFrameRegression extends Regression<Tuple> {
                     }
                 }
                 Tuple xt = x.schema().equals(schema) ? x : formula.x(x);
-                return exp.shap(xt);
+                return exp.shap(xt, opts);
             }
         }
     }
@@ -258,14 +264,19 @@ public interface DataFrameRegression extends Regression<Tuple> {
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         public double[] shap(Tuple x) {
+            return shap(x, null);
+        }
+
+        @Override
+        @SuppressWarnings("unchecked")
+        public double[] shap(Tuple x, KernelSHAP.Options options) {
             double[] phi = null;
             for (DataFrameRegression model : models) {
                 if (!(model instanceof SHAP<?> s)) {
                     throw new UnsupportedOperationException("Base model does not support SHAP: " + model.getClass().getName());
                 }
-                double[] mphi = ((SHAP<Tuple>) s).shap(x);
+                double[] mphi = ((SHAP<Tuple>) s).shap(x, options);
                 if (phi == null) {
                     phi = mphi.clone();
                 } else {
