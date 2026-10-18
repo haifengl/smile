@@ -18,6 +18,7 @@ package smile.tensor;
 
 import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
+import smile.linalg.NativeLibrary;
 import static smile.linalg.Transpose.*;
 import static smile.linalg.lapack.clapack_h.*;
 
@@ -138,6 +139,11 @@ public record LU(DenseMatrix lu, int[] ipiv, int info) implements Serializable {
         }
         if (lu.m != B.m) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
+        }
+
+        if (!NativeLibrary.isLapackAvailable()) {
+            JLapack.getrs(lu, ipiv, B);
+            return;
         }
 
         byte[] trans = { NO_TRANSPOSE.lapack() };

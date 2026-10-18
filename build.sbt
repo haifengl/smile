@@ -52,7 +52,8 @@ lazy val commonSettings = Seq(
     Seq(
       "onnxruntime.native.path",
       "onnxruntime-genai.native.path",
-      "smile.onnx.genai.model"
+      "smile.onnx.genai.model",
+      "smile.linalg.backend"
     ).flatMap { key =>
       sys.props.get(key).filter(_.nonEmpty).map(v => s"-D$key=$v")
     }
@@ -133,7 +134,7 @@ lazy val javaSettings = commonSettings ++ Seq(
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-api" % "2.0.20",
     "org.slf4j" % "slf4j-simple" % "2.0.20" % Test,
-    "org.junit.jupiter" % "junit-jupiter-engine" % "6.1.3" % Test,
+    "org.junit.jupiter" % "junit-jupiter" % "6.1.3" % Test,
     "com.github.sbt.junit" % "jupiter-interface" % JupiterKeys.jupiterVersion.value % Test
   )
 )

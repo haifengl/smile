@@ -20,7 +20,6 @@ import smile.math.MathEx;
 
 import java.lang.foreign.MemorySegment;
 import java.util.Arrays;
-import static smile.linalg.blas.cblas_h.*;
 
 /**
  * Mathematical vector interface. Vectors are a specialized case of matrices.
@@ -154,9 +153,9 @@ public abstract class Vector extends DenseMatrix {
      */
     public static void copy(Vector src, int pos, Vector dest, int destPos, int length) {
         if (src instanceof Vector32 a && dest instanceof Vector32 b) {
-            System.arraycopy(a.array, pos, b.array, destPos, length);
+            System.arraycopy(a.array, a.offset + pos, b.array, b.offset + destPos, length);
         } else if (src instanceof Vector64 a && dest instanceof Vector64 b) {
-            System.arraycopy(a.array, pos, b.array, destPos, length);
+            System.arraycopy(a.array, a.offset + pos, b.array, b.offset + destPos, length);
         } else {
             for (int i = 0; i < length; i++) {
                 dest.set(destPos + i, src.get(pos + i));
@@ -420,11 +419,12 @@ public abstract class Vector extends DenseMatrix {
      * @return Sum of the absolute values of the elements of the vector.
      */
     public double asum() {
-        return switch(scalarType()) {
-            case Float64 -> cblas_dasum(size(), memory, 1);
-            case Float32 -> cblas_sasum(size(), memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
-        };
+        int length = size();
+        double s = 0.0;
+        for (int i = 0; i < length; i++) {
+            s += Math.abs(get(i));
+        }
+        return s;
     }
 
     /**
@@ -442,11 +442,13 @@ public abstract class Vector extends DenseMatrix {
         if (size() != x.size()) {
             throw new IllegalArgumentException("Different vector size: " + x.size());
         }
+        if (alpha == 0.0) {
+            return;
+        }
 
-        switch(scalarType()) {
-            case Float64 -> cblas_daxpy(size(), alpha, x.memory, 1, memory, 1);
-            case Float32 -> cblas_saxpy(size(), (float) alpha, x.memory, 1, memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
+        int n = size();
+        for (int i = 0; i < n; i++) {
+            add(i, alpha * x.get(i));
         }
     }
 
@@ -465,11 +467,12 @@ public abstract class Vector extends DenseMatrix {
             throw new IllegalArgumentException("Different vector size: " + x.size());
         }
 
-        return switch(scalarType()) {
-            case Float64 -> cblas_ddot(size(), x.memory, 1, memory, 1);
-            case Float32 -> cblas_sdot(size(), x.memory, 1, memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
-        };
+        int n = size();
+        double s = 0.0;
+        for (int i = 0; i < n; i++) {
+            s += get(i) * x.get(i);
+        }
+        return s;
     }
 
     /**
@@ -478,11 +481,13 @@ public abstract class Vector extends DenseMatrix {
      * @return Euclidean norm.
      */
     public double norm2() {
-        return switch(scalarType()) {
-            case Float64 -> cblas_dnrm2(size(), memory, 1);
-            case Float32 -> cblas_snrm2(size(), memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
-        };
+        int n = size();
+        double s = 0.0;
+        for (int i = 0; i < n; i++) {
+            double v = get(i);
+            s += v * v;
+        }
+        return Math.sqrt(s);
     }
 
     /**
@@ -491,11 +496,7 @@ public abstract class Vector extends DenseMatrix {
      * @return L1 norm.
      */
     public double norm1() {
-        return switch(scalarType()) {
-            case Float64 -> cblas_dasum(size(), memory, 1);
-            case Float32 -> cblas_sasum(size(), memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
-        };
+        return asum();
     }
 
     /**
@@ -509,10 +510,9 @@ public abstract class Vector extends DenseMatrix {
 
     @Override
     public Vector scale(double alpha) {
-        switch(scalarType()) {
-            case Float64 -> cblas_dscal(size(), alpha, memory, 1);
-            case Float32 -> cblas_sscal(size(), (float) alpha, memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
+        int n = size();
+        for (int i = 0; i < n; i++) {
+            mul(i, alpha);
         }
         return this;
     }
@@ -530,10 +530,11 @@ public abstract class Vector extends DenseMatrix {
             throw new IllegalArgumentException("Different vector size: " + x.size());
         }
 
-        switch(scalarType()) {
-            case Float64 -> cblas_dswap(size(), x.memory, 1, memory, 1);
-            case Float32 -> cblas_sswap(size(), x.memory, 1, memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
+        int n = size();
+        for (int i = 0; i < n; i++) {
+            double t = get(i);
+            set(i, x.get(i));
+            x.set(i, t);
         }
     }
 
@@ -544,11 +545,17 @@ public abstract class Vector extends DenseMatrix {
      * @return The first index of the maximum absolute value of vector x.
      */
     public int iamax() {
-        return (int) switch(scalarType()) {
-            case Float64 -> cblas_idamax(size(), memory, 1);
-            case Float32 -> cblas_isamax(size(), memory, 1);
-            default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
-        };
+        int n = size();
+        int idx = 0;
+        double max = 0.0;
+        for (int i = 0; i < n; i++) {
+            double a = Math.abs(get(i));
+            if (a > max) {
+                max = a;
+                idx = i;
+            }
+        }
+        return idx;
     }
 
     /**
