@@ -91,4 +91,21 @@ public class NativeLibraryTest {
         assertNull(NativeLibrary.findLibraryFile("totally_absent_library_xyz"));
         assertFalse(NativeLibrary.libraryFilePresent("totally_absent_library_xyz"));
     }
+
+    @Test
+    void backendJavaDisablesNativeBlasAndLapack() {
+        String prev = System.getProperty(NativeLibrary.BACKEND_PROPERTY);
+        try {
+            System.setProperty(NativeLibrary.BACKEND_PROPERTY, "java");
+            assertEquals("java", NativeLibrary.backend());
+            assertFalse(NativeLibrary.isBlasAvailable());
+            assertFalse(NativeLibrary.isLapackAvailable());
+        } finally {
+            if (prev == null) {
+                System.clearProperty(NativeLibrary.BACKEND_PROPERTY);
+            } else {
+                System.setProperty(NativeLibrary.BACKEND_PROPERTY, prev);
+            }
+        }
+    }
 }

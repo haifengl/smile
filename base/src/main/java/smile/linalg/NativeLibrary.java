@@ -58,11 +58,32 @@ import smile.util.OS;
  * @author Haifeng Li
  */
 public final class NativeLibrary {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NativeLibrary.class);
+
+    /** System property to select linear algebra backend ("auto", "native", "java"). */
+    public static final String BACKEND_PROPERTY = "smile.linalg.backend";
+    /** Environment variable counterpart of {@link #BACKEND_PROPERTY}. */
+    public static final String BACKEND_ENV = "SMILE_LINALG_BACKEND";
+
+    /** System property naming the directory that contains BLAS. */
+    public static final String BLAS_NATIVE_PATH_PROPERTY = "blas.native.path";
+    /** Environment variable counterpart of {@link #BLAS_NATIVE_PATH_PROPERTY}. */
+    public static final String BLAS_NATIVE_PATH_ENV = "BLAS_NATIVE_PATH";
+
+    /** System property naming the directory that contains LAPACK. */
+    public static final String LAPACK_NATIVE_PATH_PROPERTY = "lapack.native.path";
+    /** Environment variable counterpart of {@link #LAPACK_NATIVE_PATH_PROPERTY}. */
+    public static final String LAPACK_NATIVE_PATH_ENV = "LAPACK_NATIVE_PATH";
+
     /** System property naming the directory that contains ARPACK. */
     public static final String ARPACK_NATIVE_PATH_PROPERTY = "arpack.native.path";
     /** Environment variable counterpart of {@link #ARPACK_NATIVE_PATH_PROPERTY}. */
     public static final String ARPACK_NATIVE_PATH_ENV = "ARPACK_NATIVE_PATH";
 
+    /** Bare (unmapped) default name of the BLAS library. */
+    public static final String BLAS_LIBRARY = OS.isMacOS() ? "blas" : (OS.isWindows() ? "libopenblas" : "openblas");
+    /** Bare (unmapped) default name of the LAPACK library. */
+    public static final String LAPACK_LIBRARY = OS.isMacOS() ? "lapack" : (OS.isWindows() ? "libopenblas" : "openblas");
     /** Bare (unmapped) name of the ARPACK library. */
     public static final String ARPACK_LIBRARY = "arpack";
 
@@ -72,8 +93,104 @@ public final class NativeLibrary {
     /** Library stems already loaded by this class (avoids duplicate warnings). */
     private static final Set<String> LOADED = ConcurrentHashMap.newKeySet();
 
+    /** Cached availability of native CBLAS. */
+    private static volatile Boolean blasAvailable;
+    /** Cached availability of native CLAPACK. */
+    private static volatile Boolean lapackAvailable;
+
     /** Not instantiable. */
     private NativeLibrary() {}
+
+    /**
+     * Returns the configured linear algebra backend mode ("auto", "native", or "java").
+     *
+     * @return the backend mode in lowercase.
+     */
+    public static String backend() {
+        String mode = System.getProperty(BACKEND_PROPERTY);
+        if (mode == null || mode.isBlank()) {
+            mode = System.getenv(BACKEND_ENV);
+        }
+        return (mode == null || mode.isBlank()) ? "auto" : mode.trim().toLowerCase();
+    }
+
+    /**
+     * Returns whether native CBLAS is available and enabled.
+     *
+     * @return {@code true} if native CBLAS should be used; {@code false} to use pure Java.
+     */
+    public static boolean isBlasAvailable() {
+        String mode = backend();
+        if ("java".equals(mode)) {
+            return false;
+        }
+        Boolean available = blasAvailable;
+        if (available == null) {
+            synchronized (NativeLibrary.class) {
+                available = blasAvailable;
+                if (available == null) {
+                    available = probeBlas();
+                    blasAvailable = available;
+                    if (!available && "auto".equals(mode)) {
+                        logger.info("Native BLAS library not found; falling back to pure-Java linear algebra backend.");
+                    }
+                }
+            }
+        }
+        if (!available && "native".equals(mode)) {
+            throw new UnsatisfiedLinkError("Native BLAS library is not available (smile.linalg.backend=native)");
+        }
+        return available;
+    }
+
+    /**
+     * Returns whether native CLAPACK is available and enabled.
+     *
+     * @return {@code true} if native CLAPACK should be used; {@code false} to use pure Java.
+     */
+    public static boolean isLapackAvailable() {
+        String mode = backend();
+        if ("java".equals(mode)) {
+            return false;
+        }
+        Boolean available = lapackAvailable;
+        if (available == null) {
+            synchronized (NativeLibrary.class) {
+                available = lapackAvailable;
+                if (available == null) {
+                    available = probeLapack();
+                    lapackAvailable = available;
+                    if (!available && "auto".equals(mode)) {
+                        logger.info("Native LAPACK library not found; falling back to pure-Java linear algebra backend.");
+                    }
+                }
+            }
+        }
+        if (!available && "native".equals(mode)) {
+            throw new UnsatisfiedLinkError("Native LAPACK library is not available (smile.linalg.backend=native)");
+        }
+        return available;
+    }
+
+    private static boolean probeBlas() {
+        try {
+            ensureBlasLoaded();
+            return smile.linalg.blas.cblas_h.cblas_ddot$address() != null;
+        } catch (Throwable t) {
+            logger.debug("Native BLAS probe failed: {}", t.getMessage());
+            return false;
+        }
+    }
+
+    private static boolean probeLapack() {
+        try {
+            ensureLapackLoaded();
+            return smile.linalg.lapack.clapack_h.dgetrf_$address() != null;
+        } catch (Throwable t) {
+            logger.debug("Native LAPACK probe failed: {}", t.getMessage());
+            return false;
+        }
+    }
 
     /**
      * Returns the well-known installation directories for the platform, most
@@ -171,6 +288,26 @@ public final class NativeLibrary {
             LOADED.remove(bareName);
             return false;
         }
+    }
+
+    /**
+     * Loads the BLAS library by absolute path, if it can be resolved.
+     *
+     * @return {@code true} when the library is loaded after this call.
+     */
+    public static boolean ensureBlasLoaded() {
+        String lib = System.getProperty("smile.lib.blas", BLAS_LIBRARY);
+        return ensureLoaded(BLAS_NATIVE_PATH_PROPERTY, BLAS_NATIVE_PATH_ENV, lib);
+    }
+
+    /**
+     * Loads the LAPACK library by absolute path, if it can be resolved.
+     *
+     * @return {@code true} when the library is loaded after this call.
+     */
+    public static boolean ensureLapackLoaded() {
+        String lib = System.getProperty("smile.lib.lapack", LAPACK_LIBRARY);
+        return ensureLoaded(LAPACK_NATIVE_PATH_PROPERTY, LAPACK_NATIVE_PATH_ENV, lib);
     }
 
     /**

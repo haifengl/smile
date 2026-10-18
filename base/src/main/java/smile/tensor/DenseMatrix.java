@@ -204,6 +204,10 @@ public abstract class DenseMatrix implements Matrix, Serializable {
 
     @Override
     public DenseMatrix scale(double alpha) {
+        if (!NativeLibrary.isBlasAvailable()) {
+            JBlas.scal(this, alpha);
+            return this;
+        }
         int length = capacity();
         switch(scalarType()) {
             case Float64 -> cblas_dscal(length, alpha, memory, 1);
@@ -696,7 +700,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
             throw new IllegalArgumentException(String.format("Adds matrix: %d x %d vs %d x %d", m, n, x.nrow(), x.ncol()));
         }
 
-        if (scalarType() == x.scalarType() && ld == x.ld) {
+        if (scalarType() == x.scalarType() && ld == x.ld && NativeLibrary.isBlasAvailable()) {
             int length = capacity();
             switch (scalarType()) {
                 case Float64 -> cblas_daxpy(length, alpha, x.memory, 1, memory, 1);
@@ -704,11 +708,7 @@ public abstract class DenseMatrix implements Matrix, Serializable {
                 default -> throw new UnsupportedOperationException("Unsupported scalar type: " + scalarType());
             }
         } else {
-            for (int j = 0; j < n; j++) {
-                for (int i = 0; i < m; i++) {
-                    set(i, j, get(i, j) + alpha * x.get(i, j));
-                }
-            }
+            JBlas.axpy(alpha, x, this);
         }
         return this;
     }
@@ -765,6 +765,23 @@ public abstract class DenseMatrix implements Matrix, Serializable {
                     throw new IllegalArgumentException("Incompatible y vector size: " + ncol() + " != " + y.size());
                 }
                 break;
+        }
+
+        if (!NativeLibrary.isBlasAvailable()) {
+            if (uplo != null) {
+                if (diag != null) {
+                    if (alpha == 1.0 && beta == 0.0 && x == y) {
+                        JBlas.trmv(uplo, trans, diag, this, y);
+                    } else {
+                        JBlas.gemv(trans, alpha, this, x, beta, y);
+                    }
+                } else {
+                    JBlas.symv(uplo, alpha, this, x, beta, y);
+                }
+            } else {
+                JBlas.gemv(trans, alpha, this, x, beta, y);
+            }
+            return;
         }
 
         switch (scalarType()) {
@@ -838,6 +855,24 @@ public abstract class DenseMatrix implements Matrix, Serializable {
 
         int m = C.nrow();
         int n = C.ncol();
+        if (!NativeLibrary.isBlasAvailable()) {
+            if (A.isSymmetric() && transB == NO_TRANSPOSE && B.order() == C.order()) {
+                JBlas.symm(LEFT, A.uplo(), alpha, A, B, beta, C);
+            } else if (B.isSymmetric() && transA == NO_TRANSPOSE && A.order() == C.order()) {
+                JBlas.symm(RIGHT, B.uplo(), alpha, B, A, beta, C);
+            } else {
+                if (C.order() != A.order()) {
+                    transA = Transpose.flip(transA);
+                    A = A.transpose();
+                }
+                if (C.order() != B.order()) {
+                    transB = Transpose.flip(transB);
+                    B = B.transpose();
+                }
+                JBlas.gemm(alpha, transA, A, transB, B, beta, C);
+            }
+            return;
+        }
         if (A.isSymmetric() && transB == NO_TRANSPOSE && B.order() == C.order()) {
             switch (C.scalarType()) {
                 case Float64:
@@ -980,6 +1015,14 @@ public abstract class DenseMatrix implements Matrix, Serializable {
             throw new IllegalArgumentException(String.format("Dimensions do not match for rank-1 update: %d x %d vs 1 x %d", nrow(), ncol(), y.size()));
         }
 
+        if (!NativeLibrary.isBlasAvailable()) {
+            if (scalarType() != x.scalarType() || scalarType() != y.scalarType()) {
+                throw new IllegalArgumentException("Incompatible ScalarType");
+            }
+            JBlas.ger(alpha, this, x, y);
+            return;
+        }
+
         switch(scalarType()) {
             case Float64 -> cblas_dger(order().blas(), m, n, alpha, x.memory, 1, y.memory, 1, memory, ld);
             case Float32 -> cblas_sger(order().blas(), m, n, (float) alpha, x.memory, 1, y.memory, 1, memory, ld);
@@ -994,6 +1037,30 @@ public abstract class DenseMatrix implements Matrix, Serializable {
     public DenseMatrix inverse() {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
+        }
+
+        if (!NativeLibrary.isLapackAvailable()) {
+            DenseMatrix copy = copy();
+            if (copy.isSymmetric()) {
+                if (copy.uplo == LOWER) {
+                    for (int i = 0; i < n; i++) {
+                        for (int j = 0; j < i; j++) {
+                            copy.set(j, i, copy.get(i, j));
+                        }
+                    }
+                } else if (copy.uplo == UPPER) {
+                    for (int i = 0; i < n; i++) {
+                        for (int j = i + 1; j < n; j++) {
+                            copy.set(j, i, copy.get(i, j));
+                        }
+                    }
+                }
+            }
+            LU factor = copy.lu();
+            if (factor.isSingular()) {
+                throw new ArithmeticException("Matrix is singular.");
+            }
+            return factor.inverse();
         }
 
         DenseMatrix lu = copy();
@@ -1056,10 +1123,16 @@ public abstract class DenseMatrix implements Matrix, Serializable {
      */
     public LU lu() {
         DenseMatrix lu = this;
+        int[] ipiv = new int[Math.min(lu.m, lu.n)];
+        if (!NativeLibrary.isLapackAvailable()) {
+            int info = JLapack.getrf(lu, ipiv);
+            lu.uplo = null; // LU is not symmetric
+            return new LU(lu, ipiv, info);
+        }
+
         int[] m = { lu.m };
         int[] n = { lu.n };
         int[] lda = { lu.ld };
-        int[] ipiv = new int[Math.min(lu.m, lu.n)];
         int[] info = { 0 };
         MemorySegment m_ = MemorySegment.ofArray(m);
         MemorySegment n_ = MemorySegment.ofArray(n);
@@ -1095,6 +1168,11 @@ public abstract class DenseMatrix implements Matrix, Serializable {
         }
 
         DenseMatrix lu = this;
+        if (!NativeLibrary.isLapackAvailable()) {
+            JLapack.potrf(lu);
+            return new Cholesky(lu);
+        }
+
         byte[] uplo = { lu.uplo.lapack() };
         int[] n = { lu.n };
         int[] lda = { lu.ld };
@@ -1126,6 +1204,12 @@ public abstract class DenseMatrix implements Matrix, Serializable {
     public QR qr() {
         DenseMatrix qr = this;
         Vector tau = qr.vector(Math.min(m, n));
+        if (!NativeLibrary.isLapackAvailable()) {
+            JLapack.geqrf(qr, tau);
+            qr.uplo = null; // QR is not symmetric
+            return new QR(qr, tau);
+        }
+
         Vector work = vector(1);
         int[] m = { qr.m };
         int[] n = { qr.n };
@@ -1208,6 +1292,10 @@ public abstract class DenseMatrix implements Matrix, Serializable {
      * @return singular value decomposition.
      */
     public SVD svd(boolean vectors) {
+        if (!NativeLibrary.isLapackAvailable()) {
+            return JLapack.gesdd(this, vectors);
+        }
+
         int k = Math.min(m, n);
         Vector s = vector(k);
         DenseMatrix A = this;
@@ -1294,6 +1382,14 @@ public abstract class DenseMatrix implements Matrix, Serializable {
     public EVD eigen(boolean vl, boolean vr) {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
+        }
+
+        if (!NativeLibrary.isLapackAvailable()) {
+            if (isSymmetric()) {
+                return JLapack.syevd(this, vr);
+            } else {
+                return JLapack.geev(this, vl, vr);
+            }
         }
 
         DenseMatrix eig = this;

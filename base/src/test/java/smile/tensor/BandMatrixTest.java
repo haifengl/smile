@@ -17,8 +17,11 @@
 package smile.tensor;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import smile.io.Read;
 import smile.io.Write;
+import smile.linalg.NativeLibrary;
 import static org.junit.jupiter.api.Assertions.*;
 import static smile.tensor.ScalarType.*;
 
@@ -61,11 +64,14 @@ public class BandMatrixTest {
 
     @AfterEach
     public void tearDown() {
+        System.clearProperty(NativeLibrary.BACKEND_PROPERTY);
     }
 
-    @Test
-    public void testMv() {
+    @ParameterizedTest
+    @ValueSource(strings = {"auto", "java"})
+    public void testMv(String backend) {
         System.out.println("mv");
+        System.setProperty(NativeLibrary.BACKEND_PROPERTY, backend);
         Vector x = Vector.column(b);
         Vector y = a.mv(x);
         Vector y2 = band.mv(x);
@@ -88,12 +94,46 @@ public class BandMatrixTest {
         assertEquals(0.4, t.get(1, 0), 1E-7);
     }
 
-    @Test
-    public void testSolve() {
+    @ParameterizedTest
+    @ValueSource(strings = {"auto", "java"})
+    public void testSolve(String backend) {
         System.out.println("solve");
+        System.setProperty(NativeLibrary.BACKEND_PROPERTY, backend);
         Vector y = a.copy().lu().solve(b);
         Vector y2 = band.solve(b);
         assertEquals(y, y2);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"auto", "java"})
+    public void testMatrixSolveAndSymmetricBand(String backend) {
+        System.setProperty(NativeLibrary.BACKEND_PROPERTY, backend);
+        double[][] B = {
+                {0.5, 0.2},
+                {0.5, 0.8},
+                {0.5, 0.3}
+        };
+        DenseMatrix expected = DenseMatrix.of(B);
+        a.copy().lu().solve(expected);
+
+        DenseMatrix actual = DenseMatrix.of(B);
+        band.solve(actual);
+        assertEquals(expected, actual);
+
+        BandMatrix symmLower = band.copy().withUplo(smile.linalg.UPLO.LOWER);
+        BandMatrix symmUpper = band.copy().withUplo(smile.linalg.UPLO.UPPER);
+        Vector x = Vector.column(b);
+        assertEquals(a.mv(x), symmLower.mv(x));
+        assertEquals(a.mv(x), symmUpper.mv(x));
+
+        BandMatrix scaled = band.copy().scale(2.0);
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (Math.abs(i - j) <= 1) {
+                    assertEquals(2.0 * A[i][j], scaled.get(i, j), 1E-10);
+                }
+            }
+        }
     }
 
     @Test

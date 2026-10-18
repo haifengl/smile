@@ -18,6 +18,7 @@ package smile.tensor;
 
 import java.io.Serializable;
 import java.lang.foreign.MemorySegment;
+import smile.linalg.NativeLibrary;
 import static smile.linalg.lapack.clapack_h.*;
 
 /**
@@ -135,6 +136,11 @@ public record Cholesky(DenseMatrix lu) implements Serializable {
         }
         if (lu.m != B.m) {
             throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
+        }
+
+        if (!NativeLibrary.isLapackAvailable()) {
+            JLapack.potrs(lu, B);
+            return;
         }
 
         byte[] uplo = { lu.uplo.lapack() };
