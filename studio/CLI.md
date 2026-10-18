@@ -639,7 +639,7 @@ Iris-versicolor 0.0200 0.8512 0.1288
 - With `--explain`, `--json` is enabled automatically.
 - For classification models, `explanations.shap` is a 2D matrix of dimensions `[numClasses][numFeatures]`.
 - For regression models, `explanations.shap` is a 1D array of dimensions `[numFeatures]`.
-- Tree-based models (`random-forest`, `gradient-boost`, `ada-boost`, `cart`) support SHAP explanations. If `--explain` is used on an unsupported model, the command exits with code 1 and prints an error message.
+- All built-in classification and regression models support SHAP explanations (tree-based models via `TreeSHAP`, linear models via exact linear attribution, and other models via `KernelSHAP`). If `--explain` is used on a custom model that does not support SHAP, the command exits with code 1 and prints an error message.
 
 ### Redirecting Output
 

@@ -758,7 +758,7 @@ curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1 \
   regressors.
 - `explanations` — optional model explanation object (present when requested).
 
-#### Explanations (TreeSHAP)
+#### Explanations (TreeSHAP & KernelSHAP)
 
 Explanations can be requested by passing `"enableExplanations": true` in the JSON body, or appending `?explain=true` to the URL.
 
@@ -787,9 +787,9 @@ curl -X POST "http://localhost:8080/api/v1/smile/iris_random_forest-1?explain=tr
 }
 ```
 
-- For **tree classification models** (Random Forest, AdaBoost, Gradient Tree Boost, Decision Tree), `shap` is a 2D array of floats with dimension `[classes][features]`, formatted to 3 decimal places.
-- For **tree regression models**, `shap` is a 1D array of floats with dimension `[features]`.
-- For models that do not support SHAP, `shap` returns `"Not supported"`.
+- For **classification models** (tree ensembles via TreeSHAP, and logistic regression, LDA/QDA/RDA/FLD, MLP, SVM, RBF networks via KernelSHAP), `shap` is a 2D array of floats with dimension `[classes][features]`, formatted to 3 decimal places.
+- For **regression models** (tree ensembles via TreeSHAP, linear models via exact linear SHAP, and Gaussian Process, MLP, SVM, RBF networks via KernelSHAP), `shap` is a 1D array of floats with dimension `[features]`.
+- For custom models that do not support SHAP, `shap` returns `"Not supported"`.
 
 **Error responses:**
 

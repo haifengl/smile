@@ -45,7 +45,7 @@ smile.feature          – Transforms, extraction, selection, imputation, SHAP
   ├─ smile.feature.extraction   – PCA, KernelPCA, BagOfWords, encoders, …
   ├─ smile.feature.imputation   – SimpleImputer, KNNImputer, SVDImputer, …
   ├─ smile.feature.selection    – SSR, SNR, FRegression, IV, GAFE
-  └─ smile.feature.importance   – SHAP, TreeSHAP
+  └─ smile.feature.importance   – SHAP, TreeSHAP, KernelSHAP
 smile.hpo              – Hyper-parameter search (grid, random, Bayesian)
 smile.manifold         – IsoMap, LLE, t-SNE, UMAP, KPCA, …
 smile.model            – Unified model wrappers (CART, MLP internals)
@@ -282,8 +282,13 @@ double[][] fixed = SVDImputer.impute(rawMatrix, 10, 100);
 ### SHAP Explainability (`smile.feature.importance`)
 
 ```java
+// Exact TreeSHAP on tree ensembles
 RandomForest rf = RandomForest.fit(formula, trainDf);
-double[] phi = rf.shap(testTuple);   // per-feature contributions
+double[] phi = rf.shap(testTuple);
+
+// Model-agnostic KernelSHAP on any black-box model or function
+var explainer = KernelSHAP.of(trainDf, model);
+double[] kphi = explainer.shap(testTuple);
 ```
 
 📖 **Full guide:** [FEATURE_ENGINEERING.md](FEATURE_ENGINEERING.md)

@@ -774,6 +774,32 @@ TreeSHAP is implemented by `RandomForest`, `GradientTreeBoost`,
 
 ---
 
+### KernelSHAP
+
+`KernelSHAP<T>` is a model-agnostic explainer that approximates Shapley values
+using constrained weighted linear regression over feature coalitions (Lundberg &
+Lee, NIPS 2017). It supports any scalar/vector function (`ToDoubleFunction<double[]>`,
+`Function<double[], double[]>`), `Classifier<double[]>`, `Regression<double[]>`,
+`DataFrameClassifier`, and `DataFrameRegression`.
+
+```java
+// Explain a DataFrameClassifier or DataFrameRegression
+var explainer = KernelSHAP.of(trainDf, model);
+double[] phi = explainer.shap(testTuple);
+double[] base = explainer.baseValues();
+
+// Explain a raw double[] classifier or regressor
+var vecExplainer = KernelSHAP.of(bgMatrix, svmModel);
+double[] vecPhi = vecExplainer.shap(x);
+```
+
+All non-tree models trained via `Model.classification(...)`, `Model.regression(...)`,
+`DataFrameClassifier.of(...)`, `DataFrameRegression.of(...)`, and `LinearModel`
+(`OLS`, `LASSO`, `ElasticNet`, `RidgeRegression`) automatically implement
+`SHAP<Tuple>`.
+
+---
+
 ## Choosing the Right Technique
 
 ### Scaling / Normalization
@@ -820,7 +846,7 @@ TreeSHAP is implemented by `RandomForest`, `GradientTreeBoost`,
 
 | Situation | Recommended Method |
 |---|---|
-| Any model (local explanation) | `SHAP` interface |
+| Any model (local explanation) | `SHAP` interface / `KernelSHAP` |
 | Tree ensemble (exact, fast) | `TreeSHAP` |
 
 
