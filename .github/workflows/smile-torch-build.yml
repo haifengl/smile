@@ -12,7 +12,7 @@
 #   5. Upload the produced binary as a workflow artifact
 # =============================================================================
 
-name: Build smile-torch C API Library
+name: Build LibTorch C API Library
 
 on:
   push:
