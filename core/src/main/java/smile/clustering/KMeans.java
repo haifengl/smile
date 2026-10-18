@@ -429,7 +429,7 @@ public class KMeans {
      * @param data the input data.
      * @param allowNaN true if allows the input data to contain NaN values.
      */
-    private static void validateData(double[][] data, boolean allowNaN) {
+    static void validateData(double[][] data, boolean allowNaN) {
         if (data.length == 0) {
             throw new IllegalArgumentException("Empty input data.");
         }
