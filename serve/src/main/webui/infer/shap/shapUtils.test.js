@@ -18,11 +18,14 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
+  buildExplainUrl,
   extractShapMetadata,
   formatShapNumber,
   formatSignedShap,
+  isKernelShapAlgorithm,
   prepareExplanation,
   rankAndTruncateFeatures,
+  shapMethodForAlgorithm,
 } from "./shapUtils.js";
 
 describe("shapUtils", () => {
@@ -148,5 +151,44 @@ describe("shapUtils", () => {
     assert.equal(formatShapNumber(5), "5");
     assert.equal(formatSignedShap(0.1234), "+0.123");
     assert.equal(formatSignedShap(-0.456), "-0.456");
+  });
+
+  it("identifies SHAP method for algorithms", () => {
+    assert.equal(shapMethodForAlgorithm("random-forest"), "TreeSHAP");
+    assert.equal(shapMethodForAlgorithm("gradient-boost"), "TreeSHAP");
+    assert.equal(shapMethodForAlgorithm("cart"), "TreeSHAP");
+    assert.equal(shapMethodForAlgorithm("ols"), "LinearSHAP");
+    assert.equal(shapMethodForAlgorithm("ridge"), "LinearSHAP");
+    assert.equal(shapMethodForAlgorithm("logistic"), "KernelSHAP");
+    assert.equal(shapMethodForAlgorithm("lda"), "KernelSHAP");
+    assert.equal(shapMethodForAlgorithm("mlp"), "KernelSHAP");
+    assert.equal(shapMethodForAlgorithm("svm"), "KernelSHAP");
+    assert.equal(shapMethodForAlgorithm("gaussian-process"), "KernelSHAP");
+    assert.equal(isKernelShapAlgorithm("logistic"), true);
+    assert.equal(isKernelShapAlgorithm("random-forest"), false);
+    assert.equal(isKernelShapAlgorithm("ols"), false);
+  });
+
+  it("builds explain URLs with optional KernelSHAP parameters", () => {
+    assert.equal(
+      buildExplainUrl("/api/v1/smile/iris_lda-1", false, { samples: 128, ridge: 1e-6 }),
+      "/api/v1/smile/iris_lda-1"
+    );
+    assert.equal(
+      buildExplainUrl("/api/v1/smile/iris_lda-1", true, null),
+      "/api/v1/smile/iris_lda-1?explain=true"
+    );
+    assert.equal(
+      buildExplainUrl("/api/v1/smile/iris_lda-1", true, { samples: "", ridge: "" }),
+      "/api/v1/smile/iris_lda-1?explain=true"
+    );
+    assert.equal(
+      buildExplainUrl("/api/v1/smile/iris_lda-1", true, { samples: "256", ridge: "1e-5" }),
+      "/api/v1/smile/iris_lda-1?explain=true&samples=256&ridge=0.00001"
+    );
+    assert.equal(
+      buildExplainUrl("/api/v1/smile/iris_lda-1/stream", true, { samples: 64 }),
+      "/api/v1/smile/iris_lda-1/stream?explain=true&samples=64"
+    );
   });
 });

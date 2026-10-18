@@ -53,7 +53,7 @@ def binary_name(path, text, ref):
 
 def class_exists(path, name):
     # <module>/src/main/java/... -> <module>/build/classes/java/main/...
-    module = path.split('/src/main/java/')[0]
+    module = re.split(r'[/\\]src[/\\]main[/\\]java[/\\]', path)[0]
     rel = name.replace('.', '/') + '.class'
     return os.path.exists(os.path.join(module, 'build/classes/java/main', rel))
 
@@ -66,7 +66,7 @@ for base, dirs, files in os.walk(ROOT):
         s = open(path, errors='ignore').read()
         for m in re.finditer(r'upcallHandle\(\s*([\w.]+)\.class', s):
             name = binary_name(path, s, m.group(1))
-            if os.path.isdir(os.path.join(path.split('/src/main/java/')[0], 'build/classes')) and not class_exists(path, name):
+            if os.path.isdir(os.path.join(re.split(r'[/\\]src[/\\]main[/\\]java[/\\]', path)[0], 'build/classes')) and not class_exists(path, name):
                 unresolved.append((f, name))
             fn_types.add(name)
         matches = list(re.finditer(r'FunctionDescriptor\.(of|ofVoid)\(', s))
@@ -132,8 +132,9 @@ def scan_serializable():
     init.write('allprojects { if (path == ":core") { tasks.register("printCp") { doLast { '
                'println "CP=" + project.sourceSets.main.runtimeClasspath.asPath } } } }')
     init.close()
+    gradlew = os.path.join(ROOT, 'gradlew.bat' if os.name == 'nt' else 'gradlew')
     try:
-        out = subprocess.run([os.path.join(ROOT, 'gradlew'), '-q', '--no-configuration-cache', '-I', init.name,
+        out = subprocess.run([gradlew, '-q', '--no-configuration-cache', '-I', init.name,
                               ':core:classes', ':core:printCp'], cwd=ROOT, capture_output=True, text=True, check=True).stdout
     finally:
         os.unlink(init.name)
@@ -163,7 +164,7 @@ for base, dirs, files in os.walk(core_src):
         top = os.path.basename(rel)
         for c in sorted(os.listdir(cdir)) if os.path.isdir(cdir) else []:
             if c == top + '.class' or (c.startswith(top + '$') and c.endswith('.class')):
-                json_types.append(os.path.join(os.path.dirname(rel), c[:-6]).replace('/', '.'))
+                json_types.append(os.path.join(os.path.dirname(rel), c[:-6]).replace('/', '.').replace('\\', '.'))
 
 if unresolved:
     sys.exit('callback interfaces not found in build/classes (run ./gradlew compileJava): ' + repr(unresolved[:5]))
@@ -183,6 +184,6 @@ if CHECK:
     print(f'up to date ({summary})')
 else:
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    with open(OUT, 'w') as fh:
+    with open(OUT, 'w', newline='\n') as fh:
         fh.write(text)
     print(f'{summary} -> {os.path.relpath(OUT, ROOT)}')

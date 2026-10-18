@@ -81,10 +81,16 @@ export default function InferActionFooter({
   batchHint,
   explain = false,
   onExplainChange = null,
+  shapMethod = "SHAP",
+  shapSamples = "",
+  onShapSamplesChange = null,
+  shapRidge = "",
+  onShapRidgeChange = null,
 }) {
   const fileMode = Boolean(file);
   const inputRef = useRef(null);
   const canSubmit = formHasRequiredValues(formData, schema);
+  const isKernelShap = shapMethod === "KernelSHAP";
 
   const clearFile = () => {
     if (inputRef.current) {
@@ -130,15 +136,59 @@ export default function InferActionFooter({
 
       <div className="infer-primary-actions">
         {onExplainChange && (
-          <label className="infer-explain-toggle" title="Compute SHAP feature explanations (TreeSHAP)">
-            <input
-              type="checkbox"
-              checked={explain}
-              onChange={(e) => onExplainChange(e.target.checked)}
-              disabled={disabled || streaming}
-            />
-            <span>Explain (SHAP)</span>
-          </label>
+          <div className="infer-explain-controls">
+            <label
+              className="infer-explain-toggle"
+              title={`Compute SHAP feature explanations (${shapMethod})`}
+            >
+              <input
+                type="checkbox"
+                checked={explain}
+                onChange={(e) => onExplainChange(e.target.checked)}
+                disabled={disabled || streaming}
+              />
+              <span>Explain ({shapMethod})</span>
+            </label>
+
+            {explain && isKernelShap && (onShapSamplesChange || onShapRidgeChange) && (
+              <div className="infer-kernel-shap-options">
+                {onShapSamplesChange && (
+                  <label
+                    className="infer-shap-param"
+                    title="Maximum number of coalitions to evaluate per instance (0 or blank = auto: 2M + 2048)"
+                  >
+                    <span>Samples</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      placeholder="Auto"
+                      value={shapSamples}
+                      onChange={(e) => onShapSamplesChange(e.target.value)}
+                      disabled={disabled || streaming}
+                    />
+                  </label>
+                )}
+                {onShapRidgeChange && (
+                  <label
+                    className="infer-shap-param"
+                    title="L2 ridge regularization parameter for numerical stability (default: 1e-8)"
+                  >
+                    <span>Ridge</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      placeholder="1e-8"
+                      value={shapRidge}
+                      onChange={(e) => onShapRidgeChange(e.target.value)}
+                      disabled={disabled || streaming}
+                    />
+                  </label>
+                )}
+              </div>
+            )}
+          </div>
         )}
 
         <div className="infer-action-row">

@@ -38,6 +38,7 @@ import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
+import smile.feature.importance.KernelSHAP;
 import smile.io.Read;
 import smile.model.Model;
 import smile.model.Prediction;
@@ -225,7 +226,24 @@ public class InferenceService implements OpenAiModelContributor {
      */
     public Prediction predict(String modelId, JsonObject request, boolean explain)
             throws BadRequestException, NotFoundException {
-        return getModel(modelId).predict(request, explain);
+        return predict(modelId, request, explain, null);
+    }
+
+    /**
+     * Performs inference using JSON-encoded input with optional explanations
+     * and custom {@link KernelSHAP.Options}.
+     *
+     * @param modelId     the model ID.
+     * @param request     the feature values as a JSON object.
+     * @param explain     whether to generate model explanations.
+     * @param shapOptions optional KernelSHAP options (may be {@code null}).
+     * @return the inference result.
+     * @throws BadRequestException if the request body is malformed.
+     * @throws NotFoundException   if the model ID is unknown.
+     */
+    public Prediction predict(String modelId, JsonObject request, boolean explain, KernelSHAP.Options shapOptions)
+            throws BadRequestException, NotFoundException {
+        return getModel(modelId).predict(request, explain, shapOptions);
     }
 
     /**

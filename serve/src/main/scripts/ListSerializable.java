@@ -22,7 +22,7 @@ public class ListSerializable {
                 for (Path f : (Iterable<Path>) files.filter(x -> x.toString().endsWith(".class"))::iterator) {
                     String rel = root.relativize(f).toString();
                     if (rel.equals("module-info.class") || rel.endsWith("package-info.class")) continue;
-                    String name = rel.substring(0, rel.length() - 6).replace('/', '.');
+                    String name = rel.substring(0, rel.length() - 6).replace('/', '.').replace('\\', '.');
                     try {
                         Class<?> c = Class.forName(name, false, loader);
                         if (!c.isInterface() && !c.isAnnotation() && Serializable.class.isAssignableFrom(c)) names.add(name);

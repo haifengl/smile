@@ -2378,10 +2378,10 @@
    "type": "smile.classification.Classifier$1"
   },
   {
-   "type": "smile.classification.DataFrameClassifier$1"
+   "type": "smile.classification.DataFrameClassifier$EnsembleDataFrameClassifier"
   },
   {
-   "type": "smile.classification.DataFrameClassifier$2"
+   "type": "smile.classification.DataFrameClassifier$VectorDataFrameClassifier"
   },
   {
    "type": "smile.classification.DecisionTree"
@@ -2862,6 +2862,18 @@
   },
   {
    "type": "smile.feature.extraction.RandomProjection"
+  },
+  {
+   "type": "smile.feature.importance.KernelSHAP"
+  },
+  {
+   "type": "smile.feature.importance.KernelSHAP$MaskedTuple"
+  },
+  {
+   "type": "smile.feature.importance.KernelSHAP$Options"
+  },
+  {
+   "type": "smile.feature.importance.KernelSHAP$ProjectedTuple"
   },
   {
    "type": "smile.feature.imputation.KMedoidsImputer"
@@ -3356,10 +3368,10 @@
    "type": "smile.regression.BinarySparseLinearSVM"
   },
   {
-   "type": "smile.regression.DataFrameRegression$1"
+   "type": "smile.regression.DataFrameRegression$EnsembleDataFrameRegression"
   },
   {
-   "type": "smile.regression.DataFrameRegression$2"
+   "type": "smile.regression.DataFrameRegression$VectorDataFrameRegression"
   },
   {
    "type": "smile.regression.GAM"
@@ -3908,10 +3920,10 @@
    "type": "smile.classification.Classifier$1[]"
   },
   {
-   "type": "smile.classification.DataFrameClassifier$1[]"
+   "type": "smile.classification.DataFrameClassifier$EnsembleDataFrameClassifier[]"
   },
   {
-   "type": "smile.classification.DataFrameClassifier$2[]"
+   "type": "smile.classification.DataFrameClassifier$VectorDataFrameClassifier[]"
   },
   {
    "type": "smile.classification.DecisionTree[]"
@@ -4392,6 +4404,18 @@
   },
   {
    "type": "smile.feature.extraction.RandomProjection[]"
+  },
+  {
+   "type": "smile.feature.importance.KernelSHAP[]"
+  },
+  {
+   "type": "smile.feature.importance.KernelSHAP$MaskedTuple[]"
+  },
+  {
+   "type": "smile.feature.importance.KernelSHAP$Options[]"
+  },
+  {
+   "type": "smile.feature.importance.KernelSHAP$ProjectedTuple[]"
   },
   {
    "type": "smile.feature.imputation.KMedoidsImputer[]"
@@ -4886,10 +4910,10 @@
    "type": "smile.regression.BinarySparseLinearSVM[]"
   },
   {
-   "type": "smile.regression.DataFrameRegression$1[]"
+   "type": "smile.regression.DataFrameRegression$EnsembleDataFrameRegression[]"
   },
   {
-   "type": "smile.regression.DataFrameRegression$2[]"
+   "type": "smile.regression.DataFrameRegression$VectorDataFrameRegression[]"
   },
   {
    "type": "smile.regression.GAM[]"

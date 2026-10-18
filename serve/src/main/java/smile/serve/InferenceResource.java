@@ -24,6 +24,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
@@ -38,6 +39,7 @@ import io.smallrye.mutiny.Multi;
 import io.smallrye.mutiny.infrastructure.Infrastructure;
 import io.vertx.core.json.JsonObject;
 import org.jboss.resteasy.reactive.RestStreamElementType;
+import smile.feature.importance.KernelSHAP;
 import smile.model.Prediction;
 
 /**
@@ -143,8 +145,11 @@ public class InferenceResource {
      * Performs a single inference on JSON-encoded feature values with optional explanations.
      *
      * @param explainQuery optional query parameter {@code ?explain=true}.
+     * @param samples      optional KernelSHAP coalition sample count {@code ?samples=N}.
+     * @param ridge        optional KernelSHAP L2 ridge regularization {@code ?ridge=R}.
      * @param id           the model ID.
-     * @param request      JSON object whose keys are feature names and optional {@code enableExplanations}.
+     * @param request      JSON object whose keys are feature names and optional {@code enableExplanations},
+     *                     {@code shapSamples}, {@code shapRidge}, or {@code shap}.
      * @return the prediction with optional probabilities and explanations.
      */
     @POST
@@ -152,10 +157,13 @@ public class InferenceResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public Prediction predict(@QueryParam("explain") boolean explainQuery,
+                              @QueryParam("samples") Integer samples,
+                              @QueryParam("ridge") Double ridge,
                               @PathParam("id") String id,
                               JsonObject request) {
-        boolean explain = explainQuery || Boolean.TRUE.equals(request != null ? request.getBoolean("enableExplanations") : null);
-        return service.predict(id, request, explain);
+        boolean explain = isExplainRequested(explainQuery, request);
+        KernelSHAP.Options shapOptions = resolveShapOptions(samples, ridge, request);
+        return service.predict(id, request, explain, shapOptions);
     }
 
     /**
@@ -166,6 +174,8 @@ public class InferenceResource {
      * Results are emitted as a server-sent stream of JSON objects.
      *
      * @param explainQuery optional query parameter {@code ?explain=true}.
+     * @param samples      optional KernelSHAP coalition sample count {@code ?samples=N}.
+     * @param ridge        optional KernelSHAP L2 ridge regularization {@code ?ridge=R}.
      * @param contentType  the MIME type of each input line.
      * @param id           the model ID.
      * @param input        the request body input stream.
@@ -177,10 +187,13 @@ public class InferenceResource {
     @Produces(MediaType.SERVER_SENT_EVENTS)
     @RestStreamElementType(MediaType.TEXT_PLAIN)
     public Multi<String> stream(@QueryParam("explain") boolean explainQuery,
+                                @QueryParam("samples") Integer samples,
+                                @QueryParam("ridge") Double ridge,
                                 @HeaderParam("Content-Type") String contentType,
                                 @PathParam("id") String id,
                                 InputStream input) {
         var model = service.getModel(id);
+        KernelSHAP.Options queryShapOptions = resolveShapOptions(samples, ridge, null);
         // Treat any content-type that starts with "application/json" as JSON,
         // including "application/json; charset=utf-8".
         boolean json = contentType != null && contentType.startsWith(MediaType.APPLICATION_JSON);
@@ -193,10 +206,11 @@ public class InferenceResource {
                             Prediction response;
                             if (json) {
                                 var jsonObject = new JsonObject(line);
-                                boolean explain = explainQuery || Boolean.TRUE.equals(jsonObject.getBoolean("enableExplanations"));
-                                response = model.predict(jsonObject, explain);
+                                boolean explain = isExplainRequested(explainQuery, jsonObject);
+                                KernelSHAP.Options rowOptions = resolveShapOptions(samples, ridge, jsonObject);
+                                response = model.predict(jsonObject, explain, rowOptions);
                             } else {
-                                response = model.predict(line, explainQuery);
+                                response = model.predict(line, explainQuery, queryShapOptions);
                             }
                             emitter.emit(response.toJson());
                         }
@@ -207,5 +221,90 @@ public class InferenceResource {
                 }
             });
         });
+    }
+
+    private static boolean isExplainRequested(boolean explainQuery, JsonObject request) {
+        if (explainQuery) {
+            return true;
+        }
+        if (request == null) {
+            return false;
+        }
+        Object enable = request.getValue("enableExplanations");
+        if (enable instanceof Boolean b && b) {
+            return true;
+        }
+        return request.getValue("shap") instanceof JsonObject;
+    }
+
+    /**
+     * Resolves optional {@link KernelSHAP.Options} from query parameters and/or JSON request fields.
+     * Query parameters take precedence over JSON payload fields when both are present.
+     */
+    static KernelSHAP.Options resolveShapOptions(Integer querySamples, Double queryRidge, JsonObject request) {
+        Integer samples = querySamples;
+        Double ridge = queryRidge;
+
+        if (request != null) {
+            JsonObject shapObj = request.getValue("shap") instanceof JsonObject jo ? jo : null;
+            if (samples == null) {
+                Object rawSamples = request.containsKey("shapSamples")
+                        ? request.getValue("shapSamples")
+                        : (shapObj != null
+                                ? (shapObj.containsKey("samples") ? shapObj.getValue("samples") : shapObj.getValue("numSamples"))
+                                : null);
+                if (rawSamples != null) {
+                    samples = parseIntegerOption("samples", rawSamples);
+                }
+            }
+            if (ridge == null) {
+                Object rawRidge = request.containsKey("shapRidge")
+                        ? request.getValue("shapRidge")
+                        : (shapObj != null ? shapObj.getValue("ridge") : null);
+                if (rawRidge != null) {
+                    ridge = parseDoubleOption("ridge", rawRidge);
+                }
+            }
+        }
+
+        if (samples == null && ridge == null) {
+            return null;
+        }
+
+        int numSamples = samples != null ? samples : 0;
+        double ridgeVal = ridge != null ? ridge : KernelSHAP.DEFAULT_RIDGE;
+        try {
+            return new KernelSHAP.Options(numSamples, ridgeVal);
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(ex.getMessage(), ex);
+        }
+    }
+
+    private static Integer parseIntegerOption(String name, Object value) {
+        if (value instanceof Number n) {
+            return n.intValue();
+        }
+        if (value instanceof String s && !s.isBlank()) {
+            try {
+                return Integer.parseInt(s.trim());
+            } catch (NumberFormatException ex) {
+                throw new BadRequestException("Invalid integer for '" + name + "': " + s, ex);
+            }
+        }
+        throw new BadRequestException("Invalid integer for '" + name + "': " + value);
+    }
+
+    private static Double parseDoubleOption(String name, Object value) {
+        if (value instanceof Number n) {
+            return n.doubleValue();
+        }
+        if (value instanceof String s && !s.isBlank()) {
+            try {
+                return Double.parseDouble(s.trim());
+            } catch (NumberFormatException ex) {
+                throw new BadRequestException("Invalid number for '" + name + "': " + s, ex);
+            }
+        }
+        throw new BadRequestException("Invalid number for '" + name + "': " + value);
     }
 }

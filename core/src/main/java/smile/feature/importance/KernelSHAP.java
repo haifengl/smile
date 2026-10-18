@@ -74,7 +74,7 @@ public class KernelSHAP<T> implements SHAP<T>, Serializable {
     /** Default base number of coalitions when numSamples is 0 (auto). */
     private static final int DEFAULT_BASE_COALITIONS = 2048;
     /** Default ridge regularization for numerical stability. */
-    private static final double DEFAULT_RIDGE = 1E-8;
+    public static final double DEFAULT_RIDGE = 1E-8;
     /** Threshold on (numCoalitions * backgroundSize) to parallelize coalition evaluation. */
     private static final int PARALLEL_WORK_THRESHOLD = 512;
     /** Deterministic seed for paired Monte Carlo coalition sampling. */
@@ -239,15 +239,32 @@ public class KernelSHAP<T> implements SHAP<T>, Serializable {
      */
     @SuppressWarnings("unchecked")
     public double[] shap(DataFrame data) {
+        return shap(data, null);
+    }
+
+    /**
+     * Returns the average of absolute SHAP values over a data frame with custom options.
+     * @param data the data frame.
+     * @param options the KernelSHAP options, or {@code null} to use default options.
+     * @return the average of absolute SHAP values.
+     */
+    @SuppressWarnings("unchecked")
+    public double[] shap(DataFrame data, Options options) {
         if (formula != null) {
             formula.bind(data.schema());
         }
-        return shap(( java.util.stream.Stream<? extends T>) data.stream().parallel());
+        return shap((java.util.stream.Stream<? extends T>) data.stream().parallel(), options);
     }
 
     @Override
     public double[] shap(T rawInput) {
+        return shap(rawInput, this.options);
+    }
+
+    @Override
+    public double[] shap(T rawInput, Options options) {
         Objects.requireNonNull(rawInput, "Input instance cannot be null");
+        Options opts = options != null ? options : this.options;
         if (numFeatures == 0) {
             return new double[0];
         }
@@ -268,8 +285,8 @@ public class KernelSHAP<T> implements SHAP<T>, Serializable {
             return delta;
         }
 
-        int maxSamples = options.numSamples() > 0
-                ? options.numSamples()
+        int maxSamples = opts.numSamples() > 0
+                ? opts.numSamples()
                 : 2 * numFeatures + DEFAULT_BASE_COALITIONS;
 
         List<Coalition> coalitions = generateCoalitions(numFeatures, maxSamples);
@@ -287,14 +304,14 @@ public class KernelSHAP<T> implements SHAP<T>, Serializable {
             }
         }
 
-        return solveWeightedLeastSquares(coalitions, values, delta);
+        return solveWeightedLeastSquares(coalitions, values, delta, opts);
     }
 
     /**
      * Solves the efficiency-constrained weighted least squares problem by eliminating
      * the last feature phi_{M-1} = delta - sum_{j=0}^{M-2} phi_j.
      */
-    private double[] solveWeightedLeastSquares(List<Coalition> coalitions, double[][] values, double[] delta) {
+    private double[] solveWeightedLeastSquares(List<Coalition> coalitions, double[][] values, double[] delta, Options opts) {
         int M = numFeatures;
         int d = M - 1;
         int K = numOutputs;
@@ -347,7 +364,7 @@ public class KernelSHAP<T> implements SHAP<T>, Serializable {
 
         // Symmetric L2 regularization across all M features:
         // lambda * (sum_{j=0}^{M-2} phi_j^2 + (delta - sum_{j=0}^{M-2} phi_j)^2)
-        double ridge = options.ridge();
+        double ridge = opts.ridge();
         if (ridge > 0.0) {
             for (int i = 0; i < d; i++) {
                 for (int j = 0; j <= i; j++) {

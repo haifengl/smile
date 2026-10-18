@@ -37,7 +37,12 @@ import "./ShapModal.css";
  * @param {string[]} props.featureNames array of feature names
  * @param {() => void} props.onClose callback to close modal
  */
-export default function ShapModal({ row, featureNames = [], onClose }) {
+export default function ShapModal({
+  row,
+  featureNames = [],
+  shapMethod = "SHAP",
+  onClose,
+}) {
   const [activeTab, setActiveTab] = useState("waterfall"); // "waterfall" | "force" | "decision"
   const [targetClass, setTargetClass] = useState(0);
   const [topK, setTopK] = useState(10);
@@ -89,7 +94,7 @@ export default function ShapModal({ row, featureNames = [], onClose }) {
       <div className="shap-modal-dialog" onClick={(e) => e.stopPropagation()}>
         <div className="shap-modal-header">
           <h3 className="shap-modal-title">
-            Feature Explanations (TreeSHAP) — Row #{row.id ?? 1}
+            Feature Explanations ({shapMethod}) — Row #{row.id ?? 1}
           </h3>
           <button type="button" className="shap-modal-close" onClick={onClose}>
             ✕

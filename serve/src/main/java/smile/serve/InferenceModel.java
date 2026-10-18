@@ -25,6 +25,7 @@ import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ServiceUnavailableException;
 import smile.data.Tuple;
 import smile.data.type.StructType;
+import smile.feature.importance.KernelSHAP;
 import smile.io.Paths;
 import smile.model.*;
 
@@ -154,13 +155,25 @@ public class InferenceModel {
     }
 
     /**
+     * Calculates SHAP values for an input tuple with custom {@link KernelSHAP.Options}.
+     *
+     * @param x       the input tuple.
+     * @param options the KernelSHAP options, or {@code null} to use default options.
+     * @return {@code double[]} for regression, or {@code double[k][p]} for classification.
+     * @throws UnsupportedOperationException if SHAP is not supported.
+     */
+    public Object shap(Tuple x, KernelSHAP.Options options) {
+        return model.shap(x, options);
+    }
+
+    /**
      * Performs inference using generic JSON input.
      * @param request the input data as a Map.
      * @return the inference result.
      * @throws BadRequestException if invalid request.
      */
     public Prediction predict(JsonObject request) throws BadRequestException {
-        return predict(request, false);
+        return predict(request, false, null);
     }
 
     /**
@@ -172,7 +185,21 @@ public class InferenceModel {
      * @throws BadRequestException if invalid request.
      */
     public Prediction predict(JsonObject request, boolean explain) throws BadRequestException {
-        return predict(json(request), explain);
+        return predict(request, explain, null);
+    }
+
+    /**
+     * Performs inference using generic JSON input with optional explanations
+     * and custom {@link KernelSHAP.Options}.
+     *
+     * @param request     the input data as a Map.
+     * @param explain     whether to generate model explanations.
+     * @param shapOptions optional KernelSHAP options (may be {@code null}).
+     * @return the inference result.
+     * @throws BadRequestException if invalid request.
+     */
+    public Prediction predict(JsonObject request, boolean explain, KernelSHAP.Options shapOptions) throws BadRequestException {
+        return predict(json(request), explain, shapOptions);
     }
 
     /**
@@ -182,7 +209,7 @@ public class InferenceModel {
      * @throws BadRequestException if invalid request.
      */
     public Prediction predict(String request) throws BadRequestException {
-        return predict(request, false);
+        return predict(request, false, null);
     }
 
     /**
@@ -194,7 +221,21 @@ public class InferenceModel {
      * @throws BadRequestException if invalid request.
      */
     public Prediction predict(String request, boolean explain) throws BadRequestException {
-        return predict(csv(request), explain);
+        return predict(request, explain, null);
+    }
+
+    /**
+     * Performs inference using CSV input with optional explanations
+     * and custom {@link KernelSHAP.Options}.
+     *
+     * @param request     the input data in CSV format.
+     * @param explain     whether to generate model explanations.
+     * @param shapOptions optional KernelSHAP options (may be {@code null}).
+     * @return the inference result.
+     * @throws BadRequestException if invalid request.
+     */
+    public Prediction predict(String request, boolean explain, KernelSHAP.Options shapOptions) throws BadRequestException {
+        return predict(csv(request), explain, shapOptions);
     }
 
     /**
@@ -203,24 +244,36 @@ public class InferenceModel {
      * @return the inference result.
      */
     public Prediction predict(Tuple x) {
-        return predict(x, false);
+        return predict(x, false, null);
     }
 
     /**
      * Performs inference with optional explanations.
      *
-     * @param x the input tuple.
+     * @param x       the input tuple.
      * @param explain whether to generate model explanations.
      * @return the inference result.
      */
     public Prediction predict(Tuple x, boolean explain) {
+        return predict(x, explain, null);
+    }
+
+    /**
+     * Performs inference with optional explanations and custom {@link KernelSHAP.Options}.
+     *
+     * @param x           the input tuple.
+     * @param explain     whether to generate model explanations.
+     * @param shapOptions optional KernelSHAP options (may be {@code null}).
+     * @return the inference result.
+     */
+    public Prediction predict(Tuple x, boolean explain, KernelSHAP.Options shapOptions) {
         if (state.get() != State.ACTIVE) {
             throw new ServiceUnavailableException("Model " + id + " is " + state.get().name().toLowerCase());
         }
         long start = metrics.startExecution();
         boolean success = false;
         try {
-            Prediction p = model.infer(x, isSoft, explain);
+            Prediction p = model.infer(x, isSoft, explain, shapOptions);
             success = true;
             return p;
         } finally {

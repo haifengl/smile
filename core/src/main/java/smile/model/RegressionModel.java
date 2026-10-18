@@ -64,21 +64,31 @@ public record RegressionModel(String algorithm,
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public double[] shap(Tuple x) {
+        return shap(x, null);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public double[] shap(Tuple x, smile.feature.importance.KernelSHAP.Options options) {
         if (regression instanceof smile.feature.importance.SHAP shap) {
-            return ((smile.feature.importance.SHAP<Tuple>) shap).shap(x);
+            return ((smile.feature.importance.SHAP<Tuple>) shap).shap(x, options);
         }
         throw new UnsupportedOperationException("SHAP is not supported for algorithm: " + algorithm);
     }
 
     @Override
     public Prediction infer(Tuple x, boolean probability, boolean explain) {
+        return infer(x, probability, explain, null);
+    }
+
+    @Override
+    public Prediction infer(Tuple x, boolean probability, boolean explain, smile.feature.importance.KernelSHAP.Options options) {
         double y = regression.predict(x);
         Explanations explanations = null;
         if (explain) {
             if (supportsShap()) {
-                explanations = new Explanations(shap(x));
+                explanations = new Explanations(shap(x, options));
             } else {
                 explanations = new Explanations("Not supported");
             }
@@ -88,6 +98,11 @@ public record RegressionModel(String algorithm,
 
     @Override
     public Prediction[] infer(smile.data.DataFrame data, boolean probability, boolean explain) {
+        return infer(data, probability, explain, null);
+    }
+
+    @Override
+    public Prediction[] infer(smile.data.DataFrame data, boolean probability, boolean explain, smile.feature.importance.KernelSHAP.Options options) {
         formula.bind(data.schema());
         double[] pred = regression.predict(data);
         int n = pred.length;
@@ -96,7 +111,7 @@ public record RegressionModel(String algorithm,
             Explanations explanations = null;
             if (explain) {
                 explanations = supportsShap()
-                        ? new Explanations(shap(data.get(i)))
+                        ? new Explanations(shap(data.get(i), options))
                         : new Explanations("Not supported");
             }
             responses[i] = new Prediction(pred[i], null, explanations);

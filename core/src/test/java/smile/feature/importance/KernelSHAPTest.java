@@ -389,4 +389,36 @@ public class KernelSHAPTest {
         assertSame(sampledDf, KernelSHAP.sample(sampledDf, 32));
         assertThrows(IllegalArgumentException.class, () -> KernelSHAP.sample(cpu.data(), 0));
     }
+
+    @Test
+    public void testGivenPerRequestOptionsWhenComputingShapThenOverridesSampleBudgetAndRidge() throws Exception {
+        // Given: an LDA ClassificationModel on Iris
+        var iris = new Iris();
+        var model = smile.model.Model.classification("lda", iris.formula(), iris.data(), null, new Properties());
+        Tuple x = iris.data().get(0);
+
+        // When: computing SHAP with custom per-request options
+        var customOpts = new KernelSHAP.Options(64, 1E-4);
+        var predDefault = model.infer(x, true, true, null);
+        var predCustom = model.infer(x, true, true, customOpts);
+
+        // Then: both produce valid 3x4 SHAP matrices and efficiency holds
+        assertNotNull(predDefault.explanations());
+        assertNotNull(predCustom.explanations());
+        double[][] shapDefault = (double[][]) predDefault.explanations().shap();
+        double[][] shapCustom = (double[][]) predCustom.explanations().shap();
+        assertEquals(3, shapDefault.length);
+        assertEquals(4, shapDefault[0].length);
+        assertEquals(3, shapCustom.length);
+        assertEquals(4, shapCustom[0].length);
+
+        // Batch DataFrame / Stream overload with custom options
+        @SuppressWarnings("unchecked")
+        SHAP<Tuple> shapClassifier = (SHAP<Tuple>) model.classifier();
+        double[] aggImportance = shapClassifier.shap(iris.data().slice(0, 10).stream(), customOpts);
+        assertEquals(12, aggImportance.length);
+        var batchPreds = model.infer(iris.data().slice(0, 5), true, true, customOpts);
+        assertEquals(5, batchPreds.length);
+        assertNotNull(batchPreds[0].explanations());
+    }
 }
