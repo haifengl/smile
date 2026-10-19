@@ -19,11 +19,16 @@ package smile.studio;
 
 import com.formdev.flatlaf.*;
 import ioa.llm.Model;
+import photos.sluice.secrets.SecretId;
+import photos.sluice.secrets.SecretStatus;
+import photos.sluice.secrets.SecretStore;
+import photos.sluice.secrets.SecretStoreException;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.prefs.Preferences;
 import java.util.stream.Stream;
@@ -79,25 +84,41 @@ public class SettingsDialog extends JDialog implements ActionListener {
             "https://openrouter.ai/api/v1"  // OpenRouter
     };
     private final JComboBox<String> themeCombo = new JComboBox<>(UI_THEMES);
-    private final JComboBox<String> aiServiceCombo = new JComboBox<>(aiServiceOptions);;
+    private final JComboBox<String> aiServiceCombo = new JComboBox<>(aiServiceOptions);
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cardPane = new JPanel(cardLayout);
     private final Map<String, JTextField> apiKeyFields = new TreeMap<>();
+    private final Map<String, String> initialSecrets = new TreeMap<>();
     private final Map<String, JComboBox<String>> baseUrlFields = new TreeMap<>();
     private final Map<String, JComboBox<String>> modelFields = new TreeMap<>();
     private final Preferences prefs;
+    private final SecretStore secrets;
+
+    /**
+     * Constructor using the default application secret store.
+     * @param owner the Frame from which the dialog is displayed
+     *              or null if this dialog has no owner.
+     * @param prefs the application preference and configuration data.
+     */
+    public SettingsDialog(Frame owner, Preferences prefs) {
+        this(owner, prefs, SmileStudio.secrets());
+    }
 
     /**
      * Constructor.
      * @param owner the Frame from which the dialog is displayed
      *              or null if this dialog has no owner.
      * @param prefs the application preference and configuration data.
+     * @param secrets the application credential store for API keys.
      */
-    public SettingsDialog(Frame owner, Preferences prefs) {
+    public SettingsDialog(Frame owner, Preferences prefs, SecretStore secrets) {
         super(owner, bundle.getString("Title"), true);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
         this.prefs = prefs;
+        this.secrets = secrets;
+
+        LlmServices.migratePreferencesSecrets(prefs, secrets);
 
         themeCombo.setSelectedItem(prefs.get(UI_THEME_KEY, "Dark"));
         themeCombo.addActionListener(this);
@@ -137,7 +158,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
-        pane.add(themeCombo, gbc);
+        pane.add(themeLabel.getLabelFor() == null ? themeCombo : themeCombo, gbc);
 
         // Row 1: AI Service
         gbc.gridx = 0; // Column 0
@@ -161,30 +182,56 @@ public class SettingsDialog extends JDialog implements ActionListener {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // Row 1
-        gbc.gridx = 0; // Column 0
-        gbc.gridy = 0; // Row 0
+        Optional<SecretId> secretIdOpt = LlmServices.secretId(service);
+        int row = 0;
+
+        // Row 0: API Key (or Project for googleEnterprise)
+        gbc.gridx = 0;
+        gbc.gridy = row;
         gbc.anchor = GridBagConstraints.WEST;
         JLabel apiKeyLabel = new JLabel(bundle.getString(service.equals("googleEnterprise") ? "Project" : "APIKey"));
         card.add(apiKeyLabel, gbc);
 
-        gbc.gridx = 1; // Column 1
+        gbc.gridx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0; // Allow text field to take extra horizontal space
-        JTextField apiKeyField = new JTextField(25);
-        apiKeyField.setText(prefs.get(service + "ApiKey", ""));
-        apiKeyFields.put(service, apiKeyField);
-        card.add(apiKeyField, gbc);
+        gbc.weightx = 1.0;
+        if (secretIdOpt.isPresent()) {
+            SecretId id = secretIdOpt.get();
+            JPasswordField passwordField = new JPasswordField(25);
+            passwordField.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true");
+            String existingSecret = LlmServices.readSecret(secrets, id).orElse("");
+            passwordField.setText(existingSecret);
+            initialSecrets.put(service, existingSecret);
+            apiKeyFields.put(service, passwordField);
+            card.add(passwordField, gbc);
 
-        // Row 2
-        gbc.gridx = 0; // Column 0
-        gbc.gridy = 1; // Row 1
-        gbc.fill = GridBagConstraints.NONE; // Reset fill for label
-        gbc.weightx = 0.0; // Reset weightx for label
+            // Row 1: Storage tier status label
+            row++;
+            gbc.gridx = 1;
+            gbc.gridy = row;
+            gbc.insets = new Insets(0, 5, 5, 5);
+            JLabel statusLabel = new JLabel(formatSecretStatus(secrets, id));
+            statusLabel.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
+            statusLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+            card.add(statusLabel, gbc);
+            gbc.insets = new Insets(5, 5, 5, 5);
+        } else {
+            JTextField projectField = new JTextField(25);
+            projectField.setText(prefs.get(service + API_KEY, ""));
+            apiKeyFields.put(service, projectField);
+            card.add(projectField, gbc);
+        }
+
+        // Next Row: Base URL (or Location for googleEnterprise)
+        row++;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
         JLabel baseUrlLabel = new JLabel(bundle.getString(service.equals("googleEnterprise") ? "Location" : "BaseUrl"));
         card.add(baseUrlLabel, gbc);
 
-        gbc.gridx = 1; // Column 1
+        gbc.gridx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         JComboBox<String> baseUrlField = switch (service) {
@@ -195,19 +242,20 @@ public class SettingsDialog extends JDialog implements ActionListener {
             default -> new JComboBox<>();
         };
         baseUrlField.setEditable(true);
-        baseUrlField.setSelectedItem(prefs.get(service + "BaseUrl", ""));
+        baseUrlField.setSelectedItem(prefs.get(service + BASE_URL, ""));
         baseUrlFields.put(service, baseUrlField);
         card.add(baseUrlField, gbc);
 
-        // Row 3
-        gbc.gridx = 0; // Column 0
-        gbc.gridy = 2; // Row 2
-        gbc.fill = GridBagConstraints.NONE; // Reset fill for label
-        gbc.weightx = 0.0; // Reset weightx for label
+        // Next Row: Model
+        row++;
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
         JLabel modelLabel = new JLabel(bundle.getString("Model"));
         card.add(modelLabel, gbc);
 
-        gbc.gridx = 1; // Column 1
+        gbc.gridx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         JComboBox<String> modelField = switch (service) {
@@ -219,12 +267,47 @@ public class SettingsDialog extends JDialog implements ActionListener {
         };
         modelField.setEditable(true);
         // Comma-separated list; first id is the default for this service.
-        modelField.setSelectedItem(prefs.get(service + "Model", ""));
+        modelField.setSelectedItem(prefs.get(service + MODEL, ""));
         modelField.setToolTipText(bundle.getString("Model"));
         modelFields.put(service, modelField);
         card.add(modelField, gbc);
 
         return card;
+    }
+
+    /**
+     * Formats a user-facing description of where a secret is stored or would be saved.
+     * @param secrets the secret store.
+     * @param id the secret identifier.
+     * @return the localized status text.
+     */
+    static String formatSecretStatus(SecretStore secrets, SecretId id) {
+        if (secrets == null) {
+            return bundle.getString("StatusUnavailable");
+        }
+        try {
+            return switch (secrets.status(id)) {
+                case SecretStatus.InEnvironment(String envVar) ->
+                        MessageFormat.format(bundle.getString("StatusInEnvironment"), envVar);
+                case SecretStatus.InKeyring _ ->
+                        bundle.getString("StatusInKeyring");
+                case SecretStatus.InFile _ ->
+                        bundle.getString("StatusInFile");
+                case SecretStatus.Absent _ -> {
+                    var target = secrets.whereASaveWouldStoreIt();
+                    if (target.isEmpty()) {
+                        yield bundle.getString("StatusUnavailable");
+                    }
+                    yield switch (target.get()) {
+                        case SecretStatus.InKeyring _ -> bundle.getString("StatusAbsentKeyring");
+                        case SecretStatus.InFile _ -> bundle.getString("StatusAbsentFile");
+                    };
+                }
+            };
+        } catch (SecretStoreException ex) {
+            logger.warn("Failed to check status for secret '{}': {}", id.name(), ex.getMessage());
+            return bundle.getString("StatusUnavailable");
+        }
     }
 
     private JPanel createButtonPane() {
@@ -239,8 +322,15 @@ public class SettingsDialog extends JDialog implements ActionListener {
         okButton.addActionListener((e) -> {
             prefs.put(UI_THEME_KEY, (String) themeCombo.getSelectedItem());
             prefs.put(AI_SERVICE_KEY, aiServiceOptions[aiServiceCombo.getSelectedIndex()]);
-            for (String service : aiServiceKeys) {
-                prefs.put(service + API_KEY, apiKeyFields.get(service).getText());
+            for (int i = 0; i < aiServiceKeys.length; i++) {
+                String service = aiServiceKeys[i];
+                String label = aiServiceOptions[i];
+                Optional<SecretId> secretIdOpt = LlmServices.secretId(service);
+                if (secretIdOpt.isPresent()) {
+                    saveServiceSecret(service, label, secretIdOpt.get());
+                } else {
+                    prefs.put(service + API_KEY, apiKeyFields.get(service).getText());
+                }
                 prefs.put(service + BASE_URL, (String) baseUrlFields.get(service).getSelectedItem());
                 prefs.put(service + MODEL, (String) modelFields.get(service).getSelectedItem());
             }
@@ -251,6 +341,34 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
         cancelButton.addActionListener((e) -> dispose());
         return pane;
+    }
+
+    private void saveServiceSecret(String service, String label, SecretId id) {
+        prefs.remove(service + API_KEY);
+        if (secrets == null) {
+            return;
+        }
+        JTextField field = apiKeyFields.get(service);
+        String value = (field instanceof JPasswordField pf
+                ? new String(pf.getPassword())
+                : field.getText()).strip();
+        String initial = initialSecrets.getOrDefault(service, "").strip();
+        try {
+            if (value.isEmpty()) {
+                if (!initial.isEmpty()) {
+                    secrets.remove(id);
+                }
+            } else if (!value.equals(initial)) {
+                secrets.save(id, value);
+            }
+        } catch (IllegalArgumentException | SecretStoreException ex) {
+            logger.error("Failed to save API key for {}: {}", label, ex.getMessage());
+            JOptionPane.showMessageDialog(
+                    this,
+                    MessageFormat.format(bundle.getString("SecretSaveError"), label, ex.getMessage()),
+                    bundle.getString("Title"),
+                    JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     @Override

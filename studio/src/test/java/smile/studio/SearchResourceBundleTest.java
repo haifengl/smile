@@ -53,6 +53,12 @@ public class SearchResourceBundleTest {
     private static final List<String> SCALA_KERNEL_KEYS = List.of(
             "ScalaCliInstallTitle", "ScalaCliInstallMessage");
 
+    /** Keys the Settings dialog reads at runtime, including SecretStore status keys. */
+    private static final List<String> SETTINGS_DIALOG_KEYS = List.of(
+            "Title", "OK", "Cancel", "Theme", "Service", "APIKey", "BaseUrl", "Model",
+            "Project", "Location", "StatusInEnvironment", "StatusInKeyring", "StatusInFile",
+            "StatusAbsentKeyring", "StatusAbsentFile", "StatusUnavailable", "SecretSaveError");
+
     @Test
     public void testBaseBundleHasSearchKeys() {
         System.out.println("SmileStudio: base bundle defines the search keys");
@@ -96,6 +102,27 @@ public class SearchResourceBundleTest {
                         locale + " ScalaKernel bundle is missing key: " + key);
                 assertFalse(bundle.getString(key).isBlank(),
                         locale + " ScalaKernel bundle has a blank value for key: " + key);
+            }
+        }
+    }
+
+    @Test
+    public void testSettingsDialogBundleHasEveryLocale() {
+        System.out.println("SettingsDialog: every locale defines the settings and secret-store status keys");
+        ResourceBundle baseBundle = ResourceBundle.getBundle(SettingsDialog.class.getName(), Locale.ROOT);
+        for (String key : SETTINGS_DIALOG_KEYS) {
+            assertTrue(baseBundle.containsKey(key),
+                    "base SettingsDialog bundle is missing key: " + key);
+            assertFalse(baseBundle.getString(key).isBlank(),
+                    "base SettingsDialog bundle has a blank value for key: " + key);
+        }
+        for (Locale locale : LOCALES) {
+            ResourceBundle bundle = ResourceBundle.getBundle(SettingsDialog.class.getName(), locale);
+            for (String key : SETTINGS_DIALOG_KEYS) {
+                assertTrue(bundle.containsKey(key),
+                        locale + " SettingsDialog bundle is missing key: " + key);
+                assertFalse(bundle.getString(key).isBlank(),
+                        locale + " SettingsDialog bundle has a blank value for key: " + key);
             }
         }
     }

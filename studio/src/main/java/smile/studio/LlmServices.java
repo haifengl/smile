@@ -17,22 +17,27 @@
  */
 package smile.studio;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.prefs.Preferences;
 import javax.swing.JOptionPane;
-import java.text.MessageFormat;
-import java.util.Locale;
-import java.util.ResourceBundle;
 import ioa.llm.Model;
 import ioa.llm.client.Anthropic;
 import ioa.llm.client.ChatCompletions;
 import ioa.llm.client.GoogleGemini;
 import ioa.llm.client.LLM;
 import ioa.llm.client.OpenAI;
+import photos.sluice.secrets.SecretHolding;
+import photos.sluice.secrets.SecretId;
+import photos.sluice.secrets.SecretStatus;
+import photos.sluice.secrets.SecretStore;
+import photos.sluice.secrets.SecretStoreException;
 import smile.util.Strings;
 
 /**
@@ -46,6 +51,17 @@ public final class LlmServices {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LlmServices.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(
             SmileStudio.class.getName(), Locale.getDefault());
+
+    /** Secret ID for OpenAI API key. */
+    public static final SecretId OPENAI_SECRET = new SecretId("openai", "OPENAI_API_KEY");
+    /** Secret ID for Azure OpenAI API key. */
+    public static final SecretId AZURE_OPENAI_SECRET = new SecretId("azure-openai", "AZURE_OPENAI_API_KEY");
+    /** Secret ID for Anthropic API key. */
+    public static final SecretId ANTHROPIC_SECRET = new SecretId("anthropic", "ANTHROPIC_API_KEY");
+    /** Secret ID for Google Gemini API key. */
+    public static final SecretId GOOGLE_GEMINI_SECRET = new SecretId("google-gemini", "GOOGLE_API_KEY");
+    /** Secret ID for Chat Completions compatible / Bedrock API key. */
+    public static final SecretId CHAT_COMPLETIONS_SECRET = new SecretId("chat-completions", "AWS_BEARER_TOKEN_BEDROCK");
 
     /** Service key / display label pairs matching {@link SettingsDialog}. */
     private static final String[][] SERVICES = {
@@ -88,17 +104,110 @@ public final class LlmServices {
     }
 
     /**
-     * Rebuilds the client pool and available-model list from preferences.
+     * Returns the {@link SecretId} for a service key, or {@link Optional#empty()}
+     * when the service does not store a secret API key (e.g., {@code googleEnterprise}
+     * stores a GCP Project ID in {@link Preferences}).
+     *
+     * @param serviceKey prefs prefix such as {@code openai}.
+     * @return the corresponding {@link SecretId}, if any.
+     */
+    public static Optional<SecretId> secretId(String serviceKey) {
+        if (serviceKey == null) {
+            return Optional.empty();
+        }
+        return switch (serviceKey) {
+            case "openai" -> Optional.of(OPENAI_SECRET);
+            case "azureOpenAI" -> Optional.of(AZURE_OPENAI_SECRET);
+            case "anthropic" -> Optional.of(ANTHROPIC_SECRET);
+            case "googleGemini" -> Optional.of(GOOGLE_GEMINI_SECRET);
+            case "chatCompletions" -> Optional.of(CHAT_COMPLETIONS_SECRET);
+            default -> Optional.empty();
+        };
+    }
+
+    /**
+     * Migrates any legacy plaintext API keys from {@link Preferences} into the
+     * {@link SecretStore} and removes the plaintext entries from {@link Preferences}.
+     *
+     * @param prefs application preferences.
+     * @param secrets application secret store.
+     */
+    public static void migratePreferencesSecrets(Preferences prefs, SecretStore secrets) {
+        if (prefs == null || secrets == null) {
+            return;
+        }
+        boolean modified = false;
+        for (String[] entry : SERVICES) {
+            String serviceKey = entry[0];
+            Optional<SecretId> idOpt = secretId(serviceKey);
+            if (idOpt.isEmpty()) {
+                continue;
+            }
+            String prefKey = serviceKey + "ApiKey";
+            String legacyValue = prefs.get(prefKey, null);
+            if (legacyValue == null) {
+                continue;
+            }
+            String stripped = legacyValue.strip();
+            if (stripped.isEmpty()) {
+                prefs.remove(prefKey);
+                modified = true;
+                continue;
+            }
+            SecretId id = idOpt.get();
+            try {
+                boolean hasStoredSecret = secrets.holdings(id).stream()
+                        .anyMatch(h -> h.location() instanceof SecretStatus.StoredLocation
+                                && h.holding() == SecretHolding.Holding.HOLDS);
+                if (!hasStoredSecret) {
+                    if (stripped.length() <= SecretStore.maxSecret()
+                            && secrets.whereASaveWouldStoreIt().isPresent()) {
+                        secrets.save(id, stripped);
+                    } else {
+                        logger.warn("Cannot migrate legacy API key for '{}' to SecretStore", serviceKey);
+                        continue;
+                    }
+                }
+                prefs.remove(prefKey);
+                modified = true;
+            } catch (RuntimeException ex) {
+                logger.warn("Failed to migrate API key for '{}' to SecretStore: {}", serviceKey, ex.getMessage());
+            }
+        }
+        if (modified) {
+            try {
+                prefs.flush();
+            } catch (Exception ex) {
+                logger.debug("Failed to flush preferences after secret migration: {}", ex.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Rebuilds the client pool and available-model list from preferences and the
+     * default application secret store.
      * @param prefs application preferences.
      */
     public void reload(Preferences prefs) {
+        reload(prefs, SmileStudio.secrets());
+    }
+
+    /**
+     * Rebuilds the client pool and available-model list from preferences and the
+     * given secret store.
+     * @param prefs application preferences.
+     * @param secrets credential store for API keys.
+     */
+    public void reload(Preferences prefs, SecretStore secrets) {
         this.prefs = prefs;
+        migratePreferencesSecrets(prefs, secrets);
+
         Map<String, LLM> nextClients = new LinkedHashMap<>();
         List<AvailableModel> nextModels = new ArrayList<>();
 
-        setSystemPropertyFromPrefs(prefs, "openai.apiKey", "openaiApiKey");
+        setSystemPropertyFromSecret(secrets, "openai.apiKey", OPENAI_SECRET);
         setSystemPropertyFromPrefs(prefs, "openai.baseUrl", "openaiBaseUrl");
-        setSystemPropertyFromPrefs(prefs, "anthropic.apiKey", "anthropicApiKey");
+        setSystemPropertyFromSecret(secrets, "anthropic.apiKey", ANTHROPIC_SECRET);
         setSystemPropertyFromPrefs(prefs, "anthropic.baseUrl", "anthropicBaseUrl");
 
         String defaultLabel = prefs.get(SettingsDialog.AI_SERVICE_KEY, "");
@@ -112,7 +221,7 @@ public final class LlmServices {
                 continue;
             }
             try {
-                LLM client = createClient(key, prefs);
+                LLM client = createClient(key, prefs, secrets);
                 if (client == null) {
                     continue;
                 }
@@ -179,7 +288,7 @@ public final class LlmServices {
 
     /**
      * Resolves the auto/default selection from preferences and the current
-     * model pool. Called by {@link #reload(Preferences)} and
+     * model pool. Called by {@link #reload(Preferences, SecretStore)} and
      * {@link #defaultModel(AvailableModel)} to keep the cached
      * {@link #defaultModel} field in sync.
      * @return the default entry, or null when the pool is empty.
@@ -306,11 +415,33 @@ public final class LlmServices {
         }
     }
 
-    private static LLM createClient(String serviceKey, Preferences prefs) {
+    private static void setSystemPropertyFromSecret(SecretStore secrets, String sysProp, SecretId id) {
+        if (System.getProperty(sysProp, "").isBlank()) {
+            readSecret(secrets, id).ifPresent(value -> {
+                if (!value.isBlank()) {
+                    System.setProperty(sysProp, value);
+                }
+            });
+        }
+    }
+
+    static Optional<String> readSecret(SecretStore secrets, SecretId id) {
+        if (secrets == null || id == null) {
+            return Optional.empty();
+        }
+        try {
+            return secrets.secret(id);
+        } catch (SecretStoreException ex) {
+            logger.warn("Failed to read secret '{}': {}", id.name(), ex.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    private static LLM createClient(String serviceKey, Preferences prefs, SecretStore secrets) {
         return switch (serviceKey) {
             case "openai" -> {
                 var openai = new OpenAI();
-                var apiKey = prefs.get("openaiApiKey", "");
+                var apiKey = readSecret(secrets, OPENAI_SECRET).orElse("");
                 if (!apiKey.isBlank()) {
                     openai.withApiKey(apiKey);
                 }
@@ -321,7 +452,7 @@ public final class LlmServices {
                 yield openai;
             }
             case "azureOpenAI" -> {
-                var apiKey = prefs.get("azureOpenAIApiKey", "");
+                var apiKey = readSecret(secrets, AZURE_OPENAI_SECRET).orElse("");
                 var baseUrl = prefs.get("azureOpenAIBaseUrl", "");
                 if (apiKey.isBlank() || baseUrl.isBlank()) {
                     yield null;
@@ -336,10 +467,15 @@ public final class LlmServices {
                         System.setProperty(Anthropic.API_KEY_PROPERTY_KEY, apiKey);
                     }
                 }
-                yield new Anthropic();
+                var anthropic = new Anthropic();
+                var apiKey = readSecret(secrets, ANTHROPIC_SECRET).orElse("");
+                if (!apiKey.isBlank()) {
+                    anthropic.withApiKey(apiKey);
+                }
+                yield anthropic;
             }
             case "googleGemini" -> {
-                var apiKey = prefs.get("googleGeminiApiKey", "");
+                var apiKey = readSecret(secrets, GOOGLE_GEMINI_SECRET).orElse("");
                 if (apiKey.isBlank()) {
                     yield null;
                 }
@@ -358,12 +494,9 @@ public final class LlmServices {
                 if (baseUrl.isBlank()) {
                     yield null;
                 }
-                var apiKey = prefs.get("chatCompletionsApiKey", "");
+                var apiKey = readSecret(secrets, CHAT_COMPLETIONS_SECRET).orElse("");
                 if (apiKey.isBlank()) {
-                    apiKey = System.getenv("AWS_BEARER_TOKEN_BEDROCK");
-                    if (Strings.isNullOrBlank(apiKey)) {
-                        yield null;
-                    }
+                    yield null;
                 }
                 yield new ChatCompletions(baseUrl, apiKey);
             }
