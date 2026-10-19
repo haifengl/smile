@@ -12,7 +12,6 @@ import smile.deep.metric.Precision;
 import smile.deep.metric.Recall;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.Tensor;
-
 //--- CELL ---
 Device device = Device.preferredDevice();
 
@@ -69,4 +68,3 @@ Model model = new Model(new SequentialBlock(
 model.load("mnist.pt").to(device).eval();
 var accuracy = model.eval(test, new Accuracy()).get("Accuracy");
 IO.println("accuracy = " + accuracy);
-

@@ -60,7 +60,7 @@ title: SMILE - Enterprise
       </li>
       <li>
         <strong>Explained where it ran</strong>
-        <span>Every tree-model decision can carry a deterministic local TreeSHAP explanation alongside posterior probabilities. The audit stays with the event, on the node.</span>
+        <span>Every classical ML decision can carry a local SHAP explanation (exact TreeSHAP for tree ensembles, LinearSHAP for linear models, and KernelSHAP for neural, SVM, discriminant, and Gaussian Process models) alongside posterior probabilities. The audit stays with the event, on the node.</span>
       </li>
       <li>
         <strong>Resilient &amp; hot-reloadable offline</strong>
@@ -92,7 +92,7 @@ title: SMILE - Enterprise
             <td><strong>0.2 GB</strong> (~205 MB)</td>
             <td><strong>0.4 s</strong></td>
             <td><strong>~80 MiB</strong> idle</td>
-            <td>SMILE (<code>.sml</code>) &amp; ONNX inference, TreeSHAP, Web UI inference pages, health &amp; metrics. No chat or database. Built for constrained edge gateways, sidecars, and scale-to-zero fleets.</td>
+            <td>SMILE (<code>.sml</code>) &amp; ONNX inference, TreeSHAP &amp; KernelSHAP, Web UI inference pages, health &amp; metrics. No chat or database. Built for constrained edge gateways, sidecars, and scale-to-zero fleets.</td>
           </tr>
           <tr>
             <td><code>latest-native</code></td>
@@ -155,7 +155,7 @@ title: SMILE - Enterprise
           <tr>
             <td><strong>Explainability</strong></td>
             <td>External post-processing required; no built-in feature attribution.</td>
-            <td><strong>Built-in TreeSHAP</strong> computed in-process per inference request or SSE stream.</td>
+            <td><strong>Built-in TreeSHAP &amp; KernelSHAP</strong> computed in-process per inference request or SSE stream, with interactive Waterfall, Force, and Decision plots in the Web UI.</td>
           </tr>
           <tr>
             <td><strong>Serving &amp; Operations</strong></td>

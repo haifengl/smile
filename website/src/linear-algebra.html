@@ -13,8 +13,12 @@ title: SMILE - Linear Algebra
         <a href="api/java/smile/tensor/package-summary.html"><code>smile.tensor</code></a>:
         <code>Vector</code>, <code>DenseMatrix</code>, <code>SparseMatrix</code>,
         <code>BandMatrix</code>, and <code>SymmMatrix</code>, plus factorizations
-        (LU, QR, Cholesky, SVD, eigen). Heavy ops call native BLAS/LAPACK when
-        available and fall back to pure Java otherwise.</p>
+        (LU, QR, Cholesky, SVD, eigen). Heavy ops call native BLAS/LAPACK via Java FFM when
+        available and automatically fall back to pure-Java implementations
+        (<code>JBlas</code> and <code>JLapack</code>) otherwise. You can inspect availability
+        with <code>NativeLibrary.isBlasAvailable()</code> / <code>isLapackAvailable()</code>
+        or select the backend via <code>-Dsmile.linalg.backend=auto|native|java</code>
+        (or the <code>SMILE_LINALG_BACKEND</code> environment variable).</p>
 
     <p>This page walks from scalar helpers through vectors and matrices to
         decompositions. Java uses the tensor API directly; Scala adds a lazy
