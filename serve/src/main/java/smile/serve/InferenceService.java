@@ -247,6 +247,24 @@ public class InferenceService implements OpenAiModelContributor {
     }
 
     /**
+     * Online updates a model using JSON-encoded input, optionally persisting to disk.
+     *
+     * @param modelId the model ID.
+     * @param request the feature (and optional target) values as a JSON object.
+     * @param persist whether to save the updated model to its {@code .sml} file on disk.
+     * @throws BadRequestException if the model is not online-capable or the request is malformed.
+     * @throws NotFoundException   if the model ID is unknown.
+     */
+    public void update(String modelId, JsonObject request, boolean persist)
+            throws BadRequestException, NotFoundException {
+        InferenceModel model = getModel(modelId);
+        model.update(request);
+        if (persist) {
+            model.persist();
+        }
+    }
+
+    /**
      * Reloads a model from its backing file on disk.
      * If the model was previously unloaded, it is reloaded from its known file path.
      *

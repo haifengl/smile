@@ -142,6 +142,88 @@ public class InferenceResource {
     }
 
     /**
+     * Online updates a model with a single JSON observation, optionally persisting the model to disk.
+     * Accessible only from localhost.
+     *
+     * @param persist whether to persist the updated model to its {@code .sml} file on disk.
+     * @param id      the model ID.
+     * @param request JSON object containing feature values (and target value for supervised models).
+     * @return update confirmation.
+     */
+    @POST
+    @Path("/{id}/update")
+    @LocalhostOnly
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> update(@QueryParam("persist") boolean persist,
+                                      @PathParam("id") String id,
+                                      JsonObject request) {
+        service.update(id, request, persist);
+        return Map.of(
+                "status", "updated",
+                "id", id,
+                "updated", 1,
+                "persisted", persist,
+                "timestamp", Instant.now().getEpochSecond()
+        );
+    }
+
+    /**
+     * Online updates a model over a multi-line request body (JSON lines or CSV),
+     * optionally persisting the model to disk after the batch completes.
+     * Accessible only from localhost.
+     *
+     * @param persist     whether to persist the updated model to its {@code .sml} file on disk.
+     * @param contentType the MIME type of each input line.
+     * @param id          the model ID.
+     * @param input       the request body input stream.
+     * @return update confirmation with the number of rows processed.
+     */
+    @POST
+    @Path("/{id}/update/stream")
+    @LocalhostOnly
+    @Consumes({MediaType.APPLICATION_JSON, MediaType.TEXT_PLAIN})
+    @Produces(MediaType.APPLICATION_JSON)
+    public Map<String, Object> updateStream(@QueryParam("persist") boolean persist,
+                                            @HeaderParam("Content-Type") String contentType,
+                                            @PathParam("id") String id,
+                                            InputStream input) {
+        var model = service.getModel(id);
+        if (!model.isOnline()) {
+            throw new BadRequestException("Model '" + id + "' (" + model.metadata().algorithm() + ") does not support online learning");
+        }
+        boolean json = contentType != null && contentType.startsWith(MediaType.APPLICATION_JSON);
+        int count = 0;
+        try (var reader = new BufferedReader(new InputStreamReader(input))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.isBlank()) {
+                    if (json) {
+                        model.update(new JsonObject(line));
+                    } else {
+                        model.update(line);
+                    }
+                    count++;
+                }
+            }
+        } catch (BadRequestException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new BadRequestException("Failed to process online update stream: " + ex.getMessage(), ex);
+        }
+        if (persist && count > 0) {
+            model.persist();
+        }
+        return Map.of(
+                "status", "updated",
+                "id", id,
+                "updated", count,
+                "persisted", persist && count > 0,
+                "timestamp", Instant.now().getEpochSecond()
+        );
+    }
+
+    /**
      * Performs a single inference on JSON-encoded feature values with optional explanations.
      *
      * @param explainQuery optional query parameter {@code ?explain=true}.

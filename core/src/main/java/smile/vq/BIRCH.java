@@ -525,6 +525,66 @@ public class BIRCH implements VectorQuantizer {
         }
     }
 
+    /**
+     * Returns the number of leaf sub-clusters in the CF tree.
+     * @return the number of leaf sub-clusters.
+     */
+    public int numClusters() {
+        if (root == null) {
+            return 0;
+        }
+        return countClusters(root);
+    }
+
+    private int countClusters(Node node) {
+        if (node instanceof Leaf leaf) {
+            return leaf.k;
+        } else {
+            InternalNode parent = (InternalNode) node;
+            int total = 0;
+            for (int i = 0; i < parent.k; i++) {
+                total += countClusters(parent.children[i]);
+            }
+            return total;
+        }
+    }
+
+    /**
+     * Returns the index of the leaf sub-cluster closest to {@code x} in {@link #centroids()} order.
+     * @param x a sample.
+     * @return the index of the nearest leaf sub-cluster.
+     */
+    public int indexOf(double[] x) {
+        checkInput(x);
+
+        if (root == null) {
+            throw new IllegalStateException("Model has no clustering features");
+        }
+
+        ClusteringFeature target = root.nearest(x);
+        ArrayList<ClusteringFeature> list = new ArrayList<>();
+        collectClusters(root, list);
+        for (int i = 0; i < list.size(); i++) {
+            if (list.get(i) == target) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    private void collectClusters(Node node, ArrayList<ClusteringFeature> list) {
+        if (node instanceof Leaf leaf) {
+            for (int i = 0; i < leaf.k; i++) {
+                list.add(leaf.clusters[i]);
+            }
+        } else {
+            InternalNode parent = (InternalNode) node;
+            for (int i = 0; i < parent.k; i++) {
+                collectClusters(parent.children[i], list);
+            }
+        }
+    }
+
     /** Validates input vector shape. */
     private void checkInput(double[] x) {
         if (x == null) {

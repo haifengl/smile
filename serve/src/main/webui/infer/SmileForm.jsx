@@ -53,7 +53,7 @@ function typeOf(type) {
   }
 }
 
-function toJsonSchema(model) {
+function toJsonSchema(model, onlineMode = false) {
   const jsonSchema = {
     title: model.id,
     type: "object",
@@ -67,11 +67,22 @@ function toJsonSchema(model) {
       jsonSchema.required.push(key);
     }
   }
+  if (onlineMode && model.response) {
+    jsonSchema.properties[model.response] = {
+      type: typeOf(model.responseType || "number"),
+      title: `${model.response} (target)`,
+    };
+    jsonSchema.required.push(model.response);
+  }
   return jsonSchema;
 }
 
-function schemaKeys(model) {
-  return model?.schema ? Object.keys(model.schema) : [];
+function schemaKeys(model, onlineMode = false) {
+  const keys = model?.schema ? Object.keys(model.schema) : [];
+  if (onlineMode && model?.response && !keys.includes(model.response)) {
+    return [...keys, model.response];
+  }
+  return keys;
 }
 
 function SmileForm({ modelId }) {
@@ -86,6 +97,8 @@ function SmileForm({ modelId }) {
   const [explain, setExplain] = useState(true);
   const [shapSamples, setShapSamples] = useState("");
   const [shapRidge, setShapRidge] = useState("");
+  const [onlineMode, setOnlineMode] = useState(false);
+  const [persistUpdate, setPersistUpdate] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const [streamCount, setStreamCount] = useState(0);
   const [startedAt, setStartedAt] = useState(null);
@@ -106,6 +119,8 @@ function SmileForm({ modelId }) {
     setRows([]);
     setFile(null);
     setFormData({});
+    setOnlineMode(false);
+    setPersistUpdate(false);
     setSubmitError(null);
     setStartedAt(null);
     setFinishedAt(null);
@@ -119,7 +134,7 @@ function SmileForm({ modelId }) {
       })
       .then((data) => {
         setModelMeta(data);
-        setSchema(toJsonSchema(data));
+        setSchema(toJsonSchema(data, false));
         setLoading(false);
       })
       .catch((err) => {
@@ -184,12 +199,47 @@ function SmileForm({ modelId }) {
     setFile(null);
   };
 
+  const handleOnlineModeChange = (nextOnline) => {
+    setOnlineMode(nextOnline);
+    if (modelMeta) {
+      setSchema(toJsonSchema(modelMeta, nextOnline));
+    }
+  };
+
   const handleSubmit = ({ formData }) => {
     if (file) {
       return;
     }
     setSubmitError(null);
     beginRun();
+
+    if (onlineMode) {
+      const updateUrl = persistUpdate
+        ? `/api/v1/smile/${modelId}/update?persist=true`
+        : `/api/v1/smile/${modelId}/update`;
+      fetch(updateUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+        .then(async (res) => {
+          if (!res.ok) {
+            const msg = await res.text();
+            throw new Error(msg || "Failed to update model");
+          }
+          return res.json();
+        })
+        .then((data) => {
+          appendRow({ data }, formData);
+          endRun();
+        })
+        .catch((err) => {
+          setSubmitError(err.message);
+          endRun();
+        });
+      return;
+    }
+
     const shapMethod = shapMethodForAlgorithm(modelMeta?.algorithm);
     const shapOptions = isKernelShapAlgorithm(modelMeta?.algorithm)
       ? { samples: shapSamples, ridge: shapRidge }
@@ -226,7 +276,7 @@ function SmileForm({ modelId }) {
       return;
     }
     setSubmitError(null);
-    const keys = schemaKeys(modelMeta);
+    const keys = schemaKeys(modelMeta, onlineMode);
     const { isCsv, isJson } = detectBatchFileKind(file);
 
     if (!isCsv && !isJson) {
@@ -255,6 +305,25 @@ function SmileForm({ modelId }) {
       }
       if (!body.trim()) {
         throw new Error("File has no data rows");
+      }
+
+      if (onlineMode) {
+        const updateStreamUrl = persistUpdate
+          ? `/api/v1/smile/${modelId}/update/stream?persist=true`
+          : `/api/v1/smile/${modelId}/update/stream`;
+        const res = await fetch(updateStreamUrl, {
+          method: "POST",
+          headers: { "Content-Type": contentType },
+          body,
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          const msg = await res.text();
+          throw new Error(msg || `Update failed (${res.status})`);
+        }
+        const data = await res.json();
+        appendRow({ data });
+        return;
       }
 
       const shapMethod = shapMethodForAlgorithm(modelMeta?.algorithm);
@@ -309,7 +378,7 @@ function SmileForm({ modelId }) {
   if (error) return <p className="toast">Error: {error}</p>;
   if (!schema) return null;
 
-  const keys = schemaKeys(modelMeta);
+  const keys = schemaKeys(modelMeta, onlineMode);
   const shapMethod = shapMethodForAlgorithm(modelMeta?.algorithm);
 
   return (
@@ -342,6 +411,10 @@ function SmileForm({ modelId }) {
               onShapSamplesChange={setShapSamples}
               shapRidge={shapRidge}
               onShapRidgeChange={setShapRidge}
+              onlineMode={onlineMode}
+              onOnlineModeChange={modelMeta?.online ? handleOnlineModeChange : null}
+              persistUpdate={persistUpdate}
+              onPersistUpdateChange={setPersistUpdate}
               batchHint={
                 <>
                   Upload CSV (column order:{" "}

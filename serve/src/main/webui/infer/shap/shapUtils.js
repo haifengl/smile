@@ -36,6 +36,12 @@ const CLUSTERING_ALGORITHMS = new Set([
   "gmeans",
   "deterministic-annealing",
   "da",
+  "som",
+  "neural-gas",
+  "growing-neural-gas",
+  "gng",
+  "neural-map",
+  "birch",
 ]);
 
 /**

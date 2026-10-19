@@ -86,6 +86,10 @@ export default function InferActionFooter({
   onShapSamplesChange = null,
   shapRidge = "",
   onShapRidgeChange = null,
+  onlineMode = false,
+  onOnlineModeChange = null,
+  persistUpdate = false,
+  onPersistUpdateChange = null,
 }) {
   const fileMode = Boolean(file);
   const inputRef = useRef(null);
@@ -135,58 +139,92 @@ export default function InferActionFooter({
       </div>
 
       <div className="infer-primary-actions">
-        {onExplainChange && (
+        {(onExplainChange || onOnlineModeChange) && (
           <div className="infer-explain-controls">
-            <label
-              className="infer-explain-toggle"
-              title={`Compute SHAP feature explanations (${shapMethod})`}
-            >
-              <input
-                type="checkbox"
-                checked={explain}
-                onChange={(e) => onExplainChange(e.target.checked)}
-                disabled={disabled || streaming}
-              />
-              <span>Explain ({shapMethod})</span>
-            </label>
+            {onOnlineModeChange && (
+              <>
+                <label
+                  className="infer-explain-toggle"
+                  title="Update model online with submitted data instead of running inference"
+                >
+                  <input
+                    type="checkbox"
+                    checked={onlineMode}
+                    onChange={(e) => onOnlineModeChange(e.target.checked)}
+                    disabled={disabled || streaming}
+                  />
+                  <span>Online Update</span>
+                </label>
+                {onlineMode && onPersistUpdateChange && (
+                  <label
+                    className="infer-explain-toggle"
+                    title="Persist updated model state back to its .sml file on disk"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={persistUpdate}
+                      onChange={(e) => onPersistUpdateChange(e.target.checked)}
+                      disabled={disabled || streaming}
+                    />
+                    <span>Persist to disk</span>
+                  </label>
+                )}
+              </>
+            )}
+            {!onlineMode && onExplainChange && (
+              <>
+                <label
+                  className="infer-explain-toggle"
+                  title={`Compute SHAP feature explanations (${shapMethod})`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={explain}
+                    onChange={(e) => onExplainChange(e.target.checked)}
+                    disabled={disabled || streaming}
+                  />
+                  <span>Explain ({shapMethod})</span>
+                </label>
 
-            {explain && isKernelShap && (onShapSamplesChange || onShapRidgeChange) && (
-              <div className="infer-kernel-shap-options">
-                {onShapSamplesChange && (
-                  <label
-                    className="infer-shap-param"
-                    title="Maximum number of coalitions to evaluate per instance (0 or blank = auto: 2M + 2048)"
-                  >
-                    <span>Samples</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      placeholder="Auto"
-                      value={shapSamples}
-                      onChange={(e) => onShapSamplesChange(e.target.value)}
-                      disabled={disabled || streaming}
-                    />
-                  </label>
+                {explain && isKernelShap && (onShapSamplesChange || onShapRidgeChange) && (
+                  <div className="infer-kernel-shap-options">
+                    {onShapSamplesChange && (
+                      <label
+                        className="infer-shap-param"
+                        title="Maximum number of coalitions to evaluate per instance (0 or blank = auto: 2M + 2048)"
+                      >
+                        <span>Samples</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          placeholder="Auto"
+                          value={shapSamples}
+                          onChange={(e) => onShapSamplesChange(e.target.value)}
+                          disabled={disabled || streaming}
+                        />
+                      </label>
+                    )}
+                    {onShapRidgeChange && (
+                      <label
+                        className="infer-shap-param"
+                        title="L2 ridge regularization parameter for numerical stability (default: 1e-8)"
+                      >
+                        <span>Ridge</span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          placeholder="1e-8"
+                          value={shapRidge}
+                          onChange={(e) => onShapRidgeChange(e.target.value)}
+                          disabled={disabled || streaming}
+                        />
+                      </label>
+                    )}
+                  </div>
                 )}
-                {onShapRidgeChange && (
-                  <label
-                    className="infer-shap-param"
-                    title="L2 ridge regularization parameter for numerical stability (default: 1e-8)"
-                  >
-                    <span>Ridge</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      placeholder="1e-8"
-                      value={shapRidge}
-                      onChange={(e) => onShapRidgeChange(e.target.value)}
-                      disabled={disabled || streaming}
-                    />
-                  </label>
-                )}
-              </div>
+              </>
             )}
           </div>
         )}
@@ -200,7 +238,13 @@ export default function InferActionFooter({
               onClick={onRunFile}
               disabled={disabled || streaming}
             >
-              {streaming ? `Streaming… (${streamCount})` : "Run"}
+              {streaming
+                ? onlineMode
+                  ? "Updating…"
+                  : `Streaming… (${streamCount})`
+                : onlineMode
+                ? "Update from File"
+                : "Run"}
             </button>
           ) : (
             <button
@@ -209,7 +253,7 @@ export default function InferActionFooter({
               title="Using form"
               disabled={disabled || streaming || !canSubmit}
             >
-              Submit
+              {onlineMode ? "Update Model" : "Submit"}
             </button>
           )}
           {streaming && (

@@ -350,6 +350,32 @@ public class PredictTest {
         }
     }
 
+    @Test
+    public void testPredictVectorQuantizerSOMAndGNG() throws Exception {
+        System.out.println("Predict SOM and GNG: outputs prediction, centroid, and error");
+        Path somModel = tempDir.resolve("som.sml");
+        int somTrainExit = new CommandLine(new Train()).execute(
+            "-d", IRIS_ARFF.toString(),
+            "--formula", "class ~ .",
+            "-m", somModel.toString(),
+            "som", "--nrow", "3", "--ncol", "3", "--epochs", "5"
+        );
+        assertEquals(0, somTrainExit);
+
+        outCapture.reset();
+        int exitSomJson = new CommandLine(new Predict()).execute(
+            IRIS_ARFF.toString(), "--model", somModel.toString(), "--json"
+        );
+        assertEquals(0, exitSomJson);
+        String[] somLines = outCapture.toString().trim().split("\\r?\\n");
+        assertEquals(150, somLines.length);
+        for (String line : somLines) {
+            assertTrue(line.contains("\"prediction\":["), "SOM JSON line should contain 2D grid cell array: " + line);
+            assertTrue(line.contains("\"centroid\":["), "SOM JSON line should contain centroid: " + line);
+            assertTrue(line.contains("\"error\":"), "SOM JSON line should contain quantization error: " + line);
+        }
+    }
+
     // ------------------------------------------------------------------
     // Error handling
     // ------------------------------------------------------------------
