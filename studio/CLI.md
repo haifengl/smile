@@ -517,6 +517,65 @@ smile train -d <file> -m <model> --formula "y ~ ." gaussian-process --kernel <fn
 | `--iterations <n>` | | Maximum HPO iterations               |
 | `--tolerance <ε>` | | HPO stopping tolerance               |
 
+### 5.4b Clustering Algorithms
+
+Centroid-based clustering sub-commands produce a `ClusteringModel`. When `--formula` is omitted, all columns are included as features (`~ .`). If a formula with a response variable is supplied (e.g. `class ~ .`), the response variable is excluded from the feature schema.
+
+#### `kmeans` — K-Means Clustering
+
+```
+smile train -d <file> -m <model> kmeans -k <clusters> [options]
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `-k`, `--clusters <k>` | ✔ | Number of clusters |
+| `--iterations <n>` | | Maximum number of iterations (default: 100) |
+| `--tolerance <ε>` | | Convergence tolerance (default: `1E-4`) |
+| `--runs <n>` | | Number of runs to pick the lowest-distortion clustering |
+| `--transform <rule>` | | Feature transformation (see §5.6) |
+
+#### `xmeans` — X-Means Clustering
+
+```
+smile train -d <file> -m <model> xmeans -k <kmax> [options]
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `-k`, `--clusters <kmax>` | ✔ | Maximum number of clusters |
+| `--iterations <n>` | | Maximum number of iterations (default: 100) |
+| `--tolerance <ε>` | | Convergence tolerance (default: `1E-4`) |
+| `--transform <rule>` | | Feature transformation (see §5.6) |
+
+#### `gmeans` — G-Means Clustering
+
+```
+smile train -d <file> -m <model> gmeans -k <kmax> [options]
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `-k`, `--clusters <kmax>` | ✔ | Maximum number of clusters |
+| `--iterations <n>` | | Maximum number of iterations (default: 100) |
+| `--tolerance <ε>` | | Convergence tolerance (default: `1E-4`) |
+| `--transform <rule>` | | Feature transformation (see §5.6) |
+
+#### `deterministic-annealing` (`da`) — Deterministic Annealing Clustering
+
+```
+smile train -d <file> -m <model> deterministic-annealing -k <kmax> [options]
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `-k`, `--clusters <kmax>` | ✔ | Maximum number of clusters |
+| `--alpha <α>` | | Temperature cooling factor in `(0, 1)` (default: `0.9`) |
+| `--iterations <n>` | | Maximum iterations per temperature (default: 100) |
+| `--tolerance <ε>` | | Convergence tolerance (default: `1E-4`) |
+| `--split-tolerance <ε>` | | Cluster split tolerance (default: `1E-2`) |
+| `--transform <rule>` | | Feature transformation (see §5.6) |
+
 ### 5.5 Cross-validation & Ensembles
 
 ```bash

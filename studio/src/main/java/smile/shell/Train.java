@@ -66,6 +66,8 @@ public class Train {
     private String algorithm;
     /** The problem type is classification. */
     private boolean classification = true;
+    /** The problem type is clustering. */
+    private boolean clustering = false;
     /** The hyperparameter key-value pairs. */
     private Properties params = new Properties();
 
@@ -74,6 +76,18 @@ public class Train {
         var path = model.toPath();
         var data = Read.data(train.getCanonicalPath(), format);
         var columns = Arrays.asList(data.names());
+
+        if (seed != 0) {
+           MathEx.setSeed(seed);
+        }
+
+        if (clustering) {
+            Formula modelFormula = formula != null ? Formula.of(formula) : Formula.rhs(".");
+            var m = Model.clustering(algorithm, modelFormula, data, params);
+            System.out.println(m.clustering());
+            saveModel(m, path);
+            return;
+        }
 
         Formula modelFormula;
         if (formula != null) {
@@ -86,10 +100,6 @@ public class Train {
             modelFormula = Formula.lhs("y");
         } else {
             modelFormula = Formula.lhs(columns.getFirst());
-        }
-
-        if (seed != 0) {
-           MathEx.setSeed(seed);
         }
 
         DataFrame testData = null;
@@ -525,6 +535,99 @@ public class Train {
         if (transform != null) params.setProperty("smile.feature.transform", transform);
         if (iterations > 0) params.setProperty("smile.gaussian_process.iterations", String.valueOf(iterations));
         if (tolerance > 0) params.setProperty("smile.gaussian_process.tolerance", String.valueOf(tolerance));
+        run();
+    }
+
+    @Command(name = "kmeans", description = "K-Means Clustering",
+             mixinStandardHelpOptions = true)
+    void kmeans(
+            @Option(names = {"--transform"}, paramLabel = "<rule>", description = "The feature transformation <standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>.")
+            String transform,
+            @Option(names = {"-k", "--clusters"}, paramLabel = "<k>", required = true, description = "The number of clusters.")
+            int k,
+            @Option(names = {"--iterations"}, paramLabel = "<value>", description = "The maximum number of iterations.")
+            int iterations,
+            @Option(names = {"--tolerance"}, paramLabel = "<value>", description = "The tolerance of convergence test.")
+            double tolerance,
+            @Option(names = {"--runs"}, paramLabel = "<value>", description = "The number of runs to pick the best clustering.")
+            int runs) throws Exception {
+
+        algorithm = "kmeans";
+        clustering = true;
+        params.setProperty("smile.clustering.k", String.valueOf(k));
+        if (transform != null) params.setProperty("smile.feature.transform", transform);
+        if (iterations > 0) params.setProperty("smile.clustering.iterations", String.valueOf(iterations));
+        if (tolerance > 0) params.setProperty("smile.clustering.tolerance", String.valueOf(tolerance));
+        if (runs > 0) params.setProperty("smile.clustering.runs", String.valueOf(runs));
+        run();
+    }
+
+    @Command(name = "xmeans", description = "X-Means Clustering",
+             mixinStandardHelpOptions = true)
+    void xmeans(
+            @Option(names = {"--transform"}, paramLabel = "<rule>", description = "The feature transformation <standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>.")
+            String transform,
+            @Option(names = {"-k", "--clusters"}, paramLabel = "<kmax>", required = true, description = "The maximum number of clusters.")
+            int kmax,
+            @Option(names = {"--iterations"}, paramLabel = "<value>", description = "The maximum number of iterations.")
+            int iterations,
+            @Option(names = {"--tolerance"}, paramLabel = "<value>", description = "The tolerance of convergence test.")
+            double tolerance) throws Exception {
+
+        algorithm = "xmeans";
+        clustering = true;
+        params.setProperty("smile.clustering.k", String.valueOf(kmax));
+        if (transform != null) params.setProperty("smile.feature.transform", transform);
+        if (iterations > 0) params.setProperty("smile.clustering.iterations", String.valueOf(iterations));
+        if (tolerance > 0) params.setProperty("smile.clustering.tolerance", String.valueOf(tolerance));
+        run();
+    }
+
+    @Command(name = "gmeans", description = "G-Means Clustering",
+             mixinStandardHelpOptions = true)
+    void gmeans(
+            @Option(names = {"--transform"}, paramLabel = "<rule>", description = "The feature transformation <standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>.")
+            String transform,
+            @Option(names = {"-k", "--clusters"}, paramLabel = "<kmax>", required = true, description = "The maximum number of clusters.")
+            int kmax,
+            @Option(names = {"--iterations"}, paramLabel = "<value>", description = "The maximum number of iterations.")
+            int iterations,
+            @Option(names = {"--tolerance"}, paramLabel = "<value>", description = "The tolerance of convergence test.")
+            double tolerance) throws Exception {
+
+        algorithm = "gmeans";
+        clustering = true;
+        params.setProperty("smile.clustering.k", String.valueOf(kmax));
+        if (transform != null) params.setProperty("smile.feature.transform", transform);
+        if (iterations > 0) params.setProperty("smile.clustering.iterations", String.valueOf(iterations));
+        if (tolerance > 0) params.setProperty("smile.clustering.tolerance", String.valueOf(tolerance));
+        run();
+    }
+
+    @Command(name = "deterministic-annealing", aliases = {"da"}, description = "Deterministic Annealing Clustering",
+             mixinStandardHelpOptions = true)
+    void deterministicAnnealing(
+            @Option(names = {"--transform"}, paramLabel = "<rule>", description = "The feature transformation <standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>.")
+            String transform,
+            @Option(names = {"-k", "--clusters"}, paramLabel = "<kmax>", required = true, description = "The maximum number of clusters.")
+            int kmax,
+            @Option(names = {"--alpha"}, paramLabel = "<value>", description = "The temperature decreasing factor in (0, 1).")
+            double alpha,
+            @Option(names = {"--iterations"}, paramLabel = "<value>", description = "The maximum number of iterations at each temperature.")
+            int iterations,
+            @Option(names = {"--tolerance"}, paramLabel = "<value>", description = "The tolerance of convergence test.")
+            double tolerance,
+            @Option(names = {"--split-tolerance"}, paramLabel = "<value>", description = "The tolerance to split a cluster.")
+            double splitTolerance) throws Exception {
+
+        algorithm = "deterministic-annealing";
+        clustering = true;
+        params.setProperty("smile.deterministic_annealing.k", String.valueOf(kmax));
+        if (transform != null) params.setProperty("smile.feature.transform", transform);
+        if (alpha > 0) params.setProperty("smile.deterministic_annealing.alpha", String.valueOf(alpha));
+        if (iterations > 0) params.setProperty("smile.deterministic_annealing.iterations", String.valueOf(iterations));
+        if (tolerance > 0) params.setProperty("smile.deterministic_annealing.tolerance", String.valueOf(tolerance));
+        if (splitTolerance > 0) params.setProperty("smile.deterministic_annealing.split_tolerance", String.valueOf(splitTolerance));
         run();
     }
 }

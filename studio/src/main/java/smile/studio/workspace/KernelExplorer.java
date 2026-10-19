@@ -180,7 +180,9 @@ public class KernelExplorer extends JPanel {
                                             smile.io.Write.object(%s, java.nio.file.Path.of("%s"));
                                             """, name, path));
 
-                                    if (snippet.typeName().equals("ClassificationModel") || snippet.typeName().equals("RegressionModel")) {
+                                    if (snippet.typeName().equals("ClassificationModel")
+                                            || snippet.typeName().equals("RegressionModel")
+                                            || snippet.typeName().equals("ClusteringModel")) {
                                         var schema = kernel.eval(name + ".schema();");
                                         if (schema != null) {
                                             var serviceNode = new DefaultMutableTreeNode(new PersistedModel(name, schema.toString(), path));
@@ -234,13 +236,14 @@ public class KernelExplorer extends JPanel {
                       "DecisionTree", "RegressionTree", "AdaBoost", "RandomForest",
                       "GradientTreeBoost", "LinearSVM", "SparseLinearSVM",
                       "LinearModel", "GaussianProcessRegression",
-                      "ClassificationModel", "RegressionModel":
+                      "ClassificationModel", "RegressionModel", "ClusteringModel":
                     treeModel.insertNodeInto(node, models, models.getChildCount());
                     break;
 
                 default:
                     if (typeName.startsWith("Classifier<") ||
                         typeName.startsWith("Regression<") ||
+                        typeName.startsWith("CentroidClustering<") ||
                         typeName.startsWith("KNN<") ||
                         typeName.startsWith("RBFNetwork<") ||
                         typeName.startsWith("KernelMachine<") ||

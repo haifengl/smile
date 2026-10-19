@@ -8,6 +8,7 @@
  */
 package smile.serve.model;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -16,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import smile.model.ClassificationModel;
+import smile.model.ClusteringModel;
 import smile.model.Model;
 import smile.model.RegressionModel;
 import smile.serve.ModelMetadata;
@@ -57,6 +59,9 @@ public record SmileModelDetails(
                 train = regressionMetrics(r.train());
                 validation = regressionMetrics(r.validation());
                 test = regressionMetrics(r.test());
+            }
+            case ClusteringModel c -> {
+                train = clusteringMetrics(c);
             }
             default -> { }
         }
@@ -114,6 +119,21 @@ public record SmileModelDetails(
         putFinite(map, "rmse", m.rmse());
         putFinite(map, "mad", m.mad());
         putFinite(map, "r2", m.r2());
+        return map;
+    }
+
+    private static Map<String, Object> clusteringMetrics(ClusteringModel c) {
+        if (c == null || c.clustering() == null) {
+            return null;
+        }
+        var clustering = c.clustering();
+        int k = clustering.k();
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("k", k);
+        map.put("size", clustering.group().length);
+        putFinite(map, "distortion", clustering.distortion());
+        map.put("cluster_sizes", Arrays.copyOf(clustering.size(), k));
+        map.put("distortions", Arrays.copyOf(clustering.distortions(), k));
         return map;
     }
 

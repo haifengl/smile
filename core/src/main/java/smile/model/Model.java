@@ -17,6 +17,7 @@
 package smile.model;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Properties;
 import smile.classification.*;
 import smile.classification.GradientTreeBoost;
@@ -24,10 +25,25 @@ import smile.classification.MLP;
 import smile.classification.RBFNetwork;
 import smile.classification.RandomForest;
 import smile.classification.SVM;
+import smile.clustering.CentroidClustering;
+import smile.clustering.Clustering;
+import smile.clustering.DeterministicAnnealing;
+import smile.clustering.GMeans;
+import smile.clustering.KMeans;
+import smile.clustering.XMeans;
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
+import smile.data.transform.Transform;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
+import smile.feature.transform.MaxAbsScaler;
+import smile.feature.transform.Normalizer;
+import smile.feature.transform.RobustStandardizer;
+import smile.feature.transform.Scaler;
+import smile.feature.transform.Standardizer;
+import smile.feature.transform.WinsorScaler;
 import smile.regression.*;
 import smile.validation.ClassificationMetrics;
 import smile.validation.CrossValidation;
@@ -470,5 +486,96 @@ public interface Model {
             default ->
                     throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
         };
+    }
+
+    /**
+     * Trains a centroid-based clustering model.
+     * @param algorithm the clustering algorithm ("kmeans", "xmeans", "gmeans", "deterministic-annealing", or "da").
+     * @param formula the feature selection formula; if {@code null}, all columns are included.
+     * @param data the training data.
+     * @param params the hyperparameters.
+     * @return the clustering model.
+     */
+    static ClusteringModel clustering(String algorithm, Formula formula, DataFrame data, Properties params) {
+        Formula f = formula != null ? formula : Formula.rhs(".");
+        Formula expanded = f.expand(data.schema());
+        DataFrame X = expanded.x(data);
+        StructType schema = X.schema();
+        Properties effectiveParams = params != null ? params : new Properties();
+        Transform transform = fitTransform(X, effectiveParams.getProperty("smile.feature.transform"));
+        if (transform != null) {
+            X = transform.apply(X);
+        }
+        double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
+        CentroidClustering<double[], double[]> model = fitClustering(algorithm, x, effectiveParams);
+        return new ClusteringModel(algorithm, schema, expanded, model, transform, (Properties) effectiveParams.clone());
+    }
+
+    /**
+     * Fits a centroid-based clustering algorithm on a numeric feature matrix.
+     * @param algorithm the clustering algorithm ("kmeans", "xmeans", "gmeans", "deterministic-annealing", or "da").
+     * @param x the input feature matrix.
+     * @param params the hyperparameters.
+     * @return the fitted centroid clustering.
+     */
+    static CentroidClustering<double[], double[]> fitClustering(String algorithm, double[][] x, Properties params) {
+        return switch (algorithm) {
+            case "kmeans" -> {
+                int runs = Integer.parseInt(params.getProperty("smile.clustering.runs", "1"));
+                var options = Clustering.Options.of(params);
+                yield runs > 1
+                        ? Clustering.run(runs, () -> KMeans.fit(x, options))
+                        : KMeans.fit(x, options);
+            }
+            case "xmeans" ->
+                    XMeans.fit(x, Clustering.Options.of(params));
+            case "gmeans" ->
+                    GMeans.fit(x, Clustering.Options.of(params));
+            case "deterministic-annealing", "da" ->
+                    DeterministicAnnealing.fit(x, DeterministicAnnealing.Options.of(params));
+            default ->
+                    throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
+        };
+    }
+
+    /**
+     * Fits a feature preprocessing transform on a data frame from a specification string.
+     * @param data the predictor data frame.
+     * @param spec the transform specification (e.g., "standardizer", "winsor(0.01,0.99)", "minmax", "MaxAbs", "L1", "L2", "Linf").
+     * @return the fitted transform, or {@code null} if {@code spec} is null or blank.
+     */
+    private static Transform fitTransform(DataFrame data, String spec) {
+        if (spec == null || spec.isBlank()) {
+            return null;
+        }
+        String normalized = spec.trim().toLowerCase(Locale.ROOT);
+        if (normalized.startsWith("winsor(") && normalized.endsWith(")")) {
+            String args = normalized.substring("winsor(".length(), normalized.length() - 1);
+            String[] parts = args.split(",");
+            if (parts.length != 2) {
+                throw new IllegalArgumentException("Invalid winsor transform specification: " + spec);
+            }
+            double lower = Double.parseDouble(parts[0].trim());
+            double upper = Double.parseDouble(parts[1].trim());
+            return WinsorScaler.fit(data, lower, upper);
+        }
+        return switch (normalized) {
+            case "standardizer" -> Standardizer.fit(data);
+            case "robust", "robuststandardizer", "robust_standardizer" -> RobustStandardizer.fit(data);
+            case "minmax", "scaler" -> Scaler.fit(data);
+            case "maxabs", "max_abs", "maxabsscaler" -> MaxAbsScaler.fit(data);
+            case "winsor", "winsorscaler" -> WinsorScaler.fit(data);
+            case "l1" -> new Normalizer(Normalizer.Norm.L1, numericColumns(data));
+            case "l2" -> new Normalizer(Normalizer.Norm.L2, numericColumns(data));
+            case "linf", "l_inf" -> new Normalizer(Normalizer.Norm.L_INF, numericColumns(data));
+            default -> throw new IllegalArgumentException("Unsupported feature transform: " + spec);
+        };
+    }
+
+    private static String[] numericColumns(DataFrame data) {
+        return data.schema().fields().stream()
+                .filter(StructField::isNumeric)
+                .map(StructField::name)
+                .toArray(String[]::new);
     }
 }

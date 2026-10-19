@@ -555,4 +555,55 @@ public class InferenceResourceTest {
             .then()
                 .statusCode(400);
     }
+
+    // --------------------------------------------------------------- Clustering model
+    @Test
+    public void testGivenClusteringModelWhenLoadedAndQueriedThenReturnsPredictionAndCentroid() throws Exception {
+        // Given a K-Means ClusteringModel saved to a temporary .sml file
+        var data = smile.io.Read.arff(smile.io.Paths.getTestData("weka/iris.arff"));
+        var params = new Properties();
+        params.setProperty("smile.clustering.k", "3");
+        var clusteringModel = smile.model.Model.clustering("kmeans", Formula.lhs("class"), data, params);
+        clusteringModel.setTag(smile.model.Model.ID, "iris_kmeans");
+        clusteringModel.setTag(smile.model.Model.VERSION, "1");
+        Path tempModel = smile.io.Write.object(clusteringModel);
+
+        try {
+            // When loading the clustering model dynamically
+            String escapedPath = tempModel.toAbsolutePath().toString().replace("\\", "\\\\");
+            given()
+                .contentType(ContentType.JSON)
+                .body("{\"model\":\"" + escapedPath + "\",\"kind\":\"smile\"}")
+                .when().post("/api/v1/models/load")
+                .then()
+                    .statusCode(200)
+                    .body("id", is("iris_kmeans-1"));
+
+            // Then GET /api/v1/models/iris_kmeans-1 includes clustering details in smile.train
+            given()
+                .when().get("/api/v1/models/iris_kmeans-1")
+                .then()
+                    .statusCode(200)
+                    .body("kind", is("kmeans"))
+                    .body("smile.train.k", is(3))
+                    .body("smile.train.size", is(150))
+                    .body("smile.train.distortion", notNullValue())
+                    .body("smile.train.cluster_sizes", hasSize(3))
+                    .body("smile.train.distortions", hasSize(3));
+
+            // And POST /api/v1/smile/iris_kmeans-1 returns cluster prediction and centroid
+            var sample = "{\"sepallength\":5.1,\"sepalwidth\":3.5,\"petallength\":1.4,\"petalwidth\":0.2}";
+            given()
+                .contentType(ContentType.JSON)
+                .body(sample)
+                .when().post("/api/v1/smile/iris_kmeans-1")
+                .then()
+                    .statusCode(200)
+                    .body("prediction", notNullValue())
+                    .body("centroid", hasSize(4));
+        } finally {
+            given().when().post("/api/v1/smile/iris_kmeans-1/unload?timeout=5");
+            java.nio.file.Files.deleteIfExists(tempModel);
+        }
+    }
 }

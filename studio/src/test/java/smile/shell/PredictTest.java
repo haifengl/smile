@@ -293,15 +293,61 @@ public class PredictTest {
     @Test
     public void testPredictExplainOnUnsupportedModelFails() throws Exception {
         System.out.println("Predict: --explain on unsupported model fails with exit code 1");
-        Path model = trainRegressor("ols");
+        Path model = tempDir.resolve("kmeans.sml");
+        int trainExit = new CommandLine(new Train()).execute(
+            "-d", IRIS_ARFF.toString(),
+            "--formula", "class ~ .",
+            "-m", model.toString(),
+            "kmeans", "-k", "3"
+        );
+        assertEquals(0, trainExit);
         errCapture.reset();
 
         int exit = new CommandLine(new Predict()).execute(
-            LONGLEY_ARFF.toString(), "--model", model.toString(), "--explain"
+            IRIS_ARFF.toString(), "--model", model.toString(), "--explain"
         );
         assertEquals(1, exit, "Should exit with 1 when model does not support explanations");
         String err = errCapture.toString();
         assertTrue(err.contains("does not support SHAP explanations"), "Error should mention unsupported SHAP: " + err);
+    }
+
+    @Test
+    public void testPredictClusteringOutputsClusterAndCentroid() throws Exception {
+        System.out.println("Predict clustering: outputs cluster label and centroid in text and JSON");
+        Path model = tempDir.resolve("kmeans.sml");
+        int trainExit = new CommandLine(new Train()).execute(
+            "-d", IRIS_ARFF.toString(),
+            "--formula", "class ~ .",
+            "-m", model.toString(),
+            "kmeans", "-k", "3"
+        );
+        assertEquals(0, trainExit);
+
+        // Plain text output
+        outCapture.reset();
+        int exitText = new CommandLine(new Predict()).execute(
+            IRIS_ARFF.toString(), "--model", model.toString()
+        );
+        assertEquals(0, exitText);
+        String[] textLines = outCapture.toString().trim().split("\\r?\\n");
+        assertEquals(150, textLines.length);
+        for (String line : textLines) {
+            String[] tokens = line.trim().split("\\s+");
+            assertEquals(5, tokens.length, "Expected cluster label + 4 centroid coordinates: " + line);
+        }
+
+        // JSON output
+        outCapture.reset();
+        int exitJson = new CommandLine(new Predict()).execute(
+            IRIS_ARFF.toString(), "--model", model.toString(), "--json"
+        );
+        assertEquals(0, exitJson);
+        String[] jsonLines = outCapture.toString().trim().split("\\r?\\n");
+        assertEquals(150, jsonLines.length);
+        for (String line : jsonLines) {
+            assertTrue(line.contains("\"prediction\":"), "JSON line should contain prediction: " + line);
+            assertTrue(line.contains("\"centroid\":["), "JSON line should contain centroid array: " + line);
+        }
     }
 
     // ------------------------------------------------------------------
