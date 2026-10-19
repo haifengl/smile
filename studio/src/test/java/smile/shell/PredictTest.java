@@ -376,6 +376,48 @@ public class PredictTest {
         }
     }
 
+    @Test
+    public void testPredictAnomalyModelOutputsBooleanAndScore() throws Exception {
+        System.out.println("Predict IsolationForest: outputs boolean anomaly flag and score in text and JSON");
+        Path iforestModel = tempDir.resolve("iforest.sml");
+        int trainExit = new CommandLine(new Train()).execute(
+            "-d", IRIS_ARFF.toString(),
+            "--formula", "class ~ .",
+            "-m", iforestModel.toString(),
+            "isolation-forest", "--trees", "50", "--threshold", "0.6"
+        );
+        assertEquals(0, trainExit);
+
+        // Plain text output
+        outCapture.reset();
+        int exitText = new CommandLine(new Predict()).execute(
+            IRIS_ARFF.toString(), "--model", iforestModel.toString()
+        );
+        assertEquals(0, exitText);
+        String[] textLines = outCapture.toString().trim().split("\\r?\\n");
+        assertEquals(150, textLines.length);
+        for (String line : textLines) {
+            String[] tokens = line.trim().split("\\s+");
+            assertEquals(2, tokens.length, "Expected boolean anomaly flag + score: " + line);
+            assertTrue(tokens[0].equals("true") || tokens[0].equals("false"), "First token should be boolean: " + line);
+            assertDoesNotThrow(() -> Double.parseDouble(tokens[1]));
+        }
+
+        // JSON output
+        outCapture.reset();
+        int exitJson = new CommandLine(new Predict()).execute(
+            IRIS_ARFF.toString(), "--model", iforestModel.toString(), "--json"
+        );
+        assertEquals(0, exitJson);
+        String[] jsonLines = outCapture.toString().trim().split("\\r?\\n");
+        assertEquals(150, jsonLines.length);
+        for (String line : jsonLines) {
+            assertTrue(line.contains("\"prediction\":true") || line.contains("\"prediction\":false"),
+                    "Anomaly JSON line should contain boolean prediction: " + line);
+            assertTrue(line.contains("\"score\":"), "Anomaly JSON line should contain score: " + line);
+        }
+    }
+
     // ------------------------------------------------------------------
     // Error handling
     // ------------------------------------------------------------------

@@ -42,6 +42,11 @@ const CLUSTERING_ALGORITHMS = new Set([
   "gng",
   "neural-map",
   "birch",
+  "isolation-forest",
+  "iforest",
+  "lof",
+  "ocsvm",
+  "one-class-svm",
 ]);
 
 /**

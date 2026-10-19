@@ -616,5 +616,49 @@ public class TrainTest {
         assertEquals(0, exitBirch);
         assertInstanceOf(smile.model.VectorQuantizerModel.class, Read.object(birchFile));
     }
+
+    // ------------------------------------------------------------------
+    // Anomaly Detection
+    // ------------------------------------------------------------------
+
+    @Test
+    public void testTrainAnomalyModels() throws Exception {
+        System.out.println("Train IsolationForest, LOF, and OCSVM (anomaly detection)");
+        Path iforestFile = tempDir.resolve("iforest.sml");
+        int exitIforest = new CommandLine(new Train()).execute(
+            "-d", irisArff().toString(),
+            "--formula", "class ~ .",
+            "-m", iforestFile.toString(),
+            "isolation-forest", "--trees", "50", "--max-depth", "8", "--sampling", "0.7", "--threshold", "0.6"
+        );
+        assertEquals(0, exitIforest);
+        var iforestModel = (smile.model.AnomalyModel) Read.object(iforestFile);
+        assertEquals("isolation-forest", iforestModel.algorithm());
+        assertEquals(0.6, iforestModel.threshold(), 1E-12);
+
+        Path lofFile = tempDir.resolve("lof.sml");
+        int exitLof = new CommandLine(new Train()).execute(
+            "-d", irisArff().toString(),
+            "--formula", "class ~ .",
+            "-m", lofFile.toString(),
+            "lof", "-k", "15", "--threshold", "1.6", "--transform", "standardizer"
+        );
+        assertEquals(0, exitLof);
+        var lofModel = (smile.model.AnomalyModel) Read.object(lofFile);
+        assertEquals("lof", lofModel.algorithm());
+        assertEquals(1.6, lofModel.threshold(), 1E-12);
+
+        Path ocsvmFile = tempDir.resolve("ocsvm.sml");
+        int exitOcsvm = new CommandLine(new Train()).execute(
+            "-d", irisArff().toString(),
+            "--formula", "class ~ .",
+            "-m", ocsvmFile.toString(),
+            "ocsvm", "--kernel", "Gaussian(1.0)", "--nu", "0.1", "--threshold", "-0.05"
+        );
+        assertEquals(0, exitOcsvm);
+        var ocsvmModel = (smile.model.AnomalyModel) Read.object(ocsvmFile);
+        assertEquals("ocsvm", ocsvmModel.algorithm());
+        assertEquals(-0.05, ocsvmModel.threshold(), 1E-12);
+    }
 }
 

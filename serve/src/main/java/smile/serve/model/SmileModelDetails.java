@@ -16,6 +16,10 @@ import java.util.TreeMap;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import smile.anomaly.IsolationForest;
+import smile.anomaly.LOF;
+import smile.anomaly.SVM;
+import smile.model.AnomalyModel;
 import smile.model.ClassificationModel;
 import smile.model.ClusteringModel;
 import smile.model.Model;
@@ -71,6 +75,9 @@ public record SmileModelDetails(
             }
             case VectorQuantizerModel vq -> {
                 train = quantizerMetrics(vq);
+            }
+            case AnomalyModel a -> {
+                train = anomalyMetrics(a);
             }
             default -> { }
         }
@@ -165,6 +172,33 @@ public record SmileModelDetails(
             case GrowingNeuralGas gng -> map.put("neurons", gng.neurons().length);
             case NeuralMap nm -> map.put("neurons", nm.neurons().length);
             case BIRCH birch -> map.put("clusters", birch.numClusters());
+            default -> { }
+        }
+        return map;
+    }
+
+    private static Map<String, Object> anomalyMetrics(AnomalyModel a) {
+        if (a == null || a.detector() == null) {
+            return null;
+        }
+        Map<String, Object> map = new LinkedHashMap<>();
+        putFinite(map, "threshold", a.threshold());
+        switch (a.detector()) {
+            case IsolationForest iforest -> {
+                map.put("trees", iforest.size());
+                map.put("extension_level", iforest.extensionLevel());
+            }
+            case LOF<?> lof -> {
+                map.put("k", lof.k());
+                if (lof.scores() != null) {
+                    map.put("size", lof.scores().length);
+                }
+            }
+            case SVM<?> svm -> {
+                if (svm.vectors() != null) {
+                    map.put("support_vectors", svm.vectors().length);
+                }
+            }
             default -> { }
         }
         return map;

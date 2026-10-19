@@ -30,14 +30,16 @@ import tools.jackson.databind.annotation.JsonSerialize;
  * The model prediction containing the predicted output value, optional class
  * probability estimates for soft classification models, optional cluster/prototype
  * centroid coordinates for clustering and vector quantization models, optional
- * quantization error, and optional explanations.
+ * quantization error, optional anomaly score, and optional explanations.
  *
- * @param output        the predicted value (class label, cluster label, prototype index/grid cell, or regression output).
+ * @param output        the predicted value (class label, cluster label, prototype index/grid cell, anomaly flag, or regression output).
  * @param probabilities posteriori class probabilities for soft classifiers;
- *                      {@code null} for hard classifiers, regressors, clustering, and vector quantization models.
+ *                      {@code null} for hard classifiers, regressors, clustering, vector quantization, and anomaly detection models.
  * @param centroid      cluster centroid or prototype code vector coordinates;
- *                      {@code null} for classifiers and regressors.
+ *                      {@code null} for classifiers, regressors, and anomaly detection models.
  * @param error         quantization error (distance to prototype) for vector quantization models;
+ *                      {@code null} otherwise.
+ * @param score         anomaly or decision score for anomaly detection models;
  *                      {@code null} otherwise.
  * @param explanations  the prediction explanations; {@code null} if not requested.
  * @author Haifeng Li
@@ -54,6 +56,8 @@ public record Prediction(
         @JsonInclude(JsonInclude.Include.NON_NULL)
         Double error,
         @JsonInclude(JsonInclude.Include.NON_NULL)
+        Double score,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         Explanations explanations
 ) implements Serializable {
     @Serial
@@ -67,7 +71,7 @@ public record Prediction(
      * @param output the predicted value.
      */
     public Prediction(Number output) {
-        this(output, null, null, null, null);
+        this(output, null, null, null, null, null);
     }
 
     /**
@@ -77,7 +81,7 @@ public record Prediction(
      * @param probabilities posteriori class probabilities.
      */
     public Prediction(Number output, double[] probabilities) {
-        this(output, probabilities, null, null, null);
+        this(output, probabilities, null, null, null, null);
     }
 
     /**
@@ -88,7 +92,7 @@ public record Prediction(
      * @param explanations  the prediction explanations.
      */
     public Prediction(Number output, double[] probabilities, Explanations explanations) {
-        this(output, probabilities, null, null, explanations);
+        this(output, probabilities, null, null, null, explanations);
     }
 
     /**
@@ -100,7 +104,31 @@ public record Prediction(
      * @param explanations  the prediction explanations.
      */
     public Prediction(Number output, double[] probabilities, double[] centroid, Explanations explanations) {
-        this(output, probabilities, centroid, null, explanations);
+        this(output, probabilities, centroid, null, null, explanations);
+    }
+
+    /**
+     * Constructs a prediction with optional probability estimates, centroid, error, and explanations.
+     *
+     * @param output        the predicted value.
+     * @param probabilities posteriori class probabilities.
+     * @param centroid      cluster or prototype centroid coordinates.
+     * @param error         quantization error.
+     * @param explanations  the prediction explanations.
+     */
+    public Prediction(Object output, double[] probabilities, double[] centroid, Double error, Explanations explanations) {
+        this(output, probabilities, centroid, error, null, explanations);
+    }
+
+    /**
+     * Constructs an anomaly detection prediction with anomaly flag, score, and optional explanations.
+     *
+     * @param anomaly      the anomaly flag ({@code true} for anomaly, {@code false} for normal).
+     * @param score        the anomaly or decision score.
+     * @param explanations the prediction explanations.
+     */
+    public Prediction(Boolean anomaly, Double score, Explanations explanations) {
+        this(anomaly, null, null, null, score, explanations);
     }
 
     /**
@@ -141,6 +169,9 @@ public record Prediction(
         }
         if (error != null) {
             s += " " + smile.util.Strings.format(error.doubleValue());
+        }
+        if (score != null) {
+            s += " " + smile.util.Strings.format(score.doubleValue());
         }
         return s;
     }

@@ -656,6 +656,51 @@ smile train -d <file> -m <model> birch --radius <T> [options]
 | `--leaves <L>` | | Maximum number of entries in leaf nodes (default: 5) |
 | `--transform <rule>` | | Feature transformation (see §5.6) |
 
+### 5.4d Anomaly & Novelty Detection Algorithms
+
+Anomaly detection sub-commands produce an `AnomalyModel`. At inference time, `AnomalyModel` outputs a boolean anomaly flag (`prediction`: `true` for anomaly, `false` for normal) and the anomaly or decision score (`score`).
+
+#### `isolation-forest` (`iforest`) — Isolation Forest
+
+```
+smile train -d <file> -m <model> isolation-forest [options]
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `--trees <n>` | | Number of isolation trees (default: 100) |
+| `--max-depth <n>` | | Maximum tree depth (default: `log2(subsample_size)`) |
+| `--sampling <rate>` | | Subsampling rate in `(0, 1)` (default: `0.7`) |
+| `--extension-level <n>` | | Extended Isolation Forest level (`0` = standard Isolation Forest) |
+| `--threshold <score>` | | Anomaly score threshold in `(0, 1]` above which a sample is flagged as an anomaly (default: `0.5`) |
+| `--transform <rule>` | | Feature transformation (see §5.6) |
+
+#### `lof` — Local Outlier Factor
+
+```
+smile train -d <file> -m <model> lof [options]
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `-k`, `--neighbors <k>` | | Number of nearest neighbors (default: 20) |
+| `--threshold <score>` | | LOF score threshold above which a sample is flagged as an anomaly (default: `1.5`) |
+| `--transform <rule>` | | Feature transformation (see §5.6) |
+
+#### `ocsvm` (`one-class-svm`) — One-Class SVM
+
+```
+smile train -d <file> -m <model> ocsvm --kernel <fn> [options]
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `--kernel <fn>` | ✔ | Kernel function (same syntax as `svm`) |
+| `--nu <ν>` | | Upper bound on the fraction of outliers in `(0, 1]` (default: `0.5`) |
+| `--tolerance <ε>` | | Convergence tolerance (default: `1E-3`) |
+| `--threshold <score>` | | Decision value threshold below which a sample is flagged as an anomaly (default: `0.0`) |
+| `--transform <rule>` | | Feature transformation (see §5.6) |
+
 ### 5.5 Cross-validation & Ensembles
 
 ```bash

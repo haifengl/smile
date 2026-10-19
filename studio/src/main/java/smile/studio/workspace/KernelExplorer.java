@@ -183,7 +183,8 @@ public class KernelExplorer extends JPanel {
                                     if (snippet.typeName().equals("ClassificationModel")
                                             || snippet.typeName().equals("RegressionModel")
                                             || snippet.typeName().equals("ClusteringModel")
-                                            || snippet.typeName().equals("VectorQuantizerModel")) {
+                                            || snippet.typeName().equals("VectorQuantizerModel")
+                                            || snippet.typeName().equals("AnomalyModel")) {
                                         var schema = kernel.eval(name + ".schema();");
                                         if (schema != null) {
                                             var serviceNode = new DefaultMutableTreeNode(new PersistedModel(name, schema.toString(), path));
@@ -238,7 +239,9 @@ public class KernelExplorer extends JPanel {
                       "GradientTreeBoost", "LinearSVM", "SparseLinearSVM",
                       "LinearModel", "GaussianProcessRegression",
                       "SOM", "NeuralGas", "GrowingNeuralGas", "NeuralMap", "BIRCH", "VectorQuantizer",
-                      "ClassificationModel", "RegressionModel", "ClusteringModel", "VectorQuantizerModel":
+                      "IsolationForest", "LOF",
+                      "ClassificationModel", "RegressionModel", "ClusteringModel",
+                      "VectorQuantizerModel", "AnomalyModel":
                     treeModel.insertNodeInto(node, models, models.getChildCount());
                     break;
 
@@ -246,6 +249,8 @@ public class KernelExplorer extends JPanel {
                     if (typeName.startsWith("Classifier<") ||
                         typeName.startsWith("Regression<") ||
                         typeName.startsWith("CentroidClustering<") ||
+                        typeName.startsWith("LOF<") ||
+                        typeName.startsWith("SVM<") ||
                         typeName.startsWith("KNN<") ||
                         typeName.startsWith("RBFNetwork<") ||
                         typeName.startsWith("KernelMachine<") ||

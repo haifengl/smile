@@ -144,7 +144,7 @@ export function normalizePrediction(data) {
   return { values: { result: String(data) } };
 }
 
-const PREFERRED_ORDER = ["file", "top1", "prob", "top5", "prediction", "centroid", "error", "result"];
+const PREFERRED_ORDER = ["file", "top1", "prob", "top5", "prediction", "score", "centroid", "error", "result"];
 
 /**
  * Stable column order across rows: prediction/result first, then p0..pn,
