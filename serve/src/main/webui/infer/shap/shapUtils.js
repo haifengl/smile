@@ -30,18 +30,29 @@ const LINEAR_SHAP_ALGORITHMS = new Set([
   "ridge",
 ]);
 
+const CLUSTERING_ALGORITHMS = new Set([
+  "kmeans",
+  "xmeans",
+  "gmeans",
+  "deterministic-annealing",
+  "da",
+]);
+
 /**
  * Returns the SHAP method name ("TreeSHAP", "LinearSHAP", or "KernelSHAP")
- * for a SMILE model algorithm name.
+ * for a SMILE model algorithm name, or {@code null} for clustering models.
  *
  * @param {string|null|undefined} algorithm
- * @returns {"TreeSHAP"|"LinearSHAP"|"KernelSHAP"}
+ * @returns {"TreeSHAP"|"LinearSHAP"|"KernelSHAP"|null}
  */
 export function shapMethodForAlgorithm(algorithm) {
   if (!algorithm || typeof algorithm !== "string") {
     return "SHAP";
   }
   const normalized = algorithm.trim().toLowerCase();
+  if (CLUSTERING_ALGORITHMS.has(normalized)) {
+    return null;
+  }
   if (TREE_SHAP_ALGORITHMS.has(normalized)) {
     return "TreeSHAP";
   }

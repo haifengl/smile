@@ -190,12 +190,13 @@ function SmileForm({ modelId }) {
     }
     setSubmitError(null);
     beginRun();
+    const shapMethod = shapMethodForAlgorithm(modelMeta?.algorithm);
     const shapOptions = isKernelShapAlgorithm(modelMeta?.algorithm)
       ? { samples: shapSamples, ridge: shapRidge }
       : null;
     const url = buildExplainUrl(
       `/api/v1/smile/${modelId}`,
-      explain,
+      Boolean(shapMethod) && explain,
       shapOptions
     );
 
@@ -256,12 +257,13 @@ function SmileForm({ modelId }) {
         throw new Error("File has no data rows");
       }
 
+      const shapMethod = shapMethodForAlgorithm(modelMeta?.algorithm);
       const shapOptions = isKernelShapAlgorithm(modelMeta?.algorithm)
         ? { samples: shapSamples, ridge: shapRidge }
         : null;
       const streamUrl = buildExplainUrl(
         `/api/v1/smile/${modelId}/stream`,
-        explain,
+        Boolean(shapMethod) && explain,
         shapOptions
       );
 
@@ -333,8 +335,8 @@ function SmileForm({ modelId }) {
               streamCount={streamCount}
               onStop={() => abortRef.current?.abort()}
               disabled={streaming}
-              explain={explain}
-              onExplainChange={setExplain}
+              explain={Boolean(shapMethod) && explain}
+              onExplainChange={shapMethod ? setExplain : null}
               shapMethod={shapMethod}
               shapSamples={shapSamples}
               onShapSamplesChange={setShapSamples}

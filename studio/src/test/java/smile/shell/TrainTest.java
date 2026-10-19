@@ -501,5 +501,62 @@ public class TrainTest {
         );
         assertNotEquals(0, exit, "Should fail without --data");
     }
+
+    // ------------------------------------------------------------------
+    // Clustering
+    // ------------------------------------------------------------------
+
+    @Test
+    public void testTrainKMeansClustering() throws Exception {
+        System.out.println("Train K-Means (clustering)");
+        Path modelFile = tempDir.resolve("kmeans.sml");
+        int exit = new CommandLine(new Train()).execute(
+            "-d", irisArff().toString(),
+            "--formula", "class ~ .",
+            "-m", modelFile.toString(),
+            "kmeans", "-k", "3", "--iterations", "50", "--runs", "2"
+        );
+        assertEquals(0, exit, "Expected exit code 0");
+        assertTrue(Files.exists(modelFile), "Model file should be created");
+        var obj = Read.object(modelFile);
+        assertInstanceOf(smile.model.ClusteringModel.class, obj);
+        var model = (smile.model.ClusteringModel) obj;
+        assertEquals(3, model.k());
+        assertEquals(4, model.schema().length());
+    }
+
+    @Test
+    public void testTrainXMeansGMeansAndDAClustering() throws Exception {
+        System.out.println("Train X-Means, G-Means, and Deterministic Annealing (clustering)");
+        Path xmeansFile = tempDir.resolve("xmeans.sml");
+        int exitX = new CommandLine(new Train()).execute(
+            "-d", irisArff().toString(),
+            "--formula", "class ~ .",
+            "-m", xmeansFile.toString(),
+            "xmeans", "-k", "5"
+        );
+        assertEquals(0, exitX);
+        assertInstanceOf(smile.model.ClusteringModel.class, Read.object(xmeansFile));
+
+        Path gmeansFile = tempDir.resolve("gmeans.sml");
+        int exitG = new CommandLine(new Train()).execute(
+            "-d", irisArff().toString(),
+            "--formula", "class ~ .",
+            "-m", gmeansFile.toString(),
+            "gmeans", "-k", "5"
+        );
+        assertEquals(0, exitG);
+        assertInstanceOf(smile.model.ClusteringModel.class, Read.object(gmeansFile));
+
+        Path daFile = tempDir.resolve("da.sml");
+        int exitDa = new CommandLine(new Train()).execute(
+            "-d", irisArff().toString(),
+            "--formula", "class ~ .",
+            "-m", daFile.toString(),
+            "da", "-k", "3", "--alpha", "0.8", "--iterations", "30"
+        );
+        assertEquals(0, exitDa);
+        assertInstanceOf(smile.model.ClusteringModel.class, Read.object(daFile));
+    }
 }
 

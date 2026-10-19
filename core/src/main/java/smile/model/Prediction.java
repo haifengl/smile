@@ -28,11 +28,14 @@ import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * The model prediction containing the predicted output value, optional class
- * probability estimates for soft classification models, and optional explanations.
+ * probability estimates for soft classification models, optional cluster
+ * centroid coordinates for clustering models, and optional explanations.
  *
- * @param output        the predicted value (class label or regression output).
+ * @param output        the predicted value (class label, cluster label, or regression output).
  * @param probabilities posteriori class probabilities for soft classifiers;
- *                      {@code null} for hard classifiers and regressors.
+ *                      {@code null} for hard classifiers, regressors, and clustering models.
+ * @param centroid      cluster centroid coordinates for clustering models;
+ *                      {@code null} for classifiers and regressors.
  * @param explanations  the prediction explanations; {@code null} if not requested.
  * @author Haifeng Li
  */
@@ -42,6 +45,8 @@ public record Prediction(
         @JsonInclude(JsonInclude.Include.NON_NULL)
         @JsonSerialize(using = ProbabilitySerializer.class)
         double[] probabilities,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        double[] centroid,
         @JsonInclude(JsonInclude.Include.NON_NULL)
         Explanations explanations
 ) implements Serializable {
@@ -56,7 +61,7 @@ public record Prediction(
      * @param output the predicted value.
      */
     public Prediction(Number output) {
-        this(output, null, null);
+        this(output, null, null, null);
     }
 
     /**
@@ -66,7 +71,18 @@ public record Prediction(
      * @param probabilities posteriori class probabilities.
      */
     public Prediction(Number output, double[] probabilities) {
-        this(output, probabilities, null);
+        this(output, probabilities, null, null);
+    }
+
+    /**
+     * Constructs a prediction with optional probability estimates and explanations.
+     *
+     * @param output        the predicted value.
+     * @param probabilities posteriori class probabilities.
+     * @param explanations  the prediction explanations.
+     */
+    public Prediction(Number output, double[] probabilities, Explanations explanations) {
+        this(output, probabilities, null, explanations);
     }
 
     /**
@@ -93,6 +109,11 @@ public record Prediction(
         if (probabilities != null) {
             s += Arrays.stream(probabilities)
                     .mapToObj(p -> String.format(Locale.US, "%.4f", p))
+                    .collect(Collectors.joining(" ", " ", ""));
+        }
+        if (centroid != null) {
+            s += Arrays.stream(centroid)
+                    .mapToObj(smile.util.Strings::format)
                     .collect(Collectors.joining(" ", " ", ""));
         }
         return s;

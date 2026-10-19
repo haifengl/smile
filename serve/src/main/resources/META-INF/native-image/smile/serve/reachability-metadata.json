@@ -3221,6 +3221,9 @@
    "type": "smile.model.ClassificationModel"
   },
   {
+   "type": "smile.model.ClusteringModel"
+  },
+  {
    "type": "smile.model.Explanations"
   },
   {
@@ -4761,6 +4764,9 @@
   },
   {
    "type": "smile.model.ClassificationModel[]"
+  },
+  {
+   "type": "smile.model.ClusteringModel[]"
   },
   {
    "type": "smile.model.Explanations[]"
