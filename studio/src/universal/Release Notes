@@ -1,6 +1,6 @@
-# SMILE 7.0.0 Release Notes
+# SMILE 7.1.0 Release Notes
 
-Welcome to **SMILE 7.0.0**! This major release unifies high-performance JVM machine learning with the next generation of agentic data science. Version 7.0.0 introduces autonomous desktop automation, multi-agent orchestration, high-throughput LLM serving with batched Multi-Token Prediction (MTP) speculative decoding, native Kotlin and Scala 3 notebook kernels, an extensive productivity and research skills suite, time series forecasting (ARIMA/ARMA), and comprehensive stability and security hardening across Studio and the Agent harness.
+Welcome to **SMILE 7.1.0**! This release unifies high-performance JVM machine learning with the next generation of agentic data science. Building on the 7.0 architecture, **SMILE 7.1.0** introduces autonomous desktop automation, multi-agent orchestration, model-agnostic KernelSHAP explainability with interactive visualizations, a pure-Java BLAS/LAPACK fallback engine, four tailored SMILE Serve container flavors (`latest`, `-gpu`, `-native`, `-micro`), high-throughput LLM serving with batched Multi-Token Prediction (MTP) speculative decoding, native Kotlin and Scala 3 notebook kernels, an extensive productivity and research skills suite, time series forecasting (ARIMA/ARMA), OS keychain credential storage, and comprehensive stability hardening across Studio, Serve, and the Agent harness.
 
 ---
 
@@ -12,25 +12,35 @@ Welcome to **SMILE 7.0.0**! This major release unifies high-performance JVM mach
   - Safe desktop automation pipeline with coordinate mapping, interactive user confirmation, and automatic session bounds.
 - **👔 Chief of Staff Agent (`@frank`)**:
   - Added Frank to coordinate multi-agent teams, synthesize status reports across active agents, track project priorities, and lead cross-agent briefings.
+- **📣 Evangelist (`@julien`) & Sales (`@mike`) Workspace Integration**:
+  - Added localized welcome and capability banners for Evangelist and Sales agents across all supported workspace locales, expanded the Java and Python Coder capability overviews, and organized agent tabs in the Studio panel.
 - **Dynamic Agent Catalog**:
-  - Studio now discovers and loads agent personas dynamically from configuration specifications, with clean peer-to-peer delegation and request queuing.
+  - Studio discovers and loads agent personas dynamically from configuration specifications, with clean peer-to-peer delegation and request queuing.
 
-### ⚡ High-Performance LLM Serving & Speculative Decoding
+### ⚡ High-Performance LLM & Model Serving (`smile-serve`)
 - **Batched Multi-Token Prediction (MTP) Speculative Decoding**:
   - Implemented high-throughput batched MTP speculative decoding with persistent per-request draft histories, enabled by default in `smile.serve`.
   - Accelerated generation with fused DeltaNet window operations, eager FlashInfer attention, and CUDA graph verification for low-latency token generation.
-- **SHAP Explanations in Model Serving**:
-  - Native SHAP explanation payloads in REST inference responses with clean 3-decimal formatting and zero overhead when unrequested.
+- **Interactive SHAP Explanations in API & Web UI**:
+  - Native SHAP explanation payloads (`TreeSHAP`, `LinearSHAP`, and `KernelSHAP`) in REST and streaming inference responses with clean 3-decimal formatting and zero overhead when unrequested.
+  - Interactive SHAP explanation pane in the Predictions panel supporting **Waterfall**, **Force**, and **Decision** plots for both 1D regression and 2D multi-class classification outputs, updating dynamically as you click rows.
+  - Per-request KernelSHAP tuning via `?samples` and `?ridge` query parameters (or `shapSamples`, `shapRidge`, and nested `shap` payload fields) and inline **Samples** and **Ridge** controls in the Web UI.
+- **Four Container Image Flavors (`latest`, `-gpu`, `-native`, `-micro`)**:
+  - **`Dockerfile.micro` (`-micro`, ~205 MB)**: Single-stage UBI 10 micro GraalVM native image built with the `micro` profile for lightweight, inference-only deployments (`.sml` and ONNX models + Web UI, without chat, auth, or JDBC overhead).
+  - **`Dockerfile.native` (`-native`, ~375 MB)**: GraalVM native image with CPU chat powered by ONNX Runtime GenAI.
+  - **`Dockerfile` (`latest`, ~575 MB)**: Lean CPU JVM image with ONNX Runtime GenAI support for CPU chat.
+  - **`Dockerfile.gpu` (`-gpu`)**: Self-contained multi-stage build with full GPU/CUDA and S3 blob storage support.
+- **Pluggable Blob Storage SPI & `local` Profile**:
+  - Extracted S3 blob storage into an optional build-time plugin (`serve-plugins/blob-s3` and `serve-plugins/blob-spi`, selectable via `-Pserve.plugins=...`) to keep the AWS SDK out of CPU and native images.
+  - Added a dedicated `local` Quarkus profile (embedded H2 in the model directory without PostgreSQL) and scoped `quarkus-jdbc-postgresql` to `prod`.
 - **Dynamic Model Loading & Control APIs**:
   - Dynamically load and unload models on the fly via `POST /api/v1/models/load`.
   - Added real-time telemetry, model control, and health endpoints (`/smile/{id}`, `/onnx/{id}`, and `/q/health`).
-  - Native Prometheus metrics scraping integration.
   - Support for ONNX Runtime 1.30, ONNX Runtime GenAI models (including Phi-4 mini), LibTorch 2.14.1, and automatic KV-cache precision selection (`auto`).
-- **Centralized Prometheus metrics API**:
+- **Centralized Prometheus Metrics API**:
   - **`GET /q/metrics`:** Single scrape target formatted according to standard Prometheus text specifications.
   - **Multidimensional Labeling:** Every time-series metric carries a `model_id` label, allowing unified visualization dashboards (e.g., Grafana) with dynamic multi-tenant filtering.
-  - **Microsecond Precision:** Latency observations, throughput gauges, and cache counters are recorded with sub-millisecond fidelity via Micrometer.
-  - **Non-blocking Execution:** Metric tracking uses atomic primitives and lightweight histograms without introducing latency penalties to inference pipelines.
+  - **Microsecond Precision & Non-blocking Execution:** Latency observations, throughput gauges, and cache counters are recorded with sub-millisecond fidelity via Micrometer using atomic primitives and lightweight histograms.
 
 ### 📚 Expanded Skills Suite
 - **Comprehensive Document Processing**:
@@ -48,11 +58,19 @@ Welcome to **SMILE 7.0.0**! This major release unifies high-performance JVM mach
 - **🚀 Native Kotlin Scripting Kernel**:
   - Interactive Kotlin notebooks (`.kts`) powered by the Kotlin Custom Scripting Host API with full access to SMILE algorithms.
 - **⚡ AST-Aware Scala 3 Evaluation**:
-  - `ScalaKernel` now parses code using the Scala 3 compiler to evaluate complete top-level classes, multi-line blocks, and closures without timeouts or truncation.
+  - `ScalaKernel` parses code using the Scala 3 compiler to evaluate complete top-level classes, multi-line blocks, and closures without timeouts or truncation.
 - **Interactive Welcome & Release Notes**:
   - Replaced the blank starting file with an interactive `Welcome` tutorial and dedicated `Release Notes` viewer.
 
 ### 📈 Machine Learning, Analytics & Core Engine
+- **Model-Agnostic KernelSHAP (`smile.feature.importance.KernelSHAP`)**:
+  - Brought SHAP feature attributions to all DataFrame and linear models—including Logistic Regression, LDA, QDA, RDA, Fisher, MLP, SVM, RBF networks, OLS, Lasso, ElasticNet, Ridge, and Gaussian Process models—alongside existing TreeSHAP support.
+  - Uses exact coalition enumeration for small feature sets, priority symmetric shell enumeration with antithetic paired sampling for larger feature sets, and single-factorization multi-output Cholesky/SVD solvers.
+  - Added `KernelSHAP.Options` overloads to `shap(...)` and `infer(...)` on `SHAP`, `DataFrameClassifier`, `DataFrameRegression`, `ClassificationModel`, and `RegressionModel` for inference-time tuning without rebuilding background state.
+- **Pure-Java BLAS & LAPACK Fallback (`smile.linalg`, `smile.tensor`)**:
+  - `smile.tensor` now works out of the box on machines without native OpenBLAS or system BLAS/LAPACK installed instead of failing with `UnsatisfiedLinkError`.
+  - Implemented pure-Java Level-1/2/3 BLAS (`JBlas`) and LAPACK decompositions and solvers (`JLapack`: LU, Cholesky, QR, SVD, symmetric/general EVD, packed symmetric, and banded solvers) for both `Float64` and `Float32`.
+  - Added `NativeLibrary.isBlasAvailable()` and `NativeLibrary.isLapackAvailable()` probes, plus backend selection via the `smile.linalg.backend` system property or `SMILE_LINALG_BACKEND` environment variable (`auto`, `native`, or `java`).
 - **Time Series Analysis (ARIMA & ARMA)**:
   - Added `smile.timeseries.ARIMA` supporting arbitrary differencing, stationary transformation, and recursive multi-step forecasting.
   - Added model selection diagnostics: Gaussian log-likelihood, AIC, BIC, RSS, and coefficient $t$-test tables.
@@ -62,7 +80,7 @@ Welcome to **SMILE 7.0.0**! This major release unifies high-performance JVM mach
 - **Local Outlier Factor (LOF) Anomaly Detection**:
   - Density-based anomaly detection via `smile.anomaly.LOF<T>` across arbitrary metric spaces.
 - **Tree Ensemble Feature Selection**:
-  - Introduced `smile.feature.selection.EnsembleSelection` to easily score, rank, and threshold feature importance from Random Forests, Gradient Boosted Trees, and Decision Trees.
+  - Introduced `smile.feature.selection.EnsembleSelection` to score, rank, and threshold feature importance from Random Forests, Gradient Boosted Trees, and Decision Trees.
 - **Java 25 Spark Module**:
   - Modernized `spark` module rewritten in pure Java 25.
 
@@ -74,8 +92,21 @@ Welcome to **SMILE 7.0.0**! This major release unifies high-performance JVM mach
 
 ---
 
+## 🔒 Security
+
+- **OS Credential Store for Studio API Keys**:
+  - Integrated `SecretStore` (`photos.sluice:secret-store`) in Studio to store AI provider API keys in the native OS credential manager (macOS Keychain, Windows Credential Manager, Linux Secret Service), with environment variable overrides and owner-restricted file fallback (`~/.smile/credentials`).
+  - Automatically migrates and scrubs legacy plain-text keys from Java `Preferences`.
+  - Replaced plain-text API key fields in `SettingsDialog` with masked `JPasswordField` controls (including a reveal toggle and localized storage-tier status indicator across all 5 locales).
+- **SSRF Protection**:
+  - Blocked link-local and cloud-metadata addresses in `WebFetch` to prevent SSRF vulnerabilities.
+
+---
+
 ## 🔧 Improvements
 
+- **Lighter `smile-base` Runtime Footprint**:
+  - Scoped optional I/O and SQL dependencies (`duckdb_jdbc`, Apache Arrow, Avro, Snappy, Parso, and `lsp4j`) as `compileOnly` / `Provided` in `smile-base` so downstream applications no longer inherit ~170 MB of optional libraries unless explicitly needed.
 - **Multi-Model LLM Management & Reasoning**:
   - Unified model catalog supporting OpenAI, Anthropic Claude, Google Gemini, and local Ollama models.
   - Per-agent model selection with dynamic reasoning effort retry escalation (Default → High → Low).
@@ -94,16 +125,24 @@ Welcome to **SMILE 7.0.0**! This major release unifies high-performance JVM mach
 - **Atomic Notebook Persistence**:
   - Safe `.ipynb` serialization writes to temporary files before atomically replacing target files, preventing corruption during system interruptions.
 - **Polyglot API Surface**:
-  - Expanded idiomatic Kotlin and Scala wrappers covering `smile.timeseries`, `smile.anomaly`, `smile.hpo`, `smile.data`, and `plot.swing`.
+  - Expanded idiomatic Kotlin and Scala wrappers covering `smile.feature.importance` (`KernelSHAP`), `smile.timeseries`, `smile.anomaly`, `smile.hpo`, `smile.data`, and `plot.swing`.
+- **Serve Developer Experience**:
+  - Configured `./gradlew :serve:quarkusDev` to run from the root repository directory with pre-configured test models out of the box.
 
 ---
 
 ## 🐛 Bug Fixes & Reliability
 
+- **JSON I/O Jackson v3 Migration (`smile-base`)**:
+  - Migrated `smile.io.JSON` from residual Jackson v2 imports (`com.fasterxml.jackson.*`) to Jackson v3 (`tools.jackson.*`), fixing a `NoClassDefFoundError` at runtime in downstream modules that only inherit `smile-base`'s `api` dependency.
+- **Banded Matrix Multiplication (`smile-base`)**:
+  - Fixed `BandMatrix.mv` with `UPLO.LOWER` in the native CBLAS path to slice band storage at offset `ku`.
+- **GraalVM Native Image Reflection & FFM Registration (`smile-serve`)**:
+  - Registered `OnnxModelInfo.NodeDescriptor[]` for native reflection, resolving a `MissingReflectionRegistrationError` on `GET /api/v1/onnx/{id}`.
+  - Registered `ChatCompletionChunk` and `ChatMessageObject` for reflection so streaming SSE chat chunks serialize properly in native images instead of emitting empty `data:{}` frames.
+  - Updated FFM reachability metadata generation to emit `critical(allowHeapAccess)` for BLAS/LAPACK downcalls and added the missing `libopenblas.so` symlink in container images so BLAS-backed models run in native and GPU containers without link errors.
 - **Agent Tool Hardening**:
   - Added strict input validation and null guards across all built-in tools.
-- **Security & SSRF Protection**:
-  - Blocked link-local and cloud-metadata addresses in `WebFetch` to prevent SSRF vulnerabilities.
 - **Memory & Visual Artifact Management**:
   - Fixed HTTP 413 payload errors during multi-turn vision tasks by replacing in-memory screenshot bitmaps with compact metadata placeholders between tool loops.
 - **Windows Platform Stability**:

@@ -2,7 +2,7 @@
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
 title: SMILE - Quick Start
-version: "7.0.0"
+version: "7.1.0"
 ---
 {% include "toc.njk" %}
 
@@ -127,8 +127,13 @@ libraryDependencies += "com.github.haifengl" % "smile-deep" % "{{ version }}"
 </div>
 
     <h3 id="native-blas">Native BLAS / LAPACK (optional)</h3>
-    <p>Several algorithms (manifold learning, Gaussian Process, MLP) benefit significantly
-       from native BLAS/LAPACK. Install the system libraries:</p>
+    <p><code>smile.tensor</code> includes a pure-Java BLAS and LAPACK implementation
+       (<code>JBlas</code> and <code>JLapack</code>), so all linear algebra operations and
+       machine learning algorithms work out of the box with zero native dependencies.
+       When native BLAS/LAPACK libraries are present on the system, SMILE uses them
+       automatically via Java FFM for hardware-accelerated linear algebra (controllable via
+       <code>-Dsmile.linalg.backend=auto|native|java</code> or <code>SMILE_LINALG_BACKEND</code>).
+       To install optional native BLAS/LAPACK and ARPACK libraries:</p>
 
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#blas_linux" type="button" role="tab">Linux</button></li>
