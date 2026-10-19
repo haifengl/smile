@@ -16,9 +16,12 @@
  */
 package smile.model;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
+import smile.anomaly.IsolationForest;
+import smile.anomaly.LOF;
 import smile.classification.*;
 import smile.classification.GradientTreeBoost;
 import smile.classification.MLP;
@@ -46,6 +49,7 @@ import smile.feature.transform.Standardizer;
 import smile.feature.transform.WinsorScaler;
 import smile.regression.*;
 import smile.math.MathEx;
+import smile.math.kernel.MercerKernel;
 import smile.util.function.TimeFunction;
 import smile.validation.ClassificationMetrics;
 import smile.validation.CrossValidation;
@@ -708,6 +712,72 @@ public interface Model {
                 }
                 yield birch;
             }
+            default ->
+                    throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
+        };
+    }
+
+    /**
+     * Trains an anomaly detection model.
+     * @param algorithm the anomaly detection algorithm ("isolation-forest", "iforest", "lof", "ocsvm", or "one-class-svm").
+     * @param formula the feature selection formula; if {@code null}, all columns are included.
+     * @param data the training data.
+     * @param params the hyperparameters.
+     * @return the anomaly detection model.
+     */
+    static AnomalyModel anomaly(String algorithm, Formula formula, DataFrame data, Properties params) {
+        Formula f = formula != null ? formula : Formula.rhs(".");
+        Formula expanded = f.expand(data.schema());
+        DataFrame X = expanded.x(data);
+        StructType schema = X.schema();
+        Properties effectiveParams = params != null ? params : new Properties();
+        Transform transform = fitTransform(X, effectiveParams.getProperty("smile.feature.transform"));
+        if (transform != null) {
+            X = transform.apply(X);
+        }
+        double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
+        Serializable detector = fitAnomaly(algorithm, x, effectiveParams);
+        double threshold = defaultAnomalyThreshold(algorithm, effectiveParams);
+        return new AnomalyModel(algorithm, schema, expanded, detector, threshold, transform, (Properties) effectiveParams.clone());
+    }
+
+    /**
+     * Fits an anomaly detection algorithm on a numeric feature matrix.
+     * @param algorithm the anomaly detection algorithm ("isolation-forest", "iforest", "lof", "ocsvm", or "one-class-svm").
+     * @param x the input feature matrix.
+     * @param params the hyperparameters.
+     * @return the fitted anomaly detector.
+     */
+    static Serializable fitAnomaly(String algorithm, double[][] x, Properties params) {
+        return switch (algorithm) {
+            case "isolation-forest", "iforest" ->
+                    IsolationForest.fit(x, IsolationForest.Options.of(params));
+            case "lof" ->
+                    LOF.fit(x, LOF.Options.of(params));
+            case "ocsvm", "one-class-svm" -> {
+                MercerKernel<double[]> kernel = MercerKernel.of(params.getProperty("smile.svm.kernel", "linear"));
+                yield smile.anomaly.SVM.fit(x, kernel, smile.anomaly.SVM.Options.of(params));
+            }
+            default ->
+                    throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
+        };
+    }
+
+    /**
+     * Resolves the anomaly decision threshold for the specified algorithm.
+     */
+    private static double defaultAnomalyThreshold(String algorithm, Properties params) {
+        String explicit = params.getProperty("smile.anomaly.threshold");
+        if (explicit != null && !explicit.isBlank()) {
+            return Double.parseDouble(explicit.trim());
+        }
+        return switch (algorithm) {
+            case "isolation-forest", "iforest" ->
+                    Double.parseDouble(params.getProperty("smile.isolation_forest.threshold", "0.5"));
+            case "lof" ->
+                    Double.parseDouble(params.getProperty("smile.lof.threshold", "1.5"));
+            case "ocsvm", "one-class-svm" ->
+                    Double.parseDouble(params.getProperty("smile.svm.threshold", "0.0"));
             default ->
                     throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
         };

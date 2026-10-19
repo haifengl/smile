@@ -70,6 +70,8 @@ public class Train {
     private boolean clustering = false;
     /** The problem type is vector quantization. */
     private boolean quantizer = false;
+    /** The problem type is anomaly detection. */
+    private boolean anomaly = false;
     /** The hyperparameter key-value pairs. */
     private Properties params = new Properties();
 
@@ -95,6 +97,14 @@ public class Train {
             Formula modelFormula = formula != null ? Formula.of(formula) : Formula.rhs(".");
             var m = Model.quantizer(algorithm, modelFormula, data, params);
             System.out.println("Trained " + m.algorithm() + " vector quantizer on " + data.size() + " rows.");
+            saveModel(m, path);
+            return;
+        }
+
+        if (anomaly) {
+            Formula modelFormula = formula != null ? Formula.of(formula) : Formula.rhs(".");
+            var m = Model.anomaly(algorithm, modelFormula, data, params);
+            System.out.println("Trained " + m.algorithm() + " anomaly detector on " + data.size() + " rows.");
             saveModel(m, path);
             return;
         }
@@ -776,6 +786,75 @@ public class Train {
         if (transform != null) params.setProperty("smile.feature.transform", transform);
         if (branching > 0) params.setProperty("smile.birch.branching", String.valueOf(branching));
         if (leaves > 0) params.setProperty("smile.birch.leaves", String.valueOf(leaves));
+        run();
+    }
+
+    @Command(name = "isolation-forest", aliases = {"iforest"}, description = "Isolation Forest Anomaly Detection",
+             mixinStandardHelpOptions = true)
+    void isolationForest(
+            @Option(names = {"--transform"}, paramLabel = "<rule>", description = "The feature transformation <standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>.")
+            String transform,
+            @Option(names = {"--trees"}, paramLabel = "<trees>", description = "The number of isolation trees.")
+            int trees,
+            @Option(names = {"--max-depth"}, paramLabel = "<depth>", description = "The maximum tree depth.")
+            int maxDepth,
+            @Option(names = {"--sampling"}, paramLabel = "<rate>", description = "The subsampling rate in (0, 1).")
+            double sampling,
+            @Option(names = {"--extension-level"}, paramLabel = "<level>", description = "The Extended Isolation Forest extension level (0 for standard Isolation Forest).")
+            int extensionLevel,
+            @Option(names = {"--threshold"}, paramLabel = "<score>", description = "The anomaly score threshold in (0, 1] (default 0.5).")
+            Double threshold) throws Exception {
+
+        algorithm = "isolation-forest";
+        anomaly = true;
+        if (transform != null) params.setProperty("smile.feature.transform", transform);
+        if (trees > 0) params.setProperty("smile.isolation_forest.trees", String.valueOf(trees));
+        if (maxDepth > 0) params.setProperty("smile.isolation_forest.max_depth", String.valueOf(maxDepth));
+        if (sampling > 0) params.setProperty("smile.isolation_forest.sampling_rate", String.valueOf(sampling));
+        if (extensionLevel > 0) params.setProperty("smile.isolation_forest.extension_level", String.valueOf(extensionLevel));
+        if (threshold != null) params.setProperty("smile.anomaly.threshold", String.valueOf(threshold));
+        run();
+    }
+
+    @Command(name = "lof", description = "Local Outlier Factor (LOF) Anomaly Detection",
+             mixinStandardHelpOptions = true)
+    void lof(
+            @Option(names = {"--transform"}, paramLabel = "<rule>", description = "The feature transformation <standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>.")
+            String transform,
+            @Option(names = {"-k", "--neighbors"}, paramLabel = "<k>", description = "The number of nearest neighbors.")
+            int k,
+            @Option(names = {"--threshold"}, paramLabel = "<score>", description = "The LOF anomaly score threshold (default 1.5).")
+            Double threshold) throws Exception {
+
+        algorithm = "lof";
+        anomaly = true;
+        if (transform != null) params.setProperty("smile.feature.transform", transform);
+        if (k > 0) params.setProperty("smile.lof.k", String.valueOf(k));
+        if (threshold != null) params.setProperty("smile.anomaly.threshold", String.valueOf(threshold));
+        run();
+    }
+
+    @Command(name = "ocsvm", aliases = {"one-class-svm"}, description = "One-Class SVM Anomaly / Novelty Detection",
+             mixinStandardHelpOptions = true)
+    void ocsvm(
+            @Option(names = {"--transform"}, paramLabel = "<rule>", description = "The feature transformation <standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>.")
+            String transform,
+            @Option(names = {"--kernel"}, paramLabel = "<function>", required = true, description = "The kernel function.")
+            String kernel,
+            @Option(names = {"--nu"}, paramLabel = "<value>", description = "Upper bound on the fraction of outliers in (0, 1].")
+            double nu,
+            @Option(names = {"--tolerance"}, paramLabel = "<value>", description = "The tolerance of convergence test.")
+            double tolerance,
+            @Option(names = {"--threshold"}, paramLabel = "<score>", description = "The decision function threshold below which a sample is flagged as an anomaly (default 0.0).")
+            Double threshold) throws Exception {
+
+        algorithm = "ocsvm";
+        anomaly = true;
+        params.setProperty("smile.svm.kernel", kernel);
+        if (transform != null) params.setProperty("smile.feature.transform", transform);
+        if (nu > 0) params.setProperty("smile.svm.nu", String.valueOf(nu));
+        if (tolerance > 0) params.setProperty("smile.svm.tolerance", String.valueOf(tolerance));
+        if (threshold != null) params.setProperty("smile.anomaly.threshold", String.valueOf(threshold));
         run();
     }
 }

@@ -751,4 +751,64 @@ public class InferenceResourceTest {
             java.nio.file.Files.deleteIfExists(tempModel);
         }
     }
+
+    // --------------------------------------------------------------- AnomalyModel
+    @Test
+    public void testGivenAnomalyModelWhenLoadedAndQueriedThenReturnsPredictionAndScore() throws Exception {
+        // Given an IsolationForest AnomalyModel saved to a temporary .sml file
+        var data = smile.io.Read.arff(smile.io.Paths.getTestData("weka/iris.arff"));
+        var params = new Properties();
+        params.setProperty("smile.isolation_forest.trees", "50");
+        params.setProperty("smile.anomaly.threshold", "0.55");
+        var anomalyModel = smile.model.Model.anomaly("isolation-forest", Formula.lhs("class"), data, params);
+        anomalyModel.setTag(smile.model.Model.ID, "iris_iforest");
+        anomalyModel.setTag(smile.model.Model.VERSION, "1");
+        Path tempModel = smile.io.Write.object(anomalyModel);
+
+        try {
+            String escapedPath = tempModel.toAbsolutePath().toString().replace("\\", "\\\\");
+            given()
+                .contentType(ContentType.JSON)
+                .body("{\"model\":\"" + escapedPath + "\",\"kind\":\"smile\"}")
+                .when().post("/api/v1/models/load")
+                .then()
+                    .statusCode(200)
+                    .body("id", is("iris_iforest-1"));
+
+            // GET /api/v1/models/iris_iforest-1 includes IsolationForest details in smile.train
+            given()
+                .when().get("/api/v1/models/iris_iforest-1")
+                .then()
+                    .statusCode(200)
+                    .body("kind", is("isolation-forest"))
+                    .body("smile.train.trees", is(50))
+                    .body("smile.train.extension_level", is(0))
+                    .body("smile.train.threshold", is(0.55f));
+
+            // POST /api/v1/smile/iris_iforest-1 on normal sample returns boolean prediction and score
+            var inlier = "{\"sepallength\":5.1,\"sepalwidth\":3.5,\"petallength\":1.4,\"petalwidth\":0.2}";
+            given()
+                .contentType(ContentType.JSON)
+                .body(inlier)
+                .when().post("/api/v1/smile/iris_iforest-1")
+                .then()
+                    .statusCode(200)
+                    .body("prediction", is(false))
+                    .body("score", notNullValue());
+
+            // POST /api/v1/smile/iris_iforest-1 on extreme outlier returns prediction = true
+            var outlier = "{\"sepallength\":100.0,\"sepalwidth\":100.0,\"petallength\":100.0,\"petalwidth\":100.0}";
+            given()
+                .contentType(ContentType.JSON)
+                .body(outlier)
+                .when().post("/api/v1/smile/iris_iforest-1")
+                .then()
+                    .statusCode(200)
+                    .body("prediction", is(true))
+                    .body("score", notNullValue());
+        } finally {
+            given().when().post("/api/v1/smile/iris_iforest-1/unload?timeout=5");
+            java.nio.file.Files.deleteIfExists(tempModel);
+        }
+    }
 }

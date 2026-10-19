@@ -3224,6 +3224,9 @@
    "type": "smile.math.rbf.ThinPlateRadialBasis"
   },
   {
+   "type": "smile.model.AnomalyModel"
+  },
+  {
    "type": "smile.model.ClassificationModel"
   },
   {
@@ -4776,6 +4779,9 @@
   },
   {
    "type": "smile.math.rbf.ThinPlateRadialBasis[]"
+  },
+  {
+   "type": "smile.model.AnomalyModel[]"
   },
   {
    "type": "smile.model.ClassificationModel[]"
