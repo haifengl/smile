@@ -28,25 +28,31 @@ import tools.jackson.databind.annotation.JsonSerialize;
 
 /**
  * The model prediction containing the predicted output value, optional class
- * probability estimates for soft classification models, optional cluster
- * centroid coordinates for clustering models, and optional explanations.
+ * probability estimates for soft classification models, optional cluster/prototype
+ * centroid coordinates for clustering and vector quantization models, optional
+ * quantization error, and optional explanations.
  *
- * @param output        the predicted value (class label, cluster label, or regression output).
+ * @param output        the predicted value (class label, cluster label, prototype index/grid cell, or regression output).
  * @param probabilities posteriori class probabilities for soft classifiers;
- *                      {@code null} for hard classifiers, regressors, and clustering models.
- * @param centroid      cluster centroid coordinates for clustering models;
+ *                      {@code null} for hard classifiers, regressors, clustering, and vector quantization models.
+ * @param centroid      cluster centroid or prototype code vector coordinates;
  *                      {@code null} for classifiers and regressors.
+ * @param error         quantization error (distance to prototype) for vector quantization models;
+ *                      {@code null} otherwise.
  * @param explanations  the prediction explanations; {@code null} if not requested.
  * @author Haifeng Li
  */
 public record Prediction(
         @JsonProperty("prediction")
-        Number output,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        Object output,
         @JsonInclude(JsonInclude.Include.NON_NULL)
         @JsonSerialize(using = ProbabilitySerializer.class)
         double[] probabilities,
         @JsonInclude(JsonInclude.Include.NON_NULL)
         double[] centroid,
+        @JsonInclude(JsonInclude.Include.NON_NULL)
+        Double error,
         @JsonInclude(JsonInclude.Include.NON_NULL)
         Explanations explanations
 ) implements Serializable {
@@ -61,7 +67,7 @@ public record Prediction(
      * @param output the predicted value.
      */
     public Prediction(Number output) {
-        this(output, null, null, null);
+        this(output, null, null, null, null);
     }
 
     /**
@@ -71,7 +77,7 @@ public record Prediction(
      * @param probabilities posteriori class probabilities.
      */
     public Prediction(Number output, double[] probabilities) {
-        this(output, probabilities, null, null);
+        this(output, probabilities, null, null, null);
     }
 
     /**
@@ -82,7 +88,19 @@ public record Prediction(
      * @param explanations  the prediction explanations.
      */
     public Prediction(Number output, double[] probabilities, Explanations explanations) {
-        this(output, probabilities, null, explanations);
+        this(output, probabilities, null, null, explanations);
+    }
+
+    /**
+     * Constructs a prediction with optional probability estimates, centroid, and explanations.
+     *
+     * @param output        the predicted value.
+     * @param probabilities posteriori class probabilities.
+     * @param centroid      cluster centroid coordinates.
+     * @param explanations  the prediction explanations.
+     */
+    public Prediction(Number output, double[] probabilities, double[] centroid, Explanations explanations) {
+        this(output, probabilities, centroid, null, explanations);
     }
 
     /**
@@ -101,11 +119,16 @@ public record Prediction(
     @Override
     public String toString() {
         if (output == null) return "null";
-        String s = (output instanceof Double d)
-                ? smile.util.Strings.format(d.doubleValue())
-                : (output instanceof Float f)
-                ? smile.util.Strings.format(f.floatValue())
-                : output.toString();
+        String s;
+        if (output instanceof Double d) {
+            s = smile.util.Strings.format(d.doubleValue());
+        } else if (output instanceof Float f) {
+            s = smile.util.Strings.format(f.floatValue());
+        } else if (output instanceof int[] coords) {
+            s = Arrays.toString(coords);
+        } else {
+            s = output.toString();
+        }
         if (probabilities != null) {
             s += Arrays.stream(probabilities)
                     .mapToObj(p -> String.format(Locale.US, "%.4f", p))
@@ -115,6 +138,9 @@ public record Prediction(
             s += Arrays.stream(centroid)
                     .mapToObj(smile.util.Strings::format)
                     .collect(Collectors.joining(" ", " ", ""));
+        }
+        if (error != null) {
+            s += " " + smile.util.Strings.format(error.doubleValue());
         }
         return s;
     }

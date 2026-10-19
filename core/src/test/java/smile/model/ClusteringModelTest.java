@@ -63,7 +63,7 @@ public class ClusteringModelTest {
         assertTrue(cluster >= 0 && cluster < 3);
 
         Prediction pred = model.infer(iris.data().get(0));
-        assertEquals(cluster, pred.output().intValue());
+        assertEquals(cluster, ((Number) pred.output()).intValue());
         assertNull(pred.probabilities());
         assertNotNull(pred.centroid());
         assertEquals(4, pred.centroid().length);
@@ -103,7 +103,7 @@ public class ClusteringModelTest {
         Prediction[] predictions = model.infer(featuresOnly);
         assertEquals(featuresOnly.size(), predictions.length);
         for (Prediction p : predictions) {
-            int c = p.output().intValue();
+            int c = ((Number) p.output()).intValue();
             assertTrue(c >= 0 && c < 3);
             assertArrayEquals(model.center(c), p.centroid(), 1E-12);
         }

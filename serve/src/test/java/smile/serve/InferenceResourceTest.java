@@ -606,4 +606,149 @@ public class InferenceResourceTest {
             java.nio.file.Files.deleteIfExists(tempModel);
         }
     }
+
+    // --------------------------------------------------------------- VectorQuantizerModel & Online Update
+    @Test
+    public void testGivenVectorQuantizerSOMWhenLoadedQueriedAndUpdatedOnlineThenSucceeds() throws Exception {
+        // Given a SOM VectorQuantizerModel saved to a temporary .sml file
+        var data = smile.io.Read.arff(smile.io.Paths.getTestData("weka/iris.arff"));
+        var params = new Properties();
+        params.setProperty("smile.som.nrow", "3");
+        params.setProperty("smile.som.ncol", "3");
+        params.setProperty("smile.som.epochs", "5");
+        var somModel = smile.model.Model.quantizer("som", Formula.lhs("class"), data, params);
+        somModel.setTag(smile.model.Model.ID, "iris_som");
+        somModel.setTag(smile.model.Model.VERSION, "1");
+        Path tempModel = smile.io.Write.object(somModel);
+
+        try {
+            String escapedPath = tempModel.toAbsolutePath().toString().replace("\\", "\\\\");
+            given()
+                .contentType(ContentType.JSON)
+                .body("{\"model\":\"" + escapedPath + "\",\"kind\":\"smile\"}")
+                .when().post("/api/v1/models/load")
+                .then()
+                    .statusCode(200)
+                    .body("id", is("iris_som-1"));
+
+            // Metadata indicates online = true
+            given()
+                .when().get("/api/v1/smile/iris_som-1")
+                .then()
+                    .statusCode(200)
+                    .body("algorithm", is("som"))
+                    .body("online", is(true));
+
+            // GET /api/v1/models/iris_som-1 includes SOM lattice details
+            given()
+                .when().get("/api/v1/models/iris_som-1")
+                .then()
+                    .statusCode(200)
+                    .body("kind", is("som"))
+                    .body("smile.train.online", is(true))
+                    .body("smile.train.nrow", is(3))
+                    .body("smile.train.ncol", is(3))
+                    .body("smile.train.neurons", is(9));
+
+            // POST /api/v1/smile/iris_som-1 returns 2D grid prediction [row, col], centroid, and error
+            var sample = "{\"sepallength\":5.1,\"sepalwidth\":3.5,\"petallength\":1.4,\"petalwidth\":0.2}";
+            given()
+                .contentType(ContentType.JSON)
+                .body(sample)
+                .when().post("/api/v1/smile/iris_som-1")
+                .then()
+                    .statusCode(200)
+                    .body("prediction", hasSize(2))
+                    .body("centroid", hasSize(4))
+                    .body("error", notNullValue());
+
+            // Online update single JSON sample with ?persist=true
+            given()
+                .contentType(ContentType.JSON)
+                .body(sample)
+                .when().post("/api/v1/smile/iris_som-1/update?persist=true")
+                .then()
+                    .statusCode(200)
+                    .body("status", is("updated"))
+                    .body("id", is("iris_som-1"))
+                    .body("updated", is(1))
+                    .body("persisted", is(true));
+
+            // Online update batch CSV stream
+            var csvBody = "5.1,3.5,1.4,0.2\n6.7,3.0,5.2,2.3\n";
+            given()
+                .contentType(ContentType.TEXT)
+                .body(csvBody)
+                .when().post("/api/v1/smile/iris_som-1/update/stream?persist=true")
+                .then()
+                    .statusCode(200)
+                    .body("status", is("updated"))
+                    .body("updated", is(2))
+                    .body("persisted", is(true));
+
+            // Updating a non-online model (iris_random_forest-1) returns 400 Bad Request
+            given()
+                .contentType(ContentType.JSON)
+                .body(sample)
+                .when().post("/api/v1/smile/iris_random_forest-1/update")
+                .then()
+                    .statusCode(400);
+        } finally {
+            given().when().post("/api/v1/smile/iris_som-1/unload?timeout=5");
+            java.nio.file.Files.deleteIfExists(tempModel);
+        }
+    }
+
+    @Test
+    public void testGivenOnlineSupervisedModelWhenUpdatedOnlineThenSucceeds() throws Exception {
+        // Given an online LogisticRegression ClassificationModel saved to a temporary .sml file
+        var data = smile.io.Read.arff(smile.io.Paths.getTestData("weka/iris.arff"));
+        var logitModel = smile.model.Model.classification("logistic", Formula.lhs("class"), data, null, new Properties());
+        logitModel.setTag(smile.model.Model.ID, "iris_logit");
+        logitModel.setTag(smile.model.Model.VERSION, "1");
+        Path tempModel = smile.io.Write.object(logitModel);
+
+        try {
+            String escapedPath = tempModel.toAbsolutePath().toString().replace("\\", "\\\\");
+            given()
+                .contentType(ContentType.JSON)
+                .body("{\"model\":\"" + escapedPath + "\",\"kind\":\"smile\"}")
+                .when().post("/api/v1/models/load")
+                .then()
+                    .statusCode(200)
+                    .body("id", is("iris_logit-1"));
+
+            // Metadata exposes online = true and response = "class"
+            given()
+                .when().get("/api/v1/smile/iris_logit-1")
+                .then()
+                    .statusCode(200)
+                    .body("online", is(true))
+                    .body("response", is("class"))
+                    .body("responseType", is("integer"));
+
+            // Update with target field "class"
+            var sampleWithTarget = "{\"sepallength\":5.1,\"sepalwidth\":3.5,\"petallength\":1.4,\"petalwidth\":0.2,\"class\":0}";
+            given()
+                .contentType(ContentType.JSON)
+                .body(sampleWithTarget)
+                .when().post("/api/v1/smile/iris_logit-1/update")
+                .then()
+                    .statusCode(200)
+                    .body("status", is("updated"))
+                    .body("updated", is(1));
+
+            // Missing target field returns 400 Bad Request
+            var sampleWithoutTarget = "{\"sepallength\":5.1,\"sepalwidth\":3.5,\"petallength\":1.4,\"petalwidth\":0.2}";
+            given()
+                .contentType(ContentType.JSON)
+                .body(sampleWithoutTarget)
+                .when().post("/api/v1/smile/iris_logit-1/update")
+                .then()
+                    .statusCode(400);
+        } finally {
+            given().when().post("/api/v1/smile/iris_logit-1/unload?timeout=5");
+            java.nio.file.Files.deleteIfExists(tempModel);
+        }
+    }
 }

@@ -244,6 +244,11 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
         }
 
         @Override
+        public void update(Tuple x, int y) {
+            model.update(vectorize(x), y);
+        }
+
+        @Override
         public double[] shap(Tuple x) {
             return shap(x, null);
         }

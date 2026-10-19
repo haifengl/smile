@@ -77,7 +77,7 @@ public class PredictionTest {
         var row = segment.test().get(0);
         var resp = model.infer(row, true, true);
         assertNotNull(resp);
-        assertEquals(resp.output(), Integer.valueOf(resp.output().intValue()));
+        assertEquals(resp.output(), ((Number) resp.output()).intValue());
         assertNotNull(resp.probabilities());
         assertNotNull(resp.explanations());
         assertTrue(resp.explanations().shap() instanceof double[][]);

@@ -418,7 +418,13 @@ public class LinearModel implements DataFrameRegression, SHAP<Tuple> {
      * @param data the training data.
      */
     public void update(Tuple data) {
-        update(formula.x(data).toArray(bias, CategoricalEncoder.DUMMY), formula.y(data));
+        update(data, formula.y(data));
+    }
+
+    @Override
+    public void update(Tuple x, double y) {
+        Tuple xt = x.schema().equals(schema) ? x : formula.x(x);
+        update(xt.toArray(bias, CategoricalEncoder.DUMMY), y);
     }
 
     /**

@@ -68,6 +68,8 @@ public class Train {
     private boolean classification = true;
     /** The problem type is clustering. */
     private boolean clustering = false;
+    /** The problem type is vector quantization. */
+    private boolean quantizer = false;
     /** The hyperparameter key-value pairs. */
     private Properties params = new Properties();
 
@@ -85,6 +87,14 @@ public class Train {
             Formula modelFormula = formula != null ? Formula.of(formula) : Formula.rhs(".");
             var m = Model.clustering(algorithm, modelFormula, data, params);
             System.out.println(m.clustering());
+            saveModel(m, path);
+            return;
+        }
+
+        if (quantizer) {
+            Formula modelFormula = formula != null ? Formula.of(formula) : Formula.rhs(".");
+            var m = Model.quantizer(algorithm, modelFormula, data, params);
+            System.out.println("Trained " + m.algorithm() + " vector quantizer on " + data.size() + " rows.");
             saveModel(m, path);
             return;
         }
@@ -628,6 +638,144 @@ public class Train {
         if (iterations > 0) params.setProperty("smile.deterministic_annealing.iterations", String.valueOf(iterations));
         if (tolerance > 0) params.setProperty("smile.deterministic_annealing.tolerance", String.valueOf(tolerance));
         if (splitTolerance > 0) params.setProperty("smile.deterministic_annealing.split_tolerance", String.valueOf(splitTolerance));
+        run();
+    }
+
+    @Command(name = "som", description = "Self-Organizing Map",
+             mixinStandardHelpOptions = true)
+    void som(
+            @Option(names = {"--transform"}, paramLabel = "<rule>", description = "The feature transformation <standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>.")
+            String transform,
+            @Option(names = {"--nrow"}, paramLabel = "<rows>", description = "The number of rows in the SOM lattice.")
+            int nrow,
+            @Option(names = {"--ncol"}, paramLabel = "<cols>", description = "The number of columns in the SOM lattice.")
+            int ncol,
+            @Option(names = {"--epochs"}, paramLabel = "<value>", description = "The number of training epochs.")
+            int epochs,
+            @Option(names = {"--alpha"}, paramLabel = "<schedule>", description = "The learning rate schedule.")
+            String alpha,
+            @Option(names = {"--neighborhood"}, paramLabel = "<function>", description = "The neighborhood function <Gaussian(sigma, T), bubble(r), square(w), triangle(sigma, T), MexicanHat(sigma, T)>.")
+            String neighborhood) throws Exception {
+
+        algorithm = "som";
+        quantizer = true;
+        if (transform != null) params.setProperty("smile.feature.transform", transform);
+        if (nrow > 0) params.setProperty("smile.som.nrow", String.valueOf(nrow));
+        if (ncol > 0) params.setProperty("smile.som.ncol", String.valueOf(ncol));
+        if (epochs > 0) params.setProperty("smile.som.epochs", String.valueOf(epochs));
+        if (alpha != null) params.setProperty("smile.som.alpha", alpha);
+        if (neighborhood != null) params.setProperty("smile.som.neighborhood", neighborhood);
+        run();
+    }
+
+    @Command(name = "neural-gas", description = "Neural Gas",
+             mixinStandardHelpOptions = true)
+    void neuralGas(
+            @Option(names = {"--transform"}, paramLabel = "<rule>", description = "The feature transformation <standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>.")
+            String transform,
+            @Option(names = {"-k", "--neurons"}, paramLabel = "<k>", description = "The number of neurons.")
+            int k,
+            @Option(names = {"--epochs"}, paramLabel = "<value>", description = "The number of training epochs.")
+            int epochs,
+            @Option(names = {"--alpha"}, paramLabel = "<schedule>", description = "The learning rate schedule.")
+            String alpha,
+            @Option(names = {"--theta"}, paramLabel = "<schedule>", description = "The neighborhood decay schedule.")
+            String theta,
+            @Option(names = {"--lifetime"}, paramLabel = "<schedule>", description = "The connection lifetime schedule.")
+            String lifetime) throws Exception {
+
+        algorithm = "neural-gas";
+        quantizer = true;
+        if (transform != null) params.setProperty("smile.feature.transform", transform);
+        if (k > 0) params.setProperty("smile.neural_gas.k", String.valueOf(k));
+        if (epochs > 0) params.setProperty("smile.neural_gas.epochs", String.valueOf(epochs));
+        if (alpha != null) params.setProperty("smile.neural_gas.alpha", alpha);
+        if (theta != null) params.setProperty("smile.neural_gas.theta", theta);
+        if (lifetime != null) params.setProperty("smile.neural_gas.lifetime", lifetime);
+        run();
+    }
+
+    @Command(name = "growing-neural-gas", aliases = {"gng"}, description = "Growing Neural Gas",
+             mixinStandardHelpOptions = true)
+    void growingNeuralGas(
+            @Option(names = {"--transform"}, paramLabel = "<rule>", description = "The feature transformation <standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>.")
+            String transform,
+            @Option(names = {"--epochs"}, paramLabel = "<value>", description = "The number of training epochs.")
+            int epochs,
+            @Option(names = {"--eps-best"}, paramLabel = "<value>", description = "The learning rate for the best matching neuron.")
+            double epsBest,
+            @Option(names = {"--eps-neighbor"}, paramLabel = "<value>", description = "The learning rate for topological neighbors.")
+            double epsNeighbor,
+            @Option(names = {"--edge-lifetime"}, paramLabel = "<value>", description = "The maximum age of edges.")
+            int edgeLifetime,
+            @Option(names = {"--lambda"}, paramLabel = "<value>", description = "The step interval to insert a new neuron.")
+            int lambda,
+            @Option(names = {"--alpha"}, paramLabel = "<value>", description = "The error reduction factor when splitting.")
+            double alpha,
+            @Option(names = {"--beta"}, paramLabel = "<value>", description = "The global error decay factor per step.")
+            double beta) throws Exception {
+
+        algorithm = "growing-neural-gas";
+        quantizer = true;
+        if (transform != null) params.setProperty("smile.feature.transform", transform);
+        if (epochs > 0) params.setProperty("smile.gng.epochs", String.valueOf(epochs));
+        if (epsBest > 0) params.setProperty("smile.gng.eps_best", String.valueOf(epsBest));
+        if (epsNeighbor > 0) params.setProperty("smile.gng.eps_neighbor", String.valueOf(epsNeighbor));
+        if (edgeLifetime > 0) params.setProperty("smile.gng.edge_lifetime", String.valueOf(edgeLifetime));
+        if (lambda > 0) params.setProperty("smile.gng.lambda", String.valueOf(lambda));
+        if (alpha > 0) params.setProperty("smile.gng.alpha", String.valueOf(alpha));
+        if (beta > 0) params.setProperty("smile.gng.beta", String.valueOf(beta));
+        run();
+    }
+
+    @Command(name = "neural-map", description = "NeuralMap Competitive Learning",
+             mixinStandardHelpOptions = true)
+    void neuralMap(
+            @Option(names = {"--transform"}, paramLabel = "<rule>", description = "The feature transformation <standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>.")
+            String transform,
+            @Option(names = {"--radius"}, paramLabel = "<value>", required = true, description = "The distance threshold to activate the nearest neuron.")
+            double radius,
+            @Option(names = {"--epochs"}, paramLabel = "<value>", description = "The number of training epochs.")
+            int epochs,
+            @Option(names = {"--eps-best"}, paramLabel = "<value>", description = "The learning rate for the activated neuron.")
+            double epsBest,
+            @Option(names = {"--eps-neighbor"}, paramLabel = "<value>", description = "The learning rate for neighbors.")
+            double epsNeighbor,
+            @Option(names = {"--edge-lifetime"}, paramLabel = "<value>", description = "The maximum age of edges.")
+            int edgeLifetime,
+            @Option(names = {"--beta"}, paramLabel = "<value>", description = "The freshness decay factor.")
+            double beta) throws Exception {
+
+        algorithm = "neural-map";
+        quantizer = true;
+        params.setProperty("smile.neural_map.radius", String.valueOf(radius));
+        if (transform != null) params.setProperty("smile.feature.transform", transform);
+        if (epochs > 0) params.setProperty("smile.neural_map.epochs", String.valueOf(epochs));
+        if (epsBest > 0) params.setProperty("smile.neural_map.eps_best", String.valueOf(epsBest));
+        if (epsNeighbor > 0) params.setProperty("smile.neural_map.eps_neighbor", String.valueOf(epsNeighbor));
+        if (edgeLifetime > 0) params.setProperty("smile.neural_map.edge_lifetime", String.valueOf(edgeLifetime));
+        if (beta > 0) params.setProperty("smile.neural_map.beta", String.valueOf(beta));
+        run();
+    }
+
+    @Command(name = "birch", description = "BIRCH Hierarchical Clustering / Quantization",
+             mixinStandardHelpOptions = true)
+    void birch(
+            @Option(names = {"--transform"}, paramLabel = "<rule>", description = "The feature transformation <standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>.")
+            String transform,
+            @Option(names = {"--branching"}, paramLabel = "<B>", description = "The branching factor of non-leaf nodes.")
+            int branching,
+            @Option(names = {"--leaves"}, paramLabel = "<L>", description = "The maximum number of entries in leaf nodes.")
+            int leaves,
+            @Option(names = {"--radius"}, paramLabel = "<T>", required = true, description = "The maximum radius of a sub-cluster.")
+            double radius) throws Exception {
+
+        algorithm = "birch";
+        quantizer = true;
+        params.setProperty("smile.birch.radius", String.valueOf(radius));
+        if (transform != null) params.setProperty("smile.feature.transform", transform);
+        if (branching > 0) params.setProperty("smile.birch.branching", String.valueOf(branching));
+        if (leaves > 0) params.setProperty("smile.birch.leaves", String.valueOf(leaves));
         run();
     }
 }

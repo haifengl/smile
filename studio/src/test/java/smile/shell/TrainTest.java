@@ -558,5 +558,63 @@ public class TrainTest {
         assertEquals(0, exitDa);
         assertInstanceOf(smile.model.ClusteringModel.class, Read.object(daFile));
     }
+
+    // ------------------------------------------------------------------
+    // Vector Quantization
+    // ------------------------------------------------------------------
+
+    @Test
+    public void testTrainVectorQuantizers() throws Exception {
+        System.out.println("Train SOM, NeuralGas, GNG, NeuralMap, and BIRCH (vector quantization)");
+        Path somFile = tempDir.resolve("som.sml");
+        int exitSom = new CommandLine(new Train()).execute(
+            "-d", irisArff().toString(),
+            "--formula", "class ~ .",
+            "-m", somFile.toString(),
+            "som", "--nrow", "4", "--ncol", "4", "--epochs", "5"
+        );
+        assertEquals(0, exitSom);
+        assertInstanceOf(smile.model.VectorQuantizerModel.class, Read.object(somFile));
+
+        Path ngFile = tempDir.resolve("ng.sml");
+        int exitNg = new CommandLine(new Train()).execute(
+            "-d", irisArff().toString(),
+            "--formula", "class ~ .",
+            "-m", ngFile.toString(),
+            "neural-gas", "-k", "5", "--epochs", "5"
+        );
+        assertEquals(0, exitNg);
+        assertInstanceOf(smile.model.VectorQuantizerModel.class, Read.object(ngFile));
+
+        Path gngFile = tempDir.resolve("gng.sml");
+        int exitGng = new CommandLine(new Train()).execute(
+            "-d", irisArff().toString(),
+            "--formula", "class ~ .",
+            "-m", gngFile.toString(),
+            "gng", "--epochs", "5", "--lambda", "50"
+        );
+        assertEquals(0, exitGng);
+        assertInstanceOf(smile.model.VectorQuantizerModel.class, Read.object(gngFile));
+
+        Path nmFile = tempDir.resolve("nm.sml");
+        int exitNm = new CommandLine(new Train()).execute(
+            "-d", irisArff().toString(),
+            "--formula", "class ~ .",
+            "-m", nmFile.toString(),
+            "neural-map", "--radius", "1.5", "--epochs", "5"
+        );
+        assertEquals(0, exitNm);
+        assertInstanceOf(smile.model.VectorQuantizerModel.class, Read.object(nmFile));
+
+        Path birchFile = tempDir.resolve("birch.sml");
+        int exitBirch = new CommandLine(new Train()).execute(
+            "-d", irisArff().toString(),
+            "--formula", "class ~ .",
+            "-m", birchFile.toString(),
+            "birch", "--radius", "1.0", "--branching", "5", "--leaves", "5"
+        );
+        assertEquals(0, exitBirch);
+        assertInstanceOf(smile.model.VectorQuantizerModel.class, Read.object(birchFile));
+    }
 }
 

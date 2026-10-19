@@ -45,9 +45,18 @@ import smile.feature.transform.Scaler;
 import smile.feature.transform.Standardizer;
 import smile.feature.transform.WinsorScaler;
 import smile.regression.*;
+import smile.math.MathEx;
+import smile.util.function.TimeFunction;
 import smile.validation.ClassificationMetrics;
 import smile.validation.CrossValidation;
 import smile.validation.RegressionMetrics;
+import smile.vq.BIRCH;
+import smile.vq.GrowingNeuralGas;
+import smile.vq.Neighborhood;
+import smile.vq.NeuralGas;
+import smile.vq.NeuralMap;
+import smile.vq.SOM;
+import smile.vq.VectorQuantizer;
 
 /**
  * Generic model interface.
@@ -110,6 +119,42 @@ public interface Model {
      */
     default void setTag(String key, String value) {
         tags().setProperty(key, value);
+    }
+
+    /**
+     * Returns true if this model supports online learning updates.
+     *
+     * @return true if online learning is supported.
+     */
+    default boolean isOnline() {
+        return false;
+    }
+
+    /**
+     * Online updates the model with a single observation.
+     *
+     * @param x the input tuple (including target variable if supervised).
+     * @throws UnsupportedOperationException if online learning is not supported.
+     */
+    default void update(Tuple x) {
+        throw new UnsupportedOperationException("Online update is not supported for algorithm: " + algorithm());
+    }
+
+    /**
+     * Online updates the model sequentially with a data frame of observations.
+     *
+     * @param data the input data frame.
+     * @throws UnsupportedOperationException if online learning is not supported.
+     */
+    default void update(DataFrame data) {
+        if (!isOnline()) {
+            throw new UnsupportedOperationException("Online update is not supported for algorithm: " + algorithm());
+        }
+        formula().bind(data.schema());
+        int n = data.size();
+        for (int i = 0; i < n; i++) {
+            update(data.get(i));
+        }
     }
 
     /**
@@ -533,6 +578,136 @@ public interface Model {
                     GMeans.fit(x, Clustering.Options.of(params));
             case "deterministic-annealing", "da" ->
                     DeterministicAnnealing.fit(x, DeterministicAnnealing.Options.of(params));
+            default ->
+                    throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
+        };
+    }
+
+    /**
+     * Trains a vector quantization model.
+     * @param algorithm the vector quantizer algorithm ("som", "neural-gas", "growing-neural-gas", "gng", "neural-map", or "birch").
+     * @param formula the feature selection formula; if {@code null}, all columns are included.
+     * @param data the training data.
+     * @param params the hyperparameters.
+     * @return the vector quantization model.
+     */
+    static VectorQuantizerModel quantizer(String algorithm, Formula formula, DataFrame data, Properties params) {
+        Formula f = formula != null ? formula : Formula.rhs(".");
+        Formula expanded = f.expand(data.schema());
+        DataFrame X = expanded.x(data);
+        StructType schema = X.schema();
+        Properties effectiveParams = params != null ? params : new Properties();
+        Transform transform = fitTransform(X, effectiveParams.getProperty("smile.feature.transform"));
+        if (transform != null) {
+            X = transform.apply(X);
+        }
+        double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
+        VectorQuantizer model = fitQuantizer(algorithm, x, effectiveParams);
+        return new VectorQuantizerModel(algorithm, schema, expanded, model, transform, (Properties) effectiveParams.clone());
+    }
+
+    /**
+     * Fits a vector quantization algorithm on a numeric feature matrix.
+     * @param algorithm the vector quantizer algorithm ("som", "neural-gas", "growing-neural-gas", "gng", "neural-map", or "birch").
+     * @param x the input feature matrix.
+     * @param params the hyperparameters.
+     * @return the fitted vector quantizer.
+     */
+    static VectorQuantizer fitQuantizer(String algorithm, double[][] x, Properties params) {
+        int n = x.length;
+        int d = x[0].length;
+        return switch (algorithm) {
+            case "som" -> {
+                int nrow = Integer.parseInt(params.getProperty("smile.som.nrow", "10"));
+                int ncol = Integer.parseInt(params.getProperty("smile.som.ncol", "10"));
+                int epochs = Integer.parseInt(params.getProperty("smile.som.epochs", "20"));
+                int T = Math.max(1, n * epochs);
+                String alphaSpec = params.getProperty("smile.som.alpha");
+                TimeFunction alpha = alphaSpec != null && !alphaSpec.isBlank()
+                        ? TimeFunction.of(alphaSpec)
+                        : TimeFunction.linear(0.1, T, 0.01);
+                String thetaSpec = params.getProperty("smile.som.neighborhood");
+                Neighborhood theta = thetaSpec != null && !thetaSpec.isBlank()
+                        ? Neighborhood.of(thetaSpec)
+                        : Neighborhood.Gaussian(1.0, Math.max(1.0, T / 4.0));
+                double[][][] lattice = SOM.lattice(nrow, ncol, x);
+                SOM som = new SOM(lattice, alpha, theta);
+                for (int epoch = 0; epoch < epochs; epoch++) {
+                    for (int j : MathEx.permutate(n)) {
+                        som.update(x[j]);
+                    }
+                }
+                yield som;
+            }
+            case "neural-gas" -> {
+                int k = Integer.parseInt(params.getProperty("smile.neural_gas.k", "10"));
+                int epochs = Integer.parseInt(params.getProperty("smile.neural_gas.epochs", "20"));
+                int T = Math.max(1, n * epochs);
+                String alphaSpec = params.getProperty("smile.neural_gas.alpha");
+                TimeFunction alpha = alphaSpec != null && !alphaSpec.isBlank()
+                        ? TimeFunction.of(alphaSpec)
+                        : TimeFunction.exp(0.3, Math.max(1.0, T / 2.0));
+                String thetaSpec = params.getProperty("smile.neural_gas.theta");
+                TimeFunction theta = thetaSpec != null && !thetaSpec.isBlank()
+                        ? TimeFunction.of(thetaSpec)
+                        : TimeFunction.exp(Math.max(1.0, k / 2.0), Math.max(1.0, T / 8.0));
+                String lifetimeSpec = params.getProperty("smile.neural_gas.lifetime");
+                TimeFunction lifetime = lifetimeSpec != null && !lifetimeSpec.isBlank()
+                        ? TimeFunction.of(lifetimeSpec)
+                        : TimeFunction.constant(Math.max(1.0, n * 2.0));
+                NeuralGas ng = new NeuralGas(CentroidClustering.seeds(x, k), alpha, theta, lifetime);
+                for (int epoch = 0; epoch < epochs; epoch++) {
+                    for (int j : MathEx.permutate(n)) {
+                        ng.update(x[j]);
+                    }
+                }
+                yield ng;
+            }
+            case "growing-neural-gas", "gng" -> {
+                int epochs = Integer.parseInt(params.getProperty("smile.gng.epochs", "20"));
+                double epsBest = Double.parseDouble(params.getProperty("smile.gng.eps_best", "0.2"));
+                double epsNeighbor = Double.parseDouble(params.getProperty("smile.gng.eps_neighbor", "0.006"));
+                int edgeLifetime = Integer.parseInt(params.getProperty("smile.gng.edge_lifetime", "50"));
+                int lambda = Integer.parseInt(params.getProperty("smile.gng.lambda", "100"));
+                double alpha = Double.parseDouble(params.getProperty("smile.gng.alpha", "0.5"));
+                double beta = Double.parseDouble(params.getProperty("smile.gng.beta", "0.995"));
+                GrowingNeuralGas gng = new GrowingNeuralGas(d, epsBest, epsNeighbor, edgeLifetime, lambda, alpha, beta);
+                for (int epoch = 0; epoch < epochs; epoch++) {
+                    for (int j : MathEx.permutate(n)) {
+                        gng.update(x[j]);
+                    }
+                }
+                yield gng;
+            }
+            case "neural-map" -> {
+                int epochs = Integer.parseInt(params.getProperty("smile.neural_map.epochs", "10"));
+                double radius = Double.parseDouble(params.getProperty("smile.neural_map.radius", "1.0"));
+                double epsBest = Double.parseDouble(params.getProperty("smile.neural_map.eps_best", "0.05"));
+                double epsNeighbor = Double.parseDouble(params.getProperty("smile.neural_map.eps_neighbor", "0.002"));
+                int edgeLifetime = Integer.parseInt(params.getProperty("smile.neural_map.edge_lifetime", "50"));
+                double beta = Double.parseDouble(params.getProperty("smile.neural_map.beta", "0.995"));
+                double clearEps = Double.parseDouble(params.getProperty("smile.neural_map.clear_eps", "1E-7"));
+                NeuralMap nm = new NeuralMap(d, radius, epsBest, epsNeighbor, edgeLifetime, beta);
+                for (int epoch = 0; epoch < epochs; epoch++) {
+                    for (int j : MathEx.permutate(n)) {
+                        nm.update(x[j]);
+                    }
+                    if (clearEps > 0) {
+                        nm.clear(clearEps);
+                    }
+                }
+                yield nm;
+            }
+            case "birch" -> {
+                int branching = Integer.parseInt(params.getProperty("smile.birch.branching", "5"));
+                int leaves = Integer.parseInt(params.getProperty("smile.birch.leaves", "5"));
+                double radius = Double.parseDouble(params.getProperty("smile.birch.radius", "1.0"));
+                BIRCH birch = new BIRCH(d, branching, leaves, radius);
+                for (double[] xi : x) {
+                    birch.update(xi);
+                }
+                yield birch;
+            }
             default ->
                     throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
         };

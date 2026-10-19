@@ -180,6 +180,16 @@ public interface DataFrameRegression extends Regression<Tuple> {
         }
 
         @Override
+        public boolean online() {
+            return model.online();
+        }
+
+        @Override
+        public void update(Tuple x, double y) {
+            model.update(vectorize(x), y);
+        }
+
+        @Override
         public double[] shap(Tuple x) {
             return shap(x, null);
         }

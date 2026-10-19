@@ -74,7 +74,7 @@ public class NeuralGas implements VectorQuantizer {
      * @param i the index of neuron.
      * @param w the weight vector.
      */
-    private record Neuron(int i, double[] w) implements Serializable { }
+    public record Neuron(int i, double[] w) implements Serializable { }
 
     /**
      * The neurons.
@@ -209,6 +209,15 @@ public class NeuralGas implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
+        return bmu(x).w;
+    }
+
+    /**
+     * Returns the best matching unit (neuron) for a sample.
+     * @param x a sample.
+     * @return the best matching neuron.
+     */
+    public Neuron bmu(double[] x) {
         checkInput(x);
 
         if (neurons.length == 0) {
@@ -216,7 +225,7 @@ public class NeuralGas implements VectorQuantizer {
         }
 
         IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
-        return neurons[MathEx.whichMin(dist)].w;
+        return neurons[MathEx.whichMin(dist)];
     }
 
     /** Validates input vector shape. */

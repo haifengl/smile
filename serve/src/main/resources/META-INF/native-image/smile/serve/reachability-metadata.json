@@ -2939,6 +2939,12 @@
    "type": "smile.graph.AdjacencyMatrix"
   },
   {
+   "type": "smile.graph.Graph"
+  },
+  {
+   "type": "smile.graph.Graph$Edge"
+  },
+  {
    "type": "smile.hash.PerfectHash"
   },
   {
@@ -3231,6 +3237,9 @@
   },
   {
    "type": "smile.model.RegressionModel"
+  },
+  {
+   "type": "smile.model.VectorQuantizerModel"
   },
   {
    "type": "smile.model.cart.CART"
@@ -4484,6 +4493,12 @@
    "type": "smile.graph.AdjacencyMatrix[]"
   },
   {
+   "type": "smile.graph.Graph[]"
+  },
+  {
+   "type": "smile.graph.Graph$Edge[]"
+  },
+  {
    "type": "smile.hash.PerfectHash[]"
   },
   {
@@ -4776,6 +4791,9 @@
   },
   {
    "type": "smile.model.RegressionModel[]"
+  },
+  {
+   "type": "smile.model.VectorQuantizerModel[]"
   },
   {
    "type": "smile.model.cart.CART[]"

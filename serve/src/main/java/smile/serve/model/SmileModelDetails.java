@@ -20,9 +20,15 @@ import smile.model.ClassificationModel;
 import smile.model.ClusteringModel;
 import smile.model.Model;
 import smile.model.RegressionModel;
+import smile.model.VectorQuantizerModel;
 import smile.serve.ModelMetadata;
 import smile.validation.ClassificationMetrics;
 import smile.validation.RegressionMetrics;
+import smile.vq.BIRCH;
+import smile.vq.GrowingNeuralGas;
+import smile.vq.NeuralGas;
+import smile.vq.NeuralMap;
+import smile.vq.SOM;
 
 /**
  * SMILE {@code .sml} details returned by {@code GET /models/{id}}.
@@ -62,6 +68,9 @@ public record SmileModelDetails(
             }
             case ClusteringModel c -> {
                 train = clusteringMetrics(c);
+            }
+            case VectorQuantizerModel vq -> {
+                train = quantizerMetrics(vq);
             }
             default -> { }
         }
@@ -134,6 +143,30 @@ public record SmileModelDetails(
         putFinite(map, "distortion", clustering.distortion());
         map.put("cluster_sizes", Arrays.copyOf(clustering.size(), k));
         map.put("distortions", Arrays.copyOf(clustering.distortions(), k));
+        return map;
+    }
+
+    private static Map<String, Object> quantizerMetrics(VectorQuantizerModel vq) {
+        if (vq == null || vq.quantizer() == null) {
+            return null;
+        }
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("online", vq.isOnline());
+        switch (vq.quantizer()) {
+            case SOM som -> {
+                double[][][] lattice = som.neurons();
+                int nrow = lattice.length;
+                int ncol = nrow > 0 ? lattice[0].length : 0;
+                map.put("nrow", nrow);
+                map.put("ncol", ncol);
+                map.put("neurons", nrow * ncol);
+            }
+            case NeuralGas ng -> map.put("neurons", ng.neurons().length);
+            case GrowingNeuralGas gng -> map.put("neurons", gng.neurons().length);
+            case NeuralMap nm -> map.put("neurons", nm.neurons().length);
+            case BIRCH birch -> map.put("clusters", birch.numClusters());
+            default -> { }
+        }
         return map;
     }
 

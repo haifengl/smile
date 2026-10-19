@@ -241,6 +241,15 @@ public class NeuralMap implements VectorQuantizer {
 
     @Override
     public double[] quantize(double[] x) {
+        return neurons.get(indexOf(x)).w;
+    }
+
+    /**
+     * Returns the index of the best matching neuron in {@link #neurons()} for a sample.
+     * @param x a sample.
+     * @return the index of the best matching neuron.
+     */
+    public int indexOf(double[] x) {
         checkInputForQuantize(x);
 
         if (neurons.isEmpty()) {
@@ -249,14 +258,17 @@ public class NeuralMap implements VectorQuantizer {
 
         neurons.stream().parallel().forEach(node -> node.distance(x));
 
+        int bmuIdx = 0;
         Neuron bmu = neurons.getFirst();
-        for (Neuron neuron : neurons) {
+        for (int i = 1; i < neurons.size(); i++) {
+            Neuron neuron = neurons.get(i);
             if (neuron.distance < bmu.distance) {
                 bmu = neuron;
+                bmuIdx = i;
             }
         }
 
-        return bmu.w;
+        return bmuIdx;
     }
 
     /** Validates input for update while allowing dimension inference on first sample. */

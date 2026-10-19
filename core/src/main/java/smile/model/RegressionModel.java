@@ -59,6 +59,25 @@ public record RegressionModel(String algorithm,
     }
 
     @Override
+    public boolean isOnline() {
+        return regression.online();
+    }
+
+    @Override
+    public void update(Tuple x) {
+        update(x, formula.y(x));
+    }
+
+    /**
+     * Online updates the regression model with a new training instance.
+     * @param x the input tuple.
+     * @param y the target value.
+     */
+    public void update(Tuple x, double y) {
+        regression.update(x, y);
+    }
+
+    @Override
     public boolean supportsShap() {
         return regression instanceof smile.feature.importance.SHAP;
     }

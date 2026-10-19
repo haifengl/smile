@@ -78,6 +78,25 @@ public record ClassificationModel(String algorithm,
     }
 
     @Override
+    public boolean isOnline() {
+        return classifier.isOnline();
+    }
+
+    @Override
+    public void update(Tuple x) {
+        update(x, formula.yint(x));
+    }
+
+    /**
+     * Online updates the classification model with a new training instance.
+     * @param x the input tuple.
+     * @param y the class label.
+     */
+    public void update(Tuple x, int y) {
+        classifier.update(x, y);
+    }
+
+    @Override
     public boolean supportsShap() {
         return classifier instanceof smile.feature.importance.SHAP;
     }

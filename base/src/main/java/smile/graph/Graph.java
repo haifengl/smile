@@ -16,6 +16,8 @@
  */
 package smile.graph;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.DoubleStream;
 import smile.math.MathEx;
@@ -37,7 +39,9 @@ import smile.util.Strings;
  *
  * @author Haifeng Li
  */
-public abstract class Graph {
+public abstract class Graph implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Graph.class);
     /**
      * Is the graph directed?
@@ -53,7 +57,7 @@ public abstract class Graph {
      * @param weight the weight of edge. For unweighted graph,
      *               this is always 1.
      */
-    public record Edge(int u, int v, double weight) implements Comparable<Edge> {
+    public record Edge(int u, int v, double weight) implements Comparable<Edge>, Serializable {
         /**
          * Constructor of unweighted edge.
          * @param u the vertex id.

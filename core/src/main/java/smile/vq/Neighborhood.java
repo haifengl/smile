@@ -17,6 +17,11 @@
 package smile.vq;
 
 import java.io.Serializable;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import static smile.util.Regex.DOUBLE_REGEX;
+import static smile.util.Regex.INTEGER_REGEX;
 
 /**
  * The neighborhood function for 2-dimensional lattice topology (e.g. SOM).
@@ -112,5 +117,50 @@ public interface Neighborhood extends Serializable {
             double norm = gamma * (i*i + j*j);
             return (1 + norm / 2) * Math.exp(norm);
         };
+    }
+
+    /**
+     * Parses a neighborhood function specification string.
+     *
+     * @param neighborhood the neighborhood function representation, e.g.
+     *                     {@code "bubble(2)"}, {@code "square(2)"},
+     *                     {@code "triangle(1.0, 1000)"}, {@code "Gaussian(1.0, 1000)"},
+     *                     or {@code "MexicanHat(1.0, 1000)"}.
+     * @return the neighborhood function.
+     */
+    static Neighborhood of(String neighborhood) {
+        String s = neighborhood.trim().toLowerCase(Locale.ROOT);
+
+        Pattern square = Pattern.compile(String.format("square\\((%s)\\)", INTEGER_REGEX));
+        Matcher m = square.matcher(s);
+        if (m.matches()) {
+            return square(Integer.parseInt(m.group(1)));
+        }
+
+        Pattern bubble = Pattern.compile(String.format("bubble\\((%s)\\)", INTEGER_REGEX));
+        m = bubble.matcher(s);
+        if (m.matches()) {
+            return bubble(Integer.parseInt(m.group(1)));
+        }
+
+        Pattern triangle = Pattern.compile(String.format("triangle\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
+        m = triangle.matcher(s);
+        if (m.matches()) {
+            return triangle(Double.parseDouble(m.group(1)), Double.parseDouble(m.group(2)));
+        }
+
+        Pattern gaussian = Pattern.compile(String.format("gaussian\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
+        m = gaussian.matcher(s);
+        if (m.matches()) {
+            return Gaussian(Double.parseDouble(m.group(1)), Double.parseDouble(m.group(2)));
+        }
+
+        Pattern mexicanHat = Pattern.compile(String.format("mexican_?hat\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
+        m = mexicanHat.matcher(s);
+        if (m.matches()) {
+            return MexicanHat(Double.parseDouble(m.group(1)), Double.parseDouble(m.group(2)));
+        }
+
+        throw new IllegalArgumentException("Unknown neighborhood function: " + neighborhood);
     }
 }

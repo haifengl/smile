@@ -182,7 +182,8 @@ public class KernelExplorer extends JPanel {
 
                                     if (snippet.typeName().equals("ClassificationModel")
                                             || snippet.typeName().equals("RegressionModel")
-                                            || snippet.typeName().equals("ClusteringModel")) {
+                                            || snippet.typeName().equals("ClusteringModel")
+                                            || snippet.typeName().equals("VectorQuantizerModel")) {
                                         var schema = kernel.eval(name + ".schema();");
                                         if (schema != null) {
                                             var serviceNode = new DefaultMutableTreeNode(new PersistedModel(name, schema.toString(), path));
@@ -236,7 +237,8 @@ public class KernelExplorer extends JPanel {
                       "DecisionTree", "RegressionTree", "AdaBoost", "RandomForest",
                       "GradientTreeBoost", "LinearSVM", "SparseLinearSVM",
                       "LinearModel", "GaussianProcessRegression",
-                      "ClassificationModel", "RegressionModel", "ClusteringModel":
+                      "SOM", "NeuralGas", "GrowingNeuralGas", "NeuralMap", "BIRCH", "VectorQuantizer",
+                      "ClassificationModel", "RegressionModel", "ClusteringModel", "VectorQuantizerModel":
                     treeModel.insertNodeInto(node, models, models.getChildCount());
                     break;
 

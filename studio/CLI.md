@@ -576,6 +576,86 @@ smile train -d <file> -m <model> deterministic-annealing -k <kmax> [options]
 | `--split-tolerance <ε>` | | Cluster split tolerance (default: `1E-2`) |
 | `--transform <rule>` | | Feature transformation (see §5.6) |
 
+### 5.4c Vector Quantization & Competitive Learning Algorithms
+
+Vector quantization sub-commands produce a `VectorQuantizerModel` supporting online learning (`update`). At inference time, `VectorQuantizerModel` outputs the nearest prototype index (or `[row, col]` grid cell for `som`), the quantized prototype vector (`centroid`), and the quantization error (`error`).
+
+#### `som` — Self-Organizing Map
+
+```
+smile train -d <file> -m <model> som [options]
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `--nrow <rows>` | | Number of rows in the SOM lattice (default: 10) |
+| `--ncol <cols>` | | Number of columns in the SOM lattice (default: 10) |
+| `--epochs <n>` | | Number of training epochs (default: 20) |
+| `--alpha <sched>` | | Learning rate schedule |
+| `--neighborhood <fn>` | | Neighborhood function: `Gaussian(sigma, T)`, `bubble(r)`, `square(w)`, `triangle(sigma, T)`, `MexicanHat(sigma, T)` |
+| `--transform <rule>` | | Feature transformation (see §5.6) |
+
+#### `neural-gas` — Neural Gas
+
+```
+smile train -d <file> -m <model> neural-gas [options]
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `-k`, `--neurons <k>` | | Number of neurons (default: 10) |
+| `--epochs <n>` | | Number of training epochs (default: 20) |
+| `--alpha <sched>` | | Learning rate schedule |
+| `--theta <sched>` | | Neighborhood decay schedule |
+| `--lifetime <sched>` | | Connection lifetime schedule |
+| `--transform <rule>` | | Feature transformation (see §5.6) |
+
+#### `growing-neural-gas` (`gng`) — Growing Neural Gas
+
+```
+smile train -d <file> -m <model> growing-neural-gas [options]
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `--epochs <n>` | | Number of training epochs (default: 20) |
+| `--eps-best <ε>` | | Learning rate for the best matching neuron (default: `0.2`) |
+| `--eps-neighbor <ε>` | | Learning rate for topological neighbors (default: `0.006`) |
+| `--edge-lifetime <n>` | | Maximum age of edges (default: 50) |
+| `--lambda <n>` | | Step interval to insert a new neuron (default: 100) |
+| `--alpha <α>` | | Error reduction factor when splitting (default: `0.5`) |
+| `--beta <β>` | | Global error decay factor per step (default: `0.995`) |
+| `--transform <rule>` | | Feature transformation (see §5.6) |
+
+#### `neural-map` — NeuralMap Competitive Learning
+
+```
+smile train -d <file> -m <model> neural-map --radius <r> [options]
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `--radius <r>` | ✔ | Distance threshold to activate the nearest neuron |
+| `--epochs <n>` | | Number of training epochs (default: 10) |
+| `--eps-best <ε>` | | Learning rate for activated neuron (default: `0.05`) |
+| `--eps-neighbor <ε>` | | Learning rate for neighbors (default: `0.002`) |
+| `--edge-lifetime <n>` | | Maximum age of edges (default: 50) |
+| `--beta <β>` | | Freshness decay factor (default: `0.995`) |
+| `--transform <rule>` | | Feature transformation (see §5.6) |
+
+#### `birch` — BIRCH
+
+```
+smile train -d <file> -m <model> birch --radius <T> [options]
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `--radius <T>` | ✔ | Maximum radius of a sub-cluster |
+| `--branching <B>` | | Branching factor of non-leaf nodes (default: 5) |
+| `--leaves <L>` | | Maximum number of entries in leaf nodes (default: 5) |
+| `--transform <rule>` | | Feature transformation (see §5.6) |
+
 ### 5.5 Cross-validation & Ensembles
 
 ```bash

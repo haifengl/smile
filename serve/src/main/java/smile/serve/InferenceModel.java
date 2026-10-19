@@ -17,16 +17,21 @@
  */
 package smile.serve;
 
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import io.vertx.core.json.JsonObject;
 import jakarta.ws.rs.BadRequestException;
+import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.ServiceUnavailableException;
 import smile.data.Tuple;
 import smile.data.type.StructType;
 import smile.feature.importance.KernelSHAP;
 import smile.io.Paths;
+import smile.io.Write;
 import smile.model.*;
 
 /**
@@ -49,6 +54,7 @@ public class InferenceModel {
     private final boolean isSoft;
     private final AtomicReference<State> state = new AtomicReference<>(State.ACTIVE);
     private final ModelMetrics metrics = new ModelMetrics();
+    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     /** Constructor. */
     public InferenceModel(Model model, Path path) {
@@ -272,13 +278,194 @@ public class InferenceModel {
         }
         long start = metrics.startExecution();
         boolean success = false;
+        rwLock.readLock().lock();
         try {
             Prediction p = model.infer(x, isSoft, explain, shapOptions);
             success = true;
             return p;
         } finally {
+            rwLock.readLock().unlock();
             metrics.finishExecution(start, success);
         }
+    }
+
+    /**
+     * Returns true if the underlying model supports online learning updates.
+     *
+     * @return true if online learning is supported.
+     */
+    public boolean isOnline() {
+        return model.isOnline();
+    }
+
+    /**
+     * Online updates the model using JSON-encoded input.
+     * For supervised models, the response variable (or {@code "y"}) must be present.
+     *
+     * @param request the JSON object containing feature values (and target value if supervised).
+     * @throws BadRequestException if the model does not support online learning or fields are missing.
+     */
+    public void update(JsonObject request) throws BadRequestException {
+        if (state.get() != State.ACTIVE) {
+            throw new ServiceUnavailableException("Model " + id + " is " + state.get().name().toLowerCase());
+        }
+        if (!model.isOnline()) {
+            throw new BadRequestException("Model '" + id + "' (" + model.algorithm() + ") does not support online learning");
+        }
+        Tuple x = json(request);
+        long start = metrics.startExecution();
+        boolean success = false;
+        rwLock.writeLock().lock();
+        try {
+            switch (model) {
+                case ClassificationModel c -> {
+                    int y = extractIntTarget(request);
+                    c.update(x, y);
+                }
+                case RegressionModel r -> {
+                    double y = extractDoubleTarget(request);
+                    r.update(x, y);
+                }
+                default -> model.update(x);
+            }
+            success = true;
+        } finally {
+            rwLock.writeLock().unlock();
+            metrics.finishExecution(start, success);
+        }
+    }
+
+    /**
+     * Online updates the model using a CSV line.
+     * For supervised models, the target value must be in the column immediately following the schema fields.
+     *
+     * @param line the CSV line.
+     * @throws BadRequestException if the model does not support online learning or the line is invalid.
+     */
+    public void update(String line) throws BadRequestException {
+        if (state.get() != State.ACTIVE) {
+            throw new ServiceUnavailableException("Model " + id + " is " + state.get().name().toLowerCase());
+        }
+        if (!model.isOnline()) {
+            throw new BadRequestException("Model '" + id + "' (" + model.algorithm() + ") does not support online learning");
+        }
+        if (line == null || line.isBlank()) {
+            throw new BadRequestException("CSV line must not be blank");
+        }
+        var values = line.split(",", -1);
+        StructType schema = model.schema();
+        boolean supervised = model instanceof ClassificationModel || model instanceof RegressionModel;
+        int requiredCols = schema.length() + (supervised ? 1 : 0);
+        if (values.length < requiredCols) {
+            throw new BadRequestException(
+                    "Expected at least %d CSV columns for online update but got %d".formatted(requiredCols, values.length));
+        }
+
+        Tuple x = csv(line);
+        long start = metrics.startExecution();
+        boolean success = false;
+        rwLock.writeLock().lock();
+        try {
+            switch (model) {
+                case ClassificationModel c -> {
+                    int y;
+                    try {
+                        y = Integer.parseInt(values[schema.length()].trim());
+                    } catch (NumberFormatException ex) {
+                        throw new BadRequestException("Invalid integer target value in CSV: " + values[schema.length()], ex);
+                    }
+                    c.update(x, y);
+                }
+                case RegressionModel r -> {
+                    double y;
+                    try {
+                        y = Double.parseDouble(values[schema.length()].trim());
+                    } catch (NumberFormatException ex) {
+                        throw new BadRequestException("Invalid numeric target value in CSV: " + values[schema.length()], ex);
+                    }
+                    r.update(x, y);
+                }
+                default -> model.update(x);
+            }
+            success = true;
+        } finally {
+            rwLock.writeLock().unlock();
+            metrics.finishExecution(start, success);
+        }
+    }
+
+    /**
+     * Persists the current in-memory model state to its backing {@code .sml} file on disk.
+     */
+    public void persist() {
+        if (path == null) {
+            throw new BadRequestException("Model '" + id + "' has no backing file path");
+        }
+        if (!(model instanceof Serializable s)) {
+            throw new BadRequestException("Model '" + id + "' is not serializable");
+        }
+        rwLock.readLock().lock();
+        try {
+            Write.object(s, path);
+        } catch (Exception ex) {
+            throw new InternalServerErrorException("Failed to persist model '" + id + "': " + ex.getMessage(), ex);
+        } finally {
+            rwLock.readLock().unlock();
+        }
+    }
+
+    private String responseFieldName() {
+        if (model.formula() != null && model.formula().response() != null) {
+            var vars = model.formula().response().variables();
+            if (!vars.isEmpty()) {
+                return vars.iterator().next();
+            }
+        }
+        return "y";
+    }
+
+    private Object extractTargetObject(JsonObject request) {
+        String name = responseFieldName();
+        if (request.containsKey(name)) {
+            return request.getValue(name);
+        }
+        if (request.containsKey("y")) {
+            return request.getValue("y");
+        }
+        if (request.containsKey("target")) {
+            return request.getValue("target");
+        }
+        throw new BadRequestException("Missing required target field: " + name);
+    }
+
+    private int extractIntTarget(JsonObject request) {
+        Object val = extractTargetObject(request);
+        if (val instanceof Number n) {
+            return n.intValue();
+        }
+        if (val instanceof String s && !s.isBlank()) {
+            try {
+                return Integer.parseInt(s.trim());
+            } catch (NumberFormatException ex) {
+                throw new BadRequestException("Invalid integer target value: " + s, ex);
+            }
+        }
+        throw new BadRequestException("Invalid integer target value: " + val);
+    }
+
+    private double extractDoubleTarget(JsonObject request) {
+        Object val = extractTargetObject(request);
+        if (val instanceof Number n) {
+            return n.doubleValue();
+        }
+        if (val instanceof String s && !s.isBlank()) {
+            try {
+                return Double.parseDouble(s.trim());
+            } catch (NumberFormatException ex) {
+                throw new BadRequestException("Invalid numeric target value: " + s, ex);
+            }
+        }
+        throw new BadRequestException("Invalid numeric target value: " + val);
     }
 
     /**
