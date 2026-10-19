@@ -51,7 +51,8 @@ public enum PluginScope {
      * <p>The files are named {@code plugins.json} / {@code plugins.local.json} rather
      * than {@code settings.json}, because Studio's settings are already spread across
      * {@code studio.json} (inference server), {@code studio.properties} (open tabs),
-     * and Java {@code Preferences} (API keys). Dedicated plugin-state files keep the
+     * Java {@code Preferences} (UI and model settings), and {@code SecretStore} (API keys).
+     * Dedicated plugin-state files keep the
      * plugin feature self-contained and remove any ambiguity about where a future
      * Studio setting belongs.
      *

@@ -734,13 +734,17 @@ Open via **File > Settings…**. Choose an AI service provider from the drop-dow
 | **Google Gemini** | Gemini models via native API; set API key, model |
 | **Google Vertex AI** | Gemini via Vertex; set API key, base URL, model |
 
-All fields (API key, base URL, model) are stored in Java `Preferences` (OS keychain / registry). API keys set in Settings take precedence over environment variables.
+Non-secret settings (base URL, models, default service, UI theme) are stored in Java `Preferences`. API keys are stored via the tiered `SecretStore` library (`photos.sluice:secret-store`):
+
+1. **Environment variables** (`OPENAI_API_KEY`, `AZURE_OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `AWS_BEARER_TOKEN_BEDROCK`) take highest read precedence when set.
+2. **OS credential store** (macOS Keychain, Windows Credential Manager, or Linux Secret Service / `libsecret`) stores keys saved in Settings.
+3. **Permission-restricted credential files** (`~/.smile/credentials/*.key` with owner-only `0600` / Windows ACL permissions) serve as the fallback when no OS keyring is available.
 
 **Supported models** are listed as suggestions in each provider's combo box; you can also type any model name manually since the fields are editable.
 
 After clicking **OK** the new LLM instance is initialized immediately.
 
-> **Security note:** API keys are stored in the JVM `Preferences` store. On macOS this is the system Keychain; on Windows it is the Registry; on Linux it is `~/.java/.userPrefs`.
+> **Security note:** API keys are stored in the operating system's native credential store (macOS Keychain, Windows Credential Manager, or Linux Secret Service) or in owner-only permission-restricted files under `~/.smile/credentials` on headless machines without a keyring. Any legacy keys previously saved in Java `Preferences` are automatically migrated to `SecretStore` and removed from `Preferences`.
 
 ---
 

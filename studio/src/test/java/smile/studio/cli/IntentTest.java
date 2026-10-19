@@ -17,6 +17,7 @@
  */
 package smile.studio.cli;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -24,11 +25,17 @@ import java.util.prefs.Preferences;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import photos.sluice.secrets.SecretStore;
+import smile.studio.LlmServices;
 import smile.studio.SettingsDialog;
 import smile.studio.SmileStudio;
 import static org.junit.jupiter.api.Assertions.*;
 
 class IntentTest {
+    @TempDir
+    Path tempDir;
+
     private String savedService;
     private String savedModelPref;
     private String savedOpenAiModel;
@@ -43,13 +50,19 @@ class IntentTest {
         savedAnthropicModel = prefs.get("anthropicModel", "");
 
         prefs.put(SettingsDialog.AI_SERVICE_KEY, "OpenAI");
-        prefs.put("openaiApiKey", "test-key");
         prefs.put("openaiModel", "gpt-6-sol, gpt-6-astra");
-        prefs.put("anthropicApiKey", "anth-key");
         prefs.put("anthropicModel", "claude-sonnet-5");
         prefs.remove(SettingsDialog.DEFAULT_MODEL_KEY);
 
-        SmileStudio.llmServices().reload(prefs);
+        SecretStore testSecrets = SecretStore.forApplication("SmileStudioIntentTest")
+                .inNamespace("ai.smile.studio.intent.test")
+                .onOperatingSystem("none")
+                .withCredentialFilesIn(tempDir.resolve("credentials"))
+                .open();
+        testSecrets.save(LlmServices.OPENAI_SECRET, "test-key");
+        testSecrets.save(LlmServices.ANTHROPIC_SECRET, "anth-key");
+
+        SmileStudio.llmServices().reload(prefs, testSecrets);
     }
 
     @AfterEach

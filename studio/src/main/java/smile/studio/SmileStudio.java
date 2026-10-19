@@ -35,6 +35,7 @@ import com.formdev.flatlaf.fonts.jetbrains_mono.FlatJetBrainsMonoFont;
 import com.formdev.flatlaf.util.SystemInfo;
 import ioa.llm.client.LLM;
 import ioa.llm.mcp.MCP;
+import photos.sluice.secrets.SecretStore;
 import org.fife.rsta.ui.search.FindDialog;
 import org.fife.rsta.ui.search.ReplaceDialog;
 import org.fife.rsta.ui.search.SearchEvent;
@@ -61,6 +62,12 @@ public class SmileStudio extends JFrame implements SearchListener {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(SmileStudio.class.getName(), Locale.getDefault());
     /** Application preference and configuration. */
     private static final Preferences prefs = Preferences.userNodeForPackage(SmileStudio.class);
+    /** Tiered credential store for API keys and secrets. */
+    private static final SecretStore secrets = SecretStore.forApplication("SmileStudio")
+            .inNamespace("ai.smile.studio")
+            .withEnvironmentOverride()
+            .withCredentialFilesIn(Path.of(System.getProperty("user.home"), ".smile", "credentials"))
+            .open();
     /** The key for auto save preference. */
     private static final String AUTO_SAVE_KEY = "autoSave";
     /** Client pool and available models. Reloaded on the EDT when settings change. */
@@ -88,7 +95,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         replaceDialog.setSearchContext(context);
 
         // Initialize LLM clients on the EDT so error dialogs run on the right thread.
-        llmServices.reload(prefs);
+        llmServices.reload(prefs, secrets);
 
         // Assign workspace before initMenuAndToolBar() so that AutoSaveAction,
         // whose timer lives on the workspace's auto saver, is never handed a null
@@ -264,6 +271,14 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     /**
+     * Returns the application credential store for API keys and secrets.
+     * @return the secret store.
+     */
+    public static SecretStore secrets() {
+        return secrets;
+    }
+
+    /**
      * Sets the status in the StatusBar of the Studio containing the component.
      * @param comp the component that sets the status message.
      * @param status the status message.
@@ -312,7 +327,7 @@ public class SmileStudio extends JFrame implements SearchListener {
      * @return the default service's client, or {@code null} if none is configured.
      */
     public static LLM updateLLM() {
-        llmServices.reload(prefs);
+        llmServices.reload(prefs, secrets);
         return llmServices.defaultClient();
     }
 
@@ -765,7 +780,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            SettingsDialog dialog = new SettingsDialog(SmileStudio.this, prefs);
+            SettingsDialog dialog = new SettingsDialog(SmileStudio.this, prefs, secrets);
             dialog.setVisible(true);
         }
     }
