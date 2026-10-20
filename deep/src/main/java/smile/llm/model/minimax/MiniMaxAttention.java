@@ -232,7 +232,7 @@ public class MiniMaxAttention implements Attention {
             cachePool.put(kvLayerId, positions, kRope, value);
 
             int cacheLen = maxPos + seqlen;
-            var cached = cachePool.get(kvLayerId, cacheLen);
+            var cached = cachePool.getPadded(kvLayerId, cacheLen);
             Tensor keys = repeatKV(cached._1(), numRep);
             Tensor values = repeatKV(cached._2(), numRep);
 

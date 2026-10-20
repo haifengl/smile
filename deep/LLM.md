@@ -22,12 +22,13 @@ For ONNX-based generative models, see [ONNX_GENAI.md](ONNX_GENAI.md).
 6. [Transformer Primitives](#transformer-primitives)
 7. [LLaMA (`smile.llm.model.llama`)](#llama-smilellmmodelllama)
 8. [Qwen3.5 (`smile.llm.model.qwen`)](#qwen35-smilellmmodellqwen)
-9. [Inference Engine (`smile.llm.engine`)](#inference-engine-smilellmengine)
-10. [KV Cache & Radix Prefix Reuse (`smile.llm.cache`)](#kv-cache--radix-prefix-reuse-smilellmcache)
-11. [Attention Backends (`smile.llm.attention`)](#attention-backends-smilellmattention)
-12. [Quantization (`smile.llm.quant`)](#quantization-smilellmquant)
-13. [Tensor Parallelism (`smile.llm.parallel`)](#tensor-parallelism-smilellmparallel)
-14. [Tool Calling & Chat Templates](#tool-calling--chat-templates)
+9. [MiniMax-M3 (`smile.llm.model.minimax`)](#minimax-m3-smilellmmodelminimax)
+10. [Inference Engine (`smile.llm.engine`)](#inference-engine-smilellmengine)
+11. [KV Cache & Radix Prefix Reuse (`smile.llm.cache`)](#kv-cache--radix-prefix-reuse-smilellmcache)
+12. [Attention Backends (`smile.llm.attention`)](#attention-backends-smilellmattention)
+13. [Quantization (`smile.llm.quant`)](#quantization-smilellmquant)
+14. [Tensor Parallelism (`smile.llm.parallel`)](#tensor-parallelism-smilellmparallel)
+15. [Tool Calling & Chat Templates](#tool-calling--chat-templates)
 
 ---
 
@@ -354,6 +355,68 @@ qwen.setPrefixReplayEnabled(true);  // radix prefix reuse + DeltaNet state resto
 
 ---
 
+## MiniMax-M3 (`smile.llm.model.minimax`)
+
+MiniMax-M3 is a 428B-parameter (23B active) multimodal MoE language model. The text tower has GQA
+attention (64 query / 4 KV heads, Gemma-style RMSNorm, per-head QK norm, partial RoPE), 3 dense and
+57 sparse-MoE layers (128 routed experts, top-4, sigmoid routing with a selection bias, one shared
+expert, `swigluoai` activation), and **MiniMax Sparse Attention (MSA)** on the MoE layers: an index branch
+scores 128-token KV blocks (max of the raw `index_q . index_k` dot product, one index-key head shared by
+the 4 index-query heads) and attention runs only over each query's top-16 blocks plus its local block.
+
+```java
+MiniMax model = MiniMax.build("/models/MiniMax-M3-MXFP8", /*maxBatch*/ 8, /*maxSeqLen*/ 32768,
+        new byte[]{0, 1, 2, 3, 4, 5, 6, 7}, /*memFractionStatic*/ 0.85, /*pageSize*/ 16);
+ChatCompletion reply = model.chat(dialog, 512, 0.6, 0.95, false, 0, null);
+```
+
+| Class | Role |
+|---|---|
+| `MiniMax` | `LanguageModel` + `ModelExecutor` facade: `build`, bind / prefill / decode / finish, `encodeChat` |
+| `MiniMaxModelArgs` | Hyperparameters from `config.json` (`text_config`), weight mode |
+| `MiniMaxModel`, `MiniMaxBlock` | Decoder stack (one replica per expert-parallel rank) |
+| `MiniMaxAttention`, `MiniMaxSparse`, `MiniMaxIndexCache` | GQA, MSA block selection, index-key cache addressed by the KV pool's slots (so radix prefix reuse covers it) |
+| `MiniMaxMoE`, `MiniMaxMlp` | Router + experts (stacked weights), dense/shared FFN |
+| `MiniMaxShard` | Expert-parallel slice: rank, size, device |
+| `MiniMaxTokenizer`, `MiniMaxWeightNames` | Byte-level BPE (all added tokens atomic, as in the reference); HF tensor name mapping |
+
+**Checkpoints.** BF16 (`MiniMaxAI/MiniMax-M3`) and MXFP8 (`MiniMaxAI/MiniMax-M3-MXFP8`, FP8 E4M3 weights with an
+E8M0 scale per 32 elements). Vision tower, projector and MTP tensors are skipped (the published checkpoint has no
+MTP weights); image / video / audio input is rejected.
+
+**Expert parallelism.** Each rank holds a contiguous slice of every layer's routed experts (allocated directly on its
+device); attention, dense FFNs, the router and the shared expert are replicated. Every rank routes all tokens, computes
+the tokens assigned to its own experts, and the partial outputs are summed with an all-reduce. In `smile-serve` the
+device list comes from `smile.chat.devices` (the number of ranks is its length). The full MXFP8 model is ~440 GB, so it
+does not fit one 8 x 40 GB node; the GPU test checkpoints are truncated to the first 4 / 16 layers.
+
+**MXFP8 weight modes** (`MiniMaxWeightMode`; `smile.chat.quantization` or `SMILE_MINIMAX_MXFP8` =
+`auto|marlin|fp8|fp8emu|dequant`):
+
+| Mode | Weights on device | GEMM | Hardware |
+|---|---|---|---|
+| `MARLIN` | FP8 + E8M0 (Marlin layout) | weight-only Marlin kernel, bf16 activations (vLLM generalized Marlin, vendored in `third_party/vllm_marlin`) | any CUDA GPU with bf16 (A100 and up) |
+| `FP8` | FP8 + 128x128 float scales (lossless re-expression of the E8M0 scales) | native block-scaled FP8 GEMM, activations quantized to FP8 (W8A8) | Hopper (sm_90) and newer |
+| `FP8_EMULATED` | same as `FP8` | emulated with dequantization | any CUDA GPU (tests) |
+| `DENSE` | bf16 (dequantized while loading) | bf16 matmul | reference, 2x the memory |
+
+`auto` picks `FP8` on Hopper+ only after `Fp8BlockGemm.selfCheck` (native vs emulated GEMM on a random problem) passes,
+otherwise `MARLIN`. **The native FP8 path has not been run on Hopper hardware yet**; run
+`MxFp8BlockFp8Test` there first. W8A8 is slightly noisier than W8A16 (activations are rounded to FP8).
+
+**Chat.** `MiniMaxChatTemplate` is a byte-exact port of `chat_template.jinja` (verified against transformers on golden
+prompts). The request field `thinking` (`enabled|disabled|adaptive`, or `{"type": ...}`; also
+`chat_template_kwargs.thinking_mode`) selects the thinking mode; unset means the model decides. Reasoning
+(`<mm:think>`) is returned as `<think>...</think>` like the other models. Tool calls use the
+`]<]minimax[>[<tool_call>` XML format, parsed by `MiniMaxToolCallParser` (typed from the request's tool schemas).
+
+**Limits.** MSA block selection is a reference tensor implementation that materializes an `[batch, groups, query,
+context]` score matrix, so long contexts need a lot of memory and prefill is slow; the MoE layer routes on the host
+(no CUDA graphs); no speculative decoding, log-probabilities, tensor-parallel attention or multi-node execution.
+Opt-in tests that need a checkpoint or GPUs read `MINIMAX_*` environment variables (see the test javadoc).
+
+---
+
 ## Inference Engine (`smile.llm.engine`)
 
 `InferenceEngine` is the continuous-batching runtime used by serve. It admits
@@ -512,8 +575,9 @@ int[] prompt = model.encodeChat(dialog, options);
 |---|---|
 | `ChatTemplate` | Interface for model-specific prompt formatting |
 | `Qwen3ChatTemplate` | Qwen3 chat template (thinking / non-thinking, tools) |
+| `MiniMaxChatTemplate` | MiniMax-M3 chat template (thinking modes, tools, tool results) |
 | `ToolCallParser` | Interface for parsing tool calls from generated text |
-| `JsonToolCallParser` / `Qwen3XmlToolCallParser` | Concrete parsers |
+| `JsonToolCallParser` / `Qwen3XmlToolCallParser` / `MiniMaxToolCallParser` | Concrete parsers |
 | `AssistantTextSanitizer` | Strips tool-call markup from assistant text |
 
 ---

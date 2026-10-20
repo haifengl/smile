@@ -16,6 +16,8 @@
  */
 package smile.llm;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -39,7 +41,8 @@ public record FunctionDefinition(
             throw new IllegalArgumentException("function name must not be blank");
         }
         if (parameters != null) {
-            parameters = Map.copyOf(parameters);
+            // Keep the caller's key order: it is rendered into prompts, and Map.copyOf randomizes it per JVM.
+            parameters = Collections.unmodifiableMap(new LinkedHashMap<>(parameters));
         }
     }
 }

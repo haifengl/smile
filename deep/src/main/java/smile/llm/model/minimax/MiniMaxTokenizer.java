@@ -58,26 +58,77 @@ public class MiniMaxTokenizer extends Tiktoken {
                     + "| ?[^\\s\\p{L}\\p{N}]+[\\r\\n/]*"
                     + "|\\s*[\\r\\n]+"
                     + "|\\s+(?!\\S)"
-                    + "|\\s+");
+                    + "|\\s+",
+            // The reference regex engine is Unicode-aware: \s matches U+00A0 and other Unicode spaces.
+            Pattern.UNICODE_CHARACTER_CLASS);
 
     private final int pad;
+    /** Control tokens dropped when decoding for display. */
+    private final java.util.Set<Integer> hidden;
+    /** Ids of the reasoning tags, or -1 when the vocabulary lacks them. */
+    private final int thinkOpen;
+    private final int thinkClose;
+
+    /** One entry of {@code added_tokens} in {@code tokenizer.json}. */
+    public record AddedToken(String content, boolean special) { }
 
     /**
-     * Constructor.
+     * Constructor for a vocabulary whose added tokens are the built-in MiniMax set.
      *
      * @param ranks token byte sequence to id map, including added tokens.
      * @throws IllegalArgumentException if the BOS, EOS or pad token is missing.
      */
     public MiniMaxTokenizer(Map<Bytes, Integer> ranks) {
-        super(REGEX, ranks, BOS, EOS, presentSpecials(ranks));
-        this.pad = specialToken(PAD);
+        this(ranks, defaultAdded(ranks));
     }
 
-    private static String[] presentSpecials(Map<Bytes, Integer> ranks) {
-        List<String> present = new ArrayList<>();
+    /**
+     * Constructor.
+     *
+     * <p>Every added token is atomic when encoding text, special or not (as in the reference tokenizer),
+     * which is what makes {@code <tool_call>} and {@code ]<]minimax[>[} single tokens. Tokens flagged special
+     * are hidden when decoding for display.
+     *
+     * @param ranks token byte sequence to id map, including added tokens.
+     * @param added the {@code added_tokens} of {@code tokenizer.json}.
+     * @throws IllegalArgumentException if the BOS, EOS or pad token is missing.
+     */
+    public MiniMaxTokenizer(Map<Bytes, Integer> ranks, List<AddedToken> added) {
+        super(REGEX, ranks, BOS, EOS, contents(ranks, added));
+        this.pad = specialToken(PAD);
+        java.util.Set<Integer> h = new java.util.HashSet<>();
+        for (AddedToken t : added) {
+            Integer id = specialToken(t.content());
+            if (id != null && t.special()) {
+                h.add(id);
+            }
+        }
+        for (String control : new String[]{PAD, BOS, EOS}) {
+            h.add(specialToken(control));
+        }
+        this.hidden = java.util.Set.copyOf(h);
+        Integer open = specialToken("<mm:think>");
+        Integer close = specialToken("</mm:think>");
+        this.thinkOpen = open == null ? -1 : open;
+        this.thinkClose = close == null ? -1 : close;
+    }
+
+    private static List<AddedToken> defaultAdded(Map<Bytes, Integer> ranks) {
+        List<AddedToken> list = new ArrayList<>();
         for (String s : CANDIDATE_SPECIALS) {
             if (ranks.containsKey(new Bytes(s))) {
-                present.add(s);
+                boolean control = !s.equals("]<]minimax[>[") && !s.endsWith("think>");
+                list.add(new AddedToken(s, control));
+            }
+        }
+        return list;
+    }
+
+    private static String[] contents(Map<Bytes, Integer> ranks, List<AddedToken> added) {
+        List<String> present = new ArrayList<>();
+        for (AddedToken t : added) {
+            if (ranks.containsKey(new Bytes(t.content()))) {
+                present.add(t.content());
             }
         }
         for (String required : new String[]{BOS, EOS, PAD}) {
@@ -100,12 +151,62 @@ public class MiniMaxTokenizer extends Tiktoken {
         if (!Files.exists(json)) {
             throw new IOException("tokenizer.json not found in " + checkpointDir);
         }
-        return new MiniMaxTokenizer(HuggingFaceBpeVocab.loadTokenizerJson(json));
+        var added = new ArrayList<AddedToken>();
+        for (var node : new tools.jackson.databind.ObjectMapper().readTree(json.toFile()).path("added_tokens")) {
+            added.add(new AddedToken(node.path("content").asString(), node.path("special").asBoolean(false)));
+        }
+        return new MiniMaxTokenizer(HuggingFaceBpeVocab.loadTokenizerJson(json), added);
     }
 
     @Override
     public int[] encode(String text, boolean bos, boolean eos) {
         return super.encode(Normalizer.normalize(text, Normalizer.Form.NFC), bos, eos);
+    }
+
+    /**
+     * Encodes template text in which markers such as {@code ]~b]}, {@code [e~[} and {@code ]<]minimax[>[}
+     * stand for single special tokens, as the reference tokenizer does for text containing them.
+     *
+     * @param text a rendered chat prompt.
+     * @return token ids.
+     */
+    public synchronized int[] encodeWithSpecials(String text) {
+        allowSpecialTokens(true);
+        try {
+            return encode(text, false, false);
+        } finally {
+            allowSpecialTokens(false);
+        }
+    }
+
+    /**
+     * Decodes tokens. With {@code skipSpecial}, control tokens ({@code ]~b]}, {@code [e~[}, padding, ...) are
+     * dropped, the reasoning tags {@code <mm:think>} and {@code </mm:think>} are rendered as {@code <think>}
+     * and {@code </think>} (the form chat clients style as reasoning), and the tool-call marker
+     * {@code ]<]minimax[>[} stays so tool calls can be parsed from the text.
+     */
+    @Override
+    public String tryDecode(int[] tokens, boolean skipSpecial) throws java.nio.charset.CharacterCodingException {
+        if (!skipSpecial) {
+            return super.tryDecode(tokens, false);
+        }
+        StringBuilder out = new StringBuilder();
+        int from = 0;
+        for (int i = 0; i <= tokens.length; i++) {
+            boolean boundary = i == tokens.length || tokens[i] == thinkOpen || tokens[i] == thinkClose;
+            if (!boundary) {
+                continue;
+            }
+            int[] segment = java.util.Arrays.stream(tokens, from, i).filter(t -> !hidden.contains(t)).toArray();
+            if (segment.length > 0) {
+                out.append(super.tryDecode(segment, false));
+            }
+            if (i < tokens.length) {
+                out.append(tokens[i] == thinkOpen ? "<think>" : "</think>");
+            }
+            from = i + 1;
+        }
+        return out.toString();
     }
 
     /**

@@ -43,6 +43,7 @@ import smile.deep.tensor.SafeTensors;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.ChatCompletion;
+import smile.llm.ChatOptions;
 import smile.llm.FinishReason;
 import smile.llm.GenerationListener;
 import smile.llm.LanguageModel;
@@ -51,6 +52,7 @@ import smile.llm.cache.KvCachePool;
 import smile.llm.engine.ModelExecutor;
 import smile.llm.engine.Sampling;
 import smile.llm.parallel.ParallelConfig;
+import smile.llm.template.MiniMaxChatTemplate;
 import smile.llm.quant.MxFp8;
 import smile.torch.Native;
 import smile.llm.parallel.ParallelState;
@@ -223,7 +225,21 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
 
     @Override
     public int[] encodeChat(Message... dialog) {
-        throw new UnsupportedOperationException("MiniMax chat template is not implemented yet");
+        return encodeChat(dialog, null);
+    }
+
+    @Override
+    public int[] encodeChat(Message[] dialog, ChatOptions options) {
+        if (dialog == null || dialog.length == 0) {
+            throw new IllegalArgumentException("No messages provided.");
+        }
+        for (Message m : dialog) {
+            if (m.hasMedia()) {
+                throw new IllegalArgumentException("MiniMax-M3 image, video and audio input is not supported yet");
+            }
+        }
+        String prompt = MiniMaxChatTemplate.forOptions(options).encode(Arrays.asList(dialog), options);
+        return tokenizer.encodeWithSpecials(prompt);
     }
 
     /**
@@ -233,6 +249,26 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
      */
     public int[] encode(String text) {
         return tokenizer.encode(text);
+    }
+
+    /**
+     * Returns how linear weights are stored and multiplied.
+     * @return the weight mode.
+     */
+    public MiniMaxWeightMode weightMode() {
+        return params.weightMode();
+    }
+
+    /**
+     * Enables or disables radix KV prefix reuse on every rank. The MSA index keys live in side caches
+     * addressed by the same slots, so shared prefixes reuse them too.
+     *
+     * @param enabled {@code true} to reuse cached prefixes.
+     */
+    public void setPrefixReuseEnabled(boolean enabled) {
+        for (MiniMaxModel m : models) {
+            m.kvCachePool().setPrefixReuseEnabled(enabled);
+        }
     }
 
     @Override
@@ -552,6 +588,25 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
      */
     public static MiniMax build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte[] devices,
                                 double memFractionStatic, int pageSize) throws IOException {
+        return build(checkpointDir, maxBatchSize, maxSeqLen, devices, memFractionStatic, pageSize, null);
+    }
+
+    /**
+     * Builds a model, choosing how MXFP8 weights are stored and multiplied.
+     *
+     * @param checkpointDir     directory with {@code config.json}, {@code tokenizer.json} and safetensors.
+     * @param maxBatchSize      maximum concurrent requests.
+     * @param maxSeqLen         maximum context length; {@code <= 0} uses {@code max_position_embeddings}.
+     * @param devices           CUDA device indices, one expert-parallel rank each, or {@code null} for one CPU rank.
+     * @param memFractionStatic fraction of device memory for weights + KV; {@code <= 0} sizes the pool for tests.
+     * @param pageSize          KV page size in tokens.
+     * @param weightMode        {@code auto}, {@code marlin}, {@code fp8}, {@code fp8emu} or {@code dequant};
+     *                          {@code null} reads {@code SMILE_MINIMAX_MXFP8} (default {@code auto}).
+     * @return the loaded model.
+     * @throws IOException if the checkpoint is missing, unsupported or incomplete.
+     */
+    public static MiniMax build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte[] devices,
+                                double memFractionStatic, int pageSize, String weightMode) throws IOException {
         File dir = new File(checkpointDir);
         if (!dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory not found: " + checkpointDir);
@@ -584,7 +639,8 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
 
         MiniMaxModelArgs args = MiniMaxModelArgs.fromHuggingFace(configJson.toString(), maxBatchSize, maxSeqLen);
         if (root.has("quantization_config")) {
-            MiniMaxWeightMode mode = selectWeightMode(System.getenv().getOrDefault("SMILE_MINIMAX_MXFP8", "auto"),
+            MiniMaxWeightMode mode = selectWeightMode(weightMode != null && !weightMode.isBlank() ? weightMode.trim().toLowerCase()
+                            : System.getenv().getOrDefault("SMILE_MINIMAX_MXFP8", "auto"),
                     devices, computeDtype);
             args = args.withWeightMode(mode);
             logger.info("MXFP8 checkpoint: weight mode {}", mode);

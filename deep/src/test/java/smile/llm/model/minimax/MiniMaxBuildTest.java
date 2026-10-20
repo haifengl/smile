@@ -258,4 +258,49 @@ public class MiniMaxBuildTest {
             }
         }
     }
+
+    @Test
+    public void testGivenRequestsWithDifferentCapacitiesWhenDecodedTogetherThenMatchesSingleDecodes() throws IOException {
+        MiniMaxModelArgs a = MiniMaxModelArgs.fromHuggingFace(CONFIG, 4, 0);
+        writeCheckpoint(randomWeights(a), false);
+        try (MiniMax m = MiniMax.build(dir.toString(), 4, 0, (byte) -1, 0, 1)) {
+            int[] p1 = {3, 1, 4, 1, 5};
+            int[] p2 = {9, 2, 6, 5, 3, 5, 8, 9, 7, 9, 3, 2};
+            int[] tokens = {7, 11};
+
+            // Batched: the first request reserves 8 slots, the second 40.
+            int i1 = m.bind(p1, 8);
+            int i2 = m.bind(p2, 40);
+            float[] batched;
+            try (var noGrad = Tensor.noGradGuard()) {
+                m.prefill(i1, p1, 0).close();
+                m.prefill(i2, p2, 0).close();
+                try (Tensor logits = m.decodeStep(new int[]{i1, i2}, tokens, new int[]{p1.length, p2.length})) {
+                    batched = logits.copy().floatArray();
+                }
+            } finally {
+                m.evict(i1);
+                m.evict(i2);
+            }
+
+            // Alone, same capacities.
+            int[][] prompts = {p1, p2};
+            int[] caps = {8, 40};
+            int vocab = a.vocabSize();
+            for (int r = 0; r < 2; r++) {
+                int id = m.bind(prompts[r], caps[r]);
+                try (var noGrad = Tensor.noGradGuard()) {
+                    m.prefill(id, prompts[r], 0).close();
+                    try (Tensor logits = m.decodeStep(new int[]{id}, new int[]{tokens[r]}, new int[]{prompts[r].length})) {
+                        float[] single = logits.copy().floatArray();
+                        for (int v = 0; v < vocab; v++) {
+                            assertEquals(single[v], batched[r * vocab + v], 1e-4f, "request " + r + " logit " + v);
+                        }
+                    }
+                } finally {
+                    m.evict(id);
+                }
+            }
+        }
+    }
 }

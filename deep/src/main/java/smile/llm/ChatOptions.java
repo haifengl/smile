@@ -25,12 +25,43 @@ import java.util.List;
  * @param tools             available tools; {@code null} or empty means no tools.
  * @param toolChoice        tool selection policy; {@code null} defaults to {@link ToolChoice#AUTO}.
  * @param parallelToolCalls whether multiple tool calls in one turn are allowed.
+ * @param thinkingMode      {@link #THINKING_ENABLED}, {@link #THINKING_DISABLED}, {@link #THINKING_ADAPTIVE}, or
+ *                          {@code null} for the model's default (templates that support it).
  * @author Haifeng Li
  */
 public record ChatOptions(
         ToolDefinition[] tools,
         ToolChoice toolChoice,
-        boolean parallelToolCalls) {
+        boolean parallelToolCalls,
+        String thinkingMode) {
+
+    /** Thinking is requested before every answer. */
+    public static final String THINKING_ENABLED = "enabled";
+    /** The model answers without thinking. */
+    public static final String THINKING_DISABLED = "disabled";
+    /** The model decides whether to think. */
+    public static final String THINKING_ADAPTIVE = "adaptive";
+
+    /**
+     * Options without a thinking-mode preference.
+     *
+     * @param tools             tool definitions; may be {@code null}.
+     * @param toolChoice        tool choice; {@code null} means auto.
+     * @param parallelToolCalls whether parallel tool calls are allowed.
+     */
+    public ChatOptions(ToolDefinition[] tools, ToolChoice toolChoice, boolean parallelToolCalls) {
+        this(tools, toolChoice, parallelToolCalls, null);
+    }
+
+    /**
+     * Returns a copy with another thinking mode.
+     *
+     * @param mode {@link #THINKING_ENABLED}, {@link #THINKING_DISABLED}, {@link #THINKING_ADAPTIVE} or {@code null}.
+     * @return the new options.
+     */
+    public ChatOptions withThinkingMode(String mode) {
+        return new ChatOptions(tools, toolChoice, parallelToolCalls, mode);
+    }
 
     /** Empty options (no tools). */
     public static final ChatOptions NONE = new ChatOptions(null, ToolChoice.NONE, true);
@@ -44,6 +75,10 @@ public record ChatOptions(
         }
         if (toolChoice == null) {
             toolChoice = ToolChoice.AUTO;
+        }
+        if (thinkingMode != null && !THINKING_ENABLED.equals(thinkingMode)
+                && !THINKING_DISABLED.equals(thinkingMode) && !THINKING_ADAPTIVE.equals(thinkingMode)) {
+            throw new IllegalArgumentException("thinking mode must be enabled, disabled or adaptive: " + thinkingMode);
         }
     }
 
