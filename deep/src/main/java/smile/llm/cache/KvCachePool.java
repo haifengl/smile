@@ -1612,7 +1612,10 @@ public class KvCachePool implements AutoCloseable {
         if (startPos == null || startPos.length != batch) {
             throw new IllegalArgumentException("startPos length must equal batch size");
         }
-        for (int b = 0; b < batch; b++) {
+        // With caller-supplied slots only the bound rows are checked: padded rows (CUDA-graph batches rounded up to
+        // a power of two) repeat a bound row's slots.
+        int checkedRows = slotIdx != null ? Math.min(batch, requestSlots.length) : batch;
+        for (int b = 0; b < checkedRows; b++) {
             ensureRequestRow(b, startPos[b] + seqlen);
         }
 

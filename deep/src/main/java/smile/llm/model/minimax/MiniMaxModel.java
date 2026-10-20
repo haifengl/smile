@@ -342,7 +342,7 @@ public class MiniMaxModel extends LayerBlock {
     private boolean graphEligible(int batch) {
         return GRAPHS_REQUESTED && !graphsDisabled && kvCachePool != null && smile.torch.Native.cudaGraphAvailable()
                 && kvCachePool.device().isCUDA() && params.weightMode() == MiniMaxWeightMode.MARLIN
-                && batch >= 1 && batch <= GRAPH_MAX_BATCH && (batch & (batch - 1)) == 0
+                && batch >= 1 && batch <= GRAPH_MAX_BATCH
                 && smile.torch.Native.fusedOpsAvailable();
     }
 
@@ -367,10 +367,22 @@ public class MiniMaxModel extends LayerBlock {
      * @return float32 logits {@code [B, V]} (a fresh tensor), or {@code null} when graphs are off or not
      *         applicable and the caller must run the eager path.
      */
-    public Tensor decodeGraph(long[] tokens, int[] positions) {
-        int batch = positions.length;
-        if (!graphEligible(batch)) {
+    public Tensor decodeGraph(long[] realTokens, int[] realPositions) {
+        int real = realPositions.length;
+        if (!graphEligible(real)) {
             return null;
+        }
+        // Pad to the next power of two with copies of row 0: a padded row reads and writes exactly what row 0 does
+        // (same token, position and slots), so it needs no scratch KV slot and the real rows are unaffected.
+        int batch = Integer.highestOneBit(real) == real ? real : Integer.highestOneBit(real) << 1;
+        if (batch > GRAPH_MAX_BATCH) {
+            return null;
+        }
+        long[] tokens = java.util.Arrays.copyOf(realTokens, batch);
+        int[] positions = java.util.Arrays.copyOf(realPositions, batch);
+        for (int i = real; i < batch; i++) {
+            tokens[i] = realTokens[0];
+            positions[i] = realPositions[0];
         }
         int maxPos = 0;
         for (int p : positions) {
@@ -384,8 +396,14 @@ public class MiniMaxModel extends LayerBlock {
         }
         Device device = kvCachePool.device();
         long[] host = new long[3 * batch + batch * length];
-        long[] write = kvCachePool.slotIndices(positions, 1);
+        long[] write = kvCachePool.slotIndices(realPositions, 1);
         long[] read = kvCachePool.slotIndices(length);
+        write = java.util.Arrays.copyOf(write, batch);
+        read = java.util.Arrays.copyOf(read, batch * length);
+        for (int i = real; i < batch; i++) {
+            write[i] = write[0];
+            System.arraycopy(read, 0, read, i * length, length);
+        }
         for (int i = 0; i < batch; i++) {
             host[i] = tokens[i];
             host[batch + i] = positions[i];
@@ -419,9 +437,18 @@ public class MiniMaxModel extends LayerBlock {
                         (System.nanoTime() - t0) / 1_000_000, graphs.size());
             }
             smile.torch.Native.cudaGraphReplay(entry.graph);
-            return entry.logits.reshape(batch, -1).copy();
+            Tensor all = entry.logits.reshape(batch, -1);
+            if (real == batch) {
+                return all.copy();
+            }
+            try (var rows = Index.slice(0, real)) {
+                return all.get(rows).copy();
+            }
         } catch (RuntimeException e) {
             graphLog.warn("MiniMax decode CUDA graph failed, falling back to eager decode: {}", e.toString());
+            if (System.getenv("SMILE_MINIMAX_GRAPH_DEBUG") != null) {
+                e.printStackTrace();
+            }
             graphsDisabled = true;
             closeGraphs();
             return null;
