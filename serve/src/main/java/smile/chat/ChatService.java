@@ -51,6 +51,7 @@ import smile.llm.attention.AttentionBackends;
 import smile.llm.attention.FlashInferArtifacts;
 import smile.llm.engine.DecodeCudaGraph;
 import smile.llm.model.llama.*;
+import smile.llm.model.minimax.MiniMax;
 import smile.llm.model.qwen.Qwen;
 import smile.onnx.genai.GenAI;
 import smile.onnx.genai.GenAISupportedModels;
@@ -414,7 +415,7 @@ public class ChatService implements OpenAiModelContributor {
         if (checkpointDir == null || !Files.isDirectory(checkpointDir)) {
             return false;
         }
-        if (isQwenCheckpoint(checkpointDir)) {
+        if (isQwenCheckpoint(checkpointDir) || isMiniMaxCheckpoint(checkpointDir)) {
             return true;
         }
         // Llama-family: HF config.json model_type llama, or classic tokenizer layout.
@@ -434,6 +435,9 @@ public class ChatService implements OpenAiModelContributor {
      * Returns {@code true} when the HF id looks like a builtin Torch Llama/Qwen family.
      */
     static boolean isBuiltinTorchFamily(String modelSpec) {
+        if (isMiniMaxRepoId(modelSpec)) {
+            return true;
+        }
         return GenAISupportedModels.matchRepoId(modelSpec)
                 .map(f -> f == GenAISupportedModels.Family.LLAMA
                         || f == GenAISupportedModels.Family.QWEN)
@@ -493,6 +497,7 @@ public class ChatService implements OpenAiModelContributor {
                                  boolean hybridPrefixReplay) {
         switch (model) {
             case Llama llama -> llama.setPrefixReuseEnabled(enabled);
+            case MiniMax minimax -> minimax.setPrefixReuseEnabled(enabled);
             case Qwen qwen -> {
                 qwen.setPrefixReplayEnabled(hybridPrefixReplay);
                 qwen.setPrefixReuseEnabled(enabled);
@@ -533,6 +538,10 @@ public class ChatService implements OpenAiModelContributor {
      * Logs checkpoint quant format vs selected weight GEMM backend (primary vs failover).
      */
     static void logQuantBackend(LanguageModel model, ChatServiceConfig config, KvCacheConfig kvCache) {
+        if (model instanceof MiniMax minimax) {
+            logger.infof("Weight quant: MiniMax-M3 weight mode %s", minimax.weightMode());
+            return;
+        }
         try {
             String modelPath = config.model().orElse(null);
             if (modelPath == null || modelPath.isBlank()) {
@@ -920,6 +929,9 @@ public class ChatService implements OpenAiModelContributor {
                 smile.llm.quant.QuantBackendOverride.clear();
             }
         }
+        if (isMiniMaxCheckpoint(localPath)) {
+            return buildMiniMax(localPath.toString(), config, memFraction, pageSize);
+        }
         String tokenizerPath = resolveLocalTokenizer(localPath);
         try {
             smile.llm.quant.QuantBackendOverride.set(config.quantization());
@@ -1002,6 +1014,60 @@ public class ChatService implements OpenAiModelContributor {
     }
 
     /**
+     * Returns {@code true} when {@code config.json} identifies a MiniMax-M3 checkpoint
+     * ({@code model_type} {@code minimax_m3*} or an {@code architectures} entry {@code MiniMaxM3*}).
+     */
+    static boolean isMiniMaxCheckpoint(Path checkpointDir) throws IOException {
+        Path configJson = checkpointDir.resolve("config.json");
+        if (!Files.isRegularFile(configJson)) {
+            return false;
+        }
+        JsonNode root = new ObjectMapper().readTree(configJson.toFile());
+        String modelType = root.has("model_type") ? root.get("model_type").asString() : "";
+        if (modelType.startsWith("minimax_m3")) {
+            return true;
+        }
+        if (root.has("architectures") && root.get("architectures").isArray()) {
+            for (JsonNode n : root.get("architectures")) {
+                String arch = n.asString();
+                if (arch != null && arch.startsWith("MiniMaxM3")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Returns {@code true} when a Hugging Face repo id names a MiniMax-M3 model. */
+    static boolean isMiniMaxRepoId(String modelSpec) {
+        return modelSpec != null && modelSpec.toLowerCase(java.util.Locale.ROOT).contains("minimax-m3");
+    }
+
+    /**
+     * Loads MiniMax-M3 with its routed experts spread over {@code smile.chat.devices} (expert parallelism;
+     * {@code smile.chat.tensor-parallel-size} is the number of devices). {@code smile.chat.quantization} picks
+     * how MXFP8 weights run: {@code auto}, {@code marlin}, {@code fp8} (Hopper+), or {@code dense}
+     * (dequantize while loading). The KV cache uses the compute dtype.
+     */
+    private LanguageModel buildMiniMax(String checkpointDir, ChatServiceConfig config,
+                                       double memFraction, int pageSize) throws Exception {
+        String quantization = config.quantization() == null ? "auto" : config.quantization().trim().toLowerCase();
+        String weightMode = switch (quantization) {
+            case "", "auto" -> null;
+            case "dense" -> "dequant";
+            case "marlin", "fp8" -> quantization;
+            default -> throw new IllegalArgumentException(
+                    "smile.chat.quantization=" + quantization + " is not supported for MiniMax-M3 "
+                            + "(use auto, marlin, fp8 or dense)");
+        };
+        byte[] devices = parallelConfig(config).devices();
+        logger.infof("Loading MiniMax-M3 from %s on %d device(s), weight mode %s",
+                checkpointDir, devices.length, weightMode == null ? "auto" : weightMode);
+        return MiniMax.build(checkpointDir, config.maxBatchSize(), config.maxSeqLen(), devices,
+                memFraction, pageSize, weightMode);
+    }
+
+    /**
      * Returns {@code true} when {@code config.json} identifies a Qwen3.5 hybrid checkpoint.
      */
     static boolean isQwenCheckpoint(Path checkpointDir) throws IOException {
@@ -1068,6 +1134,10 @@ public class ChatService implements OpenAiModelContributor {
             }
         }
 
+        if (isMiniMaxCheckpoint(checkpoint)) {
+            resolveHuggingFaceQwenTokenizer(repoId, config.modelLoaderThreads());   // tokenizer.json
+            return buildMiniMax(checkpointDir, config, memFractionStatic, pageSize);
+        }
         String tokenizerPath = resolveHuggingFaceTokenizer(repoId);
         try {
             smile.llm.quant.QuantBackendOverride.set(config.quantization());

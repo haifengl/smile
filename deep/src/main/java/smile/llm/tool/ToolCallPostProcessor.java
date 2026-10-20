@@ -66,7 +66,7 @@ public final class ToolCallPostProcessor {
 
         boolean lengthLimited = completion.reason() == FinishReason.length;
         String raw = completion.content() == null ? "" : completion.content();
-        ParseResult parsed = parseToolCalls(raw, lengthLimited);
+        ParseResult parsed = parseToolCalls(raw, lengthLimited, options.tools());
         if (parsed.hasToolCalls()) {
             // Visible content is only the optional prefix before tool calls
             // (already think-stripped by the parser); never return raw XML.
@@ -96,7 +96,14 @@ public final class ToolCallPostProcessor {
                 null);
     }
 
-    private static ParseResult parseToolCalls(String raw, boolean lengthLimited) {
+    private static ParseResult parseToolCalls(String raw, boolean lengthLimited,
+                                              smile.llm.ToolDefinition[] tools) {
+        if (raw.contains(MiniMaxToolCallParser.NS + "<tool_call>")) {
+            ParseResult minimax = new MiniMaxToolCallParser(tools).parse(raw, lengthLimited);
+            if (minimax.hasToolCalls()) {
+                return minimax;
+            }
+        }
         if (raw.contains("<function=")) {
             ParseResult qwen = QWEN3_XML.parse(raw, lengthLimited);
             if (qwen.hasToolCalls()) {

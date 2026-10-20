@@ -87,6 +87,13 @@ public class CompletionRequest {
     public JsonNode toolChoice;
     /** Whether parallel tool calls are allowed. Default: {@code true}. */
     public Boolean parallelToolCalls;
+    /**
+     * Thinking mode for models whose chat template supports it: {@code "enabled"}, {@code "disabled"},
+     * {@code "adaptive"}, or an object {@code {"type": "..."}}.
+     */
+    public JsonNode thinking;
+    /** vLLM-style template arguments; {@code thinking_mode} is honored when {@link #thinking} is absent. */
+    public JsonNode chatTemplateKwargs;
 
     /**
      * Returns {@code true} when the client set {@code max_completion_tokens}
@@ -150,7 +157,32 @@ public class CompletionRequest {
                 && (choice instanceof ToolChoice.Required || choice instanceof ToolChoice.Named)) {
             throw new IllegalArgumentException("tool_choice requires a non-empty tools array");
         }
-        return new ChatOptions(defs, choice, parallel);
+        return new ChatOptions(defs, choice, parallel, resolveThinkingMode());
+    }
+
+    /**
+     * Resolves the requested thinking mode from {@code thinking} or {@code chat_template_kwargs.thinking_mode}.
+     *
+     * @return {@code enabled}, {@code disabled}, {@code adaptive}, or {@code null} when unspecified.
+     * @throws IllegalArgumentException for any other value.
+     */
+    String resolveThinkingMode() {
+        JsonNode node = thinking;
+        if (node != null && node.isObject()) {
+            node = node.get("type");
+        }
+        if ((node == null || node.isNull()) && chatTemplateKwargs != null && chatTemplateKwargs.isObject()) {
+            node = chatTemplateKwargs.get("thinking_mode");
+        }
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        String mode = node.asText("").trim().toLowerCase(java.util.Locale.ROOT);
+        return switch (mode) {
+            case "enabled", "disabled", "adaptive" -> mode;
+            default -> throw new IllegalArgumentException(
+                    "thinking must be enabled, disabled or adaptive, got '" + node.asText("") + "'");
+        };
     }
 
     static ToolDefinition[] parseTools(JsonNode toolsNode) {

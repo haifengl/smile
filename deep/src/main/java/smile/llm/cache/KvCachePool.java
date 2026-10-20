@@ -1686,7 +1686,9 @@ public class KvCachePool implements AutoCloseable {
     /**
      * Returns the physical slot of every position {@code [0, length)} of the bound
      * batch, row-major {@code [batch * length]}. Side caches (e.g. MSA index keys) use
-     * these slots so they share allocation, prefix reuse and eviction with K/V.
+     * these slots so they share allocation, prefix reuse and eviction with K/V. Rows whose reserved capacity
+     * is shorter than {@code length} (requests of different lengths decoded in one batch) repeat their last
+     * slot for the extra positions; the caller must mask those positions.
      *
      * @param length number of positions per row.
      * @return slot ids.
@@ -1697,10 +1699,12 @@ public class KvCachePool implements AutoCloseable {
         long[] indices = new long[batch * length];
         for (int b = 0; b < batch; b++) {
             long[] slots = requestSlots[b];
-            if (length > slots.length) {
-                throw new IllegalArgumentException("slot read exceeds bound request capacity");
+            int n = Math.min(length, slots.length);
+            System.arraycopy(slots, 0, indices, b * length, n);
+            // Rows shorter than the batch's longest row: repeat their last slot. Callers mask those positions.
+            for (int t = n; t < length; t++) {
+                indices[b * length + t] = slots[slots.length - 1];
             }
-            System.arraycopy(slots, 0, indices, b * length, length);
         }
         return indices;
     }
@@ -1760,6 +1764,46 @@ public class KvCachePool implements AutoCloseable {
             // index_select materializes new storage; reshape is a view of that
             // storage. The flat tensors stay on the caller's Tensor.push scope
             // (not closed here) so LibTorch refcounting keeps storage alive.
+            Tensor keys = layerK.get(idx).reshape(batch, length, numKvHeads, headDim);
+            Tensor values = layerV.get(idx).reshape(batch, length, numKvHeads, headDim);
+            if (smile.llm.quant.Fp8KvCodec.isFp8(dtype)) {
+                Tensor kd = smile.llm.quant.Fp8KvCodec.dequantize(keys, kScale, computeDtype);
+                Tensor vd = smile.llm.quant.Fp8KvCodec.dequantize(values, vScale, computeDtype);
+                keys.close();
+                values.close();
+                return new Tuple2<>(kd, vd);
+            }
+            if (keys.dtype() != computeDtype) {
+                Tensor kd = keys.to(computeDtype);
+                Tensor vd = values.to(computeDtype);
+                if (kd != keys) {
+                    keys.close();
+                }
+                if (vd != values) {
+                    values.close();
+                }
+                return new Tuple2<>(kd, vd);
+            }
+            return new Tuple2<>(keys, values);
+        }
+    }
+
+    /**
+     * Like {@link #get(int, int)} for a batch whose rows have different reserved capacities: positions past a
+     * row's own capacity read that row's last slot instead of failing. The caller must mask such positions
+     * (a decode step masks everything beyond each row's current position).
+     *
+     * @param layer  layer index.
+     * @param length number of positions to read per row.
+     * @return {@code (keys, values)} each shaped {@code [batch, length, numKvHeads, headDim]}.
+     */
+    public Tuple2<Tensor, Tensor> getPadded(int layer, int length) {
+        long[] indices = slotIndices(length);
+        int batch = indices.length / Math.max(1, length);
+        try (var idx = Tensor.of(indices);
+             var layerIdx = Index.of(layer);
+             var layerK = kCache.get(layerIdx);
+             var layerV = vCache.get(layerIdx)) {
             Tensor keys = layerK.get(idx).reshape(batch, length, numKvHeads, headDim);
             Tensor values = layerV.get(idx).reshape(batch, length, numKvHeads, headDim);
             if (smile.llm.quant.Fp8KvCodec.isFp8(dtype)) {

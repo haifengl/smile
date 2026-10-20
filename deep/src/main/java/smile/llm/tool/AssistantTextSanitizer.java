@@ -30,11 +30,16 @@ public final class AssistantTextSanitizer {
             "<think>.*?</think>", Pattern.DOTALL);
     private static final Pattern TOOL_CALL_BLOCK = Pattern.compile(
             "<tool_call>.*?</tool_call>", Pattern.DOTALL);
+    /** MiniMax tool-call block; an unterminated block (token limit) is removed up to the end of the text. */
+    private static final Pattern MINIMAX_TOOL_CALL_BLOCK = Pattern.compile(
+            "\\]<\\]minimax\\[>\\[<tool_call>.*?(?:\\]<\\]minimax\\[>\\[</tool_call>|$)", Pattern.DOTALL);
+    private static final Pattern MINIMAX_MARKER = Pattern.compile("\\]<\\]minimax\\[>\\[");
     private static final Pattern TOOL_RESPONSE_BLOCK = Pattern.compile(
             "<tool_response>.*?</tool_response>", Pattern.DOTALL);
     /** Chat specials and role headers that may appear if decode skips fail. */
     private static final Pattern CHAT_SPECIALS = Pattern.compile(
-            "<\\|im_start\\|>|<\\|im_end\\|>|<\\|endoftext\\|>");
+            "<\\|im_start\\|>|<\\|im_end\\|>|<\\|endoftext\\|>"
+                    + "|\\]~b\\]|\\[e~\\[|\\]~!b\\[|\\]!p~\\[");
     private static final Pattern ROLE_HEADER = Pattern.compile(
             "(?m)^(?:system|user|assistant|tool)\\s*$\\n?");
     private static final Pattern ORPHAN_THINK = Pattern.compile(
@@ -71,10 +76,12 @@ public final class AssistantTextSanitizer {
         } else {
             out = THINK_BLOCK.matcher(out).replaceAll("");
         }
+        out = MINIMAX_TOOL_CALL_BLOCK.matcher(out).replaceAll("");
         out = TOOL_CALL_BLOCK.matcher(out).replaceAll("");
         out = TOOL_RESPONSE_BLOCK.matcher(out).replaceAll("");
         out = CHAT_SPECIALS.matcher(out).replaceAll("");
         out = ROLE_HEADER.matcher(out).replaceAll("");
+        out = MINIMAX_MARKER.matcher(out).replaceAll("");
         out = ORPHAN_THINK.matcher(out).replaceAll("");
         out = out.strip();
         return out.isEmpty() ? null : out;

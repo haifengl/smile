@@ -96,4 +96,22 @@ public class ToolCallingSerdeTest {
         assertEquals("call_1", chunks.getFirst().getFirst().id());
         assertEquals("fn", chunks.getFirst().getFirst().function().name());
     }
+
+    @Test
+    public void testGivenThinkingVariantsWhenToChatOptionsThenModeResolved() throws Exception {
+        String base = "\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]";
+        assertNull(mapper.readValue("{" + base + "}", CompletionRequest.class).toChatOptions().thinkingMode());
+        assertEquals("enabled", mapper.readValue("{" + base + ",\"thinking\":\"enabled\"}",
+                CompletionRequest.class).toChatOptions().thinkingMode());
+        assertEquals("disabled", mapper.readValue("{" + base + ",\"thinking\":{\"type\":\"Disabled\"}}",
+                CompletionRequest.class).toChatOptions().thinkingMode());
+        assertEquals("adaptive", mapper.readValue("{" + base + ",\"chat_template_kwargs\":{\"thinking_mode\":\"adaptive\"}}",
+                CompletionRequest.class).toChatOptions().thinkingMode());
+        // `thinking` wins over the template kwargs.
+        assertEquals("enabled", mapper.readValue("{" + base + ",\"thinking\":\"enabled\","
+                + "\"chat_template_kwargs\":{\"thinking_mode\":\"disabled\"}}",
+                CompletionRequest.class).toChatOptions().thinkingMode());
+        CompletionRequest bad = mapper.readValue("{" + base + ",\"thinking\":\"sometimes\"}", CompletionRequest.class);
+        assertThrows(IllegalArgumentException.class, bad::toChatOptions);
+    }
 }
