@@ -170,9 +170,8 @@ public class Device {
     public static Device preferredDevice() {
         if (smile_torch_h.smile_cuda_is_available() != 0) {
             return Device.CUDA();
-        // MPS is slower than CPU
-        // } else if (smile_torch_h.smile_mps_is_available() != 0) {
-        //    return Device.MPS();
+        } else if (smile_torch_h.smile_mps_is_available() != 0) {
+            return Device.MPS();
         } else {
             return Device.CPU();
         }
