@@ -157,6 +157,33 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)))
                 .orElse(null);
+        static final java.util.Optional<MemorySegment> GEMMA_RMS_NORM_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_gemma_rms_norm");
+        static final MethodHandle GEMMA_RMS_NORM = GEMMA_RMS_NORM_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> QK_NORM_ROPE_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_qk_norm_rope");
+        static final MethodHandle QK_NORM_ROPE = QK_NORM_ROPE_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> SWIGLU_OAI_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_swiglu_oai");
+        static final MethodHandle SWIGLU_OAI = SWIGLU_OAI_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MOE_ROUTE_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_moe_route");
+        static final MethodHandle MOE_ROUTE = MOE_ROUTE_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
         static final java.util.Optional<MemorySegment> MXFP8_TO_BLOCK_FP8_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_mxfp8_to_block_fp8");
         static final MethodHandle MXFP8_TO_BLOCK_FP8 = MXFP8_TO_BLOCK_FP8_SYM
@@ -881,6 +908,112 @@ public final class Native {
         return marlinFp8Result(Bindings.MARLIN_MOE_FP8_GEMM, "smile_marlin_moe_fp8_gemm",
                 a.handle(), qweight.handle(), scales.handle(), align.handle(), topkWeights.handle(),
                 blockSize, topK, mulTopkWeights ? 1 : 0);
+    }
+
+
+    private static final boolean FUSED_OPS_ENABLED = !"0".equals(System.getenv("SMILE_FUSED_OPS"));
+
+    /** @return {@code true} when the fused decode kernels are compiled in and not disabled by {@code SMILE_FUSED_OPS=0}. */
+    public static boolean fusedOpsAvailable() {
+        return FUSED_OPS_ENABLED && Bindings.GEMMA_RMS_NORM != null && Bindings.QK_NORM_ROPE != null
+                && Bindings.SWIGLU_OAI != null && Bindings.MOE_ROUTE != null;
+    }
+
+    /** Result of a fused kernel call, or {@code null} when it declined (unsupported input; the error is cleared). */
+    private static Tensor fusedResult(MethodHandle handle, Object... args) {
+        MemorySegment out;
+        try {
+            out = (MemorySegment) handle.invokeWithArguments(args);
+        } catch (Throwable t) {
+            return null;
+        }
+        return out == null || out.address() == 0 ? null : new Tensor(out);
+    }
+
+    /**
+     * Gemma RMSNorm {@code x * rsqrt(mean(x^2) + eps) * (1 + w)} in one launch.
+     *
+     * @return the normalized tensor, or {@code null} when the kernel is unavailable or the input is unsupported
+     *         (not CUDA, unsupported dtype).
+     */
+    public static Tensor gemmaRmsNorm(Tensor x, Tensor weight, double eps) {
+        if (!FUSED_OPS_ENABLED || Bindings.GEMMA_RMS_NORM == null || !x.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.GEMMA_RMS_NORM, x.handle(), weight.handle(), eps);
+    }
+
+    /**
+     * Per-head Gemma RMSNorm of {@code q} and {@code k} then partial RoPE, one launch; see
+     * {@code smile_minimax_ops.h}.
+     *
+     * @return {@code {q, k}}, or {@code null} when unavailable or unsupported.
+     */
+    public static Tensor[] qkNormRope(Tensor q, Tensor k, Tensor qWeight, Tensor kWeight,
+                                      Tensor cos, Tensor sin, int rotaryDim, double eps) {
+        if (!FUSED_OPS_ENABLED || Bindings.QK_NORM_ROPE == null || !q.device().isCUDA()) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment kPtr = arena.allocate(ValueLayout.ADDRESS);
+            MemorySegment qOut;
+            try {
+                qOut = (MemorySegment) Bindings.QK_NORM_ROPE.invokeExact(q.handle(), k.handle(),
+                        qWeight.handle(), kWeight.handle(), cos.handle(), sin.handle(), rotaryDim, eps, kPtr);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (qOut == null || qOut.address() == 0) {
+                return null;
+            }
+            MemorySegment kHandle = kPtr.get(ValueLayout.ADDRESS, 0);
+            if (kHandle == null || kHandle.address() == 0) {
+                new Tensor(qOut).close();
+                return null;
+            }
+            return new Tensor[]{new Tensor(qOut), new Tensor(kHandle)};
+        }
+    }
+
+    /**
+     * The {@code swigluoai} activation in one launch.
+     *
+     * @return {@code [T, I]} activations, or {@code null} when unavailable or unsupported.
+     */
+    public static Tensor swigluOai(Tensor gate, Tensor up, double alpha, double limit) {
+        if (!FUSED_OPS_ENABLED || Bindings.SWIGLU_OAI == null || !gate.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.SWIGLU_OAI, gate.handle(), up.handle(), alpha, limit);
+    }
+
+    /**
+     * MoE routing (sigmoid, bias-corrected top-k, normalise, scale) in one launch.
+     *
+     * @return {@code {ids int32 [T, k], weights float32 [T, k]}}, or {@code null} when unavailable or unsupported.
+     */
+    public static Tensor[] moeRoute(Tensor logits, Tensor bias, int topK, double scale) {
+        if (!FUSED_OPS_ENABLED || Bindings.MOE_ROUTE == null || !logits.device().isCUDA()) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment wPtr = arena.allocate(ValueLayout.ADDRESS);
+            MemorySegment ids;
+            try {
+                ids = (MemorySegment) Bindings.MOE_ROUTE.invokeExact(logits.handle(), bias.handle(), topK, scale, wPtr);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (ids == null || ids.address() == 0) {
+                return null;
+            }
+            MemorySegment w = wPtr.get(ValueLayout.ADDRESS, 0);
+            if (w == null || w.address() == 0) {
+                new Tensor(ids).close();
+                return null;
+            }
+            return new Tensor[]{new Tensor(ids), new Tensor(w)};
+        }
     }
 
     /** @return {@code true} when the MXFP8 to block-FP8 converter is compiled into {@code libsmile_torch}. */

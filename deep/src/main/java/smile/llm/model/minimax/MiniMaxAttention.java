@@ -221,13 +221,25 @@ public class MiniMaxAttention implements Attention {
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
         try {
-            Tensor query = headNorm(qProj.forward(x), qNorm, batch, seqlen, numHeads);
-            Tensor key = headNorm(kProj.forward(x), kNorm, batch, seqlen, numKvHeads);
+            Tensor qRaw = qProj.forward(x);
+            Tensor kRaw = kProj.forward(x);
             Tensor value = vProj.forward(x).view(batch, seqlen, numKvHeads, headDim);
 
-            var rope = PartialRotaryEncoding.apply(query, key, cos, sin, rotaryDim);
-            Tensor qRope = rope._1();
-            Tensor kRope = rope._2();
+            Tensor qRope;
+            Tensor kRope;
+            Tensor[] fused = Native.qkNormRope(qRaw.reshape(batch, seqlen, numHeads, headDim),
+                    kRaw.reshape(batch, seqlen, numKvHeads, headDim),
+                    qNorm.weight(), kNorm.weight(), cos, sin, rotaryDim, qNorm.eps());
+            if (fused != null) {
+                qRope = fused[0];
+                kRope = fused[1];
+            } else {
+                Tensor query = headNorm(qRaw, qNorm, batch, seqlen, numHeads);
+                Tensor key = headNorm(kRaw, kNorm, batch, seqlen, numKvHeads);
+                var rope = PartialRotaryEncoding.apply(query, key, cos, sin, rotaryDim);
+                qRope = rope._1();
+                kRope = rope._2();
+            }
 
             MiniMaxStep step = MiniMaxStep.current(positions);
             cachePool.put(kvLayerId, positions, kRope, value, step == null ? null : step.writeSlots(cachePool, seqlen));
@@ -235,19 +247,30 @@ public class MiniMaxAttention implements Attention {
             int cacheLen = maxPos + seqlen;
             var cached = step == null ? cachePool.getPadded(kvLayerId, cacheLen)
                     : cachePool.getPadded(kvLayerId, cacheLen, step.readSlots(cachePool, cacheLen));
-            Tensor keys = repeatKV(cached._1(), numRep);
-            Tensor values = repeatKV(cached._2(), numRep);
-
+            // Decode: the numRep query heads of a KV group are the "query rows" of one attention over that
+            // group's keys, so K/V are never expanded to all heads and the mask stays per group.
+            boolean grouped = seqlen == 1 && numRep > 1;
             Tensor attnMask;
             if (useSparse()) {
-                attnMask = sparseMask(x, cos, sin, positions, seqlen, cacheLen, step);
+                attnMask = sparseMask(x, cos, sin, positions, seqlen, cacheLen, step, grouped ? 1 : numRep);
             } else {
                 attnMask = seqlen > 1 ? mask : step != null
                         ? step.decodeMask(x.device(), x.dtype(), cacheLen) : decodeMask(positions, cacheLen, x);
             }
-            Tensor attn = KERNEL.forward(qRope.transpose(1, 2), keys.transpose(1, 2), values.transpose(1, 2),
-                    attnMask, AttentionContext.contiguous(1.0 / Math.sqrt(headDim), 0.0, false));
-            Tensor merged = attn.transpose(1, 2).contiguous().view(batch, seqlen, -1);
+            double scale = 1.0 / Math.sqrt(headDim);
+            Tensor merged;
+            if (grouped) {
+                Tensor attn = KERNEL.forward(qRope.reshape(batch, numKvHeads, numRep, headDim),
+                        cached._1().transpose(1, 2), cached._2().transpose(1, 2),
+                        attnMask, AttentionContext.contiguous(scale, 0.0, false));
+                merged = attn.reshape(batch, 1, -1);
+            } else {
+                Tensor keys = repeatKV(cached._1(), numRep);
+                Tensor values = repeatKV(cached._2(), numRep);
+                Tensor attn = KERNEL.forward(qRope.transpose(1, 2), keys.transpose(1, 2), values.transpose(1, 2),
+                        attnMask, AttentionContext.contiguous(scale, 0.0, false));
+                merged = attn.transpose(1, 2).contiguous().view(batch, seqlen, -1);
+            }
             Tensor out = oProj.forward(merged);
             out.promoteToParent();
             return out;
@@ -261,26 +284,41 @@ public class MiniMaxAttention implements Attention {
      * cached history and returns the additive mask restricting each head to its group's top-k blocks.
      */
     private Tensor sparseMask(Tensor x, Tensor cos, Tensor sin, int[] positions, int seqlen, int cacheLen,
-                              MiniMaxStep step) {
+                              MiniMaxStep step, int maskReps) {
         int batch = positions.length;
         int groups = args.numIndexHeads();
         int idxDim = args.indexDim();
-        Tensor iq = indexNorm(indexQProj.forward(x), indexQNorm, batch, seqlen, groups, idxDim);
-        Tensor ik = indexNorm(indexKProj.forward(x), indexKNorm, batch, seqlen, args.numIndexKeyHeads(), idxDim);
-        var rope = PartialRotaryEncoding.apply(iq, ik, cos, sin, rotaryDim);
+        int keyHeads = args.numIndexKeyHeads();
+        Tensor iqRaw = indexQProj.forward(x);
+        Tensor ikRaw = indexKProj.forward(x);
+        Tensor[] fused = Native.qkNormRope(iqRaw.reshape(batch, seqlen, groups, idxDim),
+                ikRaw.reshape(batch, seqlen, keyHeads, idxDim),
+                indexQNorm.weight(), indexKNorm.weight(), cos, sin, rotaryDim, indexQNorm.eps());
+        Tensor ropeQ;
+        Tensor ropeK;
+        if (fused != null) {
+            ropeQ = fused[0];
+            ropeK = fused[1];
+        } else {
+            Tensor iq = indexNorm(iqRaw, indexQNorm, batch, seqlen, groups, idxDim);
+            Tensor ik = indexNorm(ikRaw, indexKNorm, batch, seqlen, keyHeads, idxDim);
+            var rope = PartialRotaryEncoding.apply(iq, ik, cos, sin, rotaryDim);
+            ropeQ = rope._1();
+            ropeK = rope._2();
+        }
 
         Tensor writeIdx = step == null ? null : step.writeSlots(cachePool, seqlen);
         if (writeIdx != null) {
-            indexCache.put(indexOrdinal, writeIdx, rope._2());
+            indexCache.put(indexOrdinal, writeIdx, ropeK);
         } else {
-            indexCache.put(indexOrdinal, cachePool.slotIndices(positions, seqlen), rope._2());
+            indexCache.put(indexOrdinal, cachePool.slotIndices(positions, seqlen), ropeK);
         }
         Tensor history = (step == null ? indexCache.get(indexOrdinal, cachePool.slotIndices(cacheLen))
                 : indexCache.get(indexOrdinal, step.readSlots(cachePool, cacheLen)))
                 .reshape(batch, cacheLen, args.numIndexKeyHeads(), idxDim);
-        Tensor allow = MiniMaxSparse.allowMask(rope._1(), history, positions, args.blockSize(),
+        Tensor allow = MiniMaxSparse.allowMask(ropeQ, history, positions, args.blockSize(),
                 args.topkBlocks(), args.initBlocks(), args.localBlocks());
-        return MiniMaxSparse.additiveMask(allow, numRep, x.dtype());
+        return MiniMaxSparse.additiveMask(allow, maskReps, x.dtype());
     }
 
     private Tensor indexNorm(Tensor proj, QwenRMSNorm norm, int batch, int seqlen, int heads, int dim) {

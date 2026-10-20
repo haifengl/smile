@@ -146,6 +146,16 @@ public class MiniMaxMlp {
      * @return the activated tensor.
      */
     static Tensor swiglu(Tensor gate, Tensor up, double alpha, double limit) {
+        if (gate.dim() >= 2) {
+            long[] shape = gate.shape();
+            long inter = shape[shape.length - 1];
+            Tensor g2 = gate.dim() == 2 ? gate : gate.reshape(-1, inter);
+            Tensor u2 = up.dim() == 2 ? up : up.reshape(-1, inter);
+            Tensor fused = smile.torch.Native.swigluOai(g2, u2, alpha, limit);
+            if (fused != null) {
+                return gate.dim() == 2 ? fused : fused.reshape(shape);
+            }
+        }
         Tensor g = gate.clamp(Double.NEGATIVE_INFINITY, limit);
         Tensor u = up.clamp(-limit, limit);
         Tensor glu = g.mul(SIGMOID.forward(g.mul(alpha)));
