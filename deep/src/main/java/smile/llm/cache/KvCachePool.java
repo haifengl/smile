@@ -1805,6 +1805,35 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * One layer of the key cache {@code [numSlots, numKvHeads, headDim]} in the pool dtype, as a view.
+     *
+     * @param layer layer index.
+     * @return the view; the caller closes it.
+     */
+    public Tensor keyLayer(int layer) {
+        try (var layerIdx = Index.of(layer)) {
+            return kCache.get(layerIdx);
+        }
+    }
+
+    /**
+     * One layer of the value cache; see {@link #keyLayer(int)}.
+     *
+     * @param layer layer index.
+     * @return the view; the caller closes it.
+     */
+    public Tensor valueLayer(int layer) {
+        try (var layerIdx = Index.of(layer)) {
+            return vCache.get(layerIdx);
+        }
+    }
+
+    /** @return {@code true} when K/V are stored in the compute dtype (not quantized FP8), so kernels can read them. */
+    public boolean kvIsComputeDtype() {
+        return dtype == computeDtype && !smile.llm.quant.Fp8KvCodec.isFp8(dtype);
+    }
+
+    /**
      * Like {@link #get(int, int)} for a batch whose rows have different reserved capacities: positions past a
      * row's own capacity read that row's last slot instead of failing. The caller must mask such positions
      * (a decode step masks everything beyond each row's current position).

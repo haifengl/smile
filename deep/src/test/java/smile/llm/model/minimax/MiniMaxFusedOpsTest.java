@@ -306,4 +306,107 @@ public class MiniMaxFusedOpsTest {
         assumeTrue(available(), "needs CUDA and the fused kernels");
         checkMsaDecodeMask(1000, new int[]{5, 999, 640}, 16, 1, 2);
     }
+
+    private void checkSparseDecodeAttention(int length, int[] positions, int topk, int init, int local) {
+        int batch = positions.length;
+        int kvHeads = 4;
+        int rep = 16;
+        int d = 128;
+        int slotsTotal = batch * length + 5;
+        Random rnd = new Random(21);
+        float[] idxQ = roundTrip(random(rnd, batch * kvHeads * d, 1f), batch, kvHeads, d);
+        float[] idxK = roundTrip(random(rnd, slotsTotal * d, 1f), slotsTotal, 1, d);
+        float[] q = roundTrip(random(rnd, batch * kvHeads * rep * d, 1f), batch, kvHeads * rep, d);
+        float[] k = roundTrip(random(rnd, slotsTotal * kvHeads * d, 1f), slotsTotal, kvHeads, d);
+        float[] v = roundTrip(random(rnd, slotsTotal * kvHeads * d, 1f), slotsTotal, kvHeads, d);
+        java.util.List<Long> pool = new java.util.ArrayList<>();
+        for (long i = 0; i < slotsTotal; i++) {
+            pool.add(i);
+        }
+        java.util.Collections.shuffle(pool, rnd);
+        long[] slots = new long[batch * length];
+        for (int i = 0; i < slots.length; i++) {
+            slots[i] = pool.get(i);
+        }
+        double scale = 1.0 / Math.sqrt(d);
+        try (var noGrad = Tensor.noGradGuard();
+             Tensor iq = Tensor.of(idxQ, batch, kvHeads, d).to(CUDA).to(ScalarType.BFloat16);
+             Tensor ik = Tensor.of(idxK, slotsTotal, 1, d).to(CUDA).to(ScalarType.BFloat16);
+             Tensor qt = Tensor.of(q, batch, kvHeads * rep, d).to(CUDA).to(ScalarType.BFloat16);
+             Tensor kt = Tensor.of(k, slotsTotal, kvHeads, d).to(CUDA).to(ScalarType.BFloat16);
+             Tensor vt = Tensor.of(v, slotsTotal, kvHeads, d).to(CUDA).to(ScalarType.BFloat16);
+             Tensor st = Tensor.of(slots, batch * (long) length).to(CUDA);
+             Tensor pt = Tensor.of(positions, batch).to(CUDA);
+             Tensor sel = Native.msaDecodeSelect(iq, ik, st, pt, length, 128, topk, init, local)) {
+            assertNotNull(sel);
+            int[] blocks;
+            try (Tensor cpu = sel.to(Device.CPU())) {
+                blocks = cpu.intArray();
+            }
+            try (Tensor out = Native.sparseDecodeAttention(qt, kt, vt, st, pt, sel, length, scale)) {
+                assertNotNull(out);
+                assertArrayEquals(new long[]{batch, kvHeads * rep, d}, out.shape());
+                float[] got = host(out);
+                double[] expected = new double[got.length];
+                float[] qr = q;
+                for (int b = 0; b < batch; b++) {
+                    for (int g = 0; g < kvHeads; g++) {
+                        java.util.List<Integer> keys = new java.util.ArrayList<>();
+                        for (int j = 0; j < topk; j++) {
+                            int blk = blocks[(b * kvHeads + g) * topk + j];
+                            if (blk < 0) {
+                                continue;
+                            }
+                            for (int l = blk * 128; l < Math.min((blk + 1) * 128, length); l++) {
+                                if (l <= positions[b]) {
+                                    keys.add(l);
+                                }
+                            }
+                        }
+                        assertFalse(keys.isEmpty());
+                        for (int r = 0; r < rep; r++) {
+                            int head = g * rep + r;
+                            double[] s = new double[keys.size()];
+                            double max = Double.NEGATIVE_INFINITY;
+                            for (int i = 0; i < s.length; i++) {
+                                long slot = slots[b * length + keys.get(i)];
+                                double dot = 0;
+                                for (int e = 0; e < d; e++) {
+                                    dot += qr[(b * kvHeads * rep + head) * d + e] * k[(int) ((slot * kvHeads + g) * d + e)];
+                                }
+                                s[i] = dot * scale;
+                                max = Math.max(max, s[i]);
+                            }
+                            double sum = 0;
+                            for (int i = 0; i < s.length; i++) {
+                                s[i] = Math.exp(s[i] - max);
+                                sum += s[i];
+                            }
+                            for (int e = 0; e < d; e++) {
+                                double acc = 0;
+                                for (int i = 0; i < s.length; i++) {
+                                    long slot = slots[b * length + keys.get(i)];
+                                    acc += s[i] * v[(int) ((slot * kvHeads + g) * d + e)];
+                                }
+                                expected[(b * kvHeads * rep + head) * d + e] = acc / sum;
+                            }
+                        }
+                    }
+                }
+                assertClose(expected, got, 0.02, 0.01, "sparse attention");
+            }
+        }
+    }
+
+    @Test
+    public void testGivenRaggedRowsWhenSparseDecodeAttentionThenMatchesReference() {
+        assumeTrue(available(), "needs CUDA and the fused kernels");
+        checkSparseDecodeAttention(2048, new int[]{700, 130, 2047}, 4, 0, 1);
+    }
+
+    @Test
+    public void testGivenFullTopkAndShortRowWhenSparseDecodeAttentionThenMatchesReference() {
+        assumeTrue(available(), "needs CUDA and the fused kernels");
+        checkSparseDecodeAttention(3000, new int[]{5, 2999, 1500, 640}, 16, 1, 2);
+    }
 }

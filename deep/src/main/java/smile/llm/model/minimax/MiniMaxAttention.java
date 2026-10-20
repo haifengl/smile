@@ -19,6 +19,7 @@ package smile.llm.model.minimax;
 import java.lang.foreign.Arena;
 import java.lang.foreign.MemorySegment;
 import smile.deep.layer.LinearLayer;
+import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.llm.attention.Attention;
 import smile.llm.attention.AttentionContext;
@@ -279,31 +280,37 @@ public class MiniMaxAttention implements Attention {
             cachePool.put(kvLayerId, positions, kRope, value, step == null ? null : step.writeSlots(cachePool, seqlen));
 
             int cacheLen = step != null && step.fixedLength() > 0 ? step.fixedLength() : maxPos + seqlen;
-            var cached = step == null ? cachePool.getPadded(kvLayerId, cacheLen)
-                    : cachePool.getPadded(kvLayerId, cacheLen, step.readSlots(cachePool, cacheLen));
             // Decode: the numRep query heads of a KV group are the "query rows" of one attention over that
             // group's keys, so K/V are never expanded to all heads and the mask stays per group.
             boolean grouped = seqlen == 1 && numRep > 1;
-            Tensor attnMask;
-            if (useSparse()) {
-                attnMask = sparseMask(x, cos, sin, positions, seqlen, cacheLen, step, grouped ? 1 : numRep, proj);
-            } else {
-                attnMask = seqlen > 1 ? mask : step != null
-                        ? step.decodeMask(x.device(), x.dtype(), cacheLen) : decodeMask(positions, cacheLen, x);
-            }
             double scale = 1.0 / Math.sqrt(headDim);
-            Tensor merged;
-            if (grouped) {
-                Tensor attn = KERNEL.forward(qRope.reshape(batch, numKvHeads, numRep, headDim),
-                        cached._1().transpose(1, 2), cached._2().transpose(1, 2),
-                        attnMask, AttentionContext.contiguous(scale, 0.0, false));
-                merged = attn.reshape(batch, 1, -1);
-            } else {
-                Tensor keys = repeatKV(cached._1(), numRep);
-                Tensor values = repeatKV(cached._2(), numRep);
-                Tensor attn = KERNEL.forward(qRope.transpose(1, 2), keys.transpose(1, 2), values.transpose(1, 2),
-                        attnMask, AttentionContext.contiguous(scale, 0.0, false));
-                merged = attn.transpose(1, 2).contiguous().view(batch, seqlen, -1);
+            Tensor ropeQ = useSparse() ? indexStage(x, cos, sin, positions, seqlen, step, proj) : null;
+            Tensor merged = null;
+            if (grouped && ropeQ != null && step != null) {
+                merged = sparseDecode(qRope, ropeQ, x, cacheLen, step, scale);
+            }
+            if (merged == null) {
+                var cached = step == null ? cachePool.getPadded(kvLayerId, cacheLen)
+                        : cachePool.getPadded(kvLayerId, cacheLen, step.readSlots(cachePool, cacheLen));
+                Tensor attnMask;
+                if (ropeQ != null) {
+                    attnMask = sparseMask(ropeQ, x, positions, seqlen, cacheLen, step, grouped ? 1 : numRep);
+                } else {
+                    attnMask = seqlen > 1 ? mask : step != null
+                            ? step.decodeMask(x.device(), x.dtype(), cacheLen) : decodeMask(positions, cacheLen, x);
+                }
+                if (grouped) {
+                    Tensor attn = KERNEL.forward(qRope.reshape(batch, numKvHeads, numRep, headDim),
+                            cached._1().transpose(1, 2), cached._2().transpose(1, 2),
+                            attnMask, AttentionContext.contiguous(scale, 0.0, false));
+                    merged = attn.reshape(batch, 1, -1);
+                } else {
+                    Tensor keys = repeatKV(cached._1(), numRep);
+                    Tensor values = repeatKV(cached._2(), numRep);
+                    Tensor attn = KERNEL.forward(qRope.transpose(1, 2), keys.transpose(1, 2), values.transpose(1, 2),
+                            attnMask, AttentionContext.contiguous(scale, 0.0, false));
+                    merged = attn.transpose(1, 2).contiguous().view(batch, seqlen, -1);
+                }
             }
             Tensor out = oProj.forward(merged);
             out.promoteToParent();
@@ -314,11 +321,41 @@ public class MiniMaxAttention implements Attention {
     }
 
     /**
-     * MSA index branch: projects index queries/keys, stores the new keys, scores blocks over the
-     * cached history and returns the additive mask restricting each head to its group's top-k blocks.
+     * Block-sparse decode attention: selects the top-k blocks from the index cache and attends over just those
+     * blocks, reading K/V straight from the pool (no gather of the whole window, no mask).
+     *
+     * @return the merged heads {@code [B, 1, H * D]}, or {@code null} when the kernels cannot handle this
+     *         configuration (the caller then uses the masked SDPA path).
      */
-    private Tensor sparseMask(Tensor x, Tensor cos, Tensor sin, int[] positions, int seqlen, int cacheLen,
-                              MiniMaxStep step, int maskReps, Tensor proj) {
+    private Tensor sparseDecode(Tensor qRope, Tensor ropeQ, Tensor x, int cacheLen, MiniMaxStep step, double scale) {
+        int groups = args.numIndexHeads();
+        if (groups != numKvHeads || indexCache.numKeyHeads() != 1 || !cachePool.kvIsComputeDtype()
+                || x.dtype() != ScalarType.BFloat16) {
+            return null;
+        }
+        int batch = (int) x.shape()[0];
+        Tensor slots = step.readSlots(cachePool, cacheLen);
+        Tensor positions = step.positionsDevice(x.device());
+        try (Tensor indexLayer = indexCache.layer(indexOrdinal);
+             Tensor kLayer = cachePool.keyLayer(kvLayerId);
+             Tensor vLayer = cachePool.valueLayer(kvLayerId)) {
+            Tensor sel = Native.msaDecodeSelect(ropeQ.reshape(batch, groups, args.indexDim()), indexLayer, slots,
+                    positions, cacheLen, args.blockSize(), args.topkBlocks(), args.initBlocks(), args.localBlocks());
+            if (sel == null) {
+                return null;
+            }
+            Tensor out = Native.sparseDecodeAttention(qRope.reshape(batch, numHeads, headDim), kLayer, vLayer,
+                    slots, positions, sel, cacheLen, scale);
+            return out == null ? null : out.reshape(batch, 1, -1);
+        }
+    }
+
+    /**
+     * MSA index branch, first half: projects the index queries/keys (norm + RoPE), stores the new keys in the
+     * index cache and returns the index queries {@code [B, S, G, D]}.
+     */
+    private Tensor indexStage(Tensor x, Tensor cos, Tensor sin, int[] positions, int seqlen,
+                              MiniMaxStep step, Tensor proj) {
         int batch = positions.length;
         int groups = args.numIndexHeads();
         int idxDim = args.indexDim();
@@ -350,6 +387,18 @@ public class MiniMaxAttention implements Attention {
         } else {
             indexCache.put(indexOrdinal, cachePool.slotIndices(positions, seqlen), ropeK);
         }
+        return ropeQ;
+    }
+
+    /**
+     * MSA index branch, second half: scores blocks over the cached history and returns the additive mask
+     * restricting each head to its group's top-k blocks.
+     */
+    private Tensor sparseMask(Tensor ropeQ, Tensor x, int[] positions, int seqlen, int cacheLen,
+                              MiniMaxStep step, int maskReps) {
+        int batch = positions.length;
+        int groups = args.numIndexHeads();
+        int idxDim = args.indexDim();
         if (seqlen == 1 && step != null && indexCache.numKeyHeads() == 1) {
             try (Tensor layer = indexCache.layer(indexOrdinal)) {
                 Tensor mask = Native.msaDecodeMask(ropeQ.reshape(batch, groups, idxDim), layer,
