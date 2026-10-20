@@ -910,6 +910,8 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             network.layers().get(e.getKey()).moe().setRouterFp32(e.getValue()[0], e.getValue()[1]);
         }
 
+        network.fuseProjections();
+
         // loadStateDict(strict=false) silently skips unregistered names; fail loudly instead.
         Set<String> missing = new java.util.TreeSet<>(MiniMaxWeightNames.expectedNames(args, rank));
         missing.removeAll(loaded);

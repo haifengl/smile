@@ -184,6 +184,14 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE,
                         ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final java.util.Optional<MemorySegment> MSA_DECODE_MASK_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_msa_decode_mask");
+        static final MethodHandle MSA_DECODE_MASK = MSA_DECODE_MASK_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT)))
+                .orElse(null);
         static final java.util.Optional<MemorySegment> MXFP8_TO_BLOCK_FP8_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_mxfp8_to_block_fp8");
         static final MethodHandle MXFP8_TO_BLOCK_FP8 = MXFP8_TO_BLOCK_FP8_SYM
@@ -1014,6 +1022,24 @@ public final class Native {
             }
             return new Tensor[]{new Tensor(ids), new Tensor(w)};
         }
+    }
+
+    /**
+     * MSA block selection for single-token decode; see {@code smile_minimax_ops.h}.
+     *
+     * @param q         index queries {@code [B, G, D]}.
+     * @param cache     one layer of the index-key cache {@code [numSlots, 1, D]}, contiguous.
+     * @param slots     int64 {@code [B * length]} physical slots.
+     * @param positions int32 {@code [B]} query positions on the device.
+     * @return additive mask {@code [B, G, 1, length]}, or {@code null} when unavailable or unsupported.
+     */
+    public static Tensor msaDecodeMask(Tensor q, Tensor cache, Tensor slots, Tensor positions, int length,
+                                       int blockSize, int topk, int initBlocks, int localBlocks) {
+        if (!FUSED_OPS_ENABLED || Bindings.MSA_DECODE_MASK == null || !q.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.MSA_DECODE_MASK, q.handle(), cache.handle(), slots.handle(),
+                positions.handle(), length, blockSize, topk, initBlocks, localBlocks);
     }
 
     /** @return {@code true} when the MXFP8 to block-FP8 converter is compiled into {@code libsmile_torch}. */

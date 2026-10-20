@@ -171,6 +171,13 @@ public class MiniMaxModel extends LayerBlock {
         }
     }
 
+    /** Merges each layer's attention projections into one GEMM where the weights allow it; call after loading. */
+    public void fuseProjections() {
+        for (var layer : layers) {
+            layer.selfAttn.fuseProjections();
+        }
+    }
+
     /**
      * Installs the KV pool in every attention layer.
      *

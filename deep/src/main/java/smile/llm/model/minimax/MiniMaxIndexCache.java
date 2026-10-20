@@ -93,6 +93,18 @@ public class MiniMaxIndexCache implements AutoCloseable {
         }
     }
 
+    /** One layer of the cache {@code [numSlots, numKeyHeads, indexDim]} as a view; the caller closes it. */
+    public Tensor layer(int ordinal) {
+        try (var layerIdx = Index.of(ordinal)) {
+            return cache.get(layerIdx);
+        }
+    }
+
+    /** @return index-key heads per token. */
+    public int numKeyHeads() {
+        return numKeyHeads;
+    }
+
     public Tensor get(int ordinal, long[] slots) {
         try (var layerIdx = Index.of(ordinal);
              var layer = cache.get(layerIdx);
