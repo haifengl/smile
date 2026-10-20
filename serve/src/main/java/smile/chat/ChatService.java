@@ -776,9 +776,10 @@ public class ChatService implements OpenAiModelContributor {
                 if (model instanceof GenAiChatModel) {
                     // Serial GenAI multimodal path materializes files below.
                 } else if (!(model instanceof Qwen qwen) || !qwen.isMultimodal()) {
-                    throw new IllegalArgumentException(
+                    // A client error (HTTP 400), not a server failure: this model is text-only.
+                    throw new jakarta.ws.rs.BadRequestException(
                             "Multimodal content requires a Qwen3.8 vision checkpoint "
-                                    + "or a GenAI multimodal model");
+                                    + "or a GenAI multimodal model; model '" + modelId + "' is text-only");
                 } else {
                     var mm = qwen.processMultimodal(messages);
                     int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), mm.inputIds().length);
