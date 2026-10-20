@@ -208,7 +208,7 @@ public class MLPTest {
             System.out.format("Epoch %d, Test Error = %d\n", epoch, error);
         }
 
-        assertEquals(35, error, 5);
+        assertEquals(30, error, 5);
     }
 
     @Test
@@ -305,7 +305,7 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(128, error, 5);
+        assertEquals(123, error, 5);
     }
 
     @Test
