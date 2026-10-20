@@ -54,8 +54,22 @@ public class QwenRMSNorm implements Layer {
         Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
+    /** @return the learned offset (the effective scale is {@code 1 + weight}). */
+    public Tensor weight() {
+        return weight;
+    }
+
+    /** @return the numerical stability epsilon. */
+    public double eps() {
+        return eps;
+    }
+
     @Override
     public Tensor forward(Tensor input) {
+        Tensor single = Native.gemmaRmsNorm(input, weight, eps);
+        if (single != null) {
+            return single;
+        }
         Tensor fused = Native.rmsNorm(input, weight, eps);
         if (fused != null) {
             return fused;

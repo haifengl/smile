@@ -307,8 +307,14 @@ public class MiniMaxMoE extends LayerBlock {
     private Tensor[] routeOnDevice(Tensor flat) {
         Tensor x = flat.to(ScalarType.Float);
         Tensor w = routerWeight != null ? routerWeight : gateWeight.to(ScalarType.Float);
-        Tensor scores = sigmoid.forward(x.matmul(w.transpose(0, 1)));
-        Tensor selection = scores.add(routerBias != null ? routerBias : bias.to(ScalarType.Float));
+        Tensor logits = x.matmul(w.transpose(0, 1));
+        Tensor biasF = routerBias != null ? routerBias : bias.to(ScalarType.Float);
+        Tensor[] fused = smile.torch.Native.moeRoute(logits, biasF, topK, scale);
+        if (fused != null) {
+            return fused;
+        }
+        Tensor scores = sigmoid.forward(logits);
+        Tensor selection = scores.add(biasF);
         var top = selection.topk(topK, 1, true, true);
         Tensor idx = top._2();
         Tensor picked = scores.gather(1, idx);
