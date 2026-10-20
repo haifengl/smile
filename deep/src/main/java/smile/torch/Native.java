@@ -109,6 +109,60 @@ public final class Native {
         static final MethodHandle MARLIN_AVAILABLE = MARLIN_AVAILABLE_SYM
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT)))
                 .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_FP8_AVAILABLE_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_fp8_available");
+        static final MethodHandle MARLIN_FP8_AVAILABLE = MARLIN_FP8_AVAILABLE_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_FP8_REPACK_WEIGHT_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_fp8_repack_weight");
+        static final MethodHandle MARLIN_FP8_REPACK_WEIGHT = MARLIN_FP8_REPACK_WEIGHT_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_FP8_REPACK_SCALES_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_fp8_repack_scales");
+        static final MethodHandle MARLIN_FP8_REPACK_SCALES = MARLIN_FP8_REPACK_SCALES_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_FP8_GEMM_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_fp8_gemm");
+        static final MethodHandle MARLIN_FP8_GEMM = MARLIN_FP8_GEMM_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_FP8_REPACK_WEIGHT_STACK_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_fp8_repack_weight_stack");
+        static final MethodHandle MARLIN_FP8_REPACK_WEIGHT_STACK = MARLIN_FP8_REPACK_WEIGHT_STACK_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_FP8_REPACK_SCALES_STACK_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_fp8_repack_scales_stack");
+        static final MethodHandle MARLIN_FP8_REPACK_SCALES_STACK = MARLIN_FP8_REPACK_SCALES_STACK_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MOE_ALIGN_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_moe_align_block_size");
+        static final MethodHandle MOE_ALIGN = MOE_ALIGN_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_MOE_FP8_GEMM_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_moe_fp8_gemm");
+        static final MethodHandle MARLIN_MOE_FP8_GEMM = MARLIN_MOE_FP8_GEMM_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MXFP8_TO_BLOCK_FP8_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_mxfp8_to_block_fp8");
+        static final MethodHandle MXFP8_TO_BLOCK_FP8 = MXFP8_TO_BLOCK_FP8_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
         static final MethodHandle MODULE_SET_REQUIRES_GRAD = LINKER.downcallHandle(
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_module_set_requires_grad"),
                 FunctionDescriptor.ofVoid(ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
@@ -702,6 +756,165 @@ public final class Native {
                             : err);
         }
         return new Tensor(out);
+    }
+
+    /** @return {@code true} when the MXFP8 Marlin kernels are compiled into {@code libsmile_torch}. */
+    public static boolean marlinFp8Available() {
+        if (Bindings.MARLIN_FP8_AVAILABLE == null) {
+            return false;
+        }
+        try {
+            return ((int) Bindings.MARLIN_FP8_AVAILABLE.invokeExact()) != 0;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /** @return {@code true} when the MoE token-grouping and Marlin MoE GEMM kernels are available. */
+    public static boolean marlinMoeFp8Available() {
+        return Bindings.MOE_ALIGN != null && Bindings.MARLIN_MOE_FP8_GEMM != null
+                && Bindings.MARLIN_FP8_REPACK_WEIGHT_STACK != null && Bindings.MARLIN_FP8_REPACK_SCALES_STACK != null;
+    }
+
+    private static Tensor marlinFp8Result(MethodHandle handle, String name, Object... args) {
+        if (handle == null) {
+            throw new IllegalStateException(name + " symbol not found (rebuild libsmile_torch with -DUSE_MARLIN_FP8=ON)");
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) handle.invokeWithArguments(args);
+        } catch (Throwable t) {
+            String err = lastError();
+            throw new RuntimeException(err == null || err.isEmpty() ? name + " failed: " + t.getMessage() : err, t);
+        }
+        if (out == null || out.address() == 0) {
+            String err = lastError();
+            throw new RuntimeException(err == null || err.isEmpty() ? name + " returned null" : err);
+        }
+        return new Tensor(out);
+    }
+
+    /**
+     * Repacks an MXFP8 weight into the Marlin tile layout.
+     *
+     * @param weight FP8 E4M3 (or uint8 holding E4M3 bytes) {@code [N, K]} on CUDA; {@code N % 64 == 0}, {@code K % 128 == 0}.
+     * @return int32 {@code [K / 16, N * 4]}.
+     */
+    public static Tensor marlinFp8RepackWeight(Tensor weight) {
+        return marlinFp8Result(Bindings.MARLIN_FP8_REPACK_WEIGHT, "smile_marlin_fp8_repack_weight", weight.handle());
+    }
+
+    /**
+     * Permutes E8M0 scales into the Marlin layout.
+     *
+     * @param scales uint8 {@code [N, K / 32]}.
+     * @return uint8 {@code [K / 32, N]}.
+     */
+    public static Tensor marlinFp8RepackScales(Tensor scales) {
+        return marlinFp8Result(Bindings.MARLIN_FP8_REPACK_SCALES, "smile_marlin_fp8_repack_scales", scales.handle());
+    }
+
+    /**
+     * MXFP8 weight-only GEMM: {@code A @ dequant(W)^T}.
+     *
+     * @param a       bfloat16 activations {@code [M, K]} on CUDA.
+     * @param qweight output of {@link #marlinFp8RepackWeight}.
+     * @param scales  output of {@link #marlinFp8RepackScales}.
+     * @return bfloat16 {@code [M, N]}.
+     */
+    public static Tensor marlinFp8Gemm(Tensor a, Tensor qweight, Tensor scales) {
+        return marlinFp8Result(Bindings.MARLIN_FP8_GEMM, "smile_marlin_fp8_gemm",
+                a.handle(), qweight.handle(), scales.handle());
+    }
+
+    /**
+     * Stacked variant of {@link #marlinFp8RepackWeight}.
+     *
+     * @param weights FP8 {@code [E, N, K]}.
+     * @return int32 {@code [E, K / 16, N * 4]}.
+     */
+    public static Tensor marlinFp8RepackWeightStack(Tensor weights) {
+        return marlinFp8Result(Bindings.MARLIN_FP8_REPACK_WEIGHT_STACK, "smile_marlin_fp8_repack_weight_stack",
+                weights.handle());
+    }
+
+    /**
+     * Stacked variant of {@link #marlinFp8RepackScales}.
+     *
+     * @param scales uint8 {@code [E, N, K / 32]}.
+     * @return uint8 {@code [E, K / 32, N]}.
+     */
+    public static Tensor marlinFp8RepackScalesStack(Tensor scales) {
+        return marlinFp8Result(Bindings.MARLIN_FP8_REPACK_SCALES_STACK, "smile_marlin_fp8_repack_scales_stack",
+                scales.handle());
+    }
+
+    /**
+     * Groups top-k assignments by expert on the device for the Marlin MoE kernel.
+     *
+     * @param topkIds           expert ids {@code [T, topK]} (int64 or int32) on CUDA.
+     * @param expertStart       first expert owned by this rank.
+     * @param numLocalExperts   experts owned by this rank.
+     * @param blockSize         MoE block size (8, 16, 32, 48 or 64).
+     * @return one int32 tensor: sorted token ids, per-block expert ids, then the padded length.
+     */
+    public static Tensor moeAlignBlockSize(Tensor topkIds, int expertStart, int numLocalExperts, int blockSize) {
+        return marlinFp8Result(Bindings.MOE_ALIGN, "smile_moe_align_block_size",
+                topkIds.handle(), expertStart, numLocalExperts, blockSize);
+    }
+
+    /**
+     * MXFP8 Marlin MoE GEMM; see {@code smile_marlin_fp8.h}.
+     *
+     * @param a              bfloat16 {@code [M, K]}.
+     * @param qweight        int32 {@code [E, K/16, N*4]}.
+     * @param scales         uint8 {@code [E, K/32, N]}.
+     * @param align          result of {@link #moeAlignBlockSize}.
+     * @param topkWeights    float32, {@code T * topK} routing weights.
+     * @param blockSize      the block size passed to {@link #moeAlignBlockSize}.
+     * @param topK           top-k of the routing ({@code 1} for the second GEMM).
+     * @param mulTopkWeights whether to scale each row by its routing weight.
+     * @return bfloat16 {@code [M * topK, N]}.
+     */
+    public static Tensor marlinMoeFp8Gemm(Tensor a, Tensor qweight, Tensor scales, Tensor align,
+                                          Tensor topkWeights, int blockSize, int topK, boolean mulTopkWeights) {
+        return marlinFp8Result(Bindings.MARLIN_MOE_FP8_GEMM, "smile_marlin_moe_fp8_gemm",
+                a.handle(), qweight.handle(), scales.handle(), align.handle(), topkWeights.handle(),
+                blockSize, topK, mulTopkWeights ? 1 : 0);
+    }
+
+    /** @return {@code true} when the MXFP8 to block-FP8 converter is compiled into {@code libsmile_torch}. */
+    public static boolean mxfp8ToBlockFp8Available() {
+        return Bindings.MXFP8_TO_BLOCK_FP8 != null;
+    }
+
+    /**
+     * Re-expresses MXFP8 weights (1x32 E8M0 scales) as block FP8 (one float32 scale per 128x128 tile).
+     *
+     * @param weight FP8 E4M3 {@code [N, K]} or {@code [E, N, K]} on CUDA, {@code N} and {@code K} multiples of 128.
+     * @param scale  uint8 E8M0 scales {@code [.., N, K / 32]}.
+     * @return {@code {fp8, scaleInv}} where {@code scaleInv} is float32 {@code [.., N/128, K/128]} and
+     *         {@code W = fp8 * scaleInv} per tile.
+     */
+    public static Tensor[] mxfp8ToBlockFp8(Tensor weight, Tensor scale) {
+        if (Bindings.MXFP8_TO_BLOCK_FP8 == null) {
+            throw new IllegalStateException("smile_mxfp8_to_block_fp8 symbol not found (rebuild libsmile_torch)");
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment scaleOut = arena.allocate(ValueLayout.ADDRESS);
+            MemorySegment fp8;
+            try {
+                fp8 = (MemorySegment) Bindings.MXFP8_TO_BLOCK_FP8.invokeExact(weight.handle(), scale.handle(), scaleOut);
+            } catch (Throwable t) {
+                String err = lastError();
+                throw new RuntimeException(err == null || err.isEmpty() ? "smile_mxfp8_to_block_fp8 failed: " + t.getMessage() : err, t);
+            }
+            if (fp8 == null || fp8.address() == 0) {
+                String err = lastError();
+                throw new RuntimeException(err == null || err.isEmpty() ? "smile_mxfp8_to_block_fp8 returned null" : err);
+            }
+            return new Tensor[]{new Tensor(fp8), new Tensor(scaleOut.get(ValueLayout.ADDRESS, 0))};
+        }
     }
 
     /**
