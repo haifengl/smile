@@ -41,13 +41,27 @@ final class MiniMaxStep implements AutoCloseable {
     /** Block-scoring tensors for one {@code (seqlen, length, groups)} shape. */
     record Sparse(Tensor queryPos, Tensor visibleBlocks, Tensor localStart, Tensor blockIdx, Tensor blockGrid) { }
 
+    /**
+     * Device-resident step metadata of a CUDA-graph decode step: static buffers refilled before every replay,
+     * so nothing is built on the host while capturing.
+     *
+     * @param positions int64 {@code [B]} query positions.
+     * @param write     int64 {@code [B]} physical slots written this step.
+     * @param read      int64 {@code [B * length]} slots of positions {@code [0, length)}.
+     * @param keyPos    int64 {@code [1, length]} the grid {@code 0..length-1}.
+     * @param length    padded attention window.
+     */
+    record External(Tensor positions, Tensor write, Tensor read, Tensor keyPos, int length) { }
+
     private final int[] positions;
+    private final External external;
     private final MiniMaxStep previous;
     private final List<Tensor> owned = new ArrayList<>();
     private final Map<String, Object> cache = new HashMap<>();
 
-    private MiniMaxStep(int[] positions, MiniMaxStep previous) {
+    private MiniMaxStep(int[] positions, External external, MiniMaxStep previous) {
         this.positions = positions.clone();
+        this.external = external;
         this.previous = previous;
     }
 
@@ -58,9 +72,21 @@ final class MiniMaxStep implements AutoCloseable {
      * @return the step; close it when the pass ends.
      */
     static MiniMaxStep begin(int[] positions) {
-        var step = new MiniMaxStep(positions, CURRENT.get());
+        var step = new MiniMaxStep(positions, null, CURRENT.get());
         CURRENT.set(step);
         return step;
+    }
+
+    /** Starts a CUDA-graph decode step whose metadata lives in static device buffers. */
+    static MiniMaxStep beginExternal(int[] positions, External external) {
+        var step = new MiniMaxStep(positions, external, CURRENT.get());
+        CURRENT.set(step);
+        return step;
+    }
+
+    /** The padded attention window of a graph step, or {@code 0} for an ordinary step. */
+    int fixedLength() {
+        return external == null ? 0 : external.length();
     }
 
     /** The step of the pass running on this thread whose positions equal {@code positions}, or {@code null}. */
@@ -110,11 +136,20 @@ final class MiniMaxStep implements AutoCloseable {
 
     /** Query positions as an int32 tensor on the device, {@code [batch]}. */
     Tensor positionsDevice(Device device) {
+        if (external != null) {
+            return memo("positions:i32", () -> own(external.positions().to(ScalarType.Int32)));
+        }
         return memo("positions:" + device, () -> own(Tensor.of(positions, positions.length).to(device)));
     }
 
     /** Slots of positions {@code [0, length)} of every bound row, {@code [batch * length]}. */
     Tensor readSlots(KvCachePool pool, int length) {
+        if (external != null) {
+            if (length != external.length()) {
+                throw new IllegalStateException("graph step window " + external.length() + " != " + length);
+            }
+            return external.read();
+        }
         return memo("read:" + length, () -> own(Tensor.of(pool.slotIndices(length)).to(pool.device())));
     }
 
@@ -123,6 +158,9 @@ final class MiniMaxStep implements AutoCloseable {
      * write of the pass, so this returns {@code null} until that write happened.
      */
     Tensor writeSlots(KvCachePool pool, int seqlen) {
+        if (external != null) {
+            return seqlen == 1 ? external.write() : null;
+        }
         String key = "write:" + seqlen;
         Object v = cache.get(key);
         if (v == null) {
@@ -138,6 +176,14 @@ final class MiniMaxStep implements AutoCloseable {
 
     /** Decode attention mask {@code [B, 1, 1, length]}, shared by every dense layer of the step. */
     Tensor decodeMask(Device device, ScalarType dtype, int length) {
+        if (external != null) {
+            return memo("decode-mask-ext:" + dtype, () -> {
+                Tensor beyond = external.keyPos().gt(external.positions().unsqueeze(1));
+                Tensor mask = Tensor.where(beyond, scalar(device, dtype, Double.NEGATIVE_INFINITY),
+                        scalar(device, dtype, 0.0));
+                return own(mask.reshape(positions.length, 1, 1, length));
+            });
+        }
         return memo("decode-mask:" + device + ':' + dtype + ':' + length, () -> {
             float[] data = new float[positions.length * length];
             for (int b = 0; b < positions.length; b++) {

@@ -419,6 +419,11 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             try (var scope = new AutoScope()) {
                 Tensor.push(scope);
                 try {
+                    Tensor graphed = models[r].decodeGraph(toks, positions);
+                    if (graphed != null) {
+                        graphed.detachFromScopes();
+                        return graphed;
+                    }
                     Tensor tokens = Tensor.of(toks).reshape(b, 1).to(models[r].device());
                     Tensor out = models[r].forward(tokens, positions);
                     Tensor rows = out.reshape(b, -1).copy();

@@ -189,6 +189,7 @@ public class MiniMaxModel extends LayerBlock {
             throw new IllegalArgumentException("pool must not be null");
         }
         var previous = this.kvCachePool;
+        closeGraphs();
         this.kvCachePool = pool;
         if (indexCache != null) {
             indexCache.close();
@@ -267,6 +268,189 @@ public class MiniMaxModel extends LayerBlock {
             return logits;
         } finally {
             step.close();
+            Tensor.pop();
+        }
+    }
+
+
+    // ------------------------------------------------------------------ CUDA-graph decode
+
+    private static final org.slf4j.Logger graphLog = org.slf4j.LoggerFactory.getLogger(MiniMaxModel.class);
+    /** Whole-step decode graphs (power-of-two batches, bucketed window); {@code SMILE_MINIMAX_CUDA_GRAPH=0} disables them. */
+    private static final boolean GRAPHS_REQUESTED = !"0".equals(System.getenv("SMILE_MINIMAX_CUDA_GRAPH"));
+    private static final int GRAPH_MAX_BATCH = intEnv("SMILE_MINIMAX_CUDA_GRAPH_MAX_BATCH", 32);
+    private static final int GRAPH_MAX_ENTRIES = intEnv("SMILE_MINIMAX_CUDA_GRAPH_MAX_ENTRIES", 48);
+
+    private static int intEnv(String name, int fallback) {
+        try {
+            return Integer.parseInt(System.getenv().getOrDefault(name, "").trim());
+        } catch (NumberFormatException e) {
+            return fallback;
+        }
+    }
+
+    /** One captured decode step for a fixed (batch, window). */
+    private static final class GraphEntry implements AutoCloseable {
+        final int batch;
+        final int length;
+        /** Static input: tokens[B] | positions[B] | write slots[B] | read slots[B * length], all int64. */
+        final Tensor meta;
+        final Tensor keyPos;
+        final Tensor logits;
+        MemorySegment graph;
+        boolean captured;
+
+        GraphEntry(Device device, int batch, int length, int vocab) {
+            this.batch = batch;
+            this.length = length;
+            var ints = new Tensor.Options().device(device).dtype(ScalarType.Int64).requireGradients(false);
+            var floats = new Tensor.Options().device(device).dtype(ScalarType.Float).requireGradients(false);
+            meta = Tensor.zeros(ints, 3L * batch + (long) batch * length);
+            long[] grid = new long[length];
+            for (int i = 0; i < length; i++) {
+                grid[i] = i;
+            }
+            keyPos = Tensor.of(grid, 1, length).to(device);
+            logits = Tensor.zeros(floats, batch, 1, vocab);
+            for (Tensor t : new Tensor[]{meta, keyPos, logits}) {
+                t.detachFromScopes();
+            }
+        }
+
+        @Override
+        public void close() {
+            if (graph != null) {
+                smile.torch.Native.cudaGraphDestroy(graph);
+                graph = null;
+            }
+            meta.close();
+            keyPos.close();
+            logits.close();
+        }
+    }
+
+    private final java.util.Map<Long, GraphEntry> graphs = new java.util.HashMap<>();
+    private boolean graphsDisabled;
+
+    /** Window bucket: at most ~12.5% above the needed length, a multiple of 256. */
+    static int graphWindow(int needed) {
+        int n = Math.max(needed, 256);
+        int step = Math.max(256, Integer.highestOneBit(n) / 8);
+        return (n + step - 1) / step * step;
+    }
+
+    private boolean graphEligible(int batch) {
+        return GRAPHS_REQUESTED && !graphsDisabled && kvCachePool != null && smile.torch.Native.cudaGraphAvailable()
+                && kvCachePool.device().isCUDA() && params.weightMode() == MiniMaxWeightMode.MARLIN
+                && batch >= 1 && batch <= GRAPH_MAX_BATCH && (batch & (batch - 1)) == 0
+                && smile.torch.Native.fusedOpsAvailable();
+    }
+
+    /** Frees every captured graph (the KV pool or the weights changed under them). */
+    public void closeGraphs() {
+        for (GraphEntry e : graphs.values()) {
+            e.close();
+        }
+        graphs.clear();
+    }
+
+    /**
+     * Single-token decode through a captured CUDA graph.
+     *
+     * <p>The first step of a (batch, window) shape runs eagerly twice (library handles and kernel attributes must
+     * exist before capture), then captures the whole forward pass and replays it; later steps only refill the
+     * static metadata buffer and replay. Nothing is built on the host while capturing: slots, positions and the
+     * attention mask come from the static buffers (see {@link MiniMaxStep.External}).
+     *
+     * @param tokens    last token of each row.
+     * @param positions KV write position of each row.
+     * @return float32 logits {@code [B, V]} (a fresh tensor), or {@code null} when graphs are off or not
+     *         applicable and the caller must run the eager path.
+     */
+    public Tensor decodeGraph(long[] tokens, int[] positions) {
+        int batch = positions.length;
+        if (!graphEligible(batch)) {
+            return null;
+        }
+        int maxPos = 0;
+        for (int p : positions) {
+            maxPos = Math.max(maxPos, p);
+        }
+        int length = graphWindow(maxPos + 1);
+        long key = ((long) batch << 32) | length;
+        GraphEntry entry = graphs.get(key);
+        if (entry == null && graphs.size() >= GRAPH_MAX_ENTRIES) {
+            return null;
+        }
+        Device device = kvCachePool.device();
+        long[] host = new long[3 * batch + batch * length];
+        long[] write = kvCachePool.slotIndices(positions, 1);
+        long[] read = kvCachePool.slotIndices(length);
+        for (int i = 0; i < batch; i++) {
+            host[i] = tokens[i];
+            host[batch + i] = positions[i];
+            host[2 * batch + i] = write[i];
+        }
+        System.arraycopy(read, 0, host, 3 * batch, read.length);
+        try {
+            boolean fresh = entry == null;
+            if (fresh) {
+                entry = new GraphEntry(device, batch, length, params.vocabSize());
+                graphs.put(key, entry);
+            }
+            try (Tensor src = Tensor.of(host)) {
+                smile.torch.Native.copy_(entry.meta, src);
+            }
+            if (fresh) {
+                for (int i = 0; i < 2; i++) {
+                    smile.torch.Native.copy_(entry.logits, graphForward(entry, positions));
+                }
+                entry.graph = smile.torch.Native.cudaGraphCreate();
+                int deviceIndex = Byte.toUnsignedInt(device.index());
+                long t0 = System.nanoTime();
+                smile.torch.Native.cudaGraphCaptureBegin(entry.graph, deviceIndex);
+                try {
+                    smile.torch.Native.copy_(entry.logits, graphForward(entry, positions));
+                } finally {
+                    smile.torch.Native.cudaGraphCaptureEnd(entry.graph);
+                }
+                entry.captured = true;
+                graphLog.info("captured MiniMax decode graph batch={} window={} in {} ms ({} graphs)", batch, length,
+                        (System.nanoTime() - t0) / 1_000_000, graphs.size());
+            }
+            smile.torch.Native.cudaGraphReplay(entry.graph);
+            return entry.logits.reshape(batch, -1).copy();
+        } catch (RuntimeException e) {
+            graphLog.warn("MiniMax decode CUDA graph failed, falling back to eager decode: {}", e.toString());
+            graphsDisabled = true;
+            closeGraphs();
+            return null;
+        }
+    }
+
+    /** The decode forward pass reading all per-step data from the entry's static buffers. */
+    private Tensor graphForward(GraphEntry e, int[] positions) {
+        int b = e.batch;
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        MiniMaxStep step = null;
+        try {
+            Tensor tokens = e.meta.get(Index.slice(0, b)).reshape(b, 1);
+            Tensor pos = e.meta.get(Index.slice(b, 2 * b));
+            Tensor write = e.meta.get(Index.slice(2 * b, 3 * b));
+            Tensor read = e.meta.get(Index.slice(3 * b, 3 * b + b * e.length));
+            step = MiniMaxStep.beginExternal(positions,
+                    new MiniMaxStep.External(pos, write, read, e.keyPos, e.length));
+            Tensor cos = rope.cos().get(pos).unsqueeze(1);
+            Tensor sin = rope.sin().get(pos).unsqueeze(1);
+            Tensor h = tokEmbeddings.forward(tokens);
+            Tensor logits = run(h, positions, cos, sin, null, false);
+            logits.promoteToParent();
+            return logits;
+        } finally {
+            if (step != null) {
+                step.close();
+            }
             Tensor.pop();
         }
     }
