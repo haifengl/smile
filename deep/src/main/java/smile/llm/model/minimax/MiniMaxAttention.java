@@ -278,7 +278,7 @@ public class MiniMaxAttention implements Attention {
             MiniMaxStep step = MiniMaxStep.current(positions);
             cachePool.put(kvLayerId, positions, kRope, value, step == null ? null : step.writeSlots(cachePool, seqlen));
 
-            int cacheLen = maxPos + seqlen;
+            int cacheLen = step != null && step.fixedLength() > 0 ? step.fixedLength() : maxPos + seqlen;
             var cached = step == null ? cachePool.getPadded(kvLayerId, cacheLen)
                     : cachePool.getPadded(kvLayerId, cacheLen, step.readSlots(cachePool, cacheLen));
             // Decode: the numRep query heads of a KV group are the "query rows" of one attention over that
