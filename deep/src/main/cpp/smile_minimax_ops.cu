@@ -265,8 +265,9 @@ __global__ void msa_block_score_kernel(const T* __restrict__ q, const T* __restr
 /** Picks the top-k visible blocks per (row, group) and writes the additive mask [B, G, 1, L]. Grid (G, B). */
 template <typename T>
 __global__ void msa_select_mask_kernel(const float* __restrict__ scores, const int* __restrict__ positions,
-                                       T* __restrict__ mask, int groups, int length, int block_size,
-                                       int num_blocks, int topk, int init_blocks, int local_blocks) {
+                                       T* __restrict__ mask, int* __restrict__ sel, int groups, int length,
+                                       int block_size, int num_blocks, int topk, int init_blocks,
+                                       int local_blocks) {
     const int g = blockIdx.x;
     const int b = blockIdx.y;
     const int pos = positions[b];
@@ -288,6 +289,8 @@ __global__ void msa_select_mask_kernel(const float* __restrict__ scores, const i
         s[i] = v;
         chosen[i] = 0;
     }
+    int* sel_row = sel != nullptr ? sel + ((int64_t) b * groups + g) * topk : nullptr;
+    for (int r = threadIdx.x; sel_row != nullptr && r < topk; r += blockDim.x) sel_row[r] = -1;
     __syncthreads();
     const int warps = blockDim.x >> 5;
     const int k2 = min(topk, num_blocks);
@@ -324,16 +327,169 @@ __global__ void msa_select_mask_kernel(const float* __restrict__ scores, const i
             }
             if (fb > -1e38f) {
                 chosen[fi] = 1;
+                if (sel_row != nullptr) sel_row[r] = fi;
                 s[fi] = -INFINITY;
             }
         }
         __syncthreads();
     }
+    if (mask == nullptr) return;
     T* dst = mask + ((int64_t) b * groups + g) * length;
     const T zero = static_cast<T>(0.f);
     const T neg_inf = static_cast<T>(-INFINITY);
     for (int l = threadIdx.x; l < length; l += blockDim.x) {
         dst[l] = (l <= pos && chosen[l / block_size]) ? zero : neg_inf;
+    }
+}
+
+// ---------------------------------------------------------------- block-sparse decode attention
+
+constexpr int kSdBlock = 128;                    // keys per block
+constexpr int kSdDim = 128;                      // head dim
+constexpr int kSdRep = 16;                       // query heads per KV group
+constexpr int kSdRowWords = kSdDim / 2 + 1;      // 65 words per smem row: conflict-free column reads
+constexpr size_t kSdSmem = (size_t) kSdRep * kSdDim * 4 * 2 + (size_t) kSdBlock * kSdRowWords * 4;
+
+__device__ __forceinline__ void bf16x2_to_float(uint32_t w, float& lo, float& hi) {
+    lo = __uint_as_float(w << 16);
+    hi = __uint_as_float(w & 0xffff0000u);
+}
+
+/**
+ * Attention of the 16 query heads of one KV group over one selected 128-key block, in fp32.
+ * Writes the block's partial softmax state: max m, sum l and the unnormalised output o per head.
+ * Grid (topk, kv_heads, batch), 256 threads.
+ */
+__global__ void sparse_decode_partial_kernel(const at::BFloat16* __restrict__ q, const at::BFloat16* __restrict__ kc,
+                                             const at::BFloat16* __restrict__ vc, const int64_t* __restrict__ slots,
+                                             const int* __restrict__ positions, const int* __restrict__ sel,
+                                             float* __restrict__ part_o, float* __restrict__ part_m,
+                                             float* __restrict__ part_l, int heads, int kv_heads, int length,
+                                             int topk, float scale) {
+    extern __shared__ __align__(16) unsigned char smem_raw[];
+    float* qs = reinterpret_cast<float*>(smem_raw);                 // [16][128], pre-scaled
+    float* ps = qs + kSdRep * kSdDim;                                // [16][128] scores then probabilities
+    uint32_t* kv = reinterpret_cast<uint32_t*>(ps + kSdRep * kSdDim);  // [128][65] words of bf16 pairs
+    const int j = blockIdx.x;
+    const int g = blockIdx.y;
+    const int b = blockIdx.z;
+    const int tid = threadIdx.x;
+    const int64_t base = ((int64_t) b * kv_heads + g) * topk + j;
+    const int blk = sel[base];
+    float* m_out = part_m + base * kSdRep;
+    float* l_out = part_l + base * kSdRep;
+    if (blk < 0) {
+        if (tid < kSdRep) {
+            m_out[tid] = -INFINITY;
+            l_out[tid] = 0.f;
+        }
+        return;
+    }
+    const int pos = positions[b];
+    const int first = blk * kSdBlock;
+
+    const at::BFloat16* qh = q + ((int64_t) b * heads + (int64_t) g * kSdRep) * kSdDim;
+    for (int i = tid; i < kSdRep * kSdDim; i += 256) qs[i] = static_cast<float>(qh[i]) * scale;
+
+    auto load_tile = [&](const at::BFloat16* cache) {
+        for (int i = tid; i < kSdBlock * (kSdDim / 2); i += 256) {
+            const int r = i >> 6;
+            const int c = i & 63;
+            const int key = first + r;
+            uint32_t w = 0;
+            if (key < length && key <= pos) {
+                const int64_t slot = slots[(int64_t) b * length + key];
+                w = reinterpret_cast<const uint32_t*>(cache + (slot * kv_heads + g) * kSdDim)[c];
+            }
+            kv[r * kSdRowWords + c] = w;
+        }
+    };
+    load_tile(kc);
+    __syncthreads();
+
+    {   // scores: thread = (key, half of the heads)
+        const int key = tid & (kSdBlock - 1);
+        const int h0 = (tid >> 7) * 8;
+        float acc[8];
+        for (int h = 0; h < 8; h++) acc[h] = 0.f;
+        for (int c = 0; c < kSdDim / 2; c++) {
+            float k0, k1;
+            bf16x2_to_float(kv[key * kSdRowWords + c], k0, k1);
+            for (int h = 0; h < 8; h++) {
+                acc[h] += qs[(h0 + h) * kSdDim + 2 * c] * k0 + qs[(h0 + h) * kSdDim + 2 * c + 1] * k1;
+            }
+        }
+        const bool valid = first + key < length && first + key <= pos;
+        for (int h = 0; h < 8; h++) ps[(h0 + h) * kSdBlock + key] = valid ? acc[h] : -INFINITY;
+    }
+    __syncthreads();
+    load_tile(vc);   // K is no longer needed
+    {   // softmax numerators: 16 lanes per head
+        const int h = tid >> 4;
+        const int sub = tid & 15;
+        float mx = -INFINITY;
+        for (int i = 0; i < kSdBlock / 16; i++) mx = fmaxf(mx, ps[h * kSdBlock + sub + 16 * i]);
+        for (int o = 8; o > 0; o >>= 1) mx = fmaxf(mx, __shfl_xor_sync(0xffffffffu, mx, o, 16));
+        float sum = 0.f;
+        for (int i = 0; i < kSdBlock / 16; i++) {
+            const int idx = h * kSdBlock + sub + 16 * i;
+            const float p = mx == -INFINITY ? 0.f : __expf(ps[idx] - mx);
+            ps[idx] = p;
+            sum += p;
+        }
+        for (int o = 8; o > 0; o >>= 1) sum += __shfl_xor_sync(0xffffffffu, sum, o, 16);
+        if (sub == 0) {
+            m_out[h] = mx;
+            l_out[h] = sum;
+        }
+    }
+    __syncthreads();
+    {   // o = p @ V: thread = (column pair, 4 heads)
+        const int dp = tid & 63;
+        const int h0 = (tid >> 6) * 4;
+        float acc[4][2];
+        for (int h = 0; h < 4; h++) acc[h][0] = acc[h][1] = 0.f;
+        for (int key = 0; key < kSdBlock; key++) {
+            float v0, v1;
+            bf16x2_to_float(kv[key * kSdRowWords + dp], v0, v1);
+            for (int h = 0; h < 4; h++) {
+                const float p = ps[(h0 + h) * kSdBlock + key];
+                acc[h][0] += p * v0;
+                acc[h][1] += p * v1;
+            }
+        }
+        float* o = part_o + base * kSdRep * kSdDim;
+        for (int h = 0; h < 4; h++) {
+            reinterpret_cast<float2*>(o + (h0 + h) * kSdDim)[dp] = make_float2(acc[h][0], acc[h][1]);
+        }
+    }
+}
+
+/** Merges the per-block partial softmax states of every head. Grid (kv_heads, batch), 256 threads. */
+__global__ void sparse_decode_combine_kernel(const float* __restrict__ part_o, const float* __restrict__ part_m,
+                                             const float* __restrict__ part_l, at::BFloat16* __restrict__ out,
+                                             int heads, int kv_heads, int topk) {
+    const int g = blockIdx.x;
+    const int b = blockIdx.y;
+    const int64_t base = ((int64_t) b * kv_heads + g) * topk;
+    for (int idx = threadIdx.x; idx < kSdRep * kSdDim; idx += blockDim.x) {
+        const int h = idx / kSdDim;
+        const int d = idx % kSdDim;
+        float mx = -INFINITY;
+        for (int j = 0; j < topk; j++) mx = fmaxf(mx, part_m[(base + j) * kSdRep + h]);
+        float den = 0.f;
+        float num = 0.f;
+        if (mx != -INFINITY) {
+            for (int j = 0; j < topk; j++) {
+                const float mj = part_m[(base + j) * kSdRep + h];
+                if (mj == -INFINITY) continue;
+                const float w = __expf(mj - mx);
+                den += w * part_l[(base + j) * kSdRep + h];
+                num += w * part_o[((base + j) * kSdRep + h) * kSdDim + d];
+            }
+        }
+        out[((int64_t) b * heads + (int64_t) g * kSdRep + h) * kSdDim + d] =
+                static_cast<at::BFloat16>(den > 0.f ? num / den : 0.f);
     }
 }
 
@@ -563,12 +719,129 @@ extern "C" ST_Tensor smile_msa_decode_mask(ST_Tensor q, ST_Tensor cache, ST_Tens
                     qt.data_ptr<T>(), ct.data_ptr<T>(), st.data_ptr<int64_t>(), pt.data_ptr<int>(),
                     scores.data_ptr<float>(), groups, d, length, block_size, num_blocks);
             msa_select_mask_kernel<T><<<dim3(groups, batch), 256, smem2, stream_of(qt)>>>(
-                    scores.data_ptr<float>(), pt.data_ptr<int>(), mask.data_ptr<T>(), groups, length, block_size,
-                    num_blocks, topk, init_blocks, local_blocks);
+                    scores.data_ptr<float>(), pt.data_ptr<int>(), mask.data_ptr<T>(), nullptr, groups, length,
+                    block_size, num_blocks, topk, init_blocks, local_blocks);
             return 0;
         });
         check_launch("smile_msa_decode_mask");
         return new ST_Tensor_{ mask };
+    } catch (const std::exception& e) {
+        set_err(e.what());
+        return nullptr;
+    }
+}
+
+extern "C" ST_Tensor smile_msa_decode_select(ST_Tensor q, ST_Tensor cache, ST_Tensor slots, ST_Tensor positions,
+                                             int length, int block_size, int topk, int init_blocks,
+                                             int local_blocks) {
+    try {
+        smile_torch_clear_error();
+        at::Tensor qt = require_cuda(q, "smile_msa_decode_select: q").contiguous();
+        at::Tensor ct = require_cuda(cache, "smile_msa_decode_select: cache");
+        at::Tensor st = require_cuda(slots, "smile_msa_decode_select: slots");
+        at::Tensor pt = require_cuda(positions, "smile_msa_decode_select: positions");
+        if (qt.dim() != 3 || ct.scalar_type() != qt.scalar_type() || !ct.is_contiguous()) {
+            throw std::runtime_error("smile_msa_decode_select: q [B,G,D] and a contiguous cache of the same dtype");
+        }
+        const int batch = (int) qt.size(0);
+        const int groups = (int) qt.size(1);
+        const int d = (int) qt.size(2);
+        if (groups > kMsaMaxGroups || d % 32 != 0 || d > 256 || ct.size(-1) != d
+            || (ct.dim() == 3 && ct.size(1) != 1)) {
+            throw std::runtime_error("smile_msa_decode_select: unsupported shape (groups <= 8, one shared key head)");
+        }
+        if (st.scalar_type() != at::kLong || st.numel() != (int64_t) batch * length
+            || pt.scalar_type() != at::kInt || pt.numel() != batch || topk <= 0) {
+            throw std::runtime_error("smile_msa_decode_select: slots must be int64 [B*L], positions int32 [B]");
+        }
+        const int num_blocks = (length + block_size - 1) / block_size;
+        if (num_blocks > kMsaMaxBlocks || block_size <= 0 || length <= 0) {
+            throw std::runtime_error("smile_msa_decode_select: too many blocks for the shared-memory scorer");
+        }
+        st = st.contiguous();
+        pt = pt.contiguous();
+        c10::cuda::CUDAGuard guard(qt.get_device());
+        at::Tensor scores = at::empty({batch, groups, num_blocks}, qt.options().dtype(at::kFloat));
+        at::Tensor sel = at::empty({batch, groups, topk}, qt.options().dtype(at::kInt));
+        const int threads1 = 128;
+        const size_t smem1 = ((size_t) groups * d + (threads1 / 32) * groups) * sizeof(float);
+        const size_t smem2 = (size_t) num_blocks * (sizeof(float) + 1);
+        DISPATCH_FLOAT(qt.scalar_type(), "smile_msa_decode_select", [&] {
+            msa_block_score_kernel<T><<<dim3(num_blocks, batch), threads1, smem1, stream_of(qt)>>>(
+                    qt.data_ptr<T>(), ct.data_ptr<T>(), st.data_ptr<int64_t>(), pt.data_ptr<int>(),
+                    scores.data_ptr<float>(), groups, d, length, block_size, num_blocks);
+            msa_select_mask_kernel<T><<<dim3(groups, batch), 256, smem2, stream_of(qt)>>>(
+                    scores.data_ptr<float>(), pt.data_ptr<int>(), nullptr, sel.data_ptr<int>(), groups, length,
+                    block_size, num_blocks, topk, init_blocks, local_blocks);
+            return 0;
+        });
+        check_launch("smile_msa_decode_select");
+        return new ST_Tensor_{ sel };
+    } catch (const std::exception& e) {
+        set_err(e.what());
+        return nullptr;
+    }
+}
+
+extern "C" ST_Tensor smile_sparse_decode_attention(ST_Tensor q, ST_Tensor k_layer, ST_Tensor v_layer,
+                                                   ST_Tensor slots, ST_Tensor positions, ST_Tensor sel,
+                                                   int length, double scale) {
+    try {
+        smile_torch_clear_error();
+        at::Tensor qt = require_cuda(q, "smile_sparse_decode_attention: q").contiguous();
+        at::Tensor kt = require_cuda(k_layer, "smile_sparse_decode_attention: k");
+        at::Tensor vt = require_cuda(v_layer, "smile_sparse_decode_attention: v");
+        at::Tensor st = require_cuda(slots, "smile_sparse_decode_attention: slots");
+        at::Tensor pt = require_cuda(positions, "smile_sparse_decode_attention: positions");
+        at::Tensor lt = require_cuda(sel, "smile_sparse_decode_attention: sel");
+        if (qt.dim() != 3 || qt.scalar_type() != at::kBFloat16 || kt.scalar_type() != at::kBFloat16
+            || vt.scalar_type() != at::kBFloat16 || !kt.is_contiguous() || !vt.is_contiguous()
+            || kt.dim() != 3 || vt.sizes() != kt.sizes()) {
+            throw std::runtime_error("smile_sparse_decode_attention: bf16 q [B,H,D] and contiguous k/v [slots,G,D]");
+        }
+        const int batch = (int) qt.size(0);
+        const int heads = (int) qt.size(1);
+        const int kv_heads = (int) kt.size(1);
+        if (qt.size(2) != kSdDim || kt.size(2) != kSdDim || kv_heads <= 0 || heads != kv_heads * kSdRep) {
+            throw std::runtime_error("smile_sparse_decode_attention: needs head_dim 128 and 16 query heads per KV head");
+        }
+        if (lt.scalar_type() != at::kInt || lt.dim() != 3 || lt.size(0) != batch || lt.size(1) != kv_heads
+            || st.scalar_type() != at::kLong || st.numel() != (int64_t) batch * length
+            || pt.scalar_type() != at::kInt || pt.numel() != batch) {
+            throw std::runtime_error("smile_sparse_decode_attention: sel/slots/positions have the wrong shape or dtype");
+        }
+        const int topk = (int) lt.size(2);
+        st = st.contiguous();
+        pt = pt.contiguous();
+        lt = lt.contiguous();
+        c10::cuda::CUDAGuard guard(qt.get_device());
+        // The attribute is per device (ranks run on different devices). Set it once per device, during the eager
+        // warmup, so nothing but stream work happens while a CUDA graph is being captured.
+        static bool attr_done[64] = {false};
+        const int dev = qt.get_device();
+        if (dev < 0 || dev >= 64) throw std::runtime_error("smile_sparse_decode_attention: device index out of range");
+        if (!attr_done[dev]) {
+            const cudaError_t attr = cudaFuncSetAttribute(
+                    sparse_decode_partial_kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, (int) kSdSmem);
+            if (attr != cudaSuccess) {
+                throw std::runtime_error(std::string("smile_sparse_decode_attention: ") + cudaGetErrorString(attr));
+            }
+            attr_done[dev] = true;
+        }
+        const int64_t parts = (int64_t) batch * kv_heads * topk;
+        at::Tensor part_o = at::empty({parts, kSdRep, kSdDim}, qt.options().dtype(at::kFloat));
+        at::Tensor part_m = at::empty({parts, kSdRep}, qt.options().dtype(at::kFloat));
+        at::Tensor part_l = at::empty({parts, kSdRep}, qt.options().dtype(at::kFloat));
+        at::Tensor out = at::empty({batch, heads, kSdDim}, qt.options());
+        sparse_decode_partial_kernel<<<dim3(topk, kv_heads, batch), 256, kSdSmem, stream_of(qt)>>>(
+                qt.data_ptr<at::BFloat16>(), kt.data_ptr<at::BFloat16>(), vt.data_ptr<at::BFloat16>(),
+                st.data_ptr<int64_t>(), pt.data_ptr<int>(), lt.data_ptr<int>(), part_o.data_ptr<float>(),
+                part_m.data_ptr<float>(), part_l.data_ptr<float>(), heads, kv_heads, length, topk, (float) scale);
+        sparse_decode_combine_kernel<<<dim3(kv_heads, batch), 256, 0, stream_of(qt)>>>(
+                part_o.data_ptr<float>(), part_m.data_ptr<float>(), part_l.data_ptr<float>(),
+                out.data_ptr<at::BFloat16>(), heads, kv_heads, topk);
+        check_launch("smile_sparse_decode_attention");
+        return new ST_Tensor_{ out };
     } catch (const std::exception& e) {
         set_err(e.what());
         return nullptr;

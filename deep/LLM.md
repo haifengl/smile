@@ -423,9 +423,16 @@ attention window rounded up to a multiple of 256 (at most ~12.5% above the conte
 merged projection. Measured on A100 (context 512): 4 layers on 1 GPU 13.7 -> 3.9 ms/step (batch 8); 16 layers on 8 GPUs
 24 -> 11 ms/step (batch 8), 24 -> 15 ms (batch 32).
 
+**Block-sparse decode attention.** On MSA layers the select kernel returns the chosen block ids and
+`smile_sparse_decode_attention` attends over just those blocks (one CTA per row, KV group and block: the 16 query heads
+of the group over 128 keys, fp32 softmax partials, then a merge kernel), reading K/V straight from the pool by slot, so
+the full-window K/V gather and the mask disappear and cost follows the 16 selected blocks instead of the context.
+Requires bf16 K/V, head dim 128 and 16 query heads per KV head; otherwise the masked SDPA path runs.
+`SMILE_SPARSE_DECODE_ATTENTION=0` forces that path. A 4-layer decode at context 6000, batch 8: 6.4 -> 5.8 ms/step.
+
 **Limits.** MSA block selection during prefill is a reference tensor implementation that materializes an `[batch,
-groups, query, context]` score matrix, so long prompts need a lot of memory and prefill is slow; decode attention still
-runs over the whole (masked) window; non-Marlin weight modes route on the host (no CUDA graphs); no speculative
+groups, query, context]` score matrix, so long prompts need a lot of memory and prefill is slow; decode attention on MSA layers runs
+the block-sparse kernel (below), other layers still attend over the whole masked window; non-Marlin weight modes route on the host (no CUDA graphs); no speculative
 decoding, log-probabilities, tensor-parallel attention or multi-node execution.
 Opt-in tests that need a checkpoint or GPUs read `MINIMAX_*` environment variables (see the test javadoc).
 

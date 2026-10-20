@@ -63,6 +63,25 @@ SMILE_API ST_Tensor smile_msa_decode_mask(ST_Tensor q, ST_Tensor cache, ST_Tenso
                                           int length, int block_size, int topk, int init_blocks,
                                           int local_blocks);
 
+/**
+ * Same scoring and selection as smile_msa_decode_mask, but returns the chosen block ids instead of a mask:
+ * int32 [B, G, topk], -1 where fewer than topk blocks are visible. No mask is written.
+ */
+SMILE_API ST_Tensor smile_msa_decode_select(ST_Tensor q, ST_Tensor cache, ST_Tensor slots, ST_Tensor positions,
+                                            int length, int block_size, int topk, int init_blocks,
+                                            int local_blocks);
+
+/**
+ * Block-sparse decode attention: each KV group's 16 query heads attend to the keys of their selected 128-key
+ * blocks only (causal, so keys past the query position are skipped), reading K/V straight from the cache by slot.
+ * q: bfloat16 [B, H, 128] (H = 16 * G); k_layer, v_layer: contiguous bfloat16 [numSlots, G, 128] (one layer of
+ * the KV pool); slots: int64 [B * length]; positions: int32 [B]; sel: int32 [B, G, topk] from
+ * smile_msa_decode_select. Returns bfloat16 [B, H, 128]. Two launches: per-block partial softmax, then a merge.
+ */
+SMILE_API ST_Tensor smile_sparse_decode_attention(ST_Tensor q, ST_Tensor k_layer, ST_Tensor v_layer,
+                                                  ST_Tensor slots, ST_Tensor positions, ST_Tensor sel,
+                                                  int length, double scale);
+
 #ifdef __cplusplus
 }
 #endif
