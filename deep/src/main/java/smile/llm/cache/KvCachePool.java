@@ -1595,6 +1595,17 @@ public class KvCachePool implements AutoCloseable {
      * @param v         values shaped {@code [batch, seqlen, numKvHeads, headDim]}.
      */
     public void put(int layer, int[] startPos, Tensor k, Tensor v) {
+        put(layer, startPos, k, v, null);
+    }
+
+    /**
+     * Like {@link #put(int, int[], Tensor, Tensor)} with the physical slot of every written position already
+     * on the device ({@code [batch * seqlen]}, row-major), so a model can upload it once per step instead of once
+     * per layer. Ignored when a decode/verify CUDA-graph index buffer is active.
+     *
+     * @param slotIdx device tensor of slots, or {@code null} to build it from the host.
+     */
+    public void put(int layer, int[] startPos, Tensor k, Tensor v, Tensor slotIdx) {
         long[] shape = k.shape();
         int batch = (int) shape[0];
         int seqlen = (int) shape[1];
@@ -1624,6 +1635,8 @@ public class KvCachePool implements AutoCloseable {
                         "verify KV index buffer not prepared for batch " + batch + ", seqlen " + seqlen);
             }
             idx = verifyKvIndexBuf;
+        } else if (slotIdx != null) {
+            idx = slotIdx;
         } else {
             long[] indices = new long[batch * seqlen];
             for (int b = 0; b < batch; b++) {
@@ -1799,8 +1812,19 @@ public class KvCachePool implements AutoCloseable {
      */
     public Tuple2<Tensor, Tensor> getPadded(int layer, int length) {
         long[] indices = slotIndices(length);
-        int batch = indices.length / Math.max(1, length);
-        try (var idx = Tensor.of(indices);
+        try (var idx = Tensor.of(indices)) {
+            return getPadded(layer, length, idx);
+        }
+    }
+
+    /**
+     * {@link #getPadded(int, int)} with the {@code [batch * length]} slot index already on the device.
+     *
+     * @param idx device tensor from {@link #slotIndices(int)}; not closed here.
+     */
+    public Tuple2<Tensor, Tensor> getPadded(int layer, int length, Tensor idx) {
+        int batch = (int) (idx.shape()[0] / Math.max(1, length));
+        try (
              var layerIdx = Index.of(layer);
              var layerK = kCache.get(layerIdx);
              var layerV = vCache.get(layerIdx)) {

@@ -66,78 +66,53 @@ final class MiniMaxSparse {
         Device device = indexQ.device();
         var opts = new Tensor.Options().device(device).dtype(ScalarType.Float).requireGradients(false);
 
-        // Host-side position bookkeeping (tiny integer tensors).
-        long[] qpos = new long[batch * seqlen];
-        long[] valid = new long[batch * seqlen];
-        long[] localStart = new long[batch * seqlen];
-        for (int b = 0; b < batch; b++) {
-            for (int t = 0; t < seqlen; t++) {
-                int p = positions[b] + t;
-                int visible = p / blockSize + 1;
-                qpos[b * seqlen + t] = p;
-                valid[b * seqlen + t] = visible;
-                localStart[b * seqlen + t] = Math.max(0, visible - localBlocks);
-            }
-        }
-        long[] kpos = new long[length];
-        long[] blockOf = new long[length];
-        for (int j = 0; j < length; j++) {
-            kpos[j] = j;
-            blockOf[j] = j / blockSize;
-        }
-        long[] blk = new long[numBlocks];
-        for (int i = 0; i < numBlocks; i++) {
-            blk[i] = i;
-        }
-
-        AutoScope scope = new AutoScope();
-        Tensor.push(scope);
+        MiniMaxStep shared = MiniMaxStep.current(positions);
+        MiniMaxStep step = shared != null ? shared : MiniMaxStep.begin(positions);
         try {
-            Tensor qpT = Tensor.of(qpos, batch, 1, seqlen, 1).to(device);
-            Tensor kpT = Tensor.of(kpos, 1, 1, 1, length).to(device);
-            Tensor causal = kpT.le(qpT);
+            AutoScope scope = new AutoScope();
+            Tensor.push(scope);
+            try {
+                var sp = step.sparse(device, seqlen, length, groups, blockSize, localBlocks);
+                Tensor causal = step.keyPos(device, length).le(sp.queryPos());
 
-            Tensor q = indexQ.to(ScalarType.Float).permute(0, 2, 1, 3);
-            Tensor k = indexK.to(ScalarType.Float).permute(0, 2, 3, 1);
-            Tensor scores = q.matmul(k);
+                Tensor q = indexQ.to(ScalarType.Float).permute(0, 2, 1, 3);
+                Tensor k = indexK.to(ScalarType.Float).permute(0, 2, 3, 1);
+                Tensor scores = q.matmul(k);
 
-            Tensor negInf = Tensor.zeros(opts, 1).fill_(Double.NEGATIVE_INFINITY);
-            Tensor masked = Tensor.where(causal, scores, negInf);
+                Tensor negInf = step.scalar(device, ScalarType.Float, Double.NEGATIVE_INFINITY);
+                Tensor masked = Tensor.where(causal, scores, negInf);
 
-            Tensor blockIdx = Tensor.of(blockOf, 1, 1, 1, length).to(device)
-                    .expand(batch, groups, seqlen, length).contiguous();
-            Tensor blockScore = Tensor.zeros(opts, batch, groups, seqlen, numBlocks)
-                    .fill_(Double.NEGATIVE_INFINITY);
-            blockScore.scatterReduce_(3, blockIdx, masked, "amax");
+                Tensor blockScore = Tensor.zeros(opts, batch, groups, seqlen, numBlocks)
+                        .fill_(Double.NEGATIVE_INFINITY);
+                blockScore.scatterReduce_(3, sp.blockIdx(), masked, "amax");
 
-            Tensor validT = Tensor.of(valid, batch, 1, seqlen, 1).to(device);
-            Tensor localT = Tensor.of(localStart, batch, 1, seqlen, 1).to(device);
-            Tensor blkT = Tensor.of(blk, 1, 1, 1, numBlocks).to(device);
-            Tensor visible = blkT.lt(validT);
-            Tensor score = Tensor.where(visible, blockScore, negInf);
-            if (initBlocks > 0) {
-                Tensor init = blkT.lt(initBlocks).and(visible);
-                score = Tensor.where(init, Tensor.zeros(opts, 1).fill_(INIT_SCORE), score);
+                Tensor blkT = sp.blockGrid();
+                Tensor visible = blkT.lt(sp.visibleBlocks());
+                Tensor score = Tensor.where(visible, blockScore, negInf);
+                Tensor local = blkT.ge(sp.localStart()).and(visible);
+                score = Tensor.where(local, step.scalar(device, ScalarType.Float, LOCAL_SCORE), score);
+                if (initBlocks > 0) {
+                    // Init outranks local when a block is both (matches the reference ordering).
+                    Tensor init = blkT.lt(initBlocks).and(visible);
+                    score = Tensor.where(init, step.scalar(device, ScalarType.Float, INIT_SCORE), score);
+                }
+
+                int k2 = Math.min(topk, numBlocks);
+                var top = score.topk(k2, 3, true, true);
+                Tensor chosenValid = top._1().gt(-1e38).to(ScalarType.Float);
+                Tensor allowBlocks = Tensor.zeros(opts, batch, groups, seqlen, numBlocks);
+                allowBlocks.scatterReduce_(3, top._2(), chosenValid, "amax");
+
+                Tensor allow = allowBlocks.gather(3, sp.blockIdx()).gt(0.5).and(causal);
+                allow.promoteToParent();
+                return allow;
+            } finally {
+                Tensor.pop();
             }
-            Tensor local = blkT.ge(localT).and(visible);
-            score = Tensor.where(local, Tensor.zeros(opts, 1).fill_(LOCAL_SCORE), score);
-            if (initBlocks > 0) {
-                // Init outranks local when a block is both (matches the reference ordering).
-                Tensor init = blkT.lt(initBlocks).and(visible);
-                score = Tensor.where(init, Tensor.zeros(opts, 1).fill_(INIT_SCORE), score);
-            }
-
-            int k2 = Math.min(topk, numBlocks);
-            var top = score.topk(k2, 3, true, true);
-            Tensor chosenValid = top._1().gt(-1e38).to(ScalarType.Float);
-            Tensor allowBlocks = Tensor.zeros(opts, batch, groups, seqlen, numBlocks);
-            allowBlocks.scatterReduce_(3, top._2(), chosenValid, "amax");
-
-            Tensor allow = allowBlocks.gather(3, blockIdx).gt(0.5).and(causal);
-            allow.promoteToParent();
-            return allow;
         } finally {
-            Tensor.pop();
+            if (shared == null) {
+                step.close();
+            }
         }
     }
 

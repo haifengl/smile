@@ -229,18 +229,21 @@ public class MiniMaxAttention implements Attention {
             Tensor qRope = rope._1();
             Tensor kRope = rope._2();
 
-            cachePool.put(kvLayerId, positions, kRope, value);
+            MiniMaxStep step = MiniMaxStep.current(positions);
+            cachePool.put(kvLayerId, positions, kRope, value, step == null ? null : step.writeSlots(cachePool, seqlen));
 
             int cacheLen = maxPos + seqlen;
-            var cached = cachePool.getPadded(kvLayerId, cacheLen);
+            var cached = step == null ? cachePool.getPadded(kvLayerId, cacheLen)
+                    : cachePool.getPadded(kvLayerId, cacheLen, step.readSlots(cachePool, cacheLen));
             Tensor keys = repeatKV(cached._1(), numRep);
             Tensor values = repeatKV(cached._2(), numRep);
 
             Tensor attnMask;
             if (useSparse()) {
-                attnMask = sparseMask(x, cos, sin, positions, seqlen, cacheLen);
+                attnMask = sparseMask(x, cos, sin, positions, seqlen, cacheLen, step);
             } else {
-                attnMask = seqlen > 1 ? mask : decodeMask(positions, cacheLen, x);
+                attnMask = seqlen > 1 ? mask : step != null
+                        ? step.decodeMask(x.device(), x.dtype(), cacheLen) : decodeMask(positions, cacheLen, x);
             }
             Tensor attn = KERNEL.forward(qRope.transpose(1, 2), keys.transpose(1, 2), values.transpose(1, 2),
                     attnMask, AttentionContext.contiguous(1.0 / Math.sqrt(headDim), 0.0, false));
@@ -257,7 +260,8 @@ public class MiniMaxAttention implements Attention {
      * MSA index branch: projects index queries/keys, stores the new keys, scores blocks over the
      * cached history and returns the additive mask restricting each head to its group's top-k blocks.
      */
-    private Tensor sparseMask(Tensor x, Tensor cos, Tensor sin, int[] positions, int seqlen, int cacheLen) {
+    private Tensor sparseMask(Tensor x, Tensor cos, Tensor sin, int[] positions, int seqlen, int cacheLen,
+                              MiniMaxStep step) {
         int batch = positions.length;
         int groups = args.numIndexHeads();
         int idxDim = args.indexDim();
@@ -265,8 +269,14 @@ public class MiniMaxAttention implements Attention {
         Tensor ik = indexNorm(indexKProj.forward(x), indexKNorm, batch, seqlen, args.numIndexKeyHeads(), idxDim);
         var rope = PartialRotaryEncoding.apply(iq, ik, cos, sin, rotaryDim);
 
-        indexCache.put(indexOrdinal, cachePool.slotIndices(positions, seqlen), rope._2());
-        Tensor history = indexCache.get(indexOrdinal, cachePool.slotIndices(cacheLen))
+        Tensor writeIdx = step == null ? null : step.writeSlots(cachePool, seqlen);
+        if (writeIdx != null) {
+            indexCache.put(indexOrdinal, writeIdx, rope._2());
+        } else {
+            indexCache.put(indexOrdinal, cachePool.slotIndices(positions, seqlen), rope._2());
+        }
+        Tensor history = (step == null ? indexCache.get(indexOrdinal, cachePool.slotIndices(cacheLen))
+                : indexCache.get(indexOrdinal, step.readSlots(cachePool, cacheLen)))
                 .reshape(batch, cacheLen, args.numIndexKeyHeads(), idxDim);
         Tensor allow = MiniMaxSparse.allowMask(rope._1(), history, positions, args.blockSize(),
                 args.topkBlocks(), args.initBlocks(), args.localBlocks());

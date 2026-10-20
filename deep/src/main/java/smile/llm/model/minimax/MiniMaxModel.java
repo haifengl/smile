@@ -219,6 +219,7 @@ public class MiniMaxModel extends LayerBlock {
         Arrays.fill(positions, startPos);
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
+        MiniMaxStep step = MiniMaxStep.begin(positions);
         try (var window = Index.slice(startPos, startPos + seqlen)) {
             Tensor cos = rope.cos().get(window);
             Tensor sin = rope.sin().get(window);
@@ -228,6 +229,7 @@ public class MiniMaxModel extends LayerBlock {
             logits.promoteToParent();
             return logits;
         } finally {
+            step.close();
             Tensor.pop();
         }
     }
@@ -248,6 +250,7 @@ public class MiniMaxModel extends LayerBlock {
         }
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
+        MiniMaxStep step = MiniMaxStep.begin(positions);
         try {
             Tensor cos = PartialRotaryEncoding.gather(rope.cos(), positions);
             Tensor sin = PartialRotaryEncoding.gather(rope.sin(), positions);
@@ -256,6 +259,7 @@ public class MiniMaxModel extends LayerBlock {
             logits.promoteToParent();
             return logits;
         } finally {
+            step.close();
             Tensor.pop();
         }
     }

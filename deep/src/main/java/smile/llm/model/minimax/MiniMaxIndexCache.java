@@ -75,6 +75,24 @@ public class MiniMaxIndexCache implements AutoCloseable {
      * @param slots   source slots, length {@code N}.
      * @return keys {@code [N, numKeyHeads, indexDim]}; caller owns the tensor.
      */
+    /** {@link #put(int, long[], Tensor)} with the slots already on the device. */
+    public void put(int ordinal, Tensor idx, Tensor keys) {
+        try (var layerIdx = Index.of(ordinal);
+             var layer = cache.get(layerIdx);
+             var flat = keys.reshape(idx.shape()[0], numKeyHeads, indexDim);
+             var cast = flat.to(cache.dtype())) {
+            layer.put_(cast, idx);
+        }
+    }
+
+    /** {@link #get(int, long[])} with the slots already on the device. */
+    public Tensor get(int ordinal, Tensor idx) {
+        try (var layerIdx = Index.of(ordinal);
+             var layer = cache.get(layerIdx)) {
+            return layer.get(idx);
+        }
+    }
+
     public Tensor get(int ordinal, long[] slots) {
         try (var layerIdx = Index.of(ordinal);
              var layer = cache.get(layerIdx);
