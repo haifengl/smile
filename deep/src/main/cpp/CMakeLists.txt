@@ -230,7 +230,42 @@ if(SMILE_TORCH_CUDA_ENABLED)
     endif()
 endif()
 
-add_library(smile_torch SHARED ${SMILE_TORCH_SOURCES})
+# MXFP8 weight-only Marlin (vLLM generalized Marlin, Apache-2.0) for GPUs without native FP8.
+# Compiled as its own object library for sm_80 only (it runs on newer GPUs through the embedded PTX).
+option(USE_MARLIN_FP8 "Build MXFP8 Marlin GEMM (FP8 weights, E8M0 scales, bf16 activations)" ON)
+set(SMILE_MARLIN_FP8_OBJECTS "")
+if(SMILE_TORCH_CUDA_ENABLED AND USE_MARLIN_FP8)
+    set(VLLM_MARLIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vllm_marlin")
+    add_library(smile_marlin_fp8 OBJECT
+        smile_marlin_fp8.cu
+        ${VLLM_MARLIN_DIR}/quantization/marlin/gptq_marlin_repack.cu
+        ${VLLM_MARLIN_DIR}/quantization/marlin/sm80_kernel_bfloat16_fe4m3fn_bfloat16.cu
+        smile_marlin_moe_fp8.cu
+        smile_mxfp8_convert.cu
+        ${VLLM_MARLIN_DIR}/moe/marlin_moe_wna16/sm80_kernel_bfloat16_fe4m3fn_bfloat16.cu)
+    target_include_directories(smile_marlin_fp8 PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${VLLM_MARLIN_DIR}
+        "${LIBTORCH_ROOT}/include"
+        "${LIBTORCH_ROOT}/include/torch/csrc/api/include")
+    target_compile_definitions(smile_marlin_fp8 PRIVATE USE_CUDA)
+    # The kernel instantiations and the launcher that takes their addresses live in different
+    # translation units; CUDA >= 12.8 gives template kernel stubs internal linkage unless told not to.
+    target_compile_options(smile_marlin_fp8 PRIVATE
+        $<$<COMPILE_LANGUAGE:CUDA>:-static-global-template-stub=false>)
+    target_link_libraries(smile_marlin_fp8 PRIVATE ${TORCH_LIBRARIES} CUDA::cudart)
+    set_target_properties(smile_marlin_fp8 PROPERTIES
+        CUDA_ARCHITECTURES "80"
+        CUDA_STANDARD 17
+        CUDA_STANDARD_REQUIRED ON
+        POSITION_INDEPENDENT_CODE ON)
+    list(APPEND SMILE_MARLIN_FP8_OBJECTS $<TARGET_OBJECTS:smile_marlin_fp8>)
+    message(STATUS "MXFP8 Marlin GEMM (vLLM generalized Marlin): ON")
+else()
+    message(STATUS "MXFP8 Marlin GEMM: OFF")
+endif()
+
+add_library(smile_torch SHARED ${SMILE_TORCH_SOURCES} ${SMILE_MARLIN_FP8_OBJECTS})
 
 target_include_directories(smile_torch
     # Public: callers only need the C header

@@ -1684,6 +1684,51 @@ public class KvCachePool implements AutoCloseable {
     }
 
     /**
+     * Returns the physical slot of every position {@code [0, length)} of the bound
+     * batch, row-major {@code [batch * length]}. Side caches (e.g. MSA index keys) use
+     * these slots so they share allocation, prefix reuse and eviction with K/V.
+     *
+     * @param length number of positions per row.
+     * @return slot ids.
+     */
+    public long[] slotIndices(int length) {
+        ensureBound();
+        int batch = requestSlots.length;
+        long[] indices = new long[batch * length];
+        for (int b = 0; b < batch; b++) {
+            long[] slots = requestSlots[b];
+            if (length > slots.length) {
+                throw new IllegalArgumentException("slot read exceeds bound request capacity");
+            }
+            System.arraycopy(slots, 0, indices, b * length, length);
+        }
+        return indices;
+    }
+
+    /**
+     * Returns the physical slot of positions {@code [startPos[b], startPos[b] + seqlen)} for
+     * each bound row, row-major {@code [batch * seqlen]}, matching the layout of
+     * {@link #put(int, int[], Tensor, Tensor)}. Slots are reserved lazily by {@code put}, so call
+     * this after the K/V write for the same window.
+     *
+     * @param startPos write start position per row.
+     * @param seqlen   positions per row.
+     * @return slot ids.
+     */
+    public long[] slotIndices(int[] startPos, int seqlen) {
+        ensureBound();
+        int batch = requestSlots.length;
+        if (startPos == null || startPos.length != batch) {
+            throw new IllegalArgumentException("startPos length must equal batch size");
+        }
+        long[] indices = new long[batch * seqlen];
+        for (int b = 0; b < batch; b++) {
+            System.arraycopy(requestSlots[b], startPos[b], indices, b * seqlen, seqlen);
+        }
+        return indices;
+    }
+
+    /**
      * Reads key/value activations for positions {@code [0, length)} of the
      * bound batch.
      *

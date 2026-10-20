@@ -279,7 +279,10 @@ public record SafeTensors(Map<String, Tensor> tensors, Map<String, String> metad
             case "BF16" -> ScalarType.BFloat16;
             case "F32" -> ScalarType.Float;
             case "F64" -> ScalarType.Double;
-            default -> null; // F8_* and unknown
+            // e4m3fn / e5m2 share the safetensors byte layout, so they stream straight into storage.
+            case "F8_E4M3" -> ScalarType.Float8e4m3fn;
+            case "F8_E5M2" -> ScalarType.Float8e5m2;
+            default -> null; // unknown
         };
     }
 
