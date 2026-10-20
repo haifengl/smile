@@ -65,6 +65,8 @@ public class MiniMaxAttention implements Attention {
     final LinearOp indexQProj, indexKProj;
     final QwenRMSNorm indexQNorm, indexKNorm;
     KvCachePool cachePool;
+    /** q|k|v (|index_q|index_k on MSA layers) as one GEMM, or {@code null}. */
+    private LinearOp fusedProj;
     /** MSA parameters; {@code null} on dense layers. */
     final MiniMaxModelArgs args;
     /** Index-key cache and this layer's ordinal in it; {@code null} until installed. */
@@ -123,6 +125,34 @@ public class MiniMaxAttention implements Attention {
         }
         MemorySegment m = this.module;
         Native.CLEANER.register(this, () -> smile_module_free(m));
+    }
+
+    /**
+     * Replaces the separate Marlin q/k/v (and index) projections by one GEMM over the concatenated output.
+     * A no-op unless every projection is a loaded Marlin MXFP8 layer; call after the weights are loaded.
+     */
+    void fuseProjections() {
+        if ("0".equals(System.getenv("SMILE_MINIMAX_FUSE_QKV")) || fusedProj != null) {
+            return;
+        }
+        var layers = new java.util.ArrayList<LinearOp>(java.util.List.of(qProj, kProj, vProj));
+        if (indexQProj != null) {
+            layers.add(indexQProj);
+            layers.add(indexKProj);
+        }
+        var parts = new smile.llm.quant.MxFp8MarlinLinear[layers.size()];
+        for (int i = 0; i < parts.length; i++) {
+            if (!(layers.get(i) instanceof smile.llm.quant.MxFp8MarlinLinear m) || !m.isLoaded()) {
+                return;
+            }
+            parts[i] = m;
+        }
+        fusedProj = smile.llm.quant.MxFp8MarlinLinear.fuse(parts);
+    }
+
+    /** Output columns [from, to) of a fused projection as a view. */
+    private static Tensor columns(Tensor proj, long from, long to) {
+        return proj.get(smile.deep.tensor.Index.Ellipsis, smile.deep.tensor.Index.slice((int) from, (int) to));
     }
 
     /** Registers dense layers as submodules; FP8-resident projections own no parameters. */
@@ -221,9 +251,13 @@ public class MiniMaxAttention implements Attention {
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
         try {
-            Tensor qRaw = qProj.forward(x);
-            Tensor kRaw = kProj.forward(x);
-            Tensor value = vProj.forward(x).view(batch, seqlen, numKvHeads, headDim);
+            long qw = (long) numHeads * headDim;
+            long kw = (long) numKvHeads * headDim;
+            Tensor proj = fusedProj != null ? fusedProj.forward(x) : null;
+            Tensor qRaw = proj != null ? columns(proj, 0, qw) : qProj.forward(x);
+            Tensor kRaw = proj != null ? columns(proj, qw, qw + kw) : kProj.forward(x);
+            Tensor value = (proj != null ? columns(proj, qw + kw, qw + 2 * kw) : vProj.forward(x))
+                    .reshape(batch, seqlen, numKvHeads, headDim);
 
             Tensor qRope;
             Tensor kRope;
@@ -252,7 +286,7 @@ public class MiniMaxAttention implements Attention {
             boolean grouped = seqlen == 1 && numRep > 1;
             Tensor attnMask;
             if (useSparse()) {
-                attnMask = sparseMask(x, cos, sin, positions, seqlen, cacheLen, step, grouped ? 1 : numRep);
+                attnMask = sparseMask(x, cos, sin, positions, seqlen, cacheLen, step, grouped ? 1 : numRep, proj);
             } else {
                 attnMask = seqlen > 1 ? mask : step != null
                         ? step.decodeMask(x.device(), x.dtype(), cacheLen) : decodeMask(positions, cacheLen, x);
@@ -284,13 +318,16 @@ public class MiniMaxAttention implements Attention {
      * cached history and returns the additive mask restricting each head to its group's top-k blocks.
      */
     private Tensor sparseMask(Tensor x, Tensor cos, Tensor sin, int[] positions, int seqlen, int cacheLen,
-                              MiniMaxStep step, int maskReps) {
+                              MiniMaxStep step, int maskReps, Tensor proj) {
         int batch = positions.length;
         int groups = args.numIndexHeads();
         int idxDim = args.indexDim();
         int keyHeads = args.numIndexKeyHeads();
-        Tensor iqRaw = indexQProj.forward(x);
-        Tensor ikRaw = indexKProj.forward(x);
+        long base = (long) (numHeads + 2 * numKvHeads) * headDim;
+        long iqWidth = (long) groups * idxDim;
+        Tensor iqRaw = proj != null ? columns(proj, base, base + iqWidth) : indexQProj.forward(x);
+        Tensor ikRaw = proj != null ? columns(proj, base + iqWidth, base + iqWidth + (long) keyHeads * idxDim)
+                : indexKProj.forward(x);
         Tensor[] fused = Native.qkNormRope(iqRaw.reshape(batch, seqlen, groups, idxDim),
                 ikRaw.reshape(batch, seqlen, keyHeads, idxDim),
                 indexQNorm.weight(), indexKNorm.weight(), cos, sin, rotaryDim, indexQNorm.eps());
@@ -312,6 +349,16 @@ public class MiniMaxAttention implements Attention {
             indexCache.put(indexOrdinal, writeIdx, ropeK);
         } else {
             indexCache.put(indexOrdinal, cachePool.slotIndices(positions, seqlen), ropeK);
+        }
+        if (seqlen == 1 && step != null && indexCache.numKeyHeads() == 1) {
+            try (Tensor layer = indexCache.layer(indexOrdinal)) {
+                Tensor mask = Native.msaDecodeMask(ropeQ.reshape(batch, groups, idxDim), layer,
+                        step.readSlots(cachePool, cacheLen), step.positionsDevice(x.device()), cacheLen,
+                        args.blockSize(), args.topkBlocks(), args.initBlocks(), args.localBlocks());
+                if (mask != null) {
+                    return mask;
+                }
+            }
         }
         Tensor history = (step == null ? indexCache.get(indexOrdinal, cachePool.slotIndices(cacheLen))
                 : indexCache.get(indexOrdinal, step.readSlots(cachePool, cacheLen)))

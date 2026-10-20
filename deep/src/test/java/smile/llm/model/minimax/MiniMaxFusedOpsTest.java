@@ -250,4 +250,60 @@ public class MiniMaxFusedOpsTest {
             out[1].close();
         }
     }
+
+    private void checkMsaDecodeMask(int length, int[] positions, int topk, int init, int local) {
+        int batch = positions.length;
+        int groups = 4;
+        int d = 128;
+        int slotsTotal = batch * length + 17;
+        Random rnd = new Random(11);
+        float[] q = roundTrip(random(rnd, batch * groups * d, 1f), batch, 1, groups, d);
+        float[] keys = roundTrip(random(rnd, slotsTotal * d, 1f), slotsTotal, 1, d);
+        // each row's positions live in shuffled physical slots
+        java.util.List<Long> pool = new java.util.ArrayList<>();
+        for (long i = 0; i < slotsTotal; i++) {
+            pool.add(i);
+        }
+        java.util.Collections.shuffle(pool, rnd);
+        long[] slots = new long[batch * length];
+        for (int i = 0; i < slots.length; i++) {
+            slots[i] = pool.get(i);
+        }
+        float[] history = new float[batch * length * d];
+        for (int i = 0; i < slots.length; i++) {
+            System.arraycopy(keys, (int) slots[i] * d, history, i * d, d);
+        }
+        Tensor expected;
+        try (Tensor qc = Tensor.of(q, batch, 1, groups, d).to(ScalarType.BFloat16);
+             Tensor hc = Tensor.of(history, batch, length, 1, d).to(ScalarType.BFloat16);
+             Tensor allow = MiniMaxSparse.allowMask(qc, hc, positions, 128, topk, init, local)) {
+            expected = MiniMaxSparse.additiveMask(allow, 1, ScalarType.BFloat16).to(ScalarType.Float);
+        }
+        float[] want = expected.floatArray();
+        try (var noGrad = Tensor.noGradGuard();
+             Tensor qt = Tensor.of(q, batch, groups, d).to(CUDA).to(ScalarType.BFloat16);
+             Tensor ct = Tensor.of(keys, slotsTotal, 1, d).to(CUDA).to(ScalarType.BFloat16);
+             Tensor st = Tensor.of(slots, batch * (long) length).to(CUDA);
+             Tensor pt = Tensor.of(positions, batch).to(CUDA);
+             Tensor mask = Native.msaDecodeMask(qt, ct, st, pt, length, 128, topk, init, local)) {
+            assertNotNull(mask);
+            assertArrayEquals(new long[]{batch, groups, 1, length}, mask.shape());
+            float[] got = host(mask);
+            for (int i = 0; i < want.length; i++) {
+                assertEquals(want[i], got[i], "mask element " + i + " (row " + i / (groups * length) + ")");
+            }
+        }
+    }
+
+    @Test
+    public void testGivenRaggedRowsWhenMsaDecodeMaskThenMatchesReferenceSelection() {
+        assumeTrue(available(), "needs CUDA and the fused kernels");
+        checkMsaDecodeMask(2048, new int[]{700, 130, 2047}, 4, 0, 1);
+    }
+
+    @Test
+    public void testGivenInitBlocksAndShortRowWhenMsaDecodeMaskThenMatchesReferenceSelection() {
+        assumeTrue(available(), "needs CUDA and the fused kernels");
+        checkMsaDecodeMask(1000, new int[]{5, 999, 640}, 16, 1, 2);
+    }
 }

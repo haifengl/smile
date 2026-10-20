@@ -108,6 +108,11 @@ final class MiniMaxStep implements AutoCloseable {
         });
     }
 
+    /** Query positions as an int32 tensor on the device, {@code [batch]}. */
+    Tensor positionsDevice(Device device) {
+        return memo("positions:" + device, () -> own(Tensor.of(positions, positions.length).to(device)));
+    }
+
     /** Slots of positions {@code [0, length)} of every bound row, {@code [batch * length]}. */
     Tensor readSlots(KvCachePool pool, int length) {
         return memo("read:" + length, () -> own(Tensor.of(pool.slotIndices(length)).to(pool.device())));

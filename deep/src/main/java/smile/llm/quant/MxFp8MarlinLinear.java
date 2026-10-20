@@ -74,6 +74,40 @@ public class MxFp8MarlinLinear implements MxFp8Layer {
     }
 
     /**
+     * Concatenates the outputs of several loaded layers that share their input into one layer, so a single
+     * kernel launch computes all of them. Marlin tiles are 64 output columns wide, so packed weights and
+     * permuted scales concatenate along the output dimension. The parts are closed.
+     *
+     * @param parts loaded layers with equal {@code inFeatures}; their outputs appear in this order.
+     * @return the fused layer.
+     */
+    public static MxFp8MarlinLinear fuse(MxFp8MarlinLinear... parts) {
+        int out = 0;
+        Tensor[] q = new Tensor[parts.length];
+        Tensor[] s = new Tensor[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            if (!parts[i].isLoaded() || parts[i].inFeatures != parts[0].inFeatures) {
+                throw new IllegalArgumentException("fuse needs loaded layers with equal input size");
+            }
+            out += parts[i].outFeatures;
+            q[i] = parts[i].qweight;
+            s[i] = parts[i].scales;
+        }
+        MxFp8MarlinLinear fused = new MxFp8MarlinLinear(parts[0].inFeatures, out);
+        fused.qweight = Tensor.hstack(q);
+        fused.scales = Tensor.hstack(s);
+        for (MxFp8MarlinLinear p : parts) {
+            p.close();
+        }
+        return fused;
+    }
+
+    /** @return the output size N. */
+    public int outFeatures() {
+        return outFeatures;
+    }
+
+    /**
      * Returns whether the weight has been installed.
      * @return {@code true} once {@link #setWeight} has run.
      */

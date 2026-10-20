@@ -74,7 +74,7 @@ template <typename T>
 __global__ void qk_norm_rope_kernel(const T* __restrict__ q, const T* __restrict__ k,
                                     const T* __restrict__ qw, const T* __restrict__ kw,
                                     const void* __restrict__ cos, const void* __restrict__ sin, int cos_is_float,
-                                    T* __restrict__ qo, T* __restrict__ ko,
+                                    T* __restrict__ qo, T* __restrict__ ko, int64_t q_row, int64_t k_row,
                                     int64_t tokens, int hq, int hk, int d, int rot, int cos_rows, float eps) {
     extern __shared__ float smem[];
     const int warp = threadIdx.x >> 5;
@@ -88,7 +88,7 @@ __global__ void qk_norm_rope_kernel(const T* __restrict__ q, const T* __restrict
     const int h = (int) (item % heads);
     const bool is_q = h < hq;
     const int64_t off = is_q ? (t * hq + h) * (int64_t) d : (t * hk + (h - hq)) * (int64_t) d;
-    const T* src = (is_q ? q : k) + off;
+    const T* src = is_q ? q + t * q_row + (int64_t) h * d : k + t * k_row + (int64_t)(h - hq) * d;
     T* dst = (is_q ? qo : ko) + off;
     const T* w = is_q ? qw : kw;
 
@@ -207,6 +207,136 @@ __global__ void moe_route_kernel(const float* __restrict__ logits, const float* 
     }
 }
 
+
+// ---------------------------------------------------------------- MSA decode block scoring
+
+constexpr int kMsaMaxGroups = 8;
+constexpr int kMsaMaxBlocks = 8192;
+
+/** Block-max of the raw index dot products. Grid (numBlocks, B); one CTA scores one 128-key block for all groups. */
+template <typename T>
+__global__ void msa_block_score_kernel(const T* __restrict__ q, const T* __restrict__ cache,
+                                       const int64_t* __restrict__ slots, const int* __restrict__ positions,
+                                       float* __restrict__ scores, int groups, int d, int length, int block_size,
+                                       int num_blocks) {
+    const int blk = blockIdx.x;
+    const int b = blockIdx.y;
+    const int pos = positions[b];
+    const int first = blk * block_size;
+    const int warp = threadIdx.x >> 5;
+    const int lane = threadIdx.x & 31;
+    const int warps = blockDim.x >> 5;
+    float* out = scores + ((int64_t) b * groups) * num_blocks + blk;
+    if (first > pos) {
+        if (threadIdx.x < groups) out[(int64_t) threadIdx.x * num_blocks] = -INFINITY;
+        return;
+    }
+    extern __shared__ float smem[];
+    float* qs = smem;                      // [groups * d]
+    float* red = smem + groups * d;        // [warps * groups]
+    for (int i = threadIdx.x; i < groups * d; i += blockDim.x) {
+        qs[i] = static_cast<float>(q[(int64_t) b * groups * d + i]);
+    }
+    __syncthreads();
+    float best[kMsaMaxGroups];
+    for (int g = 0; g < groups; g++) best[g] = -INFINITY;
+    const int last = min(min(first + block_size, length) - 1, pos);
+    for (int l = first + warp; l <= last; l += warps) {
+        const T* k = cache + slots[(int64_t) b * length + l] * (int64_t) d;
+        float part[kMsaMaxGroups];
+        for (int g = 0; g < groups; g++) part[g] = 0.f;
+        for (int e = lane; e < d; e += 32) {
+            const float kv = static_cast<float>(k[e]);
+            for (int g = 0; g < groups; g++) part[g] += qs[g * d + e] * kv;
+        }
+        for (int g = 0; g < groups; g++) best[g] = fmaxf(best[g], warp_sum(part[g]));
+    }
+    if (lane == 0) {
+        for (int g = 0; g < groups; g++) red[warp * groups + g] = best[g];
+    }
+    __syncthreads();
+    if (threadIdx.x < groups) {
+        float m = -INFINITY;
+        for (int w = 0; w < warps; w++) m = fmaxf(m, red[w * groups + threadIdx.x]);
+        out[(int64_t) threadIdx.x * num_blocks] = m;
+    }
+}
+
+/** Picks the top-k visible blocks per (row, group) and writes the additive mask [B, G, 1, L]. Grid (G, B). */
+template <typename T>
+__global__ void msa_select_mask_kernel(const float* __restrict__ scores, const int* __restrict__ positions,
+                                       T* __restrict__ mask, int groups, int length, int block_size,
+                                       int num_blocks, int topk, int init_blocks, int local_blocks) {
+    const int g = blockIdx.x;
+    const int b = blockIdx.y;
+    const int pos = positions[b];
+    const int visible = pos / block_size + 1;
+    const int local_start = max(0, visible - local_blocks);
+    extern __shared__ float smem[];
+    float* s = smem;                                              // [num_blocks]
+    unsigned char* chosen = reinterpret_cast<unsigned char*>(s + num_blocks);
+    __shared__ float red_v[32];
+    __shared__ int red_i[32];
+    const float* src = scores + ((int64_t) b * groups + g) * num_blocks;
+    for (int i = threadIdx.x; i < num_blocks; i += blockDim.x) {
+        float v = -INFINITY;
+        if (i < visible) {
+            v = src[i];
+            if (i >= local_start) v = 1e29f;
+            if (i < init_blocks) v = 1e30f;
+        }
+        s[i] = v;
+        chosen[i] = 0;
+    }
+    __syncthreads();
+    const int warps = blockDim.x >> 5;
+    const int k2 = min(topk, num_blocks);
+    for (int r = 0; r < k2; r++) {
+        float best = -INFINITY;
+        int bi = 0x7fffffff;
+        for (int i = threadIdx.x; i < num_blocks; i += blockDim.x) {
+            if (s[i] > best) {
+                best = s[i];
+                bi = i;
+            }
+        }
+        for (int o = 16; o > 0; o >>= 1) {
+            float ov = __shfl_xor_sync(0xffffffffu, best, o);
+            int oi = __shfl_xor_sync(0xffffffffu, bi, o);
+            if (ov > best || (ov == best && oi < bi)) {
+                best = ov;
+                bi = oi;
+            }
+        }
+        if ((threadIdx.x & 31) == 0) {
+            red_v[threadIdx.x >> 5] = best;
+            red_i[threadIdx.x >> 5] = bi;
+        }
+        __syncthreads();
+        if (threadIdx.x == 0) {
+            float fb = red_v[0];
+            int fi = red_i[0];
+            for (int w = 1; w < warps; w++) {
+                if (red_v[w] > fb || (red_v[w] == fb && red_i[w] < fi)) {
+                    fb = red_v[w];
+                    fi = red_i[w];
+                }
+            }
+            if (fb > -1e38f) {
+                chosen[fi] = 1;
+                s[fi] = -INFINITY;
+            }
+        }
+        __syncthreads();
+    }
+    T* dst = mask + ((int64_t) b * groups + g) * length;
+    const T zero = static_cast<T>(0.f);
+    const T neg_inf = static_cast<T>(-INFINITY);
+    for (int l = threadIdx.x; l < length; l += blockDim.x) {
+        dst[l] = (l <= pos && chosen[l / block_size]) ? zero : neg_inf;
+    }
+}
+
 at::Tensor require_cuda(const ST_Tensor t, const char* what) {
     if (!t || !t->t.defined() || !t->t.is_cuda()) {
         throw std::runtime_error(std::string(what) + " must be a CUDA tensor");
@@ -268,8 +398,15 @@ extern "C" ST_Tensor smile_qk_norm_rope(ST_Tensor q, ST_Tensor k, ST_Tensor qw, 
     try {
         smile_torch_clear_error();
         *out_k = nullptr;
-        at::Tensor qt = require_cuda(q, "smile_qk_norm_rope: q").contiguous();
-        at::Tensor kt = require_cuda(k, "smile_qk_norm_rope: k").contiguous();
+        at::Tensor qt = require_cuda(q, "smile_qk_norm_rope: q");
+        at::Tensor kt = require_cuda(k, "smile_qk_norm_rope: k");
+        // Slices of a fused projection are fine: heads must be contiguous and tokens uniformly strided.
+        auto token_strided = [](const at::Tensor& t) {
+            return t.dim() == 4 && t.stride(3) == 1 && t.stride(2) == t.size(3)
+                   && t.stride(0) == t.size(1) * t.stride(1);
+        };
+        if (!token_strided(qt)) qt = qt.contiguous();
+        if (!token_strided(kt)) kt = kt.contiguous();
         if (qt.dim() != 4 || kt.dim() != 4 || qt.scalar_type() != kt.scalar_type()) {
             throw std::runtime_error("smile_qk_norm_rope: q/k must be rank-4 [B,S,H,D] of one dtype");
         }
@@ -296,8 +433,8 @@ extern "C" ST_Tensor smile_qk_norm_rope(ST_Tensor q, ST_Tensor k, ST_Tensor qw, 
             throw std::runtime_error("smile_qk_norm_rope: cos rows do not divide the token count");
         }
         c10::cuda::CUDAGuard guard(qt.get_device());
-        at::Tensor qo = at::empty_like(qt);
-        at::Tensor ko = at::empty_like(kt);
+        at::Tensor qo = at::empty(qt.sizes(), qt.options());
+        at::Tensor ko = at::empty(kt.sizes(), kt.options());
         const int warps = 4;
         const int64_t items = tokens * (hq + hk);
         const unsigned blocks = (unsigned) ((items + warps - 1) / warps);
@@ -306,7 +443,7 @@ extern "C" ST_Tensor smile_qk_norm_rope(ST_Tensor q, ST_Tensor k, ST_Tensor qw, 
             qk_norm_rope_kernel<T><<<blocks, warps * 32, smem, stream_of(qt)>>>(
                     qt.data_ptr<T>(), kt.data_ptr<T>(), qwt.data_ptr<T>(), kwt.data_ptr<T>(),
                     ct.data_ptr(), st.data_ptr(), ct.scalar_type() == at::kFloat ? 1 : 0,
-                    qo.data_ptr<T>(), ko.data_ptr<T>(), tokens, hq, hk, (int) d, rotary_dim,
+                    qo.data_ptr<T>(), ko.data_ptr<T>(), qt.stride(1), kt.stride(1), tokens, hq, hk, (int) d, rotary_dim,
                     (int) ct.size(0), (float) eps);
             return 0;
         });
@@ -380,6 +517,58 @@ extern "C" ST_Tensor smile_moe_route(ST_Tensor logits, ST_Tensor bias, int top_k
         }
         *out_weights = new ST_Tensor_{ weights };
         return new ST_Tensor_{ ids };
+    } catch (const std::exception& e) {
+        set_err(e.what());
+        return nullptr;
+    }
+}
+
+extern "C" ST_Tensor smile_msa_decode_mask(ST_Tensor q, ST_Tensor cache, ST_Tensor slots, ST_Tensor positions,
+                                           int length, int block_size, int topk, int init_blocks,
+                                           int local_blocks) {
+    try {
+        smile_torch_clear_error();
+        at::Tensor qt = require_cuda(q, "smile_msa_decode_mask: q").contiguous();
+        at::Tensor ct = require_cuda(cache, "smile_msa_decode_mask: cache");
+        at::Tensor st = require_cuda(slots, "smile_msa_decode_mask: slots");
+        at::Tensor pt = require_cuda(positions, "smile_msa_decode_mask: positions");
+        if (qt.dim() != 3 || ct.scalar_type() != qt.scalar_type() || !ct.is_contiguous()) {
+            throw std::runtime_error("smile_msa_decode_mask: q [B,G,D] and a contiguous cache of the same dtype");
+        }
+        const int batch = (int) qt.size(0);
+        const int groups = (int) qt.size(1);
+        const int d = (int) qt.size(2);
+        if (groups > kMsaMaxGroups || d % 32 != 0 || d > 256 || ct.numel() % d != 0 || ct.size(-1) != d
+            || (ct.dim() == 3 && ct.size(1) != 1)) {
+            throw std::runtime_error("smile_msa_decode_mask: unsupported shape (groups <= 8, one shared key head)");
+        }
+        if (st.scalar_type() != at::kLong || st.numel() != (int64_t) batch * length
+            || pt.scalar_type() != at::kInt || pt.numel() != batch) {
+            throw std::runtime_error("smile_msa_decode_mask: slots must be int64 [B*L], positions int32 [B]");
+        }
+        const int num_blocks = (length + block_size - 1) / block_size;
+        if (num_blocks > kMsaMaxBlocks || block_size <= 0 || length <= 0) {
+            throw std::runtime_error("smile_msa_decode_mask: too many blocks for the shared-memory scorer");
+        }
+        st = st.contiguous();
+        pt = pt.contiguous();
+        c10::cuda::CUDAGuard guard(qt.get_device());
+        at::Tensor scores = at::empty({batch, groups, num_blocks}, qt.options().dtype(at::kFloat));
+        at::Tensor mask = at::empty({batch, groups, 1, length}, qt.options());
+        const int threads1 = 128;
+        const size_t smem1 = ((size_t) groups * d + (threads1 / 32) * groups) * sizeof(float);
+        const size_t smem2 = (size_t) num_blocks * (sizeof(float) + 1);
+        DISPATCH_FLOAT(qt.scalar_type(), "smile_msa_decode_mask", [&] {
+            msa_block_score_kernel<T><<<dim3(num_blocks, batch), threads1, smem1, stream_of(qt)>>>(
+                    qt.data_ptr<T>(), ct.data_ptr<T>(), st.data_ptr<int64_t>(), pt.data_ptr<int>(),
+                    scores.data_ptr<float>(), groups, d, length, block_size, num_blocks);
+            msa_select_mask_kernel<T><<<dim3(groups, batch), 256, smem2, stream_of(qt)>>>(
+                    scores.data_ptr<float>(), pt.data_ptr<int>(), mask.data_ptr<T>(), groups, length, block_size,
+                    num_blocks, topk, init_blocks, local_blocks);
+            return 0;
+        });
+        check_launch("smile_msa_decode_mask");
+        return new ST_Tensor_{ mask };
     } catch (const std::exception& e) {
         set_err(e.what());
         return nullptr;
