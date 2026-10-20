@@ -414,9 +414,11 @@ prompts). The request field `thinking` (`enabled|disabled|adaptive`, or `{"type"
 RMSNorm, QK norm + RoPE, swigluoai, MoE routing, MSA block scoring/top-k) around the Marlin GEMMs; q/k/v and the two
 index projections run as one GEMM, and decode attention treats the query heads of a KV group as query rows (no K/V
 expansion). Slot indices, positions and masks are built once per step (`MiniMaxStep`). The whole step is captured in a
-CUDA graph per (batch, window): batches that are powers of two up to `SMILE_MINIMAX_CUDA_GRAPH_MAX_BATCH` (32), the
+CUDA graph per (batch, window): batches up to `SMILE_MINIMAX_CUDA_GRAPH_MAX_BATCH` (32), padded to the next power of
+two with copies of row 0 (so a padded row rewrites exactly what row 0 writes), the
 attention window rounded up to a multiple of 256 (at most ~12.5% above the context), at most
-`SMILE_MINIMAX_CUDA_GRAPH_MAX_ENTRIES` (48) graphs; other batches, and any capture failure, run eagerly.
+`SMILE_MINIMAX_CUDA_GRAPH_MAX_ENTRIES` (48) graphs; larger batches, and any capture failure, run eagerly (set
+`SMILE_MINIMAX_GRAPH_DEBUG=1` to print the failure's stack trace; the warning is only logged).
 `SMILE_MINIMAX_CUDA_GRAPH=0` disables graphs, `SMILE_FUSED_OPS=0` the fused kernels, `SMILE_MINIMAX_FUSE_QKV=0` the
 merged projection. Measured on A100 (context 512): 4 layers on 1 GPU 13.7 -> 3.9 ms/step (batch 8); 16 layers on 8 GPUs
 24 -> 11 ms/step (batch 8), 24 -> 15 ms (batch 32).
