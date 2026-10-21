@@ -700,13 +700,22 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
         logger.info("Read weight map ({} tensors) in {} ms",
                 weightMap.size(), System.currentTimeMillis() - tMap);
 
+        Device policyDevice = cuda
+                ? Device.CUDA(parallelConfig.devices()[0])
+                : Device.CPU();
+        var quantPolicy = smile.llm.quant.QuantPolicy.resolve(
+                Path.of(checkpointDir), policyDevice, null);
+        // FP8 checkpoints replace the GEMM projections, so their bf16 shells are never allocated.
+        final boolean quantizedGemms = quantPolicy.backend() == smile.llm.quant.WeightGemmBackend.FP8
+                || quantPolicy.backend() == smile.llm.quant.WeightGemmBackend.MARLIN_FP8;
+
         // Phase A: construct empty shells on each rank's device (parallel by TP).
         QwenModel[] models = new QwenModel[parallelConfig.tpSize()];
         logger.info("Starting parallel TP rank construct (tpSize={})", parallelConfig.tpSize());
         long tConstruct = System.currentTimeMillis();
         if (parallelConfig.tpSize() == 1) {
             models[0] = constructRank(0, parallelConfig, modelArgs, visionArgs, cuda,
-                    memFractionStatic, tpGroup);
+                    memFractionStatic, tpGroup, quantizedGemms);
         } else {
             ExecutorService pool = Executors.newFixedThreadPool(parallelConfig.tpSize());
             try {
@@ -714,7 +723,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 for (int r = 0; r < parallelConfig.tpSize(); r++) {
                     final int rank = r;
                     futures.add(pool.submit(() -> constructRank(
-                            rank, parallelConfig, modelArgs, visionArgs, cuda, memFractionStatic, tpGroup)));
+                            rank, parallelConfig, modelArgs, visionArgs, cuda, memFractionStatic, tpGroup,
+                            quantizedGemms)));
                 }
                 for (int r = 0; r < parallelConfig.tpSize(); r++) {
                     models[r] = futures.get(r).get();
@@ -730,11 +740,6 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         // Phase B: each safetensors file once on CPU, fan-out to all ranks.
         long tLoad = System.currentTimeMillis();
-        Device policyDevice = cuda
-                ? Device.CUDA(parallelConfig.devices()[0])
-                : Device.CPU();
-        var quantPolicy = smile.llm.quant.QuantPolicy.resolve(
-                Path.of(checkpointDir), policyDevice, null);
         if (quantPolicy.backend() == smile.llm.quant.WeightGemmBackend.FP8
                 || quantPolicy.backend() == smile.llm.quant.WeightGemmBackend.MARLIN_FP8) {
             logger.info("Qwen FP8 weight install: format={} backend={} tpSize={}",
@@ -809,7 +814,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
      */
     private static QwenModel constructRank(int rank, ParallelConfig parallel, QwenModelArgs modelArgs,
                                            QwenVisionArgs visionArgs, boolean cuda, double memFractionStatic,
-                                           TensorParallelGroup tpGroup) {
+                                           TensorParallelGroup tpGroup, boolean quantizedGemms) {
         Device device = cuda ? Device.CUDA(parallel.devices()[rank]) : Device.CPU();
         TensorShardSpec shard = TensorShardSpec.forRank(
                 parallel.tpSize(), rank,
@@ -844,7 +849,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
         long tConstruct = System.currentTimeMillis();
         QwenModel model;
-        try (var ignored = ParameterInit.uninitialized(device)) {
+        try (var ignored = ParameterInit.uninitialized(device);
+             var placeholders = quantizedGemms ? ParameterInit.placeholderGemms() : null) {
             model = new QwenModel(modelArgs, statePool, shard, tpGroup, visionArgs);
         }
         logger.info("tpRank={}: QwenModel construct in {} ms",

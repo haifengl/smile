@@ -31,7 +31,45 @@ public final class ParameterInit {
     private static final ThreadLocal<Integer> SKIP_DEPTH = ThreadLocal.withInitial(() -> 0);
     private static final ThreadLocal<Device> DEVICE = new ThreadLocal<>();
 
+    private static final ThreadLocal<Integer> GEMM_PLACEHOLDER_DEPTH = ThreadLocal.withInitial(() -> 0);
+
     private ParameterInit() {}
+
+    /**
+     * Returns {@code true} inside a {@link #placeholderGemms()} scope.
+     * @return {@code true} if {@link LinearLayer#gemm} should skip allocating the weight.
+     */
+    public static boolean skipGemmWeights() {
+        return GEMM_PLACEHOLDER_DEPTH.get() > 0;
+    }
+
+    /**
+     * Opens a scope in which {@link LinearLayer#gemm} creates a 1x1 placeholder instead of the full weight. Used
+     * when quantized replacements (FP8, Marlin) will be installed for those projections, so the dense bf16 shells
+     * (twice the size of the FP8 weights) never exist on the device.
+     *
+     * @return scope handle (close to leave the region).
+     */
+    public static GemmScope placeholderGemms() {
+        GEMM_PLACEHOLDER_DEPTH.set(GEMM_PLACEHOLDER_DEPTH.get() + 1);
+        return GemmScope.INSTANCE;
+    }
+
+    /** Scope handle of {@link #placeholderGemms()}. */
+    public enum GemmScope implements AutoCloseable {
+        /** Singleton scope handle. */
+        INSTANCE;
+
+        @Override
+        public void close() {
+            int depth = GEMM_PLACEHOLDER_DEPTH.get() - 1;
+            if (depth <= 0) {
+                GEMM_PLACEHOLDER_DEPTH.remove();
+            } else {
+                GEMM_PLACEHOLDER_DEPTH.set(depth);
+            }
+        }
+    }
 
     /**
      * Returns {@code true} when the current thread is inside an

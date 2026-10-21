@@ -72,9 +72,9 @@ public class FeedForward {
             this.tpGroup = null;
             this.tpRank = 0;
             int hidden = shard != null ? shard.intermediateSize() : globalIntermediate;
-            this.w1 = new LinearLayer(dim, hidden, false);
-            this.w2 = new LinearLayer(hidden, dim, false);
-            this.w3 = new LinearLayer(dim, hidden, false);
+            this.w1 = LinearLayer.gemm(dim, hidden, false);
+            this.w2 = LinearLayer.gemm(hidden, dim, false);
+            this.w3 = LinearLayer.gemm(dim, hidden, false);
         } else {
             this.tpGroup = tpGroup;
             this.tpRank = shard.tpRank();

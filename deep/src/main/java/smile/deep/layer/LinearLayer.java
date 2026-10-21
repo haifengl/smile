@@ -48,6 +48,19 @@ public class LinearLayer extends ModuleLayer implements smile.llm.quant.LinearOp
         super(create(in, out, bias));
     }
 
+    /**
+     * A linear layer for a projection that a quantized backend may replace: identical to the constructor, except
+     * inside {@link ParameterInit#placeholderGemms()} where only a 1x1 placeholder is allocated.
+     *
+     * @param in   the number of input features.
+     * @param out  the number of output features.
+     * @param bias whether the layer has a bias.
+     * @return the layer.
+     */
+    public static LinearLayer gemm(int in, int out, boolean bias) {
+        return ParameterInit.skipGemmWeights() ? new LinearLayer(1, 1, bias) : new LinearLayer(in, out, bias);
+    }
+
     private static Handles create(int in, int out, boolean bias) {
         MemorySegment h;
         if (ParameterInit.skip()) {
