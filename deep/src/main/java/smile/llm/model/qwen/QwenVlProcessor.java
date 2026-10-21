@@ -525,13 +525,14 @@ public class QwenVlProcessor {
             Tensor pixelValues,
             int[][] imageGridThw,
             int[][] videoGridThw,
-            InterleavedMRope.MropePositions mrope) {
+            InterleavedMRope.MropePositions mrope) implements smile.llm.engine.MultimodalPrompt {
 
         /**
          * Returns whether vision tensors are present.
          *
          * @return {@code true} when vision tensors are present.
          */
+        @Override
         public boolean hasVision() {
             return pixelValues != null;
         }

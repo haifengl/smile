@@ -19,7 +19,6 @@ package smile.llm.engine;
 import smile.llm.ChatOptions;
 import smile.llm.GenerationListener;
 import smile.llm.Message;
-import smile.llm.model.qwen.QwenVlProcessor;
 
 /**
  * One generation job submitted to {@link InferenceEngine}.
@@ -27,7 +26,7 @@ import smile.llm.model.qwen.QwenVlProcessor;
  * @param promptTokens           token ids (required unless {@code dialog} is set).
  * @param dialog                 optional chat turns; encoded by the engine when
  *                               {@code promptTokens} is {@code null}.
- * @param multimodal             optional Qwen VL preprocess result (images/video); when
+ * @param multimodal             optional preprocessed media (images/video); when
  *                               set, {@code promptTokens} should match {@code multimodal.inputIds()}.
  * @param maxGenLen              max new tokens.
  * @param temperature            sampling temperature.
@@ -44,7 +43,7 @@ import smile.llm.model.qwen.QwenVlProcessor;
 public record GenerationRequest(
         int[] promptTokens,
         Message[] dialog,
-        QwenVlProcessor.ProcessedMultimodal multimodal,
+        MultimodalPrompt multimodal,
         int maxGenLen,
         double temperature,
         double topp,
@@ -137,7 +136,7 @@ public record GenerationRequest(
      * @param listener    optional generation listener, or {@code null}.
      * @return new generation request.
      */
-    public static GenerationRequest ofMultimodal(QwenVlProcessor.ProcessedMultimodal multimodal,
+    public static GenerationRequest ofMultimodal(MultimodalPrompt multimodal,
                                                  int maxGenLen, double temperature, double topp,
                                                  boolean logprobs, long seed,
                                                  GenerationListener listener) {
@@ -157,7 +156,7 @@ public record GenerationRequest(
      * @param chatOptions optional chat options, or {@code null}.
      * @return new generation request.
      */
-    public static GenerationRequest ofMultimodal(QwenVlProcessor.ProcessedMultimodal multimodal,
+    public static GenerationRequest ofMultimodal(MultimodalPrompt multimodal,
                                                  int maxGenLen, double temperature, double topp,
                                                  boolean logprobs, long seed,
                                                  GenerationListener listener,
@@ -181,7 +180,7 @@ public record GenerationRequest(
      * @param numSpeculativeTokens  draft tokens when speculative.
      * @return new generation request.
      */
-    public static GenerationRequest ofMultimodal(QwenVlProcessor.ProcessedMultimodal multimodal,
+    public static GenerationRequest ofMultimodal(MultimodalPrompt multimodal,
                                                  int maxGenLen, double temperature, double topp,
                                                  boolean logprobs, long seed,
                                                  GenerationListener listener,

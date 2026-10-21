@@ -2549,6 +2549,39 @@ ST_Tensor smile_rms_norm(ST_Tensor x, ST_Tensor weight, double eps) {
     return nullptr;
 }
 
+ST_Tensor smile_resize_bicubic_aa(ST_Tensor x, int out_h, int out_w) {
+    if (!x || out_h <= 0 || out_w <= 0) {
+        set_error("smile_resize_bicubic_aa: null tensor or non-positive size");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        auto t = x->t;
+        if (t.dim() != 4) {
+            set_error("smile_resize_bicubic_aa: expected [N, C, H, W]");
+            return nullptr;
+        }
+        // torchvision.transforms.v2.functional.resize(antialias=True): uint8 CPU tensors go through ATen's native
+        // uint8 kernel (fixed-point weights), which is NOT the same as interpolating in float and rounding (up to
+        // several levels apart on noisy images); other inputs are interpolated in float.
+        namespace F = torch::nn::functional;
+        auto opts = F::InterpolateFuncOptions()
+                .size(std::vector<int64_t>{out_h, out_w})
+                .mode(torch::kBicubic)
+                .align_corners(false)
+                .antialias(true);
+        at::Tensor r;
+        if (t.scalar_type() == at::kByte && t.device().is_cpu()) {
+            r = F::interpolate(t, opts).clamp(0, 255);
+        } else if (t.scalar_type() == at::kByte) {
+            r = F::interpolate(t.to(at::kFloat), opts).round().clamp(0, 255).to(at::kByte);
+        } else {
+            r = F::interpolate(t, opts);
+        }
+        return new ST_Tensor_{ r.contiguous() };
+    ST_TRY_END
+    return nullptr;
+}
+
 ST_Tensor smile_rms_norm_gated(
         ST_Tensor x, ST_Tensor gate, ST_Tensor weight, double eps) {
     if (!x || !gate || !weight) {

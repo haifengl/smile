@@ -1097,6 +1097,12 @@ SMILE_API ST_Tensor smile_repeat_kv_heads(ST_Tensor x, int rep);
 SMILE_API ST_Tensor smile_rms_norm(ST_Tensor x, ST_Tensor weight, double eps);
 
 /**
+ * Bicubic resize with antialiasing, matching torchvision's {@code resize(antialias=True)}: x is
+ * [N, C, H, W] (uint8 inputs are computed in float and rounded back), the result is [N, C, out_h, out_w].
+ */
+SMILE_API ST_Tensor smile_resize_bicubic_aa(ST_Tensor x, int out_h, int out_w);
+
+/**
  * Gated RMSNorm: {@code weight * rms_norm(x) * silu(gate)} in {@code x}'s dtype.
  * {@code x} and {@code gate} are {@code [..., D]}; {@code weight} is {@code [D]}.
  */

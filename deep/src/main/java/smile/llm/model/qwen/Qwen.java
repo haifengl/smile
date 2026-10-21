@@ -2268,10 +2268,10 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
 
     @Override
     public Tensor prefillMultimodal(int requestId,
-                                    QwenVlProcessor.ProcessedMultimodal multimodal,
+                                    smile.llm.engine.MultimodalPrompt promptArg,
                                     int from, int to) {
-        if (multimodal == null) {
-            throw new IllegalArgumentException("multimodal required");
+        if (!(promptArg instanceof QwenVlProcessor.ProcessedMultimodal multimodal)) {
+            throw new IllegalArgumentException("a Qwen VL multimodal prompt is required");
         }
         int[] prompt = multimodal.inputIds();
         if (from < 0 || to < from || to > prompt.length) {
