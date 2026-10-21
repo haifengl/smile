@@ -616,21 +616,24 @@ public final class InferenceEngine implements AutoCloseable {
             if (next.request.hasMultimodal()) {
                 matched = 0;
             }
-            if (matched > 0) {
+            int from = matched;
+            // Keep last prompt token for next-token logits when generating.
+            if (from > 0 && promptLen < desired && promptLen > 0) {
+                from = Math.min(from, promptLen - 1);
+            }
+            if (from > 0) {
+                // Replay exactly the tokens prefill will not process (hybrid models rebuild recurrent state from
+                // them). Replaying the whole match (page-aligned, so possibly the entire prompt) and then restarting
+                // prefill at promptLen - 1 would apply that token to the recurrent state twice.
                 try {
                     long tw = System.nanoTime();
-                    executor.warmPrefix(kvId, prompt, matched);
+                    executor.warmPrefix(kvId, prompt, from);
                     prefillMsTotal.addAndGet((System.nanoTime() - tw) / 1_000_000L);
                 } catch (RuntimeException ex) {
                     executor.evict(kvId);
                     next.handle.future().completeExceptionally(ex);
                     continue;
                 }
-            }
-            int from = matched;
-            // Keep last prompt token for next-token logits when generating.
-            if (from > 0 && promptLen < desired && promptLen > 0) {
-                from = Math.min(from, promptLen - 1);
             }
             GenerationListener listener = next.request.listener();
             if (listener != null) {
