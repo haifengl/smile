@@ -381,8 +381,8 @@ ChatCompletion reply = model.chat(dialog, 512, 0.6, 0.95, false, 0, null);
 | `MiniMaxTokenizer`, `MiniMaxWeightNames` | Byte-level BPE (all added tokens atomic, as in the reference); HF tensor name mapping |
 
 **Checkpoints.** BF16 (`MiniMaxAI/MiniMax-M3`) and MXFP8 (`MiniMaxAI/MiniMax-M3-MXFP8`, FP8 E4M3 weights with an
-E8M0 scale per 32 elements). Vision tower, projector and MTP tensors are skipped (the published checkpoint has no
-MTP weights); audio input is rejected (images and video are supported, see below).
+E8M0 scale per 32 elements). The text loader skips the vision tensors (loaded separately, see below) and the published
+checkpoint has no MTP weights; audio input is rejected (images and video are supported, see below).
 
 **Images and video.** The checkpoint's vision side (`vision_tower.*`, `multi_modal_projector.*`, `patch_merge_mlp.*`, ~1.7 GB,
 bf16) loads onto rank 0's device after the text weights (`SMILE_MINIMAX_VISION=0` skips it; a checkpoint without vision
