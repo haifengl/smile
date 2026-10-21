@@ -221,6 +221,21 @@ public class MiniMaxModel extends LayerBlock {
      * @return float32 logits.
      */
     public Tensor forward(Tensor tokens, int startPos, boolean allTokenLogits) {
+        return forward(tokens, startPos, allTokenLogits, null, null);
+    }
+
+    /**
+     * Prefill window whose embeddings are partly replaced, for multimodal prompts: rows of the token embeddings
+     * at {@code rows} are overwritten by {@code replacement} (vision embeddings) before the first layer.
+     *
+     * @param tokens         token ids {@code [1, S]}.
+     * @param startPos       cache start position.
+     * @param allTokenLogits score every position when {@code true}, otherwise only the last.
+     * @param rows           window positions to overwrite, or {@code null}.
+     * @param replacement    {@code [rows.length, hidden]} embeddings in the compute dtype, on this device.
+     * @return float32 logits.
+     */
+    public Tensor forward(Tensor tokens, int startPos, boolean allTokenLogits, long[] rows, Tensor replacement) {
         int batch = (int) tokens.shape()[0];
         int seqlen = (int) tokens.shape()[1];
         int[] positions = new int[batch];
@@ -232,6 +247,13 @@ public class MiniMaxModel extends LayerBlock {
             Tensor cos = rope.cos().get(window);
             Tensor sin = rope.sin().get(window);
             Tensor h = tokEmbeddings.forward(tokens);
+            if (rows != null && rows.length > 0) {
+                long[] shape = h.shape();
+                Tensor flat = h.reshape(-1, shape[shape.length - 1]);
+                Tensor index = Tensor.of(rows).to(h.device());
+                flat.put_(replacement.to(flat.dtype()), index);
+                h = flat.reshape(shape);
+            }
             Tensor mask = seqlen > 1 ? causalMask(seqlen, startPos, h) : null;
             Tensor logits = run(h, positions, cos, sin, mask, allTokenLogits);
             logits.promoteToParent();

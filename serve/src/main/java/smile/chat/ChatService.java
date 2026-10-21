@@ -775,11 +775,25 @@ public class ChatService implements OpenAiModelContributor {
             if (hasMedia) {
                 if (model instanceof GenAiChatModel) {
                     // Serial GenAI multimodal path materializes files below.
+                } else if (model instanceof smile.llm.model.minimax.MiniMax minimax && minimax.isMultimodal()) {
+                    smile.llm.model.minimax.MiniMaxMultimodal mm;
+                    try {
+                        mm = minimax.processMultimodal(messages, chatOptions);
+                    } catch (IllegalArgumentException e) {
+                        throw new jakarta.ws.rs.BadRequestException(e.getMessage(), e);
+                    }
+                    int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), mm.inputIds().length);
+                    promptLen = mm.inputIds().length;
+                    genReq = smile.llm.engine.GenerationRequest.ofMultimodal(
+                            mm, maxGenLen, request.temperature, request.topP,
+                            request.logprobs, request.seed, listener, chatOptions,
+                            speculative, speculativeTokens);
                 } else if (!(model instanceof Qwen qwen) || !qwen.isMultimodal()) {
                     // A client error (HTTP 400), not a server failure: this model is text-only.
                     throw new jakarta.ws.rs.BadRequestException(
-                            "Multimodal content requires a Qwen3.8 vision checkpoint "
-                                    + "or a GenAI multimodal model; model '" + modelId + "' is text-only");
+                            "Multimodal content requires a vision checkpoint (Qwen3.8 or MiniMax-M3 with its "
+                                    + "vision weights) or a GenAI multimodal model; model '" + modelId
+                                    + "' is text-only");
                 } else {
                     var mm = qwen.processMultimodal(messages);
                     int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), mm.inputIds().length);
