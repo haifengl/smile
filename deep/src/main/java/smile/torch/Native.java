@@ -198,14 +198,15 @@ public final class Native {
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
-                        ValueLayout.JAVA_INT)))
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)))
                 .orElse(null);
         static final java.util.Optional<MemorySegment> SPARSE_DECODE_ATTENTION_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_sparse_decode_attention");
         static final MethodHandle SPARSE_DECODE_ATTENTION = SPARSE_DECODE_ATTENTION_SYM
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE)))
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE,
+                        ValueLayout.JAVA_INT)))
                 .orElse(null);
         static final java.util.Optional<MemorySegment> MXFP8_TO_BLOCK_FP8_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_mxfp8_to_block_fp8");
@@ -1060,31 +1061,34 @@ public final class Native {
     /**
      * MSA block selection for single-token decode returning block ids; see {@code smile_minimax_ops.h}.
      *
-     * @return int32 {@code [B, G, topk]} (-1 pads), or {@code null} when unavailable or unsupported.
+     * @param q         index queries {@code [T, G, D]}, {@code T = B * seqlen}.
+     * @param seqlen    query tokens per row (1 for decode); token {@code t} is at {@code positions[t / seqlen] + t % seqlen}.
+     * @return int32 {@code [T, G, topk]} (-1 pads), or {@code null} when unavailable or unsupported.
      */
     public static Tensor msaDecodeSelect(Tensor q, Tensor cache, Tensor slots, Tensor positions, int length,
-                                         int blockSize, int topk, int initBlocks, int localBlocks) {
+                                         int blockSize, int topk, int initBlocks, int localBlocks, int seqlen) {
         if (!FUSED_OPS_ENABLED || Bindings.MSA_DECODE_SELECT == null || !q.device().isCUDA()) {
             return null;
         }
         return fusedResult(Bindings.MSA_DECODE_SELECT, q.handle(), cache.handle(), slots.handle(),
-                positions.handle(), length, blockSize, topk, initBlocks, localBlocks);
+                positions.handle(), length, blockSize, topk, initBlocks, localBlocks, seqlen);
     }
 
     /**
      * Block-sparse decode attention over the blocks chosen by {@link #msaDecodeSelect}; see
      * {@code smile_minimax_ops.h}.
      *
-     * @return bfloat16 {@code [B, H, 128]}, or {@code null} when unavailable or unsupported.
+     * @param q      bfloat16 {@code [T, H, 128]}, {@code T = B * seqlen}.
+     * @return bfloat16 {@code [T, H, 128]}, or {@code null} when unavailable or unsupported.
      */
     public static Tensor sparseDecodeAttention(Tensor q, Tensor kLayer, Tensor vLayer, Tensor slots,
-                                               Tensor positions, Tensor sel, int length, double scale) {
+                                               Tensor positions, Tensor sel, int length, double scale, int seqlen) {
         if (!FUSED_OPS_ENABLED || Bindings.SPARSE_DECODE_ATTENTION == null || !q.device().isCUDA()
                 || "0".equals(System.getenv("SMILE_SPARSE_DECODE_ATTENTION"))) {
             return null;
         }
         return fusedResult(Bindings.SPARSE_DECODE_ATTENTION, q.handle(), kLayer.handle(), vLayer.handle(),
-                slots.handle(), positions.handle(), sel.handle(), length, scale);
+                slots.handle(), positions.handle(), sel.handle(), length, scale, seqlen);
     }
 
     /** @return {@code true} when the MXFP8 to block-FP8 converter is compiled into {@code libsmile_torch}. */

@@ -286,8 +286,8 @@ public class MiniMaxAttention implements Attention {
             double scale = 1.0 / Math.sqrt(headDim);
             Tensor ropeQ = useSparse() ? indexStage(x, cos, sin, positions, seqlen, step, proj) : null;
             Tensor merged = null;
-            if (grouped && ropeQ != null && step != null) {
-                merged = sparseDecode(qRope, ropeQ, x, cacheLen, step, scale);
+            if (numRep > 1 && ropeQ != null && step != null) {
+                merged = sparseKernel(qRope, ropeQ, x, cacheLen, step, scale);
             }
             if (merged == null) {
                 var cached = step == null ? cachePool.getPadded(kvLayerId, cacheLen)
@@ -321,32 +321,36 @@ public class MiniMaxAttention implements Attention {
     }
 
     /**
-     * Block-sparse decode attention: selects the top-k blocks from the index cache and attends over just those
-     * blocks, reading K/V straight from the pool (no gather of the whole window, no mask).
+     * Block-sparse attention for decode and prefill windows: selects the top-k blocks per query token from the
+     * index cache and attends over just those blocks, reading K/V straight from the pool (no gather of the
+     * whole window, no mask, nothing quadratic in the window).
      *
-     * @return the merged heads {@code [B, 1, H * D]}, or {@code null} when the kernels cannot handle this
+     * @return the merged heads {@code [B, S, H * D]}, or {@code null} when the kernels cannot handle this
      *         configuration (the caller then uses the masked SDPA path).
      */
-    private Tensor sparseDecode(Tensor qRope, Tensor ropeQ, Tensor x, int cacheLen, MiniMaxStep step, double scale) {
+    private Tensor sparseKernel(Tensor qRope, Tensor ropeQ, Tensor x, int cacheLen, MiniMaxStep step, double scale) {
         int groups = args.numIndexHeads();
         if (groups != numKvHeads || indexCache.numKeyHeads() != 1 || !cachePool.kvIsComputeDtype()
                 || x.dtype() != ScalarType.BFloat16) {
             return null;
         }
         int batch = (int) x.shape()[0];
+        int seqlen = (int) x.shape()[1];
+        int tokens = batch * seqlen;
         Tensor slots = step.readSlots(cachePool, cacheLen);
         Tensor positions = step.positionsDevice(x.device());
         try (Tensor indexLayer = indexCache.layer(indexOrdinal);
              Tensor kLayer = cachePool.keyLayer(kvLayerId);
              Tensor vLayer = cachePool.valueLayer(kvLayerId)) {
-            Tensor sel = Native.msaDecodeSelect(ropeQ.reshape(batch, groups, args.indexDim()), indexLayer, slots,
-                    positions, cacheLen, args.blockSize(), args.topkBlocks(), args.initBlocks(), args.localBlocks());
+            Tensor sel = Native.msaDecodeSelect(ropeQ.reshape(tokens, groups, args.indexDim()), indexLayer, slots,
+                    positions, cacheLen, args.blockSize(), args.topkBlocks(), args.initBlocks(), args.localBlocks(),
+                    seqlen);
             if (sel == null) {
                 return null;
             }
-            Tensor out = Native.sparseDecodeAttention(qRope.reshape(batch, numHeads, headDim), kLayer, vLayer,
-                    slots, positions, sel, cacheLen, scale);
-            return out == null ? null : out.reshape(batch, 1, -1);
+            Tensor out = Native.sparseDecodeAttention(qRope.reshape(tokens, numHeads, headDim), kLayer, vLayer,
+                    slots, positions, sel, cacheLen, scale, seqlen);
+            return out == null ? null : out.reshape(batch, seqlen, -1);
         }
     }
 
