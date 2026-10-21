@@ -423,17 +423,21 @@ attention window rounded up to a multiple of 256 (at most ~12.5% above the conte
 merged projection. Measured on A100 (context 512): 4 layers on 1 GPU 13.7 -> 3.9 ms/step (batch 8); 16 layers on 8 GPUs
 24 -> 11 ms/step (batch 8), 24 -> 15 ms (batch 32).
 
-**Block-sparse decode attention.** On MSA layers the select kernel returns the chosen block ids and
-`smile_sparse_decode_attention` attends over just those blocks (one CTA per row, KV group and block: the 16 query heads
-of the group over 128 keys, fp32 softmax partials, then a merge kernel), reading K/V straight from the pool by slot, so
-the full-window K/V gather and the mask disappear and cost follows the 16 selected blocks instead of the context.
-Requires bf16 K/V, head dim 128 and 16 query heads per KV head; otherwise the masked SDPA path runs.
-`SMILE_SPARSE_DECODE_ATTENTION=0` forces that path. A 4-layer decode at context 6000, batch 8: 6.4 -> 5.8 ms/step.
+**Block-sparse attention (decode and prefill).** On MSA layers the select kernel returns the chosen block ids per query
+token and `smile_sparse_decode_attention` attends over just those blocks (one CTA per token, KV group and block: the 16
+query heads of the group over 128 keys, fp32 softmax partials, then a merge kernel), reading K/V straight from the pool
+by slot. Nothing is quadratic in the window: no `[S, L]` score matrix, no mask, no full-window K/V gather, so long
+prompts no longer run out of memory (the reference tensor-op path needed ~15 GB for a 16k-token prompt) and decode cost
+follows the 16 selected blocks. The same kernels serve decode (one token per row) and prefill windows (token `t` of a
+row sits at `positions[row] + t % seqlen`); the partial-softmax workspace is chunked to ~256 MB. Requires bf16 K/V, head
+dim 128 and 16 query heads per KV head; otherwise the masked SDPA path runs. `SMILE_SPARSE_DECODE_ATTENTION=0` forces
+that path. Measured (4 layers, 1 GPU, A100): decode at context 6000 / batch 8 6.4 -> 5.8 ms/step; contexts 16000 and
+30000 (impossible before) decode at 6.5 and 9.2 ms/step at batch 1.
 
-**Limits.** MSA block selection during prefill is a reference tensor implementation that materializes an `[batch,
-groups, query, context]` score matrix, so long prompts need a lot of memory and prefill is slow; decode attention on MSA layers runs
-the block-sparse kernel (below), other layers still attend over the whole masked window; non-Marlin weight modes route on the host (no CUDA graphs); no speculative
-decoding, log-probabilities, tensor-parallel attention or multi-node execution.
+**Limits.** The three dense layers still use masked SDPA for prefill; the block scorer uses CUDA cores (no tensor
+cores) and every query token re-reads its selected K/V blocks, so very long prefills are compute-bound; non-Marlin
+weight modes route on the host (no CUDA graphs); no speculative decoding, log-probabilities, tensor-parallel attention
+or multi-node execution.
 Opt-in tests that need a checkpoint or GPUs read `MINIMAX_*` environment variables (see the test javadoc).
 
 ---

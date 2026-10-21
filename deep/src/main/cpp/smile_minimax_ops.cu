@@ -212,21 +212,23 @@ __global__ void moe_route_kernel(const float* __restrict__ logits, const float* 
 
 constexpr int kMsaMaxGroups = 8;
 constexpr int kMsaMaxBlocks = 8192;
+constexpr int kMaxGridY = 60000;   // gridDim.y / z limit is 65535
 
 /** Block-max of the raw index dot products. Grid (numBlocks, B); one CTA scores one 128-key block for all groups. */
 template <typename T>
 __global__ void msa_block_score_kernel(const T* __restrict__ q, const T* __restrict__ cache,
                                        const int64_t* __restrict__ slots, const int* __restrict__ positions,
                                        float* __restrict__ scores, int groups, int d, int length, int block_size,
-                                       int num_blocks) {
+                                       int num_blocks, int seqlen, int t0) {
     const int blk = blockIdx.x;
-    const int b = blockIdx.y;
-    const int pos = positions[b];
+    const int t = t0 + blockIdx.y;               // query token; row b = t / seqlen, position = start + t % seqlen
+    const int b = t / seqlen;
+    const int pos = positions[b] + t % seqlen;
     const int first = blk * block_size;
     const int warp = threadIdx.x >> 5;
     const int lane = threadIdx.x & 31;
     const int warps = blockDim.x >> 5;
-    float* out = scores + ((int64_t) b * groups) * num_blocks + blk;
+    float* out = scores + ((int64_t) t * groups) * num_blocks + blk;
     if (first > pos) {
         if (threadIdx.x < groups) out[(int64_t) threadIdx.x * num_blocks] = -INFINITY;
         return;
@@ -235,7 +237,7 @@ __global__ void msa_block_score_kernel(const T* __restrict__ q, const T* __restr
     float* qs = smem;                      // [groups * d]
     float* red = smem + groups * d;        // [warps * groups]
     for (int i = threadIdx.x; i < groups * d; i += blockDim.x) {
-        qs[i] = static_cast<float>(q[(int64_t) b * groups * d + i]);
+        qs[i] = static_cast<float>(q[(int64_t) t * groups * d + i]);
     }
     __syncthreads();
     float best[kMsaMaxGroups];
@@ -267,10 +269,11 @@ template <typename T>
 __global__ void msa_select_mask_kernel(const float* __restrict__ scores, const int* __restrict__ positions,
                                        T* __restrict__ mask, int* __restrict__ sel, int groups, int length,
                                        int block_size, int num_blocks, int topk, int init_blocks,
-                                       int local_blocks) {
+                                       int local_blocks, int seqlen, int t0) {
     const int g = blockIdx.x;
-    const int b = blockIdx.y;
-    const int pos = positions[b];
+    const int t = t0 + blockIdx.y;
+    const int b = t / seqlen;
+    const int pos = positions[b] + t % seqlen;
     const int visible = pos / block_size + 1;
     const int local_start = max(0, visible - local_blocks);
     extern __shared__ float smem[];
@@ -278,7 +281,7 @@ __global__ void msa_select_mask_kernel(const float* __restrict__ scores, const i
     unsigned char* chosen = reinterpret_cast<unsigned char*>(s + num_blocks);
     __shared__ float red_v[32];
     __shared__ int red_i[32];
-    const float* src = scores + ((int64_t) b * groups + g) * num_blocks;
+    const float* src = scores + ((int64_t) t * groups + g) * num_blocks;
     for (int i = threadIdx.x; i < num_blocks; i += blockDim.x) {
         float v = -INFINITY;
         if (i < visible) {
@@ -289,7 +292,7 @@ __global__ void msa_select_mask_kernel(const float* __restrict__ scores, const i
         s[i] = v;
         chosen[i] = 0;
     }
-    int* sel_row = sel != nullptr ? sel + ((int64_t) b * groups + g) * topk : nullptr;
+    int* sel_row = sel != nullptr ? sel + ((int64_t) t * groups + g) * topk : nullptr;
     for (int r = threadIdx.x; sel_row != nullptr && r < topk; r += blockDim.x) sel_row[r] = -1;
     __syncthreads();
     const int warps = blockDim.x >> 5;
@@ -334,7 +337,7 @@ __global__ void msa_select_mask_kernel(const float* __restrict__ scores, const i
         __syncthreads();
     }
     if (mask == nullptr) return;
-    T* dst = mask + ((int64_t) b * groups + g) * length;
+    T* dst = mask + ((int64_t) t * groups + g) * length;   // mask output is decode-only: t == b
     const T zero = static_cast<T>(0.f);
     const T neg_inf = static_cast<T>(-INFINITY);
     for (int l = threadIdx.x; l < length; l += blockDim.x) {
@@ -365,17 +368,19 @@ __global__ void sparse_decode_partial_kernel(const at::BFloat16* __restrict__ q,
                                              const int* __restrict__ positions, const int* __restrict__ sel,
                                              float* __restrict__ part_o, float* __restrict__ part_m,
                                              float* __restrict__ part_l, int heads, int kv_heads, int length,
-                                             int topk, float scale) {
+                                             int topk, float scale, int seqlen, int t0) {
     extern __shared__ __align__(16) unsigned char smem_raw[];
     float* qs = reinterpret_cast<float*>(smem_raw);                 // [16][128], pre-scaled
     float* ps = qs + kSdRep * kSdDim;                                // [16][128] scores then probabilities
     uint32_t* kv = reinterpret_cast<uint32_t*>(ps + kSdRep * kSdDim);  // [128][65] words of bf16 pairs
     const int j = blockIdx.x;
     const int g = blockIdx.y;
-    const int b = blockIdx.z;
+    const int tl = blockIdx.z;                    // token within this launch (partial buffers are chunk-local)
+    const int t = t0 + tl;                        // global query token
+    const int b = t / seqlen;
     const int tid = threadIdx.x;
-    const int64_t base = ((int64_t) b * kv_heads + g) * topk + j;
-    const int blk = sel[base];
+    const int64_t base = ((int64_t) tl * kv_heads + g) * topk + j;
+    const int blk = sel[((int64_t) t * kv_heads + g) * topk + j];
     float* m_out = part_m + base * kSdRep;
     float* l_out = part_l + base * kSdRep;
     if (blk < 0) {
@@ -385,10 +390,10 @@ __global__ void sparse_decode_partial_kernel(const at::BFloat16* __restrict__ q,
         }
         return;
     }
-    const int pos = positions[b];
+    const int pos = positions[b] + t % seqlen;
     const int first = blk * kSdBlock;
 
-    const at::BFloat16* qh = q + ((int64_t) b * heads + (int64_t) g * kSdRep) * kSdDim;
+    const at::BFloat16* qh = q + ((int64_t) t * heads + (int64_t) g * kSdRep) * kSdDim;
     for (int i = tid; i < kSdRep * kSdDim; i += 256) qs[i] = static_cast<float>(qh[i]) * scale;
 
     auto load_tile = [&](const at::BFloat16* cache) {
@@ -468,10 +473,10 @@ __global__ void sparse_decode_partial_kernel(const at::BFloat16* __restrict__ q,
 /** Merges the per-block partial softmax states of every head. Grid (kv_heads, batch), 256 threads. */
 __global__ void sparse_decode_combine_kernel(const float* __restrict__ part_o, const float* __restrict__ part_m,
                                              const float* __restrict__ part_l, at::BFloat16* __restrict__ out,
-                                             int heads, int kv_heads, int topk) {
+                                             int heads, int kv_heads, int topk, int t0) {
     const int g = blockIdx.x;
-    const int b = blockIdx.y;
-    const int64_t base = ((int64_t) b * kv_heads + g) * topk;
+    const int tl = blockIdx.y;
+    const int64_t base = ((int64_t) tl * kv_heads + g) * topk;
     for (int idx = threadIdx.x; idx < kSdRep * kSdDim; idx += blockDim.x) {
         const int h = idx / kSdDim;
         const int d = idx % kSdDim;
@@ -488,7 +493,7 @@ __global__ void sparse_decode_combine_kernel(const float* __restrict__ part_o, c
                 num += w * part_o[((base + j) * kSdRep + h) * kSdDim + d];
             }
         }
-        out[((int64_t) b * heads + (int64_t) g * kSdRep + h) * kSdDim + d] =
+        out[((int64_t)(t0 + tl) * heads + (int64_t) g * kSdRep + h) * kSdDim + d] =
                 static_cast<at::BFloat16>(den > 0.f ? num / den : 0.f);
     }
 }
@@ -717,10 +722,10 @@ extern "C" ST_Tensor smile_msa_decode_mask(ST_Tensor q, ST_Tensor cache, ST_Tens
         DISPATCH_FLOAT(qt.scalar_type(), "smile_msa_decode_mask", [&] {
             msa_block_score_kernel<T><<<dim3(num_blocks, batch), threads1, smem1, stream_of(qt)>>>(
                     qt.data_ptr<T>(), ct.data_ptr<T>(), st.data_ptr<int64_t>(), pt.data_ptr<int>(),
-                    scores.data_ptr<float>(), groups, d, length, block_size, num_blocks);
+                    scores.data_ptr<float>(), groups, d, length, block_size, num_blocks, 1, 0);
             msa_select_mask_kernel<T><<<dim3(groups, batch), 256, smem2, stream_of(qt)>>>(
                     scores.data_ptr<float>(), pt.data_ptr<int>(), mask.data_ptr<T>(), nullptr, groups, length,
-                    block_size, num_blocks, topk, init_blocks, local_blocks);
+                    block_size, num_blocks, topk, init_blocks, local_blocks, 1, 0);
             return 0;
         });
         check_launch("smile_msa_decode_mask");
@@ -733,7 +738,7 @@ extern "C" ST_Tensor smile_msa_decode_mask(ST_Tensor q, ST_Tensor cache, ST_Tens
 
 extern "C" ST_Tensor smile_msa_decode_select(ST_Tensor q, ST_Tensor cache, ST_Tensor slots, ST_Tensor positions,
                                              int length, int block_size, int topk, int init_blocks,
-                                             int local_blocks) {
+                                             int local_blocks, int seqlen) {
     try {
         smile_torch_clear_error();
         at::Tensor qt = require_cuda(q, "smile_msa_decode_select: q").contiguous();
@@ -743,15 +748,16 @@ extern "C" ST_Tensor smile_msa_decode_select(ST_Tensor q, ST_Tensor cache, ST_Te
         if (qt.dim() != 3 || ct.scalar_type() != qt.scalar_type() || !ct.is_contiguous()) {
             throw std::runtime_error("smile_msa_decode_select: q [B,G,D] and a contiguous cache of the same dtype");
         }
-        const int batch = (int) qt.size(0);
+        const int tokens = (int) qt.size(0);
+        const int batch = (int) pt.numel();
         const int groups = (int) qt.size(1);
         const int d = (int) qt.size(2);
         if (groups > kMsaMaxGroups || d % 32 != 0 || d > 256 || ct.size(-1) != d
             || (ct.dim() == 3 && ct.size(1) != 1)) {
             throw std::runtime_error("smile_msa_decode_select: unsupported shape (groups <= 8, one shared key head)");
         }
-        if (st.scalar_type() != at::kLong || st.numel() != (int64_t) batch * length
-            || pt.scalar_type() != at::kInt || pt.numel() != batch || topk <= 0) {
+        if (seqlen <= 0 || tokens != batch * seqlen || st.scalar_type() != at::kLong
+            || st.numel() != (int64_t) batch * length || pt.scalar_type() != at::kInt || topk <= 0) {
             throw std::runtime_error("smile_msa_decode_select: slots must be int64 [B*L], positions int32 [B]");
         }
         const int num_blocks = (length + block_size - 1) / block_size;
@@ -761,18 +767,21 @@ extern "C" ST_Tensor smile_msa_decode_select(ST_Tensor q, ST_Tensor cache, ST_Te
         st = st.contiguous();
         pt = pt.contiguous();
         c10::cuda::CUDAGuard guard(qt.get_device());
-        at::Tensor scores = at::empty({batch, groups, num_blocks}, qt.options().dtype(at::kFloat));
-        at::Tensor sel = at::empty({batch, groups, topk}, qt.options().dtype(at::kInt));
+        at::Tensor scores = at::empty({tokens, groups, num_blocks}, qt.options().dtype(at::kFloat));
+        at::Tensor sel = at::empty({tokens, groups, topk}, qt.options().dtype(at::kInt));
         const int threads1 = 128;
         const size_t smem1 = ((size_t) groups * d + (threads1 / 32) * groups) * sizeof(float);
         const size_t smem2 = (size_t) num_blocks * (sizeof(float) + 1);
         DISPATCH_FLOAT(qt.scalar_type(), "smile_msa_decode_select", [&] {
-            msa_block_score_kernel<T><<<dim3(num_blocks, batch), threads1, smem1, stream_of(qt)>>>(
-                    qt.data_ptr<T>(), ct.data_ptr<T>(), st.data_ptr<int64_t>(), pt.data_ptr<int>(),
-                    scores.data_ptr<float>(), groups, d, length, block_size, num_blocks);
-            msa_select_mask_kernel<T><<<dim3(groups, batch), 256, smem2, stream_of(qt)>>>(
-                    scores.data_ptr<float>(), pt.data_ptr<int>(), nullptr, sel.data_ptr<int>(), groups, length,
-                    block_size, num_blocks, topk, init_blocks, local_blocks);
+            for (int t0 = 0; t0 < tokens; t0 += kMaxGridY) {
+                const int n = std::min(kMaxGridY, tokens - t0);
+                msa_block_score_kernel<T><<<dim3(num_blocks, n), threads1, smem1, stream_of(qt)>>>(
+                        qt.data_ptr<T>(), ct.data_ptr<T>(), st.data_ptr<int64_t>(), pt.data_ptr<int>(),
+                        scores.data_ptr<float>(), groups, d, length, block_size, num_blocks, seqlen, t0);
+                msa_select_mask_kernel<T><<<dim3(groups, n), 256, smem2, stream_of(qt)>>>(
+                        scores.data_ptr<float>(), pt.data_ptr<int>(), nullptr, sel.data_ptr<int>(), groups, length,
+                        block_size, num_blocks, topk, init_blocks, local_blocks, seqlen, t0);
+            }
             return 0;
         });
         check_launch("smile_msa_decode_select");
@@ -785,7 +794,7 @@ extern "C" ST_Tensor smile_msa_decode_select(ST_Tensor q, ST_Tensor cache, ST_Te
 
 extern "C" ST_Tensor smile_sparse_decode_attention(ST_Tensor q, ST_Tensor k_layer, ST_Tensor v_layer,
                                                    ST_Tensor slots, ST_Tensor positions, ST_Tensor sel,
-                                                   int length, double scale) {
+                                                   int length, double scale, int seqlen) {
     try {
         smile_torch_clear_error();
         at::Tensor qt = require_cuda(q, "smile_sparse_decode_attention: q").contiguous();
@@ -799,15 +808,16 @@ extern "C" ST_Tensor smile_sparse_decode_attention(ST_Tensor q, ST_Tensor k_laye
             || kt.dim() != 3 || vt.sizes() != kt.sizes()) {
             throw std::runtime_error("smile_sparse_decode_attention: bf16 q [B,H,D] and contiguous k/v [slots,G,D]");
         }
-        const int batch = (int) qt.size(0);
+        const int tokens = (int) qt.size(0);
+        const int batch = (int) pt.numel();
         const int heads = (int) qt.size(1);
         const int kv_heads = (int) kt.size(1);
         if (qt.size(2) != kSdDim || kt.size(2) != kSdDim || kv_heads <= 0 || heads != kv_heads * kSdRep) {
             throw std::runtime_error("smile_sparse_decode_attention: needs head_dim 128 and 16 query heads per KV head");
         }
-        if (lt.scalar_type() != at::kInt || lt.dim() != 3 || lt.size(0) != batch || lt.size(1) != kv_heads
+        if (lt.scalar_type() != at::kInt || lt.dim() != 3 || lt.size(0) != tokens || lt.size(1) != kv_heads
             || st.scalar_type() != at::kLong || st.numel() != (int64_t) batch * length
-            || pt.scalar_type() != at::kInt || pt.numel() != batch) {
+            || pt.scalar_type() != at::kInt || seqlen <= 0 || tokens != batch * seqlen) {
             throw std::runtime_error("smile_sparse_decode_attention: sel/slots/positions have the wrong shape or dtype");
         }
         const int topk = (int) lt.size(2);
@@ -828,18 +838,26 @@ extern "C" ST_Tensor smile_sparse_decode_attention(ST_Tensor q, ST_Tensor k_laye
             }
             attr_done[dev] = true;
         }
-        const int64_t parts = (int64_t) batch * kv_heads * topk;
+        // Partial softmax state is chunk-local: bound the workspace (~256 MB) and loop over token chunks.
+        const int64_t per_token = (int64_t) kv_heads * topk * kSdRep * kSdDim * 4;
+        const int chunk = (int) std::max<int64_t>(1, std::min<int64_t>(
+                std::min<int64_t>(tokens, kMaxGridY), (256LL << 20) / per_token));
+        const int64_t parts = (int64_t) chunk * kv_heads * topk;
         at::Tensor part_o = at::empty({parts, kSdRep, kSdDim}, qt.options().dtype(at::kFloat));
         at::Tensor part_m = at::empty({parts, kSdRep}, qt.options().dtype(at::kFloat));
         at::Tensor part_l = at::empty({parts, kSdRep}, qt.options().dtype(at::kFloat));
-        at::Tensor out = at::empty({batch, heads, kSdDim}, qt.options());
-        sparse_decode_partial_kernel<<<dim3(topk, kv_heads, batch), 256, kSdSmem, stream_of(qt)>>>(
-                qt.data_ptr<at::BFloat16>(), kt.data_ptr<at::BFloat16>(), vt.data_ptr<at::BFloat16>(),
-                st.data_ptr<int64_t>(), pt.data_ptr<int>(), lt.data_ptr<int>(), part_o.data_ptr<float>(),
-                part_m.data_ptr<float>(), part_l.data_ptr<float>(), heads, kv_heads, length, topk, (float) scale);
-        sparse_decode_combine_kernel<<<dim3(kv_heads, batch), 256, 0, stream_of(qt)>>>(
-                part_o.data_ptr<float>(), part_m.data_ptr<float>(), part_l.data_ptr<float>(),
-                out.data_ptr<at::BFloat16>(), heads, kv_heads, topk);
+        at::Tensor out = at::empty({tokens, heads, kSdDim}, qt.options());
+        for (int t0 = 0; t0 < tokens; t0 += chunk) {
+            const int n = std::min(chunk, tokens - t0);
+            sparse_decode_partial_kernel<<<dim3(topk, kv_heads, n), 256, kSdSmem, stream_of(qt)>>>(
+                    qt.data_ptr<at::BFloat16>(), kt.data_ptr<at::BFloat16>(), vt.data_ptr<at::BFloat16>(),
+                    st.data_ptr<int64_t>(), pt.data_ptr<int>(), lt.data_ptr<int>(), part_o.data_ptr<float>(),
+                    part_m.data_ptr<float>(), part_l.data_ptr<float>(), heads, kv_heads, length, topk,
+                    (float) scale, seqlen, t0);
+            sparse_decode_combine_kernel<<<dim3(kv_heads, n), 256, 0, stream_of(qt)>>>(
+                    part_o.data_ptr<float>(), part_m.data_ptr<float>(), part_l.data_ptr<float>(),
+                    out.data_ptr<at::BFloat16>(), heads, kv_heads, topk, t0);
+        }
         check_launch("smile_sparse_decode_attention");
         return new ST_Tensor_{ out };
     } catch (const std::exception& e) {
