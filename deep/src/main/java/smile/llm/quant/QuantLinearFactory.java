@@ -69,6 +69,19 @@ public final class QuantLinearFactory {
     }
 
     /**
+     * Builds a block-scaled FP8 linear for Ampere/Ada: the FP8 weights stay resident and run through Marlin.
+     * Takes ownership of {@code weightFp8} and {@code weightScaleInv}.
+     *
+     * @param weightFp8      FP8 weight {@code [out, in]}.
+     * @param weightScaleInv float32 block scales {@code [out/128, in/128]}.
+     * @param bias           optional bias, or {@code null}.
+     * @return Marlin block-FP8 linear op.
+     */
+    public static LinearOp fp8BlockMarlin(Tensor weightFp8, Tensor weightScaleInv, Tensor bias) {
+        return new Fp8BlockMarlinLinear(weightFp8, weightScaleInv, bias);
+    }
+
+    /**
      * Builds an NVFP4 linear (may throw at forward until LibTorch NVFP4 is wired).
      *
      * @param weight      NVFP4 weight.

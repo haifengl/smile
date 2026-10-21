@@ -735,14 +735,15 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                 : Device.CPU();
         var quantPolicy = smile.llm.quant.QuantPolicy.resolve(
                 Path.of(checkpointDir), policyDevice, null);
-        if (quantPolicy.backend() == smile.llm.quant.WeightGemmBackend.FP8) {
+        if (quantPolicy.backend() == smile.llm.quant.WeightGemmBackend.FP8
+                || quantPolicy.backend() == smile.llm.quant.WeightGemmBackend.MARLIN_FP8) {
             logger.info("Qwen FP8 weight install: format={} backend={} tpSize={}",
                     quantPolicy.format(), quantPolicy.backend(), parallelConfig.tpSize());
             Path ckpt = Path.of(checkpointDir);
             for (int r = 0; r < models.length; r++) {
                 smile.llm.quant.QuantizedQwenFp8Loader.install(
                         models[r], ckpt, models[r].device(),
-                        parallelConfig.tpSize(), r, computeDtype, modelLoaderThreads);
+                        parallelConfig.tpSize(), r, computeDtype, modelLoaderThreads, quantPolicy.backend());
             }
             loadHuggingFaceWeightsShared(models, dir, weightMap, modelLoaderThreads,
                     /*skipInstalledFp8Linears=*/true);
@@ -750,8 +751,8 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             loadHuggingFaceWeightsShared(models, dir, weightMap, modelLoaderThreads, false);
         } else {
             throw new IllegalStateException(
-                    "Quantized Qwen hybrid checkpoints only support native FP8 on Hopper+ "
-                            + "(sm_90+); detected format=" + quantPolicy.format()
+                    "Quantized Qwen hybrid checkpoints only support block-FP8 (native on Hopper+, Marlin on "
+                            + "Ampere/Ada); detected format=" + quantPolicy.format()
                             + " backend=" + quantPolicy.backend()
                             + ". GPTQ/AWQ/Marlin and NVFP4 are not supported for Qwen yet. "
                             + "Use a dense BF16/FP16 Qwen checkpoint, or Llama with "

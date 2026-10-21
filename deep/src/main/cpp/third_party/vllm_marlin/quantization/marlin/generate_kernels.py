@@ -63,10 +63,20 @@ THREAD_CONFIGS = [(128, 128, 256), (64, 256, 256), (64, 128, 128), (128, 64, 128
 
 THREAD_M_BLOCKS = [0.5, 1, 2, 3, 4]
 
-# SMILE: only the configuration MiniMax-M3 needs is instantiated (MXFP8 weights: FP8 E4M3 elements,
-# E8M0 scales per 32 elements, bfloat16 activations). The upstream script emits every vLLM
-# quantization format; add configs back here to widen support.
+# SMILE: only the configurations SMILE needs are instantiated: MXFP8 weights (FP8 E4M3 elements, E8M0 scales per
+# 32 elements) for MiniMax-M3, and block-FP8 weights (FP8 E4M3 elements, bfloat16 scales per 128 K) for Qwen3.x-FP8
+# checkpoints, both with bfloat16 activations. The upstream script emits every vLLM quantization format; add
+# configs back here to widen support.
 QUANT_CONFIGS = [
+    # FP8 with bfloat16 group scales (upstream "FP8" config restricted to bfloat16, group 128)
+    {
+        "a_type": ["kBFloat16"],
+        "c_type": ["kBFloat16"],
+        "b_type": "kFE4M3fn",
+        "thread_configs": THREAD_CONFIGS,
+        "thread_m_blocks": THREAD_M_BLOCKS,
+        "group_blocks": [8],
+    },
     # MXFP8
     {
         "a_type": ["kBFloat16"],

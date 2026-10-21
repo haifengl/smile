@@ -80,6 +80,19 @@ public final class QuantizedQwenFp8Loader {
     public static void install(QwenModel model, Path dir, Device device,
                                int tpSize, int tpRank, ScalarType outDtype,
                                int modelLoaderThreads) throws IOException {
+        install(model, dir, device, tpSize, tpRank, outDtype, modelLoaderThreads, WeightGemmBackend.FP8);
+    }
+
+    /**
+     * Same as {@link #install(QwenModel, Path, Device, int, int, ScalarType, int)} with an explicit backend:
+     * {@link WeightGemmBackend#FP8} (Hopper+, {@code _scaled_mm_v2}) or {@link WeightGemmBackend#MARLIN_FP8}
+     * (Ampere/Ada, FP8 weights resident, weight-only Marlin GEMM).
+     *
+     * @param backend how block-FP8 linears are multiplied.
+     */
+    public static void install(QwenModel model, Path dir, Device device,
+                               int tpSize, int tpRank, ScalarType outDtype,
+                               int modelLoaderThreads, WeightGemmBackend backend) throws IOException {
         Map<String, String> weightMap = readWeightMap(dir);
         validateCheckpointPolicy(dir, weightMap, model.visionArgs() != null);
 
@@ -109,24 +122,24 @@ public final class QuantizedQwenFp8Loader {
             int fi = 0;
             for (QwenBlock block : model.layers()) {
                 if (block.selfAttn() != null) {
-                    LinearOp q = materialize(bank, jobs.get(fi++), model, device, outDtype);
-                    LinearOp k = materialize(bank, jobs.get(fi++), model, device, outDtype);
-                    LinearOp v = materialize(bank, jobs.get(fi++), model, device, outDtype);
-                    LinearOp o = materialize(bank, jobs.get(fi++), model, device, outDtype);
+                    LinearOp q = materialize(bank, jobs.get(fi++), model, device, outDtype, backend);
+                    LinearOp k = materialize(bank, jobs.get(fi++), model, device, outDtype, backend);
+                    LinearOp v = materialize(bank, jobs.get(fi++), model, device, outDtype, backend);
+                    LinearOp o = materialize(bank, jobs.get(fi++), model, device, outDtype, backend);
                     blockFp8 += countBlockFp8(q, k, v, o);
                     tensorFp8 += countTensorFp8(q, k, v, o);
                     block.selfAttn().replaceProjections(q, k, v, o);
                 } else if (block.linearAttn() != null) {
-                    LinearOp qkv = materialize(bank, jobs.get(fi++), model, device, outDtype);
-                    LinearOp z = materialize(bank, jobs.get(fi++), model, device, outDtype);
-                    LinearOp out = materialize(bank, jobs.get(fi++), model, device, outDtype);
+                    LinearOp qkv = materialize(bank, jobs.get(fi++), model, device, outDtype, backend);
+                    LinearOp z = materialize(bank, jobs.get(fi++), model, device, outDtype, backend);
+                    LinearOp out = materialize(bank, jobs.get(fi++), model, device, outDtype, backend);
                     blockFp8 += countBlockFp8(qkv, z, out);
                     tensorFp8 += countTensorFp8(qkv, z, out);
                     block.linearAttn().replaceGemmProjections(qkv, z, out);
                 }
-                LinearOp w1 = materialize(bank, jobs.get(fi++), model, device, outDtype);
-                LinearOp w3 = materialize(bank, jobs.get(fi++), model, device, outDtype);
-                LinearOp w2 = materialize(bank, jobs.get(fi++), model, device, outDtype);
+                LinearOp w1 = materialize(bank, jobs.get(fi++), model, device, outDtype, backend);
+                LinearOp w3 = materialize(bank, jobs.get(fi++), model, device, outDtype, backend);
+                LinearOp w2 = materialize(bank, jobs.get(fi++), model, device, outDtype, backend);
                 blockFp8 += countBlockFp8(w1, w2, w3);
                 tensorFp8 += countTensorFp8(w1, w2, w3);
                 block.feedForward().replaceLinears(w1, w2, w3);
@@ -145,7 +158,7 @@ public final class QuantizedQwenFp8Loader {
     private static int countBlockFp8(LinearOp... ops) {
         int n = 0;
         for (LinearOp op : ops) {
-            if (op instanceof Fp8BlockLinear) {
+            if (op instanceof Fp8BlockLinear || op instanceof Fp8BlockMarlinLinear) {
                 n++;
             }
         }
@@ -212,7 +225,7 @@ public final class QuantizedQwenFp8Loader {
     }
 
     private static LinearOp materialize(Map<String, Tensor> bank, LinearJob job, QwenModel model,
-                                        Device device, ScalarType outDtype) {
+                                        Device device, ScalarType outDtype, WeightGemmBackend backend) {
         Tensor weight = require(bank, job.hfBase + ".weight");
         Tensor scale = optionalScale(bank, job.hfBase);
         QwenModelArgs args = model.params();
@@ -241,6 +254,9 @@ public final class QuantizedQwenFp8Loader {
                     throw new IllegalStateException(
                             "TP shard broke block scale layout for " + job.hfBase);
                 }
+                if (backend == WeightGemmBackend.MARLIN_FP8) {
+                    return QuantLinearFactory.fp8BlockMarlin(wDev, sDev, null);
+                }
                 return QuantLinearFactory.fp8Block(wDev, sDev, null, outDtype);
             } finally {
                 if (ownedW) {
@@ -260,6 +276,10 @@ public final class QuantizedQwenFp8Loader {
                             + " (supported: scalar tensor scale, or block-128 weight_scale_inv)");
         }
 
+        if (backend == WeightGemmBackend.MARLIN_FP8) {
+            throw new IllegalStateException("per-tensor FP8 scales on Ampere/Ada are not supported (" + job.hfBase
+                    + "); only block-128 weight_scale_inv checkpoints run through Marlin");
+        }
         Tensor localW = QwenWeightShard.shard(job.smileWeightName, weight, args, shard);
         boolean ownedW = localW != weight;
         Tensor wDev = localW.device().equals(device) ? localW.copy() : localW.to(device);

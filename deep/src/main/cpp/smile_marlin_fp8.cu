@@ -9,6 +9,7 @@
 namespace {
 
 constexpr int kScaleGroup = 32;
+constexpr int kBlockGroup = 128;
 
 void set_err(const std::string& msg) { smile_torch_set_error(msg.c_str()); }
 
@@ -70,6 +71,31 @@ at::Tensor repack_scales_impl(const at::Tensor& t) {
     return g.reshape({-1, 4}).index_select(1, order).reshape({rows, -1}).contiguous();
 }
 
+/**
+ * Block-FP8 scales (DeepSeek/Qwen layout, one float32 per 128x128 tile, [N/128, K/128], W = fp8 * scale) to the
+ * Marlin group-128 layout: expand every tile scale over its 128 output columns -> [K/128, N], cast to bfloat16,
+ * apply the Marlin scale permutation, and fold the FP8->bfloat16 exponent bias (2^(8-1) - 2^(4-1) = 2^120) into the
+ * scales, as vLLM does for FP8 Marlin (the kernel converts E4M3 bits to bfloat16 without rescaling).
+ */
+at::Tensor repack_block_scales_impl(const at::Tensor& t) {
+    if (t.dim() != 2 || !t.is_cuda()) {
+        throw std::runtime_error("block scales must be a 2-D CUDA tensor [N/128, K/128]");
+    }
+    at::Tensor g = t.to(at::kFloat).t().contiguous();                      // [K/128, N/128]
+    g = g.repeat_interleave(kBlockGroup, /*dim=*/1).to(at::kBFloat16);       // [K/128, N]
+    const int64_t n = g.size(1);
+    if (n % 64 != 0) {
+        throw std::runtime_error("N must be a multiple of 64, got " + std::to_string(n));
+    }
+    at::Tensor perm = scale_perm(t.device());
+    g = g.reshape({-1, 64}).index_select(1, perm).reshape({-1, n}).contiguous();
+    // 2^120 only shifts the exponent: exact unless a scale is >= 2^8 (never for quantization scales)
+    if (g.abs().max().item<float>() >= 256.0f) {
+        throw std::runtime_error("block scale too large for the fused exponent bias");
+    }
+    return (g.to(at::kFloat) * std::ldexp(1.0f, 120)).to(at::kBFloat16).contiguous();
+}
+
 /** Stacks per-expert results of {@code fn} over the leading dimension of a 3-D tensor. */
 template <typename F>
 at::Tensor stack_impl(const at::Tensor& t, F fn) {
@@ -105,6 +131,10 @@ extern "C" ST_Tensor smile_marlin_fp8_repack_scales(ST_Tensor s) {
     SMILE_GUARD("smile_marlin_fp8_repack_scales", repack_scales_impl(s->t))
 }
 
+extern "C" ST_Tensor smile_marlin_fp8_repack_block_scales(ST_Tensor s) {
+    SMILE_GUARD("smile_marlin_fp8_repack_block_scales", repack_block_scales_impl(s->t))
+}
+
 extern "C" ST_Tensor smile_marlin_fp8_repack_weight_stack(ST_Tensor w) {
     SMILE_GUARD("smile_marlin_fp8_repack_weight_stack", stack_impl(w->t, repack_weight_impl))
 }
@@ -138,9 +168,13 @@ extern "C" ST_Tensor smile_marlin_fp8_gemm(ST_Tensor a, ST_Tensor qweight, ST_Te
             set_err("smile_marlin_fp8_gemm: qweight is not a Marlin-packed int32 [K/16, N*4]");
             return nullptr;
         }
-        if (S.scalar_type() != at::kByte || !S.is_contiguous() || S.size(0) != size_k / kScaleGroup
+        // uint8 E8M0 scales per 32 K (MXFP8) or bfloat16 scales per 128 K (block FP8, exponent bias fused in)
+        const bool block = S.scalar_type() == at::kBFloat16;
+        const int group = block ? kBlockGroup : kScaleGroup;
+        if ((!block && S.scalar_type() != at::kByte) || !S.is_contiguous() || S.size(0) != size_k / group
                 || S.size(1) != size_n) {
-            set_err("smile_marlin_fp8_gemm: scales must be uint8 [K/32, N] from smile_marlin_fp8_repack_scales");
+            set_err("smile_marlin_fp8_gemm: scales must be uint8 [K/32, N] (smile_marlin_fp8_repack_scales) or "
+                    "bfloat16 [K/128, N] (smile_marlin_fp8_repack_block_scales)");
             return nullptr;
         }
         const int dev = A.get_device();
@@ -165,8 +199,8 @@ extern "C" ST_Tensor smile_marlin_fp8_gemm(ST_Tensor a, ST_Tensor qweight, ST_Te
                           empty_b.data_ptr(), empty_f.data_ptr(), S.data_ptr(), empty_f.data_ptr(),
                           empty_b.data_ptr(), (int) size_m, (int) size_n, (int) size_k, (int) A.stride(0),
                           workspace.data_ptr(), vllm::kBFloat16, vllm::kFE4M3fn, vllm::kBFloat16,
-                          vllm::kFE8M0fnu, /*has_bias=*/false, /*has_zp=*/false,
-                          /*num_groups=*/(int) S.size(0), /*group_size=*/kScaleGroup, dev,
+                          block ? vllm::kBFloat16 : vllm::kFE8M0fnu, /*has_bias=*/false, /*has_zp=*/false,
+                          /*num_groups=*/(int) S.size(0), /*group_size=*/group, dev,
                           at::cuda::getCurrentCUDAStream(dev), /*thread_k=*/-1, /*thread_n=*/-1, sms,
                           /*use_atomic_add=*/false, use_fp32_reduce, /*is_zp_float=*/false);
         cudaError_t st = cudaGetLastError();
