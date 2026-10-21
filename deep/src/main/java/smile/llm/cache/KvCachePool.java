@@ -195,6 +195,12 @@ public class KvCachePool implements AutoCloseable {
      */
     private boolean verifyGraphBuffers;
     /** Fixed-address CSR for the verify CUDA graph (rewritten in place each round). */
+    /**
+     * Fixed-address FlashInfer page tables of the decode CUDA graphs, one per batch size. A captured graph keeps
+     * reading the addresses it was captured with, so these are never freed or moved (the per-step metadata is
+     * released by every {@link #activateStep}); only their contents are refreshed before each replay.
+     */
+    private final Map<Integer, FlashInferKvMetadata> decodeGraphMeta = new java.util.HashMap<>();
     private FlashInferKvMetadata verifyGraphMeta;
     private int verifyGraphMetaBatch = -1;
     private int verifyGraphMetaCapacityPages = -1;
@@ -842,13 +848,69 @@ public class KvCachePool implements AutoCloseable {
         if (cachePositions == null || cachePositions.length == 0) {
             throw new IllegalArgumentException("cachePositions must be non-empty");
         }
-        sharedFlashInferMetadata(cacheLen);
-        ensureDecodeKvIndexBuf(cachePositions.length);
-        for (int b = 0; b < cachePositions.length; b++) {
+        ensureBound();
+        int batch = cachePositions.length;
+        refreshDecodeGraphMetadata(cacheLen, batch);
+        ensureDecodeKvIndexBuf(batch);
+        for (int b = 0; b < batch; b++) {
             long slot = requestSlots[b][cachePositions[b]];
             decodeKvIndexBuf.put_(slot, b);
         }
-        bumpUniformFlashInferMetadata(cacheLen, cachePositions.length);
+    }
+
+    /**
+     * The fixed-address page table decode graphs read (see {@link #prepareDecodeGraphStep}).
+     *
+     * @param batch decode batch size.
+     * @return the metadata; its tensors keep their addresses for the life of the pool.
+     * @throws IllegalStateException if {@link #prepareDecodeGraphStep} has not run for this batch size.
+     */
+    public FlashInferKvMetadata decodeGraphMetadata(int batch) {
+        FlashInferKvMetadata meta = decodeGraphMeta.get(batch);
+        if (meta == null) {
+            throw new IllegalStateException("decode graph metadata not prepared for batch " + batch);
+        }
+        return meta;
+    }
+
+    private void refreshDecodeGraphMetadata(int cacheLen, int batch) {
+        if (requestSlots.length != batch) {
+            throw new IllegalStateException("decode graph batch " + batch + " != bound batch " + requestSlots.length);
+        }
+        FlashInferKvMetadata meta = decodeGraphMeta.get(batch);
+        if (meta == null) {
+            // room for every page of the pool, so the buffers never have to grow (and move) later
+            long capacityPages = Math.max(1, numSlots() / pageSize);
+            var opts = new Tensor.Options().device(device).dtype(ScalarType.Int32);
+            Tensor indptr = Tensor.zeros(opts, batch + 1);
+            Tensor indices = Tensor.zeros(opts, batch * capacityPages);
+            Tensor last = Tensor.zeros(opts, batch);
+            indptr.detachFromScopes();
+            indices.detachFromScopes();
+            last.detachFromScopes();
+            meta = new FlashInferKvMetadata(indptr, indices, last, pageSize);
+            decodeGraphMeta.put(batch, meta);
+        }
+        int pages = (cacheLen + pageSize - 1) / pageSize;
+        int rem = cacheLen % pageSize;
+        int[] indptr = new int[batch + 1];
+        int[] last = new int[batch];
+        int[] flat = new int[batch * pages];
+        int cursor = 0;
+        for (int b = 0; b < batch; b++) {
+            if (cacheLen > requestSlots[b].length) {
+                throw new IllegalArgumentException("KV FlashInfer length out of range: " + cacheLen);
+            }
+            indptr[b] = cursor;
+            last[b] = rem == 0 ? pageSize : rem;
+            for (int p = 0; p < pages; p++) {
+                flat[cursor++] = (int) (requestSlots[b][p * pageSize] / pageSize);
+            }
+        }
+        indptr[batch] = cursor;
+        copyIntsInto(meta.pagedKvIndptr(), indptr);
+        copyIntsInto(meta.pagedKvLastPageLen(), last);
+        copyIntsInto(meta.pagedKvIndices(), flat);
     }
 
     private void ensureDecodeKvIndexBuf(int batch) {
