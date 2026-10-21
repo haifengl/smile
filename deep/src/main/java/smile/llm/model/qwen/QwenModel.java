@@ -1146,6 +1146,9 @@ public class QwenModel extends LayerBlock {
                 } catch (RuntimeException e) {
                     logger.warn("tpRank={}: CUDA graph capture failed, falling back to eager: {}",
                             tpRank, e.getMessage());
+                    if (System.getenv("SMILE_DECODE_CUDA_GRAPH_DEBUG") != null) {
+                        e.printStackTrace();
+                    }
                     DecodeCudaGraph.disableCapture(e.getMessage());
                     DecodeCudaGraph.markPersistentLogits(false);
                     if (decodeGraphSession != null) {
