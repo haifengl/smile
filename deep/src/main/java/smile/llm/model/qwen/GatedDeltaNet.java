@@ -113,11 +113,11 @@ public class GatedDeltaNet {
             throw new IllegalArgumentException("linear_num_value_heads must be divisible by linear_num_key_heads");
         }
 
-        this.inProjQkv = new LinearLayer(hiddenSize, keyDim * 2 + valueDim, false);
-        this.inProjZ = new LinearLayer(hiddenSize, valueDim, false);
+        this.inProjQkv = LinearLayer.gemm(hiddenSize, keyDim * 2 + valueDim, false);
+        this.inProjZ = LinearLayer.gemm(hiddenSize, valueDim, false);
         this.inProjB = new LinearLayer(hiddenSize, numVHeads, false);
         this.inProjA = new LinearLayer(hiddenSize, numVHeads, false);
-        this.outProj = new LinearLayer(valueDim, hiddenSize, false);
+        this.outProj = LinearLayer.gemm(valueDim, hiddenSize, false);
         this.conv1dWeight = Tensor.zeros(convDim, convKernel);
         this.aLog = Tensor.zeros(numVHeads);
         this.dtBias = Tensor.ones(numVHeads);

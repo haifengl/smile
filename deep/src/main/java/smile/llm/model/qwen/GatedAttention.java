@@ -117,10 +117,10 @@ public class GatedAttention implements Attention {
         this.tpGroup = tpGroup;
         this.tpRank = tpRank;
 
-        this.qProj = new LinearLayer(dim, numHeads * headDim * 2, false);
-        this.kProj = new LinearLayer(dim, numKvHeads * headDim, false);
-        this.vProj = new LinearLayer(dim, numKvHeads * headDim, false);
-        this.oProj = new LinearLayer(numHeads * headDim, dim, false);
+        this.qProj = LinearLayer.gemm(dim, numHeads * headDim * 2, false);
+        this.kProj = LinearLayer.gemm(dim, numKvHeads * headDim, false);
+        this.vProj = LinearLayer.gemm(dim, numKvHeads * headDim, false);
+        this.oProj = LinearLayer.gemm(numHeads * headDim, dim, false);
         this.qNorm = new QwenRMSNorm(headDim, normEps);
         this.kNorm = new QwenRMSNorm(headDim, normEps);
 

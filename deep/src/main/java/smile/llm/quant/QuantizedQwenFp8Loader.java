@@ -96,7 +96,16 @@ public final class QuantizedQwenFp8Loader {
         Map<String, String> weightMap = readWeightMap(dir);
         validateCheckpointPolicy(dir, weightMap, model.visionArgs() != null);
 
-        List<LinearJob> jobs = buildJobs(model, weightMap);
+        List<Target> targets = new ArrayList<>();
+        for (QwenBlock block : model.layers()) {
+            targets.add(new Target(block, false));
+        }
+        if (model.mtp() != null && hasMtpProjections(weightMap)) {
+            for (QwenBlock block : model.mtp().blocks()) {
+                targets.add(new Target(block, true));
+            }
+        }
+        List<LinearJob> jobs = buildJobs(targets, weightMap);
         if (jobs.isEmpty()) {
             throw new IOException("No FP8 Qwen linear weights found under " + dir);
         }
@@ -120,7 +129,8 @@ public final class QuantizedQwenFp8Loader {
         int tensorFp8 = 0;
         try {
             int fi = 0;
-            for (QwenBlock block : model.layers()) {
+            for (Target target : targets) {
+                QwenBlock block = target.block();
                 if (block.selfAttn() != null) {
                     LinearOp q = materialize(bank, jobs.get(fi++), model, device, outDtype, backend);
                     LinearOp k = materialize(bank, jobs.get(fi++), model, device, outDtype, backend);
@@ -175,41 +185,53 @@ public final class QuantizedQwenFp8Loader {
         return n;
     }
 
-    private static List<LinearJob> buildJobs(QwenModel model, Map<String, String> weightMap)
+    /** A block to install and whether it belongs to the MTP head (HF names {@code mtp.layers.N.*}). */
+    private record Target(QwenBlock block, boolean mtp) { }
+
+    private static boolean hasMtpProjections(Map<String, String> weightMap) {
+        return weightMap.containsKey("mtp.layers.0.self_attn.q_proj.weight");
+    }
+
+    private static List<LinearJob> buildJobs(List<Target> targets, Map<String, String> weightMap)
             throws IOException {
         List<LinearJob> jobs = new ArrayList<>();
-        for (QwenBlock block : model.layers()) {
+        for (Target target : targets) {
+            QwenBlock block = target.block();
+            boolean mtp = target.mtp();
             int layer = block.layerId();
             if (block.selfAttn() != null) {
-                jobs.add(job(weightMap, layer, "self_attn.q_proj",
+                jobs.add(job(weightMap, layer, mtp, "self_attn.q_proj",
                         "layers." + layer + ".self_attn.q_proj.weight"));
-                jobs.add(job(weightMap, layer, "self_attn.k_proj",
+                jobs.add(job(weightMap, layer, mtp, "self_attn.k_proj",
                         "layers." + layer + ".self_attn.k_proj.weight"));
-                jobs.add(job(weightMap, layer, "self_attn.v_proj",
+                jobs.add(job(weightMap, layer, mtp, "self_attn.v_proj",
                         "layers." + layer + ".self_attn.v_proj.weight"));
-                jobs.add(job(weightMap, layer, "self_attn.o_proj",
+                jobs.add(job(weightMap, layer, mtp, "self_attn.o_proj",
                         "layers." + layer + ".self_attn.o_proj.weight"));
             } else if (block.linearAttn() != null) {
-                jobs.add(job(weightMap, layer, "linear_attn.in_proj_qkv",
+                jobs.add(job(weightMap, layer, mtp, "linear_attn.in_proj_qkv",
                         "layers." + layer + ".linear_attn.in_proj_qkv.weight"));
-                jobs.add(job(weightMap, layer, "linear_attn.in_proj_z",
+                jobs.add(job(weightMap, layer, mtp, "linear_attn.in_proj_z",
                         "layers." + layer + ".linear_attn.in_proj_z.weight"));
-                jobs.add(job(weightMap, layer, "linear_attn.out_proj",
+                jobs.add(job(weightMap, layer, mtp, "linear_attn.out_proj",
                         "layers." + layer + ".linear_attn.out_proj.weight"));
             }
-            jobs.add(job(weightMap, layer, "mlp.gate_proj",
+            jobs.add(job(weightMap, layer, mtp, "mlp.gate_proj",
                     "layers." + layer + ".mlp.w1.weight"));
-            jobs.add(job(weightMap, layer, "mlp.up_proj",
+            jobs.add(job(weightMap, layer, mtp, "mlp.up_proj",
                     "layers." + layer + ".mlp.w3.weight"));
-            jobs.add(job(weightMap, layer, "mlp.down_proj",
+            jobs.add(job(weightMap, layer, mtp, "mlp.down_proj",
                     "layers." + layer + ".mlp.w2.weight"));
         }
         return jobs;
     }
 
-    private static LinearJob job(Map<String, String> weightMap, int layer, String hfSuffix,
+    private static LinearJob job(Map<String, String> weightMap, int layer, boolean mtp, String hfSuffix,
                                  String smileWeightName) throws IOException {
-        String base = resolveHfBase(weightMap, layer, hfSuffix);
+        String base = mtp ? "mtp.layers." + layer + "." + hfSuffix : resolveHfBase(weightMap, layer, hfSuffix);
+        if (mtp && !weightMap.containsKey(base + ".weight")) {
+            throw new IOException("Missing Qwen FP8 MTP weight " + base + ".weight");
+        }
         return new LinearJob(layer, base, smileWeightName);
     }
 

@@ -173,6 +173,15 @@ public class QwenMtp extends LayerBlock {
     }
 
     /**
+     * Returns the MTP transformer blocks (their projections are loaded like the main model's).
+     *
+     * @return the blocks, in order.
+     */
+    public List<QwenBlock> blocks() {
+        return layers;
+    }
+
+    /**
      * Returns the number of MTP transformer layers.
      *
      * @return number of MTP transformer layers.
