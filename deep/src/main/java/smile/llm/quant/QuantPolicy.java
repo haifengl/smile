@@ -45,7 +45,7 @@ public final class QuantPolicy {
      *
      * @param checkpointDir model directory.
      * @param device        target device.
-     * @param backendOverride {@code auto}/{@code dense}/{@code fp8}/{@code nvfp4}/{@code marlin},
+     * @param backendOverride {@code auto}/{@code dense}/{@code fp8}/{@code marlin_fp8}/{@code nvfp4}/{@code marlin},
      *                        or {@code null} to use {@link QuantBackendOverride} / {@code auto}.
      * @return resolved format and backend.
      * @throws java.io.IOException if checkpoint IO fails.
@@ -76,6 +76,14 @@ public final class QuantPolicy {
             if (backend == WeightGemmBackend.FP8 && format != QuantFormat.FP8) {
                 throw new IllegalStateException(
                         "smile.chat.quantization=fp8 requires a native FP8 checkpoint; got " + format);
+            }
+            if (backend == WeightGemmBackend.MARLIN_FP8 && format != QuantFormat.FP8) {
+                throw new IllegalStateException(
+                        "smile.chat.quantization=marlin_fp8 requires a native FP8 checkpoint; got " + format);
+            }
+            if (backend == WeightGemmBackend.FP8 && WeightGemmBackend.computeCapability(device)[0] < 9) {
+                throw new IllegalStateException(
+                        "smile.chat.quantization=fp8 needs a Hopper+ GPU (sm_90+); use auto or marlin_fp8 on this GPU");
             }
             if (backend == WeightGemmBackend.NVFP4 && format != QuantFormat.NVFP4) {
                 throw new IllegalStateException(

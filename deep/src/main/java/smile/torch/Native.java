@@ -132,6 +132,12 @@ public final class Native {
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_FP8_REPACK_BLOCK_SCALES_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_fp8_repack_block_scales");
+        static final MethodHandle MARLIN_FP8_REPACK_BLOCK_SCALES = MARLIN_FP8_REPACK_BLOCK_SCALES_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
         static final java.util.Optional<MemorySegment> MARLIN_FP8_REPACK_WEIGHT_STACK_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_fp8_repack_weight_stack");
         static final MethodHandle MARLIN_FP8_REPACK_WEIGHT_STACK = MARLIN_FP8_REPACK_WEIGHT_STACK_SYM
@@ -859,6 +865,22 @@ public final class Native {
      */
     public static Tensor marlinFp8RepackWeight(Tensor weight) {
         return marlinFp8Result(Bindings.MARLIN_FP8_REPACK_WEIGHT, "smile_marlin_fp8_repack_weight", weight.handle());
+    }
+
+    /** @return {@code true} when the block-FP8 scale repack (Qwen/DeepSeek checkpoints on Ampere) is compiled in. */
+    public static boolean marlinFp8BlockScalesAvailable() {
+        return Bindings.MARLIN_FP8_REPACK_BLOCK_SCALES != null;
+    }
+
+    /**
+     * Repacks block-FP8 scales ({@code W = fp8 * scale} per 128x128 tile) for the group-128 Marlin kernel.
+     *
+     * @param scaleInv float32 {@code [N/128, K/128]} on CUDA.
+     * @return bfloat16 {@code [K/128, N]} in the Marlin layout, FP8 exponent bias folded in.
+     */
+    public static Tensor marlinFp8RepackBlockScales(Tensor scaleInv) {
+        return marlinFp8Result(Bindings.MARLIN_FP8_REPACK_BLOCK_SCALES, "smile_marlin_fp8_repack_block_scales",
+                scaleInv.handle());
     }
 
     /**

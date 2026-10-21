@@ -30,6 +30,13 @@ SMILE_API ST_Tensor smile_marlin_fp8_repack_weight(ST_Tensor w);
 SMILE_API ST_Tensor smile_marlin_fp8_repack_scales(ST_Tensor s);
 
 /**
+ * Repacks block-FP8 scales (float32 [N/128, K/128], W = fp8 * scale per 128x128 tile) for the group-128 Marlin kernel:
+ * returns bfloat16 [K/128, N] in the Marlin layout with the FP8 exponent bias folded in. NULL on error.
+ * Weights are repacked with smile_marlin_fp8_repack_weight; smile_marlin_fp8_gemm accepts these scales.
+ */
+SMILE_API ST_Tensor smile_marlin_fp8_repack_block_scales(ST_Tensor s);
+
+/**
  * Stacked variants for MoE experts: w [E, N, K] -> int32 [E, K / 16, N * 4];
  * s [E, N, K / 32] -> uint8 [E, K / 32, N]. NULL on error.
  */
@@ -75,7 +82,8 @@ SMILE_API ST_Tensor smile_mxfp8_to_block_fp8(ST_Tensor w, ST_Tensor scale, ST_Te
 
 /**
  * C = A @ dequant(W)^T.
- * a: bfloat16 [M, K] on CUDA; qweight/scales from the two repack calls above.
+ * a: bfloat16 [M, K] on CUDA; qweight/scales from the repack calls above (uint8 E8M0 scales per 32 K for MXFP8,
+ * or bfloat16 scales per 128 K for block FP8).
  * Returns a new bfloat16 [M, N] tensor, or NULL on error.
  */
 SMILE_API ST_Tensor smile_marlin_fp8_gemm(ST_Tensor a, ST_Tensor qweight, ST_Tensor scales);

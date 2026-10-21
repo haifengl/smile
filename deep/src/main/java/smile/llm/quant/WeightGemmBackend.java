@@ -26,6 +26,7 @@ import smile.torch.Native;
  * <ul>
  *   <li>Dense → {@link #DENSE}</li>
  *   <li>Native FP8 on sm_90+ → {@link #FP8}</li>
+ *   <li>Block-FP8 checkpoints on Ampere/Ada (sm_80–89) → {@link #MARLIN_FP8} (weights stay FP8 in memory)</li>
  *   <li>Native NVFP4 on sm_100+ → {@link #NVFP4}</li>
  *   <li>GPTQ/AWQ on Ampere/Ada (8.0–8.9) → {@link #MARLIN}</li>
  *   <li>GPTQ/AWQ on Hopper/Blackwell → fail fast (no Marlin)</li>
@@ -41,7 +42,9 @@ public enum WeightGemmBackend {
     /** Native NVFP4 weight GEMM (Blackwell+). */
     NVFP4,
     /** Marlin INT4 failover (Ampere/Ada). */
-    MARLIN;
+    MARLIN,
+    /** Weight-only Marlin GEMM over FP8 weights with bfloat16 group scales (Ampere/Ada failover for FP8 checkpoints). */
+    MARLIN_FP8;
 
     /**
      * Selects the weight GEMM backend.
@@ -58,21 +61,35 @@ public enum WeightGemmBackend {
         if (format == QuantFormat.DENSE) {
             return DENSE;
         }
-
         int[] cc = computeCapability(device);
-        int major = cc[0];
-        int minor = cc[1];
-        int sm = major * 10 + minor;
+        return select(cc[0], cc[1], format);
+    }
 
+    /**
+     * The selection policy for a given compute capability (separate so it can be tested without a GPU).
+     *
+     * @param major  compute capability major.
+     * @param minor  compute capability minor.
+     * @param format checkpoint quantization format.
+     * @return the backend to use.
+     * @throws IllegalStateException on unsupported format/GPU combinations.
+     */
+    static WeightGemmBackend select(int major, int minor, QuantFormat format) {
+        if (format == QuantFormat.DENSE) {
+            return DENSE;
+        }
+        int sm = major * 10 + minor;
         return switch (format) {
             case FP8 -> {
-                if (major < 9) {
-                    throw new IllegalStateException(
-                            "FP8 weight GEMM requires compute capability >= 9.0 (Hopper+); got sm_"
-                                    + sm + ". Use a GPTQ/AWQ checkpoint with Marlin on Ampere/Ada, "
-                                    + "or a dense BF16/FP16 checkpoint.");
+                if (major >= 9) {
+                    yield FP8;
                 }
-                yield FP8;
+                if (major < 8) {
+                    throw new IllegalStateException(
+                            "FP8 checkpoints need compute capability >= 8.0 (Marlin on Ampere/Ada) or >= 9.0 "
+                                    + "(native); got sm_" + sm + ".");
+                }
+                yield MARLIN_FP8;
             }
             case NVFP4 -> {
                 if (major < 10) {
@@ -114,12 +131,12 @@ public enum WeightGemmBackend {
     }
 
     /**
-     * Returns whether this backend is the Ampere/Ada INT4 failover.
+     * Returns whether this backend is an Ampere/Ada Marlin failover (INT4 or FP8 weights).
      *
-     * @return {@code true} when this backend is the Ampere/Ada INT4 failover.
+     * @return {@code true} when this backend is an Ampere/Ada Marlin failover.
      */
     public boolean isFailover() {
-        return this == MARLIN;
+        return this == MARLIN || this == MARLIN_FP8;
     }
 
     /**
