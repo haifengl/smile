@@ -781,6 +781,9 @@ public class ChatService implements OpenAiModelContributor {
                         mm = minimax.processMultimodal(messages, chatOptions);
                     } catch (IllegalArgumentException e) {
                         throw new jakarta.ws.rs.BadRequestException(e.getMessage(), e);
+                    } catch (java.io.IOException e) {
+                        // an unreadable, undecodable or missing image/video is the client's problem
+                        throw new jakarta.ws.rs.BadRequestException("cannot read media: " + e.getMessage(), e);
                     }
                     int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), mm.inputIds().length);
                     promptLen = mm.inputIds().length;

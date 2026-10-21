@@ -166,11 +166,36 @@ public class MiniMaxVisionTower extends LayerBlock {
             Tensor[] cosSin = ropeTables(segments, (int) total, device);
             Tensor x = preNorm.forward(patchEmbed.forward(pixelValues));
             for (Block block : blocks) {
-                x = block.forward(x, cu, cosSin[0], cosSin[1], args.rotaryDim());
+                // A block's intermediates (qkv, attention, the 4x wide MLP) are freed when its scope ends and the
+                // previous layer's activations as soon as the next exist, so memory stays at a few layers' worth
+                // however long the video is.
+                AutoScope inner = new AutoScope();
+                Tensor.push(inner);
+                Tensor next;
+                try {
+                    next = block.forward(x, cu, cosSin[0], cosSin[1], args.rotaryDim());
+                    next.promoteToParent();
+                } finally {
+                    Tensor.pop();
+                }
+                x.close();
+                x = next;
             }
-            Tensor y = projector2.forward(gelu.forward(projector1.forward(x)));
-            y = y.reshape(y.shape()[0] / ((long) args.mergeSize() * args.mergeSize()), -1);
-            Tensor out = merge2.forward(gelu.forward(merge1.forward(y)));
+            Tensor y;
+            {
+                AutoScope inner = new AutoScope();
+                Tensor.push(inner);
+                try {
+                    y = projector2.forward(gelu.forward(projector1.forward(x)));
+                    y = y.reshape(y.shape()[0] / ((long) args.mergeSize() * args.mergeSize()), -1);
+                    y = merge2.forward(gelu.forward(merge1.forward(y)));
+                    y.promoteToParent();
+                } finally {
+                    Tensor.pop();
+                }
+            }
+            x.close();
+            Tensor out = y;
             if (out.dtype() != dtype) {
                 out = out.to(dtype);
             }
