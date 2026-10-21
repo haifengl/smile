@@ -30,6 +30,67 @@ import java.util.Map;
 final class PyJson {
     private PyJson() { }
 
+    /** Python's {@code str.isspace()} for one char: Unicode space separators, ASCII/line separators, U+0085. */
+    private static boolean isPySpace(char c) {
+        return Character.isWhitespace(c) || Character.getType(c) == Character.SPACE_SEPARATOR || c == 0x85;
+    }
+
+    /**
+     * Python's {@code str.strip()} (also the Jinja {@code |trim} filter): removes Unicode whitespace, including
+     * the non-breaking spaces that {@link String#strip()} keeps.
+     *
+     * @param s the text.
+     * @return the stripped text.
+     */
+    static String strip(String s) {
+        int start = 0;
+        int end = s.length();
+        while (start < end && isPySpace(s.charAt(start))) {
+            start++;
+        }
+        while (end > start && isPySpace(s.charAt(end - 1))) {
+            end--;
+        }
+        return s.substring(start, end);
+    }
+
+    /** Python's {@code s.lstrip('\n')}. */
+    static String lstripNewlines(String s) {
+        int start = 0;
+        while (start < s.length() && s.charAt(start) == '\n') {
+            start++;
+        }
+        return s.substring(start);
+    }
+
+    /** Python's {@code s.rstrip('\n')}. */
+    static String rstripNewlines(String s) {
+        int end = s.length();
+        while (end > 0 && s.charAt(end - 1) == '\n') {
+            end--;
+        }
+        return s.substring(0, end);
+    }
+
+    /**
+     * Python's {@code str(value)} for the JSON scalar types: {@code True}, {@code False}, {@code None}, integers and
+     * {@code repr(float)}; strings are returned as is, containers fall back to {@link #dumps}.
+     *
+     * @param value a parsed JSON value.
+     * @return the text Jinja's {@code |string} filter would give for the equivalent Python value.
+     */
+    static String pyStr(Object value) {
+        return switch (value) {
+            case null -> "None";
+            case Boolean b -> b ? "True" : "False";
+            case Double d -> floatRepr(d);
+            case Float f -> floatRepr(f.doubleValue());
+            case Number n -> n.toString();
+            case CharSequence cs -> cs.toString();
+            default -> dumps(value);
+        };
+    }
+
     /**
      * Serializes a value like Python's {@code json.dumps(value, ensure_ascii=False)}.
      *

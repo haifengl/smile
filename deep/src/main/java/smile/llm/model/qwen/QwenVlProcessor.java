@@ -167,44 +167,72 @@ public class QwenVlProcessor {
      * @throws IOException if media cannot be loaded.
      */
     public ProcessedMultimodal process(Message... dialog) throws IOException {
+        return process(dialog, null);
+    }
+
+    /**
+     * Processes a chat dialog into tokens, vision tensors, and mRoPE planes.
+     *
+     * <p>When the tokenizer knows the checkpoint's chat template the prompt is rendered with it (reasoning-effort
+     * system turn, opened think block, ...); otherwise the legacy hand-built layout is used.
+     *
+     * @param dialog  conversation turns.
+     * @param options chat options (thinking mode, reasoning effort); may be {@code null}.
+     * @return processed multimodal batch (single sequence).
+     * @throws IOException if media cannot be loaded.
+     */
+    public ProcessedMultimodal process(Message[] dialog, smile.llm.ChatOptions options) throws IOException {
         List<BufferedImage> images = new ArrayList<>();
         List<List<BufferedImage>> videos = new ArrayList<>();
         List<Double> videoFps = new ArrayList<>();
 
+        String rendered = tokenizer.renderDialog(dialog, options);
         IntArrayList tokens = new IntArrayList();
         for (Message message : dialog) {
-            tokens.add(tokenizer.specialToken("<|im_start|>"));
-            String role = switch (message.role()) {
-                case system -> "system";
-                case user -> "user";
-                case assistant -> "assistant";
-                default -> message.role().name();
-            };
-            tokens.add(tokenizer.encode(role + "\n", false, false));
+            if (rendered == null) {
+                tokens.add(tokenizer.specialToken("<|im_start|>"));
+                String role = switch (message.role()) {
+                    case system -> "system";
+                    case user -> "user";
+                    case assistant -> "assistant";
+                    default -> message.role().name();
+                };
+                tokens.add(tokenizer.encode(role + "\n", false, false));
+            }
             for (ContentPart part : message.parts()) {
                 if (part instanceof TextPart text) {
-                    tokens.add(tokenizer.encode(text.text(), false, false));
+                    if (rendered == null) {
+                        tokens.add(tokenizer.encode(text.text(), false, false));
+                    }
                 } else if (part instanceof ImageUrlPart image) {
-                    BufferedImage img = loadImage(image.url());
-                    images.add(img);
-                    tokens.add(tokenizer.specialToken("<|vision_start|>"));
-                    tokens.add(tokenizer.specialToken("<|image_pad|>")); // expanded later
-                    tokens.add(tokenizer.specialToken("<|vision_end|>"));
+                    images.add(loadImage(image.url()));
+                    if (rendered == null) {
+                        tokens.add(tokenizer.specialToken("<|vision_start|>"));
+                        tokens.add(tokenizer.specialToken("<|image_pad|>")); // expanded later
+                        tokens.add(tokenizer.specialToken("<|vision_end|>"));
+                    }
                 } else if (part instanceof VideoUrlPart video) {
                     double fps = video.fps() != null ? video.fps() : defaultVideoFps;
-                    List<BufferedImage> frames = loadVideoFrames(video.url(), fps);
-                    videos.add(frames);
+                    videos.add(loadVideoFrames(video.url(), fps));
                     videoFps.add(fps);
-                    tokens.add(tokenizer.specialToken("<|vision_start|>"));
-                    tokens.add(tokenizer.specialToken("<|video_pad|>"));
-                    tokens.add(tokenizer.specialToken("<|vision_end|>"));
+                    if (rendered == null) {
+                        tokens.add(tokenizer.specialToken("<|vision_start|>"));
+                        tokens.add(tokenizer.specialToken("<|video_pad|>"));
+                        tokens.add(tokenizer.specialToken("<|vision_end|>"));
+                    }
                 }
             }
-            tokens.add(tokenizer.specialToken("<|im_end|>"));
-            tokens.add(tokenizer.encode("\n", false, false));
+            if (rendered == null) {
+                tokens.add(tokenizer.specialToken("<|im_end|>"));
+                tokens.add(tokenizer.encode("\n", false, false));
+            }
         }
-        tokens.add(tokenizer.specialToken("<|im_start|>"));
-        tokens.add(tokenizer.encode("assistant\n", false, false));
+        if (rendered == null) {
+            tokens.add(tokenizer.specialToken("<|im_start|>"));
+            tokens.add(tokenizer.encode("assistant\n", false, false));
+        } else {
+            tokens.add(tokenizer.encodeWithSpecials(rendered));
+        }
 
         List<float[]> allPatches = new ArrayList<>();
         List<int[]> imageGrids = new ArrayList<>();

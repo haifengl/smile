@@ -92,8 +92,18 @@ public class CompletionRequest {
      * {@code "adaptive"}, or an object {@code {"type": "..."}}.
      */
     public JsonNode thinking;
-    /** vLLM-style template arguments; {@code thinking_mode} is honored when {@link #thinking} is absent. */
+    /**
+     * vLLM-style template arguments: {@code thinking_mode}, {@code enable_thinking} (boolean), {@code reasoning_effort}
+     * and {@code preserve_thinking} are honored when the matching top-level field is absent.
+     */
     public JsonNode chatTemplateKwargs;
+    /**
+     * Reasoning effort for templates that support it (Qwen3.8): {@code xhigh} (alias {@code high}), {@code medium} or
+     * {@code low}. Ignored by models whose template has no such setting.
+     */
+    public String reasoningEffort;
+    /** Keep earlier turns' reasoning in the prompt (Qwen3.8 {@code preserve_thinking}); template default when absent. */
+    public Boolean preserveThinking;
 
     /**
      * Returns {@code true} when the client set {@code max_completion_tokens}
@@ -157,7 +167,53 @@ public class CompletionRequest {
                 && (choice instanceof ToolChoice.Required || choice instanceof ToolChoice.Named)) {
             throw new IllegalArgumentException("tool_choice requires a non-empty tools array");
         }
-        return new ChatOptions(defs, choice, parallel, resolveThinkingMode());
+        return new ChatOptions(defs, choice, parallel, resolveThinkingMode(), resolveReasoningEffort(),
+                resolvePreserveThinking());
+    }
+
+    private JsonNode templateKwarg(String name) {
+        if (chatTemplateKwargs != null && chatTemplateKwargs.isObject()) {
+            JsonNode node = chatTemplateKwargs.get(name);
+            return node == null || node.isNull() ? null : node;
+        }
+        return null;
+    }
+
+    /**
+     * Resolves {@code reasoning_effort} from the top-level field or {@code chat_template_kwargs}.
+     *
+     * @return {@code xhigh}, {@code medium}, {@code low}, or {@code null} when unspecified.
+     * @throws IllegalArgumentException for any other value.
+     */
+    String resolveReasoningEffort() {
+        String effort = reasoningEffort;
+        if (effort == null || effort.isBlank()) {
+            JsonNode node = templateKwarg("reasoning_effort");
+            effort = node == null ? null : node.asText("");
+        }
+        if (effort == null || effort.isBlank()) {
+            return null;
+        }
+        return switch (effort.trim().toLowerCase(java.util.Locale.ROOT)) {
+            case "xhigh", "high" -> "xhigh";
+            case "medium" -> "medium";
+            case "low" -> "low";
+            default -> throw new IllegalArgumentException(
+                    "reasoning_effort must be xhigh, medium or low, got '" + effort + "'");
+        };
+    }
+
+    /**
+     * Resolves {@code preserve_thinking} from the top-level field or {@code chat_template_kwargs}.
+     *
+     * @return the preference, or {@code null} for the template default.
+     */
+    Boolean resolvePreserveThinking() {
+        if (preserveThinking != null) {
+            return preserveThinking;
+        }
+        JsonNode node = templateKwarg("preserve_thinking");
+        return node == null ? null : node.asBoolean();
     }
 
     /**
@@ -173,6 +229,10 @@ public class CompletionRequest {
         }
         if ((node == null || node.isNull()) && chatTemplateKwargs != null && chatTemplateKwargs.isObject()) {
             node = chatTemplateKwargs.get("thinking_mode");
+        }
+        if ((node == null || node.isNull()) && templateKwarg("enable_thinking") != null) {
+            // vLLM / transformers spelling: a boolean
+            return templateKwarg("enable_thinking").asBoolean() ? "enabled" : "disabled";
         }
         if (node == null || node.isNull()) {
             return null;

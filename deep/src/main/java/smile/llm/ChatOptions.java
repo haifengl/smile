@@ -27,13 +27,19 @@ import java.util.List;
  * @param parallelToolCalls whether multiple tool calls in one turn are allowed.
  * @param thinkingMode      {@link #THINKING_ENABLED}, {@link #THINKING_DISABLED}, {@link #THINKING_ADAPTIVE}, or
  *                          {@code null} for the model's default (templates that support it).
+ * @param reasoningEffort   {@code xhigh}, {@code medium} or {@code low} for templates with a reasoning-effort
+ *                          setting (Qwen3.8); {@code null} for the template's default.
+ * @param preserveThinking  whether earlier assistant turns keep their reasoning in the prompt (Qwen3.8's
+ *                          {@code preserve_thinking}); {@code null} for the template's default.
  * @author Haifeng Li
  */
 public record ChatOptions(
         ToolDefinition[] tools,
         ToolChoice toolChoice,
         boolean parallelToolCalls,
-        String thinkingMode) {
+        String thinkingMode,
+        String reasoningEffort,
+        Boolean preserveThinking) {
 
     /** Thinking is requested before every answer. */
     public static final String THINKING_ENABLED = "enabled";
@@ -41,6 +47,19 @@ public record ChatOptions(
     public static final String THINKING_DISABLED = "disabled";
     /** The model decides whether to think. */
     public static final String THINKING_ADAPTIVE = "adaptive";
+
+    /**
+     * Options without reasoning-effort or preserve-thinking preferences.
+     *
+     * @param tools             tool definitions; may be {@code null}.
+     * @param toolChoice        tool choice; {@code null} means auto.
+     * @param parallelToolCalls whether parallel tool calls are allowed.
+     * @param thinkingMode      thinking mode or {@code null}.
+     */
+    public ChatOptions(ToolDefinition[] tools, ToolChoice toolChoice, boolean parallelToolCalls,
+                       String thinkingMode) {
+        this(tools, toolChoice, parallelToolCalls, thinkingMode, null, null);
+    }
 
     /**
      * Options without a thinking-mode preference.
@@ -60,7 +79,27 @@ public record ChatOptions(
      * @return the new options.
      */
     public ChatOptions withThinkingMode(String mode) {
-        return new ChatOptions(tools, toolChoice, parallelToolCalls, mode);
+        return new ChatOptions(tools, toolChoice, parallelToolCalls, mode, reasoningEffort, preserveThinking);
+    }
+
+    /**
+     * Returns a copy with another reasoning effort.
+     *
+     * @param effort {@code xhigh}, {@code medium}, {@code low} or {@code null} for the template default.
+     * @return the new options.
+     */
+    public ChatOptions withReasoningEffort(String effort) {
+        return new ChatOptions(tools, toolChoice, parallelToolCalls, thinkingMode, effort, preserveThinking);
+    }
+
+    /**
+     * Returns a copy with another preserve-thinking preference.
+     *
+     * @param preserve whether earlier turns keep their reasoning, or {@code null} for the template default.
+     * @return the new options.
+     */
+    public ChatOptions withPreserveThinking(Boolean preserve) {
+        return new ChatOptions(tools, toolChoice, parallelToolCalls, thinkingMode, reasoningEffort, preserve);
     }
 
     /** Empty options (no tools). */
