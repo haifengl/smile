@@ -49,6 +49,10 @@ public class Tokenizer extends Tiktoken {
             "(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+");
 
     private final int[] stopTokens;
+    /** Behaviours of the checkpoint's chat template, or {@code null} to build the prompt the legacy way. */
+    private volatile smile.llm.template.Qwen3ChatTemplate.Variant chatVariant;
+    /** Added tokens that stay one token inside text (longest first), as in the reference tokenizer. */
+    private volatile String[] atomicTokens = new String[0];
 
     /**
      * Constructor.
@@ -72,6 +76,7 @@ public class Tokenizer extends Tiktoken {
         addStop(stops, "<|im_end|>");
         addStop(stops, "<|im_start|>");
         this.stopTokens = stops.stream().mapToInt(Integer::intValue).toArray();
+        registerAtomicTokens(List.of(defaultSpecialTokens()));
     }
 
     private void addStop(List<Integer> stops, String token) {
@@ -100,6 +105,102 @@ public class Tokenizer extends Tiktoken {
     }
 
     /**
+     * Declares the chat template of the checkpoint, so {@link #encodeDialog} renders prompts like it.
+     *
+     * @param variant the template's behaviours ({@link smile.llm.template.Qwen3ChatTemplate.Variant#detect}), or
+     *                {@code null} for the legacy hand-built prompt.
+     */
+    public void setChatTemplate(smile.llm.template.Qwen3ChatTemplate.Variant variant) {
+        this.chatVariant = variant;
+    }
+
+    /**
+     * Returns the declared chat template behaviours.
+     *
+     * @return the variant, or {@code null} when none was declared.
+     */
+    public smile.llm.template.Qwen3ChatTemplate.Variant chatTemplate() {
+        return chatVariant;
+    }
+
+    /**
+     * Registers added tokens (control tokens plus {@code <tool_call>}-style markers) that must stay a single token when
+     * they occur in text, as the reference tokenizer does. Tokens missing from the vocabulary are ignored.
+     *
+     * @param contents the token strings.
+     */
+    public void registerAtomicTokens(java.util.Collection<String> contents) {
+        java.util.TreeSet<String> present = new java.util.TreeSet<>(
+                java.util.Comparator.comparingInt(String::length).reversed().thenComparing(java.util.Comparator.naturalOrder()));
+        for (String c : contents) {
+            if (tokenId(c) >= 0) {
+                present.add(c);
+            }
+        }
+        this.atomicTokens = present.toArray(String[]::new);
+    }
+
+    private int tokenId(String content) {
+        Integer special = specialTokens.get(content);
+        if (special != null) {
+            return special;
+        }
+        Integer rank = ranks.get(new Bytes(content));
+        return rank == null ? -1 : rank;
+    }
+
+    /**
+     * Encodes rendered chat text in which control tokens ({@code <|im_start|>}, {@code <think>}, {@code <tool_call>},
+     * the vision placeholders, ...) stand for single tokens; everything between them is ordinary text.
+     *
+     * @param text a rendered prompt.
+     * @return token ids.
+     */
+    public int[] encodeWithSpecials(String text) {
+        String[] atomic = atomicTokens;
+        IntArrayList out = new IntArrayList();
+        int pos = 0;
+        while (pos < text.length()) {
+            int at = -1;
+            String hit = null;
+            for (String token : atomic) {
+                int i = text.indexOf(token, pos);
+                if (i >= 0 && (at < 0 || i < at)) {
+                    at = i;
+                    hit = token;
+                }
+            }
+            if (hit == null) {
+                out.add(encode(text.substring(pos), false, false));
+                break;
+            }
+            if (at > pos) {
+                out.add(encode(text.substring(pos, at), false, false));
+            }
+            int id = tokenId(hit);
+            out.add(id);
+            pos = at + hit.length();
+        }
+        return out.toArray();
+    }
+
+    /**
+     * Renders a dialog with the checkpoint's chat template.
+     *
+     * @param dialog  the messages.
+     * @param options chat options (tools, thinking mode, reasoning effort); may be {@code null}.
+     * @return the prompt text with the assistant turn open, or {@code null} when no template was declared.
+     */
+    public String renderDialog(Message[] dialog, smile.llm.ChatOptions options) {
+        var variant = chatVariant;
+        if (variant == null) {
+            return null;
+        }
+        return new smile.llm.template.Qwen3ChatTemplate(variant, true)
+                .encode(new ArrayList<>(List.of(dialog)), options);
+    }
+
+    /**
      * Encodes a chat dialog in the Qwen chat-template format and leaves the
      * assistant header open for completion.
      *
@@ -119,6 +220,10 @@ public class Tokenizer extends Tiktoken {
      * @return token ids.
      */
     public int[] encodeDialog(Message[] dialog, smile.llm.ChatOptions options) {
+        String rendered = dialog == null || dialog.length == 0 ? null : renderDialog(dialog, options);
+        if (rendered != null) {
+            return encodeWithSpecials(rendered);
+        }
         if (needsToolTemplate(dialog, options)) {
             String prompt = smile.llm.template.Qwen3ChatTemplate.encodeDialog(dialog, options);
             return encode(prompt, false, false);
@@ -186,14 +291,14 @@ public class Tokenizer extends Tiktoken {
         Path tokenizerJson = dir.resolve("tokenizer.json");
         if (Files.exists(tokenizerJson)) {
             logger.info("Loading Qwen tokenizer from {}", tokenizerJson.getFileName());
-            return new Tokenizer(loadTokenizerJson(tokenizerJson));
+            return configure(new Tokenizer(loadTokenizerJson(tokenizerJson)), dir);
         }
 
         Path vocabJson = dir.resolve("vocab.json");
         Path mergesTxt = dir.resolve("merges.txt");
         if (Files.exists(vocabJson) && Files.exists(mergesTxt)) {
             logger.info("Loading Qwen tokenizer from vocab.json (+ added_tokens if present)");
-            return new Tokenizer(loadVocabAndMerges(vocabJson, mergesTxt));
+            return configure(new Tokenizer(loadVocabAndMerges(vocabJson, mergesTxt)), dir);
         }
 
         Path tiktoken = firstExisting(dir,
@@ -204,6 +309,41 @@ public class Tokenizer extends Tiktoken {
         }
 
         throw new IOException("No Qwen tokenizer files found under " + checkpointDir);
+    }
+
+    /**
+     * Reads the checkpoint's chat template ({@code chat_template.jinja}, or {@code chat_template} in
+     * {@code tokenizer_config.json}) to learn its behaviours, and its added tokens to keep them atomic in text.
+     */
+    private static Tokenizer configure(Tokenizer tokenizer, Path dir) {
+        try {
+            String jinja = null;
+            Path file = dir.resolve("chat_template.jinja");
+            if (Files.exists(file)) {
+                jinja = Files.readString(file);
+            } else if (Files.exists(dir.resolve("tokenizer_config.json"))) {
+                JsonNode template = new ObjectMapper().readTree(dir.resolve("tokenizer_config.json").toFile())
+                        .get("chat_template");
+                if (template != null && template.isString()) {
+                    jinja = template.asString();
+                }
+            }
+            if (jinja != null) {
+                tokenizer.setChatTemplate(smile.llm.template.Qwen3ChatTemplate.Variant.detect(jinja));
+                logger.info("Qwen chat template: {}", tokenizer.chatTemplate());
+            }
+            Path json = dir.resolve("tokenizer.json");
+            if (Files.exists(json)) {
+                List<String> added = new ArrayList<>(List.of(defaultSpecialTokens()));
+                for (JsonNode t : new ObjectMapper().readTree(json.toFile()).path("added_tokens")) {
+                    added.add(t.path("content").asString());
+                }
+                tokenizer.registerAtomicTokens(added);
+            }
+        } catch (IOException e) {
+            logger.warn("Could not read the chat template or added tokens in {}: {}", dir, e.toString());
+        }
+        return tokenizer;
     }
 
     private static Path firstExisting(Path dir, String... names) {

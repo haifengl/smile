@@ -473,7 +473,7 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
                                 "Multimodal message requires a vision-capable Qwen checkpoint");
                     }
                     try {
-                        return vlProcessor.process(dialog).inputIds();
+                        return vlProcessor.process(dialog, options).inputIds();
                     } catch (IOException e) {
                         throw new IllegalArgumentException("Failed to process multimodal dialog", e);
                     }
@@ -496,6 +496,22 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             throw new IllegalStateException("No VL processor (text-only checkpoint)");
         }
         return vlProcessor.process(dialog);
+    }
+
+    /**
+     * Preprocesses a multimodal dialog with chat options (thinking mode, reasoning effort).
+     *
+     * @param dialog  the messages.
+     * @param options chat options; may be {@code null}.
+     * @return the processed prompt and vision tensors.
+     * @throws IOException if media cannot be read.
+     */
+    public QwenVlProcessor.ProcessedMultimodal processMultimodal(Message[] dialog, smile.llm.ChatOptions options)
+            throws IOException {
+        if (vlProcessor == null) {
+            throw new IllegalStateException("No VL processor (text-only checkpoint)");
+        }
+        return vlProcessor.process(dialog, options);
     }
 
     /**

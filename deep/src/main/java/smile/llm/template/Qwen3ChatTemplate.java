@@ -21,70 +21,146 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import tools.jackson.databind.ObjectMapper;
+import smile.llm.AudioUrlPart;
 import smile.llm.ChatOptions;
+import smile.llm.ContentPart;
 import smile.llm.FunctionCall;
+import smile.llm.ImageUrlPart;
 import smile.llm.Message;
 import smile.llm.Role;
+import smile.llm.TextPart;
 import smile.llm.ToolCall;
 import smile.llm.ToolChoice;
 import smile.llm.ToolDefinition;
+import smile.llm.VideoUrlPart;
 
 /**
- * Java port of the Qwen3 / Qwen3.5 / Qwen3.8 {@code chat_template.jinja}
- * tool-calling path (XML {@code <tool_call>} format).
+ * Java port of the Qwen3.5 / Qwen3.8 {@code chat_template.jinja}, byte for byte (the golden tests compare it with
+ * transformers' rendering of the real templates).
  *
- * <p>Reference: Hugging Face {@code Qwen/Qwen3.8-27B} chat template.
+ * <p>The released templates differ in a few independent behaviours, which {@link Variant#detect} reads from the
+ * checkpoint's own template text so every checkpoint renders like its reference:
+ * <ul>
+ *   <li>Qwen3.8 adds a reasoning-effort system turn ({@code reasoning_effort}: {@code xhigh} by default, {@code low},
+ *       {@code medium} = none) whenever thinking is on, and keeps the {@code <think>} block of earlier assistant
+ *       turns unless {@code preserve_thinking} is false;</li>
+ *   <li>Qwen3.5 splits a {@code <think>...</think>} found in an assistant message's content, and prints an empty
+ *       system turn for an empty system message;</li>
+ *   <li>small Qwen3.5 models think only when {@code enable_thinking} is true, the larger ones unless it is false.</li>
+ * </ul>
+ * The generation prompt opens the thinking block ({@code <think>\n}) or closes an empty one
+ * ({@code <think>\n\n</think>\n\n}); the model then continues inside the block, so replies carry no opening tag.
  *
  * @author Haifeng Li
  */
 public final class Qwen3ChatTemplate implements ChatTemplate {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
-    private static final String TOOL_INSTRUCTIONS = """
+    private static final String XHIGH = "Reasoning effort is set to xhigh. Please think carefully through the task, "
+            + "validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, "
+            + "and clarity in the final answer.";
+    private static final String LOW = "Reasoning effort is set to low. Keep your thinking brief and focused, moving "
+            + "directly to the conclusion without unnecessary elaboration.";
 
-
-            If you choose to call a function ONLY reply in the following format with NO suffix:
-
-            <tool_call>
-            <function=example_function_name>
-            <parameter=example_parameter_1>
-            value_1
-            </parameter>
-            <parameter=example_parameter_2>
-            This is the value for the second parameter
-            that can span
-            multiple lines
-            </parameter>
-            </function>
-            </tool_call>
-
-            <IMPORTANT>
-            Reminder:
-            - Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags
-            - Required parameters MUST be specified
-            - You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after
-            - If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls
-            </IMPORTANT>""".stripIndent();
-
-    private final boolean addGenerationPrompt;
-    private final boolean enableThinking;
+    private static final String TOOL_INSTRUCTIONS = "\n\nIf you choose to call a function ONLY reply in the following "
+            + "format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>"
+            + "\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\n"
+            + "that can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n"
+            + "- Function calls MUST follow the specified format: an inner <function=...></function> block must be "
+            + "nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may "
+            + "provide optional reasoning for your function call in natural language BEFORE the function call, but NOT "
+            + "after\n- If there is no function call available, answer the question like normal with your current "
+            + "knowledge and do not tell the user about function calls\n</IMPORTANT>";
 
     /**
-     * Default template: open assistant turn, thinking enabled.
+     * The behaviours in which the released Qwen3.x templates differ.
+     *
+     * @param reasoningEffort       renders the reasoning-effort system instructions while thinking is on.
+     * @param thinkingDefaultOn     thinking is on unless {@code enable_thinking} is false (otherwise: only when true).
+     * @param honorPreserveThinking assistant turns before the last user query keep their think block unless
+     *                              {@code preserve_thinking} is false (otherwise: only turns after that query do).
+     * @param splitThinkFromContent a {@code </think>} inside assistant content is split into reasoning and answer.
+     * @param tojsonScalars         non-string tool arguments are rendered as JSON (otherwise only mappings and lists;
+     *                              scalars as Python {@code str()}).
      */
+    public record Variant(boolean reasoningEffort, boolean thinkingDefaultOn, boolean honorPreserveThinking,
+                          boolean splitThinkFromContent, boolean tojsonScalars) {
+        /** Qwen3.8. */
+        public static final Variant QWEN3_8 = new Variant(true, true, true, false, true);
+        /** Qwen3.5 (thinking by default). */
+        public static final Variant QWEN3_5 = new Variant(false, true, false, true, false);
+        /** Small Qwen3.5 models (thinking only when requested). */
+        public static final Variant QWEN3_5_SMALL = new Variant(false, false, false, true, false);
+
+        /**
+         * Reads the behaviours from the text of a {@code chat_template.jinja}.
+         *
+         * @param jinja the template source.
+         * @return the variant.
+         */
+        public static Variant detect(String jinja) {
+            return new Variant(
+                    jinja.contains("reasoning_effort"),
+                    !jinja.contains("enable_thinking is defined and enable_thinking is true"),
+                    jinja.contains("preserve_thinking is undefined"),
+                    jinja.contains("content.split('</think>')"),
+                    !jinja.contains("args_value is mapping or"));
+        }
+    }
+
+    private final Variant variant;
+    private final boolean addGenerationPrompt;
+
+    /** Qwen3.8 behaviour with an open assistant turn. */
     public Qwen3ChatTemplate() {
-        this(true, true);
+        this(Variant.QWEN3_8, true);
     }
 
     /**
-     * Creates a chat template with generation-prompt and thinking options.
+     * Creates the template of a checkpoint.
      *
-     * @param addGenerationPrompt when {@code true}, append open assistant header.
-     * @param enableThinking      when {@code true}, open with {@code <think>\\n}.
+     * @param variant             the checkpoint's behaviours.
+     * @param addGenerationPrompt whether to append the open assistant turn.
      */
-    public Qwen3ChatTemplate(boolean addGenerationPrompt, boolean enableThinking) {
+    public Qwen3ChatTemplate(Variant variant, boolean addGenerationPrompt) {
+        this.variant = variant;
         this.addGenerationPrompt = addGenerationPrompt;
-        this.enableThinking = enableThinking;
+    }
+
+    /** Whether thinking is on for these options: {@code enabled}/{@code disabled} are explicit, anything else is the default. */
+    private boolean thinking(ChatOptions options) {
+        String mode = options.thinkingMode();
+        if (ChatOptions.THINKING_ENABLED.equals(mode)) {
+            return true;
+        }
+        if (ChatOptions.THINKING_DISABLED.equals(mode)) {
+            return false;
+        }
+        return variant.thinkingDefaultOn();
+    }
+
+    /** The Jinja {@code render_content} macro on the ordered parts of a message. */
+    private static String renderContent(Message message, boolean system) {
+        StringBuilder sb = new StringBuilder();
+        for (ContentPart part : message.parts()) {
+            switch (part) {
+                case TextPart t -> sb.append(t.text());
+                case ImageUrlPart ignored -> {
+                    if (system) {
+                        throw new IllegalArgumentException("System message cannot contain images.");
+                    }
+                    sb.append("<|vision_start|><|image_pad|><|vision_end|>");
+                }
+                case VideoUrlPart ignored -> {
+                    if (system) {
+                        throw new IllegalArgumentException("System message cannot contain videos.");
+                    }
+                    sb.append("<|vision_start|><|video_pad|><|vision_end|>");
+                }
+                case AudioUrlPart ignored -> throw new IllegalArgumentException("Unexpected item type in content.");
+            }
+        }
+        return sb.toString();
     }
 
     @Override
@@ -93,18 +169,33 @@ public final class Qwen3ChatTemplate implements ChatTemplate {
             throw new IllegalArgumentException("No messages provided.");
         }
         ChatOptions opts = options == null ? ChatOptions.NONE : options;
+        boolean thinking = thinking(opts);
+
+        String instructions = "";
+        if (variant.reasoningEffort() && thinking) {
+            String effort = opts.reasoningEffort() == null ? "xhigh" : opts.reasoningEffort();
+            instructions = switch (effort) {
+                case "xhigh" -> XHIGH;
+                case "low" -> LOW;
+                case "medium" -> "";
+                default -> throw new IllegalArgumentException("Unexpected reasoning effort " + effort
+                        + ". Supported types are xhigh (default), medium, and low.");
+            };
+        }
+
         StringBuilder sb = new StringBuilder();
-
         List<ToolDefinition> tools = opts.toolsForTemplate();
-        boolean injectTools = !tools.isEmpty();
-        boolean skipFirstSystem = false;
-
-        if (injectTools) {
+        Message first = dialog.getFirst();
+        boolean firstIsSystem = first.role() == Role.system;
+        String systemContent = firstIsSystem ? PyJson.strip(renderContent(first, true)) : "";
+        if (!tools.isEmpty()) {
             sb.append("<|im_start|>system\n");
+            if (!instructions.isEmpty()) {
+                sb.append(instructions).append("\n\n");
+            }
             sb.append("# Tools\n\nYou have access to the following functions:\n\n<tools>");
             for (ToolDefinition tool : tools) {
-                sb.append('\n');
-                sb.append(toToolJson(tool));
+                sb.append('\n').append(PyJson.dumps(toolMap(tool)));
             }
             sb.append("\n</tools>");
             if (!(opts.toolChoice() instanceof ToolChoice.None)) {
@@ -113,156 +204,155 @@ public final class Qwen3ChatTemplate implements ChatTemplate {
             if (opts.toolChoice() instanceof ToolChoice.Required) {
                 sb.append("\n\nYou MUST call at least one function.");
             }
-            if (dialog.getFirst().role() == Role.system) {
-                String sys = dialog.getFirst().content().trim();
-                if (!sys.isEmpty()) {
-                    sb.append("\n\n").append(sys);
-                }
-                skipFirstSystem = true;
+            if (!systemContent.isEmpty()) {
+                sb.append("\n\n").append(systemContent);
             }
             sb.append("<|im_end|>\n");
-        } else if (dialog.getFirst().role() == Role.system) {
-            String sys = dialog.getFirst().content().trim();
-            if (!sys.isEmpty()) {
-                sb.append("<|im_start|>system\n").append(sys).append("<|im_end|>\n");
+        } else if (variant.reasoningEffort()) {
+            if (firstIsSystem && !systemContent.isEmpty()) {
+                sb.append("<|im_start|>system\n").append(instructions.isEmpty() ? "" : instructions + "\n\n")
+                        .append(systemContent).append("<|im_end|>\n");
+            } else if (!instructions.isEmpty()) {
+                sb.append("<|im_start|>system\n").append(instructions).append("<|im_end|>\n");
             }
-            skipFirstSystem = true;
+        } else if (firstIsSystem) {
+            sb.append("<|im_start|>system\n").append(systemContent).append("<|im_end|>\n");
         }
 
-        boolean inToolGroup = false;
+        // ns.last_query_index: the last user message that is not just wrapped tool output
+        int lastQuery = dialog.size() - 1;
+        boolean found = false;
+        for (int i = dialog.size() - 1; i >= 0; i--) {
+            Message m = dialog.get(i);
+            if (m.role() == Role.user) {
+                String content = PyJson.strip(renderContent(m, false));
+                if (!(content.startsWith("<tool_response>") && content.endsWith("</tool_response>"))) {
+                    lastQuery = i;
+                    found = true;
+                    break;
+                }
+            }
+        }
+        if (!found) {
+            throw new IllegalArgumentException("No user query found in messages.");
+        }
+
         for (int i = 0; i < dialog.size(); i++) {
             Message message = dialog.get(i);
-            if (skipFirstSystem && i == 0 && message.role() == Role.system) {
-                continue;
-            }
-            String content = message.content().trim();
+            String content = PyJson.strip(renderContent(message, message.role() == Role.system));
             switch (message.role()) {
                 case system -> {
                     if (i != 0) {
                         throw new IllegalArgumentException("System message must be at the beginning.");
                     }
                 }
-                case user -> {
-                    closeToolGroup(sb, inToolGroup);
-                    inToolGroup = false;
-                    sb.append("<|im_start|>user\n").append(content).append("<|im_end|>\n");
-                }
+                case user -> sb.append("<|im_start|>user\n").append(content).append("<|im_end|>\n");
                 case assistant -> {
-                    closeToolGroup(sb, inToolGroup);
-                    inToolGroup = false;
-                    sb.append("<|im_start|>assistant\n");
-                    String assistantText = message.hasToolCalls()
-                            ? smile.llm.tool.AssistantTextSanitizer.stripToolCalls(content)
-                            : content;
-                    // Drop any leaked chat specials from prior malformed history.
-                    assistantText = smile.llm.tool.AssistantTextSanitizer.sanitize(assistantText);
-                    if (assistantText == null) {
-                        assistantText = "";
+                    String reasoning = "";
+                    if (variant.splitThinkFromContent() && content.contains("</think>")) {
+                        String[] segments = content.split("</think>", -1);
+                        String head = PyJson.rstripNewlines(segments[0]);
+                        String[] opened = head.split("<think>", -1);
+                        reasoning = PyJson.lstripNewlines(opened[opened.length - 1]);
+                        content = PyJson.lstripNewlines(segments[segments.length - 1]);
                     }
-                    if (message.hasToolCalls()) {
-                        // HF template: optional reasoning before tool XML.
-                        if (!assistantText.isEmpty()) {
-                            sb.append(assistantText).append("\n\n");
-                        }
-                        boolean first = true;
-                        for (ToolCall call : message.toolCalls()) {
+                    reasoning = PyJson.strip(reasoning);
+                    boolean keepThink = i > lastQuery
+                            || (variant.honorPreserveThinking()
+                                && (opts.preserveThinking() == null || opts.preserveThinking()));
+                    if (keepThink) {
+                        sb.append("<|im_start|>assistant\n<think>\n").append(reasoning).append("\n</think>\n\n")
+                                .append(content);
+                    } else {
+                        sb.append("<|im_start|>assistant\n").append(content);
+                    }
+                    List<ToolCall> calls = message.toolCalls();
+                    if (calls != null) {
+                        boolean firstCall = true;
+                        for (ToolCall call : calls) {
                             FunctionCall fn = call.function();
-                            if (first) {
+                            if (firstCall) {
+                                sb.append(PyJson.strip(content).isEmpty() ? "" : "\n\n");
                                 sb.append("<tool_call>\n<function=").append(fn.name()).append(">\n");
-                                first = false;
+                                firstCall = false;
                             } else {
                                 sb.append("\n<tool_call>\n<function=").append(fn.name()).append(">\n");
                             }
                             appendParameters(sb, fn.arguments());
                             sb.append("</function>\n</tool_call>");
                         }
-                    } else if (!assistantText.isEmpty()) {
-                        sb.append(assistantText);
                     }
                     sb.append("<|im_end|>\n");
                 }
                 case tool -> {
-                    if (!inToolGroup) {
+                    Message prev = i > 0 ? dialog.get(i - 1) : null;
+                    if (prev != null && prev.role() != Role.tool) {
                         sb.append("<|im_start|>user");
-                        inToolGroup = true;
                     }
                     sb.append("\n<tool_response>\n").append(content).append("\n</tool_response>");
-                    Message next = i + 1 < dialog.size() ? dialog.get(i + 1) : null;
-                    if (next == null || next.role() != Role.tool) {
+                    boolean last = i == dialog.size() - 1;
+                    if (last || dialog.get(i + 1).role() != Role.tool) {
                         sb.append("<|im_end|>\n");
-                        inToolGroup = false;
                     }
                 }
+                default -> throw new IllegalArgumentException("Unexpected message role.");
             }
         }
-        closeToolGroup(sb, inToolGroup);
 
         if (addGenerationPrompt) {
             sb.append("<|im_start|>assistant\n");
-            if (enableThinking) {
-                sb.append("<think>\n");
-            } else {
-                sb.append("<think>\n\n</think>\n\n");
-            }
+            sb.append(thinking ? "<think>\n" : "<think>\n\n</think>\n\n");
         }
         return sb.toString();
     }
 
-    private static void closeToolGroup(StringBuilder sb, boolean inToolGroup) {
-        if (inToolGroup) {
-            sb.append("<|im_end|>\n");
+    private static Map<String, Object> toolMap(ToolDefinition tool) {
+        Map<String, Object> root = new LinkedHashMap<>();
+        root.put("type", tool.type());
+        Map<String, Object> fn = new LinkedHashMap<>();
+        fn.put("name", tool.function().name());
+        if (tool.function().description() != null) {
+            fn.put("description", tool.function().description());
         }
+        if (tool.function().parameters() != null) {
+            fn.put("parameters", tool.function().parameters());
+        }
+        root.put("function", fn);
+        return root;
     }
 
-    private static String toToolJson(ToolDefinition tool) {
-        try {
-            Map<String, Object> root = new LinkedHashMap<>();
-            root.put("type", tool.type());
-            Map<String, Object> fn = new LinkedHashMap<>();
-            fn.put("name", tool.function().name());
-            if (tool.function().description() != null) {
-                fn.put("description", tool.function().description());
-            }
-            if (tool.function().parameters() != null) {
-                fn.put("parameters", tool.function().parameters());
-            }
-            root.put("function", fn);
-            return MAPPER.writeValueAsString(root);
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to serialize tool definition", e);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    private static void appendParameters(StringBuilder sb, String argumentsJson) {
+    /** The {@code <parameter=name>} blocks of a call; arguments are the JSON object the model produced. */
+    private void appendParameters(StringBuilder sb, String argumentsJson) {
         if (argumentsJson == null || argumentsJson.isBlank()) {
             return;
         }
+        Object parsed;
         try {
-            Object parsed = MAPPER.readValue(argumentsJson, Object.class);
-            if (!(parsed instanceof Map<?, ?> map)) {
-                return;
+            parsed = MAPPER.readValue(argumentsJson, Object.class);
+        } catch (Exception e) {
+            return;   // not a JSON object: leave the function body empty
+        }
+        if (!(parsed instanceof Map<?, ?> map)) {
+            return;
+        }
+        for (Map.Entry<?, ?> e : map.entrySet()) {
+            Object value = e.getValue();
+            sb.append("<parameter=").append(e.getKey()).append(">\n");
+            if (value instanceof CharSequence s) {
+                sb.append(s);
+            } else if (variant.tojsonScalars() || value instanceof Map || value instanceof List) {
+                sb.append(PyJson.dumps(value));
+            } else {
+                sb.append(PyJson.pyStr(value));
             }
-            for (Map.Entry<?, ?> e : map.entrySet()) {
-                String key = String.valueOf(e.getKey());
-                Object value = e.getValue();
-                sb.append("<parameter=").append(key).append(">\n");
-                if (value instanceof String s) {
-                    sb.append(s);
-                } else {
-                    sb.append(MAPPER.writeValueAsString(value));
-                }
-                sb.append("\n</parameter>\n");
-            }
-        } catch (Exception ignored) {
-            // leave function body empty when arguments are not a JSON object
+            sb.append("\n</parameter>\n");
         }
     }
 
     /**
-     * Encodes dialog to a prompt string (generation prompt open).
+     * Encodes dialog to a prompt string (generation prompt open) with the Qwen3.8 behaviours.
      *
-     * @param dialog conversation turns.
+     * @param dialog  conversation turns.
      * @param options chat options; may be {@code null}.
      * @return prompt text.
      */

@@ -798,7 +798,7 @@ public class ChatService implements OpenAiModelContributor {
                                     + "vision weights) or a GenAI multimodal model; model '" + modelId
                                     + "' is text-only");
                 } else {
-                    var mm = qwen.processMultimodal(messages);
+                    var mm = qwen.processMultimodal(messages, chatOptions);
                     int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), mm.inputIds().length);
                     promptLen = mm.inputIds().length;
                     genReq = smile.llm.engine.GenerationRequest.ofMultimodal(

@@ -423,6 +423,26 @@ does not fit one 8 x 40 GB node; the GPU test checkpoints are truncated to the f
 otherwise `MARLIN`. **The native FP8 path has not been run on Hopper hardware yet**; run
 `MxFp8BlockFp8Test` there first. W8A8 is slightly noisier than W8A16 (activations are rounded to FP8).
 
+### Qwen chat prompt
+
+`Qwen3ChatTemplate` renders prompts exactly like the checkpoint's `chat_template.jinja` (goldens: 41 dialogs x the Qwen3.5-0.8B,
+Qwen3.5-27B and Qwen3.8 templates rendered by transformers, `Qwen3ChatTemplateGoldenTest`; token ids of the rendered prompts
+equal the HF tokenizer's, `QwenTokenizerRealTest`). `Tokenizer.of(dir)` reads the checkpoint's template and
+`Qwen3ChatTemplate.Variant.detect` derives which behaviours apply, so each generation renders like its own reference:
+Qwen3.8 adds the reasoning-effort system turn and keeps think blocks of earlier turns (`preserve_thinking`), Qwen3.5
+splits `<think>` out of assistant content and prints an empty system turn, small Qwen3.5 models think only when asked.
+The same template serves plain chat, tool calls and the vision prompt; all added tokens (`<|im_start|>`, `<think>`,
+`<tool_call>`, the vision placeholders, ...) stay single tokens inside text (the tool path used to encode them as plain
+characters).
+
+Request fields (also accepted inside `chat_template_kwargs`): `thinking` / `thinking_mode` (`enabled|disabled|adaptive`) or
+`enable_thinking` (boolean) switch thinking off (`<think>\n\n</think>\n\n` is prefilled, the model answers directly),
+`reasoning_effort` (`xhigh` = default, `high` as an alias, `medium` = no instructions, `low`; others are HTTP 400) and
+`preserve_thinking`. The generation prompt opens `<think>\n`, so replies carry only the closing `</think>`; the endpoint
+returns the text after the last `</think>` (streaming chunks still carry the reasoning followed by `</think>`). Qwen3.8's
+default system turn adds ~44 prompt tokens per request (a shared prefix). `reasoning_content` in assistant history messages
+is not read (clients that echo it back are rendered with an empty think block).
+
 ### Qwen3.x block-FP8 on Ampere (Marlin)
 
 Fine-grained FP8 checkpoints (`weight_block_size=[128,128]`, float32 `weight_scale_inv`, e.g. `Qwen/Qwen3.8-27B-FP8`) use
@@ -634,7 +654,7 @@ int[] prompt = model.encodeChat(dialog, options);
 | Type | Role |
 |---|---|
 | `ChatTemplate` | Interface for model-specific prompt formatting |
-| `Qwen3ChatTemplate` | Qwen3 chat template (thinking / non-thinking, tools) |
+| `Qwen3ChatTemplate` | Qwen3.5 / Qwen3.8 chat template, byte-exact port of `chat_template.jinja` (thinking, reasoning effort, tools, tool results, history) |
 | `MiniMaxChatTemplate` | MiniMax-M3 chat template (thinking modes, tools, tool results) |
 | `ToolCallParser` | Interface for parsing tool calls from generated text |
 | `JsonToolCallParser` / `Qwen3XmlToolCallParser` / `MiniMaxToolCallParser` | Concrete parsers |

@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * Unit tests for {@link Qwen3ChatTemplate}.
  */
 public class Qwen3ChatTemplateTest {
-    private final Qwen3ChatTemplate template = new Qwen3ChatTemplate(true, true);
+    private final Qwen3ChatTemplate template = new Qwen3ChatTemplate();
 
     @Test
     public void testGivenToolsWhenEncodedThenSystemBlockContainsTools() {
@@ -58,7 +58,7 @@ public class Qwen3ChatTemplateTest {
         Message assistant = Message.assistant(null, List.of(
                 ToolCall.function("call_1", new FunctionCall(
                         "get_weather", "{\"location\":\"SF\"}"))));
-        String prompt = new Qwen3ChatTemplate(false, true).encode(
+        String prompt = new Qwen3ChatTemplate(Qwen3ChatTemplate.Variant.QWEN3_8, false).encode(
                 List.of(Message.user("hi"), assistant), null);
         assertTrue(prompt.contains("<tool_call>"));
         assertTrue(prompt.contains("<function=get_weather>"));
@@ -68,7 +68,7 @@ public class Qwen3ChatTemplateTest {
 
     @Test
     public void testGivenToolResultWhenEncodedThenToolResponseBlock() {
-        String prompt = new Qwen3ChatTemplate(false, true).encode(List.of(
+        String prompt = new Qwen3ChatTemplate(Qwen3ChatTemplate.Variant.QWEN3_8, false).encode(List.of(
                 Message.user("hi"),
                 Message.assistant(null, List.of(
                         ToolCall.function("call_1", new FunctionCall("get_weather", "{\"location\":\"SF\"}")))),

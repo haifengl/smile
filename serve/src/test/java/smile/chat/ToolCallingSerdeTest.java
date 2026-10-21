@@ -114,4 +114,37 @@ public class ToolCallingSerdeTest {
         CompletionRequest bad = mapper.readValue("{" + base + ",\"thinking\":\"sometimes\"}", CompletionRequest.class);
         assertThrows(IllegalArgumentException.class, bad::toChatOptions);
     }
+
+    @Test
+    public void testGivenQwenTemplateKwargsWhenToChatOptionsThenThinkingEffortAndPreserveResolved() throws Exception {
+        String base = "\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]";
+        var plain = mapper.readValue("{" + base + "}", CompletionRequest.class).toChatOptions();
+        assertNull(plain.reasoningEffort());
+        assertNull(plain.preserveThinking());
+        // transformers / vLLM spelling: a boolean enable_thinking
+        assertEquals("disabled", mapper.readValue("{" + base + ",\"chat_template_kwargs\":{\"enable_thinking\":false}}",
+                CompletionRequest.class).toChatOptions().thinkingMode());
+        assertEquals("enabled", mapper.readValue("{" + base + ",\"chat_template_kwargs\":{\"enable_thinking\":true}}",
+                CompletionRequest.class).toChatOptions().thinkingMode());
+        // thinking / thinking_mode still win over enable_thinking
+        assertEquals("adaptive", mapper.readValue("{" + base + ",\"chat_template_kwargs\":{\"thinking_mode\":\"adaptive\","
+                + "\"enable_thinking\":false}}", CompletionRequest.class).toChatOptions().thinkingMode());
+        assertEquals("low", mapper.readValue("{" + base + ",\"reasoning_effort\":\"low\"}",
+                CompletionRequest.class).toChatOptions().reasoningEffort());
+        assertEquals("medium", mapper.readValue("{" + base + ",\"chat_template_kwargs\":{\"reasoning_effort\":\"Medium\"}}",
+                CompletionRequest.class).toChatOptions().reasoningEffort());
+        // the OpenAI spelling "high" is Qwen's xhigh
+        assertEquals("xhigh", mapper.readValue("{" + base + ",\"reasoning_effort\":\"high\"}",
+                CompletionRequest.class).toChatOptions().reasoningEffort());
+        // the top-level field wins over the kwargs
+        assertEquals("low", mapper.readValue("{" + base + ",\"reasoning_effort\":\"low\","
+                + "\"chat_template_kwargs\":{\"reasoning_effort\":\"medium\"}}",
+                CompletionRequest.class).toChatOptions().reasoningEffort());
+        assertEquals(Boolean.FALSE, mapper.readValue("{" + base + ",\"preserve_thinking\":false}",
+                CompletionRequest.class).toChatOptions().preserveThinking());
+        assertEquals(Boolean.TRUE, mapper.readValue("{" + base + ",\"chat_template_kwargs\":{\"preserve_thinking\":true}}",
+                CompletionRequest.class).toChatOptions().preserveThinking());
+        CompletionRequest bad = mapper.readValue("{" + base + ",\"reasoning_effort\":\"max\"}", CompletionRequest.class);
+        assertThrows(IllegalArgumentException.class, bad::toChatOptions);
+    }
 }
