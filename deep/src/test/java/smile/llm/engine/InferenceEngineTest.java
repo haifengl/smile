@@ -296,6 +296,57 @@ public class InferenceEngineTest {
         }
     }
 
+    /** Records the token ranges the engine asks the executor to replay and to prefill after a prefix hit. */
+    static final class PrefixHitStub extends StepStub {
+        final int matched;
+        final java.util.List<int[]> warm = java.util.Collections.synchronizedList(new java.util.ArrayList<>());
+        final java.util.List<int[]> chunks = java.util.Collections.synchronizedList(new java.util.ArrayList<>());
+
+        PrefixHitStub(int matched) {
+            this.matched = matched;
+        }
+
+        @Override public int prefixLen(int requestId) { return matched; }
+        @Override public void warmPrefix(int requestId, int[] prompt, int prefixLen) {
+            warm.add(new int[]{0, prefixLen});
+        }
+        @Override public smile.deep.tensor.Tensor prefillChunk(int requestId, int[] prompt, int from, int to) {
+            chunks.add(new int[]{from, to});
+            return super.prefillChunk(requestId, prompt, from, to);
+        }
+    }
+
+    @Test
+    public void testGivenFullPromptPrefixHitWhenAdmittedThenReplayEndsWhereChunkedPrefillStarts() throws Exception {
+        // a prompt that is exactly one page: the radix match covers all of it
+        int[] prompt = new int[16];
+        java.util.Arrays.fill(prompt, 5);
+        var stub = new PrefixHitStub(16);
+        try (var engine = new InferenceEngine(stub, 2, 2, 64, 5_000)) {
+            engine.submit(GenerationRequest.ofTokens(prompt, 2, 0.0, 0.9, false, 0, null))
+                    .future().get(5, TimeUnit.SECONDS);
+        }
+        assertEquals(1, stub.warm.size());
+        assertEquals(1, stub.chunks.size());
+        // the last token is prefilled to get logits, so the replay must stop before it: no token is applied twice
+        assertEquals(15, stub.warm.get(0)[1], "replay length");
+        assertEquals(15, stub.chunks.get(0)[0], "prefill start");
+        assertEquals(16, stub.chunks.get(0)[1]);
+    }
+
+    @Test
+    public void testGivenPartialPrefixHitWhenAdmittedThenReplayEqualsMatchAndPrefillContinues() throws Exception {
+        int[] prompt = new int[22];
+        java.util.Arrays.fill(prompt, 5);
+        var stub = new PrefixHitStub(16);
+        try (var engine = new InferenceEngine(stub, 2, 2, 64, 5_000)) {
+            engine.submit(GenerationRequest.ofTokens(prompt, 2, 0.0, 0.9, false, 0, null))
+                    .future().get(5, TimeUnit.SECONDS);
+        }
+        assertEquals(16, stub.warm.get(0)[1]);
+        assertEquals(16, stub.chunks.get(0)[0]);
+    }
+
     /** Minimal ModelExecutor that does not touch CUDA (generate fallback). */
     static final class StubExecutor implements ModelExecutor {
         volatile boolean blockFirst;
