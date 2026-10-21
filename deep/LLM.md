@@ -382,7 +382,26 @@ ChatCompletion reply = model.chat(dialog, 512, 0.6, 0.95, false, 0, null);
 
 **Checkpoints.** BF16 (`MiniMaxAI/MiniMax-M3`) and MXFP8 (`MiniMaxAI/MiniMax-M3-MXFP8`, FP8 E4M3 weights with an
 E8M0 scale per 32 elements). Vision tower, projector and MTP tensors are skipped (the published checkpoint has no
-MTP weights); image / video / audio input is rejected.
+MTP weights); audio input is rejected (images and video are supported, see below).
+
+**Images and video.** The checkpoint's vision side (`vision_tower.*`, `multi_modal_projector.*`, `patch_merge_mlp.*`, ~1.7 GB,
+bf16) loads onto rank 0's device after the text weights (`SMILE_MINIMAX_VISION=0` skips it; a checkpoint without vision
+weights answers media requests with HTTP 400). `MiniMaxVisionTower` is a CLIP-style ViT (Conv3d patch embedding applied as
+a linear map, pre-LayerNorm, 32 pre-norm blocks with a partial 3D RoPE over frame/row/column, no post-LayerNorm) followed
+by the projector MLP and the 2x2 patch-merge MLP; attention is bidirectional inside each image or inside each group of at
+most 4 temporal patches of a video. `MiniMaxVisionProcessor` reproduces the reference image/video processors
+(`smart_resize` to multiples of 28 under 451,584 px per image or 602,112 px per video frame, bicubic antialiased resize,
+normalize, pad the frame count to a multiple of 2, merge-block patch order); `MiniMax.processMultimodal` applies the chat
+template and expands each `]<]image[>[` to `start, one placeholder per merged 2x2 patch group, end`, and each
+`]<]video[>[` to, per two-frame group, a `]<]t seconds[>[` timestamp followed by the same. `prefillMultimodal` encodes the
+media on rank 0, copies the embeddings to the other ranks and prefills in 2048-token windows with the placeholder rows
+replaced; sequences with media are never added to the prefix cache (their ids are placeholders). Media come from `data:`,
+http(s) or file URLs (images up to 64 MiB / 100 MP); videos are sampled with `ffmpeg`/`ffprobe` (1 fps by default, 4 to 768
+frames, so those binaries must exist in the runtime image) or read from a directory of numbered frame images. Verified
+on the real vision weights: the vision tower matches a reference built from vLLM's RoPE kernels to bf16 noise (relative
+L2 0.017), patches match the HF processors to 5e-7, and a 4-layer model's expanded prompts equal vLLM's token ids exactly
+with continuation log-probabilities within 0.011 (one image, two images, a video). A 100k-patch video encodes in ~3 s.
+Not done: audio, log-probabilities, tools together with media in one request.
 
 **Expert parallelism.** Each rank holds a contiguous slice of every layer's routed experts (allocated directly on its
 device); attention, dense FFNs, the router and the shared expert are replicated. Every rank routes all tokens, computes

@@ -65,72 +65,89 @@ public class MiniMaxMultimodalTest {
         }
     }
 
-    @Test
-    public void testGivenImagesWhenPromptedThenMatchesVllm() throws Exception {
-        String dir = System.getenv("MINIMAX_MM_DIR");
-        String ref = System.getenv("MINIMAX_MM_REF");
-        String devList = System.getenv("MINIMAX_DEVICES");
-        assumeTrue(dir != null && ref != null && devList != null && System.getenv("MINIMAX_MM_MEDIA") != null,
-                "MINIMAX_MM_* not set");
-        String[] parts = devList.split(",");
+    private static byte[] devices() {
+        String[] parts = System.getenv("MINIMAX_DEVICES").split(",");
         byte[] devices = new byte[parts.length];
         for (int i = 0; i < devices.length; i++) {
             devices[i] = Byte.parseByte(parts[i].trim());
         }
-        JsonNode expected = new ObjectMapper().readTree(new File(ref));
-        Message[][] cases = {
-                {user("img:img_a.png", "What is in this picture?")},
-                {user("Compare", "img:img_b.png", "img:img_d.png", "these two.")},
-        };
-        String[] names = {"one_image", "two_images"};
-        try (MiniMax m = MiniMax.build(dir, 4, 8192, devices, 0.6, 1)) {
-            assertTrue(m.isMultimodal(), "vision weights not loaded");
-            for (int c = 0; c < cases.length; c++) {
-                JsonNode want = expected.get(names[c]);
-                var mm = m.processMultimodal(cases[c], null);
-                int[] ids = mm.inputIds();
-                int[] wantIds = new int[want.get("prompt_token_ids").size()];
-                for (int i = 0; i < wantIds.length; i++) {
-                    wantIds[i] = want.get("prompt_token_ids").get(i).asInt();
-                }
-                assertArrayEquals(wantIds, ids, names[c] + ": expanded prompt differs from vLLM");
+        return devices;
+    }
 
-                int id = m.bind(ids, ids.length + 32);
-                try {
-                    Tensor first = m.prefillMultimodal(id, mm, 0, ids.length);
-                    JsonNode tokens = want.get("token_ids");
-                    JsonNode lps = want.get("logprobs");
-                    double sum = 0;
-                    int agree = 0;
-                    int n = tokens.size();
-                    float[] logits = row(first);
-                    for (int i = 0; i < n; i++) {
-                        int token = tokens.get(i).asInt();
-                        int arg = 0;
-                        for (int v = 1; v < logits.length; v++) {
-                            if (logits[v] > logits[arg]) {
-                                arg = v;
-                            }
-                        }
-                        double ours = logprob(logits, token);
-                        double theirs = lps.get(i).get(String.valueOf(token)).asDouble();
-                        sum += Math.abs(ours - theirs);
-                        if (arg == token) {
-                            agree++;
-                        }
-                        if (i + 1 < n) {
-                            logits = row(m.decodeStep(new int[]{id}, new int[]{token}, new int[]{ids.length + i}));
-                        }
+    /** Prompt ids must equal vLLM's; then the teacher-forced continuation is scored against vLLM's log-probs. */
+    private static void check(MiniMax m, Message[] dialog, JsonNode want, String name) throws Exception {
+        var mm = m.processMultimodal(dialog, null);
+        int[] ids = mm.inputIds();
+        int[] wantIds = new int[want.get("prompt_token_ids").size()];
+        for (int i = 0; i < wantIds.length; i++) {
+            wantIds[i] = want.get("prompt_token_ids").get(i).asInt();
+        }
+        assertArrayEquals(wantIds, ids, name + ": expanded prompt differs from vLLM");
+
+        int id = m.bind(ids, ids.length + 32);
+        try {
+            Tensor first = m.prefillMultimodal(id, mm, 0, ids.length);
+            JsonNode tokens = want.get("token_ids");
+            JsonNode lps = want.get("logprobs");
+            double sum = 0;
+            int agree = 0;
+            int n = tokens.size();
+            float[] logits = row(first);
+            for (int i = 0; i < n; i++) {
+                int token = tokens.get(i).asInt();
+                int arg = 0;
+                for (int v = 1; v < logits.length; v++) {
+                    if (logits[v] > logits[arg]) {
+                        arg = v;
                     }
-                    System.out.println("MM " + names[c] + ": prompt " + ids.length + " tokens, mean |dlogprob| "
-                            + sum / n + ", top-1 agreement " + agree + "/" + n);
-                    assertTrue(sum / n < 0.1, names[c] + " mean |dlogprob| " + sum / n);
-                    assertTrue(agree >= n - 1, names[c] + " top-1 agreement " + agree + "/" + n);
-                } finally {
-                    m.evict(id);
-                    mm.close();
+                }
+                sum += Math.abs(logprob(logits, token) - lps.get(i).get(String.valueOf(token)).asDouble());
+                if (arg == token) {
+                    agree++;
+                }
+                if (i + 1 < n) {
+                    logits = row(m.decodeStep(new int[]{id}, new int[]{token}, new int[]{ids.length + i}));
                 }
             }
+            System.out.println("MM " + name + ": prompt " + ids.length + " tokens, mean |dlogprob| " + sum / n
+                    + ", top-1 agreement " + agree + "/" + n);
+            assertTrue(sum / n < 0.1, name + " mean |dlogprob| " + sum / n);
+            assertTrue(agree >= n - 1, name + " top-1 agreement " + agree + "/" + n);
+        } finally {
+            m.evict(id);
+            mm.close();
+        }
+    }
+
+    @Test
+    public void testGivenImagesWhenPromptedThenMatchesVllm() throws Exception {
+        String dir = System.getenv("MINIMAX_MM_DIR");
+        String ref = System.getenv("MINIMAX_MM_REF");
+        assumeTrue(dir != null && ref != null && System.getenv("MINIMAX_DEVICES") != null
+                && System.getenv("MINIMAX_MM_MEDIA") != null, "MINIMAX_MM_* not set");
+        JsonNode expected = new ObjectMapper().readTree(new File(ref));
+        try (MiniMax m = MiniMax.build(dir, 4, 8192, devices(), 0.6, 1)) {
+            assertTrue(m.isMultimodal(), "vision weights not loaded");
+            check(m, new Message[]{user("img:img_a.png", "What is in this picture?")},
+                    expected.get("one_image"), "one_image");
+            check(m, new Message[]{user("Compare", "img:img_b.png", "img:img_d.png", "these two.")},
+                    expected.get("two_images"), "two_images");
+        }
+    }
+
+    /** Needs {@code MINIMAX_MM_VIDEO_REF} (vLLM output) and the frames in {@code MINIMAX_MM_MEDIA/video}. */
+    @Test
+    public void testGivenVideoWhenPromptedThenMatchesVllm() throws Exception {
+        String dir = System.getenv("MINIMAX_MM_DIR");
+        String ref = System.getenv("MINIMAX_MM_VIDEO_REF");
+        assumeTrue(dir != null && ref != null && System.getenv("MINIMAX_DEVICES") != null
+                && System.getenv("MINIMAX_MM_MEDIA") != null, "MINIMAX_MM_* not set");
+        JsonNode expected = new ObjectMapper().readTree(new File(ref));
+        String frames = new File(System.getenv("MINIMAX_MM_MEDIA"), "video").getPath();
+        try (MiniMax m = MiniMax.build(dir, 4, 8192, devices(), 0.6, 1)) {
+            Message clip = new Message(smile.llm.Role.user, new smile.llm.VideoUrlPart(frames, 1.0),
+                    new TextPart("Describe the clip."));
+            check(m, new Message[]{clip}, expected.get("video"), "video");
         }
     }
 }
