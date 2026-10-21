@@ -50,6 +50,9 @@ import smile.llm.LanguageModel;
 import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
 import smile.llm.engine.ModelExecutor;
+import smile.llm.engine.MultimodalPrompt;
+import smile.llm.ImageUrlPart;
+import smile.llm.VideoUrlPart;
 import smile.llm.engine.Sampling;
 import smile.llm.parallel.ParallelConfig;
 import smile.llm.template.MiniMaxChatTemplate;
@@ -84,6 +87,11 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
     private final ExecutorService executor;
     private final MiniMaxTokenizer tokenizer;
     private final MiniMaxModelArgs params;
+    /** Vision encoder on rank 0's device, or {@code null} when the checkpoint has no vision weights. */
+    private MiniMaxVisionTower vision;
+    private MiniMaxVisionProcessor visionProcessor;
+    /** Requests whose KV holds image/video content: never added to the prefix cache (the ids are placeholders). */
+    private final Set<Integer> multimodalRequests = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     /**
      * Constructor.
@@ -146,6 +154,8 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         if (executor != null) {
             executor.shutdownNow();
         }
+        vision = null;   // its weights are released with the module (cleaner)
+        visionProcessor = null;
         for (MiniMaxModel m : models) {
             KvCachePool pool = m.kvCachePool();
             if (pool != null) {
@@ -221,6 +231,304 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
     @Override
     public int maxSeqLen() {
         return params.maxSeqLen();
+    }
+
+    /**
+     * Returns whether images and videos can be processed (the checkpoint shipped vision weights and they loaded).
+     * @return {@code true} when {@link #processMultimodal} may be called.
+     */
+    public boolean isMultimodal() {
+        return vision != null;
+    }
+
+    /**
+     * Installs the vision encoder (rank 0's device).
+     *
+     * @param tower the loaded tower, or {@code null}.
+     */
+    void setVision(MiniMaxVisionTower tower) {
+        this.vision = tower;
+        this.visionProcessor = tower == null ? null : new MiniMaxVisionProcessor(tower.args());
+    }
+
+    private static final String IMAGE_MARKER = "]<]image[>[";
+    private static final String VIDEO_MARKER = "]<]video[>[";
+    private static final String VISION_START = "]<]start of image[>[";
+    private static final String VISION_END = "]<]end of image[>[";
+    /** Tokens per prefill window of a multimodal prompt. */
+    private static final int MULTIMODAL_CHUNK = 2048;
+
+    /** Python's {@code f"{x:.1f}"}: the exact binary value rounded half to even. */
+    private static String seconds(double value) {
+        return new java.math.BigDecimal(value).setScale(1, java.math.RoundingMode.HALF_EVEN).toPlainString();
+    }
+
+    /**
+     * Applies the chat template to a dialog with images and videos, preprocesses the media, and expands every
+     * placeholder to one token per vision patch group exactly as the reference processor does: an image becomes
+     * {@code start, image * n, end}; a video becomes, per two-frame group, a timestamp text, {@code start,
+     * video * n, end}.
+     *
+     * @param dialog  the messages; media parts are image or video URLs (data, http(s) or file).
+     * @param options chat options.
+     * @return the expanded token ids and the patches to encode during prefill.
+     * @throws IOException              if media cannot be read or decoded.
+     * @throws IllegalArgumentException if the request is malformed (no vision weights, audio, a media marker typed
+     *                                  into text, an extreme aspect ratio, ...).
+     */
+    public MiniMaxMultimodal processMultimodal(Message[] dialog, ChatOptions options) throws IOException {
+        if (vision == null) {
+            throw new IllegalArgumentException("this MiniMax-M3 checkpoint has no vision weights");
+        }
+        if (dialog == null || dialog.length == 0) {
+            throw new IllegalArgumentException("No messages provided.");
+        }
+        List<String> imageUrls = new ArrayList<>();
+        List<VideoUrlPart> videos = new ArrayList<>();
+        for (Message m : dialog) {
+            for (var part : m.parts()) {
+                if (part instanceof ImageUrlPart image) {
+                    imageUrls.add(image.url());
+                } else if (part instanceof VideoUrlPart video) {
+                    videos.add(video);
+                } else if (part instanceof smile.llm.AudioUrlPart) {
+                    throw new IllegalArgumentException("MiniMax-M3 does not accept audio input");
+                }
+            }
+        }
+        String text = MiniMaxChatTemplate.forOptions(options).encode(Arrays.asList(dialog), options);
+        if (count(text, IMAGE_MARKER) != imageUrls.size() || count(text, VIDEO_MARKER) != videos.size()) {
+            throw new IllegalArgumentException("the prompt contains " + count(text, IMAGE_MARKER) + " image and "
+                    + count(text, VIDEO_MARKER) + " video markers for " + imageUrls.size() + " images and "
+                    + videos.size() + " videos (do not type the placeholder tokens into message text)");
+        }
+
+        int merge2 = vision.args().mergeSize() * vision.args().mergeSize();
+        List<MiniMaxVisionProcessor.Patches> images = new ArrayList<>();
+        List<MiniMaxVisionProcessor.Patches> clips = new ArrayList<>();
+        List<double[]> clipTimes = new ArrayList<>();
+        try {
+            for (String url : imageUrls) {
+                try {
+                    images.add(visionProcessor.image(MiniMaxMedia.image(url)));
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("unusable image: " + e.getMessage(), e);
+                }
+            }
+            for (VideoUrlPart v : videos) {
+                var clip = MiniMaxMedia.video(v.url(), v.fps());
+                clips.add(visionProcessor.video(clip.frames()));
+                clipTimes.add(clip.timestamps());
+            }
+
+            StringBuilder out = new StringBuilder(text.length() + 64);
+            int imageIndex = 0;
+            int videoIndex = 0;
+            int at = 0;
+            while (at < text.length()) {
+                int nextImage = text.indexOf(IMAGE_MARKER, at);
+                int nextVideo = text.indexOf(VIDEO_MARKER, at);
+                int next = nextImage < 0 ? nextVideo : nextVideo < 0 ? nextImage : Math.min(nextImage, nextVideo);
+                if (next < 0) {
+                    out.append(text, at, text.length());
+                    break;
+                }
+                out.append(text, at, next);
+                if (next == nextImage) {
+                    int[] g = images.get(imageIndex++).grid();
+                    out.append(VISION_START).append(IMAGE_MARKER.repeat(g[0] * g[1] * g[2] / merge2)).append(VISION_END);
+                    at = next + IMAGE_MARKER.length();
+                } else {
+                    int[] g = clips.get(videoIndex).grid();
+                    double[] times = clipTimes.get(videoIndex++);
+                    int perFrame = g[1] * g[2] / merge2;
+                    int tps = vision.args().temporalPatchSize();
+                    for (int t = 0; t < g[0]; t++) {
+                        double ts = times[Math.min(t * tps, times.length - 1)];
+                        out.append("]<]").append(seconds(ts)).append(" seconds[>[");
+                        out.append(VISION_START).append(VIDEO_MARKER.repeat(perFrame)).append(VISION_END);
+                    }
+                    at = next + VIDEO_MARKER.length();
+                }
+            }
+            int[] ids = tokenizer.encodeWithSpecials(out.toString());
+            Tensor imagePixels = images.isEmpty() ? null : stack(images);
+            Tensor videoPixels = clips.isEmpty() ? null : stack(clips);
+            return new MiniMaxMultimodal(ids, imagePixels, grids(images), videoPixels, grids(clips));
+        } finally {
+            for (var p : images) {
+                p.pixels().close();
+            }
+            for (var p : clips) {
+                p.pixels().close();
+            }
+        }
+    }
+
+    private static int count(String text, String marker) {
+        int n = 0;
+        for (int i = text.indexOf(marker); i >= 0; i = text.indexOf(marker, i + marker.length())) {
+            n++;
+        }
+        return n;
+    }
+
+    private static Tensor stack(List<MiniMaxVisionProcessor.Patches> items) {
+        if (items.size() == 1) {
+            return items.get(0).pixels().copy();
+        }
+        return Tensor.vstack(items.stream().map(MiniMaxVisionProcessor.Patches::pixels).toArray(Tensor[]::new));
+    }
+
+    private static int[][] grids(List<MiniMaxVisionProcessor.Patches> items) {
+        return items.stream().map(MiniMaxVisionProcessor.Patches::grid).toArray(int[][]::new);
+    }
+
+    @Override
+    public Tensor prefillMultimodal(int requestId, MultimodalPrompt prompt, int from, int to) {
+        if (!(prompt instanceof MiniMaxMultimodal mm)) {
+            throw new IllegalArgumentException("a MiniMax-M3 multimodal prompt is required");
+        }
+        if (vision == null) {
+            throw new IllegalStateException("vision encoder not loaded");
+        }
+        int[] ids = mm.inputIds();
+        if (from < 0 || to < from || to > ids.length) {
+            throw new IllegalArgumentException("invalid prefill range [" + from + ", " + to + ") for len " + ids.length);
+        }
+        if (from == to) {
+            return null;
+        }
+        final int imageId = vision.args().imageTokenId();
+        final int videoId = vision.args().videoTokenId();
+        int imageTokens = 0;
+        int videoTokens = 0;
+        for (int id : ids) {
+            if (id == imageId) {
+                imageTokens++;
+            } else if (id == videoId) {
+                videoTokens++;
+            }
+        }
+        int merge2 = vision.args().mergeSize() * vision.args().mergeSize();
+        if (imageTokens != patchCount(mm.imageGrids()) / merge2 || videoTokens != patchCount(mm.videoGrids()) / merge2) {
+            throw new IllegalArgumentException("prompt has " + imageTokens + " image and " + videoTokens
+                    + " video placeholders but the media provide "
+                    + patchCount(mm.imageGrids()) / merge2 + " and " + patchCount(mm.videoGrids()) / merge2);
+        }
+        for (MiniMaxModel m : models) {
+            m.kvCachePool().activateStep(requestId);
+        }
+        multimodalRequests.add(requestId);
+
+        // 1. Encode all media on rank 0 (images first, then videos), 2. every rank prefills window by window
+        // with the placeholder rows replaced by its copy of those embeddings.
+        Tensor[] encoded = onRanks(r -> {
+            if (r != 0) {
+                return null;
+            }
+            try (var scope = new AutoScope()) {
+                Tensor.push(scope);
+                try {
+                    Device device = models[0].device();
+                    ScalarType dtype = models[0].dtype();
+                    List<Tensor> parts = new ArrayList<>();
+                    if (mm.imagePixels() != null) {
+                        parts.add(vision.forward(mm.imagePixels().to(device, dtype), mm.imageGrids()));
+                    }
+                    if (mm.videoPixels() != null) {
+                        parts.add(vision.forward(mm.videoPixels().to(device, dtype), mm.videoGrids()));
+                    }
+                    Tensor all = parts.size() == 1 ? parts.get(0).copy() : Tensor.vstack(parts.toArray(Tensor[]::new));
+                    all.detachFromScopes();
+                    return all;
+                } finally {
+                    Tensor.pop();
+                }
+            }
+        });
+        Tensor embeddings = firstAndClose(encoded);
+        try {
+            int imageBefore = 0;
+            int videoBefore = 0;
+            for (int j = 0; j < from; j++) {
+                if (ids[j] == imageId) {
+                    imageBefore++;
+                } else if (ids[j] == videoId) {
+                    videoBefore++;
+                }
+            }
+            final int imageStart = imageBefore;
+            final int videoStart = videoBefore;
+            final int imageCount = imageTokens;
+            Tensor[] logits = onRanks(r -> {
+                try (var scope = new AutoScope()) {
+                    Tensor.push(scope);
+                    try {
+                        Device device = models[r].device();
+                        Tensor mine = embeddings == null ? null : embeddings.to(device);
+                        int img = imageStart;
+                        int vid = videoStart;
+                        Tensor last = null;
+                        for (int a = from; a < to; a += MULTIMODAL_CHUNK) {
+                            int b = Math.min(to, a + MULTIMODAL_CHUNK);
+                            int[] window = Arrays.copyOfRange(ids, a, b);
+                            long[] rows = new long[window.length];
+                            long[] source = new long[window.length];
+                            int n = 0;
+                            for (int j = 0; j < window.length; j++) {
+                                if (window[j] == imageId) {
+                                    rows[n] = j;
+                                    source[n++] = img++;
+                                } else if (window[j] == videoId) {
+                                    rows[n] = j;
+                                    source[n++] = imageCount + vid++;
+                                }
+                            }
+                            Tensor tokens = Tensor.of(window).reshape(1, window.length).to(device);
+                            Tensor out;
+                            if (n == 0) {
+                                out = models[r].forward(tokens, a, false);
+                            } else {
+                                long[] usedRows = Arrays.copyOf(rows, n);
+                                Tensor sourceIndex = Tensor.of(Arrays.copyOf(source, n)).to(device);
+                                Tensor picked = mine.get(sourceIndex);
+                                out = models[r].forward(tokens, a, false, usedRows, picked);
+                            }
+                            if (b == to && to == ids.length) {
+                                last = out.reshape(1, -1).copy();
+                            }
+                        }
+                        if (last == null) {
+                            return null;
+                        }
+                        last.detachFromScopes();
+                        return last;
+                    } finally {
+                        Tensor.pop();
+                    }
+                }
+            });
+            Tensor row = firstAndClose(logits);
+            if (row == null) {
+                return null;
+            }
+            Tensor owned = row.copy();
+            row.close();
+            return owned;
+        } finally {
+            if (embeddings != null) {
+                embeddings.close();
+            }
+        }
+    }
+
+    private static long patchCount(int[][] grids) {
+        long n = 0;
+        for (int[] g : grids) {
+            n += (long) g[0] * g[1] * g[2];
+        }
+        return n;
     }
 
     @Override
@@ -442,13 +750,19 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
 
     @Override
     public void finish(int requestId, int[] sequenceTokens) {
+        boolean media = multimodalRequests.remove(requestId);
         for (MiniMaxModel m : models) {
-            m.kvCachePool().finishRequest(requestId, sequenceTokens);
+            if (media) {
+                m.kvCachePool().unbindRequest(requestId);   // placeholder ids must not become a reusable prefix
+            } else {
+                m.kvCachePool().finishRequest(requestId, sequenceTokens);
+            }
         }
     }
 
     @Override
     public void evict(int requestId) {
+        multimodalRequests.remove(requestId);
         for (MiniMaxModel m : models) {
             m.kvCachePool().unbindRequest(requestId);
         }
@@ -691,6 +1005,23 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             loader.shutdownNow();
         }
 
+        // The vision encoder (~1.7 GB) lives on rank 0's device; load it before the KV pool takes the free memory.
+        MiniMaxVisionTower vision = null;
+        if (!"0".equals(System.getenv("SMILE_MINIMAX_VISION"))) {
+            try {
+                long t0 = System.currentTimeMillis();
+                vision = MiniMaxVisionTower.load(dir, networks[0].device(), computeDtype);
+                if (vision != null) {
+                    logger.info("vision encoder loaded on {} in {} ms", networks[0].device(),
+                            System.currentTimeMillis() - t0);
+                } else {
+                    logger.info("checkpoint has no vision weights: images and videos are not supported");
+                }
+            } catch (IOException | RuntimeException e) {
+                logger.warn("vision encoder not loaded, images and videos are not supported: {}", e.toString());
+            }
+        }
+
         // MSA index keys take extra bytes per token on top of K/V; shrink the pool's share so both fit.
         double kvPerToken = 2.0 * args.numLayers() * args.numKvHeads() * args.headDim();
         double indexPerToken = (double) args.numSparseLayers() * args.numIndexKeyHeads() * args.indexDim();
@@ -704,7 +1035,9 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             network.setKvCachePool(pool, false);
             network.eval();
         }
-        return new MiniMax(dir.getName(), networks, group, tokenizer, args);
+        MiniMax result = new MiniMax(dir.getName(), networks, group, tokenizer, args);
+        result.setVision(vision);
+        return result;
     }
 
     /**
