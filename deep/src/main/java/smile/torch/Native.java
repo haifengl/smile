@@ -157,6 +157,12 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)))
                 .orElse(null);
+        static final java.util.Optional<MemorySegment> RESIZE_BICUBIC_AA_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_resize_bicubic_aa");
+        static final MethodHandle RESIZE_BICUBIC_AA = RESIZE_BICUBIC_AA_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)))
+                .orElse(null);
         static final java.util.Optional<MemorySegment> GEMMA_RMS_NORM_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_gemma_rms_norm");
         static final MethodHandle GEMMA_RMS_NORM = GEMMA_RMS_NORM_SYM
@@ -1089,6 +1095,19 @@ public final class Native {
         }
         return fusedResult(Bindings.SPARSE_DECODE_ATTENTION, q.handle(), kLayer.handle(), vLayer.handle(),
                 slots.handle(), positions.handle(), sel.handle(), length, scale, seqlen);
+    }
+
+    /**
+     * Bicubic resize with antialiasing (torchvision {@code resize(antialias=True)}).
+     *
+     * @param x    {@code [N, C, H, W]}, uint8 or floating point, on any device.
+     * @param outH target height.
+     * @param outW target width.
+     * @return {@code [N, C, outH, outW]} of the same dtype.
+     * @throws IllegalStateException if the loaded native library predates this function.
+     */
+    public static Tensor resizeBicubicAa(Tensor x, int outH, int outW) {
+        return marlinFp8Result(Bindings.RESIZE_BICUBIC_AA, "smile_resize_bicubic_aa", x.handle(), outH, outW);
     }
 
     /** @return {@code true} when the MXFP8 to block-FP8 converter is compiled into {@code libsmile_torch}. */

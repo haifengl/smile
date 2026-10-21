@@ -152,7 +152,7 @@ public interface ModelExecutor {
 
     /**
      * Prefills a multimodal prompt using vision embeds + interleaved mRoPE.
-     * Default throws; Qwen overrides.
+     * Default throws; Qwen and MiniMax override.
      *
      * @param requestId request id.
      * @param multimodal preprocess result.
@@ -161,7 +161,7 @@ public interface ModelExecutor {
      * @return logits when {@code to == inputIds.length}, else null.
      */
     default Tensor prefillMultimodal(int requestId,
-                                     smile.llm.model.qwen.QwenVlProcessor.ProcessedMultimodal multimodal,
+                                     MultimodalPrompt multimodal,
                                      int from, int to) {
         throw new UnsupportedOperationException("multimodal prefill not supported");
     }
