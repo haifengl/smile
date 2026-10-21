@@ -423,6 +423,22 @@ does not fit one 8 x 40 GB node; the GPU test checkpoints are truncated to the f
 otherwise `MARLIN`. **The native FP8 path has not been run on Hopper hardware yet**; run
 `MxFp8BlockFp8Test` there first. W8A8 is slightly noisier than W8A16 (activations are rounded to FP8).
 
+### Qwen3.x block-FP8 on Ampere (Marlin)
+
+Fine-grained FP8 checkpoints (`weight_block_size=[128,128]`, float32 `weight_scale_inv`, e.g. `Qwen/Qwen3.8-27B-FP8`) use
+native `_scaled_mm_v2` on Hopper and the same weight-only Marlin kernel as MiniMax on Ampere/Ada
+(`WeightGemmBackend.MARLIN_FP8`, chosen by `auto` for FP8 on sm_80-89; override name `marlin_fp8`).
+`Fp8BlockMarlinLinear` repacks the FP8 weights once (`smile_marlin_fp8_repack_weight`) and the 128x128 scales into the
+kernel's group-128 layout (`smile_marlin_fp8_repack_block_scales`: expanded over the 128 columns, bf16, Marlin permutation,
+FP8 exponent bias 2^120 folded in), so weights stay 1 byte per element in memory. Because the model constructor would
+otherwise allocate every projection as a bf16 shell (38.9 GB for the 27B model), the projections the installer replaces are
+constructed as 1x1 placeholders (`ParameterInit.placeholderGemms()`, `LinearLayer.gemm`). The FP8 installer also covers the
+MTP head (`mtp.layers.N.*`). Verified on an A100-40GB against vLLM's Marlin FP8 on the same checkpoint: teacher-forced
+log-probabilities over 8 prompts x 48 steps differ by 0.0037 on average (top-1 agreement 380/384; every disagreement is a
+tie in vLLM's own distribution); kernel tests cover every Qwen3.8-27B layer shape. Measured on one A100-40GB (batch 1,
+eager): ~22 tok/s plain, ~49 tok/s with MTP speculation. Decode CUDA graphs need FlashInfer attention and are unavailable
+in builds without it.
+
 **Chat.** `MiniMaxChatTemplate` is a byte-exact port of `chat_template.jinja` (verified against transformers on golden
 prompts). The request field `thinking` (`enabled|disabled|adaptive`, or `{"type": ...}`; also
 `chat_template_kwargs.thinking_mode`) selects the thinking mode; unset means the model decides. Reasoning
