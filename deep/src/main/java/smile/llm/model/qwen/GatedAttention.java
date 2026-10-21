@@ -468,7 +468,10 @@ public class GatedAttention implements Attention {
             Tensor qT = qRope.transpose(1, 2);
             Tensor attn;
             if (AttentionBackends.current() == AttentionBackend.FLASHINFER) {
-                FlashInferKvMetadata meta = cachePool.sharedFlashInferMetadata(cacheLens);
+                // a decode graph reads fixed-address tables that are refreshed before each replay
+                FlashInferKvMetadata meta = cachePool.decodeGraphBuffers() && seqlen == 1
+                        ? cachePool.decodeGraphMetadata(batchSize)
+                        : cachePool.sharedFlashInferMetadata(cacheLens);
                 var ctx = uniform
                         ? AttentionContext.paged(
                                 scale, false,
