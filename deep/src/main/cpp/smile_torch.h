@@ -989,6 +989,21 @@ typedef struct ST_NcclComm_ *ST_NcclComm;
  */
 SMILE_API ST_NcclComm smile_nccl_comm_create(int n, const int *device_indices);
 
+/**
+ * Writes a fresh 128-byte NCCL unique id to {@code out}; the process that creates a multi-process communicator shares it
+ * (out of band) with every other process. Returns 0, or -1 with the error set.
+ */
+SMILE_API int smile_nccl_unique_id(unsigned char *out);
+
+/**
+ * Creates this process's part of a communicator that spans {@code world_size} ranks: local ranks
+ * {@code rank_offset .. rank_offset + n_local - 1} on {@code device_indices}. Every process of the world must call it
+ * with the same unique id and world size at the same time. The {@code rank} arguments of the collectives below are
+ * LOCAL indices (0 .. n_local - 1); {@code root} of a broadcast is a world rank.
+ */
+SMILE_API ST_NcclComm smile_nccl_comm_create_ranks(int n_local, const int *device_indices, int world_size,
+                                                   int rank_offset, const unsigned char *unique_id);
+
 /** Destroys a communicator created by {@link #smile_nccl_comm_create}. */
 SMILE_API void smile_nccl_comm_free(ST_NcclComm comm);
 

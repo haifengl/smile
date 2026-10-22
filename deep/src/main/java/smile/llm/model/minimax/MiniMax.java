@@ -49,6 +49,8 @@ import smile.llm.GenerationListener;
 import smile.llm.LanguageModel;
 import smile.llm.Message;
 import smile.llm.cache.KvCachePool;
+import smile.llm.cluster.ClusterFollower;
+import smile.llm.cluster.ClusterLeader;
 import smile.llm.engine.ModelExecutor;
 import smile.llm.engine.MultimodalPrompt;
 import smile.llm.ImageUrlPart;
@@ -92,6 +94,50 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
     private MiniMaxVisionProcessor visionProcessor;
     /** Requests whose KV holds image/video content: never added to the prefix cache (the ids are placeholders). */
     private final Set<Integer> multimodalRequests = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    /** Leader of a multi-node cluster (this process owns the first ranks and mirrors every state change), or null. */
+    private volatile ClusterLeader cluster;
+
+    /** Op codes of the messages the leader mirrors to the follower processes (see {@link ClusterLeader}). */
+    private static final int OP_BIND = 1;
+    private static final int OP_PREFILL = 2;
+    private static final int OP_DECODE = 3;
+    private static final int OP_FINISH = 4;
+    private static final int OP_EVICT = 5;
+    private static final int OP_PREFIX_REUSE = 6;
+
+    /**
+     * Placement of this process's ranks in a multi-node model.
+     *
+     * @param worldSize  expert-parallel ranks of the whole model.
+     * @param rankOffset world rank of this process's first rank.
+     * @param uniqueId   the NCCL unique id shared by every process.
+     */
+    public record ClusterSpec(int worldSize, int rankOffset, byte[] uniqueId) { }
+
+    /**
+     * Makes this process the leader of a cluster: from now on bind, prefill, decode, finish, evict and the prefix-reuse
+     * switch are mirrored to the followers, whose copies of the model execute them in lockstep.
+     *
+     * @param leader the connected cluster.
+     */
+    public void attachCluster(ClusterLeader leader) {
+        this.cluster = leader;
+    }
+
+    private static void writeInts(java.io.DataOutputStream out, int[] a) throws IOException {
+        out.writeInt(a.length);
+        for (int v : a) {
+            out.writeInt(v);
+        }
+    }
+
+    private static int[] readInts(java.io.DataInputStream in) throws IOException {
+        int[] a = new int[in.readInt()];
+        for (int i = 0; i < a.length; i++) {
+            a[i] = in.readInt();
+        }
+        return a;
+    }
 
     /**
      * Constructor.
@@ -392,6 +438,10 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         if (vision == null) {
             throw new IllegalStateException("vision encoder not loaded");
         }
+        if (cluster != null) {
+            // the followers would never join the collectives of this prefill: refuse rather than hang
+            throw new UnsupportedOperationException("images and videos are not supported on a multi-node model yet");
+        }
         int[] ids = mm.inputIds();
         if (from < 0 || to < from || to > ids.length) {
             throw new IllegalArgumentException("invalid prefill range [" + from + ", " + to + ") for len " + ids.length);
@@ -574,6 +624,10 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
      * @param enabled {@code true} to reuse cached prefixes.
      */
     public void setPrefixReuseEnabled(boolean enabled) {
+        ClusterLeader c = cluster;
+        if (c != null) {
+            c.send(OP_PREFIX_REUSE, o -> o.writeBoolean(enabled));
+        }
         for (MiniMaxModel m : models) {
             m.kvCachePool().setPrefixReuseEnabled(enabled);
         }
@@ -612,6 +666,27 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
 
     @Override
     public int bind(int[] prompt, int totalCapacity) {
+        ClusterLeader c = cluster;
+        if (c == null) {
+            return bindLocal(prompt, totalCapacity);
+        }
+        long msg = c.send(OP_BIND, o -> {
+            writeInts(o, prompt);
+            o.writeInt(totalCapacity);
+        });
+        int id = bindLocal(prompt, totalCapacity);
+        c.awaitAck(msg);   // binds are rare: confirm the followers agree on the request id
+        for (int i = 0; i < c.followers(); i++) {
+            int theirs = c.valueOf(i, msg);
+            if (theirs != id) {
+                throw new IllegalStateException("KV request id mismatch across nodes: leader=" + id
+                        + " follower " + i + "=" + theirs);
+            }
+        }
+        return id;
+    }
+
+    private int bindLocal(int[] prompt, int totalCapacity) {
         int id = -1;
         for (MiniMaxModel m : models) {
             int local = m.kvCachePool().bindRequest(prompt, totalCapacity);
@@ -647,12 +722,34 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         if (from == to) {
             return null;
         }
+        int[] window = Arrays.copyOfRange(prompt, from, to);
+        boolean last = to == prompt.length;
+        ClusterLeader c = cluster;
+        if (c != null) {
+            c.send(OP_PREFILL, o -> {
+                o.writeInt(requestId);
+                o.writeInt(from);
+                o.writeBoolean(last);
+                writeInts(o, window);
+            });
+        }
+        Tensor[] logits = prefillWindow(requestId, window, from, last);
+        Tensor row = firstAndClose(logits);
+        if (row != null) {
+            // Hand ownership to the caller's scope (a no-op without one).
+            Tensor owned = row.copy();
+            row.close();
+            return owned;
+        }
+        return null;
+    }
+
+    /** Runs one prefill window on this process's ranks; each rank's last-position logits when {@code last}. */
+    private Tensor[] prefillWindow(int requestId, int[] window, int from, boolean last) {
         for (MiniMaxModel m : models) {
             m.kvCachePool().activateStep(requestId);
         }
-        int[] window = Arrays.copyOfRange(prompt, from, to);
-        boolean last = to == prompt.length;
-        Tensor[] logits = onRanks(r -> {
+        return onRanks(r -> {
             try (var scope = new AutoScope()) {
                 Tensor.push(scope);
                 try {
@@ -669,14 +766,6 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                 }
             }
         });
-        Tensor row = firstAndClose(logits);
-        if (row != null) {
-            // Hand ownership to the caller's scope (a no-op without one).
-            Tensor owned = row.copy();
-            row.close();
-            return owned;
-        }
-        return null;
     }
 
     /**
@@ -716,6 +805,24 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         if (lastTokens.length != b || positions.length != b || b == 0) {
             throw new IllegalArgumentException("decodeStep batch sizes must match and be non-empty");
         }
+        ClusterLeader c = cluster;
+        if (c != null) {
+            c.send(OP_DECODE, o -> {
+                writeInts(o, requestIds);
+                writeInts(o, lastTokens);
+                writeInts(o, positions);
+            });
+        }
+        Tensor[] logits = decodeLocal(requestIds, lastTokens, positions);
+        Tensor rows = firstAndClose(logits);
+        Tensor owned = rows.copy();
+        rows.close();
+        return owned;
+    }
+
+    /** Runs one decode step on this process's ranks; each rank's logits {@code [batch, vocab]}. */
+    private Tensor[] decodeLocal(int[] requestIds, int[] lastTokens, int[] positions) {
+        int b = requestIds.length;
         for (MiniMaxModel m : models) {
             m.kvCachePool().activateStep(requestIds);
         }
@@ -723,7 +830,7 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         for (int i = 0; i < b; i++) {
             toks[i] = lastTokens[i];
         }
-        Tensor[] logits = onRanks(r -> {
+        return onRanks(r -> {
             try (var scope = new AutoScope()) {
                 Tensor.push(scope);
                 try {
@@ -742,14 +849,22 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                 }
             }
         });
-        Tensor rows = firstAndClose(logits);
-        Tensor owned = rows.copy();
-        rows.close();
-        return owned;
     }
 
     @Override
     public void finish(int requestId, int[] sequenceTokens) {
+        ClusterLeader c = cluster;
+        if (c != null) {
+            c.send(OP_FINISH, o -> {
+                o.writeInt(requestId);
+                writeInts(o, sequenceTokens == null ? new int[0] : sequenceTokens);
+                o.writeBoolean(sequenceTokens != null);
+            });
+        }
+        finishLocal(requestId, sequenceTokens);
+    }
+
+    private void finishLocal(int requestId, int[] sequenceTokens) {
         boolean media = multimodalRequests.remove(requestId);
         for (MiniMaxModel m : models) {
             if (media) {
@@ -762,6 +877,14 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
 
     @Override
     public void evict(int requestId) {
+        ClusterLeader c = cluster;
+        if (c != null) {
+            c.send(OP_EVICT, o -> o.writeInt(requestId));
+        }
+        evictLocal(requestId);
+    }
+
+    private void evictLocal(int requestId) {
         multimodalRequests.remove(requestId);
         for (MiniMaxModel m : models) {
             m.kvCachePool().unbindRequest(requestId);
@@ -849,6 +972,63 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         }
     }
 
+    /**
+     * Follower main loop: executes the leader's mirrored calls on this process's ranks until the leader shuts the
+     * cluster down. Results (logits) are discarded: only the leader samples.
+     *
+     * @param link the connection to the leader.
+     * @throws Exception the first failing call (already reported to the leader).
+     */
+    public void serveCluster(ClusterFollower link) throws Exception {
+        link.run((op, in) -> {
+            switch (op) {
+                case OP_BIND: {
+                    int[] prompt = readInts(in);
+                    return bindLocal(prompt, in.readInt());
+                }
+                case OP_PREFILL: {
+                    int requestId = in.readInt();
+                    int from = in.readInt();
+                    boolean last = in.readBoolean();
+                    int[] window = readInts(in);
+                    for (Tensor t : prefillWindow(requestId, window, from, last)) {
+                        if (t != null) {
+                            t.close();
+                        }
+                    }
+                    return -1;
+                }
+                case OP_DECODE: {
+                    int[] ids = readInts(in);
+                    int[] last = readInts(in);
+                    int[] positions = readInts(in);
+                    for (Tensor t : decodeLocal(ids, last, positions)) {
+                        if (t != null) {
+                            t.close();
+                        }
+                    }
+                    return -1;
+                }
+                case OP_FINISH: {
+                    int requestId = in.readInt();
+                    int[] tokens = readInts(in);
+                    finishLocal(requestId, in.readBoolean() ? tokens : null);
+                    return -1;
+                }
+                case OP_EVICT:
+                    evictLocal(in.readInt());
+                    return -1;
+                case OP_PREFIX_REUSE:
+                    for (MiniMaxModel m : models) {
+                        m.kvCachePool().setPrefixReuseEnabled(in.readBoolean());
+                    }
+                    return -1;
+                default:
+                    throw new IllegalStateException("unknown cluster op " + op);
+            }
+        });
+    }
+
     private int sample(Tensor logits, double temperature, double topp) {
         try (logits) {
             return Sampling.sampleTokenIds(logits, temperature, topp)[0];
@@ -926,6 +1106,29 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
      */
     public static MiniMax build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte[] devices,
                                 double memFractionStatic, int pageSize, String weightMode) throws IOException {
+        return build(checkpointDir, maxBatchSize, maxSeqLen, devices, memFractionStatic, pageSize, weightMode, null);
+    }
+
+    /**
+     * Builds this process's part of a model whose expert-parallel ranks span several processes (and nodes).
+     * {@code devices} are the GPUs of this process; its ranks are {@code cluster.rankOffset() ..} of
+     * {@code cluster.worldSize()}, and every process must call this at the same time (the NCCL communicator is created
+     * first and returns when all ranks have joined). With a {@code null} {@code cluster} this is the single-process build.
+     *
+     * @param checkpointDir     directory with {@code config.json}, {@code tokenizer.json} and safetensors.
+     * @param maxBatchSize      maximum concurrent requests.
+     * @param maxSeqLen         maximum context length; {@code <= 0} uses {@code max_position_embeddings}.
+     * @param devices           CUDA device indices of this process, one expert-parallel rank each.
+     * @param memFractionStatic fraction of device memory for weights + KV.
+     * @param pageSize          KV page size in tokens.
+     * @param weightMode        see {@link #build(String, int, int, byte[], double, int, String)}.
+     * @param cluster           this process's place in the cluster, or {@code null}.
+     * @return the loaded model.
+     * @throws IOException if the checkpoint is missing, unsupported or incomplete.
+     */
+    public static MiniMax build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte[] devices,
+                                double memFractionStatic, int pageSize, String weightMode, ClusterSpec cluster)
+            throws IOException {
         File dir = new File(checkpointDir);
         if (!dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory not found: " + checkpointDir);
@@ -971,14 +1174,21 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         }
 
         final MiniMaxModelArgs modelArgs = args;
-        TensorParallelGroup group = ranks > 1 ? new TensorParallelGroup(ParallelConfig.tensorParallel(devices)) : null;
+        if (cluster != null && !cuda) {
+            throw new IllegalArgumentException("a multi-node model needs CUDA devices");
+        }
+        final int world = cluster != null ? cluster.worldSize() : ranks;
+        final int firstRank = cluster != null ? cluster.rankOffset() : 0;
+        TensorParallelGroup group = cluster != null
+                ? new TensorParallelGroup(ParallelConfig.tensorParallel(devices), world, firstRank, cluster.uniqueId())
+                : (ranks > 1 ? new TensorParallelGroup(ParallelConfig.tensorParallel(devices)) : null);
         MiniMaxModel[] networks = new MiniMaxModel[ranks];
         for (int r = 0; r < ranks; r++) {
             long t0 = System.currentTimeMillis();
             Device device = cuda ? Device.CUDA(devices[r]) : Device.CPU();
-            networks[r] = new MiniMaxModel(args, new MiniMaxShard(r, ranks, device), group);
+            networks[r] = new MiniMaxModel(args, new MiniMaxShard(firstRank + r, world, device), group);
             networks[r].to(device, computeDtype);
-            logger.info("rank {}/{}: allocated {} layers ({} local experts) on {} in {} ms", r, ranks,
+            logger.info("rank {}/{}: allocated {} layers ({} local experts) on {} in {} ms", firstRank + r, world,
                     args.numLayers(), networks[r].shard().localExperts(args.numExperts()), device,
                     System.currentTimeMillis() - t0);
         }
@@ -1007,7 +1217,8 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
 
         // The vision encoder (~1.7 GB) lives on rank 0's device; load it before the KV pool takes the free memory.
         MiniMaxVisionTower vision = null;
-        if (!"0".equals(System.getenv("SMILE_MINIMAX_VISION"))) {
+        boolean follower = cluster != null && cluster.rankOffset() > 0;   // the vision encoder lives on the leader's rank 0
+        if (!follower && !"0".equals(System.getenv("SMILE_MINIMAX_VISION"))) {
             try {
                 long t0 = System.currentTimeMillis();
                 vision = MiniMaxVisionTower.load(dir, networks[0].device(), computeDtype);
@@ -1038,6 +1249,46 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         MiniMax result = new MiniMax(dir.getName(), networks, group, tokenizer, args);
         result.setVision(vision);
         return result;
+    }
+
+    /**
+     * Builds the leader of a multi-node model: waits for {@code followers} follower processes
+     * ({@link MiniMaxFollower}) to connect, builds this process's ranks together with theirs, and mirrors every state
+     * change to them from then on. The leader owns world ranks {@code 0 .. devices.length - 1}.
+     *
+     * @param checkpointDir     checkpoint directory on this node.
+     * @param maxBatchSize      maximum concurrent requests.
+     * @param maxSeqLen         maximum context length; {@code <= 0} uses {@code max_position_embeddings}.
+     * @param devices           CUDA device indices of this process.
+     * @param memFractionStatic fraction of device memory for weights + KV (the followers use the same).
+     * @param pageSize          KV page size in tokens.
+     * @param weightMode        see {@link #build(String, int, int, byte[], double, int, String)}; {@code null} for auto.
+     * @param port              TCP port the followers connect to.
+     * @param followers         number of follower processes.
+     * @param timeoutMs         how long to wait for the followers.
+     * @return the leader model.
+     * @throws IOException if the followers do not connect or the checkpoint cannot be loaded.
+     */
+    public static MiniMax buildLeader(String checkpointDir, int maxBatchSize, int maxSeqLen, byte[] devices,
+                                      double memFractionStatic, int pageSize, String weightMode,
+                                      int port, int followers, long timeoutMs) throws IOException {
+        Map<String, String> params = new LinkedHashMap<>();
+        params.put("maxBatchSize", Integer.toString(maxBatchSize));
+        params.put("maxSeqLen", Integer.toString(maxSeqLen));
+        params.put("memFractionStatic", Double.toString(memFractionStatic));
+        params.put("pageSize", Integer.toString(pageSize));
+        params.put("weightMode", weightMode == null ? "" : weightMode);
+        ClusterLeader leader = ClusterLeader.start(port, followers, devices.length, timeoutMs, params);
+        MiniMax model;
+        try {
+            model = build(checkpointDir, maxBatchSize, maxSeqLen, devices, memFractionStatic, pageSize, weightMode,
+                    new ClusterSpec(leader.worldSize(), 0, leader.uniqueId()));
+        } catch (IOException | RuntimeException e) {
+            leader.close();
+            throw e;
+        }
+        model.attachCluster(leader);
+        return model;
     }
 
     /**
