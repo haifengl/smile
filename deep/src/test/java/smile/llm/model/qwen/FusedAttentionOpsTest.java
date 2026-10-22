@@ -164,4 +164,40 @@ public class FusedAttentionOpsTest {
             }
         }
     }
+
+    @Test
+    public void testGivenFourRowsWhenGemv2ThenWithinOneBf16RoundingOfExactSum() {
+        assumeTrue(cuda(), "CUDA not available");
+        int hidden = 5120, n = 48, rows = 4;
+        try (Tensor x = Tensor.randn(rows, hidden).to(CUDA, BF16);
+             Tensor wa = Tensor.randn(n, hidden).mul(0.05).to(CUDA, BF16);
+             Tensor wb = Tensor.randn(n, hidden).mul(0.05).to(CUDA, BF16)) {
+            Tensor[] ab = Native.gemv2(x, wa, wb);
+            assumeTrue(ab != null, "fused gemv2 not available");
+            float[] xv = x.to(Device.CPU()).to(ScalarType.Float).contiguous().floatArray();
+            float[] wv = wa.to(Device.CPU()).to(ScalarType.Float).contiguous().floatArray();
+            float[] got = ab[0].to(Device.CPU()).to(ScalarType.Float).contiguous().floatArray();
+            try (Tensor ref = x.matmul(wa.transpose(0, 1));
+                 Tensor refCpu = ref.to(Device.CPU()).to(ScalarType.Float)) {
+                float[] cublas = refCpu.contiguous().floatArray();
+                double worstOurs = 0, worstCublas = 0;
+                for (int r = 0; r < rows; r++) {
+                    for (int c = 0; c < n; c++) {
+                        double exact = 0;
+                        for (int k = 0; k < hidden; k++) {
+                            exact += (double) xv[r * hidden + k] * wv[c * hidden + k];
+                        }
+                        double scale = Math.abs(exact) + 1e-3;
+                        worstOurs = Math.max(worstOurs, Math.abs(got[r * n + c] - exact) / scale);
+                        worstCublas = Math.max(worstCublas, Math.abs(cublas[r * n + c] - exact) / scale);
+                    }
+                }
+                // a correctly rounded bf16 result is within 2^-9 relative of the exact sum (plus fp32 accumulation noise)
+                assertTrue(worstOurs < 0.01, "gemv2 worst relative error " + worstOurs + " (cuBLAS " + worstCublas + ")");
+            } finally {
+                ab[0].close();
+                ab[1].close();
+            }
+        }
+    }
 }

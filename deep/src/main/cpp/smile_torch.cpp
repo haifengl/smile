@@ -2480,6 +2480,110 @@ ST_Tensor smile_gated_delta_verify_window(
     return nullptr;
 }
 
+ST_Tensor smile_gated_delta_verify_window_fused(
+        ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor conv_weight,
+        ST_Tensor a, ST_Tensor b, ST_Tensor a_log_f, ST_Tensor dt_bias_f, ST_Tensor rec_state,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim,
+        int qk_l2norm,
+        ST_Tensor *conv_ckpts, ST_Tensor *rec_ckpts, int n_ckpt) {
+    if (!hidden || !conv_state || !conv_weight || !a || !b || !a_log_f || !dt_bias_f || !rec_state
+            || !conv_ckpts || !rec_ckpts || n_ckpt < 1) {
+        set_error("smile_gated_delta_verify_window_fused: null argument");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+#ifdef USE_CUDA
+        auto h = hidden->t;          // [B,S,C]
+        auto cst = conv_state->t;    // [B,C,K-1]
+        auto rst = rec_state->t;     // [B,Hv,Dk,Dv] float
+        if (!h.is_cuda() || h.dim() != 3 || cst.dim() != 3 || rst.dim() != 4
+                || !h.is_contiguous() || !cst.is_contiguous() || !rst.is_contiguous()
+                || rst.scalar_type() != c10::ScalarType::Float
+                || cst.scalar_type() != h.scalar_type()) {
+            set_error("smile_gated_delta_verify_window_fused: unsupported layout/dtype");
+            return nullptr;
+        }
+        const int64_t B = h.size(0), S = h.size(1), C = h.size(2);
+        const int64_t K = conv_weight->t.size(-1);
+        const int64_t Hv = num_v_heads;
+        if (n_ckpt < 1 || n_ckpt > S || S > kGatedDeltaMaxCkpt || cst.size(0) != B || cst.size(1) != C
+                || cst.size(2) != K - 1 || rst.size(0) != B || rst.size(1) != Hv
+                || rst.size(2) != head_k_dim || rst.size(3) != head_v_dim) {
+            set_error("smile_gated_delta_verify_window_fused: shape mismatch");
+            return nullptr;
+        }
+        GatedDeltaDtype dt;
+        switch (h.scalar_type()) {
+            case c10::ScalarType::Float: dt = GatedDeltaDtype::kFloat; break;
+            case c10::ScalarType::BFloat16: dt = GatedDeltaDtype::kBFloat16; break;
+            case c10::ScalarType::Half: dt = GatedDeltaDtype::kHalf; break;
+            default:
+                set_error("smile_gated_delta_verify_window_fused: unsupported dtype");
+                return nullptr;
+        }
+        auto w = conv_weight->t.reshape({C, K}).contiguous().to(h.scalar_type());
+        GatedDeltaConvCkpt cck{};
+        GatedDeltaCkpt rck{};
+        cck.n = rck.n = static_cast<int>(n_ckpt);
+        for (int i = 0; i < n_ckpt; ++i) {
+            if (!conv_ckpts[i] || !rec_ckpts[i]) {
+                set_error("smile_gated_delta_verify_window_fused: null checkpoint");
+                return nullptr;
+            }
+            auto &ct = conv_ckpts[i]->t;
+            auto &rt = rec_ckpts[i]->t;
+            if (!ct.is_contiguous() || ct.scalar_type() != h.scalar_type() || ct.numel() < cst.numel()
+                    || !rt.is_contiguous() || rt.scalar_type() != c10::ScalarType::Float
+                    || rt.numel() < rst.numel()) {
+                set_error("smile_gated_delta_verify_window_fused: invalid checkpoint tensor");
+                return nullptr;
+            }
+            cck.ptr[i] = ct.data_ptr();
+            rck.ptr[i] = rt.data_ptr<float>();
+        }
+        c10::cuda::CUDAGuard guard(h.device());
+        cudaStream_t stream = at::cuda::getCurrentCUDAStream(h.device().index()).stream();
+        auto fopt = h.options().dtype(c10::ScalarType::Float);
+        auto q = torch::empty({B, Hv, S, (int64_t)head_k_dim}, fopt);
+        auto k = torch::empty({B, Hv, S, (int64_t)head_k_dim}, fopt);
+        auto v = torch::empty({B, Hv, S, (int64_t)head_v_dim}, fopt);
+        int rc = smile_causal_conv1d_window_split_qkv_cuda(
+                h.data_ptr(), cst.data_ptr(), w.data_ptr(), dt,
+                q.data_ptr<float>(), k.data_ptr<float>(), v.data_ptr<float>(),
+                B, C, K, S, num_k_heads, num_v_heads, head_k_dim, head_v_dim,
+                &cck, stream);
+        if (rc != 0) {
+            set_error(smile_gated_delta_last_error());
+            return nullptr;
+        }
+        if (a->t.scalar_type() != c10::ScalarType::BFloat16 || b->t.scalar_type() != c10::ScalarType::BFloat16
+                || h.scalar_type() != c10::ScalarType::BFloat16 || !a->t.is_contiguous() || !b->t.is_contiguous()
+                || a->t.numel() != B * S * Hv || b->t.numel() != B * S * Hv
+                || a_log_f->t.scalar_type() != c10::ScalarType::Float || dt_bias_f->t.scalar_type() != c10::ScalarType::Float
+                || head_k_dim != 128 || head_v_dim % 32 != 0) {
+            set_error("smile_gated_delta_verify_window_fused: unsupported dtype/shape");
+            return nullptr;
+        }
+        auto out = torch::empty({B, S, Hv, (int64_t)head_v_dim}, h.options());
+        const float scale = 1.0f / std::sqrt(static_cast<float>(head_k_dim));
+        rc = smile_gated_delta_recurrent_gates_cuda(
+                q.data_ptr<float>(), k.data_ptr<float>(), v.data_ptr<float>(),
+                a->t.data_ptr(), b->t.data_ptr(), a_log_f->t.data_ptr<float>(), dt_bias_f->t.data_ptr<float>(),
+                rst.data_ptr<float>(), out.data_ptr(), B, Hv, S, head_k_dim, head_v_dim,
+                scale, qk_l2norm, stream, &rck);
+        if (rc != 0) {
+            set_error(smile_gated_delta_last_error());
+            return nullptr;
+        }
+        return new ST_Tensor_{ out };
+#else
+        set_error("smile_gated_delta_verify_window_fused: CUDA only");
+        return nullptr;
+#endif
+    ST_TRY_END
+    return nullptr;
+}
+
 ST_Tensor smile_gated_delta_compute_g(
         ST_Tensor a, ST_Tensor a_log, ST_Tensor dt_bias) {
     if (!a || !a_log || !dt_bias) {

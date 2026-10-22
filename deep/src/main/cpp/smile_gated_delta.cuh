@@ -99,6 +99,17 @@ int smile_gated_delta_decode_fused_cuda(
         int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim,
         float scale, void *cuda_stream);
 
+/**
+ * Recurrent rule over a window with the gates folded in (as smile_gated_delta_decode_fused_cuda, but any S) and optional
+ * per-step state checkpoints. q/k/v: float [B, H, S, dim]; a, b: bf16 [B, S, H]; out_bf16: [B, S, H, V].
+ */
+int smile_gated_delta_recurrent_gates_cuda(
+        const float *q, const float *k, const float *v,
+        const void *a, const void *b, const float *a_log, const float *dt_bias,
+        float *state, void *out_bf16,
+        int64_t B, int64_t H, int64_t S, int64_t K, int64_t V,
+        float scale, int qk_l2norm, void *cuda_stream, const GatedDeltaCkpt *ckpt = nullptr);
+
 int smile_causal_conv1d_update_decode_cuda(
         const float *x,
         float *state,
