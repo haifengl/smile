@@ -139,7 +139,8 @@ they do not run on CPUs without AVX2 (before Intel Haswell, 2013); use the JVM i
 
 ### 1.2 GPU Build & Run
 
-Build the JVM+GPU image from source and run it with CUDA graph decode enabled.
+Build the JVM+GPU image from source and run it. Decode CUDA graphs and FlashInfer attention are on by default
+(`SMILE_DECODE_CUDA_GRAPH=0` turns the graphs off).
 To enable Google login, add `-Dsmile.auth.google.client-id=...
 -Dsmile.auth.google.client-secret=... -Dsmile.auth.google.redirect-uri=...` to
 `JAVA_OPTS_APPEND` yourself (see [§7.6](#authentication)); keep those values
@@ -208,8 +209,6 @@ spec:
             secretKeyRef:
               name: smile-db-secret
               key: password
-        - name: SMILE_DECODE_CUDA_GRAPH
-          value: "1"
         - name: JAVA_OPTS_APPEND
           value: >-
             -Dsmile.chat.model=Qwen/Qwen3.8-27B
@@ -446,6 +445,7 @@ Controls (all default to the values that were benchmarked):
 | `smile.chat.speculative` | `true` | MTP speculation for Qwen3.5/3.8 checkpoints with MTP weights (ignored for other models). Set `false` to disable. |
 | `smile.chat.speculative-tokens` | `0` (model default; 3 for Qwen3.8-27B) | Draft depth. Measured aggregate tok/s at 1 / 8 / 16 requests: depth 1: 47 / 203 / 387; depth 2: 53 / 216-236 / 408-441; depth 3 (default): 55 / 232 / 446; depth 4: 54 / 241 / 439. Depths 2-4 are within noise; depth 1 is slower. |
 | `smile.chat.speculative-max-concurrency` | `0` (= `max-batch-size`) | Requests that may speculate at once. A request keeps its speculation slot for its whole life; requests beyond the limit use batched plain decode. Speculating only part of a large cohort is slower than all or none, so leave unlimited unless you need to bound checkpoint memory. |
+| `SMILE_DECODE_CUDA_GRAPH` | on | Capture plain decode steps as CUDA graphs (needs FlashInfer attention, the default backend; uniform batches only). A capture failure turns graphs off for the process and decode continues eagerly. `0` disables. |
 | `SMILE_VERIFY_CUDA_GRAPH` | on | Capture the verify forward as one CUDA graph (one capture per session). `0` disables. |
 | `SMILE_MTP_HISTORY` | on | Draft head keeps a persistent per-request KV of the whole prefix (prompt and accepted tokens). `0` restores the context-free legacy head (about half the accept rate). |
 | `SMILE_MTP_VERIFY_CHECKPOINT_REPLAY` | on | On a partial accept, restore the DeltaNet state saved during the verify pass instead of running a second forward. `0` disables. |
@@ -480,6 +480,45 @@ Notes and limits:
   doubles verify cost) logs the numeric gap between graph replay and an eager
   reference every round; `SMILE_VERIFY_GRAPH_TRACE=1` logs each round's
   replay / warmup / capture decision.
+
+### Qwen3.8 27B FP8 on one 40 GB A100
+
+[Qwen/Qwen3.8-27B-FP8](https://huggingface.co/Qwen/Qwen3.8-27B-FP8) (block FP8, 29 GB) runs on a single A100-40GB through
+the weight-only FP8 Marlin kernel (`smile.chat.devices=0`, `mem-fraction-static=0.93`, FlashInfer attention, decode CUDA
+graphs, no tensor parallelism). Greedy, batch 1, 11 different prompts x 256 new tokens, wall time per request:
+
+| Setup | Throughput | Draft accept rate |
+|---|---|---|
+| Plain decode | 36.3 tok/s | n/a |
+| MTP, 3 draft tokens (default) | **77.8 tok/s (2.1x)** | 66 % |
+| MTP, 4 draft tokens | **80.1 tok/s (2.2x)** | 58 % |
+
+An MTP round takes about 37 ms: 8.2 ms to draft, 28.1 ms to verify, 0.6 ms of state replay. Marlin plus the lm_head
+GEMM read the weights in about 22 ms, so a plain step cannot go much below that (about 44 tok/s). With 2 / 4 concurrent
+requests (200 tokens each) the aggregate is 70 / 129 tok/s with MTP and 35 / 74 tok/s without; those cohorts sit at
+different positions, so they run eagerly (the decode graph needs equal positions) with no loss against `=0`.
+
+The path from the first working build (eager, ~22 tok/s plain) to the numbers above, each step measured on one prompt
+set, plain decode:
+
+| Step | Plain tok/s |
+|---|---|
+| Decode CUDA graphs (FlashInfer build; page tables kept at fixed addresses between replays) | 25.6 |
+| DeltaNet recurrent kernel: state in registers, split over the value dimension (122 -> 10 us per layer) | 28.6 |
+| Fused DeltaNet decode core (conv + split + gates + recurrent in two launches), persistent Marlin workspace | 33.2 |
+| Fused residual-add + RMSNorm, SiLU-mul, vectorized RMSNorm | 33.9 |
+| Fused a/b projection, strided QK norm + RoPE, gate multiply and KV write in the 16 attention layers | 36.4 |
+
+The verify window got the matching fusions (conv + gates + recurrent with per-position checkpoints in two launches, the
+fused attention ops): 29.8 -> 28.1 ms per round.
+
+Notes:
+
+- Comparisons on a handful of prompts are noisy: a 1-ulp change flips a greedy token, the text diverges, and the accept
+  rate follows the text (moves of +-7 points on three prompts). Compare on 10+ prompts.
+- `SMILE_GATED_DELTA_UNFUSED=1` goes back to the multi-kernel DeltaNet path, `SMILE_GATED_DELTA_REFERENCE=1` to the
+  original recurrent kernel and `SMILE_FUSED_OPS=0` disables all fused elementwise kernels (A/B and debugging only).
+- With MTP the draft depth matters little: 2 / 3 / 4 / 5 drafts gave 65 / 72 / 74 / 73 tok/s on a 3-prompt set.
 
 ---
 

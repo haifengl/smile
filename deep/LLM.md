@@ -353,6 +353,66 @@ default for hybrid safety):
 qwen.setPrefixReplayEnabled(true);  // radix prefix reuse + DeltaNet state restore
 ```
 
+### Qwen chat prompt
+
+`Qwen3ChatTemplate` renders prompts exactly like the checkpoint's `chat_template.jinja` (goldens: 41 dialogs x the Qwen3.5-0.8B,
+Qwen3.5-27B and Qwen3.8 templates rendered by transformers, `Qwen3ChatTemplateGoldenTest`; token ids of the rendered prompts
+equal the HF tokenizer's, `QwenTokenizerRealTest`). `Tokenizer.of(dir)` reads the checkpoint's template and
+`Qwen3ChatTemplate.Variant.detect` derives which behaviours apply, so each generation renders like its own reference:
+Qwen3.8 adds the reasoning-effort system turn and keeps think blocks of earlier turns (`preserve_thinking`), Qwen3.5
+splits `<think>` out of assistant content and prints an empty system turn, small Qwen3.5 models think only when asked.
+The same template serves plain chat, tool calls and the vision prompt; all added tokens (`<|im_start|>`, `<think>`,
+`<tool_call>`, the vision placeholders, ...) stay single tokens inside text (the tool path used to encode them as plain
+characters).
+
+Request fields (also accepted inside `chat_template_kwargs`): `thinking` / `thinking_mode` (`enabled|disabled|adaptive`) or
+`enable_thinking` (boolean) switch thinking off (`<think>\n\n</think>\n\n` is prefilled, the model answers directly),
+`reasoning_effort` (`xhigh` = default, `high` as an alias, `medium` = no instructions, `low`; others are HTTP 400) and
+`preserve_thinking`. The generation prompt opens `<think>\n`, so replies carry only the closing `</think>`; the endpoint
+returns the text after the last `</think>` (streaming chunks still carry the reasoning followed by `</think>`). Qwen3.8's
+default system turn adds ~44 prompt tokens per request (a shared prefix). `reasoning_content` in assistant history messages
+is not read (clients that echo it back are rendered with an empty think block).
+
+### Qwen3.x block-FP8 on Ampere (Marlin)
+
+Fine-grained FP8 checkpoints (`weight_block_size=[128,128]`, float32 `weight_scale_inv`, e.g. `Qwen/Qwen3.8-27B-FP8`) use
+native `_scaled_mm_v2` on Hopper and the same weight-only Marlin kernel as MiniMax on Ampere/Ada
+(`WeightGemmBackend.MARLIN_FP8`, chosen by `auto` for FP8 on sm_80-89; override name `marlin_fp8`).
+`Fp8BlockMarlinLinear` repacks the FP8 weights once (`smile_marlin_fp8_repack_weight`) and the 128x128 scales into the
+kernel's group-128 layout (`smile_marlin_fp8_repack_block_scales`: expanded over the 128 columns, bf16, Marlin permutation,
+FP8 exponent bias 2^120 folded in), so weights stay 1 byte per element in memory. Because the model constructor would
+otherwise allocate every projection as a bf16 shell (38.9 GB for the 27B model), the projections the installer replaces are
+constructed as 1x1 placeholders (`ParameterInit.placeholderGemms()`, `LinearLayer.gemm`). The FP8 installer also covers the
+MTP head (`mtp.layers.N.*`). Verified on an A100-40GB against vLLM's Marlin FP8 on the same checkpoint: teacher-forced
+log-probabilities over 8 prompts x 48 steps differ by 0.0037 on average (top-1 agreement 380/384; every disagreement is a
+tie in vLLM's own distribution); kernel tests cover every Qwen3.8-27B layer shape. Measured on one A100-40GB (batch 1):
+~36 tok/s plain and ~78-80 tok/s with MTP speculation (11 prompts x 256 tokens); the first eager build was ~22 / ~49. See
+"Qwen decode performance" below. Decode CUDA graphs need FlashInfer attention (the default backend; `libsmile_torch` must be
+built with `USE_FLASHINFER`, which is the CMake default) and are on by default; `SMILE_DECODE_CUDA_GRAPH=0` disables them.
+
+### Qwen decode performance (batch 1, FlashInfer + CUDA graphs)
+
+A plain decode step is ~27 ms of GPU time: Marlin GEMMs 20.9 ms and the lm_head GEMM 1.7 ms (both at the memory-bandwidth
+floor, ~1.3 TB/s) plus ~5 ms of everything else, in ~1500 graph nodes. The kernels that bring the rest down (all in
+`libsmile_torch`; each has a CUDA test against an independent reference, and an env switch back to the old path):
+
+| Kernel | Replaces | Where |
+|---|---|---|
+| `gated_delta_recurrent_fast_kernel` | one block per head with the whole state in shared memory: state in registers, grid over `V/32` x `B*H`, one cross-warp reduction per token (122 -> 10 us per layer call); `SMILE_GATED_DELTA_REFERENCE=1` selects the old kernel | `smile_gated_delta.cu` |
+| `smile_gated_delta_decode_fused` | DeltaNet decode conv update + q/k/v split + gate math + recurrent rule (~25 launches -> 2); `SMILE_GATED_DELTA_UNFUSED=1` disables it | `GatedDeltaNet.forward`, `Native.gatedDeltaDecodeFused` |
+| `smile_gated_delta_verify_window_fused` | the same for MTP verify windows, including the per-position conv and recurrent checkpoints | `GatedDeltaNet.fusedVerifyWindowGates` |
+| `smile_gemv2` | the two tiny `in_proj_a` / `in_proj_b` cuBLAS GEMVs (decode only: in verify it changes greedy trajectories for no gain) | `GatedDeltaNet.projectAB` |
+| `smile_add_gemma_rms_norm`, vectorized `smile_gemma_rms_norm`, `smile_silu_mul` | residual add + RMSNorm, SiLU * up | `QwenBlock`, `FeedForward` |
+| `smile_qk_norm_rope` (strided heads), `smile_sigmoid_gate_mul`, `smile_kv_write` | q/k norm + RoPE reading q in place from the interleaved q|gate projection, `attn * sigmoid(gate)`, the K and V cache writes (decode and verify paths of the 16 attention layers) | `GatedAttention`, `KvCachePool.put` |
+| persistent Marlin workspace | a `zeros` fill per GEMM (the kernel leaves its lock array zeroed) | `smile_marlin_fp8.cu` |
+
+`SMILE_FUSED_OPS=0` turns off all the elementwise kernels at once. Two implementation rules that cost time: a graph
+captured once reads the addresses it was captured with, so anything a replayed kernel reads (FlashInfer page tables) lives
+in fixed-address buffers refreshed before each replay (`KvCachePool.decodeGraphMetadata`); and a `Tensor` cached from
+inside a layer's forward must call `detachFromScopes()`, or the layer's `AutoScope` frees it after the first step.
+Comparing configurations needs 10+ prompts: 1-ulp changes flip greedy tokens and the MTP accept rate moves with the
+generated text. MTP rounds at 3 drafts: draft 8.2 ms (5.2 ms of it the 248k-vocabulary lm_head), verify 28.1 ms.
+
 ---
 
 ## MiniMax-M3 (`smile.llm.model.minimax`)
@@ -422,42 +482,6 @@ does not fit one 8 x 40 GB node; the GPU test checkpoints are truncated to the f
 `auto` picks `FP8` on Hopper+ only after `Fp8BlockGemm.selfCheck` (native vs emulated GEMM on a random problem) passes,
 otherwise `MARLIN`. **The native FP8 path has not been run on Hopper hardware yet**; run
 `MxFp8BlockFp8Test` there first. W8A8 is slightly noisier than W8A16 (activations are rounded to FP8).
-
-### Qwen chat prompt
-
-`Qwen3ChatTemplate` renders prompts exactly like the checkpoint's `chat_template.jinja` (goldens: 41 dialogs x the Qwen3.5-0.8B,
-Qwen3.5-27B and Qwen3.8 templates rendered by transformers, `Qwen3ChatTemplateGoldenTest`; token ids of the rendered prompts
-equal the HF tokenizer's, `QwenTokenizerRealTest`). `Tokenizer.of(dir)` reads the checkpoint's template and
-`Qwen3ChatTemplate.Variant.detect` derives which behaviours apply, so each generation renders like its own reference:
-Qwen3.8 adds the reasoning-effort system turn and keeps think blocks of earlier turns (`preserve_thinking`), Qwen3.5
-splits `<think>` out of assistant content and prints an empty system turn, small Qwen3.5 models think only when asked.
-The same template serves plain chat, tool calls and the vision prompt; all added tokens (`<|im_start|>`, `<think>`,
-`<tool_call>`, the vision placeholders, ...) stay single tokens inside text (the tool path used to encode them as plain
-characters).
-
-Request fields (also accepted inside `chat_template_kwargs`): `thinking` / `thinking_mode` (`enabled|disabled|adaptive`) or
-`enable_thinking` (boolean) switch thinking off (`<think>\n\n</think>\n\n` is prefilled, the model answers directly),
-`reasoning_effort` (`xhigh` = default, `high` as an alias, `medium` = no instructions, `low`; others are HTTP 400) and
-`preserve_thinking`. The generation prompt opens `<think>\n`, so replies carry only the closing `</think>`; the endpoint
-returns the text after the last `</think>` (streaming chunks still carry the reasoning followed by `</think>`). Qwen3.8's
-default system turn adds ~44 prompt tokens per request (a shared prefix). `reasoning_content` in assistant history messages
-is not read (clients that echo it back are rendered with an empty think block).
-
-### Qwen3.x block-FP8 on Ampere (Marlin)
-
-Fine-grained FP8 checkpoints (`weight_block_size=[128,128]`, float32 `weight_scale_inv`, e.g. `Qwen/Qwen3.8-27B-FP8`) use
-native `_scaled_mm_v2` on Hopper and the same weight-only Marlin kernel as MiniMax on Ampere/Ada
-(`WeightGemmBackend.MARLIN_FP8`, chosen by `auto` for FP8 on sm_80-89; override name `marlin_fp8`).
-`Fp8BlockMarlinLinear` repacks the FP8 weights once (`smile_marlin_fp8_repack_weight`) and the 128x128 scales into the
-kernel's group-128 layout (`smile_marlin_fp8_repack_block_scales`: expanded over the 128 columns, bf16, Marlin permutation,
-FP8 exponent bias 2^120 folded in), so weights stay 1 byte per element in memory. Because the model constructor would
-otherwise allocate every projection as a bf16 shell (38.9 GB for the 27B model), the projections the installer replaces are
-constructed as 1x1 placeholders (`ParameterInit.placeholderGemms()`, `LinearLayer.gemm`). The FP8 installer also covers the
-MTP head (`mtp.layers.N.*`). Verified on an A100-40GB against vLLM's Marlin FP8 on the same checkpoint: teacher-forced
-log-probabilities over 8 prompts x 48 steps differ by 0.0037 on average (top-1 agreement 380/384; every disagreement is a
-tie in vLLM's own distribution); kernel tests cover every Qwen3.8-27B layer shape. Measured on one A100-40GB (batch 1,
-eager): ~22 tok/s plain, ~49 tok/s with MTP speculation. Decode CUDA graphs need FlashInfer attention and are unavailable
-in builds without it.
 
 **Chat.** `MiniMaxChatTemplate` is a byte-exact port of `chat_template.jinja` (verified against transformers on golden
 prompts). The request field `thinking` (`enabled|disabled|adaptive`, or `{"type": ...}`; also
