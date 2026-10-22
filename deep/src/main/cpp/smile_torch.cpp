@@ -1953,7 +1953,8 @@ void smile_manual_seed(int64_t seed) {
 
 #ifdef USE_NCCL
 struct ST_NcclComm_ {
-    int nRanks = 0;
+    int nRanks = 0;              // local ranks (== comms length)
+    int worldSize = 0;           // ranks of the whole communicator (>= nRanks; > nRanks when it spans processes)
     ncclComm_t *comms = nullptr; // length nRanks
 };
 #endif
@@ -1971,12 +1972,80 @@ ST_NcclComm smile_nccl_comm_create(int n, const int *device_indices) {
     ST_TRY_BEGIN
         auto *c = new ST_NcclComm_();
         c->nRanks = n;
+        c->worldSize = n;
         c->comms = new ncclComm_t[static_cast<size_t>(n)];
         ncclResult_t rc = ncclCommInitAll(c->comms, n, device_indices);
         if (rc != ncclSuccess) {
             delete[] c->comms;
             delete c;
             set_error(std::string("ncclCommInitAll: ") + ncclGetErrorString(rc));
+            return nullptr;
+        }
+        return c;
+    ST_TRY_END
+    return nullptr;
+#endif
+}
+
+int smile_nccl_unique_id(unsigned char *out) {
+#ifndef USE_NCCL
+    (void)out;
+    set_error("smile_torch was built without NCCL (USE_NCCL not enabled)");
+    return -1;
+#else
+    if (!out) {
+        set_error("smile_nccl_unique_id: null output");
+        return -1;
+    }
+    ncclUniqueId id;
+    ncclResult_t rc = ncclGetUniqueId(&id);
+    if (rc != ncclSuccess) {
+        set_error(std::string("ncclGetUniqueId: ") + ncclGetErrorString(rc));
+        return -1;
+    }
+    static_assert(sizeof(id.internal) == 128, "ncclUniqueId layout changed");
+    memcpy(out, id.internal, sizeof(id.internal));
+    return 0;
+#endif
+}
+
+ST_NcclComm smile_nccl_comm_create_ranks(int n_local, const int *device_indices, int world_size, int rank_offset,
+                                         const unsigned char *unique_id) {
+#ifndef USE_NCCL
+    (void)n_local; (void)device_indices; (void)world_size; (void)rank_offset; (void)unique_id;
+    set_error("smile_torch was built without NCCL (USE_NCCL not enabled)");
+    return nullptr;
+#else
+    if (n_local < 1 || !device_indices || !unique_id || world_size < n_local || rank_offset < 0
+            || rank_offset + n_local > world_size) {
+        set_error("smile_nccl_comm_create_ranks: invalid args");
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+        ncclUniqueId id;
+        memcpy(id.internal, unique_id, sizeof(id.internal));
+        auto *c = new ST_NcclComm_();
+        c->nRanks = n_local;
+        c->worldSize = world_size;
+        c->comms = new ncclComm_t[static_cast<size_t>(n_local)]();
+        // All local ranks join in one group; the call returns when every rank of the world (in every process)
+        // has joined, so each process must call it concurrently.
+        ncclResult_t rc = ncclGroupStart();
+        for (int i = 0; i < n_local && rc == ncclSuccess; i++) {
+            if (cudaSetDevice(device_indices[i]) != cudaSuccess) {
+                rc = ncclInvalidUsage;
+                break;
+            }
+            rc = ncclCommInitRank(&c->comms[i], world_size, id, rank_offset + i);
+        }
+        ncclResult_t end = ncclGroupEnd();
+        if (rc == ncclSuccess) {
+            rc = end;
+        }
+        if (rc != ncclSuccess) {
+            delete[] c->comms;
+            delete c;
+            set_error(std::string("ncclCommInitRank: ") + ncclGetErrorString(rc));
             return nullptr;
         }
         return c;
@@ -2065,7 +2134,7 @@ int smile_nccl_broadcast(ST_NcclComm comm, int rank, int root, ST_Tensor local) 
         set_error("smile_nccl_broadcast: null args");
         return -1;
     }
-    if (rank < 0 || rank >= comm->nRanks || root < 0 || root >= comm->nRanks) {
+    if (rank < 0 || rank >= comm->nRanks || root < 0 || root >= comm->worldSize) {
         set_error("smile_nccl_broadcast: rank/root out of range");
         return -1;
     }

@@ -44,6 +44,10 @@ public final class TensorParallelGroup implements AutoCloseable {
     private final Device[] devices;
     /** NCCL communicator handle, or null when using peer-copy fallback. */
     private final MemorySegment ncclComm;
+    /** Ranks of the whole communicator; larger than {@link ParallelConfig#tpSize()} when it spans processes. */
+    private final int worldSize;
+    /** World rank of this process's first local rank. */
+    private final int rankOffset;
     private final Tensor[] allReduceSlots;
     private final CyclicBarrier allReduceBarrier;
     private final AtomicReference<RuntimeException> allReduceError = new AtomicReference<>();
@@ -55,6 +59,8 @@ public final class TensorParallelGroup implements AutoCloseable {
      * @param config process-mesh configuration ({@code ppSize} must be 1 in phase 1).
      */
     public TensorParallelGroup(ParallelConfig config) {
+        this.worldSize = config.tpSize();
+        this.rankOffset = 0;
         this.config = config;
         this.mesh = new DeviceMesh(config);
         this.states = new ParallelState[config.tpSize()];
@@ -82,6 +88,52 @@ public final class TensorParallelGroup implements AutoCloseable {
             }
         }
         this.ncclComm = (comm.address() == 0) ? null : comm;
+    }
+
+    /**
+     * A group whose ranks span several processes (and nodes): this process owns the world ranks
+     * {@code rankOffset .. rankOffset + localConfig.tpSize() - 1}, one per device of {@code localConfig}, and joins the
+     * NCCL communicator identified by {@code uniqueId} (the same 128 bytes in every process, from
+     * {@link Native#ncclUniqueId()}). Construction returns once every rank of the world has joined, so all processes must
+     * construct their groups concurrently. {@link #allReduceSumInPlace} takes WORLD ranks.
+     *
+     * @param localConfig the devices of this process (one rank each).
+     * @param worldSize   ranks of the whole communicator.
+     * @param rankOffset  world rank of this process's first rank.
+     * @param uniqueId    the shared NCCL unique id.
+     */
+    public TensorParallelGroup(ParallelConfig localConfig, int worldSize, int rankOffset, byte[] uniqueId) {
+        if (worldSize < localConfig.tpSize() || rankOffset < 0 || rankOffset + localConfig.tpSize() > worldSize) {
+            throw new IllegalArgumentException("ranks " + rankOffset + ".." + (rankOffset + localConfig.tpSize() - 1)
+                    + " do not fit a world of " + worldSize);
+        }
+        this.worldSize = worldSize;
+        this.rankOffset = rankOffset;
+        this.config = localConfig;
+        this.mesh = new DeviceMesh(localConfig);
+        this.states = new ParallelState[localConfig.tpSize()];
+        this.devices = new Device[localConfig.tpSize()];
+        int[] idxs = new int[localConfig.tpSize()];
+        for (int r = 0; r < localConfig.tpSize(); r++) {
+            states[r] = new ParallelState(localConfig, r);
+            devices[r] = mesh.device(r);
+            idxs[r] = devices[r].index();
+        }
+        this.allReduceSlots = new Tensor[localConfig.tpSize()];
+        this.allReduceBarrier = new CyclicBarrier(localConfig.tpSize(), this::runAllReduce);
+        this.ncclComm = Native.ncclCommCreateRanks(idxs, worldSize, rankOffset, uniqueId);
+        logger.info("NCCL communicator joined: world ranks {}..{} of {} on devices {}",
+                rankOffset, rankOffset + idxs.length - 1, worldSize, java.util.Arrays.toString(idxs));
+    }
+
+    /** @return ranks of the whole communicator (equals {@link #tpSize()} unless it spans processes). */
+    public int worldSize() {
+        return worldSize;
+    }
+
+    /** @return world rank of this process's first local rank. */
+    public int rankOffset() {
+        return rankOffset;
     }
 
     /**
@@ -144,9 +196,10 @@ public final class TensorParallelGroup implements AutoCloseable {
      * @param local  local tensor to reduce in place.
      */
     public void allReduceSumInPlace(int tpRank, Tensor local) {
-        if (config.tpSize() <= 1) {
+        if (worldSize <= 1) {
             return;
         }
+        tpRank -= rankOffset;   // the collectives index this process's communicators locally
         boolean profile = smile.llm.engine.DecodeForwardProfile.enabled();
         long t0 = profile ? System.nanoTime() : 0L;
         if (ncclComm != null) {

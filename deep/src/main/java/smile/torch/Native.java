@@ -287,6 +287,17 @@ public final class Native {
         static final MethodHandle NCCL_COMM_FREE = LINKER.downcallHandle(
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_nccl_comm_free"),
                 FunctionDescriptor.ofVoid(ValueLayout.ADDRESS));
+        static final MethodHandle NCCL_UNIQUE_ID = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_nccl_unique_id")
+                .map(sym -> LINKER.downcallHandle(sym,
+                        FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle NCCL_COMM_CREATE_RANKS = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_nccl_comm_create_ranks")
+                .map(sym -> LINKER.downcallHandle(sym,
+                        FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS,
+                                ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)))
+                .orElse(null);
         static final MethodHandle NCCL_ALL_REDUCE_SUM = LINKER.downcallHandle(
                 smile_torch_h.SYMBOL_LOOKUP.findOrThrow("smile_nccl_all_reduce_sum"),
                 FunctionDescriptor.of(ValueLayout.JAVA_INT,
@@ -1484,6 +1495,68 @@ public final class Native {
             }
             if (comm == null || comm.address() == 0) {
                 return MemorySegment.NULL;
+            }
+            return comm;
+        }
+    }
+
+    /**
+     * A fresh NCCL unique id (128 bytes) for a communicator that spans processes.
+     *
+     * @return the id.
+     * @throws IllegalStateException when NCCL is unavailable.
+     */
+    public static byte[] ncclUniqueId() {
+        if (Bindings.NCCL_UNIQUE_ID == null) {
+            throw new IllegalStateException("libsmile_torch has no smile_nccl_unique_id (rebuild the native library)");
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment out = arena.allocate(128);
+            int rc;
+            try {
+                rc = (int) Bindings.NCCL_UNIQUE_ID.invokeExact(out);
+            } catch (Throwable t) {
+                throw new IllegalStateException("smile_nccl_unique_id unavailable: " + t, t);
+            }
+            if (rc != 0) {
+                throw new IllegalStateException("ncclGetUniqueId failed: " + lastError());
+            }
+            return out.toArray(ValueLayout.JAVA_BYTE);
+        }
+    }
+
+    /**
+     * Creates this process's ranks of a communicator spanning {@code worldSize} ranks: {@code deviceIndices.length}
+     * local ranks starting at world rank {@code rankOffset}. Every process must call this at the same time with the same
+     * {@code uniqueId}; it returns once all ranks have joined. The collectives take local rank indices.
+     *
+     * @return the communicator handle.
+     * @throws IllegalStateException when it cannot be created.
+     */
+    public static MemorySegment ncclCommCreateRanks(int[] deviceIndices, int worldSize, int rankOffset, byte[] uniqueId) {
+        if (deviceIndices == null || deviceIndices.length < 1 || uniqueId == null || uniqueId.length != 128) {
+            throw new IllegalArgumentException("devices and a 128-byte unique id are required");
+        }
+        if (Bindings.NCCL_COMM_CREATE_RANKS == null) {
+            throw new IllegalStateException(
+                    "libsmile_torch has no smile_nccl_comm_create_ranks (rebuild the native library)");
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment devices = arena.allocate(ValueLayout.JAVA_INT, deviceIndices.length);
+            for (int i = 0; i < deviceIndices.length; i++) {
+                devices.setAtIndex(ValueLayout.JAVA_INT, i, deviceIndices[i]);
+            }
+            MemorySegment id = arena.allocate(128);
+            MemorySegment.copy(uniqueId, 0, id, ValueLayout.JAVA_BYTE, 0, 128);
+            MemorySegment comm;
+            try {
+                comm = (MemorySegment) Bindings.NCCL_COMM_CREATE_RANKS.invokeExact(
+                        deviceIndices.length, devices, worldSize, rankOffset, id);
+            } catch (Throwable t) {
+                throw new IllegalStateException("smile_nccl_comm_create_ranks unavailable: " + t, t);
+            }
+            if (comm == null || comm.address() == 0) {
+                throw new IllegalStateException("NCCL communicator creation failed: " + lastError());
             }
             return comm;
         }

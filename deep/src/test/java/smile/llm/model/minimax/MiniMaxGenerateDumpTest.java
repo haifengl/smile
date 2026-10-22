@@ -29,7 +29,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * batch positions, per-rank threads) reproduces the single-rank tokens.
  *
  * <p>Environment: {@code MINIMAX_MODEL_DIR}, {@code MINIMAX_PROMPTS}, {@code MINIMAX_OUT},
- * {@code MINIMAX_DEVICES}, optional {@code MINIMAX_GEN} (tokens per prompt, default 24).
+ * {@code MINIMAX_DEVICES}, optional {@code MINIMAX_GEN} (tokens per prompt, default 24), {@code MINIMAX_MEM_FRACTION}
+ * (default 0.6), and {@code MINIMAX_CLUSTER_PORT} + {@code MINIMAX_CLUSTER_FOLLOWERS} to lead a multi-node model.
  *
  * @author Haifeng Li
  */
@@ -47,7 +48,13 @@ public class MiniMaxGenerateDumpTest {
 
         var prompts = new ObjectMapper().readTree(new File(promptsPath));
         StringBuilder out = new StringBuilder("[");
-        try (MiniMax m = MiniMax.build(dir, 4, 8192, devices, 0.6, 1)) {
+        // MINIMAX_CLUSTER_PORT / MINIMAX_CLUSTER_FOLLOWERS: run as the leader of a multi-node model (see MiniMaxFollower)
+        String clusterPort = System.getenv("MINIMAX_CLUSTER_PORT");
+        double memFraction = Double.parseDouble(System.getenv().getOrDefault("MINIMAX_MEM_FRACTION", "0.6"));
+        try (MiniMax m = clusterPort == null
+                ? MiniMax.build(dir, 4, 8192, devices, memFraction, 1)
+                : MiniMax.buildLeader(dir, 4, 8192, devices, memFraction, 1, null, Integer.parseInt(clusterPort),
+                        Integer.parseInt(System.getenv().getOrDefault("MINIMAX_CLUSTER_FOLLOWERS", "1")), 3_600_000L)) {
             boolean first = true;
             for (var p : prompts) {
                 int[] ids = new int[p.get("ids").size()];
