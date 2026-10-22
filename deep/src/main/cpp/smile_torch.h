@@ -1072,6 +1072,19 @@ SMILE_API ST_Tensor smile_gated_delta_verify_window(
         ST_Tensor *conv_ckpts, ST_Tensor *rec_ckpts, int n_ckpt);
 
 /**
+ * As smile_gated_delta_verify_window, with the gates folded into the recurrent kernel: takes the raw bf16 {@code a}/{@code b}
+ * projections {@code [B,S,Hv]} plus float {@code a_log_f}/{@code dt_bias_f} {@code [Hv]} instead of precomputed g/beta, and
+ * skips the host-side layout conversions. Requires bf16, head_k_dim 128, head_v_dim % 32 == 0; returns NULL (nothing
+ * modified) otherwise. Returns the core {@code [B,S,Hv,head_v_dim]}.
+ */
+SMILE_API ST_Tensor smile_gated_delta_verify_window_fused(
+        ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor conv_weight,
+        ST_Tensor a, ST_Tensor b, ST_Tensor a_log_f, ST_Tensor dt_bias_f, ST_Tensor rec_state,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim,
+        int qk_l2norm,
+        ST_Tensor *conv_ckpts, ST_Tensor *rec_ckpts, int n_ckpt);
+
+/**
  * Fused decay gate {@code g = -exp(A_log) * softplus(a + dt_bias)}.
  * Returns float {@code [B,S,H]} (or broadcast-compatible shape of {@code a}).
  */

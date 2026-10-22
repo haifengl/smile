@@ -229,10 +229,11 @@ __global__ void __launch_bounds__(128) gated_delta_recurrent_fast_kernel(
         if (a_raw != nullptr) {
             // Decode (S == 1) with the gates folded in: g = -exp(A_log) * softplus(a + dt_bias), beta = sigmoid(b).
             const int hh = static_cast<int>(bh % H);
-            const float x = __bfloat162float(a_raw[bh]) + dt_bias[hh];
+            const int64_t ab_idx = ((bh / H) * S + t) * H + hh;  // a, b are [B, S, H]
+            const float x = __bfloat162float(a_raw[ab_idx]) + dt_bias[hh];
             const float sp = x > 20.f ? x : log1pf(expf(x));
             g_t = expf(-expf(a_log[hh]) * sp);
-            beta_t = 1.f / (1.f + expf(-__bfloat162float(b_raw[bh])));
+            beta_t = 1.f / (1.f + expf(-__bfloat162float(b_raw[ab_idx])));
         } else {
             g_t = expf(g[bh * S + t]);
             beta_t = beta[bh * S + t];
@@ -288,7 +289,8 @@ __global__ void __launch_bounds__(128) gated_delta_recurrent_fast_kernel(
         if (warp == 0) {
             const float y = g_t * b + qk * delta;
             if (out_bf16 != nullptr) {
-                out_bf16[v_off + col] = __float2bfloat16(y);
+                // [B, S, H, V]: the layout the output projection consumes (for S == 1 this is v_off)
+                out_bf16[(((bh / H) * S + t) * H + (bh % H)) * V + col] = __float2bfloat16(y);
             } else {
                 out[v_off + col] = y;
             }
@@ -650,6 +652,39 @@ int smile_gated_delta_decode_fused_cuda(
             scale, /*qk_l2norm=*/1, GatedDeltaCkpt{},
             static_cast<const __nv_bfloat16 *>(a), static_cast<const __nv_bfloat16 *>(b), a_log, dt_bias,
             static_cast<__nv_bfloat16 *>(out));
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        g_gated_delta_error = cudaGetErrorString(err);
+        return -1;
+    }
+    return 0;
+}
+
+int smile_gated_delta_recurrent_gates_cuda(
+        const float *q, const float *k, const float *v,
+        const void *a, const void *b, const float *a_log, const float *dt_bias,
+        float *state, void *out_bf16,
+        int64_t B, int64_t H, int64_t S, int64_t K, int64_t V,
+        float scale, int qk_l2norm, void *cuda_stream, const GatedDeltaCkpt *ckpt_in) {
+    g_gated_delta_error.clear();
+    GatedDeltaCkpt ckpt{};
+    if (ckpt_in != nullptr) {
+        if (ckpt_in->n < 0 || ckpt_in->n > kGatedDeltaMaxCkpt) {
+            g_gated_delta_error = "gated_delta: too many checkpoint slots";
+            return -1;
+        }
+        ckpt = *ckpt_in;
+    }
+    if (K != kFastK || V % kFastCols != 0 || B < 1 || H < 1 || S < 1) {
+        g_gated_delta_error = "gated_delta_recurrent_gates: unsupported shape";
+        return -1;
+    }
+    cudaStream_t stream = cuda_stream ? static_cast<cudaStream_t>(cuda_stream) : static_cast<cudaStream_t>(0);
+    dim3 grid(static_cast<unsigned>(V / kFastCols), static_cast<unsigned>(B * H));
+    gated_delta_recurrent_fast_kernel<<<grid, 128, 0, stream>>>(
+            q, k, v, nullptr, nullptr, state, nullptr, H, S, V, scale, qk_l2norm, ckpt,
+            static_cast<const __nv_bfloat16 *>(a), static_cast<const __nv_bfloat16 *>(b), a_log, dt_bias,
+            static_cast<__nv_bfloat16 *>(out_bf16));
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         g_gated_delta_error = cudaGetErrorString(err);

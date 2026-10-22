@@ -92,4 +92,51 @@ public class GatedDeltaDecodeFusedTest {
             }
         }
     }
+
+    @Test
+    public void testGivenVerifyWindowWhenFusedThenMatchesUnfusedWindowWithCheckpoints() {
+        assumeTrue(smile.torch.smile_torch_h.smile_cuda_is_available() != 0, "CUDA not available");
+        assumeTrue(Native.hasGatedDeltaVerifyWindowFused() && Native.hasGatedDeltaVerifyWindow(),
+                "fused verify window not in libsmile_torch");
+        int batch = 2, seq = 4, hk = 16, hv = 48, dk = 128, dv = 128, kernel = 4;
+        int channels = 2 * hk * dk + hv * dv;
+        Device cuda = Device.CUDA();
+        ScalarType bf16 = ScalarType.BFloat16;
+        try (Tensor weightB = Tensor.randn(channels, kernel).mul(0.5).to(cuda, bf16);
+             Tensor aLog = Tensor.randn(hv).mul(0.3).to(cuda, ScalarType.Float);
+             Tensor dtBias = Tensor.randn(hv).to(cuda, ScalarType.Float);
+             Tensor convF = Tensor.randn(batch, channels, kernel - 1).to(cuda, bf16);
+             Tensor convR = convF.copy();
+             Tensor recF = Tensor.randn(batch, hv, dk, dv).mul(0.1).to(cuda, ScalarType.Float);
+             Tensor recR = recF.copy();
+             Tensor hidden = Tensor.randn(batch, seq, channels).to(cuda, bf16);
+             Tensor a = Tensor.randn(batch, seq, hv).to(cuda, bf16);
+             Tensor b = Tensor.randn(batch, seq, hv).to(cuda, bf16)) {
+            int n = seq - 1;
+            Tensor[] convCkF = new Tensor[n], recCkF = new Tensor[n], convCkR = new Tensor[n], recCkR = new Tensor[n];
+            for (int i = 0; i < n; i++) {
+                convCkF[i] = Tensor.zeros(batch, channels, kernel - 1).to(cuda, bf16);
+                convCkR[i] = Tensor.zeros(batch, channels, kernel - 1).to(cuda, bf16);
+                recCkF[i] = Tensor.zeros(batch, hv, dk, dv).to(cuda, ScalarType.Float);
+                recCkR[i] = Tensor.zeros(batch, hv, dk, dv).to(cuda, ScalarType.Float);
+            }
+            Tensor fused = Native.gatedDeltaVerifyWindowFused(hidden, convF, weightB, a, b, aLog, dtBias, recF,
+                    hk, hv, dk, dv, convCkF, recCkF);
+            assertNotNull(fused, "fused verify window declined a supported layout");
+            Tensor[] gates = GatedDeltaRule.computeBetaAndDecayGate(a, b, aLog, dtBias);
+            Tensor ref = Native.gatedDeltaVerifyWindow(hidden, convR, weightB, gates[0], gates[1], recR,
+                    hk, hv, dk, dv, true, convCkR, recCkR);
+            assertNotNull(ref);
+            assertEquals(java.util.Arrays.toString(ref.shape()), java.util.Arrays.toString(fused.shape()));
+            double core = maxAbsDiff(fused, ref);
+            assertTrue(core < 2e-2, "core max|diff|=" + core);
+            assertEquals(0.0, maxAbsDiff(convF, convR), 0.0, "conv state");
+            assertTrue(maxAbsDiff(recF, recR) < 1e-3, "recurrent state");
+            for (int i = 0; i < n; i++) {
+                assertEquals(0.0, maxAbsDiff(convCkF[i], convCkR[i]), 0.0, "conv checkpoint " + i);
+                double rc = maxAbsDiff(recCkF[i], recCkR[i]);
+                assertTrue(rc < 1e-3, "recurrent checkpoint " + i + " diff " + rc);
+            }
+        }
+    }
 }

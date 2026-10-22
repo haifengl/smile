@@ -320,6 +320,16 @@ public final class Native {
                         ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
                 .orElse(null);
+        static final MethodHandle GATED_DELTA_VERIFY_WINDOW_FUSED = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_gated_delta_verify_window_fused")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
         static final MethodHandle SOFTPLUS = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_torch_softplus")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -1613,6 +1623,46 @@ public final class Native {
                 return null;
             }
             return new Tensor(out);
+        }
+    }
+
+    /** Whether {@link #gatedDeltaVerifyWindowFused} is available. */
+    public static boolean hasGatedDeltaVerifyWindowFused() {
+        return Bindings.GATED_DELTA_VERIFY_WINDOW_FUSED != null;
+    }
+
+    /**
+     * {@link #gatedDeltaVerifyWindow} with the gates computed inside the recurrent kernel from the raw {@code a}/{@code b}
+     * projections {@code [B, S, Hv]} (bf16) and float {@code aLogF}/{@code dtBiasF}; {@code convWeight} should be a bf16
+     * {@code [C, K]} contiguous copy so no per-call conversion is needed.
+     *
+     * @return core {@code [B, S, Hv, Dv]}, or {@code null} when unsupported (nothing modified).
+     */
+    public static Tensor gatedDeltaVerifyWindowFused(
+            Tensor hidden, Tensor convState, Tensor convWeight, Tensor a, Tensor b, Tensor aLogF, Tensor dtBiasF,
+            Tensor recState, int numKHeads, int numVHeads, int headKDim, int headVDim,
+            Tensor[] convCkpts, Tensor[] recCkpts) {
+        if (Bindings.GATED_DELTA_VERIFY_WINDOW_FUSED == null) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            int n = recCkpts.length;
+            MemorySegment convArr = arena.allocate(ValueLayout.ADDRESS, n);
+            MemorySegment recArr = arena.allocate(ValueLayout.ADDRESS, n);
+            for (int i = 0; i < n; i++) {
+                convArr.setAtIndex(ValueLayout.ADDRESS, i, convCkpts[i].handle());
+                recArr.setAtIndex(ValueLayout.ADDRESS, i, recCkpts[i].handle());
+            }
+            MemorySegment out;
+            try {
+                out = (MemorySegment) Bindings.GATED_DELTA_VERIFY_WINDOW_FUSED.invokeExact(
+                        hidden.handle(), convState.handle(), convWeight.handle(), a.handle(), b.handle(),
+                        aLogF.handle(), dtBiasF.handle(), recState.handle(),
+                        numKHeads, numVHeads, headKDim, headVDim, 1, convArr, recArr, n);
+            } catch (Throwable t) {
+                return null;
+            }
+            return out == null || out.address() == 0 ? null : new Tensor(out);
         }
     }
 

@@ -224,6 +224,8 @@ public class GatedDeltaNet {
 
     /** Float copy of the depthwise conv taps for the fused decode kernel (built lazily, never refreshed after load). */
     private Tensor convWeightF;
+    /** bf16 copy of the conv taps for the verify-window kernel (it reads them in the activation dtype). */
+    private Tensor convWeightB;
 
     private Tensor abWeightA;
     private Tensor abWeightB;
@@ -348,7 +350,19 @@ public class GatedDeltaNet {
             // in two native launches. Returns null (nothing modified) when unsupported.
             Tensor fusedCore = null;
             Tensor[] fusedGates = null;
-            if (batchedVerify && convState != null && smile.torch.Native.hasGatedDeltaVerifyWindow()) {
+            if (batchedVerify && convState != null && !FUSED_DECODE_DISABLED
+                    && smile.torch.Native.hasGatedDeltaVerifyWindowFused()) {
+                ensureFloatCaches();
+                fusedCore = fusedVerifyWindowGates(mixedRaw, convState, a, b, batch, seqLen);
+                if (fusedCore != null) {
+                    a.close();
+                    b.close();
+                    mixed.close();
+                    mixedRaw.close();
+                }
+            }
+            if (fusedCore == null && batchedVerify && convState != null
+                    && smile.torch.Native.hasGatedDeltaVerifyWindow()) {
                 ensureFloatCaches();
                 fusedGates = GatedDeltaRule.computeBetaAndDecayGate(a, b, aLogF, dtBiasF);
                 fusedCore = fusedVerifyWindow(mixedRaw, convState, fusedGates, batch, seqLen);
@@ -556,6 +570,43 @@ public class GatedDeltaNet {
      *
      * @return core {@code [B, S, Hv, Dv]}, or {@code null} when unsupported (state untouched).
      */
+    /** Whole verify window in two launches with the gates folded in; {@code null} (nothing modified) when unsupported. */
+    private Tensor fusedVerifyWindowGates(Tensor mixedRaw, Tensor convState, Tensor a, Tensor b,
+                                          int batch, int seqLen) {
+        if (mixedRaw.dtype() != smile.deep.tensor.ScalarType.BFloat16 || a.dtype() != smile.deep.tensor.ScalarType.BFloat16
+                || convState.dtype() != smile.deep.tensor.ScalarType.BFloat16) {
+            return null;
+        }
+        Tensor recState = statePool.activeRecurrent(linearLayerId);
+        if (recState == null) {
+            return null;
+        }
+        int stored = 0;
+        while (stored < seqLen && statePool.speculativeRecurrentSlot(stored + 1, linearLayerId) != null) {
+            stored++;
+        }
+        if (stored < seqLen - 1) {
+            return null;
+        }
+        Tensor[] convCk = new Tensor[stored];
+        Tensor[] recCk = new Tensor[stored];
+        for (int t = 0; t < stored; t++) {
+            convCk[t] = statePool.speculativeConvSlot(t + 1, linearLayerId);
+            recCk[t] = statePool.speculativeRecurrentSlot(t + 1, linearLayerId);
+        }
+        if (convWeightB == null || !convWeightB.device().equals(conv1dWeight.device())) {
+            if (convWeightB != null) {
+                convWeightB.close();
+            }
+            convWeightB = conv1dWeight.contiguous().to(smile.deep.tensor.ScalarType.BFloat16).contiguous();
+            convWeightB.detachFromScopes();
+        }
+        recState.detachFromScopes();
+        return smile.torch.Native.gatedDeltaVerifyWindowFused(
+                mixedRaw, convState, convWeightB, a, b, aLogF, dtBiasF, recState,
+                numKHeads, numVHeads, headKDim, headVDim, convCk, recCk);
+    }
+
     private Tensor fusedVerifyWindow(Tensor mixedRaw, Tensor convState, Tensor[] gates,
                                      int batch, int seqLen) {
         // Layout/dtype validation lives in the native op (returns null, state untouched).
