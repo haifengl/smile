@@ -178,8 +178,15 @@ public class FeedForward {
         long t0 = profile ? System.nanoTime() : 0L;
         try (var w3x = w3.forward(x);
              var w1x = w1.forward(x)) {
-            Tensor siluOut = silu.forward(w1x);
-            Tensor out = w2.forward(siluOut.mul_(w3x));
+            Tensor fusedAct = smile.torch.Native.siluMul(w1x, w3x);
+            Tensor out;
+            if (fusedAct != null) {
+                out = w2.forward(fusedAct);
+                fusedAct.close();
+            } else {
+                Tensor siluOut = silu.forward(w1x);
+                out = w2.forward(siluOut.mul_(w3x));
+            }
             if (profile) {
                 smile.llm.engine.DecodeForwardProfile.addMlp(System.nanoTime() - t0);
             }
