@@ -27,7 +27,9 @@ import smile.torch.Native;
  * <p>Unlike {@code SMILE_FLASHINFER_DECODE_CUDA_GRAPH} (reverted — FlashInfer plan
  * flag only), this captures the full decode forward via {@code at::cuda::CUDAGraph}.
  *
- * <p>Enable with environment variable {@code SMILE_DECODE_CUDA_GRAPH=1}.
+ * <p>On by default when the native library has CUDA-graph support and the model uses FlashInfer attention; set the
+ * environment variable {@code SMILE_DECODE_CUDA_GRAPH=0} to disable. A capture failure disables graphs for the process
+ * (decode continues eagerly).
  *
  * <p><b>Phase 2d (multi-batch):</b> graphs are bucketed by
  * {@code (batch, numPages)} for uniform decode steps: batch must be a power of
@@ -39,7 +41,7 @@ import smile.torch.Native;
 public final class DecodeCudaGraph {
     private static final Logger logger = LoggerFactory.getLogger(DecodeCudaGraph.class);
 
-    private static final boolean ENABLED = "1".equals(System.getenv("SMILE_DECODE_CUDA_GRAPH"));
+    private static final boolean ENABLED = !"0".equals(System.getenv("SMILE_DECODE_CUDA_GRAPH"));
     private static final boolean AVAILABLE = Native.cudaGraphAvailable();
     private static final int MAX_BATCH = parseMaxBatch();
     /** When false, disables next-bucket prefetch ({@code SMILE_DECODE_CUDA_GRAPH_PRE_CAPTURE=1} to enable). */
@@ -68,7 +70,7 @@ public final class DecodeCudaGraph {
     /**
      * Returns whether decode CUDA graphs are enabled for this process.
      *
-     * @return {@code true} when env is set, native API is linked, and capture is not disabled.
+     * @return {@code true} unless {@code SMILE_DECODE_CUDA_GRAPH=0}, when the native API is linked and capture has not failed.
      */
     public static boolean enabled() {
         return ENABLED && AVAILABLE && !captureDisabled;
