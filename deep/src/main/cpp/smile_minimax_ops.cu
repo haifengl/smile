@@ -10,7 +10,9 @@
 #include <c10/cuda/CUDAGuard.h>
 #include <torch/torch.h>
 
+#include <algorithm>
 #include <cfloat>
+#include <cuda_bf16.h>
 #include <string>
 
 /* smile_torch.cpp */
@@ -161,6 +163,76 @@ __global__ void silu_mul_kernel(const T* __restrict__ gate, const T* __restrict_
     out[i] = static_cast<T>(g / (1.f + expf(-g)) * static_cast<float>(up[i]));
 }
 
+
+// ---------------------------------------------------------------- two small GEMVs, gate multiply, KV write
+
+/** oa = x . wa^T and ob = x . wb^T for a handful of rows (B <= MAXB), bf16 in/out, fp32 accumulation. One block per output column. */
+template <int MAXB>
+__global__ void gemv2_bf16_kernel(const __nv_bfloat16* __restrict__ x, const __nv_bfloat16* __restrict__ wa,
+                                  const __nv_bfloat16* __restrict__ wb, __nv_bfloat16* __restrict__ oa,
+                                  __nv_bfloat16* __restrict__ ob, int B, int N, int K) {
+    const int col = blockIdx.x;
+    const bool second = col >= N;
+    const int n = second ? col - N : col;
+    const __nv_bfloat16* w = (second ? wb : wa) + (int64_t) n * K;
+    float acc[MAXB];
+    #pragma unroll
+    for (int b = 0; b < MAXB; ++b) acc[b] = 0.f;
+    for (int k = threadIdx.x * 8; k < K; k += blockDim.x * 8) {
+        union { uint4 u; __nv_bfloat16 t[8]; } wv;
+        wv.u = *reinterpret_cast<const uint4*>(w + k);
+        #pragma unroll
+        for (int b = 0; b < MAXB; ++b) {
+            if (b < B) {
+                union { uint4 u; __nv_bfloat16 t[8]; } xv;
+                xv.u = *reinterpret_cast<const uint4*>(x + (int64_t) b * K + k);
+                #pragma unroll
+                for (int i = 0; i < 8; ++i) acc[b] += __bfloat162float(wv.t[i]) * __bfloat162float(xv.t[i]);
+            }
+        }
+    }
+    __shared__ float partial[MAXB][32];
+    const int warp = threadIdx.x >> 5;
+    #pragma unroll
+    for (int b = 0; b < MAXB; ++b) {
+        float v = warp_sum(acc[b]);
+        if ((threadIdx.x & 31) == 0) partial[b][warp] = v;
+    }
+    __syncthreads();
+    if (threadIdx.x < B) {
+        float v = 0.f;
+        for (int wi = 0; wi < (int) (blockDim.x >> 5); ++wi) v += partial[threadIdx.x][wi];
+        (second ? ob : oa)[(int64_t) threadIdx.x * N + n] = __float2bfloat16(v);
+    }
+}
+
+/** out = attn * sigmoid(gate), both rounded to T like the two eager ops; gate has a row (token) and head stride. */
+template <typename T>
+__global__ void sigmoid_gate_mul_kernel(const T* __restrict__ attn, const T* __restrict__ gate, T* __restrict__ out,
+                                        int64_t tokens, int heads, int d, int64_t g_row, int64_t g_hs) {
+    const int64_t n = tokens * heads * d;
+    for (int64_t i = (int64_t) blockIdx.x * blockDim.x + threadIdx.x; i < n; i += (int64_t) gridDim.x * blockDim.x) {
+        const int dd = (int) (i % d);
+        const int64_t th = i / d;
+        const int h = (int) (th % heads);
+        const int64_t t = th / heads;
+        const float g = static_cast<float>(gate[t * g_row + (int64_t) h * g_hs + dd]);
+        const float sg = round_to<T>(1.f / (1.f + expf(-g)));
+        out[i] = static_cast<T>(static_cast<float>(attn[i]) * sg);
+    }
+}
+
+/** Copies row t of k and v (row_vec 16-byte vectors) into slot slots[t] of the layer's K and V caches. */
+__global__ void kv_write_kernel(const uint4* __restrict__ k, const uint4* __restrict__ v, uint4* __restrict__ kc,
+                                uint4* __restrict__ vc, const int64_t* __restrict__ slots, int row_vec) {
+    const int64_t t = blockIdx.x;
+    const int64_t dst = slots[t] * (int64_t) row_vec;
+    for (int i = threadIdx.x + blockIdx.y * blockDim.x; i < row_vec; i += blockDim.x * gridDim.y) {
+        kc[dst + i] = k[t * row_vec + i];
+        vc[dst + i] = v[t * row_vec + i];
+    }
+}
+
 // ---------------------------------------------------------------- QK norm + RoPE
 
 template <typename T>
@@ -168,7 +240,7 @@ __global__ void qk_norm_rope_kernel(const T* __restrict__ q, const T* __restrict
                                     const T* __restrict__ qw, const T* __restrict__ kw,
                                     const void* __restrict__ cos, const void* __restrict__ sin, int cos_is_float,
                                     T* __restrict__ qo, T* __restrict__ ko, int64_t q_row, int64_t k_row,
-                                    int64_t tokens, int hq, int hk, int d, int rot, int cos_rows, float eps) {
+                                    int64_t q_hs, int64_t k_hs, int64_t tokens, int hq, int hk, int d, int rot, int cos_rows, float eps) {
     extern __shared__ float smem[];
     const int warp = threadIdx.x >> 5;
     const int lane = threadIdx.x & 31;
@@ -181,7 +253,7 @@ __global__ void qk_norm_rope_kernel(const T* __restrict__ q, const T* __restrict
     const int h = (int) (item % heads);
     const bool is_q = h < hq;
     const int64_t off = is_q ? (t * hq + h) * (int64_t) d : (t * hk + (h - hq)) * (int64_t) d;
-    const T* src = is_q ? q + t * q_row + (int64_t) h * d : k + t * k_row + (int64_t)(h - hq) * d;
+    const T* src = is_q ? q + t * q_row + (int64_t) h * q_hs : k + t * k_row + (int64_t)(h - hq) * k_hs;
     T* dst = (is_q ? qo : ko) + off;
     const T* w = is_q ? qw : kw;
 
@@ -734,6 +806,106 @@ extern "C" ST_Tensor smile_silu_mul(ST_Tensor gate, ST_Tensor up) {
     }
 }
 
+extern "C" ST_Tensor smile_gemv2(ST_Tensor x, ST_Tensor wa, ST_Tensor wb, ST_Tensor *out_b) {
+    try {
+        smile_torch_clear_error();
+        *out_b = nullptr;
+        at::Tensor xt = require_cuda(x, "smile_gemv2: x").contiguous();
+        at::Tensor a = require_cuda(wa, "smile_gemv2: wa");
+        at::Tensor b = require_cuda(wb, "smile_gemv2: wb");
+        if (xt.scalar_type() != at::kBFloat16 || a.scalar_type() != at::kBFloat16 || b.scalar_type() != at::kBFloat16
+                || !a.is_contiguous() || !b.is_contiguous() || a.dim() != 2 || a.sizes() != b.sizes()) {
+            throw std::runtime_error("smile_gemv2: bf16 contiguous [N,K] weights of one shape required");
+        }
+        const int64_t K = a.size(1), N = a.size(0);
+        const int64_t rows = xt.numel() / K;
+        if (xt.size(-1) != K || rows < 1 || rows > 8 || K % 8 != 0
+                || ((uintptr_t) xt.data_ptr() % 16) || ((uintptr_t) a.data_ptr() % 16) || ((uintptr_t) b.data_ptr() % 16)) {
+            throw std::runtime_error("smile_gemv2: unsupported shape/alignment");
+        }
+        c10::cuda::CUDAGuard guard(xt.get_device());
+        at::Tensor oa = at::empty({rows, N}, xt.options());
+        at::Tensor ob = at::empty({rows, N}, xt.options());
+        gemv2_bf16_kernel<8><<<(unsigned) (2 * N), 128, 0, stream_of(xt)>>>(
+                (const __nv_bfloat16*) xt.data_ptr(), (const __nv_bfloat16*) a.data_ptr(),
+                (const __nv_bfloat16*) b.data_ptr(), (__nv_bfloat16*) oa.data_ptr(), (__nv_bfloat16*) ob.data_ptr(),
+                (int) rows, (int) N, (int) K);
+        check_launch("smile_gemv2");
+        *out_b = new ST_Tensor_{ ob };
+        return new ST_Tensor_{ oa };
+    } catch (const std::exception& e) {
+        set_err(e.what());
+        return nullptr;
+    }
+}
+
+extern "C" ST_Tensor smile_sigmoid_gate_mul(ST_Tensor attn, ST_Tensor gate) {
+    try {
+        smile_torch_clear_error();
+        at::Tensor at_ = require_cuda(attn, "smile_sigmoid_gate_mul: attn").contiguous();
+        at::Tensor g = require_cuda(gate, "smile_sigmoid_gate_mul: gate");
+        if (g.dim() != 4 || g.stride(3) != 1 || g.stride(0) != g.size(1) * g.stride(1) || g.scalar_type() != at_.scalar_type()
+                || at_.numel() != g.numel()) {
+            throw std::runtime_error("smile_sigmoid_gate_mul: gate must be [B,S,H,D] with unit D stride matching attn");
+        }
+        c10::cuda::CUDAGuard guard(at_.get_device());
+        at::Tensor out = at::empty_like(at_);
+        const int64_t tokens = g.size(0) * g.size(1);
+        const int64_t n = at_.numel();
+        if (n > 0) {
+            DISPATCH_FLOAT(at_.scalar_type(), "smile_sigmoid_gate_mul", [&] {
+                sigmoid_gate_mul_kernel<T><<<(unsigned) std::min<int64_t>((n + 255) / 256, 4096), 256, 0, stream_of(at_)>>>(
+                        at_.data_ptr<T>(), g.data_ptr<T>(), out.data_ptr<T>(), tokens, (int) g.size(2), (int) g.size(3),
+                        g.stride(1), g.stride(2));
+                return 0;
+            });
+            check_launch("smile_sigmoid_gate_mul");
+        }
+        return new ST_Tensor_{ out };
+    } catch (const std::exception& e) {
+        set_err(e.what());
+        return nullptr;
+    }
+}
+
+/** Returns 0 when written, -1 (error set) when the layout is unsupported; nothing is written then. */
+extern "C" int smile_kv_write(ST_Tensor k_layer, ST_Tensor v_layer, ST_Tensor k, ST_Tensor v, ST_Tensor slots) {
+    try {
+        smile_torch_clear_error();
+        const at::Tensor& kc = require_cuda(k_layer, "smile_kv_write: k_layer");
+        const at::Tensor& vc = require_cuda(v_layer, "smile_kv_write: v_layer");
+        const at::Tensor& kt = require_cuda(k, "smile_kv_write: k");
+        const at::Tensor& vt = require_cuda(v, "smile_kv_write: v");
+        const at::Tensor& sl = require_cuda(slots, "smile_kv_write: slots");
+        if (!kc.is_contiguous() || !vc.is_contiguous() || !kt.is_contiguous() || !vt.is_contiguous()
+                || kc.scalar_type() != kt.scalar_type() || vc.scalar_type() != vt.scalar_type()
+                || kt.scalar_type() != vt.scalar_type() || sl.scalar_type() != at::kLong || !sl.is_contiguous()
+                || kt.numel() != vt.numel() || kt.numel() % std::max<int64_t>(sl.numel(), 1) != 0) {
+            throw std::runtime_error("smile_kv_write: unsupported dtype/layout");
+        }
+        const int64_t tokens = sl.numel();
+        if (tokens == 0) return 0;
+        const int64_t row_elems = kt.numel() / tokens;
+        const int64_t row_bytes = row_elems * kt.element_size();
+        if (row_bytes % 16 != 0 || kc.numel() % row_elems != 0 || vc.numel() % row_elems != 0
+                || ((uintptr_t) kt.data_ptr() % 16) || ((uintptr_t) vt.data_ptr() % 16)
+                || ((uintptr_t) kc.data_ptr() % 16) || ((uintptr_t) vc.data_ptr() % 16)) {
+            throw std::runtime_error("smile_kv_write: unsupported row size/alignment");
+        }
+        c10::cuda::CUDAGuard guard(kt.get_device());
+        const int row_vec = (int) (row_bytes / 16);
+        dim3 grid((unsigned) tokens, (unsigned) std::min(4, (row_vec + 255) / 256));
+        kv_write_kernel<<<grid, 256, 0, stream_of(kt)>>>(
+                (const uint4*) kt.data_ptr(), (const uint4*) vt.data_ptr(), (uint4*) kc.data_ptr(),
+                (uint4*) vc.data_ptr(), sl.data_ptr<int64_t>(), row_vec);
+        check_launch("smile_kv_write");
+        return 0;
+    } catch (const std::exception& e) {
+        set_err(e.what());
+        return -1;
+    }
+}
+
 extern "C" ST_Tensor smile_qk_norm_rope(ST_Tensor q, ST_Tensor k, ST_Tensor qw, ST_Tensor kw,
                                         ST_Tensor cos, ST_Tensor sin, int rotary_dim, double eps,
                                         ST_Tensor *out_k) {
@@ -743,8 +915,9 @@ extern "C" ST_Tensor smile_qk_norm_rope(ST_Tensor q, ST_Tensor k, ST_Tensor qw, 
         at::Tensor qt = require_cuda(q, "smile_qk_norm_rope: q");
         at::Tensor kt = require_cuda(k, "smile_qk_norm_rope: k");
         // Slices of a fused projection are fine: heads must be contiguous and tokens uniformly strided.
+        // Heads may be strided (Qwen interleaves a gate after every query head); only D must be unit stride.
         auto token_strided = [](const at::Tensor& t) {
-            return t.dim() == 4 && t.stride(3) == 1 && t.stride(2) == t.size(3)
+            return t.dim() == 4 && t.stride(3) == 1 && t.stride(2) >= t.size(3)
                    && t.stride(0) == t.size(1) * t.stride(1);
         };
         if (!token_strided(qt)) qt = qt.contiguous();
@@ -785,7 +958,7 @@ extern "C" ST_Tensor smile_qk_norm_rope(ST_Tensor q, ST_Tensor k, ST_Tensor qw, 
             qk_norm_rope_kernel<T><<<blocks, warps * 32, smem, stream_of(qt)>>>(
                     qt.data_ptr<T>(), kt.data_ptr<T>(), qwt.data_ptr<T>(), kwt.data_ptr<T>(),
                     ct.data_ptr(), st.data_ptr(), ct.scalar_type() == at::kFloat ? 1 : 0,
-                    qo.data_ptr<T>(), ko.data_ptr<T>(), qt.stride(1), kt.stride(1), tokens, hq, hk, (int) d, rotary_dim,
+                    qo.data_ptr<T>(), ko.data_ptr<T>(), qt.stride(1), kt.stride(1), qt.stride(2), kt.stride(2), tokens, hq, hk, (int) d, rotary_dim,
                     (int) ct.size(0), (float) eps);
             return 0;
         });

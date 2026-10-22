@@ -1616,6 +1616,10 @@ ST_Tensor smile_linear_forward(ST_Linear l, ST_Tensor input) {
     if (!l || !input) return nullptr;
     MAKE_TENSOR(l->mod->forward(input->t));
 }
+ST_Tensor smile_linear_weight(ST_Linear l) {
+    if (!l) return nullptr;
+    return new ST_Tensor_{ l->mod->weight };
+}
 ST_Module smile_linear_as_module(ST_Linear l) {
     if (!l) return nullptr;
     BORROW_MODULE(l, mod);

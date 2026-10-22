@@ -181,6 +181,26 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE,
                         ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final MethodHandle LINEAR_WEIGHT = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_linear_weight")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle GEMV2 = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_gemv2")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle SIGMOID_GATE_MUL = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_sigmoid_gate_mul")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle KV_WRITE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_kv_write")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
         static final MethodHandle SILU_MUL = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_silu_mul")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -1043,6 +1063,79 @@ public final class Native {
                 return null;
             }
             return new Tensor[]{new Tensor(y), new Tensor(sum)};
+        }
+    }
+
+    /**
+     * The weight {@code [out, in]} of a {@code smile_linear} layer as an alias of the module parameter, or {@code null}.
+     *
+     * @param linear the {@code ST_Linear} handle.
+     */
+    public static Tensor linearWeight(MemorySegment linear) {
+        if (Bindings.LINEAR_WEIGHT == null) {
+            return null;
+        }
+        try {
+            MemorySegment w = (MemorySegment) Bindings.LINEAR_WEIGHT.invokeExact(linear);
+            return w == null || w.address() == 0 ? null : new Tensor(w);
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    /**
+     * Two small bf16 projections {@code x . wa^T} and {@code x . wb^T} in one launch (at most 8 rows).
+     *
+     * @return {@code {a, b}} each {@code [rows, N]}, or {@code null} when unsupported (nothing allocated).
+     */
+    public static Tensor[] gemv2(Tensor x, Tensor wa, Tensor wb) {
+        if (!FUSED_OPS_ENABLED || Bindings.GEMV2 == null || !x.device().isCUDA()) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment bPtr = arena.allocate(ValueLayout.ADDRESS);
+            MemorySegment a;
+            try {
+                a = (MemorySegment) Bindings.GEMV2.invokeExact(x.handle(), wa.handle(), wb.handle(), bPtr);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (a == null || a.address() == 0) {
+                return null;
+            }
+            MemorySegment b = bPtr.get(ValueLayout.ADDRESS, 0);
+            if (b == null || b.address() == 0) {
+                new Tensor(a).close();
+                return null;
+            }
+            return new Tensor[]{new Tensor(a), new Tensor(b)};
+        }
+    }
+
+    /** {@code attn * sigmoid(gate)} where {@code gate} is a strided {@code [B,S,H,D]} view; {@code null} when unsupported. */
+    public static Tensor sigmoidGateMul(Tensor attn, Tensor gate) {
+        if (!FUSED_OPS_ENABLED || Bindings.SIGMOID_GATE_MUL == null || !attn.device().isCUDA()
+                || !gate.device().isCUDA() || attn.dtype() != gate.dtype()) {
+            return null;
+        }
+        return fusedResult(Bindings.SIGMOID_GATE_MUL, attn.handle(), gate.handle());
+    }
+
+    /**
+     * Writes new K/V rows into one layer's caches at {@code slots} (int64) in one launch.
+     *
+     * @return {@code true} when written; {@code false} (nothing written) when the layout is unsupported.
+     */
+    public static boolean kvWrite(Tensor kLayer, Tensor vLayer, Tensor k, Tensor v, Tensor slots) {
+        if (!FUSED_OPS_ENABLED || Bindings.KV_WRITE == null || !k.device().isCUDA()) {
+            return false;
+        }
+        try {
+            int rc = (int) Bindings.KV_WRITE.invokeExact(
+                    kLayer.handle(), vLayer.handle(), k.handle(), v.handle(), slots.handle());
+            return rc == 0;
+        } catch (Throwable t) {
+            return false;
         }
     }
 

@@ -81,4 +81,14 @@ public class LinearLayer extends ModuleLayer implements smile.llm.quant.LinearOp
     public Tensor forward(Tensor input) {
         return new Tensor(smile_linear_forward(handle, input.handle()));
     }
+
+    /**
+     * The weight {@code [out, in]} as an alias of the module parameter (shares storage; do not close it before
+     * the layer is done with).
+     *
+     * @return the weight, or {@code null} when the native binding is unavailable.
+     */
+    public Tensor weight() {
+        return smile.torch.Native.linearWeight(handle);
+    }
 }
