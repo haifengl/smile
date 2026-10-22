@@ -143,6 +143,25 @@ object read {
     Read.data(path, format)
   }
 
+  /**
+    * Reads a data file. Infers the data format by the file name extension.
+    * @param path the input file path.
+    * @param format the optional file format specification.
+    * @return the data frame.
+    */
+  def data(path: Path, format: String): DataFrame = {
+    Read.data(path, format)
+  }
+
+  /**
+    * Reads a data file. Infers the data format by the file name extension.
+    * @param path the input file path.
+    * @return the data frame.
+    */
+  def data(path: Path): DataFrame = {
+    Read.data(path)
+  }
+
   /** Reads a JDBC query result to a data frame. */
   def jdbc(rs: ResultSet): DataFrame = {
     DataFrame.of(rs)
@@ -207,6 +226,12 @@ object read {
 
   /** Reads an Apache Arrow file. */
   def arrow(file: Path): DataFrame = Read.arrow(file)
+
+  /** Reads an Apache Avro file using its embedded writer schema. */
+  def avro(file: String): DataFrame = Read.avro(file)
+
+  /** Reads an Apache Avro file using its embedded writer schema. */
+  def avro(file: Path): DataFrame = Read.avro(file)
 
   /** Reads an Apache Avro file. */
   def avro(file: String, schema: InputStream): DataFrame = Read.avro(file, schema)

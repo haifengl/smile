@@ -68,6 +68,62 @@ public class ReadTest {
     }
 
     @Test
+    public void testReadDataAvroEmbeddedSchema() throws Exception {
+        System.out.println("avro embedded schema");
+        DataFrame df = Read.data(Paths.getTestData("kylo/userdata1.avro"));
+        assertEquals(1000, df.nrow());
+        assertEquals(13, df.ncol());
+    }
+
+    @Test
+    public void testReadDataTsv() throws Exception {
+        System.out.println("tsv");
+        var temp = java.nio.file.Files.createTempFile("smile-test-", ".tsv");
+        try {
+            java.nio.file.Files.writeString(temp, "name\tage\nAlice\t30\nBob\t25\n");
+            DataFrame df = Read.data(temp);
+            assertEquals(2, df.nrow());
+            assertEquals(2, df.ncol());
+            assertEquals("Alice", df.getString(0, 0));
+            assertEquals(30, df.getInt(0, 1));
+        } finally {
+            java.nio.file.Files.deleteIfExists(temp);
+        }
+    }
+
+    @Test
+    public void testReadDataJsonl() throws Exception {
+        System.out.println("jsonl");
+        var temp = java.nio.file.Files.createTempFile("smile-test-", ".jsonl");
+        try {
+            java.nio.file.Files.copy(
+                    Paths.getTestData("kylo/books.json"),
+                    temp,
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            DataFrame df = Read.data(temp);
+            assertEquals(7, df.nrow());
+            assertEquals(10, df.ncol());
+        } finally {
+            java.nio.file.Files.deleteIfExists(temp);
+        }
+    }
+
+    @Test
+    public void testReadDataArrow() throws Exception {
+        System.out.println("arrow");
+        DataFrame weather = Read.arff(Paths.getTestData("weka/weather.nominal.arff"));
+        var temp = java.nio.file.Files.createTempFile("smile-test-", ".arrow");
+        try {
+            Write.arrow(weather, temp);
+            DataFrame df = Read.data(temp);
+            assertEquals(weather.nrow(), df.nrow());
+            assertEquals(weather.ncol(), df.ncol());
+        } finally {
+            java.nio.file.Files.deleteIfExists(temp);
+        }
+    }
+
+    @Test
     public void testReadDataJson() throws Exception {
         System.out.println("json");
         DataFrame df = Read.data(Paths.getTestData("kylo/books.json").toString());

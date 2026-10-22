@@ -65,6 +65,16 @@ public class AvroTest {
     }
 
     @Test
+    public void testEmbeddedSchema() throws Exception {
+        System.out.println("embedded schema");
+        DataFrame embedded = Read.avro(Paths.getTestData("kylo/userdata1.avro"));
+        assertEquals(df.size(), embedded.size());
+        assertEquals(df.schema(), embedded.schema());
+        assertEquals("Amanda", embedded.getString(0, 2));
+        assertEquals(49756.53, embedded.getDouble(0, 10), 1E-10);
+    }
+
+    @Test
     public void testShape() {
         System.out.println("shape");
         assertEquals(13, df.shape(1));

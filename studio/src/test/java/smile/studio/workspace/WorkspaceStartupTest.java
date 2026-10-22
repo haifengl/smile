@@ -145,4 +145,32 @@ public class WorkspaceStartupTest {
                         "desktop-operator"),
                 Workspace.TAB_ORDER);
     }
+
+    @Test
+    public void testIsDataFile() {
+        // Supported tabular data file extensions
+        assertTrue(Workspace.isDataFile(Path.of("iris.csv")));
+        assertTrue(Workspace.isDataFile(Path.of("data/train.CSV")));
+        assertTrue(Workspace.isDataFile(Path.of("table.tsv")));
+        assertTrue(Workspace.isDataFile(Path.of("weather.arff")));
+        assertTrue(Workspace.isDataFile(Path.of("userdata.parquet")));
+        assertTrue(Workspace.isDataFile(Path.of("records.arrow")));
+        assertTrue(Workspace.isDataFile(Path.of("records.feather")));
+        assertTrue(Workspace.isDataFile(Path.of("userdata.avro")));
+        assertTrue(Workspace.isDataFile(Path.of("airline.sas7bdat")));
+        assertTrue(Workspace.isDataFile(Path.of("airline.sas")));
+        assertTrue(Workspace.isDataFile(Path.of("events.jsonl")));
+
+        // Plain .json files may be plain JSON objects (e.g., studio.json, mcp.json)
+        // and must NOT be treated as tabular data files
+        assertFalse(Workspace.isDataFile(Path.of("conf/studio.json")));
+        assertFalse(Workspace.isDataFile(Path.of("conf/mcp.json")));
+        assertFalse(Workspace.isDataFile(Path.of("package.json")));
+
+        // Notebooks and plain text files
+        assertFalse(Workspace.isDataFile(Path.of("notebook.ipynb")));
+        assertFalse(Workspace.isDataFile(Path.of("script.jsh")));
+        assertFalse(Workspace.isDataFile(Path.of("README.md")));
+        assertFalse(Workspace.isDataFile(Path.of("notes.txt")));
+    }
 }

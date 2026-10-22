@@ -33,12 +33,14 @@ import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.Agent;
 import ioa.agent.Coder;
 import smile.io.Paths;
+import smile.io.Read;
 import smile.shell.JShell;
 import smile.studio.SmileStudio;
 import smile.studio.cli.AgentCLI;
 import smile.studio.notebook.Notebook;
 import smile.studio.text.Notepad;
 import smile.swing.FileExplorer;
+import smile.swing.SmileUtilities;
 import smile.swing.tree.DirectoryTreeNode;
 
 /**
@@ -58,6 +60,12 @@ public class Workspace extends JSplitPane {
             "kts", // Kotlin scripts
             "py", "ipynb"  // Python source files and Jupyter notebooks
     };
+    /**
+     * Tabular data file name extensions.
+     */
+    static final Set<String> DATA_FILE_EXTENSIONS = Set.of(
+            "csv", "tsv", "arff", "parquet", "arrow", "feather", "avro", "sas", "sas7bdat", "jsonl"
+    );
     /**
      * Workspace FileChooser that points to its own recent directory.
      */
@@ -638,9 +646,21 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Opens a file as a tab. Notebooks are opened as notebooks; other
-     * non-binary files are opened in a plain text editor; binary files are
-     * handed over to the desktop.
+     * Returns true if the file has a tabular data file extension that should
+     * be opened in a table view.
+     *
+     * @param path the file path.
+     * @return true if the file is a supported tabular data file.
+     */
+    public static boolean isDataFile(Path path) {
+        return DATA_FILE_EXTENSIONS.contains(Paths.getFileExtension(path));
+    }
+
+    /**
+     * Opens a file as a tab or data table. Notebooks are opened as notebooks;
+     * tabular data files are opened in a table view backed by a DataFrame;
+     * other non-binary files are opened in a plain text editor; binary files
+     * are handed over to the desktop.
      *
      * @param path the file path.
      */
@@ -665,8 +685,13 @@ public class Workspace extends JSplitPane {
 
         OpenFile openFile;
         try {
-            if (Arrays.asList(SMILE_FILE_EXTENSIONS).contains(Paths.getFileExtension(path))) {
+            String ext = Paths.getFileExtension(path);
+            if (Arrays.asList(SMILE_FILE_EXTENSIONS).contains(ext)) {
                 openFile = new Notebook(path, coders, kernelExplorer::refresh);
+            } else if (isDataFile(path)) {
+                var df = Read.data(path);
+                SmileUtilities.show(df, filename + " [" + df.nrow() + " × " + df.ncol() + "]");
+                return;
             } else if (!Paths.isBinary(path)) {
                 openFile = new Notepad(path);
             } else {
