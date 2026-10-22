@@ -98,6 +98,27 @@ public interface Read {
      * @throws Exception when fails to read the file.
      * @return the data frame.
      */
+    static DataFrame data(Path path) throws Exception {
+        return data(path.toString(), null);
+    }
+
+    /**
+     * Reads a data file. Infers the data format by the file name extension.
+     * @param path the input file path.
+     * @param format the optional file format specification.
+     * @throws Exception when fails to read the file.
+     * @return the data frame.
+     */
+    static DataFrame data(Path path, String format) throws Exception {
+        return data(path.toString(), format);
+    }
+
+    /**
+     * Reads a data file. Infers the data format by the file name extension.
+     * @param path the input file path.
+     * @throws Exception when fails to read the file.
+     * @return the data frame.
+     */
     static DataFrame data(String path) throws Exception {
         return data(path, null);
     }
@@ -109,7 +130,7 @@ public interface Read {
      *               it is such as <code>delimiter=\t,header=true,comment=#,escape=\,quote="</code>.
      *               For JSON files, it is the file mode (single-line or
      *               multi-line). For Avro files, it is the path to the schema
-     *               file.
+     *               file (or null to use the schema embedded in the container file).
      * @throws Exception when fails to read the file.
      * @return the data frame.
      */
@@ -124,17 +145,21 @@ public interface Read {
         if (query >= 0) basename = basename.substring(0, query);
 
         int dotIndex = basename.lastIndexOf('.');
-        String ext = dotIndex < 0 ? "csv" : basename.substring(dotIndex + 1);
+        String ext = dotIndex < 0 ? "csv" : basename.substring(dotIndex + 1).toLowerCase(Locale.ROOT);
         switch (ext) {
             case "dat":
             case "txt":
             case "csv": return csv(path, format);
+            case "tsv": return csv(path, Strings.isNullOrBlank(format) ? "delimiter=\\t,header=true" : format);
             case "arff": return arff(path);
-            case "json": return json(path, JSON.Mode.parse(format), null);
+            case "json":
+            case "jsonl": return json(path, JSON.Mode.parse(format), null);
+            case "sas":
             case "sas7bdat": return sas(path);
-            case "avro": return avro(path, format);
+            case "avro": return Strings.isNullOrBlank(format) ? avro(path) : avro(path, format);
             // Parquet.read() will convert Path to a proper URI string
             case "parquet": return parquet(Path.of(path));
+            case "arrow":
             case "feather": return arrow(path);
             default:
                 if (format != null) {
@@ -458,6 +483,31 @@ public interface Read {
     static DataFrame arrow(Path path) throws IOException {
         Arrow arrow = new Arrow();
         return arrow.read(path);
+    }
+
+    /**
+     * Reads an Apache Avro file using its embedded writer schema.
+     *
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame avro(String path) throws IOException, URISyntaxException {
+        Avro avro = new Avro();
+        return avro.read(path);
+    }
+
+    /**
+     * Reads an Apache Avro file using its embedded writer schema.
+     *
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
+     */
+    static DataFrame avro(Path path) throws IOException {
+        Avro avro = new Avro();
+        return avro.read(path);
     }
 
     /**
