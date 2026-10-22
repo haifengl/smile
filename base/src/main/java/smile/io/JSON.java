@@ -135,7 +135,7 @@ public class JSON {
             schema = inferSchema(Files.newBufferedReader(path, charset), Math.min(1000, limit));
         }
 
-        return read(Files.newBufferedReader(path, charset), Integer.MAX_VALUE);
+        return read(Files.newBufferedReader(path, charset), limit);
     }
 
     /**
@@ -163,7 +163,7 @@ public class JSON {
             schema = inferSchema(Input.reader(path, charset), Math.min(1000, limit));
         }
 
-        return read(Input.reader(path, charset), Integer.MAX_VALUE);
+        return read(Input.reader(path, charset), limit);
     }
 
     /**
