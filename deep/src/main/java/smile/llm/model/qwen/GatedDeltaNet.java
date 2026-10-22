@@ -41,6 +41,9 @@ import static smile.torch.smile_torch_h.smile_module_register_parameter;
  * @author Haifeng Li
  */
 public class GatedDeltaNet {
+    /** {@code SMILE_GATED_DELTA_UNFUSED=1} keeps the multi-kernel decode path (debugging, A/B). */
+    private static final boolean FUSED_DECODE_DISABLED = System.getenv("SMILE_GATED_DELTA_UNFUSED") != null;
+
     final MemorySegment module;
     final int hiddenSize;
     final int numKHeads;
@@ -219,6 +222,9 @@ public class GatedDeltaNet {
         this.statePool = pool;
     }
 
+    /** Float copy of the depthwise conv taps for the fused decode kernel (built lazily, never refreshed after load). */
+    private Tensor convWeightF;
+
     /** Lazily materializes float A_log / dt_bias caches on the parameter device. */
     private void ensureFloatCaches() {
         if (aLogF == null || dtBiasF == null
@@ -234,6 +240,13 @@ public class GatedDeltaNet {
             dtBiasF = dtBias.to(ScalarType.Float);
             aLogF.detachFromScopes();
             dtBiasF.detachFromScopes();
+        }
+        if (convWeightF == null || !convWeightF.device().equals(conv1dWeight.device())) {
+            if (convWeightF != null) {
+                convWeightF.close();
+            }
+            convWeightF = conv1dWeight.contiguous().to(ScalarType.Float).contiguous();
+            convWeightF.detachFromScopes();
         }
     }
 
@@ -308,6 +321,23 @@ public class GatedDeltaNet {
             if (batchedVerify && fusedCore == null) {
                 saveWindowConvCheckpoints(mixed, convState, batch, seqLen);
             }
+            if (decodeS1 && !verifyLoop && !batchedVerify && convState != null && statePool != null
+                    && !FUSED_DECODE_DISABLED && smile.torch.Native.hasGatedDeltaDecodeFused()) {
+                ensureFloatCaches();
+                try (Tensor flat = mixedRaw.reshape(batch, channels);
+                     Tensor aFlat = a.reshape(batch, numVHeads);
+                     Tensor bFlat = b.reshape(batch, numVHeads)) {
+                    fusedCore = smile.torch.Native.gatedDeltaDecodeFused(
+                            flat, convState, convWeightF, aFlat, bFlat, aLogF, dtBiasF,
+                            statePool.activeRecurrent(linearLayerId), numKHeads, numVHeads, headKDim, headVDim);
+                }
+                if (fusedCore != null) {
+                    a.close();
+                    b.close();
+                    mixed.close();
+                    mixedRaw.close();
+                }
+            }
             Tensor query = null;
             Tensor key = null;
             Tensor value = null;
@@ -317,7 +347,7 @@ public class GatedDeltaNet {
             Tensor mixedConv = null;
             Tensor mixedConvBase = null;
 
-            if (!verifyLoop && decodeS1 && convState != null) {
+            if (!verifyLoop && fusedCore == null && decodeS1 && convState != null) {
                 Tensor[] qkv = GatedDeltaRule.causalConv1dUpdateSplitQkv(
                         mixed, convState, conv1dWeight,
                         numKHeads, numVHeads, headKDim, headVDim);

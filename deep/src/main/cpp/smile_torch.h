@@ -1135,6 +1135,18 @@ SMILE_API ST_Tensor smile_causal_conv1d_update_split_qkv(
         ST_Tensor *out_k, ST_Tensor *out_v);
 
 /**
+ * Whole Gated DeltaNet decode core for {@code S==1} in two launches (conv update + QKV split, then the recurrent rule
+ * with the gates folded in). {@code hidden} bf16 {@code [B,C(,1)]} (the QKV projection), {@code conv_state} bf16
+ * {@code [B,C,K-1]} (updated in place), {@code conv_weight_f} float {@code [C,K]}, {@code a}/{@code b} bf16 {@code [B,Hv]},
+ * {@code a_log_f}/{@code dt_bias_f} float {@code [Hv]}, {@code rec_state} float {@code [B,Hv,128,Dv]} (updated in place).
+ * Returns the bf16 core {@code [B*Hv, head_v_dim]}, or NULL when the layout/dtype/shape is unsupported (nothing modified).
+ */
+SMILE_API ST_Tensor smile_gated_delta_decode_fused(
+        ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor conv_weight_f,
+        ST_Tensor a, ST_Tensor b, ST_Tensor a_log_f, ST_Tensor dt_bias_f, ST_Tensor rec_state,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim);
+
+/**
  * HF {@code apply_rotary_pos_emb} / {@code rotate_half} on query and key.
  * {@code xq}/{@code xk} are {@code [B,S,H,D]}; {@code cos}/{@code sin} are
  * {@code [S,R]}, {@code [B,S,R]}, or {@code [R]} (R = rotary_dim). Returns

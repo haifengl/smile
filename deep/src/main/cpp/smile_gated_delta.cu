@@ -196,7 +196,12 @@ __global__ void __launch_bounds__(128) gated_delta_recurrent_fast_kernel(
         int64_t H, int64_t S, int64_t V,
         float scale,
         int qk_l2norm,
-        GatedDeltaCkpt ckpt) {
+        GatedDeltaCkpt ckpt,
+        const __nv_bfloat16 *__restrict__ a_raw = nullptr,
+        const __nv_bfloat16 *__restrict__ b_raw = nullptr,
+        const float *__restrict__ a_log = nullptr,
+        const float *__restrict__ dt_bias = nullptr,
+        __nv_bfloat16 *__restrict__ out_bf16 = nullptr) {
     const int64_t bh = blockIdx.y;
     const int v0 = blockIdx.x * kFastCols;
     const int tid = threadIdx.x;
@@ -220,8 +225,18 @@ __global__ void __launch_bounds__(128) gated_delta_recurrent_fast_kernel(
         const int p = static_cast<int>(t & 1);
         const int64_t qk_off = (bh * S + t) * kFastK;
         const int64_t v_off = (bh * S + t) * V;
-        const float g_t = expf(g[bh * S + t]);
-        const float beta_t = beta[bh * S + t];
+        float g_t, beta_t;
+        if (a_raw != nullptr) {
+            // Decode (S == 1) with the gates folded in: g = -exp(A_log) * softplus(a + dt_bias), beta = sigmoid(b).
+            const int hh = static_cast<int>(bh % H);
+            const float x = __bfloat162float(a_raw[bh]) + dt_bias[hh];
+            const float sp = x > 20.f ? x : log1pf(expf(x));
+            g_t = expf(-expf(a_log[hh]) * sp);
+            beta_t = 1.f / (1.f + expf(-__bfloat162float(b_raw[bh])));
+        } else {
+            g_t = expf(g[bh * S + t]);
+            beta_t = beta[bh * S + t];
+        }
 
         const float kr = k[qk_off + tid];
         const float qr = q[qk_off + tid];
@@ -271,7 +286,12 @@ __global__ void __launch_bounds__(128) gated_delta_recurrent_fast_kernel(
         b = s_red[p][0][lane][1] + s_red[p][1][lane][1] + s_red[p][2][lane][1] + s_red[p][3][lane][1];
         const float delta = (vv - g_t * a) * beta_t;
         if (warp == 0) {
-            out[v_off + col] = g_t * b + qk * delta;
+            const float y = g_t * b + qk * delta;
+            if (out_bf16 != nullptr) {
+                out_bf16[v_off + col] = __float2bfloat16(y);
+            } else {
+                out[v_off + col] = y;
+            }
         }
         #pragma unroll
         for (int r = 0; r < kFastRows; ++r) {
@@ -542,6 +562,94 @@ int smile_causal_conv1d_update_split_qkv_cuda(
     causal_conv1d_update_split_qkv_kernel<<<blocks, threads, 0, stream>>>(
             x, state, w, q, k, v, B, C, K,
             num_k_heads, num_v_heads, head_k_dim, head_v_dim);
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        g_gated_delta_error = cudaGetErrorString(err);
+        return -1;
+    }
+    return 0;
+}
+
+namespace {
+
+/** One thread per (b, c): bf16 input and bf16 conv state, float taps; outputs are rounded to bf16 like the unfused path. */
+__global__ void causal_conv1d_decode_bf16_kernel(
+        const __nv_bfloat16 *__restrict__ x,
+        __nv_bfloat16 *__restrict__ state,
+        const float *__restrict__ w,
+        float *__restrict__ q, float *__restrict__ k, float *__restrict__ v,
+        int64_t B, int64_t C, int K,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim) {
+    const int64_t idx = static_cast<int64_t>(blockIdx.x) * blockDim.x + threadIdx.x;
+    if (idx >= B * C) return;
+    const int64_t b = idx / C;
+    const int64_t c = idx - b * C;
+    const int state_len = K - 1;
+    __nv_bfloat16 *st = state + idx * state_len;
+    const float *w_c = w + c * K;
+
+    float acc = 0.f;
+    for (int i = 0; i < state_len; ++i) {
+        acc += __bfloat162float(st[i]) * w_c[i];
+    }
+    const __nv_bfloat16 x_bf = x[idx];
+    acc += __bfloat162float(x_bf) * w_c[state_len];
+    // SiLU then round to the compute dtype, as the unfused path does when it converts q/k/v back to bf16.
+    const float val = __bfloat162float(__float2bfloat16(acc / (1.f + expf(-acc))));
+
+    for (int i = 0; i + 1 < state_len; ++i) {
+        st[i] = st[i + 1];
+    }
+    if (state_len > 0) {
+        st[state_len - 1] = x_bf;
+    }
+
+    const int key_dim = num_k_heads * head_k_dim;
+    const int rep = num_v_heads / num_k_heads;
+    if (c < key_dim) {
+        const int h = static_cast<int>(c / head_k_dim), d = static_cast<int>(c % head_k_dim);
+        for (int r = 0; r < rep; ++r) {
+            q[(b * num_v_heads + h * rep + r) * head_k_dim + d] = val;
+        }
+    } else if (c < 2 * key_dim) {
+        const int64_t cc = c - key_dim;
+        const int h = static_cast<int>(cc / head_k_dim), d = static_cast<int>(cc % head_k_dim);
+        for (int r = 0; r < rep; ++r) {
+            k[(b * num_v_heads + h * rep + r) * head_k_dim + d] = val;
+        }
+    } else {
+        const int64_t cc = c - 2 * key_dim;
+        v[b * num_v_heads * head_v_dim + cc] = val;
+    }
+}
+
+} // namespace
+
+int smile_gated_delta_decode_fused_cuda(
+        const void *hidden, void *conv_state, const float *conv_w,
+        const void *a, const void *b, const float *a_log, const float *dt_bias,
+        float *rec_state, float *q_buf, float *k_buf, float *v_buf, void *out,
+        int64_t B, int64_t C, int K,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim,
+        float scale, void *cuda_stream) {
+    g_gated_delta_error.clear();
+    if (B < 1 || K < 2 || K > 16 || head_k_dim != kFastK || head_v_dim % kFastCols != 0
+            || num_k_heads < 1 || num_v_heads % num_k_heads != 0
+            || C != int64_t(2) * num_k_heads * head_k_dim + int64_t(num_v_heads) * head_v_dim) {
+        g_gated_delta_error = "gated_delta_decode_fused: unsupported shape";
+        return -1;
+    }
+    cudaStream_t stream = cuda_stream ? static_cast<cudaStream_t>(cuda_stream) : static_cast<cudaStream_t>(0);
+    const int64_t n = B * C;
+    causal_conv1d_decode_bf16_kernel<<<static_cast<unsigned>((n + 255) / 256), 256, 0, stream>>>(
+            static_cast<const __nv_bfloat16 *>(hidden), static_cast<__nv_bfloat16 *>(conv_state), conv_w,
+            q_buf, k_buf, v_buf, B, C, K, num_k_heads, num_v_heads, head_k_dim, head_v_dim);
+    dim3 grid(static_cast<unsigned>(head_v_dim / kFastCols), static_cast<unsigned>(B * num_v_heads));
+    gated_delta_recurrent_fast_kernel<<<grid, 128, 0, stream>>>(
+            q_buf, k_buf, v_buf, nullptr, nullptr, rec_state, nullptr, num_v_heads, 1, head_v_dim,
+            scale, /*qk_l2norm=*/1, GatedDeltaCkpt{},
+            static_cast<const __nv_bfloat16 *>(a), static_cast<const __nv_bfloat16 *>(b), a_log, dt_bias,
+            static_cast<__nv_bfloat16 *>(out));
     cudaError_t err = cudaGetLastError();
     if (err != cudaSuccess) {
         g_gated_delta_error = cudaGetErrorString(err);

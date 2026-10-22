@@ -339,6 +339,15 @@ public final class Native {
                         ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final MethodHandle GATED_DELTA_DECODE_FUSED = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_gated_delta_decode_fused")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)))
+                .orElse(null);
         static final MethodHandle APPLY_ROTARY_POS_EMB = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_apply_rotary_pos_emb")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -1729,6 +1738,34 @@ public final class Native {
             }
             return new Tensor[]{
                     new Tensor(qOut), new Tensor(kHandle), new Tensor(vHandle)};
+        }
+    }
+
+    /**
+     * Whole Gated DeltaNet decode core ({@code S == 1}, bf16): conv update + QKV split + gates + recurrent rule in two
+     * launches. Updates {@code convState} and {@code recState} in place.
+     *
+     * @return the core {@code [B * numVHeads, headVDim]}, or {@code null} (nothing modified) when unsupported.
+     */
+    public static boolean hasGatedDeltaDecodeFused() {
+        return Bindings.GATED_DELTA_DECODE_FUSED != null;
+    }
+
+    public static Tensor gatedDeltaDecodeFused(
+            Tensor hidden, Tensor convState, Tensor convWeightF, Tensor a, Tensor b,
+            Tensor aLogF, Tensor dtBiasF, Tensor recState,
+            int numKHeads, int numVHeads, int headKDim, int headVDim) {
+        if (Bindings.GATED_DELTA_DECODE_FUSED == null) {
+            return null;
+        }
+        try {
+            MemorySegment out = (MemorySegment) Bindings.GATED_DELTA_DECODE_FUSED.invokeExact(
+                    hidden.handle(), convState.handle(), convWeightF.handle(), a.handle(), b.handle(),
+                    aLogF.handle(), dtBiasF.handle(), recState.handle(),
+                    numKHeads, numVHeads, headKDim, headVDim);
+            return out == null || out.address() == 0 ? null : new Tensor(out);
+        } catch (Throwable t) {
+            return null;
         }
     }
 
