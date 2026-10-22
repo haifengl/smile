@@ -257,7 +257,7 @@ if(SMILE_TORCH_CUDA_ENABLED AND USE_MARLIN_FP8)
     target_link_libraries(smile_marlin_fp8 PRIVATE ${TORCH_LIBRARIES} CUDA::cudart)
     set_target_properties(smile_marlin_fp8 PROPERTIES
         CUDA_ARCHITECTURES "80"
-        CUDA_STANDARD 17
+        CUDA_STANDARD 20
         CUDA_STANDARD_REQUIRED ON
         POSITION_INDEPENDENT_CODE ON)
     list(APPEND SMILE_MARLIN_FP8_OBJECTS $<TARGET_OBJECTS:smile_marlin_fp8>)
