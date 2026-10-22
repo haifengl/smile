@@ -190,7 +190,7 @@ public class WorkspaceStartupTest {
     public void testLargeTextFileSizeThresholdsAndFormatting() {
         assertEquals(10L * 1024 * 1024, Workspace.LARGE_TEXT_FILE_WARNING_BYTES);
         assertEquals(50L * 1024 * 1024, Workspace.MAX_TEXT_FILE_BYTES);
-        assertEquals(10L * 1024 * 1024, Workspace.LARGE_DATA_FILE_WARNING_BYTES);
+        assertEquals(100L * 1024 * 1024, Workspace.LARGE_DATA_FILE_WARNING_BYTES);
         assertEquals(100_000, Workspace.DEFAULT_DATA_ROW_LIMIT);
         assertTrue(Workspace.LARGE_TEXT_FILE_WARNING_BYTES < Workspace.MAX_TEXT_FILE_BYTES);
         assertEquals("10.0 MB", Workspace.formatSizeMB(Workspace.LARGE_TEXT_FILE_WARNING_BYTES));
