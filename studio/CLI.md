@@ -1305,5 +1305,5 @@ FEATURE TRANSFORMS (--transform)
 
 ---
 
-*SMILE — © 2010-2026 Haifeng Li. GNU GPL licensed.*
+*SMILE — © 2010-2026 Haifeng Li. Licensed under BSL 1.1 (`studio`), AGPLv3 (`serve`), and GPLv3 (Core Engine); see LICENSE and https://www.aihalo.dev/licensing.html.*
 

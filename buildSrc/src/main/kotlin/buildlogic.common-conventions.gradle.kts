@@ -59,4 +59,12 @@ tasks.withType<Test>().all {
 
 tasks.withType<Jar>().all {
     archiveBaseName.set("${rootProject.name}-${project.name}")
+    val moduleLicense = when {
+        project.path.startsWith(":serve") -> rootProject.file("serve/LICENSE")
+        project.path == ":studio" -> rootProject.file("studio/LICENSE")
+        else -> rootProject.file("LICENSE")
+    }
+    from(moduleLicense) {
+        into("META-INF")
+    }
 }

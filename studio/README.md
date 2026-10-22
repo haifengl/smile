@@ -1146,5 +1146,5 @@ The remote JVM is allocated up to 75% of the system RAM (`-XX:MaxRAMPercentage=7
 
 ---
 
-*SMILE Studio is free software under the GNU General Public License v3. For commercial use enquiries contact sales@aihalo.dev*
+*SMILE Agent Studio is licensed under the Business Source License 1.1 (BSL 1.1) — free for personal, academic, and non-production evaluation use, converting to AGPLv3 four years after release. For commercial production licensing, see https://www.aihalo.dev/licensing.html or contact sales@aihalo.dev.*
 

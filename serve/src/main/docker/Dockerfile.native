@@ -97,6 +97,11 @@ RUN ./gradlew :serve:build -x test -Pserve.plugins= \
 # -----------------------------------------------------------------------------
 FROM ${RUNTIME_BASE}
 
+LABEL org.opencontainers.image.title="SMILE Serve (Native)" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later OR LicenseRef-SMILE-Commercial" \
+      org.opencontainers.image.source="https://github.com/haifengl/smile" \
+      org.opencontainers.image.url="https://www.aihalo.dev/licensing.html"
+
 USER root
 
 # Install the OpenMP build of OpenBLAS (the ubi10 `openblas` package itself ships no libraries) for native BLAS/LAPACK and libgomp for its OpenMP build. ARPACK (and the FlexiBLAS/EPEL
