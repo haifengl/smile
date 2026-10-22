@@ -15,6 +15,7 @@
 #include <cuda_bf16.h>
 #include <cuda_fp16.h>
 #include <cstdint>
+#include <cstdlib>
 #include <string>
 
 static thread_local std::string g_gated_delta_error;
@@ -174,6 +175,123 @@ __global__ void gated_delta_recurrent_kernel(
     }
 }
 
+/**
+ * Decode/short-window variant for K == 128, V % 32 == 0 (Qwen3.5/3.8). The state columns are independent given q, k, so
+ * the grid is (V / 32, B * H): each block owns a 128 x 32 slice of one head's state, one warp per 32 rows, one state
+ * element per register per thread. With S1 = g * S0 + k (x) delta the per-token work needs a single cross-warp reduction:
+ *   kv = g * (k . S0),  delta = (v - kv) * beta,  y = g * (q . S0) + (q . k) * delta.
+ */
+constexpr int kFastK = 128;
+constexpr int kFastCols = 32;
+constexpr int kFastRows = kFastK / 4; // rows per warp
+
+__global__ void __launch_bounds__(128) gated_delta_recurrent_fast_kernel(
+        const float *__restrict__ q,
+        const float *__restrict__ k,
+        const float *__restrict__ v,
+        const float *__restrict__ g,
+        const float *__restrict__ beta,
+        float *__restrict__ state,
+        float *__restrict__ out,
+        int64_t H, int64_t S, int64_t V,
+        float scale,
+        int qk_l2norm,
+        GatedDeltaCkpt ckpt) {
+    const int64_t bh = blockIdx.y;
+    const int v0 = blockIdx.x * kFastCols;
+    const int tid = threadIdx.x;
+    const int lane = tid & 31;
+    const int warp = tid >> 5;
+    const int col = v0 + lane;
+
+    __shared__ float s_k[2][kFastK];
+    __shared__ float s_q[2][kFastK];
+    __shared__ float s_norm[2][4][3];
+    __shared__ float s_red[2][4][kFastCols][2];
+
+    float *state_bh = state + bh * kFastK * V;
+    float st[kFastRows];
+    #pragma unroll
+    for (int r = 0; r < kFastRows; ++r) {
+        st[r] = state_bh[static_cast<int64_t>(warp * kFastRows + r) * V + col];
+    }
+
+    for (int64_t t = 0; t < S; ++t) {
+        const int p = static_cast<int>(t & 1);
+        const int64_t qk_off = (bh * S + t) * kFastK;
+        const int64_t v_off = (bh * S + t) * V;
+        const float g_t = expf(g[bh * S + t]);
+        const float beta_t = beta[bh * S + t];
+
+        const float kr = k[qk_off + tid];
+        const float qr = q[qk_off + tid];
+        s_k[p][tid] = kr;
+        s_q[p][tid] = qr;
+        float qq = qr * qr, kk = kr * kr, qk = qr * kr;
+        #pragma unroll
+        for (int o = 16; o > 0; o >>= 1) {
+            qq += __shfl_xor_sync(0xffffffffu, qq, o);
+            kk += __shfl_xor_sync(0xffffffffu, kk, o);
+            qk += __shfl_xor_sync(0xffffffffu, qk, o);
+        }
+        if (lane == 0) {
+            s_norm[p][warp][0] = qq;
+            s_norm[p][warp][1] = kk;
+            s_norm[p][warp][2] = qk;
+        }
+        const float vv = v[v_off + col];
+        __syncthreads();
+
+        qq = s_norm[p][0][0] + s_norm[p][1][0] + s_norm[p][2][0] + s_norm[p][3][0];
+        kk = s_norm[p][0][1] + s_norm[p][1][1] + s_norm[p][2][1] + s_norm[p][3][1];
+        qk = s_norm[p][0][2] + s_norm[p][1][2] + s_norm[p][2][2] + s_norm[p][3][2];
+        float q_mul = scale;
+        float k_mul = 1.f;
+        if (qk_l2norm) {
+            const float q_inv = rsqrtf(qq + 1e-6f);
+            const float k_inv = rsqrtf(kk + 1e-6f);
+            q_mul = q_inv * scale;
+            k_mul = k_inv;
+            qk *= q_inv * k_inv;
+        }
+        qk *= scale;
+
+        float a = 0.f, b = 0.f;
+        #pragma unroll
+        for (int r = 0; r < kFastRows; ++r) {
+            const int row = warp * kFastRows + r;
+            a += st[r] * (s_k[p][row] * k_mul);
+            b += st[r] * (s_q[p][row] * q_mul);
+        }
+        s_red[p][warp][lane][0] = a;
+        s_red[p][warp][lane][1] = b;
+        __syncthreads();
+
+        a = s_red[p][0][lane][0] + s_red[p][1][lane][0] + s_red[p][2][lane][0] + s_red[p][3][lane][0];
+        b = s_red[p][0][lane][1] + s_red[p][1][lane][1] + s_red[p][2][lane][1] + s_red[p][3][lane][1];
+        const float delta = (vv - g_t * a) * beta_t;
+        if (warp == 0) {
+            out[v_off + col] = g_t * b + qk * delta;
+        }
+        #pragma unroll
+        for (int r = 0; r < kFastRows; ++r) {
+            st[r] = g_t * st[r] + (s_k[p][warp * kFastRows + r] * k_mul) * delta;
+        }
+        if (t < ckpt.n && ckpt.ptr[t] != nullptr) {
+            float *ck_bh = ckpt.ptr[t] + bh * kFastK * V;
+            #pragma unroll
+            for (int r = 0; r < kFastRows; ++r) {
+                ck_bh[static_cast<int64_t>(warp * kFastRows + r) * V + col] = st[r];
+            }
+        }
+    }
+
+    #pragma unroll
+    for (int r = 0; r < kFastRows; ++r) {
+        state_bh[static_cast<int64_t>(warp * kFastRows + r) * V + col] = st[r];
+    }
+}
+
 } // namespace
 
 int smile_gated_delta_recurrent_cuda(
@@ -201,6 +319,22 @@ int smile_gated_delta_recurrent_cuda(
     if (B < 1 || H < 1 || S < 1 || K < 1 || V < 1) {
         g_gated_delta_error = "gated_delta: invalid shape";
         return -1;
+    }
+
+    cudaStream_t fast_stream = cuda_stream
+            ? static_cast<cudaStream_t>(cuda_stream)
+            : static_cast<cudaStream_t>(0);
+    static const bool disable_fast = std::getenv("SMILE_GATED_DELTA_REFERENCE") != nullptr;
+    if (K == kFastK && V % kFastCols == 0 && !disable_fast) {
+        dim3 grid(static_cast<unsigned>(V / kFastCols), static_cast<unsigned>(B * H));
+        gated_delta_recurrent_fast_kernel<<<grid, 128, 0, fast_stream>>>(
+                q, k, v, g, beta, state, out, H, S, V, scale, qk_l2norm, ckpt);
+        cudaError_t fast_err = cudaGetLastError();
+        if (fast_err != cudaSuccess) {
+            g_gated_delta_error = cudaGetErrorString(fast_err);
+            return -1;
+        }
+        return 0;
     }
 
     const int64_t blocks = B * H;
