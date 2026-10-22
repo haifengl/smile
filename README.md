@@ -3,28 +3,58 @@
 [![CI](https://github.com/haifengl/smile/actions/workflows/ci.yml/badge.svg)](https://github.com/haifengl/smile/actions/workflows/ci.yml)
 [![CodeQL](https://github.com/haifengl/smile/actions/workflows/codeql.yml/badge.svg)](https://github.com/haifengl/smile/actions/workflows/codeql.yml)
 
-SMILE (Statistical Machine Intelligence & Learning Engine) is a comprehensive,
-high-performance machine learning framework for the JVM. SMILE v5+ requires
-**Java 25**; v4.x requires Java 21; all previous versions require Java 8.
-SMILE also provides idiomatic APIs for **Scala** and **Kotlin**.
-With advanced data structures and algorithms, SMILE delivers state-of-the-art
-performance across every aspect of machine learning.
+SMILE (**Statistical Machine Intelligence & Learning Engine**) is a comprehensive,
+high-performance machine learning and AI platform for the JVM. Built on **Java 25**
+with idiomatic APIs for **Kotlin** and **Scala** (v4.x supports Java 21; earlier
+versions support Java 8), SMILE covers the entire lifecycle of machine intelligence:
+building models with agentic AutoML, embedding algorithms directly in your
+application, and serving classical ML, ONNX graphs, and LLMs on your own machines.
 
-SMILE Serve is a production-ready inference server
-that brings together three complementary inference capabilities on the JVM:
+### Vision: Intelligence Where the Work Is
 
-| Capability | API prefix  | Description |
-|---|----------------------|-------------|
-| **Classic ML** | `/api/v1/smile` | Serialized SMILE models (`.sml`) — classifiers and regressors |
-| **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`) |
-| **LLM Chat** | `/api/v1/chat/completions` | OpenAI-compatible chat completions |
+A decision should not require a cloud round-trip or a fragile bridge to an external
+Python stack. The score, the explanation, and the model update belong on the machine
+that already holds the facts: inside a JVM microservice, a branch server, a payment
+terminal, a vehicle gateway, or an air-gapped node. SMILE makes real-time,
+autonomous machine intelligence native to the systems enterprises already run, from
+resource-constrained edge gateways to multi-GPU clusters.
+
+### What We Value
+
+- **Sovereign & Self-Hosted by Default:** Your data, models, API keys, and telemetry stay on your machines and your network. Everything is built to run locally and keep working when the external link is down.
+- **Zero-Bloat Craftsmanship:** The core engine is pure, self-contained JVM bytecode built on compact, cache-friendly data structures. You get deterministic low latency and a tiny memory footprint by default, with optional plug-and-play native acceleration (OpenBLAS/LAPACK, ONNX Runtime, LibTorch/CUDA) when hardware is available.
+- **Explainable & Auditable in Place:** High-stakes decisions cannot be black boxes. SMILE provides both exact **TreeSHAP** for tree ensembles and model-agnostic **KernelSHAP** for any classifier or regressor, computing local feature attributions in-process alongside predictions, while AutoML workflows generate readable Java, Scala, Kotlin, or Python notebooks you can inspect line by line.
+- **Open Source with Enterprise Backing:** Open-source licensing supports academic research and community collaboration, while commercial licensing from [HALO.AI](https://www.aihalo.dev/) removes copyleft and source-disclosure obligations for proprietary, embedded, and mission-critical production deployments.
+
+### Key Strengths
+
+- **Comprehensive Breadth in One Engine:** Hundreds of algorithms spanning classification, regression, clustering, manifold learning, time series, anomaly detection, NLP, statistical testing, linear algebra, deep learning, computer vision, and native LLM inference (`MiniMax M3`, `Qwen`, `Llama`, tiktoken, Radix KV cache, MTP speculative decoding).
+- **State-of-the-Art Speed & Footprint:** Engineered with primitive-backed memory layouts, Panama FFM, and the Java Vector API (SIMD), SMILE routinely outperforms R, Python, Spark, and H2O while scaling down to a **0.2 GB** GraalVM native micro-container that boots in **0.4 s** and idles at **~80 MiB RAM**.
+- **On-Device Training & Adaptation:** Unlike static inference-only runtimes, SMILE trains and updates models (Random Forests, Gradient Boosting, K-Means, DBSCAN, anomaly detectors) directly on live edge or application data.
+- **Built for Agentic & Production Workloads:** Continuous batching, prefix-preserving Radix KV caches, and speculative decoding that retains its speedup under full batch load, paired with atomic model hot-swapping, Kubernetes health probes, and Prometheus metrics.
+
+### Three Pillars of SMILE
+
+#### 1. Core Engine: Embed in Your Application
+Call classification, regression, clustering, deep learning, NLP, and visualization directly in-process from Java, Scala, or Kotlin with no separate service to operate.
+
+#### 2. SMILE Serve: Unified Inference Runtime
+A production-ready, Quarkus-based inference server (available as JVM, CUDA GPU, and GraalVM native containers) that brings together three complementary inference capabilities in a single process:
+
+| Capability | API prefix | Description                                                    |
+|---|---|----------------------------------------------------------------|
+| **Classic ML** | `/api/v1/smile` | Serialized SMILE models (`.sml`) — classification, regression, clustering (`ClusteringModel`), vector quantization (`VectorQuantizerModel`), and anomaly detection (`AnomalyModel`), with local SHAP explanations (`TreeSHAP` & `KernelSHAP`) |
+| **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`)                    |
+| **LLM Chat** | `/api/v1/chat` | OpenAI-compatible chat completions, tool calling, and SSE streaming |
+| **Models** | `/api/v1/models` | OpenAI-compatible list and retrieve for every loaded model — chat, ONNX, and SMILE |
+| **Metrics** | `/q/metrics` | Prometheus scrape for classic, ONNX, and LLM models |
 
 A React-based web UI is bundled and served from the same process.
-See [serve/README.md](serve/README.md) how to build and run the service.
+See [serve/README.md](serve/README.md) for how to build and run the service.
 
-SMILE Studio is an agentic IDE for data science using Python, Java, or Scala.
-See [studio/README.md](studio/README.md) how to get your first project up and
-start interacting with your data with natural language in a few minutes.
+#### 3. SMILE Studio: Agentic IDE & AutoML Workplace
+A desktop workplace for data science and software engineering using Python, Java, Kotlin, or Scala. Specialized AI agents collaborate with you in interactive notebooks to explore data, engineer features, train and tune models, and export `.sml` or `.onnx` artifacts directly to SMILE Serve.
+See [studio/README.md](studio/README.md) to get your first project running in a few minutes.
 
 ---
 
@@ -59,7 +89,7 @@ start interacting with your data with natural language in a few minutes.
 | **Regression** | SVR, Gaussian Process, Regression Trees, GBDT, Random Forest, RBF, OLS, LASSO, ElasticNet, Ridge |
 | **Clustering** | BIRCH, CLARANS, DBSCAN, DENCLUE, Deterministic Annealing, K-Means, X-Means, G-Means, Neural Gas, Growing Neural Gas, Hierarchical, SIB, SOM, Spectral, Min-Entropy |
 | **Manifold Learning** | IsoMap, LLE, Laplacian Eigenmap, t-SNE, UMAP, PCA, Kernel PCA, Probabilistic PCA, GHA, Random Projection, ICA |
-| **Feature Engineering** | Genetic Algorithm selection, Ensemble selection, TreeSHAP, SNR, Sum-Squares ratio, data transformations, formula API |
+| **Feature Engineering** | Genetic Algorithm selection, Ensemble selection, TreeSHAP, KernelSHAP, SNR, Sum-Squares ratio, data transformations, formula API |
 | **NLP** | Sentence / word tokenization, Bigram test, Phrase & Keyword extraction, Stemmer, POS tagging, Relevance ranking |
 | **Association Rules** | FP-growth frequent itemset mining |
 | **Sequence Learning** | Hidden Markov Model, Conditional Random Field |
