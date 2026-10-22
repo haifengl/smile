@@ -33,8 +33,27 @@ SMILE_API ST_Tensor smile_add_gemma_rms_norm(ST_Tensor x, ST_Tensor r, ST_Tensor
 SMILE_API ST_Tensor smile_silu_mul(ST_Tensor gate, ST_Tensor up);
 
 /**
+ * Two small projections in one launch: a = x . wa^T, b = x . wb^T. x: bf16 CUDA [rows, K] (rows <= 8, K % 8 == 0);
+ * wa, wb: contiguous bf16 [N, K]. Returns a [rows, N] and writes b [rows, N] to *out_b.
+ */
+SMILE_API ST_Tensor smile_gemv2(ST_Tensor x, ST_Tensor wa, ST_Tensor wb, ST_Tensor *out_b);
+
+/**
+ * out = attn * sigmoid(gate) with both factors rounded to the dtype like the eager ops. attn: contiguous [tokens, H*D];
+ * gate: [B, S, H, D] view with unit D stride and uniform token stride (a slice of an interleaved q|gate projection).
+ */
+SMILE_API ST_Tensor smile_sigmoid_gate_mul(ST_Tensor attn, ST_Tensor gate);
+
+/**
+ * Writes the new tokens' K and V rows into the layer caches in one launch: row t of k/v ([tokens, ...] contiguous, same
+ * dtype as the caches) goes to cache slot slots[t] (int64 [tokens]). k_layer/v_layer: contiguous [numSlots, ...] with the
+ * same row size. Returns 0, or -1 with the error set (nothing written) when the layout is unsupported.
+ */
+SMILE_API int smile_kv_write(ST_Tensor k_layer, ST_Tensor v_layer, ST_Tensor k, ST_Tensor v, ST_Tensor slots);
+
+/**
  * Per-head Gemma RMSNorm of q and k followed by rotate-half RoPE on the first rotary_dim dims, in one launch.
- * q: CUDA [B, S, Hq, D]; k: [B, S, Hk, D] (same dtype; unit stride over D and heads, uniform token stride, so slices of a fused projection need no copy); qw: [D]; kw: [D]. cos/sin: float32 or q's dtype,
+ * q: CUDA [B, S, Hq, D]; k: [B, S, Hk, D] (same dtype; unit stride over D, any head stride, uniform token stride, so slices of a fused projection need no copy); qw: [D]; kw: [D]. cos/sin: float32 or q's dtype,
  * [R, rotary_dim] where token t uses row t % R (R = batch for decode, sequence length for prefill).
  * Returns the new q and writes the new k to *out_k.
  */

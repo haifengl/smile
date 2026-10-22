@@ -806,6 +806,8 @@ SMILE_API ST_Linear smile_linear_create_uninitialized(int64_t in_features, int64
                                                       int bias, int device_type, int8_t device_index);
 SMILE_API void      smile_linear_free  (ST_Linear l);
 SMILE_API ST_Tensor smile_linear_forward(ST_Linear l, ST_Tensor input);
+/** The layer's weight tensor [out, in] (an alias: shares storage with the module's parameter). */
+SMILE_API ST_Tensor smile_linear_weight(ST_Linear l);
 /** Returns a borrowed (non-owning) ST_Module view. */
 SMILE_API ST_Module smile_linear_as_module(ST_Linear l);
 

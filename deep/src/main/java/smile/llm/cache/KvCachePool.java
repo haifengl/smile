@@ -1748,7 +1748,7 @@ public class KvCachePool implements AutoCloseable {
                 layerV.put_(vq, idx);
                 kq.close();
                 vq.close();
-            } else {
+            } else if (!smile.torch.Native.kvWrite(layerK, layerV, kf, vf, idx)) {
                 layerK.put_(kf, idx);
                 layerV.put_(vf, idx);
             }

@@ -225,6 +225,40 @@ public class GatedDeltaNet {
     /** Float copy of the depthwise conv taps for the fused decode kernel (built lazily, never refreshed after load). */
     private Tensor convWeightF;
 
+    private Tensor abWeightA;
+    private Tensor abWeightB;
+    private LinearOp abOwnerA;
+    private LinearOp abOwnerB;
+
+    /**
+     * {@code in_proj_a} and {@code in_proj_b} of a decode step in one launch (they are tiny dense bf16 GEMVs that
+     * cost four cuBLAS launches otherwise). Returns {@code null} when the layers are not plain dense CUDA bf16.
+     */
+    private Tensor[] projectAB(Tensor x, int batch) {
+        if (!(inProjA instanceof smile.deep.layer.LinearLayer la) || !(inProjB instanceof smile.deep.layer.LinearLayer lb)
+                || batch > 8 || !x.device().isCUDA() || x.dtype() != ScalarType.BFloat16) {
+            return null;
+        }
+        if (abWeightA == null || abOwnerA != inProjA || abOwnerB != inProjB) {
+            abWeightA = la.weight();
+            abWeightB = lb.weight();
+            // built inside the layer's AutoScope: keep the aliases past it
+            if (abWeightA != null) {
+                abWeightA.detachFromScopes();
+            }
+            if (abWeightB != null) {
+                abWeightB.detachFromScopes();
+            }
+            abOwnerA = inProjA;
+            abOwnerB = inProjB;
+        }
+        if (abWeightA == null || abWeightB == null || abWeightA.dtype() != ScalarType.BFloat16
+                || abWeightB.dtype() != ScalarType.BFloat16) {
+            return null;
+        }
+        return smile.torch.Native.gemv2(x, abWeightA, abWeightB);
+    }
+
     /** Lazily materializes float A_log / dt_bias caches on the parameter device. */
     private void ensureFloatCaches() {
         if (aLogF == null || dtBiasF == null
@@ -292,8 +326,18 @@ public class GatedDeltaNet {
                     : mixedRaw.transpose(1, 2); // [B, C, S]
             Tensor zRaw = inProjZ.forward(x);
             Tensor z = zRaw.view(batch, seqLen, numVHeads, headVDim);
-            Tensor b = inProjB.forward(x);
-            Tensor a = inProjA.forward(x);
+            Tensor b;
+            Tensor a;
+            Tensor[] ab = decodeS1 && !FUSED_DECODE_DISABLED ? projectAB(x, batch) : null;
+            if (ab != null) {
+                a = ab[0].view(batch, seqLen, numVHeads);
+                b = ab[1].view(batch, seqLen, numVHeads);
+                ab[0].close();
+                ab[1].close();
+            } else {
+                b = inProjB.forward(x);
+                a = inProjA.forward(x);
+            }
             if (profile) {
                 smile.llm.engine.DecodeForwardProfile.addDeltaProj(System.nanoTime() - tMark);
                 tMark = System.nanoTime();

@@ -425,12 +425,11 @@ public class GatedAttention implements Attention {
             Tensor qRaw = qProj.forward(x);
             Tensor qFull = qRaw.view(batchSize, seqlen, numHeads, headDim * 2);
             Tensor query;
-            Tensor gate;
+            Tensor gateView;
             try (var qSlice = smile.deep.tensor.Index.slice(0, headDim);
                  var gSlice = smile.deep.tensor.Index.slice(headDim, headDim * 2)) {
                 query = qFull.get(smile.deep.tensor.Index.Ellipsis, qSlice);
-                Tensor gateSlice = qFull.get(smile.deep.tensor.Index.Ellipsis, gSlice);
-                gate = gateSlice.reshape(batchSize, seqlen, numHeads * headDim);
+                gateView = qFull.get(smile.deep.tensor.Index.Ellipsis, gSlice);
             }
 
             Tensor kRaw = kProj.forward(x);
@@ -438,17 +437,28 @@ public class GatedAttention implements Attention {
             Tensor vRaw = vProj.forward(x);
             Tensor value = vRaw.view(batchSize, seqlen, numKvHeads, headDim);
 
-            Tensor qFlat = query.reshape(batchSize * seqlen * numHeads, headDim);
-            Tensor qNormed = qNorm.forward(qFlat);
-            query = qNormed.view(batchSize, seqlen, numHeads, headDim);
+            // One launch: per-head Gemma norms of q and k, then partial RoPE (q is read in place from the
+            // interleaved q|gate projection).
+            Tensor[] qkRope = smile.torch.Native.qkNormRope(
+                    query, key, qNorm.weight(), kNorm.weight(), cos, sin, rotaryDim, qNorm.eps());
+            Tensor qRope;
+            Tensor kRope;
+            if (qkRope != null) {
+                qRope = qkRope[0];
+                kRope = qkRope[1];
+            } else {
+                Tensor qFlat = query.reshape(batchSize * seqlen * numHeads, headDim);
+                Tensor qNormed = qNorm.forward(qFlat);
+                query = qNormed.view(batchSize, seqlen, numHeads, headDim);
 
-            Tensor kFlat = key.reshape(batchSize * seqlen * numKvHeads, headDim);
-            Tensor kNormed = kNorm.forward(kFlat);
-            key = kNormed.view(batchSize, seqlen, numKvHeads, headDim);
+                Tensor kFlat = key.reshape(batchSize * seqlen * numKvHeads, headDim);
+                Tensor kNormed = kNorm.forward(kFlat);
+                key = kNormed.view(batchSize, seqlen, numKvHeads, headDim);
 
-            var rope = PartialRotaryEncoding.apply(query, key, cos, sin, rotaryDim);
-            Tensor qRope = rope._1();
-            Tensor kRope = rope._2();
+                var rope = PartialRotaryEncoding.apply(query, key, cos, sin, rotaryDim);
+                qRope = rope._1();
+                kRope = rope._2();
+            }
 
             cachePool.put(kvLayerId, positions, kRope, value);
             kRope.close();
@@ -510,10 +520,14 @@ public class GatedAttention implements Attention {
             Tensor attnT = attn.transpose(1, 2);
             Tensor attnC = attnT.contiguous();
             attn = attnC.view(batchSize, seqlen, -1);
-            Tensor gated = smile.torch.Native.mulSigmoid(attn, gate);
+            Tensor gated = smile.torch.Native.sigmoidGateMul(attn, gateView);
             if (gated == null) {
-                Tensor gateSig = sigmoid.forward(gate);
-                gated = attn.mul(gateSig);
+                Tensor gate = gateView.reshape(batchSize, seqlen, numHeads * headDim);
+                gated = smile.torch.Native.mulSigmoid(attn, gate);
+                if (gated == null) {
+                    Tensor gateSig = sigmoid.forward(gate);
+                    gated = attn.mul(gateSig);
+                }
             }
             Tensor out = oProj.forward(gated);
             if (profile) {
