@@ -99,7 +99,19 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame data(Path path) throws Exception {
-        return data(path.toString(), null);
+        return data(path.toString(), null, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from a data file.
+     * Infers the data format by the file name extension.
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws Exception when fails to read the file.
+     * @return the data frame.
+     */
+    static DataFrame data(Path path, int limit) throws Exception {
+        return data(path.toString(), null, limit);
     }
 
     /**
@@ -110,7 +122,20 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame data(Path path, String format) throws Exception {
-        return data(path.toString(), format);
+        return data(path.toString(), format, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from a data file.
+     * Infers the data format by the file name extension.
+     * @param path the input file path.
+     * @param format the optional file format specification.
+     * @param limit the number of records to read.
+     * @throws Exception when fails to read the file.
+     * @return the data frame.
+     */
+    static DataFrame data(Path path, String format, int limit) throws Exception {
+        return data(path.toString(), format, limit);
     }
 
     /**
@@ -120,7 +145,19 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame data(String path) throws Exception {
-        return data(path, null);
+        return data(path, null, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from a data file.
+     * Infers the data format by the file name extension.
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws Exception when fails to read the file.
+     * @return the data frame.
+     */
+    static DataFrame data(String path, int limit) throws Exception {
+        return data(path, null, limit);
     }
 
     /**
@@ -135,6 +172,23 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame data(String path, String format) throws Exception {
+        return data(path, format, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from a data file.
+     * Infers the data format by the file name extension.
+     * @param path the input file path.
+     * @param format the optional file format specification. For csv files,
+     *               it is such as <code>delimiter=\t,header=true,comment=#,escape=\,quote="</code>.
+     *               For JSON files, it is the file mode (single-line or
+     *               multi-line). For Avro files, it is the path to the schema
+     *               file (or null to use the schema embedded in the container file).
+     * @param limit the number of records to read.
+     * @throws Exception when fails to read the file.
+     * @return the data frame.
+     */
+    static DataFrame data(String path, String format, int limit) throws Exception {
         // Derive extension from the last segment of the path only,
         // so that URIs like "s3://bucket/file" are handled correctly.
         String basename = path;
@@ -149,24 +203,24 @@ public interface Read {
         switch (ext) {
             case "dat":
             case "txt":
-            case "csv": return csv(path, format);
-            case "tsv": return csv(path, Strings.isNullOrBlank(format) ? "delimiter=\\t,header=true" : format);
-            case "arff": return arff(path);
+            case "csv": return csv(path, format, limit);
+            case "tsv": return csv(path, Strings.isNullOrBlank(format) ? "delimiter=\\t,header=true" : format, limit);
+            case "arff": return arff(path, limit);
             case "json":
-            case "jsonl": return json(path, JSON.Mode.parse(format), null);
+            case "jsonl": return json(path, JSON.Mode.parse(format), null, limit);
             case "sas":
-            case "sas7bdat": return sas(path);
-            case "avro": return Strings.isNullOrBlank(format) ? avro(path) : avro(path, format);
+            case "sas7bdat": return sas(path, limit);
+            case "avro": return Strings.isNullOrBlank(format) ? avro(path, limit) : avro(path, format, limit);
             // Parquet.read() will convert Path to a proper URI string
-            case "parquet": return parquet(Path.of(path));
+            case "parquet": return parquet(Path.of(path), limit);
             case "arrow":
-            case "feather": return arrow(path);
+            case "feather": return arrow(path, limit);
             default:
                 if (format != null) {
                     if (format.equals("csv")) {
-                        return csv(path);
+                        return csv(path, null, limit);
                     } else if (format.startsWith("csv,")) {
-                        return csv(path, format.substring(4));
+                        return csv(path, format.substring(4), limit);
                     }
                 }
         }
@@ -195,7 +249,21 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame csv(String path, String format) throws IOException, URISyntaxException {
-        if (Strings.isNullOrBlank(format)) return csv(path);
+        return csv(path, format, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from a CSV file.
+     * @param path the input file path.
+     * @param format the format specification in key-value pairs such as
+     *               <code>delimiter=\t,header=true,comment=#,escape=\,quote="</code>.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame csv(String path, String format, int limit) throws IOException, URISyntaxException {
+        if (Strings.isNullOrBlank(format)) return csv(path, CSVFormat.DEFAULT, null, limit);
 
         CSVFormat.Builder formatBuilder = CSVFormat.Builder.create();
         for (String token : format.split(",")) {
@@ -241,7 +309,7 @@ public interface Read {
             }
         }
 
-        return csv(path, formatBuilder.get());
+        return csv(path, formatBuilder.get(), null, limit);
     }
 
     /**
@@ -266,9 +334,23 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame csv(String path, CSVFormat format, StructType schema) throws IOException, URISyntaxException {
+        return csv(path, format, schema, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from a CSV file.
+     * @param path the input file path.
+     * @param format the CSV file format.
+     * @param schema the data schema.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame csv(String path, CSVFormat format, StructType schema, int limit) throws IOException, URISyntaxException {
         CSV csv = new CSV(format);
         if (schema != null) csv.schema(schema);
-        return csv.read(path);
+        return csv.read(path, limit);
     }
 
     /**
@@ -327,9 +409,23 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame json(String path, JSON.Mode mode, StructType schema) throws IOException, URISyntaxException {
+        return json(path, mode, schema, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from a JSON file.
+     * @param path the input file path.
+     * @param mode the file mode (single-line or multi-line).
+     * @param schema the data schema.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame json(String path, JSON.Mode mode, StructType schema, int limit) throws IOException, URISyntaxException {
         JSON json = new JSON().mode(mode);
         if (schema != null) json.schema(schema);
-        return json.read(path);
+        return json.read(path, limit);
     }
 
     /**
@@ -351,9 +447,22 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame json(Path path, JSON.Mode mode, StructType schema) throws IOException {
+        return json(path, mode, schema, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from a JSON file.
+     * @param path the input file path.
+     * @param mode the file mode (single-line or multi-line).
+     * @param schema the data schema.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
+     */
+    static DataFrame json(Path path, JSON.Mode mode, StructType schema, int limit) throws IOException {
         JSON json = new JSON().mode(mode);
         if (schema != null) json.schema(schema);
-        return json.read(path);
+        return json.read(path, limit);
     }
 
     /**
@@ -388,8 +497,22 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame arff(String path) throws IOException, ParseException, URISyntaxException {
+        return arff(path, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from an ARFF file.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame arff(String path, int limit) throws IOException, ParseException, URISyntaxException {
         try (var arff = new Arff(path)) {
-            return arff.read();
+            return arff.read(limit);
         }
     }
 
@@ -424,8 +547,21 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame arff(Path path) throws IOException, ParseException {
+        return arff(path, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from an ARFF file.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
+     * @return the data frame.
+     */
+    static DataFrame arff(Path path, int limit) throws IOException, ParseException {
         try (var arff = new Arff(path)) {
-            return arff.read();
+            return arff.read(limit);
         }
     }
 
@@ -442,6 +578,19 @@ public interface Read {
     }
 
     /**
+     * Reads a limited number of records from a SAS7BDAT file.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame sas(String path, int limit) throws IOException, URISyntaxException {
+        return SAS.read(path, limit);
+    }
+
+    /**
      * Reads a SAS7BDAT file.
      *
      * @param path the input file path.
@@ -450,6 +599,18 @@ public interface Read {
      */
     static DataFrame sas(Path path) throws IOException {
         return SAS.read(path);
+    }
+
+    /**
+     * Reads a limited number of records from a SAS7BDAT file.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
+     */
+    static DataFrame sas(Path path, int limit) throws IOException {
+        return SAS.read(path, limit);
     }
 
     /**
@@ -470,6 +631,20 @@ public interface Read {
     }
 
     /**
+     * Reads a limited number of records from an Apache Arrow file.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame arrow(String path, int limit) throws IOException, URISyntaxException {
+        Arrow arrow = new Arrow();
+        return arrow.read(path, limit);
+    }
+
+    /**
      * Reads an Apache Arrow file.
      * Apache Arrow is a cross-language development platform for in-memory data.
      * It specifies a standardized language-independent columnar memory format
@@ -486,6 +661,19 @@ public interface Read {
     }
 
     /**
+     * Reads a limited number of records from an Apache Arrow file.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
+     */
+    static DataFrame arrow(Path path, int limit) throws IOException {
+        Arrow arrow = new Arrow();
+        return arrow.read(path, limit);
+    }
+
+    /**
      * Reads an Apache Avro file using its embedded writer schema.
      *
      * @param path the input file path.
@@ -499,6 +687,20 @@ public interface Read {
     }
 
     /**
+     * Reads a limited number of records from an Apache Avro file using its embedded writer schema.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame avro(String path, int limit) throws IOException, URISyntaxException {
+        Avro avro = new Avro();
+        return avro.read(path, limit);
+    }
+
+    /**
      * Reads an Apache Avro file using its embedded writer schema.
      *
      * @param path the input file path.
@@ -508,6 +710,19 @@ public interface Read {
     static DataFrame avro(Path path) throws IOException {
         Avro avro = new Avro();
         return avro.read(path);
+    }
+
+    /**
+     * Reads a limited number of records from an Apache Avro file using its embedded writer schema.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
+     */
+    static DataFrame avro(Path path, int limit) throws IOException {
+        Avro avro = new Avro();
+        return avro.read(path, limit);
     }
 
     /**
@@ -534,8 +749,22 @@ public interface Read {
      * @return the data frame.
      */
     static DataFrame avro(String path, String schema) throws IOException, URISyntaxException {
+        return avro(path, schema, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from an Apache Avro file.
+     *
+     * @param path the input file path.
+     * @param schema the data schema file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame avro(String path, String schema, int limit) throws IOException, URISyntaxException {
         Avro avro = new Avro(Files.newInputStream(Path.of(schema)));
-        return avro.read(path);
+        return avro.read(path, limit);
     }
 
     /**
@@ -577,6 +806,18 @@ public interface Read {
     }
 
     /**
+     * Reads a limited number of records from an Apache Parquet file.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws Exception when fails to read the file.
+     * @return the data frame.
+     */
+    static DataFrame parquet(Path path, int limit) throws Exception {
+        return Parquet.read(path, limit);
+    }
+
+    /**
      * Reads an Apache Parquet file.
      *
      * @param uri the input file URI.
@@ -586,6 +827,18 @@ public interface Read {
      */
     static DataFrame parquet(String uri) throws Exception {
         return Parquet.read(uri);
+    }
+
+    /**
+     * Reads a limited number of records from an Apache Parquet file.
+     *
+     * @param uri the input file URI.
+     * @param limit the number of records to read.
+     * @throws Exception when fails to read the file.
+     * @return the data frame.
+     */
+    static DataFrame parquet(String uri, int limit) throws Exception {
+        return Parquet.read(uri, limit);
     }
 
     /**

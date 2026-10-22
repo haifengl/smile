@@ -127,6 +127,18 @@ public class WorkspaceStartupTest {
                 assertFalse(val.isBlank(), "Empty key " + key + " in locale " + locale);
             }
             assertTrue(bundle.containsKey("AgentWelcome"), "Missing AgentWelcome fallback in locale " + locale);
+            for (String key : java.util.List.of(
+                    "LargeFileWarningTitle",
+                    "LargeFileWarningMessage",
+                    "FileTooLargeTitle",
+                    "FileTooLargeMessage",
+                    "LargeDataFileWarningTitle",
+                    "LargeDataFileWarningMessage",
+                    "LoadRowLimitOption",
+                    "LoadAllRowsOption")) {
+                assertTrue(bundle.containsKey(key), "Missing key " + key + " in locale " + locale);
+                assertFalse(bundle.getString(key).isBlank(), "Empty key " + key + " in locale " + locale);
+            }
         }
     }
 
@@ -172,5 +184,17 @@ public class WorkspaceStartupTest {
         assertFalse(Workspace.isDataFile(Path.of("script.jsh")));
         assertFalse(Workspace.isDataFile(Path.of("README.md")));
         assertFalse(Workspace.isDataFile(Path.of("notes.txt")));
+    }
+
+    @Test
+    public void testLargeTextFileSizeThresholdsAndFormatting() {
+        assertEquals(10L * 1024 * 1024, Workspace.LARGE_TEXT_FILE_WARNING_BYTES);
+        assertEquals(50L * 1024 * 1024, Workspace.MAX_TEXT_FILE_BYTES);
+        assertEquals(10L * 1024 * 1024, Workspace.LARGE_DATA_FILE_WARNING_BYTES);
+        assertEquals(100_000, Workspace.DEFAULT_DATA_ROW_LIMIT);
+        assertTrue(Workspace.LARGE_TEXT_FILE_WARNING_BYTES < Workspace.MAX_TEXT_FILE_BYTES);
+        assertEquals("10.0 MB", Workspace.formatSizeMB(Workspace.LARGE_TEXT_FILE_WARNING_BYTES));
+        assertEquals("50.0 MB", Workspace.formatSizeMB(Workspace.MAX_TEXT_FILE_BYTES));
+        assertEquals("12.5 MB", Workspace.formatSizeMB(12L * 1024 * 1024 + 512L * 1024));
     }
 }

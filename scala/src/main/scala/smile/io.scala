@@ -137,10 +137,11 @@ object read {
     *               For json files, it is the file mode (single-line or
     *               multi-line). For avro files, it is the path to the schema
     *               file.
+    * @param limit the number of records to read.
     * @return the data frame.
     */
-  def data(path: String, format: String = null): DataFrame = {
-    Read.data(path, format)
+  def data(path: String, format: String = null, limit: Int = Integer.MAX_VALUE): DataFrame = {
+    Read.data(path, format, limit)
   }
 
   /**
@@ -156,10 +157,31 @@ object read {
   /**
     * Reads a data file. Infers the data format by the file name extension.
     * @param path the input file path.
+    * @param format the optional file format specification.
+    * @param limit the number of records to read.
+    * @return the data frame.
+    */
+  def data(path: Path, format: String, limit: Int): DataFrame = {
+    Read.data(path, format, limit)
+  }
+
+  /**
+    * Reads a data file. Infers the data format by the file name extension.
+    * @param path the input file path.
     * @return the data frame.
     */
   def data(path: Path): DataFrame = {
     Read.data(path)
+  }
+
+  /**
+    * Reads a limited number of records from a data file.
+    * @param path the input file path.
+    * @param limit the number of records to read.
+    * @return the data frame.
+    */
+  def data(path: Path, limit: Int): DataFrame = {
+    Read.data(path, limit)
   }
 
   /** Reads a JDBC query result to a data frame. */

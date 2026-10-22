@@ -73,13 +73,13 @@ object write {
 /** Data loading utilities. */
 object read {
     /** Reads a data file. Infers the data format by the file name extension. */
-    fun data(file: String, format: String? = null): DataFrame {
-        return Read.data(file, format)
+    fun data(file: String, format: String? = null, limit: Int = Int.MAX_VALUE): DataFrame {
+        return Read.data(file, format, limit)
     }
 
     /** Reads a data file. Infers the data format by the file name extension. */
-    fun data(file: Path, format: String? = null): DataFrame {
-        return Read.data(file, format)
+    fun data(file: Path, format: String? = null, limit: Int = Int.MAX_VALUE): DataFrame {
+        return Read.data(file, format, limit)
     }
 
     /** Reads a JDBC query result to a data frame. */

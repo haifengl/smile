@@ -108,6 +108,18 @@ public class Avro {
     }
 
     /**
+     * Reads a limited number of records from an avro file.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
+     */
+    public DataFrame read(Path path, int limit) throws IOException {
+        return read(Files.newInputStream(path), limit);
+    }
+
+    /**
      * Reads an avro file.
      *
      * @param path the input file path.
@@ -117,6 +129,19 @@ public class Avro {
      */
     public DataFrame read(String path) throws IOException, URISyntaxException {
         return read(Files.newInputStream(Path.of(path)), Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from an avro file.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    public DataFrame read(String path, int limit) throws IOException, URISyntaxException {
+        return read(Files.newInputStream(Path.of(path)), limit);
     }
 
     /**
