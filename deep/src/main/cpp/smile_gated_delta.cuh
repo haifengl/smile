@@ -86,6 +86,19 @@ int smile_causal_conv1d_window_split_qkv_cuda(
  *
  * @return 0 on success.
  */
+/**
+ * Whole DeltaNet decode core (S == 1, bf16, head_k_dim 128, head_v_dim % 32 == 0) in two launches: conv update + q/k/v
+ * split (bf16 state updated in place, outputs rounded to bf16 into the float scratch q/k/v of [B, Hv, dim]) and the
+ * recurrent rule with the gates (-exp(A_log) * softplus(a + dt_bias), sigmoid(b)) folded in. out is bf16 [B, Hv, head_v_dim].
+ */
+int smile_gated_delta_decode_fused_cuda(
+        const void *hidden, void *conv_state, const float *conv_w,
+        const void *a, const void *b, const float *a_log, const float *dt_bias,
+        float *rec_state, float *q_buf, float *k_buf, float *v_buf, void *out,
+        int64_t B, int64_t C, int K,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim,
+        float scale, void *cuda_stream);
+
 int smile_causal_conv1d_update_decode_cuda(
         const float *x,
         float *state,

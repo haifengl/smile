@@ -4,6 +4,7 @@
  * MXFP8 Marlin entry points; see smile_marlin_fp8.h. The launcher is vendored from vLLM (see the
  * header of smile_marlin_fp8_launcher.cuh for the exact provenance).
  */
+#include <map>
 #include "smile_marlin_fp8_launcher.cuh"
 
 namespace {
@@ -190,7 +191,14 @@ extern "C" ST_Tensor smile_marlin_fp8_gemm(ST_Tensor a, ST_Tensor qweight, ST_Te
         int64_t max_m_block = std::min<int64_t>((size_m + 15) / 16 * 16, 64);
         at::Tensor c_tmp = torch::empty({sms * max_m_block * marlin::max_thread_n},
                                         torch::dtype(torch::kFloat).device(A.device()));
-        at::Tensor workspace = torch::zeros({sms}, torch::dtype(torch::kInt).device(A.device()));
+        // The kernel leaves its lock array zeroed, so one workspace per (device, stream) is reused (as vLLM does)
+        // instead of paying a fill kernel per GEMM. Calls on one stream are serialized, so they never share a lock live.
+        static thread_local std::map<std::pair<int, void *>, at::Tensor> workspaces;
+        cudaStream_t cur_stream = at::cuda::getCurrentCUDAStream(dev);
+        at::Tensor &workspace = workspaces[{dev, (void *) cur_stream}];
+        if (!workspace.defined() || workspace.numel() < sms) {
+            workspace = torch::zeros({sms}, torch::dtype(torch::kInt).device(A.device()));
+        }
         at::Tensor empty_f = torch::empty({0}, torch::dtype(torch::kFloat).device(A.device()));
         at::Tensor empty_b = torch::empty({0}, A.options());
 

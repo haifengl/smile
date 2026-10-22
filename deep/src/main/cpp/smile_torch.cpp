@@ -2908,6 +2908,65 @@ ST_Tensor smile_causal_conv1d_update_split_qkv(
     return nullptr;
 }
 
+ST_Tensor smile_gated_delta_decode_fused(
+        ST_Tensor hidden, ST_Tensor conv_state, ST_Tensor conv_weight_f,
+        ST_Tensor a, ST_Tensor b, ST_Tensor a_log_f, ST_Tensor dt_bias_f, ST_Tensor rec_state,
+        int num_k_heads, int num_v_heads, int head_k_dim, int head_v_dim) {
+    if (!hidden || !conv_state || !conv_weight_f || !a || !b || !a_log_f || !dt_bias_f || !rec_state) {
+        return nullptr;
+    }
+    ST_TRY_BEGIN
+#ifdef USE_CUDA
+        const auto &h = hidden->t;
+        const auto &cst = conv_state->t;
+        const auto &w = conv_weight_f->t;
+        const auto &rst = rec_state->t;
+        const auto bf = c10::ScalarType::BFloat16;
+        const auto fl = c10::ScalarType::Float;
+        if (!h.is_cuda() || h.scalar_type() != bf || !h.is_contiguous() || cst.scalar_type() != bf
+                || !cst.is_contiguous() || w.scalar_type() != fl || !w.is_contiguous() || w.dim() != 2
+                || a->t.scalar_type() != bf || b->t.scalar_type() != bf
+                || !a->t.is_contiguous() || !b->t.is_contiguous()
+                || a_log_f->t.scalar_type() != fl || dt_bias_f->t.scalar_type() != fl
+                || !a_log_f->t.is_contiguous() || !dt_bias_f->t.is_contiguous()
+                || rst.scalar_type() != fl || !rst.is_contiguous() || rst.dim() != 4) {
+            return nullptr;
+        }
+        const int64_t B = h.size(0);
+        const int64_t C = h.size(1);
+        if ((h.dim() == 3 && h.size(2) != 1) || (h.dim() != 2 && h.dim() != 3) || cst.dim() != 3
+                || cst.size(0) != B || cst.size(1) != C || w.size(0) != C || cst.size(2) != w.size(1) - 1
+                || a->t.numel() != B * num_v_heads || b->t.numel() != B * num_v_heads
+                || a_log_f->t.numel() != num_v_heads || dt_bias_f->t.numel() != num_v_heads
+                || rst.size(0) != B || rst.size(1) != num_v_heads || rst.size(2) != head_k_dim
+                || rst.size(3) != head_v_dim || num_k_heads < 1 || num_v_heads % num_k_heads != 0) {
+            return nullptr;
+        }
+        c10::cuda::CUDAGuard guard(h.device());
+        cudaStream_t stream = at::cuda::getCurrentCUDAStream(h.device().index()).stream();
+        auto fopt = h.options().dtype(fl);
+        auto q = torch::empty({B, num_v_heads, head_k_dim}, fopt);
+        auto k = torch::empty({B, num_v_heads, head_k_dim}, fopt);
+        auto v = torch::empty({B, num_v_heads, head_v_dim}, fopt);
+        auto out = torch::empty({B * num_v_heads, head_v_dim}, h.options());
+        const float scale = 1.0f / std::sqrt(static_cast<float>(head_k_dim));
+        int rc = smile_gated_delta_decode_fused_cuda(
+                h.data_ptr(), cst.data_ptr(), w.data_ptr<float>(), a->t.data_ptr(), b->t.data_ptr(),
+                a_log_f->t.data_ptr<float>(), dt_bias_f->t.data_ptr<float>(), rst.data_ptr<float>(),
+                q.data_ptr<float>(), k.data_ptr<float>(), v.data_ptr<float>(), out.data_ptr(),
+                B, C, static_cast<int>(w.size(1)), num_k_heads, num_v_heads, head_k_dim, head_v_dim,
+                scale, stream);
+        if (rc != 0) {
+            return nullptr; // unsupported shape: nothing was launched
+        }
+        return new ST_Tensor_{ out };
+#else
+        return nullptr;
+#endif
+    ST_TRY_END
+    return nullptr;
+}
+
 ST_Tensor smile_flashinfer_paged_attention(
         ST_Tensor query,
         ST_Tensor k_cache,
