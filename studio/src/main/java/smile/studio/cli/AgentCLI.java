@@ -321,7 +321,7 @@ public class AgentCLI extends JPanel {
         QueuedRequest item = event.item();
         String id = item.id();
         switch (event.action()) {
-            case ENQUEUED -> {
+            case ENQUEUED, EVENT -> {
                 Intent intent = queuedIntents.get(id);
                 if (intent == null) {
                     // Not a local submit we bound already: it arrived from a peer agent.
