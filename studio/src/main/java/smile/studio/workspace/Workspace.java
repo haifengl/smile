@@ -77,10 +77,10 @@ public class Workspace extends JSplitPane {
      */
     static final long MAX_TEXT_FILE_BYTES = 50L * 1024 * 1024;
     /**
-     * File size threshold (10 MB) above which opening a tabular data file
+     * File size threshold (100 MB) above which opening a tabular data file
      * asks the user whether to load all rows or a limited number of rows.
      */
-    static final long LARGE_DATA_FILE_WARNING_BYTES = 10L * 1024 * 1024;
+    static final long LARGE_DATA_FILE_WARNING_BYTES = 100L * 1024 * 1024;
     /**
      * Default maximum number of rows to load when opening a large tabular data file.
      */
