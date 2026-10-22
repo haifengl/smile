@@ -1926,8 +1926,10 @@ public class Qwen implements LanguageModel, AutoCloseable, smile.llm.engine.Mode
             priorTokens = prior;
         }
 
+        /** Normal end of a request (history released): not a demotion, so nothing is logged. */
         void invalidate() {
-            invalidate("unspecified");
+            valid = false;
+            closePending();
         }
 
         void invalidate(String reason) {
