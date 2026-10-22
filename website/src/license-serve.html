@@ -37,16 +37,22 @@ authorized licensing agent and reseller (the &quot;<strong>Commercial Agent</str
 <h2 id="definitions">2. Definitions</h2>
 <ul>
 <li><strong>&quot;Order Form&quot;</strong> — the ordering document (or online checkout) that references
-this Agreement and states the Customer, the licensed scope/quantities, fees,
-term, and support tier.</li>
+this Agreement and states the Customer, the licensed scope/quantities (including
+any bundled SMILE Core Engine scope and SMILE Agent Studio seats), fees, term,
+and support tier.</li>
 <li><strong>&quot;Licensed Product&quot;</strong> — <strong>SMILE Serve Engine</strong>, the inference and model-serving
 runtime, including its components, APIs, and accompanying documentation, in the
-version/build listed on the Order Form.</li>
+version/build listed on the Order Form, together with any <strong>SMILE Core Engine</strong>
+modules and <strong>SMILE Agent Studio</strong> software expressly included on the Order Form
+under Section 3.5.</li>
 <li><strong>&quot;Production Use&quot;</strong> — operation of the Licensed Product in a live environment
-to serve requests other than solely for evaluation, development, or testing.</li>
-<li><strong>&quot;Open Source Version&quot;</strong> — SMILE Serve Engine as distributed by the Licensor under the
-GNU Affero General Public License v3. This Agreement does not govern the Open
-Source Version; the AGPLv3 does.</li>
+to serve requests or execute workloads other than solely for evaluation,
+development, or testing.</li>
+<li><strong>&quot;Open Source Version&quot;</strong> — SMILE Serve Engine as distributed by the Licensor
+under the GNU Affero General Public License v3 (and, as to SMILE Core Engine,
+under the GNU General Public License v3, or as to SMILE Agent Studio, under the
+Business Source License 1.1). This Agreement does not govern those distributions;
+their respective open-source or source-available licenses do.</li>
 </ul>
 <h2 id="grant-of-license">3. Grant of License</h2>
 <p>3.1 <strong>Grant.</strong> Subject to the terms of this Agreement and payment of the Fees, the
@@ -70,9 +76,16 @@ licensed scope.</p>
 capabilities on the Order Form — such as high-availability clustering, zero-GC
 execution, and enterprise management — are licensed only under this Agreement and
 are not part of the Open Source Version.</p>
-<p>3.5 <strong>The Open Source route remains available.</strong> Nothing in this Agreement
+<p>3.5 <strong>Bundled Core Engine and Agent Studio use.</strong> Where the Order Form includes
+<strong>SMILE Core Engine</strong> and/or <strong>SMILE Agent Studio</strong> as part of a Production Runtime
+subscription:</p>
+<ul class="legal-clauses">
+<li>(a) the Customer may reproduce, install, and execute the <strong>SMILE Core Engine</strong> modules (<code>base</code>, <code>core</code>, <code>nlp</code>, <code>deep</code>, <code>plot</code>, <code>kotlin</code>, <code>scala</code>, and related modules) internally on the licensed nodes and environments to develop, train, update, and score models and run in-process workloads for the Customer's internal and commercial Production Use, <strong>free of GPLv3 source-disclosure obligations</strong> (excluding redistribution of SMILE object code to third parties, which requires a separate OEM license under the SMILE Core Engine Commercial License Agreement); and</li>
+<li>(b) the Customer may install and use <strong>SMILE Agent Studio</strong> for Commercial Production Use during the Term by up to the number of Authorized Users stated on the Order Form, governed by the seat, model-ownership, and no-source-disclosure terms (Sections 3.1(a)–(b), 3.2, 3.6, and 4.2) and disclaimers (Sections 8.4 and 10.2–10.3) of the <strong>SMILE Agent Studio Commercial License Agreement (Version 1.0)</strong>, which are incorporated by reference as to such seats.</li>
+</ul>
+<p>3.6 <strong>The Open Source route remains available.</strong> Nothing in this Agreement
 restricts the Customer's rights under the Open Source Version, which the Customer
-may use instead under the AGPLv3.</p>
+may use instead under the AGPLv3 (or the GPLv3 or BSL 1.1, as applicable).</p>
 <h2 id="ownership">4. Ownership</h2>
 <p>4.1 <strong>Reserved to the Licensor.</strong> The Licensed Product is licensed, not sold. All
 intellectual property rights in the Licensed Product are and remain the exclusive
