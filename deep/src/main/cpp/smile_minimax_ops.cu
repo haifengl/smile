@@ -68,6 +68,99 @@ __global__ void gemma_rms_norm_kernel(const T* __restrict__ x, const T* __restri
     }
 }
 
+
+// ---------------------------------------------------------------- residual add + RMSNorm, SwiGLU
+
+/** sum = x + r (rounded to T like the eager add), y = gemma_rms_norm(sum). One row per block. */
+template <typename T>
+__global__ void add_gemma_rms_norm_kernel(const T* __restrict__ x, const T* __restrict__ r, const T* __restrict__ w,
+                                          T* __restrict__ sum, T* __restrict__ y, int d, float eps) {
+    const int64_t off = (int64_t) blockIdx.x * d;
+    float ss = 0.f;
+    for (int i = threadIdx.x; i < d; i += blockDim.x) {
+        const T t = static_cast<T>(static_cast<float>(x[off + i]) + static_cast<float>(r[off + i]));
+        sum[off + i] = t;
+        const float v = static_cast<float>(t);
+        ss += v * v;
+    }
+    __shared__ float partial[32];
+    ss = warp_sum(ss);
+    if ((threadIdx.x & 31) == 0) partial[threadIdx.x >> 5] = ss;
+    __syncthreads();
+    if (threadIdx.x < 32) {
+        float v = threadIdx.x < (blockDim.x >> 5) ? partial[threadIdx.x] : 0.f;
+        v = warp_sum(v);
+        if (threadIdx.x == 0) partial[0] = v;
+    }
+    __syncthreads();
+    const float rstd = rsqrtf(partial[0] / (float) d + eps);
+    for (int i = threadIdx.x; i < d; i += blockDim.x) {
+        y[off + i] = static_cast<T>(static_cast<float>(sum[off + i]) * rstd * gemma_scale<T>(w, i));
+    }
+}
+
+
+/**
+ * Row-per-block RMSNorm with 16-byte vector accesses and the whole row held in registers: one read of x (and r), one
+ * block reduction, one write. d must be a multiple of the vector width and at most 1024 * width. ADD fuses the residual
+ * add (the rounded sum is also written to sum_out).
+ */
+template <typename T, bool ADD>
+__global__ void rms_norm_vec_kernel(const T* __restrict__ x, const T* __restrict__ r, const T* __restrict__ w,
+                                    T* __restrict__ sum_out, T* __restrict__ y, int d, float eps) {
+    constexpr int VEC = 16 / sizeof(T);
+    const int nvec = d / VEC;
+    const int tid = threadIdx.x;
+    const int64_t row = (int64_t) blockIdx.x * d;
+    float v[VEC];
+    float ss = 0.f;
+    const bool active = tid < nvec;
+    if (active) {
+        union { uint4 u; T t[VEC]; } xv;
+        xv.u = *reinterpret_cast<const uint4*>(x + row + (int64_t) tid * VEC);
+        if (ADD) {
+            union { uint4 u; T t[VEC]; } rv, sv;
+            rv.u = *reinterpret_cast<const uint4*>(r + row + (int64_t) tid * VEC);
+            #pragma unroll
+            for (int i = 0; i < VEC; ++i) {
+                sv.t[i] = static_cast<T>(static_cast<float>(xv.t[i]) + static_cast<float>(rv.t[i]));
+                v[i] = static_cast<float>(sv.t[i]);
+            }
+            *reinterpret_cast<uint4*>(sum_out + row + (int64_t) tid * VEC) = sv.u;
+        } else {
+            #pragma unroll
+            for (int i = 0; i < VEC; ++i) v[i] = static_cast<float>(xv.t[i]);
+        }
+        #pragma unroll
+        for (int i = 0; i < VEC; ++i) ss += v[i] * v[i];
+    }
+    __shared__ float partial[32];
+    ss = warp_sum(ss);
+    if ((tid & 31) == 0) partial[tid >> 5] = ss;
+    __syncthreads();
+    float tot = (tid & 31) < (blockDim.x >> 5) ? partial[tid & 31] : 0.f;
+    tot = warp_sum(tot);  // every warp reduces the per-warp partials itself: no second sync needed
+    const float rstd = rsqrtf(tot / (float) d + eps);
+    if (active) {
+        union { uint4 u; T t[VEC]; } wv, yv;
+        wv.u = *reinterpret_cast<const uint4*>(w + (int64_t) tid * VEC);
+        #pragma unroll
+        for (int i = 0; i < VEC; ++i) {
+            yv.t[i] = static_cast<T>(v[i] * rstd * round_to<T>(static_cast<float>(wv.t[i]) + 1.0f));
+        }
+        *reinterpret_cast<uint4*>(y + row + (int64_t) tid * VEC) = yv.u;
+    }
+}
+
+/** out = silu(gate) * up in float with one rounding. */
+template <typename T>
+__global__ void silu_mul_kernel(const T* __restrict__ gate, const T* __restrict__ up, T* __restrict__ out, int64_t n) {
+    const int64_t i = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= n) return;
+    const float g = static_cast<float>(gate[i]);
+    out[i] = static_cast<T>(g / (1.f + expf(-g)) * static_cast<float>(up[i]));
+}
+
 // ---------------------------------------------------------------- QK norm + RoPE
 
 template <typename T>
@@ -540,6 +633,18 @@ extern "C" ST_Tensor smile_gemma_rms_norm(ST_Tensor x, ST_Tensor w, double eps) 
         const int64_t rows = xt.numel() / d;
         if (rows == 0) return new ST_Tensor_{ y };
         const int threads = d >= 1024 ? 512 : (d >= 256 ? 256 : 64);
+        const int vec = 16 / (int) xt.element_size();
+        if (d % vec == 0 && d / vec <= 1024 && d >= 256 && xt.data_ptr() && ((uintptr_t) xt.data_ptr() % 16) == 0
+                && ((uintptr_t) wt.data_ptr() % 16) == 0) {
+            const int vthreads = (int) (((d / vec) + 31) / 32 * 32);
+            DISPATCH_FLOAT(xt.scalar_type(), "smile_gemma_rms_norm", [&] {
+                rms_norm_vec_kernel<T, false><<<(unsigned) rows, vthreads, 0, stream_of(xt)>>>(
+                        xt.data_ptr<T>(), nullptr, wt.data_ptr<T>(), nullptr, y.data_ptr<T>(), (int) d, (float) eps);
+                return 0;
+            });
+            check_launch("smile_gemma_rms_norm");
+            return new ST_Tensor_{ y };
+        }
         DISPATCH_FLOAT(xt.scalar_type(), "smile_gemma_rms_norm", [&] {
             gemma_rms_norm_kernel<T><<<(unsigned) rows, threads, 0, stream_of(xt)>>>(
                     xt.data_ptr<T>(), wt.data_ptr<T>(), y.data_ptr<T>(), (int) d, (float) eps);
@@ -547,6 +652,82 @@ extern "C" ST_Tensor smile_gemma_rms_norm(ST_Tensor x, ST_Tensor w, double eps) 
         });
         check_launch("smile_gemma_rms_norm");
         return new ST_Tensor_{ y };
+    } catch (const std::exception& e) {
+        set_err(e.what());
+        return nullptr;
+    }
+}
+
+extern "C" ST_Tensor smile_add_gemma_rms_norm(ST_Tensor x, ST_Tensor r, ST_Tensor w, double eps, ST_Tensor *out_sum) {
+    try {
+        smile_torch_clear_error();
+        *out_sum = nullptr;
+        at::Tensor xt = require_cuda(x, "smile_add_gemma_rms_norm: x").contiguous();
+        at::Tensor rt = require_cuda(r, "smile_add_gemma_rms_norm: r").contiguous();
+        if (xt.sizes() != rt.sizes() || xt.scalar_type() != rt.scalar_type()) {
+            throw std::runtime_error("smile_add_gemma_rms_norm: x and r must have the same shape and dtype");
+        }
+        const int64_t d = xt.size(-1);
+        at::Tensor wt = require_cuda(w, "smile_add_gemma_rms_norm: w").to(xt.scalar_type()).contiguous();
+        if (wt.numel() != d) throw std::runtime_error("smile_add_gemma_rms_norm: weight length != last dim");
+        c10::cuda::CUDAGuard guard(xt.get_device());
+        at::Tensor sum = at::empty_like(xt);
+        at::Tensor y = at::empty_like(xt);
+        const int64_t rows = xt.numel() / d;
+        if (rows > 0) {
+            const int threads = d >= 1024 ? 512 : (d >= 256 ? 256 : 64);
+            const int vec = 16 / (int) xt.element_size();
+            const bool vectorized = d % vec == 0 && d / vec <= 1024 && d >= 256
+                    && ((uintptr_t) xt.data_ptr() % 16) == 0 && ((uintptr_t) rt.data_ptr() % 16) == 0
+                    && ((uintptr_t) wt.data_ptr() % 16) == 0;
+            if (vectorized) {
+                const int vthreads = (int) (((d / vec) + 31) / 32 * 32);
+                DISPATCH_FLOAT(xt.scalar_type(), "smile_add_gemma_rms_norm", [&] {
+                    rms_norm_vec_kernel<T, true><<<(unsigned) rows, vthreads, 0, stream_of(xt)>>>(
+                            xt.data_ptr<T>(), rt.data_ptr<T>(), wt.data_ptr<T>(), sum.data_ptr<T>(), y.data_ptr<T>(),
+                            (int) d, (float) eps);
+                    return 0;
+                });
+                check_launch("smile_add_gemma_rms_norm");
+                *out_sum = new ST_Tensor_{ sum };
+                return new ST_Tensor_{ y };
+            }
+            DISPATCH_FLOAT(xt.scalar_type(), "smile_add_gemma_rms_norm", [&] {
+                add_gemma_rms_norm_kernel<T><<<(unsigned) rows, threads, 0, stream_of(xt)>>>(
+                        xt.data_ptr<T>(), rt.data_ptr<T>(), wt.data_ptr<T>(), sum.data_ptr<T>(), y.data_ptr<T>(),
+                        (int) d, (float) eps);
+                return 0;
+            });
+            check_launch("smile_add_gemma_rms_norm");
+        }
+        *out_sum = new ST_Tensor_{ sum };
+        return new ST_Tensor_{ y };
+    } catch (const std::exception& e) {
+        set_err(e.what());
+        return nullptr;
+    }
+}
+
+extern "C" ST_Tensor smile_silu_mul(ST_Tensor gate, ST_Tensor up) {
+    try {
+        smile_torch_clear_error();
+        at::Tensor g = require_cuda(gate, "smile_silu_mul: gate").contiguous();
+        at::Tensor u = require_cuda(up, "smile_silu_mul: up").contiguous();
+        if (g.sizes() != u.sizes() || g.scalar_type() != u.scalar_type()) {
+            throw std::runtime_error("smile_silu_mul: gate and up must have the same shape and dtype");
+        }
+        c10::cuda::CUDAGuard guard(g.get_device());
+        at::Tensor out = at::empty_like(g);
+        const int64_t n = g.numel();
+        if (n > 0) {
+            DISPATCH_FLOAT(g.scalar_type(), "smile_silu_mul", [&] {
+                silu_mul_kernel<T><<<(unsigned) ((n + 255) / 256), 256, 0, stream_of(g)>>>(
+                        g.data_ptr<T>(), u.data_ptr<T>(), out.data_ptr<T>(), n);
+                return 0;
+            });
+            check_launch("smile_silu_mul");
+        }
+        return new ST_Tensor_{ out };
     } catch (const std::exception& e) {
         set_err(e.what());
         return nullptr;

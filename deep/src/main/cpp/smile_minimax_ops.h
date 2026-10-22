@@ -24,6 +24,15 @@ SMILE_API int smile_minimax_ops_available(void);
 SMILE_API ST_Tensor smile_gemma_rms_norm(ST_Tensor x, ST_Tensor w, double eps);
 
 /**
+ * Residual add fused with Gemma RMSNorm: sum = x + r (rounded to the dtype like an eager add), y = gemma_rms_norm(sum).
+ * x, r: CUDA tensors of one shape/dtype [.., D]; w: [D]. Returns y and writes sum to *out_sum.
+ */
+SMILE_API ST_Tensor smile_add_gemma_rms_norm(ST_Tensor x, ST_Tensor r, ST_Tensor w, double eps, ST_Tensor *out_sum);
+
+/** out = silu(gate) * up (float math, one rounding). gate, up: CUDA tensors of one shape/dtype. */
+SMILE_API ST_Tensor smile_silu_mul(ST_Tensor gate, ST_Tensor up);
+
+/**
  * Per-head Gemma RMSNorm of q and k followed by rotate-half RoPE on the first rotary_dim dims, in one launch.
  * q: CUDA [B, S, Hq, D]; k: [B, S, Hk, D] (same dtype; unit stride over D and heads, uniform token stride, so slices of a fused projection need no copy); qw: [D]; kw: [D]. cos/sin: float32 or q's dtype,
  * [R, rotary_dim] where token t uses row t % R (R = batch for decode, sequence length for prefill).

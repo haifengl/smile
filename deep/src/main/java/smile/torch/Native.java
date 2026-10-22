@@ -175,6 +175,17 @@ public final class Native {
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)))
                 .orElse(null);
+        static final MethodHandle ADD_GEMMA_RMS_NORM = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_add_gemma_rms_norm")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle SILU_MUL = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_silu_mul")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
         static final java.util.Optional<MemorySegment> QK_NORM_ROPE_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_qk_norm_rope");
         static final MethodHandle QK_NORM_ROPE = QK_NORM_ROPE_SYM
@@ -1002,6 +1013,46 @@ public final class Native {
             return null;
         }
         return fusedResult(Bindings.GEMMA_RMS_NORM, x.handle(), weight.handle(), eps);
+    }
+
+    /**
+     * Residual add fused with Gemma RMSNorm: {@code sum = x + r}, {@code y = gemmaRmsNorm(sum)}, one launch.
+     *
+     * @return {@code {y, sum}}, or {@code null} when unavailable or unsupported (nothing allocated).
+     */
+    public static Tensor[] addGemmaRmsNorm(Tensor x, Tensor r, Tensor weight, double eps) {
+        if (!FUSED_OPS_ENABLED || Bindings.ADD_GEMMA_RMS_NORM == null || !x.device().isCUDA()
+                || !r.device().isCUDA() || x.dtype() != r.dtype()) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment sumPtr = arena.allocate(ValueLayout.ADDRESS);
+            MemorySegment y;
+            try {
+                y = (MemorySegment) Bindings.ADD_GEMMA_RMS_NORM.invokeExact(
+                        x.handle(), r.handle(), weight.handle(), eps, sumPtr);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (y == null || y.address() == 0) {
+                return null;
+            }
+            MemorySegment sum = sumPtr.get(ValueLayout.ADDRESS, 0);
+            if (sum == null || sum.address() == 0) {
+                new Tensor(y).close();
+                return null;
+            }
+            return new Tensor[]{new Tensor(y), new Tensor(sum)};
+        }
+    }
+
+    /** {@code silu(gate) * up} in one launch, or {@code null} when unavailable or unsupported. */
+    public static Tensor siluMul(Tensor gate, Tensor up) {
+        if (!FUSED_OPS_ENABLED || Bindings.SILU_MUL == null || !gate.device().isCUDA()
+                || !up.device().isCUDA() || gate.dtype() != up.dtype()) {
+            return null;
+        }
+        return fusedResult(Bindings.SILU_MUL, gate.handle(), up.handle());
     }
 
     /**

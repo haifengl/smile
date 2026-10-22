@@ -190,11 +190,19 @@ public class QwenBlock {
                     ? selfAttn.forward(h, positions, cos, sin, mask)
                     : linearAttn.forward(h);
             h.close();
-            Tensor afterAttn = residual.add(mixed);
+            Tensor afterAttn;
+            Tensor ffIn;
+            Tensor[] addNorm = smile.torch.Native.addGemmaRmsNorm(residual, mixed, postNorm.weight(), postNorm.eps());
+            if (addNorm != null) {
+                ffIn = addNorm[0];
+                afterAttn = addNorm[1];
+            } else {
+                afterAttn = residual.add(mixed);
+                ffIn = postNorm.forward(afterAttn);
+            }
             mixed.close();
 
             residual = afterAttn;
-            Tensor ffIn = postNorm.forward(afterAttn);
             Tensor ffOut = feedForward.forward(ffIn);
             ffIn.close();
             Tensor out = residual.add(ffOut);
