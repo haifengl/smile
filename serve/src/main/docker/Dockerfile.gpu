@@ -200,6 +200,11 @@ RUN python3 -m pip install --no-cache-dir --break-system-packages --no-deps \
 # -----------------------------------------------------------------------------
 FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu24.04
 
+LABEL org.opencontainers.image.title="SMILE Serve (GPU)" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later OR LicenseRef-SMILE-Commercial" \
+      org.opencontainers.image.source="https://github.com/haifengl/smile" \
+      org.opencontainers.image.url="https://www.aihalo.dev/licensing.html"
+
 ARG TORCH_VERSION
 ARG CU_VERSION
 ARG ORT_VERSION=1.30.0

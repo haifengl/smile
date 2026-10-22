@@ -438,7 +438,8 @@ SMILE provides two visualization layers:
 SMILE employs a modern multi-product licensing model designed to support
 free academic and open-source collaboration while offering commercial licensing
 and enterprise support for proprietary and mission-critical deployments.
-For details, see [LICENSE](https://github.com/haifengl/smile/blob/master/LICENSE).
+For details, see [LICENSE](https://github.com/haifengl/smile/blob/master/LICENSE) and
+[Commercial Licensing & Pricing](https://www.aihalo.dev/licensing.html).
 To acquire a commercial license, contact **sales@aihalo.dev**.
 
 ---

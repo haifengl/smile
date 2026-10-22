@@ -104,6 +104,11 @@
 ###
 FROM registry.access.redhat.com/ubi10/openjdk-25-runtime:1.24
 
+LABEL org.opencontainers.image.title="SMILE Serve" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later OR LicenseRef-SMILE-Commercial" \
+      org.opencontainers.image.source="https://github.com/haifengl/smile" \
+      org.opencontainers.image.url="https://www.aihalo.dev/licensing.html"
+
 ENV LANGUAGE='en_US:en'
 
 USER root

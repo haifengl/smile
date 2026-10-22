@@ -1,5 +1,15 @@
 name := "smile-studio"
 
+licenses := List(
+  "BUSL-1.1" -> uri("https://raw.githubusercontent.com/haifengl/smile/master/studio/LICENSE"),
+  "LicenseRef-SMILE-Commercial" -> uri("https://www.aihalo.dev/licensing.html")
+)
+
+Compile / packageBin / mappings := {
+  (Compile / packageBin / mappings).value.filterNot(_._2 == "META-INF/LICENSE") :+
+    (((LocalRootProject / baseDirectory).value / "studio" / "LICENSE") -> "META-INF/LICENSE")
+}
+
 resolvers += "jitpack" at "https://jitpack.io"
 
 Compile / mainClass := Some("smile.Main")
@@ -31,6 +41,8 @@ Universal / mappings ++= {
   val rootFiles = Seq(
     (rootDir / "studio" / "README.md") -> "README.md",
     (rootDir / "studio" / "CLI.md") -> "CLI.md",
+    (rootDir / "studio" / "LICENSE") -> "LICENSE.studio",
+    (rootDir / "serve" / "LICENSE") -> "serve/LICENSE",
     (rootDir / "COPYING") -> "COPYING",
     (rootDir / "LICENSE") -> "LICENSE"
   ).map { case (file, target) =>

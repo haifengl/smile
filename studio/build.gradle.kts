@@ -66,6 +66,12 @@ distributions {
             // 2. Package documentation and license files at root
             from("README.md")
             from("CLI.md")
+            from("LICENSE") {
+                rename { "LICENSE.studio" }
+            }
+            from(rootProject.file("serve/LICENSE")) {
+                into("serve")
+            }
             from(rootProject.file("COPYING"))
             from(rootProject.file("LICENSE"))
 

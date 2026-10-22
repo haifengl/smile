@@ -111,6 +111,11 @@ RUN set -eu; \
 # -----------------------------------------------------------------------------
 FROM ${RUNTIME_BASE}
 
+LABEL org.opencontainers.image.title="SMILE Serve (Micro Native)" \
+      org.opencontainers.image.licenses="AGPL-3.0-or-later OR LicenseRef-SMILE-Commercial" \
+      org.opencontainers.image.source="https://github.com/haifengl/smile" \
+      org.opencontainers.image.url="https://www.aihalo.dev/licensing.html"
+
 COPY --from=builder /out/ /
 
 # Runtime libraries only (no headers, cmake files or static libs)

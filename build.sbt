@@ -14,7 +14,7 @@ lazy val commonSettings = Seq(
   description := "Statistical Machine Intelligence and Learning Engine",
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
-  organizationHomepage := Some(uri("https://www.aihalo.dev//")),
+  organizationHomepage := Some(uri("https://www.aihalo.dev/")),
   version := "7.0.0",
 
   // Run in a separate JVM, to make sure sbt waits until all threads have
@@ -83,7 +83,7 @@ lazy val commonSettings = Seq(
   },
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
-  homepage := Some(uri("https://www.aihalo.dev//")),
+  homepage := Some(uri("https://www.aihalo.dev/")),
   scmInfo := Some(
     ScmInfo(
       uri("https://github.com/haifengl/smile"),
@@ -95,7 +95,7 @@ lazy val commonSettings = Seq(
       id = "haifengl",
       name = "Haifeng Li",
       email = "",
-      url = uri("https://github.com/haifengl")
+      url = uri("https://www.aihalo.dev/")
     ),
     Developer(
       id = "kklioss",
@@ -105,8 +105,12 @@ lazy val commonSettings = Seq(
     )
   ),
   licenses := List(
-    "GNU 3" -> uri("https://opensource.org/licenses/GPL-3.0")
-  )
+    "GPL-3.0-or-later" -> uri("https://www.gnu.org/licenses/gpl-3.0.html"),
+    "LicenseRef-SMILE-Commercial" -> uri("https://www.aihalo.dev/licensing.html")
+  ),
+  Compile / packageBin / mappings += {
+    ((LocalRootProject / baseDirectory).value / "LICENSE") -> "META-INF/LICENSE"
+  }
 )
 
 lazy val javaSettings = commonSettings ++ Seq(
