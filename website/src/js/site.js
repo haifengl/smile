@@ -217,14 +217,37 @@
 
     var form = document.getElementById('order-request-form');
     var resultBox = document.getElementById('order-result');
+    var modalTitle = document.getElementById('contact-modal-title');
+    var modalSub = document.getElementById('contact-modal-sub');
+    var modeInput = document.getElementById('order-mode');
+    var modeTabs = modal.querySelectorAll('[data-contact-tab]');
+    var firstNameInput = document.getElementById('order-first-name');
+    var lastNameInput = document.getElementById('order-last-name');
+    var emailInput = document.getElementById('order-email');
+    var customerInput = document.getElementById('order-customer');
+    var roleInput = document.getElementById('order-role');
+    var companySizeSelect = document.getElementById('order-company-size');
+    var orgTypeSelect = document.getElementById('order-org-type');
+    var interestSelect = document.getElementById('order-interest');
+    var demoSpecificWrap = document.getElementById('demo-specific-fields');
+    var demoProductSelect = document.getElementById('demo-product');
+    var pilotEnvWrap = document.getElementById('pilot-env-wrap');
+    var pilotEnvSelect = document.getElementById('pilot-env');
+    var pilotScaleWrap = document.getElementById('pilot-scale-wrap');
+    var pilotScaleSelect = document.getElementById('pilot-scale');
+    var tierWrap = document.getElementById('order-tier-wrap');
     var tierSelect = document.getElementById('order-tier');
     var nodesInput = document.getElementById('order-nodes');
     var seatsInput = document.getElementById('order-seats');
     var nodesWrap = document.getElementById('order-nodes-wrap');
     var seatsWrap = document.getElementById('order-seats-wrap');
+    var billingWrap = document.getElementById('order-billing-wrap');
+    var billingEmailInput = document.getElementById('order-billing-email');
     var nodesLabel = document.getElementById('order-nodes-label');
     var nodesHint = document.getElementById('order-nodes-hint');
     var seatsHint = document.getElementById('order-seats-hint');
+    var notesInput = document.getElementById('order-notes');
+    var summaryBox = document.getElementById('order-summary');
     var summaryTitle = document.getElementById('order-summary-title');
     var summaryAgreement = document.getElementById('order-summary-agreement');
     var summaryPrice = document.getElementById('order-summary-price');
@@ -238,22 +261,95 @@
     var resultCode = document.getElementById('order-result-code');
     var closeBtns = modal.querySelectorAll('[data-contact-close]');
     var lastFocus = null;
+    var activeMode = 'order';
+
+    var MODE_CONFIG = {
+      contact: {
+        title: 'Contact Us',
+        sub: 'HALO.AI LLC · Direct engineering, architecture & licensing inquiries',
+        submitLabel: 'Send Inquiry',
+        defaultInterest: 'AI Framework Integration & Open-Source Tooling',
+        placeholder: 'Tell us about your technical requirements, licensing inquiries, or project scope...'
+      },
+      demo: {
+        title: 'Get a Live Technical Demo',
+        sub: 'See SMILE Core Engine, Serve Engine, and Agent Studio on your workload',
+        submitLabel: 'Request Demo',
+        defaultInterest: 'High-Performance Model Serving & Inference Infrastructure',
+        placeholder: 'Share the models (.sml, .onnx, LLM), latency/throughput targets, or workflows you want to see in the demo...'
+      },
+      pilot: {
+        title: 'Request a 30-Day Enterprise Pilot',
+        sub: 'Run SMILE on your edge gateways, servers, or air-gapped network · 100% credited to annual contract',
+        submitLabel: 'Request Pilot',
+        defaultInterest: 'On-Premises / Hybrid Cloud Private AI Deployment',
+        placeholder: 'Tell us where your nodes sit, what models you score or train today, and your target pilot timeline...'
+      },
+      order: {
+        title: 'Request Commercial Order Form',
+        sub: 'Administered by HALO.AI LLC · Standard Version 1.0 Agreements · Net-30 Invoicing & Offline Ed25519 License Keys',
+        submitLabel: 'Request Order Form & Key',
+        defaultInterest: 'Commercial Licensing & Enterprise Pricing Models',
+        placeholder: 'Optional: target go-live date, OEM application product line name, Year 2 Maintenance preference, or PO / vendor onboarding instructions...'
+      }
+    };
 
     var TIER_DEFAULTS = {
       PRODUCTION_RUNTIME: { nodes: 4, seats: 5 },
-      OEM: { nodes: 1, seats: 10 },
+      OEM: { nodes: 10, seats: 10 },
       ENTERPRISE: { nodes: 100, seats: 25 },
       STUDIO_TEAM: { nodes: 0, seats: 5 },
-      EVALUATION_PILOT: { nodes: 4, seats: 5 },
-      GENERAL_INQUIRY: { nodes: 4, seats: 5 }
+      EVALUATION_PILOT: { nodes: 4, seats: 5 }
     };
 
     function formatUsd(amount) {
       return '$' + amount.toLocaleString('en-US');
     }
 
+    function setMode(mode, preferredTier) {
+      activeMode = MODE_CONFIG[mode] ? mode : 'contact';
+      var cfg = MODE_CONFIG[activeMode];
+      if (modeInput) modeInput.value = activeMode;
+      if (modalTitle) modalTitle.textContent = cfg.title;
+      if (modalSub) modalSub.textContent = cfg.sub;
+      if (submitBtn) submitBtn.textContent = cfg.submitLabel;
+      if (notesInput) notesInput.placeholder = cfg.placeholder;
+      if (interestSelect && cfg.defaultInterest) {
+        interestSelect.value = cfg.defaultInterest;
+      }
+
+      modeTabs.forEach(function (tab) {
+        var isMatch = tab.getAttribute('data-contact-tab') === activeMode;
+        tab.classList.toggle('is-active', isMatch);
+        tab.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+      });
+
+      var isDemo = activeMode === 'demo';
+      var isPilot = activeMode === 'pilot';
+      var isOrder = activeMode === 'order';
+
+      if (demoSpecificWrap) demoSpecificWrap.hidden = !isDemo;
+      if (pilotEnvWrap) pilotEnvWrap.hidden = !isPilot;
+      if (pilotScaleWrap) pilotScaleWrap.hidden = !isPilot;
+      if (tierWrap) tierWrap.hidden = !isOrder;
+      if (billingWrap) billingWrap.hidden = !isOrder;
+      if (summaryBox) summaryBox.hidden = !isOrder;
+
+      if (isOrder) {
+        if (tierSelect && preferredTier && TIER_DEFAULTS[preferredTier]) {
+          tierSelect.value = preferredTier;
+          updateSummary(true);
+        } else {
+          updateSummary(false);
+        }
+      } else {
+        if (nodesWrap) nodesWrap.hidden = true;
+        if (seatsWrap) seatsWrap.hidden = true;
+      }
+    }
+
     function updateSummary(resetDefaults) {
-      if (!tierSelect) return;
+      if (!tierSelect || activeMode !== 'order') return;
       var tier = tierSelect.value;
       var defaults = TIER_DEFAULTS[tier] || TIER_DEFAULTS.PRODUCTION_RUNTIME;
 
@@ -318,27 +414,17 @@
         if (summaryTitle) summaryTitle.textContent = '30-Day Commercial Trial / Turnkey Enterprise Pilot';
         if (summaryAgreement) summaryAgreement.textContent = 'Includes signed offline Ed25519 trial key (SMILE-STUDIO-v1)';
         if (summaryPrice) summaryPrice.innerHTML = 'Trial / Pilot <span>30 days</span>';
-      } else {
-        if (nodesWrap) nodesWrap.hidden = true;
-        if (seatsWrap) seatsWrap.hidden = true;
-        if (summaryTitle) summaryTitle.textContent = 'Architecture & Licensing Consultation';
-        if (summaryAgreement) summaryAgreement.textContent = 'Direct engineering & licensing response within 1 business day';
-        if (summaryPrice) summaryPrice.innerHTML = 'Custom <span>consultation</span>';
       }
     }
 
-    function open(preferredTier) {
+    function open(preferredMode, preferredTier) {
       lastFocus = document.activeElement;
       if (form) form.hidden = false;
       if (resultBox) resultBox.hidden = true;
       if (errorEl) errorEl.hidden = true;
 
-      if (tierSelect && preferredTier && TIER_DEFAULTS[preferredTier]) {
-        tierSelect.value = preferredTier;
-        updateSummary(true);
-      } else {
-        updateSummary(false);
-      }
+      var resolvedMode = preferredMode || (preferredTier ? 'order' : 'contact');
+      setMode(resolvedMode, preferredTier);
 
       var drawer = document.getElementById('mobile-drawer');
       var menuBtn = document.getElementById('menu-toggle');
@@ -351,8 +437,7 @@
       modal.hidden = false;
       modal.classList.add('is-open');
       document.body.classList.add('contact-open');
-      var firstInput = document.getElementById('order-customer');
-      if (firstInput) firstInput.focus();
+      if (firstNameInput) firstNameInput.focus();
     }
 
     function close() {
@@ -364,6 +449,12 @@
         lastFocus.focus();
       }
     }
+
+    modeTabs.forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        setMode(tab.getAttribute('data-contact-tab'));
+      });
+    });
 
     if (tierSelect) {
       tierSelect.addEventListener('change', function () { updateSummary(true); });
@@ -377,7 +468,9 @@
 
     document.querySelectorAll('[data-contact-open]').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        open(btn.getAttribute('data-contact-tier'));
+        var mode = btn.getAttribute('data-contact-mode');
+        var tier = btn.getAttribute('data-contact-tier');
+        open(mode, tier);
       });
     });
 
@@ -392,21 +485,45 @@
     });
 
     function buildOrderSummaryText(payload, orderId) {
-      return [
-        'SMILE COMMERCIAL ORDER REQUEST (' + orderId + ')',
+      var header = payload.requestType === 'demo'
+        ? 'SMILE DEMO REQUEST (' + orderId + ')'
+        : payload.requestType === 'pilot'
+        ? 'SMILE 30-DAY PILOT REQUEST (' + orderId + ')'
+        : payload.requestType === 'order'
+        ? 'SMILE COMMERCIAL ORDER REQUEST (' + orderId + ')'
+        : 'SMILE CONTACT INQUIRY (' + orderId + ')';
+
+      var lines = [
+        header,
         '============================================================',
-        'Order Reference : ' + orderId,
-        'Submitted At    : ' + payload.submittedAt,
-        'Commercial Tier : ' + payload.tier,
-        'Estimated Quote : ' + payload.estimatedPrice,
-        'Customer Entity : ' + payload.customer,
-        'Primary Contact : ' + payload.contactName + ' <' + payload.email + '>',
-        'Billing Contact : ' + (payload.billingEmail || payload.email),
-        'Nodes / Devs    : ' + payload.nodes,
-        'Studio Seats    : ' + payload.seats,
-        'Notes / Scope   : ' + (payload.notes || 'None'),
-        '============================================================'
-      ].join('\n');
+        'Reference ID      : ' + orderId,
+        'Request Type      : ' + payload.requestType.toUpperCase(),
+        'Submitted At      : ' + payload.submittedAt,
+        'Name              : ' + payload.firstName + ' ' + payload.lastName,
+        'Work Email        : ' + payload.email,
+        'Job Title / Role  : ' + payload.jobTitle,
+        'Company / Org     : ' + payload.customer,
+        'Organization Type : ' + payload.organizationType,
+        'Company Size      : ' + payload.companySize,
+        'Primary Interest  : ' + payload.primaryInterest
+      ];
+
+      if (payload.requestType === 'demo' && payload.demoProduct) {
+        lines.push('Demo Focus        : ' + payload.demoProduct);
+      } else if (payload.requestType === 'pilot') {
+        lines.push('Pilot Environment : ' + (payload.pilotEnvironment || 'On-Premises'));
+        lines.push('Pilot Program     : ' + (payload.pilotScale || '30-Day Pilot'));
+      } else if (payload.requestType === 'order') {
+        lines.push('Commercial Tier   : ' + payload.tier);
+        lines.push('Estimated Quote   : ' + payload.estimatedPrice);
+        lines.push('Billing Contact   : ' + (payload.billingEmail || payload.email));
+        lines.push('Nodes / Devs      : ' + payload.nodes);
+        lines.push('Studio Seats      : ' + payload.seats);
+      }
+
+      lines.push('Requirements/Scope: ' + (payload.notes || 'None'));
+      lines.push('============================================================');
+      return lines.join('\n');
     }
 
     function showResult(payload, orderId, deliveredOnline) {
@@ -415,23 +532,27 @@
       if (resultBox) resultBox.hidden = false;
       if (resultCode) resultCode.textContent = text;
 
-      var subject = encodeURIComponent('SMILE Commercial Order Request [' + orderId + '] — ' + payload.customer);
+      var typeLabel = payload.requestType === 'demo' ? 'Demo Request'
+        : payload.requestType === 'pilot' ? 'Pilot Request'
+        : payload.requestType === 'order' ? 'Order Request'
+        : 'Inquiry';
+      var subject = encodeURIComponent('SMILE ' + typeLabel + ' [' + orderId + '] — ' + payload.customer);
       var body = encodeURIComponent(text);
       if (mailtoBtn) {
         mailtoBtn.href = 'mailto:sales@aihalo.dev?subject=' + subject + '&body=' + body;
       }
 
       if (deliveredOnline) {
-        if (resultBadge) resultBadge.textContent = 'Order Received · ' + orderId;
-        if (resultTitle) resultTitle.textContent = 'Order Request Logged (' + orderId + ')';
+        if (resultBadge) resultBadge.textContent = 'Received · ' + orderId;
+        if (resultTitle) resultTitle.textContent = typeLabel + ' Logged (' + orderId + ')';
         if (resultMessage) {
-          resultMessage.textContent = 'We have received your request and sent a confirmation to ' + payload.email + '. Your executable Order Form and offline Ed25519 license key (SMILE-STUDIO-v1) will be issued upon order confirmation.';
+          resultMessage.textContent = 'We have received your ' + typeLabel.toLowerCase() + ' and sent a confirmation to ' + payload.email + '. Our team will respond within 1 business day.';
         }
       } else {
         if (resultBadge) resultBadge.textContent = 'Reference · ' + orderId;
-        if (resultTitle) resultTitle.textContent = 'Send Your Order Request (' + orderId + ')';
+        if (resultTitle) resultTitle.textContent = 'Send Your ' + typeLabel + ' (' + orderId + ')';
         if (resultMessage) {
-          resultMessage.textContent = 'Your structured Order Request is ready below. Click "Send via Email Client" (or copy the summary to sales@aihalo.dev) to receive your counter-signed Order Form and offline Ed25519 license key.';
+          resultMessage.textContent = 'Your structured ' + typeLabel.toLowerCase() + ' is ready below. Click "Send via Email Client" (or copy the summary to sales@aihalo.dev) to complete your request.';
         }
       }
     }
@@ -442,7 +563,7 @@
         copyText(text || '').then(function () {
           copyBtn.textContent = 'Copied!';
           setTimeout(function () {
-            copyBtn.textContent = 'Copy Order Summary';
+            copyBtn.textContent = 'Copy Summary';
           }, 1800);
         });
       });
@@ -456,18 +577,25 @@
         var honeypot = form.querySelector('[name="website_url"]');
         if (honeypot && honeypot.value) return;
 
-        var customer = (document.getElementById('order-customer').value || '').trim();
-        var contactName = (document.getElementById('order-contact').value || '').trim();
-        var email = (document.getElementById('order-email').value || '').trim();
-        var billingEmail = (document.getElementById('order-billing-email').value || '').trim();
-        var tier = tierSelect ? tierSelect.value : 'PRODUCTION_RUNTIME';
+        var firstName = (firstNameInput ? firstNameInput.value : '').trim();
+        var lastName = (lastNameInput ? lastNameInput.value : '').trim();
+        var email = (emailInput ? emailInput.value : '').trim();
+        var customer = (customerInput ? customerInput.value : '').trim();
+        var jobTitle = (roleInput ? roleInput.value : '').trim();
+        var companySize = companySizeSelect ? companySizeSelect.value : '';
+        var organizationType = orgTypeSelect ? orgTypeSelect.value : '';
+        var primaryInterest = interestSelect ? interestSelect.value : '';
+        var billingEmail = (billingEmailInput ? billingEmailInput.value : '').trim();
+        var tier = activeMode === 'order' ? (tierSelect ? tierSelect.value : 'PRODUCTION_RUNTIME')
+          : activeMode === 'pilot' ? 'EVALUATION_PILOT'
+          : 'GENERAL_INQUIRY';
         var nodes = parseInt(nodesInput ? nodesInput.value : '4', 10) || 4;
         var seats = parseInt(seatsInput ? seatsInput.value : '5', 10) || 5;
-        var notes = (document.getElementById('order-notes').value || '').trim();
+        var notes = (notesInput ? notesInput.value : '').trim();
 
-        if (!customer || !contactName || !email || email.indexOf('@') === -1) {
+        if (!firstName || !lastName || !email || email.indexOf('@') === -1 || !customer || !jobTitle) {
           if (errorEl) {
-            errorEl.textContent = 'Please provide your Customer Legal Entity Name, your Name & Title, and a valid Work Email.';
+            errorEl.textContent = 'Please fill in First Name, Last Name, Work Email, Company / Organization Name, and Job Title / Role.';
             errorEl.hidden = false;
           }
           return;
@@ -476,24 +604,36 @@
         var now = new Date();
         var ymd = now.toISOString().slice(0, 10).replace(/-/g, '');
         var rand = String(Math.floor(100 + Math.random() * 900));
-        var fallbackOrderId = 'ORD-' + ymd.slice(0, 4) + '-' + ymd.slice(4, 8) + '-' + rand;
+        var prefix = activeMode === 'demo' ? 'DEMO' : activeMode === 'pilot' ? 'PILOT' : activeMode === 'order' ? 'ORD' : 'INQ';
+        var fallbackOrderId = prefix + '-' + ymd.slice(0, 4) + '-' + ymd.slice(4, 8) + '-' + rand;
 
         var payload = {
           orderId: fallbackOrderId,
-          customer: customer,
-          contactName: contactName,
+          requestType: activeMode,
+          firstName: firstName,
+          lastName: lastName,
+          contactName: firstName + ' ' + lastName + ', ' + jobTitle,
+          jobTitle: jobTitle,
           email: email,
           billingEmail: billingEmail,
+          customer: customer,
+          organizationType: organizationType,
+          companySize: companySize,
+          primaryInterest: primaryInterest,
+          demoProduct: demoProductSelect ? demoProductSelect.value : '',
+          pilotEnvironment: pilotEnvSelect ? pilotEnvSelect.value : '',
+          pilotScale: pilotScaleSelect ? pilotScaleSelect.value : '',
           tier: tier,
           nodes: nodes,
           seats: seats,
-          estimatedPrice: summaryPrice ? summaryPrice.textContent.trim() : '',
+          estimatedPrice: activeMode === 'order' && summaryPrice ? summaryPrice.textContent.trim() : '',
           notes: notes,
           sourcePage: window.location.pathname,
           submittedAt: now.toISOString()
         };
 
         var endpoint = form.getAttribute('data-endpoint');
+        var defaultBtnLabel = (MODE_CONFIG[activeMode] || MODE_CONFIG.contact).submitLabel;
         if (submitBtn) {
           submitBtn.disabled = true;
           submitBtn.textContent = 'Submitting…';
@@ -516,7 +656,7 @@
           .then(function (data) {
             if (submitBtn) {
               submitBtn.disabled = false;
-              submitBtn.textContent = 'Request Order Form & Key';
+              submitBtn.textContent = defaultBtnLabel;
             }
             showResult(payload, (data && data.orderId) ? data.orderId : fallbackOrderId, true);
           })
@@ -524,21 +664,24 @@
             if (timer) clearTimeout(timer);
             if (submitBtn) {
               submitBtn.disabled = false;
-              submitBtn.textContent = 'Request Order Form & Key';
+              submitBtn.textContent = defaultBtnLabel;
             }
             showResult(payload, fallbackOrderId, false);
           });
       });
     }
 
-    // Auto-open modal if URL contains ?order=1 or ?tier=...
+    // Auto-open modal if URL contains ?mode=..., ?order=1, or ?tier=...
     try {
       var params = new URLSearchParams(window.location.search);
+      var urlMode = params.get('mode');
       var urlTier = params.get('tier');
       if (urlTier && TIER_DEFAULTS[urlTier]) {
-        open(urlTier);
+        open('order', urlTier);
+      } else if (urlMode && MODE_CONFIG[urlMode]) {
+        open(urlMode);
       } else if (params.get('order') === '1') {
-        open('PRODUCTION_RUNTIME');
+        open('order', 'PRODUCTION_RUNTIME');
       }
     } catch (e) { /* ignore */ }
   }
