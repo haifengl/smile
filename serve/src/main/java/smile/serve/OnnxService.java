@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Stream;
+import io.quarkus.arc.All;
 import io.quarkus.runtime.Startup;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -64,18 +65,18 @@ public class OnnxService implements OpenAiModelContributor {
     /** Loaded models, keyed by model ID. Sorted for stable list order. */
     private final Map<String, OnnxModel> models = Collections.synchronizedSortedMap(new TreeMap<>());
     private final Map<String, Path> modelPaths = Collections.synchronizedMap(new TreeMap<>());
-    /** Registers/removes Prometheus meters as models load and unload. */
-    private final ModelMetricsBinder metricsBinder;
+    /** Registers/removes telemetry meters as models load and unload. */
+    private final List<ModelMetricsBinder> metricsBinders;
 
     /**
      * Loads ONNX models upon application start.
      *
      * @param config the ONNX service configuration.
-     * @param metricsBinder the Prometheus meter binder.
+     * @param metricsBinders telemetry meter binders discovered on the classpath.
      */
     @Inject
-    public OnnxService(OnnxServiceConfig config, ModelMetricsBinder metricsBinder) {
-        this.metricsBinder = metricsBinder;
+    public OnnxService(OnnxServiceConfig config, @All List<ModelMetricsBinder> metricsBinders) {
+        this.metricsBinders = metricsBinders == null ? List.of() : List.copyOf(metricsBinders);
         var path = Path.of(config.model()).toAbsolutePath().normalize();
         if (Files.isRegularFile(path) && path.toString().endsWith(".onnx")) {
             loadModel(path);
@@ -104,7 +105,7 @@ public class OnnxService implements OpenAiModelContributor {
             var model = new OnnxModel(id, path, session);
             models.put(id, model);
             modelPaths.put(id, path);
-            metricsBinder.register(ModelMetricsBinder.ONNX_NAMESPACE, id, model.metrics());
+            metricsBinders.forEach(b -> b.register(ModelMetricsBinder.ONNX_NAMESPACE, id, model.metrics()));
             logger.infof("ONNX model '%s' loaded successfully (inputs=%s, outputs=%s)",
                     id, session.inputNames(), session.outputNames());
         } catch (Throwable ex) {
@@ -242,8 +243,10 @@ public class OnnxService implements OpenAiModelContributor {
             var reloaded = new OnnxModel(id, path, session);
             OnnxModel old = models.put(id, reloaded);
             modelPaths.put(id, path);
-            metricsBinder.unregister(ModelMetricsBinder.ONNX_NAMESPACE, id);
-            metricsBinder.register(ModelMetricsBinder.ONNX_NAMESPACE, id, reloaded.metrics());
+            metricsBinders.forEach(b -> {
+                b.unregister(ModelMetricsBinder.ONNX_NAMESPACE, id);
+                b.register(ModelMetricsBinder.ONNX_NAMESPACE, id, reloaded.metrics());
+            });
             if (old != null) {
                 old.close();
             }
@@ -267,7 +270,7 @@ public class OnnxService implements OpenAiModelContributor {
         OnnxModel existing = getModel(id);
         boolean drained = existing.unload(graceTimeout);
         models.remove(id);
-        metricsBinder.unregister(ModelMetricsBinder.ONNX_NAMESPACE, id);
+        metricsBinders.forEach(b -> b.unregister(ModelMetricsBinder.ONNX_NAMESPACE, id));
         logger.infof("ONNX model '%s' unloaded (drained in-flight: %s)", id, drained);
         return drained;
     }
@@ -329,7 +332,7 @@ public class OnnxService implements OpenAiModelContributor {
         for (OnnxModel model : loaded) {
             models.put(model.id(), model);
             modelPaths.put(model.id(), model.path());
-            metricsBinder.register(ModelMetricsBinder.ONNX_NAMESPACE, model.id(), model.metrics());
+            metricsBinders.forEach(b -> b.register(ModelMetricsBinder.ONNX_NAMESPACE, model.id(), model.metrics()));
             logger.infof("Dynamically loaded ONNX model '%s' from '%s'", model.id(), model.path());
         }
         return loaded;

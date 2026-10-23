@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Stream;
+import io.quarkus.arc.All;
 import io.quarkus.runtime.Startup;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -64,19 +65,19 @@ public class InferenceService implements OpenAiModelContributor {
     /** Loaded models, keyed by {@code <id>-<version>}. Sorted for stable list order. */
     private final Map<String, InferenceModel> models = Collections.synchronizedSortedMap(new TreeMap<>());
     private final Map<String, Path> modelPaths = Collections.synchronizedMap(new TreeMap<>());
-    /** Registers/removes Prometheus meters as models load and unload. */
-    private final ModelMetricsBinder metricsBinder;
+    /** Registers/removes telemetry meters as models load and unload. */
+    private final List<ModelMetricsBinder> metricsBinders;
 
     /**
      * Loads ML models upon application start.
      * The {@code @ApplicationScoped} scope ensures the models are loaded once and reused.
      *
      * @param config the service configuration.
-     * @param metricsBinder the Prometheus meter binder.
+     * @param metricsBinders telemetry meter binders discovered on the classpath.
      */
     @Inject
-    public InferenceService(InferenceServiceConfig config, ModelMetricsBinder metricsBinder) {
-        this.metricsBinder = metricsBinder;
+    public InferenceService(InferenceServiceConfig config, @All List<ModelMetricsBinder> metricsBinders) {
+        this.metricsBinders = metricsBinders == null ? List.of() : List.copyOf(metricsBinders);
         var path = Path.of(config.model()).toAbsolutePath().normalize();
         if (Files.isRegularFile(path)) {
             loadModel(path);
@@ -105,7 +106,7 @@ public class InferenceService implements OpenAiModelContributor {
                 var model = new InferenceModel(m, path);
                 models.put(model.id(), model);
                 modelPaths.put(model.id(), path);
-                metricsBinder.register(ModelMetricsBinder.SMILE_NAMESPACE, model.id(), model.metrics());
+                metricsBinders.forEach(b -> b.register(ModelMetricsBinder.SMILE_NAMESPACE, model.id(), model.metrics()));
                 logger.infof("Model '%s' loaded successfully", model.id());
             } else {
                 logger.errorf("'%s' does not contain a valid SMILE model (got %s)",
@@ -291,8 +292,10 @@ public class InferenceService implements OpenAiModelContributor {
                 var reloaded = new InferenceModel(m, path);
                 models.put(reloaded.id(), reloaded);
                 modelPaths.put(reloaded.id(), path);
-                metricsBinder.unregister(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id());
-                metricsBinder.register(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id(), reloaded.metrics());
+                metricsBinders.forEach(b -> {
+                    b.unregister(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id());
+                    b.register(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id(), reloaded.metrics());
+                });
                 logger.infof("Model '%s' reloaded successfully", reloaded.id());
                 return reloaded;
             } else {
@@ -316,7 +319,7 @@ public class InferenceService implements OpenAiModelContributor {
         InferenceModel existing = getModel(id);
         boolean drained = existing.unload(graceTimeout);
         models.remove(id);
-        metricsBinder.unregister(ModelMetricsBinder.SMILE_NAMESPACE, id);
+        metricsBinders.forEach(b -> b.unregister(ModelMetricsBinder.SMILE_NAMESPACE, id));
         logger.infof("Model '%s' unloaded (drained in-flight: %s)", id, drained);
         return drained;
     }
@@ -374,7 +377,7 @@ public class InferenceService implements OpenAiModelContributor {
         for (InferenceModel model : loaded) {
             models.put(model.id(), model);
             modelPaths.put(model.id(), model.path());
-            metricsBinder.register(ModelMetricsBinder.SMILE_NAMESPACE, model.id(), model.metrics());
+            metricsBinders.forEach(b -> b.register(ModelMetricsBinder.SMILE_NAMESPACE, model.id(), model.metrics()));
             logger.infof("Dynamically loaded model '%s' from '%s'", model.id(), model.path());
         }
         return loaded;

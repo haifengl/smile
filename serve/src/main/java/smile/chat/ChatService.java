@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.SubmissionPublisher;
+import io.quarkus.arc.All;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.Startup;
 import io.vertx.core.json.JsonObject;
@@ -110,8 +111,8 @@ public class ChatService implements OpenAiModelContributor {
     private volatile String source;
     /** Resolves internal media URLs to data URLs for VL inference. */
     private final MediaService mediaService;
-    /** Prometheus meters for LLM serving. */
-    private final LlmMetrics llmMetrics;
+    /** Telemetry plugins for LLM serving. */
+    private final List<LlmMetrics> llmMetrics;
     /** Native MTP speculation (from {@code smile.chat.speculative}). */
     private volatile boolean speculative;
     /** Draft depth override ({@code 0} = model default). */
@@ -140,12 +141,12 @@ public class ChatService implements OpenAiModelContributor {
      */
     @Inject
     public ChatService(ChatServiceConfig config, KvCacheConfig kvCache, MediaService mediaService,
-                       OgaChatConfig oga, LlmMetrics llmMetrics) {
+                       OgaChatConfig oga, @All List<LlmMetrics> llmMetrics) {
         this.config = config;
         this.kvCache = kvCache;
         this.oga = oga;
         this.mediaService = mediaService;
-        this.llmMetrics = llmMetrics;
+        this.llmMetrics = llmMetrics == null ? List.of() : List.copyOf(llmMetrics);
         this.speculative = config.speculative();
         this.speculativeTokens = config.speculativeTokens();
         try {
@@ -399,12 +400,12 @@ public class ChatService implements OpenAiModelContributor {
             logger.warnf("Chat model %s does not implement ModelExecutor; "
                     + "continuous batching unavailable", modelId);
         }
-        llmMetrics.bind(modelId, engine);
+        llmMetrics.forEach(m -> m.bind(modelId, engine));
     }
 
     private void finishModelSetupForGenAi() {
         // GenAI: no prefix reuse / speculative / InferenceEngine.
-        llmMetrics.bind(modelId, null);
+        llmMetrics.forEach(m -> m.bind(modelId, null));
     }
 
     /**
@@ -471,7 +472,7 @@ public class ChatService implements OpenAiModelContributor {
             }
         }
         model = null;
-        llmMetrics.unbind();
+        llmMetrics.forEach(LlmMetrics::unbind);
 
         try {
             GenAI.shutdown();
@@ -910,21 +911,22 @@ public class ChatService implements OpenAiModelContributor {
                 generated = result.completionTokens().length;
             }
         }
-        llmMetrics.recordPromptTokens(prompt);
-        llmMetrics.recordGenerationTokens(generated);
-
-        long elapsed = listener.elapsedNanos();
-        llmMetrics.recordDuration("e2e_request_latency", elapsed);
-        long ttft = listener.timeToFirstTokenNanos();
-        if (ttft >= 0L) {
-            llmMetrics.recordDuration("request_prefill_time", ttft);
-            llmMetrics.recordDuration("request_decode_time", Math.max(0L, elapsed - ttft));
-        }
-        if (generated > 0) {
-            llmMetrics.recordDuration("request_time_per_output_token", elapsed / generated);
-        }
-        if (error == null && result != null) {
-            llmMetrics.recordSuccess(result.reason());
+        for (LlmMetrics sink : llmMetrics) {
+            sink.recordPromptTokens(prompt);
+            sink.recordGenerationTokens(generated);
+            long elapsed = listener.elapsedNanos();
+            sink.recordDuration("e2e_request_latency", elapsed);
+            long ttft = listener.timeToFirstTokenNanos();
+            if (ttft >= 0L) {
+                sink.recordDuration("request_prefill_time", ttft);
+                sink.recordDuration("request_decode_time", Math.max(0L, elapsed - ttft));
+            }
+            if (generated > 0) {
+                sink.recordDuration("request_time_per_output_token", elapsed / generated);
+            }
+            if (error == null && result != null) {
+                sink.recordSuccess(result.reason());
+            }
         }
     }
 
