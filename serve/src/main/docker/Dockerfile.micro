@@ -82,8 +82,7 @@ RUN curl -fsSL --retry 5 --retry-delay 10 "https://github.com/microsoft/onnxrunt
 WORKDIR /src
 COPY . /src
 RUN (cd serve/src/main/webui && npm install)
-# -Pserve.plugins= excludes optional plugins (blob-s3 / AWS SDK) from the native image.
-RUN ./gradlew :serve:build -x test -Pserve.plugins= \
+RUN ./gradlew :serve:build -x test \
         -Dquarkus.profile=micro \
         -Dquarkus.native.enabled=true \
         -Dquarkus.package.jar.enabled=false \

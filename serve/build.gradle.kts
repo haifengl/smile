@@ -29,14 +29,9 @@ dependencies {
         implementation("io.quarkus:quarkus-jdbc-postgresql")
     }
     implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.9.2")
-    implementation(project(":serve-plugins:blob-spi"))
-    // Optional plugins, chosen at build time: -Pserve.plugins=blob-s3,... (default: all; empty for native).
-    val availablePlugins = listOf("blob-s3")
-    val plugins = providers.gradleProperty("serve.plugins").orNull
-        ?.split(",")?.map(String::trim)?.filter(String::isNotEmpty) ?: availablePlugins
-    plugins.forEach {
-        require(it in availablePlugins) { "Unknown serve plugin '$it'; available: $availablePlugins" }
-        implementation(project(":serve-plugins:$it"))
+    // Optional plugins dropped into serve/plugins/ (default: include all; pass -Pserve.plugins=false to skip).
+    if (providers.gradleProperty("serve.plugins").getOrElse("true") != "false") {
+        implementation(fileTree("plugins") { include("*.jar") })
     }
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-test-h2")

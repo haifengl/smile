@@ -117,19 +117,16 @@ sidecars, serverless or scale-to-zero platforms, and fleets of many small replic
 
 **`latest-native`: the full feature set on CPU, as a native executable.** Adds user accounts, conversation storage
 (H2) and CPU chat, with about 5x less memory than the JVM image and sub-second startup (before a chat model loads). Chat on CPU serves pre-converted ONNX Runtime GenAI packages only, for example
-`-e SMILE_CHAT_MODEL=microsoft/Phi-4-mini-instruct-onnx`; Llama and Qwen checkpoints need the GPU image. There is no
-S3 blob storage, because the native build leaves out the AWS SDK. Best for a small single-node deployment with the web UI,
+`-e SMILE_CHAT_MODEL=microsoft/Phi-4-mini-instruct-onnx`; Llama and Qwen checkpoints need the GPU image. Best for a small single-node deployment with the web UI,
 and for CPU-only machines.
 
 **`latest`: the JVM image.** The same features as `latest-native` on a conventional JVM: JIT-compiled, runs on any
 x86-64 CPU, usable with the usual JVM tooling. It uses far more memory (it sizes its heap to 80% of the container limit,
 so set a memory limit) and takes a few seconds to start. It is the image to pick for small ONNX Runtime GenAI models on
-CPU, for example embeddings, when the CPU does not support the native executables or you prefer a JVM deployment. It has
-no S3 plugin; build the image yourself without `-Pserve.plugins=` to include it.
+CPU, for example embeddings, when the CPU does not support the native executables or you prefer a JVM deployment.
 
 **`latest-gpu`: LLM serving on NVIDIA GPUs.** Runs the LibTorch/CUDA engine for Llama and Qwen checkpoints with CUDA
-graphs, FlashInfer attention and tensor parallelism, plus everything the JVM image does and the S3 blob storage plugin
-(`smile.blob.storage=s3`), which is where chat images and files are stored in production. It needs an NVIDIA GPU, a driver
+graphs, FlashInfer attention and tensor parallelism, plus everything the JVM image does. It needs an NVIDIA GPU, a driver
 that supports CUDA 13.2 and the NVIDIA Container Toolkit (`docker run --gpus all`). GPU memory is set by the model: for
 example Qwen 27B in BF16 needs two 40 GB GPUs. The image is large (about 16 GB) and startup is dominated by loading the
 model. See [§1.2](#12-gpu-build--run).
@@ -645,20 +642,7 @@ jextract bindings or serializable model classes change. Add `--check` to verify,
 
 ### Plugins
 
-Optional backends live in `serve-plugins/` and are chosen at build time with `-Pserve.plugins=<comma list>`
-(default: all; an empty value includes none). The backend itself is picked at runtime by config.
-
-| Plugin | Adds | Config |
-|---|---|---|
-| `blob-s3` | S3-compatible blob storage (AWS SDK v2) | `smile.blob.storage=s3`, `smile.blob.s3.bucket/region/endpoint/access-key/secret-key` |
-
-Of the published images only the GPU image (`-gpu`) includes `blob-s3`, because S3 is where chat images and files
-are stored in production. The CPU JVM image and the native images are built with `-Pserve.plugins=` so the AWS SDK
-stays out; `smile.blob.storage` then supports only `local`, and any other value fails at startup. A plain
-`./gradlew :serve:build` (no `-Pserve.plugins`) includes all plugins.
-
-A plugin is a Gradle module under `serve-plugins/` that implements `smile.chat.blob.BlobStoreProvider` (from
-`blob-spi`) as an `@ApplicationScoped` bean and ships an empty `META-INF/beans.xml` so ArC indexes it.
+Optional plugins (such as commercial/enterprise storage backends) can be placed in `serve/plugins/*.jar` before running `./gradlew :serve:build`. A plugin implements `smile.chat.blob.BlobStoreProvider` as an `@ApplicationScoped` CDI bean and ships an empty `META-INF/beans.xml` so ArC indexes it at build time. The active backend is selected at runtime by `smile.blob.storage` (default: `local`).
 
 ---
 
