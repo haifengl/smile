@@ -435,12 +435,16 @@ SMILE provides two visualization layers:
 
 ## License
 
-SMILE employs a modern multi-product licensing model designed to support
-free academic and open-source collaboration while offering commercial licensing
-and enterprise support for proprietary and mission-critical deployments.
-For details, see [LICENSE](https://github.com/haifengl/smile/blob/master/LICENSE) and
-[Commercial Licensing & Pricing](https://www.aihalo.dev/licensing.html).
-To acquire a commercial license, contact **sales@aihalo.dev**.
+SMILE uses a multi-license model that keeps academic research and open-source collaboration free while providing standard, upfront commercial licenses—administered by **HALO.AI LLC**—for proprietary distribution and production deployments:
+
+| Component | Open Source / Evaluation ($0) | Commercial License Tier |
+|---|---|---|
+| **Core Engine** (`base`, `core`, `nlp`, `deep`, `plot`, `kotlin`, `scala`) | **GPLv3** — Free for open-source projects | **OEM & Embedded ($25,000 one-time)** — Perpetual right to embed and ship in proprietary products free of GPLv3 disclosure, plus Year 1 Maintenance & 10 Agent Studio seats (optional 20% / $5,000 yr renewal) |
+| **SMILE Serve** (`serve`, `serve-plugins`) | **AGPLv3** — Free when complying with §13 network source disclosure | **Production Runtime ($12,000 / year)** — Covers up to 4 production server nodes ($250/node/mo) + internal Core Engine + 5 free Agent Studio seats, with zero AGPLv3/GPLv3 disclosure |
+| **SMILE Agent Studio** (`studio`) | **BSL 1.1** — Free for personal, academic, and non-production evaluation (converts to AGPLv3 after 4 years) | **Bundled Free** with Runtime (5 seats), OEM (10 seats), and Enterprise (25 seats), or **$95 / seat / mo** ($995/seat/yr paid annually, 5-seat standalone min) |
+| **Enterprise & Edge Fleet** | — | **From $50,000 / year** — Volume edge-node licensing (100–5,000+ gateways), site-wide OEM rights, 25 Studio seats, and optional $15k 30-day Turnkey Pilot |
+
+All commercial tiers include Critical & High CVE resolution SLAs and a 12-month capped IP indemnity. See [LICENSE](https://github.com/haifengl/smile/blob/master/LICENSE) and **[Commercial Licensing & Pricing](https://www.aihalo.dev/licensing.html)**, or contact **sales@aihalo.dev**.
 
 ---
 
