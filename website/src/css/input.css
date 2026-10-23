@@ -1028,6 +1028,33 @@
     font-size: 0.78rem;
     color: var(--text-muted);
   }
+  .contact-modal-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.45rem 1.25rem;
+    background: var(--bg-base);
+    border-bottom: 1px solid var(--border);
+  }
+  .contact-tab {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 0.45rem;
+    cursor: pointer;
+  }
+  .contact-tab:hover {
+    color: var(--text);
+    background: var(--accent-soft);
+  }
+  .contact-tab.is-active {
+    color: var(--accent);
+    background: var(--bg-elevated);
+    border-color: var(--border);
+  }
   .contact-modal-body {
     padding: 1.15rem 1.25rem 1.25rem;
     overflow-y: auto;
