@@ -706,7 +706,7 @@ public final class Native {
      * @param scaleA   float scale for {@code a}.
      * @param scaleB   float scale for {@code b}.
      * @param outDtype output {@link smile.deep.tensor.ScalarType} code
-     *                 ({@link smile.torch.smile_torch_h#ST_DTYPE_BFloat16()} etc.).
+     *                 ({@link smile.torch.smile_torch_h#ST_DTYPE_BFLOAT16()} etc.).
      * @return output tensor, or {@code null} if the native path is unavailable.
      */
     public static Tensor scaledMm(Tensor a, Tensor b, Tensor scaleA, Tensor scaleB, int outDtype) {

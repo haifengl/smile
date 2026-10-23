@@ -2,7 +2,7 @@
 layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
 title: SMILE - FAQ
-version: "7.0.0"
+version: "7.1.0"
 ---
 {% include "toc.njk" %}
 
@@ -88,10 +88,15 @@ libraryDependencies += "com.github.haifengl" % "smile-plot" % "{{ version }}"
   <div class="playground-editor" hidden></div>
 </div>
 
-    <p>Some algorithms (manifold learning, Gaussian Process, MLP, …) use native BLAS/LAPACK
-        through Java FFM. Install system libraries such as OpenBLAS and ARPACK
-        (Linux packages, Homebrew <code>arpack</code>, or the release package
-        <code>bin/</code> on <code>PATH</code> for Windows). Details are in
+    <p><code>smile.tensor</code> includes a pure-Java BLAS and LAPACK fallback, so all
+        algorithms work out of the box without native libraries installed. For large-scale
+        linear algebra (manifold learning, Gaussian Process, MLP, …), SMILE automatically
+        dispatches to native BLAS/LAPACK through Java FFM when available. You can install
+        system libraries such as OpenBLAS and ARPACK (Linux packages, Homebrew
+        <code>arpack</code>, or the release package <code>bin/</code> on <code>PATH</code>
+        for Windows), or select the backend explicitly via
+        <code>-Dsmile.linalg.backend=auto|native|java</code> (or the
+        <code>SMILE_LINALG_BACKEND</code> environment variable). Details are in
         <a href="quickstart.html#native-blas">Quick Start</a>.</p>
 
     <p>To pick a specific BLAS shared library name, set
@@ -126,7 +131,7 @@ libraryDependencies += "com.github.haifengl" % "smile-plot" % "{{ version }}"
         and an operating system for startups.
         A notebook, an agent panel, and the project sit in one window.
         Java, Kotlin, Scala, and Python notebooks share one editor, and you can write the cells yourself.
-        Seven agents cover the model, the code, the product, the design, coordination, and the desktop.
+        Nine agents cover the model, the code, the product, the design, growth, sales, coordination, and the desktop.
         Clair can take a data file through profiling, features, model selection, tuning, and
         evaluation. A fitted model leaves as a <code>.sml</code> file, or you can start
         a REST inference service for it from the kernel explorer.

@@ -98,7 +98,7 @@ public class Parquet {
      * @return the data frame.
      */
     public static DataFrame read(String uri, int limit) throws Exception {
-        ScanOptions options = new ScanOptions(32768); // batch size
+        ScanOptions options = new ScanOptions(Math.min(32768, limit)); // batch size
         try (BufferAllocator allocator = new RootAllocator(Long.MAX_VALUE);
              DatasetFactory factory = new FileSystemDatasetFactory(allocator, NativeMemoryPool.getDefault(), FileFormat.PARQUET, uri);
              Dataset dataset = factory.finish();
@@ -112,8 +112,11 @@ public class Parquet {
             while (reader.loadNextBatch() && rowCount < limit) {
                 try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
                     DataFrame frame = Arrow.read(root);
+                    if (rowCount + frame.size() > limit) {
+                        frame = frame.slice(0, limit - rowCount);
+                    }
                     frames.add(frame);
-                    rowCount += frames.size();
+                    rowCount += frame.size();
                 }
             }
 

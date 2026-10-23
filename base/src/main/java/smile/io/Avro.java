@@ -53,9 +53,16 @@ import smile.data.type.StructType;
  */
 public class Avro {
     /**
-     * Avro schema.
+     * Avro schema. If null, the schema embedded in the container file header will be used.
      */
     private final Schema schema;
+
+    /**
+     * Constructor using the schema embedded in the Avro container file.
+     */
+    public Avro() {
+        this.schema = null;
+    }
 
     /**
      * Constructor.
@@ -63,7 +70,7 @@ public class Avro {
      * @param schema the data schema.
      */
     public Avro(Schema schema) {
-        if (schema.getType() != Schema.Type.RECORD) {
+        if (schema != null && schema.getType() != Schema.Type.RECORD) {
             throw new IllegalArgumentException("The type of schema is not Record");
         }
         this.schema = schema;
@@ -101,6 +108,18 @@ public class Avro {
     }
 
     /**
+     * Reads a limited number of records from an avro file.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
+     */
+    public DataFrame read(Path path, int limit) throws IOException {
+        return read(Files.newInputStream(path), limit);
+    }
+
+    /**
      * Reads an avro file.
      *
      * @param path the input file path.
@@ -115,6 +134,19 @@ public class Avro {
     /**
      * Reads a limited number of records from an avro file.
      *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    public DataFrame read(String path, int limit) throws IOException, URISyntaxException {
+        return read(Files.newInputStream(Path.of(path)), limit);
+    }
+
+    /**
+     * Reads a limited number of records from an avro file.
+     *
      * @param input the input stream of data file.
      * @param limit the number of records to read.
      * @throws IOException when fails to read the file.
@@ -123,7 +155,11 @@ public class Avro {
     public DataFrame read(InputStream input, int limit) throws IOException {
         DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
         try (DataFileStream<GenericRecord> dataFileReader = new DataFileStream<>(input, datumReader)) {
-            StructType struct = toStructType(schema);
+            Schema effectiveSchema = schema != null ? schema : dataFileReader.getSchema();
+            if (effectiveSchema.getType() != Schema.Type.RECORD) {
+                throw new IllegalArgumentException("The type of schema is not Record");
+            }
+            StructType struct = toStructType(effectiveSchema);
 
             List<Tuple> rows = new ArrayList<>();
             GenericRecord record = null;

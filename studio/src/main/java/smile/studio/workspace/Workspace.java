@@ -33,12 +33,14 @@ import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.Agent;
 import ioa.agent.Coder;
 import smile.io.Paths;
+import smile.io.Read;
 import smile.shell.JShell;
 import smile.studio.SmileStudio;
 import smile.studio.cli.AgentCLI;
 import smile.studio.notebook.Notebook;
 import smile.studio.text.Notepad;
 import smile.swing.FileExplorer;
+import smile.swing.SmileUtilities;
 import smile.swing.tree.DirectoryTreeNode;
 
 /**
@@ -58,6 +60,31 @@ public class Workspace extends JSplitPane {
             "kts", // Kotlin scripts
             "py", "ipynb"  // Python source files and Jupyter notebooks
     };
+    /**
+     * Tabular data file name extensions.
+     */
+    static final Set<String> DATA_FILE_EXTENSIONS = Set.of(
+            "csv", "tsv", "arff", "parquet", "arrow", "feather", "avro", "sas", "sas7bdat", "jsonl"
+    );
+    /**
+     * File size threshold (10 MB) above which opening a text file in Notepad
+     * asks the user for confirmation.
+     */
+    static final long LARGE_TEXT_FILE_WARNING_BYTES = 10L * 1024 * 1024;
+    /**
+     * Hard file size limit (50 MB) above which a text file is refused by
+     * Notepad to prevent exhausting JVM and system memory.
+     */
+    static final long MAX_TEXT_FILE_BYTES = 50L * 1024 * 1024;
+    /**
+     * File size threshold (100 MB) above which opening a tabular data file
+     * asks the user whether to load all rows or a limited number of rows.
+     */
+    static final long LARGE_DATA_FILE_WARNING_BYTES = 100L * 1024 * 1024;
+    /**
+     * Default maximum number of rows to load when opening a large tabular data file.
+     */
+    static final int DEFAULT_DATA_ROW_LIMIT = 100_000;
     /**
      * Workspace FileChooser that points to its own recent directory.
      */
@@ -638,9 +665,140 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Opens a file as a tab. Notebooks are opened as notebooks; other
-     * non-binary files are opened in a plain text editor; binary files are
-     * handed over to the desktop.
+     * Returns true if the file has a tabular data file extension that should
+     * be opened in a table view.
+     *
+     * @param path the file path.
+     * @return true if the file is a supported tabular data file.
+     */
+    public static boolean isDataFile(Path path) {
+        return DATA_FILE_EXTENSIONS.contains(Paths.getFileExtension(path));
+    }
+
+    /**
+     * Formats a byte count in megabytes with one decimal place.
+     *
+     * @param bytes the size in bytes.
+     * @return the formatted size in MB.
+     */
+    static String formatSizeMB(long bytes) {
+        return String.format(Locale.ROOT, "%.1f MB", bytes / (1024.0 * 1024.0));
+    }
+
+    /**
+     * Checks whether a text file is small enough to open safely in Notepad.
+     * Shows a warning dialog if the file exceeds {@link #MAX_TEXT_FILE_BYTES},
+     * or a confirmation dialog if it exceeds {@link #LARGE_TEXT_FILE_WARNING_BYTES}.
+     *
+     * @param path the file path.
+     * @return true if the file should be opened in Notepad, false otherwise.
+     * @throws IOException if the file size cannot be read.
+     */
+    private boolean confirmOpenTextFile(Path path) throws IOException {
+        long size = Files.size(path);
+        String filename = path.getFileName().toString();
+        if (size > MAX_TEXT_FILE_BYTES) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    MessageFormat.format(
+                            bundle.getString("FileTooLargeMessage"),
+                            filename,
+                            formatSizeMB(size),
+                            formatSizeMB(MAX_TEXT_FILE_BYTES)),
+                    bundle.getString("FileTooLargeTitle"),
+                    JOptionPane.WARNING_MESSAGE);
+            return false;
+        }
+        if (size > LARGE_TEXT_FILE_WARNING_BYTES) {
+            int choice = JOptionPane.showConfirmDialog(
+                    this,
+                    MessageFormat.format(
+                            bundle.getString("LargeFileWarningMessage"),
+                            filename,
+                            formatSizeMB(size)),
+                    bundle.getString("LargeFileWarningTitle"),
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+            return choice == JOptionPane.YES_OPTION;
+        }
+        return true;
+    }
+
+    /**
+     * Prompts the user for the row limit when opening a large tabular data file.
+     * If the file is at or below {@link #LARGE_DATA_FILE_WARNING_BYTES}, returns
+     * {@link Integer#MAX_VALUE} without showing a dialog.
+     *
+     * @param path the file path.
+     * @return the maximum number of rows to load, or {@link OptionalInt#empty()}
+     *         if the user cancels.
+     * @throws IOException if the file size cannot be read.
+     */
+    private OptionalInt promptDataFileRowLimit(Path path) throws IOException {
+        long size = Files.size(path);
+        if (size <= LARGE_DATA_FILE_WARNING_BYTES) {
+            return OptionalInt.of(Integer.MAX_VALUE);
+        }
+
+        String filename = path.getFileName().toString();
+        JLabel messageLabel = new JLabel(MessageFormat.format(
+                bundle.getString("LargeDataFileWarningMessage"),
+                filename,
+                formatSizeMB(size)));
+
+        JRadioButton limitRadio = new JRadioButton(bundle.getString("LoadRowLimitOption"), true);
+        JRadioButton allRadio = new JRadioButton(bundle.getString("LoadAllRowsOption"), false);
+        ButtonGroup group = new ButtonGroup();
+        group.add(limitRadio);
+        group.add(allRadio);
+
+        JSpinner limitSpinner = new JSpinner(
+                new SpinnerNumberModel(DEFAULT_DATA_ROW_LIMIT, 1, Integer.MAX_VALUE, 10_000));
+        limitRadio.addActionListener(e -> limitSpinner.setEnabled(true));
+        allRadio.addActionListener(e -> limitSpinner.setEnabled(false));
+
+        JPanel limitPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        limitPanel.add(limitRadio);
+        limitPanel.add(limitSpinner);
+
+        JPanel allPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        allPanel.add(allRadio);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        messageLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        limitPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        allPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        panel.add(messageLabel);
+        panel.add(Box.createVerticalStrut(8));
+        panel.add(limitPanel);
+        panel.add(allPanel);
+
+        int choice = JOptionPane.showConfirmDialog(
+                this,
+                panel,
+                bundle.getString("LargeDataFileWarningTitle"),
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (choice != JOptionPane.OK_OPTION) {
+            return OptionalInt.empty();
+        }
+        if (allRadio.isSelected()) {
+            return OptionalInt.of(Integer.MAX_VALUE);
+        }
+        try {
+            limitSpinner.commitEdit();
+        } catch (java.text.ParseException ex) {
+            // Keep last valid spinner value
+        }
+        return OptionalInt.of(((Number) limitSpinner.getValue()).intValue());
+    }
+
+    /**
+     * Opens a file as a tab or data table. Notebooks are opened as notebooks;
+     * tabular data files are opened in a table view backed by a DataFrame;
+     * other non-binary files are opened in a plain text editor; binary files
+     * are handed over to the desktop.
      *
      * @param path the file path.
      */
@@ -665,9 +823,21 @@ public class Workspace extends JSplitPane {
 
         OpenFile openFile;
         try {
-            if (Arrays.asList(SMILE_FILE_EXTENSIONS).contains(Paths.getFileExtension(path))) {
+            String ext = Paths.getFileExtension(path);
+            if (Arrays.asList(SMILE_FILE_EXTENSIONS).contains(ext)) {
                 openFile = new Notebook(path, coders, kernelExplorer::refresh);
+            } else if (isDataFile(path)) {
+                OptionalInt limit = promptDataFileRowLimit(path);
+                if (limit.isEmpty()) {
+                    return;
+                }
+                var df = Read.data(path, limit.getAsInt());
+                SmileUtilities.show(df, filename + " [" + df.nrow() + " × " + df.ncol() + "]");
+                return;
             } else if (!Paths.isBinary(path)) {
+                if (!confirmOpenTextFile(path)) {
+                    return;
+                }
                 openFile = new Notepad(path);
             } else {
                 var desktop = Desktop.getDesktop();

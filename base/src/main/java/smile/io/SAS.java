@@ -51,6 +51,18 @@ public interface SAS {
     }
 
     /**
+     * Reads a limited number of records from a SAS7BDAT file.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
+     */
+    static DataFrame read(Path path, int limit) throws IOException {
+        return read(Files.newInputStream(path), limit);
+    }
+
+    /**
      * Reads a SAS7BDAT file.
      *
      * @param path the input file path.
@@ -60,6 +72,19 @@ public interface SAS {
      */
     static DataFrame read(String path) throws IOException, URISyntaxException {
         return read(Input.stream(path), Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from a SAS7BDAT file.
+     *
+     * @param path the input file path.
+     * @param limit the number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame read(String path, int limit) throws IOException, URISyntaxException {
+        return read(Input.stream(path), limit);
     }
 
     /**
@@ -87,13 +112,13 @@ public interface SAS {
             for (int j = 0; j < ncol; j++) {
                 Column column = columns.get(j);
                 if (column.getType() == String.class) {
-                    String[] vector = new String[nrow];
+                    String[] vector = new String[rows.length];
                     for (int i = 0; i < rows.length; i++) {
                         vector[i] = (String) rows[i][j];
                     }
                     vectors[j] = new StringVector(column.getName(), vector);
                 } else {
-                    double[] vector = new double[nrow];
+                    double[] vector = new double[rows.length];
                     for (int i = 0; i < rows.length; i++) {
                         vector[i] = ((Number) rows[i][j]).doubleValue();
                     }
