@@ -63,13 +63,103 @@
   <div id="contact-modal" class="contact-modal" hidden>
     <div class="contact-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="contact-modal-title">
       <div class="contact-modal-bar">
-        <p id="contact-modal-title" class="contact-modal-title">Contact Us</p>
+        <div>
+          <p id="contact-modal-title" class="contact-modal-title">Request Commercial Order Form</p>
+          <p class="contact-modal-sub">Administered by HALO.AI LLC · Standard Version 1.0 Agreements · Net-30 Invoicing &amp; Offline Ed25519 License Keys</p>
+        </div>
         <button type="button" class="icon-btn" data-contact-close aria-label="Close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
-      <div class="contact-modal-frame-clip">
-        <iframe class="contact-modal-frame" title="Contact form" data-src="https://docs.google.com/forms/d/e/1FAIpQLSe-r5s7DrzXchPUagg5_6mEp_p78zpWQk6A9Z9JxAikKIGxIQ/viewform?embedded=true">Loading…</iframe>
+      <div class="contact-modal-body">
+        <form id="order-request-form" class="order-form" data-endpoint="https://api.aihalo.dev/v1/orders" novalidate>
+          <input type="text" name="website_url" class="order-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <div class="order-grid">
+            <div class="order-field order-field-full">
+              <label for="order-tier">Commercial Licensing Tier <span aria-hidden="true">*</span></label>
+              <select id="order-tier" name="tier" required>
+                <option value="PRODUCTION_RUNTIME">Production Runtime — $12,000 / year (up to 4 server nodes + 5 Agent Studio seats)</option>
+                <option value="OEM">OEM &amp; Embedded Distribution — $25,000 one-time (1 App line, 10 dev seats + 10 Studio seats)</option>
+                <option value="ENTERPRISE">Enterprise &amp; Edge Fleet — From $50,000 / year (100–5,000+ edge nodes + 25 Studio seats)</option>
+                <option value="STUDIO_TEAM">SMILE Agent Studio Team — $995 / seat / year (5-seat standalone minimum, or add-on seats)</option>
+                <option value="EVALUATION_PILOT">30-Day Commercial Trial Key / $15,000 Turnkey Edge Pilot</option>
+                <option value="GENERAL_INQUIRY">General Licensing, Architecture Review, or Demo Inquiry</option>
+              </select>
+            </div>
+
+            <div class="order-field">
+              <label for="order-customer">Customer Legal Entity Name <span aria-hidden="true">*</span></label>
+              <input id="order-customer" name="customer" type="text" required placeholder="e.g., Acme Financial Corp.">
+            </div>
+
+            <div class="order-field">
+              <label for="order-contact">Your Name &amp; Title <span aria-hidden="true">*</span></label>
+              <input id="order-contact" name="contactName" type="text" required placeholder="e.g., Jane Doe, VP Platform Engineering">
+            </div>
+
+            <div class="order-field">
+              <label for="order-email">Work Email (License Key Delivery) <span aria-hidden="true">*</span></label>
+              <input id="order-email" name="email" type="email" required placeholder="you@company.com">
+            </div>
+
+            <div class="order-field">
+              <label for="order-billing-email">Billing / AP Email (Optional)</label>
+              <input id="order-billing-email" name="billingEmail" type="email" placeholder="ap@company.com">
+            </div>
+
+            <div class="order-field" id="order-nodes-wrap">
+              <label for="order-nodes" id="order-nodes-label">Production Server Nodes</label>
+              <input id="order-nodes" name="nodes" type="number" min="1" max="100000" value="4">
+              <small id="order-nodes-hint" class="order-hint">4 nodes included in base pack (+$250/node/mo above 4)</small>
+            </div>
+
+            <div class="order-field" id="order-seats-wrap">
+              <label for="order-seats" id="order-seats-label">Agent Studio Authorized User Seats</label>
+              <input id="order-seats" name="seats" type="number" min="1" max="10000" value="5">
+              <small id="order-seats-hint" class="order-hint">5 seats bundled free (+$995/seat/yr for extra seats)</small>
+            </div>
+
+            <div class="order-field order-field-full">
+              <label for="order-notes">Deployment Scope, Application Name (for OEM), or PO / Procurement Notes</label>
+              <textarea id="order-notes" name="notes" rows="3" placeholder="Optional: target go-live date, OEM application product line name, Year 2 Maintenance preference, or vendor onboarding instructions."></textarea>
+            </div>
+          </div>
+
+          <div class="order-summary" id="order-summary" aria-live="polite">
+            <div>
+              <span class="order-summary-kicker">Estimated Order Summary</span>
+              <strong id="order-summary-title">Production Runtime (Serve + Core + 5 Studio Seats)</strong>
+              <span id="order-summary-agreement" class="order-summary-meta">Governing Agreement: Serve Engine Commercial License 1.0</span>
+            </div>
+            <div class="order-summary-price" id="order-summary-price">$12,000 <span>/ year</span></div>
+          </div>
+
+          <p class="order-error" id="order-error" hidden role="alert"></p>
+
+          <div class="order-actions">
+            <span class="order-direct-mail">Prefer email? <a href="mailto:sales@aihalo.dev">sales@aihalo.dev</a></span>
+            <div class="order-actions-right">
+              <button type="button" class="btn btn-quiet" data-contact-close>Cancel</button>
+              <button type="submit" class="btn btn-accent" id="order-submit-btn">Request Order Form &amp; Key</button>
+            </div>
+          </div>
+        </form>
+
+        <div id="order-result" class="order-result" hidden>
+          <div class="order-result-head">
+            <span class="order-result-badge" id="order-result-badge">Order Request Ready</span>
+            <h3 id="order-result-title">Your Order Request Has Been Prepared</h3>
+            <p id="order-result-message"></p>
+          </div>
+          <pre class="order-result-payload"><code id="order-result-code"></code></pre>
+          <div class="order-actions">
+            <button type="button" class="btn btn-quiet btn-sm" id="order-copy-btn">Copy Order Summary</button>
+            <div class="order-actions-right">
+              <a class="btn btn-accent" id="order-mailto-btn" href="mailto:sales@aihalo.dev">Send via Email Client →</a>
+              <button type="button" class="btn btn-quiet" data-contact-close>Done</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
