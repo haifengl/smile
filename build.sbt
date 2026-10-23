@@ -109,7 +109,10 @@ lazy val commonSettings = Seq(
     "LicenseRef-SMILE-Commercial" -> uri("https://www.aihalo.dev/licensing.html")
   ),
   Compile / packageBin / mappings += {
-    ((LocalRootProject / baseDirectory).value / "LICENSE") -> "META-INF/LICENSE"
+    val rootDir = (LocalRootProject / baseDirectory).value
+    val moduleLicense = baseDirectory.value / "LICENSE"
+    val license = if (moduleLicense.exists()) moduleLicense else rootDir / "LICENSE"
+    fileConverter.value.toVirtualFile(license.toPath) -> "META-INF/LICENSE"
   }
 )
 
@@ -253,5 +256,11 @@ lazy val kotlin = project.in(file("kotlin"))
 
 lazy val studio = project.in(file("studio"))
   .settings(javaSettings*)
-  .settings(publish / skip := true)
+  .settings(
+    publish / skip := true,
+    licenses := List(
+      "BUSL-1.1" -> uri("https://raw.githubusercontent.com/haifengl/smile/master/studio/LICENSE"),
+      "LicenseRef-SMILE-Commercial" -> uri("https://www.aihalo.dev/licensing.html")
+    )
+  )
   .dependsOn(deep, scala, kotlin)
