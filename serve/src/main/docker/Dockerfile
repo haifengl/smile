@@ -23,10 +23,9 @@
 #
 # Before building the container image run:
 #
-# ./gradlew :serve:build -Dquarkus.profile=local -Pserve.plugins=
+# ./gradlew :serve:build -Dquarkus.profile=local
 #
-# (-Dquarkus.profile=local: embedded H2 database; omit it for PostgreSQL, i.e. `prod`. -Pserve.plugins= leaves out
-# optional plugins such as blob-s3 and its AWS SDK, as in the published image; omit it to include them.)
+# (-Dquarkus.profile=local: embedded H2 database; omit it for PostgreSQL, i.e. `prod`.)
 #
 # Then, build the image with:
 #

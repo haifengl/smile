@@ -372,7 +372,7 @@ java \
         </table>
     </div>
 
-    <p>Optional plugins under <code>serve-plugins/</code> (such as <code>blob-s3</code> for S3-compatible chat blob storage via <code>smile.blob.storage=s3</code>) are selected at build time with <code>-Pserve.plugins=&lt;comma list&gt;</code> (default: all; pass <code>-Pserve.plugins=</code> to exclude). Of the published Docker images, only <code>latest-gpu</code> bundles <code>blob-s3</code> so the CPU JVM and native images stay free of the AWS SDK.</p>
+    <p>Optional plugins (such as commercial/enterprise storage backends implementing <code>smile.chat.blob.BlobStoreProvider</code>) can be placed in <code>serve/plugins/*.jar</code> before building so ArC indexes them into the Quarkus application.</p>
 
 
     <h2 id="configuration" class="title">Configuration Reference</h2>

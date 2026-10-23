@@ -34,7 +34,6 @@
 #   --build-arg QUARKUS_PROFILE=prod
 # (the prod profile needs a PostgreSQL database; see serve/README.md). Extra Gradle arguments go in
 #   --build-arg GRADLE_ARGS="..."
-# All serve-plugins (e.g. blob-s3) are included unless GRADLE_ARGS says otherwise (-Pserve.plugins=...).
 #
 # Then run the container using (requires NVIDIA Container Toolkit).
 # For Qwen 27B BF16 on 2x 40GB GPUs:

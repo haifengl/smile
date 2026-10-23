@@ -18,4 +18,3 @@ plugins {
 
 rootProject.name = "smile"
 include("base", "core", "deep", "nlp", "plot", "spark", "kotlin", "serve", "studio")
-include("serve-plugins:blob-spi", "serve-plugins:blob-s3")
