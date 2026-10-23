@@ -285,8 +285,9 @@ Runtime and ONNX-GENAI native libraries installed and configured; see
 ### 1.4 Health and Metrics Endpoints
 
 Operational endpoints follow the Quarkus `/q/` convention, separate from the
-business API under `/api/v1`. They are provided by the SmallRye Health and
-Micrometer extensions.
+business API under `/api/v1`. Health probes are provided by SmallRye Health;
+Prometheus metrics (`/q/metrics`) are exposed when a metrics plugin (such as
+`metrics-prometheus`) is included in `serve/plugins/`.
 
 **Health** (SmallRye Health / MicroProfile Health):
 
@@ -319,7 +320,7 @@ trigger a container restart. The readiness check reports the loaded model
 counts. Use `/q/health/live` for Kubernetes `livenessProbe` and
 `/q/health/ready` for `readinessProbe`.
 
-**Metrics** (Micrometer, Prometheus text format):
+**Metrics** (Prometheus text format, via optional metrics plugin):
 
 ```
 GET /q/metrics
@@ -642,7 +643,7 @@ jextract bindings or serializable model classes change. Add `--check` to verify,
 
 ### Plugins
 
-Optional plugins (such as commercial/enterprise storage backends) can be placed in `serve/plugins/*.jar` before running `./gradlew :serve:build`. A plugin implements `smile.chat.blob.BlobStoreProvider` as an `@ApplicationScoped` CDI bean and ships an empty `META-INF/beans.xml` so ArC indexes it at build time. The active backend is selected at runtime by `smile.blob.storage` (default: `local`).
+Optional plugins (such as commercial/enterprise storage backends and Prometheus telemetry) can be placed in `serve/plugins/*.jar` before running `./gradlew :serve:build`. Plugins implement the in-tree SPI interfaces (`smile.chat.blob.BlobStoreProvider`, `smile.serve.ModelMetricsBinder`, and `smile.chat.LlmMetrics`) as `@ApplicationScoped` CDI beans and ship an empty `META-INF/beans.xml` so ArC indexes them at build time. The active blob backend is selected at runtime by `smile.blob.storage` (default: `local`), while metrics binders and sinks are discovered automatically via CDI (`@All`). Pass `-Pserve.plugins=false` to build without any staged plugin JARs.
 
 ---
 

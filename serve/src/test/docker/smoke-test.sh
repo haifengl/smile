@@ -130,7 +130,14 @@ printf '  startup: %s\n' "$(docker logs "$NAME" 2>&1 | grep -o 'started in [0-9.
 
 # --- checks common to every flavor
 http_status "health" 200 "$BASE/q/health"
-if curl -s "$BASE/q/metrics" | grep -q '^# HELP'; then ok "prometheus metrics (/q/metrics)"; else bad "prometheus metrics (/q/metrics)"; fi
+METRICS_CODE=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/q/metrics")
+if [ "$METRICS_CODE" = "200" ]; then
+    if curl -s "$BASE/q/metrics" | grep -q '^# HELP'; then ok "prometheus metrics (/q/metrics)"; else bad "prometheus metrics (/q/metrics)"; fi
+elif [ "$METRICS_CODE" = "404" ]; then
+    ok "prometheus metrics (/q/metrics omitted without metrics plugin)"
+else
+    bad "prometheus metrics (/q/metrics)" "HTTP $METRICS_CODE"
+fi
 http_status "web UI" 200 "$BASE/"
 json_check  "model list has the SMILE and ONNX models" \
     "{'iris_random_forest-1','iris_lda-1','logreg_iris'} <= {m['id'] for m in d['data']}" "$API/models"

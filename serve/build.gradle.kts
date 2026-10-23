@@ -15,7 +15,6 @@ dependencies {
     implementation("io.quarkus:quarkus-rest")
     implementation("io.quarkus:quarkus-rest-jackson")
     implementation("io.quarkus:quarkus-arc")
-    implementation("io.quarkus:quarkus-micrometer-registry-prometheus")
     implementation("io.quarkus:quarkus-smallrye-health")
     implementation("org.jboss.slf4j:slf4j-jboss-logmanager:2.1.0.Final")
     implementation("io.quarkus:quarkus-hibernate-orm-panache")
@@ -45,6 +44,7 @@ dependencies {
 
 tasks.withType<Test> {
     systemProperty("java.util.logging.manager", "org.jboss.logmanager.LogManager")
+    systemProperty("quarkus.test.flat-class-path", "true")
 }
 
 tasks.quarkusDev {

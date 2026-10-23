@@ -8,6 +8,7 @@
  */
 package smile.chat;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import smile.llm.GenerationListener;
@@ -27,7 +28,7 @@ import smile.llm.GenerationListener;
  * @author Haifeng Li
  */
 public final class LlmMetricsListener implements GenerationListener {
-    private final LlmMetrics metrics;
+    private final List<LlmMetrics> sinks;
     private final long startNanos;
     private final AtomicInteger promptTokens = new AtomicInteger();
     private final AtomicInteger cachedInputTokens = new AtomicInteger();
@@ -38,10 +39,10 @@ public final class LlmMetricsListener implements GenerationListener {
     /**
      * Constructor.
      *
-     * @param metrics the LLM metrics sink.
+     * @param sinks the LLM metrics sinks.
      */
-    public LlmMetricsListener(LlmMetrics metrics) {
-        this.metrics = metrics;
+    public LlmMetricsListener(List<LlmMetrics> sinks) {
+        this.sinks = sinks == null ? List.of() : List.copyOf(sinks);
         this.startNanos = System.nanoTime();
     }
 
@@ -66,11 +67,17 @@ public final class LlmMetricsListener implements GenerationListener {
         }
         long now = System.nanoTime();
         if (firstTokenNanos.compareAndSet(-1L, now)) {
-            metrics.recordDuration("time_to_first_token", now - startNanos);
+            long ttft = now - startNanos;
+            for (LlmMetrics sink : sinks) {
+                sink.recordDuration("time_to_first_token", ttft);
+            }
         } else {
             long previous = lastTokenNanos.get();
             if (previous > 0L) {
-                metrics.recordDuration("inter_token_latency", now - previous);
+                long itl = now - previous;
+                for (LlmMetrics sink : sinks) {
+                    sink.recordDuration("inter_token_latency", itl);
+                }
             }
         }
         lastTokenNanos.set(now);
