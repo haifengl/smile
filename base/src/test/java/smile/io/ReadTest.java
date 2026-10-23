@@ -68,6 +68,62 @@ public class ReadTest {
     }
 
     @Test
+    public void testReadDataAvroEmbeddedSchema() throws Exception {
+        System.out.println("avro embedded schema");
+        DataFrame df = Read.data(Paths.getTestData("kylo/userdata1.avro"));
+        assertEquals(1000, df.nrow());
+        assertEquals(13, df.ncol());
+    }
+
+    @Test
+    public void testReadDataTsv() throws Exception {
+        System.out.println("tsv");
+        var temp = java.nio.file.Files.createTempFile("smile-test-", ".tsv");
+        try {
+            java.nio.file.Files.writeString(temp, "name\tage\nAlice\t30\nBob\t25\n");
+            DataFrame df = Read.data(temp);
+            assertEquals(2, df.nrow());
+            assertEquals(2, df.ncol());
+            assertEquals("Alice", df.getString(0, 0));
+            assertEquals(30, df.getInt(0, 1));
+        } finally {
+            java.nio.file.Files.deleteIfExists(temp);
+        }
+    }
+
+    @Test
+    public void testReadDataJsonl() throws Exception {
+        System.out.println("jsonl");
+        var temp = java.nio.file.Files.createTempFile("smile-test-", ".jsonl");
+        try {
+            java.nio.file.Files.copy(
+                    Paths.getTestData("kylo/books.json"),
+                    temp,
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            DataFrame df = Read.data(temp);
+            assertEquals(7, df.nrow());
+            assertEquals(10, df.ncol());
+        } finally {
+            java.nio.file.Files.deleteIfExists(temp);
+        }
+    }
+
+    @Test
+    public void testReadDataArrow() throws Exception {
+        System.out.println("arrow");
+        DataFrame weather = Read.arff(Paths.getTestData("weka/weather.nominal.arff"));
+        var temp = java.nio.file.Files.createTempFile("smile-test-", ".arrow");
+        try {
+            Write.arrow(weather, temp);
+            DataFrame df = Read.data(temp);
+            assertEquals(weather.nrow(), df.nrow());
+            assertEquals(weather.ncol(), df.ncol());
+        } finally {
+            java.nio.file.Files.deleteIfExists(temp);
+        }
+    }
+
+    @Test
     public void testReadDataJson() throws Exception {
         System.out.println("json");
         DataFrame df = Read.data(Paths.getTestData("kylo/books.json").toString());
@@ -93,6 +149,44 @@ public class ReadTest {
         System.out.println(df);
         assertEquals(1000, df.nrow());
         assertEquals(13, df.ncol());
+    }
+
+    @Test
+    public void testReadDataWithLimit() throws Exception {
+        System.out.println("read data with limit");
+        DataFrame arff = Read.data(Paths.getTestData("weka/weather.nominal.arff"), 5);
+        assertEquals(5, arff.nrow());
+
+        DataFrame avro = Read.data(Paths.getTestData("kylo/userdata1.avro"), 25);
+        assertEquals(25, avro.nrow());
+
+        DataFrame json = Read.data(Paths.getTestData("kylo/books.json"), 3);
+        assertEquals(3, json.nrow());
+
+        DataFrame sas = Read.data(Paths.getTestData("sas/airline.sas7bdat"), 10);
+        assertEquals(10, sas.nrow());
+
+        DataFrame parquet = Read.data(Paths.getTestData("kylo/userdata1.parquet").toAbsolutePath(), 50);
+        assertEquals(50, parquet.nrow());
+
+        var tempTsv = java.nio.file.Files.createTempFile("smile-test-", ".tsv");
+        try {
+            java.nio.file.Files.writeString(tempTsv, "name\tage\nAlice\t30\nBob\t25\nCharlie\t35\n");
+            DataFrame tsv = Read.data(tempTsv, 2);
+            assertEquals(2, tsv.nrow());
+        } finally {
+            java.nio.file.Files.deleteIfExists(tempTsv);
+        }
+
+        var tempArrow = java.nio.file.Files.createTempFile("smile-test-", ".arrow");
+        try {
+            DataFrame fullWeather = Read.arff(Paths.getTestData("weka/weather.nominal.arff"));
+            Write.arrow(fullWeather, tempArrow);
+            DataFrame arrow = Read.data(tempArrow, 4);
+            assertEquals(4, arrow.nrow());
+        } finally {
+            java.nio.file.Files.deleteIfExists(tempArrow);
+        }
     }
 
     @Test

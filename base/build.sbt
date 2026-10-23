@@ -5,7 +5,7 @@ packageOptions += Package.ManifestAttributes("Automatic-Module-Name" -> "smile.b
 libraryDependencies ++= {
   val arrowV = "19.0.0"
   Seq(
-    "tools.jackson.core" % "jackson-databind" % "3.2.3",
+    "tools.jackson.core" % "jackson-databind" % "3.2.4",
     "org.apache.commons" % "commons-csv" % "1.14.1",
     "org.duckdb"         % "duckdb_jdbc" % "1.5.6.0" % Provided, // smile.data.SQL
     "org.apache.arrow"   % "arrow-dataset" % arrowV % Provided,

@@ -72,6 +72,16 @@ object write {
 
 /** Data loading utilities. */
 object read {
+    /** Reads a data file. Infers the data format by the file name extension. */
+    fun data(file: String, format: String? = null, limit: Int = Int.MAX_VALUE): DataFrame {
+        return Read.data(file, format, limit)
+    }
+
+    /** Reads a data file. Infers the data format by the file name extension. */
+    fun data(file: Path, format: String? = null, limit: Int = Int.MAX_VALUE): DataFrame {
+        return Read.data(file, format, limit)
+    }
+
     /** Reads a JDBC query result to a data frame. */
     fun jdbc(rs: ResultSet): DataFrame {
         return DataFrame.of(rs)
@@ -153,6 +163,16 @@ object read {
     /** Reads an Apache Arrow file. */
     fun arrow(file: Path): DataFrame {
         return Read.arrow(file)
+    }
+
+    /** Reads an Apache Avro file using its embedded writer schema. */
+    fun avro(file: String): DataFrame {
+        return Read.avro(file)
+    }
+
+    /** Reads an Apache Avro file using its embedded writer schema. */
+    fun avro(file: Path): DataFrame {
+        return Read.avro(file)
     }
 
     /** Reads an Apache Avro file. */

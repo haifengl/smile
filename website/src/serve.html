@@ -49,10 +49,41 @@ title: SMILE - Serve
 
     <p>The service starts on port 8080 inside the container (mapped to 8888 on the host). Place your <code>.sml</code> and <code>.onnx</code> model files in <code>/path/to/model/folder</code>; they are discovered automatically at startup.</p>
 
+    <h3 id="image-flavors">Image Flavors</h3>
+
+    <p>The release workflow publishes four variants of the image to the GitHub Container Registry, <code>ghcr.io/haifengl/smile-serve</code>. Pick one with the tag suffix: <code>latest</code> or <code>7.1.0</code> for the JVM image, and e.g. <code>latest-micro</code> or <code>7.1.0-native</code> for the others.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Tag</th><th>Image</th><th>Chat</th><th>User accounts, conversations (database)</th><th>Size</th></tr></thead>
+            <tbody>
+            <tr><td><code>latest</code></td><td>JVM (OpenJDK 25), CPU</td><td>CPU: ONNX Runtime GenAI packages</td><td>yes</td><td>0.6 GB</td></tr>
+            <tr><td><code>latest-gpu</code></td><td>JVM, NVIDIA CUDA</td><td>GPU: LibTorch (Llama, Qwen) and ONNX Runtime GenAI</td><td>yes</td><td>16 GB</td></tr>
+            <tr><td><code>latest-native</code></td><td>GraalVM native executable, CPU</td><td>CPU: ONNX Runtime GenAI packages</td><td>yes</td><td>0.4 GB</td></tr>
+            <tr><td><code>latest-micro</code></td><td>GraalVM native executable, CPU, inference only</td><td>none</td><td>none</td><td>0.2 GB</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>All four serve SMILE (<code>.sml</code>) and ONNX models, the web UI, health probes (<code>/q/health</code>), and Prometheus metrics (<code>/q/metrics</code>). The published images use the <code>local</code> profile: users and conversation history are kept in an embedded H2 database file, <code>/model/smile_serve</code>, so mount <code>/model</code> read-write if you want them to survive restarts.</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Metric / Requirement</th><th><code>latest-micro</code></th><th><code>latest-native</code></th><th><code>latest</code> (JVM)</th><th><code>latest-gpu</code></th></tr></thead>
+            <tbody>
+            <tr><td>Startup (no chat model)</td><td>0.4 s</td><td>0.5 s</td><td>3.4 s</td><td>3.3 s</td></tr>
+            <tr><td>Idle memory</td><td>~80 MiB</td><td>~115 MiB</td><td>~600 MiB</td><td>—</td></tr>
+            <tr><td>With a chat model loaded</td><td>n/a</td><td>8 s, 3 GiB (Phi-4-mini, 4.6 GB package)</td><td>11 s, 3.5 GiB (same)</td><td>15 s, ~34 GiB GPU RAM (Llama-3.1-8B BF16, 1 GPU)</td></tr>
+            <tr><td>S3 blob storage plugin</td><td>no</td><td>no</td><td>no</td><td>yes</td></tr>
+            <tr><td>Needs</td><td>x86-64-v3 CPU</td><td>x86-64-v3 CPU</td><td>any x86-64 CPU</td><td>NVIDIA GPU, CUDA 13.2 driver, NVIDIA Container Toolkit</td></tr>
+            </tbody>
+        </table>
+    </div>
+
 
     <h3 id="gpu-build-run">GPU Build &amp; Run</h3>
 
-    <p>Build the JVM+GPU image from source and run it with CUDA graph decode enabled. To enable Google login, add <code>-Dsmile.auth.google.client-id=...</code> <code>-Dsmile.auth.google.client-secret=...</code> <code>-Dsmile.auth.google.redirect-uri=...</code> to <code>JAVA_OPTS_APPEND</code> yourself (see <a href="#authentication">Authentication</a>); keep those values out of shell history / <code>docker inspect</code> by sourcing them from environment variables rather than inlining literals.</p>
+    <p>Build the JVM+GPU image from source and run it with CUDA graph decode enabled. The image builds the Quarkus app inside Docker with the <code>local</code> profile by default (<code>--build-arg QUARKUS_PROFILE=local</code>, embedded H2 database in <code>/model/smile_serve</code>); pass <code>--build-arg QUARKUS_PROFILE=prod</code> for PostgreSQL. To enable Google login, add <code>-Dsmile.auth.google.client-id=...</code> <code>-Dsmile.auth.google.client-secret=...</code> <code>-Dsmile.auth.google.redirect-uri=...</code> to <code>JAVA_OPTS_APPEND</code> yourself (see <a href="#authentication">Authentication</a>); keep those values out of shell history / <code>docker inspect</code> by sourcing them from environment variables rather than inlining literals.</p>
 
 
     <div class="code-playground glass" data-lang="bash">
@@ -62,8 +93,7 @@ title: SMILE - Serve
     <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
     {% include "components/playground-extra-actions.njk" %}
   </div>
-  <pre class="playground-source language-bash"><code class="language-bash">./gradlew :serve:build
-sudo docker build -f serve/src/main/docker/Dockerfile.gpu -t quarkus/smile-serve-gpu .
+  <pre class="playground-source language-bash"><code class="language-bash">sudo docker build -f serve/src/main/docker/Dockerfile.gpu -t quarkus/smile-serve-gpu .
 sudo docker run -i --rm --gpus all -p 8888:8080 \
   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B" \
   -u root -v "/llm/model":/model quarkus/smile-serve-gpu</code></pre>
@@ -328,6 +358,22 @@ java \
 
     <p>See the <a href="https://quarkus.io/guides/gradle-tooling" target="_blank" rel="noopener">Quarkus native build guide</a> for details.</p>
 
+    <h3 id="native-variants">Native Image Variants &amp; Plugins</h3>
+
+    <p>Both native Dockerfiles build in-container from the repository root and need no host-side build:</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Dockerfile</th><th>Contents</th><th>Size</th></tr></thead>
+            <tbody>
+            <tr><td><code>Dockerfile.native</code></td><td>Full CPU image: SMILE, ONNX, CPU chat (ONNX Runtime GenAI packages), auth, and embedded H2 database. No LibTorch.</td><td>~375 MB</td></tr>
+            <tr><td><code>Dockerfile.micro</code></td><td>Inference only (<code>-Dquarkus.profile=micro</code>): SMILE and ONNX models plus the web UI's inference pages. No chat, auth/users, database, LibTorch, or GenAI.</td><td>~205 MB</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p>Optional plugins under <code>serve-plugins/</code> (such as <code>blob-s3</code> for S3-compatible chat blob storage via <code>smile.blob.storage=s3</code>) are selected at build time with <code>-Pserve.plugins=&lt;comma list&gt;</code> (default: all; pass <code>-Pserve.plugins=</code> to exclude). Of the published Docker images, only <code>latest-gpu</code> bundles <code>blob-s3</code> so the CPU JVM and native images stay free of the AWS SDK.</p>
+
 
     <h2 id="configuration" class="title">Configuration Reference</h2>
 
@@ -519,13 +565,43 @@ Content-Type: application/json</code></pre>
         <li>For custom models that do not support SHAP, <code>shap</code> returns <code>"Not supported"</code>.</li>
     </ul>
 
+    <p>For models using <strong>KernelSHAP</strong>, optional per-request parameters can be passed as query parameters (<code>?samples=N&amp;ridge=R</code>) or in the JSON request body (<code>shapSamples</code>, <code>shapRidge</code>, or <code>"shap": {"samples": N, "ridge": R}</code>):</p>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered">
+            <thead><tr><th>Query param</th><th>JSON field</th><th>Type</th><th>Default</th><th>Description</th></tr></thead>
+            <tbody>
+            <tr><td><code>samples</code></td><td><code>shapSamples</code> / <code>shap.samples</code></td><td><code>int</code></td><td><code>0</code> (auto: <code>2 * M + 2048</code>)</td><td>Maximum number of feature coalitions to evaluate per instance (<code>&gt;= 0</code>).</td></tr>
+            <tr><td><code>ridge</code></td><td><code>shapRidge</code> / <code>shap.ridge</code></td><td><code>double</code></td><td><code>1e-8</code></td><td>L2 regularization penalty for weighted least squares (<code>&gt;= 0</code>, finite).</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="code-playground glass" data-lang="bash">
+  <div class="playground-toolbar">
+    <span class="lang-tab is-active">Bash</span>
+    <span class="toolbar-spacer"></span>
+    <button type="button" class="btn btn-ghost btn-sm playground-copy">Copy</button>
+    {% include "components/playground-extra-actions.njk" %}
+  </div>
+  <pre class="playground-source language-bash"><code class="language-bash">curl -X POST "http://localhost:8080/api/v1/smile/iris_lda-1?explain=true&amp;samples=256&amp;ridge=1e-6" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sepallength": 5.1,
+    "sepalwidth":  3.5,
+    "petallength": 1.4,
+    "petalwidth":  0.2
+  }'</code></pre>
+  <div class="playground-editor" hidden></div>
+</div>
+
     <p><strong>Error responses:</strong></p>
 
     <div class="table-responsive">
         <table class="table table-striped table-bordered">
             <thead><tr><th>HTTP</th><th>Cause</th></tr></thead>
             <tbody>
-            <tr><td><code>400 Bad Request</code></td><td>Missing required field, or malformed JSON</td></tr>
+            <tr><td><code>400 Bad Request</code></td><td>Missing required field, malformed JSON, or invalid SHAP parameters (<code>samples &lt; 0</code> or <code>ridge &lt; 0</code> / non-finite)</td></tr>
             <tr><td><code>404 Not Found</code></td><td>Unknown model ID</td></tr>
             </tbody>
         </table>
@@ -1354,24 +1430,23 @@ Content-Type: application/json
     <p>A React-based web interface is bundled via <a href="https://quarkiverse.github.io/quarkiverse-docs/quarkus-quinoa/dev/" target="_blank" rel="noopener">Quarkus Quinoa</a>. It is served from the root URL and provides:</p>
 
     <ul>
-        <li><strong>Inference UI</strong> (<code>/infer</code>) — unified model shell: <strong>collapsible</strong> sidebar lists <strong>chat</strong>, <strong>SMILE</strong> (<code>.sml</code>), and <strong>ONNX</strong> (<code>.onnx</code>) models. Selecting a chat model embeds the chat module with a <strong>collapsible right nav</strong> (history, login, settings). SMILE models get a schema-driven form; ONNX models get a numeric form from tensor shapes, or an image upload when a 4-D vision-like input is detected (overrideable).</li>
+        <li><strong>Inference UI</strong> (<code>/infer</code>) — unified model shell: <strong>collapsible</strong> sidebar lists <strong>chat</strong>, <strong>SMILE</strong> (<code>.sml</code>), and <strong>ONNX</strong> (<code>.onnx</code>) models. Selecting a chat model embeds the chat module with a <strong>collapsible right nav</strong> (history, login, settings). SMILE models get a schema-driven form with an <strong>Explain (SHAP)</strong> toggle (displaying the active <code>TreeSHAP</code>, <code>LinearSHAP</code>, or <code>KernelSHAP</code> method plus inline <code>Samples</code> and <code>Ridge</code> controls for KernelSHAP) and an inline bottom SHAP explanation pane rendering interactive <strong>Waterfall</strong>, <strong>Force</strong>, and <strong>Decision</strong> plots for any selected prediction row. ONNX models get a numeric form from tensor shapes, or an image upload when a 4-D vision-like input is detected (overrideable).</li>
         <li><strong>Chat UI</strong> (<code>/chat</code>) — standalone chat with the same <strong>right nav panel</strong> (New Chat always available; history/login/settings when signed in). Streaming tokens, Markdown/math. On localhost, you are auto-signed-in as <strong><code>me</code></strong>.</li>
     </ul>
-
-    <p>In dev mode the React development server runs on port <strong>5173</strong> and requests are proxied to the Quarkus backend. The production build (<code>dist/</code>) is served statically by the Quarkus process.</p>
 
 
     <h2 id="database" class="title">Database</h2>
 
-    <p>Chat conversation history requires a relational database.</p>
+    <p>Chat conversation history requires a relational database (not required for the ML or ONNX inference endpoints, or for the <code>micro</code> profile):</p>
 
     <div class="table-responsive">
         <table class="table table-striped table-bordered">
             <thead><tr><th>Profile</th><th>Backend</th><th>URL</th></tr></thead>
             <tbody>
-            <tr><td>Production</td><td>PostgreSQL</td><td><code>jdbc:postgresql://localhost:5432/smile</code></td></tr>
-            <tr><td>Dev</td><td>SQLite</td><td><code>jdbc:sqlite:./smile_serve.db</code></td></tr>
-            <tr><td>Test</td><td>H2 (in-memory)</td><td><code>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</code></td></tr>
+            <tr><td><code>local</code> (Docker default)</td><td>H2 (embedded file)</td><td><code>jdbc:h2:file:/model/smile_serve</code></td></tr>
+            <tr><td><code>prod</code></td><td>PostgreSQL</td><td><code>jdbc:postgresql://localhost:5432/smile</code></td></tr>
+            <tr><td><code>micro</code></td><td>None</td><td>Disabled (inference-only native image)</td></tr>
+            <tr><td><code>dev</code> / <code>test</code></td><td>H2 (file / in-memory)</td><td><code>jdbc:h2:file:./build/smile_serve</code> / <code>jdbc:h2:mem:test;DB_CLOSE_DELAY=-1</code></td></tr>
             </tbody>
         </table>
     </div>

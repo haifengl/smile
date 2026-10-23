@@ -152,9 +152,9 @@ libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-repl"        % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
   "ch.qos.logback"    % "logback-classic"    % "1.6.5",
-  "com.openai"        % "openai-java"        % "4.80.0",
-  "com.anthropic"     % "anthropic-java"     % "2.71.0",
-  "com.google.genai"  % "google-genai"       % "1.76.0",
+  "com.openai"        % "openai-java"        % "4.86.0",
+  "com.anthropic"     % "anthropic-java"     % "2.73.0",
+  "com.google.genai"  % "google-genai"       % "1.78.0",
   "org.commonmark"    % "commonmark"         % "0.30.1",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.6.0",
   "org.eclipse.lsp4j" % "org.eclipse.lsp4j"  % "1.0.0",
@@ -165,7 +165,7 @@ libraryDependencies ++= Seq(
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.10.0",
   "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.24",
-  "io.modelcontextprotocol.sdk" % "mcp"          % "2.0.1",
+  "io.modelcontextprotocol.sdk" % "mcp"          % "2.1.0",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "com.github.serpapi"          % "serpapi-java" % "1.2.0",
   "com.google.code.gson"        % "gson"         % "2.14.0", // evict older version used by serpapi
@@ -186,7 +186,7 @@ libraryDependencies ++= {
 }
 
 libraryDependencies ++= {
-  val jacksonV = "3.2.3"
+  val jacksonV = "3.2.4"
   val jsonschemaV = "4.38.0"
   Seq(
     "tools.jackson.core"       % "jackson-databind"            % jacksonV,

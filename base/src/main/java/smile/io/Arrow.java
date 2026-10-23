@@ -148,8 +148,11 @@ public class Arrow {
             while (reader.loadNextBatch() && rowCount < limit) {
                 try (VectorSchemaRoot root = reader.getVectorSchemaRoot()) {
                     DataFrame frame = read(root);
+                    if (rowCount + frame.size() > limit) {
+                        frame = frame.slice(0, limit - rowCount);
+                    }
                     frames.add(frame);
-                    rowCount += frames.size();
+                    rowCount += frame.size();
                 }
             }
 
