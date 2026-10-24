@@ -26,6 +26,8 @@ import javax.swing.*;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.MessageFormat;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.List;
 import java.util.prefs.Preferences;
@@ -41,6 +43,10 @@ import org.fife.rsta.ui.search.ReplaceDialog;
 import org.fife.rsta.ui.search.SearchEvent;
 import org.fife.rsta.ui.search.SearchListener;
 import org.fife.ui.rtextarea.SearchContext;
+import smile.license.LicenseKey;
+import smile.studio.license.LicenseDialog;
+import smile.studio.license.LicenseState;
+import smile.studio.license.LicenseStore;
 import smile.studio.workspace.OpenFile;
 import smile.studio.workspace.ServeManager;
 import smile.studio.workspace.Workspace;
@@ -80,6 +86,8 @@ public class SmileStudio extends JFrame implements SearchListener {
     private final FindDialog findDialog = new FindDialog(this, this);
     private final ReplaceDialog replaceDialog = new ReplaceDialog(this, this);
     private final Workspace workspace;
+    private final LicenseStore licenseStore = new LicenseStore(prefs, secrets);
+    private LicenseState licenseState;
     /** Kept as a field so {@code windowClosing} can stop it before shutdown. */
     private AutoSaveAction autoSaveAction;
 
@@ -104,6 +112,9 @@ public class SmileStudio extends JFrame implements SearchListener {
         Path cwd = Path.of(System.getProperty("user.dir"));
         workspace = new Workspace(cwd);
         initMenuAndToolBar();
+
+        statusBar.setOnLicenseClick(() -> openLicenseDialog(false));
+        applyLicenseState(licenseStore.load());
 
         JPanel contentPane = new JPanel(new BorderLayout());
         // Don't show toolbar on Windows/Linux to reduce UI clutter.
@@ -237,9 +248,83 @@ public class SmileStudio extends JFrame implements SearchListener {
                 // current pane size. We should set it after window is opened.
                 workspace.setDividerLocation(0.55);
                 // Invoke later so that splitPane.invalidate() be done
-                SwingUtilities.invokeLater(() -> workspace.project().setDividerLocation(0.2));
+                SwingUtilities.invokeLater(() -> {
+                    workspace.project().setDividerLocation(0.2);
+                    if (licenseState != null && licenseState.requiresStartupAttestation(LocalDate.now())) {
+                        openLicenseDialog(true);
+                    }
+                });
             }
         });
+    }
+
+    /**
+     * Opens the modal {@link LicenseDialog} and applies the resulting {@link LicenseState}
+     * to the window title and status bar badge.
+     *
+     * @param startupGate true when opened automatically during startup because attestation is required.
+     */
+    private void openLicenseDialog(boolean startupGate) {
+        LicenseState current = licenseStore.load();
+        LicenseDialog dialog = new LicenseDialog(this, licenseStore, current, startupGate);
+        dialog.setVisible(true);
+        applyLicenseState(dialog.resultState());
+    }
+
+    /**
+     * Updates the active {@link LicenseState}, window title bar, and right-hand status bar badge.
+     *
+     * @param state the resolved license state.
+     */
+    private void applyLicenseState(LicenseState state) {
+        this.licenseState = Objects.requireNonNull(state, "state");
+        LocalDate today = LocalDate.now();
+        String appName = bundle.getString("AppName");
+        String title = switch (state.mode()) {
+            case COMMERCIAL_LICENSED -> state.key()
+                    .map(k -> MessageFormat.format(bundle.getString("TitleLicensed"), appName, k.customer()))
+                    .orElseGet(() -> MessageFormat.format(bundle.getString("TitleEvaluation"), appName));
+            case COMMERCIAL_TRIAL -> MessageFormat.format(
+                    bundle.getString("TitleTrial"),
+                    appName,
+                    state.trialDaysRemaining(today));
+            default -> MessageFormat.format(bundle.getString("TitleEvaluation"), appName);
+        };
+        setTitle(title);
+        statusBar.setLicenseState(state, today);
+    }
+
+    /**
+     * Formats the human-readable license status line displayed in {@code Help -> About}.
+     *
+     * @param state the active license state.
+     * @param today the date used to compute remaining days.
+     * @return localized license summary string.
+     */
+    private String formatAboutLicenseStatus(LicenseState state, LocalDate today) {
+        if (state == null) {
+            return bundle.getString("AboutStatusEvaluation");
+        }
+        return switch (state.mode()) {
+            case COMMERCIAL_LICENSED -> {
+                if (state.key().isPresent()) {
+                    LicenseKey k = state.key().get();
+                    yield MessageFormat.format(
+                            bundle.getString("AboutStatusLicensed"),
+                            k.customer(),
+                            k.tier().name(),
+                            k.seats(),
+                            k.expiresAt().toString());
+                }
+                yield bundle.getString("AboutStatusEvaluation");
+            }
+            case COMMERCIAL_TRIAL -> {
+                long daysLeft = state.trialDaysRemaining(today);
+                String expStr = state.trialExpiresAt().map(LocalDate::toString).orElse("");
+                yield MessageFormat.format(bundle.getString("AboutStatusTrial"), daysLeft, expStr);
+            }
+            default -> bundle.getString("AboutStatusEvaluation");
+        };
     }
 
     private Map<String, Object> getJtdInitOptions() {
@@ -426,6 +511,8 @@ public class SmileStudio extends JFrame implements SearchListener {
         JMenu helpMenu = new JMenu(bundle.getString("Help"));
         helpMenu.add(new JMenuItem(new TutorialAction()));
         helpMenu.add(new JMenuItem(new JavaDocAction()));
+        helpMenu.addSeparator();
+        helpMenu.add(new JMenuItem(new LicenseAction()));
         helpMenu.add(new JMenuItem(new AboutAction()));
         menuBar.add(helpMenu);
 
@@ -863,6 +950,17 @@ public class SmileStudio extends JFrame implements SearchListener {
         }
     }
 
+    private class LicenseAction extends AbstractAction {
+        public LicenseAction() {
+            super(bundle.getString("License"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            openLicenseDialog(false);
+        }
+    }
+
     private class AboutAction extends AbstractAction {
         public AboutAction() {
             super(bundle.getString("About"));
@@ -872,14 +970,11 @@ public class SmileStudio extends JFrame implements SearchListener {
         public void actionPerformed(ActionEvent e) {
             String version = SmileStudio.class.getPackage().getImplementationVersion();
             if (version == null) version = "DEV";
-            String message = String.format("""
-                    Smile Studio %s
-                    Copyright (c) 2010-2026 Haifeng Li.
-                    All rights reserved.
-                    
-                    Smile Studio is free for research and educational use.
-                    For commercial use, please contact sales@aihalo.dev
-                    """, version);
+            String statusSummary = formatAboutLicenseStatus(licenseState, LocalDate.now());
+            String message = MessageFormat.format(
+                    bundle.getString("AboutMessage"),
+                    version,
+                    statusSummary);
             JOptionPane.showMessageDialog(SmileStudio.this,
                     message,
                     bundle.getString("About"),

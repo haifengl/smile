@@ -17,15 +17,20 @@
  */
 package smile.studio;
 
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.text.MessageFormat;
+import java.time.LocalDate;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import com.sun.management.OperatingSystemMXBean;
+import smile.license.LicenseKey;
+import smile.studio.license.LicenseState;
 
 /**
  * A status bar poses an information area typically found at the window's bottom.
@@ -37,8 +42,12 @@ public class StatusBar extends JPanel {
     private static final String READY = bundle.getString("Ready");
     /** Status message. */
     private final JLabel status = new JLabel(READY);
-    /** Status message. */
+    /** System CPU/Heap message. */
     private final JLabel system = new JLabel();
+    /** Clickable license mode / customer badge on the far right. */
+    private final JLabel licenseBadge = new JLabel();
+    /** Optional action executed when the user clicks the license badge. */
+    private Runnable onLicenseClick;
     /** OS's MXBean */
     private final OperatingSystemMXBean os = (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
     /** Memory's MXBean */
@@ -58,15 +67,31 @@ public class StatusBar extends JPanel {
 
         // Left-aligned status message
         status.setHorizontalAlignment(SwingConstants.LEFT);
-        // Add some padding to the left side
         status.setBorder(new EmptyBorder(0, 8, 0, 0));
         add(status, BorderLayout.WEST);
 
-        // Right-aligned system info
+        // Right-aligned container for system info + license badge
+        JPanel eastPane = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 2));
+        eastPane.setOpaque(false);
+
         system.setHorizontalAlignment(SwingConstants.RIGHT);
-        // Add some padding to the right side
-        system.setBorder(new EmptyBorder(0, 0, 0, 8));
-        add(system, BorderLayout.EAST);
+        eastPane.add(system);
+
+        licenseBadge.setHorizontalAlignment(SwingConstants.RIGHT);
+        licenseBadge.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        licenseBadge.setBorder(new EmptyBorder(0, 6, 0, 4));
+        licenseBadge.setVisible(false);
+        licenseBadge.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e) && onLicenseClick != null) {
+                    onLicenseClick.run();
+                }
+            }
+        });
+        eastPane.add(licenseBadge);
+
+        add(eastPane, BorderLayout.EAST);
 
         // Timer to refresh CPU/Memory usage
         var refresher = createRefresher();
@@ -93,6 +118,99 @@ public class StatusBar extends JPanel {
             String info = MessageFormat.format(bundle.getString("SystemInfo"), heapStr, cpuStr);
             system.setText(info);
         });
+    }
+
+    /**
+     * Sets the callback invoked when the user clicks the right-hand license badge.
+     *
+     * @param action the callback to invoke.
+     */
+    public void setOnLicenseClick(Runnable action) {
+        this.onLicenseClick = action;
+    }
+
+    /**
+     * Updates the right-hand license badge text, warning color, and tooltip from the
+     * given {@link LicenseState}.
+     *
+     * @param state the active license state.
+     */
+    public void setLicenseState(LicenseState state) {
+        setLicenseState(state, LocalDate.now());
+    }
+
+    /**
+     * Updates the right-hand license badge text, warning color, and tooltip from the
+     * given {@link LicenseState} as of {@code today}.
+     *
+     * @param state the active license state.
+     * @param today the date used to compute remaining days.
+     */
+    public void setLicenseState(LicenseState state, LocalDate today) {
+        if (state == null) {
+            licenseBadge.setVisible(false);
+            return;
+        }
+        Color defaultFg = UIManager.getColor("Label.foreground");
+        Color warningFg = new Color(0xD9, 0x77, 0x06); // amber warning for <14 days or trial
+
+        switch (state.mode()) {
+            case COMMERCIAL_LICENSED -> {
+                if (state.key().isPresent()) {
+                    LicenseKey k = state.key().get();
+                    String text = "[" + MessageFormat.format(bundle.getString("BadgeLicensed"), k.customer()) + "]";
+                    String tooltip = MessageFormat.format(
+                            bundle.getString("TooltipLicensed"),
+                            k.tier().name(),
+                            k.seats(),
+                            k.expiresAt().toString());
+                    licenseBadge.setText(text);
+                    licenseBadge.setToolTipText(tooltip);
+                    licenseBadge.setForeground(k.daysRemaining(today) < 14 ? warningFg : defaultFg);
+                    licenseBadge.setVisible(true);
+                } else {
+                    setEvaluationBadge(defaultFg);
+                }
+            }
+            case COMMERCIAL_TRIAL -> {
+                long daysLeft = state.trialDaysRemaining(today);
+                String expStr = state.trialExpiresAt().map(LocalDate::toString).orElse("");
+                String text = "[" + MessageFormat.format(bundle.getString("BadgeTrial"), daysLeft) + "]";
+                String tooltip = MessageFormat.format(bundle.getString("TooltipTrial"), daysLeft, expStr);
+                licenseBadge.setText(text);
+                licenseBadge.setToolTipText(tooltip);
+                licenseBadge.setForeground(daysLeft < 7 ? warningFg : defaultFg);
+                licenseBadge.setVisible(true);
+            }
+            default -> setEvaluationBadge(defaultFg);
+        }
+        revalidate();
+        repaint();
+    }
+
+    private void setEvaluationBadge(Color fg) {
+        licenseBadge.setText("[" + bundle.getString("BadgeEvaluation") + "]");
+        licenseBadge.setToolTipText(bundle.getString("TooltipEvaluation"));
+        licenseBadge.setForeground(fg);
+        licenseBadge.setVisible(true);
+    }
+
+    /**
+     * Returns the current license badge text (for testing).
+     *
+     * @return the license badge text.
+     */
+    public String getLicenseBadgeText() {
+        return licenseBadge.getText();
+    }
+
+    /**
+     * Returns the current license badge tooltip (for testing).
+     *
+     * @return the license badge tooltip.
+     */
+    public String getLicenseBadgeTooltip() {
+        return licenseBadge.getToolTipText();
     }
 
     /**
