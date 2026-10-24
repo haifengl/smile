@@ -91,4 +91,30 @@ public record LicenseState(
         Objects.requireNonNull(today, "today");
         return trialExpiresAt.map(today::isAfter).orElse(false);
     }
+
+    /**
+     * Returns true when this state grants access to commercial Studio features
+     * (such as Private &amp; Custom Enterprise Catalogs) as of {@link LocalDate#now()}.
+     *
+     * @return true if backed by an active commercial license or active 30-day commercial trial.
+     */
+    public boolean isCommercialEntitled() {
+        return isCommercialEntitled(LocalDate.now());
+    }
+
+    /**
+     * Returns true when this state grants access to commercial Studio features
+     * (such as Private &amp; Custom Enterprise Catalogs) as of {@code today}.
+     *
+     * @param today the current date.
+     * @return true if backed by an active commercial license or active 30-day commercial trial.
+     */
+    public boolean isCommercialEntitled(LocalDate today) {
+        Objects.requireNonNull(today, "today");
+        return switch (mode) {
+            case COMMERCIAL_LICENSED -> key.map(k -> k.allowsStudio() && !k.isExpired(today)).orElse(false);
+            case COMMERCIAL_TRIAL -> trialExpiresAt.map(exp -> !today.isAfter(exp)).orElse(false);
+            case EVALUATION, UNSET -> false;
+        };
+    }
 }

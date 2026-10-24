@@ -41,7 +41,7 @@ import java.util.Optional;
  *
  * @author Haifeng Li
  */
-final class PluginDefaults {
+public final class PluginDefaults {
 
     /**
      * One known marketplace: the source string to register it by, and the name its
@@ -50,16 +50,16 @@ final class PluginDefaults {
      * @param source the source string, in the {@code marketplace add} shorthand.
      * @param name the marketplace name its manifest declares.
      */
-    record Known(String source, String name) { }
+    public record Known(String source, String name) { }
 
     /** The official Anthropic marketplace, as Claude Code adds it on first start. */
-    static final Known ANTHROPIC_OFFICIAL =
+    public static final Known ANTHROPIC_OFFICIAL =
             new Known("anthropics/claude-plugins-official", "claude-plugins-official");
 
     /**
      * The marketplaces Studio seeds when {@code studio.json} names none, in order.
      */
-    private static final List<Known> KNOWN = List.of(ANTHROPIC_OFFICIAL);
+    public static final List<Known> KNOWN = List.of(ANTHROPIC_OFFICIAL);
 
     private PluginDefaults() {
     }
@@ -67,6 +67,18 @@ final class PluginDefaults {
     /** @return the source strings of the built-in marketplaces. */
     static List<String> knownSources() {
         return KNOWN.stream().map(Known::source).toList();
+    }
+
+    /**
+     * Returns whether a source string matches one of the built-in public default
+     * marketplaces ({@link #KNOWN}), which remain open in Evaluation Mode without
+     * requiring a commercial license.
+     *
+     * @param source the marketplace source string.
+     * @return true if the source matches a built-in default marketplace.
+     */
+    public static boolean isBuiltIn(String source) {
+        return bySource(source).isPresent();
     }
 
     /**
