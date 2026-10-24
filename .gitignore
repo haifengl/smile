@@ -66,8 +66,6 @@ node_modules
 .DS_Store
 
 # Generated
-/website/_site/
-/website/scripts/
 /serve/src/main/resources/META-INF/resources/
 /serve/src/main/webui/dist/
 
