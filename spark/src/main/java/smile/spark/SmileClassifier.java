@@ -58,8 +58,11 @@ public class SmileClassifier
         smile.classification.Classifier<double[]> fit(double[][] x, int[] y);
     }
 
+    /** The instance UID. */
     private final String uid;
+    /** The classifier trainer function. */
     private Trainer trainer;
+    /** The explicit number of classes, or -1 to infer from data. */
     private int numClasses = -1;
 
     /**

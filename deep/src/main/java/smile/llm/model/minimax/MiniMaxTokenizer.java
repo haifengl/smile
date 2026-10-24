@@ -69,7 +69,12 @@ public class MiniMaxTokenizer extends Tiktoken {
     private final int thinkOpen;
     private final int thinkClose;
 
-    /** One entry of {@code added_tokens} in {@code tokenizer.json}. */
+    /**
+     * One entry of {@code added_tokens} in {@code tokenizer.json}.
+     *
+     * @param content the token string.
+     * @param special {@code true} if the token is a special control token.
+     */
     public record AddedToken(String content, boolean special) { }
 
     /**

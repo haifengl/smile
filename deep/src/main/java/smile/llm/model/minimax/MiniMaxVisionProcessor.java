@@ -50,7 +50,12 @@ public final class MiniMaxVisionProcessor {
     private static final double[] MEAN = {0.48145466, 0.4578275, 0.40821073};
     private static final double[] STD = {0.26862954, 0.26130258, 0.27577711};
 
-    /** Patches of one image or video and its {@code (t, h, w)} grid. */
+    /**
+     * Patches of one image or video and its {@code (t, h, w)} grid.
+     *
+     * @param pixels flattened patch tensor {@code [N, patchDim]}.
+     * @param grid   the {@code (t, h, w)} patch grid dimensions.
+     */
     public record Patches(Tensor pixels, int[] grid) { }
 
     private final int patchSize;
@@ -85,6 +90,11 @@ public final class MiniMaxVisionProcessor {
      * The reference {@code smart_resize}: both sides become multiples of {@code factor}, the area stays within
      * {@code [minPixels, maxPixels]} and the aspect ratio is kept approximately.
      *
+     * @param height    source image height in pixels.
+     * @param width     source image width in pixels.
+     * @param factor    divisibility factor for output dimensions.
+     * @param minPixels minimum total pixel count.
+     * @param maxPixels maximum total pixel count.
      * @return {@code {height, width}}.
      * @throws IllegalArgumentException if the aspect ratio exceeds 200.
      */

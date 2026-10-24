@@ -45,7 +45,9 @@ public class SmileRegressionModel
 
     private static final ThreadLocal<String> INIT_UID = new ThreadLocal<>();
 
+    /** The instance UID. */
     private final String uid;
+    /** The underlying SMILE regression model. */
     private final smile.regression.Regression<double[]> model;
 
     /**

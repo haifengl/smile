@@ -126,12 +126,20 @@ public final class TensorParallelGroup implements AutoCloseable {
                 rankOffset, rankOffset + idxs.length - 1, worldSize, java.util.Arrays.toString(idxs));
     }
 
-    /** @return ranks of the whole communicator (equals {@link #tpSize()} unless it spans processes). */
+    /**
+     * Returns the ranks of the whole communicator (equals {@link #tpSize()} unless it spans processes).
+     *
+     * @return ranks of the whole communicator (equals {@link #tpSize()} unless it spans processes).
+     */
     public int worldSize() {
         return worldSize;
     }
 
-    /** @return world rank of this process's first local rank. */
+    /**
+     * Returns the world rank of this process's first local rank.
+     *
+     * @return world rank of this process's first local rank.
+     */
     public int rankOffset() {
         return rankOffset;
     }

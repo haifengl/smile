@@ -60,23 +60,39 @@ public record MiniMaxVisionArgs(
         int imageTokenId,
         int videoTokenId) {
 
-    /** @return per-head width. */
+    /**
+     * Returns the per-head width.
+     *
+     * @return per-head width.
+     */
     public int headDim() {
         return hiddenSize / numHeads;
     }
 
-    /** @return length of one flattened patch ({@code C * T * P * P}). */
+    /**
+     * Returns the length of one flattened patch ({@code C * T * P * P}).
+     *
+     * @return length of one flattened patch ({@code C * T * P * P}).
+     */
     public int patchDim() {
         return numChannels * temporalPatchSize * patchSize * patchSize;
     }
 
-    /** @return rotary dimensions per axis (t, h, w each get this many). */
+    /**
+     * Returns the rotary dimensions per axis (t, h, w each get this many).
+     *
+     * @return rotary dimensions per axis (t, h, w each get this many).
+     */
     public int axisDim() {
         int ropeDims = 2 * (headDim() / 2);
         return 2 * ((ropeDims / 3) / 2);
     }
 
-    /** @return rotated dimensions of each head ({@code 3 * axisDim}); the remaining head dims pass through. */
+    /**
+     * Returns the rotated dimensions of each head ({@code 3 * axisDim}); the remaining head dims pass through.
+     *
+     * @return rotated dimensions of each head ({@code 3 * axisDim}); the remaining head dims pass through.
+     */
     public int rotaryDim() {
         return 3 * axisDim();
     }
