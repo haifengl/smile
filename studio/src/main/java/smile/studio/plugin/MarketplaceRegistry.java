@@ -24,7 +24,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import smile.studio.StudioConfig;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.node.ArrayNode;
@@ -43,16 +45,41 @@ import tools.jackson.databind.node.ObjectNode;
 public final class MarketplaceRegistry {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MarketplaceRegistry.class);
 
+    /**
+     * Error message returned when attempting to register a private or custom marketplace
+     * without an active SMILE Agent Studio Commercial License or 30-day Commercial Trial.
+     */
+    public static final String COMMERCIAL_ENTITLEMENT_REQUIRED =
+            "Private & Custom Enterprise Catalogs require a SMILE Agent Studio Commercial License "
+            + "or active 30-day Commercial Trial.";
+
+    /** Strategy for resolving a marketplace source to a local root directory (injectable for tests). */
+    @FunctionalInterface
+    interface RootResolver {
+        Path resolve(MarketplaceSource source, Path cacheDir) throws IOException;
+    }
+
     private final PluginHome home;
     private final Fetcher fetcher;
     private final StudioConfig.Plugins policy;
+    private final BooleanSupplier commercialEntitled;
+    private final RootResolver rootResolver;
 
     /**
      * Constructor.
      * @param home the plugin home.
      */
     public MarketplaceRegistry(PluginHome home) {
-        this(home, StudioConfig.plugins());
+        this(home, StudioConfig.plugins(), () -> true);
+    }
+
+    /**
+     * Constructor with an explicit commercial entitlement check.
+     * @param home the plugin home.
+     * @param commercialEntitled supplier indicating whether commercial entitlement is active.
+     */
+    public MarketplaceRegistry(PluginHome home, BooleanSupplier commercialEntitled) {
+        this(home, StudioConfig.plugins(), commercialEntitled);
     }
 
     /**
@@ -61,9 +88,47 @@ public final class MarketplaceRegistry {
      * @param policy the marketplace policy from {@code studio.json}.
      */
     MarketplaceRegistry(PluginHome home, StudioConfig.Plugins policy) {
-        this.home = home;
-        this.policy = policy;
+        this(home, policy, () -> true);
+    }
+
+    /**
+     * Constructor with an explicit policy and commercial entitlement predicate.
+     * @param home the plugin home.
+     * @param policy the marketplace policy from {@code studio.json}.
+     * @param commercialEntitled supplier indicating whether commercial entitlement is active.
+     */
+    MarketplaceRegistry(PluginHome home, StudioConfig.Plugins policy, BooleanSupplier commercialEntitled) {
+        this.home = Objects.requireNonNull(home, "home");
+        this.policy = Objects.requireNonNull(policy, "policy");
+        this.commercialEntitled = Objects.requireNonNull(commercialEntitled, "commercialEntitled");
         this.fetcher = new Fetcher();
+        this.rootResolver = fetcher::marketplaceRoot;
+    }
+
+    /**
+     * Constructor with an explicit root resolver, for offline unit tests.
+     * @param home the plugin home.
+     * @param policy the marketplace policy from {@code studio.json}.
+     * @param commercialEntitled supplier indicating whether commercial entitlement is active.
+     * @param rootResolver custom resolver for marketplace sources.
+     */
+    MarketplaceRegistry(PluginHome home, StudioConfig.Plugins policy,
+                        BooleanSupplier commercialEntitled, RootResolver rootResolver) {
+        this.home = Objects.requireNonNull(home, "home");
+        this.policy = Objects.requireNonNull(policy, "policy");
+        this.commercialEntitled = Objects.requireNonNull(commercialEntitled, "commercialEntitled");
+        this.fetcher = new Fetcher();
+        this.rootResolver = Objects.requireNonNull(rootResolver, "rootResolver");
+    }
+
+    /**
+     * Returns whether commercial features (such as Private &amp; Custom Enterprise Catalogs)
+     * are currently unlocked.
+     *
+     * @return true if commercial entitlement is active.
+     */
+    public boolean isCommercialEntitled() {
+        return commercialEntitled.getAsBoolean();
     }
 
     /**
@@ -111,10 +176,13 @@ public final class MarketplaceRegistry {
 
     private Registered add(String sourceText, boolean implicit) throws IOException {
         MarketplaceSource source = MarketplaceSource.parse(sourceText);
+        if (!PluginDefaults.isBuiltIn(sourceText) && !commercialEntitled.getAsBoolean()) {
+            throw new IOException(COMMERCIAL_ENTITLEMENT_REQUIRED);
+        }
         if (implicit && !PluginDefaults.isTrustedSource(sourceText, policy.marketplaces())) {
             throw new IOException("Marketplace source is not one of plugins.marketplaces: " + sourceText);
         }
-        Path root = fetcher.marketplaceRoot(source, home.cache());
+        Path root = rootResolver.resolve(source, home.cache());
         MarketplaceManifest manifest = MarketplaceManifest.from(root);
 
         Map<String, Stored> stored = load();

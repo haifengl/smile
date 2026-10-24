@@ -259,16 +259,27 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     /**
+     * Returns the Studio license store.
+     *
+     * @return the license store.
+     */
+    public LicenseStore licenseStore() {
+        return licenseStore;
+    }
+
+    /**
      * Opens the modal {@link LicenseDialog} and applies the resulting {@link LicenseState}
      * to the window title and status bar badge.
      *
      * @param startupGate true when opened automatically during startup because attestation is required.
+     * @return the updated {@link LicenseState}.
      */
-    private void openLicenseDialog(boolean startupGate) {
+    public LicenseState openLicenseDialog(boolean startupGate) {
         LicenseState current = licenseStore.load();
         LicenseDialog dialog = new LicenseDialog(this, licenseStore, current, startupGate);
         dialog.setVisible(true);
         applyLicenseState(dialog.resultState());
+        return licenseState;
     }
 
     /**

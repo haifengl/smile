@@ -230,5 +230,32 @@ public class LicenseStoreTest {
         assertEquals(UsageMode.COMMERCIAL_LICENSED, state.mode());
         assertEquals("Global Bank", state.key().orElseThrow().customer());
         assertEquals("SMILE_LICENSE_KEY", state.sourceDescription().orElseThrow());
+        assertTrue(state.isCommercialEntitled(today));
+    }
+
+    @Test
+    void isCommercialEntitledReflectsActiveLicenseOrTrialState() throws Exception {
+        LicenseStore store = newStore();
+        LocalDate start = LocalDate.of(2026, 4, 21);
+
+        // First run (UNSET) -> not commercially entitled
+        assertFalse(store.load(start).isCommercialEntitled(start));
+
+        // Evaluation mode -> not commercially entitled
+        assertFalse(store.selectEvaluationMode(start).isCommercialEntitled(start));
+
+        // Active 30-day commercial trial -> commercially entitled
+        LicenseState trial = store.startCommercialTrial(start);
+        assertTrue(trial.isCommercialEntitled(start));
+        assertTrue(trial.isCommercialEntitled(start.plusDays(30)));
+        assertFalse(store.load(start.plusDays(31)).isCommercialEntitled(start.plusDays(31)));
+
+        // Active commercial license key -> commercially entitled until expiry
+        String token = signToken("""
+                {"ver":1,"id":"LIC-2026-0300","customer":"Acme Corp","tier":"STUDIO_TEAM","seats":5,"issuedAt":"2026-04-01","expiresAt":"2026-12-31"}""");
+        LicenseState licensed = store.activateKey(token, start);
+        assertTrue(licensed.isCommercialEntitled(start));
+        assertTrue(licensed.isCommercialEntitled(LocalDate.of(2026, 12, 31)));
+        assertFalse(store.load(LocalDate.of(2027, 1, 1)).isCommercialEntitled(LocalDate.of(2027, 1, 1)));
     }
 }

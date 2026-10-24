@@ -28,6 +28,7 @@ import java.awt.Insets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
@@ -46,6 +47,9 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
+import smile.studio.SmileStudio;
+import smile.studio.license.LicenseDialog;
+import smile.studio.license.LicenseStore;
 
 /**
  * The {@code /plugin} panel: a Swing dialog over {@link PluginService}, mirroring
@@ -82,8 +86,19 @@ public final class PluginPanel extends JDialog {
      * @param cwd the project working directory.
      */
     public PluginPanel(Frame owner, Path cwd) {
+        this(owner, owner instanceof SmileStudio studio
+                ? new PluginService(cwd, () -> studio.licenseStore().load().isCommercialEntitled())
+                : new PluginService(cwd));
+    }
+
+    /**
+     * Constructor with an explicit {@link PluginService}, for tests.
+     * @param owner the owning frame.
+     * @param service the plugin service.
+     */
+    PluginPanel(Frame owner, PluginService service) {
         super(owner, bundle.getString("Plugins"), true);
-        this.service = new PluginService(cwd);
+        this.service = Objects.requireNonNull(service, "service");
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -359,9 +374,7 @@ public final class PluginPanel extends JDialog {
         add.addActionListener(e -> {
             String text = source.getText().trim();
             if (!text.isEmpty()) {
-                report(text, service.addMarketplace(text));
-                source.setText("");
-                refresh();
+                addMarketplace(text, source);
             }
         });
         JButton remove = new JButton(bundle.getString("Remove"));
@@ -386,6 +399,61 @@ public final class PluginPanel extends JDialog {
         panel.add(new JScrollPane(marketplaceList), BorderLayout.CENTER);
         panel.add(south, BorderLayout.SOUTH);
         return panel;
+    }
+
+    /**
+     * Registers a marketplace from the Marketplaces tab. If the source is a custom or
+     * private catalog and the user is in Evaluation Mode, prompts to open
+     * {@link LicenseDialog} so they can activate a Commercial Key or start the 30-day
+     * Commercial Trial and refreshes the license state afterward.
+     *
+     * @param text the trimmed marketplace source string.
+     * @param source the input field to clear on success.
+     */
+    private void addMarketplace(String text, JTextField source) {
+        if (!PluginDefaults.isBuiltIn(text) && !service.isCommercialEntitled()) {
+            Object[] options = {bundle.getString("ManageLicense"), bundle.getString("Cancel")};
+            int choice = JOptionPane.showOptionDialog(
+                    this,
+                    bundle.getString("CommercialRequiredMessage"),
+                    bundle.getString("CommercialRequiredTitle"),
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.INFORMATION_MESSAGE,
+                    null,
+                    options,
+                    options[0]);
+            if (choice != 0) {
+                return;
+            }
+            openLicenseDialog();
+            if (!service.isCommercialEntitled()) {
+                return;
+            }
+            seedDefaultMarketplaces();
+        }
+        InstallResult result = service.addMarketplace(text);
+        report(text, result);
+        if (result.success()) {
+            source.setText("");
+        }
+        refresh();
+    }
+
+    /**
+     * Opens {@link LicenseDialog} and refreshes Studio's active license state.
+     */
+    private void openLicenseDialog() {
+        if (getOwner() instanceof SmileStudio studio) {
+            studio.openLicenseDialog(false);
+        } else {
+            LicenseStore store = new LicenseStore();
+            LicenseDialog dialog = new LicenseDialog(
+                    getOwner() instanceof Frame frame ? frame : null,
+                    store,
+                    store.load(),
+                    false);
+            dialog.setVisible(true);
+        }
     }
 
     // ------------------------------------------------------------------

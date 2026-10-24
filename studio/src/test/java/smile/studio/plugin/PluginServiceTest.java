@@ -273,4 +273,99 @@ public class PluginServiceTest {
         assertEquals("plugins", seeds.getFirst().name());
         assertTrue(PluginDefaults.isTrustedSource("acme/plugins", List.of("acme/plugins")));
     }
+
+    @Test
+    public void testIsBuiltInMarketplace() {
+        assertTrue(PluginDefaults.isBuiltIn("anthropics/claude-plugins-official"));
+        assertTrue(PluginDefaults.isBuiltIn("  anthropics/claude-plugins-official  "));
+        assertFalse(PluginDefaults.isBuiltIn("acme/private-plugins"));
+        assertFalse(PluginDefaults.isBuiltIn("https://internal.acme.com/marketplace.json"));
+        assertFalse(PluginDefaults.isBuiltIn("/opt/acme/plugins"));
+        assertFalse(PluginDefaults.isBuiltIn(""));
+        assertFalse(PluginDefaults.isBuiltIn(null));
+    }
+
+    @Test
+    public void testEvaluationModeBlocksCustomMarketplaceButAllowsBuiltIn(@TempDir Path root) throws IOException {
+        // Given: local directories standing in for the built-in official catalog and a private catalog.
+        Path officialDir = writeMarketplace(root, "official", PluginDefaults.ANTHROPIC_OFFICIAL.name());
+        Path privateDir = writeMarketplace(root, "private-cat", "acme-private");
+        Path cwd = root.resolve("project");
+        Files.createDirectories(cwd);
+        PluginHome home = new PluginHome(root.resolve("home"));
+
+        MarketplaceRegistry registry = new MarketplaceRegistry(
+                home,
+                StudioConfig.DEFAULT_PLUGINS,
+                () -> false,
+                (source, cacheDir) -> switch (source) {
+                    case MarketplaceSource.Github gh
+                            when gh.repo().equals(PluginDefaults.ANTHROPIC_OFFICIAL.source()) -> officialDir;
+                    case MarketplaceSource.Local local -> local.path();
+                    default -> throw new IOException("Unexpected remote source: " + source);
+                });
+        PluginService evalService = new PluginService(
+                home,
+                cwd,
+                root.resolve("state-home"),
+                StudioConfig.DEFAULT_PLUGINS,
+                PluginDefaults.KNOWN,
+                () -> false,
+                registry);
+
+        // When/Then: adding a private/custom marketplace in Evaluation Mode is refused across all surfaces.
+        IOException ex = assertThrows(IOException.class, () -> registry.add(privateDir.toString()));
+        assertTrue(ex.getMessage().contains("Commercial License"), ex.getMessage());
+
+        InstallResult panelBlocked = evalService.addMarketplace("acme/internal-catalog");
+        assertFalse(panelBlocked.success());
+        assertTrue(panelBlocked.message().contains(MarketplaceRegistry.COMMERCIAL_ENTITLEMENT_REQUIRED),
+                panelBlocked.message());
+
+        String cliBlocked = evalService.execute(List.of("marketplace", "add", privateDir.toString()));
+        assertTrue(cliBlocked.startsWith("Error: "), cliBlocked);
+        assertTrue(cliBlocked.contains(MarketplaceRegistry.COMMERCIAL_ENTITLEMENT_REQUIRED), cliBlocked);
+        assertTrue(evalService.marketplaces().isEmpty());
+
+        // When/Then: seeding and installing from the built-in public marketplace succeeds in Evaluation Mode.
+        String seeded = evalService.ensureDefaultMarketplaces();
+        assertTrue(seeded.contains(PluginDefaults.ANTHROPIC_OFFICIAL.name()), seeded);
+        assertEquals(1, evalService.marketplaces().size());
+
+        String installed = evalService.execute(
+                List.of("install", "hello@" + PluginDefaults.ANTHROPIC_OFFICIAL.name()));
+        assertTrue(installed.contains("Installed"), installed);
+        assertEquals(1, evalService.installed().size());
+    }
+
+    @Test
+    public void testCustomSeedsGatedUntilCommercialEntitlementActive(@TempDir Path root) throws IOException {
+        // Given: studio.json configures a custom enterprise marketplace seed.
+        Path customMarket = writeMarketplace(root, "corp-seed", "corp-market");
+        Path cwd = root.resolve("project");
+        Files.createDirectories(cwd);
+        PluginHome home = new PluginHome(root.resolve("home"));
+        StudioConfig.Plugins policy = new StudioConfig.Plugins(List.of(customMarket.toString()));
+
+        boolean[] entitled = {false};
+        PluginService service = new PluginService(
+                home, cwd, root.resolve("state-home"), policy, () -> entitled[0]);
+
+        // When: ensureDefaultMarketplaces runs in Evaluation Mode.
+        String evalSeeded = service.ensureDefaultMarketplaces();
+
+        // Then: custom studio.json seed is skipped and the marker is not prematurely locked.
+        assertTrue(evalSeeded.isEmpty(), evalSeeded);
+        assertTrue(service.marketplaces().isEmpty());
+        assertFalse(Files.exists(home.seededMarker()));
+
+        // When: user activates a Commercial License or 30-day Commercial Trial.
+        entitled[0] = true;
+        String commercialSeeded = service.ensureDefaultMarketplaces();
+
+        // Then: the custom enterprise marketplace is now seeded and unlocked.
+        assertTrue(commercialSeeded.contains("corp-market"), commercialSeeded);
+        assertEquals(1, service.marketplaces().size());
+        assertTrue(Files.exists(home.seededMarker()));
+    }
 }

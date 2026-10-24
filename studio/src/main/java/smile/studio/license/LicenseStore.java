@@ -37,6 +37,7 @@ import smile.license.LicenseVerificationException;
 import smile.license.LicenseVerificationException.Reason;
 import smile.license.LicenseVerifier;
 import smile.license.LicenseVerifier.ResolvedToken;
+import smile.studio.SmileStudio;
 
 /**
  * Resolves, stores, and transitions SMILE Agent Studio license keys, usage modes,
@@ -71,6 +72,14 @@ public final class LicenseStore {
     private String envTokenOverride;
     private String propTokenOverride;
     private boolean useSystemEnvAndProps = true;
+
+    /**
+     * Creates a {@link LicenseStore} backed by the default Studio preferences node
+     * and standard file/environment locations.
+     */
+    public LicenseStore() {
+        this(Preferences.userNodeForPackage(SmileStudio.class), null);
+    }
 
     /**
      * Creates a {@link LicenseStore} backed by the given preferences and secret store,

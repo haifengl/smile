@@ -22,7 +22,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
+import java.util.function.BooleanSupplier;
 import smile.studio.StudioConfig;
+import smile.studio.license.LicenseStore;
 
 /**
  * The facade the UI and the CLI both drive. Every operation returns text meant for
@@ -49,13 +52,31 @@ public final class PluginService {
     private final Path cwd;
     /** The marketplaces {@link #ensureDefaultMarketplaces} seeds; injectable for tests. */
     private final List<PluginDefaults.Known> seeds;
+    /** Supplies whether commercial features (private/custom catalogs) are unlocked. */
+    private final BooleanSupplier commercialEntitled;
 
     /**
-     * Constructor.
+     * Constructor resolving commercial entitlement via {@link LicenseStore}.
      * @param cwd the project working directory.
      */
     public PluginService(Path cwd) {
-        this(new PluginHome(), cwd, Path.of(System.getProperty("user.home")), StudioConfig.plugins());
+        this(cwd, PluginService::defaultCommercialEntitled);
+    }
+
+    /**
+     * Constructor with an explicit commercial entitlement supplier.
+     * @param cwd the project working directory.
+     * @param commercialEntitled supplier indicating whether commercial entitlement is active.
+     */
+    public PluginService(Path cwd, BooleanSupplier commercialEntitled) {
+        this(
+                new PluginHome(),
+                cwd,
+                Path.of(System.getProperty("user.home")),
+                StudioConfig.plugins(),
+                PluginDefaults.seeds(StudioConfig.plugins().marketplaces()),
+                commercialEntitled
+        );
     }
 
     /**
@@ -65,7 +86,7 @@ public final class PluginService {
      * @param userHome the user home for the user scope.
      */
     PluginService(PluginHome home, Path cwd, Path userHome) {
-        this(home, cwd, userHome, StudioConfig.DEFAULT_PLUGINS);
+        this(home, cwd, userHome, StudioConfig.DEFAULT_PLUGINS, () -> true);
     }
 
     /**
@@ -79,12 +100,22 @@ public final class PluginService {
      * @param policy the marketplace policy from {@code studio.json}.
      */
     PluginService(PluginHome home, Path cwd, Path userHome, StudioConfig.Plugins policy) {
-        this.cwd = cwd;
-        this.home = home;
-        this.seeds = PluginDefaults.seeds(policy.marketplaces());
-        this.registry = new MarketplaceRegistry(home, policy);
-        this.state = new PluginStateStore(cwd, userHome);
-        this.installer = new PluginInstaller(home, registry, state, cwd);
+        this(home, cwd, userHome, policy, () -> true);
+    }
+
+    /**
+     * Constructor with an explicit policy and commercial entitlement predicate, for tests.
+     *
+     * @param home the plugin home.
+     * @param cwd the project working directory.
+     * @param userHome the user home for the user scope.
+     * @param policy the marketplace policy from {@code studio.json}.
+     * @param commercialEntitled supplier indicating whether commercial entitlement is active.
+     */
+    PluginService(PluginHome home, Path cwd, Path userHome,
+                  StudioConfig.Plugins policy,
+                  BooleanSupplier commercialEntitled) {
+        this(home, cwd, userHome, policy, PluginDefaults.seeds(policy.marketplaces()), commercialEntitled);
     }
 
     /**
@@ -98,12 +129,69 @@ public final class PluginService {
     PluginService(PluginHome home, Path cwd, Path userHome,
                   StudioConfig.Plugins policy,
                   List<PluginDefaults.Known> seeds) {
-        this.cwd = cwd;
-        this.home = home;
+        this(home, cwd, userHome, policy, seeds, () -> true);
+    }
+
+    /**
+     * Constructor with explicit seeds and commercial entitlement predicate, for tests.
+     * @param home the plugin home.
+     * @param cwd the project working directory.
+     * @param userHome the user home for the user scope.
+     * @param policy the marketplace policy from {@code studio.json}.
+     * @param seeds the marketplaces to seed on first open.
+     * @param commercialEntitled supplier indicating whether commercial entitlement is active.
+     */
+    PluginService(PluginHome home, Path cwd, Path userHome,
+                  StudioConfig.Plugins policy,
+                  List<PluginDefaults.Known> seeds,
+                  BooleanSupplier commercialEntitled) {
+        this(
+                home,
+                cwd,
+                userHome,
+                policy,
+                seeds,
+                commercialEntitled,
+                new MarketplaceRegistry(home, policy, commercialEntitled)
+        );
+    }
+
+    /**
+     * Constructor with an explicit {@link MarketplaceRegistry}, for offline tests.
+     * @param home the plugin home.
+     * @param cwd the project working directory.
+     * @param userHome the user home for the user scope.
+     * @param policy the marketplace policy from {@code studio.json}.
+     * @param seeds the marketplaces to seed on first open.
+     * @param commercialEntitled supplier indicating whether commercial entitlement is active.
+     * @param registry the marketplace registry.
+     */
+    PluginService(PluginHome home, Path cwd, Path userHome,
+                  StudioConfig.Plugins policy,
+                  List<PluginDefaults.Known> seeds,
+                  BooleanSupplier commercialEntitled,
+                  MarketplaceRegistry registry) {
+        this.cwd = Objects.requireNonNull(cwd, "cwd");
+        this.home = Objects.requireNonNull(home, "home");
         this.seeds = seeds == null ? List.of() : List.copyOf(seeds);
-        this.registry = new MarketplaceRegistry(home, policy);
+        this.commercialEntitled = Objects.requireNonNull(commercialEntitled, "commercialEntitled");
+        this.registry = Objects.requireNonNull(registry, "registry");
         this.state = new PluginStateStore(cwd, userHome);
-        this.installer = new PluginInstaller(home, registry, state, cwd);
+        this.installer = new PluginInstaller(home, this.registry, state, cwd);
+    }
+
+    private static boolean defaultCommercialEntitled() {
+        return new LicenseStore().load().isCommercialEntitled();
+    }
+
+    /**
+     * Returns whether commercial features (such as Private &amp; Custom Enterprise Catalogs)
+     * are currently unlocked by an active Commercial License or 30-day Commercial Trial.
+     *
+     * @return true if commercial entitlement is active.
+     */
+    public boolean isCommercialEntitled() {
+        return commercialEntitled.getAsBoolean();
     }
 
     /**
@@ -157,8 +245,12 @@ public final class PluginService {
         if (Files.exists(marker)) {
             return "";
         }
+        boolean entitled = commercialEntitled.getAsBoolean();
+        List<PluginDefaults.Known> effectiveSeeds = entitled
+                ? seeds
+                : seeds.stream().filter(k -> PluginDefaults.isBuiltIn(k.source())).toList();
         StringBuilder sb = new StringBuilder();
-        for (PluginDefaults.Known known : seeds) {
+        for (PluginDefaults.Known known : effectiveSeeds) {
             if (registry.find(known.name()).isPresent()) {
                 continue;
             }
@@ -172,11 +264,13 @@ public final class PluginService {
                 logger.debug("Could not seed marketplace {}: {}", known.source(), ex.getMessage());
             }
         }
-        try {
-            Files.createDirectories(marker.getParent());
-            Files.writeString(marker, "seeded\n");
-        } catch (IOException ex) {
-            logger.warn("Could not write plugin seed marker {}: {}", marker, ex.getMessage());
+        if (entitled || !effectiveSeeds.isEmpty() || seeds.isEmpty()) {
+            try {
+                Files.createDirectories(marker.getParent());
+                Files.writeString(marker, "seeded\n");
+            } catch (IOException ex) {
+                logger.warn("Could not write plugin seed marker {}: {}", marker, ex.getMessage());
+            }
         }
         return sb.toString();
     }
