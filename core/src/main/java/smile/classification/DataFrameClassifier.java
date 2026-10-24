@@ -175,11 +175,17 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
         @Serial
         private static final long serialVersionUID = 1L;
 
+        /** The model formula. */
         private final Formula formula;
+        /** The predictor schema. */
         private final StructType schema;
+        /** The underlying vector classifier. */
         private final Classifier<double[]> model;
+        /** Optional vectorized background dataset for KernelSHAP. */
         private final double[][] bgVectors;
+        /** Optional DataFrame background dataset for KernelSHAP. */
         private final DataFrame bgFrame;
+        /** Default KernelSHAP options. */
         private final KernelSHAP.Options shapOptions;
         private transient volatile KernelSHAP<double[]> vectorExplainer;
         private transient volatile KernelSHAP<Tuple> tupleExplainer;
@@ -292,6 +298,7 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
         @Serial
         private static final long serialVersionUID = 1L;
 
+        /** The base models of the ensemble. */
         private final DataFrameClassifier[] models;
         /** The ensemble is a soft classifier only if all the base models are. */
         private final boolean soft;

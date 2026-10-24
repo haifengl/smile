@@ -126,7 +126,11 @@ public class MiniMaxVisionTower extends LayerBlock {
         }
     }
 
-    /** @return the hyperparameters. */
+    /**
+     * Returns the vision hyperparameters.
+     *
+     * @return the hyperparameters.
+     */
     public MiniMaxVisionArgs args() {
         return args;
     }

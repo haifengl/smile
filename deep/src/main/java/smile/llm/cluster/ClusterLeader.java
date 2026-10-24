@@ -214,17 +214,29 @@ public final class ClusterLeader implements AutoCloseable {
         return leader;
     }
 
-    /** @return ranks of the whole communicator. */
+    /**
+     * Returns the ranks of the whole communicator.
+     *
+     * @return ranks of the whole communicator.
+     */
     public int worldSize() {
         return worldSize;
     }
 
-    /** @return the NCCL unique id shared with the followers. */
+    /**
+     * Returns the NCCL unique id shared with the followers.
+     *
+     * @return the NCCL unique id shared with the followers.
+     */
     public byte[] uniqueId() {
         return uniqueId.clone();
     }
 
-    /** @return the number of followers. */
+    /**
+     * Returns the number of followers.
+     *
+     * @return the number of followers.
+     */
     public int followers() {
         return peers.size();
     }
