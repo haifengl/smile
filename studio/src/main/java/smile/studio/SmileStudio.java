@@ -22,6 +22,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BaseMultiResolutionImage;
 import javax.swing.*;
 import java.net.URI;
 import java.nio.file.Files;
@@ -82,7 +83,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     /** Client pool and available models. Reloaded on the EDT when settings change. */
     private static final LlmServices llmServices = new LlmServices();
     /** Application frame icons in different sizes, for the title bar and task switcher. */
-    private List<Image> frameIcons = List.of();
+    private BaseMultiResolutionImage frameIcons;
     private final JMenuBar menuBar = new JMenuBar();
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();
@@ -481,8 +482,8 @@ public class SmileStudio extends JFrame implements SearchListener {
      */
     private void setFrameIcon() {
         frameIcons = loadFrameIcons(SmileStudio.class, "images/smile.png");
-        if (!frameIcons.isEmpty()) {
-            setIconImages(frameIcons);
+        if (frameIcons != null) {
+            setIconImage(frameIcons);
         }
     }
 
@@ -1167,7 +1168,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                     message,
                     bundle.getString("About"),
                     JOptionPane.INFORMATION_MESSAGE,
-                    frameIcons.size() > 5 ? new ImageIcon(frameIcons.get(5)) : null);
+                    frameIcons != null ? new ImageIcon(frameIcons.getResolutionVariant(128, 128)) : null);
         }
     }
 

@@ -107,13 +107,16 @@ public class SmileUtilitiesTest {
         // When scaled to a 16px logical size
         ImageIcon scaled = SmileUtilities.scaleImageIcon(icon, 16);
 
-        // Then the icon exposes a 1× and a 2× bitmap for HiDPI displays
+        // Then the icon exposes variants for all standard DPI scale factors
         assertInstanceOf(MultiResolutionImage.class, scaled.getImage());
         MultiResolutionImage mr = (MultiResolutionImage) scaled.getImage();
         List<Image> variants = mr.getResolutionVariants();
-        assertEquals(2, variants.size());
-        assertEquals(16, variants.get(0).getWidth(null));
-        assertEquals(32, variants.get(1).getWidth(null));
+        assertEquals(SmileUtilities.DPI_SCALES.length, variants.size());
+        for (int i = 0; i < SmileUtilities.DPI_SCALES.length; i++) {
+            int expected = (int) Math.round(16 * SmileUtilities.DPI_SCALES[i]);
+            assertEquals(expected, variants.get(i).getWidth(null), "width at scale index " + i);
+            assertEquals(expected, variants.get(i).getHeight(null), "height at scale index " + i);
+        }
     }
 
     @Test
@@ -221,9 +224,11 @@ public class SmileUtilitiesTest {
     public void testLoadFrameIconsReturnsEverySize() {
         // Given a real icon on the classpath
         // When loaded as frame icons
-        List<Image> icons = SmileUtilities.loadFrameIcons(OWNER, "table/images/forward.png");
+        BaseMultiResolutionImage frameIcon = SmileUtilities.loadFrameIcons(OWNER, "table/images/forward.png");
 
         // Then there is one bitmap per requested size, in order
+        assertNotNull(frameIcon);
+        List<Image> icons = frameIcon.getResolutionVariants();
         assertEquals(SmileUtilities.FRAME_ICON_SIZES.size(), icons.size());
         for (int i = 0; i < icons.size(); i++) {
             int size = SmileUtilities.FRAME_ICON_SIZES.get(i);
@@ -236,12 +241,11 @@ public class SmileUtilitiesTest {
     public void testLoadFrameIconsMissingResourceIsEmptyNotFatal() {
         // Given a resource that does not exist
         // When loaded
-        List<Image> icons = SmileUtilities.loadFrameIcons(OWNER, "images/does-not-exist.png");
+        BaseMultiResolutionImage icons = SmileUtilities.loadFrameIcons(OWNER, "images/does-not-exist.png");
 
-        // Then an empty list is returned rather than an exception, so a missing
+        // Then null is returned rather than an exception, so a missing
         // decoration cannot stop the window from being created.
-        assertNotNull(icons);
-        assertTrue(icons.isEmpty(), "expected no icons, got " + icons.size());
+        assertNull(icons);
     }
 
     // ── getLineOfOffset ────────────────────────────────────────────────────────
