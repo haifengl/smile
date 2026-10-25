@@ -22,7 +22,10 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
-          cache: gradle
+          cache: sbt
+
+      - name: Set up sbt
+        uses: sbt/setup-sbt@v1
 
       - name: Grant execute permission to Gradle wrapper
         run: chmod +x gradlew
