@@ -75,9 +75,15 @@ distributions {
             from(rootProject.file("COPYING"))
             from(rootProject.file("LICENSE"))
 
-            // 3. Package serve application
+            // 3. Package serve application (and Agent Hub if built in sibling ioa repo)
             from(rootProject.file("serve/build/quarkus-app")) {
                 into("serve")
+            }
+            val siblingHubApp = rootProject.file("../ioa/hub/build/quarkus-app")
+            if (siblingHubApp.exists()) {
+                from(siblingHubApp) {
+                    into("hub")
+                }
             }
 
             // 4. Package test datasets matching sbt dataPrefixes

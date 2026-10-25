@@ -17,6 +17,8 @@
  */
 package smile.studio.license;
 
+import java.awt.Cursor;
+import java.awt.GraphicsEnvironment;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,6 +30,7 @@ import java.util.Base64;
 import java.util.UUID;
 import java.util.prefs.Preferences;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -257,5 +260,56 @@ public class LicenseStoreTest {
         assertTrue(licensed.isCommercialEntitled(start));
         assertTrue(licensed.isCommercialEntitled(LocalDate.of(2026, 12, 31)));
         assertFalse(store.load(LocalDate.of(2027, 1, 1)).isCommercialEntitled(LocalDate.of(2027, 1, 1)));
+    }
+
+    @Test
+    void licenseDialogDisplaysCommercialCardButtonsCompletelyAndLinksStudioLicense() throws Exception {
+        Assumptions.assumeFalse(GraphicsEnvironment.isHeadless());
+        LocalDate today = LocalDate.of(2026, 4, 21);
+
+        // 1. Default first-run / evaluation state
+        LicenseStore store = newStore();
+        assertDialogLayoutAndLink(store, store.load(today), false);
+
+        // 2. Active commercial trial state
+        LicenseState trialState = store.startCommercialTrial(today);
+        assertDialogLayoutAndLink(store, trialState, false);
+
+        // 3. Expired trial state (with warning banner)
+        LicenseState expiredState = store.load(today.plusDays(35));
+        assertDialogLayoutAndLink(store, expiredState, true);
+
+        // 4. Active commercial licensed state (with active license banner)
+        String token = signToken("""
+                {"ver":1,"id":"LIC-2026-0400","customer":"Acme Corp","tier":"ENTERPRISE","seats":25,"issuedAt":"2026-04-01","expiresAt":"2027-04-01"}""");
+        LicenseState licensedState = store.activateKey(token, today);
+        assertDialogLayoutAndLink(store, licensedState, false);
+    }
+
+    private static void assertDialogLayoutAndLink(LicenseStore store, LicenseState state, boolean startupGate) {
+        LicenseDialog dialog = new LicenseDialog(null, store, state, startupGate);
+        try {
+            assertTrue(dialog.commercialCard.getHeight() >= dialog.commercialCard.getPreferredSize().height,
+                    "Commercial card height (" + dialog.commercialCard.getHeight()
+                            + ") is smaller than preferred (" + dialog.commercialCard.getPreferredSize().height + ")");
+            assertTrue(dialog.commercialControlsPane.getY() + dialog.commercialControlsPane.getHeight()
+                            <= dialog.commercialControlsPane.getParent().getHeight(),
+                    "Commercial controls pane overflows commercial card center panel");
+            assertTrue(dialog.getLicenseButton.getWidth() > 0 && dialog.getLicenseButton.getHeight() > 0);
+            if (dialog.trialButton.isVisible()) {
+                assertTrue(dialog.trialButton.getWidth() > 0 && dialog.trialButton.getHeight() > 0);
+            }
+            assertTrue(dialog.primaryButton.getWidth() > 0 && dialog.primaryButton.getHeight() > 0);
+            if (!startupGate) {
+                assertTrue(dialog.cancelButton.getWidth() > 0 && dialog.cancelButton.getHeight() > 0);
+            }
+
+            // Verify footer studio/LICENSE link
+            assertTrue(dialog.termsLabel.getText().contains("<a href=\"" + LicenseDialog.LICENSE_URL + "\">studio/LICENSE</a>"));
+            assertEquals(LicenseDialog.LICENSE_URL, dialog.termsLabel.getToolTipText());
+            assertEquals(Cursor.HAND_CURSOR, dialog.termsLabel.getCursor().getType());
+        } finally {
+            dialog.dispose();
+        }
     }
 }

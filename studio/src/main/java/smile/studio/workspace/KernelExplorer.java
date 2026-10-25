@@ -27,8 +27,11 @@ import java.io.File;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import com.formdev.flatlaf.util.SystemFileChooser;
+import ioa.agent.bot.BotsConfig;
 import jdk.jshell.VarSnippet;
 import smile.studio.StudioConfig;
+import smile.studio.bot.BotActivityDialog;
+import smile.studio.bot.BotManagerDialog;
 import smile.studio.kernel.Kernel;
 import smile.studio.kernel.Variable;
 import static smile.swing.SmileUtilities.LARGE_ICON_SIZE;
@@ -51,6 +54,30 @@ public class KernelExplorer extends JPanel {
     /** The single inference service node under {@link #services}. */
     private final DefaultMutableTreeNode serviceNode =
             new DefaultMutableTreeNode(new ServeService(StudioConfig.DEFAULT_HOST, StudioConfig.DEFAULT_PORT));
+    /** The Agent Hub service node under {@link #services}. */
+    private final DefaultMutableTreeNode hubNode =
+            new DefaultMutableTreeNode(new HubService(
+                    StudioConfig.DEFAULT_HOST,
+                    StudioConfig.DEFAULT_HUB_PORT,
+                    StudioConfig.DEFAULT_HUB_ADMIN_TOKEN));
+
+    /** User object for a Bot persona tree node under {@link #hubNode}. */
+    public record BotTreeItem(BotsConfig.BotSpec bot) {
+        @Override
+        public String toString() {
+            String prefix = "*".equals(bot.persona()) ? "★ " : "@";
+            return prefix + bot.botId() + " (" + bot.name() + ")";
+        }
+    }
+
+    /** User object for a Routine tree node under a {@link BotTreeItem}. */
+    public record RoutineTreeItem(BotsConfig.BotSpec bot, BotsConfig.RoutineSpec routine) {
+        @Override
+        public String toString() {
+            String mark = (bot.enabled() && routine.enabled()) ? "● " : "○ ";
+            return mark + routine.routineId() + " — " + routine.name();
+        }
+    }
     private static final ImageIcon matrixIcon = loadImageIcon(KernelExplorer.class, "images/matrix.png", LARGE_ICON_SIZE);
     private static final ImageIcon modelIcon = loadImageIcon(KernelExplorer.class, "images/model.png", LARGE_ICON_SIZE);
     private static final ImageIcon serverIcon = loadImageIcon(KernelExplorer.class, "images/server.png", LARGE_ICON_SIZE);
@@ -93,6 +120,9 @@ public class KernelExplorer extends JPanel {
         treeModel.insertNodeInto(services, root, root.getChildCount());
         // One shared inference service; saved models are added as its children.
         treeModel.insertNodeInto(serviceNode, services, services.getChildCount());
+        // Agent Hub service; Bot personas and their Routines are added as its children.
+        treeModel.insertNodeInto(hubNode, services, services.getChildCount());
+        refreshBotsTree();
 
         // Allow one selection at a time.
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
@@ -122,6 +152,16 @@ public class KernelExplorer extends JPanel {
                     setIcon(serverIcon);
                     setText(bundle.getString("InferenceService"));
                     setToolTipText(service.host() + ":" + service.port());
+                } else if (object instanceof HubService hub) {
+                    setIcon(serverIcon);
+                    setText(bundle.getString("AgentHubService") + (HubManager.getInstance().isRunning() ? " (Running)" : ""));
+                    setToolTipText(hub.host() + ":" + hub.port());
+                } else if (object instanceof BotTreeItem botItem) {
+                    setText(botItem.toString());
+                    setToolTipText(botItem.bot().description());
+                } else if (object instanceof RoutineTreeItem routineItem) {
+                    setText(routineItem.toString());
+                    setToolTipText(routineItem.routine().trigger().source() + ": " + routineItem.routine().workflow().target());
                 } else if (object instanceof VarSnippet snippet) {
                     setText(snippet.name());
                     setToolTipText(snippet.source().trim());
@@ -136,6 +176,20 @@ public class KernelExplorer extends JPanel {
 
         tree.addMouseListener(new MouseAdapter() {
             @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showContextMenu(e);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showContextMenu(e);
+                }
+            }
+
+            @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) { // double-click
                     // Get the path and node associated with the double click
@@ -148,6 +202,20 @@ public class KernelExplorer extends JPanel {
                             StartServiceDialog dialog = new StartServiceDialog(
                                     SwingUtilities.getWindowAncestor(KernelExplorer.this),
                                     (ServeService) serviceNode.getUserObject());
+                            dialog.setVisible(true);
+                            return;
+                        }
+                        if (node == hubNode || node.getUserObject() instanceof BotTreeItem) {
+                            BotActivityDialog dialog = new BotActivityDialog(
+                                    SwingUtilities.getWindowAncestor(KernelExplorer.this), 0);
+                            dialog.setVisible(true);
+                            return;
+                        }
+                        if (node.getUserObject() instanceof RoutineTreeItem routineItem) {
+                            BotManagerDialog dialog = new BotManagerDialog(
+                                    SwingUtilities.getWindowAncestor(KernelExplorer.this),
+                                    routineItem.routine().routineId(),
+                                    KernelExplorer.this::refreshBotsTree);
                             dialog.setVisible(true);
                             return;
                         }
@@ -263,6 +331,110 @@ public class KernelExplorer extends JPanel {
 
         for (int i = 0; i < tree.getRowCount(); i++) {
             tree.expandRow(i);
+        }
+    }
+
+    /**
+     * Populates the {@link #hubNode} subtree from {@code ${smile.home}/conf/bots.json}
+     * (or the running Agent Hub).
+     */
+    public final void refreshBotsTree() {
+        hubNode.removeAllChildren();
+        try {
+            BotsConfig cfg = BotsConfig.load();
+            for (BotsConfig.BotSpec bot : cfg.bots()) {
+                DefaultMutableTreeNode botTreeNode = new DefaultMutableTreeNode(new BotTreeItem(bot));
+                for (BotsConfig.RoutineSpec routine : bot.routines()) {
+                    botTreeNode.add(new DefaultMutableTreeNode(new RoutineTreeItem(bot, routine)));
+                }
+                hubNode.add(botTreeNode);
+            }
+        } catch (Exception ex) {
+            logger.debug("Could not populate Agent Hub tree nodes: {}", ex.getMessage());
+        }
+        treeModel.reload(hubNode);
+    }
+
+    private void showContextMenu(MouseEvent e) {
+        TreePath treePath = tree.getPathForLocation(e.getX(), e.getY());
+        if (treePath == null) {
+            return;
+        }
+        tree.setSelectionPath(treePath);
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) treePath.getLastPathComponent();
+        Object userObj = node.getUserObject();
+
+        JPopupMenu popup = new JPopupMenu();
+        Window owner = SwingUtilities.getWindowAncestor(this);
+
+        if (node == hubNode || userObj instanceof BotTreeItem || userObj instanceof RoutineTreeItem) {
+            if (userObj instanceof RoutineTreeItem item) {
+                JMenuItem runItem = new JMenuItem("▶ Run Now (" + item.routine().routineId() + ")");
+                runItem.addActionListener(ev -> Thread.ofPlatform().name("hub-tree-run").daemon(true).start(() -> {
+                    try {
+                        if (!HubManager.getInstance().isRunning()) {
+                            HubManager.getInstance().start();
+                        }
+                        HubManager.getInstance().client().runRoutineNow(
+                                item.bot().botId(), item.routine().routineId());
+                    } catch (Exception ex) {
+                        showError(ex.getMessage());
+                    }
+                }));
+                popup.add(runItem);
+
+                boolean currentlyEnabled = item.routine().enabled();
+                JMenuItem toggleItem = new JMenuItem(currentlyEnabled ? "Disable Routine" : "Enable Routine");
+                toggleItem.addActionListener(ev -> Thread.ofPlatform().name("hub-tree-toggle").daemon(true).start(() -> {
+                    try {
+                        HubManager.getInstance().client().setRoutineEnabled(
+                                item.bot().botId(), item.routine().routineId(), !currentlyEnabled);
+                        SwingUtilities.invokeLater(this::refreshBotsTree);
+                    } catch (Exception ex) {
+                        showError(ex.getMessage());
+                    }
+                }));
+                popup.add(toggleItem);
+
+                JMenuItem editItem = new JMenuItem("Configure Routine…");
+                editItem.addActionListener(ev -> {
+                    BotManagerDialog dlg = new BotManagerDialog(owner, item.routine().routineId(), this::refreshBotsTree);
+                    dlg.setVisible(true);
+                });
+                popup.add(editItem);
+                popup.addSeparator();
+            }
+
+            JMenuItem manageBotsItem = new JMenuItem("Configure Bots & Routines…");
+            manageBotsItem.addActionListener(ev -> {
+                BotManagerDialog dlg = new BotManagerDialog(owner, null, this::refreshBotsTree);
+                dlg.setVisible(true);
+            });
+            popup.add(manageBotsItem);
+
+            JMenuItem activityItem = new JMenuItem("Approvals, Run History & Bot Pages…");
+            activityItem.addActionListener(ev -> {
+                BotActivityDialog dlg = new BotActivityDialog(owner, 0);
+                dlg.setVisible(true);
+            });
+            popup.add(activityItem);
+            popup.addSeparator();
+
+            boolean running = HubManager.getInstance().isRunning();
+            JMenuItem startStopItem = new JMenuItem(running ? "Stop Agent Hub" : "Start Agent Hub");
+            startStopItem.addActionListener(ev -> Thread.ofPlatform().name("hub-tree-startstop").daemon(true).start(() -> {
+                if (running) {
+                    HubManager.getInstance().stop();
+                } else {
+                    if (!HubManager.getInstance().start()) {
+                        showError(bundle.getString("HubStartFailed"));
+                    }
+                }
+                SwingUtilities.invokeLater(this::refreshBotsTree);
+            }));
+            popup.add(startStopItem);
+
+            popup.show(tree, e.getX(), e.getY());
         }
     }
 

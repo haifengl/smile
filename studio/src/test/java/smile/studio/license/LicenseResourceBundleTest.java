@@ -79,6 +79,18 @@ public class LicenseResourceBundleTest {
         }
     }
 
+    @Test
+    public void testFooterTermsFormatsStudioLicenseAsBrowserLinkInEveryLocale() {
+        String expectedAnchor = "<a href=\"" + LicenseDialog.LICENSE_URL + "\">studio/LICENSE</a>";
+        for (Locale locale : LOCALES) {
+            ResourceBundle bundle = ResourceBundle.getBundle(LicenseDialog.BUNDLE_NAME, locale);
+            String html = LicenseDialog.formatFooterTermsHtml(bundle.getString("FooterTerms"));
+            assertTrue(html.startsWith("<html>") && html.endsWith("</html>"));
+            assertTrue(html.contains(expectedAnchor),
+                    "FooterTerms HTML in " + locale + " is missing studio/LICENSE link: " + html);
+        }
+    }
+
     private static void assertBundleKeys(String baseName, Locale locale, List<String> keys) {
         ResourceBundle bundle = ResourceBundle.getBundle(baseName, locale);
         for (String key : keys) {

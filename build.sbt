@@ -169,7 +169,7 @@ lazy val scalaSettings = commonSettings ++ Seq(
     "-groups",
     "-dynamic-side-menu",
     "-project-version", version.value,
-    "-project-logo", "website/src/images/smile.png",
+    "-project-logo", "studio/src/main/resources/smile/studio/images/smile.png",
     "-project-footer", """Copyright © 2010-2026 Haifeng Li. All rights reserved.
                          |Use is subject to license terms.""".stripMargin
   ),

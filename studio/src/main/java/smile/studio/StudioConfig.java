@@ -47,8 +47,12 @@ public final class StudioConfig {
 
     /** Default bind host: loopback, which is safe for a desktop app. */
     public static final String DEFAULT_HOST = "localhost";
-    /** Default HTTP port. */
+    /** Default HTTP port for Inference Server. */
     public static final int DEFAULT_PORT = 8888;
+    /** Default HTTP port for Agent Hub. */
+    public static final int DEFAULT_HUB_PORT = 8890;
+    /** Default admin bearer token for local Agent Hub. */
+    public static final String DEFAULT_HUB_ADMIN_TOKEN = "dev-admin-token";
     /**
      * Default model location, relative to the working directory.
      *
@@ -61,6 +65,10 @@ public final class StudioConfig {
     /** The inference server settings, with defaults applied. */
     public static final InferenceServer DEFAULT_INFERENCE_SERVER =
             new InferenceServer(false, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_MODEL_PATH);
+
+    /** The Agent Hub settings, with defaults applied. */
+    public static final AgentHub DEFAULT_AGENT_HUB =
+            new AgentHub(false, DEFAULT_HOST, DEFAULT_HUB_PORT, DEFAULT_HUB_ADMIN_TOKEN, false);
 
     private StudioConfig() {
     }
@@ -75,6 +83,18 @@ public final class StudioConfig {
      *                  (default {@value #DEFAULT_MODEL_PATH}).
      */
     public record InferenceServer(boolean autoStart, String host, int port, String modelPath) {
+    }
+
+    /**
+     * Agent Hub settings from {@code studio.json}.
+     *
+     * @param autoStart       whether to start or attach to Agent Hub when Studio starts.
+     * @param host            the bind/target host (default {@value #DEFAULT_HOST}).
+     * @param port            the HTTP port (default {@value #DEFAULT_HUB_PORT}).
+     * @param adminToken      the bearer token for {@code /v1/admin/*} endpoints.
+     * @param keepAliveOnExit whether to leave the local Agent Hub running when Studio closes.
+     */
+    public record AgentHub(boolean autoStart, String host, int port, String adminToken, boolean keepAliveOnExit) {
     }
 
     /**
@@ -219,5 +239,40 @@ public final class StudioConfig {
             }
         }
         return new Plugins(marketplaces);
+    }
+
+    /**
+     * Returns the Agent Hub settings, or {@link #DEFAULT_AGENT_HUB} when no
+     * {@code studio.json} is present or it has no {@code agentHub} object.
+     *
+     * @return the Agent Hub settings.
+     */
+    public static AgentHub agentHub() {
+        Path path = resolve();
+        if (path == null) {
+            return DEFAULT_AGENT_HUB;
+        }
+        try {
+            return parseAgentHub(path);
+        } catch (IOException ex) {
+            logger.error("Failed to read {}: {}", path, ex.getMessage());
+            return DEFAULT_AGENT_HUB;
+        }
+    }
+
+    public static AgentHub parseAgentHub(Path path) throws IOException {
+        JsonNode root = mapper.readTree(path.toFile());
+        JsonNode node = root.get("agentHub");
+        if (node == null || node.isNull()) {
+            return DEFAULT_AGENT_HUB;
+        }
+        boolean autoStart = node.has("autoStart") && node.get("autoStart").asBoolean();
+        String host = node.has("host") && !node.get("host").asString().isBlank()
+                ? node.get("host").asString().trim() : DEFAULT_HOST;
+        int port = node.has("port") ? node.get("port").asInt() : DEFAULT_HUB_PORT;
+        String adminToken = node.has("adminToken") && !node.get("adminToken").asString().isBlank()
+                ? node.get("adminToken").asString().trim() : DEFAULT_HUB_ADMIN_TOKEN;
+        boolean keepAliveOnExit = node.has("keepAliveOnExit") && node.get("keepAliveOnExit").asBoolean();
+        return new AgentHub(autoStart, host, port, adminToken, keepAliveOnExit);
     }
 }

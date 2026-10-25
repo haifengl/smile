@@ -11,7 +11,6 @@ fi
 
 sbt clean
 rm -rf target/docs
-rm -rf website/_site/api
 sbt unidoc
 mkdir -p target/docs
 # sbt 2.x writes unidoc output under target/out/jvm/scala-<version>/<project>/javaunidoc
@@ -32,14 +31,7 @@ find target/docs/scala -name '*.html' -exec bin/gtag.sh {} \;
 ./gradlew :kotlin:dokkaGenerate
 find target/docs/kotlin -name '*.html' -exec bin/gtag.sh {} \;
 
-cd website
-npm install
-npm run deploy
-mkdir -p _site/api
-mv ../target/docs/* _site/api/
-
 # build binary package
-cd ..
 ./gradlew :serve:build -x test -Dquarkus.profile=local
 sbt studio/Universal/packageBin
 
@@ -86,7 +78,6 @@ while true; do
             cd ..
             find target/docs/clojure -name '*.html' -exec tidy -m {} \;
             find target/docs/clojure -name '*.html' -exec bin/gtag.sh {} \;
-            mv target/docs/clojure website/_site/api/
 
             break;;
         [Nn]* ) break;;
