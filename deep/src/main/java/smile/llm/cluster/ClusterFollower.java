@@ -138,7 +138,11 @@ public final class ClusterFollower implements AutoCloseable {
                 + (last == null ? "" : ": " + last));
     }
 
-    /** @return what the leader assigned. */
+    /**
+     * Returns what the leader assigned.
+     *
+     * @return what the leader assigned.
+     */
     public Welcome welcome() {
         return welcome;
     }

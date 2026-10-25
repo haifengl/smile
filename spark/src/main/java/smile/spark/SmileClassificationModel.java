@@ -46,8 +46,11 @@ public class SmileClassificationModel
 
     private static final ThreadLocal<String> INIT_UID = new ThreadLocal<>();
 
+    /** The instance UID. */
     private final String uid;
+    /** The number of target classes. */
     private final int numClasses;
+    /** The underlying SMILE classifier. */
     private final smile.classification.Classifier<double[]> model;
 
     /**

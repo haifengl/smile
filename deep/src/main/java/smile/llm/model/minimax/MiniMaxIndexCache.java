@@ -69,13 +69,12 @@ public class MiniMaxIndexCache implements AutoCloseable {
     }
 
     /**
-     * Reads index keys.
+     * {@link #put(int, long[], Tensor)} with the slots already on the device.
      *
      * @param ordinal sparse-layer ordinal.
-     * @param slots   source slots, length {@code N}.
-     * @return keys {@code [N, numKeyHeads, indexDim]}; caller owns the tensor.
+     * @param idx     device tensor of destination slots, length {@code N}.
+     * @param keys    index keys, any shape holding {@code N * numKeyHeads * indexDim} elements.
      */
-    /** {@link #put(int, long[], Tensor)} with the slots already on the device. */
     public void put(int ordinal, Tensor idx, Tensor keys) {
         try (var layerIdx = Index.of(ordinal);
              var layer = cache.get(layerIdx);
@@ -85,7 +84,13 @@ public class MiniMaxIndexCache implements AutoCloseable {
         }
     }
 
-    /** {@link #get(int, long[])} with the slots already on the device. */
+    /**
+     * {@link #get(int, long[])} with the slots already on the device.
+     *
+     * @param ordinal sparse-layer ordinal.
+     * @param idx     device tensor of source slots, length {@code N}.
+     * @return keys {@code [N, numKeyHeads, indexDim]}; caller owns the tensor.
+     */
     public Tensor get(int ordinal, Tensor idx) {
         try (var layerIdx = Index.of(ordinal);
              var layer = cache.get(layerIdx)) {
@@ -93,18 +98,34 @@ public class MiniMaxIndexCache implements AutoCloseable {
         }
     }
 
-    /** One layer of the cache {@code [numSlots, numKeyHeads, indexDim]} as a view; the caller closes it. */
+    /**
+     * One layer of the cache {@code [numSlots, numKeyHeads, indexDim]} as a view; the caller closes it.
+     *
+     * @param ordinal sparse-layer ordinal.
+     * @return the layer view tensor.
+     */
     public Tensor layer(int ordinal) {
         try (var layerIdx = Index.of(ordinal)) {
             return cache.get(layerIdx);
         }
     }
 
-    /** @return index-key heads per token. */
+    /**
+     * Returns the number of index-key heads per token.
+     *
+     * @return index-key heads per token.
+     */
     public int numKeyHeads() {
         return numKeyHeads;
     }
 
+    /**
+     * Reads index keys.
+     *
+     * @param ordinal sparse-layer ordinal.
+     * @param slots   source slots, length {@code N}.
+     * @return keys {@code [N, numKeyHeads, indexDim]}; caller owns the tensor.
+     */
     public Tensor get(int ordinal, long[] slots) {
         try (var layerIdx = Index.of(ordinal);
              var layer = cache.get(layerIdx);

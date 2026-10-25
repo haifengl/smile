@@ -54,12 +54,20 @@ public class QwenRMSNorm implements Layer {
         Native.CLEANER.register(this, () -> smile_module_free(m));
     }
 
-    /** @return the learned offset (the effective scale is {@code 1 + weight}). */
+    /**
+     * Returns the learned offset (the effective scale is {@code 1 + weight}).
+     *
+     * @return the learned offset (the effective scale is {@code 1 + weight}).
+     */
     public Tensor weight() {
         return weight;
     }
 
-    /** @return the numerical stability epsilon. */
+    /**
+     * Returns the numerical stability epsilon.
+     *
+     * @return the numerical stability epsilon.
+     */
     public double eps() {
         return eps;
     }

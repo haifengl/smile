@@ -76,12 +76,20 @@ public final class Fp8BlockMarlinLinear implements LinearOp, AutoCloseable {
         this.bias = bias;
     }
 
-    /** @return input features. */
+    /**
+     * Returns the number of input features.
+     *
+     * @return input features.
+     */
     public int inFeatures() {
         return inFeatures;
     }
 
-    /** @return output features. */
+    /**
+     * Returns the number of output features.
+     *
+     * @return output features.
+     */
     public int outFeatures() {
         return outFeatures;
     }

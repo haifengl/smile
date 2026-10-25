@@ -1665,7 +1665,11 @@ public class KvCachePool implements AutoCloseable {
      * on the device ({@code [batch * seqlen]}, row-major), so a model can upload it once per step instead of once
      * per layer. Ignored when a decode/verify CUDA-graph index buffer is active.
      *
-     * @param slotIdx device tensor of slots, or {@code null} to build it from the host.
+     * @param layer    layer index.
+     * @param startPos write start position per batch row ({@code length == batch}).
+     * @param k        keys shaped {@code [batch, seqlen, numKvHeads, headDim]}.
+     * @param v        values shaped {@code [batch, seqlen, numKvHeads, headDim]}.
+     * @param slotIdx  device tensor of slots, or {@code null} to build it from the host.
      */
     public void put(int layer, int[] startPos, Tensor k, Tensor v, Tensor slotIdx) {
         long[] shape = k.shape();
@@ -1890,7 +1894,11 @@ public class KvCachePool implements AutoCloseable {
         }
     }
 
-    /** @return {@code true} when K/V are stored in the compute dtype (not quantized FP8), so kernels can read them. */
+    /**
+     * Returns whether K/V are stored in the compute dtype (not quantized FP8), so kernels can read them.
+     *
+     * @return {@code true} when K/V are stored in the compute dtype (not quantized FP8), so kernels can read them.
+     */
     public boolean kvIsComputeDtype() {
         return dtype == computeDtype && !smile.llm.quant.Fp8KvCodec.isFp8(dtype);
     }
@@ -1914,7 +1922,10 @@ public class KvCachePool implements AutoCloseable {
     /**
      * {@link #getPadded(int, int)} with the {@code [batch * length]} slot index already on the device.
      *
-     * @param idx device tensor from {@link #slotIndices(int)}; not closed here.
+     * @param layer  layer index.
+     * @param length number of positions to read per row.
+     * @param idx    device tensor from {@link #slotIndices(int)}; not closed here.
+     * @return {@code (keys, values)} each shaped {@code [batch, length, numKvHeads, headDim]}.
      */
     public Tuple2<Tensor, Tensor> getPadded(int layer, int length, Tensor idx) {
         int batch = (int) (idx.shape()[0] / Math.max(1, length));
