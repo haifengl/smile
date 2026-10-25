@@ -19,6 +19,7 @@ package smile.studio;
 
 import com.formdev.flatlaf.*;
 import ioa.llm.Model;
+import ioa.llm.client.LlmConfig;
 import photos.sluice.secrets.SecretId;
 import photos.sluice.secrets.SecretStatus;
 import photos.sluice.secrets.SecretStore;
@@ -119,6 +120,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
         this.secrets = secrets;
 
         LlmServices.migratePreferencesSecrets(prefs, secrets);
+        LlmConfig llmCfg = LlmServices.loadOrMigrateConfig(prefs);
+        LlmServices.syncToPreferences(llmCfg, prefs);
 
         themeCombo.setSelectedItem(prefs.get(UI_THEME_KEY, "Dark"));
         themeCombo.addActionListener(this);
@@ -321,7 +324,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
         okButton.addActionListener((e) -> {
             prefs.put(UI_THEME_KEY, (String) themeCombo.getSelectedItem());
-            prefs.put(AI_SERVICE_KEY, aiServiceOptions[aiServiceCombo.getSelectedIndex()]);
+            String selectedServiceLabel = aiServiceOptions[aiServiceCombo.getSelectedIndex()];
+            prefs.put(AI_SERVICE_KEY, selectedServiceLabel);
             for (int i = 0; i < aiServiceKeys.length; i++) {
                 String service = aiServiceKeys[i];
                 String label = aiServiceOptions[i];
@@ -331,9 +335,12 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 } else {
                     prefs.put(service + API_KEY, apiKeyFields.get(service).getText());
                 }
-                prefs.put(service + BASE_URL, (String) baseUrlFields.get(service).getSelectedItem());
-                prefs.put(service + MODEL, (String) modelFields.get(service).getSelectedItem());
+                Object baseUrlItem = baseUrlFields.get(service).getSelectedItem();
+                Object modelItem = modelFields.get(service).getSelectedItem();
+                prefs.put(service + BASE_URL, baseUrlItem == null ? "" : baseUrlItem.toString());
+                prefs.put(service + MODEL, modelItem == null ? "" : modelItem.toString());
             }
+            LlmConfig.fromPreferences(prefs).ifPresent(LlmConfig::save);
             SmileStudio.updateLLM();
             SmileStudio.refreshModelSelectors();
             dispose();

@@ -169,6 +169,17 @@ public class Workspace extends JSplitPane {
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
         explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
 
+        // Record this project in ${smile.home}/conf/projects.json for cross-project
+        // Bot routines (/daily-log and /daily-recap) and sync to Agent Hub if running.
+        Thread.ofPlatform().name("projects-config-sync").daemon(true).start(() -> {
+            try {
+                ioa.agent.bot.ProjectsConfig.registerProject(cwd);
+                HubManager.getInstance().syncTrackedProjects();
+            } catch (Exception ex) {
+                logger.debug("Could not record project in projects.json: {}", ex.getMessage());
+            }
+        });
+
         for (var file : getOpenFilePaths()) {
             try {
                 openFile(file);
