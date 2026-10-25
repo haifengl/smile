@@ -102,7 +102,11 @@ public class MxFp8MarlinLinear implements MxFp8Layer {
         return fused;
     }
 
-    /** @return the output size N. */
+    /**
+     * Returns the output size N.
+     *
+     * @return the output size N.
+     */
     public int outFeatures() {
         return outFeatures;
     }

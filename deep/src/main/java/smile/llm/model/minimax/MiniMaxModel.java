@@ -384,8 +384,8 @@ public class MiniMaxModel extends LayerBlock {
      * static metadata buffer and replay. Nothing is built on the host while capturing: slots, positions and the
      * attention mask come from the static buffers (see {@link MiniMaxStep.External}).
      *
-     * @param tokens    last token of each row.
-     * @param positions KV write position of each row.
+     * @param realTokens    last token of each row.
+     * @param realPositions KV write position of each row.
      * @return float32 logits {@code [B, V]} (a fresh tensor), or {@code null} when graphs are off or not
      *         applicable and the caller must run the eager path.
      */

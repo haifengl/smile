@@ -88,7 +88,15 @@ public final class QuantizedQwenFp8Loader {
      * {@link WeightGemmBackend#FP8} (Hopper+, {@code _scaled_mm_v2}) or {@link WeightGemmBackend#MARLIN_FP8}
      * (Ampere/Ada, FP8 weights resident, weight-only Marlin GEMM).
      *
-     * @param backend how block-FP8 linears are multiplied.
+     * @param model              target rank model (shells already on {@code device}).
+     * @param dir                checkpoint directory.
+     * @param device             rank device.
+     * @param tpSize             tensor-parallel world size.
+     * @param tpRank             this rank.
+     * @param outDtype           compute dtype for dequant / Fp8Linear output.
+     * @param modelLoaderThreads shard-read concurrency ({@code 0} = auto).
+     * @param backend            how block-FP8 linears are multiplied.
+     * @throws java.io.IOException if checkpoint IO fails.
      */
     public static void install(QwenModel model, Path dir, Device device,
                                int tpSize, int tpRank, ScalarType outDtype,

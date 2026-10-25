@@ -32,7 +32,9 @@ import smile.data.type.StructType;
  * @author Haifeng Li
  */
 public class SparkRowTuple implements Tuple {
+    /** The SMILE schema. */
     private final StructType schema;
+    /** The underlying Spark row. */
     private final Row row;
 
     /**

@@ -136,11 +136,17 @@ public interface DataFrameRegression extends Regression<Tuple> {
         @Serial
         private static final long serialVersionUID = 1L;
 
+        /** The model formula. */
         private final Formula formula;
+        /** The predictor schema. */
         private final StructType schema;
+        /** The underlying vector regression model. */
         private final Regression<double[]> model;
+        /** Optional vectorized background dataset for KernelSHAP. */
         private final double[][] bgVectors;
+        /** Optional DataFrame background dataset for KernelSHAP. */
         private final DataFrame bgFrame;
+        /** Default KernelSHAP options. */
         private final KernelSHAP.Options shapOptions;
         private transient volatile KernelSHAP<double[]> vectorExplainer;
         private transient volatile KernelSHAP<Tuple> tupleExplainer;
@@ -233,6 +239,7 @@ public interface DataFrameRegression extends Regression<Tuple> {
         @Serial
         private static final long serialVersionUID = 1L;
 
+        /** The base models of the ensemble. */
         private final DataFrameRegression[] models;
         /** The ensemble is an online learner only if all the base models are. */
         private final boolean online;

@@ -57,7 +57,9 @@ public class SmileRegressor
         smile.regression.Regression<double[]> fit(double[][] x, double[] y);
     }
 
+    /** The instance UID. */
     private final String uid;
+    /** The regression trainer function. */
     private Trainer trainer;
 
     /**
