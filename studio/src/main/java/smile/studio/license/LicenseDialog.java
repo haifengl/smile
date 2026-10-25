@@ -31,6 +31,7 @@ import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import javax.swing.text.View;
 import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import smile.license.LicenseKey;
@@ -59,25 +60,31 @@ public class LicenseDialog extends JDialog {
     /** URL opened when clicking "Get a License Key". */
     public static final String LICENSING_URL = "https://www.aihalo.dev/licensing.html";
 
+    /** URL opened when clicking the studio/LICENSE link in the footer. */
+    public static final String LICENSE_URL = "https://github.com/haifengl/smile/blob/master/studio/LICENSE";
+
+    private static final int DEFAULT_TEXT_WIDTH = 560;
     private static final ResourceBundle bundle = ResourceBundle.getBundle(BUNDLE_NAME, Locale.getDefault());
 
     private final LicenseStore store;
     private LicenseState state;
     private final boolean startupGate;
 
-    private final JRadioButton evalRadio = new JRadioButton();
-    private final JRadioButton commercialRadio = new JRadioButton();
-    private final JPanel evalCard = new JPanel(new BorderLayout(8, 6));
-    private final JPanel commercialCard = new JPanel(new BorderLayout(8, 8));
-    private final JPanel commercialControlsPane = new JPanel();
-    private final JPanel activeLicenseBanner = new JPanel();
-    private final JTextField keyField = new JTextField(42);
-    private final JLabel errorLabel = new JLabel(" ");
-    private final JButton trialButton = new JButton();
-    private final JLabel trialStatusLabel = new JLabel();
-    private final JButton deactivateButton = new JButton();
-    private final JButton primaryButton = new JButton();
-    private final JButton cancelButton = new JButton(bundle.getString("CancelButton"));
+    final JRadioButton evalRadio = new JRadioButton();
+    final JRadioButton commercialRadio = new JRadioButton();
+    final JPanel evalCard = new JPanel(new BorderLayout(8, 6));
+    final JPanel commercialCard = new JPanel(new BorderLayout(8, 8));
+    final JPanel commercialControlsPane = new JPanel();
+    final JPanel activeLicenseBanner = new JPanel();
+    final JTextField keyField = new JTextField(42);
+    final JLabel errorLabel = new JLabel(" ");
+    final JButton getLicenseButton = new JButton();
+    final JButton trialButton = new JButton();
+    final JLabel trialStatusLabel = new JLabel();
+    final JButton deactivateButton = new JButton();
+    final JLabel termsLabel = new JLabel();
+    final JButton primaryButton = new JButton();
+    final JButton cancelButton = new JButton(bundle.getString("CancelButton"));
 
     /**
      * Creates a modal {@link LicenseDialog}.
@@ -140,7 +147,12 @@ public class LicenseDialog extends JDialog {
 
         updateSelectionState();
         pack();
-        setMinimumSize(new Dimension(640, getPreferredSize().height));
+        int width = Math.max(680, getPreferredSize().width);
+        setSize(width, getPreferredSize().height);
+        validate();
+        Dimension finalSize = new Dimension(width, getPreferredSize().height);
+        setSize(finalSize);
+        setMinimumSize(finalSize);
         setLocationRelativeTo(owner);
     }
 
@@ -190,8 +202,7 @@ public class LicenseDialog extends JDialog {
     }
 
     private JPanel createCardsPane() {
-        JPanel cards = new JPanel();
-        cards.setLayout(new BoxLayout(cards, BoxLayout.Y_AXIS));
+        JPanel cards = new JPanel(new BorderLayout(0, 12));
 
         // Card 1: Evaluation Mode (BSL 1.1)
         evalRadio.setText(bundle.getString("EvalCardTitle"));
@@ -232,11 +243,8 @@ public class LicenseDialog extends JDialog {
         commercialCard.add(commercialCenter, BorderLayout.CENTER);
         makeCardClickable(commercialCard, commercialRadio);
 
-        evalCard.setAlignmentX(Component.LEFT_ALIGNMENT);
-        commercialCard.setAlignmentX(Component.LEFT_ALIGNMENT);
-        cards.add(evalCard);
-        cards.add(Box.createVerticalStrut(12));
-        cards.add(commercialCard);
+        cards.add(evalCard, BorderLayout.NORTH);
+        cards.add(commercialCard, BorderLayout.CENTER);
         return cards;
     }
 
@@ -320,14 +328,16 @@ public class LicenseDialog extends JDialog {
         commercialControlsPane.add(errorLabel);
         commercialControlsPane.add(Box.createVerticalStrut(6));
 
-        JPanel actionsRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        JPanel actionsRow = new JPanel();
+        actionsRow.setLayout(new BoxLayout(actionsRow, BoxLayout.X_AXIS));
         actionsRow.setOpaque(false);
         actionsRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JButton getLicenseBtn = new JButton(bundle.getString("GetLicenseLink"));
-        getLicenseBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        getLicenseBtn.addActionListener(e -> openLicensingPage());
-        actionsRow.add(getLicenseBtn);
+        getLicenseButton.setText(bundle.getString("GetLicenseLink"));
+        getLicenseButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        getLicenseButton.addActionListener(e -> openBrowser(LICENSING_URL));
+        actionsRow.add(getLicenseButton);
+        actionsRow.add(Box.createHorizontalStrut(8));
 
         trialButton.setText(bundle.getString("StartTrialButton"));
         trialButton.addActionListener(e -> onStartTrial());
@@ -359,8 +369,16 @@ public class LicenseDialog extends JDialog {
         JPanel footer = new JPanel(new BorderLayout(12, 0));
         footer.setBorder(new EmptyBorder(8, 0, 0, 0));
 
-        JLabel termsLabel = new JLabel(bundle.getString("FooterTerms"));
+        termsLabel.setText(formatFooterTermsHtml(bundle.getString("FooterTerms")));
         termsLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+        termsLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        termsLabel.setToolTipText(LICENSE_URL);
+        termsLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                openBrowser(LICENSE_URL);
+            }
+        });
         footer.add(termsLabel, BorderLayout.WEST);
 
         JPanel buttons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
@@ -374,6 +392,17 @@ public class LicenseDialog extends JDialog {
         buttons.add(primaryButton);
         footer.add(buttons, BorderLayout.EAST);
         return footer;
+    }
+
+    static String formatFooterTermsHtml(String footerTerms) {
+        String escaped = footerTerms
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;");
+        String linked = escaped.replace(
+                "studio/LICENSE",
+                "<a href=\"" + LICENSE_URL + "\">studio/LICENSE</a>");
+        return "<html>" + linked + "</html>";
     }
 
     private void updateSelectionState() {
@@ -475,30 +504,58 @@ public class LicenseDialog extends JDialog {
         };
     }
 
-    private void openLicensingPage() {
+    private void openBrowser(String url) {
         try {
             if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                Desktop.getDesktop().browse(new URI(LICENSING_URL));
+                Desktop.getDesktop().browse(new URI(url));
                 return;
             }
         } catch (Exception ex) {
-            logger.warn("Could not open browser for URL: {}", LICENSING_URL, ex);
+            logger.warn("Could not open browser for URL: {}", url, ex);
         }
         JOptionPane.showMessageDialog(
                 this,
-                LICENSING_URL,
+                url,
                 bundle.getString("DialogTitle"),
                 JOptionPane.INFORMATION_MESSAGE);
     }
 
     private static JTextArea createReadOnlyText(String text) {
-        JTextArea area = new JTextArea(text);
+        JTextArea area = new JTextArea(text) {
+            @Override
+            public Dimension getPreferredSize() {
+                int width = getWidth() > 0 ? getWidth() : DEFAULT_TEXT_WIDTH;
+                Insets insets = getInsets();
+                int availWidth = Math.max(100, width - insets.left - insets.right);
+                View view = getUI() != null ? getUI().getRootView(this) : null;
+                if (view != null) {
+                    view.setSize(availWidth, Float.MAX_VALUE);
+                    int prefHeight = (int) Math.ceil(view.getPreferredSpan(View.Y_AXIS))
+                            + insets.top + insets.bottom;
+                    return new Dimension(width, prefHeight);
+                }
+                return new Dimension(width, 40);
+            }
+
+            @Override
+            public Dimension getMinimumSize() {
+                Dimension pref = getPreferredSize();
+                return new Dimension(200, pref.height);
+            }
+
+            @Override
+            public Dimension getMaximumSize() {
+                Dimension pref = getPreferredSize();
+                return new Dimension(Integer.MAX_VALUE, pref.height);
+            }
+        };
         area.setEditable(false);
         area.setFocusable(false);
         area.setLineWrap(true);
         area.setWrapStyleWord(true);
         area.setOpaque(false);
         area.setFont(UIManager.getFont("Label.font"));
+        area.setSize(DEFAULT_TEXT_WIDTH, Short.MAX_VALUE);
         return area;
     }
 
@@ -511,10 +568,16 @@ public class LicenseDialog extends JDialog {
                 }
             }
         };
-        card.addMouseListener(adapter);
-        for (Component child : card.getComponents()) {
-            if (child instanceof JTextArea) {
+        attachClickAdapter(card, adapter);
+    }
+
+    private static void attachClickAdapter(Container container, MouseAdapter adapter) {
+        container.addMouseListener(adapter);
+        for (Component child : container.getComponents()) {
+            if (child instanceof JTextArea || child instanceof JLabel) {
                 child.addMouseListener(adapter);
+            } else if (child instanceof JPanel panel) {
+                attachClickAdapter(panel, adapter);
             }
         }
     }
