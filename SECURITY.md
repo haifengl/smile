@@ -4,15 +4,19 @@
 
 ## Supported Versions
 
-We currently support security fixes for the latest stable release and selected older versions.
+We currently support security fixes for the latest stable release and selected Long-Term Support (LTS) versions for earlier Java baselines.
 
-| Version | Supported          |
-|---------|--------------------|
-| 7.x     | :white_check_mark: |
-| 6.x     | :x:                |
-| 5.x     | :x:                |
-| 4.4.x   | :white_check_mark: |
-| < 4.4   | :x:                |
+| Version | Java Baseline | Supported          | Status / Notes                                       |
+|---------|---------------|--------------------|------------------------------------------------------|
+| 7.x     | Java 25       | :white_check_mark: | Current active release line                          |
+| 6.x     | Java 25       | :x:                | End-of-Life (EoL) — superseded by 7.x                |
+| 5.x     | Java 25       | :x:                | End-of-Life (EoL) — superseded by 7.x                |
+| 4.4.x   | Java 21       | :white_check_mark: | Supported for Java 21 LTS environments               |
+| < 4.4   | Java 21       | :x:                | End-of-Life (EoL) — upgrade to 4.4.x                 |
+| 3.1.x   | Java 8 / 17   | :white_check_mark: | Supported for Java 8 / 11 / 17 LTS environments      |
+| < 3.1   | Java 8        | :x:                | End-of-Life (EoL) — upgrade to 3.1.x                 |
+
+**End-of-Life (EoL) & Commercial Support Notice:** With the release of SMILE 7.x, the 5.x and 6.x release lines have reached End-of-Life (EoL) and no longer receive public security patches or maintenance updates. Organizations requiring guaranteed 24-hour Critical/High CVE resolution SLAs, security backports, or commercial IP indemnification across supported or legacy versions can obtain a commercial license or OEM maintenance subscription at [https://www.aihalo.dev/licensing.html](https://www.aihalo.dev/licensing.html) or by contacting [sales@aihalo.dev](mailto:sales@aihalo.dev).
 
 ## Reporting a Vulnerability
 

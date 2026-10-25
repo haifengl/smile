@@ -1,0 +1,233 @@
+name: Publish API Docs
+
+on:
+  workflow_dispatch:
+  release:
+    types: [ published ]
+  push:
+    branches: [ "master" ]
+    paths:
+      - ".github/workflows/api-docs.yml"
+
+permissions:
+  contents: read
+  deployments: write
+
+concurrency:
+  group: api-docs-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build & Deploy API Docs (Cloudflare Pages)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Java 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: gradle
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "22"
+
+      - name: Install tidy
+        run: sudo apt-get update && sudo apt-get install -y tidy
+
+      - name: Grant execute permissions
+        run: chmod +x gradlew bin/gtag.sh clojure/lein
+
+      - name: Generate Java, JSON, Scala, Kotlin, and Clojure API docs
+        run: |
+          rm -rf target/docs
+          mkdir -p target/docs
+
+          # 1. Java API docs (Unidoc) and publish locally for Clojure codox dependency resolution
+          sbt unidoc publishLocal
+          UNIDOC_DIR=$(find target/out -type d -path '*/smile/javaunidoc' -print -quit)
+          if [[ -z "$UNIDOC_DIR" ]]; then
+            echo "ERROR: unidoc output not found under target/out" >&2
+            exit 1
+          fi
+          mv "$UNIDOC_DIR" target/docs/java
+
+          # 2. JSON & Scala API docs (Scaladoc)
+          sbt json/doc scala/doc
+          find target/docs/json -name '*.html' -exec bin/gtag.sh {} \;
+          find target/docs/scala -name '*.html' -exec bin/gtag.sh {} \;
+
+          # 3. Kotlin API docs (Dokka)
+          ./gradlew :kotlin:dokkaGenerate --no-daemon
+          find target/docs/kotlin -name '*.html' -exec bin/gtag.sh {} \;
+
+          # 4. Clojure API docs (Codox)
+          (cd clojure && ./lein codox)
+          find target/docs/clojure -name '*.html' -exec tidy -m -q {} \; || true
+          find target/docs/clojure -name '*.html' -exec bin/gtag.sh {} \;
+
+          # 5. Package archive so halo-website builds can restore /api/* in one request
+          tar -czf target/docs/api-docs.tar.gz -C target/docs java json scala kotlin clojure
+
+      - name: Assemble halo-website deployment directory
+        run: |
+          mkdir -p _site/api
+          cp -r target/docs/* _site/api/
+
+          # Sync current static website pages from halo-website so deploying _site
+          # preserves all root pages alongside the updated /api/* documentation.
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const BASE = process.env.PAGES_ORIGIN || "https://halo-website-96p.pages.dev";
+
+            async function fetchBytes(url) {
+              const res = await fetch(url, { redirect: "follow" });
+              if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+              return Buffer.from(await res.arrayBuffer());
+            }
+
+            async function main() {
+              let files = [];
+              try {
+                const res = await fetch(`${BASE}/site-manifest.json`);
+                if (res.ok && (res.headers.get("content-type") || "").includes("json")) {
+                  const manifest = await res.json();
+                  if (Array.isArray(manifest.files)) files = manifest.files;
+                }
+              } catch (_) {}
+
+              if (files.length === 0) {
+                const res = await fetch(`${BASE}/search-index.json`);
+                if (res.ok) {
+                  const idx = await res.json();
+                  files = idx.map(p => p.url || "index.html");
+                }
+              }
+
+              const extra = [
+                "index.html",
+                "search-index.json",
+                "site-manifest.json",
+                "favicon.ico",
+                "css/site.css",
+                "css/tokens.css",
+                "css/input.css",
+                "css/prism.min.css",
+                "css/prism-tomorrow.min.css",
+                "js/site.js",
+                "js/search.js",
+                "js/toc.js",
+                "js/playground.js",
+                "js/graphviz.js",
+                "js/dedent.js",
+                "js/follow-sidebar.js",
+                "js/google-analytics.js",
+                "js/autotrack.js",
+                "js/autotrack.js.map",
+                "js/vendor/prism/prism.min.js",
+                "js/vendor/prism/prism-bash.min.js",
+                "js/vendor/prism/prism-clike.min.js",
+                "js/vendor/prism/prism-clojure.min.js",
+                "js/vendor/prism/prism-groovy.min.js",
+                "js/vendor/prism/prism-java.min.js",
+                "js/vendor/prism/prism-kotlin.min.js",
+                "js/vendor/prism/prism-markup.min.js",
+                "js/vendor/prism/prism-scala.min.js",
+                "fonts/ibm-plex-mono-latin-400-normal.woff2",
+                "fonts/ibm-plex-mono-latin-500-normal.woff2",
+                "fonts/ibm-plex-mono-latin-600-normal.woff2",
+                "fonts/ibm-plex-sans-latin-400-normal.woff2",
+                "fonts/ibm-plex-sans-latin-500-normal.woff2",
+                "fonts/ibm-plex-sans-latin-600-normal.woff2",
+                "fonts/ibm-plex-sans-latin-700-normal.woff2"
+              ];
+              const allFiles = Array.from(new Set([...files, ...extra])).filter(Boolean);
+              console.log(`Syncing ${allFiles.length} website files from ${BASE}...`);
+
+              const htmlAssets = new Set();
+              for (const rel of allFiles) {
+                try {
+                  const buf = await fetchBytes(`${BASE}/${rel}`);
+                  const dest = path.join("_site", rel);
+                  fs.mkdirSync(path.dirname(dest), { recursive: true });
+                  fs.writeFileSync(dest, buf);
+                  if (rel.endsWith(".html")) {
+                    const text = buf.toString("utf8");
+                    const re = /(?:src|href)="(images\/[^"#?]+|gallery\/[^"#?]+)"/g;
+                    let m;
+                    while ((m = re.exec(text)) !== null) htmlAssets.add(m[1]);
+                  }
+                } catch (err) {
+                  console.warn(`Skipped ${rel}: ${err.message}`);
+                }
+              }
+
+              for (const asset of htmlAssets) {
+                const dest = path.join("_site", asset);
+                if (fs.existsSync(dest)) continue;
+                try {
+                  const buf = await fetchBytes(`${BASE}/${asset}`);
+                  fs.mkdirSync(path.dirname(dest), { recursive: true });
+                  fs.writeFileSync(dest, buf);
+                } catch (err) {
+                  console.warn(`Skipped asset ${asset}: ${err.message}`);
+                }
+              }
+            }
+            main().catch(err => { console.error(err); process.exit(1); });
+          '
+
+          cat << 'EOF' > _site/_headers
+          # Security & Caching Headers for Cloudflare Pages (aihalo.dev)
+
+          /*
+            X-Content-Type-Options: nosniff
+            X-Frame-Options: SAMEORIGIN
+            Referrer-Policy: strict-origin-when-cross-origin
+            Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+          /*.html
+            Cache-Control: public, max-age=0, must-revalidate
+
+          /search-index.json
+            Cache-Control: public, max-age=300, stale-while-revalidate=600
+
+          /css/*
+            Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+          /js/*
+            Cache-Control: public, max-age=86400, stale-while-revalidate=604800
+
+          /fonts/*
+            Cache-Control: public, max-age=31536000, immutable
+
+          /images/*
+            Cache-Control: public, max-age=604800, stale-while-revalidate=2592000
+          EOF
+
+      - name: Verify API documentation artifacts
+        run: |
+          test -f _site/api/java/index.html
+          test -f _site/api/json/index.html
+          test -f _site/api/scala/index.html
+          test -f _site/api/kotlin/index.html
+          test -f _site/api/clojure/index.html
+          test -f _site/api/api-docs.tar.gz
+          test -f _site/index.html
+
+      - name: Publish to Cloudflare Pages (halo-website)
+        if: env.CLOUDFLARE_API_TOKEN != ''
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || '81626d9bb59b7ad3b5bb24cc006e309e' }}
+        run: |
+          npx --yes wrangler@4 pages deploy _site \
+            --project-name=halo-website \
+            --branch=main \
+            --commit-dirty=true

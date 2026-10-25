@@ -46,6 +46,7 @@ hs_err_pid*
 # it is not built or downloaded by anything here, so do not commit it.
 /studio/src/universal/jbr
 /studio/src/universal/jdtls
+/studio/src/universal/hub
 
 # Clojure
 .nrepl-port
