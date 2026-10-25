@@ -62,7 +62,10 @@ jobs:
 
           # 2. JSON & Scala API docs (Scaladoc) and local Maven artifacts for Clojure Codox
           rm -rf ~/.m2/repository/com/github/haifengl
-          sbt json/doc scala/doc base/publishM2 core/publishM2
+          sbt json/doc
+          sbt scala/doc
+          sbt base/publishM2
+          sbt core/publishM2
           find target/docs/json -name '*.html' -exec bin/gtag.sh {} \;
           find target/docs/scala -name '*.html' -exec bin/gtag.sh {} \;
 
