@@ -44,8 +44,12 @@ public class StatusBar extends JPanel {
     private final JLabel status = new JLabel(READY);
     /** System CPU/Heap message. */
     private final JLabel system = new JLabel();
+    /** Clickable Agent Hub & pending approvals badge. */
+    private final JLabel botBadge = new JLabel();
     /** Clickable license mode / customer badge on the far right. */
     private final JLabel licenseBadge = new JLabel();
+    /** Optional action executed when the user clicks the bot badge. */
+    private Runnable onBotClick;
     /** Optional action executed when the user clicks the license badge. */
     private Runnable onLicenseClick;
     /** OS's MXBean */
@@ -76,6 +80,21 @@ public class StatusBar extends JPanel {
 
         system.setHorizontalAlignment(SwingConstants.RIGHT);
         eastPane.add(system);
+
+        botBadge.setHorizontalAlignment(SwingConstants.RIGHT);
+        botBadge.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        botBadge.setBorder(new EmptyBorder(0, 6, 0, 2));
+        botBadge.setText("[🤖 Bots]");
+        botBadge.setToolTipText("Open Agent Hub Approvals, Run History & Bot Pages");
+        botBadge.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e) && onBotClick != null) {
+                    onBotClick.run();
+                }
+            }
+        });
+        eastPane.add(botBadge);
 
         licenseBadge.setHorizontalAlignment(SwingConstants.RIGHT);
         licenseBadge.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -127,6 +146,38 @@ public class StatusBar extends JPanel {
      */
     public void setOnLicenseClick(Runnable action) {
         this.onLicenseClick = action;
+    }
+
+    /**
+     * Sets the callback invoked when the user clicks the Agent Hub / Bot badge.
+     *
+     * @param action the callback to invoke.
+     */
+    public void setOnBotClick(Runnable action) {
+        this.onBotClick = action;
+    }
+
+    /**
+     * Updates the Agent Hub / Bot status badge text and color.
+     *
+     * @param hubRunning       true when Agent Hub is reachable.
+     * @param pendingApprovals count of pending approvals or staged drafts.
+     */
+    public void updateBotBadge(boolean hubRunning, int pendingApprovals) {
+        Color defaultFg = UIManager.getColor("Label.foreground");
+        Color warningFg = new Color(0xD9, 0x77, 0x06);
+        if (pendingApprovals > 0) {
+            botBadge.setText("[🤖 Approvals (" + pendingApprovals + ")]");
+            botBadge.setForeground(warningFg);
+        } else if (hubRunning) {
+            botBadge.setText("[🤖 Hub: UP]");
+            botBadge.setForeground(defaultFg);
+        } else {
+            botBadge.setText("[🤖 Bots]");
+            botBadge.setForeground(defaultFg);
+        }
+        revalidate();
+        repaint();
     }
 
     /**

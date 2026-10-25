@@ -47,6 +47,9 @@ import smile.license.LicenseKey;
 import smile.studio.license.LicenseDialog;
 import smile.studio.license.LicenseState;
 import smile.studio.license.LicenseStore;
+import smile.studio.bot.BotActivityDialog;
+import smile.studio.bot.BotManagerDialog;
+import smile.studio.workspace.HubManager;
 import smile.studio.workspace.OpenFile;
 import smile.studio.workspace.ServeManager;
 import smile.studio.workspace.Workspace;
@@ -114,6 +117,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         initMenuAndToolBar();
 
         statusBar.setOnLicenseClick(() -> openLicenseDialog(false));
+        statusBar.setOnBotClick(() -> new BotActivityDialog(this, 0).setVisible(true));
         applyLicenseState(licenseStore.load());
 
         JPanel contentPane = new JPanel(new BorderLayout());
@@ -218,6 +222,27 @@ public class SmileStudio extends JFrame implements SearchListener {
                 });
             }
         }
+
+        var hubCfg = StudioConfig.agentHub();
+        if (hubCfg.autoStart()) {
+            Thread.ofPlatform().name("hub-autostart").daemon(true).start(() -> {
+                var manager = HubManager.getInstance();
+                if (!manager.start(hubCfg.host(), hubCfg.port(), hubCfg.adminToken())) {
+                    logger.error("Failed to auto-start Agent Hub");
+                }
+                SwingUtilities.invokeLater(() -> workspace.explorer().refreshBotsTree());
+            });
+        }
+
+        // Periodically poll Agent Hub status & pending approvals for the status bar badge.
+        var hubBadgeTimer = new javax.swing.Timer(10000, e -> Thread.ofPlatform().name("hub-badge-poll").daemon(true).start(() -> {
+            var client = HubManager.getInstance().client();
+            boolean running = client.isReady();
+            int pending = running ? client.getOverview().pendingApprovalCount() : 0;
+            SwingUtilities.invokeLater(() -> statusBar.updateBotBadge(running, pending));
+        }));
+        hubBadgeTimer.setInitialDelay(3000);
+        hubBadgeTimer.start();
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -518,6 +543,19 @@ public class SmileStudio extends JFrame implements SearchListener {
         inferenceMenu.add(new JMenuItem(new InferenceMetricsAction()));
         inferenceMenu.add(new JMenuItem(new OpenInferenceUiAction()));
         menuBar.add(inferenceMenu);
+
+        JMenu hubMenu = new JMenu(bundle.getString("AgentHub"));
+        hubMenu.add(new JMenuItem(new StartAgentHubAction()));
+        hubMenu.add(new JMenuItem(new StopAgentHubAction()));
+        hubMenu.add(new JMenuItem(new RestartAgentHubAction()));
+        hubMenu.addSeparator();
+        hubMenu.add(new JMenuItem(new ConfigureBotsAction()));
+        hubMenu.add(new JMenuItem(new BotApprovalsAction()));
+        hubMenu.add(new JMenuItem(new BotPagesAction()));
+        hubMenu.addSeparator();
+        hubMenu.add(new JMenuItem(new AgentHubHealthAction()));
+        hubMenu.add(new JMenuItem(new AgentHubMetricsAction()));
+        menuBar.add(hubMenu);
 
         JMenu helpMenu = new JMenu(bundle.getString("Help"));
         helpMenu.add(new JMenuItem(new TutorialAction()));
@@ -862,6 +900,143 @@ public class SmileStudio extends JFrame implements SearchListener {
         }
         try {
             if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().browse(URI.create(base + path));
+            }
+        } catch (Exception ex) {
+            logger.error("Failed to open browser: {}", ex.getMessage());
+        }
+    }
+
+    private class StartAgentHubAction extends AbstractAction {
+        public StartAgentHubAction() {
+            super(bundle.getString("StartAgentHub"), StartInferenceAction.icons.small());
+            putValue(LARGE_ICON_KEY, StartInferenceAction.icons.large());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Thread.ofPlatform().name("hub-start").daemon(true).start(() -> {
+                boolean ok = HubManager.getInstance().start();
+                SwingUtilities.invokeLater(() -> {
+                    workspace.explorer().refreshBotsTree();
+                    statusBar.setStatus(ok
+                            ? MessageFormat.format(bundle.getString("AgentHubStarted"),
+                                    HubManager.getInstance().baseUrl())
+                            : bundle.getString("AgentHubStartFailed"));
+                });
+            });
+        }
+    }
+
+    private class StopAgentHubAction extends AbstractAction {
+        public StopAgentHubAction() {
+            super(bundle.getString("StopAgentHub"), StopInferenceAction.icons.small());
+            putValue(LARGE_ICON_KEY, StopInferenceAction.icons.large());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            HubManager.getInstance().stop();
+            workspace.explorer().refreshBotsTree();
+            statusBar.setStatus(bundle.getString("AgentHubStopped"));
+        }
+    }
+
+    private class RestartAgentHubAction extends AbstractAction {
+        public RestartAgentHubAction() {
+            super(bundle.getString("RestartAgentHub"), RestartInferenceAction.icons.small());
+            putValue(LARGE_ICON_KEY, RestartInferenceAction.icons.large());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Thread.ofPlatform().name("hub-restart").daemon(true).start(() -> {
+                var manager = HubManager.getInstance();
+                manager.stop();
+                boolean ok = manager.start();
+                SwingUtilities.invokeLater(() -> {
+                    workspace.explorer().refreshBotsTree();
+                    statusBar.setStatus(ok
+                            ? MessageFormat.format(bundle.getString("AgentHubStarted"),
+                                    manager.baseUrl())
+                            : bundle.getString("AgentHubStartFailed"));
+                });
+            });
+        }
+    }
+
+    private class ConfigureBotsAction extends AbstractAction {
+        public ConfigureBotsAction() {
+            super(bundle.getString("ConfigureBots"), SettingsAction.icons.small());
+            putValue(LARGE_ICON_KEY, SettingsAction.icons.large());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            BotManagerDialog dialog = new BotManagerDialog(
+                    SmileStudio.this, null, () -> workspace.explorer().refreshBotsTree());
+            dialog.setVisible(true);
+        }
+    }
+
+    private class BotApprovalsAction extends AbstractAction {
+        public BotApprovalsAction() {
+            super(bundle.getString("BotApprovals"));
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            BotActivityDialog dialog = new BotActivityDialog(SmileStudio.this, 0);
+            dialog.setVisible(true);
+        }
+    }
+
+    private class BotPagesAction extends AbstractAction {
+        public BotPagesAction() {
+            super(bundle.getString("BotPages"), OpenInferenceUiAction.icons.small());
+            putValue(LARGE_ICON_KEY, OpenInferenceUiAction.icons.large());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            BotActivityDialog dialog = new BotActivityDialog(SmileStudio.this, 2);
+            dialog.setVisible(true);
+        }
+    }
+
+    private class AgentHubHealthAction extends AbstractAction {
+        public AgentHubHealthAction() {
+            super(bundle.getString("InferenceHealth"), InferenceHealthAction.icons.small());
+            putValue(LARGE_ICON_KEY, InferenceHealthAction.icons.large());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            openAgentHubPage("/q/health");
+        }
+    }
+
+    private class AgentHubMetricsAction extends AbstractAction {
+        public AgentHubMetricsAction() {
+            super(bundle.getString("InferenceMetrics"), InferenceMetricsAction.icons.small());
+            putValue(LARGE_ICON_KEY, InferenceMetricsAction.icons.large());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            openAgentHubPage("/q/metrics");
+        }
+    }
+
+    private void openAgentHubPage(String path) {
+        if (!HubManager.getInstance().isRunning()) {
+            JOptionPane.showMessageDialog(this, bundle.getString("AgentHubNotRunning"),
+                    bundle.getString("AgentHub"), JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        String base = HubManager.getInstance().baseUrl();
+        try {
+            if (base != null && Desktop.isDesktopSupported()) {
                 Desktop.getDesktop().browse(URI.create(base + path));
             }
         } catch (Exception ex) {

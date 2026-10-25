@@ -5,6 +5,13 @@
     "port": 8888,
     "modelPath": "./model"
   },
+  "agentHub": {
+    "autoStart": false,
+    "host": "localhost",
+    "port": 8890,
+    "adminToken": "dev-admin-token",
+    "keepAliveOnExit": false
+  },
   "plugins": {
     "marketplaces": [
       "anthropics/claude-plugins-official"

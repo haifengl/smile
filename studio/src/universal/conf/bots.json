@@ -1,0 +1,298 @@
+{
+  "primaryBot": "chief-of-staff",
+  "dailyLogTime": "19:00",
+  "contextProjects": [],
+  "autoReviewRules": [
+    {
+      "id": "rule-require-outbound-approval",
+      "category": "OUTBOUND_COMMUNICATION",
+      "pattern": "*",
+      "decision": "REQUIRE_APPROVAL"
+    },
+    {
+      "id": "rule-require-automation-write-approval",
+      "category": "AUTOMATION_WRITE",
+      "pattern": "*",
+      "decision": "REQUIRE_APPROVAL"
+    }
+  ],
+  "bots": [
+    {
+      "botId": "all-agents-memory",
+      "name": "Daily Memory Logger",
+      "description": "Runs /daily-log at 7:00 PM for every agent persona that had activity today across the Bot workspace and enriched Studio projects.",
+      "persona": "*",
+      "enabled": true,
+      "routines": [
+        {
+          "routineId": "daily-log",
+          "name": "7:00 PM Daily Memory Log",
+          "enabled": true,
+          "trigger": {
+            "source": "timer",
+            "cron": "0 19 * * *",
+            "intervalSeconds": 0,
+            "missedFirePolicy": "FIRE_ONCE",
+            "reminderBeforeSeconds": 0,
+            "settleSeconds": 0,
+            "maxTurnsPerHour": 0
+          },
+          "workflow": {
+            "kind": "SKILL",
+            "target": "daily-log",
+            "instructions": "Inspect today's modified sessions across ${smile.home}/bot/.smile/<persona>/sessions/ and each enriched contextProject (<project>/.smile/<persona>/sessions/). Append structured entries to the corresponding memory/YYYY-MM-DD.md files.",
+            "requireActivityToday": true,
+            "useContextProjects": true
+          },
+          "policy": {
+            "sessionMode": "ISOLATED_PER_RUN",
+            "confirmConsequential": false,
+            "approvalTtlMinutes": 0
+          }
+        }
+      ]
+    },
+    {
+      "botId": "frank",
+      "name": "Frank — Chief of Staff (Primary Bot)",
+      "description": "Primary Bot front door: consolidates end-of-day recaps, triages executive email, and guards the user's calendar.",
+      "persona": "chief-of-staff",
+      "enabled": true,
+      "routines": [
+        {
+          "routineId": "frank-daily-recap",
+          "name": "8:00 PM End-of-Day Consolidation & Briefing",
+          "enabled": true,
+          "trigger": {
+            "source": "timer",
+            "cron": "0 20 * * *",
+            "intervalSeconds": 0,
+            "missedFirePolicy": "FIRE_ONCE",
+            "reminderBeforeSeconds": 0,
+            "settleSeconds": 0,
+            "maxTurnsPerHour": 0
+          },
+          "workflow": {
+            "kind": "SKILL",
+            "target": "daily-recap",
+            "instructions": "Consolidate today's memory/YYYY-MM-DD.md logs and session outcomes across ${smile.home}/bot/ and all contextProjects. Promote durable learnings to MEMORY.md and refresh ${smile.home}/bot/pages/executive-brief.html.",
+            "requireActivityToday": false,
+            "useContextProjects": true,
+            "awaitRoutineId": "daily-log"
+          },
+          "policy": {
+            "sessionMode": "ISOLATED_PER_RUN",
+            "confirmConsequential": false,
+            "approvalTtlMinutes": 0
+          }
+        },
+        {
+          "routineId": "frank-inbox",
+          "name": "Executive Email Triage",
+          "enabled": true,
+          "trigger": {
+            "source": "email",
+            "intervalSeconds": 0,
+            "missedFirePolicy": "FIRE_ONCE",
+            "mailbox": "frank",
+            "reminderBeforeSeconds": 0,
+            "typeMatch": "email.*",
+            "senderAllowlist": ["*"],
+            "settleSeconds": 45,
+            "maxTurnsPerHour": 10
+          },
+          "workflow": {
+            "kind": "PROMPT",
+            "target": "Triage the inbound email(s). Check active priorities in MEMORY.md, delegate specialist tasks via AgentRequest, and stage any outbound reply into the Batch Draft Queue for approval.",
+            "requireActivityToday": false,
+            "useContextProjects": false
+          },
+          "policy": {
+            "sessionMode": "ISOLATED_PER_RUN",
+            "confirmConsequential": true,
+            "approvalTtlMinutes": 0
+          }
+        },
+        {
+          "routineId": "frank-calendar",
+          "name": "Calendar Guard & 15m Pre-Meeting Brief",
+          "enabled": true,
+          "trigger": {
+            "source": "calendar",
+            "intervalSeconds": 300,
+            "missedFirePolicy": "FIRE_ONCE",
+            "calendarUrl": "file://${smile.home}/bot/calendar/frank.ics",
+            "reminderBeforeSeconds": 900,
+            "typeMatch": "calendar.*",
+            "senderAllowlist": ["*"],
+            "settleSeconds": 30,
+            "maxTurnsPerHour": 12
+          },
+          "workflow": {
+            "kind": "PROMPT",
+            "target": "For calendar.invite/updated, check schedule conflicts and ask the user whether to Accept/Decline. For calendar.reminder, prepare a pre-meeting brief with attendee/project context.",
+            "requireActivityToday": false,
+            "useContextProjects": false
+          },
+          "policy": {
+            "sessionMode": "ISOLATED_PER_RUN",
+            "confirmConsequential": true,
+            "approvalTtlMinutes": 15
+          }
+        }
+      ]
+    },
+    {
+      "botId": "julien",
+      "name": "Julien — Developer & Product Evangelist",
+      "description": "Monitors developer communities (HN, Reddit, GitHub, Stack Overflow) and drafts high-signal educational answers and posts.",
+      "persona": "evangelist",
+      "enabled": true,
+      "routines": [
+        {
+          "routineId": "julien-community-watch",
+          "name": "4-Hour Community Watch (HN, Reddit, GitHub, SO)",
+          "enabled": true,
+          "model": "claude-haiku-4-5",
+          "trigger": {
+            "source": "timer",
+            "intervalSeconds": 14400,
+            "missedFirePolicy": "SKIP",
+            "reminderBeforeSeconds": 0,
+            "settleSeconds": 0,
+            "quietStart": "22:00",
+            "quietEnd": "08:00",
+            "maxTurnsPerHour": 6
+          },
+          "workflow": {
+            "kind": "PROMPT",
+            "target": "Scan Hacker News, Reddit, GitHub Discussions, and Stack Overflow for new threads matching SMILE / Halo.ai / JVM ML topics not in .smile/memory/community-feed.json. Record high-signal threads, forward buying signals to @mike, and trigger julien-community-post if urgent questions need answers.",
+            "requireActivityToday": false,
+            "useContextProjects": false
+          },
+          "policy": {
+            "sessionMode": "ISOLATED_PER_RUN",
+            "confirmConsequential": true,
+            "approvalTtlMinutes": 0
+          }
+        },
+        {
+          "routineId": "julien-community-post",
+          "name": "Mon/Wed/Fri Proactive Community Post & Answer Sweep",
+          "enabled": true,
+          "trigger": {
+            "source": "timer",
+            "cron": "0 10 * * MON,WED,FRI",
+            "intervalSeconds": 0,
+            "missedFirePolicy": "SKIP",
+            "reminderBeforeSeconds": 0,
+            "settleSeconds": 0,
+            "maxTurnsPerHour": 0
+          },
+          "workflow": {
+            "kind": "SKILL",
+            "target": "social-writing",
+            "instructions": "Draft helpful technical answers for queued threads in community-feed.json and one proactive educational post on SMILE / Halo.ai. Polish with /humanize, stage all items in the Batch Draft Queue for approval, and update ${smile.home}/bot/pages/community-radar.html.",
+            "requireActivityToday": false,
+            "useContextProjects": false
+          },
+          "policy": {
+            "sessionMode": "ISOLATED_PER_RUN",
+            "confirmConsequential": true,
+            "approvalTtlMinutes": 0
+          }
+        }
+      ]
+    },
+    {
+      "botId": "mike",
+      "name": "Mike — Founder-Led B2B Sales",
+      "description": "Scans daily buying signals, enriches prospects in pipeline.json, and stages multi-channel outreach drafts for batch review.",
+      "persona": "sales",
+      "enabled": true,
+      "routines": [
+        {
+          "routineId": "mike-signal-watch",
+          "name": "Weekday Morning Signal Watch (08:00)",
+          "enabled": true,
+          "model": "claude-haiku-4-5",
+          "trigger": {
+            "source": "timer",
+            "cron": "0 8 * * MON-FRI",
+            "intervalSeconds": 0,
+            "missedFirePolicy": "FIRE_ONCE",
+            "reminderBeforeSeconds": 0,
+            "settleSeconds": 0,
+            "maxTurnsPerHour": 0
+          },
+          "workflow": {
+            "kind": "SKILL",
+            "target": "signal-scanning",
+            "instructions": "Scan last 24h buying signals, qualify against ICP.md, and update .smile/memory/pipeline.json.",
+            "requireActivityToday": false,
+            "useContextProjects": false
+          },
+          "policy": {
+            "sessionMode": "ISOLATED_PER_RUN",
+            "confirmConsequential": true,
+            "approvalTtlMinutes": 0
+          }
+        },
+        {
+          "routineId": "mike-outreach-sweep",
+          "name": "Weekday Multi-Channel Outreach Sweep (08:30)",
+          "enabled": true,
+          "trigger": {
+            "source": "timer",
+            "cron": "30 8 * * MON-FRI",
+            "intervalSeconds": 0,
+            "missedFirePolicy": "FIRE_ONCE",
+            "reminderBeforeSeconds": 0,
+            "settleSeconds": 0,
+            "maxTurnsPerHour": 0
+          },
+          "workflow": {
+            "kind": "SKILL",
+            "target": "cold-email",
+            "instructions": "For qualified prospects and due follow-ups in .smile/memory/pipeline.json, draft channel-appropriate messages (email, linkedin_connect, linkedin_dm, messaging), polish with /humanize, stage the batch into the Draft Queue for approval, and refresh ${smile.home}/bot/pages/sales-pipeline.html.",
+            "requireActivityToday": false,
+            "useContextProjects": false,
+            "awaitRoutineId": "mike-signal-watch"
+          },
+          "policy": {
+            "sessionMode": "ISOLATED_PER_RUN",
+            "confirmConsequential": true,
+            "approvalTtlMinutes": 0
+          }
+        },
+        {
+          "routineId": "mike-replies",
+          "name": "Inbound Prospect Reply Handler",
+          "enabled": true,
+          "trigger": {
+            "source": "email",
+            "intervalSeconds": 0,
+            "missedFirePolicy": "FIRE_ONCE",
+            "mailbox": "mike",
+            "reminderBeforeSeconds": 0,
+            "typeMatch": "email.*",
+            "senderAllowlist": ["*"],
+            "settleSeconds": 30,
+            "maxTurnsPerHour": 10
+          },
+          "workflow": {
+            "kind": "PROMPT",
+            "target": "Update prospect stage in .smile/memory/pipeline.json, coordinate meeting scheduling with @frank if requested, and stage a reply draft for user approval.",
+            "requireActivityToday": false,
+            "useContextProjects": false
+          },
+          "policy": {
+            "sessionMode": "ISOLATED_PER_RUN",
+            "confirmConsequential": true,
+            "approvalTtlMinutes": 0
+          }
+        }
+      ]
+    }
+  ]
+}
