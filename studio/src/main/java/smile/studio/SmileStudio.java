@@ -980,8 +980,10 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class BotApprovalsAction extends AbstractAction {
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/approved.png");
         public BotApprovalsAction() {
-            super(bundle.getString("BotApprovals"));
+            super(bundle.getString("BotApprovals"), icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
