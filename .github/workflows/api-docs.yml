@@ -51,8 +51,8 @@ jobs:
           rm -rf target/docs
           mkdir -p target/docs
 
-          # 1. Java API docs (Unidoc) and publish locally for Clojure codox dependency resolution
-          sbt unidoc publishLocal
+          # 1. Java API docs (Unidoc)
+          sbt unidoc
           UNIDOC_DIR=$(find target/out -type d -path '*/smile/javaunidoc' -print -quit)
           if [[ -z "$UNIDOC_DIR" ]]; then
             echo "ERROR: unidoc output not found under target/out" >&2
@@ -60,8 +60,9 @@ jobs:
           fi
           mv "$UNIDOC_DIR" target/docs/java
 
-          # 2. JSON & Scala API docs (Scaladoc)
-          sbt json/doc scala/doc
+          # 2. JSON & Scala API docs (Scaladoc) and local Maven artifacts for Clojure Codox
+          rm -rf ~/.m2/repository/com/github/haifengl
+          sbt json/doc scala/doc base/publishM2 core/publishM2
           find target/docs/json -name '*.html' -exec bin/gtag.sh {} \;
           find target/docs/scala -name '*.html' -exec bin/gtag.sh {} \;
 
