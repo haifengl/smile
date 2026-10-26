@@ -78,6 +78,10 @@ public class MiniMaxMoE extends LayerBlock {
     /** Raw FP8 staging for the experts of this layer while the checkpoint is being read. */
     private Tensor stage13w, stage13s, stage2w, stage2s;
     private int staged;
+    /** NVFP4 experts: float32 per-expert kernel scales of the gate+up and down GEMMs, and the host copy of the checkpoint's. */
+    private Tensor w13g, w2g;
+    private float[] globalGate, globalUp, globalDown;
+    final boolean nvfp4;
     final MiniMaxMlp shared;
     final Sigmoid sigmoid = new Sigmoid(false);
     /** Full-precision router copies (the checkpoint stores them in float32); {@code null} uses the module's. */
@@ -119,6 +123,10 @@ public class MiniMaxMoE extends LayerBlock {
         var opts = new Tensor.Options().device(shard.device()).requireGradients(false);
         int inter = args.expertIntermediateSize();
         this.mode = args.weightMode();
+        this.nvfp4 = args.nvfp4Experts();
+        if (nvfp4 && mode != MiniMaxWeightMode.MARLIN && mode != MiniMaxWeightMode.DENSE) {
+            throw new IllegalArgumentException("NVFP4 experts run through Marlin or dequantized, got weight mode " + mode);
+        }
         this.expertInter = inter;
         this.totalExperts = numExperts;
         this.gateWeight = Tensor.zeros(opts, numExperts, dim);
@@ -148,7 +156,7 @@ public class MiniMaxMoE extends LayerBlock {
         smile_module_free(gateModule);
 
         if (args.numSharedExperts() > 0) {
-            this.shared = new MiniMaxMlp(dim, args.sharedIntermediateSize() * args.numSharedExperts(),
+            this.shared = new MiniMaxMlp(dim, shard.part(args.sharedIntermediateSize() * args.numSharedExperts()),
                     args.swigluAlpha(), args.swigluLimit(), mode);
             add("shared_experts", shared.module());
         } else {
@@ -288,6 +296,99 @@ public class MiniMaxMoE extends LayerBlock {
         }
     }
 
+    /**
+     * Receives one NVFP4 routed-expert projection from the checkpoint. Experts are staged raw until the layer is
+     * complete, then repacked once for the Marlin MoE kernel.
+     *
+     * @param projection {@code 1} gate, {@code 2} down or {@code 3} up.
+     * @param local      expert index within this rank.
+     * @param packed     uint8 weight on the rank's device: {@code [I, D / 2]} for gate/up, {@code [D, I / 2]} for down.
+     * @param scale      E4M3 scales {@code [N, K / 16]}.
+     * @param global     the checkpoint's {@code weight_global_scale} (the weight is {@code fp4 * scale / global}).
+     */
+    void loadExpertNvfp4(int projection, int local, Tensor packed, Tensor scale, float global) {
+        if (!nvfp4) {
+            throw new IllegalStateException("not an NVFP4 model");
+        }
+        if (mode == MiniMaxWeightMode.DENSE) {
+            // Reference path: expand to bfloat16 into this expert's slot of the stacked weight.
+            try (var noGrad = Tensor.noGradGuard();
+                 Tensor w = smile.torch.Native.nvfp4Dequantize(packed, scale, global);
+                 var index = Index.of(local);
+                 Tensor slot = expertWeights(projection).get(index)) {
+                smile.torch.Native.copy_(slot, w);
+            }
+            return;
+        }
+        final int group = 16;
+        Device device = packed.device();
+        if (stage13w == null) {
+            var u8 = new Tensor.Options().device(device).dtype(ScalarType.UInt8).requireGradients(false);
+            var f8 = new Tensor.Options().device(device).dtype(ScalarType.Float8e4m3fn).requireGradients(false);
+            stage13w = Tensor.empty(u8, localExperts, 2L * expertInter, dim / 2);
+            stage13s = Tensor.empty(f8, localExperts, 2L * expertInter, dim / group);
+            stage2w = Tensor.empty(u8, localExperts, dim, expertInter / 2);
+            stage2s = Tensor.empty(f8, localExperts, dim, expertInter / group);
+            globalGate = new float[localExperts];
+            globalUp = new float[localExperts];
+            globalDown = new float[localExperts];
+        }
+        try (var noGrad = Tensor.noGradGuard();
+             var e = Index.of(local)) {
+            Tensor w;
+            Tensor sc;
+            Index rows = null;
+            if (projection == 2) {
+                w = stage2w.get(e);
+                sc = stage2s.get(e);
+                globalDown[local] = global;
+            } else {
+                int from = projection == 1 ? 0 : expertInter;
+                rows = Index.slice(from, from + expertInter);
+                w = stage13w.get(e, rows);
+                sc = stage13s.get(e, rows);
+                (projection == 1 ? globalGate : globalUp)[local] = global;
+            }
+            try {
+                smile.torch.Native.copy_(w, packed);
+                smile.torch.Native.copy_(sc, scale);
+            } finally {
+                w.close();
+                sc.close();
+                if (rows != null) {
+                    rows.close();
+                }
+            }
+        }
+        if (++staged == 3 * localExperts) {
+            // The kernel takes one global scale per expert for the fused gate+up GEMM; vLLM uses the gate's and so do we.
+            for (int i = 0; i < localExperts; i++) {
+                if (globalGate[i] != globalUp[i]) {
+                    throw new IllegalStateException("w1 and w3 global scales differ for local expert " + i + " ("
+                            + globalGate[i] + " vs " + globalUp[i] + "); the fused gate+up GEMM needs one");
+                }
+            }
+            Tensor gate = Tensor.of(globalGate, localExperts).to(device);
+            Tensor down = Tensor.of(globalDown, localExperts).to(device);
+            Tensor[] gu = smile.torch.Native.marlinNvfp4RepackScalesStack(stage13s, gate);
+            Tensor[] dn = smile.torch.Native.marlinNvfp4RepackScalesStack(stage2s, down);
+            w13s = gu[0];
+            w13g = gu[1];
+            w2s = dn[0];
+            w2g = dn[1];
+            w13q = smile.torch.Native.marlinNvfp4RepackWeightStack(stage13w);
+            w2q = smile.torch.Native.marlinNvfp4RepackWeightStack(stage2w);
+            gate.close();
+            down.close();
+            stage13w.close();
+            stage13s.close();
+            stage2w.close();
+            stage2s.close();
+            stage13w = stage13s = stage2w = stage2s = null;
+            globalGate = globalUp = globalDown = null;
+        }
+    }
+
     /** Marlin MoE block size: small enough to limit padding, as chosen by vLLM. */
     private int moeBlockSize(int tokens) {
         int block = 8;
@@ -339,17 +440,27 @@ public class MiniMaxMoE extends LayerBlock {
             Tensor[] routed = routeOnDevice(flat);
             int block = moeBlockSize(tokens);
             Tensor align = smile.torch.Native.moeAlignBlockSize(routed[0], expertStart, localExperts, block);
-            Tensor gateUp = smile.torch.Native.marlinMoeFp8Gemm(flat, w13q, w13s, align, routed[1], block, topK, false);
+            Tensor gateUp = nvfp4
+                    ? smile.torch.Native.marlinMoeNvfp4Gemm(flat, w13q, w13s, w13g, align, routed[1], block, topK, false)
+                    : smile.torch.Native.marlinMoeFp8Gemm(flat, w13q, w13s, align, routed[1], block, topK, false);
             Tensor gate = gateUp.get(Index.Colon, Index.slice(0, expertInter));
             Tensor up = gateUp.get(Index.Colon, Index.slice(expertInter, 2 * expertInter));
             Tensor act = MiniMaxMlp.swiglu(gate, up, alpha, limit).contiguous();
-            Tensor down = smile.torch.Native.marlinMoeFp8Gemm(act, w2q, w2s, align, routed[1], block, 1, true);
+            Tensor down = nvfp4
+                    ? smile.torch.Native.marlinMoeNvfp4Gemm(act, w2q, w2s, w2g, align, routed[1], block, 1, true)
+                    : smile.torch.Native.marlinMoeFp8Gemm(act, w2q, w2s, align, routed[1], block, 1, true);
             Tensor out = down.reshape(tokens, topK, dim).to(ScalarType.Float).sum(1, false);
-            if (group != null) {
-                group.allReduceSumInPlace(shard.rank(), out);
-            }
-            if (shared != null) {
+            if (shard.tp() && shared != null) {
+                // The shared expert is split across ranks too: its partial sums ride the routed experts' all-reduce.
                 out = out.add(shared.forward(flat).to(ScalarType.Float));
+                group.allReduceSumInPlace(shard.rank(), out);
+            } else {
+                if (group != null) {
+                    group.allReduceSumInPlace(shard.rank(), out);
+                }
+                if (shared != null) {
+                    out = out.add(shared.forward(flat).to(ScalarType.Float));
+                }
             }
             Tensor result = out.to(input.dtype()).reshape(shape);
             result.promoteToParent();
@@ -465,11 +576,17 @@ public class MiniMaxMoE extends LayerBlock {
                 Tensor scatterIdx = Tensor.of(toks[e], n, 1).to(device).expand(n, dim).contiguous();
                 out.scatterReduce_(0, scatterIdx, y, "sum");
             }
-            if (group != null) {
-                group.allReduceSumInPlace(shard.rank(), out);
-            }
-            if (shared != null) {
+            if (shard.tp() && shared != null) {
+                // The shared expert is split across ranks too: its partial sums ride the routed experts' all-reduce.
                 out = out.add(shared.forward(flat).to(ScalarType.Float));
+                group.allReduceSumInPlace(shard.rank(), out);
+            } else {
+                if (group != null) {
+                    group.allReduceSumInPlace(shard.rank(), out);
+                }
+                if (shared != null) {
+                    out = out.add(shared.forward(flat).to(ScalarType.Float));
+                }
             }
             Tensor result = out.to(input.dtype()).reshape(shape);
             result.promoteToParent();

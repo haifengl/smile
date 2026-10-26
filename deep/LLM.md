@@ -444,6 +444,23 @@ ChatCompletion reply = model.chat(dialog, 512, 0.6, 0.95, false, 0, null);
 E8M0 scale per 32 elements). The text loader skips the vision tensors (loaded separately, see below) and the published
 checkpoint has no MTP weights; audio input is rejected (images and video are supported, see below).
 
+**MiniMax-M3.1-Flash** (`MiniMaxAI/MiniMax-M3.1-Flash`, ~250 GB) keeps MXFP8 for attention and the dense/shared FFNs but stores the
+routed experts as NVFP4 (`moe_quant_algo: NVFP4`, compressed-tensors `weight_packed` / `weight_scale` (E4M3 per 16) /
+`weight_global_scale`). The experts stay FP4-resident and run through the vendored vLLM Marlin MoE kernel (`kFE2M1f` with
+E4M3 group-16 scales and a per-expert float32 global scale, `smile_marlin_moe_nvfp4_gemm`; scales repacked like vLLM's
+`prepare_nvfp4_moe_layer_for_marlin`). `SMILE_MINIMAX_MXFP8=dequant` expands them to bfloat16 instead (reference path). Checked on a
+4-layer slice against that dense path: mean |logprob delta| 0.003 on 71/3000/6600-token prompts. Flash enables sparse
+attention in every layer (also the three dense-FFN ones). Not run on Hopper/Blackwell natively.
+Expert parallelism replicates everything that is not an expert (16 GB per GPU for Flash), which does not fit 8x40 GB next to
+29 GB of experts, so NVFP4 checkpoints default to **tensor-parallel non-expert weights** (`SMILE_MINIMAX_TP=on|off|auto`,
+single process only): query heads split across ranks (one KV head serves two ranks when there are 4 KV heads on 8 ranks, as in
+vLLM), `o_proj` and the dense/shared FFNs are row-parallel (the shared expert's partial sum rides the routed experts'
+all-reduce), embedding and `lm_head` are split by vocabulary. Per GPU: ~31.5-32 GiB of weights, ~8 GB left for KV, index cache
+and activations (use `smile.chat.mem-fraction-static` around 0.88, a short prefill chunk, and `SMILE_MINIMAX_VISION=0` or expect
+rank 0 to carry the 1.7 GB vision tower). Checked against vLLM (image `vllm/vllm-openai:minimax-m31-flash`, TP8, Marlin): 4 layers
+mean |logprob delta| 0.004, growing smoothly with depth to 0.65-0.85 at 60 layers on random-word prompts, which equals the gap between two
+of our own runs that differ only by a few ULPs (fused vs unfused QKV: 0.59-0.86), i.e. the model's noise floor; chat prompts answer correctly.
+
 **Images and video.** The checkpoint's vision side (`vision_tower.*`, `multi_modal_projector.*`, `patch_merge_mlp.*`, ~1.7 GB,
 bf16) loads onto rank 0's device after the text weights (`SMILE_MINIMAX_VISION=0` skips it; a checkpoint without vision
 weights answers media requests with HTTP 400). `MiniMaxVisionTower` is a CLIP-style ViT (Conv3d patch embedding applied as

@@ -55,9 +55,16 @@ public class MiniMaxAttention implements Attention {
     private static final TorchNativeAttentionKernel KERNEL = new TorchNativeAttentionKernel();
 
     final MemorySegment module;
+    /** Query and KV heads this rank computes (all of them without tensor parallelism). */
     final int numHeads;
     final int numKvHeads;
+    /** Index-query groups of this rank's KV heads. */
+    final int numGroups;
+    /** Query heads per KV head. */
     final int numRep;
+    /** Set when the heads are split across ranks: the output projection is a partial sum. */
+    private final smile.llm.parallel.TensorParallelGroup group;
+    private final int rank;
     final int headDim;
     final int rotaryDim;
     final int kvLayerId;
@@ -83,12 +90,35 @@ public class MiniMaxAttention implements Attention {
      * @param layerId decoder layer index (also the KV pool layer).
      */
     public MiniMaxAttention(MiniMaxModelArgs args, int layerId) {
+        this(args, layerId, MiniMaxShard.single(), null);
+    }
+
+    /**
+     * Constructor for a rank of a tensor-parallel group.
+     *
+     * @param args    model hyperparameters.
+     * @param layerId decoder layer index (also the KV pool layer).
+     * @param shard   this rank's slice; with {@link MiniMaxShard#tp()} the heads are split across ranks.
+     * @param group   all-reduce group for the output projection, or {@code null}.
+     */
+    public MiniMaxAttention(MiniMaxModelArgs args, int layerId, MiniMaxShard shard,
+                            smile.llm.parallel.TensorParallelGroup group) {
         if (args.numHeads() % args.numKvHeads() != 0) {
             throw new IllegalArgumentException("numHeads must be divisible by numKvHeads");
         }
-        this.numHeads = args.numHeads();
-        this.numKvHeads = args.numKvHeads();
+        this.numHeads = shard.part(args.numHeads());
+        this.numKvHeads = shard.kvHeads(args.numKvHeads());
         this.numRep = numHeads / numKvHeads;
+        if (numHeads % numKvHeads != 0 || (args.numHeads() / args.numKvHeads()) % numRep != 0) {
+            throw new IllegalArgumentException("a rank's " + numHeads + " query heads must be whole groups of its "
+                    + numKvHeads + " KV heads");
+        }
+        this.numGroups = numKvHeads;
+        this.group = shard.tp() ? group : null;
+        this.rank = shard.rank();
+        if (shard.tp() && group == null) {
+            throw new IllegalArgumentException("tensor-parallel attention requires a TensorParallelGroup");
+        }
         this.headDim = args.headDim();
         this.rotaryDim = args.rotaryDim();
         this.kvLayerId = layerId;
@@ -103,7 +133,7 @@ public class MiniMaxAttention implements Attention {
         this.kNorm = new QwenRMSNorm(headDim, args.normEps());
 
         boolean sparse = args.isSparse(layerId);
-        int indexWidth = args.numIndexHeads() * args.indexDim();
+        int indexWidth = numGroups * args.indexDim();
         this.indexQProj = sparse ? mode.newLinear(dim, indexWidth) : null;
         this.indexKProj = sparse ? mode.newLinear(dim, args.numIndexKeyHeads() * args.indexDim()) : null;
         this.indexQNorm = sparse ? new QwenRMSNorm(args.indexDim(), args.normEps()) : null;
@@ -313,6 +343,9 @@ public class MiniMaxAttention implements Attention {
                 }
             }
             Tensor out = oProj.forward(merged);
+            if (group != null) {
+                group.allReduceSumInPlace(rank, out);
+            }
             out.promoteToParent();
             return out;
         } finally {
@@ -329,7 +362,7 @@ public class MiniMaxAttention implements Attention {
      *         configuration (the caller then uses the masked SDPA path).
      */
     private Tensor sparseKernel(Tensor qRope, Tensor ropeQ, Tensor x, int cacheLen, MiniMaxStep step, double scale) {
-        int groups = args.numIndexHeads();
+        int groups = numGroups;
         if (groups != numKvHeads || indexCache.numKeyHeads() != 1 || !cachePool.kvIsComputeDtype()
                 || x.dtype() != ScalarType.BFloat16) {
             return null;
@@ -361,7 +394,7 @@ public class MiniMaxAttention implements Attention {
     private Tensor indexStage(Tensor x, Tensor cos, Tensor sin, int[] positions, int seqlen,
                               MiniMaxStep step, Tensor proj) {
         int batch = positions.length;
-        int groups = args.numIndexHeads();
+        int groups = numGroups;
         int idxDim = args.indexDim();
         int keyHeads = args.numIndexKeyHeads();
         long base = (long) (numHeads + 2 * numKvHeads) * headDim;
@@ -401,7 +434,7 @@ public class MiniMaxAttention implements Attention {
     private Tensor sparseMask(Tensor ropeQ, Tensor x, int[] positions, int seqlen, int cacheLen,
                               MiniMaxStep step, int maskReps) {
         int batch = positions.length;
-        int groups = args.numIndexHeads();
+        int groups = numGroups;
         int idxDim = args.indexDim();
         if (seqlen == 1 && step != null && indexCache.numKeyHeads() == 1) {
             try (Tensor layer = indexCache.layer(indexOrdinal)) {

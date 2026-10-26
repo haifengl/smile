@@ -163,6 +163,32 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)))
                 .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_MOE_NVFP4_GEMM_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_moe_nvfp4_gemm");
+        static final MethodHandle MARLIN_MOE_NVFP4_GEMM = MARLIN_MOE_NVFP4_GEMM_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_NVFP4_REPACK_WEIGHT_STACK_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_nvfp4_repack_weight_stack");
+        static final MethodHandle MARLIN_NVFP4_REPACK_WEIGHT_STACK = MARLIN_NVFP4_REPACK_WEIGHT_STACK_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_NVFP4_REPACK_SCALES_STACK_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_nvfp4_repack_scales_stack");
+        static final MethodHandle MARLIN_NVFP4_REPACK_SCALES_STACK = MARLIN_NVFP4_REPACK_SCALES_STACK_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> NVFP4_DEQUANTIZE_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_nvfp4_dequantize");
+        static final MethodHandle NVFP4_DEQUANTIZE = NVFP4_DEQUANTIZE_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_FLOAT)))
+                .orElse(null);
         static final java.util.Optional<MemorySegment> RESIZE_BICUBIC_AA_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_resize_bicubic_aa");
         static final MethodHandle RESIZE_BICUBIC_AA = RESIZE_BICUBIC_AA_SYM
@@ -1023,6 +1049,86 @@ public final class Native {
                 blockSize, topK, mulTopkWeights ? 1 : 0);
     }
 
+
+    /** @return {@code true} when the NVFP4 Marlin MoE kernels and repack functions are compiled in. */
+    public static boolean marlinMoeNvfp4Available() {
+        return Bindings.MOE_ALIGN != null && Bindings.MARLIN_MOE_NVFP4_GEMM != null
+                && Bindings.MARLIN_NVFP4_REPACK_WEIGHT_STACK != null && Bindings.MARLIN_NVFP4_REPACK_SCALES_STACK != null;
+    }
+
+    /**
+     * Repacks NVFP4 expert weights into the Marlin tile layout.
+     *
+     * @param weights uint8 {@code [E, N, K / 2]}, two E2M1 nibbles per byte.
+     * @return int32 {@code [E, K / 16, N * 2]}.
+     */
+    public static Tensor marlinNvfp4RepackWeightStack(Tensor weights) {
+        return marlinFp8Result(Bindings.MARLIN_NVFP4_REPACK_WEIGHT_STACK, "smile_marlin_nvfp4_repack_weight_stack",
+                weights.handle());
+    }
+
+    /**
+     * Repacks NVFP4 expert scales for the Marlin MoE kernel.
+     *
+     * @param scales      E4M3 group-16 scales {@code [E, N, K / 16]} (float8_e4m3fn or uint8 bytes).
+     * @param globalScale the checkpoint's {@code weight_global_scale}, float32 {@code [E]}.
+     * @return {@code {scales uint8 [E, K / 16, N], per-expert kernel scale float32 [E]}}.
+     */
+    public static Tensor[] marlinNvfp4RepackScalesStack(Tensor scales, Tensor globalScale) {
+        MethodHandle handle = Bindings.MARLIN_NVFP4_REPACK_SCALES_STACK;
+        if (handle == null) {
+            throw new IllegalStateException("smile_marlin_nvfp4_repack_scales_stack symbol not found (rebuild libsmile_torch)");
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment globalOut = arena.allocate(ValueLayout.ADDRESS);
+            MemorySegment out;
+            try {
+                out = (MemorySegment) handle.invokeExact(scales.handle(), globalScale.handle(), globalOut);
+            } catch (Throwable t) {
+                String err = lastError();
+                throw new RuntimeException(err == null || err.isEmpty() ? "smile_marlin_nvfp4_repack_scales_stack failed: " + t.getMessage() : err, t);
+            }
+            if (out == null || out.address() == 0) {
+                String err = lastError();
+                throw new RuntimeException(err == null || err.isEmpty() ? "smile_marlin_nvfp4_repack_scales_stack returned null" : err);
+            }
+            return new Tensor[]{new Tensor(out), new Tensor(globalOut.get(ValueLayout.ADDRESS, 0))};
+        }
+    }
+
+    /**
+     * Marlin MoE GEMM over NVFP4 experts; see {@link #marlinMoeFp8Gemm}.
+     *
+     * @param a              bfloat16 activations {@code [M, K]}.
+     * @param qweight        output of {@link #marlinNvfp4RepackWeightStack}.
+     * @param scales         first output of {@link #marlinNvfp4RepackScalesStack}.
+     * @param globalScale    second output of {@link #marlinNvfp4RepackScalesStack}.
+     * @param align          result of {@link #moeAlignBlockSize}.
+     * @param topkWeights    float32, {@code T * topK} routing weights.
+     * @param blockSize      the block size passed to {@link #moeAlignBlockSize}.
+     * @param topK           top-k of the routing ({@code 1} for the second GEMM).
+     * @param mulTopkWeights whether to scale each row by its routing weight.
+     * @return bfloat16 {@code [M * topK, N]}.
+     */
+    public static Tensor marlinMoeNvfp4Gemm(Tensor a, Tensor qweight, Tensor scales, Tensor globalScale, Tensor align,
+                                            Tensor topkWeights, int blockSize, int topK, boolean mulTopkWeights) {
+        return marlinFp8Result(Bindings.MARLIN_MOE_NVFP4_GEMM, "smile_marlin_moe_nvfp4_gemm",
+                a.handle(), qweight.handle(), scales.handle(), globalScale.handle(), align.handle(),
+                topkWeights.handle(), blockSize, topK, mulTopkWeights ? 1 : 0);
+    }
+
+    /**
+     * Dequantizes NVFP4 weights to bfloat16.
+     *
+     * @param packed      uint8 {@code [.., N, K / 2]}, two E2M1 nibbles per byte.
+     * @param scale       E4M3 scales {@code [.., N, K / 16]}.
+     * @param globalScale the checkpoint's {@code weight_global_scale}.
+     * @return bfloat16 {@code [.., N, K]}.
+     */
+    public static Tensor nvfp4Dequantize(Tensor packed, Tensor scale, float globalScale) {
+        return marlinFp8Result(Bindings.NVFP4_DEQUANTIZE, "smile_nvfp4_dequantize", packed.handle(), scale.handle(),
+                globalScale);
+    }
 
     private static final boolean FUSED_OPS_ENABLED = !"0".equals(System.getenv("SMILE_FUSED_OPS"));
 

@@ -58,6 +58,8 @@ import smile.llm.parallel.TensorShardSpec;
  * @param maxSeqLen              maximum sequence length.
  * @param weightMode             how linear weights are stored and multiplied (chosen by the loader,
  *                               not read from {@code config.json}).
+ * @param nvfp4Experts           whether the routed experts are NVFP4 ({@code moe_quant_algo} in the
+ *                               checkpoint's quantization config; chosen by the loader).
  *
  * @author Haifeng Li
  */
@@ -91,7 +93,8 @@ public record MiniMaxModelArgs(
         int numMtpModules,
         int maxBatchSize,
         int maxSeqLen,
-        MiniMaxWeightMode weightMode) {
+        MiniMaxWeightMode weightMode,
+        boolean nvfp4Experts) {
 
     /**
      * Returns whether a layer uses a mixture of experts.
@@ -157,7 +160,20 @@ public record MiniMaxModelArgs(
                 rotaryDim, denseIntermediateSize, expertIntermediateSize, sharedIntermediateSize, numExperts,
                 numExpertsPerTok, numSharedExperts, routedScalingFactor, swigluAlpha, swigluLimit, moeLayers,
                 sparseLayers, indexDim, numIndexHeads, topkBlocks, blockSize, initBlocks, localBlocks,
-                numMtpModules, maxBatchSize, maxSeqLen, mode);
+                numMtpModules, maxBatchSize, maxSeqLen, mode, nvfp4Experts);
+    }
+
+    /**
+     * Returns a copy that reads the routed experts as NVFP4.
+     *
+     * @return the new args.
+     */
+    public MiniMaxModelArgs withNvfp4Experts() {
+        return new MiniMaxModelArgs(dim, numLayers, numHeads, numKvHeads, headDim, vocabSize, normEps, ropeTheta,
+                rotaryDim, denseIntermediateSize, expertIntermediateSize, sharedIntermediateSize, numExperts,
+                numExpertsPerTok, numSharedExperts, routedScalingFactor, swigluAlpha, swigluLimit, moeLayers,
+                sparseLayers, indexDim, numIndexHeads, topkBlocks, blockSize, initBlocks, localBlocks,
+                numMtpModules, maxBatchSize, maxSeqLen, weightMode, true);
     }
 
     /**
@@ -184,6 +200,15 @@ public record MiniMaxModelArgs(
     public KvCacheLayout kvCacheLayout(TensorShardSpec shard) {
         int kvHeads = shard != null && shard.tpSize() > 1 ? shard.numKvHeads() : numKvHeads;
         return new KvCacheLayout(numLayers, kvHeads, headDim, maxBatchSize, maxSeqLen);
+    }
+
+    /**
+     * KV layout for a rank that works with {@code localKvHeads} of the KV heads.
+     * @param localKvHeads KV heads cached on this rank.
+     * @return cache layout for {@link smile.llm.cache.KvCachePool}.
+     */
+    public KvCacheLayout kvCacheLayout(int localKvHeads) {
+        return new KvCacheLayout(numLayers, localKvHeads, headDim, maxBatchSize, maxSeqLen);
     }
 
     private void checkLayer(int layerId) {
@@ -322,7 +347,8 @@ public record MiniMaxModelArgs(
                 text.has("num_mtp_modules") ? text.get("num_mtp_modules").asInt() : 0,
                 maxBatchSize,
                 resolveMaxSeqLen(text, maxSeqLen),
-                MiniMaxWeightMode.DENSE);
+                MiniMaxWeightMode.DENSE,
+                false);
     }
 
     /** Parses a 0/1 per-layer array; a missing node means every layer is {@code dflt}. */
