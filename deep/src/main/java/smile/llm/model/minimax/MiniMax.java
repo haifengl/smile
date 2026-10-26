@@ -1148,6 +1148,13 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                 throw new IOException("Unsupported quantization (quant_method=" + method
                         + "); only MXFP8 with 1x" + MxFp8.BLOCK + " blocks is supported");
             }
+            String expertAlgo = q.path("moe_quant_algo").asString("");
+            if (!expertAlgo.isEmpty() && !"NVFP4".equals(expertAlgo)) {
+                throw new IOException("Unsupported routed-expert quantization moe_quant_algo=" + expertAlgo);
+            }
+            if ("NVFP4".equals(expertAlgo) && q.path("group_size").asInt(0) != 16) {
+                throw new IOException("NVFP4 experts need group_size 16, got " + q.path("group_size"));
+            }
         }
 
         boolean cuda = devices != null;
@@ -1164,8 +1171,20 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             MiniMaxWeightMode mode = selectWeightMode(weightMode != null && !weightMode.isBlank() ? weightMode.trim().toLowerCase()
                             : System.getenv().getOrDefault("SMILE_MINIMAX_MXFP8", "auto"),
                     devices, computeDtype);
+            if ("NVFP4".equals(root.path("quantization_config").path("moe_quant_algo").asString(""))) {
+                // MXFP8 attention/dense layers + NVFP4 experts: both run through Marlin (weight-only, bfloat16 activations).
+                // SMILE_MINIMAX_MXFP8=dequant expands everything to bfloat16 (reference path, needs the memory).
+                if (mode != MiniMaxWeightMode.DENSE) {
+                    if (!(cuda && computeDtype == ScalarType.BFloat16
+                            && Native.marlinFp8Available() && Native.marlinMoeNvfp4Available())) {
+                        throw new IOException("NVFP4 experts need CUDA, bfloat16 and a libsmile_torch built with Marlin NVFP4");
+                    }
+                    mode = MiniMaxWeightMode.MARLIN;
+                }
+                args = args.withNvfp4Experts();
+            }
             args = args.withWeightMode(mode);
-            logger.info("MXFP8 checkpoint: weight mode {}", mode);
+            logger.info("MXFP8 checkpoint: weight mode {}{}", mode, args.nvfp4Experts() ? " with NVFP4 experts" : "");
         }
         MiniMaxTokenizer tokenizer = MiniMaxTokenizer.of(checkpointDir);
         if (tokenizer.size() > args.vocabSize()) {
@@ -1182,11 +1201,19 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         TensorParallelGroup group = cluster != null
                 ? new TensorParallelGroup(ParallelConfig.tensorParallel(devices), world, firstRank, cluster.uniqueId())
                 : (ranks > 1 ? new TensorParallelGroup(ParallelConfig.tensorParallel(devices)) : null);
+        // Tensor-parallel attention/FFN/vocabulary: the replicated weights of a big checkpoint (Flash: 16 GB per GPU) would
+        // not leave room next to its experts. auto = on for NVFP4 experts; SMILE_MINIMAX_TP=on|off forces it.
+        String tpRequest = System.getenv().getOrDefault("SMILE_MINIMAX_TP", "auto").trim().toLowerCase();
+        boolean tensorParallel = cluster == null && ranks > 1
+                && ("on".equals(tpRequest) || ("auto".equals(tpRequest) && args.nvfp4Experts()));
+        if (tensorParallel) {
+            logger.info("tensor-parallel attention, FFNs and vocabulary across {} ranks", ranks);
+        }
         MiniMaxModel[] networks = new MiniMaxModel[ranks];
         for (int r = 0; r < ranks; r++) {
             long t0 = System.currentTimeMillis();
             Device device = cuda ? Device.CUDA(devices[r]) : Device.CPU();
-            networks[r] = new MiniMaxModel(args, new MiniMaxShard(firstRank + r, world, device), group);
+            networks[r] = new MiniMaxModel(args, new MiniMaxShard(firstRank + r, world, device, tensorParallel), group);
             networks[r].to(device, computeDtype);
             logger.info("rank {}/{}: allocated {} layers ({} local experts) on {} in {} ms", firstRank + r, world,
                     args.numLayers(), networks[r].shard().localExperts(args.numExperts()), device,
@@ -1234,15 +1261,29 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         }
 
         // MSA index keys take extra bytes per token on top of K/V; shrink the pool's share so both fit.
-        double kvPerToken = 2.0 * args.numLayers() * args.numKvHeads() * args.headDim();
+        double kvPerToken = 2.0 * args.numLayers() * networks[0].shard().kvHeads(args.numKvHeads()) * args.headDim();
         double indexPerToken = (double) args.numSparseLayers() * args.numIndexKeyHeads() * args.indexDim();
-        double poolFraction = memFractionStatic * kvPerToken / (kvPerToken + indexPerToken);
+        double kvShare = kvPerToken / (kvPerToken + indexPerToken);
         for (MiniMaxModel network : networks) {
             Device device = network.device();
             device.emptyCache();
+            // The pool counts everything already on the device (weights, NCCL, context) against its budget, so give it
+            // the weights plus its share of what is left under the static fraction.
+            double poolFraction = memFractionStatic;
+            if (device.isCUDA()) {
+                long[] memInfo = Native.cudaMemGetInfo(device.index());
+                logger.info("rank {}: {} used of {} MiB before the KV pool", network.shard().rank(), (memInfo[1] - memInfo[0]) >> 20, memInfo[1] >> 20);
+            }
+            if (memFractionStatic > 0 && device.isCUDA()) {
+                long[] mem = Native.cudaMemGetInfo(device.index());
+                double used = (double) mem[1] - mem[0];
+                double room = Math.max(0.0, memFractionStatic * mem[1] - used);
+                poolFraction = (used + room * kvShare) / mem[1];
+            }
             KvCachePool pool = memFractionStatic > 0
-                    ? KvCachePool.allocate(args.kvCacheLayout(), device, computeDtype, poolFraction, pageSize)
-                    : KvCachePool.forTesting(args.kvCacheLayout(), device);
+                    ? KvCachePool.allocate(args.kvCacheLayout(network.shard().kvHeads(args.numKvHeads())), device, computeDtype,
+                            poolFraction, pageSize)
+                    : KvCachePool.forTesting(args.kvCacheLayout(network.shard().kvHeads(args.numKvHeads())), device);
             network.setKvCachePool(pool, false);
             network.eval();
         }
@@ -1400,16 +1441,26 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                 Map<String, Tensor> stateDict = new HashMap<>();
                 long staged = 0;
                 for (String hfName : keys) {
-                    if (hfName.endsWith(SCALE_SUFFIX)) {
-                        continue;  // consumed together with its weight
+                    if (hfName.endsWith(SCALE_SUFFIX) || hfName.endsWith(NVFP4_SIDECAR_SUFFIX)
+                            || hfName.endsWith(".input_global_scale")) {
+                        continue;  // consumed together with its weight (activations are not quantized here)
                     }
                     Tensor src = st.tensors().get(hfName);
                     if (src == null) {
                         throw new IOException("Tensor '" + hfName + "' missing from " + shard);
                     }
+                    if (hfName.endsWith(NVFP4_WEIGHT_SUFFIX)) {
+                        loadNvfp4Expert(network, st, hfName, shard, target);
+                        loaded.add(MiniMaxWeightNames.remap(hfName.substring(0, hfName.length() - "_packed".length())));
+                        continue;
+                    }
                     String smileName = MiniMaxWeightNames.remap(hfName);
                     Tensor onDevice;
                     Tensor scaleCpu = hfName.endsWith(".weight") ? st.tensors().get(hfName + "_scale_inv") : null;
+                    if (rank.tp()) {
+                        src = tpSlice(rank, args, smileName, src, false);
+                        scaleCpu = scaleCpu == null ? null : tpSlice(rank, args, smileName, scaleCpu, true);
+                    }
                     if (scaleCpu != null && args.weightMode().quantized()) {
                         // FP8-resident: hand the raw FP8 bytes and E8M0 scales to the Marlin layer.
                         Tensor fp8 = src.to(target);
@@ -1510,17 +1561,102 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         }
     }
 
+    private static final java.util.regex.Pattern TP_COLUMN = java.util.regex.Pattern.compile(
+            "^(layers\\.\\d+\\.(mlp|moe\\.shared_experts)\\.w[13]|embed_tokens|lm_head)\\.weight$");
+    private static final java.util.regex.Pattern TP_ROW = java.util.regex.Pattern.compile(
+            "^layers\\.\\d+\\.(mlp|moe\\.shared_experts)\\.w2\\.weight$");
+
+    /**
+     * Returns the part of a replicated weight (or of its MXFP8 scale, {@code scale}) that a tensor-parallel rank keeps:
+     * query heads, this rank's KV head and its index-query group, the matching columns of the output projection, a
+     * slice of every dense/shared FFN, and a slice of the vocabulary for the embedding and the output head. Other
+     * tensors (norms, the router, the index-key projection) are returned whole.
+     */
+    private static Tensor tpSlice(MiniMaxShard rank, MiniMaxModelArgs args, String name, Tensor t, boolean scale) {
+        int dim;
+        int start;
+        int len;
+        int hd = args.headDim();
+        if (name.endsWith(".self_attn.q_proj.weight")) {
+            dim = 0;
+            start = rank.partStart(args.numHeads()) * hd;
+            len = rank.part(args.numHeads()) * hd;
+        } else if (name.endsWith(".self_attn.k_proj.weight") || name.endsWith(".self_attn.v_proj.weight")) {
+            dim = 0;
+            start = rank.kvStart(args.numKvHeads()) * hd;
+            len = rank.kvHeads(args.numKvHeads()) * hd;
+        } else if (name.endsWith(".self_attn.o_proj.weight")) {
+            dim = 1;
+            start = rank.partStart(args.numHeads()) * hd;
+            len = rank.part(args.numHeads()) * hd;
+        } else if (name.endsWith(".self_attn.index_q_proj.weight")) {
+            dim = 0;
+            start = rank.kvStart(args.numKvHeads()) * args.indexDim();
+            len = rank.kvHeads(args.numKvHeads()) * args.indexDim();
+        } else if (TP_COLUMN.matcher(name).matches()) {
+            dim = 0;
+            len = rank.part((int) t.shape()[0]);
+            start = rank.partStart((int) t.shape()[0]);
+        } else if (TP_ROW.matcher(name).matches()) {
+            int cols = (int) t.shape()[1] * (scale ? MxFp8.BLOCK : 1);
+            dim = 1;
+            len = rank.part(cols);
+            start = rank.partStart(cols);
+        } else {
+            return t;
+        }
+        if (scale && dim == 1) {
+            start /= MxFp8.BLOCK;
+            len /= MxFp8.BLOCK;
+        }
+        try (var range = smile.deep.tensor.Index.slice(start, start + len)) {
+            Tensor part = dim == 0 ? t.get(range, smile.deep.tensor.Index.Ellipsis) : t.get(smile.deep.tensor.Index.Ellipsis, range);
+            return part.contiguous();
+        }
+    }
+
     /** Elements staged on the device before they are copied into the model (about 0.5 GB in bf16). */
     private static final long LOAD_BATCH_ELEMENTS = 256L << 20;
 
     private static final String SCALE_SUFFIX = ".weight_scale_inv";
 
+    /** NVFP4 expert tensors: the packed weight, and its block-scale and global-scale sidecars. */
+    private static final String NVFP4_WEIGHT_SUFFIX = ".weight_packed";
+    private static final String NVFP4_SIDECAR_SUFFIX = ".weight_scale";
+    private static final String NVFP4_GLOBAL_SUFFIX = ".weight_global_scale";
+
+    /** Hands one NVFP4 routed-expert projection (packed nibbles, E4M3 group-16 scales, global scale) to its MoE layer. */
+    private static void loadNvfp4Expert(MiniMaxModel network, SafeTensors st, String hfName, String shard,
+                                        Device target) throws IOException {
+        String stem = hfName.substring(0, hfName.length() - NVFP4_WEIGHT_SUFFIX.length());
+        Tensor packed = st.tensors().get(hfName);
+        Tensor scale = st.tensors().get(stem + NVFP4_SIDECAR_SUFFIX);
+        Tensor global = st.tensors().get(stem + NVFP4_GLOBAL_SUFFIX);
+        if (scale == null || global == null) {
+            throw new IOException("NVFP4 expert '" + stem + "' lacks its scales in " + shard);
+        }
+        var em = EXPERT.matcher(MiniMaxWeightNames.remap(stem + ".weight"));
+        if (!em.matches()) {
+            throw new IOException("Unexpected NVFP4 tensor " + hfName);
+        }
+        MiniMaxMoE moe = network.layers().get(Integer.parseInt(em.group(1))).moe();
+        Tensor packedDev = packed.to(target);
+        Tensor scaleDev = scale.to(target);
+        try {
+            moe.loadExpertNvfp4(Integer.parseInt(em.group(3)), Integer.parseInt(em.group(2)) - moe.expertStart(),
+                    packedDev, scaleDev, global.to(Device.CPU(), ScalarType.Float).floatArray()[0]);
+        } finally {
+            if (packedDev != packed) packedDev.close();
+            if (scaleDev != scale) scaleDev.close();
+        }
+    }
+
     private static final java.util.regex.Pattern EXPERT =
             java.util.regex.Pattern.compile("^layers\\.(\\d+)\\.moe\\.experts\\.(\\d+)\\.w([123])\\.weight$");
 
     /** Expert weight or its scale sidecar; used to skip tensors owned by other ranks. */
-    private static final java.util.regex.Pattern EXPERT_KEY =
-            java.util.regex.Pattern.compile("^layers\\.(\\d+)\\.moe\\.experts\\.(\\d+)\\.w([123])\\.weight(_scale_inv)?$");
+    private static final java.util.regex.Pattern EXPERT_KEY = java.util.regex.Pattern.compile(
+            "^layers\\.(\\d+)\\.moe\\.experts\\.(\\d+)\\.w([123])\\.(weight(_scale_inv|_packed|_scale|_global_scale)?|input_global_scale)$");
 
     private static final java.util.regex.Pattern ROUTER =
             java.util.regex.Pattern.compile("^layers\\.(\\d+)\\.moe\\.(gate\\.weight|e_score_correction_bias)$");

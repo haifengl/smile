@@ -88,6 +88,17 @@ QUANT_CONFIGS = [
     },
 ]
 
+# SMILE: NVFP4 (FP4 E2M1 weights, FP8 E4M3 scales per 16 elements plus one float32 global scale per expert, bfloat16
+# activations) for the MiniMax-M3.1-Flash routed experts. Only the MoE kernel set needs it.
+NVFP4_CONFIG = {
+    "a_type": ["kBFloat16"],
+    "b_type": "kFE2M1f",
+    "s_type": "kFE4M3fn",
+    "thread_configs": THREAD_CONFIGS,
+    "thread_m_blocks": THREAD_M_BLOCKS,
+    "group_blocks": [1],
+}
+
 # Kernels are written next to the kernel.h / marlin_template.h they include.
 OUTPUT_DIR = sys.argv[2] if len(sys.argv) > 2 else os.path.dirname(__file__)
 
@@ -104,7 +115,13 @@ def generate_new_kernels():
     result_dict = {}
     sm_75_result_dict = {}
 
-    for quant_config in QUANT_CONFIGS:
+    # The MoE kernel set is MXFP8 (MiniMax) plus NVFP4; the Qwen block-FP8 kernels exist only for the dense GEMM.
+    if "moe" in os.path.basename(os.path.abspath(OUTPUT_DIR)):
+        configs = [c for c in QUANT_CONFIGS if c.get("s_type") == "kFE8M0fnu"] + [NVFP4_CONFIG]
+    else:
+        configs = list(QUANT_CONFIGS)
+
+    for quant_config in configs:
         c_types = quant_config.get("c_type", ["kFloat16", "kBFloat16"])
         a_types = quant_config.get("a_type", ["kFloat16", "kBFloat16"])
         b_type = quant_config["b_type"]

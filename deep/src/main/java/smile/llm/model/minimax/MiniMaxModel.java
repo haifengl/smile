@@ -54,6 +54,8 @@ public class MiniMaxModel extends LayerBlock {
     final List<MiniMaxBlock> layers = new ArrayList<>();
     final QwenRMSNorm norm;
     final LinearLayer lmHead;
+    /** Non-null when the embedding and the output head are split by vocabulary across ranks. */
+    private final smile.llm.parallel.TensorParallelGroup group;
     PartialRotaryEncoding.CosSin rope;
     KvCachePool kvCachePool;
     MiniMaxIndexCache indexCache;
@@ -78,7 +80,8 @@ public class MiniMaxModel extends LayerBlock {
         super();
         this.params = args;
         this.shard = shard;
-        this.tokEmbeddings = new EmbeddingLayer(args.vocabSize(), args.dim());
+        this.group = shard.tp() ? group : null;
+        this.tokEmbeddings = new EmbeddingLayer(shard.part(args.vocabSize()), args.dim());
         MemorySegment list = smile_module_list_create();
         for (int i = 0; i < args.numLayers(); i++) {
             MiniMaxBlock block = new MiniMaxBlock(i, args, shard, group);
@@ -86,7 +89,7 @@ public class MiniMaxModel extends LayerBlock {
             smile_module_list_push_back(list, block.module);
         }
         this.norm = new QwenRMSNorm(args.dim(), args.normEps());
-        this.lmHead = new LinearLayer(args.dim(), args.vocabSize(), false);
+        this.lmHead = new LinearLayer(args.dim(), shard.part(args.vocabSize()), false);
         this.rope = PartialRotaryEncoding.computeCosSin(
                 args.rotaryDim(), args.maxSeqLen() * 2, args.ropeTheta());
 
@@ -246,7 +249,7 @@ public class MiniMaxModel extends LayerBlock {
         try (var window = Index.slice(startPos, startPos + seqlen)) {
             Tensor cos = rope.cos().get(window);
             Tensor sin = rope.sin().get(window);
-            Tensor h = tokEmbeddings.forward(tokens);
+            Tensor h = embed(tokens);
             if (rows != null && rows.length > 0) {
                 long[] shape = h.shape();
                 Tensor flat = h.reshape(-1, shape[shape.length - 1]);
@@ -284,7 +287,7 @@ public class MiniMaxModel extends LayerBlock {
         try {
             Tensor cos = PartialRotaryEncoding.gather(rope.cos(), positions);
             Tensor sin = PartialRotaryEncoding.gather(rope.sin(), positions);
-            Tensor h = tokEmbeddings.forward(tokens);
+            Tensor h = embed(tokens);
             Tensor logits = run(h, positions, cos, sin, null, false);
             logits.promoteToParent();
             return logits;
@@ -492,7 +495,7 @@ public class MiniMaxModel extends LayerBlock {
                     new MiniMaxStep.External(pos, write, read, e.keyPos, e.length));
             Tensor cos = rope.cos().get(pos).unsqueeze(1);
             Tensor sin = rope.sin().get(pos).unsqueeze(1);
-            Tensor h = tokEmbeddings.forward(tokens);
+            Tensor h = embed(tokens);
             Tensor logits = run(h, positions, cos, sin, null, false);
             logits.promoteToParent();
             return logits;
@@ -509,6 +512,42 @@ public class MiniMaxModel extends LayerBlock {
         return forward(tokens, 0, false);
     }
 
+    /**
+     * Looks up the token embeddings. With a vocabulary-split embedding every rank looks up the tokens in its own
+     * slice (others contribute zeros) and the slices are summed across ranks.
+     */
+    private Tensor embed(Tensor tokens) {
+        if (group == null) {
+            return tokEmbeddings.forward(tokens);
+        }
+        int local = shard.part(params.vocabSize());
+        // Token ids are far below 2^24, so float arithmetic is exact and keeps host tensors out of CUDA-graph capture.
+        Tensor index = tokens.to(ScalarType.Float).sub((double) shard.partStart(params.vocabSize()));
+        Tensor valid = index.ge(0).and(index.lt(local));
+        Tensor rows = tokEmbeddings.forward(index.clamp(0, local - 1).to(ScalarType.Int64));
+        Tensor out = rows.mul(valid.to(rows.dtype()).unsqueeze(-1));
+        group.allReduceSumInPlace(shard.rank(), out);
+        return out;
+    }
+
+    /** Output head: the full-vocabulary logits (a vocabulary-split head is gathered across ranks). */
+    private Tensor project(Tensor hidden) {
+        Tensor local = lmHead.forward(hidden);
+        if (group == null) {
+            return local;
+        }
+        long[] shape = local.shape();
+        int vocab = params.vocabSize();
+        shape[shape.length - 1] = vocab;
+        Tensor full = Tensor.zeros(new Tensor.Options().device(local.device()).dtype(local.dtype()).requireGradients(false), shape);
+        try (var cols = Index.slice(shard.partStart(vocab), shard.partStart(vocab) + shard.part(vocab));
+             Tensor slot = full.get(Index.Ellipsis, cols)) {
+            smile.torch.Native.copy_(slot, local);
+        }
+        group.allReduceSumInPlace(shard.rank(), full);
+        return full;
+    }
+
     private Tensor run(Tensor h, int[] positions, Tensor cos, Tensor sin, Tensor mask,
                        boolean allTokenLogits) {
         for (MiniMaxBlock layer : layers) {
@@ -520,10 +559,10 @@ public class MiniMaxModel extends LayerBlock {
         if (!allTokenLogits && seqlen > 1) {
             try (var last = Index.of(-1)) {
                 Tensor lastRow = normalized.get(Index.Colon, last).unsqueeze(1);
-                logits = lmHead.forward(lastRow);
+                logits = project(lastRow);
             }
         } else {
-            logits = lmHead.forward(normalized);
+            logits = project(normalized);
         }
         return logits.to(ScalarType.Float);
     }
