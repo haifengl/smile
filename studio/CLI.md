@@ -36,6 +36,9 @@ the launcher routes to one of:
 6. [Batch Prediction (`smile predict`)](#6-batch-prediction-smile-predict)
 7. [Online Serving (`smile serve`)](#7-online-serving-smile-serve)
 8. [Supported File Formats](#8-supported-file-formats)
+   - 8.1 [Supported Extensions & Default Behavior](#81-supported-extensions--default-behavior)
+   - 8.2 [Format Options by File Type (`--format`)](#82-format-options-by-file-type---format)
+   - 8.3 [Quoting `--format` and `--formula` on the Command Line](#83-quoting---format-and---formula-on-the-command-line)
 9. [JVM Tuning (`conf/smile.ini`)](#9-jvm-tuning-confsmileini)
 10. [Tutorials](#10-tutorials)
     - 10.1 [End-to-end: Iris Classification](#101-end-to-end-iris-classification)
@@ -1004,24 +1007,90 @@ curl -X POST http://localhost:8888/api/v1/chat/completions \
 
 ## 8. Supported File Formats
 
-`smile train` and `smile predict` use `smile.io.Read.data()` to load data.
-The format is auto-detected from the file extension; you can override it with
-`--format`.
+`smile train` and `smile predict` use `smile.io.Read.data(path, format)` to load data.
+The format is auto-detected from the file extension (or defaults to CSV if the path has no extension); you can customize or override it with `--format`.
 
-| Extension / Format | Description |
+### 8.1 Supported Extensions & Default Behavior
+
+| Extension | Format | Default Behavior (when `--format` is omitted) |
+|---|---|---|
+| `.arff` | Weka ARFF | Reads schema (column types, nominal levels) and data from the ARFF header |
+| `.csv`, `.txt`, `.dat` | Delimited text (CSV) | Comma-delimited (`,`), **no header row** (`V1`, `V2`, … column names), schema inferred from the first 1,000 rows |
+| `.tsv` | Tab-separated values | Tab-delimited (`\t`) **with header row** (`delimiter=\t,header=true`) |
+| `.json`, `.jsonl` | JSON / JSON Lines | Single-line mode (`SINGLE_LINE` — one flat JSON object per line), schema inferred from the first 1,000 objects |
+| `.parquet` | Apache Parquet | Columnar format with embedded schema |
+| `.avro` | Apache Avro | Uses the writer schema embedded in the Avro container file |
+| `.arrow`, `.feather` | Apache Arrow IPC / Feather | Columnar format with embedded schema |
+| `.sas`, `.sas7bdat` | SAS data file | Reads SAS7BDAT metadata and records |
+| *(other)* | Custom extension | Requires `--format csv` or `--format "csv,<options>"` to parse as CSV |
+
+**ARFF is recommended** for training data when available because it carries full schema
+information (column types and nominal class levels), which eliminates the need to
+specify `--formula` or format options manually.
+
+### 8.2 Format Options by File Type (`--format`)
+
+The value of `--format` depends on the file type being read:
+
+#### CSV / Delimited Text (`.csv`, `.tsv`, `.txt`, `.dat`, or unrecognised extensions)
+
+For CSV and delimited text files, `--format` accepts a comma-separated list of `key=value` pairs:
+
+| Option Key | Value | Description |
+|---|---|---|
+| `header` | `true` | Use the first row as column names and skip it from data records |
+| `header` | `col1\|col2\|…` | Explicit pipe-separated column names (the first row is **not** skipped) |
+| `delimiter` | `<char>` | Field delimiter character (default `,`). Standard escape sequences such as `\t` are unescaped |
+| `quote` | `<char>` | Character used to encapsulate fields containing special characters (default `"`) |
+| `escape` | `<char>` | Character used to escape special characters inside fields (e.g. `\`) |
+| `comment` | `<char>` | Comment marker at the start of a line (e.g. `#` or `%`); matching lines are ignored |
+
+If a file has a non-standard extension (e.g. `data.raw`), prefix the format string with `csv`:
+- `--format csv` — read as default CSV (comma-delimited, no header)
+- `--format "csv,header=true,delimiter=\t"` — read as CSV with custom options
+
+#### JSON (`.json`, `.jsonl`)
+
+For JSON files, `--format` specifies the JSON parsing mode (case-insensitive):
+
+| Value | Description |
 |---|---|
-| `.arff` | Weka ARFF (with schema, nominal attributes) |
-| `.csv` | Comma-separated values (header row expected) |
-| `.tsv` / `.txt` | Tab-separated values |
-| `.json` | JSON array of objects |
-| `.parquet` | Apache Parquet (column-store) |
-| `.avro` | Apache Avro |
-| `.sas7bdat` | SAS data file |
-| SQLite URL | `jdbc:sqlite:<path>` — full SQL support via `smile shell` |
+| `SINGLE_LINE` (or `single-line`, `single`) | **Default.** JSON Lines format — one flat JSON object per line |
+| `MULTI_LINE` (or `multi-line`, `multi`) | Multi-line JSON array — the file contains a JSON array `[{...}, {...}]` where objects may span multiple lines |
 
-**ARFF is recommended** for training data because it carries full schema
-information (column types, nominal levels) which eliminates the need to
-specify `--formula` manually.
+#### Apache Avro (`.avro`)
+
+| Value | Description |
+|---|---|
+| `<schema-path>` | Path to an external Avro schema file (`.avsc`). If `--format` is omitted, SMILE uses the writer schema embedded in the `.avro` file |
+
+#### Other Formats (`.arff`, `.parquet`, `.arrow`, `.feather`, `.sas`, `.sas7bdat`)
+
+These formats are self-describing and ignore the `--format` option.
+
+### 8.3 Quoting `--format` and `--formula` on the Command Line
+
+Passing `--format` (or `--formula`) values that contain `=`, spaces, or commas requires care because the launcher script (`smile` / `smile.bat`) and the Windows/JVM argument parser strip outer unescaped double quotes before forwarding arguments to `smile.Main`. If outer quotes are stripped, a value such as `header=true,delimiter=\t` or `species ~ .` can be split or misinterpreted by the launcher or Picocli.
+
+To ensure the entire value reaches Picocli intact as a single string argument, **escape inner double quotes** according to your shell:
+
+**Windows PowerShell** — use the backtick (`` ` ``) to escape inner double quotes:
+
+```powershell
+smile train -d data/iris.csv --format "`"header=true`"" --formula "species ~ ." -m model/iris_kmeans.sml kmeans -k 3
+
+# Multiple CSV format options
+smile train -d data/prostate.csv --format "`"header=true,delimiter=\t`"" --formula "lpsa ~ ." -m model/prostate_ols.sml ols
+```
+
+**Windows Command Prompt (`cmd.exe`) or Bash / Zsh** — escape the inner double quotes with a backslash (`\"`):
+
+```bash
+smile train -d data/iris.csv --format "\"header=true\"" --formula "species ~ ." -m model/iris_kmeans.sml kmeans -k 3
+
+# Multiple CSV format options
+smile train -d data/prostate.csv --format "\"header=true,delimiter=\t\"" --formula "lpsa ~ ." -m model/prostate_ols.sml ols
+```
 
 ---
 
