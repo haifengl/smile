@@ -12,6 +12,7 @@ the launcher routes to one of:
 | `smile train …` | **Train** a supervised learning model     |
 | `smile predict …` | **Predict** on a file using a saved model             |
 | `smile serve …` | **Serve** a saved model as an HTTP prediction service |
+| `smile hub …` | Start the always-on **Agent Hub & Bot** service ([BOT.md](BOT.md)) |
 
 ---
 
