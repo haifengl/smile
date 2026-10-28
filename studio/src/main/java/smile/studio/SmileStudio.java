@@ -483,6 +483,16 @@ public class SmileStudio extends JFrame implements SearchListener {
     private void setFrameIcon() {
         frameIcons = loadFrameIcons(SmileStudio.class, "images/smile.png");
         if (frameIcons != null) {
+            try {
+                if (Taskbar.isTaskbarSupported()) {
+                    Taskbar taskbar = Taskbar.getTaskbar();
+                    if (taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) {
+                        taskbar.setIconImage(frameIcons);
+                    }
+                }
+            } catch (UnsupportedOperationException | SecurityException e) {
+                logger.warn("Taskbar icon setting not supported on this platform.");
+            }
             setIconImage(frameIcons);
         }
     }
