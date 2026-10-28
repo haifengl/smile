@@ -159,7 +159,8 @@ libraryDependencies ++= Seq(
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "com.github.serpapi"          % "serpapi-java" % "1.2.0",
   "com.google.code.gson"        % "gson"         % "2.14.0", // evict older version used by serpapi
-  "photos.sluice"               % "secret-store" % "1.0.1"
+  "photos.sluice"               % "secret-store" % "1.0.1",
+  "org.eclipse.angus"           % "angus-mail"   % "2.0.3"
 )
 
 // Kotlin scripting host, required at runtime by KotlinKernel. The kotlin

@@ -27,6 +27,7 @@ import javax.swing.table.DefaultTableModel;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.bot.BotsConfig;
 import ioa.agent.bot.ProjectsConfig;
+import ioa.agent.email.EmailConfig;
 import smile.studio.LlmServices;
 import smile.studio.SmileStudio;
 import smile.studio.workspace.HubManager;
@@ -66,7 +67,7 @@ public class BotManagerDialog extends JDialog {
     private final JComboBox<String> missedFireCombo = new JComboBox<>(new String[]{
             "FIRE_ONCE", "SKIP"
     });
-    private final JTextField endpointField = new JTextField(24);
+    private final JComboBox<String> endpointCombo = new JComboBox<>();
     private final JTextField quietStartField = new JTextField(8);
     private final JTextField quietEndField = new JTextField(8);
     private final JSpinner settleSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 3600, 5));
@@ -133,6 +134,7 @@ public class BotManagerDialog extends JDialog {
         setLayout(new BorderLayout(8, 8));
 
         populateModelCombo();
+        populateEndpointCombo();
         initComponents();
         reloadFromConfig(initialRoutineId);
     }
@@ -143,6 +145,18 @@ public class BotManagerDialog extends JDialog {
         modelCombo.addItem(DEFAULT_MODEL_CHOICE);
         for (LlmServices.AvailableModel m : SmileStudio.llmServices().availableModels()) {
             modelCombo.addItem(m.model().id());
+        }
+    }
+
+    private void populateEndpointCombo() {
+        endpointCombo.removeAllItems();
+        endpointCombo.setEditable(true);
+        endpointCombo.addItem("inbox");
+        for (EmailConfig.AccountSpec acc : EmailConfig.load().accounts()) {
+            endpointCombo.addItem("account:" + acc.id());
+            if (!acc.emailAddress().isEmpty()) {
+                endpointCombo.addItem(acc.emailAddress());
+            }
         }
     }
 
@@ -225,7 +239,7 @@ public class BotManagerDialog extends JDialog {
         addSectionHeader(form, gbc, row++, "Trigger & Schedule");
         addFormRow(form, gbc, row++, "Source:", sourceCombo, "Missed-Fire Policy:", missedFireCombo);
         addFormRow(form, gbc, row++, "Cron (5-field):", cronField, "Interval (sec):", intervalSpinner);
-        addSingleRow(form, gbc, row++, "Mailbox / Feed URL / Path:", endpointField);
+        addSingleRow(form, gbc, row++, "Mailbox / Feed URL / Path:", endpointCombo);
         addFormRow(form, gbc, row++, "Quiet Start (HH:mm):", quietStartField, "Quiet End (HH:mm):", quietEndField);
         addFormRow(form, gbc, row++, "Settle (sec):", settleSpinner, "Max Turns / Hour:", maxTurnsSpinner);
 
@@ -401,7 +415,7 @@ public class BotManagerDialog extends JDialog {
         if (t.mailbox() != null && !t.mailbox().isBlank()) endpoint = t.mailbox();
         else if (t.calendarUrl() != null && !t.calendarUrl().isBlank()) endpoint = t.calendarUrl();
         else if (t.path() != null && !t.path().isBlank()) endpoint = t.path();
-        endpointField.setText(endpoint);
+        endpointCombo.setSelectedItem(endpoint);
 
         quietStartField.setText(t.quietStart() == null ? "" : t.quietStart());
         quietEndField.setText(t.quietEnd() == null ? "" : t.quietEnd());
@@ -431,7 +445,7 @@ public class BotManagerDialog extends JDialog {
         sourceCombo.setSelectedItem("timer");
         cronField.setText("0 9 * * MON-FRI");
         intervalSpinner.setValue(0);
-        endpointField.setText("");
+        endpointCombo.setSelectedItem("");
         workflowKindCombo.setSelectedItem(BotsConfig.WorkflowKind.PROMPT);
         workflowTargetField.setText("Summarize key updates and stage any outbound actions for approval.");
         instructionsArea.setText("");
@@ -467,7 +481,8 @@ public class BotManagerDialog extends JDialog {
         String cron = cronField.getText().trim();
         long interval = ((Number) intervalSpinner.getValue()).longValue();
         String missed = String.valueOf(missedFireCombo.getSelectedItem());
-        String ep = endpointField.getText().trim();
+        Object epItem = endpointCombo.getSelectedItem();
+        String ep = epItem == null ? "" : epItem.toString().trim();
 
         String mailbox = "email".equals(source) ? ep : null;
         String calUrl = "calendar".equals(source) ? ep : null;

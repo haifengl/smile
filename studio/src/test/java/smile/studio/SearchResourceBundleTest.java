@@ -53,11 +53,16 @@ public class SearchResourceBundleTest {
     private static final List<String> SCALA_KERNEL_KEYS = List.of(
             "ScalaCliInstallTitle", "ScalaCliInstallMessage");
 
-    /** Keys the Settings dialog reads at runtime, including SecretStore status keys. */
+    /** Keys the Settings dialog reads at runtime, including SecretStore and Email Account status keys. */
     private static final List<String> SETTINGS_DIALOG_KEYS = List.of(
             "Title", "OK", "Cancel", "Theme", "Service", "APIKey", "BaseUrl", "Model",
             "Project", "Location", "StatusInEnvironment", "StatusInKeyring", "StatusInFile",
-            "StatusAbsentKeyring", "StatusAbsentFile", "StatusUnavailable", "SecretSaveError");
+            "StatusAbsentKeyring", "StatusAbsentFile", "StatusUnavailable", "SecretSaveError",
+            "TabGeneralAI", "TabEmailAccounts", "EmailAccount", "EmailAdd", "EmailRemove",
+            "EmailDefault", "EmailEnabled", "EmailAccountId", "EmailDisplayName", "EmailAddress",
+            "EmailProvider", "EmailPollInterval", "EmailFolder", "EmailClientId", "EmailTenantId",
+            "EmailImapHost", "EmailImapPort", "EmailSmtpHost", "EmailSmtpPort", "EmailStartTls",
+            "EmailSecret", "EmailOAuthSignIn", "EmailTestConnection", "EmailTestSuccess", "EmailTestFailure");
 
     @Test
     public void testBaseBundleHasSearchKeys() {
