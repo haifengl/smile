@@ -27,6 +27,7 @@ jsonschema-swagger = { module = "com.github.victools:jsonschema-module-swagger-2
 sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.53.4.0" }
 swingx = { module = "org.swinglabs:swingx", version = "1.6.1" }
 secret-store = { module = "photos.sluice:secret-store", version = "1.0.1" }
+angus-mail = { module = "org.eclipse.angus:angus-mail", version = "2.0.3" }
 spark-core = { module = "org.apache.spark:spark-core_2.13", version.ref = "spark" }
 spark-sql = { module = "org.apache.spark:spark-sql_2.13", version.ref = "spark" }
 spark-mllib = { module = "org.apache.spark:spark-mllib_2.13", version.ref = "spark" }

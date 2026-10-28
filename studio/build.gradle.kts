@@ -40,6 +40,7 @@ dependencies {
     implementation("com.github.serpapi:serpapi-java:1.2.0")
     implementation("com.google.code.gson:gson:2.14.0") // evict older version used by serpapi
     implementation(libs.secret.store)
+    implementation(libs.angus.mail)
 
     implementation(libs.avro) {
         exclude(group = "org.slf4j", module = "slf4j-log4j12")
