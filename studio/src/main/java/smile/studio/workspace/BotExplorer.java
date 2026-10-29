@@ -25,6 +25,8 @@ import java.util.ResourceBundle;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.tree.*;
+import ioa.agent.Agent;
+import ioa.agent.AgentCatalog;
 import ioa.agent.bot.BotsConfig;
 
 /**
@@ -40,12 +42,42 @@ public class BotExplorer extends JPanel {
     private final DefaultMutableTreeNode root = new DefaultMutableTreeNode(bundle.getString("Root"));
 
     /** User object for a Bot persona tree node under {@link #root}. */
-    public record BotTreeItem(BotsConfig.BotSpec bot) {
+    public record BotTreeItem(BotsConfig.BotSpec bot, String title) {
+        public BotTreeItem(BotsConfig.BotSpec bot) {
+            this(bot, resolveBotTitle(bot));
+        }
+
         @Override
         public String toString() {
-            String prefix = "*".equals(bot.persona()) ? "★ " : "@";
-            return prefix + bot.botId() + " (" + bot.name() + ")";
+            return title;
         }
+    }
+
+    /**
+     * Resolves the display title for a {@link BotsConfig.BotSpec} from the target
+     * agent's {@code AGENT.md} specification when available.
+     */
+    static String resolveBotTitle(BotsConfig.BotSpec bot) {
+        String persona = bot.persona();
+        if ("*".equals(persona)) {
+            return "★ " + bot.name();
+        }
+        try {
+            return Agent.Spec.of(persona).title();
+        } catch (Exception ignored) {
+            try {
+                for (AgentCatalog.Entry entry : AgentCatalog.load()) {
+                    if (entry.spec().callName().equalsIgnoreCase(persona)
+                            || entry.spec().callName().equalsIgnoreCase(bot.botId())
+                            || entry.name().equalsIgnoreCase(bot.botId())) {
+                        return entry.spec().title();
+                    }
+                }
+            } catch (Exception ignored2) {
+                // fall back to bot.name()
+            }
+        }
+        return bot.name();
     }
 
     /** User object for a Routine tree node under a {@link BotTreeItem}. */
@@ -85,6 +117,7 @@ public class BotExplorer extends JPanel {
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
                 Object object = node.getUserObject();
                 if (object instanceof BotTreeItem botItem) {
+                    setIcon(null);
                     setText(botItem.toString());
                     setToolTipText(botItem.bot().description());
                 } else if (object instanceof RoutineTreeItem routineItem) {
