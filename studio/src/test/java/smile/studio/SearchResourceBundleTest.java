@@ -49,7 +49,7 @@ public class SearchResourceBundleTest {
     private static final List<String> REQUIRED_KEYS = List.of(
             "FindMenu", "Search", "NoActiveFile", "Find", "Replace",
             "AgentHub", "StartAgentHub", "StopAgentHub", "RestartAgentHub",
-            "ConfigureBots", "BotWorkspace", "AgentHubNotRunning",
+            "ConfigureBots", "BotActivity", "AgentHubNotRunning",
             "AgentHubStarted", "AgentHubStopped", "AgentHubStartFailed");
 
     /** Keys the Scala kernel reads when it fails to start scala-cli. */

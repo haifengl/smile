@@ -47,7 +47,7 @@ import smile.studio.workspace.HubManager;
  *
  * @author Haifeng Li
  */
-public class BotActivityDialog extends JPanel {
+public class BotActivity extends JPanel {
     private final JLabel hubStatusLabel = new JLabel("Checking Agent Hub…");
     private final JTabbedPane tabs = new JTabbedPane();
 
@@ -95,7 +95,7 @@ public class BotActivityDialog extends JPanel {
      *
      * @param initialTab initial tab index (`0` = Approvals, `1` = Runs, `2` = Pages).
      */
-    public BotActivityDialog(int initialTab) {
+    public BotActivity(int initialTab) {
         super(new BorderLayout(8, 8));
 
         initTopBar();
