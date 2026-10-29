@@ -194,6 +194,13 @@ class EmailOAuthAndSettingsTest {
 
         SharedSecrets.deleteEmailSecret(secrets, "hotmail-personal");
         assertTrue(SharedSecrets.resolveEmailSecret(secrets, "hotmail-personal").isEmpty());
+
+        // Regression test: account IDs with dots/@ (e.g. haifeng.li@aihalo.dev) save without IllegalArgumentException
+        assertTrue(SharedSecrets.saveEmailSecret(secrets, "haifeng.li@aihalo.dev", "dot-secret-token"));
+        assertEquals(
+                Optional.of("dot-secret-token"),
+                SharedSecrets.resolveEmailSecret(secrets, "haifeng.li@aihalo.dev")
+        );
     }
 
     private static Map<String, String> parseQuery(String rawQuery) {

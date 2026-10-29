@@ -543,12 +543,18 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
     private EmailConfig.AccountSpec buildSpecFromEmailForm() {
         String id = emailIdField.getText().trim();
+        String addr = emailAddressField.getText().trim();
+        if (id.isEmpty() && !addr.isEmpty()) {
+            id = addr.toLowerCase(Locale.ROOT)
+                    .replaceAll("[^a-z0-9]+", "-")
+                    .replaceAll("^-+|-+$", "");
+            emailIdField.setText(id);
+        }
         if (id.isEmpty()) {
             return null;
         }
         EmailConfig.Provider provider = (EmailConfig.Provider) emailProviderCombo.getSelectedItem();
         String display = emailNameField.getText().trim();
-        String addr = emailAddressField.getText().trim();
         int pollSec = ((Number) emailPollSpinner.getValue()).intValue();
         String folder = emailFolderField.getText().trim();
         String clientId = emailClientIdField.getText().trim();
