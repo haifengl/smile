@@ -107,4 +107,16 @@ public class HubClientAndConfigTest {
             }
         }
     }
+
+    @Test
+    public void testBotTreeItemUsesAgentNativeTitleFromAgentMd() {
+        BotsConfig cfg = BotsConfig.defaultConfig();
+        List<String> titles = cfg.bots().stream()
+                .map(b -> new BotExplorer.BotTreeItem(b).toString())
+                .toList();
+        assertTrue(titles.contains("★ Daily Memory Logger"));
+        assertTrue(titles.contains("👔 Frank the Chief of Staff"));
+        assertTrue(titles.contains("📣 Julien the Evangelist"));
+        assertTrue(titles.contains("🤝 Mike the DealMaker"));
+    }
 }
