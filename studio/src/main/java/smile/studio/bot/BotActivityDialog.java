@@ -33,7 +33,7 @@ import smile.studio.workspace.HubClient;
 import smile.studio.workspace.HubManager;
 
 /**
- * Operations &amp; Review dialog for Agent Hub:
+ * Operations &amp; Review workspace panel for Agent Hub:
  * <ol>
  *   <li><b>Approvals &amp; Batch Draft Queue</b>: inspect pending questions, tool confirmations,
  *       staged multi-channel drafts, and Secure Handoffs; view prior-draft diffs; edit inline;
@@ -47,7 +47,7 @@ import smile.studio.workspace.HubManager;
  *
  * @author Haifeng Li
  */
-public class BotActivityDialog extends JDialog {
+public class BotActivityDialog extends JPanel {
     private final JLabel hubStatusLabel = new JLabel("Checking Agent Hub…");
     private final JTabbedPane tabs = new JTabbedPane();
 
@@ -91,33 +91,32 @@ public class BotActivityDialog extends JDialog {
     private final JEditorPane pagePreviewPane = new JEditorPane("text/html", "");
 
     /**
-     * Creates the Bot Activity, Approvals &amp; Pages dialog.
+     * Creates the Bot Activity, Approvals &amp; Pages workspace panel.
      *
-     * @param owner      parent window.
      * @param initialTab initial tab index (`0` = Approvals, `1` = Runs, `2` = Pages).
      */
-    public BotActivityDialog(Window owner, int initialTab) {
-        super(owner, "Agent Hub — Approvals, Run History & Bot Pages", ModalityType.MODELESS);
-        setSize(1020, 700);
-        setLocationRelativeTo(owner);
-        setLayout(new BorderLayout(8, 8));
+    public BotActivityDialog(int initialTab) {
+        super(new BorderLayout(8, 8));
 
         initTopBar();
         tabs.addTab("Approvals & Batch Draft Queue", buildApprovalsTab());
         tabs.addTab("Run History & Transcripts", buildRunsTab());
         tabs.addTab("Interactive Bot Pages", buildPagesTab());
-        if (initialTab >= 0 && initialTab < tabs.getTabCount()) {
-            tabs.setSelectedIndex(initialTab);
-        }
+        selectTab(initialTab);
         add(tabs, BorderLayout.CENTER);
 
-        JPanel bottomBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
-        JButton closeBtn = new JButton("Close");
-        closeBtn.addActionListener(e -> dispose());
-        bottomBar.add(closeBtn);
-        add(bottomBar, BorderLayout.SOUTH);
-
         refreshAllAsync();
+    }
+
+    /**
+     * Selects the given sub-tab index if valid.
+     *
+     * @param tabIndex tab index (`0` = Approvals, `1` = Runs, `2` = Pages).
+     */
+    public final void selectTab(int tabIndex) {
+        if (tabIndex >= 0 && tabIndex < tabs.getTabCount()) {
+            tabs.setSelectedIndex(tabIndex);
+        }
     }
 
     private void initTopBar() {
@@ -133,9 +132,10 @@ public class BotActivityDialog extends JDialog {
             HubManager.getInstance().start();
             SwingUtilities.invokeLater(this::refreshAllAsync);
         }));
-        JButton configBtn = new JButton("Configure Bots…");
+        JButton configBtn = new JButton("Configure Bot Routines…");
         configBtn.addActionListener(e -> {
-            BotManagerDialog dlg = new BotManagerDialog(this, null, this::refreshAllAsync);
+            BotManagerDialog dlg = new BotManagerDialog(
+                    SwingUtilities.getWindowAncestor(this), null, this::refreshAllAsync);
             dlg.setVisible(true);
         });
         JButton refreshBtn = new JButton("↻ Refresh");

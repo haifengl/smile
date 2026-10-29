@@ -48,7 +48,6 @@ import smile.license.LicenseKey;
 import smile.studio.license.LicenseDialog;
 import smile.studio.license.LicenseState;
 import smile.studio.license.LicenseStore;
-import smile.studio.bot.BotActivityDialog;
 import smile.studio.bot.BotManagerDialog;
 import smile.studio.workspace.HubManager;
 import smile.studio.workspace.OpenFile;
@@ -118,7 +117,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         initMenuAndToolBar();
 
         statusBar.setOnLicenseClick(() -> openLicenseDialog(false));
-        statusBar.setOnBotClick(() -> new BotActivityDialog(this, 0).setVisible(true));
+        statusBar.setOnBotClick(() -> workspace.openBotWorkspace(0));
         applyLicenseState(licenseStore.load());
 
         JPanel contentPane = new JPanel(new BorderLayout());
@@ -566,8 +565,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         hubMenu.add(new JMenuItem(new RestartAgentHubAction()));
         hubMenu.addSeparator();
         hubMenu.add(new JMenuItem(new ConfigureBotsAction()));
-        hubMenu.add(new JMenuItem(new BotApprovalsAction()));
-        hubMenu.add(new JMenuItem(new BotPagesAction()));
+        hubMenu.add(new JMenuItem(new BotWorkspaceAction()));
         hubMenu.addSeparator();
         hubMenu.add(new JMenuItem(new AgentHubHealthAction()));
         hubMenu.add(new JMenuItem(new AgentHubMetricsAction()));
@@ -994,30 +992,16 @@ public class SmileStudio extends JFrame implements SearchListener {
         }
     }
 
-    private class BotApprovalsAction extends AbstractAction {
+    private class BotWorkspaceAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/approved.png");
-        public BotApprovalsAction() {
-            super(bundle.getString("BotApprovals")); // , icons.small());
+        public BotWorkspaceAction() {
+            super(bundle.getString("BotWorkspace")); // , icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            BotActivityDialog dialog = new BotActivityDialog(SmileStudio.this, 0);
-            dialog.setVisible(true);
-        }
-    }
-
-    private class BotPagesAction extends AbstractAction {
-        public BotPagesAction() {
-            super(bundle.getString("BotPages")); // , OpenInferenceUiAction.icons.small());
-            putValue(LARGE_ICON_KEY, OpenInferenceUiAction.icons.large());
-        }
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            BotActivityDialog dialog = new BotActivityDialog(SmileStudio.this, 2);
-            dialog.setVisible(true);
+            workspace.openBotWorkspace(0);
         }
     }
 

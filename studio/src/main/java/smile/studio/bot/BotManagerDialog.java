@@ -125,7 +125,7 @@ public class BotManagerDialog extends JDialog {
      * @param onSavedCallback optional callback invoked when changes are saved.
      */
     public BotManagerDialog(Window owner, String initialRoutineId, Runnable onSavedCallback) {
-        super(owner, "Configure Bots & Routines (bots.json)", ModalityType.APPLICATION_MODAL);
+        super(owner, "Configure Bot Routines (bots.json)", ModalityType.APPLICATION_MODAL);
         this.onSavedCallback = onSavedCallback;
         this.config = HubManager.getInstance().client().getOverview().config();
 

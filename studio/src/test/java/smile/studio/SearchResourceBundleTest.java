@@ -45,9 +45,12 @@ public class SearchResourceBundleTest {
             Locale.FRANCE,
             Locale.of("es", "ES"));
 
-    /** Keys the Find and Replace menu reads at runtime. */
+    /** Keys the Find and Replace menu and Agent Hub menu read at runtime. */
     private static final List<String> REQUIRED_KEYS = List.of(
-            "FindMenu", "Search", "NoActiveFile", "Find", "Replace");
+            "FindMenu", "Search", "NoActiveFile", "Find", "Replace",
+            "AgentHub", "StartAgentHub", "StopAgentHub", "RestartAgentHub",
+            "ConfigureBots", "BotWorkspace", "AgentHubNotRunning",
+            "AgentHubStarted", "AgentHubStopped", "AgentHubStartFailed");
 
     /** Keys the Scala kernel reads when it fails to start scala-cli. */
     private static final List<String> SCALA_KERNEL_KEYS = List.of(

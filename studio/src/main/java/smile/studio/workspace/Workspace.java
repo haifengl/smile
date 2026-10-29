@@ -36,6 +36,7 @@ import smile.io.Paths;
 import smile.io.Read;
 import smile.shell.JShell;
 import smile.studio.SmileStudio;
+import smile.studio.bot.BotActivityDialog;
 import smile.studio.cli.AgentCLI;
 import smile.studio.notebook.Notebook;
 import smile.studio.text.Notepad;
@@ -98,9 +99,13 @@ public class Workspace extends JSplitPane {
      */
     private final JTabbedPane explorerTabs = new JTabbedPane();
     /**
-     * The tabbed pane for notebooks.
+     * The tabbed pane for notebooks, text editors, and workspace views (e.g. Agent Hub).
      */
-    private final JTabbedPane notebookTabs = new JTabbedPane();
+    private final JTabbedPane editorTabs = new JTabbedPane();
+    /**
+     * The singleton Agent Hub workspace tab, created on demand.
+     */
+    private BotActivityDialog botWorkspace;
     /**
      * The tabbed pane for agent CLIs.
      */
@@ -203,7 +208,7 @@ public class Workspace extends JSplitPane {
             if (Files.exists(welcome)) {
                 OpenFile welcomeFile = openFileIndex.get(welcome.toAbsolutePath().normalize().toString());
                 if (welcomeFile != null) {
-                    notebookTabs.setSelectedComponent((Component) welcomeFile);
+                    editorTabs.setSelectedComponent((Component) welcomeFile);
                 }
             }
         }
@@ -246,12 +251,12 @@ public class Workspace extends JSplitPane {
         addPluginSkills(panel.toArray(Agent[]::new));
 
         project.setLeftComponent(explorerTabs);
-        project.setRightComponent(notebookTabs);
+        project.setRightComponent(editorTabs);
         project.setResizeWeight(0.2);
 
         setFileExplorerMouseListener();
-        setNotebookTabsListener();
-        setNotebookTabCloseCallback();
+        setEditorTabsListener();
+        setEditorTabCloseCallback();
         setLeftComponent(project);
         setRightComponent(agentTabs);
         setResizeWeight(0.55);
@@ -500,31 +505,52 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Sets the callback for closing file tabs.
+     * Sets the callback for closing editor tabs.
      */
-    private void setNotebookTabCloseCallback() {
-        notebookTabs.putClientProperty("JTabbedPane.tabClosable", true);
-        notebookTabs.putClientProperty("JTabbedPane.tabCloseCallback",
+    private void setEditorTabCloseCallback() {
+        editorTabs.putClientProperty("JTabbedPane.tabClosable", true);
+        editorTabs.putClientProperty("JTabbedPane.tabCloseCallback",
                 (IntConsumer) tabIndex -> {
-                    if (notebookTabs.getComponentAt(tabIndex) instanceof OpenFile openFile) {
+                    Component comp = editorTabs.getComponentAt(tabIndex);
+                    if (comp instanceof OpenFile openFile) {
                         if (closeFile(openFile)) {
-                            notebookTabs.removeTabAt(tabIndex);
+                            editorTabs.removeTabAt(tabIndex);
                             // openFiles and fileWatcher are already updated inside closeFile().
                         }
+                    } else {
+                        editorTabs.removeTabAt(tabIndex);
                     }
                 });
     }
 
     /**
-     * Sets the listener for switching file tabs to refresh the kernel explorer.
+     * Sets the listener for switching editor tabs to refresh the kernel explorer.
      */
-    private void setNotebookTabsListener() {
-        notebookTabs.addChangeListener(e -> {
-            int tabIndex = notebookTabs.getSelectedIndex();
-            if (notebookTabs.getSelectedComponent() instanceof Notebook notebook) {
+    private void setEditorTabsListener() {
+        editorTabs.addChangeListener(e -> {
+            if (editorTabs.getSelectedComponent() instanceof Notebook notebook) {
                 kernelExplorer.refresh(notebook.kernel());
             }
         });
+    }
+
+    /**
+     * Opens or focuses the Agent Hub workspace tab on the requested sub-tab.
+     *
+     * @param initialTab the sub-tab index (`0` = Approvals, `1` = Runs, `2` = Pages).
+     */
+    public void openBotWorkspace(int initialTab) {
+        if (botWorkspace == null) {
+            botWorkspace = new BotActivityDialog(initialTab);
+        } else {
+            botWorkspace.selectTab(initialTab);
+            botWorkspace.refreshAllAsync();
+        }
+        int index = editorTabs.indexOfComponent(botWorkspace);
+        if (index == -1) {
+            editorTabs.addTab("Agent Hub", botWorkspace);
+        }
+        editorTabs.setSelectedComponent(botWorkspace);
     }
 
     /**
@@ -655,7 +681,7 @@ public class Workspace extends JSplitPane {
      * @return the selected file.
      */
     public Optional<OpenFile> selectedFile() {
-        if (notebookTabs.getSelectedComponent() instanceof OpenFile openFile) {
+        if (editorTabs.getSelectedComponent() instanceof OpenFile openFile) {
             return Optional.of(openFile);
         } else {
             return Optional.empty();
@@ -668,7 +694,7 @@ public class Workspace extends JSplitPane {
      * @return the selected notebook.
      */
     public Optional<Notebook> notebook() {
-        if (notebookTabs.getSelectedComponent() instanceof Notebook notebook) {
+        if (editorTabs.getSelectedComponent() instanceof Notebook notebook) {
             return Optional.of(notebook);
         } else {
             return Optional.empty();
@@ -823,9 +849,9 @@ public class Workspace extends JSplitPane {
                 logger.warn("Tab {} not found", filename);
                 return;
             }
-            int index = notebookTabs.indexOfComponent((Component) openFile);
+            int index = editorTabs.indexOfComponent((Component) openFile);
             if (index != -1) {
-                notebookTabs.setSelectedIndex(index);
+                editorTabs.setSelectedIndex(index);
             } else {
                 logger.warn("Tab {} not found", filename);
             }
@@ -874,8 +900,8 @@ public class Workspace extends JSplitPane {
         // Route edits to the auto saver so it can schedule a debounced save.
         openFile.setChangeListener(autoSaver::documentChanged);
 
-        notebookTabs.addTab(filename, (Component) openFile);
-        notebookTabs.setSelectedComponent((Component) openFile);
+        editorTabs.addTab(filename, (Component) openFile);
+        editorTabs.setSelectedComponent((Component) openFile);
         openFiles.add(openFile);
         openFileIndex.put(path.toString(), openFile);
         fileWatcher.addFile(path);
