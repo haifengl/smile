@@ -153,10 +153,7 @@ public class BotManagerDialog extends JDialog {
         endpointCombo.setEditable(true);
         endpointCombo.addItem("inbox");
         for (EmailConfig.AccountSpec acc : EmailConfig.load().accounts()) {
-            endpointCombo.addItem("account:" + acc.id());
-            if (!acc.emailAddress().isEmpty()) {
-                endpointCombo.addItem(acc.emailAddress());
-            }
+            endpointCombo.addItem(acc.emailAddress());
         }
     }
 

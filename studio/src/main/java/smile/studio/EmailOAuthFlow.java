@@ -165,7 +165,7 @@ public final class EmailOAuthFlow {
     ) throws Exception {
         if (Strings.isNullOrBlank(account.clientId())) {
             throw new IllegalArgumentException(
-                    "OAuth Client ID is required for " + account.provider() + " account '" + account.id() + "'.");
+                    "OAuth Client ID is required for " + account.provider() + " account '" + account.emailAddress() + "'.");
         }
 
         String codeVerifier = generateCodeVerifier();
