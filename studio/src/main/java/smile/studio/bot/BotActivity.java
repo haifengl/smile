@@ -134,9 +134,11 @@ public class BotActivity extends JPanel {
         }));
         JButton configBtn = new JButton("Configure Bot Routines…");
         configBtn.addActionListener(e -> {
-            BotManagerDialog dlg = new BotManagerDialog(
-                    SwingUtilities.getWindowAncestor(this), null, this::refreshAllAsync);
-            dlg.setVisible(true);
+            var ws = (smile.studio.workspace.Workspace) SwingUtilities.getAncestorOfClass(
+                    smile.studio.workspace.Workspace.class, this);
+            if (ws != null) {
+                ws.openBotManager(null);
+            }
         });
         JButton refreshBtn = new JButton("↻ Refresh");
         refreshBtn.addActionListener(e -> refreshAllAsync());
