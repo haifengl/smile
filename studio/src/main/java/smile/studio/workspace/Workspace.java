@@ -179,7 +179,7 @@ public class Workspace extends JSplitPane {
         fileChooser.setCurrentDirectory(cwd.toFile());
 
         fileExplorer = new FileExplorer(cwd);
-        kernelExplorer = new KernelExplorer(fileChooser);
+        kernelExplorer = new KernelExplorer(cwd, fileChooser);
         botExplorer = new BotExplorer();
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
         explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
