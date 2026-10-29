@@ -23,10 +23,10 @@
    - 3.4 [`mike` — Founder-Led B2B Sales](#34-mike--founder-led-b2b-sales)
 4. [SMILE Studio Bot Interface](#4-smile-studio-bot-interface)
    - 4.1 [Agent Hub Menu](#41-agent-hub-menu)
-   - 4.2 [Kernel Explorer Tree (`Services > Agent Hub Service`)](#42-kernel-explorer-tree-services--agent-hub-service)
+   - 4.2 [Bots Explorer Tab (`BotExplorer`)](#42-bots-explorer-tab-botexplorer)
    - 4.3 [Status Bar Bot & Approval Badge](#43-status-bar-bot--approval-badge)
    - 4.4 [Conversational Setup via `BotConfig` Tool](#44-conversational-setup-via-botconfig-tool)
-5. [Configuring Bots & Routines (`BotManagerDialog`)](#5-configuring-bots--routines-botmanagerdialog)
+5. [Configuring Bot Routines (`BotManager`)](#5-configuring-bot-routines-botmanager)
    - 5.1 [Routine Definition Tab](#51-routine-definition-tab)
    - 5.2 [Context Projects Tab (`conf/projects.json`)](#52-context-projects-tab-confprojectsjson)
    - 5.3 [Auto Review Rules Tab](#53-auto-review-rules-tab)
@@ -252,42 +252,40 @@ The **Agent Hub** menu in the Studio menu bar provides direct access to service 
 | **Start Agent Hub** | Start the local Agent Hub service (or attach if already running) |
 | **Stop Agent Hub** | Stop the Studio-managed Agent Hub process |
 | **Restart Agent Hub** | Stop and restart the local Agent Hub process |
-| **Configure Bot Routines…** | Open the visual Bot Routine Manager (`BotManagerDialog`) |
-| **Bot Activity…** | Open the `Agent Hub` tab in the main workspace (`BotActivity`) |
+| **Configure Bot Routines…** | Open the `Bot Routines` tab in the main workspace (`BotManager`) |
+| **Bot Activity…** | Open the `Bot Activity` tab in the main workspace (`BotActivity`) |
 | **Health** | Open `http://<host>:<port>/q/health` in the default browser |
 | **Metrics** | Open `http://<host>:<port>/q/metrics` in the default browser |
 
-### 4.2 Kernel Explorer Tree (`Services > Agent Hub Service`)
+### 4.2 Bots Explorer Tab (`BotExplorer`)
 
-In the left-hand **Kernel** explorer tab, expand **Services > Agent Hub Service** to view all configured Bot Personas and their Routines:
+In the left-hand explorer sidebar, select the **Bots** tab to view all configured Bot Personas and their Routines under **Agent Hub**:
 
 ```
-Services
-├── Inference Service
-└── Agent Hub Service (Running)
-    ├── ★ all-agents-memory (Daily Memory Logger)
-    │   └── ● daily-log — 7:00 PM Daily Memory Log
-    ├── @frank (Frank — Chief of Staff (Primary Bot))
-    │   ├── ● frank-daily-recap — 8:00 PM End-of-Day Consolidation & Briefing
-    │   ├── ● frank-inbox — Executive Email Triage
-    │   └── ● frank-calendar — Calendar Guard & 15m Pre-Meeting Brief
-    ├── @julien (Julien — Developer & Product Evangelist)
-    │   ├── ● julien-community-watch — 4-Hour Community Watch (HN, Reddit, GitHub, SO)
-    │   └── ● julien-community-post — Mon/Wed/Fri Proactive Community Post & Answer Sweep
-    └── @mike (Mike — Founder-Led B2B Sales)
-        ├── ● mike-signal-watch — Weekday Morning Signal Watch (08:00)
-        ├── ● mike-outreach-sweep — Weekday Multi-Channel Outreach Sweep (08:30)
-        └── ● mike-replies — Inbound Prospect Reply Handler
+Agent Hub (Running)
+├── ★ all-agents-memory (Daily Memory Logger)
+│   └── ● daily-log — 7:00 PM Daily Memory Log
+├── @frank (Frank — Chief of Staff (Primary Bot))
+│   ├── ● frank-daily-recap — 8:00 PM End-of-Day Consolidation & Briefing
+│   ├── ● frank-inbox — Executive Email Triage
+│   └── ● frank-calendar — Calendar Guard & 15m Pre-Meeting Brief
+├── @julien (Julien — Developer & Product Evangelist)
+│   ├── ● julien-community-watch — 4-Hour Community Watch (HN, Reddit, GitHub, SO)
+│   └── ● julien-community-post — Mon/Wed/Fri Proactive Community Post & Answer Sweep
+└── @mike (Mike — Founder-Led B2B Sales)
+    ├── ● mike-signal-watch — Weekday Morning Signal Watch (08:00)
+    ├── ● mike-outreach-sweep — Weekday Multi-Channel Outreach Sweep (08:30)
+    └── ● mike-replies — Inbound Prospect Reply Handler
 ```
 
 - **Status indicators:** `●` indicates an enabled routine under an enabled bot; `○` indicates a disabled routine or bot.
-- **Double-click `Agent Hub Service` or a `@bot` node:** Opens the **Agent Hub** workspace tab.
-- **Double-click a routine node:** Opens the **Configure Bot Routines** dialog pre-selected on that routine.
+- **Click a routine node:** Opens or focuses the **Bot Routines** workspace tab (`BotManager`) pre-selected on that routine.
+- **Double-click `Agent Hub` or a `@bot` node:** Opens the **Bot Activity** workspace tab (`BotActivity`).
 - **Right-click context menu on a routine node:**
   - **Run Now (`<routineId>`)** — Immediately triggers the routine on Agent Hub (starting the Hub first if needed).
   - **Enable / Disable Routine** — Toggles the routine in `bots.json` and hot-reloads Agent Hub.
-  - **Configure Routine…** — Opens the routine editor.
-  - **Bot Activity…** — Opens the `Agent Hub` workspace tab.
+  - **Configure Routine…** — Opens the `Bot Routines` workspace tab.
+  - **Bot Activity…** — Opens the `Bot Activity` workspace tab.
   - **Start / Stop Agent Hub** — Starts or stops the Hub process.
 
 ### 4.3 Status Bar Bot & Approval Badge
@@ -316,9 +314,9 @@ Every mutating action prompts you with an **Automation Write Approval** confirma
 
 ---
 
-## 5. Configuring Bot Routines (`BotManagerDialog`)
+## 5. Configuring Bot Routines (`BotManager`)
 
-Open **Agent Hub > Configure Bot Routines…** to edit `$SMILE_HOME/conf/bots.json` and `$SMILE_HOME/conf/projects.json` visually. Changes can be edited even when Agent Hub is offline and are hot-reloaded immediately when Agent Hub is running.
+Open **Agent Hub > Configure Bot Routines…** (or click any routine in the **Bots** explorer tab) to open the `Bot Routines` tab and edit `$SMILE_HOME/conf/bots.json` and `$SMILE_HOME/conf/projects.json` visually. Changes can be edited even when Agent Hub is offline and are hot-reloaded immediately when Agent Hub is running.
 
 ### 5.1 Routine Definition Tab
 

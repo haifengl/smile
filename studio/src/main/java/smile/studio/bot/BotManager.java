@@ -38,7 +38,7 @@ import smile.studio.workspace.HubManager;
  *
  * @author Haifeng Li
  */
-public class BotManagerDialog extends JDialog {
+public class BotManager extends JPanel {
     private static final String DEFAULT_MODEL_CHOICE = "<Default Persona Model>";
 
     private BotsConfig config;
@@ -118,25 +118,32 @@ public class BotManagerDialog extends JDialog {
     }
 
     /**
-     * Creates the Bot &amp; Routine Manager dialog.
+     * Creates the Bot Routine Manager panel.
      *
-     * @param owner           parent window.
      * @param initialRoutineId optional routine ID to select initially.
-     * @param onSavedCallback optional callback invoked when changes are saved.
+     * @param onSavedCallback  optional callback invoked when changes are saved.
      */
-    public BotManagerDialog(Window owner, String initialRoutineId, Runnable onSavedCallback) {
-        super(owner, "Configure Bot Routines (bots.json)", ModalityType.APPLICATION_MODAL);
+    public BotManager(String initialRoutineId, Runnable onSavedCallback) {
+        super(new BorderLayout(8, 8));
         this.onSavedCallback = onSavedCallback;
         this.config = HubManager.getInstance().client().getOverview().config();
-
-        setSize(980, 680);
-        setLocationRelativeTo(owner);
-        setLayout(new BorderLayout(8, 8));
 
         populateModelCombo();
         populateEndpointCombo();
         initComponents();
         reloadFromConfig(initialRoutineId);
+    }
+
+    /**
+     * Reloads configuration from disk / Agent Hub and selects the requested routine.
+     *
+     * @param routineId optional routine ID to select.
+     */
+    public void selectRoutine(String routineId) {
+        this.config = HubManager.getInstance().client().getOverview().config();
+        populateModelCombo();
+        populateEndpointCombo();
+        reloadFromConfig(routineId);
     }
 
     private void populateModelCombo() {
@@ -201,12 +208,9 @@ public class BotManagerDialog extends JDialog {
         runNowBtn.addActionListener(e -> triggerSelectedRoutineNow());
         JButton saveBtn = new JButton("Save to bots.json");
         saveBtn.addActionListener(e -> saveCurrentRoutineAndConfig());
-        JButton closeBtn = new JButton("Close");
-        closeBtn.addActionListener(e -> dispose());
 
         bottomBar.add(runNowBtn);
         bottomBar.add(saveBtn);
-        bottomBar.add(closeBtn);
         add(bottomBar, BorderLayout.SOUTH);
     }
 

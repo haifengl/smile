@@ -48,7 +48,6 @@ import smile.license.LicenseKey;
 import smile.studio.license.LicenseDialog;
 import smile.studio.license.LicenseState;
 import smile.studio.license.LicenseStore;
-import smile.studio.bot.BotManagerDialog;
 import smile.studio.workspace.HubManager;
 import smile.studio.workspace.OpenFile;
 import smile.studio.workspace.ServeManager;
@@ -230,7 +229,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                 if (!manager.start(hubCfg.host(), hubCfg.port(), hubCfg.adminToken())) {
                     logger.error("Failed to auto-start Agent Hub");
                 }
-                SwingUtilities.invokeLater(() -> workspace.explorer().refreshBotsTree());
+                SwingUtilities.invokeLater(() -> workspace.botExplorer().refresh());
             });
         }
 
@@ -931,7 +930,7 @@ public class SmileStudio extends JFrame implements SearchListener {
             Thread.ofPlatform().name("hub-start").daemon(true).start(() -> {
                 boolean ok = HubManager.getInstance().start();
                 SwingUtilities.invokeLater(() -> {
-                    workspace.explorer().refreshBotsTree();
+                    workspace.botExplorer().refresh();
                     statusBar.setStatus(ok
                             ? MessageFormat.format(bundle.getString("AgentHubStarted"),
                                     HubManager.getInstance().baseUrl())
@@ -950,7 +949,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         @Override
         public void actionPerformed(ActionEvent e) {
             HubManager.getInstance().stop();
-            workspace.explorer().refreshBotsTree();
+            workspace.botExplorer().refresh();
             statusBar.setStatus(bundle.getString("AgentHubStopped"));
         }
     }
@@ -968,7 +967,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                 manager.stop();
                 boolean ok = manager.start();
                 SwingUtilities.invokeLater(() -> {
-                    workspace.explorer().refreshBotsTree();
+                    workspace.botExplorer().refresh();
                     statusBar.setStatus(ok
                             ? MessageFormat.format(bundle.getString("AgentHubStarted"),
                                     manager.baseUrl())
@@ -986,9 +985,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            BotManagerDialog dialog = new BotManagerDialog(
-                    SmileStudio.this, null, () -> workspace.explorer().refreshBotsTree());
-            dialog.setVisible(true);
+            workspace.openBotManager(null);
         }
     }
 

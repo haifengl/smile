@@ -37,6 +37,7 @@ import smile.io.Read;
 import smile.shell.JShell;
 import smile.studio.SmileStudio;
 import smile.studio.bot.BotActivity;
+import smile.studio.bot.BotManager;
 import smile.studio.cli.AgentCLI;
 import smile.studio.notebook.Notebook;
 import smile.studio.text.Notepad;
@@ -107,6 +108,10 @@ public class Workspace extends JSplitPane {
      */
     private BotActivity botActivity;
     /**
+     * The singleton Bot routine manager tab, created on demand.
+     */
+    private BotManager botManager;
+    /**
      * The tabbed pane for agent CLIs.
      */
     private final JTabbedPane agentTabs = new JTabbedPane();
@@ -140,6 +145,10 @@ public class Workspace extends JSplitPane {
      */
     private final KernelExplorer kernelExplorer;
     /**
+     * The explorer of Bot personas and routines.
+     */
+    private final BotExplorer botExplorer;
+    /**
      * The coding agents for each programming language, used for notebook code
      * completion. They are background instances, not the panel agents.
      */
@@ -171,8 +180,10 @@ public class Workspace extends JSplitPane {
 
         fileExplorer = new FileExplorer(cwd);
         kernelExplorer = new KernelExplorer(fileChooser);
+        botExplorer = new BotExplorer();
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
         explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
+        explorerTabs.addTab("Bots", new JScrollPane(botExplorer));
 
         // Record this project in ${smile.home}/conf/projects.json for cross-project
         // Bot routines (/daily-log and /daily-recap) and sync to Agent Hub if running.
@@ -548,9 +559,33 @@ public class Workspace extends JSplitPane {
         }
         int index = editorTabs.indexOfComponent(botActivity);
         if (index == -1) {
-            editorTabs.addTab("Agent Hub", botActivity);
+            editorTabs.addTab("Bot Activity", botActivity);
         }
         editorTabs.setSelectedComponent(botActivity);
+    }
+
+    /**
+     * Opens or focuses the Bot Routine Manager tab, optionally selecting the given routine.
+     *
+     * @param routineId optional routine ID to select.
+     */
+    public void openBotManager(String routineId) {
+        Runnable onSaved = () -> {
+            botExplorer.refresh();
+            if (botActivity != null) {
+                botActivity.refreshAllAsync();
+            }
+        };
+        if (botManager == null) {
+            botManager = new BotManager(routineId, onSaved);
+        } else {
+            botManager.selectRoutine(routineId);
+        }
+        int index = editorTabs.indexOfComponent(botManager);
+        if (index == -1) {
+            editorTabs.addTab("Bot Routines", botManager);
+        }
+        editorTabs.setSelectedComponent(botManager);
     }
 
     /**
@@ -1052,12 +1087,21 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Returns the explorer component.
+     * Returns the kernel explorer component.
      *
-     * @return the explorer component.
+     * @return the kernel explorer component.
      */
     public KernelExplorer explorer() {
         return kernelExplorer;
+    }
+
+    /**
+     * Returns the Bot explorer component.
+     *
+     * @return the Bot explorer component.
+     */
+    public BotExplorer botExplorer() {
+        return botExplorer;
     }
 
     /**
