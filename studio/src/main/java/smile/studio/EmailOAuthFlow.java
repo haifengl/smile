@@ -175,10 +175,18 @@ public final class EmailOAuthFlow {
         CompletableFuture<String> codeFuture = new CompletableFuture<>();
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         int port = server.getAddress().getPort();
-        String redirectUri = "http://127.0.0.1:" + port + "/oauth/callback";
+        // Use root "/" so a single registered Redirect URI ("http://127.0.0.1" or
+        // "http://localhost") in Azure Portal / Google Cloud matches without needing
+        // a "/oauth/callback" path suffix.
+        String redirectUri = "http://127.0.0.1:" + port;
 
-        server.createContext("/oauth/callback", exchange -> {
+        server.createContext("/", exchange -> {
             try {
+                String reqPath = exchange.getRequestURI().getPath();
+                if (reqPath != null && reqPath.startsWith("/favicon")) {
+                    exchange.sendResponseHeaders(404, -1);
+                    return;
+                }
                 Map<String, String> queryParams = parseQuery(exchange.getRequestURI().getRawQuery());
                 String error = queryParams.get("error");
                 if (!Strings.isNullOrBlank(error)) {
