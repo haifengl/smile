@@ -30,7 +30,6 @@ import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.bot.BotsConfig;
 import jdk.jshell.VarSnippet;
 import smile.studio.StudioConfig;
-import smile.studio.bot.BotActivityDialog;
 import smile.studio.bot.BotManagerDialog;
 import smile.studio.kernel.Kernel;
 import smile.studio.kernel.Variable;
@@ -206,9 +205,10 @@ public class KernelExplorer extends JPanel {
                             return;
                         }
                         if (node == hubNode || node.getUserObject() instanceof BotTreeItem) {
-                            BotActivityDialog dialog = new BotActivityDialog(
-                                    SwingUtilities.getWindowAncestor(KernelExplorer.this), 0);
-                            dialog.setVisible(true);
+                            Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, KernelExplorer.this);
+                            if (ws != null) {
+                                ws.openBotWorkspace(0);
+                            }
                             return;
                         }
                         if (node.getUserObject() instanceof RoutineTreeItem routineItem) {
@@ -405,17 +405,19 @@ public class KernelExplorer extends JPanel {
                 popup.addSeparator();
             }
 
-            JMenuItem manageBotsItem = new JMenuItem("Configure Bots & Routines…");
+            JMenuItem manageBotsItem = new JMenuItem("Configure Bot Routines…");
             manageBotsItem.addActionListener(ev -> {
                 BotManagerDialog dlg = new BotManagerDialog(owner, null, this::refreshBotsTree);
                 dlg.setVisible(true);
             });
             popup.add(manageBotsItem);
 
-            JMenuItem activityItem = new JMenuItem("Approvals, Run History & Bot Pages…");
+            JMenuItem activityItem = new JMenuItem("Bot Workspace");
             activityItem.addActionListener(ev -> {
-                BotActivityDialog dlg = new BotActivityDialog(owner, 0);
-                dlg.setVisible(true);
+                Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, KernelExplorer.this);
+                if (ws != null) {
+                    ws.openBotWorkspace(0);
+                }
             });
             popup.add(activityItem);
             popup.addSeparator();

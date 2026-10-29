@@ -252,9 +252,8 @@ The **Agent Hub** menu in the Studio menu bar provides direct access to service 
 | **Start Agent Hub** | Start the local Agent Hub service (or attach if already running) |
 | **Stop Agent Hub** | Stop the Studio-managed Agent Hub process |
 | **Restart Agent Hub** | Stop and restart the local Agent Hub process |
-| **Configure Bots & Routines…** | Open the visual Bot & Routine Manager (`BotManagerDialog`) |
-| **Approvals & Run History…** | Open `BotActivityDialog` on the **Approvals & Batch Draft Queue** tab |
-| **Interactive Bot Pages…** | Open `BotActivityDialog` on the **Interactive Bot Pages** tab |
+| **Configure Bot Routines…** | Open the visual Bot Routine Manager (`BotManagerDialog`) |
+| **Bot Workspace** | Open the `Agent Hub` tab in the main workspace (`BotActivityDialog`) |
 | **Health** | Open `http://<host>:<port>/q/health` in the default browser |
 | **Metrics** | Open `http://<host>:<port>/q/metrics` in the default browser |
 
@@ -282,13 +281,13 @@ Services
 ```
 
 - **Status indicators:** `●` indicates an enabled routine under an enabled bot; `○` indicates a disabled routine or bot.
-- **Double-click `Agent Hub Service` or a `@bot` node:** Opens the **Approvals, Run History & Bot Pages** dialog.
-- **Double-click a routine node:** Opens the **Configure Bots & Routines** dialog pre-selected on that routine.
+- **Double-click `Agent Hub Service` or a `@bot` node:** Opens the **Agent Hub** workspace tab.
+- **Double-click a routine node:** Opens the **Configure Bot Routines** dialog pre-selected on that routine.
 - **Right-click context menu on a routine node:**
   - **Run Now (`<routineId>`)** — Immediately triggers the routine on Agent Hub (starting the Hub first if needed).
   - **Enable / Disable Routine** — Toggles the routine in `bots.json` and hot-reloads Agent Hub.
   - **Configure Routine…** — Opens the routine editor.
-  - **Approvals, Run History & Bot Pages…** — Opens the activity viewer.
+  - **Bot Workspace** — Opens the `Agent Hub` workspace tab.
   - **Start / Stop Agent Hub** — Starts or stops the Hub process.
 
 ### 4.3 Status Bar Bot & Approval Badge
@@ -297,7 +296,7 @@ The right side of the Studio status bar displays a live, clickable badge polled 
 
 | Badge State | Meaning |
 |-------------|---------|
-| `[Bots]` | Agent Hub is currently offline. Click to open `BotActivityDialog` and start the Hub or view offline Bot Pages. |
+| `[Bots]` | Agent Hub is currently offline. Click to open the `Agent Hub` workspace tab and start the Hub or view offline Bot Pages. |
 | `[Hub: UP]` | Agent Hub is running and no approvals are waiting. Click to inspect runs or pages. |
 | `[Approvals (N)]` *(amber warning)* | `N` pending approvals, staged outreach drafts, or questions are waiting for your review. Click to review and resolve them. |
 
@@ -317,9 +316,9 @@ Every mutating action prompts you with an **Automation Write Approval** confirma
 
 ---
 
-## 5. Configuring Bots & Routines (`BotManagerDialog`)
+## 5. Configuring Bot Routines (`BotManagerDialog`)
 
-Open **Agent Hub > Configure Bots & Routines…** to edit `$SMILE_HOME/conf/bots.json` and `$SMILE_HOME/conf/projects.json` visually. Changes can be edited even when Agent Hub is offline and are hot-reloaded immediately when Agent Hub is running.
+Open **Agent Hub > Configure Bot Routines…** to edit `$SMILE_HOME/conf/bots.json` and `$SMILE_HOME/conf/projects.json` visually. Changes can be edited even when Agent Hub is offline and are hot-reloaded immediately when Agent Hub is running.
 
 ### 5.1 Routine Definition Tab
 
@@ -388,9 +387,9 @@ Standing Auto Review rules control whether consequential actions pause for human
 
 ---
 
-## 6. Approvals, Run History & Bot Pages (`BotActivityDialog`)
+## 6. Bot Workspace (`BotActivityDialog`)
 
-Open **Agent Hub > Approvals & Run History…** (or click the status bar `[Bots]` / `[Approvals (N)]` badge) to open the modeless operations center.
+Open **Agent Hub > Bot Workspace** (or click the status bar `[Bots]` / `[Approvals (N)]` badge) to open the `Agent Hub` tab inside the main workspace alongside notebooks and text editors.
 
 ### 6.1 Approvals & Batch Draft Queue
 
