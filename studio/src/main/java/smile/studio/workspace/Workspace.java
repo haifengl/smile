@@ -182,8 +182,8 @@ public class Workspace extends JSplitPane {
         kernelExplorer = new KernelExplorer(cwd, fileChooser);
         botExplorer = new BotExplorer();
         explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
-        explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
-        explorerTabs.addTab("Bots", new JScrollPane(botExplorer));
+        explorerTabs.addTab("Kernel", kernelExplorer);
+        explorerTabs.addTab("Bots", botExplorer);
 
         // Record this project in ${smile.home}/conf/projects.json for cross-project
         // Bot routines (/daily-log and /daily-recap) and sync to Agent Hub if running.
