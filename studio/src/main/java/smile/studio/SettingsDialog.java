@@ -111,9 +111,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private final JComboBox<String> emailAccountCombo = new JComboBox<>();
     private final JCheckBox emailDefaultCheck = new JCheckBox(bundle.getString("EmailDefault"));
     private final JCheckBox emailEnabledCheck = new JCheckBox(bundle.getString("EmailEnabled"), true);
-    private final JTextField emailIdField = new JTextField(18);
-    private final JTextField emailNameField = new JTextField(18);
     private final JTextField emailAddressField = new JTextField(22);
+    private final JTextField emailDescriptionField = new JTextField(22);
     private final JComboBox<EmailConfig.Provider> emailProviderCombo =
             new JComboBox<>(EmailConfig.Provider.values());
     private final JSpinner emailPollSpinner = new JSpinner(new SpinnerNumberModel(60, 10, 86400, 15));
@@ -159,8 +158,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
         LlmServices.syncToPreferences(llmCfg, prefs);
         this.emailConfig = EmailConfig.load();
         for (EmailConfig.AccountSpec acc : emailConfig.accounts()) {
-            SharedSecrets.resolveEmailSecret(secrets, acc.id())
-                    .ifPresent(sec -> pendingEmailSecrets.put(acc.id(), sec));
+            SharedSecrets.resolveEmailSecret(secrets, acc.emailAddress())
+                    .ifPresent(sec -> pendingEmailSecrets.put(acc.emailAddress(), sec));
         }
 
         themeCombo.setSelectedItem(prefs.get(UI_THEME_KEY, "Dark"));
@@ -359,17 +358,16 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
         int r = 0;
         addEmailRow(form, gbc, r++,
-                bundle.getString("EmailAccountId"), emailIdField,
-                bundle.getString("EmailDisplayName"), emailNameField);
-        addEmailRow(form, gbc, r++,
                 bundle.getString("EmailAddress"), emailAddressField,
                 bundle.getString("EmailProvider"), emailProviderCombo);
         addEmailRow(form, gbc, r++,
-                bundle.getString("EmailPollInterval"), emailPollSpinner,
+                bundle.getString("EmailDescription"), emailDescriptionField,
                 bundle.getString("EmailFolder"), emailFolderField);
         addEmailRow(form, gbc, r++,
-                bundle.getString("EmailClientId"), emailClientIdField,
+                bundle.getString("EmailPollInterval"), emailPollSpinner,
                 bundle.getString("EmailTenantId"), emailTenantIdField);
+        addEmailSingleRow(form, gbc, r++,
+                bundle.getString("EmailClientId"), emailClientIdField);
         addEmailRow(form, gbc, r++,
                 bundle.getString("EmailImapHost"), emailImapHostField,
                 bundle.getString("EmailImapPort"), emailImapPortSpinner);
@@ -457,17 +455,36 @@ public class SettingsDialog extends JDialog implements ActionListener {
         form.add(comp2, gbc);
     }
 
+    private static void addEmailSingleRow(
+            JPanel form,
+            GridBagConstraints gbc,
+            int row,
+            String label,
+            JComponent comp
+    ) {
+        gbc.gridy = row;
+        gbc.gridx = 0;
+        gbc.weightx = 0.0;
+        form.add(new JLabel(label), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridwidth = 3;
+        gbc.weightx = 1.0;
+        form.add(comp, gbc);
+        gbc.gridwidth = 1;
+    }
+
     private void refreshEmailAccountCombo(String selectId) {
         suppressEmailComboEvents = true;
         try {
             emailAccountCombo.removeAllItems();
             for (EmailConfig.AccountSpec acc : emailConfig.accounts()) {
-                emailAccountCombo.addItem(acc.id());
+                emailAccountCombo.addItem(acc.emailAddress());
             }
             if (!emailConfig.accounts().isEmpty()) {
                 String target = (selectId != null && !selectId.isBlank())
                         ? selectId
-                        : emailConfig.accounts().getFirst().id();
+                        : emailConfig.accounts().getFirst().emailAddress();
                 emailAccountCombo.setSelectedItem(target);
                 loadEmailAccountForm(target);
             } else {
@@ -480,9 +497,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
     }
 
     private void clearEmailAccountForm() {
-        emailIdField.setText("");
-        emailNameField.setText("");
         emailAddressField.setText("");
+        emailDescriptionField.setText("");
         emailProviderCombo.setSelectedItem(EmailConfig.Provider.GMAIL);
         emailPollSpinner.setValue(60);
         emailFolderField.setText("INBOX");
@@ -507,10 +523,9 @@ public class SettingsDialog extends JDialog implements ActionListener {
             return;
         }
         EmailConfig.AccountSpec acc = opt.get();
-        currentEmailAccountId = acc.id();
-        emailIdField.setText(acc.id());
-        emailNameField.setText(acc.displayName() != null ? acc.displayName() : acc.name());
+        currentEmailAccountId = acc.emailAddress();
         emailAddressField.setText(acc.emailAddress());
+        emailDescriptionField.setText(acc.description() != null ? acc.description() : "");
         emailProviderCombo.setSelectedItem(acc.provider());
         emailPollSpinner.setValue(acc.pollIntervalSeconds());
         emailFolderField.setText(acc.folder());
@@ -521,15 +536,15 @@ public class SettingsDialog extends JDialog implements ActionListener {
         emailSmtpHostField.setText(acc.smtpHost() != null ? acc.smtpHost() : "");
         emailSmtpPortSpinner.setValue(acc.smtpPort());
         emailStartTlsCheck.setSelected(acc.smtpStartTls());
-        emailDefaultCheck.setSelected(acc.id().equalsIgnoreCase(emailConfig.defaultAccount()));
+        emailDefaultCheck.setSelected(acc.emailAddress().equalsIgnoreCase(emailConfig.defaultAccount()));
         emailEnabledCheck.setSelected(acc.enabled());
 
         String secret = pendingEmailSecrets.getOrDefault(
-                acc.id(),
-                SharedSecrets.resolveEmailSecret(secrets, acc.id()).orElse("")
+                acc.emailAddress(),
+                SharedSecrets.resolveEmailSecret(secrets, acc.emailAddress()).orElse("")
         );
         emailSecretField.setText(secret);
-        emailSecretStatusLabel.setText(formatSecretStatus(secrets, SharedSecrets.emailSecretId(acc.id())));
+        emailSecretStatusLabel.setText(formatSecretStatus(secrets, SharedSecrets.emailSecretId(acc.emailAddress())));
         updateEmailProviderFieldStates();
     }
 
@@ -550,19 +565,13 @@ public class SettingsDialog extends JDialog implements ActionListener {
     }
 
     private EmailConfig.AccountSpec buildSpecFromEmailForm() {
-        String id = emailIdField.getText().trim();
         String addr = emailAddressField.getText().trim();
-        if (id.isEmpty() && !addr.isEmpty()) {
-            id = addr.toLowerCase(Locale.ROOT)
-                    .replaceAll("[^a-z0-9]+", "-")
-                    .replaceAll("^-+|-+$", "");
-            emailIdField.setText(id);
-        }
-        if (id.isEmpty()) {
+        String email = !addr.isEmpty() ? addr : currentEmailAccountId;
+        if (email.isEmpty()) {
             return null;
         }
         EmailConfig.Provider provider = (EmailConfig.Provider) emailProviderCombo.getSelectedItem();
-        String display = emailNameField.getText().trim();
+        String description = emailDescriptionField.getText().trim();
         int pollSec = ((Number) emailPollSpinner.getValue()).intValue();
         String folder = emailFolderField.getText().trim();
         String clientId = emailClientIdField.getText().trim();
@@ -576,11 +585,9 @@ public class SettingsDialog extends JDialog implements ActionListener {
         boolean enabled = emailEnabledCheck.isSelected();
 
         return new EmailConfig.AccountSpec(
-                id,
-                display.isEmpty() ? id : display,
+                email,
+                description.isEmpty() ? null : description,
                 provider,
-                addr,
-                display.isEmpty() ? null : display,
                 enabled,
                 pollSec,
                 folder.isEmpty() ? "INBOX" : folder,
@@ -592,8 +599,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 imapSsl,
                 smtpHost.isEmpty() ? null : smtpHost,
                 smtpPort,
-                startTls,
-                addr
+                startTls
         );
     }
 
@@ -602,30 +608,35 @@ public class SettingsDialog extends JDialog implements ActionListener {
         if (spec == null) {
             return;
         }
-        if (!currentEmailAccountId.isEmpty() && !currentEmailAccountId.equalsIgnoreCase(spec.id())) {
+        if (!currentEmailAccountId.isEmpty() && !currentEmailAccountId.equalsIgnoreCase(spec.emailAddress())) {
             emailConfig = emailConfig.withoutAccount(currentEmailAccountId);
             pendingEmailSecrets.remove(currentEmailAccountId);
         }
         emailConfig = emailConfig.withUpsertedAccount(spec);
         if (emailDefaultCheck.isSelected()) {
-            emailConfig = new EmailConfig(spec.id(), emailConfig.accounts());
+            emailConfig = new EmailConfig(spec.emailAddress(), emailConfig.accounts());
         }
         String secretVal = new String(emailSecretField.getPassword()).strip();
-        pendingEmailSecrets.put(spec.id(), secretVal);
-        currentEmailAccountId = spec.id();
+        pendingEmailSecrets.put(spec.emailAddress(), secretVal);
+        currentEmailAccountId = spec.emailAddress();
     }
 
     private void addNewEmailAccount() {
         commitCurrentEmailAccountForm();
-        String newId = "account-" + (emailConfig.accounts().size() + 1);
-        EmailConfig.AccountSpec template = EmailConfig.AccountSpec.gmail(
-                newId, "Personal Email", "", "");
-        emailConfig = emailConfig.withUpsertedAccount(template);
-        refreshEmailAccountCombo(newId);
+        suppressEmailComboEvents = true;
+        try {
+            currentEmailAccountId = "";
+            clearEmailAccountForm();
+            emailAddressField.requestFocusInWindow();
+        } finally {
+            suppressEmailComboEvents = false;
+        }
     }
 
     private void removeSelectedEmailAccount() {
-        String id = emailIdField.getText().trim();
+        String id = !emailAddressField.getText().trim().isEmpty()
+                ? emailAddressField.getText().trim()
+                : currentEmailAccountId;
         if (id.isEmpty()) {
             return;
         }
@@ -648,10 +659,10 @@ public class SettingsDialog extends JDialog implements ActionListener {
                         spec, null, Duration.ofMinutes(3));
                 SwingUtilities.invokeLater(() -> {
                     emailSecretField.setText(result.refreshToken());
-                    pendingEmailSecrets.put(spec.id(), result.refreshToken());
-                    SharedSecrets.saveEmailSecret(secrets, spec.id(), result.refreshToken());
+                    pendingEmailSecrets.put(spec.emailAddress(), result.refreshToken());
+                    SharedSecrets.saveEmailSecret(secrets, spec.emailAddress(), result.refreshToken());
                     emailSecretStatusLabel.setText(
-                            formatSecretStatus(secrets, SharedSecrets.emailSecretId(spec.id())));
+                            formatSecretStatus(secrets, SharedSecrets.emailSecretId(spec.emailAddress())));
                     emailOAuthButton.setEnabled(true);
                 });
             } catch (Exception ex) {
@@ -709,8 +720,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
         commitCurrentEmailAccountForm();
         emailConfig.save();
         for (EmailConfig.AccountSpec acc : emailConfig.accounts()) {
-            String sec = pendingEmailSecrets.getOrDefault(acc.id(), "");
-            SharedSecrets.saveEmailSecret(secrets, acc.id(), sec);
+            String sec = pendingEmailSecrets.getOrDefault(acc.emailAddress(), "");
+            SharedSecrets.saveEmailSecret(secrets, acc.emailAddress(), sec);
         }
         EmailServices.getInstance().reload(emailConfig, secrets);
         if (HubManager.getInstance().isRunning()) {

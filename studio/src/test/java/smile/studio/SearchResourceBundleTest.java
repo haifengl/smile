@@ -59,7 +59,7 @@ public class SearchResourceBundleTest {
             "Project", "Location", "StatusInEnvironment", "StatusInKeyring", "StatusInFile",
             "StatusAbsentKeyring", "StatusAbsentFile", "StatusUnavailable", "SecretSaveError",
             "TabGeneralAI", "TabEmailAccounts", "EmailAccount", "EmailAdd", "EmailRemove",
-            "EmailDefault", "EmailEnabled", "EmailAccountId", "EmailDisplayName", "EmailAddress",
+            "EmailDefault", "EmailEnabled", "EmailDescription", "EmailAddress",
             "EmailProvider", "EmailPollInterval", "EmailFolder", "EmailClientId", "EmailTenantId",
             "EmailImapHost", "EmailImapPort", "EmailSmtpHost", "EmailSmtpPort", "EmailStartTls",
             "EmailSecret", "EmailOAuthSignIn", "EmailTestConnection", "EmailTestSuccess", "EmailTestFailure");

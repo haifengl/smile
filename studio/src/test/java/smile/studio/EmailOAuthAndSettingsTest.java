@@ -97,7 +97,7 @@ class EmailOAuthAndSettingsTest {
         });
 
         EmailConfig.AccountSpec account = EmailConfig.AccountSpec.gmail(
-                "personal-gmail", "Personal Gmail", "user@gmail.com", "test-google-client-id");
+                "user@gmail.com", "Personal Gmail", "test-google-client-id");
         HttpClient httpClient = HttpClient.newHttpClient();
 
         EmailOAuthFlow.OAuthResult result = EmailOAuthFlow.authorizePkceLoopback(
@@ -141,7 +141,7 @@ class EmailOAuthAndSettingsTest {
     @Test
     void pkceLoopbackFlowRejectsMismatchedStateParameter() {
         EmailConfig.AccountSpec account = EmailConfig.AccountSpec.msGraph(
-                "work-outlook", "Work Outlook", "user@outlook.com", "ms-client-id", "common");
+                "user@outlook.com", "Work Outlook", "ms-client-id", "common");
         HttpClient httpClient = HttpClient.newHttpClient();
 
         ExecutionException ex = assertThrows(ExecutionException.class, () ->
@@ -177,23 +177,24 @@ class EmailOAuthAndSettingsTest {
         SecretStore secrets = newTestSecretStore();
 
         EmailConfig.AccountSpec spec = EmailConfig.AccountSpec.msGraph(
-                "hotmail-personal", "Personal Hotmail", "alice@hotmail.com", "ms-cid", "common");
+                "alice@hotmail.com", "Personal Hotmail", "ms-cid", "common");
         EmailConfig cfg = EmailConfig.empty().withUpsertedAccount(spec);
         cfg.save(emailConfigPath);
 
-        assertTrue(SharedSecrets.saveEmailSecret(secrets, "hotmail-personal", "ms-refresh-token-secret"));
+        assertTrue(SharedSecrets.saveEmailSecret(secrets, "alice@hotmail.com", "ms-refresh-token-secret"));
         assertEquals(
                 Optional.of("ms-refresh-token-secret"),
-                SharedSecrets.resolveEmailSecret(secrets, "hotmail-personal")
+                SharedSecrets.resolveEmailSecret(secrets, "alice@hotmail.com")
         );
 
         EmailServices services = new EmailServices();
         services.reload(EmailConfig.load(emailConfigPath), secrets);
-        assertTrue(services.client("hotmail-personal").isPresent());
-        assertEquals(EmailConfig.Provider.MSGRAPH, services.client("hotmail-personal").get().account().provider());
+        assertTrue(services.client("alice@hotmail.com").isPresent());
+        assertEquals(EmailConfig.Provider.MSGRAPH, services.client("alice@hotmail.com").get().account().provider());
+        assertEquals("Personal Hotmail", services.client("alice@hotmail.com").get().account().description());
 
-        SharedSecrets.deleteEmailSecret(secrets, "hotmail-personal");
-        assertTrue(SharedSecrets.resolveEmailSecret(secrets, "hotmail-personal").isEmpty());
+        SharedSecrets.deleteEmailSecret(secrets, "alice@hotmail.com");
+        assertTrue(SharedSecrets.resolveEmailSecret(secrets, "alice@hotmail.com").isEmpty());
 
         // Regression test: account IDs with dots/@ (e.g. haifeng.li@aihalo.dev) save without IllegalArgumentException
         assertTrue(SharedSecrets.saveEmailSecret(secrets, "haifeng.li@aihalo.dev", "dot-secret-token"));
