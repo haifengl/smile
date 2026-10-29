@@ -195,7 +195,9 @@ public interface OS {
                         outputConsumer.accept(line);
                     }
                 } catch (IOException ex) {
-                    outputConsumer.accept("ERROR reading process output: " + ex.getMessage());
+                    if (process.isAlive()) {
+                        outputConsumer.accept("ERROR reading process output: " + ex.getMessage());
+                    }
                 }
             });
         }

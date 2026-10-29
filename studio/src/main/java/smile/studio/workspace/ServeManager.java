@@ -220,19 +220,16 @@ public final class ServeManager {
      * Stops the service and releases its resources.
      */
     public synchronized void stop() {
-        if (process != null && process.isAlive()) {
-            // serve runs the Quarkus app in-process (the direct child JVM) and does
-            // not fork a persistent grandchild, so destroy() reaping the direct child
-            // is sufficient. If serve ever forks a persistent helper, this must become
-            // a process-tree kill.
+        if (frame != null) {
+            frame.stop();
+            frame.dispose();
+            frame = null;
+        } else if (process != null) {
+            process.descendants().forEach(ProcessHandle::destroy);
             process.destroy();
         }
         process = null;
         client = null;
-        if (frame != null) {
-            frame.dispose();
-            frame = null;
-        }
     }
 
     /**
