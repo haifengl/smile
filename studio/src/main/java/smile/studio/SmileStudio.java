@@ -265,6 +265,11 @@ public class SmileStudio extends JFrame implements SearchListener {
 
                 workspace.autoSaver().stop();
                 workspace.shutdown();
+                hubBadgeTimer.stop();
+                ServeManager.getInstance().stop();
+                if (!StudioConfig.agentHub().keepAliveOnExit()) {
+                    HubManager.getInstance().stop();
+                }
                 System.exit(0);
             }
 

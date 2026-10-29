@@ -217,13 +217,14 @@ public final class HubManager {
 
     /** Stops the managed local Agent Hub process and disposes its log window. */
     public synchronized void stop() {
-        if (process != null && process.isAlive()) {
+        if (frame != null) {
+            frame.stop();
+            frame.dispose();
+            frame = null;
+        } else if (process != null) {
+            process.descendants().forEach(ProcessHandle::destroy);
             process.destroy();
         }
         process = null;
-        if (frame != null) {
-            frame.dispose();
-            frame = null;
-        }
     }
 }

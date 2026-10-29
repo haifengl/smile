@@ -62,9 +62,7 @@ public class ProcessFrame extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if (process != null && process.isAlive()) {
-                    process.destroy();
-                }
+                stop();
             }
         });
 
@@ -99,9 +97,31 @@ public class ProcessFrame extends JFrame {
             });
 
             // Gracefully shutdown
-            Runtime.getRuntime().addShutdownHook(new Thread(process::destroy));
+            Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
         } catch (IOException ex) {
             output.append("Failed to start process: " + ex.getMessage() + "\n");
+        }
+    }
+
+    /**
+     * Stops the underlying process and any descendant processes.
+     */
+    public void stop() {
+        Process p = process;
+        process = null;
+        if (p != null) {
+            p.descendants().forEach(ProcessHandle::destroy);
+            p.destroy();
+            try {
+                if (!p.waitFor(2, java.util.concurrent.TimeUnit.SECONDS)) {
+                    p.descendants().forEach(ProcessHandle::destroyForcibly);
+                    p.destroyForcibly();
+                }
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                p.descendants().forEach(ProcessHandle::destroyForcibly);
+                p.destroyForcibly();
+            }
         }
     }
 
