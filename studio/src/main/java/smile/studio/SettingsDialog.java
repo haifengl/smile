@@ -123,8 +123,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private final JTextField emailImapHostField = new JTextField(18);
     private final JSpinner emailImapPortSpinner = new JSpinner(new SpinnerNumberModel(993, 1, 65535, 1));
     private final JTextField emailSmtpHostField = new JTextField(18);
-    private final JSpinner emailSmtpPortSpinner = new JSpinner(new SpinnerNumberModel(587, 1, 65535, 1));
-    private final JCheckBox emailStartTlsCheck = new JCheckBox(bundle.getString("EmailStartTls"), true);
+    private final JSpinner emailSmtpPortSpinner = new JSpinner(new SpinnerNumberModel(465, 1, 65535, 1));
+    private final JCheckBox emailStartTlsCheck = new JCheckBox(bundle.getString("EmailStartTls"), false);
     private final JPasswordField emailSecretField = new JPasswordField(24);
     private final JLabel emailSecretStatusLabel = new JLabel();
     private final JButton emailOAuthButton = new JButton(bundle.getString("EmailOAuthSignIn"));
@@ -416,6 +416,14 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridwidth = 1;
 
         emailProviderCombo.addActionListener(e -> updateEmailProviderFieldStates());
+        emailSmtpPortSpinner.addChangeListener(e -> {
+            int p = ((Number) emailSmtpPortSpinner.getValue()).intValue();
+            if (p == 465) {
+                emailStartTlsCheck.setSelected(false);
+            } else if (p == 587) {
+                emailStartTlsCheck.setSelected(true);
+            }
+        });
 
         pane.add(form, BorderLayout.CENTER);
         refreshEmailAccountCombo(emailConfig.defaultAccount());
@@ -483,8 +491,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
         emailImapHostField.setText("imap.gmail.com");
         emailImapPortSpinner.setValue(993);
         emailSmtpHostField.setText("smtp.gmail.com");
-        emailSmtpPortSpinner.setValue(587);
-        emailStartTlsCheck.setSelected(true);
+        emailSmtpPortSpinner.setValue(465);
+        emailStartTlsCheck.setSelected(false);
         emailDefaultCheck.setSelected(true);
         emailEnabledCheck.setSelected(true);
         emailSecretField.setText("");
@@ -561,9 +569,10 @@ public class SettingsDialog extends JDialog implements ActionListener {
         String tenantId = emailTenantIdField.getText().trim();
         String imapHost = emailImapHostField.getText().trim();
         int imapPort = ((Number) emailImapPortSpinner.getValue()).intValue();
+        boolean imapSsl = imapPort != 143;
         String smtpHost = emailSmtpHostField.getText().trim();
         int smtpPort = ((Number) emailSmtpPortSpinner.getValue()).intValue();
-        boolean startTls = emailStartTlsCheck.isSelected();
+        boolean startTls = smtpPort != 465 && (smtpPort == 587 || emailStartTlsCheck.isSelected());
         boolean enabled = emailEnabledCheck.isSelected();
 
         return new EmailConfig.AccountSpec(
@@ -580,7 +589,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 tenantId.isEmpty() ? "common" : tenantId,
                 imapHost.isEmpty() ? null : imapHost,
                 imapPort,
-                true,
+                imapSsl,
                 smtpHost.isEmpty() ? null : smtpHost,
                 smtpPort,
                 startTls,
