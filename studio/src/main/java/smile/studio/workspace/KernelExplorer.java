@@ -207,7 +207,7 @@ public class KernelExplorer extends JPanel {
                         if (node == hubNode || node.getUserObject() instanceof BotTreeItem) {
                             Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, KernelExplorer.this);
                             if (ws != null) {
-                                ws.openBotWorkspace(0);
+                                ws.openBotActivity(0);
                             }
                             return;
                         }
@@ -412,11 +412,11 @@ public class KernelExplorer extends JPanel {
             });
             popup.add(manageBotsItem);
 
-            JMenuItem activityItem = new JMenuItem("Bot Workspace");
+            JMenuItem activityItem = new JMenuItem("Bot Activity…");
             activityItem.addActionListener(ev -> {
                 Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, KernelExplorer.this);
                 if (ws != null) {
-                    ws.openBotWorkspace(0);
+                    ws.openBotActivity(0);
                 }
             });
             popup.add(activityItem);

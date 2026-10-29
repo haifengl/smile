@@ -36,7 +36,7 @@ import smile.io.Paths;
 import smile.io.Read;
 import smile.shell.JShell;
 import smile.studio.SmileStudio;
-import smile.studio.bot.BotActivityDialog;
+import smile.studio.bot.BotActivity;
 import smile.studio.cli.AgentCLI;
 import smile.studio.notebook.Notebook;
 import smile.studio.text.Notepad;
@@ -103,9 +103,9 @@ public class Workspace extends JSplitPane {
      */
     private final JTabbedPane editorTabs = new JTabbedPane();
     /**
-     * The singleton Agent Hub workspace tab, created on demand.
+     * The singleton Agent Hub activity tab, created on demand.
      */
-    private BotActivityDialog botWorkspace;
+    private BotActivity botActivity;
     /**
      * The tabbed pane for agent CLIs.
      */
@@ -535,22 +535,22 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Opens or focuses the Agent Hub workspace tab on the requested sub-tab.
+     * Opens or focuses the Agent Hub activity tab on the requested sub-tab.
      *
      * @param initialTab the sub-tab index (`0` = Approvals, `1` = Runs, `2` = Pages).
      */
-    public void openBotWorkspace(int initialTab) {
-        if (botWorkspace == null) {
-            botWorkspace = new BotActivityDialog(initialTab);
+    public void openBotActivity(int initialTab) {
+        if (botActivity == null) {
+            botActivity = new BotActivity(initialTab);
         } else {
-            botWorkspace.selectTab(initialTab);
-            botWorkspace.refreshAllAsync();
+            botActivity.selectTab(initialTab);
+            botActivity.refreshAllAsync();
         }
-        int index = editorTabs.indexOfComponent(botWorkspace);
+        int index = editorTabs.indexOfComponent(botActivity);
         if (index == -1) {
-            editorTabs.addTab("Agent Hub", botWorkspace);
+            editorTabs.addTab("Agent Hub", botActivity);
         }
-        editorTabs.setSelectedComponent(botWorkspace);
+        editorTabs.setSelectedComponent(botActivity);
     }
 
     /**

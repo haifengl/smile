@@ -117,7 +117,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         initMenuAndToolBar();
 
         statusBar.setOnLicenseClick(() -> openLicenseDialog(false));
-        statusBar.setOnBotClick(() -> workspace.openBotWorkspace(0));
+        statusBar.setOnBotClick(() -> workspace.openBotActivity(0));
         applyLicenseState(licenseStore.load());
 
         JPanel contentPane = new JPanel(new BorderLayout());
@@ -565,7 +565,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         hubMenu.add(new JMenuItem(new RestartAgentHubAction()));
         hubMenu.addSeparator();
         hubMenu.add(new JMenuItem(new ConfigureBotsAction()));
-        hubMenu.add(new JMenuItem(new BotWorkspaceAction()));
+        hubMenu.add(new JMenuItem(new BotActivityAction()));
         hubMenu.addSeparator();
         hubMenu.add(new JMenuItem(new AgentHubHealthAction()));
         hubMenu.add(new JMenuItem(new AgentHubMetricsAction()));
@@ -992,16 +992,16 @@ public class SmileStudio extends JFrame implements SearchListener {
         }
     }
 
-    private class BotWorkspaceAction extends AbstractAction {
+    private class BotActivityAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/approved.png");
-        public BotWorkspaceAction() {
-            super(bundle.getString("BotWorkspace")); // , icons.small());
+        public BotActivityAction() {
+            super(bundle.getString("BotActivity")); // , icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            workspace.openBotWorkspace(0);
+            workspace.openBotActivity(0);
         }
     }
 

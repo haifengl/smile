@@ -30,7 +30,7 @@
    - 5.1 [Routine Definition Tab](#51-routine-definition-tab)
    - 5.2 [Context Projects Tab (`conf/projects.json`)](#52-context-projects-tab-confprojectsjson)
    - 5.3 [Auto Review Rules Tab](#53-auto-review-rules-tab)
-6. [Approvals, Run History & Bot Pages (`BotActivityDialog`)](#6-approvals-run-history--bot-pages-botactivitydialog)
+6. [Bot Activity (`BotActivity`)](#6-bot-activity-botactivity)
    - 6.1 [Approvals & Batch Draft Queue](#61-approvals--batch-draft-queue)
    - 6.2 [Run History & Session Transcripts](#62-run-history--session-transcripts)
    - 6.3 [Interactive Bot Pages](#63-interactive-bot-pages)
@@ -253,7 +253,7 @@ The **Agent Hub** menu in the Studio menu bar provides direct access to service 
 | **Stop Agent Hub** | Stop the Studio-managed Agent Hub process |
 | **Restart Agent Hub** | Stop and restart the local Agent Hub process |
 | **Configure Bot Routines…** | Open the visual Bot Routine Manager (`BotManagerDialog`) |
-| **Bot Workspace** | Open the `Agent Hub` tab in the main workspace (`BotActivityDialog`) |
+| **Bot Activity…** | Open the `Agent Hub` tab in the main workspace (`BotActivity`) |
 | **Health** | Open `http://<host>:<port>/q/health` in the default browser |
 | **Metrics** | Open `http://<host>:<port>/q/metrics` in the default browser |
 
@@ -287,7 +287,7 @@ Services
   - **Run Now (`<routineId>`)** — Immediately triggers the routine on Agent Hub (starting the Hub first if needed).
   - **Enable / Disable Routine** — Toggles the routine in `bots.json` and hot-reloads Agent Hub.
   - **Configure Routine…** — Opens the routine editor.
-  - **Bot Workspace** — Opens the `Agent Hub` workspace tab.
+  - **Bot Activity…** — Opens the `Agent Hub` workspace tab.
   - **Start / Stop Agent Hub** — Starts or stops the Hub process.
 
 ### 4.3 Status Bar Bot & Approval Badge
@@ -387,9 +387,9 @@ Standing Auto Review rules control whether consequential actions pause for human
 
 ---
 
-## 6. Bot Workspace (`BotActivityDialog`)
+## 6. Bot Activity (`BotActivity`)
 
-Open **Agent Hub > Bot Workspace** (or click the status bar `[Bots]` / `[Approvals (N)]` badge) to open the `Agent Hub` tab inside the main workspace alongside notebooks and text editors.
+Open **Agent Hub > Bot Activity…** (or click the status bar `[Bots]` / `[Approvals (N)]` badge) to open the `Agent Hub` tab inside the main workspace alongside notebooks and text editors.
 
 ### 6.1 Approvals & Batch Draft Queue
 
