@@ -26,9 +26,6 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.tree.*;
 import ioa.agent.bot.BotsConfig;
-import smile.studio.StudioConfig;
-import static smile.swing.SmileUtilities.LARGE_ICON_SIZE;
-import static smile.swing.SmileUtilities.loadImageIcon;
 
 /**
  * Explorer sidebar tab for Agent Hub Bot personas and scheduled/event-driven Routines.
@@ -38,16 +35,11 @@ import static smile.swing.SmileUtilities.loadImageIcon;
 public class BotExplorer extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BotExplorer.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(KernelExplorer.class.getName(), Locale.getDefault());
-    private static final ImageIcon serverIcon = loadImageIcon(KernelExplorer.class, "images/server.png", LARGE_ICON_SIZE);
 
-    /** The Agent Hub service root node. */
-    private final DefaultMutableTreeNode hubNode =
-            new DefaultMutableTreeNode(new HubService(
-                    StudioConfig.DEFAULT_HOST,
-                    StudioConfig.DEFAULT_HUB_PORT,
-                    StudioConfig.DEFAULT_HUB_ADMIN_TOKEN));
+    /** The hidden tree root node. */
+    private final DefaultMutableTreeNode root = new DefaultMutableTreeNode(bundle.getString("Root"));
 
-    /** User object for a Bot persona tree node under {@link #hubNode}. */
+    /** User object for a Bot persona tree node under {@link #root}. */
     public record BotTreeItem(BotsConfig.BotSpec bot) {
         @Override
         public String toString() {
@@ -65,7 +57,7 @@ public class BotExplorer extends JPanel {
         }
     }
 
-    private final JTree tree = new JTree(hubNode);
+    private final JTree tree = new JTree(root);
     private final DefaultTreeModel treeModel = (DefaultTreeModel) tree.getModel();
 
     /**
@@ -79,10 +71,11 @@ public class BotExplorer extends JPanel {
     }
 
     private void initTree() {
-        refresh();
-
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        tree.setRootVisible(false);
+        tree.setShowsRootHandles(true);
         ToolTipManager.sharedInstance().registerComponent(tree);
+        refresh();
 
         DefaultTreeCellRenderer renderer = new DefaultTreeCellRenderer() {
             @Override
@@ -91,11 +84,7 @@ public class BotExplorer extends JPanel {
                 super.getTreeCellRendererComponent(tree, value, selected, expanded, leaf, row, hasFocus);
                 DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
                 Object object = node.getUserObject();
-                if (object instanceof HubService hub) {
-                    setIcon(serverIcon);
-                    setText(bundle.getString("AgentHubService") + (HubManager.getInstance().isRunning() ? " (Running)" : ""));
-                    setToolTipText(hub.host() + ":" + hub.port());
-                } else if (object instanceof BotTreeItem botItem) {
+                if (object instanceof BotTreeItem botItem) {
                     setText(botItem.toString());
                     setToolTipText(botItem.bot().description());
                 } else if (object instanceof RoutineTreeItem routineItem) {
@@ -137,7 +126,7 @@ public class BotExplorer extends JPanel {
                     }
                     if (userObj instanceof RoutineTreeItem routineItem) {
                         ws.openBotManager(routineItem.routine().routineId());
-                    } else if (e.getClickCount() == 2 && (node == hubNode || userObj instanceof BotTreeItem)) {
+                    } else if (e.getClickCount() == 2 && userObj instanceof BotTreeItem) {
                         ws.openBotActivity(0);
                     }
                 }
@@ -146,11 +135,11 @@ public class BotExplorer extends JPanel {
     }
 
     /**
-     * Populates the {@link #hubNode} subtree from {@code ${smile.home}/conf/bots.json}
+     * Populates the {@link #root} subtree from {@code ${smile.home}/conf/bots.json}
      * and expands all Bot persona nodes.
      */
     public final void refresh() {
-        hubNode.removeAllChildren();
+        root.removeAllChildren();
         try {
             BotsConfig cfg = BotsConfig.load();
             for (BotsConfig.BotSpec bot : cfg.bots()) {
@@ -158,12 +147,12 @@ public class BotExplorer extends JPanel {
                 for (BotsConfig.RoutineSpec routine : bot.routines()) {
                     botTreeNode.add(new DefaultMutableTreeNode(new RoutineTreeItem(bot, routine)));
                 }
-                hubNode.add(botTreeNode);
+                root.add(botTreeNode);
             }
         } catch (Exception ex) {
             logger.debug("Could not populate Agent Hub tree nodes: {}", ex.getMessage());
         }
-        treeModel.reload(hubNode);
+        treeModel.reload(root);
         for (int i = 0; i < tree.getRowCount(); i++) {
             tree.expandRow(i);
         }
@@ -180,7 +169,7 @@ public class BotExplorer extends JPanel {
 
         JPopupMenu popup = new JPopupMenu();
 
-        if (node == hubNode || userObj instanceof BotTreeItem || userObj instanceof RoutineTreeItem) {
+        if (userObj instanceof BotTreeItem || userObj instanceof RoutineTreeItem) {
             if (userObj instanceof RoutineTreeItem item) {
                 JMenuItem runItem = new JMenuItem("▶ Run Now (" + item.routine().routineId() + ")");
                 runItem.addActionListener(ev -> Thread.ofPlatform().name("hub-tree-run").daemon(true).start(() -> {
