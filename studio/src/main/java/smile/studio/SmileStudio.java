@@ -218,6 +218,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                     } catch (Exception ex) {
                         logger.error("Failed to load model '{}': {}", inference.modelPath(), ex.getMessage());
                     }
+                    workspace.explorer().refreshLoadedModelIdsAsync();
                 });
             }
         }
@@ -553,9 +554,11 @@ public class SmileStudio extends JFrame implements SearchListener {
         inferenceMenu.add(new JMenuItem(new StopInferenceAction()));
         inferenceMenu.add(new JMenuItem(new RestartInferenceAction()));
         inferenceMenu.addSeparator();
+        inferenceMenu.add(new JMenuItem(new LoadModelAction()));
+        inferenceMenu.add(new JMenuItem(new OpenInferenceUiAction()));
+        inferenceMenu.addSeparator();
         inferenceMenu.add(new JMenuItem(new InferenceHealthAction()));
         inferenceMenu.add(new JMenuItem(new InferenceMetricsAction()));
-        inferenceMenu.add(new JMenuItem(new OpenInferenceUiAction()));
         menuBar.add(inferenceMenu);
 
         JMenu hubMenu = new JMenu(bundle.getString("AgentHub"));
@@ -810,6 +813,7 @@ public class SmileStudio extends JFrame implements SearchListener {
             var config = StudioConfig.inferenceServer();
             Thread.ofPlatform().name("serve-start").daemon(true).start(() -> {
                 boolean ok = ServeManager.getInstance().start(config.host(), config.port());
+                workspace.explorer().refreshLoadedModelIdsAsync();
                 SwingUtilities.invokeLater(() -> statusBar.setStatus(ok
                         ? java.text.MessageFormat.format(bundle.getString("InferenceStarted"),
                                 ServeManager.getInstance().baseUrl())
@@ -829,6 +833,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         @Override
         public void actionPerformed(ActionEvent e) {
             ServeManager.getInstance().stop();
+            workspace.explorer().refreshLoadedModelIdsAsync();
             statusBar.setStatus(bundle.getString("InferenceStopped"));
         }
     }
@@ -848,11 +853,33 @@ public class SmileStudio extends JFrame implements SearchListener {
                 var manager = ServeManager.getInstance();
                 manager.stop();
                 boolean ok = manager.start(config.host(), config.port());
+                workspace.explorer().refreshLoadedModelIdsAsync();
                 SwingUtilities.invokeLater(() -> statusBar.setStatus(ok
                         ? java.text.MessageFormat.format(bundle.getString("InferenceStarted"),
                                 manager.baseUrl())
                         : bundle.getString("InferenceStartFailed")));
             });
+        }
+    }
+
+    /** Prompts for a model file (.sml or .onnx), loads it into the inference service, and opens the Web UI. */
+    private class LoadModelAction extends AbstractAction {
+        public LoadModelAction() {
+            super(bundle.getString("LoadModel"));
+            putValue(LARGE_ICON_KEY, OpenNotebookAction.icons.large());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            var chooser = new com.formdev.flatlaf.util.SystemFileChooser();
+            chooser.setCurrentDirectory(workspace.cwd().toFile());
+            chooser.setDialogTitle(bundle.getString("LoadModel"));
+            chooser.setFileFilter(new com.formdev.flatlaf.util.SystemFileChooser.FileNameExtensionFilter(
+                    "SMILE & ONNX Models (*.sml, *.onnx)", "sml", "onnx"));
+            if (chooser.showOpenDialog(SmileStudio.this) == com.formdev.flatlaf.util.SystemFileChooser.APPROVE_OPTION
+                    && chooser.getSelectedFile() != null) {
+                workspace.explorer().openModelInWebUi(chooser.getSelectedFile().toPath());
+            }
         }
     }
 
