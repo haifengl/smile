@@ -30,9 +30,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.swing.*;
@@ -42,6 +45,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import ioa.llm.client.LLM;
 import ioa.llm.tool.AskUserQuestion;
 import ioa.llm.tool.TodoWrite;
@@ -86,8 +90,40 @@ public class BotActivity extends JPanel {
     };
     private final JTable approvalsTable = new JTable(approvalsModel);
     private List<HubClient.BotApprovalItem> currentApprovals = new ArrayList<>();
+
+    // Detail Tabs: Tab 0 = Structured Review & Edit, Tab 1 = Raw JSON (Advanced)
+    private final JTabbedPane detailTabs = new JTabbedPane(SwingConstants.TOP);
+
+    // Structured View components
+    private static final String CARD_DRAFT = "DRAFT";
+    private static final String CARD_PROMPT = "PROMPT";
+    private final CardLayout structuredCardLayout = new CardLayout();
+    private final JPanel structuredCards = new JPanel(structuredCardLayout);
+    private boolean currentItemDraftMode = true;
+
+    // Draft Composer fields (CARD_DRAFT)
+    private final JLabel draftMetaLabel = new JLabel("Select an approval item above to inspect or edit.");
+    private final JTextField draftToField = new JTextField();
+    private final JTextField draftCcField = new JTextField();
+    private final JTextField draftSubjectField = new JTextField();
+    private final JTextArea draftBodyArea = new JTextArea(7, 30);
+
+    // Prompt / Tool / Question fields (CARD_PROMPT)
+    private final JLabel promptMetaLabel = new JLabel("Select an approval item above to inspect.");
+    private final JTextArea promptBodyArea = new JTextArea(7, 30);
+    private final JTextField promptNoteField = new JTextField();
+
+    // Prior Draft (Diff Baseline) in Structured View (auto-hidden when no previousPayloadJson exists)
+    private final JPanel structuredPriorPanel = new JPanel(new BorderLayout(4, 4));
+    private final JTextArea structuredPriorArea = new JTextArea(7, 25);
+    private JSplitPane structuredDiffSplit;
+
+    // Raw JSON (Advanced) components (auto-hides left baseline when no previousPayloadJson exists)
+    private final JPanel rawPriorPanel = new JPanel(new BorderLayout(4, 4));
     private final JTextArea priorDraftArea = new JTextArea(7, 30);
     private final JTextArea editablePayloadArea = new JTextArea(7, 30);
+    private JSplitPane rawJsonDiffSplit;
+
     private final JTextField rulePatternField = new JTextField(20);
 
     private static final ObjectMapper TOOL_MAPPER = JsonMapper.builder()
@@ -97,6 +133,44 @@ public class BotActivity extends JPanel {
     private static final DateTimeFormatter TIMESTAMP_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final int DISPLAY_TEXT_LIMIT = 12_000;
+    private static final Pattern EMAIL_ACCOUNT_PATTERN =
+            Pattern.compile("Approve sending outbound email via account '([^']+)'\\?");
+
+    /**
+     * Structured, human-friendly representation of an approval item's payload,
+     * parsed from {@link HubClient.BotApprovalItem} so users can review and edit
+     * drafts or prompts without touching raw JSON.
+     *
+     * @param draftMode       true when the item is a message/post draft ({@code BATCH_DRAFT}
+     *                        or has {@code to}/{@code body} fields or {@code To:}/{@code Subject:} headers).
+     * @param header          the prompt or tool header (e.g. {@code "Outbound Email Approval"}).
+     * @param account         optional sending account extracted from an outbound email prompt.
+     * @param to              recipient(s) for a draft ({@code To:}).
+     * @param cc              CC recipient(s) for a draft ({@code Cc:}).
+     * @param subject         subject line or title for a draft ({@code Subject:}).
+     * @param body            the editable message body (for drafts) or the prompt/question text (for non-drafts).
+     * @param browserStateDir optional browser state directory for {@code SECURE_HANDOFF}.
+     * @param note            optional user answer or resolution note for non-draft items.
+     */
+    public record StructuredApprovalPayload(
+            boolean draftMode,
+            String header,
+            String account,
+            String to,
+            String cc,
+            String subject,
+            String body,
+            String browserStateDir,
+            String note
+    ) { }
+
+    private record ParsedEmailPrompt(
+            String account,
+            String to,
+            String cc,
+            String subject,
+            String body
+    ) { }
 
     /**
      * A human-readable conversation turn parsed from {@code conversation.jsonl}.
@@ -209,15 +283,19 @@ public class BotActivity extends JPanel {
             if (!e.getValueIsAdjusting()) {
                 int row = approvalsTable.getSelectedRow();
                 if (row >= 0 && row < currentApprovals.size()) {
-                    HubClient.BotApprovalItem item = currentApprovals.get(row);
-                    priorDraftArea.setText(item.previousPayloadJson() == null || item.previousPayloadJson().isBlank()
-                            ? "(No previous version — initial draft/request)"
-                            : item.previousPayloadJson());
-                    editablePayloadArea.setText(item.payloadJson() == null ? "" : item.payloadJson());
-                    rulePatternField.setText(item.subject() == null ? "*" : item.subject());
+                    displaySelectedApproval(currentApprovals.get(row));
                 }
             }
         });
+
+        structuredPriorArea.setEditable(false);
+        structuredPriorArea.setLineWrap(true);
+        structuredPriorArea.setWrapStyleWord(true);
+        draftBodyArea.setLineWrap(true);
+        draftBodyArea.setWrapStyleWord(true);
+        promptBodyArea.setEditable(false);
+        promptBodyArea.setLineWrap(true);
+        promptBodyArea.setWrapStyleWord(true);
 
         priorDraftArea.setEditable(false);
         priorDraftArea.setLineWrap(true);
@@ -225,19 +303,119 @@ public class BotActivity extends JPanel {
         editablePayloadArea.setLineWrap(true);
         editablePayloadArea.setWrapStyleWord(true);
 
-        JPanel diffLeft = new JPanel(new BorderLayout(4, 4));
-        diffLeft.add(new JLabel("Previous Draft / Prior Payload (Diff Baseline):"), BorderLayout.NORTH);
-        diffLeft.add(new JScrollPane(priorDraftArea), BorderLayout.CENTER);
+        // Build Card 1: Draft Composer (Email / LinkedIn / Community Posts)
+        JPanel draftCard = new JPanel(new BorderLayout(6, 6));
+        draftCard.setBorder(new EmptyBorder(4, 4, 4, 4));
+        JPanel draftHeaderGrid = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(2, 4, 2, 4);
+        gbc.anchor = GridBagConstraints.WEST;
 
-        JPanel diffRight = new JPanel(new BorderLayout(4, 4));
-        diffRight.add(new JLabel("Current / Editable Draft Payload (JSON or Text):"), BorderLayout.NORTH);
-        diffRight.add(new JScrollPane(editablePayloadArea), BorderLayout.CENTER);
+        draftMetaLabel.setFont(draftMetaLabel.getFont().deriveFont(Font.BOLD));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 4;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        draftHeaderGrid.add(draftMetaLabel, gbc);
 
-        JSplitPane diffSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, diffLeft, diffRight);
-        diffSplit.setResizeWeight(0.45);
+        gbc.gridwidth = 1;
+        gbc.gridy = 1;
+        gbc.gridx = 0;
+        gbc.weightx = 0.0;
+        gbc.fill = GridBagConstraints.NONE;
+        draftHeaderGrid.add(new JLabel("To / Recipient:"), gbc);
+        gbc.gridx = 1;
+        gbc.weightx = 0.55;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        draftHeaderGrid.add(draftToField, gbc);
+
+        gbc.gridx = 2;
+        gbc.weightx = 0.0;
+        gbc.fill = GridBagConstraints.NONE;
+        draftHeaderGrid.add(new JLabel("Cc:"), gbc);
+        gbc.gridx = 3;
+        gbc.weightx = 0.45;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        draftHeaderGrid.add(draftCcField, gbc);
+
+        gbc.gridy = 2;
+        gbc.gridx = 0;
+        gbc.weightx = 0.0;
+        gbc.fill = GridBagConstraints.NONE;
+        draftHeaderGrid.add(new JLabel("Subject / Title:"), gbc);
+        gbc.gridx = 1;
+        gbc.gridwidth = 3;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        draftHeaderGrid.add(draftSubjectField, gbc);
+
+        draftCard.add(draftHeaderGrid, BorderLayout.NORTH);
+        JPanel draftBodyPanel = new JPanel(new BorderLayout(2, 2));
+        draftBodyPanel.add(new JLabel("Message / Post Body (Editable):"), BorderLayout.NORTH);
+        draftBodyPanel.add(new JScrollPane(draftBodyArea), BorderLayout.CENTER);
+        draftCard.add(draftBodyPanel, BorderLayout.CENTER);
+
+        // Build Card 2: Prompt / Tool Confirm / Automation Write / Question / Secure Handoff
+        JPanel promptCard = new JPanel(new BorderLayout(6, 6));
+        promptCard.setBorder(new EmptyBorder(4, 4, 4, 4));
+        promptMetaLabel.setFont(promptMetaLabel.getFont().deriveFont(Font.BOLD));
+        promptCard.add(promptMetaLabel, BorderLayout.NORTH);
+
+        JPanel promptCenter = new JPanel(new BorderLayout(2, 2));
+        promptCenter.add(new JLabel("Question / Action Details:"), BorderLayout.NORTH);
+        promptCenter.add(new JScrollPane(promptBodyArea), BorderLayout.CENTER);
+        promptCard.add(promptCenter, BorderLayout.CENTER);
+
+        JPanel promptAnswerBar = new JPanel(new BorderLayout(6, 0));
+        promptAnswerBar.add(new JLabel("Answer / Resolution Note (optional):"), BorderLayout.WEST);
+        promptAnswerBar.add(promptNoteField, BorderLayout.CENTER);
+        promptCard.add(promptAnswerBar, BorderLayout.SOUTH);
+
+        structuredCards.add(draftCard, CARD_DRAFT);
+        structuredCards.add(promptCard, CARD_PROMPT);
+
+        structuredPriorPanel.add(new JLabel("Previous Draft (Diff Baseline):"), BorderLayout.NORTH);
+        structuredPriorPanel.add(new JScrollPane(structuredPriorArea), BorderLayout.CENTER);
+        structuredPriorPanel.setVisible(false);
+
+        structuredDiffSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, structuredPriorPanel, structuredCards);
+        structuredDiffSplit.setResizeWeight(0.40);
+        structuredDiffSplit.setDividerSize(0);
+
+        // Tab 2 of detail pane: Raw JSON (Advanced)
+        rawPriorPanel.add(new JLabel("Previous Draft / Prior Payload (JSON):"), BorderLayout.NORTH);
+        rawPriorPanel.add(new JScrollPane(priorDraftArea), BorderLayout.CENTER);
+        rawPriorPanel.setVisible(false);
+
+        JPanel rawRight = new JPanel(new BorderLayout(4, 4));
+        rawRight.add(new JLabel("Current / Editable Payload (Beautified JSON or Text):"), BorderLayout.NORTH);
+        rawRight.add(new JScrollPane(editablePayloadArea), BorderLayout.CENTER);
+
+        rawJsonDiffSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, rawPriorPanel, rawRight);
+        rawJsonDiffSplit.setResizeWeight(0.45);
+        rawJsonDiffSplit.setDividerSize(0);
+
+        detailTabs.addTab("Structured Review & Edit", structuredDiffSplit);
+        detailTabs.addTab("Raw JSON (Advanced)", rawJsonDiffSplit);
+        detailTabs.addChangeListener(e -> {
+            int row = approvalsTable.getSelectedRow();
+            if (row < 0 || row >= currentApprovals.size()) {
+                return;
+            }
+            HubClient.BotApprovalItem item = currentApprovals.get(row);
+            if (detailTabs.getSelectedIndex() == 1) {
+                // Sync Structured -> Raw JSON
+                editablePayloadArea.setText(serializeStructuredPayload(item, readStructuredFields()));
+                editablePayloadArea.setCaretPosition(0);
+            } else {
+                // Sync Raw JSON -> Structured
+                populateStructuredFields(item, parsePayloadString(editablePayloadArea.getText(), item));
+            }
+        });
 
         JPanel detailAndActions = new JPanel(new BorderLayout(6, 6));
-        detailAndActions.add(diffSplit, BorderLayout.CENTER);
+        detailAndActions.add(detailTabs, BorderLayout.CENTER);
 
         JPanel actionBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
         JButton allowOnceBtn = new JButton("✓ Allow Once");
@@ -339,7 +517,12 @@ public class BotActivity extends JPanel {
         });
     }
 
-    private void populateApprovals(List<HubClient.BotApprovalItem> list) {
+    /**
+     * Populates the approvals table and selects the first row if available.
+     *
+     * @param list the approval items to display.
+     */
+    public void populateApprovals(List<HubClient.BotApprovalItem> list) {
         currentApprovals = new ArrayList<>(list);
         approvalsModel.setRowCount(0);
         for (HubClient.BotApprovalItem a : list) {
@@ -358,7 +541,148 @@ public class BotActivity extends JPanel {
         }
         if (!list.isEmpty()) {
             approvalsTable.setRowSelectionInterval(0, 0);
+            displaySelectedApproval(list.getFirst());
         }
+    }
+
+    private void displaySelectedApproval(HubClient.BotApprovalItem item) {
+        if (item == null) {
+            return;
+        }
+        boolean hasPrevious = item.previousPayloadJson() != null && !item.previousPayloadJson().isBlank();
+
+        // Populate Raw JSON tab
+        priorDraftArea.setText(hasPrevious
+                ? formatPayloadForDisplay(item.previousPayloadJson())
+                : "(No previous version — initial draft/request)");
+        priorDraftArea.setCaretPosition(0);
+        editablePayloadArea.setText(formatPayloadForDisplay(item.payloadJson()));
+        editablePayloadArea.setCaretPosition(0);
+
+        rawPriorPanel.setVisible(hasPrevious);
+        if (rawJsonDiffSplit != null) {
+            rawJsonDiffSplit.setDividerSize(hasPrevious ? 6 : 0);
+            if (hasPrevious) {
+                rawJsonDiffSplit.setDividerLocation(0.42);
+            }
+        }
+
+        // Populate Structured View tab
+        structuredPriorArea.setText(hasPrevious ? formatReadablePayload(item.previousPayloadJson(), item) : "");
+        structuredPriorArea.setCaretPosition(0);
+        structuredPriorPanel.setVisible(hasPrevious);
+        if (structuredDiffSplit != null) {
+            structuredDiffSplit.setDividerSize(hasPrevious ? 6 : 0);
+            if (hasPrevious) {
+                structuredDiffSplit.setDividerLocation(0.40);
+            }
+        }
+
+        StructuredApprovalPayload structured = parseApprovalPayload(item);
+        populateStructuredFields(item, structured);
+
+        rulePatternField.setText(item.subject() == null || item.subject().isBlank() ? "*" : item.subject());
+    }
+
+    private void populateStructuredFields(HubClient.BotApprovalItem item, StructuredApprovalPayload structured) {
+        currentItemDraftMode = structured.draftMode();
+        String kindBadge = item != null && item.kind() != null && !item.kind().isBlank()
+                ? "[" + item.kind() + "] "
+                : "";
+        String personaInfo = item != null && item.persona() != null && !item.persona().isBlank()
+                ? "  •  @" + item.persona() + (item.routineId() != null && !item.routineId().isBlank() ? " (" + item.routineId() + ")" : "")
+                : "";
+        String channelInfo = item != null && item.channel() != null && !item.channel().isBlank()
+                ? "  •  Channel: " + item.channel()
+                : "";
+        String accountInfo = !structured.account().isBlank()
+                ? "  •  Account: " + structured.account()
+                : "";
+        String title = !structured.header().isBlank()
+                ? structured.header()
+                : (item != null && item.subject() != null ? item.subject() : "Approval Item");
+
+        if (structured.draftMode()) {
+            draftMetaLabel.setText(kindBadge + title + channelInfo + accountInfo + personaInfo);
+            draftToField.setText(structured.to());
+            draftCcField.setText(structured.cc());
+            draftSubjectField.setText(structured.subject());
+            draftBodyArea.setText(structured.body());
+            draftBodyArea.setCaretPosition(0);
+            structuredCardLayout.show(structuredCards, CARD_DRAFT);
+        } else {
+            String stateInfo = !structured.browserStateDir().isBlank()
+                    ? "  •  Browser State: " + structured.browserStateDir()
+                    : "";
+            promptMetaLabel.setText(kindBadge + title + personaInfo + stateInfo);
+            promptBodyArea.setText(structured.body());
+            promptBodyArea.setCaretPosition(0);
+            promptNoteField.setText(structured.note());
+            structuredCardLayout.show(structuredCards, CARD_PROMPT);
+        }
+    }
+
+    /**
+     * Reads the current state of the Structured Review &amp; Edit fields.
+     *
+     * @return the current {@link StructuredApprovalPayload} from the UI controls.
+     */
+    public StructuredApprovalPayload readStructuredFields() {
+        int row = approvalsTable.getSelectedRow();
+        HubClient.BotApprovalItem item = (row >= 0 && row < currentApprovals.size()) ? currentApprovals.get(row) : null;
+        StructuredApprovalPayload base = parseApprovalPayload(item);
+        if (currentItemDraftMode) {
+            return new StructuredApprovalPayload(
+                    true,
+                    base.header(),
+                    base.account(),
+                    draftToField.getText().trim(),
+                    draftCcField.getText().trim(),
+                    draftSubjectField.getText().trim(),
+                    draftBodyArea.getText(),
+                    base.browserStateDir(),
+                    ""
+            );
+        }
+        return new StructuredApprovalPayload(
+                false,
+                base.header(),
+                base.account(),
+                base.to(),
+                base.cc(),
+                base.subject(),
+                promptBodyArea.getText(),
+                base.browserStateDir(),
+                promptNoteField.getText().trim()
+        );
+    }
+
+    /**
+     * Returns the effective edited payload JSON for the currently selected approval row,
+     * reading from either the Structured View or the Raw JSON tab depending on which is active.
+     *
+     * @return the serialized edited payload string.
+     */
+    public String currentEditedPayloadJson() {
+        int row = approvalsTable.getSelectedRow();
+        HubClient.BotApprovalItem item = (row >= 0 && row < currentApprovals.size()) ? currentApprovals.get(row) : null;
+        if (detailTabs.getSelectedIndex() == 1) {
+            return editablePayloadArea.getText().trim();
+        }
+        String serialized = serializeStructuredPayload(item, readStructuredFields());
+        editablePayloadArea.setText(serialized);
+        editablePayloadArea.setCaretPosition(0);
+        return serialized;
+    }
+
+    /** Returns true when the Previous Draft diff baseline panel is visible in Structured View. */
+    public boolean isPriorDraftPanelVisible() {
+        return structuredPriorPanel.isVisible();
+    }
+
+    /** Returns true when the Structured View is currently showing the Draft Composer card. */
+    public boolean isDraftComposerActive() {
+        return currentItemDraftMode;
     }
 
     private void populateRuns(List<HubClient.BotRunSummary> list) {
@@ -406,11 +730,16 @@ public class BotActivity extends JPanel {
         if (item.id() == null) {
             return;
         }
-        String edited = editablePayloadArea.getText().trim();
+        String edited = currentEditedPayloadJson();
+        String effectiveDecision = decision;
+        if ("ALLOW_ONCE".equals(decision) && !currentItemDraftMode && !promptNoteField.getText().trim().isEmpty()) {
+            effectiveDecision = "EDIT_AND_APPROVE";
+        }
+        String finalDecision = effectiveDecision;
         String pattern = rulePatternField.getText().trim();
         Thread.ofPlatform().name("bot-approval-resolve").daemon(true).start(() -> {
             try {
-                HubManager.getInstance().client().resolveApproval(item.id(), decision, edited, pattern);
+                HubManager.getInstance().client().resolveApproval(item.id(), finalDecision, edited, pattern);
                 SwingUtilities.invokeLater(this::refreshAllAsync);
             } catch (Exception ex) {
                 SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
@@ -425,10 +754,19 @@ public class BotActivity extends JPanel {
     private void batchResolveChecked(String decision) {
         List<Long> checkedIds = new ArrayList<>();
         Map<String, String> edits = new HashMap<>();
+        int selectedRow = approvalsTable.getSelectedRow();
         for (int i = 0; i < approvalsModel.getRowCount() && i < currentApprovals.size(); i++) {
             Boolean checked = (Boolean) approvalsModel.getValueAt(i, 0);
-            if (Boolean.TRUE.equals(checked) && currentApprovals.get(i).id() != null) {
-                checkedIds.add(currentApprovals.get(i).id());
+            HubClient.BotApprovalItem item = currentApprovals.get(i);
+            if (Boolean.TRUE.equals(checked) && item.id() != null) {
+                checkedIds.add(item.id());
+                if (i == selectedRow) {
+                    String edited = currentEditedPayloadJson();
+                    String origFormatted = formatPayloadForDisplay(item.payloadJson());
+                    if (!edited.isBlank() && !edited.equals(origFormatted)) {
+                        edits.put(String.valueOf(item.id()), edited);
+                    }
+                }
             }
         }
         if (checkedIds.isEmpty()) {
@@ -590,6 +928,318 @@ public class BotActivity extends JPanel {
             intent.output().highlight();
         }
         return intent;
+    }
+
+    /**
+     * Pretty-prints a JSON payload string with indentation for human-readable
+     * inspection and editing in the Approvals &amp; Batch Draft Queue pane.
+     * Non-JSON text or blank strings are returned unchanged.
+     *
+     * @param payload the raw payload string (compact JSON or plain text).
+     * @return the pretty-printed JSON or original text.
+     */
+    public static String formatPayloadForDisplay(String payload) {
+        if (payload == null || payload.isBlank()) {
+            return "";
+        }
+        String trimmed = payload.trim();
+        if ((trimmed.startsWith("{") && trimmed.endsWith("}"))
+                || (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+            try {
+                JsonNode node = TOOL_MAPPER.readTree(trimmed);
+                return TOOL_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(node);
+            } catch (Exception ignored) {
+            }
+        }
+        return payload;
+    }
+
+    /**
+     * Parses a {@link HubClient.BotApprovalItem} into a {@link StructuredApprovalPayload}
+     * so the UI can display structured form fields (To, Cc, Subject, Body) for drafts
+     * or a readable Question / Action card for tool confirmations and questions.
+     *
+     * @param item the approval item to parse.
+     * @return the structured payload model.
+     */
+    public static StructuredApprovalPayload parseApprovalPayload(HubClient.BotApprovalItem item) {
+        if (item == null) {
+            return new StructuredApprovalPayload(true, "", "", "", "", "", "", "", "");
+        }
+        return parsePayloadString(item.payloadJson(), item);
+    }
+
+    /**
+     * Parses a raw JSON or text payload string in the context of an optional
+     * {@link HubClient.BotApprovalItem}.
+     *
+     * @param rawPayload the JSON or plain-text payload string.
+     * @param context    optional approval item metadata (`kind`, `channel`, `recipient`, `subject`).
+     * @return the parsed {@link StructuredApprovalPayload}.
+     */
+    public static StructuredApprovalPayload parsePayloadString(String rawPayload, HubClient.BotApprovalItem context) {
+        String kind = context != null && context.kind() != null ? context.kind().trim() : "";
+        String channel = context != null && context.channel() != null ? context.channel().trim() : "";
+        String ctxRecipient = context != null && context.recipient() != null ? context.recipient().trim() : "";
+        String ctxSubject = context != null && context.subject() != null ? context.subject().trim() : "";
+
+        boolean kindIsDraft = "BATCH_DRAFT".equalsIgnoreCase(kind)
+                || "email".equalsIgnoreCase(channel)
+                || "linkedin".equalsIgnoreCase(channel)
+                || "community".equalsIgnoreCase(channel);
+
+        if (rawPayload == null || rawPayload.isBlank()) {
+            return new StructuredApprovalPayload(kindIsDraft, "", "", ctxRecipient, "", ctxSubject, "", "", "");
+        }
+
+        String trimmed = rawPayload.trim();
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            try {
+                JsonNode node = TOOL_MAPPER.readTree(trimmed);
+                if (node != null && node.isObject()) {
+                    String header = textValue(node.get("header"));
+                    String explicitAccount = textValue(node.get("account"));
+                    String explicitTo = textValue(node.get("to"));
+                    String explicitCc = textValue(node.get("cc"));
+                    String explicitSubject = textValue(node.get("subject"));
+                    String explicitBody = textValue(node.get("body"));
+                    String question = textValue(node.get("question"));
+                    String browserStateDir = textValue(node.get("browserStateDir"));
+                    String note = firstNonBlank(textValue(node.get("answer")), textValue(node.get("note")));
+
+                    ParsedEmailPrompt emailPrompt = parseEmailPrompt(question);
+                    String hLower = header.toLowerCase(Locale.ROOT);
+                    boolean draftMode = kindIsDraft
+                            || !explicitBody.isBlank()
+                            || !explicitTo.isBlank()
+                            || emailPrompt != null
+                            || hLower.contains("email approval")
+                            || hLower.contains("draft")
+                            || hLower.contains("outreach");
+
+                    String account = firstNonBlank(
+                            explicitAccount,
+                            emailPrompt != null ? emailPrompt.account() : ""
+                    );
+                    String to = firstNonBlank(
+                            explicitTo,
+                            emailPrompt != null ? emailPrompt.to() : "",
+                            ctxRecipient
+                    );
+                    String cc = firstNonBlank(
+                            explicitCc,
+                            emailPrompt != null ? emailPrompt.cc() : ""
+                    );
+                    String subject = firstNonBlank(
+                            explicitSubject,
+                            emailPrompt != null ? emailPrompt.subject() : "",
+                            ctxSubject,
+                            header
+                    );
+                    String body;
+                    if (!explicitBody.isBlank()) {
+                        body = explicitBody;
+                    } else if (emailPrompt != null) {
+                        body = emailPrompt.body();
+                    } else if (!question.isBlank()) {
+                        body = question;
+                    } else {
+                        body = formatPayloadForDisplay(rawPayload);
+                    }
+                    return new StructuredApprovalPayload(
+                            draftMode, header, account, to, cc, subject, body, browserStateDir, note
+                    );
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        ParsedEmailPrompt emailPrompt = parseEmailPrompt(rawPayload);
+        boolean draftMode = kindIsDraft || emailPrompt != null;
+        String account = emailPrompt != null ? emailPrompt.account() : "";
+        String to = firstNonBlank(emailPrompt != null ? emailPrompt.to() : "", ctxRecipient);
+        String cc = emailPrompt != null ? emailPrompt.cc() : "";
+        String subject = firstNonBlank(emailPrompt != null ? emailPrompt.subject() : "", ctxSubject);
+        String body = emailPrompt != null ? emailPrompt.body() : rawPayload;
+        return new StructuredApprovalPayload(draftMode, "", account, to, cc, subject, body, "", "");
+    }
+
+    /**
+     * Formats a raw JSON or text payload into a clean, human-readable summary
+     * for the Previous Draft (Diff Baseline) pane in Structured View.
+     *
+     * @param rawPayload the previous payload string.
+     * @param context    optional approval item context.
+     * @return human-readable formatted text without JSON syntax noise.
+     */
+    public static String formatReadablePayload(String rawPayload, HubClient.BotApprovalItem context) {
+        if (rawPayload == null || rawPayload.isBlank()) {
+            return "";
+        }
+        StructuredApprovalPayload parsed = parsePayloadString(rawPayload, context);
+        StringBuilder sb = new StringBuilder();
+        if (parsed.draftMode()) {
+            if (!parsed.to().isBlank()) {
+                sb.append("To: ").append(parsed.to()).append('\n');
+            }
+            if (!parsed.cc().isBlank()) {
+                sb.append("Cc: ").append(parsed.cc()).append('\n');
+            }
+            if (!parsed.subject().isBlank()) {
+                sb.append("Subject: ").append(parsed.subject()).append('\n');
+            }
+            if (!sb.isEmpty()) {
+                sb.append('\n');
+            }
+            sb.append(parsed.body());
+        } else {
+            if (!parsed.header().isBlank()) {
+                sb.append(parsed.header()).append("\n\n");
+            }
+            sb.append(parsed.body());
+            if (!parsed.browserStateDir().isBlank()) {
+                sb.append("\n\nBrowser State Dir: ").append(parsed.browserStateDir());
+            }
+            if (!parsed.note().isBlank()) {
+                sb.append("\n\nAnswer / Note: ").append(parsed.note());
+            }
+        }
+        return sb.toString().strip();
+    }
+
+    /**
+     * Serializes user edits from the Structured Review &amp; Edit view back into
+     * pretty-printed JSON compatible with {@code Agent Hub} and the {@code Email} tool
+     * ({@code Email.applyEditedApprovalIfPresent}).
+     *
+     * @param item   the original approval item (may be null).
+     * @param edited the structured field values from the UI.
+     * @return pretty-printed JSON payload string.
+     */
+    public static String serializeStructuredPayload(
+            HubClient.BotApprovalItem item,
+            StructuredApprovalPayload edited
+    ) {
+        if (edited == null) {
+            return item != null ? formatPayloadForDisplay(item.payloadJson()) : "";
+        }
+        ObjectNode obj = TOOL_MAPPER.createObjectNode();
+        boolean hadQuestionField = false;
+        boolean hadEmailPromptInQuestion = false;
+        if (item != null && item.payloadJson() != null) {
+            String raw = item.payloadJson().trim();
+            if (raw.startsWith("{") && raw.endsWith("}")) {
+                try {
+                    JsonNode existing = TOOL_MAPPER.readTree(raw);
+                    if (existing != null && existing.isObject()) {
+                        obj = ((ObjectNode) existing).deepCopy();
+                        hadQuestionField = obj.has("question");
+                        hadEmailPromptInQuestion = parseEmailPrompt(textValue(obj.get("question"))) != null;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
+        if (edited.draftMode()) {
+            if (!edited.header().isBlank()) {
+                obj.put("header", edited.header());
+            }
+            if (!edited.account().isBlank()) {
+                obj.put("account", edited.account());
+            }
+            obj.put("to", edited.to());
+            if (!edited.cc().isBlank() || obj.has("cc")) {
+                obj.put("cc", edited.cc());
+            }
+            obj.put("subject", edited.subject());
+            obj.put("body", edited.body());
+            if (hadQuestionField) {
+                if (hadEmailPromptInQuestion) {
+                    StringBuilder q = new StringBuilder();
+                    if (!edited.account().isBlank()) {
+                        q.append("Approve sending outbound email via account '")
+                                .append(edited.account())
+                                .append("'?\n\n");
+                    }
+                    q.append("To: ").append(edited.to()).append('\n');
+                    if (!edited.cc().isBlank()) {
+                        q.append("Cc: ").append(edited.cc()).append('\n');
+                    }
+                    q.append("Subject: ").append(edited.subject()).append("\n\n")
+                            .append(edited.body());
+                    obj.put("question", q.toString());
+                } else {
+                    obj.put("question", edited.body());
+                }
+            }
+        } else {
+            if (!edited.header().isBlank()) {
+                obj.put("header", edited.header());
+            }
+            obj.put("question", edited.body());
+            if (!edited.browserStateDir().isBlank()) {
+                obj.put("browserStateDir", edited.browserStateDir());
+            }
+            if (!edited.note().isBlank()) {
+                obj.put("answer", edited.note());
+                obj.put("note", edited.note());
+            }
+        }
+
+        try {
+            return TOOL_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(obj);
+        } catch (Exception ex) {
+            return edited.body();
+        }
+    }
+
+    private static ParsedEmailPrompt parseEmailPrompt(String text) {
+        if (text == null || text.isBlank()) {
+            return null;
+        }
+        String normalized = text.replace("\r\n", "\n");
+        String[] lines = normalized.split("\n", -1);
+        String account = "";
+        String to = null;
+        String cc = "";
+        String subject = null;
+        int bodyStartLine = -1;
+
+        for (int i = 0; i < lines.length; i++) {
+            String line = lines[i].trim();
+            if (i == 0) {
+                Matcher m = EMAIL_ACCOUNT_PATTERN.matcher(line);
+                if (m.find()) {
+                    account = m.group(1).trim();
+                    continue;
+                }
+            }
+            if (to == null && line.startsWith("To:")) {
+                to = line.substring("To:".length()).trim();
+            } else if (subject == null && line.startsWith("Cc:")) {
+                cc = line.substring("Cc:".length()).trim();
+            } else if (subject == null && line.startsWith("Subject:")) {
+                subject = line.substring("Subject:".length()).trim();
+                bodyStartLine = i + 1;
+                if (bodyStartLine < lines.length && lines[bodyStartLine].isEmpty()) {
+                    bodyStartLine++;
+                }
+                break;
+            }
+        }
+
+        if (to == null || subject == null || bodyStartLine < 0) {
+            return null;
+        }
+        StringBuilder body = new StringBuilder();
+        for (int i = bodyStartLine; i < lines.length; i++) {
+            if (i > bodyStartLine) {
+                body.append('\n');
+            }
+            body.append(lines[i]);
+        }
+        return new ParsedEmailPrompt(account, to, cc, subject, body.toString());
     }
 
     /**
