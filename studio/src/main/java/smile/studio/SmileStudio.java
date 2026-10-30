@@ -655,9 +655,9 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class OpenNotebookAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/open.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/book.png");
         public OpenNotebookAction() {
-            super(bundle.getString("Open")); // , icons.small());
+            super(bundle.getString("Open"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
             int c = getToolkit().getMenuShortcutKeyMaskEx();
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_O, c));
@@ -698,15 +698,15 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class AutoSaveAction extends AbstractAction {
-        // static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/refresh.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/refresh.png");
         public AutoSaveAction() {
             super(bundle.getString("AutoSave"));
             // Without icon, menu items won't align well on Mac.
             // However, FlatLaf won't show check mark on Windows
             // if we set the icon.
-            // if (SystemInfo.isMacFullWindowContentSupported) {
-            //     icons.applyTo(this);
-            // }
+            if (SystemInfo.isMacFullWindowContentSupported) {
+                icons.applyTo(this);
+            }
         }
 
         @Override
@@ -751,9 +751,9 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class ClearAllAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/clear.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/trash.png");
         public ClearAllAction() {
-            super(bundle.getString("ClearAll")); // , icons.small());
+            super(bundle.getString("ClearAll"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -766,7 +766,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     private class StopAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/cancel.png");
         public StopAction() {
-            super(bundle.getString("Stop")); // , icons.small());
+            super(bundle.getString("Stop"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -885,9 +885,9 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     /** Opens the inference service health endpoint in the browser. */
     private class InferenceHealthAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/health.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/heart-beat.png");
         public InferenceHealthAction() {
-            super(bundle.getString("InferenceHealth")); // , icons.small());
+            super(bundle.getString("InferenceHealth"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -1017,9 +1017,9 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class BotActivityAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/approved.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/check-circle.png");
         public BotActivityAction() {
-            super(bundle.getString("BotActivity")); // , icons.small());
+            super(bundle.getString("BotActivity"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -1086,7 +1086,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     private static class ExitAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/exit.png");
         public ExitAction() {
-            super(bundle.getString("Exit")); // , icons.small());
+            super(bundle.getString("Exit") , icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -1102,9 +1102,9 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class ShowFindDialogAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/find.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/search.png");
         ShowFindDialogAction() {
-            super(bundle.getString("Find")); // , icons.small());
+            super(bundle.getString("Find"), icons.small());
             int c = getToolkit().getMenuShortcutKeyMaskEx();
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_F, c));
             putValue(LARGE_ICON_KEY, icons.large());
@@ -1120,9 +1120,9 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class ShowReplaceDialogAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/replace.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/change.png");
         ShowReplaceDialogAction() {
-            super(bundle.getString("Replace")); // , icons.small());
+            super(bundle.getString("Replace"), icons.small());
             int c = getToolkit().getMenuShortcutKeyMaskEx();
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_H, c));
             putValue(LARGE_ICON_KEY, icons.large());

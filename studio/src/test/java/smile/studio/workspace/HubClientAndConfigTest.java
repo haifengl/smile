@@ -27,6 +27,7 @@ import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
 import smile.shell.Hub;
 import smile.studio.StudioConfig;
+import smile.studio.bot.BotActivity;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -118,5 +119,71 @@ public class HubClientAndConfigTest {
         assertTrue(titles.contains("👔 Frank the Chief of Staff"));
         assertTrue(titles.contains("📣 Julien the Evangelist"));
         assertTrue(titles.contains("🤝 Mike the DealMaker"));
+    }
+
+    @Test
+    public void testParseTranscriptFormatsToolCallsAndAssistantTurns() {
+        String jsonl = """
+                {"role":"user","type":"TEXT","content":"<system-reminder>\\nCurrent UTC time: 2026-10-30T00:00:00Z\\n</system-reminder>\\nRun the daily recap for @frank","timestamp":"2026-10-30T02:21:41.692Z"}
+                {"role":"tool","type":"TEXT","content":{"message":[{"arguments":{"path":"studio/src/main","pattern":"**/*Bot*"},"id":"call_1","name":"Glob","type":"function_call"},{"arguments":{"offset":0,"limit":2000,"file_path":"/workspace/BotActivity.java"},"id":"call_2","name":"Read","type":"function_call"}],"outputs":[{"id":"call_1","name":"Glob","output":"BotActivity.java","success":true},{"id":"call_2","name":"Read","output":"Error: File does not exist","success":false}]},"timestamp":"2026-10-30T02:21:55.000Z"}
+                {"role":"tool","type":"TEXT","content":{"message":[{"arguments":{"todos":[{"status":"completed","active_form":"Reading logs","content":"Read daily logs"},{"status":"in_progress","active_form":"Writing executive brief","content":"Write executive brief"}]},"id":"call_3","name":"TodoWrite","type":"function_call"}],"outputs":[{"id":"call_3","name":"TodoWrite","output":"Todo list was updated.","success":true}]},"timestamp":"2026-10-30T02:22:05.000Z"}
+                {"role":"assistant","type":"TEXT","content":"### Executive Brief\\nAll daily logs have been consolidated.","timestamp":"2026-10-30T02:22:42.000Z"}
+                {"role":"user","type":"TEXT","content":"Stage follow-up email","timestamp":"2026-10-30T02:24:06.000Z"}
+                {"role":"tool","type":"TEXT","content":{"message":{"content":"I will run the check first.","role":"assistant","tool_calls":[{"id":"call_4","type":"function","function":{"name":"PowerShell","arguments":"{\\"description\\":\\"Check hub status\\",\\"command\\":\\"curl http://localhost:8891/q/health\\"}"}}]},"outputs":[{"id":"call_4","name":"PowerShell","output":"UP","success":true}]},"timestamp":"2026-10-30T02:24:15.000Z"}
+                {"role":"assistant","type":"TEXT","content":"Follow-up email draft has been staged.","timestamp":"2026-10-30T02:24:30.000Z"}
+                """;
+
+        List<BotActivity.TranscriptTurn> turns = BotActivity.parseTranscript(jsonl);
+        assertEquals(2, turns.size());
+
+        BotActivity.TranscriptTurn first = turns.get(0);
+        assertEquals("Run the daily recap for @frank", first.prompt());
+        assertFalse(first.status().isBlank());
+        assertTrue(first.output().contains("  ✅ Glob **/*Bot*"));
+        assertTrue(first.output().contains("  ❌ Read /workspace/BotActivity.java"));
+        assertTrue(first.output().contains("📝 Current Tasks:"));
+        assertTrue(first.output().contains("✅ Read daily logs"));
+        assertTrue(first.output().contains("🚧 Write executive brief"));
+        assertTrue(first.output().contains("### Executive Brief"));
+
+        BotActivity.TranscriptTurn second = turns.get(1);
+        assertEquals("Stage follow-up email", second.prompt());
+        assertTrue(second.output().contains("I will run the check first."));
+        assertTrue(second.output().contains("  ✅ Check hub status"));
+        assertTrue(second.output().contains("Follow-up email draft has been staged."));
+    }
+
+    @Test
+    public void testParseTranscriptHandlesBotServiceFallbackSummaryAndChatCompletionsFallback() {
+        String fallbackJsonl = """
+                {"role":"assistant","routineId":"daily-log","persona":"chief-of-staff","status":"SKIPPED_IDLE","summary":"Skipped: persona 'chief-of-staff' had 0 modified sessions today."}
+                """;
+        List<BotActivity.TranscriptTurn> turns = BotActivity.parseTranscript(fallbackJsonl);
+        assertEquals(1, turns.size());
+        assertEquals("Routine: daily-log (@chief-of-staff)", turns.getFirst().prompt());
+        assertEquals("SKIPPED_IDLE", turns.getFirst().status());
+        assertEquals("Skipped: persona 'chief-of-staff' had 0 modified sessions today.", turns.getFirst().output());
+
+        // ChatCompletions union serialization where arguments are omitted on tool_calls
+        String chatCompletionsJsonl = """
+                {"role":"user","type":"TEXT","content":"Fix UI","timestamp":"2026-10-12T02:49:36Z"}
+                {"role":"tool","type":"TEXT","content":{"message":{"content":"Editing the file now.","role":"assistant","tool_calls":[{"custom":false,"function":true,"valid":true}],"valid":true},"outputs":[{"id":"chatcmpl-1","name":"Edit","output":"File '/src/App.jsx' edited successfully.","success":true}]},"timestamp":"2026-10-12T02:50:36Z"}
+                {"role":"assistant","type":"TEXT","content":"Done.","timestamp":"2026-10-12T02:50:54Z"}
+                """;
+        List<BotActivity.TranscriptTurn> chatTurns = BotActivity.parseTranscript(chatCompletionsJsonl);
+        assertEquals(1, chatTurns.size());
+        assertTrue(chatTurns.getFirst().output().contains("Editing the file now."));
+        assertTrue(chatTurns.getFirst().output().contains("  ✅ Edit /src/App.jsx"));
+        assertTrue(chatTurns.getFirst().output().contains("Done."));
+
+        // Verify rendering into Intent widgets in BotActivity
+        BotActivity activity = new BotActivity(1);
+        activity.renderTranscript(chatCompletionsJsonl, null);
+        var intents = activity.transcriptIntentList();
+        assertEquals(1, intents.size());
+        assertFalse(intents.getFirst().editor().isEditable());
+        assertEquals("Fix UI", intents.getFirst().editor().getText());
+        assertTrue(intents.getFirst().output().getText().contains("  ✅ Edit /src/App.jsx"));
+        assertTrue(intents.getFirst().output().getText().contains("Done."));
     }
 }
