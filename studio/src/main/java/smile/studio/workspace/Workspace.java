@@ -39,7 +39,7 @@ import smile.shell.JShell;
 import smile.studio.SmileStudio;
 import smile.studio.bot.BotActivity;
 import smile.studio.bot.BotManager;
-import smile.studio.cli.AgentCLI;
+import smile.studio.agent.AgentPanel;
 import smile.studio.notebook.Notebook;
 import smile.studio.text.Notepad;
 import smile.swing.FileExplorer;
@@ -113,7 +113,7 @@ public class Workspace extends JSplitPane {
      */
     private BotManager botManager;
     /**
-     * The tabbed pane for agent CLIs.
+     * The tabbed pane for agent panels.
      */
     private final JTabbedPane agentTabs = new JTabbedPane();
     /**
@@ -125,9 +125,9 @@ public class Workspace extends JSplitPane {
             "data-scientist", "architect", "java-coder", "python-coder", "desktop-operator"
     );
     /**
-     * Outstanding questions per agent CLI, used to mark its tab until answered.
+     * Outstanding questions per agent panel, used to mark its tab until answered.
      */
-    private final Map<AgentCLI, Integer> pendingQuestions = new IdentityHashMap<>();
+    private final Map<AgentPanel, Integer> pendingQuestions = new IdentityHashMap<>();
     /**
      * The opened files, notebooks and plain text alike.
      */
@@ -250,7 +250,7 @@ public class Workspace extends JSplitPane {
                 Agent agent = initAgent(entry.spec(), cwd);
                 if (agent != null) {
                     panel.add(agent);
-                    openAgent(agent, agentCLI(agent));
+                    openAgent(agent, agentPanel(agent));
                 }
             }
         } catch (Exception ex) {
@@ -375,13 +375,13 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Refreshes model selectors on every agent CLI after settings change.
+     * Refreshes model selectors on every agent panel after settings change.
      */
     public void refreshAgentModelSelectors() {
         for (int i = 0; i < agentTabs.getTabCount(); i++) {
             Component c = agentTabs.getComponentAt(i);
-            if (c instanceof AgentCLI cli) {
-                cli.refreshModels();
+            if (c instanceof AgentPanel panel) {
+                panel.refreshModels();
             }
         }
     }
@@ -395,7 +395,7 @@ public class Workspace extends JSplitPane {
      * input is brought to front even when the user has switched to another
      * agent's tab, and stays marked until answered.
      */
-    private void openAgent(Agent agent, AgentCLI cli) {
+    private void openAgent(Agent agent, AgentPanel panel) {
         if (agent == null) {
             return;
         }
@@ -404,18 +404,18 @@ public class Workspace extends JSplitPane {
         agent.session().addListener(new ioa.agent.AgentListener() {
             @Override
             public void onQueued(ioa.agent.AgentRequest request) {
-                SwingUtilities.invokeLater(() -> agentTabs.setSelectedComponent(cli));
+                SwingUtilities.invokeLater(() -> agentTabs.setSelectedComponent(panel));
             }
 
             @Override
             public void onQuestion(String runId, ioa.llm.tool.Question question) {
                 SwingUtilities.invokeLater(() -> {
-                    markQuestionPending(title, cli, question);
-                    agentTabs.setSelectedComponent(cli);
+                    markQuestionPending(title, panel, question);
+                    agentTabs.setSelectedComponent(panel);
                 });
             }
         });
-        agentTabs.addTab(title, cli);
+        agentTabs.addTab(title, panel);
     }
 
     /**
@@ -425,17 +425,17 @@ public class Workspace extends JSplitPane {
      * it re-enters the event dispatch thread before touching Swing.
      *
      * @param title the tab's base title.
-     * @param cli the agent's CLI, i.e. the tab component.
+     * @param panel the agent's panel, i.e. the tab component.
      * @param question the question the agent is waiting on.
      */
-    private void markQuestionPending(String title, AgentCLI cli, ioa.llm.tool.Question question) {
-        pendingQuestions.merge(cli, 1, Integer::sum);
-        int index = indexOfAgent(cli);
+    private void markQuestionPending(String title, AgentPanel panel, ioa.llm.tool.Question question) {
+        pendingQuestions.merge(panel, 1, Integer::sum);
+        int index = indexOfAgent(panel);
         if (index >= 0) {
             agentTabs.setTitleAt(index, title + "  \u2753");
         }
         question.ask().whenComplete((answer, error) ->
-                SwingUtilities.invokeLater(() -> clearQuestionPending(title, cli)));
+                SwingUtilities.invokeLater(() -> clearQuestionPending(title, panel)));
     }
 
     /**
@@ -443,13 +443,13 @@ public class Workspace extends JSplitPane {
      * once no question remains outstanding for that agent.
      *
      * @param title the tab's base title.
-     * @param cli the agent's CLI, i.e. the tab component.
+     * @param panel the agent's panel, i.e. the tab component.
      */
-    private void clearQuestionPending(String title, AgentCLI cli) {
-        int remaining = pendingQuestions.merge(cli, -1, Integer::sum);
+    private void clearQuestionPending(String title, AgentPanel panel) {
+        int remaining = pendingQuestions.merge(panel, -1, Integer::sum);
         if (remaining <= 0) {
-            pendingQuestions.remove(cli);
-            int index = indexOfAgent(cli);
+            pendingQuestions.remove(panel);
+            int index = indexOfAgent(panel);
             if (index >= 0) {
                 agentTabs.setTitleAt(index, title);
             }
@@ -459,11 +459,11 @@ public class Workspace extends JSplitPane {
     /**
      * Returns the index of an agent's tab, or -1 if it is no longer installed.
      *
-     * @param cli the agent's CLI, i.e. the tab component.
+     * @param panel the agent's panel, i.e. the tab component.
      * @return the tab index, or -1 when the tab is absent.
      */
-    private int indexOfAgent(AgentCLI cli) {
-        return agentTabs.indexOfComponent(cli);
+    private int indexOfAgent(AgentPanel panel) {
+        return agentTabs.indexOfComponent(panel);
     }
 
     /**
@@ -484,16 +484,16 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Creates an agent CLI with its welcome banner. If the resource bundle contains
+     * Creates an agent panel with its welcome banner. If the resource bundle contains
      * customized welcome and output messages for the agent, they are used; otherwise,
      * the banner falls back to a generic greeting using the agent's title and description
      * from its specification.
      *
      * @param agent the agent to open.
-     * @return the agent's CLI.
+     * @return the agent's panel.
      */
-    private AgentCLI agentCLI(Agent agent) {
-        var cli = new AgentCLI(agent, this);
+    private AgentPanel agentPanel(Agent agent) {
+        var panel = new AgentPanel(agent, this);
         var spec = agent.spec();
         String prefix = agentKeyPrefix(spec.name());
         String welcomeKey = prefix + "Welcome";
@@ -507,13 +507,13 @@ public class Workspace extends JSplitPane {
                 ? bundle.getString(outputKey)
                 : spec.description();
 
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+        panel.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
                         welcome + "\n\n" +
                         bundle.getString("Tips"),
                 MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
                         "\n\n" + output);
-        return cli;
+        return panel;
     }
 
     /**

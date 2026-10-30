@@ -50,7 +50,7 @@ import ioa.llm.client.LLM;
 import ioa.llm.tool.AskUserQuestion;
 import ioa.llm.tool.TodoWrite;
 import ioa.llm.tool.Tool;
-import smile.studio.cli.Intent;
+import smile.studio.agent.Intent;
 import smile.studio.workspace.HubClient;
 import smile.studio.workspace.HubManager;
 import smile.swing.ScrollablePanel;
@@ -1245,7 +1245,7 @@ public class BotActivity extends JPanel {
     /**
      * Parses a {@code conversation.jsonl} session transcript into human-readable
      * {@link TranscriptTurn}s, formatting tool calls the same way {@code ioa} streams
-     * tool call status updates to {@code AgentCLI} / {@link Intent}.
+     * tool call status updates to {@code AgentPanel} / {@link Intent}.
      *
      * @param jsonl the raw {@code conversation.jsonl} string.
      * @return the ordered list of conversation turns.

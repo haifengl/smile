@@ -28,7 +28,7 @@ import ioa.agent.memory.Memory;
 /**
  * Translates Claude Code plugin commands into {@code ioa} skills.
  *
- * <p>In {@code ioa} a slash command <em>is</em> a skill: {@code AgentCLI.runSlashCommand}
+ * <p>In {@code ioa} a slash command <em>is</em> a skill: {@code AgentPanel.runSlashCommand}
  * falls through to {@code runSkill}. A Claude command is a single markdown file
  * {@code commands/&lt;name&gt;.md}; a skill is a directory {@code skills/&lt;name&gt;/SKILL.md}.
  * This translator reshapes the file into the directory form, preserving the command's

@@ -11,7 +11,7 @@
  * Use of this work is strictly for evaluation and/or non-production purposes.
  * For commercial production use, please contact sales@aihalo.dev.
  */
-package smile.studio.cli;
+package smile.studio.agent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * @author Haifeng Li
  */
-class AgentCLITest {
+class AgentPanelTest {
 
     @Test
     void transcriptKeepsOnlyUserAndAssistantText() {
@@ -37,7 +37,7 @@ class AgentCLITest {
                 Message.toolCall("tool call + output", List.of()),
                 Message.error("boom"));
 
-        List<Message> shown = AgentCLI.transcript(messages);
+        List<Message> shown = AgentPanel.transcript(messages);
 
         assertEquals(2, shown.size());
         assertEquals("do the thing", shown.get(0).content());
@@ -51,7 +51,7 @@ class AgentCLITest {
                 Message.assistant(""),
                 Message.toolCall("something", List.of()));
 
-        assertTrue(AgentCLI.transcript(messages).isEmpty());
+        assertTrue(AgentPanel.transcript(messages).isEmpty());
     }
 
     @Test
@@ -63,7 +63,7 @@ class AgentCLITest {
                 Message.assistant("fourth"));
 
         List<Object> contents = new ArrayList<>();
-        for (Message message : AgentCLI.transcript(messages)) {
+        for (Message message : AgentPanel.transcript(messages)) {
             contents.add(message.content());
         }
 
@@ -74,7 +74,7 @@ class AgentCLITest {
     void addIntentReusesTheExistingComposerInsteadOfStacking() {
         // Regression: repeated addIntent() calls used to append a fresh editable intent
         // each time, so a tab could end up with two active Intent widgets.
-        AgentCLI cli = new AgentCLI(null, null);
+        AgentPanel cli = new AgentPanel(null, null);
         assertEquals(1, cli.composers().size(), "a new CLI starts with one composer");
 
         cli.addIntent();

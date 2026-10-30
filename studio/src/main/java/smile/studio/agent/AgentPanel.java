@@ -15,7 +15,7 @@
  * version), this file automatically converts to the GNU Affero General Public
  * License version 3.0 (AGPLv3) or later.
  */
-package smile.studio.cli;
+package smile.studio.agent;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -61,9 +61,9 @@ import smile.util.Strings;
  *
  * @author Haifeng Li
  */
-public class AgentCLI extends JPanel {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AgentCLI.class);
-    private static final ResourceBundle bundle = ResourceBundle.getBundle(AgentCLI.class.getName(), Locale.getDefault());
+public class AgentPanel extends JPanel {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AgentPanel.class);
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(AgentPanel.class.getName(), Locale.getDefault());
     /** The container of conversation. */
     private final JPanel intents = new ScrollablePanel();
     /** The agent. */
@@ -117,7 +117,7 @@ public class AgentCLI extends JPanel {
      * @param agent the agent.
      * @param workspace the workspace that hosts the file tabs.
      */
-    public AgentCLI(Agent agent, Workspace workspace) {
+    public AgentPanel(Agent agent, Workspace workspace) {
         super(new BorderLayout());
         this.agent = agent;
         this.workspace = workspace;

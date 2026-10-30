@@ -15,13 +15,13 @@
  * version), this file automatically converts to the GNU Affero General Public
  * License version 3.0 (AGPLv3) or later.
  */
-package smile.studio.cli;
+package smile.studio.agent;
 
 import smile.studio.text.Monospaced;
 import smile.studio.text.Editor;
 
 /**
- * Agent CLI intent editor.
+ * Agent panel intent editor.
  *
  * @author Haifeng Li
  */
