@@ -254,6 +254,16 @@ public class BotExplorer extends JPanel {
             popup.addSeparator();
         }
 
+        if (targetBot != null) {
+            HubClient.pageForBot(targetBot).ifPresent(page -> {
+                JMenuItem botPageItem = new JMenuItem("Open " + page.title());
+                botPageItem.addActionListener(ev ->
+                        HubManager.getInstance().client().openPageInBrowser(BotExplorer.this, page));
+                popup.add(botPageItem);
+                popup.addSeparator();
+            });
+        }
+
         BotsConfig.BotSpec newRoutineBot = targetBot;
         JMenuItem newRoutineItem = new JMenuItem("New Routine…");
         newRoutineItem.addActionListener(ev -> {
@@ -281,6 +291,15 @@ public class BotExplorer extends JPanel {
             }
         });
         popup.add(activityItem);
+
+        JMenu pagesMenu = new JMenu("Bot Pages");
+        for (HubClient.BotPageSummary page : HubClient.loadOfflinePages()) {
+            JMenuItem pageItem = new JMenuItem(page.title());
+            pageItem.addActionListener(ev ->
+                    HubManager.getInstance().client().openPageInBrowser(BotExplorer.this, page));
+            pagesMenu.add(pageItem);
+        }
+        popup.add(pagesMenu);
         popup.addSeparator();
 
         boolean running = HubManager.getInstance().isRunning();

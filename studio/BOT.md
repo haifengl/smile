@@ -106,7 +106,7 @@ SMILE Bot separates **who** acts, **when** they wake, and **how** they do the wo
 4. **Zero-Waste Idle Skipping (`requireActivityToday`):** When `requireActivityToday` is enabled on a routine (such as `daily-log`), Agent Hub checks whether the target persona modified any session files today before calling the LLM. Idle personas are recorded as `SKIPPED_IDLE` with zero token cost.
 5. **Two-Tier Model Routing (Watch vs. Act):** High-frequency scanning routines (such as `julien-community-watch` or `mike-signal-watch`) can specify a fast, low-cost `model` override (e.g., `claude-haiku-4-5`), while synthesis and drafting routines use the persona's default frontier model.
 6. **Batch Draft Queue & Auto Review Guardrails:** Outbound emails, social posts, consequential shell/file actions, and automation writes are intercepted into a durable approval queue. Standing Auto Review rules let you auto-allow trusted patterns while guaranteeing that **`REQUIRE_APPROVAL` always wins over `ALWAYS_ALLOW`**.
-7. **Interactive Bot Pages:** Routines update self-contained HTML dashboards in `$SMILE_HOME/bot/pages/` (`executive-brief.html`, `sales-pipeline.html`, `community-radar.html`, `token-usage.html`) that you can preview inside Studio or open in your browser.
+7. **Interactive Bot Pages:** Routines update self-contained HTML dashboards in `$SMILE_HOME/bot/pages/` (`executive-brief.html`, `sales-pipeline.html`, `community-radar.html`, `token-usage.html`) that you can open directly in your default web browser from **Agent Hub > Bot Pages** or the `BotExplorer` right-click menu.
 
 ---
 
@@ -437,7 +437,7 @@ The **Run History & Transcripts** tab lists every routine execution (`IoABotRun`
 
 ### 6.3 Interactive Bot Pages
 
-Routines generate and refresh self-contained HTML dashboards under `$SMILE_HOME/bot/pages/`. The **Interactive Bot Pages** tab lets you preview pages inside Studio or open them in your default web browser (`http://<host>:<port>/v1/pages/<slug>` when Agent Hub is running, or directly from disk when offline):
+Routines generate and refresh self-contained HTML dashboards under `$SMILE_HOME/bot/pages/`. You can launch any page in your default web browser from **Agent Hub > Bot Pages** in the main menu bar or by right-clicking a Bot persona in the `BotExplorer` sidebar (`http://<host>:<port>/v1/pages/<slug>` when Agent Hub is running, or directly from disk when offline):
 
 | Slug | File | Owner | Contents |
 |------|------|-------|----------|

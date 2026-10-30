@@ -17,6 +17,8 @@
  */
 package smile.studio.workspace;
 
+import java.awt.Component;
+import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -24,10 +26,17 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import ioa.agent.bot.BotsConfig;
 import ioa.agent.bot.ProjectsConfig;
 import tools.jackson.databind.DeserializationFeature;
@@ -350,6 +359,125 @@ public final class HubClient {
         } catch (Exception ignored) {
         }
         return List.of();
+    }
+
+    /**
+     * Returns available Bot Pages from the running Agent Hub, falling back to
+     * scanning {@code ${smile.home}/bot/pages/} and the standard built-in page
+     * slugs when the Hub is offline.
+     */
+    public List<BotPageSummary> listAvailablePages() {
+        if (isReady()) {
+            List<BotPageSummary> online = listPages();
+            if (!online.isEmpty()) {
+                return online;
+            }
+        }
+        return loadOfflinePages();
+    }
+
+    /**
+     * Returns the default offline Bot Pages list, augmented with any custom
+     * {@code *.html} files discovered in {@code ${smile.home}/bot/pages/}.
+     */
+    public static List<BotPageSummary> loadOfflinePages() {
+        String home = System.getProperty("smile.home", ".");
+        Path pagesDir = Path.of(home, "bot", "pages");
+        Map<String, BotPageSummary> bySlug = new LinkedHashMap<>();
+        bySlug.put("executive-brief", new BotPageSummary("executive-brief", "Executive Brief — @frank",
+                pagesDir.resolve("executive-brief.html").toString(), ""));
+        bySlug.put("sales-pipeline", new BotPageSummary("sales-pipeline", "Sales Pipeline — @mike",
+                pagesDir.resolve("sales-pipeline.html").toString(), ""));
+        bySlug.put("community-radar", new BotPageSummary("community-radar", "Community Radar — @julien",
+                pagesDir.resolve("community-radar.html").toString(), ""));
+        bySlug.put("token-usage", new BotPageSummary("token-usage", "Bot Activity & Token Telemetry",
+                pagesDir.resolve("token-usage.html").toString(), ""));
+
+        if (Files.isDirectory(pagesDir)) {
+            try (Stream<Path> stream = Files.list(pagesDir)) {
+                stream.filter(Files::isRegularFile)
+                        .filter(p -> p.getFileName().toString().endsWith(".html"))
+                        .sorted()
+                        .forEach(p -> {
+                            String fileName = p.getFileName().toString();
+                            String slug = fileName.substring(0, fileName.length() - 5);
+                            bySlug.computeIfAbsent(slug, s -> new BotPageSummary(s, s, p.toString(), ""));
+                        });
+            } catch (IOException ignored) {
+            }
+        }
+        return new ArrayList<>(bySlug.values());
+    }
+
+    /**
+     * Resolves the primary Bot Page associated with a Bot persona or bot ID, if any.
+     *
+     * @param bot the Bot specification.
+     * @return the matching {@link BotPageSummary}, if mapped.
+     */
+    public static Optional<BotPageSummary> pageForBot(BotsConfig.BotSpec bot) {
+        if (bot == null) {
+            return Optional.empty();
+        }
+        String botId = bot.botId() == null ? "" : bot.botId().toLowerCase();
+        String persona = bot.persona() == null ? "" : bot.persona().toLowerCase();
+        String slug = null;
+        if ("frank".equals(botId) || "chief-of-staff".equals(persona)) {
+            slug = "executive-brief";
+        } else if ("mike".equals(botId) || "sales".equals(persona)) {
+            slug = "sales-pipeline";
+        } else if ("julien".equals(botId) || "evangelist".equals(persona)) {
+            slug = "community-radar";
+        } else if ("*".equals(persona) || botId.contains("all-agents")) {
+            slug = "token-usage";
+        }
+        if (slug == null) {
+            return Optional.empty();
+        }
+        final String targetSlug = slug;
+        return loadOfflinePages().stream()
+                .filter(p -> targetSlug.equals(p.slug()))
+                .findFirst();
+    }
+
+    /**
+     * Opens the specified Bot Page in the system's default web browser.
+     * Uses {@code /v1/pages/<slug>} when Agent Hub is running, or falls back to
+     * the local HTML file on disk when offline.
+     *
+     * @param parent optional parent component for information dialogs.
+     * @param page   the Bot Page summary to open.
+     */
+    public void openPageInBrowser(Component parent, BotPageSummary page) {
+        if (page == null) {
+            return;
+        }
+        Thread.ofPlatform().name("bot-page-open").daemon(true).start(() -> {
+            try {
+                URI targetUri = null;
+                if (isReady()) {
+                    targetUri = URI.create(baseUrl + "/v1/pages/" + encode(page.slug()));
+                } else {
+                    Path localPath = page.path() != null && !page.path().isBlank()
+                            ? Path.of(page.path())
+                            : Path.of(System.getProperty("smile.home", "."), "bot", "pages", page.slug() + ".html");
+                    if (Files.isRegularFile(localPath)) {
+                        targetUri = localPath.toUri();
+                    }
+                }
+
+                if (targetUri != null && Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().browse(targetUri);
+                } else {
+                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                            parent,
+                            "Start Agent Hub to generate and view '" + page.title() + "'.",
+                            "Agent Hub",
+                            JOptionPane.INFORMATION_MESSAGE));
+                }
+            } catch (Exception ignored) {
+            }
+        });
     }
 
     /**
