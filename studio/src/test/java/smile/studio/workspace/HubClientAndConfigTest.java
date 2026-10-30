@@ -217,4 +217,90 @@ public class HubClientAndConfigTest {
             }
         }
     }
+
+    @Test
+    public void testFormatPayloadForDisplayBeautifiesCompactJson() {
+        String compact = "{\"header\":\"Outbound Email Approval\",\"question\":\"To: alice@example.com\\nSubject: Hello\\n\\nHi Alice!\"}";
+        String formatted = BotActivity.formatPayloadForDisplay(compact);
+        assertTrue(formatted.contains("\n"), "Expected multi-line pretty-printed JSON");
+        assertTrue(formatted.contains("\"header\" : \"Outbound Email Approval\""));
+        assertTrue(formatted.contains("\"question\" : \"To: alice@example.com\\nSubject: Hello\\n\\nHi Alice!\""));
+
+        // Plain text and empty values are preserved as-is
+        assertEquals("Plain text draft", BotActivity.formatPayloadForDisplay("Plain text draft"));
+        assertEquals("", BotActivity.formatPayloadForDisplay(null));
+        assertEquals("", BotActivity.formatPayloadForDisplay("   "));
+    }
+
+    @Test
+    public void testStructuredApprovalPayloadParsingSerializationAndUiState() {
+        String emailPayload = """
+                {"header":"Outbound Email Approval","question":"Approve sending outbound email via account 'mike@aihalo.dev'?\\n\\nTo: alice@example.com\\nCc: bob@example.com\\nSubject: Re: Q4 Evaluation\\n\\nHi Alice,\\nHere is the updated benchmark report."}
+                """.trim();
+        HubClient.BotApprovalItem emailItem = new HubClient.BotApprovalItem(
+                10L, 1L, "mike", "mike-outreach", "sales",
+                "BATCH_DRAFT", "email", "alice@example.com", "Outbound Email Approval",
+                emailPayload, null, "PENDING", null, null, "2026-10-30T03:00:00Z", null
+        );
+
+        BotActivity.StructuredApprovalPayload parsedDraft = BotActivity.parseApprovalPayload(emailItem);
+        assertTrue(parsedDraft.draftMode());
+        assertEquals("Outbound Email Approval", parsedDraft.header());
+        assertEquals("mike@aihalo.dev", parsedDraft.account());
+        assertEquals("alice@example.com", parsedDraft.to());
+        assertEquals("bob@example.com", parsedDraft.cc());
+        assertEquals("Re: Q4 Evaluation", parsedDraft.subject());
+        assertEquals("Hi Alice,\nHere is the updated benchmark report.", parsedDraft.body());
+
+        // Edit structured fields and serialize back to JSON compatible with Email tool
+        BotActivity.StructuredApprovalPayload editedDraft = new BotActivity.StructuredApprovalPayload(
+                true,
+                parsedDraft.header(),
+                parsedDraft.account(),
+                "alice@example.com, carol@example.com",
+                "bob@example.com",
+                "Re: Q4 Evaluation (Updated)",
+                "Hi Alice and Carol,\nHere is the revised benchmark report.",
+                "",
+                ""
+        );
+        String serializedJson = BotActivity.serializeStructuredPayload(emailItem, editedDraft);
+        assertTrue(serializedJson.contains("\"to\" : \"alice@example.com, carol@example.com\""));
+        assertTrue(serializedJson.contains("\"subject\" : \"Re: Q4 Evaluation (Updated)\""));
+        assertTrue(serializedJson.contains("\"body\" : \"Hi Alice and Carol,\\nHere is the revised benchmark report.\""));
+
+        // Verify readable diff baseline formatting
+        String readable = BotActivity.formatReadablePayload(emailPayload, emailItem);
+        assertTrue(readable.contains("To: alice@example.com"));
+        assertTrue(readable.contains("Cc: bob@example.com"));
+        assertTrue(readable.contains("Subject: Re: Q4 Evaluation"));
+        assertTrue(readable.contains("Hi Alice,\nHere is the updated benchmark report."));
+        assertFalse(readable.contains("\"header\""));
+
+        // Non-draft item (TOOL_CONFIRM / SECURE_HANDOFF) with prior payload
+        String handoffPayload = "{\"header\":\"Browser Login Required\",\"question\":\"Please complete 2FA in the browser window.\",\"browserStateDir\":\"/home/.smile/browser-state\"}";
+        HubClient.BotApprovalItem handoffItem = new HubClient.BotApprovalItem(
+                11L, 2L, "julien", "julien-watch", "evangelist",
+                "SECURE_HANDOFF", "general", "", "Browser Login Required",
+                handoffPayload, "{\"header\":\"Browser Login Required\",\"question\":\"Initial login request.\"}",
+                "PENDING", null, null, "2026-10-30T03:10:00Z", null
+        );
+        BotActivity.StructuredApprovalPayload parsedHandoff = BotActivity.parseApprovalPayload(handoffItem);
+        assertFalse(parsedHandoff.draftMode());
+        assertEquals("Browser Login Required", parsedHandoff.header());
+        assertEquals("Please complete 2FA in the browser window.", parsedHandoff.body());
+        assertEquals("/home/.smile/browser-state", parsedHandoff.browserStateDir());
+
+        // Verify UI state in BotActivity: auto-hides prior draft panel when null, shows when present
+        BotActivity activity = new BotActivity(0);
+        activity.populateApprovals(List.of(emailItem, handoffItem));
+        assertTrue(activity.isDraftComposerActive());
+        assertFalse(activity.isPriorDraftPanelVisible(), "Prior draft panel should be hidden when previousPayloadJson is null");
+        assertEquals("Re: Q4 Evaluation", activity.readStructuredFields().subject());
+
+        // Select second row (which has previousPayloadJson and is SECURE_HANDOFF)
+        activity.populateApprovals(List.of(handoffItem));
+        assertFalse(activity.isDraftComposerActive());
+        assertTrue(activity.isPriorDraftPanelVisible(), "Prior draft panel should be visible when previousPayloadJson is present");
+    }
 }
