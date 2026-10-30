@@ -32,6 +32,7 @@ import java.util.function.IntConsumer;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.Agent;
 import ioa.agent.Coder;
+import ioa.agent.bot.BotsConfig;
 import smile.io.Paths;
 import smile.io.Read;
 import smile.shell.JShell;
@@ -570,14 +571,8 @@ public class Workspace extends JSplitPane {
      * @param routineId optional routine ID to select.
      */
     public void openBotManager(String routineId) {
-        Runnable onSaved = () -> {
-            botExplorer.refresh();
-            if (botActivity != null) {
-                botActivity.refreshAllAsync();
-            }
-        };
         if (botManager == null) {
-            botManager = new BotManager(routineId, onSaved);
+            botManager = new BotManager(routineId, this::onBotManagerSaved);
         } else {
             botManager.selectRoutine(routineId);
         }
@@ -586,6 +581,40 @@ public class Workspace extends JSplitPane {
             editorTabs.addTab("Bot Routines", botManager);
         }
         editorTabs.setSelectedComponent(botManager);
+    }
+
+    /**
+     * Opens or focuses the Bot Routine Manager tab prepared for creating a new routine.
+     *
+     * @param bot optional Bot persona to pre-populate in the form.
+     */
+    public void openNewBotRoutine(BotsConfig.BotSpec bot) {
+        if (botManager == null) {
+            botManager = new BotManager(null, this::onBotManagerSaved);
+        }
+        botManager.prepareNewRoutine(bot);
+        int index = editorTabs.indexOfComponent(botManager);
+        if (index == -1) {
+            editorTabs.addTab("Bot Routines", botManager);
+        }
+        editorTabs.setSelectedComponent(botManager);
+    }
+
+    /**
+     * Refreshes the Bot Explorer, Bot Routine Manager, and Bot Activities panels after a config change.
+     */
+    public void notifyBotsSaved() {
+        onBotManagerSaved();
+        if (botManager != null) {
+            botManager.selectRoutine(null);
+        }
+    }
+
+    private void onBotManagerSaved() {
+        botExplorer.refresh();
+        if (botActivity != null) {
+            botActivity.refreshAllAsync();
+        }
     }
 
     /**

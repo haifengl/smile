@@ -44,10 +44,6 @@ public class BotManager extends JPanel {
     private BotsConfig config;
     private final Runnable onSavedCallback;
 
-    // Left routine list
-    private final DefaultListModel<RoutineItem> routineListModel = new DefaultListModel<>();
-    private final JList<RoutineItem> routineList = new JList<>(routineListModel);
-
     // Routine form fields
     private final JComboBox<String> botIdCombo = new JComboBox<>(new String[]{
             "frank", "all-agents-memory", "julien", "mike"
@@ -108,15 +104,6 @@ public class BotManager extends JPanel {
     };
     private final JTable rulesTable = new JTable(rulesTableModel);
 
-    private record RoutineItem(BotsConfig.BotSpec bot, BotsConfig.RoutineSpec routine) {
-        @Override
-        public String toString() {
-            String status = (bot.enabled() && routine.enabled()) ? "● " : "○ ";
-            String personaLabel = "*".equals(bot.persona()) ? "*" : "@" + bot.botId();
-            return status + personaLabel + " / " + routine.routineId() + " — " + routine.name();
-        }
-    }
-
     /**
      * Creates the Bot Routine Manager panel.
      *
@@ -146,6 +133,20 @@ public class BotManager extends JPanel {
         reloadFromConfig(routineId);
     }
 
+    /**
+     * Reloads configuration from disk / Agent Hub and prepares the form for a new routine.
+     *
+     * @param bot optional Bot persona to pre-populate in the form.
+     */
+    public void prepareNewRoutine(BotsConfig.BotSpec bot) {
+        this.config = HubManager.getInstance().client().getOverview().config();
+        populateModelCombo();
+        populateEndpointCombo();
+        refreshProjectsTable();
+        refreshRulesTable();
+        prepareNewRoutineForm(bot);
+    }
+
     private void populateModelCombo() {
         modelCombo.removeAllItems();
         modelCombo.setEditable(true);
@@ -165,43 +166,12 @@ public class BotManager extends JPanel {
     }
 
     private void initComponents() {
-        JPanel leftPanel = new JPanel(new BorderLayout(4, 4));
-        leftPanel.setBorder(new EmptyBorder(8, 8, 8, 0));
-        leftPanel.setPreferredSize(new Dimension(300, 560));
-
-        JLabel listLabel = new JLabel("Bot Routines:");
-        listLabel.setFont(listLabel.getFont().deriveFont(Font.BOLD));
-        leftPanel.add(listLabel, BorderLayout.NORTH);
-
-        routineList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        routineList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                RoutineItem selected = routineList.getSelectedValue();
-                if (selected != null) {
-                    loadRoutineIntoForm(selected.bot(), selected.routine());
-                }
-            }
-        });
-        leftPanel.add(new JScrollPane(routineList), BorderLayout.CENTER);
-
-        JPanel listButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
-        JButton newBtn = new JButton("+ New Routine");
-        newBtn.addActionListener(e -> prepareNewRoutineForm());
-        JButton deleteBtn = new JButton("Delete");
-        deleteBtn.addActionListener(e -> deleteSelectedRoutine());
-        listButtons.add(newBtn);
-        listButtons.add(deleteBtn);
-        leftPanel.add(listButtons, BorderLayout.SOUTH);
-
         JTabbedPane tabs = new JTabbedPane();
-        tabs.setBorder(new EmptyBorder(8, 0, 8, 8));
+        tabs.setBorder(new EmptyBorder(8, 8, 8, 8));
         tabs.addTab("Routine Definition", buildRoutineFormPanel());
         tabs.addTab("Context Projects (projects.json)", buildProjectsPanel());
         tabs.addTab("Auto Review Rules", buildRulesPanel());
-
-        JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, tabs);
-        split.setDividerLocation(310);
-        add(split, BorderLayout.CENTER);
+        add(tabs, BorderLayout.CENTER);
 
         JPanel bottomBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
         JButton runNowBtn = new JButton("▶ Run Routine Now");
@@ -353,20 +323,29 @@ public class BotManager extends JPanel {
     }
 
     private void reloadFromConfig(String selectRoutineId) {
-        routineListModel.clear();
-        int selectIdx = 0;
-        int idx = 0;
+        BotsConfig.BotSpec targetBot = null;
+        BotsConfig.RoutineSpec targetRoutine = null;
         for (BotsConfig.BotSpec bot : config.bots()) {
             for (BotsConfig.RoutineSpec routine : bot.routines()) {
-                routineListModel.addElement(new RoutineItem(bot, routine));
-                if (selectRoutineId != null && selectRoutineId.equalsIgnoreCase(routine.routineId())) {
-                    selectIdx = idx;
+                if (targetRoutine == null) {
+                    targetBot = bot;
+                    targetRoutine = routine;
                 }
-                idx++;
+                if (selectRoutineId != null && selectRoutineId.equalsIgnoreCase(routine.routineId())) {
+                    targetBot = bot;
+                    targetRoutine = routine;
+                    break;
+                }
+            }
+            if (selectRoutineId != null && targetRoutine != null
+                    && selectRoutineId.equalsIgnoreCase(targetRoutine.routineId())) {
+                break;
             }
         }
-        if (!routineListModel.isEmpty()) {
-            routineList.setSelectedIndex(selectIdx);
+        if (targetBot != null && targetRoutine != null) {
+            loadRoutineIntoForm(targetBot, targetRoutine);
+        } else {
+            prepareNewRoutineForm(config.bots().isEmpty() ? null : config.bots().getFirst());
         }
         refreshProjectsTable();
         refreshRulesTable();
@@ -437,9 +416,13 @@ public class BotManager extends JPanel {
         ttlMinutesSpinner.setValue(Math.max(0, p.approvalTtlMinutes()));
     }
 
-    private void prepareNewRoutineForm() {
-        routineList.clearSelection();
-        routineIdField.setText("custom-routine-" + (routineListModel.size() + 1));
+    private void prepareNewRoutineForm(BotsConfig.BotSpec bot) {
+        if (bot != null) {
+            botIdCombo.setSelectedItem(bot.botId());
+            personaField.setText(bot.persona());
+        }
+        int totalRoutines = config.bots().stream().mapToInt(b -> b.routines().size()).sum();
+        routineIdField.setText("custom-routine-" + (totalRoutines + 1));
         routineNameField.setText("New Bot Routine");
         routineEnabledCheck.setSelected(true);
         modelCombo.setSelectedItem(DEFAULT_MODEL_CHOICE);
@@ -453,16 +436,6 @@ public class BotManager extends JPanel {
         requireActivityCheck.setSelected(false);
         useContextProjectsCheck.setSelected(false);
         awaitRoutineField.setText("");
-    }
-
-    private void deleteSelectedRoutine() {
-        RoutineItem selected = routineList.getSelectedValue();
-        if (selected == null) {
-            return;
-        }
-        String rId = selected.routine().routineId();
-        config = config.withoutRoutine(selected.bot().botId(), rId);
-        persistConfig(null);
     }
 
     private void saveCurrentRoutineAndConfig() {
@@ -557,9 +530,8 @@ public class BotManager extends JPanel {
     }
 
     private void triggerSelectedRoutineNow() {
-        RoutineItem selected = routineList.getSelectedValue();
-        String botId = selected != null ? selected.bot().botId() : String.valueOf(botIdCombo.getSelectedItem()).trim();
-        String routineId = selected != null ? selected.routine().routineId() : routineIdField.getText().trim();
+        String botId = String.valueOf(botIdCombo.getSelectedItem()).trim();
+        String routineId = routineIdField.getText().trim();
         if (routineId.isEmpty()) {
             return;
         }

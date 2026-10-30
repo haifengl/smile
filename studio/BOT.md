@@ -280,11 +280,13 @@ Agent Hub (Running)
 
 - **Status indicators:** `●` indicates an enabled routine under an enabled bot; `○` indicates a disabled routine or bot.
 - **Click a routine node:** Opens or focuses the **Bot Routines** workspace tab (`BotManager`) pre-selected on that routine.
-- **Double-click `Agent Hub` or a `@bot` node:** Opens the **Bot Activities** workspace tab (`BotActivity`).
-- **Right-click context menu on a routine node:**
-  - **Run Now (`<routineId>`)** — Immediately triggers the routine on Agent Hub (starting the Hub first if needed).
-  - **Enable / Disable Routine** — Toggles the routine in `bots.json` and hot-reloads Agent Hub.
-  - **Configure Routine…** — Opens the `Bot Routines` workspace tab.
+- **Double-click a `@bot` node:** Opens the **Bot Activities** workspace tab (`BotActivity`).
+- **Right-click context menu:**
+  - **Run Now (`<routineId>`)** *(on a routine node)* — Immediately triggers the routine on Agent Hub (starting the Hub first if needed).
+  - **Enable / Disable Routine** *(on a routine node)* — Toggles the routine in `bots.json` and hot-reloads Agent Hub.
+  - **Configure Routine…** *(on a routine node)* — Opens the `Bot Routines` workspace tab for that routine.
+  - **Delete Routine** *(on a routine node)* — Prompts for confirmation and removes the routine from `bots.json`.
+  - **New Routine…** — Opens the `Bot Routines` workspace tab prepared for a new routine (pre-filled with the selected Bot persona if right-clicked on a bot or routine node).
   - **Bot Routines…** — Opens the `Bot Routines` workspace tab.
   - **Bot Activities…** — Opens the `Bot Activities` workspace tab.
   - **Start / Stop Agent Hub** — Starts or stops the Hub process.
@@ -321,7 +323,7 @@ Open **Agent Hub > Bot Routines…** (or click any routine in the **Bots** explo
 
 ### 5.1 Routine Definition Tab
 
-The left list shows all routines across all Bot Personas (`+ New Routine` creates a routine; `Delete` removes the selected routine). The right form edits the selected routine:
+Select any routine in the **Bots** explorer tab (or right-click to choose **New Routine…**) to load or create a routine in the form:
 
 #### Identity & Model Routing
 - **Bot ID & Persona:** Select or enter the owning `botId` (`frank`, `all-agents-memory`, `julien`, `mike`, or a custom ID) and target agent spec `persona` (`chief-of-staff`, `*`, `evangelist`, `sales`, `data-scientist`, `architect`, `java-coder`, `pythonista`, `desktop-operator`).
