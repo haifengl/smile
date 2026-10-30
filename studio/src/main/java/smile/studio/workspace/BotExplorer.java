@@ -193,90 +193,141 @@ public class BotExplorer extends JPanel {
 
     private void showContextMenu(MouseEvent e) {
         TreePath treePath = tree.getPathForLocation(e.getX(), e.getY());
-        if (treePath == null) {
-            return;
+        Object userObj = null;
+        if (treePath != null) {
+            tree.setSelectionPath(treePath);
+            DefaultMutableTreeNode node = (DefaultMutableTreeNode) treePath.getLastPathComponent();
+            userObj = node.getUserObject();
+        } else {
+            tree.clearSelection();
         }
-        tree.setSelectionPath(treePath);
-        DefaultMutableTreeNode node = (DefaultMutableTreeNode) treePath.getLastPathComponent();
-        Object userObj = node.getUserObject();
+
+        BotsConfig.BotSpec targetBot = null;
+        if (userObj instanceof BotTreeItem botItem) {
+            targetBot = botItem.bot();
+        } else if (userObj instanceof RoutineTreeItem routineItem) {
+            targetBot = routineItem.bot();
+        }
 
         JPopupMenu popup = new JPopupMenu();
 
-        if (userObj instanceof BotTreeItem || userObj instanceof RoutineTreeItem) {
-            if (userObj instanceof RoutineTreeItem item) {
-                JMenuItem runItem = new JMenuItem("▶ Run Now (" + item.routine().routineId() + ")");
-                runItem.addActionListener(ev -> Thread.ofPlatform().name("hub-tree-run").daemon(true).start(() -> {
-                    try {
-                        if (!HubManager.getInstance().isRunning()) {
-                            HubManager.getInstance().start();
-                        }
-                        HubManager.getInstance().client().runRoutineNow(
-                                item.bot().botId(), item.routine().routineId());
-                    } catch (Exception ex) {
-                        showError(ex.getMessage());
+        if (userObj instanceof RoutineTreeItem item) {
+            JMenuItem runItem = new JMenuItem("▶ Run Now (" + item.routine().routineId() + ")");
+            runItem.addActionListener(ev -> Thread.ofPlatform().name("hub-tree-run").daemon(true).start(() -> {
+                try {
+                    if (!HubManager.getInstance().isRunning()) {
+                        HubManager.getInstance().start();
                     }
-                }));
-                popup.add(runItem);
+                    HubManager.getInstance().client().runRoutineNow(
+                            item.bot().botId(), item.routine().routineId());
+                } catch (Exception ex) {
+                    showError(ex.getMessage());
+                }
+            }));
+            popup.add(runItem);
 
-                boolean currentlyEnabled = item.routine().enabled();
-                JMenuItem toggleItem = new JMenuItem(currentlyEnabled ? "Disable Routine" : "Enable Routine");
-                toggleItem.addActionListener(ev -> Thread.ofPlatform().name("hub-tree-toggle").daemon(true).start(() -> {
-                    try {
-                        HubManager.getInstance().client().setRoutineEnabled(
-                                item.bot().botId(), item.routine().routineId(), !currentlyEnabled);
-                        SwingUtilities.invokeLater(this::refresh);
-                    } catch (Exception ex) {
-                        showError(ex.getMessage());
-                    }
-                }));
-                popup.add(toggleItem);
+            boolean currentlyEnabled = item.routine().enabled();
+            JMenuItem toggleItem = new JMenuItem(currentlyEnabled ? "Disable Routine" : "Enable Routine");
+            toggleItem.addActionListener(ev -> Thread.ofPlatform().name("hub-tree-toggle").daemon(true).start(() -> {
+                try {
+                    HubManager.getInstance().client().setRoutineEnabled(
+                            item.bot().botId(), item.routine().routineId(), !currentlyEnabled);
+                    SwingUtilities.invokeLater(this::refresh);
+                } catch (Exception ex) {
+                    showError(ex.getMessage());
+                }
+            }));
+            popup.add(toggleItem);
 
-                JMenuItem editItem = new JMenuItem("Configure Routine…");
-                editItem.addActionListener(ev -> {
+            JMenuItem editItem = new JMenuItem("Configure Routine…");
+            editItem.addActionListener(ev -> {
+                Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, BotExplorer.this);
+                if (ws != null) {
+                    ws.openBotManager(item.routine().routineId());
+                }
+            });
+            popup.add(editItem);
+
+            JMenuItem deleteItem = new JMenuItem("Delete Routine");
+            deleteItem.addActionListener(ev -> deleteRoutine(item));
+            popup.add(deleteItem);
+            popup.addSeparator();
+        }
+
+        BotsConfig.BotSpec newRoutineBot = targetBot;
+        JMenuItem newRoutineItem = new JMenuItem("New Routine…");
+        newRoutineItem.addActionListener(ev -> {
+            Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, BotExplorer.this);
+            if (ws != null) {
+                ws.openNewBotRoutine(newRoutineBot);
+            }
+        });
+        popup.add(newRoutineItem);
+
+        JMenuItem manageBotsItem = new JMenuItem("Bot Routines…");
+        manageBotsItem.addActionListener(ev -> {
+            Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, BotExplorer.this);
+            if (ws != null) {
+                ws.openBotManager(null);
+            }
+        });
+        popup.add(manageBotsItem);
+
+        JMenuItem activityItem = new JMenuItem("Bot Activities…");
+        activityItem.addActionListener(ev -> {
+            Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, BotExplorer.this);
+            if (ws != null) {
+                ws.openBotActivity(0);
+            }
+        });
+        popup.add(activityItem);
+        popup.addSeparator();
+
+        boolean running = HubManager.getInstance().isRunning();
+        JMenuItem startStopItem = new JMenuItem(running ? "Stop Agent Hub" : "Start Agent Hub");
+        startStopItem.addActionListener(ev -> Thread.ofPlatform().name("hub-tree-startstop").daemon(true).start(() -> {
+            if (running) {
+                HubManager.getInstance().stop();
+            } else {
+                if (!HubManager.getInstance().start()) {
+                    showError(bundle.getString("HubStartFailed"));
+                }
+            }
+            SwingUtilities.invokeLater(this::refresh);
+        }));
+        popup.add(startStopItem);
+
+        popup.show(tree, e.getX(), e.getY());
+    }
+
+    private void deleteRoutine(RoutineTreeItem item) {
+        String rId = item.routine().routineId();
+        int choice = JOptionPane.showConfirmDialog(
+                SwingUtilities.getWindowAncestor(this),
+                "Delete routine '" + rId + "' (" + item.routine().name() + ")?",
+                "Delete Routine",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+        if (choice != JOptionPane.YES_OPTION) {
+            return;
+        }
+        Thread.ofPlatform().name("hub-tree-delete").daemon(true).start(() -> {
+            try {
+                BotsConfig cfg = HubManager.getInstance().client().getOverview().config()
+                        .withoutRoutine(item.bot().botId(), rId);
+                HubManager.getInstance().client().saveConfig(cfg);
+                SwingUtilities.invokeLater(() -> {
                     Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, BotExplorer.this);
                     if (ws != null) {
-                        ws.openBotManager(item.routine().routineId());
+                        ws.notifyBotsSaved();
+                    } else {
+                        refresh();
                     }
                 });
-                popup.add(editItem);
-                popup.addSeparator();
+            } catch (Exception ex) {
+                showError(ex.getMessage());
             }
-
-            JMenuItem manageBotsItem = new JMenuItem("Bot Routines…");
-            manageBotsItem.addActionListener(ev -> {
-                Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, BotExplorer.this);
-                if (ws != null) {
-                    ws.openBotManager(null);
-                }
-            });
-            popup.add(manageBotsItem);
-
-            JMenuItem activityItem = new JMenuItem("Bot Activities…");
-            activityItem.addActionListener(ev -> {
-                Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, BotExplorer.this);
-                if (ws != null) {
-                    ws.openBotActivity(0);
-                }
-            });
-            popup.add(activityItem);
-            popup.addSeparator();
-
-            boolean running = HubManager.getInstance().isRunning();
-            JMenuItem startStopItem = new JMenuItem(running ? "Stop Agent Hub" : "Start Agent Hub");
-            startStopItem.addActionListener(ev -> Thread.ofPlatform().name("hub-tree-startstop").daemon(true).start(() -> {
-                if (running) {
-                    HubManager.getInstance().stop();
-                } else {
-                    if (!HubManager.getInstance().start()) {
-                        showError(bundle.getString("HubStartFailed"));
-                    }
-                }
-                SwingUtilities.invokeLater(this::refresh);
-            }));
-            popup.add(startStopItem);
-
-            popup.show(tree, e.getX(), e.getY());
-        }
+        });
     }
 
     private void showError(String message) {
