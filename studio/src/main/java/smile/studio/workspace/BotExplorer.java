@@ -28,6 +28,8 @@ import javax.swing.tree.*;
 import ioa.agent.Agent;
 import ioa.agent.AgentCatalog;
 import ioa.agent.bot.BotsConfig;
+import smile.studio.bot.HubClient;
+import smile.studio.bot.HubManager;
 
 /**
  * Explorer sidebar tab for Agent Hub Bot personas and scheduled/event-driven Routines.

@@ -27,7 +27,7 @@ import photos.sluice.secrets.SecretId;
 import photos.sluice.secrets.SecretStatus;
 import photos.sluice.secrets.SecretStore;
 import photos.sluice.secrets.SecretStoreException;
-import smile.studio.workspace.HubManager;
+import smile.studio.bot.HubManager;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;

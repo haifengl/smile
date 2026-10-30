@@ -39,6 +39,7 @@ import smile.shell.JShell;
 import smile.studio.SmileStudio;
 import smile.studio.bot.BotActivity;
 import smile.studio.bot.BotManager;
+import smile.studio.bot.HubManager;
 import smile.studio.agent.AgentPanel;
 import smile.studio.notebook.Notebook;
 import smile.studio.text.Notepad;

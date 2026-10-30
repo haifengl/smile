@@ -15,7 +15,7 @@
  * version), this file automatically converts to the GNU Affero General Public
  * License version 3.0 (AGPLv3) or later.
  */
-package smile.studio.workspace;
+package smile.studio.bot;
 
 import java.awt.Component;
 import java.awt.Desktop;

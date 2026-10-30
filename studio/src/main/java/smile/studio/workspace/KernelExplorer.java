@@ -35,6 +35,7 @@ import java.util.List;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import jdk.jshell.VarSnippet;
 import smile.io.Paths;
+import smile.studio.ServeManager;
 import smile.studio.SmileStudio;
 import smile.studio.StudioConfig;
 import smile.studio.kernel.Kernel;

@@ -15,7 +15,7 @@
  * version), this file automatically converts to the GNU Affero General Public
  * License version 3.0 (AGPLv3) or later.
  */
-package smile.studio.workspace;
+package smile.studio;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -23,7 +23,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import smile.shell.Serve;
-import smile.studio.ProcessFrame;
 
 /**
  * Manages the single SMILE Serve process shared by every model in a Studio
