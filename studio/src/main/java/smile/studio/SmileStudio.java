@@ -48,6 +48,7 @@ import smile.license.LicenseKey;
 import smile.studio.license.LicenseDialog;
 import smile.studio.license.LicenseState;
 import smile.studio.license.LicenseStore;
+import smile.studio.workspace.HubClient;
 import smile.studio.workspace.HubManager;
 import smile.studio.workspace.OpenFile;
 import smile.studio.workspace.ServeManager;
@@ -568,6 +569,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         hubMenu.addSeparator();
         hubMenu.add(new JMenuItem(new ConfigureBotsAction()));
         hubMenu.add(new JMenuItem(new BotActivityAction()));
+        hubMenu.add(createBotPagesMenu());
         hubMenu.addSeparator();
         hubMenu.add(new JMenuItem(new AgentHubHealthAction()));
         hubMenu.add(new JMenuItem(new AgentHubMetricsAction()));
@@ -1026,6 +1028,45 @@ public class SmileStudio extends JFrame implements SearchListener {
         @Override
         public void actionPerformed(ActionEvent e) {
             workspace.openBotActivity(0);
+        }
+    }
+
+    private JMenu createBotPagesMenu() {
+        JMenu pagesMenu = new JMenu(bundle.getString("BotPages"));
+        populateBotPagesMenu(pagesMenu, HubClient.loadOfflinePages());
+        pagesMenu.addMenuListener(new javax.swing.event.MenuListener() {
+            @Override
+            public void menuSelected(javax.swing.event.MenuEvent e) {
+                populateBotPagesMenu(pagesMenu, HubClient.loadOfflinePages());
+                Thread.ofPlatform().name("hub-pages-menu").daemon(true).start(() -> {
+                    var pages = HubManager.getInstance().client().listAvailablePages();
+                    SwingUtilities.invokeLater(() -> {
+                        if (pagesMenu.isPopupMenuVisible()) {
+                            populateBotPagesMenu(pagesMenu, pages);
+                            pagesMenu.getPopupMenu().pack();
+                        }
+                    });
+                });
+            }
+
+            @Override
+            public void menuDeselected(javax.swing.event.MenuEvent e) {
+            }
+
+            @Override
+            public void menuCanceled(javax.swing.event.MenuEvent e) {
+            }
+        });
+        return pagesMenu;
+    }
+
+    private void populateBotPagesMenu(JMenu pagesMenu, java.util.List<HubClient.BotPageSummary> pages) {
+        pagesMenu.removeAll();
+        for (HubClient.BotPageSummary page : pages) {
+            JMenuItem item = new JMenuItem(page.title());
+            item.addActionListener(e ->
+                    HubManager.getInstance().client().openPageInBrowser(SmileStudio.this, page));
+            pagesMenu.add(item);
         }
     }
 

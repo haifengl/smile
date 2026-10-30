@@ -549,7 +549,7 @@ public class Workspace extends JSplitPane {
     /**
      * Opens or focuses the Agent Hub activity tab on the requested sub-tab.
      *
-     * @param initialTab the sub-tab index (`0` = Approvals, `1` = Runs, `2` = Pages).
+     * @param initialTab the sub-tab index (`0` = Approvals, `1` = Runs).
      */
     public void openBotActivity(int initialTab) {
         if (botActivity == null) {

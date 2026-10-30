@@ -60,8 +60,6 @@ import smile.swing.ScrollablePanel;
  *       {@code Edit & Approve}, {@code Deny}) or in batch ({@code Approve Selected Batch}).</li>
  *   <li><b>Run History &amp; Transcripts</b>: inspect {@code IoABotRun} execution history and
  *       view full session transcripts.</li>
- *   <li><b>Interactive Bot Pages</b>: preview and launch HTML dashboards generated in
- *       {@code ${smile.home}/bot/pages/}.</li>
  * </ol>
  *
  * @author Haifeng Li
@@ -126,15 +124,10 @@ public class BotActivity extends JPanel {
     private final JPanel transcriptIntents = new ScrollablePanel();
     private final JScrollPane transcriptScroll = new JScrollPane(transcriptIntents);
 
-    // Tab 3: Bot Pages
-    private final DefaultListModel<HubClient.BotPageSummary> pagesListModel = new DefaultListModel<>();
-    private final JList<HubClient.BotPageSummary> pagesList = new JList<>(pagesListModel);
-    private final JEditorPane pagePreviewPane = new JEditorPane("text/html", "");
-
     /**
-     * Creates the Bot Activity, Approvals &amp; Pages workspace panel.
+     * Creates the Bot Activity &amp; Approvals workspace panel.
      *
-     * @param initialTab initial tab index (`0` = Approvals, `1` = Runs, `2` = Pages).
+     * @param initialTab initial tab index (`0` = Approvals, `1` = Runs).
      */
     public BotActivity(int initialTab) {
         super(new BorderLayout(8, 8));
@@ -142,7 +135,6 @@ public class BotActivity extends JPanel {
         initTopBar();
         tabs.addTab("Approvals & Batch Draft Queue", buildApprovalsTab());
         tabs.addTab("Run History & Transcripts", buildRunsTab());
-        tabs.addTab("Interactive Bot Pages", buildPagesTab());
         selectTab(initialTab);
         add(tabs, BorderLayout.CENTER);
 
@@ -152,7 +144,7 @@ public class BotActivity extends JPanel {
     /**
      * Selects the given sub-tab index if valid.
      *
-     * @param tabIndex tab index (`0` = Approvals, `1` = Runs, `2` = Pages).
+     * @param tabIndex tab index (`0` = Approvals, `1` = Runs).
      */
     public final void selectTab(int tabIndex) {
         if (tabIndex >= 0 && tabIndex < tabs.getTabCount()) {
@@ -319,52 +311,7 @@ public class BotActivity extends JPanel {
         return panel;
     }
 
-    private JComponent buildPagesTab() {
-        JPanel panel = new JPanel(new BorderLayout(8, 8));
-        panel.setBorder(new EmptyBorder(8, 8, 8, 8));
-
-        pagesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        pagesList.setCellRenderer(new DefaultListCellRenderer() {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list, Object value, int index,
-                                                          boolean isSelected, boolean cellHasFocus) {
-                super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-                if (value instanceof HubClient.BotPageSummary p) {
-                    setText(p.title() + " (" + p.slug() + ".html)");
-                }
-                return this;
-            }
-        });
-        pagesList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                HubClient.BotPageSummary selected = pagesList.getSelectedValue();
-                if (selected != null) {
-                    loadPagePreviewAsync(selected);
-                }
-            }
-        });
-
-        pagePreviewPane.setEditable(false);
-
-        JPanel rightPane = new JPanel(new BorderLayout(4, 4));
-        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-        JButton openBrowserBtn = new JButton("Open Page in Browser");
-        openBrowserBtn.addActionListener(e -> openSelectedPageInBrowser());
-        topBar.add(openBrowserBtn);
-        rightPane.add(topBar, BorderLayout.NORTH);
-        rightPane.add(new JScrollPane(pagePreviewPane), BorderLayout.CENTER);
-
-        JSplitPane split = new JSplitPane(
-                JSplitPane.HORIZONTAL_SPLIT,
-                new JScrollPane(pagesList),
-                rightPane
-        );
-        split.setDividerLocation(280);
-        panel.add(split, BorderLayout.CENTER);
-        return panel;
-    }
-
-    /** Refreshes Hub status, approvals, runs, and pages in a background thread. */
+    /** Refreshes Hub status, approvals, and runs in a background thread. */
     public final void refreshAllAsync() {
         Thread.ofPlatform().name("bot-activity-refresh").daemon(true).start(() -> {
             HubClient client = HubManager.getInstance().client();
@@ -372,7 +319,6 @@ public class BotActivity extends JPanel {
             String filter = "PENDING".equals(approvalFilterCombo.getSelectedItem()) ? "PENDING" : null;
             List<HubClient.BotApprovalItem> approvals = running ? client.listApprovals(filter, 100) : List.of();
             List<HubClient.BotRunSummary> runs = running ? client.listRuns(null, null, 100) : List.of();
-            List<HubClient.BotPageSummary> pages = running ? client.listPages() : loadOfflinePages();
 
             SwingUtilities.invokeLater(() -> {
                 hubStatusLabel.setText(running
@@ -380,7 +326,6 @@ public class BotActivity extends JPanel {
                         : "○ Agent Hub Offline (" + client.baseUrl() + ")");
                 populateApprovals(approvals);
                 populateRuns(runs);
-                populatePages(pages);
             });
         });
     }
@@ -449,16 +394,6 @@ public class BotActivity extends JPanel {
             transcriptIntents.removeAll();
             transcriptIntents.revalidate();
             transcriptIntents.repaint();
-        }
-    }
-
-    private void populatePages(List<HubClient.BotPageSummary> list) {
-        pagesListModel.clear();
-        for (HubClient.BotPageSummary p : list) {
-            pagesListModel.addElement(p);
-        }
-        if (!pagesListModel.isEmpty() && pagesList.getSelectedIndex() < 0) {
-            pagesList.setSelectedIndex(0);
         }
     }
 
@@ -1160,62 +1095,5 @@ public class BotActivity extends JPanel {
             } catch (Exception ignored) {
             }
         });
-    }
-
-    private void loadPagePreviewAsync(HubClient.BotPageSummary page) {
-        Thread.ofPlatform().name("bot-page-preview").daemon(true).start(() -> {
-            try {
-                HubClient client = HubManager.getInstance().client();
-                String html;
-                if (client.isReady()) {
-                    html = client.getPageHtml(page.slug());
-                } else if (page.path() != null && !page.path().isBlank() && Files.isRegularFile(Path.of(page.path()))) {
-                    html = Files.readString(Path.of(page.path()), StandardCharsets.UTF_8);
-                } else {
-                    html = "<html><body><h3>Start Agent Hub to generate and view " + page.title() + "</h3></body></html>";
-                }
-                final String content = html;
-                SwingUtilities.invokeLater(() -> {
-                    pagePreviewPane.setText(content);
-                    pagePreviewPane.setCaretPosition(0);
-                });
-            } catch (Exception ex) {
-                SwingUtilities.invokeLater(() -> pagePreviewPane.setText("<html><body><p>" + ex.getMessage() + "</p></body></html>"));
-            }
-        });
-    }
-
-    private void openSelectedPageInBrowser() {
-        HubClient.BotPageSummary selected = pagesList.getSelectedValue();
-        if (selected == null) {
-            return;
-        }
-        try {
-            if (!Desktop.isDesktopSupported()) {
-                return;
-            }
-            HubClient client = HubManager.getInstance().client();
-            if (client.isReady()) {
-                Desktop.getDesktop().browse(URI.create(client.baseUrl() + "/v1/pages/" + selected.slug()));
-            } else if (selected.path() != null && Files.isRegularFile(Path.of(selected.path()))) {
-                Desktop.getDesktop().browse(Path.of(selected.path()).toUri());
-            }
-        } catch (Exception ignored) {
-        }
-    }
-
-    private static List<HubClient.BotPageSummary> loadOfflinePages() {
-        String home = System.getProperty("smile.home", ".");
-        Path pagesDir = Path.of(home, "bot", "pages");
-        List<HubClient.BotPageSummary> list = new ArrayList<>();
-        list.add(new HubClient.BotPageSummary("executive-brief", "Executive Brief — @frank",
-                pagesDir.resolve("executive-brief.html").toString(), ""));
-        list.add(new HubClient.BotPageSummary("sales-pipeline", "Sales Pipeline — @mike",
-                pagesDir.resolve("sales-pipeline.html").toString(), ""));
-        list.add(new HubClient.BotPageSummary("community-radar", "Community Radar — @julien",
-                pagesDir.resolve("community-radar.html").toString(), ""));
-        list.add(new HubClient.BotPageSummary("token-usage", "Bot Activity & Token Telemetry",
-                pagesDir.resolve("token-usage.html").toString(), ""));
-        return list;
     }
 }

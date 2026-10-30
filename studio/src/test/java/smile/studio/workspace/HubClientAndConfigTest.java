@@ -186,4 +186,35 @@ public class HubClientAndConfigTest {
         assertTrue(intents.getFirst().output().getText().contains("  ✅ Edit /src/App.jsx"));
         assertTrue(intents.getFirst().output().getText().contains("Done."));
     }
+
+    @Test
+    public void testLoadOfflinePagesAndPageForBotMapping(@TempDir Path tempHome) throws Exception {
+        String prevHome = System.getProperty("smile.home");
+        try {
+            System.setProperty("smile.home", tempHome.toString());
+            Path pagesDir = tempHome.resolve("bot").resolve("pages");
+            Files.createDirectories(pagesDir);
+            Files.writeString(pagesDir.resolve("custom-report.html"), "<html><body>Custom</body></html>");
+
+            List<HubClient.BotPageSummary> pages = HubClient.loadOfflinePages();
+            assertEquals(5, pages.size());
+            assertTrue(pages.stream().anyMatch(p -> "executive-brief".equals(p.slug())));
+            assertTrue(pages.stream().anyMatch(p -> "sales-pipeline".equals(p.slug())));
+            assertTrue(pages.stream().anyMatch(p -> "community-radar".equals(p.slug())));
+            assertTrue(pages.stream().anyMatch(p -> "token-usage".equals(p.slug())));
+            assertTrue(pages.stream().anyMatch(p -> "custom-report".equals(p.slug())));
+
+            BotsConfig cfg = BotsConfig.defaultConfig();
+            for (BotsConfig.BotSpec bot : cfg.bots()) {
+                var pageOpt = HubClient.pageForBot(bot);
+                assertTrue(pageOpt.isPresent(), "Expected mapped page for bot " + bot.botId());
+            }
+        } finally {
+            if (prevHome == null) {
+                System.clearProperty("smile.home");
+            } else {
+                System.setProperty("smile.home", prevHome);
+            }
+        }
+    }
 }
