@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests the {@code /plugin} text facade that both the slash command and the CLI
- * drive, exercising the exact path {@code AgentCLI.runSlashCommand} uses.
+ * drive, exercising the exact path {@code AgentPanel.runSlashCommand} uses.
  *
  * @author Haifeng Li
  */

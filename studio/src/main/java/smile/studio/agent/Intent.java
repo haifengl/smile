@@ -15,7 +15,7 @@
  * version), this file automatically converts to the GNU Affero General Public
  * License version 3.0 (AGPLv3) or later.
  */
-package smile.studio.cli;
+package smile.studio.agent;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -42,7 +42,7 @@ import smile.studio.SmileStudio;
 import smile.studio.text.Markdown;
 import smile.studio.text.Monospaced;
 import smile.studio.text.OutputArea;
-import static smile.studio.cli.IntentType.*;
+import static smile.studio.agent.IntentType.*;
 
 /**
  * An intent is a multiline text input field, and its contents can be executed
@@ -107,7 +107,7 @@ public class Intent extends JPanel {
      * Constructor.
      * @param cli the parent component.
      */
-    public Intent(AgentCLI cli) {
+    public Intent(AgentPanel cli) {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
 
@@ -306,7 +306,7 @@ public class Intent extends JPanel {
     }
 
     /** Initializes the reasoning effort combo box. */
-    private JComboBox<String> initEffortComboBox(AgentCLI cli) {
+    private JComboBox<String> initEffortComboBox(AgentPanel cli) {
         var effortComboBox = new JComboBox<String>();
         effortComboBox.setBorder(BorderFactory.createEmptyBorder());
         effortComboBox.setBackground(inputPaneColor);
@@ -324,7 +324,7 @@ public class Intent extends JPanel {
     }
 
     /** Initializes the model combo box to the left of reasoning effort. */
-    private void initModelComboBox(AgentCLI cli) {
+    private void initModelComboBox(AgentPanel cli) {
         modelComboBox.setBorder(BorderFactory.createEmptyBorder());
         modelComboBox.setBackground(inputPaneColor);
         if (modelComboBox.getComponentCount() > 0 &&
@@ -532,7 +532,7 @@ public class Intent extends JPanel {
         });
     }
 
-    private void initActionMap(AgentCLI cli) {
+    private void initActionMap(AgentPanel cli) {
         InputMap inputMap = editor.getInputMap(JComponent.WHEN_FOCUSED);
         ActionMap actionMap = editor.getActionMap();
         // Map Shift+Enter to the default newline action (insert-break)
@@ -1061,7 +1061,7 @@ public class Intent extends JPanel {
 
     /**
      * Returns a localized queue string from this widget's bundle, so callers outside
-     * this class (the queue rendering in {@link AgentCLI}) share the same translations.
+     * this class (the queue rendering in {@link AgentPanel}) share the same translations.
      * @param key the bundle key.
      * @param args optional {@link MessageFormat} arguments.
      * @return the localized message.
