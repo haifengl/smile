@@ -132,7 +132,7 @@ public class BotActivity extends JPanel {
             HubManager.getInstance().start();
             SwingUtilities.invokeLater(this::refreshAllAsync);
         }));
-        JButton configBtn = new JButton("Configure Bot Routines…");
+        JButton configBtn = new JButton("Bot Routines…");
         configBtn.addActionListener(e -> {
             var ws = (smile.studio.workspace.Workspace) SwingUtilities.getAncestorOfClass(
                     smile.studio.workspace.Workspace.class, this);

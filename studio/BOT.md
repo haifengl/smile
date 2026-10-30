@@ -252,8 +252,8 @@ The **Agent Hub** menu in the Studio menu bar provides direct access to service 
 | **Start Agent Hub** | Start the local Agent Hub service (or attach if already running) |
 | **Stop Agent Hub** | Stop the Studio-managed Agent Hub process |
 | **Restart Agent Hub** | Stop and restart the local Agent Hub process |
-| **Configure Bot Routines…** | Open the `Bot Routines` tab in the main workspace (`BotManager`) |
-| **Bot Activity…** | Open the `Bot Activity` tab in the main workspace (`BotActivity`) |
+| **Bot Routines…** | Open the `Bot Routines` tab in the main workspace (`BotManager`) |
+| **Bot Activities…** | Open the `Bot Activities` tab in the main workspace (`BotActivity`) |
 | **Health** | Open `http://<host>:<port>/q/health` in the default browser |
 | **Metrics** | Open `http://<host>:<port>/q/metrics` in the default browser |
 
@@ -280,12 +280,13 @@ Agent Hub (Running)
 
 - **Status indicators:** `●` indicates an enabled routine under an enabled bot; `○` indicates a disabled routine or bot.
 - **Click a routine node:** Opens or focuses the **Bot Routines** workspace tab (`BotManager`) pre-selected on that routine.
-- **Double-click `Agent Hub` or a `@bot` node:** Opens the **Bot Activity** workspace tab (`BotActivity`).
+- **Double-click `Agent Hub` or a `@bot` node:** Opens the **Bot Activities** workspace tab (`BotActivity`).
 - **Right-click context menu on a routine node:**
   - **Run Now (`<routineId>`)** — Immediately triggers the routine on Agent Hub (starting the Hub first if needed).
   - **Enable / Disable Routine** — Toggles the routine in `bots.json` and hot-reloads Agent Hub.
   - **Configure Routine…** — Opens the `Bot Routines` workspace tab.
-  - **Bot Activity…** — Opens the `Bot Activity` workspace tab.
+  - **Bot Routines…** — Opens the `Bot Routines` workspace tab.
+  - **Bot Activities…** — Opens the `Bot Activities` workspace tab.
   - **Start / Stop Agent Hub** — Starts or stops the Hub process.
 
 ### 4.3 Status Bar Bot & Approval Badge
@@ -316,7 +317,7 @@ Every mutating action prompts you with an **Automation Write Approval** confirma
 
 ## 5. Configuring Bot Routines (`BotManager`)
 
-Open **Agent Hub > Configure Bot Routines…** (or click any routine in the **Bots** explorer tab) to open the `Bot Routines` tab and edit `$SMILE_HOME/conf/bots.json` and `$SMILE_HOME/conf/projects.json` visually. Changes can be edited even when Agent Hub is offline and are hot-reloaded immediately when Agent Hub is running.
+Open **Agent Hub > Bot Routines…** (or click any routine in the **Bots** explorer tab) to open the `Bot Routines` tab and edit `$SMILE_HOME/conf/bots.json` and `$SMILE_HOME/conf/projects.json` visually. Changes can be edited even when Agent Hub is offline and are hot-reloaded immediately when Agent Hub is running.
 
 ### 5.1 Routine Definition Tab
 
@@ -385,9 +386,9 @@ Standing Auto Review rules control whether consequential actions pause for human
 
 ---
 
-## 6. Bot Activity (`BotActivity`)
+## 6. Bot Activities (`BotActivity`)
 
-Open **Agent Hub > Bot Activity…** (or click the status bar `[Bots]` / `[Approvals (N)]` badge) to open the `Agent Hub` tab inside the main workspace alongside notebooks and text editors.
+Open **Agent Hub > Bot Activities…** (or click the status bar `[Bots]` / `[Approvals (N)]` badge) to open the `Bot Activities` tab inside the main workspace alongside notebooks and text editors.
 
 ### 6.1 Approvals & Batch Draft Queue
 

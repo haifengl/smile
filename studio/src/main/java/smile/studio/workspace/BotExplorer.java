@@ -242,7 +242,7 @@ public class BotExplorer extends JPanel {
                 popup.addSeparator();
             }
 
-            JMenuItem manageBotsItem = new JMenuItem("Configure Bot Routines…");
+            JMenuItem manageBotsItem = new JMenuItem("Bot Routines…");
             manageBotsItem.addActionListener(ev -> {
                 Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, BotExplorer.this);
                 if (ws != null) {
@@ -251,7 +251,7 @@ public class BotExplorer extends JPanel {
             });
             popup.add(manageBotsItem);
 
-            JMenuItem activityItem = new JMenuItem("Bot Activity…");
+            JMenuItem activityItem = new JMenuItem("Bot Activities…");
             activityItem.addActionListener(ev -> {
                 Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, BotExplorer.this);
                 if (ws != null) {
