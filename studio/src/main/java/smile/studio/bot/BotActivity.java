@@ -18,19 +18,38 @@
 package smile.studio.bot;
 
 import java.awt.*;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import ioa.llm.client.LLM;
+import ioa.llm.tool.AskUserQuestion;
+import ioa.llm.tool.TodoWrite;
+import ioa.llm.tool.Tool;
+import smile.studio.cli.Intent;
 import smile.studio.workspace.HubClient;
 import smile.studio.workspace.HubManager;
+import smile.swing.ScrollablePanel;
 
 /**
  * Operations &amp; Review workspace panel for Agent Hub:
@@ -73,6 +92,27 @@ public class BotActivity extends JPanel {
     private final JTextArea editablePayloadArea = new JTextArea(7, 30);
     private final JTextField rulePatternField = new JTextField(20);
 
+    private static final ObjectMapper TOOL_MAPPER = JsonMapper.builder()
+            .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+            .disable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+            .build();
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final int DISPLAY_TEXT_LIMIT = 12_000;
+
+    /**
+     * A human-readable conversation turn parsed from {@code conversation.jsonl}.
+     *
+     * @param prompt the user or routine prompt shown in the {@link Intent} header.
+     * @param status optional timestamp or status shown in the {@link Intent} footer.
+     * @param output the formatted tool call statuses and assistant Markdown response.
+     */
+    public record TranscriptTurn(String prompt, String status, String output) { }
+
+    private record RawToolCall(String id, String name, JsonNode arguments) {
+        static final RawToolCall EMPTY = new RawToolCall("", "", null);
+    }
+
     // Tab 2: Run History & Transcripts
     private final DefaultTableModel runsModel = new DefaultTableModel(
             new Object[]{"Run ID", "Bot", "Routine", "Persona", "Model", "Status", "Started At", "Summary / Error"}, 0) {
@@ -83,7 +123,8 @@ public class BotActivity extends JPanel {
     };
     private final JTable runsTable = new JTable(runsModel);
     private List<HubClient.BotRunSummary> currentRuns = new ArrayList<>();
-    private final JTextArea transcriptArea = new JTextArea(10, 60);
+    private final JPanel transcriptIntents = new ScrollablePanel();
+    private final JScrollPane transcriptScroll = new JScrollPane(transcriptIntents);
 
     // Tab 3: Bot Pages
     private final DefaultListModel<HubClient.BotPageSummary> pagesListModel = new DefaultListModel<>();
@@ -255,19 +296,18 @@ public class BotActivity extends JPanel {
             }
         });
 
-        transcriptArea.setEditable(false);
-        transcriptArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-        transcriptArea.setLineWrap(true);
-        transcriptArea.setWrapStyleWord(true);
+        transcriptIntents.setLayout(new BoxLayout(transcriptIntents, BoxLayout.Y_AXIS));
+        transcriptScroll.getVerticalScrollBar().setUnitIncrement(18);
+        transcriptScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         JPanel transcriptPanel = new JPanel(new BorderLayout(4, 4));
         JPanel transcriptTop = new JPanel(new BorderLayout());
-        transcriptTop.add(new JLabel("Session Transcript (conversation.jsonl):"), BorderLayout.WEST);
+        transcriptTop.add(new JLabel("Session Transcript:"), BorderLayout.WEST);
         JButton cancelRunBtn = new JButton("Stop / Cancel Selected Run");
         cancelRunBtn.addActionListener(e -> cancelSelectedRun());
         transcriptTop.add(cancelRunBtn, BorderLayout.EAST);
         transcriptPanel.add(transcriptTop, BorderLayout.NORTH);
-        transcriptPanel.add(new JScrollPane(transcriptArea), BorderLayout.CENTER);
+        transcriptPanel.add(transcriptScroll, BorderLayout.CENTER);
 
         JSplitPane split = new JSplitPane(
                 JSplitPane.VERTICAL_SPLIT,
@@ -377,9 +417,16 @@ public class BotActivity extends JPanel {
     }
 
     private void populateRuns(List<HubClient.BotRunSummary> list) {
+        Long selectedId = null;
+        int prevRow = runsTable.getSelectedRow();
+        if (prevRow >= 0 && prevRow < currentRuns.size()) {
+            selectedId = currentRuns.get(prevRow).id();
+        }
         currentRuns = new ArrayList<>(list);
         runsModel.setRowCount(0);
-        for (HubClient.BotRunSummary r : list) {
+        int selectRow = -1;
+        for (int i = 0; i < list.size(); i++) {
+            HubClient.BotRunSummary r = list.get(i);
             String summaryOrErr = !r.error().isBlank() ? "ERROR: " + r.error() : r.summary();
             runsModel.addRow(new Object[]{
                     r.id(),
@@ -391,6 +438,17 @@ public class BotActivity extends JPanel {
                     r.startedAt(),
                     summaryOrErr
             });
+            if (selectedId != null && selectedId.equals(r.id())) {
+                selectRow = i;
+            }
+        }
+        if (!list.isEmpty()) {
+            int targetRow = selectRow >= 0 ? selectRow : 0;
+            runsTable.setRowSelectionInterval(targetRow, targetRow);
+        } else {
+            transcriptIntents.removeAll();
+            transcriptIntents.revalidate();
+            transcriptIntents.repaint();
         }
     }
 
@@ -463,15 +521,627 @@ public class BotActivity extends JPanel {
         }
         Thread.ofPlatform().name("bot-transcript-load").daemon(true).start(() -> {
             try {
-                String text = HubManager.getInstance().client().getTranscript(run.id());
-                SwingUtilities.invokeLater(() -> {
-                    transcriptArea.setText(text);
-                    transcriptArea.setCaretPosition(0);
-                });
+                String text = readRunTranscript(run);
+                SwingUtilities.invokeLater(() -> renderTranscript(text, run));
             } catch (Exception ex) {
-                SwingUtilities.invokeLater(() -> transcriptArea.setText("Could not load transcript: " + ex.getMessage()));
+                SwingUtilities.invokeLater(() -> renderTranscriptError("Could not load transcript: " + ex.getMessage(), run));
             }
         });
+    }
+
+    private static String readRunTranscript(HubClient.BotRunSummary run) throws IOException, InterruptedException {
+        HubClient client = HubManager.getInstance().client();
+        if (client.isReady()) {
+            try {
+                return client.getTranscript(run.id());
+            } catch (Exception ex) {
+                Optional<String> local = readLocalTranscript(run.conversationPath());
+                if (local.isPresent()) {
+                    return local.get();
+                }
+                throw ex;
+            }
+        }
+        Optional<String> local = readLocalTranscript(run.conversationPath());
+        if (local.isPresent()) {
+            return local.get();
+        }
+        return client.getTranscript(run.id());
+    }
+
+    private static Optional<String> readLocalTranscript(String conversationPath) {
+        if (conversationPath == null || conversationPath.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            Path p = Path.of(conversationPath);
+            if (Files.isRegularFile(p)) {
+                return Optional.of(Files.readString(p, StandardCharsets.UTF_8));
+            }
+            if (Files.isDirectory(p)) {
+                Path direct = p.resolve("conversation.jsonl");
+                if (Files.isRegularFile(direct)) {
+                    return Optional.of(Files.readString(direct, StandardCharsets.UTF_8));
+                }
+                try (Stream<Path> dirs = Files.list(p)) {
+                    Optional<Path> latest = dirs.filter(Files::isDirectory)
+                            .map(d -> d.resolve("conversation.jsonl"))
+                            .filter(Files::isRegularFile)
+                            .max((a, b) -> {
+                                try {
+                                    return Files.getLastModifiedTime(a).compareTo(Files.getLastModifiedTime(b));
+                                } catch (IOException e) {
+                                    return 0;
+                                }
+                            });
+                    if (latest.isPresent()) {
+                        return Optional.of(Files.readString(latest.get(), StandardCharsets.UTF_8));
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Renders a {@code conversation.jsonl} transcript into read-only {@link Intent}
+     * widgets inside {@link #transcriptIntents}.
+     *
+     * @param jsonl the raw {@code conversation.jsonl} content.
+     * @param run   optional run metadata for fallback headers.
+     */
+    public void renderTranscript(String jsonl, HubClient.BotRunSummary run) {
+        transcriptIntents.removeAll();
+        List<TranscriptTurn> turns = parseTranscript(jsonl);
+        if (turns.isEmpty()) {
+            String fallbackPrompt = run != null && run.routineId() != null && !run.routineId().isBlank()
+                    ? "Routine: " + run.routineId() + (run.persona() != null && !run.persona().isBlank() ? " (@" + run.persona() + ")" : "")
+                    : "(No transcript recorded for this run)";
+            String fallbackStatus = run != null ? run.status() : "";
+            String fallbackOutput = run != null && run.error() != null && !run.error().isBlank()
+                    ? "Error: " + run.error()
+                    : (run != null && run.summary() != null ? run.summary() : "");
+            transcriptIntents.add(createTranscriptIntent(fallbackPrompt, fallbackStatus, fallbackOutput));
+        } else {
+            for (TranscriptTurn turn : turns) {
+                transcriptIntents.add(createTranscriptIntent(turn.prompt(), turn.status(), turn.output()));
+            }
+        }
+        transcriptIntents.add(Box.createVerticalGlue());
+        transcriptIntents.revalidate();
+        transcriptIntents.repaint();
+        SwingUtilities.invokeLater(() -> transcriptScroll.getVerticalScrollBar().setValue(0));
+    }
+
+    private void renderTranscriptError(String errorMessage, HubClient.BotRunSummary run) {
+        transcriptIntents.removeAll();
+        String prompt = run != null && run.routineId() != null && !run.routineId().isBlank()
+                ? "Routine: " + run.routineId()
+                : "Transcript Error";
+        String status = run != null ? run.status() : "";
+        transcriptIntents.add(createTranscriptIntent(prompt, status, "Error: " + errorMessage));
+        transcriptIntents.add(Box.createVerticalGlue());
+        transcriptIntents.revalidate();
+        transcriptIntents.repaint();
+    }
+
+    /** Returns the rendered {@link Intent} components in the transcript panel. */
+    public List<Intent> transcriptIntentList() {
+        List<Intent> list = new ArrayList<>();
+        for (Component c : transcriptIntents.getComponents()) {
+            if (c instanceof Intent intent) {
+                list.add(intent);
+            }
+        }
+        return list;
+    }
+
+    private static Intent createTranscriptIntent(String prompt, String status, String output) {
+        Intent intent = new Intent(null);
+        intent.editor().setText(prompt == null ? "" : prompt);
+        intent.editor().setCaretPosition(0);
+        intent.setEditable(false);
+        if (status != null && !status.isBlank()) {
+            String msg = status.strip().replaceAll("\\s+", " ");
+            intent.status().setText(msg);
+            intent.status().setToolTipText(status);
+        }
+        if (output != null && !output.isBlank()) {
+            String shown = forDisplay(stripBlankLines(output));
+            intent.output().print(shown);
+            intent.output().setText(shown);
+            intent.output().setCaretPosition(0);
+            intent.output().highlight();
+        }
+        return intent;
+    }
+
+    /**
+     * Parses a {@code conversation.jsonl} session transcript into human-readable
+     * {@link TranscriptTurn}s, formatting tool calls the same way {@code ioa} streams
+     * tool call status updates to {@code AgentCLI} / {@link Intent}.
+     *
+     * @param jsonl the raw {@code conversation.jsonl} string.
+     * @return the ordered list of conversation turns.
+     */
+    public static List<TranscriptTurn> parseTranscript(String jsonl) {
+        if (jsonl == null || jsonl.isBlank()) {
+            return List.of();
+        }
+
+        List<TranscriptTurn> turns = new ArrayList<>();
+        String currentPrompt = null;
+        String currentStatus = "";
+        StringBuilder currentOutput = new StringBuilder();
+
+        for (String rawLine : jsonl.split("\\r?\\n")) {
+            String line = rawLine.trim();
+            if (line.isEmpty()) {
+                continue;
+            }
+
+            JsonNode node;
+            try {
+                node = TOOL_MAPPER.readTree(line);
+            } catch (Exception ex) {
+                if (currentPrompt == null) {
+                    currentPrompt = "Session Transcript";
+                }
+                appendSection(currentOutput, line);
+                continue;
+            }
+
+            if (node == null || !node.isObject()) {
+                continue;
+            }
+
+            String role = node.path("role").asText("").trim().toLowerCase();
+            if ("system".equals(role)) {
+                continue;
+            }
+
+            String timestamp = formatTimestamp(node.get("timestamp"));
+            if ("user".equals(role)) {
+                if (currentPrompt != null) {
+                    turns.add(new TranscriptTurn(currentPrompt, currentStatus, stripBlankLines(currentOutput.toString())));
+                    currentOutput.setLength(0);
+                }
+                String prompt = stripSystemReminder(textValue(node.get("content")));
+                currentPrompt = prompt.isBlank() ? "(Empty prompt)" : prompt;
+                currentStatus = timestamp;
+            } else if ("tool".equals(role)) {
+                if (currentPrompt == null) {
+                    currentPrompt = "Session summary";
+                    currentStatus = timestamp;
+                } else if (currentStatus.isBlank() && !timestamp.isBlank()) {
+                    currentStatus = timestamp;
+                }
+                JsonNode content = node.get("content");
+                if (content != null && content.isTextual()) {
+                    appendSection(currentOutput, content.asText());
+                } else if (content != null && content.isObject()) {
+                    JsonNode message = content.get("message");
+                    String spoken = spokenText(message);
+                    if (!spoken.isBlank()) {
+                        appendSection(currentOutput, spoken.strip());
+                    }
+                    String toolStatus = formatToolCalls(message, content.get("outputs"));
+                    if (!toolStatus.isBlank()) {
+                        appendToolLines(currentOutput, toolStatus);
+                    }
+                }
+            } else if ("assistant".equals(role)) {
+                String text = textValue(node.get("content"));
+                if (text.isBlank() && node.has("summary")) {
+                    text = node.path("summary").asText("");
+                }
+                if (currentPrompt == null) {
+                    String routineId = node.path("routineId").asText("");
+                    String persona = node.path("persona").asText("");
+                    if (!routineId.isBlank()) {
+                        currentPrompt = "Routine: " + routineId + (persona.isBlank() ? "" : " (@" + persona + ")");
+                    } else {
+                        currentPrompt = "Session summary";
+                    }
+                    String statusField = node.path("status").asText("");
+                    currentStatus = !statusField.isBlank() ? statusField : timestamp;
+                } else if (currentStatus.isBlank() && !timestamp.isBlank()) {
+                    currentStatus = timestamp;
+                }
+                if (!text.isBlank()) {
+                    appendSection(currentOutput, text.strip());
+                }
+            } else if ("error".equals(role)) {
+                String text = textValue(node.get("content"));
+                if (currentPrompt == null) {
+                    currentPrompt = "Error";
+                    currentStatus = timestamp;
+                }
+                if (!text.isBlank()) {
+                    appendSection(currentOutput, "Error: " + text.strip());
+                }
+            }
+        }
+
+        if (currentPrompt != null) {
+            turns.add(new TranscriptTurn(currentPrompt, currentStatus, stripBlankLines(currentOutput.toString())));
+        }
+        return turns;
+    }
+
+    private static String stripBlankLines(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        return text.replaceFirst("^[\\r\\n]+", "").stripTrailing();
+    }
+
+    private static void appendSection(StringBuilder sb, String section) {
+        if (section == null || section.isBlank()) {
+            return;
+        }
+        if (!sb.isEmpty()) {
+            if (sb.charAt(sb.length() - 1) == '\n') {
+                sb.append('\n');
+            } else {
+                sb.append("\n\n");
+            }
+        }
+        sb.append(section);
+    }
+
+    private static void appendToolLines(StringBuilder sb, String toolLines) {
+        if (toolLines == null || toolLines.isBlank()) {
+            return;
+        }
+        if (!sb.isEmpty() && sb.charAt(sb.length() - 1) != '\n') {
+            sb.append('\n');
+        }
+        sb.append(toolLines);
+        if (sb.charAt(sb.length() - 1) != '\n') {
+            sb.append('\n');
+        }
+    }
+
+    private static String stripSystemReminder(String prompt) {
+        if (prompt == null || prompt.isBlank()) {
+            return "";
+        }
+        return prompt.replaceFirst("(?s)^\\s*<system-reminder>.*?</system-reminder>\\s*", "").strip();
+    }
+
+    private static String spokenText(JsonNode message) {
+        if (message == null || message.isNull() || message.isMissingNode()) {
+            return "";
+        }
+        if (message.isTextual()) {
+            return message.asText();
+        }
+        if (message.isObject()) {
+            String text = textValue(message.get("content"));
+            if (!text.isBlank()) {
+                return text;
+            }
+            if (LLM.showThinking()) {
+                return textValue(message.get("reasoning"));
+            }
+            return "";
+        }
+        if (message.isArray()) {
+            StringBuilder sb = new StringBuilder();
+            for (JsonNode item : message) {
+                String type = item.path("type").asText("");
+                if ("function_call".equals(type) || "tool_use".equals(type)) {
+                    continue;
+                }
+                String text = textValue(item.get("content"));
+                if (text.isBlank()) {
+                    text = textValue(item.get("text"));
+                }
+                if (!text.isBlank()) {
+                    if (!sb.isEmpty()) {
+                        sb.append('\n');
+                    }
+                    sb.append(text);
+                }
+            }
+            return sb.toString();
+        }
+        return "";
+    }
+
+    private static String formatToolCalls(JsonNode message, JsonNode outputs) {
+        List<RawToolCall> calls = extractCalls(message);
+        List<JsonNode> results = new ArrayList<>();
+        if (outputs != null && outputs.isArray()) {
+            outputs.forEach(results::add);
+        }
+        int n = Math.max(calls.size(), results.size());
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < n; i++) {
+            RawToolCall call = i < calls.size() ? calls.get(i) : RawToolCall.EMPTY;
+            JsonNode result = findResult(results, call.id(), i);
+            String rawName = !call.name().isBlank()
+                    ? call.name()
+                    : (result != null ? result.path("name").asText("") : "");
+            boolean success = result == null || !result.has("success") || result.path("success").asBoolean(true);
+            String resultOutput = result == null ? "" : result.path("output").asText("");
+            if (rawName.isBlank() && (call.arguments() == null || call.arguments().isNull()) && resultOutput.isBlank()) {
+                continue;
+            }
+            String formatted = formatSingleToolCall(rawName, call.arguments(), success, resultOutput);
+            if (!formatted.isBlank()) {
+                sb.append(formatted);
+                if (!formatted.endsWith("\n")) {
+                    sb.append('\n');
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    private static JsonNode findResult(List<JsonNode> results, String callId, int fallbackIndex) {
+        if (callId != null && !callId.isBlank()) {
+            for (JsonNode r : results) {
+                if (callId.equals(r.path("id").asText(""))) {
+                    return r;
+                }
+            }
+        }
+        return fallbackIndex >= 0 && fallbackIndex < results.size() ? results.get(fallbackIndex) : null;
+    }
+
+    private static String formatSingleToolCall(String rawName, JsonNode argsNode, boolean success, String resultOutput) {
+        String canonicalName = Tool.canonical(rawName).orElse(rawName == null ? "" : rawName.trim());
+        Tool tool = deserializeTool(canonicalName, argsNode);
+        if (tool != null) {
+            if (tool instanceof TodoWrite) {
+                return tool.toString();
+            }
+            if (tool instanceof AskUserQuestion ask) {
+                return formatAskUserQuestion(ask, success, resultOutput);
+            }
+            String desc = tool.toString();
+            if (desc == null || desc.isBlank()) {
+                desc = canonicalName.isBlank() ? "Tool" : canonicalName;
+            }
+            return (success ? "  ✅ " : "  ❌ ") + desc;
+        }
+
+        // Fallbacks when arguments were not serialized or tool is an MCP tool
+        if ("TodoWrite".equals(canonicalName) && resultOutput != null && resultOutput.contains("📝 Current Tasks:")) {
+            return resultOutput.substring(resultOutput.indexOf("📝 Current Tasks:")).strip();
+        }
+        if ("AskUserQuestion".equals(canonicalName)) {
+            return formatAskUserQuestion(null, success, resultOutput);
+        }
+        if (("Edit".equals(canonicalName) || "Write".equals(canonicalName) || "Append".equals(canonicalName))
+                && resultOutput != null && resultOutput.startsWith("File '")) {
+            int endQuote = resultOutput.indexOf('\'', 6);
+            if (endQuote > 6) {
+                return (success ? "  ✅ " : "  ❌ ") + canonicalName + " " + resultOutput.substring(6, endQuote);
+            }
+        }
+        String argsSummary = summarizeArguments(argsNode);
+        String label = canonicalName.isBlank() ? "Tool" : canonicalName;
+        if (!argsSummary.isBlank()) {
+            label = label + " " + argsSummary;
+        }
+        return (success ? "  ✅ " : "  ❌ ") + label;
+    }
+
+    private static Tool deserializeTool(String canonicalName, JsonNode argsNode) {
+        if (canonicalName == null || canonicalName.isBlank()
+                || argsNode == null || argsNode.isNull() || argsNode.isMissingNode()) {
+            return null;
+        }
+        Optional<Tool.Spec> specOpt = Tool.of(canonicalName);
+        if (specOpt.isEmpty()) {
+            return null;
+        }
+        Class<? extends Tool> clazz = specOpt.get().clazz();
+        try {
+            if (argsNode.isTextual()) {
+                String json = argsNode.asText();
+                if (json == null || json.isBlank()) {
+                    return null;
+                }
+                return TOOL_MAPPER.readValue(json, clazz);
+            }
+            if (argsNode.isObject()) {
+                if (argsNode.isEmpty()) {
+                    return null;
+                }
+                return TOOL_MAPPER.treeToValue(argsNode, clazz);
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private static String formatAskUserQuestion(AskUserQuestion ask, boolean success, String resultOutput) {
+        String prefix = success ? "  ✅ " : "  ❌ ";
+        if (ask != null && ask.questions != null && !ask.questions.isEmpty()) {
+            String qText = ask.questions.stream()
+                    .filter(Objects::nonNull)
+                    .map(q -> q.question != null && !q.question.isBlank() ? q.question : q.header)
+                    .filter(s -> s != null && !s.isBlank())
+                    .collect(Collectors.joining("; "));
+            if (!qText.isBlank()) {
+                return prefix + "AskUserQuestion: " + qText;
+            }
+        }
+        if (resultOutput != null && !resultOutput.isBlank()) {
+            String oneLine = resultOutput.replaceFirst("^User has answered your questions:\\s*", "")
+                    .replaceFirst("\\s*You can now continue with the user's answers in mind\\.\\s*$", "")
+                    .replaceAll("\\s+", " ")
+                    .trim();
+            if (!oneLine.isBlank()) {
+                return prefix + "AskUserQuestion: " + oneLine;
+            }
+        }
+        return prefix + "AskUserQuestion";
+    }
+
+    private static String summarizeArguments(JsonNode argsNode) {
+        if (argsNode == null || argsNode.isNull() || argsNode.isMissingNode()) {
+            return "";
+        }
+        JsonNode obj = argsNode;
+        if (argsNode.isTextual()) {
+            String text = argsNode.asText("").trim();
+            if (text.isEmpty() || "{}".equals(text)) {
+                return "";
+            }
+            try {
+                obj = TOOL_MAPPER.readTree(text);
+            } catch (Exception ex) {
+                return oneLine(text, 100);
+            }
+        }
+        if (obj != null && obj.isObject()) {
+            if (obj.isEmpty()) {
+                return "";
+            }
+            return oneLine(obj.toString(), 100);
+        }
+        return "";
+    }
+
+    private static List<RawToolCall> extractCalls(JsonNode message) {
+        if (message == null || message.isNull() || message.isMissingNode()) {
+            return List.of();
+        }
+        List<RawToolCall> calls = new ArrayList<>();
+        if (message.isArray()) {
+            for (JsonNode item : message) {
+                RawToolCall call = toCall(item);
+                if (!call.name().isBlank() || call.arguments() != null) {
+                    calls.add(call);
+                }
+            }
+            return calls;
+        }
+        if (message.isObject()) {
+            JsonNode toolCalls = message.get("tool_calls");
+            if (toolCalls != null && toolCalls.isArray()) {
+                for (JsonNode item : toolCalls) {
+                    RawToolCall call = toCall(item);
+                    if (!call.name().isBlank() || call.arguments() != null) {
+                        calls.add(call);
+                    }
+                }
+                return calls;
+            }
+            RawToolCall call = toCall(message);
+            if (!call.name().isBlank() || call.arguments() != null) {
+                calls.add(call);
+            }
+        }
+        return calls;
+    }
+
+    private static RawToolCall toCall(JsonNode node) {
+        if (node == null || !node.isObject()) {
+            return RawToolCall.EMPTY;
+        }
+        JsonNode source = node;
+        if (node.get("function") != null && node.get("function").isObject()) {
+            source = node.get("function");
+        } else if (node.get("tool_use") != null && node.get("tool_use").isObject()) {
+            source = node.get("tool_use");
+        }
+        String name = textValue(source.get("name"));
+        String id = firstNonBlank(
+                textValue(node.get("id")),
+                textValue(node.get("call_id")),
+                textValue(source.get("id")),
+                textValue(source.get("call_id"))
+        );
+        JsonNode args = firstPresentNode(
+                source.get("arguments"),
+                source.get("input"),
+                node.get("arguments"),
+                node.get("input")
+        );
+        return new RawToolCall(id, name, args);
+    }
+
+    private static JsonNode firstPresentNode(JsonNode... nodes) {
+        for (JsonNode n : nodes) {
+            if (n != null && !n.isNull() && !n.isMissingNode()) {
+                if (n.isTextual() && n.asText("").isBlank()) {
+                    continue;
+                }
+                return n;
+            }
+        }
+        return null;
+    }
+
+    private static String textValue(JsonNode node) {
+        if (node == null || node.isNull() || node.isMissingNode()) {
+            return "";
+        }
+        if (node.isTextual()) {
+            return node.asText();
+        }
+        if (node.isArray()) {
+            StringBuilder sb = new StringBuilder();
+            for (JsonNode item : node) {
+                String text = item.isTextual() ? item.asText() : textValue(item.get("text"));
+                if (!text.isBlank()) {
+                    if (!sb.isEmpty()) {
+                        sb.append('\n');
+                    }
+                    sb.append(text);
+                }
+            }
+            return sb.toString();
+        }
+        return "";
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isBlank()) {
+                return v;
+            }
+        }
+        return "";
+    }
+
+    private static String formatTimestamp(JsonNode node) {
+        if (node == null || !node.isTextual()) {
+            return "";
+        }
+        String raw = node.asText("").trim();
+        if (raw.isEmpty()) {
+            return "";
+        }
+        try {
+            Instant instant = Instant.parse(raw);
+            return LocalDateTime.ofInstant(instant, ZoneId.systemDefault()).format(TIMESTAMP_FORMATTER);
+        } catch (Exception ex) {
+            return raw;
+        }
+    }
+
+    private static String oneLine(String text, int limit) {
+        String s = text.replaceAll("\\s+", " ").trim();
+        if (s.length() <= limit) {
+            return s;
+        }
+        return s.substring(0, Math.max(0, limit - 3)) + "...";
+    }
+
+    private static String forDisplay(String text) {
+        if (text.length() <= DISPLAY_TEXT_LIMIT) {
+            return text;
+        }
+        return text.substring(0, DISPLAY_TEXT_LIMIT)
+                + "\n\n… [truncated in the view; the session history file has the full text]";
     }
 
     private void cancelSelectedRun() {

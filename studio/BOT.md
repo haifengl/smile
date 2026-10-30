@@ -432,7 +432,7 @@ The **Run History & Transcripts** tab lists every routine execution (`IoABotRun`
 | `FAILED` | Turn terminated with an error (shown in `Summary / Error`) |
 | `CANCELLED` | Stopped manually by the user |
 
-- **View Transcript:** Select any run row to load its full `conversation.jsonl` transcript in the lower pane.
+- **View Transcript:** Select any run row to render its `conversation.jsonl` session transcript (prompts, tool calls, and assistant responses) in the lower pane.
 - **Stop / Cancel Run:** Click **Stop / Cancel Selected Run** to interrupt an in-flight `RUNNING` or `WAITING_APPROVAL` turn.
 
 ### 6.3 Interactive Bot Pages
