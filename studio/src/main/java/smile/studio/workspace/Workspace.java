@@ -559,7 +559,7 @@ public class Workspace extends JSplitPane {
         }
         int index = editorTabs.indexOfComponent(botActivity);
         if (index == -1) {
-            editorTabs.addTab("Bot Activity", botActivity);
+            editorTabs.addTab("Bot Activities", botActivity);
         }
         editorTabs.setSelectedComponent(botActivity);
     }
