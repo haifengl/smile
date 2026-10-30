@@ -15,7 +15,7 @@
  * version), this file automatically converts to the GNU Affero General Public
  * License version 3.0 (AGPLv3) or later.
  */
-package smile.studio.workspace;
+package smile.studio.bot;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +25,7 @@ import ioa.agent.bot.ProjectsConfig;
 import smile.shell.Hub;
 import smile.shell.Serve;
 import smile.studio.ProcessFrame;
+import smile.studio.ServeManager;
 import smile.studio.StudioConfig;
 
 /**

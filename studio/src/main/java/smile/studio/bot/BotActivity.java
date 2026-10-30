@@ -51,8 +51,6 @@ import ioa.llm.tool.AskUserQuestion;
 import ioa.llm.tool.TodoWrite;
 import ioa.llm.tool.Tool;
 import smile.studio.agent.Intent;
-import smile.studio.workspace.HubClient;
-import smile.studio.workspace.HubManager;
 import smile.swing.ScrollablePanel;
 
 /**

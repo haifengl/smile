@@ -15,7 +15,7 @@
  * version), this file automatically converts to the GNU Affero General Public
  * License version 3.0 (AGPLv3) or later.
  */
-package smile.studio.workspace;
+package smile.studio.bot;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,7 +27,7 @@ import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
 import smile.shell.Hub;
 import smile.studio.StudioConfig;
-import smile.studio.bot.BotActivity;
+import smile.studio.workspace.BotExplorer;
 
 import static org.junit.jupiter.api.Assertions.*;
 

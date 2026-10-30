@@ -30,7 +30,6 @@ import ioa.agent.bot.ProjectsConfig;
 import ioa.agent.email.EmailConfig;
 import smile.studio.LlmServices;
 import smile.studio.SmileStudio;
-import smile.studio.workspace.HubManager;
 
 /**
  * Visual editor for Bot Personas, Routines, Context Projects, and Auto Review Rules
