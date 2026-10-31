@@ -1059,7 +1059,7 @@ The completion popup is provided by RSyntaxTextArea's `AutoCompletion` infrastru
 
 ## 16. Themes / Look-and-Feel
 
-SMILE Studio uses [FlatLaf](https://www.formdev.com/flatlaf/) for its look-and-feel. Toggle **File > Dark Theme** to switch immediately between Dark (`FlatDarculaLaf`, the default) and Light (`FlatIntelliJLaf`) themes. The preference is saved under `uiTheme` and remembered across restarts.
+SMILE Studio uses [FlatLaf](https://www.formdev.com/flatlaf/) for its look-and-feel. Toggle **File > Dark Theme** to switch immediately between Light (`FlatIntelliJLaf`, the default) and Dark (`FlatDarculaLaf`) themes. The preference is saved under `uiTheme` and remembered across restarts.
 
 JetBrains Mono is installed as the default monospaced font via `FlatJetBrainsMonoFont.install()`.
 
