@@ -303,4 +303,32 @@ public class HubClientAndConfigTest {
         assertFalse(activity.isDraftComposerActive());
         assertTrue(activity.isPriorDraftPanelVisible(), "Prior draft panel should be visible when previousPayloadJson is present");
     }
+
+    @Test
+    public void testReadLocalTranscriptMatchesSessionDirectoryByStartedAt(@TempDir Path tempHome) throws Exception {
+        System.out.println("readLocalTranscript matches session directory by startedAt");
+        Path sessionsRoot = tempHome.resolve("bot").resolve(".smile").resolve("chief-of-staff").resolve("sessions");
+        Path olderSession = sessionsRoot.resolve("20261028T231946");
+        Path newerSession = sessionsRoot.resolve("20261029T234544");
+        Files.createDirectories(olderSession);
+        Files.createDirectories(newerSession);
+        Files.writeString(
+                olderSession.resolve("conversation.jsonl"),
+                "{\"role\":\"user\",\"type\":\"TEXT\",\"content\":\"Triage the inbound email(s).\"}\n"
+        );
+        Files.writeString(
+                newerSession.resolve("conversation.jsonl"),
+                "{\"role\":\"user\",\"type\":\"TEXT\",\"content\":\"Run the /daily-log skill.\"}\n"
+        );
+
+        String startedAtIso = java.time.LocalDateTime.of(2026, 10, 28, 23, 19, 46)
+                .atZone(java.time.ZoneId.systemDefault())
+                .toInstant()
+                .toString();
+
+        var resolved = BotActivity.readLocalTranscript(sessionsRoot.toString(), startedAtIso);
+        assertTrue(resolved.isPresent());
+        assertTrue(resolved.get().contains("Triage the inbound email(s)."));
+        assertFalse(resolved.get().contains("Run the /daily-log skill."));
+    }
 }

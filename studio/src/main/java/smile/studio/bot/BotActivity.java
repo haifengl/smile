@@ -806,21 +806,21 @@ public class BotActivity extends JPanel {
             try {
                 return client.getTranscript(run.id());
             } catch (Exception ex) {
-                Optional<String> local = readLocalTranscript(run.conversationPath());
+                Optional<String> local = readLocalTranscript(run.conversationPath(), run.startedAt());
                 if (local.isPresent()) {
                     return local.get();
                 }
                 throw ex;
             }
         }
-        Optional<String> local = readLocalTranscript(run.conversationPath());
+        Optional<String> local = readLocalTranscript(run.conversationPath(), run.startedAt());
         if (local.isPresent()) {
             return local.get();
         }
         return client.getTranscript(run.id());
     }
 
-    private static Optional<String> readLocalTranscript(String conversationPath) {
+    static Optional<String> readLocalTranscript(String conversationPath, String startedAt) {
         if (conversationPath == null || conversationPath.isBlank()) {
             return Optional.empty();
         }
@@ -835,9 +835,29 @@ public class BotActivity extends JPanel {
                     return Optional.of(Files.readString(direct, StandardCharsets.UTF_8));
                 }
                 try (Stream<Path> dirs = Files.list(p)) {
-                    Optional<Path> latest = dirs.filter(Files::isDirectory)
+                    List<Path> candidates = dirs.filter(Files::isDirectory)
                             .map(d -> d.resolve("conversation.jsonl"))
                             .filter(Files::isRegularFile)
+                            .toList();
+                    if (candidates.isEmpty()) {
+                        return Optional.empty();
+                    }
+                    Instant targetInstant = parseInstantSafe(startedAt);
+                    if (targetInstant != null) {
+                        DateTimeFormatter sessionFmt = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+                        Optional<Path> closest = candidates.stream()
+                                .filter(c -> parseSessionDirInstant(c.getParent(), sessionFmt).isPresent())
+                                .min(java.util.Comparator.comparingLong(c -> Math.abs(
+                                        java.time.Duration.between(
+                                                targetInstant,
+                                                parseSessionDirInstant(c.getParent(), sessionFmt).orElse(targetInstant)
+                                        ).toMillis()
+                                )));
+                        if (closest.isPresent()) {
+                            return Optional.of(Files.readString(closest.get(), StandardCharsets.UTF_8));
+                        }
+                    }
+                    Optional<Path> latest = candidates.stream()
                             .max((a, b) -> {
                                 try {
                                     return Files.getLastModifiedTime(a).compareTo(Files.getLastModifiedTime(b));
@@ -853,6 +873,29 @@ public class BotActivity extends JPanel {
         } catch (Exception ignored) {
         }
         return Optional.empty();
+    }
+
+    private static Instant parseInstantSafe(String iso) {
+        if (iso == null || iso.isBlank()) {
+            return null;
+        }
+        try {
+            return Instant.parse(iso.trim());
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private static Optional<Instant> parseSessionDirInstant(Path sessionDir, DateTimeFormatter fmt) {
+        if (sessionDir == null || sessionDir.getFileName() == null) {
+            return Optional.empty();
+        }
+        try {
+            LocalDateTime ldt = LocalDateTime.parse(sessionDir.getFileName().toString(), fmt);
+            return Optional.of(ldt.atZone(ZoneId.systemDefault()).toInstant());
+        } catch (Exception ex) {
+            return Optional.empty();
+        }
     }
 
     /**
