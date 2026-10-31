@@ -53,7 +53,7 @@ import static smile.studio.agent.IntentType.*;
 public class Intent extends JPanel {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), Locale.getDefault());
     private static final Color borderColor = Palette.web("#8dd4e8");
-    /** Emoji prefix (U+1F916 robot face) for status messages originating from agents. */
+    /** Emoji prefix (U+1F4DC scroll) for status messages originating from agents. */
     static final String AGENT_STATUS_PREFIX = "\uD83D\uDCDC ";
     /** The scroll unit increment in pixels for the subagent output scrollbars. */
     private static final int SCROLL_UNIT_INCREMENT = 18;
