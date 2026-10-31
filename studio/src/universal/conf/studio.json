@@ -6,7 +6,7 @@
     "modelPath": "./model"
   },
   "agentHub": {
-    "autoStart": false,
+    "autoStart": true,
     "host": "localhost",
     "port": 8890,
     "adminToken": "dev-admin-token",

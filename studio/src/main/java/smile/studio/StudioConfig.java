@@ -68,7 +68,7 @@ public final class StudioConfig {
 
     /** The Agent Hub settings, with defaults applied. */
     public static final AgentHub DEFAULT_AGENT_HUB =
-            new AgentHub(false, DEFAULT_HOST, DEFAULT_HUB_PORT, DEFAULT_HUB_ADMIN_TOKEN, false);
+            new AgentHub(true, DEFAULT_HOST, DEFAULT_HUB_PORT, DEFAULT_HUB_ADMIN_TOKEN, false);
 
     private StudioConfig() {
     }
@@ -266,7 +266,7 @@ public final class StudioConfig {
         if (node == null || node.isNull()) {
             return DEFAULT_AGENT_HUB;
         }
-        boolean autoStart = node.has("autoStart") && node.get("autoStart").asBoolean();
+        boolean autoStart = !node.has("autoStart") || node.get("autoStart").asBoolean();
         String host = node.has("host") && !node.get("host").asString().isBlank()
                 ? node.get("host").asString().trim() : DEFAULT_HOST;
         int port = node.has("port") ? node.get("port").asInt() : DEFAULT_HUB_PORT;
