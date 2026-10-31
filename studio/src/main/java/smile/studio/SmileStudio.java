@@ -534,7 +534,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         }
 
         var darkThemeMenuItem = new JCheckBoxMenuItem(new DarkThemeAction());
-        String currentTheme = prefs.get(SettingsDialog.UI_THEME_KEY, "Dark");
+        String currentTheme = prefs.get(SettingsDialog.UI_THEME_KEY, "Light");
         darkThemeMenuItem.setSelected("Dark".equalsIgnoreCase(currentTheme) || "Darcula".equalsIgnoreCase(currentTheme));
 
         JMenu fileMenu = new JMenu(bundle.getString("File"));
@@ -1420,7 +1420,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         FlatLaf.registerCustomDefaultsSource("smile.studio");
         // FlatLaf.setup() must be called in the main method, before creating
         // any Swing components or the Event Dispatch Thread (EDT).
-        String theme = SmileStudio.prefs.get(SettingsDialog.UI_THEME_KEY, "Dark");
+        String theme = SmileStudio.prefs.get(SettingsDialog.UI_THEME_KEY, "Light");
         switch (theme) {
             case "Light", "IntelliJ" -> FlatIntelliJLaf.setup();
             case "Dark", "Darcula" -> FlatDarculaLaf.setup();
