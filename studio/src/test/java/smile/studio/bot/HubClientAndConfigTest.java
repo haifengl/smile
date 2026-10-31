@@ -20,6 +20,8 @@ package smile.studio.bot;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import javax.swing.event.HyperlinkEvent;
 import ioa.agent.bot.BotsConfig;
 import ioa.agent.bot.ProjectsConfig;
 import org.junit.jupiter.api.Test;
@@ -27,6 +29,7 @@ import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
 import smile.shell.Hub;
 import smile.studio.StudioConfig;
+import smile.studio.text.OutputArea;
 import smile.studio.workspace.BotExplorer;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -339,5 +342,45 @@ public class HubClientAndConfigTest {
         assertTrue(resolved.isPresent());
         assertTrue(resolved.get().contains("Triage the inbound email(s)."));
         assertFalse(resolved.get().contains("Run the /daily-log skill."));
+    }
+
+    @Test
+    public void testSessionTranscriptHyperlinkOpensFileInWorkspace(@TempDir Path tempDir) throws Exception {
+        System.out.println("Session Transcript LinkGenerator resolves file paths and triggers file open handler");
+        Path dailyLog = tempDir.resolve(".smile").resolve("memory").resolve("2026-10-29.md");
+        Files.createDirectories(dailyLog.getParent());
+        Files.writeString(dailyLog, "# Daily Log\n\n- Logged session work.\n");
+
+        String forwardSlashPath = dailyLog.toAbsolutePath().normalize().toString().replace('\\', '/');
+        String jsonl = """
+                {"role":"user","type":"TEXT","content":"Run the /daily-log skill."}
+                {"role":"assistant","type":"TEXT","content":"Updated daily log at `%s`."}
+                """.formatted(forwardSlashPath);
+
+        BotActivity activity = new BotActivity(1);
+        activity.renderTranscript(jsonl, null);
+
+        var intents = activity.transcriptIntentList();
+        assertEquals(1, intents.size());
+        OutputArea output = intents.getFirst().output();
+        assertNotNull(output.getLinkGenerator(), "OutputArea must have a LinkGenerator registered");
+
+        String text = output.getText();
+        int pathIndex = text.indexOf(forwardSlashPath);
+        assertTrue(pathIndex >= 0, "Rendered transcript must contain the file path");
+
+        // Verify LinkGenerator detects the file path at an offset inside the path
+        var linkResult = output.isLinkAtOffset(output, pathIndex + 5);
+        assertNotNull(linkResult, "LinkGenerator must recognize existing file path inside backticks");
+
+        AtomicReference<Path> openedFile = new AtomicReference<>();
+        output.setFileOpenHandler(openedFile::set);
+
+        HyperlinkEvent event = linkResult.execute();
+        assertNotNull(event);
+        assertEquals(HyperlinkEvent.EventType.ACTIVATED, event.getEventType());
+
+        output.hyperlinkUpdate(event);
+        assertEquals(dailyLog.toAbsolutePath().normalize(), openedFile.get());
     }
 }
