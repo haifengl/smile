@@ -383,4 +383,17 @@ public class HubClientAndConfigTest {
         output.hyperlinkUpdate(event);
         assertEquals(dailyLog.toAbsolutePath().normalize(), openedFile.get());
     }
+
+    @Test
+    public void testBotActivityStartHubButtonHiddenWhenHubRunning() {
+        BotActivity activity = new BotActivity(0);
+
+        activity.updateHubStatus(true, "http://127.0.0.1:3829", 3);
+        assertFalse(activity.isStartHubButtonVisible(),
+                "Start / Attach Hub button should be hidden when Agent Hub is running");
+
+        activity.updateHubStatus(false, "http://127.0.0.1:3829", 0);
+        assertTrue(activity.isStartHubButtonVisible(),
+                "Start / Attach Hub button should be shown when Agent Hub is offline");
+    }
 }
