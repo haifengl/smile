@@ -78,9 +78,12 @@ public final class StudioConfig {
      */
     public static final String DEFAULT_MODEL_PATH = "./model";
 
+    /** Default LLM chat model (empty = none). */
+    public static final String DEFAULT_LLM = "";
+
     /** The inference server settings, with defaults applied. */
     public static final InferenceServer DEFAULT_INFERENCE_SERVER =
-            new InferenceServer(false, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_MODEL_PATH);
+            new InferenceServer(false, DEFAULT_HOST, DEFAULT_PORT, DEFAULT_MODEL_PATH, DEFAULT_LLM);
 
     /** The Agent Hub settings, with defaults applied. */
     public static final AgentHub DEFAULT_AGENT_HUB =
@@ -92,13 +95,35 @@ public final class StudioConfig {
     /**
      * Inference server settings from {@code studio.json}.
      *
-     * @param autoStart whether to start the service when Studio starts.
+     * @param autoStart whether to start the service when Studio starts
+     *                  (automatically {@code true} when {@code llm} is non-blank).
      * @param host      the bind host (default {@value #DEFAULT_HOST}).
      * @param port      the HTTP port (default {@value #DEFAULT_PORT}).
      * @param modelPath a model file or directory to load at startup
      *                  (default {@value #DEFAULT_MODEL_PATH}).
+     * @param llm       an optional Hugging Face model ID or directory for LLM chat
+     *                  (corresponds to {@code smile serve --llm}, default {@value #DEFAULT_LLM}).
      */
-    public record InferenceServer(boolean autoStart, String host, int port, String modelPath) {
+    public record InferenceServer(boolean autoStart, String host, int port, String modelPath, String llm) {
+        /** Normalizes fields and enables {@code autoStart} when {@code llm} is specified. */
+        public InferenceServer {
+            llm = llm == null ? DEFAULT_LLM : llm.trim();
+            if (!llm.isEmpty()) {
+                autoStart = true;
+            }
+        }
+
+        /**
+         * Backwards-compatible constructor without {@code llm}.
+         *
+         * @param autoStart whether to start the service when Studio starts.
+         * @param host      the bind host.
+         * @param port      the HTTP port.
+         * @param modelPath a model file or directory to load at startup.
+         */
+        public InferenceServer(boolean autoStart, String host, int port, String modelPath) {
+            this(autoStart, host, port, modelPath, DEFAULT_LLM);
+        }
     }
 
     /**
@@ -249,13 +274,16 @@ public final class StudioConfig {
         if (node == null || node.isNull()) {
             return DEFAULT_INFERENCE_SERVER;
         }
-        boolean autoStart = node.has("autoStart") && node.get("autoStart").asBoolean();
+        String llm = node.has("llm") && !node.get("llm").isNull()
+                ? node.get("llm").asString().trim() : DEFAULT_LLM;
+        boolean autoStart = (node.has("autoStart") && node.get("autoStart").asBoolean())
+                || !llm.isEmpty();
         String host = node.has("host") && !node.get("host").asString().isBlank()
                 ? node.get("host").asString().trim() : DEFAULT_HOST;
         int port = node.has("port") ? node.get("port").asInt() : DEFAULT_PORT;
         String modelPath = node.has("modelPath") && !node.get("modelPath").asString().isBlank()
                 ? node.get("modelPath").asString().trim() : DEFAULT_MODEL_PATH;
-        return new InferenceServer(autoStart, host, port, modelPath);
+        return new InferenceServer(autoStart, host, port, modelPath, llm);
     }
 
     /**
@@ -489,12 +517,14 @@ public final class StudioConfig {
 
             if (inferenceServer != null) {
                 ObjectNode infNode = mapper.createObjectNode();
-                infNode.put("autoStart", inferenceServer.autoStart());
+                String llm = inferenceServer.llm() == null ? DEFAULT_LLM : inferenceServer.llm().trim();
+                infNode.put("autoStart", inferenceServer.autoStart() || !llm.isEmpty());
                 infNode.put("host", inferenceServer.host() == null || inferenceServer.host().isBlank()
                         ? DEFAULT_HOST : inferenceServer.host().trim());
                 infNode.put("port", inferenceServer.port() > 0 ? inferenceServer.port() : DEFAULT_PORT);
                 infNode.put("modelPath", inferenceServer.modelPath() == null || inferenceServer.modelPath().isBlank()
                         ? DEFAULT_MODEL_PATH : inferenceServer.modelPath().trim());
+                infNode.put("llm", llm);
                 root.set("inferenceServer", infNode);
             }
 

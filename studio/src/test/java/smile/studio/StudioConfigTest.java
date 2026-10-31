@@ -272,4 +272,39 @@ public class StudioConfigTest {
         assertEquals("legacy-custom-token", hub.adminToken());
         assertEquals(Optional.of("legacy-custom-token"), StudioConfig.readAdminTokenSecret(secrets));
     }
+
+    @Test
+    public void testInferenceServerLlmAutoStartsAndPersists(@TempDir Path dir) throws IOException {
+        // Given: a studio.json with autoStart=false but a non-blank llm field
+        Path file = dir.resolve("studio.json");
+        Files.writeString(file, """
+                {
+                  "inferenceServer": {
+                    "autoStart": false,
+                    "host": "localhost",
+                    "port": 8888,
+                    "modelPath": "./model",
+                    "llm": "Qwen/Qwen2.5-7B-Instruct"
+                  }
+                }
+                """);
+
+        // When
+        var parsed = StudioConfig.parse(file);
+
+        // Then: specifying llm automatically enables autoStart
+        assertTrue(parsed.autoStart());
+        assertEquals("Qwen/Qwen2.5-7B-Instruct", parsed.llm());
+
+        // When: saving an InferenceServer constructed with autoStart=false and a non-blank llm
+        var toSave = new StudioConfig.InferenceServer(
+                false, "localhost", 8888, "./model", "microsoft/Phi-4-mini-instruct-onnx");
+        assertTrue(toSave.autoStart());
+        StudioConfig.save(file, toSave, null, null);
+
+        // Then: re-parsing preserves llm and autoStart=true
+        var reloaded = StudioConfig.parse(file);
+        assertTrue(reloaded.autoStart());
+        assertEquals("microsoft/Phi-4-mini-instruct-onnx", reloaded.llm());
+    }
 }

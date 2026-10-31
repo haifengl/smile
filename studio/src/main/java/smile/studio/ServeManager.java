@@ -56,6 +56,7 @@ public final class ServeManager {
     private Process process;
     private String host;
     private int port;
+    private String llm = "";
     private ServeClient client;
 
     private ServeManager() {
@@ -129,6 +130,16 @@ public final class ServeManager {
     }
 
     /**
+     * Starts the service using the settings in {@code studio.json}.
+     *
+     * @return {@code true} when the service is running and ready.
+     */
+    public synchronized boolean start() {
+        var cfg = StudioConfig.inferenceServer();
+        return start(cfg.host(), cfg.port(), cfg.llm());
+    }
+
+    /**
      * Starts the service if it is not already running on the given host and port.
      * If it is running on a different host or port, it is stopped and restarted.
      *
@@ -137,7 +148,23 @@ public final class ServeManager {
      * @return {@code true} when the service is running and ready.
      */
     public synchronized boolean start(String host, int port) {
-        if (isRunning() && host.equals(this.host) && port == this.port) {
+        return start(host, port, StudioConfig.inferenceServer().llm());
+    }
+
+    /**
+     * Starts the service if it is not already running on the given host, port, and LLM model.
+     * If it is running with different parameters, it is stopped and restarted.
+     *
+     * @param host the bind host.
+     * @param port the HTTP port.
+     * @param llm  optional Hugging Face model ID or directory for LLM chat.
+     * @return {@code true} when the service is running and ready.
+     */
+    public synchronized boolean start(String host, int port, String llm) {
+        String normalizedHost = (host == null || host.isBlank()) ? StudioConfig.DEFAULT_HOST : host.trim();
+        int normalizedPort = port > 0 ? port : StudioConfig.DEFAULT_PORT;
+        String normalizedLlm = llm == null ? "" : llm.trim();
+        if (isRunning() && normalizedHost.equals(this.host) && normalizedPort == this.port && normalizedLlm.equals(this.llm)) {
             notifyStarted();
             return true;
         }
@@ -152,21 +179,39 @@ public final class ServeManager {
             return false;
         }
 
-        this.host = host;
-        this.port = port;
-        this.client = new ServeClient(port);
+        this.host = normalizedHost;
+        this.port = normalizedPort;
+        this.llm = normalizedLlm;
+        this.client = new ServeClient(normalizedPort);
 
         // No -Dsmile.serve.model: the service starts empty and models are loaded
-        // on demand through the REST API. allow-empty is required, otherwise the
-        // service exits at startup before the first load request arrives.
-        panel.start(Serve.javaExecutable(),
-                "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-                "--add-opens", "java.base/java.nio=ALL-UNNAMED",
-                "--enable-native-access", "ALL-UNNAMED",
-                "-Dsmile.serve.allow-empty=true",
-                "-Dquarkus.http.host=" + host,
-                "-Dquarkus.http.port=" + port,
-                "-jar", jar.toString());
+        // on demand through the REST API (plus -Dsmile.chat.model when an LLM is configured).
+        // allow-empty is required, otherwise the service exits at startup before the first load request arrives.
+        List<String> cmd = new java.util.ArrayList<>();
+        cmd.add(Serve.javaExecutable());
+        cmd.add("--add-opens");
+        cmd.add("java.base/java.lang=ALL-UNNAMED");
+        cmd.add("--add-opens");
+        cmd.add("java.base/java.nio=ALL-UNNAMED");
+        cmd.add("--enable-native-access");
+        cmd.add("ALL-UNNAMED");
+        String ortProp = System.getProperty("onnxruntime.native.path");
+        if (ortProp != null && !ortProp.isBlank()) {
+            cmd.add("-Donnxruntime.native.path=" + ortProp);
+        }
+        String genaiProp = System.getProperty("onnxruntime-genai.native.path");
+        if (genaiProp != null && !genaiProp.isBlank()) {
+            cmd.add("-Donnxruntime-genai.native.path=" + genaiProp);
+        }
+        cmd.add("-Dsmile.serve.allow-empty=true");
+        if (!normalizedLlm.isEmpty()) {
+            cmd.add("-Dsmile.chat.model=" + normalizedLlm);
+        }
+        cmd.add("-Dquarkus.http.host=" + normalizedHost);
+        cmd.add("-Dquarkus.http.port=" + normalizedPort);
+        cmd.add("-jar");
+        cmd.add(jar.toString());
+        panel.start(cmd.toArray(String[]::new));
         process = panel.getProcess();
         notifyStarted();
 
