@@ -9,7 +9,6 @@
     "autoStart": true,
     "host": "localhost",
     "port": 8890,
-    "adminToken": "dev-admin-token",
     "keepAliveOnExit": false
   },
   "plugins": {

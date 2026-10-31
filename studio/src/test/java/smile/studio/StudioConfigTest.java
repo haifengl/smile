@@ -20,8 +20,10 @@ package smile.studio;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import photos.sluice.secrets.SecretStore;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -181,5 +183,93 @@ public class StudioConfigTest {
         // Then
         assertTrue(StudioConfig.DEFAULT_PLUGINS.marketplaces().isEmpty());
         assertFalse(StudioConfig.DEFAULT_PLUGINS.allows("anything"));
+    }
+
+    private SecretStore newTestSecretStore(Path dir) {
+        return SecretStore.forApplication("SmileStudioConfigTest")
+                .inNamespace("ai.smile.studio.config.test")
+                .onOperatingSystem("none")
+                .withCredentialFilesIn(dir.resolve("credentials"))
+                .open();
+    }
+
+    @Test
+    public void testAgentHubAdminTokenDefaultsAndStoresInSecretStore(@TempDir Path dir) throws IOException {
+        // Given: a studio.json without adminToken and an empty SecretStore
+        SecretStore secrets = newTestSecretStore(dir);
+        Path file = dir.resolve("studio.json");
+        Files.writeString(file, """
+                {
+                  "agentHub": {
+                    "autoStart": true,
+                    "host": "localhost",
+                    "port": 8890,
+                    "keepAliveOnExit": false
+                  }
+                }
+                """);
+
+        // When: parsing without a stored secret
+        var initialHub = StudioConfig.parseAgentHub(file, secrets);
+
+        // Then: falls back to DEFAULT_HUB_ADMIN_TOKEN ("dev-admin-token")
+        assertTrue(initialHub.autoStart());
+        assertEquals("localhost", initialHub.host());
+        assertEquals(8890, initialHub.port());
+        assertEquals(StudioConfig.DEFAULT_HUB_ADMIN_TOKEN, initialHub.adminToken());
+        assertFalse(initialHub.keepAliveOnExit());
+        assertEquals(Optional.empty(), StudioConfig.readAdminTokenSecret(secrets));
+
+        // When: saving updated InferenceServer and AgentHub with a custom adminToken
+        var updatedServe = new StudioConfig.InferenceServer(true, "127.0.0.1", 8889, "./custom-models");
+        var updatedHub = new StudioConfig.AgentHub(false, "10.0.0.5", 9900, "prod-secret-token-xyz", true);
+        StudioConfig.save(file, updatedServe, updatedHub, secrets);
+
+        // Then: studio.json does NOT contain adminToken in plaintext, and SecretStore holds it
+        String jsonText = Files.readString(file);
+        assertFalse(jsonText.contains("prod-secret-token-xyz"),
+                "studio.json must never store adminToken in plaintext");
+        assertFalse(jsonText.contains("adminToken"),
+                "studio.json must omit the adminToken field");
+        assertEquals(Optional.of("prod-secret-token-xyz"), StudioConfig.readAdminTokenSecret(secrets));
+
+        // And re-parsing reads both updated configs and resolves the secret token
+        var reloadedServe = StudioConfig.parse(file);
+        assertTrue(reloadedServe.autoStart());
+        assertEquals("127.0.0.1", reloadedServe.host());
+        assertEquals(8889, reloadedServe.port());
+        assertEquals("./custom-models", reloadedServe.modelPath());
+
+        var reloadedHub = StudioConfig.parseAgentHub(file, secrets);
+        assertFalse(reloadedHub.autoStart());
+        assertEquals("10.0.0.5", reloadedHub.host());
+        assertEquals(9900, reloadedHub.port());
+        assertEquals("prod-secret-token-xyz", reloadedHub.adminToken());
+        assertTrue(reloadedHub.keepAliveOnExit());
+    }
+
+    @Test
+    public void testLegacyPlaintextAdminTokenMigratesToSecretStore(@TempDir Path dir) throws IOException {
+        // Given: a legacy studio.json with a custom plaintext adminToken
+        SecretStore secrets = newTestSecretStore(dir);
+        Path file = dir.resolve("studio.json");
+        Files.writeString(file, """
+                {
+                  "agentHub": {
+                    "autoStart": true,
+                    "host": "localhost",
+                    "port": 8890,
+                    "adminToken": "legacy-custom-token",
+                    "keepAliveOnExit": true
+                  }
+                }
+                """);
+
+        // When: parsing with SecretStore
+        var hub = StudioConfig.parseAgentHub(file, secrets);
+
+        // Then: token is returned and migrated into SecretStore
+        assertEquals("legacy-custom-token", hub.adminToken());
+        assertEquals(Optional.of("legacy-custom-token"), StudioConfig.readAdminTokenSecret(secrets));
     }
 }
