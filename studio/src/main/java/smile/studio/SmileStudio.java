@@ -120,10 +120,14 @@ public class SmileStudio extends JFrame implements SearchListener {
         applyLicenseState(licenseStore.load());
 
         JPanel contentPane = new JPanel(new BorderLayout());
-        // Don't show toolbar on Windows/Linux to reduce UI clutter.
-        // However, macOS red/orange/green buttons overlap Swing components
-        // without toolbar, which we adjust the location.
-        if (SystemInfo.isMacOS) contentPane.add(toolBar, BorderLayout.NORTH);
+        // Don't show toolbar to reduce UI clutter.
+        //if (SystemInfo.isMacOS) contentPane.add(toolBar, BorderLayout.NORTH);
+        // Enabling apple.awt.fullWindowContent intentionally forces the content pane
+        // to extend entirely behind the title bar area.
+        if (SystemInfo.isMacFullWindowContentSupported) {
+            // Without a toolbar, add 30px top padding pushes the content below the title bar area
+            contentPane.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0));
+        }
         contentPane.add(workspace, BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
         setContentPane(contentPane);
