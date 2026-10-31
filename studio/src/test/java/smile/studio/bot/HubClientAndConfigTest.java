@@ -73,6 +73,15 @@ public class HubClientAndConfigTest {
         assertEquals(8892, hubCfg.port());
         assertEquals("my-token", hubCfg.adminToken());
         assertTrue(hubCfg.keepAliveOnExit());
+
+        // Absent autoStart defaults to true; explicit false opts out
+        Path defaultAutoStartFile = dir.resolve("studio-default-hub.json");
+        Files.writeString(defaultAutoStartFile, "{\"agentHub\":{\"port\":8890}}");
+        assertTrue(StudioConfig.parseAgentHub(defaultAutoStartFile).autoStart());
+
+        Path optOutFile = dir.resolve("studio-optout-hub.json");
+        Files.writeString(optOutFile, "{\"agentHub\":{\"autoStart\":false}}");
+        assertFalse(StudioConfig.parseAgentHub(optOutFile).autoStart());
     }
 
     @Test

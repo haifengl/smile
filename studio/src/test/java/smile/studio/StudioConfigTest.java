@@ -112,6 +112,7 @@ public class StudioConfigTest {
         assertFalse(StudioConfig.DEFAULT_INFERENCE_SERVER.autoStart());
         assertEquals(StudioConfig.DEFAULT_MODEL_PATH,
                 StudioConfig.DEFAULT_INFERENCE_SERVER.modelPath());
+        assertTrue(StudioConfig.DEFAULT_AGENT_HUB.autoStart());
     }
 
     @Test

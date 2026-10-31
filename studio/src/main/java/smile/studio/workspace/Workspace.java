@@ -219,14 +219,10 @@ public class Workspace extends JSplitPane {
             if (Files.exists(releaseNotes)) {
                 openFile(releaseNotes);
             }
-
-            if (Files.exists(welcome)) {
-                OpenFile welcomeFile = openFileIndex.get(welcome.toAbsolutePath().normalize().toString());
-                if (welcomeFile != null) {
-                    editorTabs.setSelectedComponent((Component) welcomeFile);
-                }
-            }
         }
+
+        // Always open Bot Activities on startup and keep it focused as the primary operational tab.
+        openBotActivity(0);
 
         // Separate Coder instances for notebook code completion. They are not
         // registered in the agent directory and never appear as tabs: the panel
@@ -563,7 +559,8 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Opens or focuses a service {@link ProcessPanel} tab in {@link #editorTabs}.
+     * Opens a service {@link ProcessPanel} tab in {@link #editorTabs}, keeping
+     * {@code Bot Activities} focused if it is currently the active tab.
      *
      * @param title the tab title (e.g. {@code "Inference Service"} or {@code "Agent Hub"}).
      * @param panel the process output panel.
@@ -572,11 +569,14 @@ public class Workspace extends JSplitPane {
         if (panel == null) {
             return;
         }
+        boolean keepBotActivityFocused = editorTabs.getSelectedComponent() == botActivity;
         int index = editorTabs.indexOfComponent(panel);
         if (index == -1) {
             editorTabs.addTab(title, panel);
         }
-        editorTabs.setSelectedComponent(panel);
+        if (!keepBotActivityFocused) {
+            editorTabs.setSelectedComponent(panel);
+        }
     }
 
     /**

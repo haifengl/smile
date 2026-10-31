@@ -230,7 +230,10 @@ public class SmileStudio extends JFrame implements SearchListener {
                 if (!manager.start(hubCfg.host(), hubCfg.port(), hubCfg.adminToken())) {
                     logger.error("Failed to auto-start Agent Hub");
                 }
-                SwingUtilities.invokeLater(() -> workspace.botExplorer().refresh());
+                SwingUtilities.invokeLater(() -> {
+                    workspace.botExplorer().refresh();
+                    workspace.openBotActivity(0);
+                });
             });
         }
 
