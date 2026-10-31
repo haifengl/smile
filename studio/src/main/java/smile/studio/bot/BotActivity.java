@@ -68,6 +68,7 @@ import smile.swing.ScrollablePanel;
  */
 public class BotActivity extends JPanel {
     private final JLabel hubStatusLabel = new JLabel("Checking Agent Hub…");
+    private final JButton startHubBtn = new JButton("Start / Attach Hub");
     private final JTabbedPane tabs = new JTabbedPane();
 
     // Tab 1: Approvals & Batch Draft Queue
@@ -229,14 +230,19 @@ public class BotActivity extends JPanel {
         top.setBorder(new EmptyBorder(8, 10, 0, 10));
 
         hubStatusLabel.setFont(hubStatusLabel.getFont().deriveFont(Font.BOLD));
-        top.add(hubStatusLabel, BorderLayout.WEST);
+        hubStatusLabel.setMinimumSize(new Dimension(0, 0));
+        top.add(hubStatusLabel, BorderLayout.CENTER);
 
         JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-        JButton startHubBtn = new JButton("Start / Attach Hub");
+        startHubBtn.setVisible(false);
         startHubBtn.addActionListener(e -> Thread.ofPlatform().name("hub-ui-start").daemon(true).start(() -> {
             HubManager.getInstance().start();
             SwingUtilities.invokeLater(this::refreshAllAsync);
         }));
+        HubManager.getInstance().addStartListener(p -> updateHubStatus(true, HubManager.getInstance().baseUrl(),
+                currentApprovals.stream().filter(a -> "PENDING".equals(a.status())).count()));
+        HubManager.getInstance().addStopListener(p -> refreshAllAsync());
+
         JButton configBtn = new JButton("Bot Routines…");
         configBtn.addActionListener(e -> {
             var ws = (smile.studio.workspace.Workspace) SwingUtilities.getAncestorOfClass(
@@ -495,15 +501,36 @@ public class BotActivity extends JPanel {
             String filter = "PENDING".equals(approvalFilterCombo.getSelectedItem()) ? "PENDING" : null;
             List<HubClient.BotApprovalItem> approvals = running ? client.listApprovals(filter, 100) : List.of();
             List<HubClient.BotRunSummary> runs = running ? client.listRuns(null, null, 100) : List.of();
+            long pendingCount = approvals.stream().filter(a -> "PENDING".equals(a.status())).count();
 
             SwingUtilities.invokeLater(() -> {
-                hubStatusLabel.setText(running
-                        ? "● Agent Hub Running (" + client.baseUrl() + ") — Pending Approvals: " + approvals.stream().filter(a -> "PENDING".equals(a.status())).count()
-                        : "○ Agent Hub Offline (" + client.baseUrl() + ")");
+                updateHubStatus(running, client.baseUrl(), pendingCount);
                 populateApprovals(approvals);
                 populateRuns(runs);
             });
         });
+    }
+
+    /**
+     * Updates the top bar status label and toggles the {@code Start / Attach Hub} button
+     * so it is only visible when Agent Hub is offline.
+     *
+     * @param running      whether Agent Hub is running or attached.
+     * @param baseUrl      the Agent Hub base URL.
+     * @param pendingCount number of pending approval items.
+     */
+    public void updateHubStatus(boolean running, String baseUrl, long pendingCount) {
+        String text = running
+                ? "● Agent Hub Running (" + baseUrl + ") — Pending Approvals: " + pendingCount
+                : "○ Agent Hub Offline (" + baseUrl + ")";
+        hubStatusLabel.setText(text);
+        hubStatusLabel.setToolTipText(text);
+        startHubBtn.setVisible(!running);
+    }
+
+    /** Returns true when the {@code Start / Attach Hub} button is visible in the top bar. */
+    public boolean isStartHubButtonVisible() {
+        return startHubBtn.isVisible();
     }
 
     private void refreshApprovalsAsync() {
