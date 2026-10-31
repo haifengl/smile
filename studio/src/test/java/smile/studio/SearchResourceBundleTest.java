@@ -47,6 +47,7 @@ public class SearchResourceBundleTest {
 
     /** Keys the Find and Replace menu and Agent Hub menu read at runtime. */
     private static final List<String> REQUIRED_KEYS = List.of(
+            "AutoSave", "DarkTheme",
             "FindMenu", "Search", "NoActiveFile", "Find", "Replace",
             "AgentHub", "StartAgentHub", "StopAgentHub", "RestartAgentHub",
             "ConfigureBots", "BotActivity", "AgentHubNotRunning",
@@ -58,10 +59,10 @@ public class SearchResourceBundleTest {
 
     /** Keys the Settings dialog reads at runtime, including SecretStore and Email Account status keys. */
     private static final List<String> SETTINGS_DIALOG_KEYS = List.of(
-            "Title", "OK", "Cancel", "Theme", "Service", "APIKey", "BaseUrl", "Model",
+            "Title", "OK", "Cancel", "Service", "APIKey", "BaseUrl", "Model",
             "Project", "Location", "StatusInEnvironment", "StatusInKeyring", "StatusInFile",
             "StatusAbsentKeyring", "StatusAbsentFile", "StatusUnavailable", "SecretSaveError",
-            "TabGeneralAI", "TabAgentHub", "TabInferenceServer", "TabEmailAccounts",
+            "TabAIServices", "TabAgentHub", "TabInferenceServer", "TabEmailAccounts",
             "HubAutoStart", "HubHost", "HubPort", "HubAdminToken", "HubKeepAliveOnExit",
             "ServeAutoStart", "ServeHost", "ServePort", "ServeModelPath", "ServeBrowse", "ServeLlm",
             "EmailAccount", "EmailAdd", "EmailRemove",

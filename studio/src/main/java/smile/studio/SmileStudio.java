@@ -533,6 +533,10 @@ public class SmileStudio extends JFrame implements SearchListener {
             SwingUtilities.invokeLater(autoSaveMenuItem::doClick);
         }
 
+        var darkThemeMenuItem = new JCheckBoxMenuItem(new DarkThemeAction());
+        String currentTheme = prefs.get(SettingsDialog.UI_THEME_KEY, "Dark");
+        darkThemeMenuItem.setSelected("Dark".equalsIgnoreCase(currentTheme) || "Darcula".equalsIgnoreCase(currentTheme));
+
         JMenu fileMenu = new JMenu(bundle.getString("File"));
         fileMenu.add(new JMenuItem(newNotebook));
         fileMenu.add(new JMenuItem(openFile));
@@ -542,6 +546,8 @@ public class SmileStudio extends JFrame implements SearchListener {
         fileMenu.addSeparator();
         fileMenu.add(new JMenuItem(settings));
         fileMenu.add(new JMenuItem(plugins));
+        fileMenu.add(darkThemeMenuItem);
+        fileMenu.addSeparator();
         fileMenu.add(new JMenuItem(exit));
         menuBar.add(fileMenu);
 
@@ -729,6 +735,37 @@ public class SmileStudio extends JFrame implements SearchListener {
                     workspace.autoSaver().start();
                 } else {
                     workspace.autoSaver().stop();
+                }
+            }
+        }
+    }
+
+    private static class DarkThemeAction extends AbstractAction {
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/change.png");
+        public DarkThemeAction() {
+            super(bundle.getString("DarkTheme"));
+            // Without icon, menu items won't align well on Mac.
+            // However, FlatLaf won't show check mark on Windows
+            // if we set the icon.
+            if (SystemInfo.isMacFullWindowContentSupported) {
+                icons.applyTo(this);
+            }
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (e.getSource() instanceof JCheckBoxMenuItem darkTheme) {
+                boolean dark = darkTheme.isSelected();
+                prefs.put(SettingsDialog.UI_THEME_KEY, dark ? "Dark" : "Light");
+                try {
+                    if (dark) {
+                        UIManager.setLookAndFeel(new FlatDarculaLaf());
+                    } else {
+                        UIManager.setLookAndFeel(new FlatIntelliJLaf());
+                    }
+                    FlatLaf.updateUI();
+                } catch (UnsupportedLookAndFeelException ex) {
+                    logger.error("Failed to setup L&F: {}", ex.getMessage());
                 }
             }
         }

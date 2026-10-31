@@ -56,7 +56,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private static final String API_KEY = "ApiKey";
     private static final String BASE_URL = "BaseUrl";
     private static final String MODEL = "Model";
-    private static final String[] UI_THEMES = {"Light", "Dark"};
     // Interactions API is not yet supported on Vertex
     private static final String[] aiServiceOptions = {"OpenAI", "Azure OpenAI", "Anthropic", "Google Gemini", "Google Gemini Enterprise", "Chat Completions Compatible"};
     private static final String[] aiServiceKeys = {"openai", "azureOpenAI", "anthropic", "googleGemini", "googleEnterprise", "chatCompletions"};
@@ -92,7 +91,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
             "https://api.orcarouter.ai/v1", // OrcaRouter
             "https://openrouter.ai/api/v1"  // OpenRouter
     };
-    private final JComboBox<String> themeCombo = new JComboBox<>(UI_THEMES);
     private final JComboBox<String> aiServiceCombo = new JComboBox<>(aiServiceOptions);
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cardPane = new JPanel(cardLayout);
@@ -179,8 +177,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
                     .ifPresent(sec -> pendingEmailSecrets.put(acc.emailAddress(), sec));
         }
 
-        themeCombo.setSelectedItem(prefs.get(UI_THEME_KEY, "Dark"));
-        themeCombo.addActionListener(this);
         aiServiceCombo.addActionListener(this);
 
         // Add the panels to the dynamic panel with unique names
@@ -197,7 +193,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
         JTabbedPane tabs = new JTabbedPane();
         tabs.setBorder(new EmptyBorder(6, 6, 0, 6));
-        tabs.addTab(bundle.getString("TabGeneralAI"), aiTab);
+        tabs.addTab(bundle.getString("TabAIServices"), aiTab);
         tabs.addTab(bundle.getString("TabAgentHub"), createAgentHubPane());
         tabs.addTab(bundle.getString("TabInferenceServer"), createInferenceServerPane());
         tabs.addTab(bundle.getString("TabEmailAccounts"), createEmailAccountsPane());
@@ -214,23 +210,10 @@ public class SettingsDialog extends JDialog implements ActionListener {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
 
-        // Row 0: UI Theme
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
-        JLabel themeLabel = new JLabel(bundle.getString("Theme"));
-        pane.add(themeLabel, gbc);
-
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        pane.add(themeLabel.getLabelFor() == null ? themeCombo : themeCombo, gbc);
-
-        // Row 1: AI Service
+        // Row 0: AI Service
         gbc.gridx = 0; // Column 0
-        gbc.gridy = 1; // Row 1
-        gbc.fill = GridBagConstraints.NONE; // Reset fill for label
-        gbc.weightx = 0.0; // Reset weightx for label
+        gbc.gridy = 0; // Row 0
+        gbc.anchor = GridBagConstraints.WEST;
         JLabel serviceLabel = new JLabel(bundle.getString("Service"));
         pane.add(serviceLabel, gbc);
 
@@ -1033,7 +1016,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
         getRootPane().setDefaultButton(okButton);
 
         okButton.addActionListener((e) -> {
-            prefs.put(UI_THEME_KEY, (String) themeCombo.getSelectedItem());
             String selectedServiceLabel = aiServiceOptions[aiServiceCombo.getSelectedIndex()];
             prefs.put(AI_SERVICE_KEY, selectedServiceLabel);
             for (int i = 0; i < aiServiceKeys.length; i++) {
@@ -1092,22 +1074,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == themeCombo) {
-            String theme = (String) themeCombo.getSelectedItem();
-            prefs.put(UI_THEME_KEY, theme);
-            try {
-                if ("Dark".equals(theme)) {
-                    UIManager.setLookAndFeel(new FlatDarculaLaf());
-                } else {
-                    UIManager.setLookAndFeel(new FlatIntelliJLaf());
-                }
-
-                // Tells FlatLaf to refresh all open frames and dialogs
-                FlatLaf.updateUI();
-            } catch (UnsupportedLookAndFeelException ex) {
-                logger.error("Failed to setup L&F: {}", ex.getMessage());
-            }
-        } else if (e.getSource() == aiServiceCombo) {
+        if (e.getSource() == aiServiceCombo) {
             String selectedOption = (String) aiServiceCombo.getSelectedItem();
 
             // Tell the CardLayout to show the panel corresponding to the selected option

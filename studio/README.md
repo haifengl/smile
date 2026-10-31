@@ -174,6 +174,7 @@ The divider positions are persisted and restored between sessions.
 | **Auto Save** | Toggle auto-save (idle-triggered, with a 60-second fallback) |
 | **Settings…** | Open the AI service configuration dialog |
 | **Plugins…** | Open the plugin marketplace dialog |
+| **Dark Theme** | Toggle between Dark (`FlatDarculaLaf`) and Light (`FlatIntelliJLaf`) themes |
 | **Exit** | Close all open notebooks (with save prompts) and quit |
 
 ### Cell Menu
@@ -968,18 +969,7 @@ The completion popup is provided by RSyntaxTextArea's `AutoCompletion` infrastru
 
 ## 16. Themes / Look-and-Feel
 
-SMILE Studio uses [FlatLaf](https://www.formdev.com/flatlaf/) for its look-and-feel. The theme is stored in application preferences under the key `Theme`:
-
-| Value | Description |
-|-------|-------------|
-| `Light` | FlatLaf Light (default on non-macOS) |
-| `Dark` | FlatLaf Dark |
-| `IntelliJ` | FlatLaf IntelliJ |
-| `Darcula` | FlatLaf Darcula |
-| `macLight` | FlatMac Light (default on macOS) |
-| `macDark` | FlatMac Dark |
-
-Change the theme by setting the `Theme` preference (e.g., programmatically or via a custom preference editor) and restarting the application.
+SMILE Studio uses [FlatLaf](https://www.formdev.com/flatlaf/) for its look-and-feel. Toggle **File > Dark Theme** to switch immediately between Dark (`FlatDarculaLaf`, the default) and Light (`FlatIntelliJLaf`) themes. The preference is saved under `uiTheme` and remembered across restarts.
 
 JetBrains Mono is installed as the default monospaced font via `FlatJetBrainsMonoFont.install()`.
 
