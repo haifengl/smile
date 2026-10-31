@@ -118,6 +118,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private final JSpinner servePortSpinner =
             new JSpinner(new SpinnerNumberModel(StudioConfig.DEFAULT_PORT, 1, 65535, 1));
     private final JTextField serveModelPathField = new JTextField(StudioConfig.DEFAULT_MODEL_PATH, 24);
+    private final JTextField serveLlmField = new JTextField(StudioConfig.DEFAULT_LLM, 24);
 
     // Email Accounts tab state & fields
     private EmailConfig emailConfig;
@@ -436,6 +437,17 @@ public class SettingsDialog extends JDialog implements ActionListener {
         serveHostField.setText(cfg.host());
         servePortSpinner.setValue(cfg.port());
         serveModelPathField.setText(cfg.modelPath());
+        serveLlmField.setText(cfg.llm());
+        serveLlmField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            private void syncAutoStart() {
+                if (!serveLlmField.getText().trim().isEmpty()) {
+                    serveAutoStartCheck.setSelected(true);
+                }
+            }
+            @Override public void insertUpdate(javax.swing.event.DocumentEvent e) { syncAutoStart(); }
+            @Override public void removeUpdate(javax.swing.event.DocumentEvent e) { syncAutoStart(); }
+            @Override public void changedUpdate(javax.swing.event.DocumentEvent e) { syncAutoStart(); }
+        });
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -498,6 +510,19 @@ public class SettingsDialog extends JDialog implements ActionListener {
         browseBtn.addActionListener(e -> browseServeModelPath());
         modelPathRow.add(browseBtn, BorderLayout.EAST);
         form.add(modelPathRow, gbc);
+        row++;
+
+        // Row 4: LLM Model (Hugging Face ID or directory)
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        form.add(new JLabel(bundle.getString("ServeLlm")), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        form.add(serveLlmField, gbc);
 
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.add(form, BorderLayout.NORTH);
@@ -517,11 +542,13 @@ public class SettingsDialog extends JDialog implements ActionListener {
         String serveHost = serveHostField.getText().trim();
         int servePort = ((Number) servePortSpinner.getValue()).intValue();
         String serveModelPath = serveModelPathField.getText().trim();
+        String serveLlm = serveLlmField.getText().trim();
         StudioConfig.InferenceServer inferenceServer = new StudioConfig.InferenceServer(
-                serveAutoStartCheck.isSelected(),
+                serveAutoStartCheck.isSelected() || !serveLlm.isEmpty(),
                 serveHost.isEmpty() ? StudioConfig.DEFAULT_HOST : serveHost,
                 servePort > 0 ? servePort : StudioConfig.DEFAULT_PORT,
-                serveModelPath.isEmpty() ? StudioConfig.DEFAULT_MODEL_PATH : serveModelPath
+                serveModelPath.isEmpty() ? StudioConfig.DEFAULT_MODEL_PATH : serveModelPath,
+                serveLlm
         );
 
         String hubHost = hubHostField.getText().trim();

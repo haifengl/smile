@@ -63,7 +63,7 @@ public class SearchResourceBundleTest {
             "StatusAbsentKeyring", "StatusAbsentFile", "StatusUnavailable", "SecretSaveError",
             "TabGeneralAI", "TabAgentHub", "TabInferenceServer", "TabEmailAccounts",
             "HubAutoStart", "HubHost", "HubPort", "HubAdminToken", "HubKeepAliveOnExit",
-            "ServeAutoStart", "ServeHost", "ServePort", "ServeModelPath", "ServeBrowse",
+            "ServeAutoStart", "ServeHost", "ServePort", "ServeModelPath", "ServeBrowse", "ServeLlm",
             "EmailAccount", "EmailAdd", "EmailRemove",
             "EmailDefault", "EmailEnabled", "EmailDescription", "EmailAddress",
             "EmailProvider", "EmailPollInterval", "EmailFolder", "EmailClientId", "EmailTenantId",

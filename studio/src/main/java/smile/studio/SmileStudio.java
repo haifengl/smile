@@ -201,26 +201,30 @@ public class SmileStudio extends JFrame implements SearchListener {
         });
 
         // Optionally start the shared inference service (conf/studio.json).
-        // Only start when there is actually a model to serve: a service with an
+        // Only start when there is actually a model or LLM to serve: a service with an
         // empty catalog has nothing to do, and the user can start it later from
         // the Inference menu or by double-clicking a model in the Kernel tree.
         var inference = StudioConfig.inferenceServer();
         if (inference.autoStart()) {
             var modelPath = Path.of(inference.modelPath());
-            if (!Files.exists(modelPath)) {
-                logger.info("Not auto-starting the inference service: model path '{}' does not exist",
+            boolean hasModelPath = Files.exists(modelPath);
+            boolean hasLlm = !inference.llm().isBlank();
+            if (!hasModelPath && !hasLlm) {
+                logger.info("Not auto-starting the inference service: model path '{}' does not exist and no llm is configured",
                         modelPath);
             } else {
                 Thread.ofPlatform().name("serve-autostart").daemon(true).start(() -> {
                     var manager = ServeManager.getInstance();
-                    if (!manager.start(inference.host(), inference.port())) {
+                    if (!manager.start(inference.host(), inference.port(), inference.llm())) {
                         logger.error("Failed to auto-start the inference service");
                         return;
                     }
-                    try {
-                        manager.loadModel(inference.modelPath());
-                    } catch (Exception ex) {
-                        logger.error("Failed to load model '{}': {}", inference.modelPath(), ex.getMessage());
+                    if (hasModelPath) {
+                        try {
+                            manager.loadModel(inference.modelPath());
+                        } catch (Exception ex) {
+                            logger.error("Failed to load model '{}': {}", inference.modelPath(), ex.getMessage());
+                        }
                     }
                     workspace.explorer().refreshLoadedModelIdsAsync();
                 });
@@ -820,7 +824,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         public void actionPerformed(ActionEvent e) {
             var config = StudioConfig.inferenceServer();
             Thread.ofPlatform().name("serve-start").daemon(true).start(() -> {
-                boolean ok = ServeManager.getInstance().start(config.host(), config.port());
+                boolean ok = ServeManager.getInstance().start(config.host(), config.port(), config.llm());
                 workspace.explorer().refreshLoadedModelIdsAsync();
                 SwingUtilities.invokeLater(() -> statusBar.setStatus(ok
                         ? java.text.MessageFormat.format(bundle.getString("InferenceStarted"),
@@ -860,7 +864,7 @@ public class SmileStudio extends JFrame implements SearchListener {
             Thread.ofPlatform().name("serve-restart").daemon(true).start(() -> {
                 var manager = ServeManager.getInstance();
                 manager.stop();
-                boolean ok = manager.start(config.host(), config.port());
+                boolean ok = manager.start(config.host(), config.port(), config.llm());
                 workspace.explorer().refreshLoadedModelIdsAsync();
                 SwingUtilities.invokeLater(() -> statusBar.setStatus(ok
                         ? java.text.MessageFormat.format(bundle.getString("InferenceStarted"),
