@@ -18,7 +18,6 @@
 package smile.studio;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Font;
 import java.io.IOException;
 import java.util.Arrays;
@@ -55,8 +54,6 @@ public class ProcessPanel extends JPanel {
         output.setEditable(false);
         output.setLineWrap(true);
         output.setWrapStyleWord(true);
-        output.setBackground(Color.BLACK);
-        output.setForeground(Color.WHITE);
         output.setFont(Monospaced.getFont());
         Monospaced.addListener(e ->
                 SwingUtilities.invokeLater(() -> output.setFont((Font) e.getNewValue())));
