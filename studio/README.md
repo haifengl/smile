@@ -1,6 +1,6 @@
-# SMILE Studio User Guide
+# SMILE Agent Studio User Guide
 
-> **SMILE Studio** is an agentic IDE for data science using Python or [SMILE](https://www.aihalo.dev//) on JVM. It combines agentic AI, interactive notebooks, and workspace explorers in a modern desktop application. The launcher (`smile` / `smile.bat`) also exposes several command-line entry points. For the User Guide for CLI, see [CLI.md](CLI.md). For the User Guide for SMILE Bot & Agent Hub, see [BOT.md](BOT.md).
+> **SMILE Agent Studio** is the local-first AI agent workspace, 24/7 autonomous Bot Hub (`smile hub`), and polyglot IDE (Java, Scala, Kotlin, and Python/Jupyter). It brings together a coordinated team of 9 specialized AI agents (executive chief of staff, product management, developer evangelism, B2B sales, data science, software architecture, Java/Python coding, and desktop GUI automation), human-in-the-loop background bots, and interactive notebooks and code/data explorers in a modern desktop application—and is fully extensible with custom agents, skills, plugins, and routines. The launcher (`smile` / `smile.bat`) also exposes command-line entry points. For the CLI User Guide, see [CLI.md](CLI.md). For the SMILE Bot & Agent Hub User Guide, see [BOT.md](BOT.md).
 
 ---
 
@@ -27,26 +27,33 @@
    - 6.4 [Restarting and Stopping a Kernel](#64-restarting-and-stopping-a-kernel)
    - 6.5 [Magic Commands (Java Kernel)](#65-magic-commands-java-kernel)
 7. [Project Explorer](#7-project-explorer)
-8. [Kernel Explorer](#8-kernel-explorer)
+8. [Kernel & Bots Explorers](#8-kernel--bots-explorers)
    - 8.1 [Inspecting Variables](#81-inspecting-variables)
    - 8.2 [Saving Models](#82-saving-models)
    - 8.3 [Starting an Inference Service](#83-starting-an-inference-service)
+   - 8.4 [Inference Menu](#84-inference-menu)
+   - 8.5 [Inference Server Configuration](#85-inference-server-configuration)
+   - 8.6 [Plugin Marketplace Configuration](#86-plugin-marketplace-configuration)
+   - 8.7 [Bots Explorer & Agent Hub Workspace](#87-bots-explorer--agent-hub-workspace)
 9. [AI Agent Panel](#9-ai-agent-panel)
    - 9.1 [Frank the Chief of Staff](#91-frank-the-chief-of-staff)
    - 9.2 [Steve the Product Manager](#92-steve-the-product-manager)
-   - 9.3 [Clair the Analyst](#93-clair-the-analyst)
-   - 9.4 [Ada the Architect](#94-ada-the-architect)
-   - 9.5 [James the Java Guru](#95-james-the-java-guru)
-   - 9.6 [Guido the Pythonista](#96-guido-the-pythonista)
-   - 9.7 [Chuck the Desktop Operator](#97-chuck-the-desktop-operator)
-   - 9.8 [Intent Types](#98-intent-types)
-   - 9.9 [Slash Commands](#99-slash-commands)
-   - 9.10 [Shell Commands](#910-shell-commands)
-   - 9.11 [Long-Term Memory (SMILE.md)](#911-long-term-memory-smilemd)
-   - 9.12 [Reasoning Effort](#912-reasoning-effort)
-   - 9.13 [Auto-Compact](#913-auto-compact)
+   - 9.3 [Julien the Evangelist](#93-julien-the-evangelist)
+   - 9.4 [Mike the B2B Sales Operator](#94-mike-the-b2b-sales-operator)
+   - 9.5 [Clair the Analyst](#95-clair-the-analyst)
+   - 9.6 [Ada the Architect](#96-ada-the-architect)
+   - 9.7 [James the Java Guru](#97-james-the-java-guru)
+   - 9.8 [Guido the Pythonista](#98-guido-the-pythonista)
+   - 9.9 [Chuck the Desktop Operator](#99-chuck-the-desktop-operator)
+   - 9.10 [Extending Studio with Custom Agents, Subagents, Bots & Routines](#910-extending-studio-with-custom-agents-subagents-bots--routines)
+   - 9.11 [Intent Types](#911-intent-types)
+   - 9.12 [Slash Commands](#912-slash-commands)
+   - 9.13 [Shell Commands](#913-shell-commands)
+   - 9.14 [Long-Term Memory (SMILE.md)](#914-long-term-memory-smilemd)
+   - 9.15 [Reasoning Effort](#915-reasoning-effort)
+   - 9.16 [Auto-Compact](#916-auto-compact)
 10. [Notepad](#10-notepad)
-11. [Settings — AI Service Configuration](#11-settings--ai-service-configuration)
+11. [Settings — AI Services, Agent Hub, Inference Server & Email](#11-settings--ai-services-agent-hub-inference-server--email)
 12. [Status Bar](#12-status-bar)
 13. [Font Size](#13-font-size)
 14. [MCP (Model Context Protocol) Integration](#14-mcp-model-context-protocol-integration)
@@ -61,16 +68,17 @@
 
 ## 1. Overview
 
-SMILE Studio brings together four major components in one window:
+SMILE Agent Studio brings together five major components in one window:
 
 | Component | Description |
 |-----------|-------------|
-| **Notebook** | Interactive multi-cell editor supporting Java, Scala, and Python |
-| **AI Agent Panel** | Conversation interface to AI-powered coding and data science agents |
-| **Project (File) Explorer** | File tree of the current working directory |
-| **Kernel Explorer** | Live view of runtime variables, models, and inference services |
+| **AI Agent Panel** | Multi-tab conversation interface to 9 built-in specialist agents plus any user-defined custom agents |
+| **Bots Explorer** | Live tree of **Agent Hub** Bot personas and scheduled/event-driven routines ([BOT.md](BOT.md)) |
+| **Workspace Editor Tabs** | **Bot Activities** (`BotActivity`), **Bot Routines** (`BotManager`), interactive multi-cell notebooks (Java, Scala, Kotlin, Python/Jupyter), Notepad code editors, and DataFrame viewers |
+| **Project (File) Explorer** | File tree of the current working directory (opens notebooks, source files, and 100 MB+ tabular data files) |
+| **Kernel Explorer** | Live view of runtime variables, DataFrames, matrices, and persisted `.sml`/`.onnx` models |
 
-All four panels are arranged in a resizable split-pane layout, and the application remembers which notebooks were open across sessions.
+All panels are arranged in a resizable split-pane layout, and the application remembers which files were open across sessions.
 
 ---
 
@@ -129,33 +137,30 @@ out what you want to do in natural language!
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────┐
-│  Menu Bar:  File  |  Cell  |  Help                                        │
-│  Toolbar:  [New] [Open] [Save] [SaveAs] | [AddCell] [Run] [Clear]         │
-│             [Restart] [Stop]                                              │
+│  Menu Bar:  File | Find | Cell | Inference | Agent Hub | Help             │
 ├──────────────────────────────┬────────────────────────────────────────────┤
 │  Explorer Tabs               │  Agent Tabs                                │
-│  ┌──────────┬──────────┐     │  🤝 Frank | 🎯 Steve | 📊 Clair | 📐 Ada   │
-│  │ Project  │  Kernel  │     │  ☕ James | 🐍 Guido | 🖥️ Chuck            │
-│  └──────────┴──────────┘     │  [Intent input / conversation area]        │
-│                              │                                            │
-│  File tree / Variable tree   ├────────────────────────────────────────────┤
-│                              │  Notebook Tabs                             │
+│  ┌─────────┬────────┬──────┐ │  🤝 Frank | 🎯 Steve | 📣 Julien | 💼 Mike │
+│  │ Project │ Kernel │ Bots │ │  📊 Clair | 📐 Ada | ☕ James | 🐍 Guido   │
+│  └─────────┴────────┴──────┘ │  🖥️ Chuck | (+ Custom Agents)              │
+│                              │  [Intent input / conversation area]        │
+│  File / Variable / Bot tree  ├────────────────────────────────────────────┤
+│                              │  Workspace Editor Tabs                     │
+│                              │  [Bot Activities] [Bot Routines] [Notebook]│
 │                              │  ┌─────────────────────────────────┐       │
 │                              │  │  Cell 1: [▶][⏭][▾][↑][↓][🧹][⌦]│       │
-│                              │  │  [code editor]                  │       │
+│                              │  │  [code editor / bot activity]   │       │
 │                              │  │  [output area]                  │       │
-│                              │  ├─────────────────────────────────┤       │
-│                              │  │  Cell 2 …                       │       │
 │                              │  └─────────────────────────────────┘       │
 ├──────────────────────────────┴────────────────────────────────────────────┤
-│  Status Bar:  [status message]         [Heap: 512 MB  CPU: 12%]           │
+│  Status Bar:  [status]    [License] [Hub: UP / Approvals (N)] [Heap / CPU]│
 └───────────────────────────────────────────────────────────────────────────┘
 ```
 
-- **Left split** – Project explorer (top) / Kernel explorer (bottom), switchable by tab.
-- **Center split** – Notebook tabs.
-- **Right split** – AI Agent tabs.
-- **Bottom** – Status bar.
+- **Left split** – **Project** explorer, **Kernel** explorer, and **Bots** explorer, switchable by tab.
+- **Center split** – Workspace editor tabs: **Bot Activities**, **Bot Routines**, interactive **Notebooks**, **Notepad** editors, and service process logs.
+- **Right split** – AI Agent tabs (built-in specialists plus any user-defined custom agents).
+- **Bottom** – Status bar with live license badge, Agent Hub / pending approvals badge, and JVM metrics.
 
 The divider positions are persisted and restored between sessions.
 
@@ -403,13 +408,14 @@ This resolves the Maven dependency (transitively) via Eclipse Aether and adds th
 The **Project** tab in the left panel shows the file tree rooted at the current working directory.
 
 - **Navigate** the tree by expanding folders.
-- **Double-click** a supported source file (`.jsh`, `.sc`, `.py`, `.ipynb`) to open it in the notebook.
+- **Double-click** a supported source file (`.jsh`, `.sc`, `.kts`, `.py`, `.ipynb`) to open it in the notebook.
+- **Double-click** a tabular data file (`.csv`, `.tsv`, `.arff`, `.parquet`, `.arrow`, `.feather`, `.avro`, `.sas`, `.sas7bdat`, `.jsonl`) to open it in an interactive **DataFrame** table view (files over 100 MB prompt whether to load the first 100,000 rows or all rows).
 - **Double-click** any other non-binary text file to open it in the **Notepad** editor.
 - Binary files are silently ignored on double-click.
 
 ---
 
-## 8. Kernel Explorer
+## 8. Kernel & Bots Explorers
 
 The **Kernel** tab in the left panel shows a live tree of runtime objects tracked by the active notebook's kernel. Switch between notebooks in the tab strip to refresh the explorer automatically.
 
@@ -523,19 +529,28 @@ field in the panel — is always permitted, because you typed the source yoursel
 `marketplaces` list only controls the *implicit* first-run seed (ADR-008: no silent
 network for an arbitrary source).
 
+### 8.7 Bots Explorer & Agent Hub Workspace
+
+The **Bots** tab in the left panel (`BotExplorer`) and the **Agent Hub** menu connect SMILE Agent Studio to **Agent Hub** (`smile hub`), the 24/7 autonomous background runtime.
+
+- **Bots Explorer (`Bots` tab):** Displays all configured Bot Personas (`@frank`, `@julien`, `@mike`, `all-agents-memory`, and any custom bots) and their scheduled or event-driven routines. Click a routine to configure it in the **Bot Routines** workspace tab (`BotManager`), double-click a bot to open **Bot Activities** (`BotActivity`), or right-click to **Run Now**, **Enable / Disable**, or open live **Bot Pages** (`executive-brief.html`, `sales-pipeline.html`, `community-radar.html`, `token-usage.html`).
+- **Bot Activities (`BotActivity` tab):** Review, diff, and inline-edit pending outbound emails, social posts, tool confirmations, and questions in the **Structured Review Composer**, approve batches in one click, and inspect session transcripts across all routine runs.
+
+For complete documentation on Agent Hub, Bot routines, webhooks, email/calendar triggers, and Auto Review guardrails, see [BOT.md](BOT.md).
+
 ---
 
 ## 9. AI Agent Panel
 
-The right panel hosts the AI agents, each in its own tab. The panel is **loaded from
+The right panel hosts the AI agents, each in its own tab. The panel is **loaded dynamically from
 the agent catalog** (`AgentCatalog` in the `ioa-agent` jar), not a hardcoded list: every
-agent under `ioa/agent` in the jar, then `$smile.home/agents`, then `~/.smile/agents`
-appears automatically, so a new agent needs no Studio-side change. The built-in tabs
-appear in the canonical workflow order — **Frank**, **Steve**, **Clair**, **Ada**,
+user-facing agent (`subagent: false`) under `.smile/agents` in the project directory, then `$smile.home/agents`, then `~/.smile/agents`, and finally the built-in `ioa/agent` catalog
+appears automatically, so adding a new domain agent needs no Studio-side code change. The 9 built-in tabs
+appear in the canonical workflow order — **Frank**, **Steve**, **Julien**, **Mike**, **Clair**, **Ada**,
 **James**, **Guido**, **Chuck** — followed by any user-defined agents. The base agent
 and subagents (`explore`, `general-purpose`, `plan`, and standalone `.md` files) are not
-shown: they are inherited or launched by the Task tool, not opened as tabs. All agents require an AI service to be configured
-(see [Section 11](#11-settings--ai-service-configuration)).
+shown as tabs: they are inherited or launched by the `Task` tool. All agents require an AI service to be configured
+(see [Section 11](#11-settings--ai-services-agent-hub-inference-server--email)).
 
 When an agent needs an answer from you, its tab is selected automatically and marked with
 a **❓** — so an agent that blocks on input brings itself to the front even if you have
@@ -544,88 +559,147 @@ cancelled.
 
 ### 9.1 Frank the Chief of Staff
 
-> 🤝 *Frank the Chief of Staff* — strategic partner and cross-agent coordinator
+> 🤝 *Frank the Chief of Staff* — strategic partner, personal assistant, and cross-agent coordinator
 
 Frank sits closest to you and keeps the whole picture in view:
 
 - Prioritizing what deserves your attention and defending the priority order
-- Coordinating cross-functional initiatives across the other agents
-- Turning raw inputs into a short brief: what matters, why, and who acts
+- Coordinating cross-functional initiatives and delegating to peer agents (`AgentRequest`)
+- Triaging executive email, guarding your calendar, and preparing pre-meeting briefs
+- Consolidating daily logs (`/daily-log`) and end-of-day recaps (`/daily-recap`) across all tracked Studio projects
 - Holding work accountable to the goals you committed to
 
 ### 9.2 Steve the Product Manager
 
-> 🎯 *Steve the Product Manager* — product strategy and prioritization
+> 🎯 *Steve the Product Manager* — product strategy, discovery, and prioritization
 
 Steve frames the problem before it is built:
 
 - Opportunity mapping and problem validation
 - User interviews and Jobs-to-Be-Done analysis
-- Competitor analysis and product positioning
+- Competitor analysis and product positioning (`WEDGE.md`, `ICP.md`)
 - PRDs, feature prioritization, and scope cutting
 - Metrics frameworks, experiment design, and launch plans
 
 When the requirements are settled, Steve hands off to Ada for architecture design.
 
-### 9.3 Clair the Analyst
+### 9.3 Julien the Evangelist
 
-> 📊 *Clair the Analyst* — end-to-end ML/AI assistant
+> 📣 *Julien the Evangelist* — brand narrative, content strategy, and community-led growth
+
+Julien builds your audience and organic growth engine:
+
+- Crafting the brand narrative, origin story, and product-marketing positioning
+- Planning searchable, shareable content strategies and thought leadership
+- Writing authentic social posts and threads for LinkedIn and X
+- Planning product launches, announcements, and PR outreach
+- Monitoring Hacker News, Reddit, GitHub Discussions, and Stack Overflow for community questions and buying signals (forwarding high-intent leads to `@mike`)
+
+Nothing goes public without your approval — drafts are staged in the open or queued in the Batch Draft Queue.
+
+### 9.4 Mike the B2B Sales Operator
+
+> 💼 *Mike the B2B Sales Operator* — prospect discovery, signal-based outreach, and pipeline management
+
+Mike runs a disciplined, founder-led B2B sales motion:
+
+- Scanning target accounts for timely buying signals (funding, hiring, leadership changes, tech stack shifts)
+- Building ICP-matched prospect lists and enriching lead profiles
+- Qualifying leads decisively with `FIT + INTENT + TIMING` scoring
+- Drafting personalized, signal-based outbound emails and multi-channel follow-up sequences
+- Maintaining a single, honest pipeline ledger (`pipeline.json`) and preparing meeting briefings
+
+No message is ever sent to a real person without your explicit approval first.
+
+### 9.5 Clair the Analyst
+
+> 📊 *Clair the Analyst* — end-to-end data science and ML/AI assistant
 
 Clair handles the complete data science workflow:
 
-- Automatic ML/AI solutions from natural language requirements
-- Data loading from CSV, ARFF, JSON, Avro, Parquet, Iceberg, SQL
-- Advanced interactive data visualization
-- Model training, evaluation, and ensembling
-- Inference server management
+- Automatic ML/AI solutions (`/automl`) from natural language requirements
+- Data loading from CSV, ARFF, JSON, Avro, Parquet, Arrow, SAS, Iceberg, and SQL
+- Advanced interactive data visualization and statistical testing
+- Model training, cross-validation, ensembling, and SHAP explainability (`TreeSHAP` and `KernelSHAP`)
+- Inference server management and scientific poster/deck reporting
 
-### 9.4 Ada the Architect
+### 9.6 Ada the Architect
 
-> 📐 *Ada the Architect* — software architecture and system design
+> 📐 *Ada the Architect* — software architecture, system design, and polyglot implementation
 
-Ada turns requirements into a buildable design:
+Ada turns requirements into a buildable design and production code:
 
 - Feasibility and constraint analysis
-- Domain design, decomposition, and contract design
-- Functional design and non-functional requirements
-- Architecture decision records (ADRs)
-- Units generation and work breakdown
+- Domain design, decomposition, and API contract design
+- Functional design, security/compliance controls, and non-functional requirements
+- Architecture decision records (ADRs), CI/CD, and cloud infrastructure design
+- Units generation, work breakdown, and full-stack polyglot implementation
 
-When the design is settled, Ada hands off to the developer agents for implementation.
+When the design is settled, Ada can implement it directly or hand off to specialist developer agents.
 
-### 9.5 James the Java Guru
+### 9.7 James the Java Guru
 
-> ☕ *James the Java Guru* — Java programming assistant
+> ☕ *James the Java Guru* — Java and JVM engineering specialist
 
-James helps with Java and SMILE-specific code:
+James helps with Java 25, JVM services, and SMILE-specific code:
 
-- Code completion and generation in the notebook (via `Tab`)
-- Reviewing and explaining Java code
-- SMILE API guidance
+- Writing, refactoring, and reviewing modern Java code
+- Inline code completion and snippet generation in the notebook (via `Tab`)
+- Concurrency, performance profiling, security audits, and JUnit test suites
+- SMILE API and Quarkus persistence guidance
 
-### 9.6 Guido the Pythonista
+### 9.8 Guido the Pythonista
 
-> 🐍 *Guido the Pythonista* — Python programming assistant
+> 🐍 *Guido the Pythonista* — Python engineering and scientific stack specialist
 
-Guido assists with Python notebooks:
+Guido assists with Python notebooks, pipelines, and libraries:
 
-- Code completion and generation
-- Python data science library guidance
+- Writing and refactoring modern, strictly typed Python
+- Scientific stack workflows (`NumPy`, `Pandas`, `Matplotlib`, `Seaborn`, `scikit-learn`)
+- Packaging (`pyproject.toml`, `uv`, `ruff`, `mypy`, `pytest`) and CLI engineering (`Click`, `Typer`)
+- Inline code completion and generation in Python/Jupyter notebooks
 
-### 9.7 Chuck the Desktop Operator
+### 9.9 Chuck the Desktop Operator
 
-> 🖥️ *Chuck the Desktop Operator* — desktop and GUI automation
+> 🖥️ *Chuck the Desktop Operator* — native GUI and browser automation
 
 Chuck drives what has no command line:
 
-- Operating native applications through the GUI
+- Operating native desktop applications through screenshots, mouse, and keyboard
 - Navigating installers, wizards, and dialogs step by step
-- Filling in forms and reading information that is only on screen
+- Automating web browsers with Playwright (with `SECURE_HANDOFF` for interactive login/2FA)
 - Verifying each step with a screenshot before moving on
 
 Chuck confirms before any action that is hard to undo, and never types secrets without consent.
 
-### 9.8 Intent Types
+### 9.10 Extending Studio with Custom Agents, Subagents, Bots & Routines
+
+SMILE Agent Studio is open and extensible. You can add domain-specific specialists (for example, an in-house legal/compliance reviewer, a DevOps incident responder, or a customer support specialist) without modifying Studio's code:
+
+1. **Add a Top-Level Agent Tab (`subagent: false`):**
+   Create a directory under `.smile/agents/<agent-name>/` (project-scoped), `~/.smile/agents/<agent-name>/` (user-scoped), or `$SMILE_HOME/agents/<agent-name>/` (global) containing an `AGENT.md` file with YAML frontmatter:
+   ```markdown
+   ---
+   name: compliance-reviewer
+   description: >
+     Regulatory and compliance specialist for SOC 2, GDPR, and vendor security reviews.
+   subagent: false
+   callName: alex
+   title: "🛡️ Alex the Compliance Officer"
+   ---
+   ## AI Role and Persona
+   You are Alex, our compliance specialist...
+   ```
+   - On next launch, **🛡️ Alex** appears automatically as a tab in the Agent Panel, can be delegated work by peer agents via `@alex` (`AgentRequest`), and can be assigned scheduled or event-driven routines in **Agent Hub** (`bots.json`).
+   - Place domain skills under `.smile/agents/<agent-name>/skills/<skill-name>/SKILL.md` to give the agent specialized workflows and reference playbooks.
+2. **Add a Task Subagent (`subagent: true`):**
+   Drop a standalone `<name>.md` file or `<name>/AGENT.md` directory (with `subagent: true` or omitted) into `.smile/agents/`. Top-level agents will automatically discover and invoke it via the `Task` tool.
+3. **Add Custom Bots & Routines:**
+   Bind any built-in or custom agent persona to a cron schedule, webhook, email inbox, or calendar feed via **Agent Hub > Bot Routines…**, by editing `$SMILE_HOME/conf/bots.json`, or by asking `@frank` in natural language (via the `BotConfig` tool). See [BOT.md](BOT.md) for details.
+4. **Install Plugins & Marketplaces (`/plugin`):**
+   Use **File > Plugins…** or `/plugin` to install skills, slash commands, subagents, and MCP servers from `anthropics/claude-plugins-official` or your organization's private git marketplace.
+
+### 9.11 Intent Types
 
 Each intent (conversation turn) has a **type selector** in the footer:
 
@@ -638,7 +712,7 @@ Each intent (conversation turn) has a **type selector** in the footer:
 
 Switch the intent type using the combo box, or use the shortcuts below.
 
-### 9.9 Slash Commands
+### 9.12 Slash Commands
 
 Type `/` followed by a command name and press `Ctrl + Enter`:
 
@@ -655,18 +729,19 @@ Type `/` followed by a command name and press `Ctrl + Enter`:
 | `/clear` | Clear the current conversation session |
 | `/resume` | Choose a previous session and restore its messages into context |
 | `/edit <file>` | Open a file in the Notepad editor |
+| `/plugin` | Open the Plugin Marketplace manager |
 | `/train` | Train a machine learning model (runs `smile train`) |
 | `/predict` | Run batch inference (runs `smile predict`) |
 
-Additional custom slash commands can be defined as agent skills in `SMILE.md`.
+Additional custom slash commands can be defined as agent skills in `SMILE.md` or under `.smile/agents/`.
 
 **Hint window:** As you type a slash command, a hint tooltip appears showing the expected arguments.
 
-### 9.10 Shell Commands
+### 9.13 Shell Commands
 
 Set the intent type to **Shell** (or prefix your input with `!`) and enter any shell command. On Windows, commands run through `powershell.exe -Command`; on Unix/macOS, through `bash -c`. The output is streamed in real time to the output area. A **Stop** button appears to forcibly terminate long-running processes.
 
-### 9.11 Long-Term Memory (SMILE.md)
+### 9.14 Long-Term Memory (SMILE.md)
 
 Agents can maintain long-term, project-specific context stored in `SMILE.md` within the current working directory. This file is automatically loaded into the agent's system prompt. Use `/memory add` or `/memory edit` to update it.
 
@@ -676,7 +751,7 @@ Agents can maintain long-term, project-specific context stored in `SMILE.md` wit
 ```
 Clair's `/init` skill creates a `SMILE.md` file by analysing the project and recording its structure, key decisions, and preferences.
 
-### 9.12 Reasoning Effort
+### 9.15 Reasoning Effort
 
 Each intent input shows a **Reasoning Effort** combo box. The available levels depend on the configured LLM:
 
@@ -693,7 +768,7 @@ If a reply still stops at the output limit, the next attempt uses reasoning effo
 
 Thinking tokens stay out of the output panel unless the system property `smile.agent.show-thinking` is `true`. A long chain of thought would otherwise bury the answer.
 
-### 9.13 Auto-Compact
+### 9.16 Auto-Compact
 
 Auto-compact runs `/compact` before the assumed context window is full. OpenAI, Anthropic, and Gemini assume a **1,000,000** token window and compact after **900,000** tokens. An OpenAI-compatible server (a local or on-prem model) assumes a **200,000** token window and compacts after **180,000** tokens, because the inference engine often sets a smaller limit than the weights allow. Set the system property `smile.agent.auto-compact` to use one token threshold for every provider.
 
@@ -723,29 +798,44 @@ The **Notepad** is a text editor tab in the workspace, opened for non-notebook f
 
 ---
 
-## 11. Settings — AI Service Configuration
+## 11. Settings — AI Services, Agent Hub, Inference Server & Email
 
-Open via **File > Settings…**. Choose an AI service provider from the drop-down:
+Open via **File > Settings…**. The Settings dialog is organized into four tabs:
+
+### 11.1 AI Services Tab (`conf/llm.json`)
+
+Choose an AI service provider from the drop-down:
 
 | Provider | Notes |
 |----------|-------|
 | **OpenAI** | GPT models; set API key, optional base URL override, model |
-| **Azure OpenAI** | Legacy Azure endpoint; requires API key, base URL, model |
+| **Azure OpenAI** | Azure endpoint; requires API key, base URL, model |
 | **Anthropic** | Claude models; set API key, optional base URL, model |
 | **Google Gemini** | Gemini models via native API; set API key, model |
-| **Google Vertex AI** | Gemini via Vertex; set API key, base URL, model |
+| **Google Gemini Enterprise** | Gemini via Vertex / Enterprise; set project, base URL, model |
+| **Chat Completions Compatible** | Local or open-weight hosts (**SMILE Serve**, Ollama, vLLM, SGLang, LM Studio, llama.cpp, OpenRouter); set base URL, optional API key, and model (`Qwen`, `DeepSeek`, `GLM`, `Kimi`, `MiniMax`, etc.) |
 
-Non-secret settings (base URL, models, default service, UI theme) are stored in Java `Preferences`. API keys are stored via the tiered `SecretStore` library (`photos.sluice:secret-store`):
+Non-secret settings (default service, base URLs, models) are persisted to `$SMILE_HOME/conf/llm.json` (shared with Agent Hub) and synced with Java `Preferences`. API keys are stored via the tiered `SecretStore` library (`photos.sluice:secret-store`):
 
 1. **Environment variables** (`OPENAI_API_KEY`, `AZURE_OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `AWS_BEARER_TOKEN_BEDROCK`) take highest read precedence when set.
 2. **OS credential store** (macOS Keychain, Windows Credential Manager, or Linux Secret Service / `libsecret`) stores keys saved in Settings.
 3. **Permission-restricted credential files** (`~/.smile/credentials/*.key` with owner-only `0600` / Windows ACL permissions) serve as the fallback when no OS keyring is available.
 
-**Supported models** are listed as suggestions in each provider's combo box; you can also type any model name manually since the fields are editable.
+### 11.2 Agent Hub Tab (`conf/studio.json`)
 
-After clicking **OK** the new LLM instance is initialized immediately.
+Configure how Studio starts or attaches to **Agent Hub** (`smile hub`):
+- **Auto-start Agent Hub on launch** (default `true`), bind **Host** (`localhost`), **Port** (`8890`), **Admin Token** (stored in `SecretStore`), and **Keep Agent Hub running when Studio exits** (`keepAliveOnExit`).
 
-> **Security note:** API keys are stored in the operating system's native credential store (macOS Keychain, Windows Credential Manager, or Linux Secret Service) or in owner-only permission-restricted files under `~/.smile/credentials` on headless machines without a keyring. Any legacy keys previously saved in Java `Preferences` are automatically migrated to `SecretStore` and removed from `Preferences`.
+### 11.3 Inference Server Tab (`conf/studio.json`)
+
+Configure the built-in **SMILE Serve** instance:
+- **Auto-start Inference Server on launch**, **Host** (`localhost`), **Port** (`8888`), **Model Path** (`./model`), and **LLM Model (HF ID)** for local chat completions.
+
+### 11.4 Email Accounts Tab (`conf/email.json`)
+
+Configure email accounts used by the `Email` tool (`@frank`, `@mike`, and other agents):
+- Supports **Gmail**, **Outlook / Microsoft 365**, and generic **IMAP + SMTP** providers.
+- Includes one-click **PKCE OAuth 2.0 Sign-In** (loopback redirect) and **Test Connection**, storing OAuth refresh tokens and IMAP/SMTP passwords in `SecretStore`.
 
 ---
 
