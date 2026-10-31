@@ -103,6 +103,24 @@ public final class HubManager {
     }
 
     /**
+     * Refreshes the {@link HubClient} target host, port, and admin token from
+     * the given {@link StudioConfig.AgentHub} configuration.
+     *
+     * @param cfg the updated Agent Hub settings.
+     */
+    public synchronized void refreshClient(StudioConfig.AgentHub cfg) {
+        if (cfg == null) {
+            return;
+        }
+        this.host = (cfg.host() == null || cfg.host().isBlank()) ? StudioConfig.DEFAULT_HOST : cfg.host().trim();
+        this.port = cfg.port() > 0 ? cfg.port() : StudioConfig.DEFAULT_HUB_PORT;
+        this.adminToken = (cfg.adminToken() == null || cfg.adminToken().isBlank())
+                ? StudioConfig.DEFAULT_HUB_ADMIN_TOKEN
+                : cfg.adminToken().trim();
+        this.client = new HubClient(this.host, this.port, this.adminToken);
+    }
+
+    /**
      * Returns the console output panel for the local Agent Hub process.
      *
      * @return the process panel.
@@ -150,6 +168,9 @@ public final class HubManager {
      * @return {@code true} when the service is running and ready.
      */
     public synchronized boolean start(String host, int port, String adminToken) {
+        String prevHost = this.host;
+        int prevPort = this.port;
+        String prevToken = this.adminToken;
         this.host = (host == null || host.isBlank()) ? StudioConfig.DEFAULT_HOST : host.trim();
         this.port = port > 0 ? port : StudioConfig.DEFAULT_HUB_PORT;
         this.adminToken = (adminToken == null || adminToken.isBlank())
@@ -157,20 +178,22 @@ public final class HubManager {
                 : adminToken.trim();
         this.client = new HubClient(this.host, this.port, this.adminToken);
 
-        // If an Agent Hub is already reachable on host:port (e.g., started via `smile hub`
-        // or running on a remote host), attach to it directly.
-        if (this.client.isReady()) {
-            logger.info("Attached to running Agent Hub at {}", this.client.baseUrl());
-            if (process != null && process.isAlive()) {
-                notifyStarted();
-            }
-            syncTrackedProjects();
-            return true;
-        }
-
+        // If our own managed local child process is already running on a different
+        // host/port/token, stop and restart it; otherwise, if an external Agent Hub
+        // is already reachable on host:port (e.g., started via `smile hub` or running
+        // on a remote host), attach to it directly.
         if (process != null && process.isAlive()) {
+            if (this.host.equals(prevHost) && this.port == prevPort && this.adminToken.equals(prevToken) && this.client.isReady()) {
+                notifyStarted();
+                syncTrackedProjects();
+                return true;
+            }
             stop();
             this.client = new HubClient(this.host, this.port, this.adminToken);
+        } else if (this.client.isReady()) {
+            logger.info("Attached to running Agent Hub at {}", this.client.baseUrl());
+            syncTrackedProjects();
+            return true;
         }
 
         String home = System.getProperty("smile.home", ".");

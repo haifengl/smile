@@ -103,6 +103,22 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private final Preferences prefs;
     private final SecretStore secrets;
 
+    // Agent Hub tab fields
+    private final JCheckBox hubAutoStartCheck = new JCheckBox(bundle.getString("HubAutoStart"), true);
+    private final JTextField hubHostField = new JTextField(StudioConfig.DEFAULT_HOST, 20);
+    private final JSpinner hubPortSpinner =
+            new JSpinner(new SpinnerNumberModel(StudioConfig.DEFAULT_HUB_PORT, 1, 65535, 1));
+    private final JPasswordField hubAdminTokenField = new JPasswordField(24);
+    private final JLabel hubAdminTokenStatusLabel = new JLabel();
+    private final JCheckBox hubKeepAliveCheck = new JCheckBox(bundle.getString("HubKeepAliveOnExit"), false);
+
+    // Inference Server tab fields
+    private final JCheckBox serveAutoStartCheck = new JCheckBox(bundle.getString("ServeAutoStart"), false);
+    private final JTextField serveHostField = new JTextField(StudioConfig.DEFAULT_HOST, 20);
+    private final JSpinner servePortSpinner =
+            new JSpinner(new SpinnerNumberModel(StudioConfig.DEFAULT_PORT, 1, 65535, 1));
+    private final JTextField serveModelPathField = new JTextField(StudioConfig.DEFAULT_MODEL_PATH, 24);
+
     // Email Accounts tab state & fields
     private EmailConfig emailConfig;
     private final Map<String, String> pendingEmailSecrets = new LinkedHashMap<>();
@@ -179,6 +195,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
         JTabbedPane tabs = new JTabbedPane();
         tabs.setBorder(new EmptyBorder(6, 6, 0, 6));
         tabs.addTab(bundle.getString("TabGeneralAI"), aiTab);
+        tabs.addTab(bundle.getString("TabAgentHub"), createAgentHubPane());
+        tabs.addTab(bundle.getString("TabInferenceServer"), createInferenceServerPane());
         tabs.addTab(bundle.getString("TabEmailAccounts"), createEmailAccountsPane());
 
         add(tabs, BorderLayout.CENTER);
@@ -318,6 +336,207 @@ public class SettingsDialog extends JDialog implements ActionListener {
         card.add(modelField, gbc);
 
         return card;
+    }
+
+    private JPanel createAgentHubPane() {
+        StudioConfig.AgentHub cfg = StudioConfig.agentHub(secrets);
+        hubAutoStartCheck.setSelected(cfg.autoStart());
+        hubHostField.setText(cfg.host());
+        hubPortSpinner.setValue(cfg.port());
+        hubAdminTokenField.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true");
+        hubAdminTokenField.setText(cfg.adminToken());
+        hubAdminTokenStatusLabel.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
+        hubAdminTokenStatusLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+        hubAdminTokenStatusLabel.setText(
+                formatSecretStatus(secrets, StudioConfig.AGENT_HUB_ADMIN_TOKEN_SECRET));
+        hubKeepAliveCheck.setSelected(cfg.keepAliveOnExit());
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBorder(new EmptyBorder(10, 10, 10, 10));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        int row = 0;
+
+        // Row 0: Auto Start
+        gbc.gridx = 0;
+        gbc.gridy = row++;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        form.add(hubAutoStartCheck, gbc);
+        gbc.gridwidth = 1;
+
+        // Row 1: Host
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        form.add(new JLabel(bundle.getString("HubHost")), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        form.add(hubHostField, gbc);
+        row++;
+
+        // Row 2: Port
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        form.add(new JLabel(bundle.getString("HubPort")), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        JSpinner.NumberEditor hubPortEditor = new JSpinner.NumberEditor(hubPortSpinner, "#");
+        hubPortSpinner.setEditor(hubPortEditor);
+        form.add(hubPortSpinner, gbc);
+        row++;
+
+        // Row 3: Admin Token
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        form.add(new JLabel(bundle.getString("HubAdminToken")), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        form.add(hubAdminTokenField, gbc);
+        row++;
+
+        // Row 4: Admin Token SecretStore status
+        gbc.gridx = 1;
+        gbc.gridy = row++;
+        gbc.insets = new Insets(0, 5, 5, 5);
+        form.add(hubAdminTokenStatusLabel, gbc);
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        // Row 5: Keep Alive On Exit
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        form.add(hubKeepAliveCheck, gbc);
+        gbc.gridwidth = 1;
+
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(form, BorderLayout.NORTH);
+        return wrapper;
+    }
+
+    private JPanel createInferenceServerPane() {
+        StudioConfig.InferenceServer cfg = StudioConfig.inferenceServer();
+        serveAutoStartCheck.setSelected(cfg.autoStart());
+        serveHostField.setText(cfg.host());
+        servePortSpinner.setValue(cfg.port());
+        serveModelPathField.setText(cfg.modelPath());
+
+        JPanel form = new JPanel(new GridBagLayout());
+        form.setBorder(new EmptyBorder(10, 10, 10, 10));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+
+        int row = 0;
+
+        // Row 0: Auto Start
+        gbc.gridx = 0;
+        gbc.gridy = row++;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        form.add(serveAutoStartCheck, gbc);
+        gbc.gridwidth = 1;
+
+        // Row 1: Host
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        form.add(new JLabel(bundle.getString("ServeHost")), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        form.add(serveHostField, gbc);
+        row++;
+
+        // Row 2: Port
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        form.add(new JLabel(bundle.getString("ServePort")), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        JSpinner.NumberEditor servePortEditor = new JSpinner.NumberEditor(servePortSpinner, "#");
+        servePortSpinner.setEditor(servePortEditor);
+        form.add(servePortSpinner, gbc);
+        row++;
+
+        // Row 3: Model Path
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        form.add(new JLabel(bundle.getString("ServeModelPath")), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        JPanel modelPathRow = new JPanel(new BorderLayout(6, 0));
+        modelPathRow.add(serveModelPathField, BorderLayout.CENTER);
+        JButton browseBtn = new JButton(bundle.getString("ServeBrowse"));
+        browseBtn.addActionListener(e -> browseServeModelPath());
+        modelPathRow.add(browseBtn, BorderLayout.EAST);
+        form.add(modelPathRow, gbc);
+
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(form, BorderLayout.NORTH);
+        return wrapper;
+    }
+
+    private void browseServeModelPath() {
+        JFileChooser chooser = new JFileChooser(serveModelPathField.getText().trim());
+        chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION
+                && chooser.getSelectedFile() != null) {
+            serveModelPathField.setText(chooser.getSelectedFile().getPath());
+        }
+    }
+
+    private void saveStudioConfiguration() {
+        String serveHost = serveHostField.getText().trim();
+        int servePort = ((Number) servePortSpinner.getValue()).intValue();
+        String serveModelPath = serveModelPathField.getText().trim();
+        StudioConfig.InferenceServer inferenceServer = new StudioConfig.InferenceServer(
+                serveAutoStartCheck.isSelected(),
+                serveHost.isEmpty() ? StudioConfig.DEFAULT_HOST : serveHost,
+                servePort > 0 ? servePort : StudioConfig.DEFAULT_PORT,
+                serveModelPath.isEmpty() ? StudioConfig.DEFAULT_MODEL_PATH : serveModelPath
+        );
+
+        String hubHost = hubHostField.getText().trim();
+        int hubPort = ((Number) hubPortSpinner.getValue()).intValue();
+        String hubToken = new String(hubAdminTokenField.getPassword()).strip();
+        StudioConfig.AgentHub agentHub = new StudioConfig.AgentHub(
+                hubAutoStartCheck.isSelected(),
+                hubHost.isEmpty() ? StudioConfig.DEFAULT_HOST : hubHost,
+                hubPort > 0 ? hubPort : StudioConfig.DEFAULT_HUB_PORT,
+                hubToken.isEmpty() ? StudioConfig.DEFAULT_HUB_ADMIN_TOKEN : hubToken,
+                hubKeepAliveCheck.isSelected()
+        );
+
+        StudioConfig.save(inferenceServer, agentHub, secrets);
+        HubManager.getInstance().refreshClient(agentHub);
     }
 
     private JPanel createEmailAccountsPane() {
@@ -801,6 +1020,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 prefs.put(service + MODEL, modelItem == null ? "" : modelItem.toString());
             }
             LlmConfig.fromPreferences(prefs).ifPresent(LlmConfig::save);
+            saveStudioConfiguration();
             saveEmailConfiguration();
             SmileStudio.updateLLM();
             SmileStudio.refreshModelSelectors();

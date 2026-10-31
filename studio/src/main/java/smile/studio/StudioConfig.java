@@ -18,11 +18,22 @@
 package smile.studio;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
+import ioa.agent.email.SharedSecrets;
+import photos.sluice.secrets.SecretHolding;
+import photos.sluice.secrets.SecretId;
+import photos.sluice.secrets.SecretStatus;
+import photos.sluice.secrets.SecretStore;
+import photos.sluice.secrets.SecretStoreException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * Studio's system-wide configuration, read from {@code studio.json}.
@@ -43,7 +54,9 @@ import tools.jackson.databind.ObjectMapper;
  */
 public final class StudioConfig {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(StudioConfig.class);
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = JsonMapper.builder()
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .build();
 
     /** Default bind host: loopback, which is safe for a desktop app. */
     public static final String DEFAULT_HOST = "localhost";
@@ -53,6 +66,9 @@ public final class StudioConfig {
     public static final int DEFAULT_HUB_PORT = 8890;
     /** Default admin bearer token for local Agent Hub. */
     public static final String DEFAULT_HUB_ADMIN_TOKEN = "dev-admin-token";
+    /** SecretStore identifier for the Agent Hub admin bearer token. */
+    public static final SecretId AGENT_HUB_ADMIN_TOKEN_SECRET =
+            new SecretId("agent-hub", "SMILE_HUB_ADMIN_TOKEN");
     /**
      * Default model location, relative to the working directory.
      *
@@ -86,7 +102,7 @@ public final class StudioConfig {
     }
 
     /**
-     * Agent Hub settings from {@code studio.json}.
+     * Agent Hub settings from {@code studio.json} and {@link SecretStore}.
      *
      * @param autoStart       whether to start or attach to Agent Hub when Studio starts.
      * @param host            the bind/target host (default {@value #DEFAULT_HOST}).
@@ -195,6 +211,32 @@ public final class StudioConfig {
     }
 
     /**
+     * Resolves the target {@code studio.json} file path for saving configuration changes:
+     * <ol>
+     *   <li>Existing file returned by {@link #resolve()}, if present.</li>
+     *   <li>{@code $SMILE_HOME/conf/studio.json} when {@code smile.home} is set and {@code conf} exists.</li>
+     *   <li>{@code ~/.smile/studio.json} fallback.</li>
+     * </ol>
+     *
+     * @return the target path for writing {@code studio.json}.
+     */
+    public static Path resolveWritablePath() {
+        Path existing = resolve();
+        if (existing != null) {
+            return existing.toAbsolutePath().normalize();
+        }
+        String home = System.getProperty("smile.home");
+        if (home != null && !home.isBlank()) {
+            Path homeConf = Path.of(home.trim(), "conf", "studio.json").toAbsolutePath().normalize();
+            if (Files.exists(homeConf) || Files.isDirectory(homeConf.getParent())) {
+                return homeConf;
+            }
+        }
+        String userHome = System.getProperty("user.home", ".");
+        return Path.of(userHome, ".smile", "studio.json").toAbsolutePath().normalize();
+    }
+
+    /**
      * Parses a {@code studio.json} file, applying defaults for absent fields.
      *
      * @param path the configuration file.
@@ -209,10 +251,10 @@ public final class StudioConfig {
         }
         boolean autoStart = node.has("autoStart") && node.get("autoStart").asBoolean();
         String host = node.has("host") && !node.get("host").asString().isBlank()
-                ? node.get("host").asString() : DEFAULT_HOST;
+                ? node.get("host").asString().trim() : DEFAULT_HOST;
         int port = node.has("port") ? node.get("port").asInt() : DEFAULT_PORT;
         String modelPath = node.has("modelPath") && !node.get("modelPath").asString().isBlank()
-                ? node.get("modelPath").asString() : DEFAULT_MODEL_PATH;
+                ? node.get("modelPath").asString().trim() : DEFAULT_MODEL_PATH;
         return new InferenceServer(autoStart, host, port, modelPath);
     }
 
@@ -242,37 +284,249 @@ public final class StudioConfig {
     }
 
     /**
-     * Returns the Agent Hub settings, or {@link #DEFAULT_AGENT_HUB} when no
-     * {@code studio.json} is present or it has no {@code agentHub} object.
+     * Returns the Agent Hub settings, resolving {@code adminToken} from the shared
+     * {@link SecretStore} (or migrating a legacy plaintext token from {@code studio.json},
+     * falling back to {@link #DEFAULT_HUB_ADMIN_TOKEN} when absent).
      *
      * @return the Agent Hub settings.
      */
     public static AgentHub agentHub() {
+        return agentHub(SharedSecrets.store());
+    }
+
+    /**
+     * Returns the Agent Hub settings using the provided {@link SecretStore}.
+     *
+     * @param secrets the secret store to read {@link #AGENT_HUB_ADMIN_TOKEN_SECRET} from.
+     * @return the Agent Hub settings.
+     */
+    public static AgentHub agentHub(SecretStore secrets) {
         Path path = resolve();
+        String secretToken = readAdminTokenSecret(secrets).orElse("");
         if (path == null) {
-            return DEFAULT_AGENT_HUB;
+            String effectiveToken = secretToken.isEmpty() ? DEFAULT_HUB_ADMIN_TOKEN : secretToken;
+            return new AgentHub(
+                    DEFAULT_AGENT_HUB.autoStart(),
+                    DEFAULT_AGENT_HUB.host(),
+                    DEFAULT_AGENT_HUB.port(),
+                    effectiveToken,
+                    DEFAULT_AGENT_HUB.keepAliveOnExit()
+            );
         }
         try {
-            return parseAgentHub(path);
+            return parseAgentHub(path, secrets);
         } catch (IOException ex) {
             logger.error("Failed to read {}: {}", path, ex.getMessage());
-            return DEFAULT_AGENT_HUB;
+            String effectiveToken = secretToken.isEmpty() ? DEFAULT_HUB_ADMIN_TOKEN : secretToken;
+            return new AgentHub(
+                    DEFAULT_AGENT_HUB.autoStart(),
+                    DEFAULT_AGENT_HUB.host(),
+                    DEFAULT_AGENT_HUB.port(),
+                    effectiveToken,
+                    DEFAULT_AGENT_HUB.keepAliveOnExit()
+            );
         }
     }
 
+    /**
+     * Parses the {@code agentHub} object from the given {@code studio.json} path.
+     *
+     * @param path the configuration file.
+     * @return the parsed Agent Hub settings.
+     * @throws IOException if the file cannot be read or parsed.
+     */
     public static AgentHub parseAgentHub(Path path) throws IOException {
+        return parseAgentHub(path, null);
+    }
+
+    /**
+     * Parses the {@code agentHub} object from the given {@code studio.json} path and
+     * resolves {@code adminToken} against {@code secrets} (migrating any legacy plaintext
+     * {@code adminToken} found in JSON when {@code secrets} is provided).
+     *
+     * @param path    the configuration file.
+     * @param secrets optional secret store for resolving/migrating {@code adminToken}.
+     * @return the parsed Agent Hub settings.
+     * @throws IOException if the file cannot be read or parsed.
+     */
+    public static AgentHub parseAgentHub(Path path, SecretStore secrets) throws IOException {
         JsonNode root = mapper.readTree(path.toFile());
         JsonNode node = root.get("agentHub");
+        Optional<String> fromSecretStore = secrets != null ? readAdminTokenSecret(secrets) : Optional.empty();
         if (node == null || node.isNull()) {
-            return DEFAULT_AGENT_HUB;
+            String token = fromSecretStore.filter(s -> !s.isBlank()).orElse(DEFAULT_HUB_ADMIN_TOKEN);
+            return new AgentHub(
+                    DEFAULT_AGENT_HUB.autoStart(),
+                    DEFAULT_AGENT_HUB.host(),
+                    DEFAULT_AGENT_HUB.port(),
+                    token,
+                    DEFAULT_AGENT_HUB.keepAliveOnExit()
+            );
         }
         boolean autoStart = !node.has("autoStart") || node.get("autoStart").asBoolean();
         String host = node.has("host") && !node.get("host").asString().isBlank()
                 ? node.get("host").asString().trim() : DEFAULT_HOST;
         int port = node.has("port") ? node.get("port").asInt() : DEFAULT_HUB_PORT;
-        String adminToken = node.has("adminToken") && !node.get("adminToken").asString().isBlank()
-                ? node.get("adminToken").asString().trim() : DEFAULT_HUB_ADMIN_TOKEN;
         boolean keepAliveOnExit = node.has("keepAliveOnExit") && node.get("keepAliveOnExit").asBoolean();
-        return new AgentHub(autoStart, host, port, adminToken, keepAliveOnExit);
+
+        String legacyJsonToken = node.has("adminToken") && !node.get("adminToken").asString().isBlank()
+                ? node.get("adminToken").asString().trim()
+                : "";
+        if (fromSecretStore.isEmpty()
+                && !legacyJsonToken.isEmpty()
+                && !DEFAULT_HUB_ADMIN_TOKEN.equals(legacyJsonToken)
+                && secrets != null) {
+            saveAdminTokenSecret(secrets, legacyJsonToken);
+            fromSecretStore = Optional.of(legacyJsonToken);
+        }
+
+        String effectiveToken = fromSecretStore.filter(s -> !s.isBlank())
+                .orElse(!legacyJsonToken.isEmpty() ? legacyJsonToken : DEFAULT_HUB_ADMIN_TOKEN);
+        return new AgentHub(autoStart, host, port, effectiveToken, keepAliveOnExit);
+    }
+
+    /**
+     * Reads the stored Agent Hub admin token from {@link SecretStore} (or environment override),
+     * returning {@link Optional#empty()} if not set.
+     *
+     * @param secrets the secret store to query.
+     * @return the stored admin token, if present.
+     */
+    public static Optional<String> readAdminTokenSecret(SecretStore secrets) {
+        if (secrets == null) {
+            return Optional.empty();
+        }
+        try {
+            return secrets.secret(AGENT_HUB_ADMIN_TOKEN_SECRET)
+                    .map(String::strip)
+                    .filter(s -> !s.isEmpty());
+        } catch (SecretStoreException ex) {
+            logger.debug("Could not read Agent Hub admin token from SecretStore: {}", ex.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Saves or clears the Agent Hub admin token in {@link SecretStore}.
+     * If {@code token} is null, blank, or equal to {@link #DEFAULT_HUB_ADMIN_TOKEN},
+     * any existing stored secret is removed so the default token is used.
+     *
+     * @param secrets the secret store.
+     * @param token   the admin token to store, or blank/default to clear.
+     */
+    public static void saveAdminTokenSecret(SecretStore secrets, String token) {
+        if (secrets == null) {
+            return;
+        }
+        String stripped = token == null ? "" : token.strip();
+        try {
+            if (stripped.isEmpty() || DEFAULT_HUB_ADMIN_TOKEN.equals(stripped)) {
+                boolean hasStored = secrets.holdings(AGENT_HUB_ADMIN_TOKEN_SECRET).stream()
+                        .anyMatch(h -> h.location() instanceof SecretStatus.StoredLocation
+                                && h.holding() == SecretHolding.Holding.HOLDS);
+                if (hasStored) {
+                    secrets.remove(AGENT_HUB_ADMIN_TOKEN_SECRET);
+                }
+            } else if (stripped.length() <= SecretStore.maxSecret()
+                    && secrets.whereASaveWouldStoreIt().isPresent()) {
+                secrets.save(AGENT_HUB_ADMIN_TOKEN_SECRET, stripped);
+            }
+        } catch (IllegalArgumentException | SecretStoreException ex) {
+            logger.warn("Failed to save Agent Hub admin token in SecretStore: {}", ex.getMessage());
+        }
+    }
+
+    /**
+     * Saves the {@link InferenceServer} and {@link AgentHub} settings to
+     * {@link #resolveWritablePath()} and stores {@code agentHub.adminToken()} in
+     * {@link SecretStore} (never writing {@code adminToken} in plaintext to {@code studio.json}).
+     * Preserves any other top-level sections in {@code studio.json} such as {@code plugins}.
+     *
+     * @param inferenceServer the Inference Server configuration to persist.
+     * @param agentHub        the Agent Hub configuration to persist.
+     * @param secrets         optional secret store for {@code adminToken}.
+     */
+    public static void save(InferenceServer inferenceServer, AgentHub agentHub, SecretStore secrets) {
+        save(resolveWritablePath(), inferenceServer, agentHub, secrets);
+    }
+
+    /**
+     * Saves the {@link InferenceServer} and {@link AgentHub} settings to the specified
+     * {@code studio.json} file path and stores {@code agentHub.adminToken()} in
+     * {@link SecretStore} (never writing {@code adminToken} in plaintext to {@code studio.json}).
+     * Preserves any other top-level sections in {@code studio.json} such as {@code plugins}.
+     *
+     * @param path            target {@code studio.json} file path.
+     * @param inferenceServer the Inference Server configuration to persist.
+     * @param agentHub        the Agent Hub configuration to persist.
+     * @param secrets         optional secret store for {@code adminToken}.
+     */
+    public static void save(
+            Path path,
+            InferenceServer inferenceServer,
+            AgentHub agentHub,
+            SecretStore secrets
+    ) {
+        if (path == null) {
+            return;
+        }
+        try {
+            ObjectNode root = null;
+            if (Files.isRegularFile(path)) {
+                try {
+                    JsonNode existing = mapper.readTree(path.toFile());
+                    if (existing instanceof ObjectNode obj) {
+                        root = obj;
+                    }
+                } catch (Exception ex) {
+                    logger.warn("Could not parse existing {} before saving, creating fresh object: {}",
+                            path, ex.getMessage());
+                }
+            }
+            if (root == null) {
+                root = mapper.createObjectNode();
+            }
+
+            if (inferenceServer != null) {
+                ObjectNode infNode = mapper.createObjectNode();
+                infNode.put("autoStart", inferenceServer.autoStart());
+                infNode.put("host", inferenceServer.host() == null || inferenceServer.host().isBlank()
+                        ? DEFAULT_HOST : inferenceServer.host().trim());
+                infNode.put("port", inferenceServer.port() > 0 ? inferenceServer.port() : DEFAULT_PORT);
+                infNode.put("modelPath", inferenceServer.modelPath() == null || inferenceServer.modelPath().isBlank()
+                        ? DEFAULT_MODEL_PATH : inferenceServer.modelPath().trim());
+                root.set("inferenceServer", infNode);
+            }
+
+            if (agentHub != null) {
+                ObjectNode hubNode = mapper.createObjectNode();
+                hubNode.put("autoStart", agentHub.autoStart());
+                hubNode.put("host", agentHub.host() == null || agentHub.host().isBlank()
+                        ? DEFAULT_HOST : agentHub.host().trim());
+                hubNode.put("port", agentHub.port() > 0 ? agentHub.port() : DEFAULT_HUB_PORT);
+                hubNode.put("keepAliveOnExit", agentHub.keepAliveOnExit());
+                root.set("agentHub", hubNode);
+                if (secrets != null) {
+                    saveAdminTokenSecret(secrets, agentHub.adminToken());
+                }
+            }
+
+            if (!root.has("plugins")) {
+                ObjectNode pluginsNode = mapper.createObjectNode();
+                var arr = mapper.createArrayNode();
+                arr.add("anthropics/claude-plugins-official");
+                pluginsNode.set("marketplaces", arr);
+                root.set("plugins", pluginsNode);
+            }
+
+            Path parent = path.getParent();
+            if (parent != null) {
+                Files.createDirectories(parent);
+            }
+            String json = mapper.writeValueAsString(root);
+            Files.writeString(path, json + "\n", StandardCharsets.UTF_8);
+        } catch (IOException ex) {
+            logger.error("Failed to save {}: {}", path, ex.getMessage());
+        }
     }
 }
