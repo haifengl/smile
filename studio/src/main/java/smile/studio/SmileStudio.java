@@ -628,7 +628,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     private class PluginsAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/plugin.png");
         public PluginsAction() {
-            super(bundle.getString("Plugins")); // , icons.small());
+            super(bundle.getString("Plugins"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -641,9 +641,9 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class NewNotebookAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/notebook.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/new.png");
         public NewNotebookAction() {
-            super(bundle.getString("New")); // , icons.small());
+            super(bundle.getString("New"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
             int c = getToolkit().getMenuShortcutKeyMaskEx();
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_N, c));
@@ -673,7 +673,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     private class SaveNotebookAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/save.png");
         public SaveNotebookAction() {
-            super(bundle.getString("Save")); // , icons.small());
+            super(bundle.getString("Save"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
             int c = getToolkit().getMenuShortcutKeyMaskEx();
             putValue(ACCELERATOR_KEY, KeyStroke.getKeyStroke(KeyEvent.VK_S, c));
@@ -688,7 +688,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     private class SaveAsNotebookAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/save-as.png");
         public SaveAsNotebookAction() {
-            super(bundle.getString("SaveAs")); // , icons.small());
+            super(bundle.getString("SaveAs"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -724,9 +724,9 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class AddCellAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/add-cell.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/add.png");
         public AddCellAction() {
-            super(bundle.getString("AddCell")); // , icons.small());
+            super(bundle.getString("AddCell"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -739,9 +739,9 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class RunAllAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/run.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/workflow.png");
         public RunAllAction() {
-            super(bundle.getString("RunAll")); // , icons.small());
+            super(bundle.getString("RunAll"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -780,7 +780,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     private class RestartKernelAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/refresh.png");
         public RestartKernelAction() {
-            super(bundle.getString("RestartKernel")); // , icons.small());
+            super(bundle.getString("RestartKernel"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -805,7 +805,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     private class StartInferenceAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/start.png");
         public StartInferenceAction() {
-            super(bundle.getString("StartInference")); // , icons.small());
+            super(bundle.getString("StartInference"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -827,7 +827,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     private class StopInferenceAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/stop.png");
         public StopInferenceAction() {
-            super(bundle.getString("StopInference")); // , icons.small());
+            super(bundle.getString("StopInference"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -843,7 +843,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     private class RestartInferenceAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/restart.png");
         public RestartInferenceAction() {
-            super(bundle.getString("RestartInference")); // , icons.small());
+            super(bundle.getString("RestartInference"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -865,9 +865,10 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     /** Prompts for a model file (.sml or .onnx), loads it into the inference service, and opens the Web UI. */
     private class LoadModelAction extends AbstractAction {
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/deep-learning.png");
         public LoadModelAction() {
-            super(bundle.getString("LoadModel"));
-            putValue(LARGE_ICON_KEY, OpenNotebookAction.icons.large());
+            super(bundle.getString("LoadModel"), icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
@@ -902,7 +903,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     private class InferenceMetricsAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/metrics.png");
         public InferenceMetricsAction() {
-            super(bundle.getString("InferenceMetrics")); // , icons.small());
+            super(bundle.getString("InferenceMetrics"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -914,9 +915,9 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     /** Opens the inference service web UI in the browser. */
     private class OpenInferenceUiAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/web-ui.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/internet.png");
         public OpenInferenceUiAction() {
-            super(bundle.getString("OpenInferenceUI")); // , icons.small());
+            super(bundle.getString("OpenInferenceUI"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -949,7 +950,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     private class StartAgentHubAction extends AbstractAction {
         public StartAgentHubAction() {
-            super(bundle.getString("StartAgentHub")); // , StartInferenceAction.icons.small());
+            super(bundle.getString("StartAgentHub"), StartInferenceAction.icons.small());
             putValue(LARGE_ICON_KEY, StartInferenceAction.icons.large());
         }
 
@@ -970,7 +971,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     private class StopAgentHubAction extends AbstractAction {
         public StopAgentHubAction() {
-            super(bundle.getString("StopAgentHub")); // , StopInferenceAction.icons.small());
+            super(bundle.getString("StopAgentHub"), StopInferenceAction.icons.small());
             putValue(LARGE_ICON_KEY, StopInferenceAction.icons.large());
         }
 
@@ -984,7 +985,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     private class RestartAgentHubAction extends AbstractAction {
         public RestartAgentHubAction() {
-            super(bundle.getString("RestartAgentHub")); // , RestartInferenceAction.icons.small());
+            super(bundle.getString("RestartAgentHub"), RestartInferenceAction.icons.small());
             putValue(LARGE_ICON_KEY, RestartInferenceAction.icons.large());
         }
 
@@ -1007,7 +1008,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     private class ConfigureBotsAction extends AbstractAction {
         public ConfigureBotsAction() {
-            super(bundle.getString("ConfigureBots")); // , SettingsAction.icons.small());
+            super(bundle.getString("ConfigureBots"), SettingsAction.icons.small());
             putValue(LARGE_ICON_KEY, SettingsAction.icons.large());
         }
 
@@ -1031,7 +1032,9 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private JMenu createBotPagesMenu() {
+        ActionIcons icons = loadActionIcons(SmileStudio.class, "images/website.png");
         JMenu pagesMenu = new JMenu(bundle.getString("BotPages"));
+        pagesMenu.setIcon(icons.small());
         populateBotPagesMenu(pagesMenu, HubClient.loadOfflinePages());
         pagesMenu.addMenuListener(new javax.swing.event.MenuListener() {
             @Override
@@ -1071,7 +1074,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     private class AgentHubHealthAction extends AbstractAction {
         public AgentHubHealthAction() {
-            super(bundle.getString("InferenceHealth")); // , InferenceHealthAction.icons.small());
+            super(bundle.getString("InferenceHealth"), InferenceHealthAction.icons.small());
             putValue(LARGE_ICON_KEY, InferenceHealthAction.icons.large());
         }
 
@@ -1083,7 +1086,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     private class AgentHubMetricsAction extends AbstractAction {
         public AgentHubMetricsAction() {
-            super(bundle.getString("InferenceMetrics")); // , InferenceMetricsAction.icons.small());
+            super(bundle.getString("InferenceMetrics"), InferenceMetricsAction.icons.small());
             putValue(LARGE_ICON_KEY, InferenceMetricsAction.icons.large());
         }
 
@@ -1112,7 +1115,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     private class SettingsAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/settings.png");
         public SettingsAction() {
-            super(bundle.getString("Settings")); // , icons.small());
+            super(bundle.getString("Settings"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
