@@ -741,7 +741,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private static class DarkThemeAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/change.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/themes.png");
         public DarkThemeAction() {
             super(bundle.getString("DarkTheme"));
             // Without icon, menu items won't align well on Mac.
