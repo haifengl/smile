@@ -52,9 +52,9 @@ A production-ready, Quarkus-based inference server (available as JVM, CUDA GPU, 
 A React-based web UI is bundled and served from the same process.
 See [serve/README.md](serve/README.md) for how to build and run the service.
 
-#### 3. SMILE Studio: Agentic IDE & AutoML Workplace
-A desktop workplace for data science and software engineering using Python, Java, Kotlin, or Scala. Specialized AI agents collaborate with you in interactive notebooks to explore data, engineer features, train and tune models, and export `.sml` or `.onnx` artifacts directly to SMILE Serve.
-See [studio/README.md](studio/README.md) to get your first project running in a few minutes.
+#### 3. SMILE Agent Studio: AI Agent Workspace, Autonomous Bot Hub & Polyglot IDE
+A local-first desktop workspace that unites a coordinated team of 9 specialized AI agents (spanning executive chief-of-staff, product management, developer evangelism, B2B sales, data science, software architecture, Java/Python engineering, and desktop GUI automation), the always-on **Agent Hub** (`smile hub`) for scheduled and event-driven background bots with human-in-the-loop approval queues, and a polyglot IDE with interactive notebooks (Java, Scala, Kotlin, and Python/Jupyter) and code/data explorers. Studio is fully extensible: drop custom agent specs (`AGENT.md`), skills, MCP servers, or plugins into your workspace to add domain-specific specialists and routines with zero code changes.
+See [studio/README.md](studio/README.md) and [studio/BOT.md](studio/BOT.md) to get your workspace and bots running in minutes.
 
 ---
 
@@ -365,29 +365,30 @@ For visualization examples, see [plot/README.md](plot/README.md).
 
 ---
 
-## SMILE Studio
+## SMILE Agent Studio & CLI
 
-SMILE Studio is an agentic IDE for data science using Python or [SMILE](https://www.aihalo.dev/) on JVM.
-See [studio/README.md](studio/README.md) for full documentation.
+**SMILE Agent Studio** is the local-first AI agent workspace, 24/7 autonomous Bot Hub (`smile hub`), and polyglot IDE (Java, Scala, Kotlin, and Python/Jupyter). It pairs 9 built-in specialist agents (**Frank** Chief of Staff, **Steve** Product Manager, **Julien** Evangelist, **Mike** B2B Sales, **Clair** Data Scientist, **Ada** Architect, **James** Java Guru, **Guido** Pythonista, and **Chuck** Desktop Operator), human-in-the-loop batch draft queues, and zero-code extensibility for custom agents, skills, plugins, and bot routines with interactive notebooks and code/data editors.
+See [studio/README.md](studio/README.md), [studio/BOT.md](studio/BOT.md), and [studio/CLI.md](studio/CLI.md) for full documentation.
 
 Download a pre-packaged release from the
 [releases page](https://github.com/haifengl/smile/releases), then:
 
 ```shell
 path/to/smile/bin/setup      # install required native dependencies
-path/to/smile/bin/smile      # launch SMILE Studio from your project directory
+path/to/smile/bin/smile      # launch SMILE Agent Studio from your project directory
 ```
 
-Other entry points:
+CLI entry points:
 
-| Command         | Description                                    |
-|-----------------|------------------------------------------------|
-| `smile`         | Desktop agentic IDE                            |
-| `smile shell`   | Java REPL with all SMILE packages pre-imported |
-| `smile scala`   | Scala REPL                                     |
-| `smile train`   | Train a supervised learning model              |
-| `smile predict` | Predict on a file using a saved model          |
-| `smile serve`   | Start the LLM inference server                 |
+| Command         | Description                                                                 |
+|-----------------|-----------------------------------------------------------------------------|
+| `smile`         | Launch **SMILE Agent Studio** (desktop AI workspace, Bot Hub & polyglot IDE)|
+| `smile hub`     | Start the always-on **Agent Hub & Bot** runtime service ([BOT.md](studio/BOT.md)) |
+| `smile shell`   | Java (JShell) REPL with all SMILE packages pre-imported                     |
+| `smile scala`   | Scala 3 REPL                                                                |
+| `smile train`   | Train a classification, regression, clustering, VQ, or anomaly model        |
+| `smile predict` | Run batch inference (with optional probabilities and SHAP explanations)     |
+| `smile serve`   | Start the unified HTTP inference server (Classic ML, ONNX, and LLM chat)    |
 
 To increase the JVM heap:
 ```shell
