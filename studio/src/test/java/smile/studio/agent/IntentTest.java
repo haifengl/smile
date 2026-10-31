@@ -36,6 +36,7 @@ class IntentTest {
     @TempDir
     Path tempDir;
 
+    private String savedLlmConfigProp;
     private String savedService;
     private String savedModelPref;
     private String savedOpenAiModel;
@@ -43,6 +44,9 @@ class IntentTest {
 
     @BeforeEach
     void setUp() {
+        savedLlmConfigProp = System.getProperty("ioa.llm.config");
+        System.setProperty("ioa.llm.config", tempDir.resolve("llm.json").toString());
+
         Preferences prefs = SmileStudio.preferences();
         savedService = prefs.get(SettingsDialog.AI_SERVICE_KEY, "");
         savedModelPref = prefs.get(SettingsDialog.DEFAULT_MODEL_KEY, "");
@@ -67,6 +71,12 @@ class IntentTest {
 
     @AfterEach
     void tearDown() {
+        if (savedLlmConfigProp == null) {
+            System.clearProperty("ioa.llm.config");
+        } else {
+            System.setProperty("ioa.llm.config", savedLlmConfigProp);
+        }
+
         Preferences prefs = SmileStudio.preferences();
         if (savedService.isEmpty()) prefs.remove(SettingsDialog.AI_SERVICE_KEY);
         else prefs.put(SettingsDialog.AI_SERVICE_KEY, savedService);
@@ -133,8 +143,8 @@ class IntentTest {
     }
 
     @Test
-    void agentStatusPrefixIsRobotEmoji() {
-        assertEquals(Character.toString(0x1F916) + " ", Intent.AGENT_STATUS_PREFIX);
+    void agentStatusPrefixIsScrollEmoji() {
+        assertEquals(Character.toString(0x1F4DC) + " ", Intent.AGENT_STATUS_PREFIX);
     }
 
     @Test
