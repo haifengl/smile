@@ -189,9 +189,11 @@ public class SettingsDialog extends JDialog implements ActionListener {
         }
         aiServiceCombo.setSelectedItem(prefs.get(AI_SERVICE_KEY, aiServiceOptions[0]));
 
+        JPanel aiForm = new JPanel(new BorderLayout());
+        aiForm.add(createServiceChoice(), BorderLayout.NORTH);
+        aiForm.add(cardPane, BorderLayout.CENTER);
         JPanel aiTab = new JPanel(new BorderLayout());
-        aiTab.add(createServiceChoice(), BorderLayout.NORTH);
-        aiTab.add(cardPane, BorderLayout.CENTER);
+        aiTab.add(aiForm, BorderLayout.NORTH);
 
         JTabbedPane tabs = new JTabbedPane();
         tabs.setBorder(new EmptyBorder(6, 6, 0, 6));
@@ -336,7 +338,9 @@ public class SettingsDialog extends JDialog implements ActionListener {
         modelFields.put(service, modelField);
         card.add(modelField, gbc);
 
-        return card;
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(card, BorderLayout.NORTH);
+        return wrapper;
     }
 
     private JPanel createAgentHubPane() {
