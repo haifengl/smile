@@ -17,22 +17,26 @@
  */
 package smile.studio;
 
-import javax.swing.*;
-import javax.swing.text.BadLocationException;
-import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.io.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.io.IOException;
 import java.util.Arrays;
-import smile.util.OS;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.SwingUtilities;
+import javax.swing.text.BadLocationException;
 import smile.studio.text.Monospaced;
+import smile.util.OS;
 
 /**
- * A frame to run a process and displays its output.
+ * A panel to run a background process and display its console output.
+ *
  * @author Haifeng Li
  */
-public class ProcessFrame extends JFrame {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProcessFrame.class);
+public class ProcessPanel extends JPanel {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ProcessPanel.class);
     /** Number of overflow lines that must accumulate before a truncation sweep. */
     private static final int TRUNCATE_BATCH = 100;
     private final JTextArea output = new JTextArea();
@@ -41,13 +45,12 @@ public class ProcessFrame extends JFrame {
 
     /**
      * Constructor.
+     *
      * @param scrollback the number of scrollback lines.
      */
-    public ProcessFrame(int scrollback) {
+    public ProcessPanel(int scrollback) {
+        super(new BorderLayout());
         this.scrollback = scrollback;
-        setSize(1200, 800);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null); // Center the window
 
         output.setEditable(false);
         output.setLineWrap(true);
@@ -55,23 +58,16 @@ public class ProcessFrame extends JFrame {
         output.setBackground(Color.BLACK);
         output.setForeground(Color.WHITE);
         output.setFont(Monospaced.getFont());
-        Monospaced.addListener((e) -> {
-            SwingUtilities.invokeLater(() -> output.setFont((Font) e.getNewValue()));
-        });
-
-        addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                stop();
-            }
-        });
+        Monospaced.addListener(e ->
+                SwingUtilities.invokeLater(() -> output.setFont((Font) e.getNewValue())));
 
         JScrollPane scrollPane = new JScrollPane(output);
-        add(scrollPane);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     /**
-     * Starts a new process and redirects its output to this frame.
+     * Starts a new process and redirects its output to this panel.
+     *
      * @param command a string array containing the program and its arguments.
      */
     public void start(String... command) {
@@ -127,6 +123,7 @@ public class ProcessFrame extends JFrame {
 
     /**
      * Returns the underlying process, or {@code null} if not yet started.
+     *
      * @return the process.
      */
     public Process getProcess() {
@@ -135,6 +132,7 @@ public class ProcessFrame extends JFrame {
 
     /**
      * Returns the text currently displayed in the output area.
+     *
      * @return the output text.
      */
     public String getOutput() {
