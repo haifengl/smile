@@ -54,16 +54,17 @@ and model serving runtime, dual-licensed under:
      and must be obtained through the Commercial Agent.
 
 ==============================================================================
-3. SMILE Studio (Business Source License 1.1 / Commercial)
+3. SMILE Agent Studio (Business Source License 1.1 / Commercial)
 ==============================================================================
 
-SMILE Studio (`studio`) is an agentic data science desktop IDE and model-packaging
-environment licensed under the Business Source License 1.1 (BSL 1.1).
+SMILE Agent Studio (`studio`) is the local-first AI agent workspace,
+autonomous Bot Hub (`smile hub`), and polyglot IDE licensed under the
+Business Source License 1.1 (BSL 1.1).
 
-  - Use Grant: You may use SMILE Studio free of charge for non-commercial
-    evaluation, personal learning, academic research, data exploration, and
-    exporting serialized model packages.
-  - Commercial & Production Use: Use of SMILE Studio within commercial
+  - Use Grant: You may use SMILE Agent Studio free of charge for
+    non-commercial evaluation, personal learning, academic research, and
+    other non-production uses.
+  - Commercial & Production Use: Use of SMILE Agent Studio within commercial
     organizations beyond evaluation, or redistribution as part of a commercial
     product, requires a paid commercial license obtained through the Commercial Agent.
   - Change License: After four (4) years from the release date of each respective
