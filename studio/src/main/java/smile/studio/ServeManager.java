@@ -21,7 +21,10 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import javax.swing.SwingUtilities;
 import smile.shell.Serve;
 
 /**
@@ -47,8 +50,10 @@ public final class ServeManager {
     /** Guards one-time registration of the {@code serve-manager-shutdown} hook. */
     private final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
 
+    private final ProcessPanel panel = new ProcessPanel(1000);
+    private final List<Consumer<ProcessPanel>> startListeners = new CopyOnWriteArrayList<>();
+    private final List<Consumer<ProcessPanel>> stopListeners = new CopyOnWriteArrayList<>();
     private Process process;
-    private ProcessFrame frame;
     private String host;
     private int port;
     private ServeClient client;
@@ -93,6 +98,37 @@ public final class ServeManager {
     }
 
     /**
+     * Returns the console output panel for the inference service.
+     *
+     * @return the process panel.
+     */
+    public ProcessPanel panel() {
+        return panel;
+    }
+
+    /**
+     * Registers a listener invoked on the Swing EDT when the service process starts.
+     *
+     * @param listener callback receiving the {@link ProcessPanel}.
+     */
+    public void addStartListener(Consumer<ProcessPanel> listener) {
+        if (listener != null) {
+            startListeners.add(listener);
+        }
+    }
+
+    /**
+     * Registers a listener invoked on the Swing EDT when the service process stops.
+     *
+     * @param listener callback receiving the {@link ProcessPanel}.
+     */
+    public void addStopListener(Consumer<ProcessPanel> listener) {
+        if (listener != null) {
+            stopListeners.add(listener);
+        }
+    }
+
+    /**
      * Starts the service if it is not already running on the given host and port.
      * If it is running on a different host or port, it is stopped and restarted.
      *
@@ -102,6 +138,7 @@ public final class ServeManager {
      */
     public synchronized boolean start(String host, int port) {
         if (isRunning() && host.equals(this.host) && port == this.port) {
+            notifyStarted();
             return true;
         }
         if (isRunning()) {
@@ -119,12 +156,10 @@ public final class ServeManager {
         this.port = port;
         this.client = new ServeClient(port);
 
-        frame = new ProcessFrame(1000);
-        frame.setTitle("Inference Service");
         // No -Dsmile.serve.model: the service starts empty and models are loaded
         // on demand through the REST API. allow-empty is required, otherwise the
         // service exits at startup before the first load request arrives.
-        frame.start(Serve.javaExecutable(),
+        panel.start(Serve.javaExecutable(),
                 "--add-opens", "java.base/java.lang=ALL-UNNAMED",
                 "--add-opens", "java.base/java.nio=ALL-UNNAMED",
                 "--enable-native-access", "ALL-UNNAMED",
@@ -132,8 +167,8 @@ public final class ServeManager {
                 "-Dquarkus.http.host=" + host,
                 "-Dquarkus.http.port=" + port,
                 "-jar", jar.toString());
-        frame.setVisible(true);
-        process = frame.getProcess();
+        process = panel.getProcess();
+        notifyStarted();
 
         // Register the shutdown hook once for the singleton's lifetime. The hook
         // calls stop(), which is idempotent and reads the current process field,
@@ -219,16 +254,33 @@ public final class ServeManager {
      * Stops the service and releases its resources.
      */
     public synchronized void stop() {
-        if (frame != null) {
-            frame.stop();
-            frame.dispose();
-            frame = null;
-        } else if (process != null) {
+        boolean hadProcess = process != null || panel.getProcess() != null;
+        panel.stop();
+        if (process != null) {
             process.descendants().forEach(ProcessHandle::destroy);
             process.destroy();
         }
         process = null;
         client = null;
+        if (hadProcess) {
+            notifyStopped();
+        }
+    }
+
+    private void notifyStarted() {
+        SwingUtilities.invokeLater(() -> {
+            for (Consumer<ProcessPanel> l : startListeners) {
+                l.accept(panel);
+            }
+        });
+    }
+
+    private void notifyStopped() {
+        SwingUtilities.invokeLater(() -> {
+            for (Consumer<ProcessPanel> l : stopListeners) {
+                l.accept(panel);
+            }
+        });
     }
 
     /**

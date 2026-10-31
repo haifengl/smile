@@ -21,9 +21,13 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import javax.swing.JPanel;
+import smile.studio.bot.HubManager;
 
 /**
  * Unit tests for {@link ServeManager} state handling.
@@ -111,5 +115,21 @@ public class ServeManagerTest {
 
         // Then: a valid path with no service running is a transport error.
         assertThrows(java.io.IOException.class, () -> manager.loadModel("iris.sml"));
+    }
+
+    @Test
+    public void testProcessPanelIsJPanelAndSharedByManagers() {
+        // Given
+        var servePanel = ServeManager.getInstance().panel();
+        var hubPanel = HubManager.getInstance().panel();
+
+        // Then
+        assertNotNull(servePanel);
+        assertNotNull(hubPanel);
+        assertTrue(servePanel instanceof JPanel);
+        assertTrue(hubPanel instanceof JPanel);
+        assertSame(servePanel, ServeManager.getInstance().panel());
+        assertSame(hubPanel, HubManager.getInstance().panel());
+        assertEquals("", servePanel.getOutput());
     }
 }

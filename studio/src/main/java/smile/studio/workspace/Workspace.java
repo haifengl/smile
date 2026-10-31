@@ -36,6 +36,8 @@ import ioa.agent.bot.BotsConfig;
 import smile.io.Paths;
 import smile.io.Read;
 import smile.shell.JShell;
+import smile.studio.ProcessPanel;
+import smile.studio.ServeManager;
 import smile.studio.SmileStudio;
 import smile.studio.bot.BotActivity;
 import smile.studio.bot.BotManager;
@@ -270,6 +272,7 @@ public class Workspace extends JSplitPane {
         setFileExplorerMouseListener();
         setEditorTabsListener();
         setEditorTabCloseCallback();
+        registerServicePanelListeners();
         setLeftComponent(project);
         setRightComponent(agentTabs);
         setResizeWeight(0.55);
@@ -530,10 +533,65 @@ public class Workspace extends JSplitPane {
                             editorTabs.removeTabAt(tabIndex);
                             // openFiles and fileWatcher are already updated inside closeFile().
                         }
+                    } else if (comp == ServeManager.getInstance().panel()) {
+                        editorTabs.removeTabAt(tabIndex);
+                        Thread.ofPlatform().name("serve-tab-stop").daemon(true).start(() -> {
+                            ServeManager.getInstance().stop();
+                            kernelExplorer.refreshLoadedModelIdsAsync();
+                        });
+                    } else if (comp == HubManager.getInstance().panel()) {
+                        editorTabs.removeTabAt(tabIndex);
+                        Thread.ofPlatform().name("hub-tab-stop").daemon(true).start(() -> {
+                            HubManager.getInstance().stop();
+                            SwingUtilities.invokeLater(this::onBotManagerSaved);
+                        });
                     } else {
                         editorTabs.removeTabAt(tabIndex);
                     }
                 });
+    }
+
+    /**
+     * Registers start and stop listeners on {@link ServeManager} and {@link HubManager}
+     * so their {@link ProcessPanel}s automatically dock into and close from {@link #editorTabs}.
+     */
+    private void registerServicePanelListeners() {
+        ServeManager.getInstance().addStartListener(panel -> openServicePanel("Inference Service", panel));
+        ServeManager.getInstance().addStopListener(this::closeServicePanel);
+        HubManager.getInstance().addStartListener(panel -> openServicePanel("Agent Hub", panel));
+        HubManager.getInstance().addStopListener(this::closeServicePanel);
+    }
+
+    /**
+     * Opens or focuses a service {@link ProcessPanel} tab in {@link #editorTabs}.
+     *
+     * @param title the tab title (e.g. {@code "Inference Service"} or {@code "Agent Hub"}).
+     * @param panel the process output panel.
+     */
+    public void openServicePanel(String title, ProcessPanel panel) {
+        if (panel == null) {
+            return;
+        }
+        int index = editorTabs.indexOfComponent(panel);
+        if (index == -1) {
+            editorTabs.addTab(title, panel);
+        }
+        editorTabs.setSelectedComponent(panel);
+    }
+
+    /**
+     * Removes a service {@link ProcessPanel} tab from {@link #editorTabs} if present.
+     *
+     * @param panel the process output panel to remove.
+     */
+    public void closeServicePanel(ProcessPanel panel) {
+        if (panel == null) {
+            return;
+        }
+        int index = editorTabs.indexOfComponent(panel);
+        if (index >= 0) {
+            editorTabs.removeTabAt(index);
+        }
     }
 
     /**

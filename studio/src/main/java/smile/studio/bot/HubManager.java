@@ -20,11 +20,15 @@ package smile.studio.bot;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import javax.swing.SwingUtilities;
 import ioa.agent.bot.ProjectsConfig;
 import smile.shell.Hub;
 import smile.shell.Serve;
-import smile.studio.ProcessFrame;
+import smile.studio.ProcessPanel;
 import smile.studio.ServeManager;
 import smile.studio.StudioConfig;
 
@@ -35,7 +39,7 @@ import smile.studio.StudioConfig;
  * configured {@code host:port} (either launched via {@code smile hub} in a terminal
  * or running remotely), {@link #start(String, int, String)} attaches to it without
  * spawning a second JVM. Otherwise, it launches {@code $SMILE_HOME/hub/quarkus-run.jar}
- * in a {@link ProcessFrame} titled {@code "Agent Hub Service"}, syncs tracked
+ * in a {@link ProcessPanel}, syncs tracked
  * Studio projects from {@code ${smile.home}/conf/projects.json}, and stops the child
  * process on Studio exit unless {@code keepAliveOnExit} is enabled in {@code studio.json}.
  *
@@ -49,9 +53,11 @@ public final class HubManager {
     private static final HubManager INSTANCE = new HubManager();
 
     private final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
+    private final ProcessPanel panel = new ProcessPanel(1000);
+    private final List<Consumer<ProcessPanel>> startListeners = new CopyOnWriteArrayList<>();
+    private final List<Consumer<ProcessPanel>> stopListeners = new CopyOnWriteArrayList<>();
 
     private Process process;
-    private ProcessFrame frame;
     private String host;
     private int port;
     private String adminToken;
@@ -97,6 +103,37 @@ public final class HubManager {
     }
 
     /**
+     * Returns the console output panel for the local Agent Hub process.
+     *
+     * @return the process panel.
+     */
+    public ProcessPanel panel() {
+        return panel;
+    }
+
+    /**
+     * Registers a listener invoked on the Swing EDT when the local Agent Hub process starts.
+     *
+     * @param listener callback receiving the {@link ProcessPanel}.
+     */
+    public void addStartListener(Consumer<ProcessPanel> listener) {
+        if (listener != null) {
+            startListeners.add(listener);
+        }
+    }
+
+    /**
+     * Registers a listener invoked on the Swing EDT when the local Agent Hub process stops.
+     *
+     * @param listener callback receiving the {@link ProcessPanel}.
+     */
+    public void addStopListener(Consumer<ProcessPanel> listener) {
+        if (listener != null) {
+            stopListeners.add(listener);
+        }
+    }
+
+    /**
      * Starts or attaches to the Agent Hub using the settings in {@code studio.json}.
      */
     public synchronized boolean start() {
@@ -124,6 +161,9 @@ public final class HubManager {
         // or running on a remote host), attach to it directly.
         if (this.client.isReady()) {
             logger.info("Attached to running Agent Hub at {}", this.client.baseUrl());
+            if (process != null && process.isAlive()) {
+                notifyStarted();
+            }
             syncTrackedProjects();
             return true;
         }
@@ -148,9 +188,7 @@ public final class HubManager {
             logger.warn("Could not create bot workspace {}: {}", botWorkspace, ex.getMessage());
         }
 
-        frame = new ProcessFrame(1000);
-        frame.setTitle("Agent Hub Service");
-        frame.start(Serve.javaExecutable(),
+        panel.start(Serve.javaExecutable(),
                 "--add-opens", "java.base/java.lang=ALL-UNNAMED",
                 "--add-opens", "java.base/java.nio=ALL-UNNAMED",
                 "--enable-native-access", "ALL-UNNAMED",
@@ -161,8 +199,8 @@ public final class HubManager {
                 "-Dquarkus.http.host=" + this.host,
                 "-Dquarkus.http.port=" + this.port,
                 "-jar", jar.toString());
-        frame.setVisible(true);
-        process = frame.getProcess();
+        process = panel.getProcess();
+        notifyStarted();
 
         if (shutdownHookRegistered.compareAndSet(false, true)) {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -216,16 +254,33 @@ public final class HubManager {
         return false;
     }
 
-    /** Stops the managed local Agent Hub process and disposes its log window. */
+    /** Stops the managed local Agent Hub process. */
     public synchronized void stop() {
-        if (frame != null) {
-            frame.stop();
-            frame.dispose();
-            frame = null;
-        } else if (process != null) {
+        boolean hadProcess = process != null || panel.getProcess() != null;
+        panel.stop();
+        if (process != null) {
             process.descendants().forEach(ProcessHandle::destroy);
             process.destroy();
         }
         process = null;
+        if (hadProcess) {
+            notifyStopped();
+        }
+    }
+
+    private void notifyStarted() {
+        SwingUtilities.invokeLater(() -> {
+            for (Consumer<ProcessPanel> l : startListeners) {
+                l.accept(panel);
+            }
+        });
+    }
+
+    private void notifyStopped() {
+        SwingUtilities.invokeLater(() -> {
+            for (Consumer<ProcessPanel> l : stopListeners) {
+                l.accept(panel);
+            }
+        });
     }
 }
