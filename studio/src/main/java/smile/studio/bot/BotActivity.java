@@ -18,6 +18,8 @@
 package smile.studio.bot;
 
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -244,13 +246,7 @@ public class BotActivity extends JPanel {
         HubManager.getInstance().addStopListener(p -> refreshAllAsync());
 
         JButton configBtn = new JButton("Bot Routines…");
-        configBtn.addActionListener(e -> {
-            var ws = (smile.studio.workspace.Workspace) SwingUtilities.getAncestorOfClass(
-                    smile.studio.workspace.Workspace.class, this);
-            if (ws != null) {
-                ws.openBotManager(null);
-            }
-        });
+        configBtn.addActionListener(e -> openRoutineInBotManager(selectedRoutineId()));
         JButton refreshBtn = new JButton("↻ Refresh");
         refreshBtn.addActionListener(e -> refreshAllAsync());
 
@@ -260,6 +256,90 @@ public class BotActivity extends JPanel {
         top.add(actions, BorderLayout.EAST);
 
         add(top, BorderLayout.NORTH);
+    }
+
+    /**
+     * Returns the routine ID of the currently selected row in the active tab
+     * (Approvals or Run History), or {@code null} if no row with a routine ID is selected.
+     *
+     * @return the selected routine ID, or {@code null}.
+     */
+    public String selectedRoutineId() {
+        if (tabs.getSelectedIndex() == 1) {
+            int row = runsTable.getSelectedRow();
+            if (row >= 0 && row < currentRuns.size()) {
+                String rId = currentRuns.get(row).routineId();
+                if (rId != null && !rId.isBlank()) {
+                    return rId;
+                }
+            }
+        } else {
+            int row = approvalsTable.getSelectedRow();
+            if (row >= 0 && row < currentApprovals.size()) {
+                String rId = currentApprovals.get(row).routineId();
+                if (rId != null && !rId.isBlank()) {
+                    return rId;
+                }
+            }
+        }
+        return null;
+    }
+
+    private void openRoutineInBotManager(String routineId) {
+        var ws = (smile.studio.workspace.Workspace) SwingUtilities.getAncestorOfClass(
+                smile.studio.workspace.Workspace.class, this);
+        if (ws != null) {
+            ws.openBotManager(routineId);
+        }
+    }
+
+    private void attachRoutineNavigationListener(JTable table, int routineColumnIndex) {
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showRoutineContextMenu(e, table);
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if (e.isPopupTrigger()) {
+                    showRoutineContextMenu(e, table);
+                }
+            }
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (SwingUtilities.isLeftMouseButton(e) && e.getClickCount() == 2) {
+                    int row = table.rowAtPoint(e.getPoint());
+                    int col = table.columnAtPoint(e.getPoint());
+                    if (row >= 0 && col >= 0) {
+                        int modelCol = table.convertColumnIndexToModel(col);
+                        if (table == runsTable || modelCol == routineColumnIndex) {
+                            table.setRowSelectionInterval(row, row);
+                            openRoutineInBotManager(selectedRoutineId());
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    private void showRoutineContextMenu(MouseEvent e, JTable table) {
+        int row = table.rowAtPoint(e.getPoint());
+        if (row >= 0) {
+            table.setRowSelectionInterval(row, row);
+        }
+        String routineId = selectedRoutineId();
+        JPopupMenu popup = new JPopupMenu();
+        String label = (routineId != null && !routineId.isBlank())
+                ? "Configure Routine (" + routineId + ")…"
+                : "Bot Routines…";
+        JMenuItem item = new JMenuItem(label);
+        item.addActionListener(ev -> openRoutineInBotManager(routineId));
+        popup.add(item);
+        popup.show(table, e.getX(), e.getY());
     }
 
     private JComponent buildApprovalsTab() {
@@ -291,6 +371,7 @@ public class BotActivity extends JPanel {
                 }
             }
         });
+        attachRoutineNavigationListener(approvalsTable, 4);
 
         structuredPriorArea.setEditable(false);
         structuredPriorArea.setLineWrap(true);
@@ -469,6 +550,7 @@ public class BotActivity extends JPanel {
                 }
             }
         });
+        attachRoutineNavigationListener(runsTable, 2);
 
         transcriptIntents.setLayout(new BoxLayout(transcriptIntents, BoxLayout.Y_AXIS));
         transcriptScroll.getVerticalScrollBar().setUnitIncrement(18);
@@ -710,7 +792,12 @@ public class BotActivity extends JPanel {
         return currentItemDraftMode;
     }
 
-    private void populateRuns(List<HubClient.BotRunSummary> list) {
+    /**
+     * Populates the run history table and preserves or initializes the selected row.
+     *
+     * @param list the run summaries to display.
+     */
+    public void populateRuns(List<HubClient.BotRunSummary> list) {
         Long selectedId = null;
         int prevRow = runsTable.getSelectedRow();
         if (prevRow >= 0 && prevRow < currentRuns.size()) {

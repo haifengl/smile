@@ -396,4 +396,48 @@ public class HubClientAndConfigTest {
         assertTrue(activity.isStartHubButtonVisible(),
                 "Start / Attach Hub button should be shown when Agent Hub is offline");
     }
+
+    @Test
+    public void testBotExplorerAndBotActivityRoutineSelection(@TempDir Path tempHome) {
+        String prevHome = System.getProperty("smile.home");
+        try {
+            System.setProperty("smile.home", tempHome.toString());
+            BotExplorer explorer = new BotExplorer();
+            assertNull(explorer.selectedRoutineId());
+
+            assertTrue(explorer.selectRoutine("julien-community-watch"));
+            assertEquals("julien-community-watch", explorer.selectedRoutineId());
+
+            assertFalse(explorer.selectRoutine("non-existent-routine"));
+            assertFalse(explorer.selectRoutine(""));
+            assertFalse(explorer.selectRoutine(null));
+
+            // BotActivity selectedRoutineId tracks the selected row in the active tab
+            BotActivity activity = new BotActivity(0);
+            assertNull(activity.selectedRoutineId());
+
+            HubClient.BotApprovalItem approvalItem = new HubClient.BotApprovalItem(
+                    10L, 1L, "mike", "mike-outreach", "sales",
+                    "BATCH_DRAFT", "email", "alice@example.com", "Outbound Email Approval",
+                    "{}", null, "PENDING", null, null, "2026-10-30T03:00:00Z", null
+            );
+            activity.populateApprovals(List.of(approvalItem));
+            assertEquals("mike-outreach", activity.selectedRoutineId());
+
+            HubClient.BotRunSummary runItem = new HubClient.BotRunSummary(
+                    20L, "julien", "julien-community-watch", "evangelist", "gpt-5.4", 1L,
+                    "COMPLETED", "2026-10-30T02:00:00Z", "2026-10-30T02:01:00Z",
+                    "", "Completed watch", ""
+            );
+            activity.populateRuns(List.of(runItem));
+            activity.selectTab(1);
+            assertEquals("julien-community-watch", activity.selectedRoutineId());
+        } finally {
+            if (prevHome == null) {
+                System.clearProperty("smile.home");
+            } else {
+                System.setProperty("smile.home", prevHome);
+            }
+        }
+    }
 }

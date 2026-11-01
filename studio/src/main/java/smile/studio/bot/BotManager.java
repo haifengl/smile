@@ -133,6 +133,15 @@ public class BotManager extends JPanel {
     }
 
     /**
+     * Returns the routine ID currently displayed in the Routine Definition form.
+     *
+     * @return the current routine ID (trimmed), or empty string if blank.
+     */
+    public String selectedRoutineId() {
+        return routineIdField.getText().trim();
+    }
+
+    /**
      * Reloads configuration from disk / Agent Hub and prepares the form for a new routine.
      *
      * @param bot optional Bot persona to pre-populate in the form.

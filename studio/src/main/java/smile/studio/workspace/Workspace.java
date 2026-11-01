@@ -595,12 +595,16 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Sets the listener for switching editor tabs to refresh the kernel explorer.
+     * Sets the listener for switching editor tabs to refresh the kernel explorer
+     * or focus the Bot explorer when Bot Routines is selected.
      */
     private void setEditorTabsListener() {
         editorTabs.addChangeListener(e -> {
             if (editorTabs.getSelectedComponent() instanceof Notebook notebook) {
                 kernelExplorer.refresh(notebook.kernel());
+            } else if (editorTabs.getSelectedComponent() == botManager && botManager != null) {
+                explorerTabs.setSelectedComponent(botExplorer);
+                botExplorer.selectRoutine(botManager.selectedRoutineId());
             }
         });
     }
@@ -640,6 +644,8 @@ public class Workspace extends JSplitPane {
             editorTabs.addTab("Bot Routines", botManager);
         }
         editorTabs.setSelectedComponent(botManager);
+        explorerTabs.setSelectedComponent(botExplorer);
+        botExplorer.selectRoutine(botManager.selectedRoutineId());
     }
 
     /**
@@ -657,6 +663,7 @@ public class Workspace extends JSplitPane {
             editorTabs.addTab("Bot Routines", botManager);
         }
         editorTabs.setSelectedComponent(botManager);
+        explorerTabs.setSelectedComponent(botExplorer);
     }
 
     /**
@@ -666,11 +673,15 @@ public class Workspace extends JSplitPane {
         onBotManagerSaved();
         if (botManager != null) {
             botManager.selectRoutine(null);
+            botExplorer.selectRoutine(botManager.selectedRoutineId());
         }
     }
 
     private void onBotManagerSaved() {
         botExplorer.refresh();
+        if (botManager != null) {
+            botExplorer.selectRoutine(botManager.selectedRoutineId());
+        }
         if (botActivity != null) {
             botActivity.refreshAllAsync();
         }
