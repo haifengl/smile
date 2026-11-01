@@ -127,6 +127,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private final JCheckBox emailDefaultCheck = new JCheckBox(bundle.getString("EmailDefault"));
     private final JCheckBox emailEnabledCheck = new JCheckBox(bundle.getString("EmailEnabled"), true);
     private final JTextField emailAddressField = new JTextField(22);
+    private final JTextField emailSenderNameField = new JTextField(18);
     private final JTextField emailDescriptionField = new JTextField(22);
     private final JComboBox<EmailConfig.Provider> emailProviderCombo =
             new JComboBox<>(EmailConfig.Provider.values());
@@ -594,13 +595,14 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 bundle.getString("EmailAddress"), emailAddressField,
                 bundle.getString("EmailProvider"), emailProviderCombo);
         addEmailRow(form, gbc, r++,
-                bundle.getString("EmailDescription"), emailDescriptionField,
-                bundle.getString("EmailFolder"), emailFolderField);
+                bundle.getString("EmailSenderName"), emailSenderNameField,
+                bundle.getString("EmailDescription"), emailDescriptionField);
         addEmailRow(form, gbc, r++,
-                bundle.getString("EmailPollInterval"), emailPollSpinner,
+                bundle.getString("EmailFolder"), emailFolderField,
+                bundle.getString("EmailPollInterval"), emailPollSpinner);
+        addEmailRow(form, gbc, r++,
+                bundle.getString("EmailClientId"), emailClientIdField,
                 bundle.getString("EmailTenantId"), emailTenantIdField);
-        addEmailSingleRow(form, gbc, r++,
-                bundle.getString("EmailClientId"), emailClientIdField);
         addEmailRow(form, gbc, r++,
                 bundle.getString("EmailImapHost"), emailImapHostField,
                 bundle.getString("EmailImapPort"), emailImapPortSpinner);
@@ -731,6 +733,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
     private void clearEmailAccountForm() {
         emailAddressField.setText("");
+        emailSenderNameField.setText("");
         emailDescriptionField.setText("");
         emailProviderCombo.setSelectedItem(EmailConfig.Provider.GMAIL);
         emailPollSpinner.setValue(60);
@@ -758,6 +761,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         EmailConfig.AccountSpec acc = opt.get();
         currentEmailAccountId = acc.emailAddress();
         emailAddressField.setText(acc.emailAddress());
+        emailSenderNameField.setText(acc.senderName() != null ? acc.senderName() : "");
         emailDescriptionField.setText(acc.description() != null ? acc.description() : "");
         emailProviderCombo.setSelectedItem(acc.provider());
         emailPollSpinner.setValue(acc.pollIntervalSeconds());
@@ -804,6 +808,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
             return null;
         }
         EmailConfig.Provider provider = (EmailConfig.Provider) emailProviderCombo.getSelectedItem();
+        String senderName = emailSenderNameField.getText().trim();
         String description = emailDescriptionField.getText().trim();
         int pollSec = ((Number) emailPollSpinner.getValue()).intValue();
         String folder = emailFolderField.getText().trim();
@@ -819,6 +824,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
         return new EmailConfig.AccountSpec(
                 email,
+                senderName.isEmpty() ? null : senderName,
                 description.isEmpty() ? null : description,
                 provider,
                 enabled,
