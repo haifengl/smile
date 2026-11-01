@@ -308,9 +308,12 @@ public class MiniMaxFusedOpsTest {
     }
 
     private void checkSparseDecodeAttention(int length, int[] positions, int topk, int init, int local) {
+        checkSparseDecodeAttention(length, positions, topk, init, local, 16);
+    }
+
+    private void checkSparseDecodeAttention(int length, int[] positions, int topk, int init, int local, int rep) {
         int batch = positions.length;
         int kvHeads = 4;
-        int rep = 16;
         int d = 128;
         int slotsTotal = batch * length + 5;
         Random rnd = new Random(21);
@@ -412,9 +415,12 @@ public class MiniMaxFusedOpsTest {
 
     /** Prefill-style window: {@code seqlen} query tokens per row, token t at {@code start[b] + t}. */
     private void checkSparseWindow(int length, int[] start, int seqlen, int topk, int init, int local) {
+        checkSparseWindow(length, start, seqlen, topk, init, local, 16);
+    }
+
+    private void checkSparseWindow(int length, int[] start, int seqlen, int topk, int init, int local, int rep) {
         int batch = start.length;
         int groups = 4;
-        int rep = 16;
         int d = 128;
         int tokens = batch * seqlen;
         int slotsTotal = batch * length + 3;
@@ -546,5 +552,19 @@ public class MiniMaxFusedOpsTest {
     public void testGivenWindowCrossingBlocksWhenSparseKernelsThenSelectionAndAttentionMatchReference() {
         assumeTrue(available(), "needs CUDA and the fused kernels");
         checkSparseWindow(1500, new int[]{1000}, 300, 16, 1, 2);
+    }
+
+    @Test
+    public void testGivenEightHeadsPerGroupWhenSparseDecodeAttentionThenMatchesReference() {
+        assumeTrue(available(), "needs CUDA and the fused kernels");   // 64 heads over 8 tensor-parallel ranks
+        checkSparseDecodeAttention(2048, new int[]{700, 130, 2047}, 4, 0, 1, 8);
+        checkSparseDecodeAttention(3000, new int[]{5, 2999, 1500, 640}, 16, 1, 2, 8);
+    }
+
+    @Test
+    public void testGivenEightHeadsPerGroupWhenSparseWindowThenSelectionAndAttentionMatchReference() {
+        assumeTrue(available(), "needs CUDA and the fused kernels");
+        checkSparseWindow(1000, new int[]{0, 600}, 8, 4, 0, 1, 8);
+        checkSparseWindow(1500, new int[]{1000}, 300, 16, 1, 2, 8);
     }
 }
