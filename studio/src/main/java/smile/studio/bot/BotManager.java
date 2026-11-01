@@ -223,8 +223,15 @@ public class BotManager extends JPanel {
         addFormRow(form, gbc, row++, "Settle (sec):", settleSpinner, "Max Turns / Hour:", maxTurnsSpinner);
 
         addSectionHeader(form, gbc, row++, "Workflow & Cross-Project Enrichment");
+        workflowKindCombo.addActionListener(e -> {
+            boolean hasTarget = workflowKindCombo.getSelectedItem() != BotsConfig.WorkflowKind.PROMPT;
+            workflowTargetField.setEnabled(hasTarget);
+            if (!hasTarget) {
+                workflowTargetField.setText("");
+            }
+        });
         addFormRow(form, gbc, row++, "Workflow Kind:", workflowKindCombo, "Await Routine ID:", awaitRoutineField);
-        addSingleRow(form, gbc, row++, "Target (Skill / Prompt):", workflowTargetField);
+        addSingleRow(form, gbc, row++, "Target (Skill / Tool):", workflowTargetField);
 
         instructionsArea.setLineWrap(true);
         instructionsArea.setWrapStyleWord(true);
@@ -412,8 +419,18 @@ public class BotManager extends JPanel {
 
         BotsConfig.WorkflowSpec w = routine.workflow();
         workflowKindCombo.setSelectedItem(w.kind());
-        workflowTargetField.setText(w.target());
-        instructionsArea.setText(w.instructions() == null ? "" : w.instructions());
+        if (w.kind() == BotsConfig.WorkflowKind.PROMPT) {
+            workflowTargetField.setText("");
+            workflowTargetField.setEnabled(false);
+            String instructions = (w.instructions() == null || w.instructions().isBlank())
+                    ? (w.target() == null ? "" : w.target())
+                    : w.instructions();
+            instructionsArea.setText(instructions);
+        } else {
+            workflowTargetField.setEnabled(true);
+            workflowTargetField.setText(w.target());
+            instructionsArea.setText(w.instructions() == null ? "" : w.instructions());
+        }
         requireActivityCheck.setSelected(w.requireActivityToday());
         useContextProjectsCheck.setSelected(w.useContextProjects());
         awaitRoutineField.setText(w.awaitRoutineId() == null ? "" : w.awaitRoutineId());
@@ -439,8 +456,9 @@ public class BotManager extends JPanel {
         intervalSpinner.setValue(0);
         endpointCombo.setSelectedItem("");
         workflowKindCombo.setSelectedItem(BotsConfig.WorkflowKind.PROMPT);
-        workflowTargetField.setText("Summarize key updates and stage any outbound actions for approval.");
-        instructionsArea.setText("");
+        workflowTargetField.setText("");
+        workflowTargetField.setEnabled(false);
+        instructionsArea.setText("Summarize key updates and stage any outbound actions for approval.");
         requireActivityCheck.setSelected(false);
         useContextProjectsCheck.setSelected(false);
         awaitRoutineField.setText("");
@@ -488,9 +506,11 @@ public class BotManager extends JPanel {
                 ((Number) maxTurnsSpinner.getValue()).intValue()
         );
 
+        BotsConfig.WorkflowKind wfKind = (BotsConfig.WorkflowKind) workflowKindCombo.getSelectedItem();
+        String wfTarget = wfKind == BotsConfig.WorkflowKind.PROMPT ? "" : workflowTargetField.getText().trim();
         BotsConfig.WorkflowSpec workflow = new BotsConfig.WorkflowSpec(
-                (BotsConfig.WorkflowKind) workflowKindCombo.getSelectedItem(),
-                workflowTargetField.getText().trim(),
+                wfKind,
+                wfTarget,
                 instructionsArea.getText().isBlank() ? null : instructionsArea.getText().trim(),
                 requireActivityCheck.isSelected(),
                 useContextProjectsCheck.isSelected(),

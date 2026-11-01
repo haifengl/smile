@@ -124,7 +124,11 @@ public class BotExplorer extends JPanel {
                     setToolTipText(botItem.bot().description());
                 } else if (object instanceof RoutineTreeItem routineItem) {
                     setText(routineItem.toString());
-                    setToolTipText(routineItem.routine().trigger().source() + ": " + routineItem.routine().workflow().target());
+                    var wf = routineItem.routine().workflow();
+                    String detail = (wf.target() != null && !wf.target().isBlank())
+                            ? wf.target()
+                            : (wf.instructions() != null ? wf.instructions() : "");
+                    setToolTipText(routineItem.routine().trigger().source() + ": " + detail);
                 }
                 return this;
             }
