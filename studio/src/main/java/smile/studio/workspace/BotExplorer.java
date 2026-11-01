@@ -193,6 +193,47 @@ public class BotExplorer extends JPanel {
         }
     }
 
+    /**
+     * Selects and scrolls to the tree node matching the given routine ID, if present.
+     *
+     * @param routineId the routine ID to select in the tree.
+     * @return true if a matching routine node was found and selected.
+     */
+    public boolean selectRoutine(String routineId) {
+        if (routineId == null || routineId.isBlank()) {
+            return false;
+        }
+        for (int i = 0; i < root.getChildCount(); i++) {
+            DefaultMutableTreeNode botNode = (DefaultMutableTreeNode) root.getChildAt(i);
+            for (int j = 0; j < botNode.getChildCount(); j++) {
+                DefaultMutableTreeNode routineNode = (DefaultMutableTreeNode) botNode.getChildAt(j);
+                if (routineNode.getUserObject() instanceof RoutineTreeItem item
+                        && routineId.equalsIgnoreCase(item.routine().routineId())) {
+                    TreePath path = new TreePath(routineNode.getPath());
+                    tree.setSelectionPath(path);
+                    tree.scrollPathToVisible(path);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns the routine ID of the currently selected tree node, or {@code null}
+     * if no routine node is selected.
+     *
+     * @return the selected routine ID, or {@code null}.
+     */
+    public String selectedRoutineId() {
+        TreePath path = tree.getSelectionPath();
+        if (path != null && path.getLastPathComponent() instanceof DefaultMutableTreeNode node
+                && node.getUserObject() instanceof RoutineTreeItem item) {
+            return item.routine().routineId();
+        }
+        return null;
+    }
+
     private void showContextMenu(MouseEvent e) {
         TreePath treePath = tree.getPathForLocation(e.getX(), e.getY());
         Object userObj = null;
