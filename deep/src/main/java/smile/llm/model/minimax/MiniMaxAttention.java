@@ -53,6 +53,18 @@ import static smile.torch.smile_torch_h.smile_module_register_module;
  */
 public class MiniMaxAttention implements Attention {
     private static final TorchNativeAttentionKernel KERNEL = new TorchNativeAttentionKernel();
+    /** Fused MSA select + sparse attention kernels; {@link #setSparseKernel} switches them off to compare with the masked SDPA path. */
+    private static volatile boolean SPARSE_KERNEL = !"0".equals(System.getenv("SMILE_MINIMAX_SPARSE_KERNEL"));
+
+    /**
+     * Enables or disables the fused sparse-attention kernels for the whole process (diagnostics: the fallback is the
+     * reference masked-SDPA path). Captured CUDA graphs must be closed by the caller afterwards.
+     *
+     * @param enabled whether the fused kernels may be used.
+     */
+    static void setSparseKernel(boolean enabled) {
+        SPARSE_KERNEL = enabled;
+    }
 
     final MemorySegment module;
     /** Query and KV heads this rank computes (all of them without tensor parallelism). */
@@ -271,10 +283,12 @@ public class MiniMaxAttention implements Attention {
         if (positions == null || positions.length != batch) {
             throw new IllegalArgumentException("positions length must equal batch size");
         }
+        MiniMaxStep graphStep = MiniMaxStep.current(positions);
+        boolean ragged = graphStep != null && graphStep.fixedLength() > 0;   // captured windows score each row at its own position
         int maxPos = 0;
         for (int p : positions) {
             maxPos = Math.max(maxPos, p);
-            if (seqlen > 1 && p != positions[0]) {
+            if (seqlen > 1 && p != positions[0] && !ragged) {
                 throw new UnsupportedOperationException("multi-token windows require uniform positions");
             }
         }
@@ -363,7 +377,7 @@ public class MiniMaxAttention implements Attention {
      */
     private Tensor sparseKernel(Tensor qRope, Tensor ropeQ, Tensor x, int cacheLen, MiniMaxStep step, double scale) {
         int groups = numGroups;
-        if (groups != numKvHeads || indexCache.numKeyHeads() != 1 || !cachePool.kvIsComputeDtype()
+        if (!SPARSE_KERNEL || groups != numKvHeads || indexCache.numKeyHeads() != 1 || !cachePool.kvIsComputeDtype()
                 || x.dtype() != ScalarType.BFloat16) {
             return null;
         }

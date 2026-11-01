@@ -215,6 +215,103 @@ public class MiniMaxModel extends LayerBlock {
         }
     }
 
+    /** Layers whose input residual stream {@link #forwardAux} captures (DSpark target taps), or {@code null}. */
+    private int[] auxLayers;
+    /** Set for the duration of one {@code forwardAux} call. */
+    private boolean auxCapture;
+    /** The taps of the last {@code forwardAux} call, until {@link #takeAux()}. */
+    private Tensor aux;
+
+    /**
+     * Selects the decoder layers whose output hidden state (the residual stream leaving the layer, before the next
+     * layer's input norm or the final norm) {@link #forwardAux} returns: exactly the DSpark draft's
+     * {@code target_layer_ids} (vLLM captures them as the stream entering layer id + 1).
+     *
+     * @param layerIds strictly increasing layer indices, or {@code null} / empty to disable.
+     */
+    public void setAuxLayers(int... layerIds) {
+        if (layerIds == null || layerIds.length == 0) {
+            auxLayers = null;
+            return;
+        }
+        for (int i = 0; i < layerIds.length; i++) {
+            if (layerIds[i] < 0 || layerIds[i] >= layers.size() || (i > 0 && layerIds[i] <= layerIds[i - 1])) {
+                throw new IllegalArgumentException("aux layers must be strictly increasing layer indices: "
+                        + Arrays.toString(layerIds));
+            }
+        }
+        auxLayers = layerIds.clone();
+    }
+
+    /**
+     * Returns the captured aux layers.
+     * @return the layer indices, or {@code null} when disabled.
+     */
+    public int[] auxLayers() {
+        return auxLayers == null ? null : auxLayers.clone();
+    }
+
+    /**
+     * Same as {@link #forward(Tensor, int, boolean, long[], Tensor)} and additionally captures the hidden states
+     * leaving the {@link #setAuxLayers aux layers}; fetch them with {@link #takeAux()}.
+     *
+     * @param tokens         token ids {@code [B, S]}.
+     * @param startPos       cache start position.
+     * @param allTokenLogits score every position when {@code true}, otherwise only the last.
+     * @param rows           window positions to overwrite, or {@code null}.
+     * @param replacement    replacement embeddings, or {@code null}.
+     * @return float32 logits.
+     */
+    public Tensor forwardAux(Tensor tokens, int startPos, boolean allTokenLogits, long[] rows, Tensor replacement) {
+        requireAux();
+        auxCapture = true;
+        try {
+            return forward(tokens, startPos, allTokenLogits, rows, replacement);
+        } finally {
+            auxCapture = false;
+        }
+    }
+
+    /**
+     * Same as {@link #forward(Tensor, int[])} and additionally captures the aux-layer hidden states.
+     *
+     * @param tokens    token ids {@code [B, 1]}.
+     * @param positions write position per batch row.
+     * @return float32 logits {@code [B, 1, V]}.
+     */
+    public Tensor forwardAux(Tensor tokens, int[] positions) {
+        requireAux();
+        auxCapture = true;
+        try {
+            return forward(tokens, positions);
+        } finally {
+            auxCapture = false;
+        }
+    }
+
+    private void requireAux() {
+        if (auxLayers == null) {
+            throw new IllegalStateException("setAuxLayers was not called");
+        }
+        if (aux != null) {
+            aux.close();
+            aux = null;
+        }
+    }
+
+    /**
+     * Returns the hidden states captured by the last {@code forwardAux} call: {@code [B * S, numAuxLayers * dim]},
+     * rows in token order (batch-major), the layers concatenated in {@link #auxLayers()} order. The caller owns the
+     * tensor (not tracked by any scope) and must close it. The values are identical on every tensor-parallel rank.
+     *
+     * @return the taps, or {@code null} if none were captured.
+     */
+    public Tensor takeAux() {
+        Tensor t = aux;
+        aux = null;
+        return t;
+    }
+
     /**
      * Prefill / multi-token window forward at a uniform cache position.
      *
@@ -377,6 +474,10 @@ public class MiniMaxModel extends LayerBlock {
             e.close();
         }
         graphs.clear();
+        for (WindowEntry e : windowGraphs.values()) {
+            e.close();
+        }
+        windowGraphs.clear();
     }
 
     /**
@@ -480,6 +581,224 @@ public class MiniMaxModel extends LayerBlock {
         }
     }
 
+    // ------------------------------------------------------------------ CUDA-graph verify windows
+
+    /**
+     * One captured window forward (the speculative verify of {@code batch} requests, {@code seqlen} rows each) for a
+     * fixed attention window.
+     */
+    private static final class WindowEntry implements AutoCloseable {
+        final int batch;
+        final int seqlen;
+        final int length;
+        final int auxWidth;
+        /**
+         * Static input, int64: tokens[B*S] | start positions[B] | write slots[B*S] | read slots[B*length] | rope rows[B*S].
+         */
+        final Tensor meta;
+        final Tensor keyPos;
+        final Tensor logits;
+        /** The taps of the window, {@code [B*S, auxWidth]}, or {@code null} when no aux layers are selected. */
+        final Tensor aux;
+        MemorySegment graph;
+
+        WindowEntry(Device device, int batch, int seqlen, int length, int vocab, int auxWidth, ScalarType dtype) {
+            this.batch = batch;
+            this.seqlen = seqlen;
+            this.length = length;
+            this.auxWidth = auxWidth;
+            var ints = new Tensor.Options().device(device).dtype(ScalarType.Int64).requireGradients(false);
+            var floats = new Tensor.Options().device(device).dtype(ScalarType.Float).requireGradients(false);
+            var compute = new Tensor.Options().device(device).dtype(dtype).requireGradients(false);
+            meta = Tensor.zeros(ints, 3L * batch * seqlen + batch + (long) batch * length);
+            long[] grid = new long[length];
+            for (int i = 0; i < length; i++) {
+                grid[i] = i;
+            }
+            keyPos = Tensor.of(grid, 1, length).to(device);
+            logits = Tensor.zeros(floats, batch, seqlen, vocab);
+            aux = auxWidth > 0 ? Tensor.zeros(compute, (long) batch * seqlen, auxWidth) : null;
+            for (Tensor t : new Tensor[]{meta, keyPos, logits, aux}) {
+                if (t != null) {
+                    t.detachFromScopes();
+                }
+            }
+        }
+
+        @Override
+        public void close() {
+            if (graph != null) {
+                smile.torch.Native.cudaGraphDestroy(graph);
+                graph = null;
+            }
+            meta.close();
+            keyPos.close();
+            logits.close();
+            if (aux != null) {
+                aux.close();
+            }
+        }
+    }
+
+    private final java.util.Map<Long, WindowEntry> windowGraphs = new java.util.HashMap<>();
+
+    private boolean windowGraphEligible(int batch, int seqlen, int maxPos) {
+        return graphEligible(batch) && seqlen >= 2 && seqlen <= 16 && maxPos + seqlen <= params.maxSeqLen()
+                && params.numSparseLayers() == params.numLayers();   // the window mask is only implemented by the sparse kernels
+    }
+
+    /**
+     * Verify windows through a captured CUDA graph: for each of {@code B} requests, {@code seqlen} tokens at positions
+     * {@code [pos[b], pos[b] + seqlen)}, scored at every row, plus the aux taps of every row when {@link #setAuxLayers}
+     * is on (left for {@link #takeAux()} as {@code [B * seqlen, width]}). The batch is padded to a power of two with
+     * copies of row 0, like {@link #decodeGraph}. Same capture protocol: two eager warm-ups, then capture; later calls
+     * only refill the static metadata and replay. The KV pool must have been activated for these requests in order.
+     *
+     * @param tokens  the window tokens, row-major {@code [B, seqlen]} (anchor then drafts of each request).
+     * @param pos     absolute position of the first token of each request.
+     * @param seqlen  rows per request.
+     * @return float32 logits {@code [B * seqlen, V]} (a fresh tensor), or {@code null} when graphs are off or not
+     *         applicable and the caller must run the eager window forward.
+     */
+    public Tensor windowGraph(long[] tokens, int[] pos, int seqlen) {
+        int real = pos.length;
+        int maxPos = 0;
+        for (int p : pos) {
+            maxPos = Math.max(maxPos, p);
+        }
+        if (tokens.length != real * seqlen || !windowGraphEligible(real, seqlen, maxPos)) {
+            return null;
+        }
+        int batch = Integer.highestOneBit(real) == real ? real : Integer.highestOneBit(real) << 1;
+        if (batch > GRAPH_MAX_BATCH) {
+            return null;
+        }
+        int length = graphWindow(maxPos + seqlen);
+        long key = ((long) batch << 40) | ((long) seqlen << 32) | length;
+        WindowEntry entry = windowGraphs.get(key);
+        if (entry == null && windowGraphs.size() >= GRAPH_MAX_ENTRIES) {
+            return null;
+        }
+        Device device = kvCachePool.device();
+        int auxWidth = auxLayers == null ? 0 : auxLayers.length * params.dim();
+        int[] positions = java.util.Arrays.copyOf(pos, batch);
+        long[] write = java.util.Arrays.copyOf(kvCachePool.slotIndices(pos, seqlen), batch * seqlen);
+        long[] read = java.util.Arrays.copyOf(kvCachePool.slotIndices(length), batch * length);
+        long[] ids = java.util.Arrays.copyOf(tokens, batch * seqlen);
+        for (int b = real; b < batch; b++) {   // padded rows repeat request 0: same tokens, slots and positions
+            positions[b] = pos[0];
+            System.arraycopy(tokens, 0, ids, b * seqlen, seqlen);
+            System.arraycopy(write, 0, write, b * seqlen, seqlen);
+            System.arraycopy(read, 0, read, b * length, length);
+        }
+        long[] host = new long[3 * batch * seqlen + batch + batch * length];
+        int at = 0;
+        System.arraycopy(ids, 0, host, at, batch * seqlen);
+        at += batch * seqlen;
+        for (int b = 0; b < batch; b++) {
+            host[at++] = positions[b];
+        }
+        System.arraycopy(write, 0, host, at, batch * seqlen);
+        at += batch * seqlen;
+        System.arraycopy(read, 0, host, at, batch * length);
+        at += batch * length;
+        for (int b = 0; b < batch; b++) {
+            for (int i = 0; i < seqlen; i++) {
+                host[at++] = positions[b] + i;
+            }
+        }
+        try {
+            boolean fresh = entry == null;
+            if (fresh) {
+                entry = new WindowEntry(device, batch, seqlen, length, params.vocabSize(), auxWidth, kvCachePool.computeDtype());
+                windowGraphs.put(key, entry);
+            }
+            try (Tensor src = Tensor.of(host)) {
+                smile.torch.Native.copy_(entry.meta, src);
+            }
+            if (fresh) {
+                for (int i = 0; i < 2; i++) {
+                    windowForward(entry, positions);
+                }
+                entry.graph = smile.torch.Native.cudaGraphCreate();
+                int deviceIndex = Byte.toUnsignedInt(device.index());
+                long t0 = System.nanoTime();
+                smile.torch.Native.cudaGraphCaptureBegin(entry.graph, deviceIndex);
+                try {
+                    windowForward(entry, positions);
+                } finally {
+                    smile.torch.Native.cudaGraphCaptureEnd(entry.graph);
+                }
+                graphLog.info("captured MiniMax verify-window graph batch={} rows={} window={} in {} ms ({} windows)", batch,
+                        seqlen, length, (System.nanoTime() - t0) / 1_000_000, windowGraphs.size());
+            }
+            smile.torch.Native.cudaGraphReplay(entry.graph);
+            if (entry.aux != null) {
+                if (aux != null) {
+                    aux.close();
+                }
+                try (var rows = Index.slice(0, real * seqlen)) {
+                    aux = entry.aux.get(rows, Index.Colon).copy();
+                }
+                aux.detachFromScopes();
+            }
+            try (var rows = Index.slice(0, real)) {
+                return entry.logits.get(rows).reshape((long) real * seqlen, -1).copy();
+            }
+        } catch (RuntimeException e) {
+            graphLog.warn("MiniMax verify-window CUDA graph failed, falling back to eager windows: {}", e.toString());
+            if (System.getenv("SMILE_MINIMAX_GRAPH_DEBUG") != null) {
+                e.printStackTrace();
+            }
+            graphsDisabled = true;
+            closeGraphs();
+            return null;
+        }
+    }
+
+    /** The window forward pass reading all per-step data from the entry's static buffers; fills the static outputs. */
+    private void windowForward(WindowEntry e, int[] positions) {
+        int b = e.batch;
+        int s = e.seqlen;
+        int rows = b * s;
+        AutoScope scope = new AutoScope();
+        Tensor.push(scope);
+        MiniMaxStep step = null;
+        boolean previous = auxCapture;
+        try {
+            int at = 0;
+            Tensor tokens = e.meta.get(Index.slice(at, at + rows)).reshape(b, s);
+            at += rows;
+            Tensor pos = e.meta.get(Index.slice(at, at + b));
+            at += b;
+            Tensor write = e.meta.get(Index.slice(at, at + rows));
+            at += rows;
+            Tensor read = e.meta.get(Index.slice(at, at + b * e.length));
+            at += b * e.length;
+            Tensor ropeRows = e.meta.get(Index.slice(at, at + rows));
+            step = MiniMaxStep.beginExternal(positions, new MiniMaxStep.External(pos, write, read, e.keyPos, e.length, s));
+            // One row per token ([B * S, R]): the fused norm+RoPE kernel indexes token t at row t.
+            Tensor cos = rope.cos().get(ropeRows);
+            Tensor sin = rope.sin().get(ropeRows);
+            Tensor h = embed(tokens);
+            auxCapture = e.aux != null;
+            Tensor logits = run(h, positions, cos, sin, null, true);
+            smile.torch.Native.copy_(e.logits, logits);
+            if (e.aux != null) {
+                try (Tensor taps = takeAux()) {
+                    smile.torch.Native.copy_(e.aux, taps);
+                }
+            }
+        } finally {
+            auxCapture = previous;
+            if (step != null) {
+                step.close();
+            }
+            Tensor.pop();
+            scope.close();
+        }
+    }
+
     /** The decode forward pass reading all per-step data from the entry's static buffers. */
     private Tensor graphForward(GraphEntry e, int[] positions) {
         int b = e.batch;
@@ -492,7 +811,7 @@ public class MiniMaxModel extends LayerBlock {
             Tensor write = e.meta.get(Index.slice(2 * b, 3 * b));
             Tensor read = e.meta.get(Index.slice(3 * b, 3 * b + b * e.length));
             step = MiniMaxStep.beginExternal(positions,
-                    new MiniMaxStep.External(pos, write, read, e.keyPos, e.length));
+                    new MiniMaxStep.External(pos, write, read, e.keyPos, e.length, 1));
             Tensor cos = rope.cos().get(pos).unsqueeze(1);
             Tensor sin = rope.sin().get(pos).unsqueeze(1);
             Tensor h = embed(tokens);
@@ -530,6 +849,33 @@ public class MiniMaxModel extends LayerBlock {
         return out;
     }
 
+    /**
+     * Looks up token embeddings outside a forward pass (DSpark draft inputs). With a vocabulary-split embedding this is
+     * a collective: every rank must call it with the same ids, each from its own thread.
+     *
+     * @param ids int64 token ids {@code [n]} on this rank's device.
+     * @return embeddings {@code [n, dim]} (caller owns).
+     */
+    Tensor embedIds(Tensor ids) {
+        try (var noGrad = Tensor.noGradGuard();
+             Tensor tokens = ids.reshape(1, -1)) {
+            return embed(tokens).reshape(-1, params.dim()).copy();
+        }
+    }
+
+    /**
+     * The output head on already final-normed hidden states (DSpark draft logits); a collective with a vocabulary-split
+     * head, like {@link #embedIds}.
+     *
+     * @param hidden {@code [n, dim]} on this rank's device.
+     * @return float32 logits {@code [n, vocab]} (caller owns).
+     */
+    Tensor headLogits(Tensor hidden) {
+        try (var noGrad = Tensor.noGradGuard()) {
+            return project(hidden).to(ScalarType.Float).copy();
+        }
+    }
+
     /** Output head: the full-vocabulary logits (a vocabulary-split head is gathered across ranks). */
     private Tensor project(Tensor hidden) {
         Tensor local = lmHead.forward(hidden);
@@ -550,8 +896,21 @@ public class MiniMaxModel extends LayerBlock {
 
     private Tensor run(Tensor h, int[] positions, Tensor cos, Tensor sin, Tensor mask,
                        boolean allTokenLogits) {
+        List<Tensor> taps = auxCapture ? new ArrayList<>() : null;
+        int index = 0;
+        int tap = 0;
         for (MiniMaxBlock layer : layers) {
             h = layer.forward(h, positions, cos, sin, mask);
+            if (taps != null && tap < auxLayers.length && auxLayers[tap] == index) {
+                taps.add(h.reshape(-1, params.dim()));
+                tap++;
+            }
+            index++;
+        }
+        if (taps != null) {
+            Tensor joined = taps.size() == 1 ? taps.get(0).copy() : Tensor.hstack(taps.toArray(new Tensor[0]));
+            joined.detachFromScopes();
+            aux = joined;
         }
         Tensor normalized = norm.forward(h);
         int seqlen = (int) normalized.shape()[1];
