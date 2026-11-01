@@ -75,3 +75,11 @@ tasks.withType<JavaCompile> {
 tasks.withType<Javadoc> {
     enabled = false
 }
+
+tasks.register<Copy>("copyServeToStudio") {
+    dependsOn(tasks.quarkusBuild)
+    from(layout.buildDirectory.dir("quarkus-app"))
+    into("$rootDir/studio/src/universal/serve")
+}
+
+tasks.build { finalizedBy("copyServeToStudio") }
