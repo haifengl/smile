@@ -102,8 +102,9 @@
             "maxTurnsPerHour": 10
           },
           "workflow": {
-            "kind": "PROMPT",
-            "target": "Triage the inbound email(s). Check active priorities in MEMORY.md, delegate specialist tasks via AgentRequest, and stage any outbound reply into the Batch Draft Queue for approval.",
+            "kind": "TOOL",
+            "target": "Email",
+            "instructions": "Triage the inbound email(s). Check active priorities in MEMORY.md, delegate specialist tasks via AgentRequest, and stage any outbound reply into the Batch Draft Queue for approval.",
             "requireActivityToday": false,
             "useContextProjects": false
           },
@@ -130,7 +131,8 @@
           },
           "workflow": {
             "kind": "PROMPT",
-            "target": "For calendar.invite/updated, check schedule conflicts and ask the user whether to Accept/Decline. For calendar.reminder, prepare a pre-meeting brief with attendee/project context.",
+            "target": "",
+            "instructions": "For calendar.invite/updated, check schedule conflicts and ask the user whether to Accept/Decline. For calendar.reminder, prepare a pre-meeting brief with attendee/project context.",
             "requireActivityToday": false,
             "useContextProjects": false
           },
@@ -166,7 +168,8 @@
           },
           "workflow": {
             "kind": "PROMPT",
-            "target": "Scan Hacker News, Reddit, GitHub Discussions, and Stack Overflow for new threads matching SMILE / Halo.ai / JVM ML topics not in .smile/memory/community-feed.json. Record high-signal threads, forward buying signals to @mike, and trigger julien-community-post if urgent questions need answers.",
+            "target": "",
+            "instructions": "Scan Hacker News, Reddit, GitHub Discussions, and Stack Overflow for new threads matching SMILE / Halo.ai / JVM ML topics not in .smile/memory/community-feed.json. Record high-signal threads, forward buying signals to @mike, and trigger julien-community-post if urgent questions need answers.",
             "requireActivityToday": false,
             "useContextProjects": false
           },
@@ -281,8 +284,9 @@
             "maxTurnsPerHour": 10
           },
           "workflow": {
-            "kind": "PROMPT",
-            "target": "Update prospect stage in .smile/memory/pipeline.json, coordinate meeting scheduling with @frank if requested, and stage a reply draft for user approval.",
+            "kind": "TOOL",
+            "target": "Email",
+            "instructions": "Update prospect stage in .smile/memory/pipeline.json, coordinate meeting scheduling with @frank if requested, and stage a reply draft for user approval.",
             "requireActivityToday": false,
             "useContextProjects": false
           },
