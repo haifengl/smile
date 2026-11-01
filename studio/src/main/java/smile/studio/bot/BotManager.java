@@ -72,6 +72,7 @@ public class BotManager extends JPanel {
     private final JComboBox<BotsConfig.WorkflowKind> workflowKindCombo =
             new JComboBox<>(BotsConfig.WorkflowKind.values());
     private final JTextField workflowTargetField = new JTextField(26);
+    private final JLabel instructionsLabel = new JLabel("Instructions:");
     private final JTextArea instructionsArea = new JTextArea(4, 32);
     private final JCheckBox requireActivityCheck = new JCheckBox("Skip if persona had 0 sessions today");
     private final JCheckBox useContextProjectsCheck = new JCheckBox("Enrich prompt with Studio Context Projects");
@@ -223,19 +224,13 @@ public class BotManager extends JPanel {
         addFormRow(form, gbc, row++, "Settle (sec):", settleSpinner, "Max Turns / Hour:", maxTurnsSpinner);
 
         addSectionHeader(form, gbc, row++, "Workflow & Cross-Project Enrichment");
-        workflowKindCombo.addActionListener(e -> {
-            boolean hasTarget = workflowKindCombo.getSelectedItem() != BotsConfig.WorkflowKind.PROMPT;
-            workflowTargetField.setEnabled(hasTarget);
-            if (!hasTarget) {
-                workflowTargetField.setText("");
-            }
-        });
+        workflowKindCombo.addActionListener(e -> updateWorkflowFieldStates());
         addFormRow(form, gbc, row++, "Workflow Kind:", workflowKindCombo, "Await Routine ID:", awaitRoutineField);
         addSingleRow(form, gbc, row++, "Target (Skill / Tool):", workflowTargetField);
 
         instructionsArea.setLineWrap(true);
         instructionsArea.setWrapStyleWord(true);
-        addSingleRow(form, gbc, row++, "Instructions:", new JScrollPane(instructionsArea));
+        addSingleRow(form, gbc, row++, instructionsLabel, new JScrollPane(instructionsArea));
         addFormRow(form, gbc, row++, "", requireActivityCheck, "", useContextProjectsCheck);
 
         addSectionHeader(form, gbc, row++, "Session & Approval Guardrails");
@@ -419,15 +414,13 @@ public class BotManager extends JPanel {
 
         BotsConfig.WorkflowSpec w = routine.workflow();
         workflowKindCombo.setSelectedItem(w.kind());
+        updateWorkflowFieldStates();
         if (w.kind() == BotsConfig.WorkflowKind.PROMPT) {
-            workflowTargetField.setText("");
-            workflowTargetField.setEnabled(false);
             String instructions = (w.instructions() == null || w.instructions().isBlank())
                     ? (w.target() == null ? "" : w.target())
                     : w.instructions();
             instructionsArea.setText(instructions);
         } else {
-            workflowTargetField.setEnabled(true);
             workflowTargetField.setText(w.target());
             instructionsArea.setText(w.instructions() == null ? "" : w.instructions());
         }
@@ -456,12 +449,25 @@ public class BotManager extends JPanel {
         intervalSpinner.setValue(0);
         endpointCombo.setSelectedItem("");
         workflowKindCombo.setSelectedItem(BotsConfig.WorkflowKind.PROMPT);
-        workflowTargetField.setText("");
-        workflowTargetField.setEnabled(false);
+        updateWorkflowFieldStates();
         instructionsArea.setText("Summarize key updates and stage any outbound actions for approval.");
         requireActivityCheck.setSelected(false);
         useContextProjectsCheck.setSelected(false);
         awaitRoutineField.setText("");
+    }
+
+    private void updateWorkflowFieldStates() {
+        BotsConfig.WorkflowKind kind = (BotsConfig.WorkflowKind) workflowKindCombo.getSelectedItem();
+        boolean hasTarget = kind != BotsConfig.WorkflowKind.PROMPT;
+        workflowTargetField.setEnabled(hasTarget);
+        if (!hasTarget) {
+            workflowTargetField.setText("");
+        }
+        boolean instructionsRequired = kind == BotsConfig.WorkflowKind.TOOL
+                || kind == BotsConfig.WorkflowKind.PROMPT;
+        instructionsLabel.setText(instructionsRequired
+                ? "Instructions (Required):"
+                : "Instructions (Optional):");
     }
 
     private void saveCurrentRoutineAndConfig() {
@@ -508,10 +514,31 @@ public class BotManager extends JPanel {
 
         BotsConfig.WorkflowKind wfKind = (BotsConfig.WorkflowKind) workflowKindCombo.getSelectedItem();
         String wfTarget = wfKind == BotsConfig.WorkflowKind.PROMPT ? "" : workflowTargetField.getText().trim();
+        String wfInstructions = instructionsArea.getText().trim();
+
+        if ((wfKind == BotsConfig.WorkflowKind.SKILL || wfKind == BotsConfig.WorkflowKind.TOOL)
+                && wfTarget.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Target (Skill / Tool) is required when Workflow Kind is " + wfKind + ".",
+                    "Validation",
+                    JOptionPane.WARNING_MESSAGE);
+            workflowTargetField.requestFocusInWindow();
+            return;
+        }
+        if ((wfKind == BotsConfig.WorkflowKind.TOOL || wfKind == BotsConfig.WorkflowKind.PROMPT)
+                && wfInstructions.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Instructions are required when Workflow Kind is " + wfKind + ".",
+                    "Validation",
+                    JOptionPane.WARNING_MESSAGE);
+            instructionsArea.requestFocusInWindow();
+            return;
+        }
+
         BotsConfig.WorkflowSpec workflow = new BotsConfig.WorkflowSpec(
                 wfKind,
                 wfTarget,
-                instructionsArea.getText().isBlank() ? null : instructionsArea.getText().trim(),
+                wfInstructions.isEmpty() ? null : wfInstructions,
                 requireActivityCheck.isSelected(),
                 useContextProjectsCheck.isSelected(),
                 awaitRoutineField.getText().isBlank() ? null : awaitRoutineField.getText().trim()
@@ -597,10 +624,14 @@ public class BotManager extends JPanel {
     }
 
     private static void addSingleRow(JPanel panel, GridBagConstraints gbc, int row, String label, Component field) {
+        addSingleRow(panel, gbc, row, new JLabel(label), field);
+    }
+
+    private static void addSingleRow(JPanel panel, GridBagConstraints gbc, int row, JLabel label, Component field) {
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weightx = 0.0;
-        panel.add(new JLabel(label), gbc);
+        panel.add(label, gbc);
 
         gbc.gridx = 1;
         gbc.gridwidth = 3;

@@ -348,11 +348,11 @@ Select any routine in the **Bots** explorer tab (or right-click to choose **New 
 
 #### Workflow & Cross-Project Enrichment
 - **Workflow Kind:**
-  - `SKILL` — Invokes an agent slash skill (e.g., `daily-log`, `daily-recap`, `social-writing`, `signal-scanning`, `cold-email`).
-  - `PROMPT` — Sends the `Instructions` text as a direct instruction prompt (`Target` is disabled).
-  - `TOOL` — Instructs the agent to execute a specific tool (e.g., `Email`).
-- **Target (Skill / Tool):** Skill name or tool name (enabled when `Workflow Kind` is `SKILL` or `TOOL`).
-- **Instructions:** Natural-language prompt instructions for the workflow (supports `${smile.home}` placeholder expansion).
+  - `SKILL` — Invokes an agent slash skill (e.g., `daily-log`, `daily-recap`, `social-writing`, `signal-scanning`, `cold-email`). `Target` is required; `Instructions` are optional.
+  - `PROMPT` — Sends the `Instructions` text as a direct instruction prompt (`Target` is disabled; `Instructions` are required).
+  - `TOOL` — Instructs the agent to execute a specific tool (e.g., `Email`). Both `Target` and `Instructions` are required.
+- **Target (Skill / Tool):** Skill name or tool name (required when `Workflow Kind` is `SKILL` or `TOOL`; disabled for `PROMPT`).
+- **Instructions:** Natural-language prompt instructions for the workflow (required for `TOOL` and `PROMPT`, optional for `SKILL`; supports `${smile.home}` placeholder expansion).
 - **Await Routine ID:** Optional upstream `routineId` dependency (e.g., `frank-daily-recap` awaits `daily-log`; `mike-outreach-sweep` awaits `mike-signal-watch`). If the upstream routine has not completed today, Agent Hub runs it first.
 - **Skip if persona had 0 sessions today (`requireActivityToday`):** Skips waking the LLM when the persona had no modified sessions today.
 - **Enrich prompt with Studio Context Projects (`useContextProjects`):** Appends the list of tracked Studio project paths and `.smile/` directories from `conf/projects.json` to the turn prompt.
