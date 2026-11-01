@@ -368,6 +368,30 @@ per-request generation stays ~17 tok/s with the batch saturated. Qwen AWQ via
 `compressed-tensors` / Marlin is not supported yet (detector currently treats
 cards such as `cyankiwi/Qwen3.8-27B-AWQ-INT4` as dense).
 
+### MiniMax-M3.1-Flash with DSpark speculative decoding
+
+MiniMax-M3.1-Flash ships a small draft model (`dspark/`, 2.3 GB) that proposes 7 tokens per round; the target verifies them in one
+CUDA-graph forward and keeps the longest matching prefix, so the output distribution is unchanged (greedy output can differ from
+plain decoding only through bf16 near-ties, which this model has plenty of). It is on by default when the checkpoint has the
+`dspark/` folder (`smile.chat.speculative=false` or `SMILE_MINIMAX_DSPARK=0` turns it off). It works with prefix reuse, tool
+calls, sampling and chunked prefill; multimodal requests decode plainly.
+
+Setup: 8x A100 40 GB, tensor-parallel non-expert weights, greedy, 8 chat prompts, 128 new tokens, warm graphs.
+
+| | Plain decode | DSpark (7 drafts) |
+|---|---|---|
+| One request | 25.4 ms/token (39 tok/s) | **11.7 ms/token (85 tok/s, 2.2x)** |
+| Drafts per round 3 / 4 / 5 / 6 | n/a | 71 / 77 / 79 / 80 tok/s |
+| 2 concurrent requests (aggregate) | 64 tok/s | 117 tok/s |
+| 4 concurrent requests (aggregate) | 121 tok/s | 140 tok/s |
+| 8 concurrent requests (aggregate) | 204 tok/s | 164 tok/s |
+
+Drafting is sequential per request (about 6 ms each), so the gain shrinks with concurrency; the service therefore lets at most 4
+requests speculate at once unless `smile.chat.speculative-max-concurrency` says otherwise (the rest use batched plain decode).
+The draft costs about 3 GB on GPU 0: lower `smile.chat.mem-fraction-static` accordingly or set `SMILE_MINIMAX_VISION=0`
+(on 40 GB cards 0.92 worked without the vision tower). Other knobs: `SMILE_MINIMAX_DSPARK_SNAPSHOTS` (draft contexts kept for prefix
+reuse, default 8), `SMILE_MINIMAX_SPARSE_KERNEL=0` (reference attention path, slower).
+
 ### Qwen3.8 27B with MTP speculative decoding
 
 Qwen3.5/3.8 checkpoints ship a native multi-token-prediction (MTP) head. With
@@ -441,9 +465,9 @@ Controls (all default to the values that were benchmarked):
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `smile.chat.speculative` | `true` | MTP speculation for Qwen3.5/3.8 checkpoints with MTP weights (ignored for other models). Set `false` to disable. |
-| `smile.chat.speculative-tokens` | `0` (model default; 3 for Qwen3.8-27B) | Draft depth. Measured aggregate tok/s at 1 / 8 / 16 requests: depth 1: 47 / 203 / 387; depth 2: 53 / 216-236 / 408-441; depth 3 (default): 55 / 232 / 446; depth 4: 54 / 241 / 439. Depths 2-4 are within noise; depth 1 is slower. |
-| `smile.chat.speculative-max-concurrency` | `0` (= `max-batch-size`) | Requests that may speculate at once. A request keeps its speculation slot for its whole life; requests beyond the limit use batched plain decode. Speculating only part of a large cohort is slower than all or none, so leave unlimited unless you need to bound checkpoint memory. |
+| `smile.chat.speculative` | `true` | MTP speculation for Qwen3.5/3.8 checkpoints with MTP weights, DSpark speculation for MiniMax-M3.1-Flash checkpoints with a `dspark/` folder (ignored for other models). Set `false` to disable. |
+| `smile.chat.speculative-tokens` | `0` (model default; 3 for Qwen3.8-27B, 7 for MiniMax DSpark) | Draft depth. Measured aggregate tok/s at 1 / 8 / 16 requests: depth 1: 47 / 203 / 387; depth 2: 53 / 216-236 / 408-441; depth 3 (default): 55 / 232 / 446; depth 4: 54 / 241 / 439. Depths 2-4 are within noise; depth 1 is slower. |
+| `smile.chat.speculative-max-concurrency` | `0` (= `max-batch-size`; 4 for MiniMax) | Requests that may speculate at once. A request keeps its speculation slot for its whole life; requests beyond the limit use batched plain decode. Speculating only part of a large cohort is slower than all or none, so leave unlimited unless you need to bound checkpoint memory. |
 | `SMILE_DECODE_CUDA_GRAPH` | on | Capture plain decode steps as CUDA graphs (needs FlashInfer attention, the default backend; uniform batches only). A capture failure turns graphs off for the process and decode continues eagerly. `0` disables. |
 | `SMILE_VERIFY_CUDA_GRAPH` | on | Capture the verify forward as one CUDA graph (one capture per session). `0` disables. |
 | `SMILE_MTP_HISTORY` | on | Draft head keeps a persistent per-request KV of the whole prefix (prompt and accepted tokens). `0` restores the context-free legacy head (about half the accept rate). |

@@ -50,8 +50,10 @@ final class MiniMaxStep implements AutoCloseable {
      * @param read      int64 {@code [B * length]} slots of positions {@code [0, length)}.
      * @param keyPos    int64 {@code [1, length]} the grid {@code 0..length-1}.
      * @param length    padded attention window.
+     * @param seqlen    tokens per row written this step ({@code write} holds {@code B * seqlen} slots); 1 for decode,
+     *                  the window length for a speculative verify.
      */
-    record External(Tensor positions, Tensor write, Tensor read, Tensor keyPos, int length) { }
+    record External(Tensor positions, Tensor write, Tensor read, Tensor keyPos, int length, int seqlen) { }
 
     private final int[] positions;
     private final External external;
@@ -159,7 +161,7 @@ final class MiniMaxStep implements AutoCloseable {
      */
     Tensor writeSlots(KvCachePool pool, int seqlen) {
         if (external != null) {
-            return seqlen == 1 ? external.write() : null;
+            return seqlen == external.seqlen() ? external.write() : null;
         }
         String key = "write:" + seqlen;
         Object v = cache.get(key);

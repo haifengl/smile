@@ -149,4 +149,105 @@ public class MiniMaxModelTest {
             }
         }
     }
+
+    @Test
+    public void testGivenAuxLayersWhenForwardAuxThenTapsAreLayerOutputs() throws IOException {
+        MiniMaxModelArgs args = args();
+        MiniMaxModel model = tinyModel(args);
+        KvCachePool pool = model.kvCachePool();
+        int dim = args.dim();
+        long[] seq = {5, 9, 11, 3, 7};
+        model.setAuxLayers(0, 2, 3);
+        assertArrayEquals(new int[]{0, 2, 3}, model.auxLayers());
+
+        pool.bindRequests(1, 8);
+        float[] plain;
+        try (Tensor tokens = Tensor.of(seq, 1, 5);
+             Tensor logits = model.forward(tokens, 0, false)) {
+            plain = logits.floatArray();
+        } finally {
+            pool.unbindRequests();
+        }
+
+        pool.bindRequests(1, 8);
+        float[] withAux;
+        float[] viaTap;
+        try (Tensor tokens = Tensor.of(seq, 1, 5);
+             Tensor logits = model.forwardAux(tokens, 0, false, null, null);
+             Tensor aux = model.takeAux()) {
+            withAux = logits.floatArray();
+            assertArrayEquals(new long[]{5, 3L * dim}, aux.shape());
+            assertNull(model.takeAux(), "taps are handed out once");
+            // The last layer's tap is the stream the final norm and the output head consume.
+            try (Tensor last = aux.get(smile.deep.tensor.Index.Colon, smile.deep.tensor.Index.slice(2L * dim, 3L * dim));
+                 Tensor row = last.get(smile.deep.tensor.Index.slice(4, 5)).unsqueeze(0).copy();
+                 Tensor normed = model.norm.forward(row);
+                 Tensor projected = model.lmHead.forward(normed).to(smile.deep.tensor.ScalarType.Float).copy()) {
+                viaTap = projected.floatArray();
+            }
+            float[] t = aux.to(smile.deep.tensor.ScalarType.Float).floatArray();
+            boolean differs = false;
+            for (int k = 0; k < t.length; k++) {
+                assertTrue(Float.isFinite(t[k]));
+                // layer 0 and layer 2 taps differ
+                if (k % (3 * dim) < dim && t[k] != t[k + dim]) {
+                    differs = true;
+                }
+            }
+            assertTrue(differs);
+        } finally {
+            pool.unbindRequests();
+        }
+        // Capturing must not change the logits.
+        assertArrayEquals(plain, withAux, 0f);
+        assertEquals(withAux.length, viaTap.length);
+        for (int k = 0; k < viaTap.length; k++) {
+            assertEquals(withAux[k], viaTap[k], 1e-4f, "logit " + k);
+        }
+    }
+
+    @Test
+    public void testGivenAuxLayersWhenDecodeThenTapEqualsWindowRow() throws IOException {
+        MiniMaxModelArgs args = args();
+        MiniMaxModel model = tinyModel(args);
+        KvCachePool pool = model.kvCachePool();
+        int dim = args.dim();
+        model.setAuxLayers(1, 3);
+
+        pool.bindRequests(1, 8);
+        float[] window;
+        try (Tensor tokens = Tensor.of(new long[]{5, 9, 11, 3, 7}, 1, 5);
+             Tensor logits = model.forwardAux(tokens, 0, false, null, null);
+             Tensor aux = model.takeAux()) {
+            window = aux.to(smile.deep.tensor.ScalarType.Float).floatArray();
+        } finally {
+            pool.unbindRequests();
+        }
+
+        pool.bindRequests(1, 8);
+        float[] decode;
+        try (Tensor prefix = Tensor.of(new long[]{5, 9, 11, 3}, 1, 4);
+             Tensor ignored = model.forward(prefix, 0, false);
+             Tensor next = Tensor.of(new long[]{7}, 1, 1);
+             Tensor logits = model.forwardAux(next, new int[]{4});
+             Tensor aux = model.takeAux()) {
+            assertArrayEquals(new long[]{1, 2L * dim}, aux.shape());
+            decode = aux.to(smile.deep.tensor.ScalarType.Float).floatArray();
+        } finally {
+            pool.unbindRequests();
+        }
+        for (int i = 0; i < 2 * dim; i++) {
+            assertEquals(window[4 * 2 * dim + i], decode[i], 2e-3f, "tap element " + i);
+        }
+    }
+
+    @Test
+    public void testGivenBadAuxLayersThenRejected() throws IOException {
+        MiniMaxModel model = tinyModel(args());
+        assertThrows(IllegalArgumentException.class, () -> model.setAuxLayers(2, 2));
+        assertThrows(IllegalArgumentException.class, () -> model.setAuxLayers(0, 4));
+        assertThrows(IllegalArgumentException.class, () -> model.setAuxLayers(-1));
+        MiniMaxModel off = tinyModel(args());
+        assertThrows(IllegalStateException.class, () -> off.forwardAux(Tensor.of(new long[]{1}, 1, 1), new int[]{0}));
+    }
 }

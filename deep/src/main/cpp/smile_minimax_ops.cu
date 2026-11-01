@@ -514,9 +514,9 @@ __global__ void msa_select_mask_kernel(const float* __restrict__ scores, const i
 
 constexpr int kSdBlock = 128;                    // keys per block
 constexpr int kSdDim = 128;                      // head dim
-constexpr int kSdRep = 16;                       // query heads per KV group
 constexpr int kSdRowWords = kSdDim / 2 + 1;      // 65 words per smem row: conflict-free column reads
-constexpr size_t kSdSmem = (size_t) kSdRep * kSdDim * 4 * 2 + (size_t) kSdBlock * kSdRowWords * 4;
+// Query heads per KV group: 16 on one device, 8 when the 64 heads are split over 8 tensor-parallel ranks.
+constexpr size_t sd_smem(int rep) { return (size_t) rep * kSdDim * 4 * 2 + (size_t) kSdBlock * kSdRowWords * 4; }
 
 __device__ __forceinline__ void bf16x2_to_float(uint32_t w, float& lo, float& hi) {
     lo = __uint_as_float(w << 16);
@@ -524,10 +524,11 @@ __device__ __forceinline__ void bf16x2_to_float(uint32_t w, float& lo, float& hi
 }
 
 /**
- * Attention of the 16 query heads of one KV group over one selected 128-key block, in fp32.
+ * Attention of the kSdRep (16 or 8) query heads of one KV group over one selected 128-key block, in fp32.
  * Writes the block's partial softmax state: max m, sum l and the unnormalised output o per head.
  * Grid (topk, kv_heads, batch), 256 threads.
  */
+template <int kSdRep>
 __global__ void sparse_decode_partial_kernel(const at::BFloat16* __restrict__ q, const at::BFloat16* __restrict__ kc,
                                              const at::BFloat16* __restrict__ vc, const int64_t* __restrict__ slots,
                                              const int* __restrict__ positions, const int* __restrict__ sel,
@@ -578,23 +579,24 @@ __global__ void sparse_decode_partial_kernel(const at::BFloat16* __restrict__ q,
     __syncthreads();
 
     {   // scores: thread = (key, half of the heads)
+        constexpr int kHalf = kSdRep / 2;
         const int key = tid & (kSdBlock - 1);
-        const int h0 = (tid >> 7) * 8;
-        float acc[8];
-        for (int h = 0; h < 8; h++) acc[h] = 0.f;
+        const int h0 = (tid >> 7) * kHalf;
+        float acc[kHalf];
+        for (int h = 0; h < kHalf; h++) acc[h] = 0.f;
         for (int c = 0; c < kSdDim / 2; c++) {
             float k0, k1;
             bf16x2_to_float(kv[key * kSdRowWords + c], k0, k1);
-            for (int h = 0; h < 8; h++) {
+            for (int h = 0; h < kHalf; h++) {
                 acc[h] += qs[(h0 + h) * kSdDim + 2 * c] * k0 + qs[(h0 + h) * kSdDim + 2 * c + 1] * k1;
             }
         }
         const bool valid = first + key < length && first + key <= pos;
-        for (int h = 0; h < 8; h++) ps[(h0 + h) * kSdBlock + key] = valid ? acc[h] : -INFINITY;
+        for (int h = 0; h < kHalf; h++) ps[(h0 + h) * kSdBlock + key] = valid ? acc[h] : -INFINITY;
     }
     __syncthreads();
     load_tile(vc);   // K is no longer needed
-    {   // softmax numerators: 16 lanes per head
+    if ((tid >> 4) < kSdRep) {   // softmax numerators: 16 lanes per head (whole warps drop out when kSdRep < 16)
         const int h = tid >> 4;
         const int sub = tid & 15;
         float mx = -INFINITY;
@@ -614,28 +616,30 @@ __global__ void sparse_decode_partial_kernel(const at::BFloat16* __restrict__ q,
         }
     }
     __syncthreads();
-    {   // o = p @ V: thread = (column pair, 4 heads)
+    {   // o = p @ V: thread = (column pair, kSdRep / 4 heads)
+        constexpr int kQuarter = kSdRep / 4;
         const int dp = tid & 63;
-        const int h0 = (tid >> 6) * 4;
-        float acc[4][2];
-        for (int h = 0; h < 4; h++) acc[h][0] = acc[h][1] = 0.f;
+        const int h0 = (tid >> 6) * kQuarter;
+        float acc[kQuarter][2];
+        for (int h = 0; h < kQuarter; h++) acc[h][0] = acc[h][1] = 0.f;
         for (int key = 0; key < kSdBlock; key++) {
             float v0, v1;
             bf16x2_to_float(kv[key * kSdRowWords + dp], v0, v1);
-            for (int h = 0; h < 4; h++) {
+            for (int h = 0; h < kQuarter; h++) {
                 const float p = ps[(h0 + h) * kSdBlock + key];
                 acc[h][0] += p * v0;
                 acc[h][1] += p * v1;
             }
         }
         float* o = part_o + base * kSdRep * kSdDim;
-        for (int h = 0; h < 4; h++) {
+        for (int h = 0; h < kQuarter; h++) {
             reinterpret_cast<float2*>(o + (h0 + h) * kSdDim)[dp] = make_float2(acc[h][0], acc[h][1]);
         }
     }
 }
 
 /** Merges the per-block partial softmax states of every head. Grid (kv_heads, batch), 256 threads. */
+template <int kSdRep>
 __global__ void sparse_decode_combine_kernel(const float* __restrict__ part_o, const float* __restrict__ part_m,
                                              const float* __restrict__ part_l, at::BFloat16* __restrict__ out,
                                              int heads, int kv_heads, int topk, int t0) {
@@ -1166,8 +1170,10 @@ extern "C" ST_Tensor smile_sparse_decode_attention(ST_Tensor q, ST_Tensor k_laye
         const int batch = (int) pt.numel();
         const int heads = (int) qt.size(1);
         const int kv_heads = (int) kt.size(1);
-        if (qt.size(2) != kSdDim || kt.size(2) != kSdDim || kv_heads <= 0 || heads != kv_heads * kSdRep) {
-            throw std::runtime_error("smile_sparse_decode_attention: needs head_dim 128 and 16 query heads per KV head");
+        const int rep = kv_heads > 0 ? heads / kv_heads : 0;
+        if (qt.size(2) != kSdDim || kt.size(2) != kSdDim || kv_heads <= 0 || heads != kv_heads * rep
+            || (rep != 16 && rep != 8)) {
+            throw std::runtime_error("smile_sparse_decode_attention: needs head_dim 128 and 16 or 8 query heads per KV head");
         }
         if (lt.scalar_type() != at::kInt || lt.dim() != 3 || lt.size(0) != tokens || lt.size(1) != kv_heads
             || st.scalar_type() != at::kLong || st.numel() != (int64_t) batch * length
@@ -1181,36 +1187,51 @@ extern "C" ST_Tensor smile_sparse_decode_attention(ST_Tensor q, ST_Tensor k_laye
         c10::cuda::CUDAGuard guard(qt.get_device());
         // The attribute is per device (ranks run on different devices). Set it once per device, during the eager
         // warmup, so nothing but stream work happens while a CUDA graph is being captured.
-        static bool attr_done[64] = {false};
+        static bool attr_done[64][2] = {};
         const int dev = qt.get_device();
         if (dev < 0 || dev >= 64) throw std::runtime_error("smile_sparse_decode_attention: device index out of range");
-        if (!attr_done[dev]) {
-            const cudaError_t attr = cudaFuncSetAttribute(
-                    sparse_decode_partial_kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, (int) kSdSmem);
+        const int variant = rep == 16 ? 0 : 1;
+        if (!attr_done[dev][variant]) {
+            const cudaError_t attr = rep == 16
+                    ? cudaFuncSetAttribute(sparse_decode_partial_kernel<16>, cudaFuncAttributeMaxDynamicSharedMemorySize,
+                                           (int) sd_smem(16))
+                    : cudaFuncSetAttribute(sparse_decode_partial_kernel<8>, cudaFuncAttributeMaxDynamicSharedMemorySize,
+                                           (int) sd_smem(8));
             if (attr != cudaSuccess) {
                 throw std::runtime_error(std::string("smile_sparse_decode_attention: ") + cudaGetErrorString(attr));
             }
-            attr_done[dev] = true;
+            attr_done[dev][variant] = true;
         }
         // Partial softmax state is chunk-local: bound the workspace (~256 MB) and loop over token chunks.
-        const int64_t per_token = (int64_t) kv_heads * topk * kSdRep * kSdDim * 4;
+        const int64_t per_token = (int64_t) kv_heads * topk * rep * kSdDim * 4;
         const int chunk = (int) std::max<int64_t>(1, std::min<int64_t>(
                 std::min<int64_t>(tokens, kMaxGridY), (256LL << 20) / per_token));
         const int64_t parts = (int64_t) chunk * kv_heads * topk;
-        at::Tensor part_o = at::empty({parts, kSdRep, kSdDim}, qt.options().dtype(at::kFloat));
-        at::Tensor part_m = at::empty({parts, kSdRep}, qt.options().dtype(at::kFloat));
-        at::Tensor part_l = at::empty({parts, kSdRep}, qt.options().dtype(at::kFloat));
+        at::Tensor part_o = at::empty({parts, rep, kSdDim}, qt.options().dtype(at::kFloat));
+        at::Tensor part_m = at::empty({parts, rep}, qt.options().dtype(at::kFloat));
+        at::Tensor part_l = at::empty({parts, rep}, qt.options().dtype(at::kFloat));
         at::Tensor out = at::empty({tokens, heads, kSdDim}, qt.options());
         for (int t0 = 0; t0 < tokens; t0 += chunk) {
             const int n = std::min(chunk, tokens - t0);
-            sparse_decode_partial_kernel<<<dim3(topk, kv_heads, n), 256, kSdSmem, stream_of(qt)>>>(
-                    qt.data_ptr<at::BFloat16>(), kt.data_ptr<at::BFloat16>(), vt.data_ptr<at::BFloat16>(),
-                    st.data_ptr<int64_t>(), pt.data_ptr<int>(), lt.data_ptr<int>(), part_o.data_ptr<float>(),
-                    part_m.data_ptr<float>(), part_l.data_ptr<float>(), heads, kv_heads, length, topk,
-                    (float) scale, seqlen, t0);
-            sparse_decode_combine_kernel<<<dim3(kv_heads, n), 256, 0, stream_of(qt)>>>(
-                    part_o.data_ptr<float>(), part_m.data_ptr<float>(), part_l.data_ptr<float>(),
-                    out.data_ptr<at::BFloat16>(), heads, kv_heads, topk, t0);
+            if (rep == 16) {
+                sparse_decode_partial_kernel<16><<<dim3(topk, kv_heads, n), 256, sd_smem(16), stream_of(qt)>>>(
+                        qt.data_ptr<at::BFloat16>(), kt.data_ptr<at::BFloat16>(), vt.data_ptr<at::BFloat16>(),
+                        st.data_ptr<int64_t>(), pt.data_ptr<int>(), lt.data_ptr<int>(), part_o.data_ptr<float>(),
+                        part_m.data_ptr<float>(), part_l.data_ptr<float>(), heads, kv_heads, length, topk,
+                        (float) scale, seqlen, t0);
+                sparse_decode_combine_kernel<16><<<dim3(kv_heads, n), 256, 0, stream_of(qt)>>>(
+                        part_o.data_ptr<float>(), part_m.data_ptr<float>(), part_l.data_ptr<float>(),
+                        out.data_ptr<at::BFloat16>(), heads, kv_heads, topk, t0);
+            } else {
+                sparse_decode_partial_kernel<8><<<dim3(topk, kv_heads, n), 256, sd_smem(8), stream_of(qt)>>>(
+                        qt.data_ptr<at::BFloat16>(), kt.data_ptr<at::BFloat16>(), vt.data_ptr<at::BFloat16>(),
+                        st.data_ptr<int64_t>(), pt.data_ptr<int>(), lt.data_ptr<int>(), part_o.data_ptr<float>(),
+                        part_m.data_ptr<float>(), part_l.data_ptr<float>(), heads, kv_heads, length, topk,
+                        (float) scale, seqlen, t0);
+                sparse_decode_combine_kernel<8><<<dim3(kv_heads, n), 256, 0, stream_of(qt)>>>(
+                        part_o.data_ptr<float>(), part_m.data_ptr<float>(), part_l.data_ptr<float>(),
+                        out.data_ptr<at::BFloat16>(), heads, kv_heads, topk, t0);
+            }
         }
         check_launch("smile_sparse_decode_attention");
         return new ST_Tensor_{ out };
