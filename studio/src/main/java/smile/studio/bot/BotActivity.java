@@ -198,6 +198,10 @@ public class BotActivity extends JPanel {
     private List<HubClient.BotRunSummary> currentRuns = new ArrayList<>();
     private final JPanel transcriptIntents = new ScrollablePanel();
     private final JScrollPane transcriptScroll = new JScrollPane(transcriptIntents);
+    private Long currentTranscriptRunId;
+    private String currentTranscriptText;
+    private Long displayedApprovalId;
+    private String displayedApprovalPayloadJson;
 
     /**
      * Creates the Bot Activity &amp; Approvals workspace panel.
@@ -213,6 +217,24 @@ public class BotActivity extends JPanel {
         selectTab(initialTab);
         add(tabs, BorderLayout.CENTER);
 
+        HubManager.getInstance().addEventListener(this::handleHubEvent);
+        refreshAllAsync();
+    }
+
+    private void handleHubEvent(HubClient.BotStreamEvent event) {
+        if (event == null || event.type() == null) {
+            return;
+        }
+        if ("transcript".equals(event.type()) && event.runId() != null) {
+            int row = runsTable.getSelectedRow();
+            if (row >= 0 && row < currentRuns.size()) {
+                HubClient.BotRunSummary selected = currentRuns.get(row);
+                if (event.runId().equals(selected.id())) {
+                    loadRunTranscriptAsync(selected);
+                }
+            }
+            return;
+        }
         refreshAllAsync();
     }
 
@@ -625,16 +647,36 @@ public class BotActivity extends JPanel {
     }
 
     /**
-     * Populates the approvals table and selects the first row if available.
+     * Populates the approvals table while preserving checked batch boxes, the
+     * selected row, and any in-progress draft edits when the selected item is unchanged.
      *
      * @param list the approval items to display.
      */
     public void populateApprovals(List<HubClient.BotApprovalItem> list) {
+        if (list.equals(currentApprovals) && approvalsModel.getRowCount() == list.size()) {
+            return;
+        }
+        Long selectedId = null;
+        int prevRow = approvalsTable.getSelectedRow();
+        if (prevRow >= 0 && prevRow < currentApprovals.size()) {
+            selectedId = currentApprovals.get(prevRow).id();
+        }
+        Map<Long, Boolean> checkedById = new HashMap<>();
+        for (int i = 0; i < approvalsModel.getRowCount() && i < currentApprovals.size(); i++) {
+            Long id = currentApprovals.get(i).id();
+            if (id != null && Boolean.TRUE.equals(approvalsModel.getValueAt(i, 0))) {
+                checkedById.put(id, Boolean.TRUE);
+            }
+        }
+
         currentApprovals = new ArrayList<>(list);
         approvalsModel.setRowCount(0);
-        for (HubClient.BotApprovalItem a : list) {
+        int selectRow = -1;
+        for (int i = 0; i < list.size(); i++) {
+            HubClient.BotApprovalItem a = list.get(i);
+            Boolean checked = (a.id() != null && checkedById.containsKey(a.id())) ? Boolean.TRUE : Boolean.FALSE;
             approvalsModel.addRow(new Object[]{
-                    Boolean.FALSE,
+                    checked,
                     a.id(),
                     a.kind(),
                     a.persona(),
@@ -645,10 +687,23 @@ public class BotActivity extends JPanel {
                     a.status(),
                     a.expiresAt()
             });
+            if (selectedId != null && selectedId.equals(a.id())) {
+                selectRow = i;
+            }
         }
         if (!list.isEmpty()) {
-            approvalsTable.setRowSelectionInterval(0, 0);
-            displaySelectedApproval(list.getFirst());
+            int targetRow = selectRow >= 0 ? selectRow : 0;
+            approvalsTable.setRowSelectionInterval(targetRow, targetRow);
+            HubClient.BotApprovalItem targetItem = list.get(targetRow);
+            boolean sameDisplayed = targetItem.id() != null
+                    && targetItem.id().equals(displayedApprovalId)
+                    && java.util.Objects.equals(targetItem.payloadJson(), displayedApprovalPayloadJson);
+            if (!sameDisplayed) {
+                displaySelectedApproval(targetItem);
+            }
+        } else {
+            displayedApprovalId = null;
+            displayedApprovalPayloadJson = null;
         }
     }
 
@@ -656,6 +711,8 @@ public class BotActivity extends JPanel {
         if (item == null) {
             return;
         }
+        displayedApprovalId = item.id();
+        displayedApprovalPayloadJson = item.payloadJson();
         boolean hasPrevious = item.previousPayloadJson() != null && !item.previousPayloadJson().isBlank();
 
         // Populate Raw JSON tab
@@ -798,6 +855,16 @@ public class BotActivity extends JPanel {
      * @param list the run summaries to display.
      */
     public void populateRuns(List<HubClient.BotRunSummary> list) {
+        if (list.equals(currentRuns) && runsModel.getRowCount() == list.size()) {
+            int row = runsTable.getSelectedRow();
+            if (row >= 0 && row < currentRuns.size()) {
+                HubClient.BotRunSummary sel = currentRuns.get(row);
+                if ("RUNNING".equals(sel.status()) || "WAITING_APPROVAL".equals(sel.status())) {
+                    loadRunTranscriptAsync(sel);
+                }
+            }
+            return;
+        }
         Long selectedId = null;
         int prevRow = runsTable.getSelectedRow();
         if (prevRow >= 0 && prevRow < currentRuns.size()) {
@@ -827,6 +894,8 @@ public class BotActivity extends JPanel {
             int targetRow = selectRow >= 0 ? selectRow : 0;
             runsTable.setRowSelectionInterval(targetRow, targetRow);
         } else {
+            currentTranscriptRunId = null;
+            currentTranscriptText = null;
             transcriptIntents.removeAll();
             transcriptIntents.revalidate();
             transcriptIntents.repaint();
@@ -1020,6 +1089,15 @@ public class BotActivity extends JPanel {
      * @param run   optional run metadata for fallback headers.
      */
     public void renderTranscript(String jsonl, HubClient.BotRunSummary run) {
+        Long runId = run != null ? run.id() : null;
+        boolean sameRun = runId != null && runId.equals(currentTranscriptRunId);
+        if (sameRun && java.util.Objects.equals(jsonl, currentTranscriptText)) {
+            return;
+        }
+        int prevScroll = transcriptScroll.getVerticalScrollBar().getValue();
+        currentTranscriptRunId = runId;
+        currentTranscriptText = jsonl;
+
         transcriptIntents.removeAll();
         List<TranscriptTurn> turns = parseTranscript(jsonl);
         if (turns.isEmpty()) {
@@ -1039,7 +1117,8 @@ public class BotActivity extends JPanel {
         transcriptIntents.add(Box.createVerticalGlue());
         transcriptIntents.revalidate();
         transcriptIntents.repaint();
-        SwingUtilities.invokeLater(() -> transcriptScroll.getVerticalScrollBar().setValue(0));
+        int targetScroll = sameRun ? prevScroll : 0;
+        SwingUtilities.invokeLater(() -> transcriptScroll.getVerticalScrollBar().setValue(targetScroll));
     }
 
     private void renderTranscriptError(String errorMessage, HubClient.BotRunSummary run) {
