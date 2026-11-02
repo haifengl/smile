@@ -130,8 +130,8 @@
             "maxTurnsPerHour": 12
           },
           "workflow": {
-            "kind": "PROMPT",
-            "target": "",
+            "kind": "TOOL",
+            "target": "Calendar",
             "instructions": "For calendar.invite/updated, check schedule conflicts and ask the user whether to Accept/Decline. For calendar.reminder, prepare a pre-meeting brief with attendee/project context.",
             "requireActivityToday": false,
             "useContextProjects": false
