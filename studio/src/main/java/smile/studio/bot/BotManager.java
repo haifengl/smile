@@ -27,6 +27,7 @@ import javax.swing.table.DefaultTableModel;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.bot.BotsConfig;
 import ioa.agent.bot.ProjectsConfig;
+import ioa.agent.calendar.CalendarConfig;
 import ioa.agent.email.EmailConfig;
 import smile.studio.LlmServices;
 import smile.studio.SmileStudio;
@@ -166,11 +167,31 @@ public class BotManager extends JPanel {
     }
 
     private void populateEndpointCombo() {
+        Object currentSel = endpointCombo.getSelectedItem();
         endpointCombo.removeAllItems();
         endpointCombo.setEditable(true);
-        endpointCombo.addItem("inbox");
-        for (EmailConfig.AccountSpec acc : EmailConfig.load().accounts()) {
-            endpointCombo.addItem(acc.emailAddress());
+        String src = (String) sourceCombo.getSelectedItem();
+        if ("calendar".equalsIgnoreCase(src)) {
+            endpointCombo.addItem("primary");
+            for (CalendarConfig.AccountSpec acc : CalendarConfig.load().accounts()) {
+                endpointCombo.addItem(acc.accountId());
+            }
+            for (EmailConfig.AccountSpec acc : EmailConfig.load().accounts()) {
+                if (acc.provider() == EmailConfig.Provider.GMAIL || acc.provider() == EmailConfig.Provider.MSGRAPH) {
+                    endpointCombo.addItem(acc.emailAddress());
+                }
+            }
+        } else {
+            endpointCombo.addItem("inbox");
+            for (EmailConfig.AccountSpec acc : EmailConfig.load().accounts()) {
+                endpointCombo.addItem(acc.emailAddress());
+            }
+            for (CalendarConfig.AccountSpec acc : CalendarConfig.load().accounts()) {
+                endpointCombo.addItem(acc.accountId());
+            }
+        }
+        if (currentSel != null) {
+            endpointCombo.setSelectedItem(currentSel);
         }
     }
 
@@ -217,6 +238,7 @@ public class BotManager extends JPanel {
         addSingleRow(form, gbc, row++, "Model Override:", modelCombo);
 
         addSectionHeader(form, gbc, row++, "Trigger & Schedule");
+        sourceCombo.addActionListener(e -> populateEndpointCombo());
         addFormRow(form, gbc, row++, "Source:", sourceCombo, "Missed-Fire Policy:", missedFireCombo);
         addFormRow(form, gbc, row++, "Cron (5-field):", cronField, "Interval (sec):", intervalSpinner);
         addSingleRow(form, gbc, row++, "Mailbox / Feed URL / Path:", endpointCombo);

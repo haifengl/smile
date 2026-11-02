@@ -41,13 +41,15 @@ import com.sun.net.httpserver.HttpServer;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
+import ioa.agent.calendar.CalendarConfig;
 import ioa.agent.email.EmailConfig;
 import smile.util.Strings;
 
 /**
  * Desktop OAuth 2.0 PKCE loopback authorization flow (RFC 7636 + RFC 8252) for
- * Google Gmail ({@link EmailConfig.Provider#GMAIL}) and Microsoft Graph
- * ({@link EmailConfig.Provider#MSGRAPH}).
+ * Google Gmail / Google Calendar ({@link EmailConfig.Provider#GMAIL},
+ * {@link CalendarConfig.Provider#GOOGLE}) and Microsoft Graph Mail / Calendar
+ * ({@link EmailConfig.Provider#MSGRAPH}, {@link CalendarConfig.Provider#MSGRAPH}).
  *
  * <p>Starts an ephemeral loopback HTTP listener on {@code 127.0.0.1:0}, opens
  * the provider's authorization URL in the user's browser with a SHA-256 PKCE
@@ -65,9 +67,9 @@ public final class EmailOAuthFlow {
     /** Google OAuth 2.0 token endpoint. */
     public static final String GOOGLE_TOKEN_ENDPOINT =
             "https://oauth2.googleapis.com/token";
-    /** Google Gmail scopes for reading, drafting, and sending email. */
+    /** Google Gmail + Calendar scopes for reading, drafting, sending email and managing calendar events. */
     public static final String GOOGLE_SCOPES =
-            "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.compose";
+            "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/calendar.events";
 
     /** Microsoft Entra v2.0 authorization endpoint template (`{tenant}`). */
     public static final String MS_AUTH_ENDPOINT_TEMPLATE =
@@ -75,9 +77,9 @@ public final class EmailOAuthFlow {
     /** Microsoft Entra v2.0 token endpoint template (`{tenant}`). */
     public static final String MS_TOKEN_ENDPOINT_TEMPLATE =
             "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token";
-    /** Microsoft Graph scopes for personal Outlook.com/Hotmail and M365 accounts. */
+    /** Microsoft Graph scopes for personal Outlook.com/Hotmail and M365 Mail + Calendar accounts. */
     public static final String MS_SCOPES =
-            "offline_access https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/User.Read";
+            "offline_access https://graph.microsoft.com/Mail.Read https://graph.microsoft.com/Mail.ReadWrite https://graph.microsoft.com/Mail.Send https://graph.microsoft.com/Calendars.ReadWrite https://graph.microsoft.com/User.Read";
 
     private static final ObjectMapper MAPPER = JsonMapper.builder().build();
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -138,6 +140,31 @@ public final class EmailOAuthFlow {
                 HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build(),
                 timeout
         );
+    }
+
+    /**
+     * Runs the interactive browser PKCE loopback OAuth 2.0 flow for a
+     * {@link CalendarConfig.AccountSpec} ({@code GOOGLE} or {@code MSGRAPH}).
+     *
+     * @param account calendar account specification.
+     * @param emailConfig optional email configuration for inherited client/tenant IDs.
+     * @param clientSecret optional OAuth client secret.
+     * @param timeout max wait duration for the user to complete sign-in in the browser.
+     * @return the acquired {@link OAuthResult}.
+     * @throws Exception if authorization is denied, times out, or token exchange fails.
+     */
+    public static OAuthResult authorizeCalendarPkceLoopback(
+            CalendarConfig.AccountSpec account,
+            EmailConfig emailConfig,
+            String clientSecret,
+            Duration timeout
+    ) throws Exception {
+        String effectiveClientId = account.effectiveClientId(emailConfig);
+        String effectiveTenantId = account.effectiveTenantId(emailConfig);
+        EmailConfig.AccountSpec synthetic = account.provider() == CalendarConfig.Provider.GOOGLE
+                ? EmailConfig.AccountSpec.gmail(account.accountId(), account.description(), effectiveClientId)
+                : EmailConfig.AccountSpec.msGraph(account.accountId(), account.description(), effectiveClientId, effectiveTenantId);
+        return authorizePkceLoopback(synthetic, clientSecret, timeout);
     }
 
     /**

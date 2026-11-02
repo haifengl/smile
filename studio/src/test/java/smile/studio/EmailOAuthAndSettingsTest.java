@@ -37,11 +37,15 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import ioa.agent.calendar.CalendarConfig;
+import ioa.agent.calendar.CalendarServices;
 import ioa.agent.email.EmailConfig;
 import ioa.agent.email.EmailServices;
 import ioa.agent.email.SharedSecrets;
 import photos.sluice.secrets.SecretStore;
 
+import java.util.Locale;
+import java.util.ResourceBundle;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -70,6 +74,7 @@ class EmailOAuthAndSettingsTest {
             providerServer.stop(0);
         }
         System.clearProperty("ioa.email.config");
+        System.clearProperty("ioa.calendar.config");
     }
 
     private SecretStore newTestSecretStore() {
@@ -202,6 +207,77 @@ class EmailOAuthAndSettingsTest {
                 Optional.of("dot-secret-token"),
                 SharedSecrets.resolveEmailSecret(secrets, "haifeng.li@aihalo.dev")
         );
+    }
+
+    @Test
+    void calendarConfigReusesEmailSecretsAndAllFiveLocaleBundlesContainCalendarKeys() {
+        assertTrue(EmailOAuthFlow.GOOGLE_SCOPES.contains("calendar.events"));
+        assertTrue(EmailOAuthFlow.MS_SCOPES.contains("Calendars.ReadWrite"));
+
+        Path emailPath = tempDir.resolve("conf").resolve("email.json");
+        Path calPath = tempDir.resolve("conf").resolve("calendar.json");
+        System.setProperty("ioa.email.config", emailPath.toString());
+        System.setProperty("ioa.calendar.config", calPath.toString());
+        SecretStore secrets = newTestSecretStore();
+
+        EmailConfig emailCfg = EmailConfig.empty().withUpsertedAccount(
+                EmailConfig.AccountSpec.gmail("alice@gmail.com", "Personal Gmail", "google-cid-1"));
+        emailCfg.save(emailPath);
+        assertTrue(SharedSecrets.saveEmailSecret(secrets, "alice@gmail.com", "shared-google-refresh-token"));
+
+        CalendarConfig calCfg = CalendarConfig.empty().withUpsertedAccount(
+                CalendarConfig.AccountSpec.google("alice@gmail.com", "Google Calendar", "primary", true, null));
+        calCfg.save(calPath);
+
+        assertEquals(
+                Optional.of("shared-google-refresh-token"),
+                SharedSecrets.resolveCalendarSecret(secrets, "alice@gmail.com", true)
+        );
+
+        CalendarServices calServices = new CalendarServices();
+        calServices.setEmailConfigSupplier(() -> emailCfg);
+        calServices.reload(CalendarConfig.load(calPath), secrets);
+        assertTrue(calServices.client("alice@gmail.com").isPresent());
+        assertEquals(
+                "google-cid-1",
+                calServices.client("alice@gmail.com").get().account().effectiveClientId(emailCfg)
+        );
+
+        // Verify all 5 locale resource bundles have the new Calendar keys
+        Locale[] locales = {
+                Locale.US,
+                Locale.SIMPLIFIED_CHINESE,
+                Locale.JAPAN,
+                Locale.FRANCE,
+                Locale.of("es", "ES")
+        };
+        String[] keys = {
+                "TabCalendarAccounts",
+                "CalendarAccount",
+                "CalendarAdd",
+                "CalendarRemove",
+                "CalendarDefault",
+                "CalendarEnabled",
+                "CalendarAccountId",
+                "CalendarProvider",
+                "CalendarId",
+                "CalendarDescription",
+                "CalendarPollInterval",
+                "CalendarUseEmailAccount",
+                "CalendarClientId",
+                "CalendarTenantId",
+                "CalendarSecret",
+                "CalendarOAuthSignIn",
+                "CalendarTestConnection",
+                "CalendarTestSuccess",
+                "CalendarTestFailure"
+        };
+        for (Locale locale : locales) {
+            ResourceBundle rb = ResourceBundle.getBundle(SettingsDialog.class.getName(), locale);
+            for (String key : keys) {
+                assertFalse(rb.getString(key).isBlank(), "Missing or blank key " + key + " for locale " + locale);
+            }
+        }
     }
 
     private static Map<String, String> parseQuery(String rawQuery) {
