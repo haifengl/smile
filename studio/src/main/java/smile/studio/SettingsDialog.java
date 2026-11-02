@@ -18,6 +18,8 @@
 package smile.studio;
 
 import com.formdev.flatlaf.*;
+import ioa.agent.calendar.CalendarConfig;
+import ioa.agent.calendar.CalendarServices;
 import ioa.agent.email.EmailConfig;
 import ioa.agent.email.EmailServices;
 import ioa.agent.email.SharedSecrets;
@@ -145,6 +147,32 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private final JButton emailOAuthButton = new JButton(bundle.getString("EmailOAuthSignIn"));
     private final JButton emailTestButton = new JButton(bundle.getString("EmailTestConnection"));
 
+    // Calendar Accounts tab state & fields
+    private CalendarConfig calendarConfig;
+    private final Map<String, String> pendingCalendarSecrets = new LinkedHashMap<>();
+    private boolean suppressCalendarComboEvents = false;
+    private String currentCalendarAccountId = "";
+    private final JComboBox<String> calendarAccountCombo = new JComboBox<>();
+    private final JCheckBox calendarDefaultCheck = new JCheckBox(bundle.getString("CalendarDefault"));
+    private final JCheckBox calendarEnabledCheck = new JCheckBox(bundle.getString("CalendarEnabled"), true);
+    private final JTextField calendarAccountIdField = new JTextField(22);
+    private final JComboBox<CalendarConfig.Provider> calendarProviderCombo =
+            new JComboBox<>(new CalendarConfig.Provider[]{
+                    CalendarConfig.Provider.GOOGLE,
+                    CalendarConfig.Provider.MSGRAPH,
+                    CalendarConfig.Provider.ICS
+            });
+    private final JTextField calendarIdField = new JTextField("primary", 18);
+    private final JTextField calendarDescriptionField = new JTextField(22);
+    private final JSpinner calendarPollSpinner = new JSpinner(new SpinnerNumberModel(300, 15, 86400, 30));
+    private final JCheckBox calendarUseEmailCheck = new JCheckBox(bundle.getString("CalendarUseEmailAccount"), true);
+    private final JTextField calendarClientIdField = new JTextField(24);
+    private final JTextField calendarTenantIdField = new JTextField("common", 14);
+    private final JPasswordField calendarSecretField = new JPasswordField(24);
+    private final JLabel calendarSecretStatusLabel = new JLabel();
+    private final JButton calendarOAuthButton = new JButton(bundle.getString("CalendarOAuthSignIn"));
+    private final JButton calendarTestButton = new JButton(bundle.getString("CalendarTestConnection"));
+
     /**
      * Constructor using the default application secret store.
      * @param owner the Frame from which the dialog is displayed
@@ -177,6 +205,18 @@ public class SettingsDialog extends JDialog implements ActionListener {
             SharedSecrets.resolveEmailSecret(secrets, acc.emailAddress())
                     .ifPresent(sec -> pendingEmailSecrets.put(acc.emailAddress(), sec));
         }
+        this.calendarConfig = CalendarConfig.load();
+        if (this.calendarConfig.accounts().isEmpty() && !this.emailConfig.accounts().isEmpty()) {
+            // Pre-populate linked calendar accounts from any OAuth email accounts (GMAIL / MSGRAPH)
+            for (EmailConfig.AccountSpec emailSpec : this.emailConfig.accounts()) {
+                CalendarConfig.AccountSpec.fromEmailAccount(emailSpec).ifPresent(calSpec ->
+                        this.calendarConfig = this.calendarConfig.withUpsertedAccount(calSpec));
+            }
+        }
+        for (CalendarConfig.AccountSpec acc : calendarConfig.accounts()) {
+            SharedSecrets.resolveCalendarSecret(secrets, acc.accountId(), false)
+                    .ifPresent(sec -> pendingCalendarSecrets.put(acc.accountId(), sec));
+        }
 
         aiServiceCombo.addActionListener(this);
 
@@ -198,6 +238,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         tabs.addTab(bundle.getString("TabAgentHub"), createAgentHubPane());
         tabs.addTab(bundle.getString("TabInferenceServer"), createInferenceServerPane());
         tabs.addTab(bundle.getString("TabEmailAccounts"), createEmailAccountsPane());
+        tabs.addTab(bundle.getString("TabCalendarAccounts"), createCalendarAccountsPane());
 
         add(tabs, BorderLayout.CENTER);
         add(createButtonPane(), BorderLayout.SOUTH);
@@ -977,6 +1018,338 @@ public class SettingsDialog extends JDialog implements ActionListener {
         }
     }
 
+    private JPanel createCalendarAccountsPane() {
+        JPanel pane = new JPanel(new BorderLayout(6, 6));
+        pane.setBorder(new EmptyBorder(8, 10, 8, 10));
+
+        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        topBar.add(new JLabel(bundle.getString("CalendarAccount")));
+        calendarAccountCombo.setPreferredSize(new Dimension(190, 26));
+        calendarAccountCombo.addActionListener(e -> {
+            if (!suppressCalendarComboEvents) {
+                commitCurrentCalendarAccountForm();
+                String selectedId = (String) calendarAccountCombo.getSelectedItem();
+                if (selectedId != null) {
+                    loadCalendarAccountForm(selectedId);
+                }
+            }
+        });
+        topBar.add(calendarAccountCombo);
+
+        JButton addBtn = new JButton(bundle.getString("CalendarAdd"));
+        addBtn.addActionListener(e -> addNewCalendarAccount());
+        JButton removeBtn = new JButton(bundle.getString("CalendarRemove"));
+        removeBtn.addActionListener(e -> removeSelectedCalendarAccount());
+        topBar.add(addBtn);
+        topBar.add(removeBtn);
+        topBar.add(calendarDefaultCheck);
+        topBar.add(calendarEnabledCheck);
+        pane.add(topBar, BorderLayout.NORTH);
+
+        JPanel form = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 4, 4, 4);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        int r = 0;
+        addEmailRow(form, gbc, r++,
+                bundle.getString("CalendarAccountId"), calendarAccountIdField,
+                bundle.getString("CalendarProvider"), calendarProviderCombo);
+        addEmailRow(form, gbc, r++,
+                bundle.getString("CalendarId"), calendarIdField,
+                bundle.getString("CalendarPollInterval"), calendarPollSpinner);
+        addEmailSingleRow(form, gbc, r++,
+                bundle.getString("CalendarDescription"), calendarDescriptionField);
+
+        gbc.gridx = 1;
+        gbc.gridy = r++;
+        gbc.gridwidth = 3;
+        form.add(calendarUseEmailCheck, gbc);
+        gbc.gridwidth = 1;
+
+        addEmailRow(form, gbc, r++,
+                bundle.getString("CalendarClientId"), calendarClientIdField,
+                bundle.getString("CalendarTenantId"), calendarTenantIdField);
+
+        calendarSecretField.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true");
+        gbc.gridx = 0;
+        gbc.gridy = r;
+        gbc.weightx = 0.0;
+        form.add(new JLabel(bundle.getString("CalendarSecret")), gbc);
+        gbc.gridx = 1;
+        gbc.gridwidth = 3;
+        gbc.weightx = 1.0;
+        form.add(calendarSecretField, gbc);
+        gbc.gridwidth = 1;
+        r++;
+
+        calendarSecretStatusLabel.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
+        calendarSecretStatusLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+        gbc.gridx = 1;
+        gbc.gridy = r++;
+        gbc.gridwidth = 3;
+        form.add(calendarSecretStatusLabel, gbc);
+        gbc.gridwidth = 1;
+
+        JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        calendarOAuthButton.addActionListener(e -> launchCalendarOAuthSignIn());
+        calendarTestButton.addActionListener(e -> testCurrentCalendarConnection());
+        actionRow.add(calendarOAuthButton);
+        actionRow.add(calendarTestButton);
+
+        gbc.gridx = 1;
+        gbc.gridy = r;
+        gbc.gridwidth = 3;
+        form.add(actionRow, gbc);
+        gbc.gridwidth = 1;
+
+        calendarProviderCombo.addActionListener(e -> updateCalendarProviderFieldStates());
+        calendarUseEmailCheck.addActionListener(e -> updateCalendarProviderFieldStates());
+
+        pane.add(form, BorderLayout.CENTER);
+        refreshCalendarAccountCombo(calendarConfig.defaultAccount());
+        return pane;
+    }
+
+    private void refreshCalendarAccountCombo(String selectId) {
+        suppressCalendarComboEvents = true;
+        try {
+            calendarAccountCombo.removeAllItems();
+            for (CalendarConfig.AccountSpec acc : calendarConfig.accounts()) {
+                calendarAccountCombo.addItem(acc.accountId());
+            }
+            if (!calendarConfig.accounts().isEmpty()) {
+                String target = (selectId != null && !selectId.isBlank())
+                        ? selectId
+                        : calendarConfig.accounts().getFirst().accountId();
+                calendarAccountCombo.setSelectedItem(target);
+                loadCalendarAccountForm(target);
+            } else {
+                currentCalendarAccountId = "";
+                clearCalendarAccountForm();
+            }
+        } finally {
+            suppressCalendarComboEvents = false;
+        }
+    }
+
+    private void clearCalendarAccountForm() {
+        calendarAccountIdField.setText("");
+        calendarProviderCombo.setSelectedItem(CalendarConfig.Provider.GOOGLE);
+        calendarIdField.setText("primary");
+        calendarDescriptionField.setText("");
+        calendarPollSpinner.setValue(300);
+        calendarUseEmailCheck.setSelected(true);
+        calendarClientIdField.setText("");
+        calendarTenantIdField.setText("common");
+        calendarDefaultCheck.setSelected(true);
+        calendarEnabledCheck.setSelected(true);
+        calendarSecretField.setText("");
+        calendarSecretStatusLabel.setText(formatSecretStatus(secrets, SharedSecrets.calendarSecretId("default")));
+        updateCalendarProviderFieldStates();
+    }
+
+    private void loadCalendarAccountForm(String accountId) {
+        Optional<CalendarConfig.AccountSpec> opt = calendarConfig.findAccount(accountId);
+        if (opt.isEmpty()) {
+            clearCalendarAccountForm();
+            return;
+        }
+        CalendarConfig.AccountSpec acc = opt.get();
+        currentCalendarAccountId = acc.accountId();
+        calendarAccountIdField.setText(acc.accountId());
+        calendarProviderCombo.setSelectedItem(acc.provider());
+        calendarIdField.setText(acc.calendarId() != null ? acc.calendarId() : "primary");
+        calendarDescriptionField.setText(acc.description() != null ? acc.description() : "");
+        calendarPollSpinner.setValue(acc.pollIntervalSeconds());
+        calendarUseEmailCheck.setSelected(acc.useEmailAccount());
+        calendarClientIdField.setText(acc.clientId() != null ? acc.clientId() : "");
+        calendarTenantIdField.setText(acc.tenantId() != null ? acc.tenantId() : "common");
+        calendarDefaultCheck.setSelected(acc.accountId().equalsIgnoreCase(calendarConfig.defaultAccount()));
+        calendarEnabledCheck.setSelected(acc.enabled());
+
+        String secret = pendingCalendarSecrets.getOrDefault(
+                acc.accountId(),
+                SharedSecrets.resolveCalendarSecret(secrets, acc.accountId(), false).orElse("")
+        );
+        calendarSecretField.setText(secret);
+        SecretId statusId = (secret.isEmpty() && acc.useEmailAccount() && emailConfig.findAccount(acc.accountId()).isPresent())
+                ? SharedSecrets.emailSecretId(acc.accountId())
+                : SharedSecrets.calendarSecretId(acc.accountId());
+        calendarSecretStatusLabel.setText(formatSecretStatus(secrets, statusId));
+        updateCalendarProviderFieldStates();
+    }
+
+    private void updateCalendarProviderFieldStates() {
+        CalendarConfig.Provider provider = (CalendarConfig.Provider) calendarProviderCombo.getSelectedItem();
+        boolean isOAuth = provider == CalendarConfig.Provider.GOOGLE || provider == CalendarConfig.Provider.MSGRAPH;
+        boolean isMsGraph = provider == CalendarConfig.Provider.MSGRAPH;
+
+        calendarUseEmailCheck.setEnabled(isOAuth);
+        calendarClientIdField.setEnabled(isOAuth);
+        calendarTenantIdField.setEnabled(isMsGraph);
+        calendarSecretField.setEnabled(isOAuth);
+        calendarOAuthButton.setEnabled(isOAuth);
+    }
+
+    private CalendarConfig.AccountSpec buildSpecFromCalendarForm() {
+        String idText = calendarAccountIdField.getText().trim();
+        String accountId = !idText.isEmpty() ? idText : currentCalendarAccountId;
+        if (accountId.isEmpty()) {
+            return null;
+        }
+        CalendarConfig.Provider provider = (CalendarConfig.Provider) calendarProviderCombo.getSelectedItem();
+        String calId = calendarIdField.getText().trim();
+        String description = calendarDescriptionField.getText().trim();
+        int pollSec = ((Number) calendarPollSpinner.getValue()).intValue();
+        boolean useEmail = calendarUseEmailCheck.isSelected();
+        String clientId = calendarClientIdField.getText().trim();
+        String tenantId = calendarTenantIdField.getText().trim();
+        boolean enabled = calendarEnabledCheck.isSelected();
+
+        return new CalendarConfig.AccountSpec(
+                accountId,
+                description.isEmpty() ? null : description,
+                provider,
+                enabled,
+                pollSec,
+                calId.isEmpty() ? "primary" : calId,
+                useEmail,
+                clientId.isEmpty() ? null : clientId,
+                tenantId.isEmpty() ? "common" : tenantId
+        );
+    }
+
+    private void commitCurrentCalendarAccountForm() {
+        CalendarConfig.AccountSpec spec = buildSpecFromCalendarForm();
+        if (spec == null) {
+            return;
+        }
+        if (!currentCalendarAccountId.isEmpty() && !currentCalendarAccountId.equalsIgnoreCase(spec.accountId())) {
+            calendarConfig = calendarConfig.withoutAccount(currentCalendarAccountId);
+            pendingCalendarSecrets.remove(currentCalendarAccountId);
+        }
+        calendarConfig = calendarConfig.withUpsertedAccount(spec);
+        if (calendarDefaultCheck.isSelected()) {
+            calendarConfig = new CalendarConfig(spec.accountId(), calendarConfig.accounts());
+        }
+        String secretVal = new String(calendarSecretField.getPassword()).strip();
+        pendingCalendarSecrets.put(spec.accountId(), secretVal);
+        currentCalendarAccountId = spec.accountId();
+    }
+
+    private void addNewCalendarAccount() {
+        commitCurrentCalendarAccountForm();
+        suppressCalendarComboEvents = true;
+        try {
+            currentCalendarAccountId = "";
+            clearCalendarAccountForm();
+            calendarAccountIdField.requestFocusInWindow();
+        } finally {
+            suppressCalendarComboEvents = false;
+        }
+    }
+
+    private void removeSelectedCalendarAccount() {
+        String id = !calendarAccountIdField.getText().trim().isEmpty()
+                ? calendarAccountIdField.getText().trim()
+                : currentCalendarAccountId;
+        if (id.isEmpty()) {
+            return;
+        }
+        calendarConfig = calendarConfig.withoutAccount(id);
+        pendingCalendarSecrets.remove(id);
+        SharedSecrets.deleteCalendarSecret(secrets, id);
+        refreshCalendarAccountCombo(calendarConfig.defaultAccount());
+    }
+
+    private void launchCalendarOAuthSignIn() {
+        commitCurrentEmailAccountForm();
+        commitCurrentCalendarAccountForm();
+        CalendarConfig.AccountSpec spec = buildSpecFromCalendarForm();
+        if (spec == null) {
+            return;
+        }
+        calendarOAuthButton.setEnabled(false);
+        Thread.ofVirtual().name("studio-calendar-oauth").start(() -> {
+            try {
+                EmailOAuthFlow.OAuthResult result = EmailOAuthFlow.authorizeCalendarPkceLoopback(
+                        spec, emailConfig, null, Duration.ofMinutes(3));
+                SwingUtilities.invokeLater(() -> {
+                    calendarSecretField.setText(result.refreshToken());
+                    pendingCalendarSecrets.put(spec.accountId(), result.refreshToken());
+                    SharedSecrets.saveCalendarSecret(secrets, spec.accountId(), result.refreshToken());
+                    calendarSecretStatusLabel.setText(
+                            formatSecretStatus(secrets, SharedSecrets.calendarSecretId(spec.accountId())));
+                    calendarOAuthButton.setEnabled(true);
+                });
+            } catch (Exception ex) {
+                SwingUtilities.invokeLater(() -> {
+                    calendarOAuthButton.setEnabled(true);
+                    JOptionPane.showMessageDialog(
+                            this,
+                            MessageFormat.format(bundle.getString("CalendarTestFailure"), ex.getMessage()),
+                            bundle.getString("Title"),
+                            JOptionPane.ERROR_MESSAGE);
+                });
+            }
+        });
+    }
+
+    private void testCurrentCalendarConnection() {
+        commitCurrentEmailAccountForm();
+        commitCurrentCalendarAccountForm();
+        CalendarConfig.AccountSpec spec = buildSpecFromCalendarForm();
+        if (spec == null) {
+            return;
+        }
+        String secretVal = new String(calendarSecretField.getPassword()).strip();
+        calendarTestButton.setEnabled(false);
+        Thread.ofVirtual().name("studio-calendar-test").start(() -> {
+            try {
+                CalendarServices testServices = new CalendarServices();
+                testServices.setEmailConfigSupplier(() -> emailConfig);
+                var client = testServices.createDefaultClient(
+                        spec,
+                        s -> !secretVal.isEmpty()
+                                ? Optional.of(secretVal)
+                                : SharedSecrets.resolveCalendarSecret(secrets, s.accountId(), s.useEmailAccount())
+                );
+                String status = client.testConnection();
+                SwingUtilities.invokeLater(() -> {
+                    calendarTestButton.setEnabled(true);
+                    JOptionPane.showMessageDialog(
+                            this,
+                            MessageFormat.format(bundle.getString("CalendarTestSuccess"), status),
+                            bundle.getString("Title"),
+                            JOptionPane.INFORMATION_MESSAGE);
+                });
+            } catch (Exception ex) {
+                SwingUtilities.invokeLater(() -> {
+                    calendarTestButton.setEnabled(true);
+                    JOptionPane.showMessageDialog(
+                            this,
+                            MessageFormat.format(bundle.getString("CalendarTestFailure"), ex.getMessage()),
+                            bundle.getString("Title"),
+                            JOptionPane.ERROR_MESSAGE);
+                });
+            }
+        });
+    }
+
+    private void saveCalendarConfiguration() {
+        commitCurrentCalendarAccountForm();
+        calendarConfig.save();
+        for (CalendarConfig.AccountSpec acc : calendarConfig.accounts()) {
+            String sec = pendingCalendarSecrets.getOrDefault(acc.accountId(), "");
+            if (!sec.isEmpty()) {
+                SharedSecrets.saveCalendarSecret(secrets, acc.accountId(), sec);
+            }
+        }
+        CalendarServices.getInstance().reload(calendarConfig, secrets);
+    }
+
     /**
      * Formats a user-facing description of where a secret is stored or would be saved.
      * @param secrets the secret store.
@@ -1041,6 +1414,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
             LlmConfig.fromPreferences(prefs).ifPresent(LlmConfig::save);
             saveStudioConfiguration();
             saveEmailConfiguration();
+            saveCalendarConfiguration();
             SmileStudio.updateLLM();
             SmileStudio.refreshModelSelectors();
             dispose();
