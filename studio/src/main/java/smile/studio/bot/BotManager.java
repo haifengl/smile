@@ -177,15 +177,15 @@ public class BotManager extends JPanel {
     private void initComponents() {
         JTabbedPane tabs = new JTabbedPane();
         tabs.setBorder(new EmptyBorder(8, 8, 8, 8));
-        tabs.addTab("Routine Definition", buildRoutineFormPanel());
-        tabs.addTab("Context Projects (projects.json)", buildProjectsPanel());
-        tabs.addTab("Auto Review Rules", buildRulesPanel());
+        tabs.addTab("Routine", buildRoutineFormPanel());
+        tabs.addTab("Context Projects", buildProjectsPanel());
+        tabs.addTab("Review Rules", buildRulesPanel());
         add(tabs, BorderLayout.CENTER);
 
         JPanel bottomBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
         JButton runNowBtn = new JButton("▶ Run Routine Now");
         runNowBtn.addActionListener(e -> triggerSelectedRoutineNow());
-        JButton saveBtn = new JButton("Save to bots.json");
+        JButton saveBtn = new JButton("Save");
         saveBtn.addActionListener(e -> saveCurrentRoutineAndConfig());
 
         bottomBar.add(runNowBtn);
@@ -243,7 +243,7 @@ public class BotManager extends JPanel {
     private JComponent buildProjectsPanel() {
         JPanel panel = new JPanel(new BorderLayout(6, 6));
         panel.setBorder(new EmptyBorder(8, 8, 8, 8));
-        JLabel info = new JLabel("<html>Tracked SMILE Studio projects in <code>${smile.home}/conf/projects.json</code>. "
+        JLabel info = new JLabel("<html>Tracked SMILE Studio projects. "
                 + "Cross-project routines (<code>/daily-log</code> at 19:00 and <code>/daily-recap</code> at 20:00) "
                 + "automatically inspect these workspaces.</html>");
         panel.add(info, BorderLayout.NORTH);
@@ -281,7 +281,7 @@ public class BotManager extends JPanel {
     private JComponent buildRulesPanel() {
         JPanel panel = new JPanel(new BorderLayout(6, 6));
         panel.setBorder(new EmptyBorder(8, 8, 8, 8));
-        JLabel info = new JLabel("<html>Standing Auto Review Rules in <code>bots.json</code>. "
+        JLabel info = new JLabel("<html>Standing Auto Review Rules. "
                 + "<b>Precedence invariant:</b> <code>REQUIRE_APPROVAL</code> always wins over <code>ALWAYS_ALLOW</code>.</html>");
         panel.add(info, BorderLayout.NORTH);
         panel.add(new JScrollPane(rulesTable), BorderLayout.CENTER);

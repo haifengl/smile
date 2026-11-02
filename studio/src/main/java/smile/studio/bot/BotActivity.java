@@ -212,8 +212,8 @@ public class BotActivity extends JPanel {
         super(new BorderLayout(8, 8));
 
         initTopBar();
-        tabs.addTab("Approvals & Batch Draft Queue", buildApprovalsTab());
-        tabs.addTab("Run History & Transcripts", buildRunsTab());
+        tabs.addTab("Approval Queue", buildApprovalsTab());
+        tabs.addTab("Run History", buildRunsTab());
         selectTab(initialTab);
         add(tabs, BorderLayout.CENTER);
 
