@@ -124,6 +124,15 @@ public final class HubClient {
             String updatedAt
     ) { }
 
+    /** Live Server-Sent Event notification from {@code GET /v1/admin/events/stream}. */
+    public record BotStreamEvent(
+            String type,
+            Long runId,
+            String botId,
+            String routineId,
+            String timestamp
+    ) { }
+
     private final HttpClient client;
     private final String baseUrl;
     private final String adminToken;
@@ -489,6 +498,84 @@ public final class HubClient {
             throw new IOException("Failed to load Bot Page '" + slug + "' (HTTP " + response.statusCode() + ")");
         }
         return response.body();
+    }
+
+    /**
+     * Connects to the Server-Sent Events stream ({@code GET /v1/admin/events/stream})
+     * and dispatches each event to {@code consumer} until the stream closes or the
+     * calling thread is interrupted.
+     *
+     * @param consumer callback invoked for each received {@link BotStreamEvent}.
+     * @throws IOException          if an I/O or HTTP error occurs.
+     * @throws InterruptedException if interrupted while streaming.
+     */
+    public void streamEvents(java.util.function.Consumer<BotStreamEvent> consumer)
+            throws IOException, InterruptedException {
+        if (consumer == null) {
+            return;
+        }
+        var builder = HttpRequest.newBuilder(URI.create(baseUrl + "/v1/admin/events/stream"))
+                .header("Accept", "text/event-stream")
+                .GET();
+        if (!adminToken.isEmpty()) {
+            builder.header("Authorization", "Bearer " + adminToken);
+        }
+        var response = client.send(builder.build(), HttpResponse.BodyHandlers.ofLines());
+        if (response.statusCode() != 200) {
+            throw new IOException("SSE connection failed (HTTP " + response.statusCode() + ")");
+        }
+        try (Stream<String> lines = response.body()) {
+            String eventName = null;
+            StringBuilder dataBuf = new StringBuilder();
+            var it = lines.iterator();
+            while (it.hasNext() && !Thread.currentThread().isInterrupted()) {
+                String line = it.next();
+                if (line.isEmpty()) {
+                    if (!dataBuf.isEmpty()) {
+                        BotStreamEvent ev = parseStreamEvent(eventName, dataBuf.toString().trim());
+                        if (ev != null) {
+                            consumer.accept(ev);
+                        }
+                        dataBuf.setLength(0);
+                    }
+                    eventName = null;
+                } else if (line.startsWith("event:")) {
+                    eventName = line.substring(6).trim();
+                } else if (line.startsWith("data:")) {
+                    if (!dataBuf.isEmpty()) {
+                        dataBuf.append('\n');
+                    }
+                    dataBuf.append(line.substring(5).trim());
+                }
+            }
+        }
+    }
+
+    static BotStreamEvent parseStreamEvent(String eventName, String data) {
+        if (data == null || data.isBlank()) {
+            return eventName != null && !eventName.isBlank()
+                    ? new BotStreamEvent(eventName, null, null, null, "")
+                    : null;
+        }
+        try {
+            JsonNode n = mapper.readTree(data);
+            String type = text(n, "type");
+            if (type.isBlank() && eventName != null) {
+                type = eventName;
+            }
+            Long runId = n.hasNonNull("runId") ? n.get("runId").asLong() : null;
+            return new BotStreamEvent(
+                    type,
+                    runId,
+                    text(n, "botId"),
+                    text(n, "routineId"),
+                    text(n, "timestamp")
+            );
+        } catch (Exception ex) {
+            return new BotStreamEvent(
+                    eventName != null && !eventName.isBlank() ? eventName : "message",
+                    null, "", "", "");
+        }
     }
 
     public HttpResponse<String> get(String path, boolean auth) throws IOException, InterruptedException {

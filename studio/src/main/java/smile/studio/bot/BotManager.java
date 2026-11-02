@@ -596,6 +596,8 @@ public class BotManager extends JPanel {
                     HubManager.getInstance().start();
                 }
                 HubManager.getInstance().client().runRoutineNow(botId, routineId);
+                HubManager.getInstance().fireEvent(new HubClient.BotStreamEvent(
+                        "run", null, botId, routineId, ""));
                 SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
                         this,
                         "Triggered routine '" + routineId + "' on Agent Hub.",

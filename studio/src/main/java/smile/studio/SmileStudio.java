@@ -245,13 +245,16 @@ public class SmileStudio extends JFrame implements SearchListener {
             });
         }
 
-        // Periodically poll Agent Hub status & pending approvals for the status bar badge.
-        var hubBadgeTimer = new javax.swing.Timer(10000, e -> Thread.ofPlatform().name("hub-badge-poll").daemon(true).start(() -> {
+        // Periodically poll Agent Hub status & pending approvals for the status bar badge,
+        // and also update immediately on Agent Hub Server-Sent Events.
+        Runnable updateHubBadge = () -> Thread.ofPlatform().name("hub-badge-poll").daemon(true).start(() -> {
             var client = HubManager.getInstance().client();
             boolean running = client.isReady();
             int pending = running ? client.getOverview().pendingApprovalCount() : 0;
             SwingUtilities.invokeLater(() -> statusBar.updateBotBadge(running, pending));
-        }));
+        });
+        HubManager.getInstance().addEventListener(ev -> updateHubBadge.run());
+        var hubBadgeTimer = new javax.swing.Timer(10000, e -> updateHubBadge.run());
         hubBadgeTimer.setInitialDelay(3000);
         hubBadgeTimer.start();
 
