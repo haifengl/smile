@@ -463,7 +463,7 @@ of our own runs that differ only by a few ULPs (fused vs unfused QKV: 0.59-0.86)
 
 **DSpark speculative decoding (Flash).** The checkpoint ships a 2.3 GB `dspark/` draft (5 dense decoder layers, hidden 6144, sliding
 window 4096, block of 7 tokens) that replaces the EAGLE-style MTP head. `MiniMax.build` loads it on rank 0's device next to the
-target (`SMILE_MINIMAX_DSPARK=0` skips it; it needs bf16 CUDA and costs ~3 GB on GPU 0, so with the vision tower use
+target (`MiniMax.build(..., loadDraft)` / `smile.chat.speculative=false` or `SMILE_MINIMAX_DSPARK=0` skip it; it needs bf16 CUDA and costs ~3 GB on GPU 0, so with the vision tower use
 `SMILE_MINIMAX_VISION=0` or `mem-fraction-static` around 0.92). How it works (`MiniMaxDspark`, `MiniMaxDsparkArgs`):
 - The target taps the residual stream **leaving** layers 3, 17, 31, 45, 59 for every committed token (`MiniMaxModel.setAuxLayers`,
   `forwardAux`, `takeAux`; vLLM adds 1 to `dspark_target_layer_ids`, so "entering layer 4/18/32/46/60"). Prefill chunks and
@@ -477,7 +477,9 @@ target (`SMILE_MINIMAX_DSPARK=0` skips it; it needs bf16 CUDA and costs ~3 GB on
 - `MiniMax.speculateStep` verifies `[anchor, drafts]` in **one target forward** (captured as a CUDA graph per (batch, window rows,
   attention window) by `MiniMaxModel.windowGraph`, with the taps copied into a static buffer), samples every row with the request's
   own sampler and accepts the matching prefix plus the bonus token (exact for any temperature). Several requests are verified in
-  one batched graph; drafting is still one request at a time (~6 ms each).
+  one batched graph, and their drafts are produced in one batched pass too (`MiniMaxDspark.draftBatch`: projections, MLPs, output
+  head and the 7 Markov steps run once over all rows, the Markov weights are read once per step; only the attention over each
+  request's own context is per request).
 - Requests without draft context (multimodal, or a gap) take one plain step. **Prefix reuse keeps speculation**: a finished
   request's draft ring is kept as a snapshot (LRU of `SMILE_MINIMAX_DSPARK_SNAPSHOTS`, default 8; the context of positions
   `[0, n)` depends only on the first `n` tokens) and a new request with a cached prefix adopts the longest matching one.
@@ -489,11 +491,13 @@ target (`SMILE_MINIMAX_DSPARK=0` skips it; it needs bf16 CUDA and costs ~3 GB on
 Measured on Flash (8x A100 40 GB, TP8, 8 chat prompts, greedy, 128 tokens, warm graphs): plain decode 25.4 ms/token (39 tok/s);
 DSpark with 7 drafts 11.7 ms/token (**85 tok/s, 2.2x**; 3 / 4 / 5 / 6 drafts: 71 / 77 / 79 / 80 tok/s); ~1.8-1.95 accepted drafts per
 round (vLLM's own implementation: 1.96 on the same prompts), a round = ~6 ms draft + ~32 ms verify for ~2.9 tokens. Aggregate
-tok/s for N concurrent requests, plain -> speculative: 1: 39 -> 121 (predictable prompt), 2: 64 -> 117, 4: 121 -> 140, 8: 204 -> 164, so
-the serve default speculates at most 4 requests at once (`smile.chat.speculative-max-concurrency`). Output equals plain greedy
+tok/s for N concurrent requests (median of 3 warm passes), plain -> speculative: 1: 39 -> 123 (a very predictable prompt set), 2: 64 -> 126,
+4: 123 -> 160, 8: 210 -> 214, so the serve default speculates at most 4 requests at once (`smile.chat.speculative-max-concurrency`).
+Output equals plain greedy
 decoding only up to the model's own noise: the same prompt prefilled twice differs by ~10 in max logit, and the top-20 logits of a
 1-row and an 8-row forward differ by 1-3, enough to flip an early greedy token (vLLM's DSpark shows the same, 7 of 8 prompts).
-Not supported yet: multimodal requests (they decode plainly), clusters, batched drafting, confidence-based truncation.
+Image and video requests speculate too (the draft only needs the target's hidden states, which the multimodal prefill returns for
+the image rows as well). Not supported yet: clusters, a CUDA graph for the draft, confidence-based truncation.
 
 **Images and video.** The checkpoint's vision side (`vision_tower.*`, `multi_modal_projector.*`, `patch_merge_mlp.*`, ~1.7 GB,
 bf16) loads onto rank 0's device after the text weights (`SMILE_MINIMAX_VISION=0` skips it; a checkpoint without vision

@@ -160,6 +160,10 @@ public class MiniMaxDspark implements AutoCloseable {
             for (int i = 0; i < layers; i++) {
                 k[i] = Tensor.zeros(options, ring, width);
                 v[i] = Tensor.zeros(options, ring, width);
+                // Owned by the request, not by whichever AutoScope is open on the creating thread (a rank thread's
+                // prefill scope would free it under the request).
+                k[i].detachFromScopes();
+                v[i].detachFromScopes();
             }
         }
 
@@ -502,7 +506,10 @@ public class MiniMaxDspark implements AutoCloseable {
         long[] ks = k.shape();
         Tensor qn4 = qn.forward(q.reshape(-1, args.headDim())).view(qs);
         Tensor kn4 = kn.forward(k.reshape(-1, args.headDim())).view(ks);
-        var r = PartialRotaryEncoding.apply(qn4, kn4, cos, sin, args.rotaryDim());
+        long batch = qs[0];
+        Tensor c = batch > 1 ? cos.reshape(batch, qs[1], -1) : cos;
+        Tensor sn = batch > 1 ? sin.reshape(batch, qs[1], -1) : sin;
+        var r = PartialRotaryEncoding.apply(qn4, kn4, c, sn, args.rotaryDim());
         return new Tensor[]{r._1(), r._2()};
     }
 
@@ -559,84 +566,160 @@ public class MiniMaxDspark implements AutoCloseable {
      * @return the drafted tokens.
      */
     public Draft draft(int requestId, int anchorToken, int anchorPos, boolean wantHidden) {
-        Cache c = cache(requestId);
+        return draftBatch(new int[]{requestId}, new int[]{anchorToken}, new int[]{anchorPos}, wantHidden)[0];
+    }
+
+    /**
+     * Drafts one block for each of several requests in one pass: the projections, the MLPs, the output head and the
+     * sequential Markov steps run once over all rows (the Markov weights are read once per step instead of once per
+     * request); only the attention over each request's own context is per request.
+     *
+     * @param requestIds   the requests (each context must hold every committed position below its anchor).
+     * @param anchorTokens each request's last sampled token, not yet in its context.
+     * @param anchorPos    their absolute positions.
+     * @return one block per request.
+     */
+    public Draft[] draftBatch(int[] requestIds, int[] anchorTokens, int[] anchorPos) {
+        return draftBatch(requestIds, anchorTokens, anchorPos, false);
+    }
+
+    private Draft[] draftBatch(int[] requestIds, int[] anchorTokens, int[] anchorPos, boolean wantHidden) {
+        int b = requestIds.length;
         int s = args.blockSize();
         int nkv = args.numKvHeads();
         int hd = args.headDim();
         int heads = args.numHeads();
         long width = (long) nkv * hd;
-        int lo = Math.max(0, anchorPos - (args.slidingWindow() - 1));
-        int hi = anchorPos + s - 1;
-        int keys = hi - lo + 1;
+        Cache[] c = new Cache[b];
+        int[] keys = new int[b];
+        int[] lo = new int[b];
+        for (int j = 0; j < b; j++) {
+            c[j] = cache(requestIds[j]);
+            lo[j] = Math.max(0, anchorPos[j] - (args.slidingWindow() - 1));
+            keys[j] = anchorPos[j] + s - 1 - lo[j] + 1;
+        }
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
-        try (var noGrad = Tensor.noGradGuard();
-             var window = Index.slice(anchorPos, anchorPos + s)) {
-            long[] ids = new long[s];
-            java.util.Arrays.fill(ids, args.noiseTokenId());
-            ids[0] = anchorToken;
-            Tensor tokens = Tensor.of(ids).to(device);
-            Tensor h = this.heads.embed(tokens).reshape(1, s, args.dim());
-            Tensor cos = rope.cos().get(window);
-            Tensor sin = rope.sin().get(window);
-            Tensor writeIdx = slots(anchorPos, s, c.ring);
-            Tensor readIdx = slots(lo, keys, c.ring);
+        try (var noGrad = Tensor.noGradGuard()) {
+            // The block's inputs: the anchor's embedding at row 0, the shared mask-token embedding elsewhere.
+            long[] ids = new long[b + 1];
+            for (int j = 0; j < b; j++) {
+                ids[j] = anchorTokens[j];
+            }
+            ids[b] = args.noiseTokenId();
+            long[] pick = new long[b * s];
+            long[] ropeRows = new long[b * s];
+            for (int j = 0; j < b; j++) {
+                for (int t = 0; t < s; t++) {
+                    pick[j * s + t] = t == 0 ? j : b;
+                    ropeRows[j * s + t] = anchorPos[j] + t;
+                }
+            }
+            Tensor embedded = this.heads.embed(Tensor.of(ids).to(device));
+            Tensor h = embedded.get(Tensor.of(pick).to(device)).reshape(b, s, args.dim());
+            Tensor ropeIdx = Tensor.of(ropeRows).to(device);
+            Tensor cos = rope.cos().get(ropeIdx);   // [b * s, R]: one row per token
+            Tensor sin = rope.sin().get(ropeIdx);
+            Tensor[] writeIdx = new Tensor[b];
+            Tensor[] readIdx = new Tensor[b];
+            for (int j = 0; j < b; j++) {
+                writeIdx[j] = slots(anchorPos[j], s, c[j].ring);
+                readIdx[j] = slots(lo[j], keys[j], c[j].ring);
+            }
             for (int i = 0; i < layers.length; i++) {
                 Layer l = layers[i];
                 Tensor a = l.inputNorm.forward(h);
-                Tensor qRaw = l.q.forward(a).reshape(1, s, heads, hd);
-                Tensor kRaw = l.k.forward(a).reshape(1, s, nkv, hd);
-                Tensor vRaw = l.v.forward(a).reshape(s, width);
+                Tensor qRaw = l.q.forward(a).reshape(b, s, heads, hd);
+                Tensor kRaw = l.k.forward(a).reshape(b, s, nkv, hd);
+                Tensor vRaw = l.v.forward(a).reshape(b, s, width);
                 Tensor[] qk = normRope(qRaw, kRaw, l.qNorm, l.kNorm, cos, sin);
-                c.k[i].put_(qk[1].reshape(s, width).to(dtype), writeIdx);
-                c.v[i].put_(vRaw.to(dtype), writeIdx);
-                Tensor kAll = c.k[i].get(readIdx).reshape(keys, nkv, hd).permute(1, 0, 2).unsqueeze(0).contiguous();
-                Tensor vAll = c.v[i].get(readIdx).reshape(keys, nkv, hd).permute(1, 0, 2).unsqueeze(0).contiguous();
-                // The numRep query heads of a KV group attend as extra query rows of that group's keys.
-                Tensor q = qk[0].reshape(s, nkv, numRep, hd).permute(1, 2, 0, 3).reshape(1, nkv, (long) numRep * s, hd);
-                Tensor att = KERNEL.forward(q, kAll, vAll, null, null);
-                Tensor merged = att.reshape(nkv, numRep, s, hd).permute(2, 0, 1, 3).reshape(1, s, (long) heads * hd);
-                h = h.add(l.o.forward(merged));
+                Tensor kRows = qk[1].reshape(b, s, width).to(dtype);
+                Tensor vRows = vRaw.to(dtype);
+                java.util.List<Tensor> merged = new java.util.ArrayList<>(b);
+                for (int j = 0; j < b; j++) {
+                    c[j].k[i].put_(b == 1 ? kRows.reshape(s, width) : kRows.get(j), writeIdx[j]);
+                    c[j].v[i].put_(b == 1 ? vRows.reshape(s, width) : vRows.get(j), writeIdx[j]);
+                    Tensor kAll = c[j].k[i].get(readIdx[j]).reshape(keys[j], nkv, hd).permute(1, 0, 2).unsqueeze(0).contiguous();
+                    Tensor vAll = c[j].v[i].get(readIdx[j]).reshape(keys[j], nkv, hd).permute(1, 0, 2).unsqueeze(0).contiguous();
+                    // The numRep query heads of a KV group attend as extra query rows of that group's keys.
+                    Tensor qj = b == 1 ? qk[0] : qk[0].get(j);
+                    Tensor q = qj.reshape(s, nkv, numRep, hd).permute(1, 2, 0, 3).reshape(1, nkv, (long) numRep * s, hd);
+                    Tensor att = KERNEL.forward(q, kAll, vAll, null, null);
+                    merged.add(att.reshape(nkv, numRep, s, hd).permute(2, 0, 1, 3).reshape(s, (long) heads * hd));
+                }
+                Tensor mergedAll = (b == 1 ? merged.get(0) : Tensor.vstack(merged.toArray(new Tensor[0])))
+                        .reshape(b, s, (long) heads * hd);
+                h = h.add(l.o.forward(mergedAll));
                 h = h.add(l.mlp.forward(l.postNorm.forward(h)));
             }
-            Tensor fin = finalNorm.forward(h).reshape(s, args.dim());
-            Tensor base = this.heads.logits(fin);
-            int[] out = new int[s];
-            float[] conf = args.confidenceHead() ? new float[s] : null;
-            Tensor prev = Tensor.of(new long[]{anchorToken}).to(device);
-            try (Tensor w2t = markovW2.transpose(0, 1)) {
+            Tensor fin = finalNorm.forward(h).reshape((long) b * s, args.dim());
+            Tensor base = this.heads.logits(fin);   // [b * s, vocab]
+
+            // Sequential Markov sampling, all requests together; everything stays on the device until the end.
+            long[] sel = new long[s * b];
+            for (int i = 0; i < s; i++) {
+                for (int j = 0; j < b; j++) {
+                    sel[i * b + j] = (long) j * s + i;
+                }
+            }
+            Tensor selAll = Tensor.of(sel).to(device);
+            var longs = new Tensor.Options().device(device).dtype(ScalarType.Int64).requireGradients(false);
+            var floats = new Tensor.Options().device(device).dtype(ScalarType.Float).requireGradients(false);
+            Tensor outTokens = Tensor.zeros(longs, s, b);
+            Tensor outConf = args.confidenceHead() ? Tensor.zeros(floats, s, b) : null;
+            long[] anchors = new long[b];
+            for (int j = 0; j < b; j++) {
+                anchors[j] = anchorTokens[j];
+            }
+            Tensor prev = Tensor.of(anchors).to(device);
+            try (Tensor w2t = markovW2.transpose(0, 1);
+                 Tensor ch = confHidden == null ? null : confHidden.transpose(0, 1);
+                 Tensor cm = confMarkov == null ? null : confMarkov.transpose(0, 1)) {
                 for (int i = 0; i < s; i++) {
-                    Tensor e = markovW1.get(prev);                       // [1, rank]
-                    Tensor bias = e.matmul(w2t).to(ScalarType.Float);     // [1, vocab]
-                    Tensor row;
-                    try (var r = Index.slice(i, i + 1)) {
-                        row = base.get(r, Index.Colon);
+                    Tensor idx;
+                    try (var r = Index.slice(i * b, (i + 1) * b)) {
+                        idx = selAll.get(r);
                     }
-                    Tensor next = row.add(bias).argmax(-1, false);       // [1]
-                    if (conf != null) {
-                        Tensor hRow;
-                        try (var r = Index.slice(i, i + 1)) {
-                            hRow = fin.get(r, Index.Colon).to(ScalarType.Float);
-                        }
-                        try (Tensor ch = confHidden.transpose(0, 1);
-                             Tensor cm = confMarkov.transpose(0, 1);
-                             Tensor z = hRow.matmul(ch).add(e.to(ScalarType.Float).matmul(cm)).add(confBias);
-                             Tensor host = z.to(Device.CPU()).copy()) {
-                            conf[i] = (float) (1.0 / (1.0 + Math.exp(-host.floatArray()[0])));
-                        }
-                    }
-                    try (Tensor host = next.to(Device.CPU())) {
-                        out[i] = (int) host.longArray()[0];
+                    Tensor e = markovW1.get(prev);                              // [b, rank]
+                    Tensor bias = e.matmul(w2t).to(ScalarType.Float);            // [b, vocab]
+                    Tensor next = base.get(idx).add(bias).argmax(-1, false);     // [b]
+                    outTokens.put_(next, Index.of(i));
+                    if (outConf != null) {
+                        Tensor z = fin.get(idx).to(ScalarType.Float).matmul(ch)
+                                .add(e.to(ScalarType.Float).matmul(cm)).add(confBias);   // [b, 1]
+                        outConf.put_(z.reshape(b), Index.of(i));
                     }
                     prev = next;
                 }
             }
-            Tensor hidden = null;
-            if (wantHidden) {
-                hidden = fin.to(ScalarType.Float).copy();
-                hidden.detachFromScopes();
+            long[] tokens;
+            float[] logits = null;
+            try (Tensor host = outTokens.to(Device.CPU()).copy()) {
+                tokens = host.longArray();
             }
-            return new Draft(out, conf, hidden);
+            if (outConf != null) {
+                try (Tensor host = outConf.to(Device.CPU()).copy()) {
+                    logits = host.floatArray();
+                }
+            }
+            Draft[] result = new Draft[b];
+            for (int j = 0; j < b; j++) {
+                int[] out = new int[s];
+                float[] conf = logits == null ? null : new float[s];
+                for (int i = 0; i < s; i++) {
+                    out[i] = (int) tokens[i * b + j];
+                    if (conf != null) {
+                        conf[i] = (float) (1.0 / (1.0 + Math.exp(-logits[i * b + j])));
+                    }
+                }
+                Tensor hidden = null;
+                if (wantHidden && b == 1) {
+                    hidden = fin.to(ScalarType.Float).copy();
+                    hidden.detachFromScopes();
+                }
+                result[j] = new Draft(out, conf, hidden);
+            }
+            return result;
         } finally {
             Tensor.pop();
             scope.close();

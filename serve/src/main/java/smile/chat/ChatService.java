@@ -1107,7 +1107,7 @@ public class ChatService implements OpenAiModelContributor {
         logger.infof("Loading MiniMax-M3 from %s on %d device(s), weight mode %s",
                 checkpointDir, devices.length, weightMode == null ? "auto" : weightMode);
         return MiniMax.build(checkpointDir, config.maxBatchSize(), config.maxSeqLen(), devices,
-                memFraction, pageSize, weightMode);
+                memFraction, pageSize, weightMode, null, config.speculative());
     }
 
     /**

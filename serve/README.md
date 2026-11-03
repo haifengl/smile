@@ -373,8 +373,8 @@ cards such as `cyankiwi/Qwen3.8-27B-AWQ-INT4` as dense).
 MiniMax-M3.1-Flash ships a small draft model (`dspark/`, 2.3 GB) that proposes 7 tokens per round; the target verifies them in one
 CUDA-graph forward and keeps the longest matching prefix, so the output distribution is unchanged (greedy output can differ from
 plain decoding only through bf16 near-ties, which this model has plenty of). It is on by default when the checkpoint has the
-`dspark/` folder (`smile.chat.speculative=false` or `SMILE_MINIMAX_DSPARK=0` turns it off). It works with prefix reuse, tool
-calls, sampling and chunked prefill; multimodal requests decode plainly.
+`dspark/` folder (`smile.chat.speculative=false` or `SMILE_MINIMAX_DSPARK=0` turns it off). It works with prefix reuse, sampling,
+chunked prefill and image requests (exercised through `InferenceEngine`; the HTTP checks below cover tool-call requests).
 
 Setup: 8x A100 40 GB, tensor-parallel non-expert weights, greedy, 8 chat prompts, 128 new tokens, warm graphs.
 
@@ -382,14 +382,18 @@ Setup: 8x A100 40 GB, tensor-parallel non-expert weights, greedy, 8 chat prompts
 |---|---|---|
 | One request | 25.4 ms/token (39 tok/s) | **11.7 ms/token (85 tok/s, 2.2x)** |
 | Drafts per round 3 / 4 / 5 / 6 | n/a | 71 / 77 / 79 / 80 tok/s |
-| 2 concurrent requests (aggregate) | 64 tok/s | 117 tok/s |
-| 4 concurrent requests (aggregate) | 121 tok/s | 140 tok/s |
-| 8 concurrent requests (aggregate) | 204 tok/s | 164 tok/s |
+| 2 concurrent requests (aggregate) | 64 tok/s | 126 tok/s |
+| 4 concurrent requests (aggregate) | 123 tok/s | 160 tok/s |
+| 8 concurrent requests (aggregate) | 210 tok/s | 214 tok/s |
 
-Drafting is sequential per request (about 6 ms each), so the gain shrinks with concurrency; the service therefore lets at most 4
-requests speculate at once unless `smile.chat.speculative-max-concurrency` says otherwise (the rest use batched plain decode).
-The draft costs about 3 GB on GPU 0: lower `smile.chat.mem-fraction-static` accordingly or set `SMILE_MINIMAX_VISION=0`
-(on 40 GB cards 0.92 worked without the vision tower). Other knobs: `SMILE_MINIMAX_DSPARK_SNAPSHOTS` (draft contexts kept for prefix
+The gain shrinks with concurrency (the batched plain decode gets more efficient too) and is gone at 8 concurrent requests, so the
+service lets at most 4 requests speculate at once unless `smile.chat.speculative-max-concurrency` says otherwise (the rest use
+batched plain decode). Image and video requests speculate as well.
+Through the HTTP API (4 reasoning-heavy prompts, 160 tokens each, one request at a time, prefill and request overhead included)
+Flash answers at 67.8 tok/s with DSpark against 37.9 tok/s without (1.8x); the 19 checks of `http_check.py` (tools, tool-result round
+trip, streaming, thinking modes, 4 concurrent requests, a 2.8k-token prompt, prefix cache) pass with speculation on.
+The draft is only loaded when `smile.chat.speculative=true`. It costs about 3 GB on GPU 0: lower `smile.chat.mem-fraction-static` accordingly or set `SMILE_MINIMAX_VISION=0`
+(on 40 GB cards 0.92 worked without the vision tower; with `speculative=false` nothing is loaded and the old settings apply). Other knobs: `SMILE_MINIMAX_DSPARK_SNAPSHOTS` (draft contexts kept for prefix
 reuse, default 8), `SMILE_MINIMAX_SPARSE_KERNEL=0` (reference attention path, slower).
 
 ### Qwen3.8 27B with MTP speculative decoding
