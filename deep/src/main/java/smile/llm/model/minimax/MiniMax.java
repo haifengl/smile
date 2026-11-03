@@ -517,6 +517,9 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             final int imageStart = imageBefore;
             final int videoStart = videoBefore;
             final int imageCount = imageTokens;
+            // The draft only needs the target's hidden states (never the image embeddings), so a multimodal request can
+            // speculate once the taps of its image and text rows are absorbed window by window.
+            final boolean capture = auxLayers != null && draft != null && speculativeEnabled && draftTracks(requestId, from);
             Tensor[] logits = onRanks(r -> {
                 try (var scope = new AutoScope()) {
                     Tensor.push(scope);
@@ -543,13 +546,29 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                             }
                             Tensor tokens = Tensor.of(window).reshape(1, window.length).to(device);
                             Tensor out;
-                            if (n == 0) {
-                                out = models[r].forward(tokens, a, false);
-                            } else {
-                                long[] usedRows = Arrays.copyOf(rows, n);
+                            long[] usedRows = null;
+                            Tensor picked = null;
+                            if (n > 0) {
+                                usedRows = Arrays.copyOf(rows, n);
                                 Tensor sourceIndex = Tensor.of(Arrays.copyOf(source, n)).to(device);
-                                Tensor picked = mine.get(sourceIndex);
-                                out = models[r].forward(tokens, a, false, usedRows, picked);
+                                picked = mine.get(sourceIndex);
+                            }
+                            out = capture ? models[r].forwardAux(tokens, a, false, usedRows, picked)
+                                    : models[r].forward(tokens, a, false, usedRows, picked);
+                            if (capture) {
+                                Tensor taps = models[r].takeAux();
+                                if (taps != null) {
+                                    try {
+                                        if (r == 0) {
+                                            if (a == 0) {
+                                                draft.bind(requestId, draftCapacity.getOrDefault(requestId, params.maxSeqLen()));
+                                            }
+                                            draft.absorb(requestId, taps, a);
+                                        }
+                                    } finally {
+                                        taps.close();
+                                    }
+                                }
                             }
                             if (b == to && to == ids.length) {
                                 last = out.reshape(1, -1).copy();
@@ -566,6 +585,11 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                 }
             });
             Tensor row = firstAndClose(logits);
+            if (capture) {
+                draftPosition.put(requestId, to);
+            } else {
+                draftPosition.remove(requestId);
+            }
             if (row == null) {
                 return null;
             }
@@ -786,6 +810,8 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
     private final java.util.concurrent.atomic.AtomicLong speculativePlain = new java.util.concurrent.atomic.AtomicLong();
     private final java.util.concurrent.atomic.AtomicLong draftNanos = new java.util.concurrent.atomic.AtomicLong();
     private final java.util.concurrent.atomic.AtomicLong verifyNanos = new java.util.concurrent.atomic.AtomicLong();
+    /** Time in {@link #accept} (sampling the verify rows and absorbing the committed taps); included in the verify time. */
+    private final java.util.concurrent.atomic.AtomicLong acceptNanos = new java.util.concurrent.atomic.AtomicLong();
 
     /**
      * Installs the DSpark drafter and starts capturing the target taps it consumes.
@@ -937,10 +963,12 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
     public String speculativeStats() {
         long rounds = speculativeRounds.get();
         long proposed = speculativeProposed.get();
-        return String.format("rounds=%d accepted/round=%.2f accept-rate=%.2f plain-steps=%d draft-ms/round=%.1f verify-ms/round=%.1f",
+        return String.format("rounds=%d accepted/round=%.2f accept-rate=%.2f plain-steps=%d draft-ms/round=%.1f verify-ms/round=%.1f"
+                        + " (of which accept+absorb %.1f)",
                 rounds, rounds == 0 ? 0.0 : (double) speculativeAccepted.get() / rounds,
                 proposed == 0 ? 0.0 : (double) speculativeAccepted.get() / proposed, speculativePlain.get(),
-                rounds == 0 ? 0.0 : draftNanos.get() / 1e6 / rounds, rounds == 0 ? 0.0 : verifyNanos.get() / 1e6 / rounds);
+                rounds == 0 ? 0.0 : draftNanos.get() / 1e6 / rounds, rounds == 0 ? 0.0 : verifyNanos.get() / 1e6 / rounds,
+                rounds == 0 ? 0.0 : acceptNanos.get() / 1e6 / rounds);
     }
 
     /** Whether the taps of {@code requestId} are being fed to the draft, and a chunk starting at {@code from} continues them. */
@@ -1206,6 +1234,15 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
      * @param aux  taps of the request's window rows {@code [n + 1, width]}, or {@code null}.
      */
     private int[] accept(int requestId, int pos, int[] drafts, Tensor rows, Tensor aux, double temperature, double topp) {
+        long started = System.nanoTime();
+        try {
+            return acceptRows(requestId, pos, drafts, rows, aux, temperature, topp);
+        } finally {
+            acceptNanos.addAndGet(System.nanoTime() - started);
+        }
+    }
+
+    private int[] acceptRows(int requestId, int pos, int[] drafts, Tensor rows, Tensor aux, double temperature, double topp) {
         int[] targetSamples = smile.llm.engine.Sampling.sampleTokenIds(rows, temperature, topp);
         var accept = smile.llm.engine.SpeculativeDecoding.acceptGreedy(drafts, targetSamples);
         int accepted = accept.numDraftAccepted();
@@ -1240,12 +1277,17 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         int[] ids = new int[k];
         int[] pos = new int[k];
         long[] tokens = new long[k * s];
+        int[] anchors = new int[k];
         for (int j = 0; j < k; j++) {
             int i = ready.get(j);
             ids[j] = requestIds[i];
             pos[j] = positions[i];
-            drafts[j] = draftBlock(ids[j], lastTokens[i], pos[j], n);
-            tokens[j * s] = lastTokens[i];
+            anchors[j] = lastTokens[i];
+        }
+        MiniMaxDspark.Draft[] blocks = draft.draftBatch(ids, anchors, pos);
+        for (int j = 0; j < k; j++) {
+            drafts[j] = Arrays.copyOf(blocks[j].tokens(), n);
+            tokens[j * s] = anchors[j];
             for (int d = 0; d < n; d++) {
                 tokens[j * s + 1 + d] = drafts[j][d];
             }
@@ -1781,6 +1823,29 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
     public static MiniMax build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte[] devices,
                                 double memFractionStatic, int pageSize, String weightMode, ClusterSpec cluster)
             throws IOException {
+        return build(checkpointDir, maxBatchSize, maxSeqLen, devices, memFractionStatic, pageSize, weightMode, cluster, true);
+    }
+
+    /**
+     * Same as {@link #build(String, int, int, byte[], double, int, String, ClusterSpec)}, optionally without the DSpark
+     * draft: a service that does not speculate should not pay the draft's ~3 GB on rank 0.
+     *
+     * @param checkpointDir     directory with {@code config.json}, {@code tokenizer.json} and safetensors.
+     * @param maxBatchSize      maximum concurrent requests.
+     * @param maxSeqLen         maximum context length; {@code <= 0} uses {@code max_position_embeddings}.
+     * @param devices           CUDA device indices, one rank each, or {@code null} for one CPU rank.
+     * @param memFractionStatic fraction of device memory for weights + KV.
+     * @param pageSize          KV page size in tokens.
+     * @param weightMode        see {@link #build(String, int, int, byte[], double, int, String)}.
+     * @param cluster           this process's place in the cluster, or {@code null}.
+     * @param loadDraft         load the checkpoint's {@code dspark/} draft when it has one (and
+     *                          {@code SMILE_MINIMAX_DSPARK} is not {@code 0}).
+     * @return the loaded model.
+     * @throws IOException if the checkpoint is missing, unsupported or incomplete.
+     */
+    public static MiniMax build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte[] devices,
+                                double memFractionStatic, int pageSize, String weightMode, ClusterSpec cluster,
+                                boolean loadDraft) throws IOException {
         File dir = new File(checkpointDir);
         if (!dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory not found: " + checkpointDir);
@@ -1915,7 +1980,7 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         // The DSpark drafter (2.3 GB FP8) also lives on rank 0's device, loaded before the KV pool takes the free memory.
         java.util.concurrent.atomic.AtomicReference<MiniMax> self = new java.util.concurrent.atomic.AtomicReference<>();
         MiniMaxDspark draft = null;
-        if (!follower && cluster == null && cuda && computeDtype == ScalarType.BFloat16
+        if (loadDraft && !follower && cluster == null && cuda && computeDtype == ScalarType.BFloat16
                 && !"0".equals(System.getenv("SMILE_MINIMAX_DSPARK")) && new File(dir, "dspark/config.json").exists()) {
             try {
                 long t0 = System.currentTimeMillis();

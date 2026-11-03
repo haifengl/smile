@@ -212,4 +212,51 @@ public class MiniMaxDsparkEngineTest {
             engine.close();
         }
     }
+
+    /**
+     * An image request with speculation on: the draft only needs the target's hidden states, so the taps of the image and
+     * text rows of the multimodal prefill are enough. Needs the vision tower next to the draft on rank 0 (about 5 GB: run
+     * with {@code MINIMAX_MEM_FRACTION=0.95}) and {@code MINIMAX_MM_MEDIA} (a directory with {@code img_a.png}).
+     */
+    @Test
+    public void multimodal() throws Exception {
+        String dir = System.getenv("MINIMAX_MODEL_DIR");
+        String devList = System.getenv("MINIMAX_DEVICES");
+        String media = System.getenv("MINIMAX_MM_MEDIA");
+        assumeTrue(dir != null && devList != null && media != null, "MINIMAX_* / MINIMAX_MM_MEDIA not set");
+        String[] ds = devList.split(",");
+        byte[] devices = new byte[ds.length];
+        for (int i = 0; i < ds.length; i++) {
+            devices[i] = Byte.parseByte(ds[i].trim());
+        }
+        double mem = Double.parseDouble(System.getenv().getOrDefault("MINIMAX_MEM_FRACTION", "0.95"));
+        try (MiniMax m = MiniMax.build(dir, 4, 4096, devices, mem, 1)) {
+            assumeTrue(m.isSpeculativeEnabled(), "no DSpark draft loaded");
+            assumeTrue(m.isMultimodal(), "no vision tower loaded");
+            InferenceEngine engine = new InferenceEngine(m, 4, 4, 2048, 120_000, 0);
+            engine.setMaxSpeculativeConcurrency(4);
+            Message[] dialog = {new Message(Role.user, List.of(
+                    new smile.llm.ImageUrlPart(new java.io.File(media, "img_a.png").getPath()),
+                    new smile.llm.TextPart("Describe this image in two sentences.")))};
+            ChatCompletion plain = null;
+            ChatCompletion spec = null;
+            long rounds = m.speculativeRounds();
+            for (boolean speculative : new boolean[]{false, true}) {
+                var mm = m.processMultimodal(dialog, null);
+                ChatCompletion c = engine.submit(GenerationRequest.ofMultimodal(mm, 64, 0.0, 1.0, false, 0, null, null,
+                        speculative, 7)).future().get(300, TimeUnit.SECONDS);
+                if (speculative) {
+                    spec = c;
+                } else {
+                    plain = c;
+                    assertEquals(rounds, m.speculativeRounds(), "a plain request must not speculate");
+                }
+            }
+            assertTrue(m.speculativeRounds() > rounds, "the image request did not speculate");
+            assertTrue(spec.completionTokens().length >= 1);
+            System.out.println("MM: plain \"" + plain.content() + "\"\n    spec  \"" + spec.content() + "\"\n    first diff "
+                    + firstDiff(plain.completionTokens(), spec.completionTokens()) + "; " + m.speculativeStats());
+            engine.close();
+        }
+    }
 }

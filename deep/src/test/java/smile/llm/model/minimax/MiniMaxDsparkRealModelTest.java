@@ -129,6 +129,42 @@ public class MiniMaxDsparkRealModelTest {
                 }
                 draft.release(request);
             }
+            // Two requests drafted together (rounds 1 and 2 of the two recorded requests): every row of the batch must
+            // reproduce what the recorded single-request round produced.
+            draft.bind(101, 4096);
+            draft.bind(102, 4096);
+            int batchMatched = 0;
+            int batchTotal = 0;
+            for (int[] pair : new int[][]{{1, 4}, {2, 5}}) {
+                int[] requests = {101, 102};
+                int[] anchors = new int[2];
+                int[] anchorPos = new int[2];
+                for (int j = 0; j < 2; j++) {
+                    JsonNode m = meta.get(pair[j] - 1);
+                    int n = m.get("n").asInt();
+                    float[] aux = readFloats(Path.of(casesDir, "case" + pair[j] + "_aux.f32"));
+                    try (Tensor all = Tensor.of(aux, n, draft.args().contextWidth()).to(device).to(ScalarType.BFloat16);
+                         var rows = Index.slice(0, m.get("valid").asInt());
+                         Tensor context = all.get(rows, Index.Colon)) {
+                        draft.absorb(requests[j], context, m.get("start").asInt());
+                    }
+                    anchors[j] = m.get("anchor").asInt();
+                    anchorPos[j] = m.get("anchor_pos").asInt();
+                }
+                MiniMaxDspark.Draft[] blocks = draft.draftBatch(requests, anchors, anchorPos);
+                for (int j = 0; j < 2; j++) {
+                    JsonNode want = meta.get(pair[j] - 1).get("tokens");
+                    for (int r = 0; r < draft.args().blockSize(); r++) {
+                        if (blocks[j].tokens()[r] == want.get(r).asInt()) {
+                            batchMatched++;
+                        }
+                        batchTotal++;
+                    }
+                }
+            }
+            draft.release(101);
+            draft.release(102);
+            assertTrue(batchMatched >= batchTotal - 2, "batched drafts: " + batchMatched + " of " + batchTotal + " match vLLM");
         } finally {
             embedding.close();
             head.close();
