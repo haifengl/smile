@@ -22,6 +22,7 @@ import ioa.agent.calendar.CalendarConfig;
 import ioa.agent.calendar.CalendarServices;
 import ioa.agent.email.EmailConfig;
 import ioa.agent.email.EmailServices;
+import ioa.agent.email.OAuthFlow;
 import ioa.agent.email.SharedSecrets;
 import ioa.llm.Model;
 import ioa.llm.client.LlmConfig;
@@ -146,8 +147,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
             new JComboBox<>(EmailConfig.Provider.values());
     private final JSpinner emailPollSpinner = new JSpinner(new SpinnerNumberModel(60, 10, 86400, 15));
     private final JTextField emailFolderField = new JTextField("INBOX", 14);
-    private final JTextField emailClientIdField = new JTextField(24);
-    private final JTextField emailTenantIdField = new JTextField("common", 14);
     private final JTextField emailImapHostField = new JTextField(18);
     private final JSpinner emailImapPortSpinner = new JSpinner(new SpinnerNumberModel(993, 1, 65535, 1));
     private final JTextField emailSmtpHostField = new JTextField(18);
@@ -155,7 +154,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private final JCheckBox emailStartTlsCheck = new JCheckBox(bundle.getString("EmailStartTls"), false);
     private final JPasswordField emailSecretField = new JPasswordField(24);
     private final JLabel emailSecretStatusLabel = new JLabel();
-    private final JButton emailOAuthButton = new JButton(bundle.getString("EmailOAuthSignIn"));
+    private final JButton emailLoginGoogleButton = new JButton(bundle.getString("OAuthLoginWithGoogle"));
+    private final JButton emailLoginMicrosoftButton = new JButton(bundle.getString("OAuthLoginWithMicrosoft"));
     private final JButton emailTestButton = new JButton(bundle.getString("EmailTestConnection"));
 
     // Calendar Accounts tab state & fields
@@ -177,11 +177,10 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private final JTextField calendarDescriptionField = new JTextField(22);
     private final JSpinner calendarPollSpinner = new JSpinner(new SpinnerNumberModel(300, 15, 86400, 30));
     private final JCheckBox calendarUseEmailCheck = new JCheckBox(bundle.getString("CalendarUseEmailAccount"), true);
-    private final JTextField calendarClientIdField = new JTextField(24);
-    private final JTextField calendarTenantIdField = new JTextField("common", 14);
     private final JPasswordField calendarSecretField = new JPasswordField(24);
     private final JLabel calendarSecretStatusLabel = new JLabel();
-    private final JButton calendarOAuthButton = new JButton(bundle.getString("CalendarOAuthSignIn"));
+    private final JButton calendarLoginGoogleButton = new JButton(bundle.getString("OAuthLoginWithGoogle"));
+    private final JButton calendarLoginMicrosoftButton = new JButton(bundle.getString("OAuthLoginWithMicrosoft"));
     private final JButton calendarTestButton = new JButton(bundle.getString("CalendarTestConnection"));
 
     /**
@@ -880,9 +879,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 bundle.getString("EmailFolder"), emailFolderField,
                 bundle.getString("EmailPollInterval"), emailPollSpinner);
         addEmailRow(form, gbc, r++,
-                bundle.getString("EmailClientId"), emailClientIdField,
-                bundle.getString("EmailTenantId"), emailTenantIdField);
-        addEmailRow(form, gbc, r++,
                 bundle.getString("EmailImapHost"), emailImapHostField,
                 bundle.getString("EmailImapPort"), emailImapPortSpinner);
         addEmailRow(form, gbc, r++,
@@ -916,9 +912,11 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridwidth = 1;
 
         JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        emailOAuthButton.addActionListener(e -> launchEmailOAuthSignIn());
+        emailLoginGoogleButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.GMAIL));
+        emailLoginMicrosoftButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.MSGRAPH));
         emailTestButton.addActionListener(e -> testCurrentEmailConnection());
-        actionRow.add(emailOAuthButton);
+        actionRow.add(emailLoginGoogleButton);
+        actionRow.add(emailLoginMicrosoftButton);
         actionRow.add(emailTestButton);
 
         gbc.gridx = 1;
@@ -1017,8 +1015,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
         emailProviderCombo.setSelectedItem(EmailConfig.Provider.GMAIL);
         emailPollSpinner.setValue(60);
         emailFolderField.setText("INBOX");
-        emailClientIdField.setText("");
-        emailTenantIdField.setText("common");
         emailImapHostField.setText("imap.gmail.com");
         emailImapPortSpinner.setValue(993);
         emailSmtpHostField.setText("smtp.gmail.com");
@@ -1045,8 +1041,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
         emailProviderCombo.setSelectedItem(acc.provider());
         emailPollSpinner.setValue(acc.pollIntervalSeconds());
         emailFolderField.setText(acc.folder());
-        emailClientIdField.setText(acc.clientId() != null ? acc.clientId() : "");
-        emailTenantIdField.setText(acc.tenantId() != null ? acc.tenantId() : "common");
         emailImapHostField.setText(acc.imapHost() != null ? acc.imapHost() : "");
         emailImapPortSpinner.setValue(acc.imapPort());
         emailSmtpHostField.setText(acc.smtpHost() != null ? acc.smtpHost() : "");
@@ -1066,13 +1060,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
     private void updateEmailProviderFieldStates() {
         EmailConfig.Provider provider = (EmailConfig.Provider) emailProviderCombo.getSelectedItem();
-        boolean isOAuth = provider == EmailConfig.Provider.GMAIL || provider == EmailConfig.Provider.MSGRAPH;
-        boolean isMsGraph = provider == EmailConfig.Provider.MSGRAPH;
         boolean isImap = provider == EmailConfig.Provider.IMAP;
 
-        emailClientIdField.setEnabled(isOAuth);
-        emailTenantIdField.setEnabled(isMsGraph);
-        emailOAuthButton.setEnabled(isOAuth);
         emailImapHostField.setEnabled(isImap);
         emailImapPortSpinner.setEnabled(isImap);
         emailSmtpHostField.setEnabled(isImap);
@@ -1086,13 +1075,15 @@ public class SettingsDialog extends JDialog implements ActionListener {
         if (email.isEmpty()) {
             return null;
         }
+        Optional<EmailConfig.AccountSpec> existing = emailConfig.findAccount(email);
         EmailConfig.Provider provider = (EmailConfig.Provider) emailProviderCombo.getSelectedItem();
         String senderName = emailSenderNameField.getText().trim();
         String description = emailDescriptionField.getText().trim();
         int pollSec = ((Number) emailPollSpinner.getValue()).intValue();
         String folder = emailFolderField.getText().trim();
-        String clientId = emailClientIdField.getText().trim();
-        String tenantId = emailTenantIdField.getText().trim();
+        String clientId = existing.map(EmailConfig.AccountSpec::clientId).orElse(null);
+        String tenantId = existing.map(EmailConfig.AccountSpec::tenantId)
+                .orElse(provider == EmailConfig.Provider.MSGRAPH ? "common" : null);
         String imapHost = emailImapHostField.getText().trim();
         int imapPort = ((Number) emailImapPortSpinner.getValue()).intValue();
         boolean imapSsl = imapPort != 143;
@@ -1110,8 +1101,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 pollSec,
                 folder.isEmpty() ? "INBOX" : folder,
                 provider == EmailConfig.Provider.GMAIL ? "label:INBOX" : null,
-                clientId.isEmpty() ? null : clientId,
-                tenantId.isEmpty() ? "common" : tenantId,
+                clientId,
+                tenantId,
                 imapHost.isEmpty() ? null : imapHost,
                 imapPort,
                 imapSsl,
@@ -1164,28 +1155,35 @@ public class SettingsDialog extends JDialog implements ActionListener {
         refreshEmailAccountCombo(emailConfig.defaultAccount());
     }
 
-    private void launchEmailOAuthSignIn() {
+    private void setOAuthLoginButtonsEnabled(boolean enabled) {
+        emailLoginGoogleButton.setEnabled(enabled);
+        emailLoginMicrosoftButton.setEnabled(enabled);
+        calendarLoginGoogleButton.setEnabled(enabled);
+        calendarLoginMicrosoftButton.setEnabled(enabled);
+    }
+
+    private void launchOneClickOAuthLogin(EmailConfig.Provider provider) {
         commitCurrentEmailAccountForm();
-        EmailConfig.AccountSpec spec = buildSpecFromEmailForm();
-        if (spec == null) {
-            return;
-        }
-        emailOAuthButton.setEnabled(false);
-        Thread.ofVirtual().name("studio-email-oauth").start(() -> {
+        commitCurrentCalendarAccountForm();
+        setOAuthLoginButtonsEnabled(false);
+        Thread.ofVirtual().name("studio-oneclick-oauth").start(() -> {
             try {
-                EmailOAuthFlow.OAuthResult result = EmailOAuthFlow.authorizePkceLoopback(
-                        spec, null, Duration.ofMinutes(3));
+                OAuthFlow.OAuthLoginResult login = provider == EmailConfig.Provider.GMAIL
+                        ? EmailOAuthFlow.loginWithGoogle(Duration.ofMinutes(3))
+                        : EmailOAuthFlow.loginWithMicrosoft(Duration.ofMinutes(3));
                 SwingUtilities.invokeLater(() -> {
-                    emailSecretField.setText(result.refreshToken());
-                    pendingEmailSecrets.put(spec.emailAddress(), result.refreshToken());
-                    SharedSecrets.saveEmailSecret(secrets, spec.emailAddress(), result.refreshToken());
-                    emailSecretStatusLabel.setText(
-                            formatSecretStatus(secrets, SharedSecrets.emailSecretId(spec.emailAddress())));
-                    emailOAuthButton.setEnabled(true);
+                    OAuthFlow.ProvisionedAccounts provisioned = OAuthFlow.provisionAccounts(
+                            login, emailConfig, calendarConfig, secrets);
+                    emailConfig = provisioned.emailConfig();
+                    calendarConfig = provisioned.calendarConfig();
+                    pendingEmailSecrets.put(login.emailAddress(), login.refreshToken());
+                    refreshEmailAccountCombo(login.emailAddress());
+                    refreshCalendarAccountCombo(login.emailAddress());
+                    setOAuthLoginButtonsEnabled(true);
                 });
             } catch (Exception ex) {
                 SwingUtilities.invokeLater(() -> {
-                    emailOAuthButton.setEnabled(true);
+                    setOAuthLoginButtonsEnabled(true);
                     JOptionPane.showMessageDialog(
                             this,
                             MessageFormat.format(bundle.getString("EmailTestFailure"), ex.getMessage()),
@@ -1306,10 +1304,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
         form.add(calendarUseEmailCheck, gbc);
         gbc.gridwidth = 1;
 
-        addEmailRow(form, gbc, r++,
-                bundle.getString("CalendarClientId"), calendarClientIdField,
-                bundle.getString("CalendarTenantId"), calendarTenantIdField);
-
         calendarSecretField.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true");
         gbc.gridx = 0;
         gbc.gridy = r;
@@ -1331,9 +1325,11 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridwidth = 1;
 
         JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        calendarOAuthButton.addActionListener(e -> launchCalendarOAuthSignIn());
+        calendarLoginGoogleButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.GMAIL));
+        calendarLoginMicrosoftButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.MSGRAPH));
         calendarTestButton.addActionListener(e -> testCurrentCalendarConnection());
-        actionRow.add(calendarOAuthButton);
+        actionRow.add(calendarLoginGoogleButton);
+        actionRow.add(calendarLoginMicrosoftButton);
         actionRow.add(calendarTestButton);
 
         gbc.gridx = 1;
@@ -1379,8 +1375,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
         calendarDescriptionField.setText("");
         calendarPollSpinner.setValue(300);
         calendarUseEmailCheck.setSelected(true);
-        calendarClientIdField.setText("");
-        calendarTenantIdField.setText("common");
         calendarDefaultCheck.setSelected(true);
         calendarEnabledCheck.setSelected(true);
         calendarSecretField.setText("");
@@ -1402,8 +1396,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
         calendarDescriptionField.setText(acc.description() != null ? acc.description() : "");
         calendarPollSpinner.setValue(acc.pollIntervalSeconds());
         calendarUseEmailCheck.setSelected(acc.useEmailAccount());
-        calendarClientIdField.setText(acc.clientId() != null ? acc.clientId() : "");
-        calendarTenantIdField.setText(acc.tenantId() != null ? acc.tenantId() : "common");
         calendarDefaultCheck.setSelected(acc.accountId().equalsIgnoreCase(calendarConfig.defaultAccount()));
         calendarEnabledCheck.setSelected(acc.enabled());
 
@@ -1422,13 +1414,9 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private void updateCalendarProviderFieldStates() {
         CalendarConfig.Provider provider = (CalendarConfig.Provider) calendarProviderCombo.getSelectedItem();
         boolean isOAuth = provider == CalendarConfig.Provider.GOOGLE || provider == CalendarConfig.Provider.MSGRAPH;
-        boolean isMsGraph = provider == CalendarConfig.Provider.MSGRAPH;
 
         calendarUseEmailCheck.setEnabled(isOAuth);
-        calendarClientIdField.setEnabled(isOAuth);
-        calendarTenantIdField.setEnabled(isMsGraph);
         calendarSecretField.setEnabled(isOAuth);
-        calendarOAuthButton.setEnabled(isOAuth);
     }
 
     private CalendarConfig.AccountSpec buildSpecFromCalendarForm() {
@@ -1437,13 +1425,15 @@ public class SettingsDialog extends JDialog implements ActionListener {
         if (accountId.isEmpty()) {
             return null;
         }
+        Optional<CalendarConfig.AccountSpec> existing = calendarConfig.findAccount(accountId);
         CalendarConfig.Provider provider = (CalendarConfig.Provider) calendarProviderCombo.getSelectedItem();
         String calId = calendarIdField.getText().trim();
         String description = calendarDescriptionField.getText().trim();
         int pollSec = ((Number) calendarPollSpinner.getValue()).intValue();
         boolean useEmail = calendarUseEmailCheck.isSelected();
-        String clientId = calendarClientIdField.getText().trim();
-        String tenantId = calendarTenantIdField.getText().trim();
+        String clientId = existing.map(CalendarConfig.AccountSpec::clientId).orElse(null);
+        String tenantId = existing.map(CalendarConfig.AccountSpec::tenantId)
+                .orElse(provider == CalendarConfig.Provider.MSGRAPH ? "common" : null);
         boolean enabled = calendarEnabledCheck.isSelected();
 
         return new CalendarConfig.AccountSpec(
@@ -1454,8 +1444,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 pollSec,
                 calId.isEmpty() ? "primary" : calId,
                 useEmail,
-                clientId.isEmpty() ? null : clientId,
-                tenantId.isEmpty() ? "common" : tenantId
+                clientId,
+                tenantId
         );
     }
 
@@ -1500,39 +1490,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
         pendingCalendarSecrets.remove(id);
         SharedSecrets.deleteCalendarSecret(secrets, id);
         refreshCalendarAccountCombo(calendarConfig.defaultAccount());
-    }
-
-    private void launchCalendarOAuthSignIn() {
-        commitCurrentEmailAccountForm();
-        commitCurrentCalendarAccountForm();
-        CalendarConfig.AccountSpec spec = buildSpecFromCalendarForm();
-        if (spec == null) {
-            return;
-        }
-        calendarOAuthButton.setEnabled(false);
-        Thread.ofVirtual().name("studio-calendar-oauth").start(() -> {
-            try {
-                EmailOAuthFlow.OAuthResult result = EmailOAuthFlow.authorizeCalendarPkceLoopback(
-                        spec, emailConfig, null, Duration.ofMinutes(3));
-                SwingUtilities.invokeLater(() -> {
-                    calendarSecretField.setText(result.refreshToken());
-                    pendingCalendarSecrets.put(spec.accountId(), result.refreshToken());
-                    SharedSecrets.saveCalendarSecret(secrets, spec.accountId(), result.refreshToken());
-                    calendarSecretStatusLabel.setText(
-                            formatSecretStatus(secrets, SharedSecrets.calendarSecretId(spec.accountId())));
-                    calendarOAuthButton.setEnabled(true);
-                });
-            } catch (Exception ex) {
-                SwingUtilities.invokeLater(() -> {
-                    calendarOAuthButton.setEnabled(true);
-                    JOptionPane.showMessageDialog(
-                            this,
-                            MessageFormat.format(bundle.getString("CalendarTestFailure"), ex.getMessage()),
-                            bundle.getString("Title"),
-                            JOptionPane.ERROR_MESSAGE);
-                });
-            }
-        });
     }
 
     private void testCurrentCalendarConnection() {
