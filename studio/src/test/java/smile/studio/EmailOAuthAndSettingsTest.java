@@ -41,6 +41,8 @@ import ioa.agent.calendar.CalendarConfig;
 import ioa.agent.calendar.CalendarServices;
 import ioa.agent.email.EmailConfig;
 import ioa.agent.email.EmailServices;
+import ioa.agent.email.OAuthClientVault;
+import ioa.agent.email.OAuthFlow;
 import ioa.agent.email.SharedSecrets;
 import photos.sluice.secrets.SecretStore;
 
@@ -210,9 +212,17 @@ class EmailOAuthAndSettingsTest {
     }
 
     @Test
-    void calendarConfigReusesEmailSecretsAndAllFiveLocaleBundlesContainCalendarKeys() {
-        assertTrue(EmailOAuthFlow.GOOGLE_SCOPES.contains("calendar.events"));
-        assertTrue(EmailOAuthFlow.MS_SCOPES.contains("Calendars.ReadWrite"));
+    void calendarConfigReusesEmailSecretsAndAllFiveLocaleBundlesContainCalendarKeys() throws Exception {
+        assertTrue(OAuthFlow.GOOGLE_SCOPES.contains("calendar.events"));
+        assertTrue(OAuthFlow.GOOGLE_SCOPES.contains("openid email profile"));
+        assertTrue(OAuthFlow.MS_SCOPES.contains("Calendars.ReadWrite"));
+
+        // Verify Studio's packaged oauth.pub key share unlocks OAuthClientVault
+        byte[] studioShare = OAuthClientVault.loadStudioKeyShare();
+        assertNotNull(studioShare);
+        assertTrue(studioShare.length >= 16);
+        assertTrue(OAuthClientVault.resolve(EmailConfig.Provider.GMAIL, null, null, null).builtIn());
+        assertTrue(OAuthClientVault.resolve(EmailConfig.Provider.MSGRAPH, null, null, null).builtIn());
 
         Path emailPath = tempDir.resolve("conf").resolve("email.json");
         Path calPath = tempDir.resolve("conf").resolve("calendar.json");
@@ -220,13 +230,20 @@ class EmailOAuthAndSettingsTest {
         System.setProperty("ioa.calendar.config", calPath.toString());
         SecretStore secrets = newTestSecretStore();
 
-        EmailConfig emailCfg = EmailConfig.empty().withUpsertedAccount(
-                EmailConfig.AccountSpec.gmail("alice@gmail.com", "Personal Gmail", "google-cid-1"));
+        OAuthFlow.OAuthLoginResult oneClickLogin = new OAuthFlow.OAuthLoginResult(
+                EmailConfig.Provider.GMAIL,
+                "alice@gmail.com",
+                "Alice Smith",
+                "shared-google-refresh-token",
+                "ya29.acc",
+                null,
+                null
+        );
+        OAuthFlow.ProvisionedAccounts provisioned = OAuthFlow.provisionAccounts(
+                oneClickLogin, EmailConfig.empty(), CalendarConfig.empty(), secrets);
+        EmailConfig emailCfg = provisioned.emailConfig();
+        CalendarConfig calCfg = provisioned.calendarConfig();
         emailCfg.save(emailPath);
-        assertTrue(SharedSecrets.saveEmailSecret(secrets, "alice@gmail.com", "shared-google-refresh-token"));
-
-        CalendarConfig calCfg = CalendarConfig.empty().withUpsertedAccount(
-                CalendarConfig.AccountSpec.google("alice@gmail.com", "Google Calendar", "primary", true, null));
         calCfg.save(calPath);
 
         assertEquals(
@@ -238,12 +255,9 @@ class EmailOAuthAndSettingsTest {
         calServices.setEmailConfigSupplier(() -> emailCfg);
         calServices.reload(CalendarConfig.load(calPath), secrets);
         assertTrue(calServices.client("alice@gmail.com").isPresent());
-        assertEquals(
-                "google-cid-1",
-                calServices.client("alice@gmail.com").get().account().effectiveClientId(emailCfg)
-        );
+        assertNull(calServices.client("alice@gmail.com").get().account().effectiveClientId(emailCfg));
 
-        // Verify all 5 locale resource bundles have the new Calendar keys
+        // Verify all 5 locale resource bundles have the new Calendar & 1-click Login keys
         Locale[] locales = {
                 Locale.US,
                 Locale.SIMPLIFIED_CHINESE,
@@ -264,13 +278,12 @@ class EmailOAuthAndSettingsTest {
                 "CalendarDescription",
                 "CalendarPollInterval",
                 "CalendarUseEmailAccount",
-                "CalendarClientId",
-                "CalendarTenantId",
                 "CalendarSecret",
-                "CalendarOAuthSignIn",
                 "CalendarTestConnection",
                 "CalendarTestSuccess",
-                "CalendarTestFailure"
+                "CalendarTestFailure",
+                "OAuthLoginWithGoogle",
+                "OAuthLoginWithMicrosoft"
         };
         for (Locale locale : locales) {
             ResourceBundle rb = ResourceBundle.getBundle(SettingsDialog.class.getName(), locale);
