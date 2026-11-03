@@ -935,7 +935,9 @@ public class SettingsDialog extends JDialog implements ActionListener {
             }
         });
 
-        pane.add(form, BorderLayout.CENTER);
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(form, BorderLayout.NORTH);
+        pane.add(wrapper, BorderLayout.CENTER);
         refreshEmailAccountCombo(emailConfig.defaultAccount());
         return pane;
     }
@@ -1341,7 +1343,9 @@ public class SettingsDialog extends JDialog implements ActionListener {
         calendarProviderCombo.addActionListener(e -> updateCalendarProviderFieldStates());
         calendarUseEmailCheck.addActionListener(e -> updateCalendarProviderFieldStates());
 
-        pane.add(form, BorderLayout.CENTER);
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(form, BorderLayout.NORTH);
+        pane.add(wrapper, BorderLayout.CENTER);
         refreshCalendarAccountCombo(calendarConfig.defaultAccount());
         return pane;
     }
