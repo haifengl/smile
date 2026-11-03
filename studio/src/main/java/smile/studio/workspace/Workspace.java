@@ -185,9 +185,9 @@ public class Workspace extends JSplitPane {
         fileExplorer = new FileExplorer(cwd);
         kernelExplorer = new KernelExplorer(cwd, fileChooser);
         botExplorer = new BotExplorer();
-        explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
-        explorerTabs.addTab("Kernel", kernelExplorer);
-        explorerTabs.addTab("Bots", botExplorer);
+        explorerTabs.addTab(bundle.getString("ProjectTab"), new JScrollPane(fileExplorer));
+        explorerTabs.addTab(bundle.getString("KernelTab"), kernelExplorer);
+        explorerTabs.addTab(bundle.getString("BotsTab"), botExplorer);
 
         // Record this project in ${smile.home}/conf/projects.json for cross-project
         // Bot routines (/daily-log and /daily-recap) and sync to Agent Hub if running.
@@ -552,9 +552,9 @@ public class Workspace extends JSplitPane {
      * so their {@link ProcessPanel}s automatically dock into and close from {@link #editorTabs}.
      */
     private void registerServicePanelListeners() {
-        ServeManager.getInstance().addStartListener(panel -> openServicePanel("Inference Service", panel));
+        ServeManager.getInstance().addStartListener(panel -> openServicePanel(bundle.getString("InferenceServiceTab"), panel));
         ServeManager.getInstance().addStopListener(this::closeServicePanel);
-        HubManager.getInstance().addStartListener(panel -> openServicePanel("Agent Hub", panel));
+        HubManager.getInstance().addStartListener(panel -> openServicePanel(bundle.getString("AgentHubTab"), panel));
         HubManager.getInstance().addStopListener(this::closeServicePanel);
     }
 
@@ -623,7 +623,7 @@ public class Workspace extends JSplitPane {
         }
         int index = editorTabs.indexOfComponent(botActivity);
         if (index == -1) {
-            editorTabs.addTab("Bot Activities", botActivity);
+            editorTabs.addTab(bundle.getString("BotActivitiesTab"), botActivity);
         }
         editorTabs.setSelectedComponent(botActivity);
     }
@@ -641,7 +641,7 @@ public class Workspace extends JSplitPane {
         }
         int index = editorTabs.indexOfComponent(botManager);
         if (index == -1) {
-            editorTabs.addTab("Bot Routines", botManager);
+            editorTabs.addTab(bundle.getString("BotRoutinesTab"), botManager);
         }
         editorTabs.setSelectedComponent(botManager);
         explorerTabs.setSelectedComponent(botExplorer);
@@ -660,7 +660,7 @@ public class Workspace extends JSplitPane {
         botManager.prepareNewRoutine(bot);
         int index = editorTabs.indexOfComponent(botManager);
         if (index == -1) {
-            editorTabs.addTab("Bot Routines", botManager);
+            editorTabs.addTab(bundle.getString("BotRoutinesTab"), botManager);
         }
         editorTabs.setSelectedComponent(botManager);
         explorerTabs.setSelectedComponent(botExplorer);

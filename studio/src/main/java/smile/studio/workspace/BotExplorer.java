@@ -267,6 +267,8 @@ public class BotExplorer extends JPanel {
                     }
                     HubManager.getInstance().client().runRoutineNow(
                             item.bot().botId(), item.routine().routineId());
+                    HubManager.getInstance().fireEvent(new HubClient.BotStreamEvent(
+                            "run", null, item.bot().botId(), item.routine().routineId(), ""));
                 } catch (Exception ex) {
                     showError(ex.getMessage());
                 }

@@ -23,8 +23,11 @@ import java.util.ResourceBundle;
 import org.fife.rsta.ui.search.SearchListener;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
+import smile.studio.bot.BotActivity;
+import smile.studio.bot.BotManager;
 import smile.studio.kernel.ScalaKernel;
 import smile.studio.workspace.OpenFile;
+import smile.studio.workspace.Workspace;
 
 /**
  * Regression tests for the Find and Replace menu.
@@ -59,7 +62,9 @@ public class SearchResourceBundleTest {
 
     /** Keys the Settings dialog reads at runtime, including SecretStore and Email Account status keys. */
     private static final List<String> SETTINGS_DIALOG_KEYS = List.of(
-            "Title", "OK", "Cancel", "Service", "APIKey", "BaseUrl", "Model",
+            "Title", "OK", "Cancel", "Service", "ServiceName", "ServiceProvider",
+            "ServiceAdd", "ServiceRemove", "ServiceDefault",
+            "APIKey", "BaseUrl", "Model",
             "Project", "Location", "StatusInEnvironment", "StatusInKeyring", "StatusInFile",
             "StatusAbsentKeyring", "StatusAbsentFile", "StatusUnavailable", "SecretSaveError",
             "TabAIServices", "TabAgentHub", "TabInferenceServer", "TabEmailAccounts",
@@ -70,6 +75,52 @@ public class SearchResourceBundleTest {
             "EmailProvider", "EmailPollInterval", "EmailFolder", "EmailClientId", "EmailTenantId",
             "EmailImapHost", "EmailImapPort", "EmailSmtpHost", "EmailSmtpPort", "EmailStartTls",
             "EmailSecret", "EmailOAuthSignIn", "EmailTestConnection", "EmailTestSuccess", "EmailTestFailure");
+
+    /** Keys the Workspace reads for sidebar and editor tabs. */
+    private static final List<String> WORKSPACE_TAB_KEYS = List.of(
+            "ProjectTab", "KernelTab", "BotsTab",
+            "BotActivitiesTab", "BotRoutinesTab",
+            "InferenceServiceTab", "AgentHubTab");
+
+    /** Keys the BotActivity panel reads at runtime. */
+    private static final List<String> BOT_ACTIVITY_KEYS = List.of(
+            "CheckingHub", "StartAttachHub", "HubRunningStatus", "HubOfflineStatus",
+            "BotRoutinesButton", "RefreshButton", "ConfigureRoutineMenu",
+            "TabApprovalQueue", "TabRunHistory", "FilterStatusLabel", "SelectAllPendingDrafts",
+            "ColSelect", "ColId", "ColKind", "ColPersona", "ColRoutine",
+            "ColChannel", "ColRecipient", "ColSubject", "ColStatus", "ColExpires",
+            "DraftSelectPrompt", "PromptSelectPrompt", "ToRecipientLabel", "CcLabel",
+            "SubjectTitleLabel", "MessageBodyLabel", "QuestionActionDetailsLabel",
+            "AnswerResolutionNoteLabel", "PreviousDraftBaselineLabel", "PreviousPayloadJsonLabel",
+            "CurrentEditablePayloadLabel", "TabStructuredReview", "TabRawJson",
+            "AllowOnceButton", "EditApproveButton", "AlwaysAllowRuleButton", "RulePatternLabel",
+            "DenyButton", "ApproveCheckedBatchButton", "ColRunId", "ColBot", "ColModel",
+            "ColStartedAt", "ColSummaryError", "SessionTranscriptLabel", "StopCancelRunButton",
+            "NoPreviousVersion", "ApprovalItemDefaultTitle", "ChannelPrefix", "AccountPrefix",
+            "BrowserStatePrefix", "ApprovalErrorTitle", "ApprovalErrorMessage",
+            "BatchApprovalTitle", "BatchApprovalSelectMessage", "BatchApprovalErrorTitle",
+            "BatchApprovalErrorMessage");
+
+    /** Keys the BotManager panel reads at runtime. */
+    private static final List<String> BOT_MANAGER_KEYS = List.of(
+            "TabRoutine", "TabContextProjects", "TabReviewRules",
+            "RunRoutineNowButton", "SaveButton", "EnabledCheckbox",
+            "BotIdLabel", "PersonaLabel", "RoutineIdLabel", "DisplayNameLabel", "ModelOverrideLabel",
+            "SectionTriggerSchedule", "SourceLabel", "MissedFirePolicyLabel",
+            "CronLabel", "IntervalLabel", "EndpointLabel", "QuietStartLabel", "QuietEndLabel",
+            "SettleLabel", "MaxTurnsPerHourLabel", "SectionWorkflowEnrichment",
+            "WorkflowKindLabel", "AwaitRoutineIdLabel", "TargetSkillToolLabel",
+            "InstructionsLabel", "InstructionsRequiredLabel", "InstructionsOptionalLabel",
+            "RequireActivityCheckbox", "UseContextProjectsCheckbox",
+            "SectionSessionGuardrails", "SessionModeLabel", "ApprovalTtlLabel",
+            "ConfirmConsequentialCheckbox", "ColProjectName", "ColPath", "ColWorkspace", "ColPersonas",
+            "ProjectsInfo", "AddProjectFolderButton", "RemoveSelectedProjectButton",
+            "ColRuleId", "ColCategory", "ColPattern", "ColDecision", "RulesInfo",
+            "AddRuleButton", "RemoveSelectedRuleButton", "CategoryLabel", "PatternLabel", "DecisionLabel",
+            "AddAutoReviewRuleTitle", "ValidationTitle", "RoutineIdRequiredMessage",
+            "TargetRequiredMessage", "InstructionsRequiredMessage", "InvalidTriggerTitle",
+            "ErrorTitle", "SaveConfigErrorMessage", "RunNowTitle", "RunNowSuccessMessage",
+            "RunNowErrorTitle", "RunNowErrorMessage");
 
     @Test
     public void testBaseBundleHasSearchKeys() {
@@ -135,6 +186,33 @@ public class SearchResourceBundleTest {
                         locale + " SettingsDialog bundle is missing key: " + key);
                 assertFalse(bundle.getString(key).isBlank(),
                         locale + " SettingsDialog bundle has a blank value for key: " + key);
+            }
+        }
+    }
+
+    @Test
+    public void testWorkspaceAndBotBundlesHaveEveryLocale() {
+        System.out.println("Workspace, BotActivity, and BotManager: every locale defines tab and label keys");
+        assertBundleKeysPresent(Workspace.class.getName(), WORKSPACE_TAB_KEYS);
+        assertBundleKeysPresent(BotActivity.class.getName(), BOT_ACTIVITY_KEYS);
+        assertBundleKeysPresent(BotManager.class.getName(), BOT_MANAGER_KEYS);
+    }
+
+    private static void assertBundleKeysPresent(String baseName, List<String> keys) {
+        ResourceBundle baseBundle = ResourceBundle.getBundle(baseName, Locale.ROOT);
+        for (String key : keys) {
+            assertTrue(baseBundle.containsKey(key),
+                    "base " + baseName + " bundle is missing key: " + key);
+            assertFalse(baseBundle.getString(key).isBlank(),
+                    "base " + baseName + " bundle has a blank value for key: " + key);
+        }
+        for (Locale locale : LOCALES) {
+            ResourceBundle bundle = ResourceBundle.getBundle(baseName, locale);
+            for (String key : keys) {
+                assertTrue(bundle.containsKey(key),
+                        locale + " " + baseName + " bundle is missing key: " + key);
+                assertFalse(bundle.getString(key).isBlank(),
+                        locale + " " + baseName + " bundle has a blank value for key: " + key);
             }
         }
     }

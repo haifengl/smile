@@ -19,14 +19,18 @@ package smile.studio.bot;
 
 import java.awt.*;
 import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.bot.BotsConfig;
 import ioa.agent.bot.ProjectsConfig;
+import ioa.agent.calendar.CalendarConfig;
 import ioa.agent.email.EmailConfig;
 import smile.studio.LlmServices;
 import smile.studio.SmileStudio;
@@ -38,6 +42,7 @@ import smile.studio.SmileStudio;
  * @author Haifeng Li
  */
 public class BotManager extends JPanel {
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(BotManager.class.getName(), Locale.getDefault());
     private static final String DEFAULT_MODEL_CHOICE = "<Default Persona Model>";
 
     private BotsConfig config;
@@ -50,7 +55,7 @@ public class BotManager extends JPanel {
     private final JTextField personaField = new JTextField("chief-of-staff", 18);
     private final JTextField routineIdField = new JTextField(22);
     private final JTextField routineNameField = new JTextField(26);
-    private final JCheckBox routineEnabledCheck = new JCheckBox("Enabled", true);
+    private final JCheckBox routineEnabledCheck = new JCheckBox(bundle.getString("EnabledCheckbox"), true);
     private final JComboBox<String> modelCombo = new JComboBox<>();
 
     // Trigger fields
@@ -72,21 +77,26 @@ public class BotManager extends JPanel {
     private final JComboBox<BotsConfig.WorkflowKind> workflowKindCombo =
             new JComboBox<>(BotsConfig.WorkflowKind.values());
     private final JTextField workflowTargetField = new JTextField(26);
-    private final JLabel instructionsLabel = new JLabel("Instructions:");
+    private final JLabel instructionsLabel = new JLabel(bundle.getString("InstructionsLabel"));
     private final JTextArea instructionsArea = new JTextArea(4, 32);
-    private final JCheckBox requireActivityCheck = new JCheckBox("Skip if persona had 0 sessions today");
-    private final JCheckBox useContextProjectsCheck = new JCheckBox("Enrich prompt with Studio Context Projects");
+    private final JCheckBox requireActivityCheck = new JCheckBox(bundle.getString("RequireActivityCheckbox"));
+    private final JCheckBox useContextProjectsCheck = new JCheckBox(bundle.getString("UseContextProjectsCheckbox"));
     private final JTextField awaitRoutineField = new JTextField(18);
 
     // Policy fields
     private final JComboBox<BotsConfig.SessionMode> sessionModeCombo =
             new JComboBox<>(BotsConfig.SessionMode.values());
-    private final JCheckBox confirmConsequentialCheck = new JCheckBox("Require approval for consequential actions", true);
+    private final JCheckBox confirmConsequentialCheck = new JCheckBox(bundle.getString("ConfirmConsequentialCheckbox"), true);
     private final JSpinner ttlMinutesSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 10080, 5));
 
     // Context Projects table
     private final DefaultTableModel projectsTableModel = new DefaultTableModel(
-            new Object[]{"Project Name", "Path", "Workspace (.smile)", "Personas"}, 0) {
+            new Object[]{
+                    bundle.getString("ColProjectName"),
+                    bundle.getString("ColPath"),
+                    bundle.getString("ColWorkspace"),
+                    bundle.getString("ColPersonas")
+            }, 0) {
         @Override
         public boolean isCellEditable(int row, int column) {
             return false;
@@ -96,7 +106,12 @@ public class BotManager extends JPanel {
 
     // Auto Review Rules table
     private final DefaultTableModel rulesTableModel = new DefaultTableModel(
-            new Object[]{"Rule ID", "Category", "Pattern", "Decision"}, 0) {
+            new Object[]{
+                    bundle.getString("ColRuleId"),
+                    bundle.getString("ColCategory"),
+                    bundle.getString("ColPattern"),
+                    bundle.getString("ColDecision")
+            }, 0) {
         @Override
         public boolean isCellEditable(int row, int column) {
             return false;
@@ -166,26 +181,46 @@ public class BotManager extends JPanel {
     }
 
     private void populateEndpointCombo() {
+        Object currentSel = endpointCombo.getSelectedItem();
         endpointCombo.removeAllItems();
         endpointCombo.setEditable(true);
-        endpointCombo.addItem("inbox");
-        for (EmailConfig.AccountSpec acc : EmailConfig.load().accounts()) {
-            endpointCombo.addItem(acc.emailAddress());
+        String src = (String) sourceCombo.getSelectedItem();
+        if ("calendar".equalsIgnoreCase(src)) {
+            endpointCombo.addItem("primary");
+            for (CalendarConfig.AccountSpec acc : CalendarConfig.load().accounts()) {
+                endpointCombo.addItem(acc.accountId());
+            }
+            for (EmailConfig.AccountSpec acc : EmailConfig.load().accounts()) {
+                if (acc.provider() == EmailConfig.Provider.GMAIL || acc.provider() == EmailConfig.Provider.MSGRAPH) {
+                    endpointCombo.addItem(acc.emailAddress());
+                }
+            }
+        } else {
+            endpointCombo.addItem("inbox");
+            for (EmailConfig.AccountSpec acc : EmailConfig.load().accounts()) {
+                endpointCombo.addItem(acc.emailAddress());
+            }
+            for (CalendarConfig.AccountSpec acc : CalendarConfig.load().accounts()) {
+                endpointCombo.addItem(acc.accountId());
+            }
+        }
+        if (currentSel != null) {
+            endpointCombo.setSelectedItem(currentSel);
         }
     }
 
     private void initComponents() {
         JTabbedPane tabs = new JTabbedPane();
         tabs.setBorder(new EmptyBorder(8, 8, 8, 8));
-        tabs.addTab("Routine Definition", buildRoutineFormPanel());
-        tabs.addTab("Context Projects (projects.json)", buildProjectsPanel());
-        tabs.addTab("Auto Review Rules", buildRulesPanel());
+        tabs.addTab(bundle.getString("TabRoutine"), buildRoutineFormPanel());
+        tabs.addTab(bundle.getString("TabContextProjects"), buildProjectsPanel());
+        tabs.addTab(bundle.getString("TabReviewRules"), buildRulesPanel());
         add(tabs, BorderLayout.CENTER);
 
         JPanel bottomBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 8));
-        JButton runNowBtn = new JButton("▶ Run Routine Now");
+        JButton runNowBtn = new JButton(bundle.getString("RunRoutineNowButton"));
         runNowBtn.addActionListener(e -> triggerSelectedRoutineNow());
-        JButton saveBtn = new JButton("Save to bots.json");
+        JButton saveBtn = new JButton(bundle.getString("SaveButton"));
         saveBtn.addActionListener(e -> saveCurrentRoutineAndConfig());
 
         bottomBar.add(runNowBtn);
@@ -211,30 +246,31 @@ public class BotManager extends JPanel {
             else if ("mike".equals(sel)) personaField.setText("sales");
         });
 
-        addFormRow(form, gbc, row++, "Bot ID:", botIdCombo, "Persona:", personaField);
-        addFormRow(form, gbc, row++, "Routine ID:", routineIdField, "", routineEnabledCheck);
-        addSingleRow(form, gbc, row++, "Display Name:", routineNameField);
-        addSingleRow(form, gbc, row++, "Model Override:", modelCombo);
+        addFormRow(form, gbc, row++, bundle.getString("BotIdLabel"), botIdCombo, bundle.getString("PersonaLabel"), personaField);
+        addFormRow(form, gbc, row++, bundle.getString("RoutineIdLabel"), routineIdField, "", routineEnabledCheck);
+        addSingleRow(form, gbc, row++, bundle.getString("DisplayNameLabel"), routineNameField);
+        addSingleRow(form, gbc, row++, bundle.getString("ModelOverrideLabel"), modelCombo);
 
-        addSectionHeader(form, gbc, row++, "Trigger & Schedule");
-        addFormRow(form, gbc, row++, "Source:", sourceCombo, "Missed-Fire Policy:", missedFireCombo);
-        addFormRow(form, gbc, row++, "Cron (5-field):", cronField, "Interval (sec):", intervalSpinner);
-        addSingleRow(form, gbc, row++, "Mailbox / Feed URL / Path:", endpointCombo);
-        addFormRow(form, gbc, row++, "Quiet Start (HH:mm):", quietStartField, "Quiet End (HH:mm):", quietEndField);
-        addFormRow(form, gbc, row++, "Settle (sec):", settleSpinner, "Max Turns / Hour:", maxTurnsSpinner);
+        addSectionHeader(form, gbc, row++, bundle.getString("SectionTriggerSchedule"));
+        sourceCombo.addActionListener(e -> populateEndpointCombo());
+        addFormRow(form, gbc, row++, bundle.getString("SourceLabel"), sourceCombo, bundle.getString("MissedFirePolicyLabel"), missedFireCombo);
+        addFormRow(form, gbc, row++, bundle.getString("CronLabel"), cronField, bundle.getString("IntervalLabel"), intervalSpinner);
+        addSingleRow(form, gbc, row++, bundle.getString("EndpointLabel"), endpointCombo);
+        addFormRow(form, gbc, row++, bundle.getString("QuietStartLabel"), quietStartField, bundle.getString("QuietEndLabel"), quietEndField);
+        addFormRow(form, gbc, row++, bundle.getString("SettleLabel"), settleSpinner, bundle.getString("MaxTurnsPerHourLabel"), maxTurnsSpinner);
 
-        addSectionHeader(form, gbc, row++, "Workflow & Cross-Project Enrichment");
+        addSectionHeader(form, gbc, row++, bundle.getString("SectionWorkflowEnrichment"));
         workflowKindCombo.addActionListener(e -> updateWorkflowFieldStates());
-        addFormRow(form, gbc, row++, "Workflow Kind:", workflowKindCombo, "Await Routine ID:", awaitRoutineField);
-        addSingleRow(form, gbc, row++, "Target (Skill / Tool):", workflowTargetField);
+        addFormRow(form, gbc, row++, bundle.getString("WorkflowKindLabel"), workflowKindCombo, bundle.getString("AwaitRoutineIdLabel"), awaitRoutineField);
+        addSingleRow(form, gbc, row++, bundle.getString("TargetSkillToolLabel"), workflowTargetField);
 
         instructionsArea.setLineWrap(true);
         instructionsArea.setWrapStyleWord(true);
         addSingleRow(form, gbc, row++, instructionsLabel, new JScrollPane(instructionsArea));
         addFormRow(form, gbc, row++, "", requireActivityCheck, "", useContextProjectsCheck);
 
-        addSectionHeader(form, gbc, row++, "Session & Approval Guardrails");
-        addFormRow(form, gbc, row++, "Session Mode:", sessionModeCombo, "Approval TTL (min):", ttlMinutesSpinner);
+        addSectionHeader(form, gbc, row++, bundle.getString("SectionSessionGuardrails"));
+        addFormRow(form, gbc, row++, bundle.getString("SessionModeLabel"), sessionModeCombo, bundle.getString("ApprovalTtlLabel"), ttlMinutesSpinner);
         addSingleRow(form, gbc, row++, "", confirmConsequentialCheck);
 
         return new JScrollPane(form);
@@ -243,14 +279,12 @@ public class BotManager extends JPanel {
     private JComponent buildProjectsPanel() {
         JPanel panel = new JPanel(new BorderLayout(6, 6));
         panel.setBorder(new EmptyBorder(8, 8, 8, 8));
-        JLabel info = new JLabel("<html>Tracked SMILE Studio projects in <code>${smile.home}/conf/projects.json</code>. "
-                + "Cross-project routines (<code>/daily-log</code> at 19:00 and <code>/daily-recap</code> at 20:00) "
-                + "automatically inspect these workspaces.</html>");
+        JLabel info = new JLabel(bundle.getString("ProjectsInfo"));
         panel.add(info, BorderLayout.NORTH);
         panel.add(new JScrollPane(projectsTable), BorderLayout.CENTER);
 
         JPanel btns = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        JButton addProjBtn = new JButton("+ Add Project Folder…");
+        JButton addProjBtn = new JButton(bundle.getString("AddProjectFolderButton"));
         addProjBtn.addActionListener(e -> {
             SystemFileChooser fc = new SystemFileChooser();
             fc.setFileSelectionMode(SystemFileChooser.DIRECTORIES_ONLY);
@@ -261,7 +295,7 @@ public class BotManager extends JPanel {
                 refreshProjectsTable();
             }
         });
-        JButton removeProjBtn = new JButton("Remove Selected");
+        JButton removeProjBtn = new JButton(bundle.getString("RemoveSelectedProjectButton"));
         removeProjBtn.addActionListener(e -> {
             int sel = projectsTable.getSelectedRow();
             if (sel >= 0 && sel < config.contextProjects().size()) {
@@ -281,15 +315,14 @@ public class BotManager extends JPanel {
     private JComponent buildRulesPanel() {
         JPanel panel = new JPanel(new BorderLayout(6, 6));
         panel.setBorder(new EmptyBorder(8, 8, 8, 8));
-        JLabel info = new JLabel("<html>Standing Auto Review Rules in <code>bots.json</code>. "
-                + "<b>Precedence invariant:</b> <code>REQUIRE_APPROVAL</code> always wins over <code>ALWAYS_ALLOW</code>.</html>");
+        JLabel info = new JLabel(bundle.getString("RulesInfo"));
         panel.add(info, BorderLayout.NORTH);
         panel.add(new JScrollPane(rulesTable), BorderLayout.CENTER);
 
         JPanel btns = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        JButton addRuleBtn = new JButton("+ Add Rule…");
+        JButton addRuleBtn = new JButton(bundle.getString("AddRuleButton"));
         addRuleBtn.addActionListener(e -> promptAddRule());
-        JButton removeRuleBtn = new JButton("Remove Selected Rule");
+        JButton removeRuleBtn = new JButton(bundle.getString("RemoveSelectedRuleButton"));
         removeRuleBtn.addActionListener(e -> {
             int sel = rulesTable.getSelectedRow();
             if (sel >= 0 && sel < config.autoReviewRules().size()) {
@@ -312,14 +345,14 @@ public class BotManager extends JPanel {
         JComboBox<BotsConfig.RuleDecision> decCombo = new JComboBox<>(BotsConfig.RuleDecision.values());
 
         JPanel p = new JPanel(new GridLayout(3, 2, 6, 6));
-        p.add(new JLabel("Category:"));
+        p.add(new JLabel(bundle.getString("CategoryLabel")));
         p.add(catCombo);
-        p.add(new JLabel("Pattern:"));
+        p.add(new JLabel(bundle.getString("PatternLabel")));
         p.add(patternInput);
-        p.add(new JLabel("Decision:"));
+        p.add(new JLabel(bundle.getString("DecisionLabel")));
         p.add(decCombo);
 
-        if (JOptionPane.showConfirmDialog(this, p, "Add Auto Review Rule",
+        if (JOptionPane.showConfirmDialog(this, p, bundle.getString("AddAutoReviewRuleTitle"),
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
             BotsConfig.AutoReviewRule rule = new BotsConfig.AutoReviewRule(
                     "rule-" + (config.autoReviewRules().size() + 1),
@@ -465,9 +498,9 @@ public class BotManager extends JPanel {
         }
         boolean instructionsRequired = kind == BotsConfig.WorkflowKind.TOOL
                 || kind == BotsConfig.WorkflowKind.PROMPT;
-        instructionsLabel.setText(instructionsRequired
-                ? "Instructions (Required):"
-                : "Instructions (Optional):");
+        instructionsLabel.setText(bundle.getString(instructionsRequired
+                ? "InstructionsRequiredLabel"
+                : "InstructionsOptionalLabel"));
     }
 
     private void saveCurrentRoutineAndConfig() {
@@ -475,7 +508,8 @@ public class BotManager extends JPanel {
         String persona = personaField.getText().trim();
         String routineId = routineIdField.getText().trim();
         if (routineId.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Routine ID is required.", "Validation", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, bundle.getString("RoutineIdRequiredMessage"),
+                    bundle.getString("ValidationTitle"), JOptionPane.WARNING_MESSAGE);
             return;
         }
         Object modelChoice = modelCombo.getSelectedItem();
@@ -519,8 +553,8 @@ public class BotManager extends JPanel {
         if ((wfKind == BotsConfig.WorkflowKind.SKILL || wfKind == BotsConfig.WorkflowKind.TOOL)
                 && wfTarget.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Target (Skill / Tool) is required when Workflow Kind is " + wfKind + ".",
-                    "Validation",
+                    MessageFormat.format(bundle.getString("TargetRequiredMessage"), wfKind),
+                    bundle.getString("ValidationTitle"),
                     JOptionPane.WARNING_MESSAGE);
             workflowTargetField.requestFocusInWindow();
             return;
@@ -528,8 +562,8 @@ public class BotManager extends JPanel {
         if ((wfKind == BotsConfig.WorkflowKind.TOOL || wfKind == BotsConfig.WorkflowKind.PROMPT)
                 && wfInstructions.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Instructions are required when Workflow Kind is " + wfKind + ".",
-                    "Validation",
+                    MessageFormat.format(bundle.getString("InstructionsRequiredMessage"), wfKind),
+                    bundle.getString("ValidationTitle"),
                     JOptionPane.WARNING_MESSAGE);
             instructionsArea.requestFocusInWindow();
             return;
@@ -563,7 +597,8 @@ public class BotManager extends JPanel {
         try {
             spec.toEventSubscription();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, ex.getMessage(), "Invalid Trigger", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, ex.getMessage(),
+                    bundle.getString("InvalidTriggerTitle"), JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -579,8 +614,9 @@ public class BotManager extends JPanel {
                 onSavedCallback.run();
             }
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Failed to save bots.json: " + ex.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    MessageFormat.format(bundle.getString("SaveConfigErrorMessage"), ex.getMessage()),
+                    bundle.getString("ErrorTitle"), JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -596,16 +632,18 @@ public class BotManager extends JPanel {
                     HubManager.getInstance().start();
                 }
                 HubManager.getInstance().client().runRoutineNow(botId, routineId);
+                HubManager.getInstance().fireEvent(new HubClient.BotStreamEvent(
+                        "run", null, botId, routineId, ""));
                 SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
                         this,
-                        "Triggered routine '" + routineId + "' on Agent Hub.",
-                        "Run Now",
+                        MessageFormat.format(bundle.getString("RunNowSuccessMessage"), routineId),
+                        bundle.getString("RunNowTitle"),
                         JOptionPane.INFORMATION_MESSAGE));
             } catch (Exception ex) {
                 SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
                         this,
-                        "Failed to run routine '" + routineId + "': " + ex.getMessage(),
-                        "Run Now Error",
+                        MessageFormat.format(bundle.getString("RunNowErrorMessage"), routineId, ex.getMessage()),
+                        bundle.getString("RunNowErrorTitle"),
                         JOptionPane.ERROR_MESSAGE));
             }
         });

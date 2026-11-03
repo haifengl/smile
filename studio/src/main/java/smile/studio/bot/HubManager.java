@@ -56,6 +56,9 @@ public final class HubManager {
     private final ProcessPanel panel = new ProcessPanel(1000);
     private final List<Consumer<ProcessPanel>> startListeners = new CopyOnWriteArrayList<>();
     private final List<Consumer<ProcessPanel>> stopListeners = new CopyOnWriteArrayList<>();
+    private final List<Consumer<HubClient.BotStreamEvent>> eventListeners = new CopyOnWriteArrayList<>();
+    private final AtomicBoolean sseRunning = new AtomicBoolean(false);
+    private volatile Thread sseThread;
 
     private Process process;
     private String host;
@@ -152,6 +155,82 @@ public final class HubManager {
     }
 
     /**
+     * Registers a listener invoked on the Swing EDT whenever a Server-Sent Event
+     * arrives from the Agent Hub ({@code GET /v1/admin/events/stream}), and starts
+     * the background SSE subscriber loop if not already active.
+     *
+     * @param listener callback receiving each {@link HubClient.BotStreamEvent}.
+     */
+    public void addEventListener(Consumer<HubClient.BotStreamEvent> listener) {
+        if (listener != null) {
+            eventListeners.add(listener);
+            ensureEventStreamRunning();
+        }
+    }
+
+    /**
+     * Removes a previously registered SSE listener.
+     *
+     * @param listener the listener to remove.
+     */
+    public void removeEventListener(Consumer<HubClient.BotStreamEvent> listener) {
+        eventListeners.remove(listener);
+    }
+
+    /**
+     * Broadcasts a local or remote {@link HubClient.BotStreamEvent} to all registered
+     * UI listeners on the Swing EDT.
+     *
+     * @param event the event to dispatch.
+     */
+    public void fireEvent(HubClient.BotStreamEvent event) {
+        if (event == null || eventListeners.isEmpty()) {
+            return;
+        }
+        SwingUtilities.invokeLater(() -> {
+            for (Consumer<HubClient.BotStreamEvent> l : eventListeners) {
+                try {
+                    l.accept(event);
+                } catch (Exception ignored) {
+                }
+            }
+        });
+    }
+
+    /**
+     * Starts the background SSE subscription loop if it is not already running.
+     */
+    public void ensureEventStreamRunning() {
+        if (sseRunning.compareAndSet(false, true)) {
+            Thread t = Thread.ofVirtual().name("hub-sse-listener").start(this::runEventStreamLoop);
+            this.sseThread = t;
+        }
+    }
+
+    private void runEventStreamLoop() {
+        while (sseRunning.get() && !Thread.currentThread().isInterrupted()) {
+            try {
+                HubClient c = client();
+                if (c != null && c.isReady()) {
+                    c.streamEvents(this::fireEvent);
+                    fireEvent(new HubClient.BotStreamEvent("disconnected", null, "", "", ""));
+                }
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                break;
+            } catch (Exception ignored) {
+            }
+            try {
+                Thread.sleep(2000L);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        sseRunning.set(false);
+    }
+
+    /**
      * Starts or attaches to the Agent Hub using the settings in {@code studio.json}.
      */
     public synchronized boolean start() {
@@ -193,6 +272,7 @@ public final class HubManager {
         } else if (this.client.isReady()) {
             logger.info("Attached to running Agent Hub at {}", this.client.baseUrl());
             syncTrackedProjects();
+            ensureEventStreamRunning();
             return true;
         }
 
@@ -236,6 +316,7 @@ public final class HubManager {
         boolean ready = awaitReady();
         if (ready) {
             syncTrackedProjects();
+            ensureEventStreamRunning();
         }
         return ready;
     }
