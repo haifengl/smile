@@ -93,13 +93,24 @@ public class SettingsDialog extends JDialog implements ActionListener {
             "https://api.orcarouter.ai/v1", // OrcaRouter
             "https://openrouter.ai/api/v1"  // OpenRouter
     };
-    private final JComboBox<String> aiServiceCombo = new JComboBox<>(aiServiceOptions);
-    private final CardLayout cardLayout = new CardLayout();
-    private final JPanel cardPane = new JPanel(cardLayout);
-    private final Map<String, JTextField> apiKeyFields = new TreeMap<>();
-    private final Map<String, String> initialSecrets = new TreeMap<>();
-    private final Map<String, JComboBox<String>> baseUrlFields = new TreeMap<>();
-    private final Map<String, JComboBox<String>> modelFields = new TreeMap<>();
+    private LlmConfig llmConfig;
+    private final Map<String, String> pendingLlmSecrets = new LinkedHashMap<>();
+    private final Map<String, String> initialSecrets = new LinkedHashMap<>();
+    private boolean suppressLlmComboEvents = false;
+    private String currentLlmServiceName = "";
+    private final JComboBox<String> llmServiceCombo = new JComboBox<>();
+    private final JCheckBox llmDefaultCheck = new JCheckBox(bundle.getString("ServiceDefault"));
+    private final JTextField llmServiceNameField = new JTextField(18);
+    private final JComboBox<String> llmProviderCombo = new JComboBox<>(aiServiceOptions);
+    private final JLabel llmApiKeyLabel = new JLabel(bundle.getString("APIKey"));
+    private final CardLayout llmCredentialCardLayout = new CardLayout();
+    private final JPanel llmCredentialHolder = new JPanel(llmCredentialCardLayout);
+    private final JPasswordField llmApiKeyField = new JPasswordField(24);
+    private final JTextField llmProjectField = new JTextField(24);
+    private final JLabel llmSecretStatusLabel = new JLabel();
+    private final JLabel llmBaseUrlLabel = new JLabel(bundle.getString("BaseUrl"));
+    private final JComboBox<String> llmBaseUrlField = new JComboBox<>();
+    private final JComboBox<String> llmModelField = new JComboBox<>();
     private final Preferences prefs;
     private final SecretStore secrets;
 
@@ -198,8 +209,19 @@ public class SettingsDialog extends JDialog implements ActionListener {
         this.secrets = secrets;
 
         LlmServices.migratePreferencesSecrets(prefs, secrets);
-        LlmConfig llmCfg = LlmServices.loadOrMigrateConfig(prefs);
-        LlmServices.syncToPreferences(llmCfg, prefs);
+        this.llmConfig = LlmServices.loadOrMigrateConfig(prefs);
+        if (this.llmConfig.services().isEmpty()) {
+            this.llmConfig = LlmConfig.empty();
+        }
+        LlmServices.syncToPreferences(this.llmConfig, prefs);
+        for (LlmConfig.ServiceEntry svc : this.llmConfig.services()) {
+            LlmServices.secretId(svc.name(), svc.provider())
+                    .flatMap(id -> LlmServices.readSecret(secrets, id))
+                    .ifPresent(sec -> {
+                        pendingLlmSecrets.put(svc.name(), sec);
+                        initialSecrets.put(svc.name(), sec);
+                    });
+        }
         this.emailConfig = EmailConfig.load();
         for (EmailConfig.AccountSpec acc : emailConfig.accounts()) {
             SharedSecrets.resolveEmailSecret(secrets, acc.emailAddress())
@@ -218,23 +240,9 @@ public class SettingsDialog extends JDialog implements ActionListener {
                     .ifPresent(sec -> pendingCalendarSecrets.put(acc.accountId(), sec));
         }
 
-        aiServiceCombo.addActionListener(this);
-
-        // Add the panels to the dynamic panel with unique names
-        for (int i = 0; i < aiServiceOptions.length; i++) {
-            cardPane.add(createServiceCard(aiServiceKeys[i]), aiServiceOptions[i]);
-        }
-        aiServiceCombo.setSelectedItem(prefs.get(AI_SERVICE_KEY, aiServiceOptions[0]));
-
-        JPanel aiForm = new JPanel(new BorderLayout());
-        aiForm.add(createServiceChoice(), BorderLayout.NORTH);
-        aiForm.add(cardPane, BorderLayout.CENTER);
-        JPanel aiTab = new JPanel(new BorderLayout());
-        aiTab.add(aiForm, BorderLayout.NORTH);
-
         JTabbedPane tabs = new JTabbedPane();
         tabs.setBorder(new EmptyBorder(6, 6, 0, 6));
-        tabs.addTab(bundle.getString("TabAIServices"), aiTab);
+        tabs.addTab(bundle.getString("TabAIServices"), createAiServicesPane());
         tabs.addTab(bundle.getString("TabAgentHub"), createAgentHubPane());
         tabs.addTab(bundle.getString("TabInferenceServer"), createInferenceServerPane());
         tabs.addTab(bundle.getString("TabEmailAccounts"), createEmailAccountsPane());
@@ -246,126 +254,356 @@ public class SettingsDialog extends JDialog implements ActionListener {
         setLocationRelativeTo(owner);
     }
 
-    private JPanel createServiceChoice() {
-        JPanel pane = new JPanel(new GridBagLayout());
-        pane.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
+    private JPanel createAiServicesPane() {
+        JPanel pane = new JPanel(new BorderLayout(6, 6));
+        pane.setBorder(new EmptyBorder(8, 10, 8, 10));
+
+        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        topBar.add(new JLabel(bundle.getString("Service")));
+        llmServiceCombo.setPreferredSize(new Dimension(190, 26));
+        llmServiceCombo.addActionListener(e -> {
+            if (!suppressLlmComboEvents) {
+                commitCurrentLlmServiceForm();
+                String selectedName = (String) llmServiceCombo.getSelectedItem();
+                if (selectedName != null) {
+                    loadLlmServiceForm(selectedName);
+                }
+            }
+        });
+        topBar.add(llmServiceCombo);
+
+        JButton addBtn = new JButton(bundle.getString("ServiceAdd"));
+        addBtn.addActionListener(e -> addNewLlmService());
+        JButton removeBtn = new JButton(bundle.getString("ServiceRemove"));
+        removeBtn.addActionListener(e -> removeSelectedLlmService());
+        topBar.add(addBtn);
+        topBar.add(removeBtn);
+        topBar.add(llmDefaultCheck);
+        pane.add(topBar, BorderLayout.NORTH);
+
+        JPanel form = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        // Row 0: AI Service
-        gbc.gridx = 0; // Column 0
-        gbc.gridy = 0; // Row 0
+        gbc.insets = new Insets(4, 4, 4, 4);
         gbc.anchor = GridBagConstraints.WEST;
-        JLabel serviceLabel = new JLabel(bundle.getString("Service"));
-        pane.add(serviceLabel, gbc);
-
-        gbc.gridx = 1; // Column 1
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0; // Allow text field to take extra horizontal space
-        pane.add(aiServiceCombo, gbc);
 
+        int r = 0;
+        addEmailRow(form, gbc, r++,
+                bundle.getString("ServiceName"), llmServiceNameField,
+                bundle.getString("ServiceProvider"), llmProviderCombo);
+
+        llmApiKeyField.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true");
+        llmCredentialHolder.add(llmApiKeyField, "secret");
+        llmCredentialHolder.add(llmProjectField, "project");
+
+        gbc.gridy = r++;
+        gbc.gridx = 0;
+        gbc.weightx = 0.0;
+        form.add(llmApiKeyLabel, gbc);
+        gbc.gridx = 1;
+        gbc.gridwidth = 3;
+        gbc.weightx = 1.0;
+        form.add(llmCredentialHolder, gbc);
+        gbc.gridwidth = 1;
+
+        llmSecretStatusLabel.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
+        llmSecretStatusLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+        gbc.gridx = 1;
+        gbc.gridy = r++;
+        gbc.gridwidth = 3;
+        gbc.insets = new Insets(0, 4, 4, 4);
+        form.add(llmSecretStatusLabel, gbc);
+        gbc.insets = new Insets(4, 4, 4, 4);
+        gbc.gridwidth = 1;
+
+        llmBaseUrlField.setEditable(true);
+        gbc.gridy = r++;
+        gbc.gridx = 0;
+        gbc.weightx = 0.0;
+        form.add(llmBaseUrlLabel, gbc);
+        gbc.gridx = 1;
+        gbc.gridwidth = 3;
+        gbc.weightx = 1.0;
+        form.add(llmBaseUrlField, gbc);
+        gbc.gridwidth = 1;
+
+        llmModelField.setEditable(true);
+        llmModelField.setToolTipText(bundle.getString("Model"));
+        addEmailSingleRow(form, gbc, r, bundle.getString("Model"), llmModelField);
+
+        llmProviderCombo.addActionListener(e -> {
+            if (!suppressLlmComboEvents) {
+                updateLlmProviderFieldStates(true);
+            }
+        });
+
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(form, BorderLayout.NORTH);
+        pane.add(wrapper, BorderLayout.CENTER);
+        refreshLlmServiceCombo(llmConfig.defaultService());
         return pane;
     }
 
-    private JPanel createServiceCard(String service) {
-        JPanel card = new JPanel(new GridBagLayout());
-        card.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        Optional<SecretId> secretIdOpt = LlmServices.secretId(service);
-        int row = 0;
-
-        // Row 0: API Key (or Project for googleEnterprise)
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.anchor = GridBagConstraints.WEST;
-        JLabel apiKeyLabel = new JLabel(bundle.getString(service.equals("googleEnterprise") ? "Project" : "APIKey"));
-        card.add(apiKeyLabel, gbc);
-
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        if (secretIdOpt.isPresent()) {
-            SecretId id = secretIdOpt.get();
-            JPasswordField passwordField = new JPasswordField(25);
-            passwordField.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true");
-            String existingSecret = LlmServices.readSecret(secrets, id).orElse("");
-            passwordField.setText(existingSecret);
-            initialSecrets.put(service, existingSecret);
-            apiKeyFields.put(service, passwordField);
-            card.add(passwordField, gbc);
-
-            // Row 1: Storage tier status label
-            row++;
-            gbc.gridx = 1;
-            gbc.gridy = row;
-            gbc.insets = new Insets(0, 5, 5, 5);
-            JLabel statusLabel = new JLabel(formatSecretStatus(secrets, id));
-            statusLabel.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
-            statusLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
-            card.add(statusLabel, gbc);
-            gbc.insets = new Insets(5, 5, 5, 5);
-        } else {
-            JTextField projectField = new JTextField(25);
-            projectField.setText(prefs.get(service + API_KEY, ""));
-            apiKeyFields.put(service, projectField);
-            card.add(projectField, gbc);
+    private String selectedLlmProviderKey() {
+        int idx = llmProviderCombo.getSelectedIndex();
+        if (idx >= 0 && idx < aiServiceKeys.length) {
+            return aiServiceKeys[idx];
         }
+        Object item = llmProviderCombo.getSelectedItem();
+        String key = item == null ? "" : LlmConfig.serviceKeyForLabel(item.toString());
+        return key.isEmpty() ? "openai" : key;
+    }
 
-        // Next Row: Base URL (or Location for googleEnterprise)
-        row++;
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0.0;
-        JLabel baseUrlLabel = new JLabel(bundle.getString(service.equals("googleEnterprise") ? "Location" : "BaseUrl"));
-        card.add(baseUrlLabel, gbc);
+    private void selectLlmProviderKey(String providerKey) {
+        String key = (providerKey == null || providerKey.isBlank()) ? "openai" : providerKey.trim();
+        for (int i = 0; i < aiServiceKeys.length; i++) {
+            if (aiServiceKeys[i].equalsIgnoreCase(key) || aiServiceOptions[i].equalsIgnoreCase(key)) {
+                llmProviderCombo.setSelectedIndex(i);
+                return;
+            }
+        }
+        llmProviderCombo.setSelectedIndex(0);
+    }
 
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        JComboBox<String> baseUrlField = switch (service) {
-            case "openai" -> new JComboBox<>(openaiBaseUrls);
-            case "anthropic" -> new JComboBox<>(anthropicBaseUrls);
-            case "googleGemini" -> new JComboBox<>(geminiBaseUrls);
-            case "chatCompletions" -> new JComboBox<>(otherBaseUrls);
-            default -> new JComboBox<>();
+    private static String comboText(JComboBox<String> combo) {
+        Object editorItem = combo.getEditor() != null ? combo.getEditor().getItem() : null;
+        if (editorItem != null && !editorItem.toString().isBlank()) {
+            return editorItem.toString().trim();
+        }
+        Object selected = combo.getSelectedItem();
+        return selected == null ? "" : selected.toString().trim();
+    }
+
+    private static void setComboOptionsAndValue(JComboBox<String> combo, String[] options, String value) {
+        combo.removeAllItems();
+        if (options != null) {
+            for (String opt : options) {
+                combo.addItem(opt);
+            }
+        }
+        String text = value == null ? "" : value;
+        combo.setSelectedItem(text);
+        if (combo.getEditor() != null) {
+            combo.getEditor().setItem(text);
+        }
+    }
+
+    private void updateLlmProviderFieldStates(boolean applyDefaultBaseUrlWhenBlank) {
+        String provider = selectedLlmProviderKey();
+        boolean isVertex = "googleEnterprise".equals(provider);
+
+        llmApiKeyLabel.setText(bundle.getString(isVertex ? "Project" : "APIKey"));
+        llmCredentialCardLayout.show(llmCredentialHolder, isVertex ? "project" : "secret");
+        llmSecretStatusLabel.setVisible(!isVertex);
+        llmBaseUrlLabel.setText(bundle.getString(isVertex ? "Location" : "BaseUrl"));
+
+        String currentBaseUrl = comboText(llmBaseUrlField);
+        String currentModel = comboText(llmModelField);
+
+        String[] baseUrls = switch (provider) {
+            case "openai" -> openaiBaseUrls;
+            case "anthropic" -> anthropicBaseUrls;
+            case "googleGemini" -> geminiBaseUrls;
+            case "chatCompletions" -> otherBaseUrls;
+            default -> new String[0];
         };
-        baseUrlField.setEditable(true);
-        baseUrlField.setSelectedItem(prefs.get(service + BASE_URL, ""));
-        baseUrlFields.put(service, baseUrlField);
-        card.add(baseUrlField, gbc);
-
-        // Next Row: Model
-        row++;
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0.0;
-        JLabel modelLabel = new JLabel(bundle.getString("Model"));
-        card.add(modelLabel, gbc);
-
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        JComboBox<String> modelField = switch (service) {
-            case "openai", "azureOpenAI" -> new JComboBox<>(openaiModels);
-            case "anthropic" -> new JComboBox<>(anthropicModels);
-            case "googleGemini", "googleEnterprise" -> new JComboBox<>(geminiModels);
-            case "chatCompletions" -> new JComboBox<>(otherModels);
-            default -> new JComboBox<>();
+        String[] models = switch (provider) {
+            case "openai", "azureOpenAI" -> openaiModels;
+            case "anthropic" -> anthropicModels;
+            case "googleGemini", "googleEnterprise" -> geminiModels;
+            case "chatCompletions" -> otherModels;
+            default -> new String[0];
         };
-        modelField.setEditable(true);
-        // Comma-separated list; first id is the default for this service.
-        modelField.setSelectedItem(prefs.get(service + MODEL, ""));
-        modelField.setToolTipText(bundle.getString("Model"));
-        modelFields.put(service, modelField);
-        card.add(modelField, gbc);
 
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.add(card, BorderLayout.NORTH);
-        return wrapper;
+        String nextBaseUrl = currentBaseUrl;
+        if (applyDefaultBaseUrlWhenBlank && (nextBaseUrl.isEmpty() || isDefaultProviderBaseUrl(nextBaseUrl))) {
+            nextBaseUrl = LlmConfig.defaultBaseUrlForProvider(provider);
+        }
+        setComboOptionsAndValue(llmBaseUrlField, baseUrls, nextBaseUrl);
+        setComboOptionsAndValue(llmModelField, models, currentModel);
+
+        String name = llmServiceNameField.getText().trim();
+        if (name.isEmpty()) {
+            name = currentLlmServiceName.isEmpty() ? provider : currentLlmServiceName;
+        }
+        Optional<SecretId> secretIdOpt = LlmServices.secretId(name, provider);
+        if (secretIdOpt.isPresent()) {
+            llmSecretStatusLabel.setText(formatSecretStatus(secrets, secretIdOpt.get()));
+        } else {
+            llmSecretStatusLabel.setText(" ");
+        }
+    }
+
+    private static boolean isDefaultProviderBaseUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return true;
+        }
+        for (String[] entry : LlmConfig.SERVICES) {
+            String def = LlmConfig.defaultBaseUrlForProvider(entry[0]);
+            if (!def.isEmpty() && def.equalsIgnoreCase(url.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void refreshLlmServiceCombo(String selectName) {
+        suppressLlmComboEvents = true;
+        try {
+            llmServiceCombo.removeAllItems();
+            for (LlmConfig.ServiceEntry svc : llmConfig.services()) {
+                llmServiceCombo.addItem(svc.name());
+            }
+            if (!llmConfig.services().isEmpty()) {
+                String target = (selectName != null && !selectName.isBlank())
+                        ? selectName
+                        : llmConfig.services().getFirst().name();
+                Optional<LlmConfig.ServiceEntry> found = llmConfig.findService(target);
+                String resolvedName = found.map(LlmConfig.ServiceEntry::name)
+                        .orElseGet(() -> llmConfig.services().getFirst().name());
+                llmServiceCombo.setSelectedItem(resolvedName);
+                loadLlmServiceForm(resolvedName);
+            } else {
+                currentLlmServiceName = "";
+                clearLlmServiceForm();
+            }
+        } finally {
+            suppressLlmComboEvents = false;
+        }
+    }
+
+    private void clearLlmServiceForm() {
+        llmServiceNameField.setText("");
+        selectLlmProviderKey("chatCompletions");
+        llmApiKeyField.setText("");
+        llmProjectField.setText("");
+        llmDefaultCheck.setSelected(llmConfig.services().isEmpty());
+        setComboOptionsAndValue(llmBaseUrlField, otherBaseUrls, LlmConfig.defaultBaseUrlForProvider("chatCompletions"));
+        setComboOptionsAndValue(llmModelField, otherModels, "");
+        updateLlmProviderFieldStates(false);
+    }
+
+    private void loadLlmServiceForm(String serviceName) {
+        Optional<LlmConfig.ServiceEntry> opt = llmConfig.findService(serviceName);
+        if (opt.isEmpty()) {
+            clearLlmServiceForm();
+            return;
+        }
+        boolean prevSuppress = suppressLlmComboEvents;
+        suppressLlmComboEvents = true;
+        try {
+            LlmConfig.ServiceEntry svc = opt.get();
+            currentLlmServiceName = svc.name();
+            llmServiceNameField.setText(svc.name());
+            selectLlmProviderKey(svc.provider());
+            llmDefaultCheck.setSelected(svc.name().equalsIgnoreCase(llmConfig.defaultService()));
+
+            boolean isVertex = "googleEnterprise".equals(svc.provider());
+            if (isVertex) {
+                llmProjectField.setText(svc.project());
+                llmApiKeyField.setText("");
+            } else {
+                String secret = pendingLlmSecrets.getOrDefault(
+                        svc.name(),
+                        LlmServices.secretId(svc.name(), svc.provider())
+                                .flatMap(id -> LlmServices.readSecret(secrets, id))
+                                .orElse("")
+                );
+                llmApiKeyField.setText(secret);
+                llmProjectField.setText("");
+            }
+            String endpointVal = isVertex
+                    ? (!svc.location().isBlank() ? svc.location() : svc.baseUrl())
+                    : svc.baseUrl();
+            setComboOptionsAndValue(llmBaseUrlField, new String[0], endpointVal);
+            setComboOptionsAndValue(llmModelField, new String[0], svc.modelsCsv());
+            updateLlmProviderFieldStates(false);
+        } finally {
+            suppressLlmComboEvents = prevSuppress;
+        }
+    }
+
+    private LlmConfig.ServiceEntry buildSpecFromLlmForm() {
+        String nameText = llmServiceNameField.getText().trim();
+        String name = !nameText.isEmpty() ? nameText : currentLlmServiceName;
+        if (name.isEmpty()) {
+            return null;
+        }
+        String provider = selectedLlmProviderKey();
+        String endpointText = comboText(llmBaseUrlField);
+        String modelsText = comboText(llmModelField);
+        List<String> models = LlmConfig.parseModelIds(modelsText);
+
+        if ("googleEnterprise".equals(provider)) {
+            String project = llmProjectField.getText().trim();
+            return new LlmConfig.ServiceEntry(name, provider, "", project, endpointText, models);
+        }
+        return new LlmConfig.ServiceEntry(name, provider, endpointText, null, null, models);
+    }
+
+    private void commitCurrentLlmServiceForm() {
+        LlmConfig.ServiceEntry spec = buildSpecFromLlmForm();
+        if (spec == null) {
+            return;
+        }
+        if (!currentLlmServiceName.isEmpty() && !currentLlmServiceName.equalsIgnoreCase(spec.name())) {
+            llmConfig = llmConfig.withoutService(currentLlmServiceName);
+            String prevSecret = pendingLlmSecrets.remove(currentLlmServiceName);
+            if (prevSecret != null) {
+                pendingLlmSecrets.put(spec.name(), prevSecret);
+            }
+        }
+        llmConfig = llmConfig.withUpsertedService(spec);
+        if (llmDefaultCheck.isSelected()) {
+            llmConfig = llmConfig.withDefaultService(spec.name());
+        }
+        if (!"googleEnterprise".equals(spec.provider())) {
+            String secretVal = new String(llmApiKeyField.getPassword()).strip();
+            pendingLlmSecrets.put(spec.name(), secretVal);
+        }
+        currentLlmServiceName = spec.name();
+    }
+
+    private void addNewLlmService() {
+        commitCurrentLlmServiceForm();
+        suppressLlmComboEvents = true;
+        try {
+            currentLlmServiceName = "";
+            clearLlmServiceForm();
+            llmServiceNameField.requestFocusInWindow();
+        } finally {
+            suppressLlmComboEvents = false;
+        }
+    }
+
+    private void removeSelectedLlmService() {
+        String name = !llmServiceNameField.getText().trim().isEmpty()
+                ? llmServiceNameField.getText().trim()
+                : currentLlmServiceName;
+        if (name.isEmpty()) {
+            return;
+        }
+        String provider = llmConfig.findService(name)
+                .map(LlmConfig.ServiceEntry::provider)
+                .orElseGet(this::selectedLlmProviderKey);
+        llmConfig = llmConfig.withoutService(name);
+        pendingLlmSecrets.remove(name);
+        initialSecrets.remove(name);
+        SharedSecrets.deleteLlmSecret(secrets, name, provider);
+        refreshLlmServiceCombo(llmConfig.defaultService());
+    }
+
+    private void saveLlmConfiguration() {
+        commitCurrentLlmServiceForm();
+        for (LlmConfig.ServiceEntry svc : llmConfig.services()) {
+            Optional<SecretId> secretIdOpt = LlmServices.secretId(svc.name(), svc.provider());
+            if (secretIdOpt.isPresent()) {
+                String value = pendingLlmSecrets.getOrDefault(svc.name(), "").strip();
+                saveServiceSecret(svc.name(), svc.name(), secretIdOpt.get(), value);
+            }
+        }
+        llmConfig.save();
+        LlmServices.syncToPreferences(llmConfig, prefs);
     }
 
     private JPanel createAgentHubPane() {
@@ -1395,23 +1633,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         getRootPane().setDefaultButton(okButton);
 
         okButton.addActionListener((e) -> {
-            String selectedServiceLabel = aiServiceOptions[aiServiceCombo.getSelectedIndex()];
-            prefs.put(AI_SERVICE_KEY, selectedServiceLabel);
-            for (int i = 0; i < aiServiceKeys.length; i++) {
-                String service = aiServiceKeys[i];
-                String label = aiServiceOptions[i];
-                Optional<SecretId> secretIdOpt = LlmServices.secretId(service);
-                if (secretIdOpt.isPresent()) {
-                    saveServiceSecret(service, label, secretIdOpt.get());
-                } else {
-                    prefs.put(service + API_KEY, apiKeyFields.get(service).getText());
-                }
-                Object baseUrlItem = baseUrlFields.get(service).getSelectedItem();
-                Object modelItem = modelFields.get(service).getSelectedItem();
-                prefs.put(service + BASE_URL, baseUrlItem == null ? "" : baseUrlItem.toString());
-                prefs.put(service + MODEL, modelItem == null ? "" : modelItem.toString());
-            }
-            LlmConfig.fromPreferences(prefs).ifPresent(LlmConfig::save);
+            saveLlmConfiguration();
             saveStudioConfiguration();
             saveEmailConfiguration();
             saveCalendarConfiguration();
@@ -1424,15 +1646,11 @@ public class SettingsDialog extends JDialog implements ActionListener {
         return pane;
     }
 
-    private void saveServiceSecret(String service, String label, SecretId id) {
+    private void saveServiceSecret(String service, String label, SecretId id, String value) {
         prefs.remove(service + API_KEY);
         if (secrets == null) {
             return;
         }
-        JTextField field = apiKeyFields.get(service);
-        String value = (field instanceof JPasswordField pf
-                ? new String(pf.getPassword())
-                : field.getText()).strip();
         String initial = initialSecrets.getOrDefault(service, "").strip();
         try {
             if (value.isEmpty()) {
@@ -1454,17 +1672,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == aiServiceCombo) {
-            String selectedOption = (String) aiServiceCombo.getSelectedItem();
-
-            // Tell the CardLayout to show the panel corresponding to the selected option
-            cardLayout.show(cardPane, selectedOption);
-
-            // Repaint and revalidate the container to ensure correct display
-            cardPane.revalidate();
-            cardPane.repaint();
-            // Call pack() if the new panel has a different preferred size
-            pack();
+        if (e.getSource() == llmProviderCombo && !suppressLlmComboEvents) {
+            updateLlmProviderFieldStates(true);
         }
     }
 }
