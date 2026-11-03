@@ -59,7 +59,9 @@ public class SearchResourceBundleTest {
 
     /** Keys the Settings dialog reads at runtime, including SecretStore and Email Account status keys. */
     private static final List<String> SETTINGS_DIALOG_KEYS = List.of(
-            "Title", "OK", "Cancel", "Service", "APIKey", "BaseUrl", "Model",
+            "Title", "OK", "Cancel", "Service", "ServiceName", "ServiceProvider",
+            "ServiceAdd", "ServiceRemove", "ServiceDefault",
+            "APIKey", "BaseUrl", "Model",
             "Project", "Location", "StatusInEnvironment", "StatusInKeyring", "StatusInFile",
             "StatusAbsentKeyring", "StatusAbsentFile", "StatusUnavailable", "SecretSaveError",
             "TabAIServices", "TabAgentHub", "TabInferenceServer", "TabEmailAccounts",

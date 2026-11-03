@@ -6,14 +6,13 @@ package smile.studio;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.MessageFormat;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.prefs.Preferences;
 import javax.swing.JOptionPane;
+import ioa.agent.email.SharedSecrets;
 import ioa.llm.Model;
 import ioa.llm.client.LLM;
 import ioa.llm.client.LlmConfig;
@@ -25,7 +24,7 @@ import photos.sluice.secrets.SecretStoreException;
 
 /**
  * Client pool and available-model list for Smile Studio, delegating to the
- * shared {@link ioa.llm.client.LlmServices} and persisting non-secret provider
+ * shared {@link ioa.llm.client.LlmServices} and persisting non-secret service
  * and model configuration to {@code ${smile.home}/conf/llm.json} (fallback
  * {@code ~/.smile/llm.json}).
  *
@@ -37,23 +36,23 @@ public final class LlmServices {
             SmileStudio.class.getName(), Locale.getDefault());
 
     /** Secret ID for OpenAI API key. */
-    public static final SecretId OPENAI_SECRET = new SecretId("openai", "OPENAI_API_KEY");
+    public static final SecretId OPENAI_SECRET = SharedSecrets.OPENAI_SECRET;
     /** Secret ID for Azure OpenAI API key. */
-    public static final SecretId AZURE_OPENAI_SECRET = new SecretId("azure-openai", "AZURE_OPENAI_API_KEY");
+    public static final SecretId AZURE_OPENAI_SECRET = SharedSecrets.AZURE_OPENAI_SECRET;
     /** Secret ID for Anthropic API key. */
-    public static final SecretId ANTHROPIC_SECRET = new SecretId("anthropic", "ANTHROPIC_API_KEY");
+    public static final SecretId ANTHROPIC_SECRET = SharedSecrets.ANTHROPIC_SECRET;
     /** Secret ID for Google Gemini API key. */
-    public static final SecretId GOOGLE_GEMINI_SECRET = new SecretId("google-gemini", "GOOGLE_API_KEY");
+    public static final SecretId GOOGLE_GEMINI_SECRET = SharedSecrets.GOOGLE_GEMINI_SECRET;
     /** Secret ID for Chat Completions compatible / Bedrock API key. */
-    public static final SecretId CHAT_COMPLETIONS_SECRET = new SecretId("chat-completions", "AWS_BEARER_TOKEN_BEDROCK");
+    public static final SecretId CHAT_COMPLETIONS_SECRET = SharedSecrets.CHAT_COMPLETIONS_SECRET;
 
     private final ioa.llm.client.LlmServices delegate = new ioa.llm.client.LlmServices();
     private volatile Preferences prefs;
 
     /**
      * One selectable model bound to the client that serves it.
-     * @param serviceKey service prefix such as {@code openai}.
-     * @param serviceLabel UI label such as {@code OpenAI}.
+     * @param serviceKey service connection name such as {@code openai} or {@code local-vllm}.
+     * @param serviceLabel UI label such as {@code OpenAI} or {@code local-vllm}.
      * @param model catalog metadata.
      * @param client the inference client for this service.
      */
@@ -83,25 +82,27 @@ public final class LlmServices {
     }
 
     /**
+     * Returns the {@link SecretId} for a service connection name and provider,
+     * or {@link Optional#empty()} when the service does not store a secret API key
+     * (e.g., {@code googleEnterprise} stores a GCP Project ID in {@code llm.json}).
+     *
+     * @param serviceName service connection name such as {@code openai} or {@code azure-eastus}.
+     * @param provider canonical provider key such as {@code openai} or {@code azureOpenAI}.
+     * @return the corresponding {@link SecretId}, if any.
+     */
+    public static Optional<SecretId> secretId(String serviceName, String provider) {
+        return SharedSecrets.llmSecretId(serviceName, provider);
+    }
+
+    /**
      * Returns the {@link SecretId} for a service key, or {@link Optional#empty()}
-     * when the service does not store a secret API key (e.g., {@code googleEnterprise}
-     * stores a GCP Project ID in {@code llm.json}).
+     * when the service does not store a secret API key (e.g., {@code googleEnterprise}).
      *
      * @param serviceKey service key such as {@code openai}.
      * @return the corresponding {@link SecretId}, if any.
      */
     public static Optional<SecretId> secretId(String serviceKey) {
-        if (serviceKey == null) {
-            return Optional.empty();
-        }
-        return switch (serviceKey) {
-            case "openai" -> Optional.of(OPENAI_SECRET);
-            case "azureOpenAI" -> Optional.of(AZURE_OPENAI_SECRET);
-            case "anthropic" -> Optional.of(ANTHROPIC_SECRET);
-            case "googleGemini" -> Optional.of(GOOGLE_GEMINI_SECRET);
-            case "chatCompletions" -> Optional.of(CHAT_COMPLETIONS_SECRET);
-            default -> Optional.empty();
-        };
+        return SharedSecrets.llmSecretId(serviceKey);
     }
 
     /**
@@ -118,7 +119,7 @@ public final class LlmServices {
         boolean modified = false;
         for (String[] entry : LlmConfig.SERVICES) {
             String serviceKey = entry[0];
-            Optional<SecretId> idOpt = secretId(serviceKey);
+            Optional<SecretId> idOpt = secretId(serviceKey, serviceKey);
             if (idOpt.isEmpty()) {
                 continue;
             }
@@ -196,7 +197,7 @@ public final class LlmServices {
     }
 
     private static boolean hasAnyModels(LlmConfig cfg) {
-        return cfg.services().values().stream().anyMatch(s -> !s.models().isEmpty());
+        return cfg.services().stream().anyMatch(s -> !s.models().isEmpty());
     }
 
     private static LlmConfig mergePrefsIfExplicit(LlmConfig fileCfg, LlmConfig prefsCfg, Preferences prefs) {
@@ -269,9 +270,14 @@ public final class LlmServices {
         delegate.reload(
                 cfg,
                 configPath,
-                serviceKey -> secretId(serviceKey)
-                        .flatMap(id -> readSecret(secrets, id))
-                        .or(() -> ioa.llm.client.LlmServices.defaultSecretResolver(serviceKey)),
+                serviceKey -> {
+                    String provider = cfg.findService(serviceKey)
+                            .map(LlmConfig.ServiceEntry::provider)
+                            .orElse(serviceKey);
+                    return secretId(serviceKey, provider)
+                            .flatMap(id -> readSecret(secrets, id))
+                            .or(() -> ioa.llm.client.LlmServices.defaultSecretResolver(serviceKey));
+                },
                 (label, msg) -> JOptionPane.showMessageDialog(
                         null,
                         MessageFormat.format(bundle.getString("InitError"), label + ": " + msg),
@@ -305,8 +311,8 @@ public final class LlmServices {
     }
 
     /**
-     * Looks up a client by service key.
-     * @param serviceKey service prefix.
+     * Looks up a client by service connection name or provider key.
+     * @param serviceKey service name or provider key.
      * @return the client if present.
      */
     public Optional<LLM> client(String serviceKey) {
@@ -349,8 +355,8 @@ public final class LlmServices {
     }
 
     /**
-     * Finds a model by service and id.
-     * @param serviceKey service prefix.
+     * Finds a model by service name (or provider key) and model id.
+     * @param serviceKey service name or provider key.
      * @param modelId API model id.
      * @return the entry if present.
      */

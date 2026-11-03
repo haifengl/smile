@@ -638,7 +638,7 @@ $SMILE_HOME/
 
 ### 8.4 Shared LLM Configuration (`conf/llm.json`)
 
-When you configure AI providers and models in SMILE Studio (**File > Settings…**), Studio writes non-secret provider metadata (default service, base URLs, configured models) to `$SMILE_HOME/conf/llm.json` (fallback `~/.smile/llm.json`) and stores API keys in `SecretStore` (OS keyring or `~/.smile/credentials/*.key`, with environment variables such as `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, and `GOOGLE_API_KEY` taking highest precedence). Agent Hub reads this same `llm.json` and `SecretStore` automatically, so you only configure your LLM credentials once.
+When you configure AI service connections and models in SMILE Studio (**File > Settings…**), Studio writes non-secret service metadata (`defaultService`, `defaultModel`, and the `services` list of `{name, provider, baseUrl, models}` entries) to `$SMILE_HOME/conf/llm.json` (fallback `~/.smile/llm.json`) and stores per-service API keys in `SecretStore` (OS keyring or `~/.smile/credentials/*.key`, with environment variables such as `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, and `IOA_LLM_SECRET_<SERVICE_NAME>` taking highest precedence). You can configure multiple named connections for the same provider (for example, multiple on-prem `chatCompletions` servers or regional `azureOpenAI` / `googleEnterprise` deployments). Agent Hub reads this same `llm.json` and `SecretStore` automatically, so you only configure your LLM credentials once.
 
 ---
 
