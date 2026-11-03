@@ -25,6 +25,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.MessageFormat;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -36,6 +37,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.ResourceBundle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -69,8 +71,9 @@ import smile.swing.ScrollablePanel;
  * @author Haifeng Li
  */
 public class BotActivity extends JPanel {
-    private final JLabel hubStatusLabel = new JLabel("Checking Agent Hub…");
-    private final JButton startHubBtn = new JButton("Start / Attach Hub");
+    private static final ResourceBundle bundle = ResourceBundle.getBundle(BotActivity.class.getName(), Locale.getDefault());
+    private final JLabel hubStatusLabel = new JLabel(bundle.getString("CheckingHub"));
+    private final JButton startHubBtn = new JButton(bundle.getString("StartAttachHub"));
     private final JTabbedPane tabs = new JTabbedPane();
 
     // Tab 1: Approvals & Batch Draft Queue
@@ -78,7 +81,18 @@ public class BotActivity extends JPanel {
             "PENDING", "ALL"
     });
     private final DefaultTableModel approvalsModel = new DefaultTableModel(
-            new Object[]{"Select", "ID", "Kind", "Persona", "Routine", "Channel", "Recipient / Target", "Subject", "Status", "Expires"}, 0) {
+            new Object[]{
+                    bundle.getString("ColSelect"),
+                    bundle.getString("ColId"),
+                    bundle.getString("ColKind"),
+                    bundle.getString("ColPersona"),
+                    bundle.getString("ColRoutine"),
+                    bundle.getString("ColChannel"),
+                    bundle.getString("ColRecipient"),
+                    bundle.getString("ColSubject"),
+                    bundle.getString("ColStatus"),
+                    bundle.getString("ColExpires")
+            }, 0) {
         @Override
         public Class<?> getColumnClass(int columnIndex) {
             return columnIndex == 0 ? Boolean.class : Object.class;
@@ -103,14 +117,14 @@ public class BotActivity extends JPanel {
     private boolean currentItemDraftMode = true;
 
     // Draft Composer fields (CARD_DRAFT)
-    private final JLabel draftMetaLabel = new JLabel("Select an approval item above to inspect or edit.");
+    private final JLabel draftMetaLabel = new JLabel(bundle.getString("DraftSelectPrompt"));
     private final JTextField draftToField = new JTextField();
     private final JTextField draftCcField = new JTextField();
     private final JTextField draftSubjectField = new JTextField();
     private final JTextArea draftBodyArea = new JTextArea(7, 30);
 
     // Prompt / Tool / Question fields (CARD_PROMPT)
-    private final JLabel promptMetaLabel = new JLabel("Select an approval item above to inspect.");
+    private final JLabel promptMetaLabel = new JLabel(bundle.getString("PromptSelectPrompt"));
     private final JTextArea promptBodyArea = new JTextArea(7, 30);
     private final JTextField promptNoteField = new JTextField();
 
@@ -188,7 +202,16 @@ public class BotActivity extends JPanel {
 
     // Tab 2: Run History & Transcripts
     private final DefaultTableModel runsModel = new DefaultTableModel(
-            new Object[]{"Run ID", "Bot", "Routine", "Persona", "Model", "Status", "Started At", "Summary / Error"}, 0) {
+            new Object[]{
+                    bundle.getString("ColRunId"),
+                    bundle.getString("ColBot"),
+                    bundle.getString("ColRoutine"),
+                    bundle.getString("ColPersona"),
+                    bundle.getString("ColModel"),
+                    bundle.getString("ColStatus"),
+                    bundle.getString("ColStartedAt"),
+                    bundle.getString("ColSummaryError")
+            }, 0) {
         @Override
         public boolean isCellEditable(int row, int column) {
             return false;
@@ -212,8 +235,8 @@ public class BotActivity extends JPanel {
         super(new BorderLayout(8, 8));
 
         initTopBar();
-        tabs.addTab("Approval Queue", buildApprovalsTab());
-        tabs.addTab("Run History", buildRunsTab());
+        tabs.addTab(bundle.getString("TabApprovalQueue"), buildApprovalsTab());
+        tabs.addTab(bundle.getString("TabRunHistory"), buildRunsTab());
         selectTab(initialTab);
         add(tabs, BorderLayout.CENTER);
 
@@ -267,9 +290,9 @@ public class BotActivity extends JPanel {
                 currentApprovals.stream().filter(a -> "PENDING".equals(a.status())).count()));
         HubManager.getInstance().addStopListener(p -> refreshAllAsync());
 
-        JButton configBtn = new JButton("Bot Routines…");
+        JButton configBtn = new JButton(bundle.getString("BotRoutinesButton"));
         configBtn.addActionListener(e -> openRoutineInBotManager(selectedRoutineId()));
-        JButton refreshBtn = new JButton("↻ Refresh");
+        JButton refreshBtn = new JButton(bundle.getString("RefreshButton"));
         refreshBtn.addActionListener(e -> refreshAllAsync());
 
         actions.add(startHubBtn);
@@ -356,8 +379,8 @@ public class BotActivity extends JPanel {
         String routineId = selectedRoutineId();
         JPopupMenu popup = new JPopupMenu();
         String label = (routineId != null && !routineId.isBlank())
-                ? "Configure Routine (" + routineId + ")…"
-                : "Bot Routines…";
+                ? MessageFormat.format(bundle.getString("ConfigureRoutineMenu"), routineId)
+                : bundle.getString("BotRoutinesButton");
         JMenuItem item = new JMenuItem(label);
         item.addActionListener(ev -> openRoutineInBotManager(routineId));
         popup.add(item);
@@ -369,11 +392,11 @@ public class BotActivity extends JPanel {
         panel.setBorder(new EmptyBorder(8, 8, 8, 8));
 
         JPanel filterBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        filterBar.add(new JLabel("Filter Status:"));
+        filterBar.add(new JLabel(bundle.getString("FilterStatusLabel")));
         approvalFilterCombo.addActionListener(e -> refreshApprovalsAsync());
         filterBar.add(approvalFilterCombo);
 
-        JButton selectAllDraftsBtn = new JButton("Select All Pending Drafts");
+        JButton selectAllDraftsBtn = new JButton(bundle.getString("SelectAllPendingDrafts"));
         selectAllDraftsBtn.addActionListener(e -> {
             for (int i = 0; i < approvalsModel.getRowCount(); i++) {
                 approvalsModel.setValueAt(Boolean.TRUE, i, 0);
@@ -431,7 +454,7 @@ public class BotActivity extends JPanel {
         gbc.gridx = 0;
         gbc.weightx = 0.0;
         gbc.fill = GridBagConstraints.NONE;
-        draftHeaderGrid.add(new JLabel("To / Recipient:"), gbc);
+        draftHeaderGrid.add(new JLabel(bundle.getString("ToRecipientLabel")), gbc);
         gbc.gridx = 1;
         gbc.weightx = 0.55;
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -440,7 +463,7 @@ public class BotActivity extends JPanel {
         gbc.gridx = 2;
         gbc.weightx = 0.0;
         gbc.fill = GridBagConstraints.NONE;
-        draftHeaderGrid.add(new JLabel("Cc:"), gbc);
+        draftHeaderGrid.add(new JLabel(bundle.getString("CcLabel")), gbc);
         gbc.gridx = 3;
         gbc.weightx = 0.45;
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -450,7 +473,7 @@ public class BotActivity extends JPanel {
         gbc.gridx = 0;
         gbc.weightx = 0.0;
         gbc.fill = GridBagConstraints.NONE;
-        draftHeaderGrid.add(new JLabel("Subject / Title:"), gbc);
+        draftHeaderGrid.add(new JLabel(bundle.getString("SubjectTitleLabel")), gbc);
         gbc.gridx = 1;
         gbc.gridwidth = 3;
         gbc.weightx = 1.0;
@@ -459,7 +482,7 @@ public class BotActivity extends JPanel {
 
         draftCard.add(draftHeaderGrid, BorderLayout.NORTH);
         JPanel draftBodyPanel = new JPanel(new BorderLayout(2, 2));
-        draftBodyPanel.add(new JLabel("Message / Post Body (Editable):"), BorderLayout.NORTH);
+        draftBodyPanel.add(new JLabel(bundle.getString("MessageBodyLabel")), BorderLayout.NORTH);
         draftBodyPanel.add(new JScrollPane(draftBodyArea), BorderLayout.CENTER);
         draftCard.add(draftBodyPanel, BorderLayout.CENTER);
 
@@ -470,19 +493,19 @@ public class BotActivity extends JPanel {
         promptCard.add(promptMetaLabel, BorderLayout.NORTH);
 
         JPanel promptCenter = new JPanel(new BorderLayout(2, 2));
-        promptCenter.add(new JLabel("Question / Action Details:"), BorderLayout.NORTH);
+        promptCenter.add(new JLabel(bundle.getString("QuestionActionDetailsLabel")), BorderLayout.NORTH);
         promptCenter.add(new JScrollPane(promptBodyArea), BorderLayout.CENTER);
         promptCard.add(promptCenter, BorderLayout.CENTER);
 
         JPanel promptAnswerBar = new JPanel(new BorderLayout(6, 0));
-        promptAnswerBar.add(new JLabel("Answer / Resolution Note (optional):"), BorderLayout.WEST);
+        promptAnswerBar.add(new JLabel(bundle.getString("AnswerResolutionNoteLabel")), BorderLayout.WEST);
         promptAnswerBar.add(promptNoteField, BorderLayout.CENTER);
         promptCard.add(promptAnswerBar, BorderLayout.SOUTH);
 
         structuredCards.add(draftCard, CARD_DRAFT);
         structuredCards.add(promptCard, CARD_PROMPT);
 
-        structuredPriorPanel.add(new JLabel("Previous Draft (Diff Baseline):"), BorderLayout.NORTH);
+        structuredPriorPanel.add(new JLabel(bundle.getString("PreviousDraftBaselineLabel")), BorderLayout.NORTH);
         structuredPriorPanel.add(new JScrollPane(structuredPriorArea), BorderLayout.CENTER);
         structuredPriorPanel.setVisible(false);
 
@@ -491,20 +514,20 @@ public class BotActivity extends JPanel {
         structuredDiffSplit.setDividerSize(0);
 
         // Tab 2 of detail pane: Raw JSON (Advanced)
-        rawPriorPanel.add(new JLabel("Previous Draft / Prior Payload (JSON):"), BorderLayout.NORTH);
+        rawPriorPanel.add(new JLabel(bundle.getString("PreviousPayloadJsonLabel")), BorderLayout.NORTH);
         rawPriorPanel.add(new JScrollPane(priorDraftArea), BorderLayout.CENTER);
         rawPriorPanel.setVisible(false);
 
         JPanel rawRight = new JPanel(new BorderLayout(4, 4));
-        rawRight.add(new JLabel("Current / Editable Payload (Beautified JSON or Text):"), BorderLayout.NORTH);
+        rawRight.add(new JLabel(bundle.getString("CurrentEditablePayloadLabel")), BorderLayout.NORTH);
         rawRight.add(new JScrollPane(editablePayloadArea), BorderLayout.CENTER);
 
         rawJsonDiffSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, rawPriorPanel, rawRight);
         rawJsonDiffSplit.setResizeWeight(0.45);
         rawJsonDiffSplit.setDividerSize(0);
 
-        detailTabs.addTab("Structured Review & Edit", structuredDiffSplit);
-        detailTabs.addTab("Raw JSON (Advanced)", rawJsonDiffSplit);
+        detailTabs.addTab(bundle.getString("TabStructuredReview"), structuredDiffSplit);
+        detailTabs.addTab(bundle.getString("TabRawJson"), rawJsonDiffSplit);
         detailTabs.addChangeListener(e -> {
             int row = approvalsTable.getSelectedRow();
             if (row < 0 || row >= currentApprovals.size()) {
@@ -525,25 +548,25 @@ public class BotActivity extends JPanel {
         detailAndActions.add(detailTabs, BorderLayout.CENTER);
 
         JPanel actionBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
-        JButton allowOnceBtn = new JButton("✓ Allow Once");
+        JButton allowOnceBtn = new JButton(bundle.getString("AllowOnceButton"));
         allowOnceBtn.addActionListener(e -> resolveSelectedSingle("ALLOW_ONCE"));
 
-        JButton editApproveBtn = new JButton("✎ Edit & Approve");
+        JButton editApproveBtn = new JButton(bundle.getString("EditApproveButton"));
         editApproveBtn.addActionListener(e -> resolveSelectedSingle("EDIT_AND_APPROVE"));
 
-        JButton alwaysAllowBtn = new JButton("★ Always Allow Rule");
+        JButton alwaysAllowBtn = new JButton(bundle.getString("AlwaysAllowRuleButton"));
         alwaysAllowBtn.addActionListener(e -> resolveSelectedSingle("ALWAYS_ALLOW_RULE"));
 
-        JButton denyBtn = new JButton("✕ Deny");
+        JButton denyBtn = new JButton(bundle.getString("DenyButton"));
         denyBtn.addActionListener(e -> resolveSelectedSingle("DENY"));
 
-        JButton batchApproveBtn = new JButton("✓✓ Approve Checked Batch");
+        JButton batchApproveBtn = new JButton(bundle.getString("ApproveCheckedBatchButton"));
         batchApproveBtn.addActionListener(e -> batchResolveChecked("ALLOW_ONCE"));
 
         actionBar.add(allowOnceBtn);
         actionBar.add(editApproveBtn);
         actionBar.add(alwaysAllowBtn);
-        actionBar.add(new JLabel("Rule Pattern:"));
+        actionBar.add(new JLabel(bundle.getString("RulePatternLabel")));
         actionBar.add(rulePatternField);
         actionBar.add(denyBtn);
         actionBar.add(batchApproveBtn);
@@ -580,8 +603,8 @@ public class BotActivity extends JPanel {
 
         JPanel transcriptPanel = new JPanel(new BorderLayout(4, 4));
         JPanel transcriptTop = new JPanel(new BorderLayout());
-        transcriptTop.add(new JLabel("Session Transcript:"), BorderLayout.WEST);
-        JButton cancelRunBtn = new JButton("Stop / Cancel Selected Run");
+        transcriptTop.add(new JLabel(bundle.getString("SessionTranscriptLabel")), BorderLayout.WEST);
+        JButton cancelRunBtn = new JButton(bundle.getString("StopCancelRunButton"));
         cancelRunBtn.addActionListener(e -> cancelSelectedRun());
         transcriptTop.add(cancelRunBtn, BorderLayout.EAST);
         transcriptPanel.add(transcriptTop, BorderLayout.NORTH);
@@ -625,8 +648,8 @@ public class BotActivity extends JPanel {
      */
     public void updateHubStatus(boolean running, String baseUrl, long pendingCount) {
         String text = running
-                ? "● Agent Hub Running (" + baseUrl + ") — Pending Approvals: " + pendingCount
-                : "○ Agent Hub Offline (" + baseUrl + ")";
+                ? MessageFormat.format(bundle.getString("HubRunningStatus"), baseUrl, pendingCount)
+                : MessageFormat.format(bundle.getString("HubOfflineStatus"), baseUrl);
         hubStatusLabel.setText(text);
         hubStatusLabel.setToolTipText(text);
         startHubBtn.setVisible(!running);
@@ -718,7 +741,7 @@ public class BotActivity extends JPanel {
         // Populate Raw JSON tab
         priorDraftArea.setText(hasPrevious
                 ? formatPayloadForDisplay(item.previousPayloadJson())
-                : "(No previous version — initial draft/request)");
+                : bundle.getString("NoPreviousVersion"));
         priorDraftArea.setCaretPosition(0);
         editablePayloadArea.setText(formatPayloadForDisplay(item.payloadJson()));
         editablePayloadArea.setCaretPosition(0);
@@ -757,14 +780,14 @@ public class BotActivity extends JPanel {
                 ? "  •  @" + item.persona() + (item.routineId() != null && !item.routineId().isBlank() ? " (" + item.routineId() + ")" : "")
                 : "";
         String channelInfo = item != null && item.channel() != null && !item.channel().isBlank()
-                ? "  •  Channel: " + item.channel()
+                ? "  •  " + MessageFormat.format(bundle.getString("ChannelPrefix"), item.channel())
                 : "";
         String accountInfo = !structured.account().isBlank()
-                ? "  •  Account: " + structured.account()
+                ? "  •  " + MessageFormat.format(bundle.getString("AccountPrefix"), structured.account())
                 : "";
         String title = !structured.header().isBlank()
                 ? structured.header()
-                : (item != null && item.subject() != null ? item.subject() : "Approval Item");
+                : (item != null && item.subject() != null ? item.subject() : bundle.getString("ApprovalItemDefaultTitle"));
 
         if (structured.draftMode()) {
             draftMetaLabel.setText(kindBadge + title + channelInfo + accountInfo + personaInfo);
@@ -776,7 +799,7 @@ public class BotActivity extends JPanel {
             structuredCardLayout.show(structuredCards, CARD_DRAFT);
         } else {
             String stateInfo = !structured.browserStateDir().isBlank()
-                    ? "  •  Browser State: " + structured.browserStateDir()
+                    ? "  •  " + MessageFormat.format(bundle.getString("BrowserStatePrefix"), structured.browserStateDir())
                     : "";
             promptMetaLabel.setText(kindBadge + title + personaInfo + stateInfo);
             promptBodyArea.setText(structured.body());
@@ -925,8 +948,8 @@ public class BotActivity extends JPanel {
             } catch (Exception ex) {
                 SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
                         this,
-                        "Failed to resolve approval: " + ex.getMessage(),
-                        "Approval Error",
+                        MessageFormat.format(bundle.getString("ApprovalErrorMessage"), ex.getMessage()),
+                        bundle.getString("ApprovalErrorTitle"),
                         JOptionPane.ERROR_MESSAGE));
             }
         });
@@ -951,8 +974,8 @@ public class BotActivity extends JPanel {
             }
         }
         if (checkedIds.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Check one or more items in the Select column first.",
-                    "Batch Approval", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, bundle.getString("BatchApprovalSelectMessage"),
+                    bundle.getString("BatchApprovalTitle"), JOptionPane.INFORMATION_MESSAGE);
             return;
         }
         Thread.ofPlatform().name("bot-batch-resolve").daemon(true).start(() -> {
@@ -962,8 +985,8 @@ public class BotActivity extends JPanel {
             } catch (Exception ex) {
                 SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
                         this,
-                        "Batch approval failed: " + ex.getMessage(),
-                        "Batch Approval Error",
+                        MessageFormat.format(bundle.getString("BatchApprovalErrorMessage"), ex.getMessage()),
+                        bundle.getString("BatchApprovalErrorTitle"),
                         JOptionPane.ERROR_MESSAGE));
             }
         });
