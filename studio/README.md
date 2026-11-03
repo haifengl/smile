@@ -804,20 +804,20 @@ Open via **File > Settings…**. The Settings dialog is organized into four tabs
 
 ### 11.1 AI Services Tab (`conf/llm.json`)
 
-Choose an AI service provider from the drop-down:
+Add, edit, or remove one or more named AI service connections (each with a unique **Service Name**, a **Provider**, an endpoint **Base URL** / **Location**, and configured **Models**):
 
 | Provider | Notes |
 |----------|-------|
 | **OpenAI** | GPT models; set API key, optional base URL override, model |
-| **Azure OpenAI** | Azure endpoint; requires API key, base URL, model |
+| **Azure OpenAI** | Azure endpoint(s); requires API key, base URL, model |
 | **Anthropic** | Claude models; set API key, optional base URL, model |
 | **Google Gemini** | Gemini models via native API; set API key, model |
-| **Google Gemini Enterprise** | Gemini via Vertex / Enterprise; set project, base URL, model |
+| **Google Gemini Enterprise** | Gemini via Vertex / Enterprise; set project, location, model |
 | **Chat Completions Compatible** | Local or open-weight hosts (**SMILE Serve**, Ollama, vLLM, SGLang, LM Studio, llama.cpp, OpenRouter); set base URL, optional API key, and model (`Qwen`, `DeepSeek`, `GLM`, `Kimi`, `MiniMax`, etc.) |
 
-Non-secret settings (default service, base URLs, models) are persisted to `$SMILE_HOME/conf/llm.json` (shared with Agent Hub) and synced with Java `Preferences`. API keys are stored via the tiered `SecretStore` library (`photos.sluice:secret-store`):
+Non-secret settings (`defaultService`, `defaultModel`, and the `services` list of `{name, provider, baseUrl, models}` entries) are persisted to `$SMILE_HOME/conf/llm.json` (shared with Agent Hub) and synced with Java `Preferences`. API keys are stored per service connection via the tiered `SecretStore` library (`photos.sluice:secret-store`):
 
-1. **Environment variables** (`OPENAI_API_KEY`, `AZURE_OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `AWS_BEARER_TOKEN_BEDROCK`) take highest read precedence when set.
+1. **Environment variables** (`OPENAI_API_KEY`, `AZURE_OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, `AWS_BEARER_TOKEN_BEDROCK`, or `IOA_LLM_SECRET_<SERVICE_NAME>`) take highest read precedence when set.
 2. **OS credential store** (macOS Keychain, Windows Credential Manager, or Linux Secret Service / `libsecret`) stores keys saved in Settings.
 3. **Permission-restricted credential files** (`~/.smile/credentials/*.key` with owner-only `0600` / Windows ACL permissions) serve as the fallback when no OS keyring is available.
 

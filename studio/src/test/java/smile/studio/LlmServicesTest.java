@@ -17,12 +17,17 @@
  */
 package smile.studio;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.prefs.Preferences;
+import ioa.agent.email.SharedSecrets;
+import ioa.llm.client.LlmConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import photos.sluice.secrets.SecretId;
 import photos.sluice.secrets.SecretStatus;
 import photos.sluice.secrets.SecretStore;
 import static org.junit.jupiter.api.Assertions.*;
@@ -244,5 +249,130 @@ class LlmServicesTest {
         assertNotNull(fileStatus);
         assertFalse(fileStatus.isBlank());
         assertNotEquals(absentStatus, fileStatus);
+    }
+
+    @Test
+    void secretId_supportsCustomNamedServicesPerProvider() {
+        Optional<SecretId> azureEast = LlmServices.secretId("azure-eastus", "azureOpenAI");
+        Optional<SecretId> azureWest = LlmServices.secretId("azure-westus", "azureOpenAI");
+        assertTrue(azureEast.isPresent());
+        assertTrue(azureWest.isPresent());
+        assertNotEquals(azureEast.get(), azureWest.get());
+        assertEquals("llm-azure-eastus", azureEast.get().name());
+        assertEquals("IOA_LLM_SECRET_AZURE_EASTUS", azureEast.get().environmentVariable());
+        assertTrue(LlmServices.secretId("vertex-prod", "googleEnterprise").isEmpty());
+    }
+
+    @Test
+    void llmConfig_supportsMultipleConnectionsPerProviderAndSerializesAsList() throws Exception {
+        Path cfgPath = tempDir.resolve("llm.json");
+        SecretStore secrets = newTestSecretStore();
+
+        LlmConfig cfg = new LlmConfig(
+                "vllm-prod",
+                "ollama-local:qwen3.5",
+                List.of(
+                        new LlmConfig.ServiceEntry(
+                                "vllm-prod",
+                                "chatCompletions",
+                                "http://127.0.0.1:8000/v1",
+                                null,
+                                null,
+                                List.of("deepseek-r1", "qwen3.5")
+                        ),
+                        new LlmConfig.ServiceEntry(
+                                "ollama-local",
+                                "chatCompletions",
+                                "http://127.0.0.1:11434/v1",
+                                null,
+                                null,
+                                List.of("qwen3.5")
+                        ),
+                        new LlmConfig.ServiceEntry(
+                                "azure-east",
+                                "azureOpenAI",
+                                "https://east.openai.azure.com/openai/v1",
+                                null,
+                                null,
+                                List.of("gpt-6-sol")
+                        ),
+                        new LlmConfig.ServiceEntry(
+                                "azure-west",
+                                "azureOpenAI",
+                                "https://west.openai.azure.com/openai/v1",
+                                null,
+                                null,
+                                List.of("gpt-6-astra")
+                        )
+                )
+        );
+        cfg.save(cfgPath);
+
+        String rawJson = Files.readString(cfgPath, StandardCharsets.UTF_8);
+        assertTrue(rawJson.contains("\"services\" : ["));
+        assertTrue(rawJson.contains("\"provider\" : \"chatCompletions\""));
+
+        SharedSecrets.saveLlmSecret(secrets, "azure-east", "azureOpenAI", "east-key");
+        SharedSecrets.saveLlmSecret(secrets, "azure-west", "azureOpenAI", "west-key");
+
+        LlmConfig reloadedCfg = LlmConfig.load(cfgPath);
+        assertEquals(4, reloadedCfg.services().size());
+        assertEquals("vllm-prod", reloadedCfg.defaultService());
+
+        ioa.llm.client.LlmServices shared = new ioa.llm.client.LlmServices();
+        shared.reload(
+                reloadedCfg,
+                cfgPath,
+                svcName -> {
+                    String provider = reloadedCfg.findService(svcName)
+                            .map(LlmConfig.ServiceEntry::provider)
+                            .orElse(svcName);
+                    return LlmServices.secretId(svcName, provider)
+                            .flatMap(id -> LlmServices.readSecret(secrets, id));
+                },
+                null
+        );
+
+        assertEquals(5, shared.availableModels().size());
+        assertTrue(shared.client("vllm-prod").isPresent());
+        assertTrue(shared.client("ollama-local").isPresent());
+        assertTrue(shared.client("azure-east").isPresent());
+        assertTrue(shared.client("azure-west").isPresent());
+        assertNotSame(shared.client("vllm-prod").get(), shared.client("ollama-local").get());
+        assertNotSame(shared.client("azure-east").get(), shared.client("azure-west").get());
+
+        var defModel = shared.defaultModel();
+        assertNotNull(defModel);
+        assertEquals("ollama-local", defModel.serviceKey());
+        assertEquals("qwen3.5", defModel.model().id());
+    }
+
+    @Test
+    void llmConfig_migratesLegacyMapServicesFormatAutomatically() {
+        String legacyJson = """
+                {
+                  "defaultService": "openai",
+                  "defaultModel": "gpt-6-sol",
+                  "services": {
+                    "openai": {
+                      "baseUrl": "https://api.openai.com/v1",
+                      "models": ["gpt-6-sol"]
+                    },
+                    "googleEnterprise": {
+                      "project": "my-gcp-proj",
+                      "location": "us-central1",
+                      "models": ["gemini-3-pro"]
+                    }
+                  }
+                }
+                """;
+        LlmConfig parsed = LlmConfig.fromJson(legacyJson);
+        assertEquals(2, parsed.services().size());
+        assertEquals("openai", parsed.service("openai").name());
+        assertEquals("openai", parsed.service("openai").provider());
+        assertEquals(List.of("gpt-6-sol"), parsed.service("openai").models());
+        assertEquals("googleEnterprise", parsed.service("googleEnterprise").provider());
+        assertEquals("my-gcp-proj", parsed.service("googleEnterprise").project());
+        assertEquals("us-central1", parsed.service("googleEnterprise").location());
     }
 }

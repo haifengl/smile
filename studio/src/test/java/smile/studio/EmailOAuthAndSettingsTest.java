@@ -37,11 +37,17 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import ioa.agent.calendar.CalendarConfig;
+import ioa.agent.calendar.CalendarServices;
 import ioa.agent.email.EmailConfig;
 import ioa.agent.email.EmailServices;
+import ioa.agent.email.OAuthClientVault;
+import ioa.agent.email.OAuthFlow;
 import ioa.agent.email.SharedSecrets;
 import photos.sluice.secrets.SecretStore;
 
+import java.util.Locale;
+import java.util.ResourceBundle;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -70,6 +76,7 @@ class EmailOAuthAndSettingsTest {
             providerServer.stop(0);
         }
         System.clearProperty("ioa.email.config");
+        System.clearProperty("ioa.calendar.config");
     }
 
     private SecretStore newTestSecretStore() {
@@ -202,6 +209,88 @@ class EmailOAuthAndSettingsTest {
                 Optional.of("dot-secret-token"),
                 SharedSecrets.resolveEmailSecret(secrets, "haifeng.li@aihalo.dev")
         );
+    }
+
+    @Test
+    void calendarConfigReusesEmailSecretsAndAllFiveLocaleBundlesContainCalendarKeys() throws Exception {
+        assertTrue(OAuthFlow.GOOGLE_SCOPES.contains("calendar.events"));
+        assertTrue(OAuthFlow.GOOGLE_SCOPES.contains("openid email profile"));
+        assertTrue(OAuthFlow.MS_SCOPES.contains("Calendars.ReadWrite"));
+
+        // Verify Studio's packaged oauth.pub key share unlocks OAuthClientVault
+        byte[] studioShare = OAuthClientVault.loadStudioKeyShare();
+        assertNotNull(studioShare);
+        assertTrue(studioShare.length >= 16);
+        assertTrue(OAuthClientVault.resolve(EmailConfig.Provider.GMAIL, null, null, null).builtIn());
+        assertTrue(OAuthClientVault.resolve(EmailConfig.Provider.MSGRAPH, null, null, null).builtIn());
+
+        Path emailPath = tempDir.resolve("conf").resolve("email.json");
+        Path calPath = tempDir.resolve("conf").resolve("calendar.json");
+        System.setProperty("ioa.email.config", emailPath.toString());
+        System.setProperty("ioa.calendar.config", calPath.toString());
+        SecretStore secrets = newTestSecretStore();
+
+        OAuthFlow.OAuthLoginResult oneClickLogin = new OAuthFlow.OAuthLoginResult(
+                EmailConfig.Provider.GMAIL,
+                "alice@gmail.com",
+                "Alice Smith",
+                "shared-google-refresh-token",
+                "ya29.acc",
+                null,
+                null
+        );
+        OAuthFlow.ProvisionedAccounts provisioned = OAuthFlow.provisionAccounts(
+                oneClickLogin, EmailConfig.empty(), CalendarConfig.empty(), secrets);
+        EmailConfig emailCfg = provisioned.emailConfig();
+        CalendarConfig calCfg = provisioned.calendarConfig();
+        emailCfg.save(emailPath);
+        calCfg.save(calPath);
+
+        assertEquals(
+                Optional.of("shared-google-refresh-token"),
+                SharedSecrets.resolveCalendarSecret(secrets, "alice@gmail.com", true)
+        );
+
+        CalendarServices calServices = new CalendarServices();
+        calServices.setEmailConfigSupplier(() -> emailCfg);
+        calServices.reload(CalendarConfig.load(calPath), secrets);
+        assertTrue(calServices.client("alice@gmail.com").isPresent());
+        assertNull(calServices.client("alice@gmail.com").get().account().effectiveClientId(emailCfg));
+
+        // Verify all 5 locale resource bundles have the new Calendar & 1-click Login keys
+        Locale[] locales = {
+                Locale.US,
+                Locale.SIMPLIFIED_CHINESE,
+                Locale.JAPAN,
+                Locale.FRANCE,
+                Locale.of("es", "ES")
+        };
+        String[] keys = {
+                "TabCalendarAccounts",
+                "CalendarAccount",
+                "CalendarAdd",
+                "CalendarRemove",
+                "CalendarDefault",
+                "CalendarEnabled",
+                "CalendarAccountId",
+                "CalendarProvider",
+                "CalendarId",
+                "CalendarDescription",
+                "CalendarPollInterval",
+                "CalendarUseEmailAccount",
+                "CalendarSecret",
+                "CalendarTestConnection",
+                "CalendarTestSuccess",
+                "CalendarTestFailure",
+                "OAuthLoginWithGoogle",
+                "OAuthLoginWithMicrosoft"
+        };
+        for (Locale locale : locales) {
+            ResourceBundle rb = ResourceBundle.getBundle(SettingsDialog.class.getName(), locale);
+            for (String key : keys) {
+                assertFalse(rb.getString(key).isBlank(), "Missing or blank key " + key + " for locale " + locale);
+            }
+        }
     }
 
     private static Map<String, String> parseQuery(String rawQuery) {

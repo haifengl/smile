@@ -18,8 +18,11 @@
 package smile.studio;
 
 import com.formdev.flatlaf.*;
+import ioa.agent.calendar.CalendarConfig;
+import ioa.agent.calendar.CalendarServices;
 import ioa.agent.email.EmailConfig;
 import ioa.agent.email.EmailServices;
+import ioa.agent.email.OAuthFlow;
 import ioa.agent.email.SharedSecrets;
 import ioa.llm.Model;
 import ioa.llm.client.LlmConfig;
@@ -91,13 +94,24 @@ public class SettingsDialog extends JDialog implements ActionListener {
             "https://api.orcarouter.ai/v1", // OrcaRouter
             "https://openrouter.ai/api/v1"  // OpenRouter
     };
-    private final JComboBox<String> aiServiceCombo = new JComboBox<>(aiServiceOptions);
-    private final CardLayout cardLayout = new CardLayout();
-    private final JPanel cardPane = new JPanel(cardLayout);
-    private final Map<String, JTextField> apiKeyFields = new TreeMap<>();
-    private final Map<String, String> initialSecrets = new TreeMap<>();
-    private final Map<String, JComboBox<String>> baseUrlFields = new TreeMap<>();
-    private final Map<String, JComboBox<String>> modelFields = new TreeMap<>();
+    private LlmConfig llmConfig;
+    private final Map<String, String> pendingLlmSecrets = new LinkedHashMap<>();
+    private final Map<String, String> initialSecrets = new LinkedHashMap<>();
+    private boolean suppressLlmComboEvents = false;
+    private String currentLlmServiceName = "";
+    private final JComboBox<String> llmServiceCombo = new JComboBox<>();
+    private final JCheckBox llmDefaultCheck = new JCheckBox(bundle.getString("ServiceDefault"));
+    private final JTextField llmServiceNameField = new JTextField(18);
+    private final JComboBox<String> llmProviderCombo = new JComboBox<>(aiServiceOptions);
+    private final JLabel llmApiKeyLabel = new JLabel(bundle.getString("APIKey"));
+    private final CardLayout llmCredentialCardLayout = new CardLayout();
+    private final JPanel llmCredentialHolder = new JPanel(llmCredentialCardLayout);
+    private final JPasswordField llmApiKeyField = new JPasswordField(24);
+    private final JTextField llmProjectField = new JTextField(24);
+    private final JLabel llmSecretStatusLabel = new JLabel();
+    private final JLabel llmBaseUrlLabel = new JLabel(bundle.getString("BaseUrl"));
+    private final JComboBox<String> llmBaseUrlField = new JComboBox<>();
+    private final JComboBox<String> llmModelField = new JComboBox<>();
     private final Preferences prefs;
     private final SecretStore secrets;
 
@@ -133,8 +147,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
             new JComboBox<>(EmailConfig.Provider.values());
     private final JSpinner emailPollSpinner = new JSpinner(new SpinnerNumberModel(60, 10, 86400, 15));
     private final JTextField emailFolderField = new JTextField("INBOX", 14);
-    private final JTextField emailClientIdField = new JTextField(24);
-    private final JTextField emailTenantIdField = new JTextField("common", 14);
     private final JTextField emailImapHostField = new JTextField(18);
     private final JSpinner emailImapPortSpinner = new JSpinner(new SpinnerNumberModel(993, 1, 65535, 1));
     private final JTextField emailSmtpHostField = new JTextField(18);
@@ -142,8 +154,34 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private final JCheckBox emailStartTlsCheck = new JCheckBox(bundle.getString("EmailStartTls"), false);
     private final JPasswordField emailSecretField = new JPasswordField(24);
     private final JLabel emailSecretStatusLabel = new JLabel();
-    private final JButton emailOAuthButton = new JButton(bundle.getString("EmailOAuthSignIn"));
+    private final JButton emailLoginGoogleButton = new JButton(bundle.getString("OAuthLoginWithGoogle"));
+    private final JButton emailLoginMicrosoftButton = new JButton(bundle.getString("OAuthLoginWithMicrosoft"));
     private final JButton emailTestButton = new JButton(bundle.getString("EmailTestConnection"));
+
+    // Calendar Accounts tab state & fields
+    private CalendarConfig calendarConfig;
+    private final Map<String, String> pendingCalendarSecrets = new LinkedHashMap<>();
+    private boolean suppressCalendarComboEvents = false;
+    private String currentCalendarAccountId = "";
+    private final JComboBox<String> calendarAccountCombo = new JComboBox<>();
+    private final JCheckBox calendarDefaultCheck = new JCheckBox(bundle.getString("CalendarDefault"));
+    private final JCheckBox calendarEnabledCheck = new JCheckBox(bundle.getString("CalendarEnabled"), true);
+    private final JTextField calendarAccountIdField = new JTextField(22);
+    private final JComboBox<CalendarConfig.Provider> calendarProviderCombo =
+            new JComboBox<>(new CalendarConfig.Provider[]{
+                    CalendarConfig.Provider.GOOGLE,
+                    CalendarConfig.Provider.MSGRAPH,
+                    CalendarConfig.Provider.ICS
+            });
+    private final JTextField calendarIdField = new JTextField("primary", 18);
+    private final JTextField calendarDescriptionField = new JTextField(22);
+    private final JSpinner calendarPollSpinner = new JSpinner(new SpinnerNumberModel(300, 15, 86400, 30));
+    private final JCheckBox calendarUseEmailCheck = new JCheckBox(bundle.getString("CalendarUseEmailAccount"), true);
+    private final JPasswordField calendarSecretField = new JPasswordField(24);
+    private final JLabel calendarSecretStatusLabel = new JLabel();
+    private final JButton calendarLoginGoogleButton = new JButton(bundle.getString("OAuthLoginWithGoogle"));
+    private final JButton calendarLoginMicrosoftButton = new JButton(bundle.getString("OAuthLoginWithMicrosoft"));
+    private final JButton calendarTestButton = new JButton(bundle.getString("CalendarTestConnection"));
 
     /**
      * Constructor using the default application secret store.
@@ -170,34 +208,44 @@ public class SettingsDialog extends JDialog implements ActionListener {
         this.secrets = secrets;
 
         LlmServices.migratePreferencesSecrets(prefs, secrets);
-        LlmConfig llmCfg = LlmServices.loadOrMigrateConfig(prefs);
-        LlmServices.syncToPreferences(llmCfg, prefs);
+        this.llmConfig = LlmServices.loadOrMigrateConfig(prefs);
+        if (this.llmConfig.services().isEmpty()) {
+            this.llmConfig = LlmConfig.empty();
+        }
+        LlmServices.syncToPreferences(this.llmConfig, prefs);
+        for (LlmConfig.ServiceEntry svc : this.llmConfig.services()) {
+            LlmServices.secretId(svc.name(), svc.provider())
+                    .flatMap(id -> LlmServices.readSecret(secrets, id))
+                    .ifPresent(sec -> {
+                        pendingLlmSecrets.put(svc.name(), sec);
+                        initialSecrets.put(svc.name(), sec);
+                    });
+        }
         this.emailConfig = EmailConfig.load();
         for (EmailConfig.AccountSpec acc : emailConfig.accounts()) {
             SharedSecrets.resolveEmailSecret(secrets, acc.emailAddress())
                     .ifPresent(sec -> pendingEmailSecrets.put(acc.emailAddress(), sec));
         }
-
-        aiServiceCombo.addActionListener(this);
-
-        // Add the panels to the dynamic panel with unique names
-        for (int i = 0; i < aiServiceOptions.length; i++) {
-            cardPane.add(createServiceCard(aiServiceKeys[i]), aiServiceOptions[i]);
+        this.calendarConfig = CalendarConfig.load();
+        if (this.calendarConfig.accounts().isEmpty() && !this.emailConfig.accounts().isEmpty()) {
+            // Pre-populate linked calendar accounts from any OAuth email accounts (GMAIL / MSGRAPH)
+            for (EmailConfig.AccountSpec emailSpec : this.emailConfig.accounts()) {
+                CalendarConfig.AccountSpec.fromEmailAccount(emailSpec).ifPresent(calSpec ->
+                        this.calendarConfig = this.calendarConfig.withUpsertedAccount(calSpec));
+            }
         }
-        aiServiceCombo.setSelectedItem(prefs.get(AI_SERVICE_KEY, aiServiceOptions[0]));
-
-        JPanel aiForm = new JPanel(new BorderLayout());
-        aiForm.add(createServiceChoice(), BorderLayout.NORTH);
-        aiForm.add(cardPane, BorderLayout.CENTER);
-        JPanel aiTab = new JPanel(new BorderLayout());
-        aiTab.add(aiForm, BorderLayout.NORTH);
+        for (CalendarConfig.AccountSpec acc : calendarConfig.accounts()) {
+            SharedSecrets.resolveCalendarSecret(secrets, acc.accountId(), false)
+                    .ifPresent(sec -> pendingCalendarSecrets.put(acc.accountId(), sec));
+        }
 
         JTabbedPane tabs = new JTabbedPane();
         tabs.setBorder(new EmptyBorder(6, 6, 0, 6));
-        tabs.addTab(bundle.getString("TabAIServices"), aiTab);
+        tabs.addTab(bundle.getString("TabAIServices"), createAiServicesPane());
         tabs.addTab(bundle.getString("TabAgentHub"), createAgentHubPane());
         tabs.addTab(bundle.getString("TabInferenceServer"), createInferenceServerPane());
         tabs.addTab(bundle.getString("TabEmailAccounts"), createEmailAccountsPane());
+        tabs.addTab(bundle.getString("TabCalendarAccounts"), createCalendarAccountsPane());
 
         add(tabs, BorderLayout.CENTER);
         add(createButtonPane(), BorderLayout.SOUTH);
@@ -205,126 +253,356 @@ public class SettingsDialog extends JDialog implements ActionListener {
         setLocationRelativeTo(owner);
     }
 
-    private JPanel createServiceChoice() {
-        JPanel pane = new JPanel(new GridBagLayout());
-        pane.setBorder(BorderFactory.createEmptyBorder(10, 10, 0, 10));
+    private JPanel createAiServicesPane() {
+        JPanel pane = new JPanel(new BorderLayout(6, 6));
+        pane.setBorder(new EmptyBorder(8, 10, 8, 10));
+
+        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        topBar.add(new JLabel(bundle.getString("Service")));
+        llmServiceCombo.setPreferredSize(new Dimension(190, 26));
+        llmServiceCombo.addActionListener(e -> {
+            if (!suppressLlmComboEvents) {
+                commitCurrentLlmServiceForm();
+                String selectedName = (String) llmServiceCombo.getSelectedItem();
+                if (selectedName != null) {
+                    loadLlmServiceForm(selectedName);
+                }
+            }
+        });
+        topBar.add(llmServiceCombo);
+
+        JButton addBtn = new JButton(bundle.getString("ServiceAdd"));
+        addBtn.addActionListener(e -> addNewLlmService());
+        JButton removeBtn = new JButton(bundle.getString("ServiceRemove"));
+        removeBtn.addActionListener(e -> removeSelectedLlmService());
+        topBar.add(addBtn);
+        topBar.add(removeBtn);
+        topBar.add(llmDefaultCheck);
+        pane.add(topBar, BorderLayout.NORTH);
+
+        JPanel form = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        // Row 0: AI Service
-        gbc.gridx = 0; // Column 0
-        gbc.gridy = 0; // Row 0
+        gbc.insets = new Insets(4, 4, 4, 4);
         gbc.anchor = GridBagConstraints.WEST;
-        JLabel serviceLabel = new JLabel(bundle.getString("Service"));
-        pane.add(serviceLabel, gbc);
-
-        gbc.gridx = 1; // Column 1
         gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0; // Allow text field to take extra horizontal space
-        pane.add(aiServiceCombo, gbc);
 
+        int r = 0;
+        addEmailRow(form, gbc, r++,
+                bundle.getString("ServiceName"), llmServiceNameField,
+                bundle.getString("ServiceProvider"), llmProviderCombo);
+
+        llmApiKeyField.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true");
+        llmCredentialHolder.add(llmApiKeyField, "secret");
+        llmCredentialHolder.add(llmProjectField, "project");
+
+        gbc.gridy = r++;
+        gbc.gridx = 0;
+        gbc.weightx = 0.0;
+        form.add(llmApiKeyLabel, gbc);
+        gbc.gridx = 1;
+        gbc.gridwidth = 3;
+        gbc.weightx = 1.0;
+        form.add(llmCredentialHolder, gbc);
+        gbc.gridwidth = 1;
+
+        llmSecretStatusLabel.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
+        llmSecretStatusLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+        gbc.gridx = 1;
+        gbc.gridy = r++;
+        gbc.gridwidth = 3;
+        gbc.insets = new Insets(0, 4, 4, 4);
+        form.add(llmSecretStatusLabel, gbc);
+        gbc.insets = new Insets(4, 4, 4, 4);
+        gbc.gridwidth = 1;
+
+        llmBaseUrlField.setEditable(true);
+        gbc.gridy = r++;
+        gbc.gridx = 0;
+        gbc.weightx = 0.0;
+        form.add(llmBaseUrlLabel, gbc);
+        gbc.gridx = 1;
+        gbc.gridwidth = 3;
+        gbc.weightx = 1.0;
+        form.add(llmBaseUrlField, gbc);
+        gbc.gridwidth = 1;
+
+        llmModelField.setEditable(true);
+        llmModelField.setToolTipText(bundle.getString("Model"));
+        addEmailSingleRow(form, gbc, r, bundle.getString("Model"), llmModelField);
+
+        llmProviderCombo.addActionListener(e -> {
+            if (!suppressLlmComboEvents) {
+                updateLlmProviderFieldStates(true);
+            }
+        });
+
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(form, BorderLayout.NORTH);
+        pane.add(wrapper, BorderLayout.CENTER);
+        refreshLlmServiceCombo(llmConfig.defaultService());
         return pane;
     }
 
-    private JPanel createServiceCard(String service) {
-        JPanel card = new JPanel(new GridBagLayout());
-        card.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-
-        Optional<SecretId> secretIdOpt = LlmServices.secretId(service);
-        int row = 0;
-
-        // Row 0: API Key (or Project for googleEnterprise)
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.anchor = GridBagConstraints.WEST;
-        JLabel apiKeyLabel = new JLabel(bundle.getString(service.equals("googleEnterprise") ? "Project" : "APIKey"));
-        card.add(apiKeyLabel, gbc);
-
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        if (secretIdOpt.isPresent()) {
-            SecretId id = secretIdOpt.get();
-            JPasswordField passwordField = new JPasswordField(25);
-            passwordField.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true");
-            String existingSecret = LlmServices.readSecret(secrets, id).orElse("");
-            passwordField.setText(existingSecret);
-            initialSecrets.put(service, existingSecret);
-            apiKeyFields.put(service, passwordField);
-            card.add(passwordField, gbc);
-
-            // Row 1: Storage tier status label
-            row++;
-            gbc.gridx = 1;
-            gbc.gridy = row;
-            gbc.insets = new Insets(0, 5, 5, 5);
-            JLabel statusLabel = new JLabel(formatSecretStatus(secrets, id));
-            statusLabel.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
-            statusLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
-            card.add(statusLabel, gbc);
-            gbc.insets = new Insets(5, 5, 5, 5);
-        } else {
-            JTextField projectField = new JTextField(25);
-            projectField.setText(prefs.get(service + API_KEY, ""));
-            apiKeyFields.put(service, projectField);
-            card.add(projectField, gbc);
+    private String selectedLlmProviderKey() {
+        int idx = llmProviderCombo.getSelectedIndex();
+        if (idx >= 0 && idx < aiServiceKeys.length) {
+            return aiServiceKeys[idx];
         }
+        Object item = llmProviderCombo.getSelectedItem();
+        String key = item == null ? "" : LlmConfig.serviceKeyForLabel(item.toString());
+        return key.isEmpty() ? "openai" : key;
+    }
 
-        // Next Row: Base URL (or Location for googleEnterprise)
-        row++;
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0.0;
-        JLabel baseUrlLabel = new JLabel(bundle.getString(service.equals("googleEnterprise") ? "Location" : "BaseUrl"));
-        card.add(baseUrlLabel, gbc);
+    private void selectLlmProviderKey(String providerKey) {
+        String key = (providerKey == null || providerKey.isBlank()) ? "openai" : providerKey.trim();
+        for (int i = 0; i < aiServiceKeys.length; i++) {
+            if (aiServiceKeys[i].equalsIgnoreCase(key) || aiServiceOptions[i].equalsIgnoreCase(key)) {
+                llmProviderCombo.setSelectedIndex(i);
+                return;
+            }
+        }
+        llmProviderCombo.setSelectedIndex(0);
+    }
 
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        JComboBox<String> baseUrlField = switch (service) {
-            case "openai" -> new JComboBox<>(openaiBaseUrls);
-            case "anthropic" -> new JComboBox<>(anthropicBaseUrls);
-            case "googleGemini" -> new JComboBox<>(geminiBaseUrls);
-            case "chatCompletions" -> new JComboBox<>(otherBaseUrls);
-            default -> new JComboBox<>();
+    private static String comboText(JComboBox<String> combo) {
+        Object editorItem = combo.getEditor() != null ? combo.getEditor().getItem() : null;
+        if (editorItem != null && !editorItem.toString().isBlank()) {
+            return editorItem.toString().trim();
+        }
+        Object selected = combo.getSelectedItem();
+        return selected == null ? "" : selected.toString().trim();
+    }
+
+    private static void setComboOptionsAndValue(JComboBox<String> combo, String[] options, String value) {
+        combo.removeAllItems();
+        if (options != null) {
+            for (String opt : options) {
+                combo.addItem(opt);
+            }
+        }
+        String text = value == null ? "" : value;
+        combo.setSelectedItem(text);
+        if (combo.getEditor() != null) {
+            combo.getEditor().setItem(text);
+        }
+    }
+
+    private void updateLlmProviderFieldStates(boolean applyDefaultBaseUrlWhenBlank) {
+        String provider = selectedLlmProviderKey();
+        boolean isVertex = "googleEnterprise".equals(provider);
+
+        llmApiKeyLabel.setText(bundle.getString(isVertex ? "Project" : "APIKey"));
+        llmCredentialCardLayout.show(llmCredentialHolder, isVertex ? "project" : "secret");
+        llmSecretStatusLabel.setVisible(!isVertex);
+        llmBaseUrlLabel.setText(bundle.getString(isVertex ? "Location" : "BaseUrl"));
+
+        String currentBaseUrl = comboText(llmBaseUrlField);
+        String currentModel = comboText(llmModelField);
+
+        String[] baseUrls = switch (provider) {
+            case "openai" -> openaiBaseUrls;
+            case "anthropic" -> anthropicBaseUrls;
+            case "googleGemini" -> geminiBaseUrls;
+            case "chatCompletions" -> otherBaseUrls;
+            default -> new String[0];
         };
-        baseUrlField.setEditable(true);
-        baseUrlField.setSelectedItem(prefs.get(service + BASE_URL, ""));
-        baseUrlFields.put(service, baseUrlField);
-        card.add(baseUrlField, gbc);
-
-        // Next Row: Model
-        row++;
-        gbc.gridx = 0;
-        gbc.gridy = row;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.weightx = 0.0;
-        JLabel modelLabel = new JLabel(bundle.getString("Model"));
-        card.add(modelLabel, gbc);
-
-        gbc.gridx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 1.0;
-        JComboBox<String> modelField = switch (service) {
-            case "openai", "azureOpenAI" -> new JComboBox<>(openaiModels);
-            case "anthropic" -> new JComboBox<>(anthropicModels);
-            case "googleGemini", "googleEnterprise" -> new JComboBox<>(geminiModels);
-            case "chatCompletions" -> new JComboBox<>(otherModels);
-            default -> new JComboBox<>();
+        String[] models = switch (provider) {
+            case "openai", "azureOpenAI" -> openaiModels;
+            case "anthropic" -> anthropicModels;
+            case "googleGemini", "googleEnterprise" -> geminiModels;
+            case "chatCompletions" -> otherModels;
+            default -> new String[0];
         };
-        modelField.setEditable(true);
-        // Comma-separated list; first id is the default for this service.
-        modelField.setSelectedItem(prefs.get(service + MODEL, ""));
-        modelField.setToolTipText(bundle.getString("Model"));
-        modelFields.put(service, modelField);
-        card.add(modelField, gbc);
 
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.add(card, BorderLayout.NORTH);
-        return wrapper;
+        String nextBaseUrl = currentBaseUrl;
+        if (applyDefaultBaseUrlWhenBlank && (nextBaseUrl.isEmpty() || isDefaultProviderBaseUrl(nextBaseUrl))) {
+            nextBaseUrl = LlmConfig.defaultBaseUrlForProvider(provider);
+        }
+        setComboOptionsAndValue(llmBaseUrlField, baseUrls, nextBaseUrl);
+        setComboOptionsAndValue(llmModelField, models, currentModel);
+
+        String name = llmServiceNameField.getText().trim();
+        if (name.isEmpty()) {
+            name = currentLlmServiceName.isEmpty() ? provider : currentLlmServiceName;
+        }
+        Optional<SecretId> secretIdOpt = LlmServices.secretId(name, provider);
+        if (secretIdOpt.isPresent()) {
+            llmSecretStatusLabel.setText(formatSecretStatus(secrets, secretIdOpt.get()));
+        } else {
+            llmSecretStatusLabel.setText(" ");
+        }
+    }
+
+    private static boolean isDefaultProviderBaseUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return true;
+        }
+        for (String[] entry : LlmConfig.SERVICES) {
+            String def = LlmConfig.defaultBaseUrlForProvider(entry[0]);
+            if (!def.isEmpty() && def.equalsIgnoreCase(url.trim())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void refreshLlmServiceCombo(String selectName) {
+        suppressLlmComboEvents = true;
+        try {
+            llmServiceCombo.removeAllItems();
+            for (LlmConfig.ServiceEntry svc : llmConfig.services()) {
+                llmServiceCombo.addItem(svc.name());
+            }
+            if (!llmConfig.services().isEmpty()) {
+                String target = (selectName != null && !selectName.isBlank())
+                        ? selectName
+                        : llmConfig.services().getFirst().name();
+                Optional<LlmConfig.ServiceEntry> found = llmConfig.findService(target);
+                String resolvedName = found.map(LlmConfig.ServiceEntry::name)
+                        .orElseGet(() -> llmConfig.services().getFirst().name());
+                llmServiceCombo.setSelectedItem(resolvedName);
+                loadLlmServiceForm(resolvedName);
+            } else {
+                currentLlmServiceName = "";
+                clearLlmServiceForm();
+            }
+        } finally {
+            suppressLlmComboEvents = false;
+        }
+    }
+
+    private void clearLlmServiceForm() {
+        llmServiceNameField.setText("");
+        selectLlmProviderKey("chatCompletions");
+        llmApiKeyField.setText("");
+        llmProjectField.setText("");
+        llmDefaultCheck.setSelected(llmConfig.services().isEmpty());
+        setComboOptionsAndValue(llmBaseUrlField, otherBaseUrls, LlmConfig.defaultBaseUrlForProvider("chatCompletions"));
+        setComboOptionsAndValue(llmModelField, otherModels, "");
+        updateLlmProviderFieldStates(false);
+    }
+
+    private void loadLlmServiceForm(String serviceName) {
+        Optional<LlmConfig.ServiceEntry> opt = llmConfig.findService(serviceName);
+        if (opt.isEmpty()) {
+            clearLlmServiceForm();
+            return;
+        }
+        boolean prevSuppress = suppressLlmComboEvents;
+        suppressLlmComboEvents = true;
+        try {
+            LlmConfig.ServiceEntry svc = opt.get();
+            currentLlmServiceName = svc.name();
+            llmServiceNameField.setText(svc.name());
+            selectLlmProviderKey(svc.provider());
+            llmDefaultCheck.setSelected(svc.name().equalsIgnoreCase(llmConfig.defaultService()));
+
+            boolean isVertex = "googleEnterprise".equals(svc.provider());
+            if (isVertex) {
+                llmProjectField.setText(svc.project());
+                llmApiKeyField.setText("");
+            } else {
+                String secret = pendingLlmSecrets.getOrDefault(
+                        svc.name(),
+                        LlmServices.secretId(svc.name(), svc.provider())
+                                .flatMap(id -> LlmServices.readSecret(secrets, id))
+                                .orElse("")
+                );
+                llmApiKeyField.setText(secret);
+                llmProjectField.setText("");
+            }
+            String endpointVal = isVertex
+                    ? (!svc.location().isBlank() ? svc.location() : svc.baseUrl())
+                    : svc.baseUrl();
+            setComboOptionsAndValue(llmBaseUrlField, new String[0], endpointVal);
+            setComboOptionsAndValue(llmModelField, new String[0], svc.modelsCsv());
+            updateLlmProviderFieldStates(false);
+        } finally {
+            suppressLlmComboEvents = prevSuppress;
+        }
+    }
+
+    private LlmConfig.ServiceEntry buildSpecFromLlmForm() {
+        String nameText = llmServiceNameField.getText().trim();
+        String name = !nameText.isEmpty() ? nameText : currentLlmServiceName;
+        if (name.isEmpty()) {
+            return null;
+        }
+        String provider = selectedLlmProviderKey();
+        String endpointText = comboText(llmBaseUrlField);
+        String modelsText = comboText(llmModelField);
+        List<String> models = LlmConfig.parseModelIds(modelsText);
+
+        if ("googleEnterprise".equals(provider)) {
+            String project = llmProjectField.getText().trim();
+            return new LlmConfig.ServiceEntry(name, provider, "", project, endpointText, models);
+        }
+        return new LlmConfig.ServiceEntry(name, provider, endpointText, null, null, models);
+    }
+
+    private void commitCurrentLlmServiceForm() {
+        LlmConfig.ServiceEntry spec = buildSpecFromLlmForm();
+        if (spec == null) {
+            return;
+        }
+        if (!currentLlmServiceName.isEmpty() && !currentLlmServiceName.equalsIgnoreCase(spec.name())) {
+            llmConfig = llmConfig.withoutService(currentLlmServiceName);
+            String prevSecret = pendingLlmSecrets.remove(currentLlmServiceName);
+            if (prevSecret != null) {
+                pendingLlmSecrets.put(spec.name(), prevSecret);
+            }
+        }
+        llmConfig = llmConfig.withUpsertedService(spec);
+        if (llmDefaultCheck.isSelected()) {
+            llmConfig = llmConfig.withDefaultService(spec.name());
+        }
+        if (!"googleEnterprise".equals(spec.provider())) {
+            String secretVal = new String(llmApiKeyField.getPassword()).strip();
+            pendingLlmSecrets.put(spec.name(), secretVal);
+        }
+        currentLlmServiceName = spec.name();
+    }
+
+    private void addNewLlmService() {
+        commitCurrentLlmServiceForm();
+        suppressLlmComboEvents = true;
+        try {
+            currentLlmServiceName = "";
+            clearLlmServiceForm();
+            llmServiceNameField.requestFocusInWindow();
+        } finally {
+            suppressLlmComboEvents = false;
+        }
+    }
+
+    private void removeSelectedLlmService() {
+        String name = !llmServiceNameField.getText().trim().isEmpty()
+                ? llmServiceNameField.getText().trim()
+                : currentLlmServiceName;
+        if (name.isEmpty()) {
+            return;
+        }
+        String provider = llmConfig.findService(name)
+                .map(LlmConfig.ServiceEntry::provider)
+                .orElseGet(this::selectedLlmProviderKey);
+        llmConfig = llmConfig.withoutService(name);
+        pendingLlmSecrets.remove(name);
+        initialSecrets.remove(name);
+        SharedSecrets.deleteLlmSecret(secrets, name, provider);
+        refreshLlmServiceCombo(llmConfig.defaultService());
+    }
+
+    private void saveLlmConfiguration() {
+        commitCurrentLlmServiceForm();
+        for (LlmConfig.ServiceEntry svc : llmConfig.services()) {
+            Optional<SecretId> secretIdOpt = LlmServices.secretId(svc.name(), svc.provider());
+            if (secretIdOpt.isPresent()) {
+                String value = pendingLlmSecrets.getOrDefault(svc.name(), "").strip();
+                saveServiceSecret(svc.name(), svc.name(), secretIdOpt.get(), value);
+            }
+        }
+        llmConfig.save();
+        LlmServices.syncToPreferences(llmConfig, prefs);
     }
 
     private JPanel createAgentHubPane() {
@@ -601,9 +879,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 bundle.getString("EmailFolder"), emailFolderField,
                 bundle.getString("EmailPollInterval"), emailPollSpinner);
         addEmailRow(form, gbc, r++,
-                bundle.getString("EmailClientId"), emailClientIdField,
-                bundle.getString("EmailTenantId"), emailTenantIdField);
-        addEmailRow(form, gbc, r++,
                 bundle.getString("EmailImapHost"), emailImapHostField,
                 bundle.getString("EmailImapPort"), emailImapPortSpinner);
         addEmailRow(form, gbc, r++,
@@ -637,9 +912,11 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridwidth = 1;
 
         JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        emailOAuthButton.addActionListener(e -> launchEmailOAuthSignIn());
+        emailLoginGoogleButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.GMAIL));
+        emailLoginMicrosoftButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.MSGRAPH));
         emailTestButton.addActionListener(e -> testCurrentEmailConnection());
-        actionRow.add(emailOAuthButton);
+        actionRow.add(emailLoginGoogleButton);
+        actionRow.add(emailLoginMicrosoftButton);
         actionRow.add(emailTestButton);
 
         gbc.gridx = 1;
@@ -658,7 +935,9 @@ public class SettingsDialog extends JDialog implements ActionListener {
             }
         });
 
-        pane.add(form, BorderLayout.CENTER);
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(form, BorderLayout.NORTH);
+        pane.add(wrapper, BorderLayout.CENTER);
         refreshEmailAccountCombo(emailConfig.defaultAccount());
         return pane;
     }
@@ -738,8 +1017,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
         emailProviderCombo.setSelectedItem(EmailConfig.Provider.GMAIL);
         emailPollSpinner.setValue(60);
         emailFolderField.setText("INBOX");
-        emailClientIdField.setText("");
-        emailTenantIdField.setText("common");
         emailImapHostField.setText("imap.gmail.com");
         emailImapPortSpinner.setValue(993);
         emailSmtpHostField.setText("smtp.gmail.com");
@@ -766,8 +1043,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
         emailProviderCombo.setSelectedItem(acc.provider());
         emailPollSpinner.setValue(acc.pollIntervalSeconds());
         emailFolderField.setText(acc.folder());
-        emailClientIdField.setText(acc.clientId() != null ? acc.clientId() : "");
-        emailTenantIdField.setText(acc.tenantId() != null ? acc.tenantId() : "common");
         emailImapHostField.setText(acc.imapHost() != null ? acc.imapHost() : "");
         emailImapPortSpinner.setValue(acc.imapPort());
         emailSmtpHostField.setText(acc.smtpHost() != null ? acc.smtpHost() : "");
@@ -787,13 +1062,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
     private void updateEmailProviderFieldStates() {
         EmailConfig.Provider provider = (EmailConfig.Provider) emailProviderCombo.getSelectedItem();
-        boolean isOAuth = provider == EmailConfig.Provider.GMAIL || provider == EmailConfig.Provider.MSGRAPH;
-        boolean isMsGraph = provider == EmailConfig.Provider.MSGRAPH;
         boolean isImap = provider == EmailConfig.Provider.IMAP;
 
-        emailClientIdField.setEnabled(isOAuth);
-        emailTenantIdField.setEnabled(isMsGraph);
-        emailOAuthButton.setEnabled(isOAuth);
         emailImapHostField.setEnabled(isImap);
         emailImapPortSpinner.setEnabled(isImap);
         emailSmtpHostField.setEnabled(isImap);
@@ -807,13 +1077,15 @@ public class SettingsDialog extends JDialog implements ActionListener {
         if (email.isEmpty()) {
             return null;
         }
+        Optional<EmailConfig.AccountSpec> existing = emailConfig.findAccount(email);
         EmailConfig.Provider provider = (EmailConfig.Provider) emailProviderCombo.getSelectedItem();
         String senderName = emailSenderNameField.getText().trim();
         String description = emailDescriptionField.getText().trim();
         int pollSec = ((Number) emailPollSpinner.getValue()).intValue();
         String folder = emailFolderField.getText().trim();
-        String clientId = emailClientIdField.getText().trim();
-        String tenantId = emailTenantIdField.getText().trim();
+        String clientId = existing.map(EmailConfig.AccountSpec::clientId).orElse(null);
+        String tenantId = existing.map(EmailConfig.AccountSpec::tenantId)
+                .orElse(provider == EmailConfig.Provider.MSGRAPH ? "common" : null);
         String imapHost = emailImapHostField.getText().trim();
         int imapPort = ((Number) emailImapPortSpinner.getValue()).intValue();
         boolean imapSsl = imapPort != 143;
@@ -831,8 +1103,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 pollSec,
                 folder.isEmpty() ? "INBOX" : folder,
                 provider == EmailConfig.Provider.GMAIL ? "label:INBOX" : null,
-                clientId.isEmpty() ? null : clientId,
-                tenantId.isEmpty() ? "common" : tenantId,
+                clientId,
+                tenantId,
                 imapHost.isEmpty() ? null : imapHost,
                 imapPort,
                 imapSsl,
@@ -885,28 +1157,35 @@ public class SettingsDialog extends JDialog implements ActionListener {
         refreshEmailAccountCombo(emailConfig.defaultAccount());
     }
 
-    private void launchEmailOAuthSignIn() {
+    private void setOAuthLoginButtonsEnabled(boolean enabled) {
+        emailLoginGoogleButton.setEnabled(enabled);
+        emailLoginMicrosoftButton.setEnabled(enabled);
+        calendarLoginGoogleButton.setEnabled(enabled);
+        calendarLoginMicrosoftButton.setEnabled(enabled);
+    }
+
+    private void launchOneClickOAuthLogin(EmailConfig.Provider provider) {
         commitCurrentEmailAccountForm();
-        EmailConfig.AccountSpec spec = buildSpecFromEmailForm();
-        if (spec == null) {
-            return;
-        }
-        emailOAuthButton.setEnabled(false);
-        Thread.ofVirtual().name("studio-email-oauth").start(() -> {
+        commitCurrentCalendarAccountForm();
+        setOAuthLoginButtonsEnabled(false);
+        Thread.ofVirtual().name("studio-oneclick-oauth").start(() -> {
             try {
-                EmailOAuthFlow.OAuthResult result = EmailOAuthFlow.authorizePkceLoopback(
-                        spec, null, Duration.ofMinutes(3));
+                OAuthFlow.OAuthLoginResult login = provider == EmailConfig.Provider.GMAIL
+                        ? EmailOAuthFlow.loginWithGoogle(Duration.ofMinutes(3))
+                        : EmailOAuthFlow.loginWithMicrosoft(Duration.ofMinutes(3));
                 SwingUtilities.invokeLater(() -> {
-                    emailSecretField.setText(result.refreshToken());
-                    pendingEmailSecrets.put(spec.emailAddress(), result.refreshToken());
-                    SharedSecrets.saveEmailSecret(secrets, spec.emailAddress(), result.refreshToken());
-                    emailSecretStatusLabel.setText(
-                            formatSecretStatus(secrets, SharedSecrets.emailSecretId(spec.emailAddress())));
-                    emailOAuthButton.setEnabled(true);
+                    OAuthFlow.ProvisionedAccounts provisioned = OAuthFlow.provisionAccounts(
+                            login, emailConfig, calendarConfig, secrets);
+                    emailConfig = provisioned.emailConfig();
+                    calendarConfig = provisioned.calendarConfig();
+                    pendingEmailSecrets.put(login.emailAddress(), login.refreshToken());
+                    refreshEmailAccountCombo(login.emailAddress());
+                    refreshCalendarAccountCombo(login.emailAddress());
+                    setOAuthLoginButtonsEnabled(true);
                 });
             } catch (Exception ex) {
                 SwingUtilities.invokeLater(() -> {
-                    emailOAuthButton.setEnabled(true);
+                    setOAuthLoginButtonsEnabled(true);
                     JOptionPane.showMessageDialog(
                             this,
                             MessageFormat.format(bundle.getString("EmailTestFailure"), ex.getMessage()),
@@ -977,6 +1256,299 @@ public class SettingsDialog extends JDialog implements ActionListener {
         }
     }
 
+    private JPanel createCalendarAccountsPane() {
+        JPanel pane = new JPanel(new BorderLayout(6, 6));
+        pane.setBorder(new EmptyBorder(8, 10, 8, 10));
+
+        JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        topBar.add(new JLabel(bundle.getString("CalendarAccount")));
+        calendarAccountCombo.setPreferredSize(new Dimension(190, 26));
+        calendarAccountCombo.addActionListener(e -> {
+            if (!suppressCalendarComboEvents) {
+                commitCurrentCalendarAccountForm();
+                String selectedId = (String) calendarAccountCombo.getSelectedItem();
+                if (selectedId != null) {
+                    loadCalendarAccountForm(selectedId);
+                }
+            }
+        });
+        topBar.add(calendarAccountCombo);
+
+        JButton addBtn = new JButton(bundle.getString("CalendarAdd"));
+        addBtn.addActionListener(e -> addNewCalendarAccount());
+        JButton removeBtn = new JButton(bundle.getString("CalendarRemove"));
+        removeBtn.addActionListener(e -> removeSelectedCalendarAccount());
+        topBar.add(addBtn);
+        topBar.add(removeBtn);
+        topBar.add(calendarDefaultCheck);
+        topBar.add(calendarEnabledCheck);
+        pane.add(topBar, BorderLayout.NORTH);
+
+        JPanel form = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(4, 4, 4, 4);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        int r = 0;
+        addEmailRow(form, gbc, r++,
+                bundle.getString("CalendarAccountId"), calendarAccountIdField,
+                bundle.getString("CalendarProvider"), calendarProviderCombo);
+        addEmailRow(form, gbc, r++,
+                bundle.getString("CalendarId"), calendarIdField,
+                bundle.getString("CalendarPollInterval"), calendarPollSpinner);
+        addEmailSingleRow(form, gbc, r++,
+                bundle.getString("CalendarDescription"), calendarDescriptionField);
+
+        gbc.gridx = 1;
+        gbc.gridy = r++;
+        gbc.gridwidth = 3;
+        form.add(calendarUseEmailCheck, gbc);
+        gbc.gridwidth = 1;
+
+        calendarSecretField.putClientProperty(FlatClientProperties.STYLE, "showRevealButton: true");
+        gbc.gridx = 0;
+        gbc.gridy = r;
+        gbc.weightx = 0.0;
+        form.add(new JLabel(bundle.getString("CalendarSecret")), gbc);
+        gbc.gridx = 1;
+        gbc.gridwidth = 3;
+        gbc.weightx = 1.0;
+        form.add(calendarSecretField, gbc);
+        gbc.gridwidth = 1;
+        r++;
+
+        calendarSecretStatusLabel.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
+        calendarSecretStatusLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
+        gbc.gridx = 1;
+        gbc.gridy = r++;
+        gbc.gridwidth = 3;
+        form.add(calendarSecretStatusLabel, gbc);
+        gbc.gridwidth = 1;
+
+        JPanel actionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        calendarLoginGoogleButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.GMAIL));
+        calendarLoginMicrosoftButton.addActionListener(e -> launchOneClickOAuthLogin(EmailConfig.Provider.MSGRAPH));
+        calendarTestButton.addActionListener(e -> testCurrentCalendarConnection());
+        actionRow.add(calendarLoginGoogleButton);
+        actionRow.add(calendarLoginMicrosoftButton);
+        actionRow.add(calendarTestButton);
+
+        gbc.gridx = 1;
+        gbc.gridy = r;
+        gbc.gridwidth = 3;
+        form.add(actionRow, gbc);
+        gbc.gridwidth = 1;
+
+        calendarProviderCombo.addActionListener(e -> updateCalendarProviderFieldStates());
+        calendarUseEmailCheck.addActionListener(e -> updateCalendarProviderFieldStates());
+
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.add(form, BorderLayout.NORTH);
+        pane.add(wrapper, BorderLayout.CENTER);
+        refreshCalendarAccountCombo(calendarConfig.defaultAccount());
+        return pane;
+    }
+
+    private void refreshCalendarAccountCombo(String selectId) {
+        suppressCalendarComboEvents = true;
+        try {
+            calendarAccountCombo.removeAllItems();
+            for (CalendarConfig.AccountSpec acc : calendarConfig.accounts()) {
+                calendarAccountCombo.addItem(acc.accountId());
+            }
+            if (!calendarConfig.accounts().isEmpty()) {
+                String target = (selectId != null && !selectId.isBlank())
+                        ? selectId
+                        : calendarConfig.accounts().getFirst().accountId();
+                calendarAccountCombo.setSelectedItem(target);
+                loadCalendarAccountForm(target);
+            } else {
+                currentCalendarAccountId = "";
+                clearCalendarAccountForm();
+            }
+        } finally {
+            suppressCalendarComboEvents = false;
+        }
+    }
+
+    private void clearCalendarAccountForm() {
+        calendarAccountIdField.setText("");
+        calendarProviderCombo.setSelectedItem(CalendarConfig.Provider.GOOGLE);
+        calendarIdField.setText("primary");
+        calendarDescriptionField.setText("");
+        calendarPollSpinner.setValue(300);
+        calendarUseEmailCheck.setSelected(true);
+        calendarDefaultCheck.setSelected(true);
+        calendarEnabledCheck.setSelected(true);
+        calendarSecretField.setText("");
+        calendarSecretStatusLabel.setText(formatSecretStatus(secrets, SharedSecrets.calendarSecretId("default")));
+        updateCalendarProviderFieldStates();
+    }
+
+    private void loadCalendarAccountForm(String accountId) {
+        Optional<CalendarConfig.AccountSpec> opt = calendarConfig.findAccount(accountId);
+        if (opt.isEmpty()) {
+            clearCalendarAccountForm();
+            return;
+        }
+        CalendarConfig.AccountSpec acc = opt.get();
+        currentCalendarAccountId = acc.accountId();
+        calendarAccountIdField.setText(acc.accountId());
+        calendarProviderCombo.setSelectedItem(acc.provider());
+        calendarIdField.setText(acc.calendarId() != null ? acc.calendarId() : "primary");
+        calendarDescriptionField.setText(acc.description() != null ? acc.description() : "");
+        calendarPollSpinner.setValue(acc.pollIntervalSeconds());
+        calendarUseEmailCheck.setSelected(acc.useEmailAccount());
+        calendarDefaultCheck.setSelected(acc.accountId().equalsIgnoreCase(calendarConfig.defaultAccount()));
+        calendarEnabledCheck.setSelected(acc.enabled());
+
+        String secret = pendingCalendarSecrets.getOrDefault(
+                acc.accountId(),
+                SharedSecrets.resolveCalendarSecret(secrets, acc.accountId(), false).orElse("")
+        );
+        calendarSecretField.setText(secret);
+        SecretId statusId = (secret.isEmpty() && acc.useEmailAccount() && emailConfig.findAccount(acc.accountId()).isPresent())
+                ? SharedSecrets.emailSecretId(acc.accountId())
+                : SharedSecrets.calendarSecretId(acc.accountId());
+        calendarSecretStatusLabel.setText(formatSecretStatus(secrets, statusId));
+        updateCalendarProviderFieldStates();
+    }
+
+    private void updateCalendarProviderFieldStates() {
+        CalendarConfig.Provider provider = (CalendarConfig.Provider) calendarProviderCombo.getSelectedItem();
+        boolean isOAuth = provider == CalendarConfig.Provider.GOOGLE || provider == CalendarConfig.Provider.MSGRAPH;
+
+        calendarUseEmailCheck.setEnabled(isOAuth);
+        calendarSecretField.setEnabled(isOAuth);
+    }
+
+    private CalendarConfig.AccountSpec buildSpecFromCalendarForm() {
+        String idText = calendarAccountIdField.getText().trim();
+        String accountId = !idText.isEmpty() ? idText : currentCalendarAccountId;
+        if (accountId.isEmpty()) {
+            return null;
+        }
+        Optional<CalendarConfig.AccountSpec> existing = calendarConfig.findAccount(accountId);
+        CalendarConfig.Provider provider = (CalendarConfig.Provider) calendarProviderCombo.getSelectedItem();
+        String calId = calendarIdField.getText().trim();
+        String description = calendarDescriptionField.getText().trim();
+        int pollSec = ((Number) calendarPollSpinner.getValue()).intValue();
+        boolean useEmail = calendarUseEmailCheck.isSelected();
+        String clientId = existing.map(CalendarConfig.AccountSpec::clientId).orElse(null);
+        String tenantId = existing.map(CalendarConfig.AccountSpec::tenantId)
+                .orElse(provider == CalendarConfig.Provider.MSGRAPH ? "common" : null);
+        boolean enabled = calendarEnabledCheck.isSelected();
+
+        return new CalendarConfig.AccountSpec(
+                accountId,
+                description.isEmpty() ? null : description,
+                provider,
+                enabled,
+                pollSec,
+                calId.isEmpty() ? "primary" : calId,
+                useEmail,
+                clientId,
+                tenantId
+        );
+    }
+
+    private void commitCurrentCalendarAccountForm() {
+        CalendarConfig.AccountSpec spec = buildSpecFromCalendarForm();
+        if (spec == null) {
+            return;
+        }
+        if (!currentCalendarAccountId.isEmpty() && !currentCalendarAccountId.equalsIgnoreCase(spec.accountId())) {
+            calendarConfig = calendarConfig.withoutAccount(currentCalendarAccountId);
+            pendingCalendarSecrets.remove(currentCalendarAccountId);
+        }
+        calendarConfig = calendarConfig.withUpsertedAccount(spec);
+        if (calendarDefaultCheck.isSelected()) {
+            calendarConfig = new CalendarConfig(spec.accountId(), calendarConfig.accounts());
+        }
+        String secretVal = new String(calendarSecretField.getPassword()).strip();
+        pendingCalendarSecrets.put(spec.accountId(), secretVal);
+        currentCalendarAccountId = spec.accountId();
+    }
+
+    private void addNewCalendarAccount() {
+        commitCurrentCalendarAccountForm();
+        suppressCalendarComboEvents = true;
+        try {
+            currentCalendarAccountId = "";
+            clearCalendarAccountForm();
+            calendarAccountIdField.requestFocusInWindow();
+        } finally {
+            suppressCalendarComboEvents = false;
+        }
+    }
+
+    private void removeSelectedCalendarAccount() {
+        String id = !calendarAccountIdField.getText().trim().isEmpty()
+                ? calendarAccountIdField.getText().trim()
+                : currentCalendarAccountId;
+        if (id.isEmpty()) {
+            return;
+        }
+        calendarConfig = calendarConfig.withoutAccount(id);
+        pendingCalendarSecrets.remove(id);
+        SharedSecrets.deleteCalendarSecret(secrets, id);
+        refreshCalendarAccountCombo(calendarConfig.defaultAccount());
+    }
+
+    private void testCurrentCalendarConnection() {
+        commitCurrentEmailAccountForm();
+        commitCurrentCalendarAccountForm();
+        CalendarConfig.AccountSpec spec = buildSpecFromCalendarForm();
+        if (spec == null) {
+            return;
+        }
+        String secretVal = new String(calendarSecretField.getPassword()).strip();
+        calendarTestButton.setEnabled(false);
+        Thread.ofVirtual().name("studio-calendar-test").start(() -> {
+            try {
+                CalendarServices testServices = new CalendarServices();
+                testServices.setEmailConfigSupplier(() -> emailConfig);
+                var client = testServices.createDefaultClient(
+                        spec,
+                        s -> !secretVal.isEmpty()
+                                ? Optional.of(secretVal)
+                                : SharedSecrets.resolveCalendarSecret(secrets, s.accountId(), s.useEmailAccount())
+                );
+                String status = client.testConnection();
+                SwingUtilities.invokeLater(() -> {
+                    calendarTestButton.setEnabled(true);
+                    JOptionPane.showMessageDialog(
+                            this,
+                            MessageFormat.format(bundle.getString("CalendarTestSuccess"), status),
+                            bundle.getString("Title"),
+                            JOptionPane.INFORMATION_MESSAGE);
+                });
+            } catch (Exception ex) {
+                SwingUtilities.invokeLater(() -> {
+                    calendarTestButton.setEnabled(true);
+                    JOptionPane.showMessageDialog(
+                            this,
+                            MessageFormat.format(bundle.getString("CalendarTestFailure"), ex.getMessage()),
+                            bundle.getString("Title"),
+                            JOptionPane.ERROR_MESSAGE);
+                });
+            }
+        });
+    }
+
+    private void saveCalendarConfiguration() {
+        commitCurrentCalendarAccountForm();
+        calendarConfig.save();
+        for (CalendarConfig.AccountSpec acc : calendarConfig.accounts()) {
+            String sec = pendingCalendarSecrets.getOrDefault(acc.accountId(), "");
+            if (!sec.isEmpty()) {
+                SharedSecrets.saveCalendarSecret(secrets, acc.accountId(), sec);
+            }
+        }
+        CalendarServices.getInstance().reload(calendarConfig, secrets);
+    }
+
     /**
      * Formats a user-facing description of where a secret is stored or would be saved.
      * @param secrets the secret store.
@@ -1022,25 +1594,10 @@ public class SettingsDialog extends JDialog implements ActionListener {
         getRootPane().setDefaultButton(okButton);
 
         okButton.addActionListener((e) -> {
-            String selectedServiceLabel = aiServiceOptions[aiServiceCombo.getSelectedIndex()];
-            prefs.put(AI_SERVICE_KEY, selectedServiceLabel);
-            for (int i = 0; i < aiServiceKeys.length; i++) {
-                String service = aiServiceKeys[i];
-                String label = aiServiceOptions[i];
-                Optional<SecretId> secretIdOpt = LlmServices.secretId(service);
-                if (secretIdOpt.isPresent()) {
-                    saveServiceSecret(service, label, secretIdOpt.get());
-                } else {
-                    prefs.put(service + API_KEY, apiKeyFields.get(service).getText());
-                }
-                Object baseUrlItem = baseUrlFields.get(service).getSelectedItem();
-                Object modelItem = modelFields.get(service).getSelectedItem();
-                prefs.put(service + BASE_URL, baseUrlItem == null ? "" : baseUrlItem.toString());
-                prefs.put(service + MODEL, modelItem == null ? "" : modelItem.toString());
-            }
-            LlmConfig.fromPreferences(prefs).ifPresent(LlmConfig::save);
+            saveLlmConfiguration();
             saveStudioConfiguration();
             saveEmailConfiguration();
+            saveCalendarConfiguration();
             SmileStudio.updateLLM();
             SmileStudio.refreshModelSelectors();
             dispose();
@@ -1050,15 +1607,11 @@ public class SettingsDialog extends JDialog implements ActionListener {
         return pane;
     }
 
-    private void saveServiceSecret(String service, String label, SecretId id) {
+    private void saveServiceSecret(String service, String label, SecretId id, String value) {
         prefs.remove(service + API_KEY);
         if (secrets == null) {
             return;
         }
-        JTextField field = apiKeyFields.get(service);
-        String value = (field instanceof JPasswordField pf
-                ? new String(pf.getPassword())
-                : field.getText()).strip();
         String initial = initialSecrets.getOrDefault(service, "").strip();
         try {
             if (value.isEmpty()) {
@@ -1080,17 +1633,8 @@ public class SettingsDialog extends JDialog implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (e.getSource() == aiServiceCombo) {
-            String selectedOption = (String) aiServiceCombo.getSelectedItem();
-
-            // Tell the CardLayout to show the panel corresponding to the selected option
-            cardLayout.show(cardPane, selectedOption);
-
-            // Repaint and revalidate the container to ensure correct display
-            cardPane.revalidate();
-            cardPane.repaint();
-            // Call pack() if the new panel has a different preferred size
-            pack();
+        if (e.getSource() == llmProviderCombo && !suppressLlmComboEvents) {
+            updateLlmProviderFieldStates(true);
         }
     }
 }

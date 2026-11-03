@@ -440,4 +440,36 @@ public class HubClientAndConfigTest {
             }
         }
     }
+
+    @Test
+    public void testParseStreamEventAndNonDestructiveBotActivityRefresh() {
+        HubClient.BotStreamEvent ev = HubClient.parseStreamEvent("run",
+                "{\"type\":\"run\",\"runId\":42,\"botId\":\"frank\",\"routineId\":\"frank-daily-recap\",\"timestamp\":\"2026-11-01T12:00:00Z\"}");
+        assertNotNull(ev);
+        assertEquals("run", ev.type());
+        assertEquals(42L, ev.runId());
+        assertEquals("frank", ev.botId());
+        assertEquals("frank-daily-recap", ev.routineId());
+
+        // Verify non-destructive approval refresh preserves user draft edits when the selected approval is unchanged
+        BotActivity activity = new BotActivity(0);
+        HubClient.BotApprovalItem item1 = new HubClient.BotApprovalItem(
+                101L, 1L, "mike", "mike-outreach", "sales",
+                "BATCH_DRAFT", "email", "alice@example.com", "Original Subject",
+                "{\"to\":\"alice@example.com\",\"subject\":\"Original Subject\",\"body\":\"Original body\"}",
+                null, "PENDING", null, null, "2026-11-01T10:00:00Z", null
+        );
+        HubClient.BotApprovalItem item2 = new HubClient.BotApprovalItem(
+                102L, 2L, "mike", "mike-outreach", "sales",
+                "BATCH_DRAFT", "email", "bob@example.com", "Second Subject",
+                "{\"to\":\"bob@example.com\",\"subject\":\"Second Subject\",\"body\":\"Second body\"}",
+                null, "PENDING", null, null, "2026-11-01T10:05:00Z", null
+        );
+        activity.populateApprovals(List.of(item1));
+        assertTrue(activity.isDraftComposerActive());
+
+        // Refreshing with a newly added second approval while item1 remains selected must not clobber item1
+        activity.populateApprovals(List.of(item1, item2));
+        assertEquals("mike-outreach", activity.selectedRoutineId());
+    }
 }

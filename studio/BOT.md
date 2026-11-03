@@ -27,12 +27,12 @@
    - 4.3 [Status Bar Bot & Approval Badge](#43-status-bar-bot--approval-badge)
    - 4.4 [Conversational Setup via `BotConfig` Tool](#44-conversational-setup-via-botconfig-tool)
 5. [Configuring Bot Routines (`BotManager`)](#5-configuring-bot-routines-botmanager)
-   - 5.1 [Routine Definition Tab](#51-routine-definition-tab)
-   - 5.2 [Context Projects Tab (`conf/projects.json`)](#52-context-projects-tab-confprojectsjson)
-   - 5.3 [Auto Review Rules Tab](#53-auto-review-rules-tab)
-6. [Bot Activity (`BotActivity`)](#6-bot-activity-botactivity)
-   - 6.1 [Approvals & Batch Draft Queue](#61-approvals--batch-draft-queue)
-   - 6.2 [Run History & Session Transcripts](#62-run-history--session-transcripts)
+   - 5.1 [Routine Tab](#51-routine-tab)
+   - 5.2 [Context Projects Tab](#52-context-projects-tab)
+   - 5.3 [Review Rules Tab](#53-review-rules-tab)
+6. [Bot Activities (`BotActivity`)](#6-bot-activities-botactivity)
+   - 6.1 [Approval Queue](#61-approval-queue)
+   - 6.2 [Run History](#62-run-history)
    - 6.3 [Interactive Bot Pages](#63-interactive-bot-pages)
 7. [External Event Sources](#7-external-event-sources)
    - 7.1 [Timer Source (`cron` and `intervalSeconds`)](#71-timer-source-cron-and-intervalseconds)
@@ -321,7 +321,7 @@ Every mutating action prompts you with an **Automation Write Approval** confirma
 
 Open **Agent Hub > Bot Routines…** (or click any routine in the **Bots** explorer tab) to open the `Bot Routines` tab and edit `$SMILE_HOME/conf/bots.json` and `$SMILE_HOME/conf/projects.json` visually. Changes can be edited even when Agent Hub is offline and are hot-reloaded immediately when Agent Hub is running.
 
-### 5.1 Routine Definition Tab
+### 5.1 Routine Tab
 
 Select any routine in the **Bots** explorer tab (or right-click to choose **New Routine…**) to load or create a routine in the form:
 
@@ -364,16 +364,16 @@ Select any routine in the **Bots** explorer tab (or right-click to choose **New 
 - **Require approval for consequential actions (`confirmConsequential`):** Gates consequential tool calls (shell commands, external file writes, peer delegation, outbound communications) through the approval queue.
 - **Approval TTL (min):** Time-to-live in minutes for pending approvals (`0` = no expiry, used for Batch Draft Queue items; `> 0` = automatically marks unreviewed items `EXPIRED` and fails closed after the deadline, used for time-sensitive calendar invites).
 
-Click **Save to bots.json** to persist changes, or click **Run Routine Now** to test the selected routine immediately.
+Click **Save** to persist changes, or click **Run Routine Now** to test the selected routine immediately.
 
-### 5.2 Context Projects Tab (`conf/projects.json`)
+### 5.2 Context Projects Tab
 
 Whenever SMILE Studio opens a project folder, it automatically registers the workspace in `$SMILE_HOME/conf/projects.json`. The **Context Projects** tab displays all tracked projects (`Project Name`, `Path`, `Workspace (.smile)`, and discovered `Personas`).
 
 - Click **+ Add Project Folder…** to register an additional project directory manually.
 - Click **Remove Selected** to stop including a project in cross-project routines (`daily-log` and `frank-daily-recap`).
 
-### 5.3 Auto Review Rules Tab
+### 5.3 Review Rules Tab
 
 Standing Auto Review rules control whether consequential actions pause for human approval or execute automatically. Each rule has four fields:
 
@@ -392,9 +392,9 @@ Standing Auto Review rules control whether consequential actions pause for human
 
 Open **Agent Hub > Bot Activities…** (or click the status bar `[Bots]` / `[Approvals (N)]` badge) to open the `Bot Activities` tab inside the main workspace alongside notebooks and text editors.
 
-### 6.1 Approvals & Batch Draft Queue
+### 6.1 Approval Queue
 
-Autonomous runs never block on modal desktop popups. Instead, any human-in-the-loop interaction is recorded in Agent Hub's `IoABotApproval` queue and displayed in the **Approvals & Batch Draft Queue** tab:
+Autonomous runs never block on modal desktop popups. Instead, any human-in-the-loop interaction is recorded in Agent Hub's `IoABotApproval` queue and displayed in the **Approval Queue** tab:
 
 #### Approval Kinds
 
@@ -422,9 +422,9 @@ Autonomous runs never block on modal desktop popups. Instead, any human-in-the-l
 3. **Batch Actions:**
    - Click **Select All Pending Drafts** (or check individual rows in the `Select` column) and click **Approve Checked Batch** to approve an entire morning outreach or community answer batch in one click.
 
-### 6.2 Run History & Session Transcripts
+### 6.2 Run History
 
-The **Run History & Transcripts** tab lists every routine execution (`IoABotRun`) with its `Run ID`, `Bot`, `Routine`, `Persona`, `Model`, `Status`, `Started At`, and `Summary / Error`:
+The **Run History** tab lists every routine execution (`IoABotRun`) with its `Run ID`, `Bot`, `Routine`, `Persona`, `Model`, `Status`, `Started At`, and `Summary / Error`:
 
 | Run Status | Meaning |
 |------------|---------|
@@ -638,7 +638,7 @@ $SMILE_HOME/
 
 ### 8.4 Shared LLM Configuration (`conf/llm.json`)
 
-When you configure AI providers and models in SMILE Studio (**File > Settings…**), Studio writes non-secret provider metadata (default service, base URLs, configured models) to `$SMILE_HOME/conf/llm.json` (fallback `~/.smile/llm.json`) and stores API keys in `SecretStore` (OS keyring or `~/.smile/credentials/*.key`, with environment variables such as `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, and `GOOGLE_API_KEY` taking highest precedence). Agent Hub reads this same `llm.json` and `SecretStore` automatically, so you only configure your LLM credentials once.
+When you configure AI service connections and models in SMILE Studio (**File > Settings…**), Studio writes non-secret service metadata (`defaultService`, `defaultModel`, and the `services` list of `{name, provider, baseUrl, models}` entries) to `$SMILE_HOME/conf/llm.json` (fallback `~/.smile/llm.json`) and stores per-service API keys in `SecretStore` (OS keyring or `~/.smile/credentials/*.key`, with environment variables such as `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GOOGLE_API_KEY`, and `IOA_LLM_SECRET_<SERVICE_NAME>` taking highest precedence). You can configure multiple named connections for the same provider (for example, multiple on-prem `chatCompletions` servers or regional `azureOpenAI` / `googleEnterprise` deployments). Agent Hub reads this same `llm.json` and `SecretStore` automatically, so you only configure your LLM credentials once.
 
 ---
 
