@@ -65,10 +65,14 @@ function App() {
 
   useEffect(() => {
     if (!models.length) return;
-    const resumeId = sessionStorage.getItem(INFER_RESUME_MODEL_KEY);
+    const params = new URLSearchParams(window.location.search);
+    const queryModelId = params.get("model");
+    const resumeId = queryModelId || sessionStorage.getItem(INFER_RESUME_MODEL_KEY);
     if (!resumeId) return;
     sessionStorage.removeItem(INFER_RESUME_MODEL_KEY);
-    const model = models.find((m) => m.id === resumeId);
+    const model =
+      models.find((m) => m.id === resumeId) ||
+      models.find((m) => m.id.startsWith(`${resumeId}-`));
     if (model) {
       selectModel(model);
     }

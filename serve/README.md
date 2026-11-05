@@ -9,7 +9,7 @@ that brings together three complementary inference capabilities on the JVM:
 
 | Capability | API prefix | Description                                                    |
 |---|---|----------------------------------------------------------------|
-| **Classic ML** | `/api/v1/smile` | Serialized SMILE models (`.sml`) — classifiers and regressors |
+| **Classic ML** | `/api/v1/smile` | Serialized SMILE models (`.sml`) — classification, regression, clustering, vector quantization, and anomaly detection |
 | **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`)                    |
 | **LLM Chat** | `/api/v1/chat` | OpenAI-compatible chat completions |
 | **Models** | `/api/v1/models` | OpenAI-compatible list and retrieve for every loaded model — chat, ONNX, and SMILE |
@@ -38,9 +38,10 @@ A React-based web UI is bundled and served from the same process.
    - [Get Model Metadata](#52-get-model-metadata)
    - [Single Inference (JSON)](#53-single-inference-json)
    - [Streaming Inference (CSV / JSON-lines)](#54-streaming-inference-csv--json-lines)
-   - [Model IDs](#55-model-ids)
-   - [Model Health and Metrics](#56-model-health-and-metrics)
-   - [Model Lifecycle Control (Reload & Unload)](#57-model-lifecycle-control-reload--unload)
+   - [Online Learning Updates](#55-online-learning-updates)
+   - [Model IDs](#56-model-ids)
+   - [Model Health and Metrics](#57-model-health-and-metrics)
+   - [Model Lifecycle Control (Reload & Unload)](#58-model-lifecycle-control-reload--unload)
 6. [ONNX Inference API](#6-onnx-inference-api)
    - [Model Format](#61-model-format)
    - [Get ONNX Model Info](#62-get-onnx-model-info)
@@ -328,7 +329,7 @@ GET /q/metrics
 
 A single scrape target covers every model — classic SMILE, ONNX, and LLM — so
 DevOps does not need per-model URLs. See
-[§5.6](#56-model-health-and-metrics) and [§6.6](#66-onnx-model-health-and-metrics)
+[§5.7](#57-model-health-and-metrics) and [§6.6](#66-onnx-model-health-and-metrics)
 for the per-model series, and [§7](#7-llm-chat-api) for the LLM series.
 
 ---
@@ -366,6 +367,34 @@ lower than 8B Llama as expected for a ~27B hybrid model across four GPUs;
 per-request generation stays ~17 tok/s with the batch saturated. Qwen AWQ via
 `compressed-tensors` / Marlin is not supported yet (detector currently treats
 cards such as `cyankiwi/Qwen3.8-27B-AWQ-INT4` as dense).
+
+### MiniMax-M3.1-Flash with DSpark speculative decoding
+
+MiniMax-M3.1-Flash ships a small draft model (`dspark/`, 2.3 GB) that proposes 7 tokens per round; the target verifies them in one
+CUDA-graph forward and keeps the longest matching prefix, so the output distribution is unchanged (greedy output can differ from
+plain decoding only through bf16 near-ties, which this model has plenty of). It is on by default when the checkpoint has the
+`dspark/` folder (`smile.chat.speculative=false` or `SMILE_MINIMAX_DSPARK=0` turns it off). It works with prefix reuse, sampling,
+chunked prefill and image requests (exercised through `InferenceEngine`; the HTTP checks below cover tool-call requests).
+
+Setup: 8x A100 40 GB, tensor-parallel non-expert weights, greedy, 8 chat prompts, 128 new tokens, warm graphs.
+
+| | Plain decode | DSpark (7 drafts) |
+|---|---|---|
+| One request | 25.4 ms/token (39 tok/s) | **11.7 ms/token (85 tok/s, 2.2x)** |
+| Drafts per round 3 / 4 / 5 / 6 | n/a | 71 / 77 / 79 / 80 tok/s |
+| 2 concurrent requests (aggregate) | 64 tok/s | 126 tok/s |
+| 4 concurrent requests (aggregate) | 123 tok/s | 160 tok/s |
+| 8 concurrent requests (aggregate) | 210 tok/s | 214 tok/s |
+
+The gain shrinks with concurrency (the batched plain decode gets more efficient too) and is gone at 8 concurrent requests, so the
+service lets at most 4 requests speculate at once unless `smile.chat.speculative-max-concurrency` says otherwise (the rest use
+batched plain decode). Image and video requests speculate as well.
+Through the HTTP API (4 reasoning-heavy prompts, 160 tokens each, one request at a time, prefill and request overhead included)
+Flash answers at 67.8 tok/s with DSpark against 37.9 tok/s without (1.8x); the 19 checks of `http_check.py` (tools, tool-result round
+trip, streaming, thinking modes, 4 concurrent requests, a 2.8k-token prompt, prefix cache) pass with speculation on.
+The draft is only loaded when `smile.chat.speculative=true`. It costs about 3 GB on GPU 0: lower `smile.chat.mem-fraction-static` accordingly or set `SMILE_MINIMAX_VISION=0`
+(on 40 GB cards 0.92 worked without the vision tower; with `speculative=false` nothing is loaded and the old settings apply). Other knobs: `SMILE_MINIMAX_DSPARK_SNAPSHOTS` (draft contexts kept for prefix
+reuse, default 8), `SMILE_MINIMAX_SPARSE_KERNEL=0` (reference attention path, slower).
 
 ### Qwen3.8 27B with MTP speculative decoding
 
@@ -440,9 +469,9 @@ Controls (all default to the values that were benchmarked):
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `smile.chat.speculative` | `true` | MTP speculation for Qwen3.5/3.8 checkpoints with MTP weights (ignored for other models). Set `false` to disable. |
-| `smile.chat.speculative-tokens` | `0` (model default; 3 for Qwen3.8-27B) | Draft depth. Measured aggregate tok/s at 1 / 8 / 16 requests: depth 1: 47 / 203 / 387; depth 2: 53 / 216-236 / 408-441; depth 3 (default): 55 / 232 / 446; depth 4: 54 / 241 / 439. Depths 2-4 are within noise; depth 1 is slower. |
-| `smile.chat.speculative-max-concurrency` | `0` (= `max-batch-size`) | Requests that may speculate at once. A request keeps its speculation slot for its whole life; requests beyond the limit use batched plain decode. Speculating only part of a large cohort is slower than all or none, so leave unlimited unless you need to bound checkpoint memory. |
+| `smile.chat.speculative` | `true` | MTP speculation for Qwen3.5/3.8 checkpoints with MTP weights, DSpark speculation for MiniMax-M3.1-Flash checkpoints with a `dspark/` folder (ignored for other models). Set `false` to disable. |
+| `smile.chat.speculative-tokens` | `0` (model default; 3 for Qwen3.8-27B, 7 for MiniMax DSpark) | Draft depth. Measured aggregate tok/s at 1 / 8 / 16 requests: depth 1: 47 / 203 / 387; depth 2: 53 / 216-236 / 408-441; depth 3 (default): 55 / 232 / 446; depth 4: 54 / 241 / 439. Depths 2-4 are within noise; depth 1 is slower. |
+| `smile.chat.speculative-max-concurrency` | `0` (= `max-batch-size`; 4 for MiniMax) | Requests that may speculate at once. A request keeps its speculation slot for its whole life; requests beyond the limit use batched plain decode. Speculating only part of a large cohort is slower than all or none, so leave unlimited unless you need to bound checkpoint memory. |
 | `SMILE_DECODE_CUDA_GRAPH` | on | Capture plain decode steps as CUDA graphs (needs FlashInfer attention, the default backend; uniform batches only). A capture failure turns graphs off for the process and decode continues eagerly. `0` disables. |
 | `SMILE_VERIFY_CUDA_GRAPH` | on | Capture the verify forward as one CUDA graph (one capture per session). `0` disables. |
 | `SMILE_MTP_HISTORY` | on | Draft head keeps a persistent per-request KV of the whole prefix (prompt and accepted tokens). `0` restores the context-free legacy head (about half the accept rate). |
@@ -699,11 +728,19 @@ java ... -Dsmile.serve.model=/data/models/rf_classifier.sml -jar quarkus-run.jar
 ### 5.1 Model Format
 
 Classic ML models are serialized Java objects saved in `.sml` files by the
-SMILE `smile.model.Model` framework. They carry:
+SMILE `smile.model.Model` framework. Supported model types are:
 
-- The trained algorithm (random forest, SVM, gradient boost, etc.)
-- The input feature schema (field names and data types)
-- Training / validation metrics
+- `ClassificationModel` — supervised classifiers (`random-forest`, `gradient-boost`, `ada-boost`, `cart`, `logistic`, `fisher`, `lda`, `qda`, `rda`, `mlp`, `svm`, `rbf`)
+- `RegressionModel` — supervised regressors (`random-forest`, `gradient-boost`, `cart`, `ols`, `lasso`, `ridge`, `elastic-net`, `gaussian-process`, `mlp`, `svm`, `rbf`)
+- `ClusteringModel` — centroid-based clustering (`kmeans`, `xmeans`, `gmeans`, `deterministic-annealing`)
+- `VectorQuantizerModel` — online vector quantizers and competitive learning models (`som`, `neural-gas`, `growing-neural-gas`, `neural-map`, `birch`)
+- `AnomalyModel` — anomaly and novelty detectors (`isolation-forest`, `lof`, `ocsvm`)
+
+Each `.sml` file carries:
+
+- The trained algorithm and optional feature transformation pipeline (`Transform`)
+- The input feature schema (field names and data types) and formula
+- Training / validation / test metrics or model summary statistics
 - Optional metadata tags (`id`, `version`, user-defined properties)
 
 At startup, `InferenceService` scans the path specified by the property
@@ -712,7 +749,7 @@ is loaded; if it is a directory every `.sml` file in the directory is loaded.
 
 ### 5.2 Get Model Metadata
 
-Returns the algorithm name, input schema, and tags for a model.
+Returns the algorithm name, input schema, online-learning capability, response variable metadata (for supervised models), and tags for a model.
 Use `GET /api/v1/models` to discover loaded model IDs.
 
 ```
@@ -735,14 +772,18 @@ curl http://localhost:8080/api/v1/smile/iris_random_forest-1
     "sepallength": { "type": "float", "nullable": false },
     "sepalwidth":  { "type": "float", "nullable": false }
   },
+  "online": false,
+  "response": "class",
+  "responseType": "integer",
   "tags": {
     "smile.random_forest.trees": "200"
   }
 }
 ```
 
-The `schema` object lists every input feature in alphabetical order — this
-is the **column order** used by the CSV streaming endpoint.
+- `schema` — lists every input feature in alphabetical order (the **column order** used by the CSV streaming endpoints).
+- `online` — `true` if the model supports online learning updates via `POST /api/v1/smile/{id}/update` (e.g. `VectorQuantizerModel` or online supervised models such as `logistic`, `mlp`, `ols --recursive`).
+- `response` / `responseType` — response variable name and type (`"integer"` for classification, `"double"` for regression); omitted (`null`) for unsupervised models (`ClusteringModel`, `VectorQuantizerModel`, `AnomalyModel`).
 
 ### 5.3 Single Inference (JSON)
 
@@ -756,7 +797,7 @@ Content-Type: application/json
 The request body is a flat JSON object whose keys are the feature names
 defined in the model schema. **All non-nullable fields are required.**
 
-**Classification example (iris):**
+**Classification example (`ClassificationModel`):**
 
 ```shell
 curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1 \
@@ -776,10 +817,74 @@ curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1 \
 }
 ```
 
-- `prediction` — the predicted class label (integer) or regression value (float).
-- `probabilities` — posterior class probabilities for **soft classifiers**
-  (e.g. random forest, logistic regression). Absent for hard classifiers and
-  regressors.
+**Clustering example (`ClusteringModel`):**
+
+```shell
+curl -X POST http://localhost:8080/api/v1/smile/iris_kmeans-1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sepallength": 5.1,
+    "sepalwidth":  3.5,
+    "petallength": 1.4,
+    "petalwidth":  0.2
+  }'
+```
+
+```json
+{
+  "prediction": 0,
+  "centroid": [5.006, 3.418, 1.464, 0.244]
+}
+```
+
+**Vector quantization example (`VectorQuantizerModel`):**
+
+```shell
+curl -X POST http://localhost:8080/api/v1/smile/iris_som-1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sepallength": 5.1,
+    "sepalwidth":  3.5,
+    "petallength": 1.4,
+    "petalwidth":  0.2
+  }'
+```
+
+```json
+{
+  "prediction": [0, 2],
+  "centroid": [5.012, 3.421, 1.461, 0.241],
+  "error": 0.142
+}
+```
+
+**Anomaly detection example (`AnomalyModel`):**
+
+```shell
+curl -X POST http://localhost:8080/api/v1/smile/iris_iforest-1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sepallength": 5.1,
+    "sepalwidth":  3.5,
+    "petallength": 1.4,
+    "petalwidth":  0.2
+  }'
+```
+
+```json
+{
+  "prediction": false,
+  "score": 0.384
+}
+```
+
+**Response fields by model type:**
+
+- `prediction` — the predicted class label (`int`), regression value (`double`), cluster index (`int`), prototype index (`int` or `[row, col]` array for `som`), or anomaly flag (`boolean`: `true` = anomaly, `false` = normal).
+- `probabilities` — posterior class probabilities for **soft classifiers** (e.g. random forest, logistic regression). Absent for hard classifiers, regressors, and unsupervised models.
+- `centroid` — cluster centroid or nearest prototype coordinates (`double[]`) for `ClusteringModel` and `VectorQuantizerModel`.
+- `error` — quantization error (Euclidean distance to prototype) for `VectorQuantizerModel`.
+- `score` — anomaly or decision score for `AnomalyModel`.
 - `explanations` — optional model explanation object (present when requested).
 
 #### Explanations (TreeSHAP & KernelSHAP)
@@ -903,7 +1008,86 @@ Where `iris.jsonl` contains:
 {"sepallength":6.7,"sepalwidth":3.0,"petallength":5.2,"petalwidth":2.3,"enableExplanations":true}
 ```
 
-### 5.5 Model IDs
+### 5.5 Online Learning Updates
+
+Models that support online learning (`model.isOnline() == true`, reported as `"online": true` by `GET /api/v1/smile/{id}`) can be updated incrementally at runtime without full retraining. This includes all `VectorQuantizerModel` algorithms (`som`, `neural-gas`, `growing-neural-gas`, `neural-map`, `birch`) as well as online supervised models (such as `logistic`, `mlp`, and `ols --recursive`).
+
+Online update endpoints are restricted to `localhost` (`127.0.0.1` / `::1`) via `@LocalhostOnly`. Non-localhost requests are rejected with **HTTP 403 Forbidden**. Calling `/update` on a model that does not support online learning returns **HTTP 400 Bad Request**.
+
+#### Single observation update (JSON)
+
+```
+POST /api/v1/smile/{id}/update?persist=false
+Content-Type: application/json
+```
+
+- `persist` *(optional, default `false`)*: When `true`, writes the updated in-memory model back to its `.sml` file on disk after applying the update.
+- For **unsupervised online models** (`VectorQuantizerModel`), the JSON object contains the input feature fields defined in the model schema.
+- For **supervised online models** (`ClassificationModel`, `RegressionModel`), the JSON object must also include the target value under the response column name (or `"y"` / `"target"`).
+
+```shell
+# Unsupervised online update (SOM vector quantizer) and persist to disk
+curl -X POST "http://localhost:8080/api/v1/smile/iris_som-1/update?persist=true" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sepallength": 5.1,
+    "sepalwidth":  3.5,
+    "petallength": 1.4,
+    "petalwidth":  0.2
+  }'
+```
+
+```json
+{
+  "status": "updated",
+  "id": "iris_som-1",
+  "updated": 1,
+  "persisted": true,
+  "timestamp": 1728087390
+}
+```
+
+```shell
+# Supervised online update (Logistic Regression with response column "class")
+curl -X POST http://localhost:8080/api/v1/smile/iris_logit-1/update \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sepallength": 5.1,
+    "sepalwidth":  3.5,
+    "petallength": 1.4,
+    "petalwidth":  0.2,
+    "class":       0
+  }'
+```
+
+#### Batch / streaming online update (CSV / JSON-lines)
+
+```
+POST /api/v1/smile/{id}/update/stream?persist=false
+Content-Type: text/plain          ← CSV mode
+Content-Type: application/json   ← JSON-lines mode
+```
+
+Processes multiple observations sequentially and optionally persists the model once at the end of the batch. In CSV mode (`text/plain`), features must appear in alphabetical schema column order; for supervised models, the target value must be in the column immediately following the schema fields.
+
+```shell
+cat new_samples.csv | curl -X POST \
+  -H "Content-Type: text/plain" \
+  --data-binary @- \
+  "http://localhost:8080/api/v1/smile/iris_som-1/update/stream?persist=true"
+```
+
+```json
+{
+  "status": "updated",
+  "id": "iris_som-1",
+  "updated": 2,
+  "persisted": true,
+  "timestamp": 1728087395
+}
+```
+
+### 5.6 Model IDs
 
 A model's ID is constructed as `<name>-<version>` from the model's embedded
 metadata tags (`smile.model.Model.ID` and `smile.model.Model.VERSION`).
@@ -911,7 +1095,7 @@ If those tags are absent, the file name stem is used as the name and `"1"` as
 the version. For example, a file named `iris_random_forest.sml` with no ID
 tag gets the ID `iris_random_forest-1`.
 
-### 5.6 Model Health and Metrics
+### 5.7 Model Health and Metrics
 
 Inspect the operational health, in-flight request concurrency, throughput, and
 inference latency of a loaded SMILE model.
@@ -963,7 +1147,7 @@ curl http://localhost:8080/q/metrics | grep 'serve_smile_.*iris_random_forest-1'
 
 ONNX models expose the same set under the `serve_onnx_*` namespace.
 
-### 5.7 Model Lifecycle Control (Reload & Unload)
+### 5.8 Model Lifecycle Control (Reload & Unload)
 
 Administrative endpoints for reloading or unloading models are restricted to
 `localhost` (`127.0.0.1` / `::1`) via `@LocalhostOnly` to prevent unauthorized
@@ -1465,7 +1649,7 @@ curl http://localhost:8080/api/v1/models
 
 - **`LLM`** — chat / completion models
 - **`ONNX`** — ONNX Runtime graphs
-- **SMILE algorithm name** — e.g. `random-forest`, `cart`, `logistic` (from the `.sml` model)
+- **SMILE algorithm name** — e.g. `random-forest`, `cart`, `logistic`, `kmeans`, `som`, `isolation-forest` (from the `.sml` model)
 
 `owned_by` rules:
 
@@ -1490,9 +1674,16 @@ Ids may contain slashes (e.g. Hugging Face repo ids).
 
 | `kind` | Extra field | Contents |
 |---|---|---|
-| SMILE algorithm | `smile` | `formula`, `schema`, `tags`, `train` / `validation` / `test` metrics (finite values only) |
+| SMILE algorithm | `smile` | `formula`, `schema`, `tags`, `train` / `validation` / `test` metrics or model summary (finite values only) |
 | `ONNX` | `onnx` | producer, domain, graph info, I/O shapes, custom metadata from the `.onnx` file |
 | `LLM` | `llm` | family, source (`local`/`huggingface`), architecture from `config.json` / `params.json` |
+
+For SMILE `.sml` models, `smile.train` reports summary metrics specific to the model family:
+- **`ClassificationModel`:** `fit_time`, `score_time`, `size`, `error`, `accuracy`, `sensitivity`, `specificity`, `precision`, `f1`, `mcc`, `auc`, `logloss`, `cross_entropy`
+- **`RegressionModel`:** `fit_time`, `score_time`, `size`, `rss`, `mse`, `rmse`, `mad`, `r2`
+- **`ClusteringModel`:** `k`, `size`, `distortion`, `cluster_sizes`, `distortions`
+- **`VectorQuantizerModel`:** `online`, plus `nrow`, `ncol`, `neurons` (for `som`), `neurons` (for `neural-gas`, `growing-neural-gas`, `neural-map`), or `clusters` (for `birch`)
+- **`AnomalyModel`:** `threshold`, plus `trees`, `extension_level` (for `isolation-forest`), `k`, `size` (for `lof`), or `support_vectors` (for `ocsvm`)
 
 List responses omit `smile` / `onnx` / `llm` so the catalog stays lean.
 

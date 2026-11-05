@@ -363,6 +363,14 @@ public class ChatService implements OpenAiModelContributor {
         }
         applyPrefixReuse(model, kvCache.prefixReuse(), kvCache.hybridPrefixReplay());
         applySpeculative(model, config.speculative(), config.speculativeTokens());
+        if (model instanceof MiniMax minimax) {
+            // Requests are only flagged speculative when a draft is loaded (a flagged request leaves the batched decode
+            // path), and ask for the model's own draft count unless the config sets one.
+            this.speculative = config.speculative() && minimax.isSpeculativeEnabled();
+            if (config.speculativeTokens() <= 0) {
+                this.speculativeTokens = minimax.numSpeculativeTokens();
+            }
+        }
         logQuantBackend(model, config, kvCache);
         if (model instanceof smile.llm.engine.ModelExecutor exec) {
             int maxInFlight = Math.max(1, config.maxBatchSize());
@@ -375,9 +383,13 @@ public class ChatService implements OpenAiModelContributor {
                     Math.max(1, config.prefillTokenBudget()),
                     config.admissionTimeoutMs(),
                     Math.max(0L, config.admitCoalesceMs()));
+            // 0 = no limit beyond the batch size, except for MiniMax: DSpark drafts one request at a time (about 6 ms
+            // each), so speculation stops paying off beyond ~4 concurrent requests (measured on Flash, TP8).
+            int defaultSpeculators = model instanceof MiniMax ? Math.min(4, Math.max(1, config.maxBatchSize()))
+                    : Math.max(1, config.maxBatchSize());
             engine.setMaxSpeculativeConcurrency(config.speculativeMaxConcurrency() > 0
                     ? config.speculativeMaxConcurrency()
-                    : Math.max(1, config.maxBatchSize()));
+                    : defaultSpeculators);
             String sysProp = System.getProperty("smile.chat.max-batch-size");
             logger.infof("Chat continuous batching: model=%s family=%s maxSeqLen=%d "
                             + "maxInFlight=%d maxDecodeBatch=%d prefillTokenBudget=%d "
@@ -519,9 +531,20 @@ public class ChatService implements OpenAiModelContributor {
     }
 
     /**
-     * Applies MTP speculative decoding knobs to Qwen when present.
+     * Applies speculative decoding knobs to Qwen (MTP) or MiniMax (DSpark) when present.
      */
     static void applySpeculative(LanguageModel model, boolean enabled, int numTokens) {
+        if (model instanceof MiniMax minimax) {
+            minimax.setNumSpeculativeTokens(numTokens);
+            minimax.setSpeculativeEnabled(enabled);
+            if (enabled && minimax.isSpeculativeEnabled()) {
+                logger.infof("DSpark speculative decoding enabled (drafts=%d)", minimax.numSpeculativeTokens());
+            } else if (enabled) {
+                logger.infof("Speculative decoding is on but this MiniMax checkpoint has no DSpark draft "
+                        + "(or it is disabled); using plain decoding");
+            }
+            return;
+        }
         if (model instanceof Qwen qwen) {
             qwen.setNumSpeculativeTokens(numTokens);
             qwen.setSpeculativeEnabled(enabled);
@@ -1084,7 +1107,7 @@ public class ChatService implements OpenAiModelContributor {
         logger.infof("Loading MiniMax-M3 from %s on %d device(s), weight mode %s",
                 checkpointDir, devices.length, weightMode == null ? "auto" : weightMode);
         return MiniMax.build(checkpointDir, config.maxBatchSize(), config.maxSeqLen(), devices,
-                memFraction, pageSize, weightMode);
+                memFraction, pageSize, weightMode, null, config.speculative());
     }
 
     /**

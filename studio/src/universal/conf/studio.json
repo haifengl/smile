@@ -3,13 +3,13 @@
     "autoStart": false,
     "host": "localhost",
     "port": 8888,
-    "modelPath": "./model"
+    "modelPath": "./model",
+    "llm": ""
   },
   "agentHub": {
-    "autoStart": false,
+    "autoStart": true,
     "host": "localhost",
     "port": 8890,
-    "adminToken": "dev-admin-token",
     "keepAliveOnExit": false
   },
   "plugins": {

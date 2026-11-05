@@ -49,10 +49,22 @@ tasks.withType<Test> {
 
 tasks.quarkusDev {
 	workingDirectory = rootProject.layout.projectDirectory.asFile
-    jvmArgs = listOf(
-        "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-        "--add-opens", "java.base/java.nio=ALL-UNNAMED",
-        "--enable-native-access", "ALL-UNNAMED")
+    val pluginGroup = io.quarkus.runtime.util.HashUtil.sha1(layout.projectDirectory.dir("plugins").asFile.absolutePath)
+    val reloadablePlugins = layout.projectDirectory.dir("plugins").asFileTree
+        .matching { include("smile-*.jar") }
+        .files
+        .joinToString(",") { "${pluginGroup}:${it.nameWithoutExtension}" }
+    jvmArgs = buildList {
+        add("--add-opens")
+        add("java.base/java.lang=ALL-UNNAMED")
+        add("--add-opens")
+        add("java.base/java.nio=ALL-UNNAMED")
+        add("--enable-native-access")
+        add("ALL-UNNAMED")
+        if (reloadablePlugins.isNotEmpty()) {
+            add("-Dquarkus.class-loading.reloadable-artifacts=${reloadablePlugins}")
+        }
+    }
 }
 
 tasks.withType<JavaCompile> {
@@ -63,3 +75,11 @@ tasks.withType<JavaCompile> {
 tasks.withType<Javadoc> {
     enabled = false
 }
+
+tasks.register<Copy>("copyServeToStudio") {
+    dependsOn(tasks.quarkusBuild)
+    from(layout.buildDirectory.dir("quarkus-app"))
+    into("$rootDir/studio/src/universal/serve")
+}
+
+tasks.build { finalizedBy("copyServeToStudio") }

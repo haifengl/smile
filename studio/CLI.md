@@ -9,9 +9,10 @@ the launcher routes to one of:
 | `smile` *(no args)* | Open the [SMILE Studio](STUDIO.md) GUI                |
 | `smile shell` | Start the **Java (JShell)** interactive REPL          |
 | `smile scala` | Start the **Scala 3** interactive REPL                |
-| `smile train …` | **Train** a supervised learning model     |
+| `smile train …` | **Train** a machine learning model (classification, regression, clustering, vector quantization, or anomaly detection) |
 | `smile predict …` | **Predict** on a file using a saved model             |
 | `smile serve …` | **Serve** a saved model as an HTTP prediction service |
+| `smile hub …` | Start the always-on **Agent Hub & Bot** service ([BOT.md](BOT.md)) |
 
 ---
 
@@ -26,20 +27,27 @@ the launcher routes to one of:
    - 5.2 [Formula Auto-detection](#52-formula-auto-detection)
    - 5.3 [Classification Algorithms](#53-classification-algorithms)
    - 5.4 [Regression Algorithms](#54-regression-algorithms)
-   - 5.5 [Cross-validation & Ensembles](#55-cross-validation--ensembles)
-   - 5.6 [Feature Transformation](#56-feature-transformation)
-   - 5.7 [Model Metadata](#57-model-metadata)
+   - 5.5 [Clustering Algorithms](#55-clustering-algorithms)
+   - 5.6 [Vector Quantization & Competitive Learning Algorithms](#56-vector-quantization--competitive-learning-algorithms)
+   - 5.7 [Anomaly & Novelty Detection Algorithms](#57-anomaly--novelty-detection-algorithms)
+   - 5.8 [Cross-validation & Ensembles](#58-cross-validation--ensembles)
+   - 5.9 [Feature Transformation](#59-feature-transformation)
+   - 5.10 [Model Metadata](#510-model-metadata)
 6. [Batch Prediction (`smile predict`)](#6-batch-prediction-smile-predict)
 7. [Online Serving (`smile serve`)](#7-online-serving-smile-serve)
 8. [Supported File Formats](#8-supported-file-formats)
+   - 8.1 [Supported Extensions & Default Behavior](#81-supported-extensions--default-behavior)
+   - 8.2 [Format Options by File Type (`--format`)](#82-format-options-by-file-type---format)
+   - 8.3 [Quoting `--format` and `--formula` on the Command Line](#83-quoting---format-and---formula-on-the-command-line)
 9. [JVM Tuning (`conf/smile.ini`)](#9-jvm-tuning-confsmileini)
 10. [Tutorials](#10-tutorials)
     - 10.1 [End-to-end: Iris Classification](#101-end-to-end-iris-classification)
     - 10.2 [End-to-end: Housing Price Regression](#102-end-to-end-housing-price-regression)
-    - 10.3 [Cross-validation & Ensemble Workflow](#103-cross-validation--ensemble-workflow)
-    - 10.4 [Online Prediction Service](#104-online-prediction-service)
-    - 10.5 [Interactive Java Shell Session](#105-interactive-java-shell-session)
-    - 10.6 [Interactive Scala REPL Session](#106-interactive-scala-repl-session)
+    - 10.3 [End-to-end: Clustering, Vector Quantization & Anomaly Detection](#103-end-to-end-clustering-vector-quantization--anomaly-detection)
+    - 10.4 [Cross-validation & Ensemble Workflow](#104-cross-validation--ensemble-workflow)
+    - 10.5 [Online Prediction Service](#105-online-prediction-service)
+    - 10.6 [Interactive Java Shell Session](#106-interactive-java-shell-session)
+    - 10.7 [Interactive Scala REPL Session](#107-interactive-scala-repl-session)
 
 ---
 
@@ -216,7 +224,8 @@ import smile.clustering.*
 smile train -d <file> -m <model> [global-options] <algorithm> [algo-options]
 ```
 
-`smile train` trains a supervised learning model from a data file and
+`smile train` trains a machine learning model (classification, regression,
+clustering, vector quantization, or anomaly detection) from a data file and
 serializes it to disk.  It is built with [picocli](https://picocli.info/) and
 uses a **two-level command structure**: global options come first, then the
 algorithm sub-command with its own options.
@@ -241,15 +250,16 @@ algorithm sub-command with its own options.
 
 ### 5.2 Formula Auto-detection
 
-If `--formula` is not specified, the response variable is chosen automatically
-by inspecting the column names in the following priority order:
+If `--formula` is not specified:
 
-1. A column named **`class`**
-2. A column named **`target`**
-3. A column named **`y`**
-4. The **first** column in the file
+- For **supervised learning** (classification and regression), the response variable is chosen automatically by inspecting the column names in the following priority order:
+  1. A column named **`class`**
+  2. A column named **`target`**
+  3. A column named **`y`**
+  4. The **first** column in the file
+- For **unsupervised learning** (clustering, vector quantization, and anomaly detection), all columns are included as features (`~ .`). If you supply a formula with a left-hand side (e.g. `--formula "class ~ ."`), the response column is excluded from the input feature schema.
 
-For the most predictable behaviour, always supply `--formula` explicitly, e.g.:
+For the most predictable behaviour, supply `--formula` explicitly, e.g.:
 
 ```bash
 smile train -d data.csv --formula "price ~ ." -m model.sml ols
@@ -329,7 +339,7 @@ smile train -d <file> -m <model> logistic [options]
 
 | Option | Description                        |
 |---|------------------------------------|
-| `--transform <rule>` | Feature transformation (see §5.6)  |
+| `--transform <rule>` | Feature transformation (see §5.9)  |
 | `--lambda <λ>` | L2 regularization strength        |
 | `--iterations <n>` | Maximum number of LBFGS iterations |
 | `--tolerance <ε>` | Convergence tolerance              |
@@ -342,7 +352,7 @@ smile train -d <file> -m <model> fisher [options]
 
 | Option | Description |
 |---|---|
-| `--transform <rule>` | Feature transformation (see §5.6) |
+| `--transform <rule>` | Feature transformation (see §5.9) |
 | `--dimension <d>` | Dimensionality of the projected space |
 | `--tolerance <ε>` | Singular covariance tolerance |
 
@@ -354,7 +364,7 @@ smile train -d <file> -m <model> lda [options]
 
 | Option | Description |
 |---|---|
-| `--transform <rule>` | Feature transformation (see §5.6) |
+| `--transform <rule>` | Feature transformation (see §5.9) |
 | `--priori <p0,p1,…>` | Comma-separated prior class probabilities |
 | `--tolerance <ε>` | Singular covariance tolerance |
 
@@ -375,7 +385,7 @@ smile train -d <file> -m <model> rda --alpha <α> [options]
 | Option | Required | Description                                              |
 |---|---|----------------------------------------------------------|
 | `--alpha <α>` | ✔ | Regularization factor in `[0, 1]`; `0` = QDA, `1` = LDA |
-| `--transform <rule>` | | Feature transformation (see §5.6)                        |
+| `--transform <rule>` | | Feature transformation (see §5.9)                        |
 | `--priori <p0,p1,…>` | | Prior class probabilities                                |
 | `--tolerance <ε>` | | Singular covariance tolerance                            |
 
@@ -389,7 +399,7 @@ smile train -d <file> -m <model> mlp --layers <spec> [options]
 |---|---|---|
 | `--layers <spec>` | ✔ | Network architecture, e.g. `ReLU(100)\|Sigmoid(30)` |
 | `--regression` | | Train regression instead of classification |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 | `--epochs <n>` | | Training epochs |
 | `--mini-batch <n>` | | Mini-batch size |
 | `--learning-rate <sched>` | | Learning rate schedule (see below) |
@@ -428,7 +438,7 @@ smile train -d <file> -m <model> svm --kernel <fn> [options]
 |---|---|---|
 | `--kernel <fn>` | ✔ | Kernel function (see below) |
 | `--regression` | | Train SVR instead of SVC |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 | `-C <value>` | | Soft margin penalty |
 | `--epsilon <ε>` | | ε-insensitive hinge loss (SVR only) |
 | `--ovr` | | One-vs-Rest multi-class strategy |
@@ -448,7 +458,7 @@ smile train -d <file> -m <model> rbf --neurons <n> [options]
 |---|---|-----------------------------------|
 | `--neurons <n>` | ✔ | Number of RBF neurons (centres)   |
 | `--regression` | | Train regression RBF              |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 | `--normalize` | | Use normalized RBF network       |
 
 ### 5.4 Regression Algorithms
@@ -513,11 +523,11 @@ smile train -d <file> -m <model> --formula "y ~ ." gaussian-process --kernel <fn
 | `--kernel <fn>` | ✔ | Kernel function (same syntax as SVM) |
 | `--noise <σ²>` | ✔ | Noise variance                       |
 | `--normalize` | | Normalize the response variable     |
-| `--transform <rule>` | | Feature transformation (see §5.6)    |
+| `--transform <rule>` | | Feature transformation (see §5.9)    |
 | `--iterations <n>` | | Maximum HPO iterations               |
 | `--tolerance <ε>` | | HPO stopping tolerance               |
 
-### 5.4b Clustering Algorithms
+### 5.5 Clustering Algorithms
 
 Centroid-based clustering sub-commands produce a `ClusteringModel`. When `--formula` is omitted, all columns are included as features (`~ .`). If a formula with a response variable is supplied (e.g. `class ~ .`), the response variable is excluded from the feature schema.
 
@@ -533,7 +543,7 @@ smile train -d <file> -m <model> kmeans -k <clusters> [options]
 | `--iterations <n>` | | Maximum number of iterations (default: 100) |
 | `--tolerance <ε>` | | Convergence tolerance (default: `1E-4`) |
 | `--runs <n>` | | Number of runs to pick the lowest-distortion clustering |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 
 #### `xmeans` — X-Means Clustering
 
@@ -546,7 +556,7 @@ smile train -d <file> -m <model> xmeans -k <kmax> [options]
 | `-k`, `--clusters <kmax>` | ✔ | Maximum number of clusters |
 | `--iterations <n>` | | Maximum number of iterations (default: 100) |
 | `--tolerance <ε>` | | Convergence tolerance (default: `1E-4`) |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 
 #### `gmeans` — G-Means Clustering
 
@@ -559,7 +569,7 @@ smile train -d <file> -m <model> gmeans -k <kmax> [options]
 | `-k`, `--clusters <kmax>` | ✔ | Maximum number of clusters |
 | `--iterations <n>` | | Maximum number of iterations (default: 100) |
 | `--tolerance <ε>` | | Convergence tolerance (default: `1E-4`) |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 
 #### `deterministic-annealing` (`da`) — Deterministic Annealing Clustering
 
@@ -574,9 +584,9 @@ smile train -d <file> -m <model> deterministic-annealing -k <kmax> [options]
 | `--iterations <n>` | | Maximum iterations per temperature (default: 100) |
 | `--tolerance <ε>` | | Convergence tolerance (default: `1E-4`) |
 | `--split-tolerance <ε>` | | Cluster split tolerance (default: `1E-2`) |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 
-### 5.4c Vector Quantization & Competitive Learning Algorithms
+### 5.6 Vector Quantization & Competitive Learning Algorithms
 
 Vector quantization sub-commands produce a `VectorQuantizerModel` supporting online learning (`update`). At inference time, `VectorQuantizerModel` outputs the nearest prototype index (or `[row, col]` grid cell for `som`), the quantized prototype vector (`centroid`), and the quantization error (`error`).
 
@@ -593,7 +603,7 @@ smile train -d <file> -m <model> som [options]
 | `--epochs <n>` | | Number of training epochs (default: 20) |
 | `--alpha <sched>` | | Learning rate schedule |
 | `--neighborhood <fn>` | | Neighborhood function: `Gaussian(sigma, T)`, `bubble(r)`, `square(w)`, `triangle(sigma, T)`, `MexicanHat(sigma, T)` |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 
 #### `neural-gas` — Neural Gas
 
@@ -608,7 +618,7 @@ smile train -d <file> -m <model> neural-gas [options]
 | `--alpha <sched>` | | Learning rate schedule |
 | `--theta <sched>` | | Neighborhood decay schedule |
 | `--lifetime <sched>` | | Connection lifetime schedule |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 
 #### `growing-neural-gas` (`gng`) — Growing Neural Gas
 
@@ -625,7 +635,7 @@ smile train -d <file> -m <model> growing-neural-gas [options]
 | `--lambda <n>` | | Step interval to insert a new neuron (default: 100) |
 | `--alpha <α>` | | Error reduction factor when splitting (default: `0.5`) |
 | `--beta <β>` | | Global error decay factor per step (default: `0.995`) |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 
 #### `neural-map` — NeuralMap Competitive Learning
 
@@ -641,7 +651,7 @@ smile train -d <file> -m <model> neural-map --radius <r> [options]
 | `--eps-neighbor <ε>` | | Learning rate for neighbors (default: `0.002`) |
 | `--edge-lifetime <n>` | | Maximum age of edges (default: 50) |
 | `--beta <β>` | | Freshness decay factor (default: `0.995`) |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 
 #### `birch` — BIRCH
 
@@ -654,9 +664,9 @@ smile train -d <file> -m <model> birch --radius <T> [options]
 | `--radius <T>` | ✔ | Maximum radius of a sub-cluster |
 | `--branching <B>` | | Branching factor of non-leaf nodes (default: 5) |
 | `--leaves <L>` | | Maximum number of entries in leaf nodes (default: 5) |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 
-### 5.4d Anomaly & Novelty Detection Algorithms
+### 5.7 Anomaly & Novelty Detection Algorithms
 
 Anomaly detection sub-commands produce an `AnomalyModel`. At inference time, `AnomalyModel` outputs a boolean anomaly flag (`prediction`: `true` for anomaly, `false` for normal) and the anomaly or decision score (`score`).
 
@@ -673,7 +683,7 @@ smile train -d <file> -m <model> isolation-forest [options]
 | `--sampling <rate>` | | Subsampling rate in `(0, 1)` (default: `0.7`) |
 | `--extension-level <n>` | | Extended Isolation Forest level (`0` = standard Isolation Forest) |
 | `--threshold <score>` | | Anomaly score threshold in `(0, 1]` above which a sample is flagged as an anomaly (default: `0.5`) |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 
 #### `lof` — Local Outlier Factor
 
@@ -685,7 +695,7 @@ smile train -d <file> -m <model> lof [options]
 |---|---|---|
 | `-k`, `--neighbors <k>` | | Number of nearest neighbors (default: 20) |
 | `--threshold <score>` | | LOF score threshold above which a sample is flagged as an anomaly (default: `1.5`) |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 
 #### `ocsvm` (`one-class-svm`) — One-Class SVM
 
@@ -699,9 +709,9 @@ smile train -d <file> -m <model> ocsvm --kernel <fn> [options]
 | `--nu <ν>` | | Upper bound on the fraction of outliers in `(0, 1]` (default: `0.5`) |
 | `--tolerance <ε>` | | Convergence tolerance (default: `1E-3`) |
 | `--threshold <score>` | | Decision value threshold below which a sample is flagged as an anomaly (default: `0.0`) |
-| `--transform <rule>` | | Feature transformation (see §5.6) |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
 
-### 5.5 Cross-validation & Ensembles
+### 5.8 Cross-validation & Ensembles
 
 ```bash
 # 5-fold cross-validation, 3 repetitions
@@ -722,7 +732,7 @@ Test metrics:       …   ← only when --test is supplied
 The saved model is the **full model** retrained on the entire training set
 (unless `--ensemble` is used, in which case it is the ensemble of fold models).
 
-### 5.6 Feature Transformation
+### 5.9 Feature Transformation
 
 Many algorithms accept a `--transform <rule>` option that applies a
 `smile.feature.transform` pipeline before fitting.  Supported values:
@@ -730,17 +740,19 @@ Many algorithms accept a `--transform <rule>` option that applies a
 | Value | Class | Description                                        |
 |---|---|----------------------------------------------------|
 | `standardizer` | `Standardizer` | Zero mean, unit variance                           |
+| `robust` | `RobustStandardizer` | Median and IQR scaling (robust to outliers)        |
 | `winsor(lo,hi)` | `WinsorScaler` | Winsorise at percentiles, e.g. `winsor(0.01,0.99)` |
-| `minmax` | `MinMaxScaler` | Scale to `[0, 1]`                                  |
+| `minmax` | `Scaler` | Scale to `[0, 1]`                                  |
 | `MaxAbs` | `MaxAbsScaler` | Scale by maximum absolute value                    |
 | `L1` | `Normalizer` | L1 normalize each sample                           |
 | `L2` | `Normalizer` | L2 normalize each sample                           |
 | `Linf` | `Normalizer` | L∞ normalize each sample                          |
 
-### 5.7 Model Metadata
+### 5.10 Model Metadata
 
-SMILE model files are standard Java serialized objects that also carry a
-`Properties` tag map.  Two well-known keys are `id` and `version`:
+SMILE model files are standard Java serialized objects (`ClassificationModel`,
+`RegressionModel`, `ClusteringModel`, `VectorQuantizerModel`, or `AnomalyModel`)
+that also carry a `Properties` tag map.  Two well-known keys are `id` and `version`:
 
 ```bash
 smile train -d data.arff -m model.sml \
@@ -752,7 +764,7 @@ smile train -d data.arff -m model.sml \
 You can store and retrieve arbitrary tags programmatically:
 
 ```java
-var model = (ClassificationModel) Read.object(Path.of("model.sml"));
+var model = (Model) Read.object(Path.of("model.sml"));
 String id  = model.getTag(Model.ID);       // "iris-classifier-v1"
 String ver = model.getTag(Model.VERSION);  // "2.0.0"
 ```
@@ -812,18 +824,47 @@ Iris-versicolor 0.0200 0.8512 0.1288
 …
 ```
 
-**JSON lines mode (`--json` or `--explain`)** — one JSON object per line matching the SMILE Serve `InferenceResponse` format:
+**Clustering (`ClusteringModel`)** — assigned cluster index followed by the cluster centroid coordinates (space-separated):
+
+```
+0 5.0060 3.4180 1.4640 0.2440
+1 5.9016 2.7484 4.3935 1.4339
+…
+```
+
+**Vector Quantization (`VectorQuantizerModel`)** — nearest prototype index (or `[row, col]` grid coordinates for `som`), followed by the prototype centroid coordinates and the quantization error (Euclidean distance to prototype):
+
+```
+# SOM (2D grid cell + centroid + quantization error)
+[0, 2] 5.0121 3.4210 1.4612 0.2415 0.1423
+
+# Neural Gas / Growing Neural Gas / NeuralMap / BIRCH (prototype index + centroid + error)
+3 5.9016 2.7484 4.3935 1.4339 0.2104
+```
+
+**Anomaly Detection (`AnomalyModel`)** — boolean anomaly flag (`true` for anomaly, `false` for normal) followed by the anomaly or decision score:
+
+```
+false 0.3842
+true  0.6419
+…
+```
+
+**JSON lines mode (`--json` or `--explain`)** — one JSON object per line matching the SMILE Serve `Prediction` response format:
 
 ```json
 {"prediction":0}
 {"prediction":0,"probabilities":[0.982,0.018,0.000]}
 {"prediction":0,"probabilities":[0.982,0.018,0.000],"explanations":{"shap":[[0.142,-0.051,0.812,0.003],[...],[...]]}}
+{"prediction":1,"centroid":[5.9016,2.7484,4.3935,1.4339]}
+{"prediction":[0,2],"centroid":[5.0121,3.4210,1.4612,0.2415],"error":0.1423}
+{"prediction":false,"score":0.3842}
 ```
 
 - With `--explain`, `--json` is enabled automatically.
 - For classification models, `explanations.shap` is a 2D matrix of dimensions `[numClasses][numFeatures]`.
 - For regression models, `explanations.shap` is a 1D array of dimensions `[numFeatures]`.
-- All built-in classification and regression models support SHAP explanations (tree-based models via `TreeSHAP`, linear models via exact linear attribution, and other models via `KernelSHAP`). If `--explain` is used on a custom model that does not support SHAP, the command exits with code 1 and prints an error message.
+- All built-in classification and regression models support SHAP explanations (tree-based models via `TreeSHAP`, linear models via exact linear attribution, and other models via `KernelSHAP`). Clustering, vector quantization, and anomaly detection models do not support SHAP; if `--explain` is passed for an unsupported model, the command exits with code 1 and prints an error message.
 
 ### Redirecting Output
 
@@ -952,7 +993,7 @@ smile serve --llm Qwen/Qwen3.8-27B --devices 0,1 --tp-size 2 --max-batch-size 32
 curl http://localhost:8888/api/v1/models
 
 # Classic ML inference
-curl -X POST http://localhost:8888/api/v1/ml/models/iris_random_forest-1 \
+curl -X POST http://localhost:8888/api/v1/smile/iris_random_forest-1 \
      -H "Content-Type: application/json" \
      -d '{"sepallength":5.1,"sepalwidth":3.5,"petallength":1.4,"petalwidth":0.2}'
 
@@ -966,24 +1007,90 @@ curl -X POST http://localhost:8888/api/v1/chat/completions \
 
 ## 8. Supported File Formats
 
-`smile train` and `smile predict` use `smile.io.Read.data()` to load data.
-The format is auto-detected from the file extension; you can override it with
-`--format`.
+`smile train` and `smile predict` use `smile.io.Read.data(path, format)` to load data.
+The format is auto-detected from the file extension (or defaults to CSV if the path has no extension); you can customize or override it with `--format`.
 
-| Extension / Format | Description |
+### 8.1 Supported Extensions & Default Behavior
+
+| Extension | Format | Default Behavior (when `--format` is omitted) |
+|---|---|---|
+| `.arff` | Weka ARFF | Reads schema (column types, nominal levels) and data from the ARFF header |
+| `.csv`, `.txt`, `.dat` | Delimited text (CSV) | Comma-delimited (`,`), **no header row** (`V1`, `V2`, … column names), schema inferred from the first 1,000 rows |
+| `.tsv` | Tab-separated values | Tab-delimited (`\t`) **with header row** (`delimiter=\t,header=true`) |
+| `.json`, `.jsonl` | JSON / JSON Lines | Single-line mode (`SINGLE_LINE` — one flat JSON object per line), schema inferred from the first 1,000 objects |
+| `.parquet` | Apache Parquet | Columnar format with embedded schema |
+| `.avro` | Apache Avro | Uses the writer schema embedded in the Avro container file |
+| `.arrow`, `.feather` | Apache Arrow IPC / Feather | Columnar format with embedded schema |
+| `.sas`, `.sas7bdat` | SAS data file | Reads SAS7BDAT metadata and records |
+| *(other)* | Custom extension | Requires `--format csv` or `--format "csv,<options>"` to parse as CSV |
+
+**ARFF is recommended** for training data when available because it carries full schema
+information (column types and nominal class levels), which eliminates the need to
+specify `--formula` or format options manually.
+
+### 8.2 Format Options by File Type (`--format`)
+
+The value of `--format` depends on the file type being read:
+
+#### CSV / Delimited Text (`.csv`, `.tsv`, `.txt`, `.dat`, or unrecognised extensions)
+
+For CSV and delimited text files, `--format` accepts a comma-separated list of `key=value` pairs:
+
+| Option Key | Value | Description |
+|---|---|---|
+| `header` | `true` | Use the first row as column names and skip it from data records |
+| `header` | `col1\|col2\|…` | Explicit pipe-separated column names (the first row is **not** skipped) |
+| `delimiter` | `<char>` | Field delimiter character (default `,`). Standard escape sequences such as `\t` are unescaped |
+| `quote` | `<char>` | Character used to encapsulate fields containing special characters (default `"`) |
+| `escape` | `<char>` | Character used to escape special characters inside fields (e.g. `\`) |
+| `comment` | `<char>` | Comment marker at the start of a line (e.g. `#` or `%`); matching lines are ignored |
+
+If a file has a non-standard extension (e.g. `data.raw`), prefix the format string with `csv`:
+- `--format csv` — read as default CSV (comma-delimited, no header)
+- `--format "csv,header=true,delimiter=\t"` — read as CSV with custom options
+
+#### JSON (`.json`, `.jsonl`)
+
+For JSON files, `--format` specifies the JSON parsing mode (case-insensitive):
+
+| Value | Description |
 |---|---|
-| `.arff` | Weka ARFF (with schema, nominal attributes) |
-| `.csv` | Comma-separated values (header row expected) |
-| `.tsv` / `.txt` | Tab-separated values |
-| `.json` | JSON array of objects |
-| `.parquet` | Apache Parquet (column-store) |
-| `.avro` | Apache Avro |
-| `.sas7bdat` | SAS data file |
-| SQLite URL | `jdbc:sqlite:<path>` — full SQL support via `smile shell` |
+| `SINGLE_LINE` (or `single-line`, `single`) | **Default.** JSON Lines format — one flat JSON object per line |
+| `MULTI_LINE` (or `multi-line`, `multi`) | Multi-line JSON array — the file contains a JSON array `[{...}, {...}]` where objects may span multiple lines |
 
-**ARFF is recommended** for training data because it carries full schema
-information (column types, nominal levels) which eliminates the need to
-specify `--formula` manually.
+#### Apache Avro (`.avro`)
+
+| Value | Description |
+|---|---|
+| `<schema-path>` | Path to an external Avro schema file (`.avsc`). If `--format` is omitted, SMILE uses the writer schema embedded in the `.avro` file |
+
+#### Other Formats (`.arff`, `.parquet`, `.arrow`, `.feather`, `.sas`, `.sas7bdat`)
+
+These formats are self-describing and ignore the `--format` option.
+
+### 8.3 Quoting `--format` and `--formula` on the Command Line
+
+Passing `--format` (or `--formula`) values that contain `=`, spaces, or commas requires care because the launcher script (`smile` / `smile.bat`) and the Windows/JVM argument parser strip outer unescaped double quotes before forwarding arguments to `smile.Main`. If outer quotes are stripped, a value such as `header=true,delimiter=\t` or `species ~ .` can be split or misinterpreted by the launcher or Picocli.
+
+To ensure the entire value reaches Picocli intact as a single string argument, **escape inner double quotes** according to your shell:
+
+**Windows PowerShell** — use the backtick (`` ` ``) to escape inner double quotes:
+
+```powershell
+smile train -d data/iris.csv --format "`"header=true`"" --formula "species ~ ." -m model/iris_kmeans.sml kmeans -k 3
+
+# Multiple CSV format options
+smile train -d data/prostate.csv --format "`"header=true,delimiter=\t`"" --formula "lpsa ~ ." -m model/prostate_ols.sml ols
+```
+
+**Windows Command Prompt (`cmd.exe`) or Bash / Zsh** — escape the inner double quotes with a backslash (`\"`):
+
+```bash
+smile train -d data/iris.csv --format "\"header=true\"" --formula "species ~ ." -m model/iris_kmeans.sml kmeans -k 3
+
+# Multiple CSV format options
+smile train -d data/prostate.csv --format "\"header=true,delimiter=\t\"" --formula "lpsa ~ ." -m model/prostate_ols.sml ols
+```
 
 ---
 
@@ -1143,7 +1250,41 @@ smile train \
 smile predict housing_test.arff --model housing_ridge.sml
 ```
 
-### 10.3 Cross-validation & Ensemble Workflow
+### 10.3 End-to-end: Clustering, Vector Quantization & Anomaly Detection
+
+```bash
+# 1. Train K-Means clustering on iris (excluding the class column via formula)
+smile train \
+  --data    examples/iris.arff \
+  --formula "class ~ ."        \
+  --model   iris_kmeans.sml    \
+  kmeans -k 3 --runs 10
+
+# Predict cluster assignments and centroids
+smile predict examples/iris.arff --model iris_kmeans.sml --json
+
+# 2. Train a 5x5 Self-Organizing Map (SOM) vector quantizer
+smile train \
+  --data    examples/iris.arff \
+  --formula "class ~ ."        \
+  --model   iris_som.sml       \
+  som --nrow 5 --ncol 5 --epochs 20
+
+# Predict 2D grid coordinates, prototype centroids, and quantization errors
+smile predict examples/iris.arff --model iris_som.sml --json
+
+# 3. Train an Isolation Forest anomaly detector
+smile train \
+  --data    examples/iris.arff \
+  --formula "class ~ ."        \
+  --model   iris_iforest.sml   \
+  isolation-forest --trees 100 --threshold 0.55
+
+# Predict boolean anomaly flags and anomaly scores
+smile predict examples/iris.arff --model iris_iforest.sml --json
+```
+
+### 10.4 Cross-validation & Ensemble Workflow
 
 ```bash
 # 10-fold stratified CV, averaged metrics
@@ -1177,7 +1318,7 @@ smile train \
   random-forest --trees 100
 ```
 
-### 10.4 Online Prediction Service
+### 10.5 Online Prediction Service
 
 ```bash
 # Train a model
@@ -1190,7 +1331,7 @@ smile serve --model iris.sml
 smile serve --model iris.sml --host 0.0.0.0 --port 9090
 
 # Query classic ML prediction (after server is up)
-curl -X POST http://localhost:9090/api/v1/ml/models/iris_random_forest-1 \
+curl -X POST http://localhost:9090/api/v1/smile/iris_random_forest-1 \
   -H "Content-Type: application/json" \
   -d '{"sepallength":6.3,"sepalwidth":2.5,"petallength":5.0,"petalwidth":1.9}'
 # → {"prediction":2}
@@ -1204,7 +1345,7 @@ curl -X POST http://localhost:8888/api/v1/chat/completions \
   -d '{"model":"microsoft/Phi-4-mini-instruct-onnx","messages":[{"role":"user","content":"Hello!"}]}'
 ```
 
-### 10.5 Interactive Java Shell Session
+### 10.6 Interactive Java Shell Session
 
 Launch and explore the iris dataset:
 
@@ -1246,7 +1387,7 @@ Run a script file non-interactively:
 smile shell examples/regression.jsh
 ```
 
-### 10.6 Interactive Scala REPL Session
+### 10.7 Interactive Scala REPL Session
 
 ```bash
 smile scala
@@ -1292,6 +1433,15 @@ REGRESSION ALGORITHMS
   random-forest  gradient-boost  cart  mlp  svm  rbf
   ols  lasso  ridge  elastic-net  gaussian-process
 
+CLUSTERING ALGORITHMS
+  kmeans  xmeans  gmeans  deterministic-annealing (da)
+
+VECTOR QUANTIZATION ALGORITHMS
+  som  neural-gas  growing-neural-gas (gng)  neural-map  birch
+
+ANOMALY DETECTION ALGORITHMS
+  isolation-forest (iforest)  lof  ocsvm (one-class-svm)
+
 CROSS-VALIDATION FLAGS (train)
   -k <fold>    k-fold CV
   -r <rounds>  repeated CV
@@ -1299,7 +1449,7 @@ CROSS-VALIDATION FLAGS (train)
   -s <seed>    fix RNG seed
 
 FEATURE TRANSFORMS (--transform)
-  standardizer  winsor(lo,hi)  minmax  MaxAbs  L1  L2  Linf
+  standardizer  robust  winsor(lo,hi)  minmax  MaxAbs  L1  L2  Linf
 ```
 
 

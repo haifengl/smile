@@ -212,8 +212,9 @@ public interface ChatServiceConfig {
     boolean toolCallingEnabled();
 
     /**
-     * Enable native MTP speculative decoding for Qwen3.5/3.8 when MTP weights are present
-     * (ignored, with an info message, for every other model). On by default: it is lossless
+     * Enable speculative decoding: native MTP for Qwen3.5/3.8 when MTP weights are present, DSpark for
+     * MiniMax-M3.1 when the checkpoint ships its {@code dspark/} draft (ignored, with an info message,
+     * for every other model). On by default: it is lossless
      * up to bf16 near-tie flips, about 2x faster for a lone request, and 1.1-1.4x faster in
      * aggregate up to 48 concurrent requests. It costs about 0.1 GB of GPU memory per
      * speculating request; see {@link #speculativeMaxConcurrency()}. Set to {@code false} to

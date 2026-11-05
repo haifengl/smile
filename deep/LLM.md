@@ -444,6 +444,61 @@ ChatCompletion reply = model.chat(dialog, 512, 0.6, 0.95, false, 0, null);
 E8M0 scale per 32 elements). The text loader skips the vision tensors (loaded separately, see below) and the published
 checkpoint has no MTP weights; audio input is rejected (images and video are supported, see below).
 
+**MiniMax-M3.1-Flash** (`MiniMaxAI/MiniMax-M3.1-Flash`, ~250 GB) keeps MXFP8 for attention and the dense/shared FFNs but stores the
+routed experts as NVFP4 (`moe_quant_algo: NVFP4`, compressed-tensors `weight_packed` / `weight_scale` (E4M3 per 16) /
+`weight_global_scale`). The experts stay FP4-resident and run through the vendored vLLM Marlin MoE kernel (`kFE2M1f` with
+E4M3 group-16 scales and a per-expert float32 global scale, `smile_marlin_moe_nvfp4_gemm`; scales repacked like vLLM's
+`prepare_nvfp4_moe_layer_for_marlin`). `SMILE_MINIMAX_MXFP8=dequant` expands them to bfloat16 instead (reference path). Checked on a
+4-layer slice against that dense path: mean |logprob delta| 0.003 on 71/3000/6600-token prompts. Flash enables sparse
+attention in every layer (also the three dense-FFN ones). Not run on Hopper/Blackwell natively.
+Expert parallelism replicates everything that is not an expert (16 GB per GPU for Flash), which does not fit 8x40 GB next to
+29 GB of experts, so NVFP4 checkpoints default to **tensor-parallel non-expert weights** (`SMILE_MINIMAX_TP=on|off|auto`,
+single process only): query heads split across ranks (one KV head serves two ranks when there are 4 KV heads on 8 ranks, as in
+vLLM), `o_proj` and the dense/shared FFNs are row-parallel (the shared expert's partial sum rides the routed experts'
+all-reduce), embedding and `lm_head` are split by vocabulary. Per GPU: ~31.5-32 GiB of weights, ~8 GB left for KV, index cache
+and activations (use `smile.chat.mem-fraction-static` around 0.88, a short prefill chunk, and `SMILE_MINIMAX_VISION=0` or expect
+rank 0 to carry the 1.7 GB vision tower). Checked against vLLM (image `vllm/vllm-openai:minimax-m31-flash`, TP8, Marlin): 4 layers
+mean |logprob delta| 0.004, growing smoothly with depth to 0.65-0.85 at 60 layers on random-word prompts, which equals the gap between two
+of our own runs that differ only by a few ULPs (fused vs unfused QKV: 0.59-0.86), i.e. the model's noise floor; chat prompts answer correctly.
+
+**DSpark speculative decoding (Flash).** The checkpoint ships a 2.3 GB `dspark/` draft (5 dense decoder layers, hidden 6144, sliding
+window 4096, block of 7 tokens) that replaces the EAGLE-style MTP head. `MiniMax.build` loads it on rank 0's device next to the
+target (`MiniMax.build(..., loadDraft)` / `smile.chat.speculative=false` or `SMILE_MINIMAX_DSPARK=0` skip it; it needs bf16 CUDA and costs ~3 GB on GPU 0, so with the vision tower use
+`SMILE_MINIMAX_VISION=0` or `mem-fraction-static` around 0.92). How it works (`MiniMaxDspark`, `MiniMaxDsparkArgs`):
+- The target taps the residual stream **leaving** layers 3, 17, 31, 45, 59 for every committed token (`MiniMaxModel.setAuxLayers`,
+  `forwardAux`, `takeAux`; vLLM adds 1 to `dspark_target_layer_ids`, so "entering layer 4/18/32/46/60"). Prefill chunks and
+  verify windows return them; plain CUDA-graph decode does not.
+- Per token the draft computes `hidden_norm(fc(concat(taps)))` and stores the K/V of its 5 layers (`absorb`, a ring of the last
+  ~4100 positions per request, ~42 MB at full window).
+- A round (`draft`) runs the block `[anchor, mask x 6]` (mask id 200058) through the 5 layers in one parallel pass (non-causal
+  inside the block, all in-window context visible), applies the target's own embedding and `lm_head` (through the tensor-parallel
+  collectives, no 4.8 GB replica), then samples the 7 tokens left to right with a rank-256 Markov transition bias
+  (`argmax(base_i + markov_w2[markov_w1[prev]])`); a confidence head is computed but not used yet.
+- `MiniMax.speculateStep` verifies `[anchor, drafts]` in **one target forward** (captured as a CUDA graph per (batch, window rows,
+  attention window) by `MiniMaxModel.windowGraph`, with the taps copied into a static buffer), samples every row with the request's
+  own sampler and accepts the matching prefix plus the bonus token (exact for any temperature). Several requests are verified in
+  one batched graph, and their drafts are produced in one batched pass too (`MiniMaxDspark.draftBatch`: projections, MLPs, output
+  head and the 7 Markov steps run once over all rows, the Markov weights are read once per step; only the attention over each
+  request's own context is per request).
+- Requests without draft context (multimodal, or a gap) take one plain step. **Prefix reuse keeps speculation**: a finished
+  request's draft ring is kept as a snapshot (LRU of `SMILE_MINIMAX_DSPARK_SNAPSHOTS`, default 8; the context of positions
+  `[0, n)` depends only on the first `n` tokens) and a new request with a cached prefix adopts the longest matching one.
+- The fused MSA decode kernels (`smile_msa_decode_select`, `smile_sparse_decode_attention`) now also handle **8 query heads per KV
+  group** (64 heads over 8 tensor-parallel ranks; previously only 16), so TP8 decode and verify windows no longer build masks on
+  the host. This alone took plain graph decode from 28.9 to 25.4 ms/token. `SMILE_MINIMAX_SPARSE_KERNEL=0` falls back to the
+  masked-SDPA path for comparisons.
+
+Measured on Flash (8x A100 40 GB, TP8, 8 chat prompts, greedy, 128 tokens, warm graphs): plain decode 25.4 ms/token (39 tok/s);
+DSpark with 7 drafts 11.7 ms/token (**85 tok/s, 2.2x**; 3 / 4 / 5 / 6 drafts: 71 / 77 / 79 / 80 tok/s); ~1.8-1.95 accepted drafts per
+round (vLLM's own implementation: 1.96 on the same prompts), a round = ~6 ms draft + ~32 ms verify for ~2.9 tokens. Aggregate
+tok/s for N concurrent requests (median of 3 warm passes), plain -> speculative: 1: 39 -> 123 (a very predictable prompt set), 2: 64 -> 126,
+4: 123 -> 160, 8: 210 -> 214, so the serve default speculates at most 4 requests at once (`smile.chat.speculative-max-concurrency`).
+Output equals plain greedy
+decoding only up to the model's own noise: the same prompt prefilled twice differs by ~10 in max logit, and the top-20 logits of a
+1-row and an 8-row forward differ by 1-3, enough to flip an early greedy token (vLLM's DSpark shows the same, 7 of 8 prompts).
+Image and video requests speculate too (the draft only needs the target's hidden states, which the multimodal prefill returns for
+the image rows as well). Not supported yet: clusters, a CUDA graph for the draft, confidence-based truncation.
+
 **Images and video.** The checkpoint's vision side (`vision_tower.*`, `multi_modal_projector.*`, `patch_merge_mlp.*`, ~1.7 GB,
 bf16) loads onto rank 0's device after the text weights (`SMILE_MINIMAX_VISION=0` skips it; a checkpoint without vision
 weights answers media requests with HTTP 400). `MiniMaxVisionTower` is a CLIP-style ViT (Conv3d patch embedding applied as

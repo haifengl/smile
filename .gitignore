@@ -47,6 +47,7 @@ hs_err_pid*
 /studio/src/universal/jbr
 /studio/src/universal/jdtls
 /studio/src/universal/hub
+/studio/src/universal/serve
 
 # Clojure
 .nrepl-port
