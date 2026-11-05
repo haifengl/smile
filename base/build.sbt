@@ -7,13 +7,13 @@ libraryDependencies ++= {
   Seq(
     "tools.jackson.core" % "jackson-databind" % "3.2.4",
     "org.apache.commons" % "commons-csv" % "1.14.1",
-    "org.duckdb"         % "duckdb_jdbc" % "1.5.6.0" % Provided, // smile.data.SQL
+    "org.duckdb"         % "duckdb_jdbc" % "2.0.0.1" % Provided, // smile.data.SQL
     "org.apache.arrow"   % "arrow-dataset" % arrowV % Provided,
     "org.apache.arrow"   % "arrow-memory-unsafe" % arrowV % Provided,
    ("org.apache.avro"    % "avro" % "1.12.2" % Provided).exclude("org.slf4j", "slf4j-log4j12"),
     "org.xerial.snappy"  % "snappy-java" % "1.1.10.12" % Provided, // for avro
     "com.epam"           % "parso" % "2.0.14" % Provided, // SAS7BDAT
     "org.eclipse.lsp4j"  % "org.eclipse.lsp4j" % "1.0.0" % Provided,
-    "org.xerial"         % "sqlite-jdbc" % "3.53.4.0" % Test
+    "org.xerial"         % "sqlite-jdbc" % "3.54.1.0" % Test
   )
 }

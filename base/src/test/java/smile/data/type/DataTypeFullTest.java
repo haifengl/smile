@@ -793,8 +793,9 @@ public class DataTypeFullTest {
     @Test
     public void testOfJdbcTypeUnsupportedThrows() {
         System.out.println("DataType.of(JDBCType) unsupported throws");
+        assertEquals(DataTypes.ObjectType, DataType.of(JDBCType.OTHER, false, "H2"));
         assertThrows(UnsupportedOperationException.class,
-            () -> DataType.of(JDBCType.OTHER, false, "H2"));
+            () -> DataType.of(JDBCType.REF_CURSOR, false, "H2"));
     }
 
     // =========================================================================

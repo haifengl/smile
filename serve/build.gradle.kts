@@ -27,14 +27,14 @@ dependencies {
     if ("prod" in profiles) {
         implementation("io.quarkus:quarkus-jdbc-postgresql")
     }
-    implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.9.2")
+    implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.9.3")
     // Optional plugins dropped into serve/plugins/ (default: include all; pass -Pserve.plugins=false to skip).
     if (providers.gradleProperty("serve.plugins").getOrElse("true") != "false") {
         implementation(fileTree("plugins") { include("*.jar") })
     }
     testImplementation("io.quarkus:quarkus-junit5")
     testImplementation("io.quarkus:quarkus-test-h2")
-    testImplementation("io.rest-assured:rest-assured:6.1.0")
+    testImplementation("io.rest-assured:rest-assured:6.3.0")
 
     // JaCoCo aggregated report
     jacocoAggregation(project(":base"))
