@@ -29,7 +29,7 @@ Each module below is marked with its build system:
 - `spark/` (Gradle + sbt): Apache Spark integration.
 - `kotlin/` (Gradle + sbt): Kotlin API with corresponding language paradigms.
 - `json/`, `scala/` (sbt): JSON and Scala APIs.
-- `studio/` (Gradle + sbt): SMILE Studio, the agentic data science IDE (`smile.Main`). UI, notebook, kernel, or agent-panel questions: `studio/README.md`. `smile` CLI subcommands, launcher flags, or packaging: `studio/CLI.md`.
+- `studio/` (Gradle + sbt): SMILE Agent Studio, the local-first AI agent workspace, autonomous Bot Hub, and polyglot IDE (`smile.Main`). UI, notebook, kernel, or agent-panel questions: `studio/README.md`. Autonomous bots and Agent Hub: `studio/BOT.md`. `smile` CLI subcommands, launcher flags, or packaging: `studio/CLI.md`.
 - `serve/` (Gradle): Machine learning inference service with Quarkus.
 
 ## ⌨️ Build & Development Commands

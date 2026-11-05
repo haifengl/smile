@@ -32,11 +32,17 @@ import java.util.function.IntConsumer;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.Agent;
 import ioa.agent.Coder;
+import ioa.agent.bot.BotsConfig;
 import smile.io.Paths;
 import smile.io.Read;
 import smile.shell.JShell;
+import smile.studio.ProcessPanel;
+import smile.studio.ServeManager;
 import smile.studio.SmileStudio;
-import smile.studio.cli.AgentCLI;
+import smile.studio.bot.BotActivity;
+import smile.studio.bot.BotManager;
+import smile.studio.bot.HubManager;
+import smile.studio.agent.AgentPanel;
 import smile.studio.notebook.Notebook;
 import smile.studio.text.Notepad;
 import smile.swing.FileExplorer;
@@ -98,11 +104,19 @@ public class Workspace extends JSplitPane {
      */
     private final JTabbedPane explorerTabs = new JTabbedPane();
     /**
-     * The tabbed pane for notebooks.
+     * The tabbed pane for notebooks, text editors, and workspace views (e.g. Agent Hub).
      */
-    private final JTabbedPane notebookTabs = new JTabbedPane();
+    private final JTabbedPane editorTabs = new JTabbedPane();
     /**
-     * The tabbed pane for agent CLIs.
+     * The singleton Agent Hub activity tab, created on demand.
+     */
+    private BotActivity botActivity;
+    /**
+     * The singleton Bot routine manager tab, created on demand.
+     */
+    private BotManager botManager;
+    /**
+     * The tabbed pane for agent panels.
      */
     private final JTabbedPane agentTabs = new JTabbedPane();
     /**
@@ -114,9 +128,9 @@ public class Workspace extends JSplitPane {
             "data-scientist", "architect", "java-coder", "python-coder", "desktop-operator"
     );
     /**
-     * Outstanding questions per agent CLI, used to mark its tab until answered.
+     * Outstanding questions per agent panel, used to mark its tab until answered.
      */
-    private final Map<AgentCLI, Integer> pendingQuestions = new IdentityHashMap<>();
+    private final Map<AgentPanel, Integer> pendingQuestions = new IdentityHashMap<>();
     /**
      * The opened files, notebooks and plain text alike.
      */
@@ -134,6 +148,10 @@ public class Workspace extends JSplitPane {
      * The explorer of runtime information.
      */
     private final KernelExplorer kernelExplorer;
+    /**
+     * The explorer of Bot personas and routines.
+     */
+    private final BotExplorer botExplorer;
     /**
      * The coding agents for each programming language, used for notebook code
      * completion. They are background instances, not the panel agents.
@@ -165,9 +183,11 @@ public class Workspace extends JSplitPane {
         fileChooser.setCurrentDirectory(cwd.toFile());
 
         fileExplorer = new FileExplorer(cwd);
-        kernelExplorer = new KernelExplorer(fileChooser);
-        explorerTabs.addTab("Project", new JScrollPane(fileExplorer));
-        explorerTabs.addTab("Kernel", new JScrollPane(kernelExplorer));
+        kernelExplorer = new KernelExplorer(cwd, fileChooser);
+        botExplorer = new BotExplorer();
+        explorerTabs.addTab(bundle.getString("ProjectTab"), new JScrollPane(fileExplorer));
+        explorerTabs.addTab(bundle.getString("KernelTab"), kernelExplorer);
+        explorerTabs.addTab(bundle.getString("BotsTab"), botExplorer);
 
         // Record this project in ${smile.home}/conf/projects.json for cross-project
         // Bot routines (/daily-log and /daily-recap) and sync to Agent Hub if running.
@@ -199,14 +219,10 @@ public class Workspace extends JSplitPane {
             if (Files.exists(releaseNotes)) {
                 openFile(releaseNotes);
             }
-
-            if (Files.exists(welcome)) {
-                OpenFile welcomeFile = openFileIndex.get(welcome.toAbsolutePath().normalize().toString());
-                if (welcomeFile != null) {
-                    notebookTabs.setSelectedComponent((Component) welcomeFile);
-                }
-            }
         }
+
+        // Always open Bot Activities on startup and keep it focused as the primary operational tab.
+        openBotActivity(0);
 
         // Separate Coder instances for notebook code completion. They are not
         // registered in the agent directory and never appear as tabs: the panel
@@ -233,7 +249,7 @@ public class Workspace extends JSplitPane {
                 Agent agent = initAgent(entry.spec(), cwd);
                 if (agent != null) {
                     panel.add(agent);
-                    openAgent(agent, agentCLI(agent));
+                    openAgent(agent, agentPanel(agent));
                 }
             }
         } catch (Exception ex) {
@@ -246,12 +262,13 @@ public class Workspace extends JSplitPane {
         addPluginSkills(panel.toArray(Agent[]::new));
 
         project.setLeftComponent(explorerTabs);
-        project.setRightComponent(notebookTabs);
+        project.setRightComponent(editorTabs);
         project.setResizeWeight(0.2);
 
         setFileExplorerMouseListener();
-        setNotebookTabsListener();
-        setNotebookTabCloseCallback();
+        setEditorTabsListener();
+        setEditorTabCloseCallback();
+        registerServicePanelListeners();
         setLeftComponent(project);
         setRightComponent(agentTabs);
         setResizeWeight(0.55);
@@ -358,13 +375,13 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Refreshes model selectors on every agent CLI after settings change.
+     * Refreshes model selectors on every agent panel after settings change.
      */
     public void refreshAgentModelSelectors() {
         for (int i = 0; i < agentTabs.getTabCount(); i++) {
             Component c = agentTabs.getComponentAt(i);
-            if (c instanceof AgentCLI cli) {
-                cli.refreshModels();
+            if (c instanceof AgentPanel panel) {
+                panel.refreshModels();
             }
         }
     }
@@ -378,7 +395,7 @@ public class Workspace extends JSplitPane {
      * input is brought to front even when the user has switched to another
      * agent's tab, and stays marked until answered.
      */
-    private void openAgent(Agent agent, AgentCLI cli) {
+    private void openAgent(Agent agent, AgentPanel panel) {
         if (agent == null) {
             return;
         }
@@ -387,18 +404,18 @@ public class Workspace extends JSplitPane {
         agent.session().addListener(new ioa.agent.AgentListener() {
             @Override
             public void onQueued(ioa.agent.AgentRequest request) {
-                SwingUtilities.invokeLater(() -> agentTabs.setSelectedComponent(cli));
+                SwingUtilities.invokeLater(() -> agentTabs.setSelectedComponent(panel));
             }
 
             @Override
             public void onQuestion(String runId, ioa.llm.tool.Question question) {
                 SwingUtilities.invokeLater(() -> {
-                    markQuestionPending(title, cli, question);
-                    agentTabs.setSelectedComponent(cli);
+                    markQuestionPending(title, panel, question);
+                    agentTabs.setSelectedComponent(panel);
                 });
             }
         });
-        agentTabs.addTab(title, cli);
+        agentTabs.addTab(title, panel);
     }
 
     /**
@@ -408,17 +425,17 @@ public class Workspace extends JSplitPane {
      * it re-enters the event dispatch thread before touching Swing.
      *
      * @param title the tab's base title.
-     * @param cli the agent's CLI, i.e. the tab component.
+     * @param panel the agent's panel, i.e. the tab component.
      * @param question the question the agent is waiting on.
      */
-    private void markQuestionPending(String title, AgentCLI cli, ioa.llm.tool.Question question) {
-        pendingQuestions.merge(cli, 1, Integer::sum);
-        int index = indexOfAgent(cli);
+    private void markQuestionPending(String title, AgentPanel panel, ioa.llm.tool.Question question) {
+        pendingQuestions.merge(panel, 1, Integer::sum);
+        int index = indexOfAgent(panel);
         if (index >= 0) {
             agentTabs.setTitleAt(index, title + "  \u2753");
         }
         question.ask().whenComplete((answer, error) ->
-                SwingUtilities.invokeLater(() -> clearQuestionPending(title, cli)));
+                SwingUtilities.invokeLater(() -> clearQuestionPending(title, panel)));
     }
 
     /**
@@ -426,13 +443,13 @@ public class Workspace extends JSplitPane {
      * once no question remains outstanding for that agent.
      *
      * @param title the tab's base title.
-     * @param cli the agent's CLI, i.e. the tab component.
+     * @param panel the agent's panel, i.e. the tab component.
      */
-    private void clearQuestionPending(String title, AgentCLI cli) {
-        int remaining = pendingQuestions.merge(cli, -1, Integer::sum);
+    private void clearQuestionPending(String title, AgentPanel panel) {
+        int remaining = pendingQuestions.merge(panel, -1, Integer::sum);
         if (remaining <= 0) {
-            pendingQuestions.remove(cli);
-            int index = indexOfAgent(cli);
+            pendingQuestions.remove(panel);
+            int index = indexOfAgent(panel);
             if (index >= 0) {
                 agentTabs.setTitleAt(index, title);
             }
@@ -442,11 +459,11 @@ public class Workspace extends JSplitPane {
     /**
      * Returns the index of an agent's tab, or -1 if it is no longer installed.
      *
-     * @param cli the agent's CLI, i.e. the tab component.
+     * @param panel the agent's panel, i.e. the tab component.
      * @return the tab index, or -1 when the tab is absent.
      */
-    private int indexOfAgent(AgentCLI cli) {
-        return agentTabs.indexOfComponent(cli);
+    private int indexOfAgent(AgentPanel panel) {
+        return agentTabs.indexOfComponent(panel);
     }
 
     /**
@@ -467,16 +484,16 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Creates an agent CLI with its welcome banner. If the resource bundle contains
+     * Creates an agent panel with its welcome banner. If the resource bundle contains
      * customized welcome and output messages for the agent, they are used; otherwise,
      * the banner falls back to a generic greeting using the agent's title and description
      * from its specification.
      *
      * @param agent the agent to open.
-     * @return the agent's CLI.
+     * @return the agent's panel.
      */
-    private AgentCLI agentCLI(Agent agent) {
-        var cli = new AgentCLI(agent, this);
+    private AgentPanel agentPanel(Agent agent) {
+        var panel = new AgentPanel(agent, this);
         var spec = agent.spec();
         String prefix = agentKeyPrefix(spec.name());
         String welcomeKey = prefix + "Welcome";
@@ -490,41 +507,184 @@ public class Workspace extends JSplitPane {
                 ? bundle.getString(outputKey)
                 : spec.description();
 
-        cli.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
+        panel.welcome(JShell.logo.replaceAll("(?m)^\\s{3}", "") +
                         bundle.getString("WelcomeSeparator") + '\n' +
                         welcome + "\n\n" +
                         bundle.getString("Tips"),
                 MessageFormat.format(bundle.getString("WelcomeOutput"), System.getProperty("user.dir")) +
                         "\n\n" + output);
-        return cli;
+        return panel;
     }
 
     /**
-     * Sets the callback for closing file tabs.
+     * Sets the callback for closing editor tabs.
      */
-    private void setNotebookTabCloseCallback() {
-        notebookTabs.putClientProperty("JTabbedPane.tabClosable", true);
-        notebookTabs.putClientProperty("JTabbedPane.tabCloseCallback",
+    private void setEditorTabCloseCallback() {
+        editorTabs.putClientProperty("JTabbedPane.tabClosable", true);
+        editorTabs.putClientProperty("JTabbedPane.tabCloseCallback",
                 (IntConsumer) tabIndex -> {
-                    if (notebookTabs.getComponentAt(tabIndex) instanceof OpenFile openFile) {
+                    Component comp = editorTabs.getComponentAt(tabIndex);
+                    if (comp instanceof OpenFile openFile) {
                         if (closeFile(openFile)) {
-                            notebookTabs.removeTabAt(tabIndex);
+                            editorTabs.removeTabAt(tabIndex);
                             // openFiles and fileWatcher are already updated inside closeFile().
                         }
+                    } else if (comp == ServeManager.getInstance().panel()) {
+                        editorTabs.removeTabAt(tabIndex);
+                        Thread.ofPlatform().name("serve-tab-stop").daemon(true).start(() -> {
+                            ServeManager.getInstance().stop();
+                            kernelExplorer.refreshLoadedModelIdsAsync();
+                        });
+                    } else if (comp == HubManager.getInstance().panel()) {
+                        editorTabs.removeTabAt(tabIndex);
+                        Thread.ofPlatform().name("hub-tab-stop").daemon(true).start(() -> {
+                            HubManager.getInstance().stop();
+                            SwingUtilities.invokeLater(this::onBotManagerSaved);
+                        });
+                    } else {
+                        editorTabs.removeTabAt(tabIndex);
                     }
                 });
     }
 
     /**
-     * Sets the listener for switching file tabs to refresh the kernel explorer.
+     * Registers start and stop listeners on {@link ServeManager} and {@link HubManager}
+     * so their {@link ProcessPanel}s automatically dock into and close from {@link #editorTabs}.
      */
-    private void setNotebookTabsListener() {
-        notebookTabs.addChangeListener(e -> {
-            int tabIndex = notebookTabs.getSelectedIndex();
-            if (notebookTabs.getSelectedComponent() instanceof Notebook notebook) {
+    private void registerServicePanelListeners() {
+        ServeManager.getInstance().addStartListener(panel -> openServicePanel(bundle.getString("InferenceServiceTab"), panel));
+        ServeManager.getInstance().addStopListener(this::closeServicePanel);
+        HubManager.getInstance().addStartListener(panel -> openServicePanel(bundle.getString("AgentHubTab"), panel));
+        HubManager.getInstance().addStopListener(this::closeServicePanel);
+    }
+
+    /**
+     * Opens a service {@link ProcessPanel} tab in {@link #editorTabs}, keeping
+     * {@code Bot Activities} focused if it is currently the active tab.
+     *
+     * @param title the tab title (e.g. {@code "Inference Service"} or {@code "Agent Hub"}).
+     * @param panel the process output panel.
+     */
+    public void openServicePanel(String title, ProcessPanel panel) {
+        if (panel == null) {
+            return;
+        }
+        boolean keepBotActivityFocused = editorTabs.getSelectedComponent() == botActivity;
+        int index = editorTabs.indexOfComponent(panel);
+        if (index == -1) {
+            editorTabs.addTab(title, panel);
+        }
+        if (!keepBotActivityFocused) {
+            editorTabs.setSelectedComponent(panel);
+        }
+    }
+
+    /**
+     * Removes a service {@link ProcessPanel} tab from {@link #editorTabs} if present.
+     *
+     * @param panel the process output panel to remove.
+     */
+    public void closeServicePanel(ProcessPanel panel) {
+        if (panel == null) {
+            return;
+        }
+        int index = editorTabs.indexOfComponent(panel);
+        if (index >= 0) {
+            editorTabs.removeTabAt(index);
+        }
+    }
+
+    /**
+     * Sets the listener for switching editor tabs to refresh the kernel explorer
+     * or focus the Bot explorer when Bot Routines is selected.
+     */
+    private void setEditorTabsListener() {
+        editorTabs.addChangeListener(e -> {
+            if (editorTabs.getSelectedComponent() instanceof Notebook notebook) {
                 kernelExplorer.refresh(notebook.kernel());
+            } else if (editorTabs.getSelectedComponent() == botManager && botManager != null) {
+                explorerTabs.setSelectedComponent(botExplorer);
+                botExplorer.selectRoutine(botManager.selectedRoutineId());
             }
         });
+    }
+
+    /**
+     * Opens or focuses the Agent Hub activity tab on the requested sub-tab.
+     *
+     * @param initialTab the sub-tab index (`0` = Approvals, `1` = Runs).
+     */
+    public void openBotActivity(int initialTab) {
+        if (botActivity == null) {
+            botActivity = new BotActivity(initialTab);
+        } else {
+            botActivity.selectTab(initialTab);
+            botActivity.refreshAllAsync();
+        }
+        int index = editorTabs.indexOfComponent(botActivity);
+        if (index == -1) {
+            editorTabs.addTab(bundle.getString("BotActivitiesTab"), botActivity);
+        }
+        editorTabs.setSelectedComponent(botActivity);
+    }
+
+    /**
+     * Opens or focuses the Bot Routine Manager tab, optionally selecting the given routine.
+     *
+     * @param routineId optional routine ID to select.
+     */
+    public void openBotManager(String routineId) {
+        if (botManager == null) {
+            botManager = new BotManager(routineId, this::onBotManagerSaved);
+        } else {
+            botManager.selectRoutine(routineId);
+        }
+        int index = editorTabs.indexOfComponent(botManager);
+        if (index == -1) {
+            editorTabs.addTab(bundle.getString("BotRoutinesTab"), botManager);
+        }
+        editorTabs.setSelectedComponent(botManager);
+        explorerTabs.setSelectedComponent(botExplorer);
+        botExplorer.selectRoutine(botManager.selectedRoutineId());
+    }
+
+    /**
+     * Opens or focuses the Bot Routine Manager tab prepared for creating a new routine.
+     *
+     * @param bot optional Bot persona to pre-populate in the form.
+     */
+    public void openNewBotRoutine(BotsConfig.BotSpec bot) {
+        if (botManager == null) {
+            botManager = new BotManager(null, this::onBotManagerSaved);
+        }
+        botManager.prepareNewRoutine(bot);
+        int index = editorTabs.indexOfComponent(botManager);
+        if (index == -1) {
+            editorTabs.addTab(bundle.getString("BotRoutinesTab"), botManager);
+        }
+        editorTabs.setSelectedComponent(botManager);
+        explorerTabs.setSelectedComponent(botExplorer);
+    }
+
+    /**
+     * Refreshes the Bot Explorer, Bot Routine Manager, and Bot Activities panels after a config change.
+     */
+    public void notifyBotsSaved() {
+        onBotManagerSaved();
+        if (botManager != null) {
+            botManager.selectRoutine(null);
+            botExplorer.selectRoutine(botManager.selectedRoutineId());
+        }
+    }
+
+    private void onBotManagerSaved() {
+        botExplorer.refresh();
+        if (botManager != null) {
+            botExplorer.selectRoutine(botManager.selectedRoutineId());
+        }
+        if (botActivity != null) {
+            botActivity.refreshAllAsync();
+        }
     }
 
     /**
@@ -655,7 +815,7 @@ public class Workspace extends JSplitPane {
      * @return the selected file.
      */
     public Optional<OpenFile> selectedFile() {
-        if (notebookTabs.getSelectedComponent() instanceof OpenFile openFile) {
+        if (editorTabs.getSelectedComponent() instanceof OpenFile openFile) {
             return Optional.of(openFile);
         } else {
             return Optional.empty();
@@ -668,7 +828,7 @@ public class Workspace extends JSplitPane {
      * @return the selected notebook.
      */
     public Optional<Notebook> notebook() {
-        if (notebookTabs.getSelectedComponent() instanceof Notebook notebook) {
+        if (editorTabs.getSelectedComponent() instanceof Notebook notebook) {
             return Optional.of(notebook);
         } else {
             return Optional.empty();
@@ -823,9 +983,9 @@ public class Workspace extends JSplitPane {
                 logger.warn("Tab {} not found", filename);
                 return;
             }
-            int index = notebookTabs.indexOfComponent((Component) openFile);
+            int index = editorTabs.indexOfComponent((Component) openFile);
             if (index != -1) {
-                notebookTabs.setSelectedIndex(index);
+                editorTabs.setSelectedIndex(index);
             } else {
                 logger.warn("Tab {} not found", filename);
             }
@@ -874,8 +1034,8 @@ public class Workspace extends JSplitPane {
         // Route edits to the auto saver so it can schedule a debounced save.
         openFile.setChangeListener(autoSaver::documentChanged);
 
-        notebookTabs.addTab(filename, (Component) openFile);
-        notebookTabs.setSelectedComponent((Component) openFile);
+        editorTabs.addTab(filename, (Component) openFile);
+        editorTabs.setSelectedComponent((Component) openFile);
         openFiles.add(openFile);
         openFileIndex.put(path.toString(), openFile);
         fileWatcher.addFile(path);
@@ -1026,12 +1186,21 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Returns the explorer component.
+     * Returns the kernel explorer component.
      *
-     * @return the explorer component.
+     * @return the kernel explorer component.
      */
     public KernelExplorer explorer() {
         return kernelExplorer;
+    }
+
+    /**
+     * Returns the Bot explorer component.
+     *
+     * @return the Bot explorer component.
+     */
+    public BotExplorer botExplorer() {
+        return botExplorer;
     }
 
     /**

@@ -39,18 +39,7 @@ Universal / mappings ++= {
     PluginCompat.toFileRef(file) -> target
   }
 
-  // 2. Convert directories using PluginCompat.toFileRefsMapping
-  val serveAppDir = rootDir / "serve" / "build" / "quarkus-app"
-  val serveAppMappings = PluginCompat.toFileRefsMapping(directory(serveAppDir))
-    .map { case (fileRef, path) =>
-      // Normalize native Windows backslashes to universal forward slashes
-      val universalPath = path.replace('\\', '/')
-      // directory() includes "quarkus-app/" in the path, strip it for clean mappings
-      val cleanPath = universalPath.stripPrefix("quarkus-app/")
-      fileRef -> s"serve/$cleanPath"
-    }
-
-  // 3. Bundle the JetBrains Runtime (JBR) that the Windows launcher runs via
+  // 2. Bundle the JetBrains Runtime (JBR) that the Windows launcher runs via
   // `set JAVA_HOME=%APP_HOME%\jbr`. It must be copied whole: a partial JBR still
   // starts, because java.exe only needs lib/jvm.cfg, but then fails at first use
   // on lib/tzdb.dat and lib/tzmappings ("can't open .../tzmappings"). The
@@ -66,7 +55,7 @@ Universal / mappings ++= {
       fileRef -> s"jbr/$cleanPath"
     }
 
-  // 4. Filter and map resources using PluginCompat.toFileRefsMapping
+  // 3. Filter and map resources using PluginCompat.toFileRefsMapping
   val dataDir = rootDir / "base" / "src" / "test" / "resources" / "data"
   val dataPrefixes = Set("mnist", "usps", "sqlite", "kylo", "weka", "libsvm", "regression", "sas", "stat", "sparse", "matrix")
 
@@ -78,7 +67,7 @@ Universal / mappings ++= {
     .filter { case (_, cleanPath) => dataPrefixes.exists(cleanPath.startsWith) }
     .map { case (fileRef, cleanPath) => fileRef -> s"data/$cleanPath" }
 
-  rootFiles ++ serveAppMappings ++ jbrMappings ++ dataMappings
+  rootFiles ++ jbrMappings ++ dataMappings
 }
 
 // dealing with long classpaths
@@ -159,7 +148,8 @@ libraryDependencies ++= Seq(
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "com.github.serpapi"          % "serpapi-java" % "1.2.0",
   "com.google.code.gson"        % "gson"         % "2.14.0", // evict older version used by serpapi
-  "photos.sluice"               % "secret-store" % "1.0.1"
+  "photos.sluice"               % "secret-store" % "1.0.1",
+  "org.eclipse.angus"           % "angus-mail"   % "2.0.3"
 )
 
 // Kotlin scripting host, required at runtime by KotlinKernel. The kotlin

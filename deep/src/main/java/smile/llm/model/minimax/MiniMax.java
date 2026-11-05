@@ -200,6 +200,12 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         if (executor != null) {
             executor.shutdownNow();
         }
+        if (draft != null) {
+            draftSnapshots.forEach(snapshot -> draft.discard(snapshot.context()));
+            draftSnapshots.clear();
+            draft.close();
+            draft = null;
+        }
         vision = null;   // its weights are released with the module (cleaner)
         visionProcessor = null;
         for (MiniMaxModel m : models) {
@@ -511,6 +517,9 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             final int imageStart = imageBefore;
             final int videoStart = videoBefore;
             final int imageCount = imageTokens;
+            // The draft only needs the target's hidden states (never the image embeddings), so a multimodal request can
+            // speculate once the taps of its image and text rows are absorbed window by window.
+            final boolean capture = auxLayers != null && draft != null && speculativeEnabled && draftTracks(requestId, from);
             Tensor[] logits = onRanks(r -> {
                 try (var scope = new AutoScope()) {
                     Tensor.push(scope);
@@ -537,13 +546,29 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                             }
                             Tensor tokens = Tensor.of(window).reshape(1, window.length).to(device);
                             Tensor out;
-                            if (n == 0) {
-                                out = models[r].forward(tokens, a, false);
-                            } else {
-                                long[] usedRows = Arrays.copyOf(rows, n);
+                            long[] usedRows = null;
+                            Tensor picked = null;
+                            if (n > 0) {
+                                usedRows = Arrays.copyOf(rows, n);
                                 Tensor sourceIndex = Tensor.of(Arrays.copyOf(source, n)).to(device);
-                                Tensor picked = mine.get(sourceIndex);
-                                out = models[r].forward(tokens, a, false, usedRows, picked);
+                                picked = mine.get(sourceIndex);
+                            }
+                            out = capture ? models[r].forwardAux(tokens, a, false, usedRows, picked)
+                                    : models[r].forward(tokens, a, false, usedRows, picked);
+                            if (capture) {
+                                Tensor taps = models[r].takeAux();
+                                if (taps != null) {
+                                    try {
+                                        if (r == 0) {
+                                            if (a == 0) {
+                                                draft.bind(requestId, draftCapacity.getOrDefault(requestId, params.maxSeqLen()));
+                                            }
+                                            draft.absorb(requestId, taps, a);
+                                        }
+                                    } finally {
+                                        taps.close();
+                                    }
+                                }
                             }
                             if (b == to && to == ids.length) {
                                 last = out.reshape(1, -1).copy();
@@ -560,6 +585,11 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                 }
             });
             Tensor row = firstAndClose(logits);
+            if (capture) {
+                draftPosition.put(requestId, to);
+            } else {
+                draftPosition.remove(requestId);
+            }
             if (row == null) {
                 return null;
             }
@@ -697,7 +727,650 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                         "KV request id mismatch across ranks: rank0=%d other=%d", id, local));
             }
         }
+        if (draft != null) {
+            draftCapacity.put(id, totalCapacity);
+            adoptDraftPrefix(id, prompt, totalCapacity);
+        }
         return id;
+    }
+
+    /** Layers whose output hidden states prefill and decode capture for a draft model, or {@code null}. */
+    private int[] auxLayers;
+    /** Rank 0's taps from the last prefill chunk / eager decode step, until {@link #takeAux()}. */
+    private volatile Tensor lastAux;
+
+    /**
+     * Captures the hidden states leaving the decoder layers {@code layerIds} on every following prefill chunk and eager decode step
+     * (CUDA-graph decode is bypassed while enabled); fetch them with {@link #takeAux()}. Used by the DSpark draft
+     * model ({@code target_layer_ids}). Not supported on a multi-node cluster yet.
+     *
+     * @param layerIds strictly increasing layer indices, or {@code null} / empty to disable.
+     */
+    public void setAuxLayers(int... layerIds) {
+        if (layerIds != null && layerIds.length > 0 && cluster != null) {
+            throw new UnsupportedOperationException("aux hidden-state capture is not supported on a cluster");
+        }
+        for (MiniMaxModel m : models) {
+            m.setAuxLayers(layerIds);
+        }
+        auxLayers = layerIds == null || layerIds.length == 0 ? null : layerIds.clone();
+        Tensor stale = takeAux(null);
+        if (stale != null) {
+            stale.close();
+        }
+    }
+
+    /**
+     * Returns the hidden states of the last prefill chunk or decode step: {@code [rows, numAuxLayers * dim]}, one
+     * row per token fed to the model (in order, batch-major), identical on all ranks. The caller owns the tensor.
+     *
+     * @return the taps, or {@code null} if none were captured since the last call.
+     */
+    public Tensor takeAux() {
+        return takeAux(null);
+    }
+
+    private Tensor takeAux(Tensor replacement) {
+        Tensor old = lastAux;
+        lastAux = replacement;
+        if (replacement == null) {
+            return old;
+        }
+        if (old != null) {
+            old.close();
+        }
+        return null;
+    }
+
+    /** Moves each rank's taps out of its model: rank 0 keeps them for {@link #takeAux()}, the others free theirs. */
+    private void stashAux(int rank) {
+        Tensor aux = models[rank].takeAux();
+        if (aux == null) {
+            return;
+        }
+        if (rank == 0) {
+            takeAux(aux);
+        } else {
+            aux.close();
+        }
+    }
+
+    // ------------------------------------------------------------------ DSpark speculative decoding
+
+    /** The DSpark block drafter on rank 0's device, or {@code null}. */
+    private MiniMaxDspark draft;
+    private volatile boolean speculativeEnabled = true;
+    private volatile int numSpeculativeTokens = 7;
+    /** Per request: the next position the draft's context expects, i.e. how many positions of taps it has absorbed. */
+    private final Map<Integer, Integer> draftPosition = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<Integer, Integer> draftCapacity = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.concurrent.atomic.AtomicLong speculativeRounds = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong speculativeProposed = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong speculativeAccepted = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong speculativePlain = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong draftNanos = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong verifyNanos = new java.util.concurrent.atomic.AtomicLong();
+    /** Time in {@link #accept} (sampling the verify rows and absorbing the committed taps); included in the verify time. */
+    private final java.util.concurrent.atomic.AtomicLong acceptNanos = new java.util.concurrent.atomic.AtomicLong();
+
+    /**
+     * Installs the DSpark drafter and starts capturing the target taps it consumes.
+     *
+     * @param drafter the loaded draft (owned by this model from now on), or {@code null} to remove it.
+     */
+    void setDraft(MiniMaxDspark drafter) {
+        this.draft = drafter;
+        setAuxLayers(drafter == null ? null : drafter.args().targetLayerIds());
+    }
+
+    /**
+     * Builds the target-head callbacks of a draft loaded before this model exists.
+     *
+     * @param self filled with the model once it is built.
+     * @return callbacks running the embedding / output head on all ranks and returning rank 0's result.
+     */
+    static MiniMaxDspark.TargetHeads headsOf(java.util.concurrent.atomic.AtomicReference<MiniMax> self) {
+        return new MiniMaxDspark.TargetHeads() {
+            @Override
+            public Tensor embed(Tensor ids) {
+                return self.get().embedRank0(ids);
+            }
+
+            @Override
+            public Tensor logits(Tensor hidden) {
+                return self.get().logitsRank0(hidden);
+            }
+        };
+    }
+
+    // The inputs of the collective calls below are made per rank on the calling thread, before any rank launches its
+    // all-reduce: a rank copying a tensor from rank 0's device inside its own thread would queue that copy on rank
+    // 0's stream behind rank 0's already-launched all-reduce, which waits for the very rank that waits for the copy.
+
+    private Tensor embedRank0(Tensor ids) {
+        long[] host;
+        try (Tensor cpu = ids.to(Device.CPU()).copy()) {
+            host = cpu.longArray();
+        }
+        Tensor[] out = onRanks(r -> {
+            try (var scope = new AutoScope()) {
+                Tensor.push(scope);
+                try {
+                    Tensor local = Tensor.of(host).to(models[r].device());
+                    Tensor e = models[r].embedIds(local);
+                    e.detachFromScopes();
+                    return e;
+                } finally {
+                    Tensor.pop();
+                }
+            }
+        });
+        return firstAndClose(out);
+    }
+
+    private Tensor logitsRank0(Tensor hidden) {
+        Tensor[] inputs = new Tensor[models.length];
+        for (int r = 0; r < inputs.length; r++) {
+            inputs[r] = r == 0 ? hidden : hidden.to(models[r].device());
+        }
+        try {
+            Tensor[] out = onRanks(r -> {
+                try (var scope = new AutoScope()) {
+                    Tensor.push(scope);
+                    try {
+                        Tensor l = models[r].headLogits(inputs[r]);
+                        l.detachFromScopes();
+                        return l;
+                    } finally {
+                        Tensor.pop();
+                    }
+                }
+            });
+            return firstAndClose(out);
+        } finally {
+            for (int r = 1; r < inputs.length; r++) {
+                inputs[r].close();
+            }
+        }
+    }
+
+    /**
+     * Switches the fused sparse-attention kernels on or off and drops the captured graphs (diagnostics: the fallback is
+     * the reference masked-SDPA path, so the two can be compared on the same state).
+     *
+     * @param enabled whether the fused kernels may be used.
+     */
+    public void setSparseKernel(boolean enabled) {
+        MiniMaxAttention.setSparseKernel(enabled);
+        for (MiniMaxModel m : models) {
+            m.closeGraphs();
+        }
+    }
+
+    /**
+     * Returns whether DSpark speculative decoding is loaded and enabled.
+     * @return {@code true} when {@link #speculateStep} drafts.
+     */
+    public boolean isSpeculativeEnabled() {
+        return speculativeEnabled && draft != null && cluster == null;
+    }
+
+    /**
+     * Enables or disables speculation (the draft stays loaded).
+     * @param enabled whether {@link #speculateStep} drafts.
+     */
+    public void setSpeculativeEnabled(boolean enabled) {
+        this.speculativeEnabled = enabled;
+    }
+
+    /**
+     * Sets the most drafts verified per round; clamped to the draft's block size.
+     * @param n draft tokens per round; {@code <= 0} selects the block size.
+     */
+    public void setNumSpeculativeTokens(int n) {
+        int block = draft == null ? 7 : draft.args().blockSize();
+        this.numSpeculativeTokens = n <= 0 ? block : Math.min(n, block);
+    }
+
+    /**
+     * Returns the most drafts verified per round.
+     * @return draft tokens per round.
+     */
+    public int numSpeculativeTokens() {
+        return numSpeculativeTokens;
+    }
+
+    /**
+     * Returns the number of draft + verify rounds run so far.
+     * @return rounds.
+     */
+    public long speculativeRounds() {
+        return speculativeRounds.get();
+    }
+
+    /**
+     * Returns the number of plain decode steps taken by requests that could not speculate.
+     * @return plain steps.
+     */
+    public long speculativePlainSteps() {
+        return speculativePlain.get();
+    }
+
+    /**
+     * Returns a summary of the speculation counters.
+     * @return rounds, accepted drafts per round, share of proposed drafts accepted, plain fallbacks and time split.
+     */
+    public String speculativeStats() {
+        long rounds = speculativeRounds.get();
+        long proposed = speculativeProposed.get();
+        return String.format("rounds=%d accepted/round=%.2f accept-rate=%.2f plain-steps=%d draft-ms/round=%.1f verify-ms/round=%.1f"
+                        + " (of which accept+absorb %.1f)",
+                rounds, rounds == 0 ? 0.0 : (double) speculativeAccepted.get() / rounds,
+                proposed == 0 ? 0.0 : (double) speculativeAccepted.get() / proposed, speculativePlain.get(),
+                rounds == 0 ? 0.0 : draftNanos.get() / 1e6 / rounds, rounds == 0 ? 0.0 : verifyNanos.get() / 1e6 / rounds,
+                rounds == 0 ? 0.0 : acceptNanos.get() / 1e6 / rounds);
+    }
+
+    /** Whether the taps of {@code requestId} are being fed to the draft, and a chunk starting at {@code from} continues them. */
+    private boolean draftTracks(int requestId, int from) {
+        return from == 0 || draftPosition.getOrDefault(requestId, -1) == from;
+    }
+
+    /** Feeds the taps of a prefill chunk {@code [from, to)} to the draft. */
+    private void absorbPrefill(int requestId, int from, int to, boolean captured) {
+        Tensor aux = captured ? takeAux() : null;
+        if (aux == null) {
+            draftPosition.remove(requestId);   // a gap in the taps (prefix hit, multimodal): the request cannot speculate
+            return;
+        }
+        try {
+            if (from == 0) {
+                draft.bind(requestId, draftCapacity.getOrDefault(requestId, params.maxSeqLen()));
+            }
+            draft.absorb(requestId, aux, from);
+            draftPosition.put(requestId, to);
+        } finally {
+            aux.close();
+        }
+    }
+
+    /** A finished request's draft context, kept for later requests that share its prefix. */
+    private record DraftSnapshot(int[] tokens, MiniMaxDspark.Cache context) { }
+
+    private static final int MAX_DRAFT_SNAPSHOTS = Math.max(0, Integer.parseInt(
+            System.getenv().getOrDefault("SMILE_MINIMAX_DSPARK_SNAPSHOTS", "8").trim()));
+    /** Most recently used last. */
+    private final java.util.LinkedList<DraftSnapshot> draftSnapshots = new java.util.LinkedList<>();
+
+    /**
+     * Keeps a finished request's draft context when it is complete enough to serve as the prefix of a later request.
+     * Returns {@code false} when the request had no usable context (the caller releases it).
+     */
+    private boolean snapshotDraft(int requestId, int[] sequence) {
+        Integer absorbed = draftPosition.get(requestId);
+        if (MAX_DRAFT_SNAPSHOTS == 0 || draft == null || sequence == null || absorbed == null
+                || absorbed < 16 || absorbed > sequence.length) {
+            return false;
+        }
+        MiniMaxDspark.Cache context = draft.detach(requestId);
+        if (context == null) {
+            return false;
+        }
+        if (absorbed > draft.ringOf(context)) {
+            draft.discard(context);   // the ring wrapped: the early positions are gone
+        } else {
+            int[] tokens = Arrays.copyOf(sequence, absorbed);
+            // A snapshot whose tokens are a prefix of another one adds nothing: keep only the longer.
+            boolean covered = false;
+            for (var it = draftSnapshots.iterator(); it.hasNext(); ) {
+                DraftSnapshot other = it.next();
+                int[] t = other.tokens();
+                int common = Arrays.mismatch(t, tokens);
+                if (common < 0) {
+                    common = Math.min(t.length, tokens.length);
+                }
+                if (common == tokens.length && t.length >= tokens.length) {
+                    covered = true;                        // the new one is a prefix of an existing one
+                    it.remove();
+                    draftSnapshots.addLast(other);         // refresh its recency (the iterator is abandoned below)
+                    break;
+                }
+                if (common == t.length) {                  // the existing one is a prefix of the new one
+                    it.remove();
+                    draft.discard(other.context());
+                }
+            }
+            if (covered) {
+                draft.discard(context);
+            } else {
+                draftSnapshots.addLast(new DraftSnapshot(tokens, context));
+                while (draftSnapshots.size() > MAX_DRAFT_SNAPSHOTS) {
+                    draft.discard(draftSnapshots.removeFirst().context());
+                }
+            }
+        }
+        draftPosition.remove(requestId);
+        draftCapacity.remove(requestId);
+        return true;
+    }
+
+    /**
+     * Gives a freshly bound request the draft context of an earlier request with the same prefix, so it can speculate
+     * although prefill skips the positions the KV cache already holds. The request resumes prefill at
+     * {@code min(matched, promptLen - 1)}, which is where its draft context must end.
+     */
+    private void adoptDraftPrefix(int requestId, int[] prompt, int totalCapacity) {
+        if (draft == null || !speculativeEnabled || draftSnapshots.isEmpty()) {
+            return;
+        }
+        int matched = model.kvCachePool().matchedPrefixLen(requestId);
+        int resume = Math.min(matched, prompt.length - 1);
+        if (resume < 1) {
+            return;
+        }
+        DraftSnapshot best = null;
+        for (DraftSnapshot snapshot : draftSnapshots) {
+            int[] t = snapshot.tokens();
+            int common = 0;
+            int limit = Math.min(Math.min(t.length, prompt.length), resume);
+            while (common < limit && t[common] == prompt[common]) {
+                common++;
+            }
+            if (common >= resume) {
+                best = snapshot;
+                break;
+            }
+        }
+        if (best != null && draft.adopt(requestId, totalCapacity, best.context(), resume)) {
+            draftPosition.put(requestId, resume);
+            draftCapacity.put(requestId, totalCapacity);
+            draftSnapshots.remove(best);
+            draftSnapshots.addLast(best);   // most recently used
+        }
+    }
+
+    private void releaseDraft(int requestId) {
+        draftCapacity.remove(requestId);
+        if (draftPosition.remove(requestId) != null && draft != null) {
+            draft.release(requestId);
+        }
+    }
+
+    @Override
+    public int[][] speculateStep(int[] requestIds, int[] lastTokens, int[] positions,
+                                 int numDrafts, double temperature, double topp) {
+        if (!isSpeculativeEnabled()) {
+            throw new UnsupportedOperationException("DSpark speculation not available");
+        }
+        if (requestIds == null || lastTokens == null || positions == null
+                || lastTokens.length != requestIds.length || positions.length != requestIds.length
+                || requestIds.length == 0) {
+            throw new IllegalArgumentException("speculateStep batch sizes must match and be non-empty");
+        }
+        if (numDrafts < 1) {
+            throw new IllegalArgumentException("numDrafts must be >= 1");
+        }
+        int n = Math.min(numDrafts, draft.args().blockSize());
+        int[][] out = new int[requestIds.length][];
+        List<Integer> ready = new ArrayList<>();
+        for (int i = 0; i < requestIds.length; i++) {
+            Integer absorbed = draftPosition.get(requestIds[i]);
+            if (absorbed != null && absorbed == positions[i]) {
+                ready.add(i);
+            } else {
+                // No usable draft context (prefix hit without a snapshot, multimodal, a gap): an ordinary step.
+                out[i] = plainStep(requestIds[i], lastTokens[i], positions[i], temperature, topp);
+            }
+        }
+        if (ready.size() == 1) {
+            int i = ready.get(0);
+            out[i] = speculateOne(requestIds[i], lastTokens[i], positions[i], n, temperature, topp);
+        } else if (ready.size() > 1) {
+            speculateBatch(ready, requestIds, lastTokens, positions, n, temperature, topp, out);
+        }
+        return out;
+    }
+
+    /** Drafts one block for a request whose draft context is complete up to {@code pos}. */
+    private int[] draftBlock(int requestId, int anchor, int pos, int n) {
+        return Arrays.copyOf(draft.draft(requestId, anchor, pos, false).tokens(), n);
+    }
+
+    /** One draft + verify round of one request. */
+    private int[] speculateOne(int requestId, int anchor, int pos, int n, double temperature, double topp) {
+        long t0 = System.nanoTime();
+        int[] drafts = draftBlock(requestId, anchor, pos, n);
+        long t1 = System.nanoTime();
+        int[] accepted = verifyOne(requestId, anchor, pos, drafts, temperature, topp);
+        draftNanos.addAndGet(t1 - t0);
+        verifyNanos.addAndGet(System.nanoTime() - t1);
+        return accepted;
+    }
+
+    /**
+     * Verifies one request's block in a single window forward (CUDA graph when possible), accepts the matching prefix
+     * and feeds the committed positions' taps to the draft.
+     */
+    private int[] verifyOne(int requestId, int anchor, int pos, int[] drafts, double temperature, double topp) {
+        int n = drafts.length;
+        int[] window = new int[n + 1];
+        window[0] = anchor;
+        System.arraycopy(drafts, 0, window, 1, n);
+
+        Tensor rows = windowRows(requestId, window, pos);
+        Tensor aux = takeAux();
+        try {
+            return accept(requestId, pos, drafts, rows, aux, temperature, topp);
+        } finally {
+            rows.close();
+            if (aux != null) {
+                aux.close();
+            }
+        }
+    }
+
+    /**
+     * Runs a verify window of one request on every rank (CUDA graph when possible) and returns rank 0's logits for all rows
+     * {@code [window.length, vocab]}; the aux taps are left for {@link #takeAux()}.
+     */
+    private Tensor windowRows(int requestId, int[] window, int pos) {
+        for (MiniMaxModel m : models) {
+            m.kvCachePool().activateStep(requestId);
+        }
+        Tensor[] logits = onRanks(r -> {
+            try (var scope = new AutoScope()) {
+                Tensor.push(scope);
+                try {
+                    long[] ids = new long[window.length];
+                    for (int i = 0; i < ids.length; i++) {
+                        ids[i] = window[i];
+                    }
+                    Tensor graphed = models[r].windowGraph(ids, new int[]{pos}, window.length);
+                    if (graphed != null) {
+                        stashAux(r);
+                        graphed.detachFromScopes();
+                        return graphed;
+                    }
+                    Tensor tokens = Tensor.of(window).reshape(1, window.length).to(models[r].device());
+                    Tensor out = models[r].forwardAux(tokens, pos, true, null, null);
+                    stashAux(r);
+                    Tensor rows = out.reshape(window.length, -1).copy();
+                    rows.detachFromScopes();
+                    return rows;
+                } finally {
+                    Tensor.pop();
+                }
+            }
+        });
+        return firstAndClose(logits);
+    }
+
+    /**
+     * Scores {@code window} (consecutive tokens starting at {@code pos}) in one verify-window forward and returns the
+     * logits of every row, {@code [window.length, vocab]} float32 (the caller owns it). Writes the window's KV like a
+     * verify does. For tests and diagnostics; needs a loaded draft (the window path captures its taps).
+     *
+     * @param requestId a request bound with {@link #bind} and prefilled up to {@code pos}.
+     * @param window    tokens at positions {@code pos ..}.
+     * @param pos       absolute position of {@code window[0]}.
+     * @return the logits.
+     */
+    public Tensor windowLogits(int requestId, int[] window, int pos) {
+        if (draft == null || auxLayers == null) {
+            throw new IllegalStateException("windowLogits needs the DSpark draft (aux taps)");
+        }
+        Tensor rows = windowRows(requestId, window, pos);
+        Tensor aux = takeAux();
+        if (aux != null) {
+            aux.close();
+        }
+        return rows;
+    }
+
+    /**
+     * Samples the verify rows of one request, accepts the matching drafts and absorbs the committed taps.
+     *
+     * @param rows target logits of the request's window {@code [n + 1, vocab]}.
+     * @param aux  taps of the request's window rows {@code [n + 1, width]}, or {@code null}.
+     */
+    private int[] accept(int requestId, int pos, int[] drafts, Tensor rows, Tensor aux, double temperature, double topp) {
+        long started = System.nanoTime();
+        try {
+            return acceptRows(requestId, pos, drafts, rows, aux, temperature, topp);
+        } finally {
+            acceptNanos.addAndGet(System.nanoTime() - started);
+        }
+    }
+
+    private int[] acceptRows(int requestId, int pos, int[] drafts, Tensor rows, Tensor aux, double temperature, double topp) {
+        int[] targetSamples = smile.llm.engine.Sampling.sampleTokenIds(rows, temperature, topp);
+        var accept = smile.llm.engine.SpeculativeDecoding.acceptGreedy(drafts, targetSamples);
+        int accepted = accept.numDraftAccepted();
+        if (aux == null) {
+            draftPosition.remove(requestId);
+        } else {
+            try (var noGrad = Tensor.noGradGuard();
+                 var keep = smile.deep.tensor.Index.slice(0, accepted + 1);
+                 Tensor committed = aux.get(keep, smile.deep.tensor.Index.Colon)) {
+                // Rows 0..accepted are the anchor and the accepted drafts, now committed; the bonus token is next round's anchor.
+                draft.absorb(requestId, committed, pos);
+                draftPosition.put(requestId, pos + accepted + 1);
+            }
+        }
+        speculativeRounds.incrementAndGet();
+        speculativeProposed.addAndGet(drafts.length);
+        speculativeAccepted.addAndGet(accepted);
+        return accept.acceptedTokens();
+    }
+
+    /**
+     * One round for several requests at once: a block is drafted per request, then all windows are verified in one
+     * batched CUDA-graph forward (the MoE sees every row of every request together). Falls back to verifying the
+     * requests one by one when no graph applies.
+     */
+    private void speculateBatch(List<Integer> ready, int[] requestIds, int[] lastTokens, int[] positions, int n,
+                                double temperature, double topp, int[][] out) {
+        int k = ready.size();
+        int s = n + 1;
+        long t0 = System.nanoTime();
+        int[][] drafts = new int[k][];
+        int[] ids = new int[k];
+        int[] pos = new int[k];
+        long[] tokens = new long[k * s];
+        int[] anchors = new int[k];
+        for (int j = 0; j < k; j++) {
+            int i = ready.get(j);
+            ids[j] = requestIds[i];
+            pos[j] = positions[i];
+            anchors[j] = lastTokens[i];
+        }
+        MiniMaxDspark.Draft[] blocks = draft.draftBatch(ids, anchors, pos);
+        for (int j = 0; j < k; j++) {
+            drafts[j] = Arrays.copyOf(blocks[j].tokens(), n);
+            tokens[j * s] = anchors[j];
+            for (int d = 0; d < n; d++) {
+                tokens[j * s + 1 + d] = drafts[j][d];
+            }
+        }
+        long t1 = System.nanoTime();
+        for (MiniMaxModel m : models) {
+            m.kvCachePool().activateStep(ids);
+        }
+        Tensor[] logits = onRanks(r -> {
+            try (var scope = new AutoScope()) {
+                Tensor.push(scope);
+                try {
+                    Tensor graphed = models[r].windowGraph(tokens, pos, s);
+                    if (graphed == null) {
+                        return null;
+                    }
+                    stashAux(r);
+                    graphed.detachFromScopes();
+                    return graphed;
+                } finally {
+                    Tensor.pop();
+                }
+            }
+        });
+        Tensor rows = firstAndClose(logits);
+        if (rows == null) {
+            takeAux();   // nothing was captured
+            for (int j = 0; j < k; j++) {
+                int i = ready.get(j);
+                out[i] = verifyOne(ids[j], lastTokens[i], pos[j], drafts[j], temperature, topp);
+            }
+            draftNanos.addAndGet(t1 - t0);
+            return;
+        }
+        Tensor aux = takeAux();
+        try (var noGrad = Tensor.noGradGuard()) {
+            for (int j = 0; j < k; j++) {
+                try (var window = smile.deep.tensor.Index.slice(j * s, (j + 1) * s);
+                     Tensor logitRows = rows.get(window, smile.deep.tensor.Index.Colon);
+                     Tensor tapRows = aux == null ? null : aux.get(window, smile.deep.tensor.Index.Colon)) {
+                    out[ready.get(j)] = accept(ids[j], pos[j], drafts[j], logitRows, tapRows, temperature, topp);
+                }
+            }
+        } finally {
+            rows.close();
+            if (aux != null) {
+                aux.close();
+            }
+        }
+        draftNanos.addAndGet(t1 - t0);
+        verifyNanos.addAndGet(System.nanoTime() - t1);
+    }
+
+    /** One ordinary decode step for a request that cannot speculate (or has no room); keeps its taps when it can. */
+    private int[] plainStep(int requestId, int token, int pos, double temperature, double topp) {
+        Integer absorbed = draftPosition.get(requestId);
+        boolean capture = draft != null && auxLayers != null && absorbed != null && absorbed == pos;
+        for (MiniMaxModel m : models) {
+            m.kvCachePool().activateStep(requestId);
+        }
+        Tensor[] logits = decodeLocal(new int[]{requestId}, new int[]{token}, new int[]{pos}, capture);
+        Tensor rows = firstAndClose(logits);
+        int sampled;
+        try {
+            sampled = smile.llm.engine.Sampling.sampleTokenIds(rows, temperature, topp)[0];
+        } finally {
+            rows.close();
+        }
+        if (capture) {
+            Tensor aux = takeAux();
+            if (aux == null) {
+                draftPosition.remove(requestId);
+            } else {
+                try {
+                    draft.absorb(requestId, aux, pos);
+                    draftPosition.put(requestId, pos + 1);
+                } finally {
+                    aux.close();
+                }
+            }
+        }
+        speculativePlain.incrementAndGet();
+        return new int[]{sampled};
     }
 
     @Override
@@ -733,7 +1406,11 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                 writeInts(o, window);
             });
         }
-        Tensor[] logits = prefillWindow(requestId, window, from, last);
+        boolean capture = auxLayers != null && (draft == null || (speculativeEnabled && draftTracks(requestId, from)));
+        Tensor[] logits = prefillWindow(requestId, window, from, last, capture);
+        if (draft != null) {
+            absorbPrefill(requestId, from, to, capture);
+        }
         Tensor row = firstAndClose(logits);
         if (row != null) {
             // Hand ownership to the caller's scope (a no-op without one).
@@ -745,7 +1422,7 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
     }
 
     /** Runs one prefill window on this process's ranks; each rank's last-position logits when {@code last}. */
-    private Tensor[] prefillWindow(int requestId, int[] window, int from, boolean last) {
+    private Tensor[] prefillWindow(int requestId, int[] window, int from, boolean last, boolean capture) {
         for (MiniMaxModel m : models) {
             m.kvCachePool().activateStep(requestId);
         }
@@ -754,7 +1431,12 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                 Tensor.push(scope);
                 try {
                     Tensor tokens = Tensor.of(window).reshape(1, window.length).to(models[r].device());
-                    Tensor out = models[r].forward(tokens, from, false);
+                    Tensor out = capture
+                            ? models[r].forwardAux(tokens, from, false, null, null)
+                            : models[r].forward(tokens, from, false);
+                    if (capture) {
+                        stashAux(r);
+                    }
                     if (!last) {
                         return null;
                     }
@@ -813,15 +1495,18 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                 writeInts(o, positions);
             });
         }
-        Tensor[] logits = decodeLocal(requestIds, lastTokens, positions);
+        Tensor[] logits = decodeLocal(requestIds, lastTokens, positions, false);
         Tensor rows = firstAndClose(logits);
         Tensor owned = rows.copy();
         rows.close();
         return owned;
     }
 
-    /** Runs one decode step on this process's ranks; each rank's logits {@code [batch, vocab]}. */
-    private Tensor[] decodeLocal(int[] requestIds, int[] lastTokens, int[] positions) {
+    /**
+     * Runs one decode step on this process's ranks; each rank's logits {@code [batch, vocab]}. With {@code capture} the
+     * step runs eagerly and the aux taps are left for {@link #takeAux()}.
+     */
+    private Tensor[] decodeLocal(int[] requestIds, int[] lastTokens, int[] positions, boolean capture) {
         int b = requestIds.length;
         for (MiniMaxModel m : models) {
             m.kvCachePool().activateStep(requestIds);
@@ -834,13 +1519,18 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             try (var scope = new AutoScope()) {
                 Tensor.push(scope);
                 try {
-                    Tensor graphed = models[r].decodeGraph(toks, positions);
+                    Tensor graphed = capture ? null : models[r].decodeGraph(toks, positions);
                     if (graphed != null) {
                         graphed.detachFromScopes();
                         return graphed;
                     }
                     Tensor tokens = Tensor.of(toks).reshape(b, 1).to(models[r].device());
-                    Tensor out = models[r].forward(tokens, positions);
+                    Tensor out = capture
+                            ? models[r].forwardAux(tokens, positions)
+                            : models[r].forward(tokens, positions);
+                    if (capture) {
+                        stashAux(r);
+                    }
                     Tensor rows = out.reshape(b, -1).copy();
                     rows.detachFromScopes();
                     return rows;
@@ -866,6 +1556,9 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
 
     private void finishLocal(int requestId, int[] sequenceTokens) {
         boolean media = multimodalRequests.remove(requestId);
+        if (media || !snapshotDraft(requestId, sequenceTokens)) {
+            releaseDraft(requestId);
+        }
         for (MiniMaxModel m : models) {
             if (media) {
                 m.kvCachePool().unbindRequest(requestId);   // placeholder ids must not become a reusable prefix
@@ -885,6 +1578,7 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
     }
 
     private void evictLocal(int requestId) {
+        releaseDraft(requestId);
         multimodalRequests.remove(requestId);
         for (MiniMaxModel m : models) {
             m.kvCachePool().unbindRequest(requestId);
@@ -991,7 +1685,7 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                     int from = in.readInt();
                     boolean last = in.readBoolean();
                     int[] window = readInts(in);
-                    for (Tensor t : prefillWindow(requestId, window, from, last)) {
+                    for (Tensor t : prefillWindow(requestId, window, from, last, false)) {
                         if (t != null) {
                             t.close();
                         }
@@ -1002,7 +1696,7 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                     int[] ids = readInts(in);
                     int[] last = readInts(in);
                     int[] positions = readInts(in);
-                    for (Tensor t : decodeLocal(ids, last, positions)) {
+                    for (Tensor t : decodeLocal(ids, last, positions, false)) {
                         if (t != null) {
                             t.close();
                         }
@@ -1129,6 +1823,29 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
     public static MiniMax build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte[] devices,
                                 double memFractionStatic, int pageSize, String weightMode, ClusterSpec cluster)
             throws IOException {
+        return build(checkpointDir, maxBatchSize, maxSeqLen, devices, memFractionStatic, pageSize, weightMode, cluster, true);
+    }
+
+    /**
+     * Same as {@link #build(String, int, int, byte[], double, int, String, ClusterSpec)}, optionally without the DSpark
+     * draft: a service that does not speculate should not pay the draft's ~3 GB on rank 0.
+     *
+     * @param checkpointDir     directory with {@code config.json}, {@code tokenizer.json} and safetensors.
+     * @param maxBatchSize      maximum concurrent requests.
+     * @param maxSeqLen         maximum context length; {@code <= 0} uses {@code max_position_embeddings}.
+     * @param devices           CUDA device indices, one rank each, or {@code null} for one CPU rank.
+     * @param memFractionStatic fraction of device memory for weights + KV.
+     * @param pageSize          KV page size in tokens.
+     * @param weightMode        see {@link #build(String, int, int, byte[], double, int, String)}.
+     * @param cluster           this process's place in the cluster, or {@code null}.
+     * @param loadDraft         load the checkpoint's {@code dspark/} draft when it has one (and
+     *                          {@code SMILE_MINIMAX_DSPARK} is not {@code 0}).
+     * @return the loaded model.
+     * @throws IOException if the checkpoint is missing, unsupported or incomplete.
+     */
+    public static MiniMax build(String checkpointDir, int maxBatchSize, int maxSeqLen, byte[] devices,
+                                double memFractionStatic, int pageSize, String weightMode, ClusterSpec cluster,
+                                boolean loadDraft) throws IOException {
         File dir = new File(checkpointDir);
         if (!dir.isDirectory()) {
             throw new IllegalArgumentException("Checkpoint directory not found: " + checkpointDir);
@@ -1148,6 +1865,13 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                 throw new IOException("Unsupported quantization (quant_method=" + method
                         + "); only MXFP8 with 1x" + MxFp8.BLOCK + " blocks is supported");
             }
+            String expertAlgo = q.path("moe_quant_algo").asString("");
+            if (!expertAlgo.isEmpty() && !"NVFP4".equals(expertAlgo)) {
+                throw new IOException("Unsupported routed-expert quantization moe_quant_algo=" + expertAlgo);
+            }
+            if ("NVFP4".equals(expertAlgo) && q.path("group_size").asInt(0) != 16) {
+                throw new IOException("NVFP4 experts need group_size 16, got " + q.path("group_size"));
+            }
         }
 
         boolean cuda = devices != null;
@@ -1164,8 +1888,20 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             MiniMaxWeightMode mode = selectWeightMode(weightMode != null && !weightMode.isBlank() ? weightMode.trim().toLowerCase()
                             : System.getenv().getOrDefault("SMILE_MINIMAX_MXFP8", "auto"),
                     devices, computeDtype);
+            if ("NVFP4".equals(root.path("quantization_config").path("moe_quant_algo").asString(""))) {
+                // MXFP8 attention/dense layers + NVFP4 experts: both run through Marlin (weight-only, bfloat16 activations).
+                // SMILE_MINIMAX_MXFP8=dequant expands everything to bfloat16 (reference path, needs the memory).
+                if (mode != MiniMaxWeightMode.DENSE) {
+                    if (!(cuda && computeDtype == ScalarType.BFloat16
+                            && Native.marlinFp8Available() && Native.marlinMoeNvfp4Available())) {
+                        throw new IOException("NVFP4 experts need CUDA, bfloat16 and a libsmile_torch built with Marlin NVFP4");
+                    }
+                    mode = MiniMaxWeightMode.MARLIN;
+                }
+                args = args.withNvfp4Experts();
+            }
             args = args.withWeightMode(mode);
-            logger.info("MXFP8 checkpoint: weight mode {}", mode);
+            logger.info("MXFP8 checkpoint: weight mode {}{}", mode, args.nvfp4Experts() ? " with NVFP4 experts" : "");
         }
         MiniMaxTokenizer tokenizer = MiniMaxTokenizer.of(checkpointDir);
         if (tokenizer.size() > args.vocabSize()) {
@@ -1182,11 +1918,19 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         TensorParallelGroup group = cluster != null
                 ? new TensorParallelGroup(ParallelConfig.tensorParallel(devices), world, firstRank, cluster.uniqueId())
                 : (ranks > 1 ? new TensorParallelGroup(ParallelConfig.tensorParallel(devices)) : null);
+        // Tensor-parallel attention/FFN/vocabulary: the replicated weights of a big checkpoint (Flash: 16 GB per GPU) would
+        // not leave room next to its experts. auto = on for NVFP4 experts; SMILE_MINIMAX_TP=on|off forces it.
+        String tpRequest = System.getenv().getOrDefault("SMILE_MINIMAX_TP", "auto").trim().toLowerCase();
+        boolean tensorParallel = cluster == null && ranks > 1
+                && ("on".equals(tpRequest) || ("auto".equals(tpRequest) && args.nvfp4Experts()));
+        if (tensorParallel) {
+            logger.info("tensor-parallel attention, FFNs and vocabulary across {} ranks", ranks);
+        }
         MiniMaxModel[] networks = new MiniMaxModel[ranks];
         for (int r = 0; r < ranks; r++) {
             long t0 = System.currentTimeMillis();
             Device device = cuda ? Device.CUDA(devices[r]) : Device.CPU();
-            networks[r] = new MiniMaxModel(args, new MiniMaxShard(firstRank + r, world, device), group);
+            networks[r] = new MiniMaxModel(args, new MiniMaxShard(firstRank + r, world, device, tensorParallel), group);
             networks[r].to(device, computeDtype);
             logger.info("rank {}/{}: allocated {} layers ({} local experts) on {} in {} ms", firstRank + r, world,
                     args.numLayers(), networks[r].shard().localExperts(args.numExperts()), device,
@@ -1233,21 +1977,56 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
             }
         }
 
+        // The DSpark drafter (2.3 GB FP8) also lives on rank 0's device, loaded before the KV pool takes the free memory.
+        java.util.concurrent.atomic.AtomicReference<MiniMax> self = new java.util.concurrent.atomic.AtomicReference<>();
+        MiniMaxDspark draft = null;
+        if (loadDraft && !follower && cluster == null && cuda && computeDtype == ScalarType.BFloat16
+                && !"0".equals(System.getenv("SMILE_MINIMAX_DSPARK")) && new File(dir, "dspark/config.json").exists()) {
+            try {
+                long t0 = System.currentTimeMillis();
+                draft = MiniMaxDspark.load(new File(dir, "dspark").getPath(), networks[0].device(), args.weightMode(),
+                        computeDtype, headsOf(self), args.maxSeqLen() * 2);
+                logger.info("DSpark draft loaded on {} in {} ms (block {}, taps {})", networks[0].device(),
+                        System.currentTimeMillis() - t0, draft.args().blockSize(),
+                        Arrays.toString(draft.args().targetLayerIds()));
+            } catch (IOException | RuntimeException e) {
+                logger.warn("DSpark draft not loaded, speculative decoding is off: {}", e.toString());
+            }
+        }
+
         // MSA index keys take extra bytes per token on top of K/V; shrink the pool's share so both fit.
-        double kvPerToken = 2.0 * args.numLayers() * args.numKvHeads() * args.headDim();
+        double kvPerToken = 2.0 * args.numLayers() * networks[0].shard().kvHeads(args.numKvHeads()) * args.headDim();
         double indexPerToken = (double) args.numSparseLayers() * args.numIndexKeyHeads() * args.indexDim();
-        double poolFraction = memFractionStatic * kvPerToken / (kvPerToken + indexPerToken);
+        double kvShare = kvPerToken / (kvPerToken + indexPerToken);
         for (MiniMaxModel network : networks) {
             Device device = network.device();
             device.emptyCache();
+            // The pool counts everything already on the device (weights, NCCL, context) against its budget, so give it
+            // the weights plus its share of what is left under the static fraction.
+            double poolFraction = memFractionStatic;
+            if (device.isCUDA()) {
+                long[] memInfo = Native.cudaMemGetInfo(device.index());
+                logger.info("rank {}: {} used of {} MiB before the KV pool", network.shard().rank(), (memInfo[1] - memInfo[0]) >> 20, memInfo[1] >> 20);
+            }
+            if (memFractionStatic > 0 && device.isCUDA()) {
+                long[] mem = Native.cudaMemGetInfo(device.index());
+                double used = (double) mem[1] - mem[0];
+                double room = Math.max(0.0, memFractionStatic * mem[1] - used);
+                poolFraction = (used + room * kvShare) / mem[1];
+            }
             KvCachePool pool = memFractionStatic > 0
-                    ? KvCachePool.allocate(args.kvCacheLayout(), device, computeDtype, poolFraction, pageSize)
-                    : KvCachePool.forTesting(args.kvCacheLayout(), device);
+                    ? KvCachePool.allocate(args.kvCacheLayout(network.shard().kvHeads(args.numKvHeads())), device, computeDtype,
+                            poolFraction, pageSize)
+                    : KvCachePool.forTesting(args.kvCacheLayout(network.shard().kvHeads(args.numKvHeads())), device);
             network.setKvCachePool(pool, false);
             network.eval();
         }
         MiniMax result = new MiniMax(dir.getName(), networks, group, tokenizer, args);
         result.setVision(vision);
+        self.set(result);
+        if (draft != null) {
+            result.setDraft(draft);
+        }
         return result;
     }
 
@@ -1400,16 +2179,26 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
                 Map<String, Tensor> stateDict = new HashMap<>();
                 long staged = 0;
                 for (String hfName : keys) {
-                    if (hfName.endsWith(SCALE_SUFFIX)) {
-                        continue;  // consumed together with its weight
+                    if (hfName.endsWith(SCALE_SUFFIX) || hfName.endsWith(NVFP4_SIDECAR_SUFFIX)
+                            || hfName.endsWith(".input_global_scale")) {
+                        continue;  // consumed together with its weight (activations are not quantized here)
                     }
                     Tensor src = st.tensors().get(hfName);
                     if (src == null) {
                         throw new IOException("Tensor '" + hfName + "' missing from " + shard);
                     }
+                    if (hfName.endsWith(NVFP4_WEIGHT_SUFFIX)) {
+                        loadNvfp4Expert(network, st, hfName, shard, target);
+                        loaded.add(MiniMaxWeightNames.remap(hfName.substring(0, hfName.length() - "_packed".length())));
+                        continue;
+                    }
                     String smileName = MiniMaxWeightNames.remap(hfName);
                     Tensor onDevice;
                     Tensor scaleCpu = hfName.endsWith(".weight") ? st.tensors().get(hfName + "_scale_inv") : null;
+                    if (rank.tp()) {
+                        src = tpSlice(rank, args, smileName, src, false);
+                        scaleCpu = scaleCpu == null ? null : tpSlice(rank, args, smileName, scaleCpu, true);
+                    }
                     if (scaleCpu != null && args.weightMode().quantized()) {
                         // FP8-resident: hand the raw FP8 bytes and E8M0 scales to the Marlin layer.
                         Tensor fp8 = src.to(target);
@@ -1510,17 +2299,102 @@ public class MiniMax implements LanguageModel, ModelExecutor, AutoCloseable {
         }
     }
 
+    private static final java.util.regex.Pattern TP_COLUMN = java.util.regex.Pattern.compile(
+            "^(layers\\.\\d+\\.(mlp|moe\\.shared_experts)\\.w[13]|embed_tokens|lm_head)\\.weight$");
+    private static final java.util.regex.Pattern TP_ROW = java.util.regex.Pattern.compile(
+            "^layers\\.\\d+\\.(mlp|moe\\.shared_experts)\\.w2\\.weight$");
+
+    /**
+     * Returns the part of a replicated weight (or of its MXFP8 scale, {@code scale}) that a tensor-parallel rank keeps:
+     * query heads, this rank's KV head and its index-query group, the matching columns of the output projection, a
+     * slice of every dense/shared FFN, and a slice of the vocabulary for the embedding and the output head. Other
+     * tensors (norms, the router, the index-key projection) are returned whole.
+     */
+    private static Tensor tpSlice(MiniMaxShard rank, MiniMaxModelArgs args, String name, Tensor t, boolean scale) {
+        int dim;
+        int start;
+        int len;
+        int hd = args.headDim();
+        if (name.endsWith(".self_attn.q_proj.weight")) {
+            dim = 0;
+            start = rank.partStart(args.numHeads()) * hd;
+            len = rank.part(args.numHeads()) * hd;
+        } else if (name.endsWith(".self_attn.k_proj.weight") || name.endsWith(".self_attn.v_proj.weight")) {
+            dim = 0;
+            start = rank.kvStart(args.numKvHeads()) * hd;
+            len = rank.kvHeads(args.numKvHeads()) * hd;
+        } else if (name.endsWith(".self_attn.o_proj.weight")) {
+            dim = 1;
+            start = rank.partStart(args.numHeads()) * hd;
+            len = rank.part(args.numHeads()) * hd;
+        } else if (name.endsWith(".self_attn.index_q_proj.weight")) {
+            dim = 0;
+            start = rank.kvStart(args.numKvHeads()) * args.indexDim();
+            len = rank.kvHeads(args.numKvHeads()) * args.indexDim();
+        } else if (TP_COLUMN.matcher(name).matches()) {
+            dim = 0;
+            len = rank.part((int) t.shape()[0]);
+            start = rank.partStart((int) t.shape()[0]);
+        } else if (TP_ROW.matcher(name).matches()) {
+            int cols = (int) t.shape()[1] * (scale ? MxFp8.BLOCK : 1);
+            dim = 1;
+            len = rank.part(cols);
+            start = rank.partStart(cols);
+        } else {
+            return t;
+        }
+        if (scale && dim == 1) {
+            start /= MxFp8.BLOCK;
+            len /= MxFp8.BLOCK;
+        }
+        try (var range = smile.deep.tensor.Index.slice(start, start + len)) {
+            Tensor part = dim == 0 ? t.get(range, smile.deep.tensor.Index.Ellipsis) : t.get(smile.deep.tensor.Index.Ellipsis, range);
+            return part.contiguous();
+        }
+    }
+
     /** Elements staged on the device before they are copied into the model (about 0.5 GB in bf16). */
     private static final long LOAD_BATCH_ELEMENTS = 256L << 20;
 
     private static final String SCALE_SUFFIX = ".weight_scale_inv";
 
+    /** NVFP4 expert tensors: the packed weight, and its block-scale and global-scale sidecars. */
+    private static final String NVFP4_WEIGHT_SUFFIX = ".weight_packed";
+    private static final String NVFP4_SIDECAR_SUFFIX = ".weight_scale";
+    private static final String NVFP4_GLOBAL_SUFFIX = ".weight_global_scale";
+
+    /** Hands one NVFP4 routed-expert projection (packed nibbles, E4M3 group-16 scales, global scale) to its MoE layer. */
+    private static void loadNvfp4Expert(MiniMaxModel network, SafeTensors st, String hfName, String shard,
+                                        Device target) throws IOException {
+        String stem = hfName.substring(0, hfName.length() - NVFP4_WEIGHT_SUFFIX.length());
+        Tensor packed = st.tensors().get(hfName);
+        Tensor scale = st.tensors().get(stem + NVFP4_SIDECAR_SUFFIX);
+        Tensor global = st.tensors().get(stem + NVFP4_GLOBAL_SUFFIX);
+        if (scale == null || global == null) {
+            throw new IOException("NVFP4 expert '" + stem + "' lacks its scales in " + shard);
+        }
+        var em = EXPERT.matcher(MiniMaxWeightNames.remap(stem + ".weight"));
+        if (!em.matches()) {
+            throw new IOException("Unexpected NVFP4 tensor " + hfName);
+        }
+        MiniMaxMoE moe = network.layers().get(Integer.parseInt(em.group(1))).moe();
+        Tensor packedDev = packed.to(target);
+        Tensor scaleDev = scale.to(target);
+        try {
+            moe.loadExpertNvfp4(Integer.parseInt(em.group(3)), Integer.parseInt(em.group(2)) - moe.expertStart(),
+                    packedDev, scaleDev, global.to(Device.CPU(), ScalarType.Float).floatArray()[0]);
+        } finally {
+            if (packedDev != packed) packedDev.close();
+            if (scaleDev != scale) scaleDev.close();
+        }
+    }
+
     private static final java.util.regex.Pattern EXPERT =
             java.util.regex.Pattern.compile("^layers\\.(\\d+)\\.moe\\.experts\\.(\\d+)\\.w([123])\\.weight$");
 
     /** Expert weight or its scale sidecar; used to skip tensors owned by other ranks. */
-    private static final java.util.regex.Pattern EXPERT_KEY =
-            java.util.regex.Pattern.compile("^layers\\.(\\d+)\\.moe\\.experts\\.(\\d+)\\.w([123])\\.weight(_scale_inv)?$");
+    private static final java.util.regex.Pattern EXPERT_KEY = java.util.regex.Pattern.compile(
+            "^layers\\.(\\d+)\\.moe\\.experts\\.(\\d+)\\.w([123])\\.(weight(_scale_inv|_packed|_scale|_global_scale)?|input_global_scale)$");
 
     private static final java.util.regex.Pattern ROUTER =
             java.util.regex.Pattern.compile("^layers\\.(\\d+)\\.moe\\.(gate\\.weight|e_score_correction_bias)$");

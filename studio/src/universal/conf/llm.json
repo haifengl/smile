@@ -1,31 +1,43 @@
 {
   "defaultService": "openai",
   "defaultModel": "",
-  "services": {
-    "openai": {
+  "services": [
+    {
+      "name": "openai",
+      "provider": "openai",
       "baseUrl": "https://api.openai.com/v1",
       "models": []
     },
-    "azureOpenAI": {
+    {
+      "name": "azureOpenAI",
+      "provider": "azureOpenAI",
       "baseUrl": "",
       "models": []
     },
-    "anthropic": {
+    {
+      "name": "anthropic",
+      "provider": "anthropic",
       "baseUrl": "https://api.anthropic.com",
       "models": []
     },
-    "googleGemini": {
+    {
+      "name": "googleGemini",
+      "provider": "googleGemini",
       "baseUrl": "https://generativelanguage.googleapis.com",
       "models": []
     },
-    "googleEnterprise": {
+    {
+      "name": "googleEnterprise",
+      "provider": "googleEnterprise",
       "project": "",
       "location": "",
       "models": []
     },
-    "chatCompletions": {
+    {
+      "name": "chatCompletions",
+      "provider": "chatCompletions",
       "baseUrl": "http://localhost:8888/api/v1",
       "models": []
     }
-  }
+  ]
 }

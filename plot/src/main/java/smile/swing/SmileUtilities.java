@@ -23,7 +23,6 @@ import java.awt.*;
 import java.awt.image.BaseMultiResolutionImage;
 import java.awt.image.BufferedImage;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
 import smile.data.DataFrame;
 import smile.plot.swing.*;
@@ -44,10 +43,17 @@ public interface SmileUtilities {
     /** The icon size Swing uses for large toolbar buttons. */
     int LARGE_ICON_SIZE = 24;
     /**
-     * The icon sizes a window frame asks for, from the title bar (16) up to the
-     * task switcher and dock (256). The window system picks the closest match.
+     * Standard display scale factors from 100% (1×) to 400% (4×), covering
+     * Windows fractional High-DPI settings (125%, 150%, 175%, 225%, 250%) as
+     * well as 2×, 3×, and 4× Retina/4K displays.
      */
-    List<Integer> FRAME_ICON_SIZES = List.of(16, 24, 32, 48, 64, 128, 256);
+    double[] DPI_SCALES = {1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 3.0, 4.0};
+    /**
+     * The icon sizes a window frame or dialog asks for, from the title bar (16)
+     * across standard DPI scale factors up to the task switcher and dock (256).
+     */
+    List<Integer> FRAME_ICON_SIZES = List.of(
+            16, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72, 80, 96, 128, 256);
 
     /**
      * Returns the line number given a text offset.
@@ -98,8 +104,10 @@ public interface SmileUtilities {
      * badly and makes thin strokes shimmer; halving until the image is within
      * twice the target, then taking the final step, keeps the detail.
      *
-     * <p>The returned icon carries a 2× resolution variant, so Swing picks the
-     * sharper bitmap on a HiDPI display instead of upscaling the 1× one.
+     * <p>The returned icon carries resolution variants for {@link #DPI_SCALES}
+     * (1×, 1.25×, 1.5×, 1.75×, 2×, 2.25×, 2.5×, 3×, 4×), so Swing picks an
+     * exact physical-pixel bitmap on fractional High-DPI and Retina displays
+     * instead of resampling at paint time.
      *
      * @param icon the input image icon.
      * @param size the desired icon size in logical pixels.
@@ -119,14 +127,15 @@ public interface SmileUtilities {
             return icon;
         }
 
-        // Fit the source into a size × size box without distorting it.
-        double scale = Math.min((double) size / width, (double) size / height);
-        int targetWidth = Math.max(1, (int) Math.round(width * scale));
-        int targetHeight = Math.max(1, (int) Math.round(height * scale));
-
-        BufferedImage one = scale(source, targetWidth, targetHeight);
-        BufferedImage two = scale(source, targetWidth * 2, targetHeight * 2);
-        return new ImageIcon(new BaseMultiResolutionImage(one, two));
+        Image[] variants = new Image[DPI_SCALES.length];
+        for (int i = 0; i < DPI_SCALES.length; i++) {
+            double dpiSize = size * DPI_SCALES[i];
+            double scale = Math.min(dpiSize / width, dpiSize / height);
+            int targetWidth = Math.max(1, (int) Math.round(width * scale));
+            int targetHeight = Math.max(1, (int) Math.round(height * scale));
+            variants[i] = scale(source, targetWidth, targetHeight);
+        }
+        return new ImageIcon(new BaseMultiResolutionImage(variants));
     }
 
     /**
@@ -224,40 +233,49 @@ public interface SmileUtilities {
     }
 
     /**
-     * Loads a window frame icon at every size the window system may ask for, for
-     * {@link java.awt.Window#setIconImages(List)}. Each size is scaled with the
-     * same progressive halving as {@link #scaleImageIcon}, so the small title-bar
-     * bitmap stays crisp instead of aliasing from a single large reduction.
+     * Loads a window frame icon at every size the window system may ask for
+     * ({@link #FRAME_ICON_SIZES}), wrapped in a {@link BaseMultiResolutionImage}
+     * for {@link java.awt.Window#setIconImage(Image)}. Each variant is scaled
+     * with progressive halving, so the small title-bar bitmap stays crisp on
+     * fractional High-DPI and Retina displays instead of aliasing from a single
+     * large reduction.
      *
-     * <p>A missing or undecodable resource is logged and yields an empty list
+     * <p>A missing or undecodable resource is logged and yields {@code null}
      * rather than an exception, so a missing decoration cannot stop the window
      * from being created.
      *
      * @param owner the class whose package the resource path is relative to.
      * @param resource the resource path, for example {@code "images/smile.png"}.
-     * @return the frame icon bitmaps, one per size, or an empty list when the
+     * @return the multi-resolution frame icon image, or {@code null} when the
      *         resource cannot be loaded.
      */
-    static List<Image> loadFrameIcons(Class<?> owner, String resource) {
+    static BaseMultiResolutionImage loadFrameIcons(Class<?> owner, String resource) {
         URL url = owner.getResource(resource);
         if (url == null) {
             System.getLogger(owner.getName()).log(System.Logger.Level.WARNING,
                     "Frame icon resource not found: {0}", resource);
-            return List.of();
+            return null;
         }
 
-        ImageIcon source = new ImageIcon(url);
-        if (source.getIconWidth() <= 0 || source.getIconHeight() <= 0) {
+        ImageIcon icon = new ImageIcon(url);
+        int width = icon.getIconWidth();
+        int height = icon.getIconHeight();
+        if (width <= 0 || height <= 0) {
             System.getLogger(owner.getName()).log(System.Logger.Level.WARNING,
                     "Frame icon resource could not be decoded: {0}", resource);
-            return List.of();
+            return null;
         }
 
-        List<Image> icons = new ArrayList<>(FRAME_ICON_SIZES.size());
-        for (int size : FRAME_ICON_SIZES) {
-            icons.add(scaleImageIcon(source, size).getImage());
+        Image source = icon.getImage();
+        Image[] variants = new Image[FRAME_ICON_SIZES.size()];
+        for (int i = 0; i < FRAME_ICON_SIZES.size(); i++) {
+            int size = FRAME_ICON_SIZES.get(i);
+            double scale = Math.min((double) size / width, (double) size / height);
+            int targetWidth = Math.max(1, (int) Math.round(width * scale));
+            int targetHeight = Math.max(1, (int) Math.round(height * scale));
+            variants[i] = scale(source, targetWidth, targetHeight);
         }
-        return List.copyOf(icons);
+        return new BaseMultiResolutionImage(variants);
     }
 
     /**

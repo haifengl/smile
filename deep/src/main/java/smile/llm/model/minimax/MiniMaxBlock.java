@@ -40,6 +40,9 @@ public class MiniMaxBlock {
     final QwenRMSNorm inputNorm;
     final QwenRMSNorm postNorm;
     final MiniMaxAttention selfAttn;
+    /** Non-null when the dense FFN is split across ranks and its output is a partial sum. */
+    private final smile.llm.parallel.TensorParallelGroup tpGroup;
+    private final int rank;
     /** Dense FFN; {@code null} on MoE layers. */
     final MiniMaxMlp mlp;
     /** Mixture of experts; {@code null} on dense layers. */
@@ -68,12 +71,14 @@ public class MiniMaxBlock {
         this.layerId = layerId;
         this.inputNorm = new QwenRMSNorm(args.dim(), args.normEps());
         this.postNorm = new QwenRMSNorm(args.dim(), args.normEps());
-        this.selfAttn = new MiniMaxAttention(args, layerId);
+        this.selfAttn = new MiniMaxAttention(args, layerId, shard, group);
+        this.tpGroup = shard.tp() ? group : null;
+        this.rank = shard.rank();
         if (args.isMoe(layerId)) {
             this.moe = new MiniMaxMoE(args, shard, group);
             this.mlp = null;
         } else {
-            this.mlp = new MiniMaxMlp(args.dim(), args.denseIntermediateSize(),
+            this.mlp = new MiniMaxMlp(args.dim(), shard.part(args.denseIntermediateSize()),
                     args.swigluAlpha(), args.swigluLimit(), args.weightMode());
             this.moe = null;
         }
@@ -158,6 +163,9 @@ public class MiniMaxBlock {
             Tensor afterAttn = x.add(attn);
             Tensor ffIn = postNorm.forward(afterAttn);
             Tensor ff = moe != null ? moe.forward(ffIn) : mlp.forward(ffIn);
+            if (moe == null && tpGroup != null) {
+                tpGroup.allReduceSumInPlace(rank, ff);
+            }
             Tensor out = afterAttn.add(ff);
             out.promoteToParent();
             return out;

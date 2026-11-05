@@ -22,6 +22,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BaseMultiResolutionImage;
 import javax.swing.*;
 import java.net.URI;
 import java.nio.file.Files;
@@ -47,11 +48,9 @@ import smile.license.LicenseKey;
 import smile.studio.license.LicenseDialog;
 import smile.studio.license.LicenseState;
 import smile.studio.license.LicenseStore;
-import smile.studio.bot.BotActivityDialog;
-import smile.studio.bot.BotManagerDialog;
-import smile.studio.workspace.HubManager;
+import smile.studio.bot.HubClient;
+import smile.studio.bot.HubManager;
 import smile.studio.workspace.OpenFile;
-import smile.studio.workspace.ServeManager;
 import smile.studio.workspace.Workspace;
 import smile.swing.Button;
 import smile.swing.SmileUtilities.ActionIcons;
@@ -82,7 +81,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     /** Client pool and available models. Reloaded on the EDT when settings change. */
     private static final LlmServices llmServices = new LlmServices();
     /** Application frame icons in different sizes, for the title bar and task switcher. */
-    private List<Image> frameIcons = List.of();
+    private BaseMultiResolutionImage frameIcons;
     private final JMenuBar menuBar = new JMenuBar();
     private final JToolBar toolBar = new JToolBar();
     private final StatusBar statusBar = new StatusBar();
@@ -117,14 +116,18 @@ public class SmileStudio extends JFrame implements SearchListener {
         initMenuAndToolBar();
 
         statusBar.setOnLicenseClick(() -> openLicenseDialog(false));
-        statusBar.setOnBotClick(() -> new BotActivityDialog(this, 0).setVisible(true));
+        statusBar.setOnBotClick(() -> workspace.openBotActivity(0));
         applyLicenseState(licenseStore.load());
 
         JPanel contentPane = new JPanel(new BorderLayout());
-        // Don't show toolbar on Windows/Linux to reduce UI clutter.
-        // However, macOS red/orange/green buttons overlap Swing components
-        // without toolbar, which we adjust the location.
-        if (SystemInfo.isMacOS) contentPane.add(toolBar, BorderLayout.NORTH);
+        // Don't show toolbar to reduce UI clutter.
+        //if (SystemInfo.isMacOS) contentPane.add(toolBar, BorderLayout.NORTH);
+        // Enabling apple.awt.fullWindowContent intentionally forces the content pane
+        // to extend entirely behind the title bar area.
+        if (SystemInfo.isMacFullWindowContentSupported) {
+            // Without a toolbar, add 30px top padding pushes the content below the title bar area
+            contentPane.setBorder(BorderFactory.createEmptyBorder(30, 0, 0, 0));
+        }
         contentPane.add(workspace, BorderLayout.CENTER);
         contentPane.add(statusBar, BorderLayout.SOUTH);
         setContentPane(contentPane);
@@ -198,27 +201,32 @@ public class SmileStudio extends JFrame implements SearchListener {
         });
 
         // Optionally start the shared inference service (conf/studio.json).
-        // Only start when there is actually a model to serve: a service with an
+        // Only start when there is actually a model or LLM to serve: a service with an
         // empty catalog has nothing to do, and the user can start it later from
         // the Inference menu or by double-clicking a model in the Kernel tree.
         var inference = StudioConfig.inferenceServer();
         if (inference.autoStart()) {
             var modelPath = Path.of(inference.modelPath());
-            if (!Files.exists(modelPath)) {
-                logger.info("Not auto-starting the inference service: model path '{}' does not exist",
+            boolean hasModelPath = Files.exists(modelPath);
+            boolean hasLlm = !inference.llm().isBlank();
+            if (!hasModelPath && !hasLlm) {
+                logger.info("Not auto-starting the inference service: model path '{}' does not exist and no llm is configured",
                         modelPath);
             } else {
                 Thread.ofPlatform().name("serve-autostart").daemon(true).start(() -> {
                     var manager = ServeManager.getInstance();
-                    if (!manager.start(inference.host(), inference.port())) {
+                    if (!manager.start(inference.host(), inference.port(), inference.llm())) {
                         logger.error("Failed to auto-start the inference service");
                         return;
                     }
-                    try {
-                        manager.loadModel(inference.modelPath());
-                    } catch (Exception ex) {
-                        logger.error("Failed to load model '{}': {}", inference.modelPath(), ex.getMessage());
+                    if (hasModelPath) {
+                        try {
+                            manager.loadModel(inference.modelPath());
+                        } catch (Exception ex) {
+                            logger.error("Failed to load model '{}': {}", inference.modelPath(), ex.getMessage());
+                        }
                     }
+                    workspace.explorer().refreshLoadedModelIdsAsync();
                 });
             }
         }
@@ -230,17 +238,23 @@ public class SmileStudio extends JFrame implements SearchListener {
                 if (!manager.start(hubCfg.host(), hubCfg.port(), hubCfg.adminToken())) {
                     logger.error("Failed to auto-start Agent Hub");
                 }
-                SwingUtilities.invokeLater(() -> workspace.explorer().refreshBotsTree());
+                SwingUtilities.invokeLater(() -> {
+                    workspace.botExplorer().refresh();
+                    workspace.openBotActivity(0);
+                });
             });
         }
 
-        // Periodically poll Agent Hub status & pending approvals for the status bar badge.
-        var hubBadgeTimer = new javax.swing.Timer(10000, e -> Thread.ofPlatform().name("hub-badge-poll").daemon(true).start(() -> {
+        // Periodically poll Agent Hub status & pending approvals for the status bar badge,
+        // and also update immediately on Agent Hub Server-Sent Events.
+        Runnable updateHubBadge = () -> Thread.ofPlatform().name("hub-badge-poll").daemon(true).start(() -> {
             var client = HubManager.getInstance().client();
             boolean running = client.isReady();
             int pending = running ? client.getOverview().pendingApprovalCount() : 0;
             SwingUtilities.invokeLater(() -> statusBar.updateBotBadge(running, pending));
-        }));
+        });
+        HubManager.getInstance().addEventListener(ev -> updateHubBadge.run());
+        var hubBadgeTimer = new javax.swing.Timer(10000, e -> updateHubBadge.run());
         hubBadgeTimer.setInitialDelay(3000);
         hubBadgeTimer.start();
 
@@ -264,6 +278,11 @@ public class SmileStudio extends JFrame implements SearchListener {
 
                 workspace.autoSaver().stop();
                 workspace.shutdown();
+                hubBadgeTimer.stop();
+                ServeManager.getInstance().stop();
+                if (!StudioConfig.agentHub().keepAliveOnExit()) {
+                    HubManager.getInstance().stop();
+                }
                 System.exit(0);
             }
 
@@ -481,8 +500,18 @@ public class SmileStudio extends JFrame implements SearchListener {
      */
     private void setFrameIcon() {
         frameIcons = loadFrameIcons(SmileStudio.class, "images/smile.png");
-        if (!frameIcons.isEmpty()) {
-            setIconImages(frameIcons);
+        if (frameIcons != null) {
+            try {
+                if (Taskbar.isTaskbarSupported()) {
+                    Taskbar taskbar = Taskbar.getTaskbar();
+                    if (taskbar.isSupported(Taskbar.Feature.ICON_IMAGE)) {
+                        taskbar.setIconImage(frameIcons);
+                    }
+                }
+            } catch (UnsupportedOperationException | SecurityException e) {
+                logger.warn("Taskbar icon setting not supported on this platform.");
+            }
+            setIconImage(frameIcons);
         }
     }
 
@@ -507,6 +536,10 @@ public class SmileStudio extends JFrame implements SearchListener {
             SwingUtilities.invokeLater(autoSaveMenuItem::doClick);
         }
 
+        var darkThemeMenuItem = new JCheckBoxMenuItem(new DarkThemeAction());
+        String currentTheme = prefs.get(SettingsDialog.UI_THEME_KEY, "Light");
+        darkThemeMenuItem.setSelected("Dark".equalsIgnoreCase(currentTheme) || "Darcula".equalsIgnoreCase(currentTheme));
+
         JMenu fileMenu = new JMenu(bundle.getString("File"));
         fileMenu.add(new JMenuItem(newNotebook));
         fileMenu.add(new JMenuItem(openFile));
@@ -516,6 +549,8 @@ public class SmileStudio extends JFrame implements SearchListener {
         fileMenu.addSeparator();
         fileMenu.add(new JMenuItem(settings));
         fileMenu.add(new JMenuItem(plugins));
+        fileMenu.add(darkThemeMenuItem);
+        fileMenu.addSeparator();
         fileMenu.add(new JMenuItem(exit));
         menuBar.add(fileMenu);
 
@@ -539,9 +574,11 @@ public class SmileStudio extends JFrame implements SearchListener {
         inferenceMenu.add(new JMenuItem(new StopInferenceAction()));
         inferenceMenu.add(new JMenuItem(new RestartInferenceAction()));
         inferenceMenu.addSeparator();
+        inferenceMenu.add(new JMenuItem(new LoadModelAction()));
+        inferenceMenu.add(new JMenuItem(new OpenInferenceUiAction()));
+        inferenceMenu.addSeparator();
         inferenceMenu.add(new JMenuItem(new InferenceHealthAction()));
         inferenceMenu.add(new JMenuItem(new InferenceMetricsAction()));
-        inferenceMenu.add(new JMenuItem(new OpenInferenceUiAction()));
         menuBar.add(inferenceMenu);
 
         JMenu hubMenu = new JMenu(bundle.getString("AgentHub"));
@@ -550,8 +587,8 @@ public class SmileStudio extends JFrame implements SearchListener {
         hubMenu.add(new JMenuItem(new RestartAgentHubAction()));
         hubMenu.addSeparator();
         hubMenu.add(new JMenuItem(new ConfigureBotsAction()));
-        hubMenu.add(new JMenuItem(new BotApprovalsAction()));
-        hubMenu.add(new JMenuItem(new BotPagesAction()));
+        hubMenu.add(new JMenuItem(new BotActivityAction()));
+        hubMenu.add(createBotPagesMenu());
         hubMenu.addSeparator();
         hubMenu.add(new JMenuItem(new AgentHubHealthAction()));
         hubMenu.add(new JMenuItem(new AgentHubMetricsAction()));
@@ -624,7 +661,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class NewNotebookAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/notebook.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/new.png");
         public NewNotebookAction() {
             super(bundle.getString("New"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
@@ -639,7 +676,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class OpenNotebookAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/open.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/book.png");
         public OpenNotebookAction() {
             super(bundle.getString("Open"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
@@ -683,7 +720,6 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     private class AutoSaveAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/refresh.png");
-
         public AutoSaveAction() {
             super(bundle.getString("AutoSave"));
             // Without icon, menu items won't align well on Mac.
@@ -707,8 +743,39 @@ public class SmileStudio extends JFrame implements SearchListener {
         }
     }
 
+    private static class DarkThemeAction extends AbstractAction {
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/themes.png");
+        public DarkThemeAction() {
+            super(bundle.getString("DarkTheme"));
+            // Without icon, menu items won't align well on Mac.
+            // However, FlatLaf won't show check mark on Windows
+            // if we set the icon.
+            if (SystemInfo.isMacFullWindowContentSupported) {
+                icons.applyTo(this);
+            }
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (e.getSource() instanceof JCheckBoxMenuItem darkTheme) {
+                boolean dark = darkTheme.isSelected();
+                prefs.put(SettingsDialog.UI_THEME_KEY, dark ? "Dark" : "Light");
+                try {
+                    if (dark) {
+                        UIManager.setLookAndFeel(new FlatDarculaLaf());
+                    } else {
+                        UIManager.setLookAndFeel(new FlatIntelliJLaf());
+                    }
+                    FlatLaf.updateUI();
+                } catch (UnsupportedLookAndFeelException ex) {
+                    logger.error("Failed to setup L&F: {}", ex.getMessage());
+                }
+            }
+        }
+    }
+
     private class AddCellAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/add-cell.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/add.png");
         public AddCellAction() {
             super(bundle.getString("AddCell"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
@@ -723,7 +790,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class RunAllAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/run.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/workflow.png");
         public RunAllAction() {
             super(bundle.getString("RunAll"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
@@ -736,7 +803,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class ClearAllAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/clear.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/trash.png");
         public ClearAllAction() {
             super(bundle.getString("ClearAll"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
@@ -797,7 +864,8 @@ public class SmileStudio extends JFrame implements SearchListener {
         public void actionPerformed(ActionEvent e) {
             var config = StudioConfig.inferenceServer();
             Thread.ofPlatform().name("serve-start").daemon(true).start(() -> {
-                boolean ok = ServeManager.getInstance().start(config.host(), config.port());
+                boolean ok = ServeManager.getInstance().start(config.host(), config.port(), config.llm());
+                workspace.explorer().refreshLoadedModelIdsAsync();
                 SwingUtilities.invokeLater(() -> statusBar.setStatus(ok
                         ? java.text.MessageFormat.format(bundle.getString("InferenceStarted"),
                                 ServeManager.getInstance().baseUrl())
@@ -817,6 +885,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         @Override
         public void actionPerformed(ActionEvent e) {
             ServeManager.getInstance().stop();
+            workspace.explorer().refreshLoadedModelIdsAsync();
             statusBar.setStatus(bundle.getString("InferenceStopped"));
         }
     }
@@ -835,7 +904,8 @@ public class SmileStudio extends JFrame implements SearchListener {
             Thread.ofPlatform().name("serve-restart").daemon(true).start(() -> {
                 var manager = ServeManager.getInstance();
                 manager.stop();
-                boolean ok = manager.start(config.host(), config.port());
+                boolean ok = manager.start(config.host(), config.port(), config.llm());
+                workspace.explorer().refreshLoadedModelIdsAsync();
                 SwingUtilities.invokeLater(() -> statusBar.setStatus(ok
                         ? java.text.MessageFormat.format(bundle.getString("InferenceStarted"),
                                 manager.baseUrl())
@@ -844,9 +914,31 @@ public class SmileStudio extends JFrame implements SearchListener {
         }
     }
 
+    /** Prompts for a model file (.sml or .onnx), loads it into the inference service, and opens the Web UI. */
+    private class LoadModelAction extends AbstractAction {
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/deep-learning.png");
+        public LoadModelAction() {
+            super(bundle.getString("LoadModel"), icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            var chooser = new com.formdev.flatlaf.util.SystemFileChooser();
+            chooser.setCurrentDirectory(workspace.cwd().toFile());
+            chooser.setDialogTitle(bundle.getString("LoadModel"));
+            chooser.setFileFilter(new com.formdev.flatlaf.util.SystemFileChooser.FileNameExtensionFilter(
+                    "SMILE & ONNX Models (*.sml, *.onnx)", "sml", "onnx"));
+            if (chooser.showOpenDialog(SmileStudio.this) == com.formdev.flatlaf.util.SystemFileChooser.APPROVE_OPTION
+                    && chooser.getSelectedFile() != null) {
+                workspace.explorer().openModelInWebUi(chooser.getSelectedFile().toPath());
+            }
+        }
+    }
+
     /** Opens the inference service health endpoint in the browser. */
     private class InferenceHealthAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/health.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/heart-beat.png");
         public InferenceHealthAction() {
             super(bundle.getString("InferenceHealth"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
@@ -874,7 +966,7 @@ public class SmileStudio extends JFrame implements SearchListener {
 
     /** Opens the inference service web UI in the browser. */
     private class OpenInferenceUiAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/web-ui.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/internet.png");
         public OpenInferenceUiAction() {
             super(bundle.getString("OpenInferenceUI"), icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
@@ -918,7 +1010,7 @@ public class SmileStudio extends JFrame implements SearchListener {
             Thread.ofPlatform().name("hub-start").daemon(true).start(() -> {
                 boolean ok = HubManager.getInstance().start();
                 SwingUtilities.invokeLater(() -> {
-                    workspace.explorer().refreshBotsTree();
+                    workspace.botExplorer().refresh();
                     statusBar.setStatus(ok
                             ? MessageFormat.format(bundle.getString("AgentHubStarted"),
                                     HubManager.getInstance().baseUrl())
@@ -937,7 +1029,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         @Override
         public void actionPerformed(ActionEvent e) {
             HubManager.getInstance().stop();
-            workspace.explorer().refreshBotsTree();
+            workspace.botExplorer().refresh();
             statusBar.setStatus(bundle.getString("AgentHubStopped"));
         }
     }
@@ -955,7 +1047,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                 manager.stop();
                 boolean ok = manager.start();
                 SwingUtilities.invokeLater(() -> {
-                    workspace.explorer().refreshBotsTree();
+                    workspace.botExplorer().refresh();
                     statusBar.setStatus(ok
                             ? MessageFormat.format(bundle.getString("AgentHubStarted"),
                                     manager.baseUrl())
@@ -973,34 +1065,61 @@ public class SmileStudio extends JFrame implements SearchListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            BotManagerDialog dialog = new BotManagerDialog(
-                    SmileStudio.this, null, () -> workspace.explorer().refreshBotsTree());
-            dialog.setVisible(true);
+            workspace.openBotManager(null);
         }
     }
 
-    private class BotApprovalsAction extends AbstractAction {
-        public BotApprovalsAction() {
-            super(bundle.getString("BotApprovals"));
+    private class BotActivityAction extends AbstractAction {
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/check-circle.png");
+        public BotActivityAction() {
+            super(bundle.getString("BotActivity"), icons.small());
+            putValue(LARGE_ICON_KEY, icons.large());
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            BotActivityDialog dialog = new BotActivityDialog(SmileStudio.this, 0);
-            dialog.setVisible(true);
+            workspace.openBotActivity(0);
         }
     }
 
-    private class BotPagesAction extends AbstractAction {
-        public BotPagesAction() {
-            super(bundle.getString("BotPages"), OpenInferenceUiAction.icons.small());
-            putValue(LARGE_ICON_KEY, OpenInferenceUiAction.icons.large());
-        }
+    private JMenu createBotPagesMenu() {
+        ActionIcons icons = loadActionIcons(SmileStudio.class, "images/website.png");
+        JMenu pagesMenu = new JMenu(bundle.getString("BotPages"));
+        pagesMenu.setIcon(icons.small());
+        populateBotPagesMenu(pagesMenu, HubClient.loadOfflinePages());
+        pagesMenu.addMenuListener(new javax.swing.event.MenuListener() {
+            @Override
+            public void menuSelected(javax.swing.event.MenuEvent e) {
+                populateBotPagesMenu(pagesMenu, HubClient.loadOfflinePages());
+                Thread.ofPlatform().name("hub-pages-menu").daemon(true).start(() -> {
+                    var pages = HubManager.getInstance().client().listAvailablePages();
+                    SwingUtilities.invokeLater(() -> {
+                        if (pagesMenu.isPopupMenuVisible()) {
+                            populateBotPagesMenu(pagesMenu, pages);
+                            pagesMenu.getPopupMenu().pack();
+                        }
+                    });
+                });
+            }
 
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            BotActivityDialog dialog = new BotActivityDialog(SmileStudio.this, 2);
-            dialog.setVisible(true);
+            @Override
+            public void menuDeselected(javax.swing.event.MenuEvent e) {
+            }
+
+            @Override
+            public void menuCanceled(javax.swing.event.MenuEvent e) {
+            }
+        });
+        return pagesMenu;
+    }
+
+    private void populateBotPagesMenu(JMenu pagesMenu, java.util.List<HubClient.BotPageSummary> pages) {
+        pagesMenu.removeAll();
+        for (HubClient.BotPageSummary page : pages) {
+            JMenuItem item = new JMenuItem(page.title());
+            item.addActionListener(e ->
+                    HubManager.getInstance().client().openPageInBrowser(SmileStudio.this, page));
+            pagesMenu.add(item);
         }
     }
 
@@ -1061,7 +1180,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     private static class ExitAction extends AbstractAction {
         static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/exit.png");
         public ExitAction() {
-            super(bundle.getString("Exit"), icons.small());
+            super(bundle.getString("Exit") , icons.small());
             putValue(LARGE_ICON_KEY, icons.large());
         }
 
@@ -1077,7 +1196,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class ShowFindDialogAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/find.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/search.png");
         ShowFindDialogAction() {
             super(bundle.getString("Find"), icons.small());
             int c = getToolkit().getMenuShortcutKeyMaskEx();
@@ -1095,7 +1214,7 @@ public class SmileStudio extends JFrame implements SearchListener {
     }
 
     private class ShowReplaceDialogAction extends AbstractAction {
-        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/replace.png");
+        static final ActionIcons icons = loadActionIcons(SmileStudio.class, "images/change.png");
         ShowReplaceDialogAction() {
             super(bundle.getString("Replace"), icons.small());
             int c = getToolkit().getMenuShortcutKeyMaskEx();
@@ -1165,7 +1284,7 @@ public class SmileStudio extends JFrame implements SearchListener {
                     message,
                     bundle.getString("About"),
                     JOptionPane.INFORMATION_MESSAGE,
-                    frameIcons.size() > 5 ? new ImageIcon(frameIcons.get(5)) : null);
+                    null);
         }
     }
 
@@ -1304,7 +1423,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         FlatLaf.registerCustomDefaultsSource("smile.studio");
         // FlatLaf.setup() must be called in the main method, before creating
         // any Swing components or the Event Dispatch Thread (EDT).
-        String theme = SmileStudio.prefs.get(SettingsDialog.UI_THEME_KEY, "Dark");
+        String theme = SmileStudio.prefs.get(SettingsDialog.UI_THEME_KEY, "Light");
         switch (theme) {
             case "Light", "IntelliJ" -> FlatIntelliJLaf.setup();
             case "Dark", "Darcula" -> FlatDarculaLaf.setup();

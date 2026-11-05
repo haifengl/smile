@@ -44,6 +44,22 @@ SMILE_API ST_Tensor smile_marlin_fp8_repack_weight_stack(ST_Tensor w);
 SMILE_API ST_Tensor smile_marlin_fp8_repack_scales_stack(ST_Tensor s);
 
 /**
+ * NVFP4 experts (FP4 E2M1 weights, E4M3 scales per 16 elements, one float32 global scale per expert).
+ * smile_marlin_nvfp4_repack_weight_stack: w uint8 [E, N, K / 2] (two nibbles per byte) -> int32 [E, K / 16, N * 2].
+ * smile_marlin_nvfp4_repack_scales_stack: s float8_e4m3fn or uint8 [E, N, K / 16] and the checkpoint's
+ * weight_global_scale float32 [E] -> uint8 [E, K / 16, N] (Marlin layout, S0E5M3); *global_out receives the float32
+ * [E] per-expert scale smile_marlin_moe_nvfp4_gemm expects. NULL on error.
+ */
+SMILE_API ST_Tensor smile_marlin_nvfp4_repack_weight_stack(ST_Tensor w);
+SMILE_API ST_Tensor smile_marlin_nvfp4_repack_scales_stack(ST_Tensor s, ST_Tensor global, ST_Tensor* global_out);
+
+/**
+ * Dequantizes NVFP4 weights to bfloat16: packed uint8 [.., N, K/2], E4M3 scale [.., N, K/16];
+ * the value is fp4 * scale / global_scale (the checkpoint's weight_global_scale). NULL on error.
+ */
+SMILE_API ST_Tensor smile_nvfp4_dequantize(ST_Tensor packed, ST_Tensor scale, float global_scale);
+
+/**
  * Groups top-k assignments by expert for the Marlin MoE kernel, entirely on the device (no host sync,
  * CUDA-graph friendly). Only experts in [expert_start, expert_start + num_local_experts) are kept; every
  * other assignment is dropped (expert parallelism).
@@ -67,6 +83,15 @@ SMILE_API ST_Tensor smile_moe_align_block_size(ST_Tensor topk_ids, int expert_st
 SMILE_API ST_Tensor smile_marlin_moe_fp8_gemm(ST_Tensor a, ST_Tensor qweight, ST_Tensor scales,
                                               ST_Tensor align, ST_Tensor topk_weights,
                                               int block_size, int top_k, int mul_topk_weights);
+
+/**
+ * Same as smile_marlin_moe_fp8_gemm for NVFP4 experts: qweight int32 [E, K/16, N*2] and scales uint8 [E, K/16, N]
+ * from the smile_marlin_nvfp4_repack_* functions, global_scale float32 [E] (their global_out). NULL on error.
+ */
+SMILE_API ST_Tensor smile_marlin_moe_nvfp4_gemm(ST_Tensor a, ST_Tensor qweight, ST_Tensor scales,
+                                                ST_Tensor global_scale, ST_Tensor align,
+                                                ST_Tensor topk_weights, int block_size, int top_k,
+                                                int mul_topk_weights);
 
 /**
  * Re-expresses MXFP8 weights (E4M3 + one E8M0 scale per 32 elements) as DeepSeek-style block FP8 (E4M3 +

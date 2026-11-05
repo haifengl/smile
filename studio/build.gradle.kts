@@ -40,6 +40,7 @@ dependencies {
     implementation("com.github.serpapi:serpapi-java:1.2.0")
     implementation("com.google.code.gson:gson:2.14.0") // evict older version used by serpapi
     implementation(libs.secret.store)
+    implementation(libs.angus.mail)
 
     implementation(libs.avro) {
         exclude(group = "org.slf4j", module = "slf4j-log4j12")
@@ -75,18 +76,7 @@ distributions {
             from(rootProject.file("COPYING"))
             from(rootProject.file("LICENSE"))
 
-            // 3. Package serve application (and Agent Hub if built in sibling ioa repo)
-            from(rootProject.file("serve/build/quarkus-app")) {
-                into("serve")
-            }
-            val siblingHubApp = rootProject.file("../ioa/hub/build/quarkus-app")
-            if (siblingHubApp.exists()) {
-                from(siblingHubApp) {
-                    into("hub")
-                }
-            }
-
-            // 4. Package test datasets matching sbt dataPrefixes
+            // 3. Package test datasets matching sbt dataPrefixes
             val dataPrefixes = listOf(
                 "mnist", "usps", "sqlite", "kylo", "weka",
                 "libsvm", "regression", "sas", "stat", "sparse", "matrix"
