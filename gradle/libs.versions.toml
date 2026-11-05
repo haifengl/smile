@@ -6,14 +6,14 @@ jsonschema = "4.38.0"
 # Keep in sync with `kotlinVersion` in kotlin/build.sbt and the Kotlin
 # Gradle plugin version in buildSrc/build.gradle.kts.
 kotlin = "2.4.21"
-spark = "4.2.0"
+spark = "4.3.0"
 hadoop = "3.5.0"
 
 [libraries]
 avro = { module = "org.apache.avro:avro", version = "1.12.2" }
 arrow-dataset = { module = "org.apache.arrow:arrow-dataset", version.ref = "arrow" }
 arrow-memory-netty = { module = "org.apache.arrow:arrow-memory-unsafe", version.ref = "arrow" }
-duckdb = { module = "org.duckdb:duckdb_jdbc", version = "1.5.6.0" }
+duckdb = { module = "org.duckdb:duckdb_jdbc", version = "2.0.0.1" }
 fastxml-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "fastxml" }
 fastxml-datatype = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "fastxml" }
 jackson-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson" }
@@ -24,10 +24,10 @@ snappy = { module = "org.xerial.snappy:snappy-java", version = "1.1.10.12" }
 jsonschema-generator = { module = "com.github.victools:jsonschema-generator", version.ref = "jsonschema" }
 jsonschema-jackson = { module = "com.github.victools:jsonschema-module-jackson", version.ref = "jsonschema" }
 jsonschema-swagger = { module = "com.github.victools:jsonschema-module-swagger-2", version.ref = "jsonschema" }
-sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.53.4.0" }
+sqlite = { module = "org.xerial:sqlite-jdbc", version = "3.54.1.0" }
 swingx = { module = "org.swinglabs:swingx", version = "1.6.1" }
 secret-store = { module = "photos.sluice:secret-store", version = "1.0.1" }
-angus-mail = { module = "org.eclipse.angus:angus-mail", version = "2.0.3" }
+angus-mail = { module = "org.eclipse.angus:angus-mail", version = "2.0.5" }
 spark-core = { module = "org.apache.spark:spark-core_2.13", version.ref = "spark" }
 spark-sql = { module = "org.apache.spark:spark-sql_2.13", version.ref = "spark" }
 spark-mllib = { module = "org.apache.spark:spark-mllib_2.13", version.ref = "spark" }

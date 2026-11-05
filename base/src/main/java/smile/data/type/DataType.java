@@ -423,6 +423,7 @@ public interface DataType extends Serializable {
             case TIME -> DataTypes.TimeType;
             case TIMESTAMP -> DataTypes.DateTimeType;
             case BINARY, VARBINARY, LONGVARBINARY, BLOB -> DataTypes.ByteArrayType;
+            case OTHER, JAVA_OBJECT, STRUCT, ARRAY -> DataTypes.ObjectType;
             default ->
                 throw new UnsupportedOperationException(String.format("Unsupported JDBCType: %s", type));
         };

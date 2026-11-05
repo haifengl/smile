@@ -130,26 +130,26 @@ batScriptExtraDefines ++= Seq(
 libraryDependencies ++= Seq(
   "org.scala-lang"   %% "scala3-repl"        % scalaVersion.value,
   "info.picocli"      % "picocli"            % "4.7.7",
-  "ch.qos.logback"    % "logback-classic"    % "1.6.5",
-  "com.openai"        % "openai-java"        % "4.86.0",
-  "com.anthropic"     % "anthropic-java"     % "2.73.0",
-  "com.google.genai"  % "google-genai"       % "1.78.0",
-  "org.commonmark"    % "commonmark"         % "0.30.1",
-  "org.xhtmlrenderer" % "flying-saucer-core" % "10.6.0",
+  "ch.qos.logback"    % "logback-classic"    % "1.6.6",
+  "com.openai"        % "openai-java"        % "4.100.0",
+  "com.anthropic"     % "anthropic-java"     % "2.75.0",
+  "com.google.genai"  % "google-genai"       % "1.80.0",
+  "org.commonmark"    % "commonmark"         % "0.32.0",
+  "org.xhtmlrenderer" % "flying-saucer-core" % "10.7.0",
   "org.eclipse.lsp4j" % "org.eclipse.lsp4j"  % "1.0.0",
   "com.fifesoft"      % "rsyntaxtextarea"    % "4.0.1",
   "com.fifesoft"      % "rstaui"             % "4.0.0",
   "com.fifesoft"      % "spellchecker"       % "3.4.1",
-  "com.formdev"       % "flatlaf"            % "3.7.2",
+  "com.formdev"       % "flatlaf"            % "3.8",
   "com.formdev"       % "flatlaf-fonts-jetbrains-mono" % "2.304",
   "org.apache.maven"  % "maven-resolver-provider" % "3.10.0",
   "org.apache.maven.resolver"   % "maven-resolver-supplier-mvn4" % "2.0.24",
   "io.modelcontextprotocol.sdk" % "mcp"          % "2.1.0",
   "io.github.furstenheim"       % "copy_down"    % "1.1",
   "com.github.serpapi"          % "serpapi-java" % "1.2.0",
-  "com.google.code.gson"        % "gson"         % "2.14.0", // evict older version used by serpapi
+  "com.google.code.gson"        % "gson"         % "2.15.0", // evict older version used by serpapi
   "photos.sluice"               % "secret-store" % "1.0.1",
-  "org.eclipse.angus"           % "angus-mail"   % "2.0.3"
+  "org.eclipse.angus"           % "angus-mail"   % "2.0.5"
 )
 
 // Kotlin scripting host, required at runtime by KotlinKernel. The kotlin
@@ -180,7 +180,7 @@ libraryDependencies ++= {
 libraryDependencies ++= {
   val arrowV = "19.0.0"
   Seq(
-    "org.duckdb"         % "duckdb_jdbc"         % "1.5.6.0",    // smile.data.SQL, used by the agents
+    "org.duckdb"         % "duckdb_jdbc"         % "2.0.0.1",    // smile.data.SQL, used by the agents
     "org.apache.arrow"   % "arrow-dataset"       % arrowV,
     "org.apache.arrow"   % "arrow-memory-unsafe" % arrowV,
    ("org.apache.avro"    % "avro"                % "1.12.2").exclude("org.slf4j", "slf4j-log4j12"),
