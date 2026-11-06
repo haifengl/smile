@@ -98,7 +98,7 @@ distributions {
 }
 
 tasks.matching { it.name in listOf("distZip", "distTar", "installDist") }.configureEach {
-    dependsOn(":serve:quarkusBuild")
+    dependsOn(":serve:copyServeToStudio")
 }
 
 tasks.register("stage") {
