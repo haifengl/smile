@@ -88,6 +88,7 @@ public final class InferenceEngine implements AutoCloseable {
      */
     private volatile int maxSpeculativeConcurrency = 1;
     private final LinkedBlockingQueue<Queued> waiting = new LinkedBlockingQueue<>();
+    private final Object queueLock = new Object();
     private final List<Active> active = new ArrayList<>();
     private final AtomicInteger inFlight = new AtomicInteger();
     private final AtomicLong nextId = new AtomicLong(1);
@@ -363,9 +364,35 @@ public final class InferenceEngine implements AutoCloseable {
         GenerationHandle handle = new GenerationHandle(id, future);
         onCreated.accept(handle);
         Queued q = new Queued(handle, request, System.nanoTime());
-        waiting.add(q);
-        queuedCount.incrementAndGet();
+        synchronized (queueLock) {
+            waiting.add(q);
+            queuedCount.incrementAndGet();
+            queueLock.notifyAll();
+        }
         return handle;
+    }
+
+    private boolean removeWaiting(Queued q) {
+        synchronized (queueLock) {
+            if (waiting.remove(q)) {
+                queuedCount.decrementAndGet();
+                return true;
+            }
+            return false;
+        }
+    }
+
+    private Queued pollWaiting(long timeoutMs) throws InterruptedException {
+        synchronized (queueLock) {
+            if (waiting.isEmpty() && running && timeoutMs > 0) {
+                queueLock.wait(timeoutMs);
+            }
+            Queued next = waiting.poll();
+            if (next != null) {
+                queuedCount.decrementAndGet();
+            }
+            return next;
+        }
     }
 
     private void loop() {
@@ -379,15 +406,16 @@ public final class InferenceEngine implements AutoCloseable {
             try {
                 drainAborted();
                 failTimedOutWaiting();
-                coalesceIdleAdmission();
                 admitWaiting();
                 if (active.isEmpty()) {
-                    Queued peek = waiting.poll(50, TimeUnit.MILLISECONDS);
-                    if (peek != null) {
-                        queuedCount.decrementAndGet();
-                        waiting.add(peek);
-                        queuedCount.incrementAndGet();
-                    } else {
+                    boolean hasWork;
+                    synchronized (queueLock) {
+                        if (waiting.isEmpty() && running) {
+                            queueLock.wait(50);
+                        }
+                        hasWork = !waiting.isEmpty();
+                    }
+                    if (!hasWork) {
                         executor.idleDecodeGraphPrefetch();
                     }
                     // Idle: no emptyCache — keep caching-allocator HWM reserved
@@ -415,11 +443,10 @@ public final class InferenceEngine implements AutoCloseable {
         while (running || !waiting.isEmpty() || inFlight.get() > 0) {
             try {
                 drainAbortedFromQueue();
-                Queued next = waiting.poll(50, TimeUnit.MILLISECONDS);
+                Queued next = pollWaiting(50);
                 if (next == null) {
                     continue;
                 }
-                queuedCount.decrementAndGet();
                 if (next.handle.isAborted()) {
                     next.handle.future().completeExceptionally(new CancellationException("aborted"));
                     continue;
@@ -476,8 +503,7 @@ public final class InferenceEngine implements AutoCloseable {
 
     private void drainAbortedFromQueue() {
         for (Queued q : waiting) {
-            if (q.handle.isAborted() && waiting.remove(q)) {
-                queuedCount.decrementAndGet();
+            if (q.handle.isAborted() && removeWaiting(q)) {
                 q.handle.future().completeExceptionally(new CancellationException("aborted"));
             }
         }
@@ -490,8 +516,7 @@ public final class InferenceEngine implements AutoCloseable {
         long now = System.nanoTime();
         for (Queued q : waiting) {
             long waitedMs = (now - q.enqueuedAtNanos) / 1_000_000L;
-            if (waitedMs >= admissionTimeoutMs && waiting.remove(q)) {
-                queuedCount.decrementAndGet();
+            if (waitedMs >= admissionTimeoutMs && removeWaiting(q)) {
                 q.handle.future().completeExceptionally(new IllegalStateException(
                         "admission timeout after " + waitedMs + " ms"));
             }
@@ -538,37 +563,50 @@ public final class InferenceEngine implements AutoCloseable {
         if (admitCoalesceMs <= 0 || !active.isEmpty()) {
             return;
         }
-        int queued = queuedCount.get();
-        if (queued <= 0 || queued >= maxInFlight) {
-            return;
-        }
-        long deadlineNs = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(admitCoalesceMs);
         long startedNs = System.nanoTime();
-        logger.info("Admit coalesce: wait up to {}ms for cohort (queued={}/{})",
-                admitCoalesceMs, queued, maxInFlight);
-        while (running && queuedCount.get() < maxInFlight) {
-            long remNs = deadlineNs - System.nanoTime();
-            if (remNs <= 0) {
-                break;
+        long deadlineNs = startedNs + TimeUnit.MILLISECONDS.toNanos(admitCoalesceMs);
+        synchronized (queueLock) {
+            int queued = queuedCount.get();
+            if (queued <= 0 || queued >= maxInFlight) {
+                return;
             }
-            // 1 ms slices: notice full cohort quickly without a condition var.
-            Thread.sleep(Math.min(1L, Math.max(1L, remNs / 1_000_000L)));
+            logger.info("Admit coalesce: wait up to {}ms for cohort (queued={}/{})",
+                    admitCoalesceMs, queued, maxInFlight);
+            while (running && queuedCount.get() > 0 && queuedCount.get() < maxInFlight) {
+                Queued head = waiting.peek();
+                if (head != null && head.handle.isAborted()) {
+                    break;
+                }
+                long remNs = deadlineNs - System.nanoTime();
+                if (remNs <= 0) {
+                    break;
+                }
+                long sliceNs = Math.min(remNs, TimeUnit.MILLISECONDS.toNanos(10));
+                queueLock.wait(sliceNs / 1_000_000L, (int) (sliceNs % 1_000_000L));
+            }
         }
         logger.info("Admit coalesce done: queued={}/{} waitedMs={}",
                 queuedCount.get(), maxInFlight,
                 (System.nanoTime() - startedNs) / 1_000_000L);
     }
 
-    private void admitWaiting() {
+    private void admitWaiting() throws InterruptedException {
+        boolean coalesced = false;
         while (active.size() < maxInFlight) {
             Queued next = waiting.peek();
             if (next == null) {
                 break;
             }
             if (next.handle.isAborted()) {
-                if (waiting.remove(next)) {
-                    queuedCount.decrementAndGet();
+                if (removeWaiting(next)) {
                     next.handle.future().completeExceptionally(new CancellationException("aborted"));
+                }
+                continue;
+            }
+            if (active.isEmpty() && admitCoalesceMs > 0 && !coalesced) {
+                coalesceIdleAdmission();
+                if (!next.handle.isAborted()) {
+                    coalesced = true;
                 }
                 continue;
             }
@@ -594,21 +632,18 @@ public final class InferenceEngine implements AutoCloseable {
                     logKvAdmissionDeferred(promptLen, maxGen, desired, msg);
                     break;
                 }
-                waiting.remove(next);
-                queuedCount.decrementAndGet();
+                removeWaiting(next);
                 next.handle.future().completeExceptionally(ex);
                 continue;
             } catch (RuntimeException ex) {
-                waiting.remove(next);
-                queuedCount.decrementAndGet();
+                removeWaiting(next);
                 next.handle.future().completeExceptionally(ex);
                 continue;
             }
-            if (!waiting.remove(next)) {
+            if (!removeWaiting(next)) {
                 executor.evict(kvId);
                 break;
             }
-            queuedCount.decrementAndGet();
             recordQueueWait(next.enqueuedAtNanos);
 
             int matched = executor.prefixLen(kvId);
@@ -1316,18 +1351,23 @@ public final class InferenceEngine implements AutoCloseable {
     @Override
     public void close() {
         running = false;
+        synchronized (queueLock) {
+            queueLock.notifyAll();
+        }
         worker.interrupt();
         try {
             worker.join(5_000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
-        for (Queued q : waiting) {
-            q.handle.future().completeExceptionally(
-                    new IllegalStateException("InferenceEngine closed"));
+        synchronized (queueLock) {
+            for (Queued q : waiting) {
+                q.handle.future().completeExceptionally(
+                        new IllegalStateException("InferenceEngine closed"));
+            }
+            waiting.clear();
+            queuedCount.set(0);
         }
-        waiting.clear();
-        queuedCount.set(0);
         for (Active a : active) {
             safeEvict(a);
             if (!a.handle.future().isDone()) {
