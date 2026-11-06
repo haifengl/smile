@@ -545,4 +545,61 @@ public class HubClientAndConfigTest {
         assertFalse(statusBar.isHubRunning());
         assertEquals(0, statusBar.pendingApprovals());
     }
+
+    @Test
+    public void testBotManagerTooltipsAppliedToLabelsAndInputComponents(@TempDir Path tempHome) {
+        String prevHome = System.getProperty("smile.home");
+        try {
+            System.setProperty("smile.home", tempHome.toString());
+            BotManager manager = new BotManager("frank-daily-recap", null);
+            java.util.ResourceBundle bundle = java.util.ResourceBundle.getBundle(
+                    BotManager.class.getName(), java.util.Locale.getDefault());
+
+            List<String> expectedTooltips = List.of(
+                    bundle.getString("MissedFirePolicyTooltip"),
+                    bundle.getString("CronTooltip"),
+                    bundle.getString("IntervalTooltip"),
+                    bundle.getString("EndpointTooltip"),
+                    bundle.getString("QuietStartTooltip"),
+                    bundle.getString("QuietEndTooltip"),
+                    bundle.getString("SettleTooltip"),
+                    bundle.getString("MaxTurnsPerHourTooltip"),
+                    bundle.getString("AwaitRoutineIdTooltip"),
+                    bundle.getString("TargetSkillToolTooltip"),
+                    bundle.getString("InstructionsTooltip"),
+                    bundle.getString("ApprovalTtlTooltip")
+            );
+
+            List<javax.swing.JComponent> allComponents = new java.util.ArrayList<>();
+            collectJComponents(manager, allComponents);
+
+            for (String tooltip : expectedTooltips) {
+                long labelMatches = allComponents.stream()
+                        .filter(c -> c instanceof javax.swing.JLabel && tooltip.equals(c.getToolTipText()))
+                        .count();
+                long inputMatches = allComponents.stream()
+                        .filter(c -> !(c instanceof javax.swing.JLabel) && tooltip.equals(c.getToolTipText()))
+                        .count();
+                assertTrue(labelMatches >= 1, "Expected JLabel with tooltip: " + tooltip);
+                assertTrue(inputMatches >= 1, "Expected input JComponent with tooltip: " + tooltip);
+            }
+        } finally {
+            if (prevHome == null) {
+                System.clearProperty("smile.home");
+            } else {
+                System.setProperty("smile.home", prevHome);
+            }
+        }
+    }
+
+    private static void collectJComponents(java.awt.Container root, List<javax.swing.JComponent> out) {
+        for (java.awt.Component comp : root.getComponents()) {
+            if (comp instanceof javax.swing.JComponent jc) {
+                out.add(jc);
+            }
+            if (comp instanceof java.awt.Container childContainer) {
+                collectJComponents(childContainer, out);
+            }
+        }
+    }
 }

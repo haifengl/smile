@@ -333,27 +333,27 @@ Select any routine in the **Bots** explorer tab (or right-click to choose **New 
 
 #### Trigger & Schedule
 - **Source:** `timer`, `email`, `calendar`, or `webhook`.
-- **Missed-Fire Policy:**
+- **Missed Fire:**
   - `FIRE_ONCE` — If Agent Hub was offline when a scheduled tick occurred, fire once catch-up upon startup (recommended for daily logs, recaps, and weekday signal watches).
   - `SKIP` — Skip missed ticks and wait for the next scheduled time (recommended for high-frequency polling or social posting).
-- **Cron (5-field):** Standard POSIX cron expression (`minute hour day-of-month month day-of-week`, e.g., `0 19 * * *` or `30 8 * * MON-FRI`).
-- **Interval (sec):** Fixed poll/fire interval in seconds (used when `cron` is blank for `timer`, or as the feed poll interval for `calendar`).
-- **Mailbox / Feed URL / Path:**
-  - For `email`: mailbox name (e.g., `frank` or `mike`, matching `POST /v1/events/email/{mailbox}`).
-  - For `calendar`: `.ics` file URI or HTTP/webcal URL (supports `${smile.home}`, e.g., `file://${smile.home}/bot/calendar/frank.ics`).
-  - For `webhook`: webhook source segment (matching `POST /v1/events/{source}`).
-- **Quiet Start / Quiet End (`HH:mm`):** Optional local quiet hours (e.g., `22:00` to `08:00`) during which non-urgent events are held until quiet hours end.
-- **Settle (sec):** Coalescing settle window in seconds. Bursts of events arriving within this window are merged into a single agent turn.
-- **Max Turns / Hour:** Per-routine hourly turn budget cap to prevent runaway token spend.
+- **Cron:** 5-field POSIX cron expression (`minute hour day-of-month month day-of-week`, e.g., `0 19 * * *` or `30 8 * * MON-FRI`).
+- **Interval:** Fixed poll/fire interval in seconds (used when `cron` is blank for `timer`, or as the feed poll interval for `calendar`).
+- **Mailbox:**
+  - For `email`: email account or mailbox name (e.g., `frank` or `mike`, matching `POST /v1/events/email/{mailbox}`).
+  - For `calendar`: calendar account or `.ics` file URI / HTTP / webcal URL (supports `${smile.home}`, e.g., `file://${smile.home}/bot/calendar/frank.ics`).
+  - For `webhook`: webhook source path segment (matching `POST /v1/events/{source}`).
+- **Quiet Start / Quiet End:** Optional local quiet hours in 24-hour `HH:mm` format (e.g., `22:00` to `08:00`) during which non-urgent events are held until quiet hours end.
+- **Settle:** Coalescing settle window in seconds. Bursts of events arriving within this window are merged into a single agent turn.
+- **Max Runs:** Maximum number of routine wakes/runs allowed within a 1-hour rolling window (`0` = unlimited) to prevent runaway token spend.
 
 #### Workflow & Cross-Project Enrichment
 - **Workflow Kind:**
   - `SKILL` — Invokes an agent slash skill (e.g., `daily-log`, `daily-recap`, `social-writing`, `signal-scanning`, `cold-email`). `Target` is required; `Instructions` are optional.
   - `PROMPT` — Sends the `Instructions` text as a direct instruction prompt (`Target` is disabled; `Instructions` are required).
   - `TOOL` — Instructs the agent to execute a specific tool (e.g., `Email`). Both `Target` and `Instructions` are required.
-- **Target (Skill / Tool):** Skill name or tool name (required when `Workflow Kind` is `SKILL` or `TOOL`; disabled for `PROMPT`).
+- **Target:** Skill name or tool name (required when `Workflow Kind` is `SKILL` or `TOOL`; disabled for `PROMPT`).
 - **Instructions:** Natural-language prompt instructions for the workflow (required for `TOOL` and `PROMPT`, optional for `SKILL`; supports `${smile.home}` placeholder expansion).
-- **Await Routine ID:** Optional upstream `routineId` dependency (e.g., `frank-daily-recap` awaits `daily-log`; `mike-outreach-sweep` awaits `mike-signal-watch`). If the upstream routine has not completed today, Agent Hub runs it first.
+- **Await Routine:** Optional upstream `routineId` dependency (e.g., `frank-daily-recap` awaits `daily-log`; `mike-outreach-sweep` awaits `mike-signal-watch`). If the upstream routine has not completed today, Agent Hub runs it first.
 - **Skip if persona had 0 sessions today (`requireActivityToday`):** Skips waking the LLM when the persona had no modified sessions today.
 - **Enrich prompt with Studio Context Projects (`useContextProjects`):** Appends the list of tracked Studio project paths and `.smile/` directories from `conf/projects.json` to the turn prompt.
 
@@ -362,7 +362,7 @@ Select any routine in the **Bots** explorer tab (or right-click to choose **New 
   - `ISOLATED_PER_RUN` *(default)* — Creates a fresh, isolated session under `$SMILE_HOME/bot/.smile/<persona>/sessions/<timestamp>/` for each run so context never bloats across days.
   - `PERSISTENT_BOT` — Reuses the resident Bot session across wakes.
 - **Require approval for consequential actions (`confirmConsequential`):** Gates consequential tool calls (shell commands, external file writes, peer delegation, outbound communications) through the approval queue.
-- **Approval TTL (min):** Time-to-live in minutes for pending approvals (`0` = no expiry, used for Batch Draft Queue items; `> 0` = automatically marks unreviewed items `EXPIRED` and fails closed after the deadline, used for time-sensitive calendar invites).
+- **Approval TTL:** Time-to-live in minutes for pending approvals (`0` = no expiry, used for Batch Draft Queue items; `> 0` = automatically marks unreviewed items `EXPIRED` and fails closed after the deadline, used for time-sensitive calendar invites).
 
 Click **Save** to persist changes, or click **Run Routine Now** to test the selected routine immediately.
 

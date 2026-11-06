@@ -253,24 +253,40 @@ public class BotManager extends JPanel {
 
         addSectionHeader(form, gbc, row++, bundle.getString("SectionTriggerSchedule"));
         sourceCombo.addActionListener(e -> populateEndpointCombo());
-        addFormRow(form, gbc, row++, bundle.getString("SourceLabel"), sourceCombo, bundle.getString("MissedFirePolicyLabel"), missedFireCombo);
-        addFormRow(form, gbc, row++, bundle.getString("CronLabel"), cronField, bundle.getString("IntervalLabel"), intervalSpinner);
-        addSingleRow(form, gbc, row++, bundle.getString("EndpointLabel"), endpointCombo);
-        addFormRow(form, gbc, row++, bundle.getString("QuietStartLabel"), quietStartField, bundle.getString("QuietEndLabel"), quietEndField);
-        addFormRow(form, gbc, row++, bundle.getString("SettleLabel"), settleSpinner, bundle.getString("MaxTurnsPerHourLabel"), maxTurnsSpinner);
+        addFormRow(form, gbc, row++,
+                bundle.getString("SourceLabel"), sourceCombo, null,
+                bundle.getString("MissedFirePolicyLabel"), missedFireCombo, bundle.getString("MissedFirePolicyTooltip"));
+        addFormRow(form, gbc, row++,
+                bundle.getString("CronLabel"), cronField, bundle.getString("CronTooltip"),
+                bundle.getString("IntervalLabel"), intervalSpinner, bundle.getString("IntervalTooltip"));
+        addSingleRow(form, gbc, row++,
+                bundle.getString("EndpointLabel"), endpointCombo, bundle.getString("EndpointTooltip"));
+        addFormRow(form, gbc, row++,
+                bundle.getString("QuietStartLabel"), quietStartField, bundle.getString("QuietStartTooltip"),
+                bundle.getString("QuietEndLabel"), quietEndField, bundle.getString("QuietEndTooltip"));
+        addFormRow(form, gbc, row++,
+                bundle.getString("SettleLabel"), settleSpinner, bundle.getString("SettleTooltip"),
+                bundle.getString("MaxTurnsPerHourLabel"), maxTurnsSpinner, bundle.getString("MaxTurnsPerHourTooltip"));
 
         addSectionHeader(form, gbc, row++, bundle.getString("SectionWorkflowEnrichment"));
         workflowKindCombo.addActionListener(e -> updateWorkflowFieldStates());
-        addFormRow(form, gbc, row++, bundle.getString("WorkflowKindLabel"), workflowKindCombo, bundle.getString("AwaitRoutineIdLabel"), awaitRoutineField);
-        addSingleRow(form, gbc, row++, bundle.getString("TargetSkillToolLabel"), workflowTargetField);
+        addFormRow(form, gbc, row++,
+                bundle.getString("WorkflowKindLabel"), workflowKindCombo, null,
+                bundle.getString("AwaitRoutineIdLabel"), awaitRoutineField, bundle.getString("AwaitRoutineIdTooltip"));
+        addSingleRow(form, gbc, row++,
+                bundle.getString("TargetSkillToolLabel"), workflowTargetField, bundle.getString("TargetSkillToolTooltip"));
 
         instructionsArea.setLineWrap(true);
         instructionsArea.setWrapStyleWord(true);
-        addSingleRow(form, gbc, row++, instructionsLabel, new JScrollPane(instructionsArea));
+        String instructionsTooltip = bundle.getString("InstructionsTooltip");
+        instructionsArea.setToolTipText(instructionsTooltip);
+        addSingleRow(form, gbc, row++, instructionsLabel, new JScrollPane(instructionsArea), instructionsTooltip);
         addFormRow(form, gbc, row++, "", requireActivityCheck, "", useContextProjectsCheck);
 
         addSectionHeader(form, gbc, row++, bundle.getString("SectionSessionGuardrails"));
-        addFormRow(form, gbc, row++, bundle.getString("SessionModeLabel"), sessionModeCombo, bundle.getString("ApprovalTtlLabel"), ttlMinutesSpinner);
+        addFormRow(form, gbc, row++,
+                bundle.getString("SessionModeLabel"), sessionModeCombo, null,
+                bundle.getString("ApprovalTtlLabel"), ttlMinutesSpinner, bundle.getString("ApprovalTtlTooltip"));
         addSingleRow(form, gbc, row++, "", confirmConsequentialCheck);
 
         return new JScrollPane(form);
@@ -662,10 +678,19 @@ public class BotManager extends JPanel {
     }
 
     private static void addSingleRow(JPanel panel, GridBagConstraints gbc, int row, String label, Component field) {
-        addSingleRow(panel, gbc, row, new JLabel(label), field);
+        addSingleRow(panel, gbc, row, new JLabel(label), field, null);
+    }
+
+    private static void addSingleRow(JPanel panel, GridBagConstraints gbc, int row, String label, Component field, String tooltip) {
+        addSingleRow(panel, gbc, row, new JLabel(label), field, tooltip);
     }
 
     private static void addSingleRow(JPanel panel, GridBagConstraints gbc, int row, JLabel label, Component field) {
+        addSingleRow(panel, gbc, row, label, field, null);
+    }
+
+    private static void addSingleRow(JPanel panel, GridBagConstraints gbc, int row, JLabel label, Component field, String tooltip) {
+        applyTooltip(label, field, tooltip);
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weightx = 0.0;
@@ -681,21 +706,49 @@ public class BotManager extends JPanel {
     private static void addFormRow(JPanel panel, GridBagConstraints gbc, int row,
                                    String label1, Component field1,
                                    String label2, Component field2) {
+        addFormRow(panel, gbc, row, label1, field1, null, label2, field2, null);
+    }
+
+    private static void addFormRow(JPanel panel, GridBagConstraints gbc, int row,
+                                   String label1, Component field1, String tooltip1,
+                                   String label2, Component field2, String tooltip2) {
+        JLabel jLabel1 = new JLabel(label1);
+        applyTooltip(jLabel1, field1, tooltip1);
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.weightx = 0.0;
-        panel.add(new JLabel(label1), gbc);
+        panel.add(jLabel1, gbc);
 
         gbc.gridx = 1;
         gbc.weightx = 0.5;
         panel.add(field1, gbc);
 
+        JLabel jLabel2 = new JLabel(label2);
+        applyTooltip(jLabel2, field2, tooltip2);
         gbc.gridx = 2;
         gbc.weightx = 0.0;
-        panel.add(new JLabel(label2), gbc);
+        panel.add(jLabel2, gbc);
 
         gbc.gridx = 3;
         gbc.weightx = 0.5;
         panel.add(field2, gbc);
+    }
+
+    private static void applyTooltip(JLabel label, Component field, String tooltip) {
+        if (tooltip == null || tooltip.isBlank()) {
+            return;
+        }
+        label.setToolTipText(tooltip);
+        if (field instanceof JComponent jc) {
+            jc.setToolTipText(tooltip);
+        }
+        if (field instanceof JSpinner spinner
+                && spinner.getEditor() instanceof JSpinner.DefaultEditor editor) {
+            editor.getTextField().setToolTipText(tooltip);
+        } else if (field instanceof JComboBox<?> combo
+                && combo.getEditor() != null
+                && combo.getEditor().getEditorComponent() instanceof JComponent editorComp) {
+            editorComp.setToolTipText(tooltip);
+        }
     }
 }
