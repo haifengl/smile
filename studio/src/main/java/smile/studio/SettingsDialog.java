@@ -1102,7 +1102,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
                 enabled,
                 pollSec,
                 folder.isEmpty() ? "INBOX" : folder,
-                provider == EmailConfig.Provider.GMAIL ? "label:INBOX" : null,
+                provider == EmailConfig.Provider.GMAIL ? "label:INBOX category:primary" : null,
                 clientId,
                 tenantId,
                 imapHost.isEmpty() ? null : imapHost,
