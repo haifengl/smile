@@ -132,7 +132,7 @@ libraryDependencies ++= Seq(
   "info.picocli"      % "picocli"            % "4.7.7",
   "ch.qos.logback"    % "logback-classic"    % "1.6.6",
   "com.openai"        % "openai-java"        % "4.100.0",
-  "com.anthropic"     % "anthropic-java"     % "2.75.0",
+  "com.anthropic"     % "anthropic-java"     % "3.5.0",
   "com.google.genai"  % "google-genai"       % "1.80.0",
   "org.commonmark"    % "commonmark"         % "0.32.0",
   "org.xhtmlrenderer" % "flying-saucer-core" % "10.7.0",
