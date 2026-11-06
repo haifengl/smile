@@ -8,10 +8,10 @@
     "chrome-devtools": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "chrome-devtools-mcp@latest"],
+      "args": ["-y", "chrome-devtools-mcp@latest", "--no-usage-statistics"],
       "windows": {
         "command": "cmd.exe",
-        "args": ["/c", "npx", "-y", "chrome-devtools-mcp@latest"]
+        "args": ["/c", "npx", "-y", "chrome-devtools-mcp@latest", "--no-usage-statistics"]
       },
       "x-smile-agents": ["desktop-operator"]
     }
