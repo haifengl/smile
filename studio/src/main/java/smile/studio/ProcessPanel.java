@@ -72,28 +72,51 @@ public class ProcessPanel extends JPanel {
         output.setText("");
 
         try {
-            process = OS.exec(Arrays.asList(command), line -> {
-                // Append the line to the JTextArea on the Event Dispatch Thread (EDT)
-                SwingUtilities.invokeLater(() -> {
-                    output.append(line + "\n");
-                    int numLinesToTruncate = output.getLineCount() - scrollback;
-                    // Truncate every TRUNCATE_BATCH overflow lines to minimise overhead.
-                    if (numLinesToTruncate > TRUNCATE_BATCH) {
-                        try {
-                            int posOfLastLineToTruncate = output.getLineEndOffset(numLinesToTruncate - 1);
-                            output.replaceRange("", 0, posOfLastLineToTruncate);
-                        } catch (BadLocationException ex) {
-                            logger.warn("Failed to truncate scrollback: {}", ex.getMessage());
-                        }
-                    }
-                });
-            });
+            process = OS.exec(Arrays.asList(command), this::appendLine);
 
             // Gracefully shutdown
             Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
         } catch (IOException ex) {
             output.append("Failed to start process: " + ex.getMessage() + "\n");
         }
+    }
+
+    /**
+     * Replaces the text displayed in the output area on the Swing EDT.
+     *
+     * @param message the message to display.
+     */
+    public void setMessage(String message) {
+        String text = message == null ? "" : message;
+        if (SwingUtilities.isEventDispatchThread()) {
+            output.setText(text);
+        } else {
+            SwingUtilities.invokeLater(() -> output.setText(text));
+        }
+    }
+
+    /**
+     * Appends a line of text to the output area on the Swing EDT, respecting scrollback.
+     *
+     * @param line the line to append.
+     */
+    public void appendLine(String line) {
+        if (line == null) {
+            return;
+        }
+        SwingUtilities.invokeLater(() -> {
+            output.append(line + "\n");
+            int numLinesToTruncate = output.getLineCount() - scrollback;
+            // Truncate every TRUNCATE_BATCH overflow lines to minimise overhead.
+            if (numLinesToTruncate > TRUNCATE_BATCH) {
+                try {
+                    int posOfLastLineToTruncate = output.getLineEndOffset(numLinesToTruncate - 1);
+                    output.replaceRange("", 0, posOfLastLineToTruncate);
+                } catch (BadLocationException ex) {
+                    logger.warn("Failed to truncate scrollback: {}", ex.getMessage());
+                }
+            }
+        });
     }
 
     /**

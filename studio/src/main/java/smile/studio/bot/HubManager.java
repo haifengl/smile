@@ -65,6 +65,8 @@ public final class HubManager {
     private int port;
     private String adminToken;
     private HubClient client;
+    private volatile boolean attached;
+    private volatile boolean stoppedByUser;
 
     private HubManager() {
     }
@@ -144,6 +146,15 @@ public final class HubManager {
     }
 
     /**
+     * Removes a previously registered start listener.
+     *
+     * @param listener the listener to remove.
+     */
+    public void removeStartListener(Consumer<ProcessPanel> listener) {
+        startListeners.remove(listener);
+    }
+
+    /**
      * Registers a listener invoked on the Swing EDT when the local Agent Hub process stops.
      *
      * @param listener callback receiving the {@link ProcessPanel}.
@@ -152,6 +163,15 @@ public final class HubManager {
         if (listener != null) {
             stopListeners.add(listener);
         }
+    }
+
+    /**
+     * Removes a previously registered stop listener.
+     *
+     * @param listener the listener to remove.
+     */
+    public void removeStopListener(Consumer<ProcessPanel> listener) {
+        stopListeners.remove(listener);
     }
 
     /**
@@ -184,7 +204,14 @@ public final class HubManager {
      * @param event the event to dispatch.
      */
     public void fireEvent(HubClient.BotStreamEvent event) {
-        if (event == null || eventListeners.isEmpty()) {
+        if (event == null) {
+            return;
+        }
+        if (attached && (process == null || !process.isAlive())
+                && event.type() != null && !"disconnected".equals(event.type())) {
+            panel.appendLine(formatStreamEventLine(event));
+        }
+        if (eventListeners.isEmpty()) {
             return;
         }
         SwingUtilities.invokeLater(() -> {
@@ -195,6 +222,42 @@ public final class HubManager {
                 }
             }
         });
+    }
+
+    private static String formatStreamEventLine(HubClient.BotStreamEvent event) {
+        StringBuilder sb = new StringBuilder("[Agent Hub] event=").append(event.type());
+        if (event.botId() != null && !event.botId().isBlank()) {
+            sb.append(" bot=").append(event.botId());
+        }
+        if (event.routineId() != null && !event.routineId().isBlank()) {
+            sb.append(" routine=").append(event.routineId());
+        }
+        if (event.runId() != null) {
+            sb.append(" runId=").append(event.runId());
+        }
+        if (event.timestamp() != null && !event.timestamp().isBlank()) {
+            sb.append(" at ").append(event.timestamp());
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Attaches to an already-running Agent Hub (if not explicitly stopped by the user)
+     * and notifies start listeners so the {@code Agent Hub} tab opens in the workspace.
+     */
+    public synchronized void attachIfRunning() {
+        if (stoppedByUser || attached || (process != null && process.isAlive())) {
+            return;
+        }
+        HubClient c = client();
+        if (c != null && c.isReady()) {
+            logger.info("Attached to running Agent Hub at {}", c.baseUrl());
+            attached = true;
+            populateAttachedPanel();
+            notifyStarted();
+            syncTrackedProjects();
+            ensureEventStreamRunning();
+        }
     }
 
     /**
@@ -250,6 +313,7 @@ public final class HubManager {
         String prevHost = this.host;
         int prevPort = this.port;
         String prevToken = this.adminToken;
+        this.stoppedByUser = false;
         this.host = (host == null || host.isBlank()) ? StudioConfig.DEFAULT_HOST : host.trim();
         this.port = port > 0 ? port : StudioConfig.DEFAULT_HUB_PORT;
         this.adminToken = (adminToken == null || adminToken.isBlank())
@@ -268,9 +332,13 @@ public final class HubManager {
                 return true;
             }
             stop();
+            this.stoppedByUser = false;
             this.client = new HubClient(this.host, this.port, this.adminToken);
         } else if (this.client.isReady()) {
             logger.info("Attached to running Agent Hub at {}", this.client.baseUrl());
+            attached = true;
+            populateAttachedPanel();
+            notifyStarted();
             syncTrackedProjects();
             ensureEventStreamRunning();
             return true;
@@ -291,6 +359,7 @@ public final class HubManager {
             logger.warn("Could not create bot workspace {}: {}", botWorkspace, ex.getMessage());
         }
 
+        Path logFile = botWorkspace.resolve("hub.log");
         panel.start(Serve.javaExecutable(),
                 "--add-opens", "java.base/java.lang=ALL-UNNAMED",
                 "--add-opens", "java.base/java.nio=ALL-UNNAMED",
@@ -301,8 +370,12 @@ public final class HubManager {
                 "-Dhub.admin.token=" + this.adminToken,
                 "-Dquarkus.http.host=" + this.host,
                 "-Dquarkus.http.port=" + this.port,
+                "-Dquarkus.log.file.enable=true",
+                "-Dquarkus.log.file.path=" + logFile,
                 "-jar", jar.toString());
         process = panel.getProcess();
+        attached = false;
+        writePidFile(botWorkspace.resolve("hub.pid"), process);
         notifyStarted();
 
         if (shutdownHookRegistered.compareAndSet(false, true)) {
@@ -319,6 +392,45 @@ public final class HubManager {
             ensureEventStreamRunning();
         }
         return ready;
+    }
+
+    /**
+     * Populates {@link #panel} with recent log lines from {@code ${smile.home}/bot/hub.log}
+     * (when available) and an attachment status banner when connected to an already-running
+     * Agent Hub process.
+     */
+    private void populateAttachedPanel() {
+        if (panel.getProcess() != null && panel.getProcess().isAlive()) {
+            return;
+        }
+        StringBuilder sb = new StringBuilder();
+        try {
+            Path logFile = Path.of(System.getProperty("smile.home", ".")).toAbsolutePath().normalize()
+                    .resolve("bot").resolve("hub.log");
+            if (Files.isRegularFile(logFile)) {
+                List<String> lines = Files.readAllLines(logFile);
+                int start = Math.max(0, lines.size() - 200);
+                for (int i = start; i < lines.size(); i++) {
+                    sb.append(lines.get(i)).append('\n');
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        String url = baseUrl();
+        if (url != null) {
+            sb.append("[Agent Hub] Attached to running Agent Hub at ").append(url).append('\n');
+        }
+        panel.setMessage(sb.toString());
+    }
+
+    private static void writePidFile(Path pidFile, Process proc) {
+        if (proc == null) {
+            return;
+        }
+        try {
+            Files.writeString(pidFile, Long.toString(proc.pid()));
+        } catch (Exception ignored) {
+        }
     }
 
     /**
@@ -360,16 +472,136 @@ public final class HubManager {
 
     /** Stops the managed local Agent Hub process. */
     public synchronized void stop() {
-        boolean hadProcess = process != null || panel.getProcess() != null;
+        stoppedByUser = true;
+        boolean wasRunning = process != null || panel.getProcess() != null || attached;
+        attached = false;
         panel.stop();
         if (process != null) {
             process.descendants().forEach(ProcessHandle::destroy);
             process.destroy();
+        } else if (isLocalHost(this.host) && this.port > 0) {
+            wasRunning |= stopLocalHubProcess(this.port);
         }
         process = null;
-        if (hadProcess) {
+        deletePidFile();
+        if (wasRunning) {
             notifyStopped();
         }
+    }
+
+    private static boolean isLocalHost(String h) {
+        if (h == null || h.isBlank()) {
+            return true;
+        }
+        String normalized = h.trim().toLowerCase(java.util.Locale.ROOT);
+        return "localhost".equals(normalized)
+                || "127.0.0.1".equals(normalized)
+                || "::1".equals(normalized)
+                || "[::1]".equals(normalized)
+                || "0.0.0.0".equals(normalized);
+    }
+
+    private static void deletePidFile() {
+        try {
+            Path pidFile = Path.of(System.getProperty("smile.home", ".")).toAbsolutePath().normalize()
+                    .resolve("bot").resolve("hub.pid");
+            Files.deleteIfExists(pidFile);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static boolean stopLocalHubProcess(int port) {
+        long currentPid = ProcessHandle.current().pid();
+        ProcessHandle target = findHubProcessFromPidFile(currentPid);
+        if (target == null) {
+            target = findHubProcessByCommandLine(port, currentPid);
+        }
+        if (target == null && smile.util.OS.isWindows()) {
+            target = findHubProcessByWindowsNetstat(port, currentPid);
+        }
+        if (target == null || !target.isAlive()) {
+            return false;
+        }
+        target.descendants().forEach(ProcessHandle::destroy);
+        target.destroy();
+        try {
+            target.onExit().get(2, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (Exception ex) {
+            target.descendants().forEach(ProcessHandle::destroyForcibly);
+            target.destroyForcibly();
+        }
+        return true;
+    }
+
+    private static ProcessHandle findHubProcessFromPidFile(long currentPid) {
+        try {
+            Path pidFile = Path.of(System.getProperty("smile.home", ".")).toAbsolutePath().normalize()
+                    .resolve("bot").resolve("hub.pid");
+            if (!Files.isRegularFile(pidFile)) {
+                return null;
+            }
+            long pid = Long.parseLong(Files.readString(pidFile).trim());
+            if (pid <= 0 || pid == currentPid) {
+                return null;
+            }
+            return ProcessHandle.of(pid)
+                    .filter(ProcessHandle::isAlive)
+                    .filter(HubManager::isJavaProcess)
+                    .orElse(null);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private static ProcessHandle findHubProcessByCommandLine(int port, long currentPid) {
+        String portArg = "-Dquarkus.http.port=" + port;
+        return ProcessHandle.allProcesses()
+                .filter(ph -> ph.pid() != currentPid && ph.isAlive())
+                .filter(ph -> ph.info().commandLine()
+                        .map(cmd -> cmd.contains("quarkus-run.jar") && cmd.contains("hub") && cmd.contains(portArg))
+                        .orElse(false))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private static ProcessHandle findHubProcessByWindowsNetstat(int port, long currentPid) {
+        String suffix = ":" + port;
+        try {
+            Process proc = new ProcessBuilder("netstat", "-ano", "-p", "tcp")
+                    .redirectErrorStream(true)
+                    .start();
+            try (var reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(proc.getInputStream(), java.nio.charset.StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String trimmed = line.trim();
+                    if (!trimmed.startsWith("TCP") || !trimmed.contains("LISTENING")) {
+                        continue;
+                    }
+                    String[] parts = trimmed.split("\\s+");
+                    if (parts.length >= 5 && parts[1].endsWith(suffix)) {
+                        long pid = Long.parseLong(parts[4]);
+                        if (pid > 0 && pid != currentPid) {
+                            ProcessHandle ph = ProcessHandle.of(pid).orElse(null);
+                            if (ph != null && ph.isAlive() && isJavaProcess(ph)) {
+                                proc.destroy();
+                                return ph;
+                            }
+                        }
+                    }
+                }
+            } finally {
+                proc.destroy();
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private static boolean isJavaProcess(ProcessHandle ph) {
+        return ph.info().command()
+                .map(cmd -> cmd.toLowerCase(java.util.Locale.ROOT).contains("java"))
+                .orElse(false);
     }
 
     private void notifyStarted() {
