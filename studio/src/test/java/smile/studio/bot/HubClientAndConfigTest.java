@@ -472,4 +472,77 @@ public class HubClientAndConfigTest {
         activity.populateApprovals(List.of(item1, item2));
         assertEquals("mike-outreach", activity.selectedRoutineId());
     }
+
+    @Test
+    public void testHubManagerNotifiesStartAndStopListenersWhenAttachingToRunningHub() throws Exception {
+        var server = com.sun.net.httpserver.HttpServer.create(new java.net.InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/q/health", exchange -> {
+            byte[] resp = "{\"status\":\"UP\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, resp.length);
+            exchange.getResponseBody().write(resp);
+            exchange.close();
+        });
+        server.createContext("/v1/admin/projects", exchange -> {
+            byte[] resp = "[]".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(200, resp.length);
+            exchange.getResponseBody().write(resp);
+            exchange.close();
+        });
+        server.start();
+        int port = server.getAddress().getPort();
+
+        var startedPanel = new AtomicReference<smile.studio.ProcessPanel>();
+        var stoppedPanel = new AtomicReference<smile.studio.ProcessPanel>();
+        java.util.function.Consumer<smile.studio.ProcessPanel> onStart = startedPanel::set;
+        java.util.function.Consumer<smile.studio.ProcessPanel> onStop = stoppedPanel::set;
+        HubManager manager = HubManager.getInstance();
+        manager.addStartListener(onStart);
+        manager.addStopListener(onStop);
+
+        try {
+            boolean ok = manager.start("127.0.0.1", port, "dev-admin-token");
+            assertTrue(ok, "HubManager.start should succeed when attaching to a ready Hub");
+            javax.swing.SwingUtilities.invokeAndWait(() -> {});
+            assertSame(manager.panel(), startedPanel.get(),
+                    "Start listener must be notified so the Agent Hub tab docks into Workspace");
+            assertTrue(manager.panel().getOutput().contains("Attached to running Agent Hub"),
+                    "ProcessPanel should display an attachment banner when attached");
+
+            manager.stop();
+            javax.swing.SwingUtilities.invokeAndWait(() -> {});
+            assertSame(manager.panel(), stoppedPanel.get(),
+                    "Stop listener must be notified when stopping an attached Agent Hub");
+
+            // After explicit stop(), attachIfRunning() must not re-open the tab until start() is called
+            startedPanel.set(null);
+            manager.attachIfRunning();
+            javax.swing.SwingUtilities.invokeAndWait(() -> {});
+            assertNull(startedPanel.get(),
+                    "attachIfRunning must respect explicit user stop");
+        } finally {
+            manager.removeStartListener(onStart);
+            manager.removeStopListener(onStop);
+            server.stop(0);
+            javax.swing.SwingUtilities.invokeAndWait(() -> {});
+        }
+    }
+
+    @Test
+    public void testStatusBarBotBadgeTracksRunningAndPendingApprovals() {
+        var statusBar = new smile.studio.StatusBar();
+        assertFalse(statusBar.isHubRunning());
+        assertEquals(0, statusBar.pendingApprovals());
+
+        statusBar.updateBotBadge(true, 0);
+        assertTrue(statusBar.isHubRunning());
+        assertEquals(0, statusBar.pendingApprovals());
+
+        statusBar.updateBotBadge(true, 4);
+        assertTrue(statusBar.isHubRunning());
+        assertEquals(4, statusBar.pendingApprovals());
+
+        statusBar.updateBotBadge(false, 0);
+        assertFalse(statusBar.isHubRunning());
+        assertEquals(0, statusBar.pendingApprovals());
+    }
 }

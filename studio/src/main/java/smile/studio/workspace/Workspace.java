@@ -221,6 +221,10 @@ public class Workspace extends JSplitPane {
             }
         }
 
+        // Register service panel listeners before opening Bot Activities so any
+        // immediate Agent Hub start/attach notification docks the Agent Hub tab.
+        registerServicePanelListeners();
+
         // Always open Bot Activities on startup and keep it focused as the primary operational tab.
         openBotActivity(0);
 
@@ -268,7 +272,6 @@ public class Workspace extends JSplitPane {
         setFileExplorerMouseListener();
         setEditorTabsListener();
         setEditorTabCloseCallback();
-        registerServicePanelListeners();
         setLeftComponent(project);
         setRightComponent(agentTabs);
         setResizeWeight(0.55);
@@ -575,6 +578,26 @@ public class Workspace extends JSplitPane {
             editorTabs.addTab(title, panel);
         }
         if (!keepBotActivityFocused) {
+            editorTabs.setSelectedComponent(panel);
+        }
+    }
+
+    /**
+     * Opens (and optionally focuses) the {@code Agent Hub} service tab in {@link #editorTabs}.
+     *
+     * @param select whether to make the {@code Agent Hub} tab the selected tab.
+     */
+    public void openAgentHubTab(boolean select) {
+        ProcessPanel panel = HubManager.getInstance().panel();
+        if (panel == null) {
+            return;
+        }
+        boolean keepBotActivityFocused = !select && editorTabs.getSelectedComponent() == botActivity;
+        int index = editorTabs.indexOfComponent(panel);
+        if (index == -1) {
+            editorTabs.addTab(bundle.getString("AgentHubTab"), panel);
+        }
+        if (select || !keepBotActivityFocused) {
             editorTabs.setSelectedComponent(panel);
         }
     }

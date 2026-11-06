@@ -50,6 +50,10 @@ public class StatusBar extends JPanel {
     private final JLabel licenseBadge = new JLabel();
     /** Optional action executed when the user clicks the bot badge. */
     private Runnable onBotClick;
+    /** Whether Agent Hub was reachable on the most recent status update. */
+    private boolean hubRunning;
+    /** Number of pending approvals on the most recent status update. */
+    private int pendingApprovals;
     /** Optional action executed when the user clicks the license badge. */
     private Runnable onLicenseClick;
     /** OS's MXBean */
@@ -158,12 +162,32 @@ public class StatusBar extends JPanel {
     }
 
     /**
+     * Returns {@code true} when the most recent status update indicated Agent Hub is running.
+     *
+     * @return {@code true} if Agent Hub is running.
+     */
+    public boolean isHubRunning() {
+        return hubRunning;
+    }
+
+    /**
+     * Returns the pending approval count from the most recent status update.
+     *
+     * @return the pending approval count.
+     */
+    public int pendingApprovals() {
+        return pendingApprovals;
+    }
+
+    /**
      * Updates the Agent Hub / Bot status badge text and color.
      *
      * @param hubRunning       true when Agent Hub is reachable.
      * @param pendingApprovals count of pending approvals or staged drafts.
      */
     public void updateBotBadge(boolean hubRunning, int pendingApprovals) {
+        this.hubRunning = hubRunning;
+        this.pendingApprovals = Math.max(0, pendingApprovals);
         Color defaultFg = UIManager.getColor("Label.foreground");
         Color warningFg = new Color(0xD9, 0x77, 0x06);
         if (pendingApprovals > 0) {

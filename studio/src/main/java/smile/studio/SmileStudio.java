@@ -116,7 +116,18 @@ public class SmileStudio extends JFrame implements SearchListener {
         initMenuAndToolBar();
 
         statusBar.setOnLicenseClick(() -> openLicenseDialog(false));
-        statusBar.setOnBotClick(() -> workspace.openBotActivity(0));
+        statusBar.setOnBotClick(() -> {
+            if (statusBar.pendingApprovals() > 0) {
+                if (statusBar.isHubRunning() || HubManager.getInstance().isRunning()) {
+                    workspace.openAgentHubTab(false);
+                }
+                workspace.openBotActivity(0);
+            } else if (statusBar.isHubRunning() || HubManager.getInstance().isRunning()) {
+                workspace.openAgentHubTab(true);
+            } else {
+                workspace.openBotActivity(0);
+            }
+        });
         applyLicenseState(licenseStore.load());
 
         JPanel contentPane = new JPanel(new BorderLayout());
@@ -248,8 +259,12 @@ public class SmileStudio extends JFrame implements SearchListener {
         // Periodically poll Agent Hub status & pending approvals for the status bar badge,
         // and also update immediately on Agent Hub Server-Sent Events.
         Runnable updateHubBadge = () -> Thread.ofPlatform().name("hub-badge-poll").daemon(true).start(() -> {
-            var client = HubManager.getInstance().client();
+            var manager = HubManager.getInstance();
+            var client = manager.client();
             boolean running = client.isReady();
+            if (running) {
+                manager.attachIfRunning();
+            }
             int pending = running ? client.getOverview().pendingApprovalCount() : 0;
             SwingUtilities.invokeLater(() -> statusBar.updateBotBadge(running, pending));
         });
@@ -1010,6 +1025,9 @@ public class SmileStudio extends JFrame implements SearchListener {
             Thread.ofPlatform().name("hub-start").daemon(true).start(() -> {
                 boolean ok = HubManager.getInstance().start();
                 SwingUtilities.invokeLater(() -> {
+                    if (ok) {
+                        workspace.openAgentHubTab(true);
+                    }
                     workspace.botExplorer().refresh();
                     statusBar.setStatus(ok
                             ? MessageFormat.format(bundle.getString("AgentHubStarted"),
@@ -1047,6 +1065,9 @@ public class SmileStudio extends JFrame implements SearchListener {
                 manager.stop();
                 boolean ok = manager.start();
                 SwingUtilities.invokeLater(() -> {
+                    if (ok) {
+                        workspace.openAgentHubTab(true);
+                    }
                     workspace.botExplorer().refresh();
                     statusBar.setStatus(ok
                             ? MessageFormat.format(bundle.getString("AgentHubStarted"),
