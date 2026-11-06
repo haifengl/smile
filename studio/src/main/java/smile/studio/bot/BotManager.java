@@ -21,9 +21,11 @@ import java.awt.*;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.Set;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableModel;
@@ -185,28 +187,38 @@ public class BotManager extends JPanel {
         endpointCombo.removeAllItems();
         endpointCombo.setEditable(true);
         String src = (String) sourceCombo.getSelectedItem();
-        if ("calendar".equalsIgnoreCase(src)) {
-            endpointCombo.addItem("primary");
-            for (CalendarConfig.AccountSpec acc : CalendarConfig.load().accounts()) {
-                endpointCombo.addItem(acc.accountId());
-            }
-            for (EmailConfig.AccountSpec acc : EmailConfig.load().accounts()) {
-                if (acc.provider() == EmailConfig.Provider.GMAIL || acc.provider() == EmailConfig.Provider.MSGRAPH) {
-                    endpointCombo.addItem(acc.emailAddress());
-                }
-            }
-        } else {
-            endpointCombo.addItem("inbox");
-            for (EmailConfig.AccountSpec acc : EmailConfig.load().accounts()) {
-                endpointCombo.addItem(acc.emailAddress());
-            }
-            for (CalendarConfig.AccountSpec acc : CalendarConfig.load().accounts()) {
-                endpointCombo.addItem(acc.accountId());
-            }
+        for (String item : resolveEndpointOptions(src, EmailConfig.load(), CalendarConfig.load())) {
+            endpointCombo.addItem(item);
         }
         if (currentSel != null) {
             endpointCombo.setSelectedItem(currentSel);
         }
+    }
+
+    static List<String> resolveEndpointOptions(String source, EmailConfig emailConfig, CalendarConfig calendarConfig) {
+        Set<String> options = new LinkedHashSet<>();
+        if ("calendar".equalsIgnoreCase(source)) {
+            options.add("primary");
+            for (CalendarConfig.AccountSpec acc : calendarConfig.accounts()) {
+                if (acc.accountId() != null && !acc.accountId().isBlank()) {
+                    options.add(acc.accountId());
+                }
+            }
+            for (EmailConfig.AccountSpec acc : emailConfig.accounts()) {
+                if ((acc.provider() == EmailConfig.Provider.GMAIL || acc.provider() == EmailConfig.Provider.MSGRAPH)
+                        && acc.emailAddress() != null && !acc.emailAddress().isBlank()) {
+                    options.add(acc.emailAddress());
+                }
+            }
+        } else {
+            options.add("inbox");
+            for (EmailConfig.AccountSpec acc : emailConfig.accounts()) {
+                if (acc.emailAddress() != null && !acc.emailAddress().isBlank()) {
+                    options.add(acc.emailAddress());
+                }
+            }
+        }
+        return List.copyOf(options);
     }
 
     private void initComponents() {

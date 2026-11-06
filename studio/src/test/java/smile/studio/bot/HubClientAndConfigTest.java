@@ -24,6 +24,8 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.event.HyperlinkEvent;
 import ioa.agent.bot.BotsConfig;
 import ioa.agent.bot.ProjectsConfig;
+import ioa.agent.calendar.CalendarConfig;
+import ioa.agent.email.EmailConfig;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import picocli.CommandLine;
@@ -601,5 +603,37 @@ public class HubClientAndConfigTest {
                 collectJComponents(childContainer, out);
             }
         }
+    }
+
+    @Test
+    public void testBotManagerResolveEndpointOptionsDeduplicatesEmailAndCalendarAccounts() {
+        EmailConfig.AccountSpec gmail = EmailConfig.AccountSpec.gmail(
+                "haifeng.hli@gmail.com", "Personal Gmail", null);
+        EmailConfig.AccountSpec outlook = EmailConfig.AccountSpec.msGraph(
+                "haifengl@outlook.com", "Work Outlook", null, "common");
+        EmailConfig.AccountSpec smtp = new EmailConfig.AccountSpec(
+                "haifeng.li@aihalo.dev", "Haifeng Li", "Halo SMTP",
+                EmailConfig.Provider.IMAP, true, 60, "INBOX", null,
+                null, null, "imap.aihalo.dev", 993, true, "smtp.aihalo.dev", 465, false);
+        EmailConfig emailConfig = EmailConfig.empty()
+                .withUpsertedAccount(gmail)
+                .withUpsertedAccount(outlook)
+                .withUpsertedAccount(smtp);
+
+        CalendarConfig calendarConfig = CalendarConfig.empty()
+                .withUpsertedAccount(CalendarConfig.AccountSpec.fromEmailAccount(gmail).orElseThrow())
+                .withUpsertedAccount(CalendarConfig.AccountSpec.fromEmailAccount(outlook).orElseThrow());
+
+        List<String> emailOptions = BotManager.resolveEndpointOptions("email", emailConfig, calendarConfig);
+        assertEquals(
+                List.of("inbox", "haifeng.hli@gmail.com", "haifengl@outlook.com", "haifeng.li@aihalo.dev"),
+                emailOptions
+        );
+
+        List<String> calendarOptions = BotManager.resolveEndpointOptions("calendar", emailConfig, calendarConfig);
+        assertEquals(
+                List.of("primary", "haifeng.hli@gmail.com", "haifengl@outlook.com"),
+                calendarOptions
+        );
     }
 }
