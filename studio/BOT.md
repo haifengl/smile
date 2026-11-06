@@ -201,17 +201,17 @@ Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and nin
   - **Trigger:** `timer` (`cron: "0 19 * * *"`, `missedFirePolicy: "FIRE_ONCE"`)
   - **Persona expansion:** Because `persona` is `"*"`, Agent Hub expands the run across every distinct persona configured in `bots.json` and every persona active in `contextProjects`.
   - **Idle check:** `requireActivityToday: true` — any persona with zero modified `conversation.jsonl` sessions today (across `$SMILE_HOME/bot/` and all tracked `contextProjects`) is skipped without invoking the LLM (`SKIPPED_IDLE`).
-  - **Workflow:** Runs the `/daily-log` skill (`useContextProjects: true`) to append structured, indexable entries to each active workspace's `memory/YYYY-MM-DD.md`.
+  - **Workflow:** Runs the `/daily-log` skill (`useContextProjects: true`) to append structured, indexable entries to each active workspace's `.smile/memory/YYYY-MM-DD.md`.
 
 ### 3.2 `frank` — Chief of Staff (Primary Bot)
 
 - **`frank-daily-recap` (8:00 PM End-of-Day Consolidation & Briefing)**
   - **Trigger:** `timer` (`cron: "0 20 * * *"`, `missedFirePolicy: "FIRE_ONCE"`)
   - **Upstream barrier:** `awaitRoutineId: "daily-log"` — if the 7:00 PM `daily-log` routine has not yet completed today (for example, if the machine was asleep and woke at 8:05 PM), Agent Hub automatically runs `daily-log` first before starting `frank-daily-recap`.
-  - **Workflow:** Runs `/daily-recap` (`useContextProjects: true`) to synthesize the day's logs across `$SMILE_HOME/bot/` and all Studio projects, promote durable facts to `MEMORY.md`, and refresh `$SMILE_HOME/bot/pages/executive-brief.html`.
+  - **Workflow:** Runs `/daily-recap` (`useContextProjects: true`) to synthesize the day's logs across `$SMILE_HOME/bot/` and all Studio projects, promote durable facts to `.smile/MEMORY.md`, and refresh `$SMILE_HOME/bot/pages/executive-brief.html`.
 - **`frank-inbox` (Executive Email Triage)**
   - **Trigger:** `email` (`mailbox: "frank"`, `settleSeconds: 45`, `maxTurnsPerHour: 10`)
-  - **Workflow:** Triages inbound emails against active priorities in `MEMORY.md`, delegates specialist work to peer agents via `AgentRequest`, and stages outbound replies into the Batch Draft Queue (`confirmConsequential: true`).
+  - **Workflow:** Triages inbound emails against active priorities in `.smile/MEMORY.md`, delegates specialist work to peer agents via `AgentRequest`, and stages outbound replies into the Batch Draft Queue (`confirmConsequential: true`).
 - **`frank-calendar` (Calendar Guard & 15m Pre-Meeting Brief)**
   - **Trigger:** `calendar` (`calendarUrl: "file://${smile.home}/bot/calendar/frank.ics"`, poll interval `300s`, `reminderBeforeSeconds: 900`)
   - **Workflow:** Checks schedule conflicts on `calendar.invite` / `calendar.updated` (asking whether to Accept/Decline with a 15-minute approval TTL) and prepares attendee/project context briefs 15 minutes before meetings (`calendar.reminder`).
@@ -532,9 +532,6 @@ $SMILE_HOME/
 │   ├── llm.json               # Shared LLM provider & model configuration
 │   └── studio.json            # Studio inferenceServer, agentHub & plugins settings
 └── bot/
-    ├── MEMORY.md              # Consolidated long-term executive memory
-    ├── memory/
-    │   └── YYYY-MM-DD.md      # Daily consolidated memory logs
     ├── pages/
     │   ├── executive-brief.html
     │   ├── sales-pipeline.html
@@ -545,6 +542,9 @@ $SMILE_HOME/
     ├── data/
     │   └── ioa_hub.mv.db      # Embedded H2 database (runs, approvals, events, state)
     └── .smile/
+        ├── MEMORY.md          # Consolidated long-term executive memory
+        ├── memory/
+        │   └── YYYY-MM-DD.md  # Daily consolidated memory logs
         ├── <persona>/
         │   └── sessions/      # Per-run conversation.jsonl transcripts
         ├── browser-state/     # Saved Playwright auth states from SECURE_HANDOFF
@@ -599,7 +599,7 @@ $SMILE_HOME/
           "workflow": {
             "kind": "SKILL",
             "target": "daily-recap",
-            "instructions": "Consolidate today's memory/YYYY-MM-DD.md logs...",
+            "instructions": "Consolidate today's .smile/memory/YYYY-MM-DD.md logs...",
             "requireActivityToday": false,
             "useContextProjects": true,
             "awaitRoutineId": "daily-log"
