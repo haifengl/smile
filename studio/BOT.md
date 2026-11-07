@@ -192,7 +192,7 @@ Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and ele
 |--------|---------|------|------------------|
 | `all-agents-memory` | `*` (All active personas) | Daily Memory Logger | `daily-log` (Daily 19:00) |
 | `frank` | `chief-of-staff` | Primary Bot & Executive Coordinator | `frank-daily-recap` (Daily 20:00), `frank-inbox` (Email), `frank-calendar` (Calendar), `frank-bot-activity-recap` (Daily 22:30) |
-| `julien` | `evangelist` | Developer & Product Evangelist | `julien-community-watch` (Every 4h), `julien-community-post` (Mon/Wed/Fri 10:00), `julien-campaign-driver` (Mon–Fri 11:00) |
+| `julien` | `evangelist` | Developer & Product Evangelist | `julien-community-watch` (Every 4h), `julien-community-post` (Mon/Wed/Fri 10:00), `julien-campaign-driver` (Every 2h) |
 | `mike` | `sales` | Founder-Led B2B Sales | `mike-signal-watch` (Mon–Fri 08:00), `mike-outreach-sweep` (Mon–Fri 08:30), `mike-replies` (Email) |
 
 ### 3.1 `all-agents-memory` — Daily Memory Logger (`*`)
@@ -228,8 +228,8 @@ Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and ele
 - **`julien-community-post` (Mon/Wed/Fri Proactive Community Post & Answer Sweep)**
   - **Trigger:** `timer` (`cron: "0 10 * * MON,WED,FRI"`, `missedFirePolicy: "SKIP"`)
   - **Workflow:** Runs the `/social-writing` skill to draft technical answers for queued threads and one proactive educational post, polishes prose with `/humanize`, stages all drafts into the Batch Draft Queue for review, and refreshes `$SMILE_HOME/bot/pages/community-radar.html`.
-- **`julien-campaign-driver` (Weekday Proactive Community Campaign Driver)**
-  - **Trigger:** `timer` (`cron: "0 11 * * MON-FRI"`, `missedFirePolicy: "FIRE_ONCE"`)
+- **`julien-campaign-driver` (2-Hour Proactive Community Campaign Driver)**
+  - **Trigger:** `timer` (`intervalSeconds: 7200`, `missedFirePolicy: "FIRE_ONCE"`, `quietStart: "22:00"`, `quietEnd: "08:00"`, `maxTurnsPerHour: 2`)
   - **Workflow:** Runs `/community-building` (`useContextProjects: true`) to advance active community awareness campaigns in `docs/business/campaigns/`, track per-community state in `.smile/memory/campaign-state.json`, stage drafts in the Batch Draft Queue, forward buying signals to `@mike`, and update `$SMILE_HOME/bot/pages/community-radar.html`.
 
 ### 3.4 `mike` — Founder-Led B2B Sales
@@ -279,7 +279,7 @@ Agent Hub (Running)
 ├── @julien (Julien — Developer & Product Evangelist)
 │   ├── ● julien-community-watch — 4-Hour Community Watch (HN, Reddit, GitHub, SO)
 │   ├── ● julien-community-post — Mon/Wed/Fri Proactive Community Post & Answer Sweep
-│   └── ● julien-campaign-driver — Weekday Proactive Community Campaign Driver (11:00)
+│   └── ● julien-campaign-driver — 2-Hour Proactive Community Campaign Driver
 └── @mike (Mike — Founder-Led B2B Sales)
     ├── ● mike-signal-watch — Weekday Morning Signal Watch (08:00)
     ├── ● mike-outreach-sweep — Weekday Multi-Channel Outreach Sweep (08:30)

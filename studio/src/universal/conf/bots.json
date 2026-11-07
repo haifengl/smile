@@ -234,16 +234,17 @@
         },
         {
           "routineId": "julien-campaign-driver",
-          "name": "Weekday Proactive Community Campaign Driver (11:00)",
+          "name": "2-Hour Proactive Community Campaign Driver",
           "enabled": true,
           "trigger": {
             "source": "timer",
-            "cron": "0 11 * * MON-FRI",
-            "intervalSeconds": 0,
+            "intervalSeconds": 7200,
             "missedFirePolicy": "FIRE_ONCE",
             "reminderBeforeSeconds": 0,
             "settleSeconds": 0,
-            "maxTurnsPerHour": 0
+            "quietStart": "22:00",
+            "quietEnd": "08:00",
+            "maxTurnsPerHour": 2
           },
           "workflow": {
             "kind": "SKILL",
