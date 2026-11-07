@@ -452,6 +452,16 @@ public class HubClientAndConfigTest {
         assertEquals(42L, ev.runId());
         assertEquals("frank", ev.botId());
         assertEquals("frank-daily-recap", ev.routineId());
+        assertEquals("", ev.pageSlug());
+
+        HubClient.BotStreamEvent pageEv = HubClient.parseStreamEvent("page",
+                "{\"type\":\"page\",\"runId\":42,\"botId\":\"frank\",\"routineId\":\"frank-daily-recap\",\"pageSlug\":\"executive-brief\",\"timestamp\":\"2026-11-01T12:01:00Z\"}");
+        assertNotNull(pageEv);
+        assertEquals("page", pageEv.type());
+        assertEquals(42L, pageEv.runId());
+        assertEquals("frank", pageEv.botId());
+        assertEquals("frank-daily-recap", pageEv.routineId());
+        assertEquals("executive-brief", pageEv.pageSlug());
 
         // Verify non-destructive approval refresh preserves user draft edits when the selected approval is unchanged
         BotActivity activity = new BotActivity(0);

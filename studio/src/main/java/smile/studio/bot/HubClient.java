@@ -130,8 +130,13 @@ public final class HubClient {
             Long runId,
             String botId,
             String routineId,
+            String pageSlug,
             String timestamp
-    ) { }
+    ) {
+        public BotStreamEvent(String type, Long runId, String botId, String routineId, String timestamp) {
+            this(type, runId, botId, routineId, "", timestamp);
+        }
+    }
 
     private final HttpClient client;
     private final String baseUrl;
@@ -569,12 +574,13 @@ public final class HubClient {
                     runId,
                     text(n, "botId"),
                     text(n, "routineId"),
+                    text(n, "pageSlug"),
                     text(n, "timestamp")
             );
         } catch (Exception ex) {
             return new BotStreamEvent(
                     eventName != null && !eventName.isBlank() ? eventName : "message",
-                    null, "", "", "");
+                    null, "", "", "", "");
         }
     }
 

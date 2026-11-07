@@ -235,6 +235,9 @@ public final class HubManager {
         if (event.runId() != null) {
             sb.append(" runId=").append(event.runId());
         }
+        if (event.pageSlug() != null && !event.pageSlug().isBlank()) {
+            sb.append(" page=").append(event.pageSlug());
+        }
         if (event.timestamp() != null && !event.timestamp().isBlank()) {
             sb.append(" at ").append(event.timestamp());
         }

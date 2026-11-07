@@ -268,7 +268,14 @@ public class SmileStudio extends JFrame implements SearchListener {
             int pending = running ? client.getOverview().pendingApprovalCount() : 0;
             SwingUtilities.invokeLater(() -> statusBar.updateBotBadge(running, pending));
         });
-        HubManager.getInstance().addEventListener(ev -> updateHubBadge.run());
+        HubManager.getInstance().addEventListener(ev -> {
+            updateHubBadge.run();
+            if (ev != null && "page".equals(ev.type()) && ev.pageSlug() != null && !ev.pageSlug().isBlank()) {
+                String slug = ev.pageSlug().trim();
+                var page = new HubClient.BotPageSummary(slug, slug, "", "");
+                HubManager.getInstance().client().openPageInBrowser(SmileStudio.this, page);
+            }
+        });
         var hubBadgeTimer = new javax.swing.Timer(10000, e -> updateHubBadge.run());
         hubBadgeTimer.setInitialDelay(3000);
         hubBadgeTimer.start();
