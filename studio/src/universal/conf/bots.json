@@ -231,6 +231,32 @@
             "confirmConsequential": true,
             "approvalTtlMinutes": 0
           }
+        },
+        {
+          "routineId": "julien-campaign-driver",
+          "name": "Weekday Proactive Community Campaign Driver (11:00)",
+          "enabled": true,
+          "trigger": {
+            "source": "timer",
+            "cron": "0 11 * * MON-FRI",
+            "intervalSeconds": 0,
+            "missedFirePolicy": "FIRE_ONCE",
+            "reminderBeforeSeconds": 0,
+            "settleSeconds": 0,
+            "maxTurnsPerHour": 0
+          },
+          "workflow": {
+            "kind": "SKILL",
+            "target": "community-building",
+            "instructions": "Execute the next step of active community awareness campaigns in docs/business/campaigns/ across contextProjects, tracking per-community state in .smile/memory/campaign-state.json: (1) complete pending account registrations and email verifications; (2) for accounts below karma/trust-level gates (Reddit 100+ comment karma, Discourse TL1/TL2, Discord onboarding), find active discussions in target communities (r/LocalLLaMA, r/ClaudeAI, r/MachineLearning, r/AI_Agents, Latent Space, Anthropic Discord, OpenAI Developer Forum, Hugging Face Discord, LangChain Discord) and draft 2-3 zero-link technical replies to earn karma; (3) once readiness gates are met, draft the next staggered Wave flagship thread or showcase post, polish with /humanize, stage all outbound items in the Batch Draft Queue for approval, forward enterprise buying signals to @mike, and update ${smile.home}/bot/pages/community-radar.html.",
+            "requireActivityToday": false,
+            "useContextProjects": true
+          },
+          "policy": {
+            "sessionMode": "ISOLATED_PER_RUN",
+            "confirmConsequential": true,
+            "approvalTtlMinutes": 0
+          }
         }
       ]
     },
