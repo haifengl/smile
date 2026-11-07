@@ -180,6 +180,38 @@ public class WorkspaceStartupTest {
         String releaseNotesContent = Files.readString(releaseNotes);
         assertTrue(releaseNotesContent.contains("Release Notes"));
 
+        // Verify that ThemedTextArea / IntentEditor (SYNTAX_STYLE_NONE) does not split
+        // UTF-16 surrogate pairs or emoji variation selectors into broken 1-char tokens.
+        var ie = new smile.studio.agent.IntentEditor(1, 80);
+        ie.setText("Hello 👔 💡 📊 🖥️ ❌ ✏️ ⬆️ ⬇️ https://aihalo.dev world");
+        var tok = ((org.fife.ui.rsyntaxtextarea.RSyntaxDocument) ie.getDocument()).getTokenListForLine(0);
+        var nonWhitespaceLexemes = new java.util.ArrayList<String>();
+        var hyperlinkLexemes = new java.util.ArrayList<String>();
+        while (tok != null && tok.isPaintable()) {
+            String lex = tok.getLexeme();
+            for (int i = 0; i < lex.length(); i++) {
+                char c = lex.charAt(i);
+                if (Character.isHighSurrogate(c)) {
+                    assertTrue(i + 1 < lex.length() && Character.isLowSurrogate(lex.charAt(i + 1)),
+                            "High surrogate must remain paired within token: " + lex);
+                    i++;
+                } else {
+                    assertFalse(Character.isLowSurrogate(c),
+                            "Unpaired low surrogate found in token: " + lex);
+                }
+            }
+            if (!tok.isWhitespace()) {
+                nonWhitespaceLexemes.add(lex);
+                if (tok.isHyperlink()) {
+                    hyperlinkLexemes.add(lex);
+                }
+            }
+            tok = tok.getNextToken();
+        }
+        assertEquals(java.util.List.of("Hello", "👔", "💡", "📊", "🖥️", "❌", "✏️", "⬆️", "⬇️", "https://aihalo.dev", "world"),
+                nonWhitespaceLexemes);
+        assertEquals(java.util.List.of("https://aihalo.dev"), hyperlinkLexemes);
+
         // Verify that rendering Welcome in Notepad neither blows up the layout width
         // on multi-line <pre> blocks nor loses emoji glyph fallback in code blocks.
         Notepad pad = new Notepad(welcome);

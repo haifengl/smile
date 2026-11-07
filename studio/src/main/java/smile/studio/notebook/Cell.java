@@ -746,6 +746,7 @@ public class Cell extends JPanel {
         }
 
         if (output.buffer().length() > 0) {
+            output.setText(output.buffer().toString());
             output.flush();
             if (output.getParent() == null) {
                 add(output, BorderLayout.SOUTH);

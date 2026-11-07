@@ -22,6 +22,7 @@ import java.awt.event.*;
 import java.io.IOException;
 import javax.swing.*;
 import javax.swing.text.Caret;
+import javax.swing.text.Document;
 
 import com.formdev.flatlaf.FlatLaf;
 import org.fife.ui.rsyntaxtextarea.*;
@@ -144,14 +145,96 @@ public class ThemedTextArea extends RSyntaxTextArea {
         });
     }
 
+    @Override
+    protected Document createDefaultModel() {
+        return new RSyntaxDocument(SYNTAX_STYLE_NONE) {
+            @Override
+            public Token getTokenListForLine(int line) {
+                return coalesceUnicodeTokens(super.getTokenListForLine(line));
+            }
+        };
+    }
+
+    /**
+     * Coalesces adjacent tokens when JFlex's 16-bit char scanner splits UTF-16
+     * surrogate pairs, emoji variation selectors / ZWJ / combining sequences, or
+     * non-ASCII identifier runs into separate single-char tokens.
+     *
+     * @param firstToken the head of the token list for a line.
+     * @return the head of the coalesced token list.
+     */
+    static Token coalesceUnicodeTokens(Token firstToken) {
+        Token curr = firstToken;
+        while (curr instanceof TokenImpl currImpl && currImpl.isPaintable()) {
+            Token next = currImpl.getNextToken();
+            if (next instanceof TokenImpl nextImpl
+                    && nextImpl.isPaintable()
+                    && currImpl.text != null
+                    && currImpl.text == nextImpl.text
+                    && currImpl.textCount > 0
+                    && nextImpl.textCount > 0
+                    && currImpl.textOffset + currImpl.textCount == nextImpl.textOffset
+                    && currImpl.getOffset() + currImpl.textCount == nextImpl.getOffset()
+                    && shouldCoalesce(currImpl, nextImpl)) {
+                currImpl.textCount += nextImpl.textCount;
+                currImpl.setNextToken(nextImpl.getNextToken());
+            } else {
+                curr = next;
+            }
+        }
+        return firstToken;
+    }
+
+    private static boolean shouldCoalesce(TokenImpl curr, TokenImpl next) {
+        char lastChar = curr.text[curr.textOffset + curr.textCount - 1];
+        char firstChar = next.text[next.textOffset];
+
+        // Never split a UTF-16 surrogate pair across tokens.
+        if (Character.isHighSurrogate(lastChar) && Character.isLowSurrogate(firstChar)) {
+            return true;
+        }
+
+        // Keep emoji variation selectors, ZWJ sequences, and combining marks with their base glyph.
+        if (!curr.isWhitespace() && !next.isWhitespace()) {
+            if (lastChar == '\u200D' || isGraphemeContinuation(next.text, next.textOffset, next.textCount)) {
+                return true;
+            }
+        }
+
+        // Coalesce adjacent non-hyperlink IDENTIFIER tokens emitted one char at a time by JFlex fallback rules.
+        return curr.getType() == TokenTypes.IDENTIFIER
+                && next.getType() == TokenTypes.IDENTIFIER
+                && curr.isHyperlink() == next.isHyperlink()
+                && curr.getLanguageIndex() == next.getLanguageIndex();
+    }
+
+    private static boolean isGraphemeContinuation(char[] text, int offset, int count) {
+        char ch = text[offset];
+        if (ch == '\u200D' || ch == '\u20E3' || (ch >= '\uFE00' && ch <= '\uFE0F')) {
+            return true;
+        }
+        int cp = (Character.isHighSurrogate(ch) && count > 1 && Character.isLowSurrogate(text[offset + 1]))
+                ? Character.toCodePoint(ch, text[offset + 1])
+                : ch;
+        if ((cp >= 0x1F3FB && cp <= 0x1F3FF) || (cp >= 0xE0100 && cp <= 0xE01EF)) {
+            return true;
+        }
+        int type = Character.getType(cp);
+        return type == Character.NON_SPACING_MARK
+                || type == Character.COMBINING_SPACING_MARK
+                || type == Character.ENCLOSING_MARK;
+    }
+
     /**
      * Applies the theme compatible with system L&F.
      */
     private void applyTheme() {
-        if (FlatLaf.isLafDark()) {
-            if (DARK_THEME != null) DARK_THEME.apply(this);
-        } else {
-            if (IDEA_THEME != null) IDEA_THEME.apply(this);
+        Theme theme = FlatLaf.isLafDark() ? DARK_THEME : IDEA_THEME;
+        if (theme != null) {
+            theme.apply(this);
+            if (theme.scheme != null) {
+                setSyntaxScheme((SyntaxScheme) theme.scheme.clone());
+            }
         }
         setFont(Monospaced.getFont());
     }
