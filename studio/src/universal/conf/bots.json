@@ -182,7 +182,7 @@
           "routineId": "julien-community-watch",
           "name": "4-Hour Community Watch (HN, Reddit, GitHub, SO)",
           "enabled": true,
-          "model": "claude-haiku-4-5",
+          "model": "gemini-3.5-flash-lite",
           "trigger": {
             "source": "timer",
             "intervalSeconds": 14400,
@@ -245,7 +245,7 @@
           "routineId": "mike-signal-watch",
           "name": "Weekday Morning Signal Watch (08:00)",
           "enabled": true,
-          "model": "claude-haiku-4-5",
+          "model": "gemini-3.5-flash-lite",
           "trigger": {
             "source": "timer",
             "cron": "0 8 * * MON-FRI",
