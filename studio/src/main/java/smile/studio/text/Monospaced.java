@@ -43,11 +43,13 @@ public class Monospaced {
             TextAttribute.WEIGHT, TextAttribute.WEIGHT_SEMIBOLD
     );
 
+    /** Last observed UIManager monospaced.font, to detect Look-and-Feel changes lazily. */
+    private static Font uiBaseFont = UIManager.getFont("monospaced.font");
+
     /** The shared font; persisted via {@link SmileStudio#preferences()}. */
-    private static Font font = baseFont()
-            .deriveFont(attributes)
-            .deriveFont(Math.clamp(SmileStudio.preferences().getFloat("monospaced", 14f),
-                    MIN_FONT_SIZE, MAX_FONT_SIZE));
+    private static Font font = createFont(Math.clamp(
+            SmileStudio.preferences().getFloat("monospaced", 14f),
+            MIN_FONT_SIZE, MAX_FONT_SIZE));
 
     /** A stable source object for font-change events. */
     private static final Object bean = new Object();
@@ -56,6 +58,12 @@ public class Monospaced {
 
     /** Private constructor – utility class. */
     private Monospaced() {
+    }
+
+    private static Font createFont(float size) {
+        return baseFont()
+                .deriveFont(attributes)
+                .deriveFont(Math.clamp(size, MIN_FONT_SIZE, MAX_FONT_SIZE));
     }
 
     /**
@@ -97,6 +105,11 @@ public class Monospaced {
      * @return the current monospace font.
      */
     public static Font getFont() {
+        Font currentUiFont = UIManager.getFont("monospaced.font");
+        if (currentUiFont != uiBaseFont) {
+            uiBaseFont = currentUiFont;
+            font = createFont(font.getSize2D());
+        }
         return font;
     }
 
