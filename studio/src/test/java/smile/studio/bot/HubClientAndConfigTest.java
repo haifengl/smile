@@ -125,6 +125,11 @@ public class HubClientAndConfigTest {
 
     @Test
     public void testBotTreeItemUsesAgentNativeTitleFromAgentMd() {
+        Path bundledBots = Path.of("src", "universal", "conf", "bots.json");
+        if (Files.isRegularFile(bundledBots)) {
+            BotsConfig bundled = BotsConfig.load(bundledBots);
+            assertTrue(bundled.findRoutine("frank-token-telemetry").isPresent());
+        }
         BotsConfig cfg = BotsConfig.defaultConfig();
         List<String> titles = cfg.bots().stream()
                 .map(b -> new BotExplorer.BotTreeItem(b).toString())
