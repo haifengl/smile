@@ -25,8 +25,13 @@ import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
+import java.util.List;
 import java.util.Locale;
 
+import org.commonmark.Extension;
+import org.commonmark.ext.autolink.AutolinkExtension;
+import org.commonmark.ext.gfm.strikethrough.StrikethroughExtension;
+import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
@@ -44,8 +49,13 @@ import smile.studio.SmileStudio;
  */
 public class Markdown extends JPanel {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Markdown.class);
-    private static final Parser parser = Parser.builder().build();
-    private static final HtmlRenderer renderer = HtmlRenderer.builder().build();
+    private static final List<Extension> EXTENSIONS = List.of(
+            TablesExtension.create(),
+            StrikethroughExtension.create(),
+            AutolinkExtension.create()
+    );
+    private static final Parser parser = Parser.builder().extensions(EXTENSIONS).build();
+    private static final HtmlRenderer renderer = HtmlRenderer.builder().extensions(EXTENSIONS).build();
     private static float fontSize = SmileStudio.preferences().getFloat("markdownFontSize", 1.25f);
     private final String text;
     private final XHTMLPanel html;
@@ -88,16 +98,36 @@ public class Markdown extends JPanel {
         return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 
+    /**
+     * Converts Markdown text to an HTML fragment using the configured CommonMark + GFM extensions.
+     * @param markdown the Markdown text.
+     * @return the rendered HTML fragment.
+     */
+    public static String toHtml(String markdown) {
+        Node document = parser.parse(markdown);
+        return renderer.render(document);
+    }
+
     /** Renders the Markdown content. */
     private XHTMLPanel render() {
-        Node document = parser.parse(text);
-        String content = renderer.render(document);
+        String content = toHtml(text);
 
         Color fg = UIManager.getColor("Label.foreground");
         String fgHex = toHexColor(fg != null ? fg : Color.BLACK);
+        Color border = UIManager.getColor("Component.borderColor");
+        String borderHex = toHexColor(border != null ? border : Color.GRAY);
 
         String html = """
                       <html>
+                      <head>
+                      <style>
+                      table { border-collapse: collapse; margin: 0.6em 0; }
+                      th, td { border: 1px solid """ + borderHex + """
+                      ; padding: 6px 10px; }
+                      th { font-weight: bold; }
+                      pre, code { font-family: monospace; }
+                      </style>
+                      </head>
                       <body style="width: 95%; height: auto; margin: 0 auto; color: """
                 + fgHex + ";\">"
                 + "<div style=\"font-size:"

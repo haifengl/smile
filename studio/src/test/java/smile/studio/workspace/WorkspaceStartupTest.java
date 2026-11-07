@@ -23,6 +23,7 @@ import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import smile.studio.text.Editor;
+import smile.studio.text.Markdown;
 import smile.studio.text.Notepad;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -113,6 +114,40 @@ public class WorkspaceStartupTest {
         javaPad.setFile(savedAsMd);
         assertTrue(javaPad.isMarkdown());
         assertEquals(Notepad.Mode.PREVIEW, javaPad.getMode());
+    }
+
+    @Test
+    public void testMarkdownGfmTablesStrikethroughAndAutolinks() {
+        // Given Markdown text with a GFM pipe table, strikethrough, and bare URL autolink
+        String md = """
+                # Feature Matrix
+
+                | Feature | Status | Notes |
+                | :--- | :---: | ---: |
+                | Tables | ~~Pending~~ Supported | https://smile-ai.org |
+                | Preview | Ready | 100% |
+                """;
+
+        // When converting to HTML and rendering into XHTMLPanel
+        String html = Markdown.toHtml(md);
+        Markdown component = new Markdown(md);
+
+        // Then GFM table, strikethrough, and autolinks are rendered and parsed into the DOM
+        assertTrue(html.contains("<table>"), "Expected <table> in rendered HTML: " + html);
+        assertTrue(html.contains("<thead>"), "Expected <thead> in rendered HTML: " + html);
+        assertTrue(html.contains("<tbody>"), "Expected <tbody> in rendered HTML: " + html);
+        assertTrue(html.contains("<th>Feature</th>") || html.contains("<th align=\"left\">Feature</th>"),
+                "Expected table header cell in rendered HTML: " + html);
+        assertTrue(html.contains("<del>Pending</del>"), "Expected <del> for strikethrough: " + html);
+        assertTrue(html.contains("<a href=\"https://smile-ai.org\">https://smile-ai.org</a>"),
+                "Expected autolink anchor in rendered HTML: " + html);
+
+        assertNotNull(component.contentPane(), "XHTMLPanel should be created without XML parse errors");
+        var doc = component.contentPane().getDocument();
+        assertNotNull(doc, "DOM Document should be loaded in XHTMLPanel");
+        assertEquals(1, doc.getElementsByTagName("table").getLength(), "DOM should contain 1 <table> element");
+        assertEquals(1, doc.getElementsByTagName("del").getLength(), "DOM should contain 1 <del> element");
+        assertEquals(1, doc.getElementsByTagName("a").getLength(), "DOM should contain 1 <a> element");
     }
 
     @Test
