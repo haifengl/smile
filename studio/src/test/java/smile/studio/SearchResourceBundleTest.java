@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import smile.studio.bot.BotActivity;
 import smile.studio.bot.BotManager;
 import smile.studio.kernel.ScalaKernel;
+import smile.studio.text.Notepad;
 import smile.studio.workspace.OpenFile;
 import smile.studio.workspace.Workspace;
 
@@ -127,6 +128,14 @@ public class SearchResourceBundleTest {
             "ErrorTitle", "SaveConfigErrorMessage", "RunNowTitle", "RunNowSuccessMessage",
             "RunNowErrorTitle", "RunNowErrorMessage");
 
+    /** Keys the Notepad panel reads at runtime, including Markdown mode toggle labels. */
+    private static final List<String> NOTEPAD_KEYS = List.of(
+            "File", "Open", "Save", "SaveAs", "Exit",
+            "Search", "GoToLine", "Find", "Replace",
+            "ShowFindBar", "ShowReplaceBar", "Error",
+            "SaveTitle", "SaveMessage", "ReplaceCount", "MarkCount",
+            "EditMode", "PreviewMode", "EditModeTooltip", "PreviewModeTooltip");
+
     @Test
     public void testBaseBundleHasSearchKeys() {
         System.out.println("SmileStudio: base bundle defines the search keys");
@@ -197,10 +206,11 @@ public class SearchResourceBundleTest {
 
     @Test
     public void testWorkspaceAndBotBundlesHaveEveryLocale() {
-        System.out.println("Workspace, BotActivity, and BotManager: every locale defines tab and label keys");
+        System.out.println("Workspace, BotActivity, BotManager, and Notepad: every locale defines tab and label keys");
         assertBundleKeysPresent(Workspace.class.getName(), WORKSPACE_TAB_KEYS);
         assertBundleKeysPresent(BotActivity.class.getName(), BOT_ACTIVITY_KEYS);
         assertBundleKeysPresent(BotManager.class.getName(), BOT_MANAGER_KEYS);
+        assertBundleKeysPresent(Notepad.class.getName(), NOTEPAD_KEYS);
     }
 
     private static void assertBundleKeysPresent(String baseName, List<String> keys) {

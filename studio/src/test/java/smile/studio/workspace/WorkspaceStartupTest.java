@@ -21,7 +21,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import smile.studio.text.Editor;
+import smile.studio.text.Notepad;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -49,6 +51,68 @@ public class WorkspaceStartupTest {
         assertEquals(SyntaxConstants.SYNTAX_STYLE_MARKDOWN, Editor.probeSyntaxStyle(Path.of("Release Notes")));
         assertEquals(SyntaxConstants.SYNTAX_STYLE_MARKDOWN, Editor.probeSyntaxStyle(Path.of("/path/to/Welcome")));
         assertEquals(SyntaxConstants.SYNTAX_STYLE_MARKDOWN, Editor.probeSyntaxStyle(Path.of("/path/to/Release Notes")));
+        assertEquals(SyntaxConstants.SYNTAX_STYLE_MARKDOWN, Editor.probeSyntaxStyle(Path.of("README.md")));
+        assertEquals(SyntaxConstants.SYNTAX_STYLE_MARKDOWN, Editor.probeSyntaxStyle(Path.of("guide.markdown")));
+        assertTrue(Editor.isMarkdown(Path.of("README.md")));
+        assertTrue(Editor.isMarkdown(Path.of("guide.markdown")));
+        assertTrue(Editor.isMarkdown(Path.of("Welcome")));
+        assertFalse(Editor.isMarkdown(Path.of("Main.java")));
+    }
+
+    @Test
+    public void testPerFileMarkdownPreviewAndEditModes(@TempDir Path tempDir) throws Exception {
+        // Given two Markdown files and one Java file
+        Path mdFile1 = tempDir.resolve("first.md");
+        Path mdFile2 = tempDir.resolve("second.markdown");
+        Path javaFile = tempDir.resolve("Sample.java");
+        Files.writeString(mdFile1, "# First Heading\n\nInitial content.");
+        Files.writeString(mdFile2, "# Second Heading\n\nSecond file content.");
+        Files.writeString(javaFile, "public class Sample {}\n");
+
+        // When opening them in Notepad
+        Notepad pad1 = new Notepad(mdFile1);
+        Notepad pad2 = new Notepad(mdFile2);
+        Notepad javaPad = new Notepad(javaFile);
+
+        // Then Markdown files open in PREVIEW mode by default, while Java files open in EDIT mode
+        assertTrue(pad1.isMarkdown());
+        assertEquals(Notepad.Mode.PREVIEW, pad1.getMode());
+        assertNotNull(pad1.markdownView());
+        assertEquals("# First Heading\n\nInitial content.", pad1.markdownView().text());
+
+        assertTrue(pad2.isMarkdown());
+        assertEquals(Notepad.Mode.PREVIEW, pad2.getMode());
+
+        assertFalse(javaPad.isMarkdown());
+        assertEquals(Notepad.Mode.EDIT, javaPad.getMode());
+        assertNull(javaPad.markdownView());
+
+        // When switching pad1 to EDIT mode, pad2 remains in PREVIEW mode (per-file isolation)
+        pad1.setMode(Notepad.Mode.EDIT);
+        assertEquals(Notepad.Mode.EDIT, pad1.getMode());
+        assertEquals(Notepad.Mode.PREVIEW, pad2.getMode());
+
+        // Attempting to set PREVIEW on a non-Markdown file keeps it in EDIT mode
+        javaPad.setMode(Notepad.Mode.PREVIEW);
+        assertEquals(Notepad.Mode.EDIT, javaPad.getMode());
+
+        // When editing text in pad1 and switching back to PREVIEW mode, preview reflects updated text
+        pad1.editor().setText("# Updated Heading\n\nEdited body.");
+        pad1.setMode(Notepad.Mode.PREVIEW);
+        assertEquals(Notepad.Mode.PREVIEW, pad1.getMode());
+        assertEquals("# Updated Heading\n\nEdited body.", pad1.markdownView().text());
+
+        // When reloading pad1 from disk while in PREVIEW mode, preview refreshes to disk content
+        Files.writeString(mdFile1, "# Disk Reloaded\n\nFrom disk.");
+        pad1.reload();
+        assertEquals(Notepad.Mode.PREVIEW, pad1.getMode());
+        assertEquals("# Disk Reloaded\n\nFrom disk.", pad1.markdownView().text());
+
+        // When saving a non-Markdown file as .md via setFile, it enables Markdown support
+        Path savedAsMd = tempDir.resolve("converted.md");
+        javaPad.setFile(savedAsMd);
+        assertTrue(javaPad.isMarkdown());
+        assertEquals(Notepad.Mode.PREVIEW, javaPad.getMode());
     }
 
     @Test
