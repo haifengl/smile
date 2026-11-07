@@ -651,4 +651,26 @@ public class HubClientAndConfigTest {
                 calendarOptions
         );
     }
+
+    @Test
+    public void testRenderTranscriptDisplaysFullLongTranscriptWithoutTruncation() {
+        String longBody = "Section line with detailed analysis.\n".repeat(600) + "FINAL_END_OF_TRANSCRIPT_MARKER";
+        assertTrue(longBody.length() > 20_000);
+        String escapedBody = longBody.replace("\n", "\\n");
+        String jsonl = """
+                {"role":"user","type":"TEXT","content":"Run full routine"}
+                {"role":"assistant","type":"TEXT","content":"%s"}
+                """.formatted(escapedBody);
+
+        BotActivity activity = new BotActivity(1);
+        activity.renderTranscript(jsonl, null);
+
+        var intents = activity.transcriptIntentList();
+        assertEquals(1, intents.size());
+        String rendered = intents.getFirst().output().getText();
+        assertTrue(rendered.contains("FINAL_END_OF_TRANSCRIPT_MARKER"),
+                "Full transcript text must be rendered without truncation");
+        assertFalse(rendered.contains("truncated in the view"),
+                "Rendered transcript must not contain a truncation notice");
+    }
 }

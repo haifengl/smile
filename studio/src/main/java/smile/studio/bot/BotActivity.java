@@ -147,7 +147,6 @@ public class BotActivity extends JPanel {
             .build();
     private static final DateTimeFormatter TIMESTAMP_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final int DISPLAY_TEXT_LIMIT = 12_000;
     private static final Pattern EMAIL_ACCOUNT_PATTERN =
             Pattern.compile("Approve sending outbound email via account '([^']+)'\\?");
 
@@ -1178,7 +1177,7 @@ public class BotActivity extends JPanel {
             intent.status().setToolTipText(status);
         }
         if (output != null && !output.isBlank()) {
-            String shown = forDisplay(stripBlankLines(output));
+            String shown = stripBlankLines(output);
             intent.output().print(shown);
             intent.output().setText(shown);
             intent.output().setCaretPosition(0);
@@ -1976,14 +1975,6 @@ public class BotActivity extends JPanel {
             return s;
         }
         return s.substring(0, Math.max(0, limit - 3)) + "...";
-    }
-
-    private static String forDisplay(String text) {
-        if (text.length() <= DISPLAY_TEXT_LIMIT) {
-            return text;
-        }
-        return text.substring(0, DISPLAY_TEXT_LIMIT)
-                + "\n\n… [truncated in the view; the session history file has the full text]";
     }
 
     private void cancelSelectedRun() {
