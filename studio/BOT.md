@@ -104,7 +104,7 @@ SMILE Bot separates **who** acts, **when** they wake, and **how** they do the wo
 2. **Setup Is a Message, Not Just a Form:** You can configure routines visually via **Agent Hub > Configure Bots & Routines…** or simply ask `@frank` in natural language (e.g., *"Pause Julien's community watch over the weekend"* or *"Add a weekday 9 AM routine for Clair"*). Agent-initiated changes use the `BotConfig` tool and require your explicit approval.
 3. **Cross-Project Memory Enrichment (`projects.json`):** Whenever you open a project in SMILE Studio, its path and `.smile/` workspace metadata are registered in `$SMILE_HOME/conf/projects.json`. Cross-project routines (`daily-log` at 19:00 and `frank-daily-recap` at 20:00) inspect both `$SMILE_HOME/bot/` and every tracked Studio project without merging project files.
 4. **Zero-Waste Idle Skipping (`requireActivityToday`):** When `requireActivityToday` is enabled on a routine (such as `daily-log`), Agent Hub checks whether the target persona modified any session files today before calling the LLM. Idle personas are recorded as `SKIPPED_IDLE` with zero token cost.
-5. **Two-Tier Model Routing (Watch vs. Act):** High-frequency scanning routines (such as `julien-community-watch` or `mike-signal-watch`) can specify a fast, low-cost `model` override (e.g., `claude-haiku-4-5`), while synthesis and drafting routines use the persona's default frontier model.
+5. **Two-Tier Model Routing (Watch vs. Act):** High-frequency scanning routines (such as `julien-community-watch` or `mike-signal-watch`) can specify a fast, low-cost `model` override (e.g., `gemini-3.5-flash-lite`), while synthesis and drafting routines use the persona's default frontier model.
 6. **Batch Draft Queue & Auto Review Guardrails:** Outbound emails, social posts, consequential shell/file actions, and automation writes are intercepted into a durable approval queue. Standing Auto Review rules let you auto-allow trusted patterns while guaranteeing that **`REQUIRE_APPROVAL` always wins over `ALWAYS_ALLOW`**.
 7. **Interactive Bot Pages:** Routines update self-contained HTML dashboards in `$SMILE_HOME/bot/pages/` (`executive-brief.html`, `sales-pipeline.html`, `community-radar.html`, `bot-activity.html`) that you can open directly in your default web browser from **Agent Hub > Bot Pages** or the `BotExplorer` right-click menu.
 
@@ -186,13 +186,13 @@ Configure Studio's connection and lifecycle behavior in `$SMILE_HOME/conf/studio
 
 ## 3. Built-In Bot Personas & Default Routines
 
-Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and ten coordinated routines:
+Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and eleven coordinated routines:
 
 | Bot ID | Persona | Role | Default Routines |
 |--------|---------|------|------------------|
 | `all-agents-memory` | `*` (All active personas) | Daily Memory Logger | `daily-log` (Daily 19:00) |
 | `frank` | `chief-of-staff` | Primary Bot & Executive Coordinator | `frank-daily-recap` (Daily 20:00), `frank-inbox` (Email), `frank-calendar` (Calendar), `frank-bot-activity-recap` (Daily 22:30) |
-| `julien` | `evangelist` | Developer & Product Evangelist | `julien-community-watch` (Every 4h), `julien-community-post` (Mon/Wed/Fri 10:00) |
+| `julien` | `evangelist` | Developer & Product Evangelist | `julien-community-watch` (Every 4h), `julien-community-post` (Mon/Wed/Fri 10:00), `julien-campaign-driver` (Mon–Fri 11:00) |
 | `mike` | `sales` | Founder-Led B2B Sales | `mike-signal-watch` (Mon–Fri 08:00), `mike-outreach-sweep` (Mon–Fri 08:30), `mike-replies` (Email) |
 
 ### 3.1 `all-agents-memory` — Daily Memory Logger (`*`)
@@ -223,24 +223,27 @@ Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and ten
 
 - **`julien-community-watch` (4-Hour Community Watch)**
   - **Trigger:** `timer` (`intervalSeconds: 14400`, `missedFirePolicy: "SKIP"`, `quietStart: "22:00"`, `quietEnd: "08:00"`)
-  - **Model override:** `claude-haiku-4-5` (lightweight watch tier)
+  - **Model override:** `gemini-3.5-flash-lite` (lightweight watch tier)
   - **Workflow:** Scans Hacker News, Reddit, GitHub Discussions, and Stack Overflow for new relevant threads not yet recorded in `.smile/memory/community-feed.json`, forwards buying signals to `@mike`, and triggers `julien-community-post` if urgent questions need answers.
 - **`julien-community-post` (Mon/Wed/Fri Proactive Community Post & Answer Sweep)**
   - **Trigger:** `timer` (`cron: "0 10 * * MON,WED,FRI"`, `missedFirePolicy: "SKIP"`)
   - **Workflow:** Runs the `/social-writing` skill to draft technical answers for queued threads and one proactive educational post, polishes prose with `/humanize`, stages all drafts into the Batch Draft Queue for review, and refreshes `$SMILE_HOME/bot/pages/community-radar.html`.
+- **`julien-campaign-driver` (Weekday Proactive Community Campaign Driver)**
+  - **Trigger:** `timer` (`cron: "0 11 * * MON-FRI"`, `missedFirePolicy: "FIRE_ONCE"`)
+  - **Workflow:** Runs `/community-building` (`useContextProjects: true`) to advance active community awareness campaigns in `docs/business/campaigns/`, track per-community state in `.smile/memory/campaign-state.json`, stage drafts in the Batch Draft Queue, forward buying signals to `@mike`, and update `$SMILE_HOME/bot/pages/community-radar.html`.
 
 ### 3.4 `mike` — Founder-Led B2B Sales
 
 - **`mike-signal-watch` (Weekday Morning Signal Watch)**
   - **Trigger:** `timer` (`cron: "0 8 * * MON-FRI"`, `missedFirePolicy: "FIRE_ONCE"`)
-  - **Model override:** `claude-haiku-4-5`
-  - **Workflow:** Runs `/signal-scanning` to scan buying signals from the last 24 hours, qualify prospects against `ICP.md`, and update `.smile/memory/pipeline.json`.
+  - **Model override:** `gemini-3.5-flash-lite`
+  - **Workflow:** Runs `/signal-scanning` (`useContextProjects: true`) to scan buying signals from the last 24 hours and Scarf production telemetry across `contextProjects`, qualify prospects against `ICP.md` and `docs/business/sales/scarf-outbound-targets.md`, and update `.smile/memory/pipeline.json` (preserving the full `prospects`, `watch_accounts`, `guardrails`, and `stats` schema).
 - **`mike-outreach-sweep` (Weekday Multi-Channel Outreach Sweep)**
   - **Trigger:** `timer` (`cron: "30 8 * * MON-FRI"`, `missedFirePolicy: "FIRE_ONCE"`, `awaitRoutineId: "mike-signal-watch"`)
-  - **Workflow:** Runs `/cold-email` for qualified prospects and due follow-ups in `pipeline.json`, drafts channel-appropriate messages (`email`, `linkedin_connect`, `linkedin_dm`, `messaging`), polishes with `/humanize`, stages the batch in the Draft Queue for approval, and updates `$SMILE_HOME/bot/pages/sales-pipeline.html`.
+  - **Workflow:** Runs `/cold-email` (`useContextProjects: true`) for qualified prospects and due follow-ups in `.smile/memory/pipeline.json`, drafts multi-threaded channel-appropriate messages (`email`, `linkedin_connect`, `linkedin_dm`, `messaging`), polishes with `/humanize`, stages the batch in the Draft Queue for approval, syncs status/next_action back to `.smile/memory/pipeline.json` and `docs/business/sales/scarf-outbound-targets.md`, and updates `$SMILE_HOME/bot/pages/sales-pipeline.html`.
 - **`mike-replies` (Inbound Prospect Reply Handler)**
   - **Trigger:** `email` (`mailbox: "mike"`, `settleSeconds: 30`, `maxTurnsPerHour: 10`)
-  - **Workflow:** Updates prospect stage in `pipeline.json`, coordinates meeting scheduling with `@frank` if requested, and stages a reply draft for user approval.
+  - **Workflow:** Updates prospect stage in `.smile/memory/pipeline.json` (`useContextProjects: true`) and `docs/business/sales/scarf-outbound-targets.md`, coordinates meeting scheduling with `@frank` if requested, stages a reply draft for user approval, and refreshes `$SMILE_HOME/bot/pages/sales-pipeline.html`.
 
 ---
 
@@ -275,7 +278,8 @@ Agent Hub (Running)
 │   └── ● frank-bot-activity-recap — 10:30 PM Bot Activity
 ├── @julien (Julien — Developer & Product Evangelist)
 │   ├── ● julien-community-watch — 4-Hour Community Watch (HN, Reddit, GitHub, SO)
-│   └── ● julien-community-post — Mon/Wed/Fri Proactive Community Post & Answer Sweep
+│   ├── ● julien-community-post — Mon/Wed/Fri Proactive Community Post & Answer Sweep
+│   └── ● julien-campaign-driver — Weekday Proactive Community Campaign Driver (11:00)
 └── @mike (Mike — Founder-Led B2B Sales)
     ├── ● mike-signal-watch — Weekday Morning Signal Watch (08:00)
     ├── ● mike-outreach-sweep — Weekday Multi-Channel Outreach Sweep (08:30)
@@ -333,7 +337,7 @@ Select any routine in the **Bots** explorer tab (or right-click to choose **New 
 - **Bot ID & Persona:** Select or enter the owning `botId` (`frank`, `all-agents-memory`, `julien`, `mike`, or a custom ID) and target agent spec `persona` (`chief-of-staff`, `*`, `evangelist`, `sales`, `data-scientist`, `architect`, `java-coder`, `pythonista`, `desktop-operator`).
 - **Routine ID & Enabled:** Unique identifier (e.g., `clair-weekly-audit`) and active toggle.
 - **Display Name:** Human-readable title.
-- **Model Override:** Choose `<Default Persona Model>` to use the persona's standard model, or select/type a specific model ID (such as `claude-haiku-4-5` or `gpt-5.4-mini`) for lightweight scanning routines.
+- **Model Override:** Choose `<Default Persona Model>` to use the persona's standard model, or select/type a specific model ID (such as `gemini-3.5-flash-lite`, `claude-haiku-4-5`, or `gpt-5.4-mini`) for lightweight scanning routines.
 
 #### Trigger & Schedule
 - **Source:** `timer`, `email`, `calendar`, or `webhook`.
