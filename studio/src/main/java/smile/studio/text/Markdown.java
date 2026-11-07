@@ -18,6 +18,7 @@
 package smile.studio.text;
 
 import javax.swing.*;
+import javax.swing.text.StyleContext;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
@@ -35,6 +36,7 @@ import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
+import org.xhtmlrenderer.layout.SharedContext;
 import org.xhtmlrenderer.simple.XHTMLPanel;
 import org.xhtmlrenderer.swing.BasicPanel;
 import org.xhtmlrenderer.swing.LinkListener;
@@ -47,7 +49,7 @@ import smile.studio.SmileStudio;
  *
  * @author Haifeng Li
  */
-public class Markdown extends JPanel {
+public class Markdown extends JPanel implements Scrollable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Markdown.class);
     private static final List<Extension> EXTENSIONS = List.of(
             TablesExtension.create(),
@@ -160,6 +162,7 @@ public class Markdown extends JPanel {
                         }
                         pre, code {
                             font-family: "JetBrains Mono", Consolas, monospace;
+                            font-size: 0.85em;
                             background-color: %s;
                             padding: 2px 4px;
                             border-radius: 4px;
@@ -168,8 +171,10 @@ public class Markdown extends JPanel {
                             padding: 10px;
                             border: 1px solid %s;
                             white-space: pre-wrap;
+                            word-wrap: break-word;
                         }
                         pre code {
+                            font-size: 1em;
                             background-color: transparent;
                             padding: 0;
                             border-radius: 0;
@@ -185,9 +190,26 @@ public class Markdown extends JPanel {
                 """, fgHex, fontSize, borderHex, thBgHex, codeBgHex, borderHex, content);
 
         try {
-            XHTMLPanel browser = new XHTMLPanel();
+            XHTMLPanel browser = new XHTMLPanel() {
+                @Override
+                public void addNotify() {
+                    super.addNotify();
+                    if (getParent() instanceof Markdown md
+                            && md.getParent() instanceof JViewport vp
+                            && vp.getParent() instanceof JScrollPane scrollPane) {
+                        setEnclosingScrollPane(scrollPane);
+                    }
+                }
+
+                @Override
+                protected void relayout() {
+                    super.relayout();
+                    registerCompositeFonts(getSharedContext());
+                }
+            };
             browser.setInteractive(false);
             browser.setOpaque(false); // transparent background
+            registerCompositeFonts(browser.getSharedContext());
 
             // Remove pre-installed LinkListeners
             for (var listener : browser.getMouseTrackingListeners()) {
@@ -227,11 +249,50 @@ public class Markdown extends JPanel {
     }
 
     /**
+     * Registers Swing composite fonts for physical monospace font families so that
+     * code blocks and inline code retain OS fallback for emoji and Unicode symbols.
+     */
+    private static void registerCompositeFonts(SharedContext sharedContext) {
+        StyleContext sc = StyleContext.getDefaultStyleContext();
+        for (String family : new String[]{"JetBrains Mono", "Consolas", "Menlo", "DejaVu Sans Mono"}) {
+            Font composite = sc.getFont(family, Font.PLAIN, 1);
+            if (composite.getFamily().equalsIgnoreCase(family)) {
+                sharedContext.setFontMapping(family, composite);
+            }
+        }
+    }
+
+    /**
      * Adjusts the font size to render Markdown.
      * @param delta the value by which the font size is adjusted.
      */
     public static void adjustFontSize(float delta) {
         fontSize += delta;
         SmileStudio.preferences().putFloat("markdownFontSize", fontSize);
+    }
+
+    @Override
+    public Dimension getPreferredScrollableViewportSize() {
+        return html != null ? html.getPreferredScrollableViewportSize() : getPreferredSize();
+    }
+
+    @Override
+    public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+        return html != null ? html.getScrollableUnitIncrement(visibleRect, orientation, direction) : 16;
+    }
+
+    @Override
+    public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+        return html != null ? html.getScrollableBlockIncrement(visibleRect, orientation, direction) : 64;
+    }
+
+    @Override
+    public boolean getScrollableTracksViewportWidth() {
+        return html == null || html.getScrollableTracksViewportWidth();
+    }
+
+    @Override
+    public boolean getScrollableTracksViewportHeight() {
+        return html != null && html.getScrollableTracksViewportHeight();
     }
 }
