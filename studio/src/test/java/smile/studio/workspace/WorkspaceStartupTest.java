@@ -179,6 +179,44 @@ public class WorkspaceStartupTest {
         Path releaseNotes = Workspace.resolveHomeFile("Release Notes");
         String releaseNotesContent = Files.readString(releaseNotes);
         assertTrue(releaseNotesContent.contains("Release Notes"));
+
+        // Verify that rendering Welcome in Notepad neither blows up the layout width
+        // on multi-line <pre> blocks nor loses emoji glyph fallback in code blocks.
+        Notepad pad = new Notepad(welcome);
+        javax.swing.JFrame frame = new javax.swing.JFrame();
+        try {
+            frame.setContentPane(pad);
+            frame.addNotify();
+            for (int width : new int[]{800, 1193}) {
+                frame.setSize(width, 900);
+                frame.validate();
+                java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(width, 900, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+                java.awt.Graphics2D g2 = img.createGraphics();
+                var xhtml = pad.markdownView().contentPane();
+                xhtml.doDocumentLayout(g2);
+                javax.swing.RepaintManager.currentManager(xhtml).validateInvalidComponents();
+                frame.validate();
+                xhtml.doDocumentLayout(g2);
+                javax.swing.RepaintManager.currentManager(xhtml).validateInvalidComponents();
+                frame.validate();
+                g2.dispose();
+
+                var root = xhtml.getRootBox();
+                assertNotNull(root);
+                var paintDim = root.getLayer().getPaintingDimension(xhtml.getLayoutContext());
+                assertTrue(paintDim.width <= width,
+                        "Expected painting width <= frame width (" + width + "), but was " + paintDim.width);
+                assertTrue(pad.markdownView().getScrollableTracksViewportWidth(),
+                        "Markdown view should track viewport width without horizontal overflow");
+
+                var preBox = root.getChild(0).getChild(0).getChild(9);
+                var preFont = ((org.xhtmlrenderer.swing.AWTFSFont) preBox.getStyle().getFSFont(xhtml.getLayoutContext())).font();
+                assertEquals(-1, preFont.canDisplayUpTo("👔 Frank | 💡 Steve | 📣 Julien | 🤝 Mike | 📊 Clair | 📐 Ada | ☕ James | 🐍 Guido | 🖥️ Chuck"),
+                        "Resolved <pre> font should display all emojis in Welcome");
+            }
+        } finally {
+            frame.dispose();
+        }
     }
 
     @Test
