@@ -110,6 +110,7 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
         previewButton.addActionListener(e -> setMode(Mode.PREVIEW));
 
         modeBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 2));
+        modeBar.setOpaque(false);
         modeBar.setBorder(new EmptyBorder(2, 6, 2, 6));
         modeBar.add(editButton);
         modeBar.add(previewButton);
@@ -119,7 +120,30 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
 
         contentCards.add(csp, Mode.EDIT.name());
         contentCards.add(previewScroll, Mode.PREVIEW.name());
-        add(contentCards, BorderLayout.CENTER);
+
+        JLayeredPane layeredPane = new JLayeredPane() {
+            @Override
+            public void doLayout() {
+                int w = getWidth();
+                int h = getHeight();
+                contentCards.setBounds(0, 0, w, h);
+                if (modeBar.isVisible()) {
+                    Dimension pref = modeBar.getPreferredSize();
+                    int scrollBarWidth = UIManager.getInt("ScrollBar.width");
+                    int rightMargin = (scrollBarWidth > 0 ? scrollBarWidth : 14) + 6;
+                    int x = Math.max(0, w - pref.width - rightMargin);
+                    modeBar.setBounds(x, 6, pref.width, pref.height);
+                }
+            }
+
+            @Override
+            public Dimension getPreferredSize() {
+                return contentCards.getPreferredSize();
+            }
+        };
+        layeredPane.add(contentCards, JLayeredPane.DEFAULT_LAYER);
+        layeredPane.add(modeBar, JLayeredPane.PALETTE_LAYER);
+        add(layeredPane, BorderLayout.CENTER);
 
         initSearchDialogs();
         initSearchKeyBindings();
@@ -182,14 +206,10 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
     private void configureMarkdownSupport(boolean isMarkdownFile, Mode initialMarkdownMode) {
         this.markdown = isMarkdownFile;
         if (markdown) {
-            if (modeBar.getParent() != this) {
-                add(modeBar, BorderLayout.NORTH);
-            }
             modeBar.setVisible(true);
             setMode(initialMarkdownMode);
         } else {
             modeBar.setVisible(false);
-            remove(modeBar);
             setMode(Mode.EDIT);
         }
         revalidate();
