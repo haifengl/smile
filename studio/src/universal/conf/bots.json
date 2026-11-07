@@ -284,9 +284,9 @@
           "workflow": {
             "kind": "SKILL",
             "target": "signal-scanning",
-            "instructions": "Scan last 24h buying signals, qualify against ICP.md, and update .smile/memory/pipeline.json.",
+            "instructions": "Scan last 24h buying signals and Scarf production telemetry across contextProjects, qualify against ICP.md and docs/business/sales/scarf-outbound-targets.md, and update .smile/memory/pipeline.json (preserving the full prospects, watch_accounts, guardrails, and stats schema across bot and contextProject workspaces).",
             "requireActivityToday": false,
-            "useContextProjects": false
+            "useContextProjects": true
           },
           "policy": {
             "sessionMode": "ISOLATED_PER_RUN",
@@ -310,9 +310,9 @@
           "workflow": {
             "kind": "SKILL",
             "target": "cold-email",
-            "instructions": "For qualified prospects and due follow-ups in .smile/memory/pipeline.json, draft channel-appropriate messages (email, linkedin_connect, linkedin_dm, messaging), polish with /humanize, stage the batch into the Draft Queue for approval, and refresh ${smile.home}/bot/pages/sales-pipeline.html.",
+            "instructions": "For qualified prospects and due follow-ups in .smile/memory/pipeline.json (synced with docs/business/sales/scarf-outbound-targets.md across contextProjects), draft multi-threaded channel-appropriate messages (email, linkedin_connect, linkedin_dm, messaging), polish with /humanize, stage the batch into the Draft Queue for approval, sync updated status/next_action back to .smile/memory/pipeline.json and docs/business/sales/scarf-outbound-targets.md, and refresh ${smile.home}/bot/pages/sales-pipeline.html.",
             "requireActivityToday": false,
-            "useContextProjects": false,
+            "useContextProjects": true,
             "awaitRoutineId": "mike-signal-watch"
           },
           "policy": {
@@ -339,9 +339,9 @@
           "workflow": {
             "kind": "TOOL",
             "target": "Email",
-            "instructions": "Update prospect stage in .smile/memory/pipeline.json, coordinate meeting scheduling with @frank if requested, and stage a reply draft for user approval.",
+            "instructions": "Update prospect stage in .smile/memory/pipeline.json and docs/business/sales/scarf-outbound-targets.md, coordinate meeting scheduling with @frank if requested, stage a reply draft for user approval, and refresh ${smile.home}/bot/pages/sales-pipeline.html.",
             "requireActivityToday": false,
-            "useContextProjects": false
+            "useContextProjects": true
           },
           "policy": {
             "sessionMode": "ISOLATED_PER_RUN",
