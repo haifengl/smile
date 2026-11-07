@@ -404,8 +404,8 @@ public final class HubClient {
                 pagesDir.resolve("sales-pipeline.html").toString(), ""));
         bySlug.put("community-radar", new BotPageSummary("community-radar", "Community Radar — @julien",
                 pagesDir.resolve("community-radar.html").toString(), ""));
-        bySlug.put("token-usage", new BotPageSummary("token-usage", "Bot Activity & Token Telemetry",
-                pagesDir.resolve("token-usage.html").toString(), ""));
+        bySlug.put("bot-activity", new BotPageSummary("bot-activity", "Bot Activity",
+                pagesDir.resolve("bot-activity.html").toString(), ""));
 
         if (Files.isDirectory(pagesDir)) {
             try (Stream<Path> stream = Files.list(pagesDir)) {
@@ -443,7 +443,7 @@ public final class HubClient {
         } else if ("julien".equals(botId) || "evangelist".equals(persona)) {
             slug = "community-radar";
         } else if ("*".equals(persona) || botId.contains("all-agents")) {
-            slug = "token-usage";
+            slug = "bot-activity";
         }
         if (slug == null) {
             return Optional.empty();

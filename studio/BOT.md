@@ -106,7 +106,7 @@ SMILE Bot separates **who** acts, **when** they wake, and **how** they do the wo
 4. **Zero-Waste Idle Skipping (`requireActivityToday`):** When `requireActivityToday` is enabled on a routine (such as `daily-log`), Agent Hub checks whether the target persona modified any session files today before calling the LLM. Idle personas are recorded as `SKIPPED_IDLE` with zero token cost.
 5. **Two-Tier Model Routing (Watch vs. Act):** High-frequency scanning routines (such as `julien-community-watch` or `mike-signal-watch`) can specify a fast, low-cost `model` override (e.g., `claude-haiku-4-5`), while synthesis and drafting routines use the persona's default frontier model.
 6. **Batch Draft Queue & Auto Review Guardrails:** Outbound emails, social posts, consequential shell/file actions, and automation writes are intercepted into a durable approval queue. Standing Auto Review rules let you auto-allow trusted patterns while guaranteeing that **`REQUIRE_APPROVAL` always wins over `ALWAYS_ALLOW`**.
-7. **Interactive Bot Pages:** Routines update self-contained HTML dashboards in `$SMILE_HOME/bot/pages/` (`executive-brief.html`, `sales-pipeline.html`, `community-radar.html`, `token-usage.html`) that you can open directly in your default web browser from **Agent Hub > Bot Pages** or the `BotExplorer` right-click menu.
+7. **Interactive Bot Pages:** Routines update self-contained HTML dashboards in `$SMILE_HOME/bot/pages/` (`executive-brief.html`, `sales-pipeline.html`, `community-radar.html`, `bot-activity.html`) that you can open directly in your default web browser from **Agent Hub > Bot Pages** or the `BotExplorer` right-click menu.
 
 ---
 
@@ -191,7 +191,7 @@ Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and ten
 | Bot ID | Persona | Role | Default Routines |
 |--------|---------|------|------------------|
 | `all-agents-memory` | `*` (All active personas) | Daily Memory Logger | `daily-log` (Daily 19:00) |
-| `frank` | `chief-of-staff` | Primary Bot & Executive Coordinator | `frank-daily-recap` (Daily 20:00), `frank-inbox` (Email), `frank-calendar` (Calendar), `frank-token-telemetry` (Daily 22:30) |
+| `frank` | `chief-of-staff` | Primary Bot & Executive Coordinator | `frank-daily-recap` (Daily 20:00), `frank-inbox` (Email), `frank-calendar` (Calendar), `frank-bot-activity-recap` (Daily 22:30) |
 | `julien` | `evangelist` | Developer & Product Evangelist | `julien-community-watch` (Every 4h), `julien-community-post` (Mon/Wed/Fri 10:00) |
 | `mike` | `sales` | Founder-Led B2B Sales | `mike-signal-watch` (Mon–Fri 08:00), `mike-outreach-sweep` (Mon–Fri 08:30), `mike-replies` (Email) |
 
@@ -215,9 +215,9 @@ Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and ten
 - **`frank-calendar` (Calendar Guard & 15m Pre-Meeting Brief)**
   - **Trigger:** `calendar` (`calendarUrl: "file://${smile.home}/bot/calendar/frank.ics"`, poll interval `300s`, `reminderBeforeSeconds: 900`)
   - **Workflow:** Checks schedule conflicts on `calendar.invite` / `calendar.updated` (asking whether to Accept/Decline with a 15-minute approval TTL) and prepares attendee/project context briefs 15 minutes before meetings (`calendar.reminder`).
-- **`frank-token-telemetry` (10:30 PM Bot Activity & Token Telemetry)**
+- **`frank-bot-activity-recap` (10:30 PM Bot Activity)**
   - **Trigger:** `timer` (`cron: "30 22 * * *"`, `missedFirePolicy: "FIRE_ONCE"`, `awaitRoutineId: "frank-daily-recap"`)
-  - **Workflow:** Queries `/v1/admin/runs` and `/q/metrics` to collect routine execution counts, `SKIPPED_IDLE` savings, model tier breakdown, and event intake telemetry, and updates `$SMILE_HOME/bot/pages/token-usage.html`.
+  - **Workflow:** Queries `/v1/admin/runs` and `/q/metrics` to collect routine execution counts, `SKIPPED_IDLE` savings, model tier breakdown, and event intake telemetry, and updates `$SMILE_HOME/bot/pages/bot-activity.html`.
 
 ### 3.3 `julien` — Developer & Product Evangelist
 
@@ -272,7 +272,7 @@ Agent Hub (Running)
 │   ├── ● frank-daily-recap — 8:00 PM End-of-Day Consolidation & Briefing
 │   ├── ● frank-inbox — Executive Email Triage
 │   ├── ● frank-calendar — Calendar Guard & 15m Pre-Meeting Brief
-│   └── ● frank-token-telemetry — 10:30 PM Bot Activity & Token Telemetry
+│   └── ● frank-bot-activity-recap — 10:30 PM Bot Activity
 ├── @julien (Julien — Developer & Product Evangelist)
 │   ├── ● julien-community-watch — 4-Hour Community Watch (HN, Reddit, GitHub, SO)
 │   └── ● julien-community-post — Mon/Wed/Fri Proactive Community Post & Answer Sweep
@@ -451,7 +451,7 @@ Routines generate and refresh self-contained HTML dashboards under `$SMILE_HOME/
 | `executive-brief` | `executive-brief.html` | `@frank` | End-of-day cross-project recap, active priorities, calendar alerts, and pending decisions |
 | `sales-pipeline` | `sales-pipeline.html` | `@mike` | Qualified prospects, buying signals, pipeline stages, and staged multi-channel outreach |
 | `community-radar` | `community-radar.html` | `@julien` | High-signal Hacker News, Reddit, GitHub, and Stack Overflow threads and drafted answers |
-| `token-usage` | `token-usage.html` | System | Routine execution counts, idle-skip savings, model tier breakdown, and event telemetry |
+| `bot-activity` | `bot-activity.html` | System | Routine execution counts, idle-skip savings, model tier breakdown, and event telemetry |
 
 You can also create custom HTML files in `$SMILE_HOME/bot/pages/<slug>.html` from any routine; Agent Hub discovers and serves them automatically at `/v1/pages/<slug>`.
 
@@ -540,7 +540,7 @@ $SMILE_HOME/
     │   ├── executive-brief.html
     │   ├── sales-pipeline.html
     │   ├── community-radar.html
-    │   └── token-usage.html
+    │   └── bot-activity.html
     ├── calendar/
     │   └── frank.ics          # Local iCalendar feed for @frank
     ├── data/

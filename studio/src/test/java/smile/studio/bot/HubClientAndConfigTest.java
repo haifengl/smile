@@ -128,7 +128,7 @@ public class HubClientAndConfigTest {
         Path bundledBots = Path.of("src", "universal", "conf", "bots.json");
         if (Files.isRegularFile(bundledBots)) {
             BotsConfig bundled = BotsConfig.load(bundledBots);
-            assertTrue(bundled.findRoutine("frank-token-telemetry").isPresent());
+            assertTrue(bundled.findRoutine("frank-bot-activity-recap").isPresent());
         }
         BotsConfig cfg = BotsConfig.defaultConfig();
         List<String> titles = cfg.bots().stream()
@@ -220,7 +220,7 @@ public class HubClientAndConfigTest {
             assertTrue(pages.stream().anyMatch(p -> "executive-brief".equals(p.slug())));
             assertTrue(pages.stream().anyMatch(p -> "sales-pipeline".equals(p.slug())));
             assertTrue(pages.stream().anyMatch(p -> "community-radar".equals(p.slug())));
-            assertTrue(pages.stream().anyMatch(p -> "token-usage".equals(p.slug())));
+            assertTrue(pages.stream().anyMatch(p -> "bot-activity".equals(p.slug())));
             assertTrue(pages.stream().anyMatch(p -> "custom-report".equals(p.slug())));
 
             BotsConfig cfg = BotsConfig.defaultConfig();

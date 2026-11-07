@@ -533,7 +533,7 @@ network for an arbitrary source).
 
 The **Bots** tab in the left panel (`BotExplorer`) and the **Agent Hub** menu connect SMILE Agent Studio to **Agent Hub** (`smile hub`), the 24/7 autonomous background runtime.
 
-- **Bots Explorer (`Bots` tab):** Displays all configured Bot Personas (`@frank`, `@julien`, `@mike`, `all-agents-memory`, and any custom bots) and their scheduled or event-driven routines. Click a routine to configure it in the **Bot Routines** workspace tab (`BotManager`), double-click a bot to open **Bot Activities** (`BotActivity`), or right-click to **Run Now**, **Enable / Disable**, or open live **Bot Pages** (`executive-brief.html`, `sales-pipeline.html`, `community-radar.html`, `token-usage.html`).
+- **Bots Explorer (`Bots` tab):** Displays all configured Bot Personas (`@frank`, `@julien`, `@mike`, `all-agents-memory`, and any custom bots) and their scheduled or event-driven routines. Click a routine to configure it in the **Bot Routines** workspace tab (`BotManager`), double-click a bot to open **Bot Activities** (`BotActivity`), or right-click to **Run Now**, **Enable / Disable**, or open live **Bot Pages** (`executive-brief.html`, `sales-pipeline.html`, `community-radar.html`, `bot-activity.html`).
 - **Bot Activities (`BotActivity` tab):** Review, diff, and inline-edit pending outbound emails, social posts, tool confirmations, and questions in the **Structured Review Composer**, approve batches in one click, and inspect session transcripts across all routine runs.
 
 For complete documentation on Agent Hub, Bot routines, webhooks, email/calendar triggers, and Auto Review guardrails, see [BOT.md](BOT.md).
