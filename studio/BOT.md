@@ -186,12 +186,12 @@ Configure Studio's connection and lifecycle behavior in `$SMILE_HOME/conf/studio
 
 ## 3. Built-In Bot Personas & Default Routines
 
-Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and nine coordinated routines:
+Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and ten coordinated routines:
 
 | Bot ID | Persona | Role | Default Routines |
 |--------|---------|------|------------------|
 | `all-agents-memory` | `*` (All active personas) | Daily Memory Logger | `daily-log` (Daily 19:00) |
-| `frank` | `chief-of-staff` | Primary Bot & Executive Coordinator | `frank-daily-recap` (Daily 20:00), `frank-inbox` (Email), `frank-calendar` (Calendar) |
+| `frank` | `chief-of-staff` | Primary Bot & Executive Coordinator | `frank-daily-recap` (Daily 20:00), `frank-inbox` (Email), `frank-calendar` (Calendar), `frank-token-telemetry` (Daily 22:30) |
 | `julien` | `evangelist` | Developer & Product Evangelist | `julien-community-watch` (Every 4h), `julien-community-post` (Mon/Wed/Fri 10:00) |
 | `mike` | `sales` | Founder-Led B2B Sales | `mike-signal-watch` (Mon–Fri 08:00), `mike-outreach-sweep` (Mon–Fri 08:30), `mike-replies` (Email) |
 
@@ -215,6 +215,9 @@ Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and nin
 - **`frank-calendar` (Calendar Guard & 15m Pre-Meeting Brief)**
   - **Trigger:** `calendar` (`calendarUrl: "file://${smile.home}/bot/calendar/frank.ics"`, poll interval `300s`, `reminderBeforeSeconds: 900`)
   - **Workflow:** Checks schedule conflicts on `calendar.invite` / `calendar.updated` (asking whether to Accept/Decline with a 15-minute approval TTL) and prepares attendee/project context briefs 15 minutes before meetings (`calendar.reminder`).
+- **`frank-token-telemetry` (10:30 PM Bot Activity & Token Telemetry)**
+  - **Trigger:** `timer` (`cron: "30 22 * * *"`, `missedFirePolicy: "FIRE_ONCE"`, `awaitRoutineId: "frank-daily-recap"`)
+  - **Workflow:** Queries `/v1/admin/runs` and `/q/metrics` to collect routine execution counts, `SKIPPED_IDLE` savings, model tier breakdown, and event intake telemetry, and updates `$SMILE_HOME/bot/pages/token-usage.html`.
 
 ### 3.3 `julien` — Developer & Product Evangelist
 
@@ -268,7 +271,8 @@ Agent Hub (Running)
 ├── @frank (Frank — Chief of Staff (Primary Bot))
 │   ├── ● frank-daily-recap — 8:00 PM End-of-Day Consolidation & Briefing
 │   ├── ● frank-inbox — Executive Email Triage
-│   └── ● frank-calendar — Calendar Guard & 15m Pre-Meeting Brief
+│   ├── ● frank-calendar — Calendar Guard & 15m Pre-Meeting Brief
+│   └── ● frank-token-telemetry — 10:30 PM Bot Activity & Token Telemetry
 ├── @julien (Julien — Developer & Product Evangelist)
 │   ├── ● julien-community-watch — 4-Hour Community Watch (HN, Reddit, GitHub, SO)
 │   └── ● julien-community-post — Mon/Wed/Fri Proactive Community Post & Answer Sweep
