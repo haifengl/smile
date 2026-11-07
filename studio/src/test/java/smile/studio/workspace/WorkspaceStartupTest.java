@@ -114,6 +114,13 @@ public class WorkspaceStartupTest {
         javaPad.setFile(savedAsMd);
         assertTrue(javaPad.isMarkdown());
         assertEquals(Notepad.Mode.PREVIEW, javaPad.getMode());
+
+        // And the mode buttons are overlaid via JLayeredPane rather than taking a separate NORTH bar
+        assertEquals(1, pad1.getComponentCount(), "Notepad should only contain the central JLayeredPane");
+        assertInstanceOf(javax.swing.JLayeredPane.class, pad1.getComponent(0));
+        pad1.setSize(800, 600);
+        pad1.doLayout();
+        pad1.getComponent(0).doLayout();
     }
 
     @Test
