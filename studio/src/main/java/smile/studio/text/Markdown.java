@@ -98,6 +98,15 @@ public class Markdown extends JPanel {
         return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
     }
 
+    /** Blends two colors by the given ratio of the foreground color (0.0 to 1.0). */
+    private static Color blend(Color base, Color overlay, double ratio) {
+        double inv = 1.0 - ratio;
+        int r = Math.clamp((int) Math.round(base.getRed() * inv + overlay.getRed() * ratio), 0, 255);
+        int g = Math.clamp((int) Math.round(base.getGreen() * inv + overlay.getGreen() * ratio), 0, 255);
+        int b = Math.clamp((int) Math.round(base.getBlue() * inv + overlay.getBlue() * ratio), 0, 255);
+        return new Color(r, g, b);
+    }
+
     /**
      * Converts Markdown text to an HTML fragment using the configured CommonMark + GFM extensions.
      * @param markdown the Markdown text.
@@ -113,26 +122,67 @@ public class Markdown extends JPanel {
         String content = toHtml(text);
 
         Color fg = UIManager.getColor("Label.foreground");
-        String fgHex = toHexColor(fg != null ? fg : Color.BLACK);
-        Color border = UIManager.getColor("Component.borderColor");
-        String borderHex = toHexColor(border != null ? border : Color.GRAY);
+        if (fg == null) fg = Color.BLACK;
+        String fgHex = toHexColor(fg);
 
-        String html = """
-                      <html>
-                      <head>
-                      <style>
-                      table { border-collapse: collapse; margin: 0.6em 0; }
-                      th, td { border: 1px solid """ + borderHex + """
-                      ; padding: 6px 10px; }
-                      th { font-weight: bold; }
-                      pre, code { font-family: monospace; }
-                      </style>
-                      </head>
-                      <body style="width: 95%; height: auto; margin: 0 auto; color: """
-                + fgHex + ";\">"
-                + "<div style=\"font-size:"
-                + String.format(Locale.ROOT, " %.2fem;\">", fontSize)
-                + content + "</div></body></html>";
+        Color panelBg = UIManager.getColor("Panel.background");
+        if (panelBg == null) panelBg = Color.WHITE;
+        String codeBgHex = toHexColor(blend(panelBg, fg, 0.07));
+        String thBgHex = toHexColor(blend(panelBg, fg, 0.05));
+
+        Color border = UIManager.getColor("Component.borderColor");
+        String borderHex = toHexColor(border != null ? border : blend(panelBg, fg, 0.25));
+
+        String html = String.format(Locale.ROOT, """
+                <html>
+                <head>
+                    <style>
+                        body {
+                            width: 95%%;
+                            height: auto;
+                            margin: 0 auto;
+                            color: %s;
+                        }
+                        .markdown-body {
+                            font-size: %.2fem;
+                        }
+                        table {
+                            border-collapse: collapse;
+                            margin: 0.6em 0;
+                        }
+                        th, td {
+                            border: 1px solid %s;
+                            padding: 6px 10px;
+                        }
+                        th {
+                            font-weight: bold;
+                            background-color: %s;
+                        }
+                        pre, code {
+                            font-family: "JetBrains Mono", Consolas, monospace;
+                            background-color: %s;
+                            padding: 2px 4px;
+                            border-radius: 4px;
+                        }
+                        pre {
+                            padding: 10px;
+                            border: 1px solid %s;
+                            white-space: pre-wrap;
+                        }
+                        pre code {
+                            background-color: transparent;
+                            padding: 0;
+                            border-radius: 0;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="markdown-body">
+                        %s
+                    </div>
+                </body>
+                </html>
+                """, fgHex, fontSize, borderHex, thBgHex, codeBgHex, borderHex, content);
 
         try {
             XHTMLPanel browser = new XHTMLPanel();

@@ -118,21 +118,25 @@ public class WorkspaceStartupTest {
 
     @Test
     public void testMarkdownGfmTablesStrikethroughAndAutolinks() {
-        // Given Markdown text with a GFM pipe table, strikethrough, and bare URL autolink
+        // Given Markdown text with a GFM pipe table, strikethrough, bare URL autolink, and code blocks
         String md = """
                 # Feature Matrix
 
                 | Feature | Status | Notes |
                 | :--- | :---: | ---: |
                 | Tables | ~~Pending~~ Supported | https://smile-ai.org |
-                | Preview | Ready | 100% |
+                | Preview | `Ready` | 100% |
+
+                ```java
+                System.out.println("Hello");
+                ```
                 """;
 
         // When converting to HTML and rendering into XHTMLPanel
         String html = Markdown.toHtml(md);
         Markdown component = new Markdown(md);
 
-        // Then GFM table, strikethrough, and autolinks are rendered and parsed into the DOM
+        // Then GFM table, strikethrough, autolinks, and code blocks are rendered and parsed into the DOM
         assertTrue(html.contains("<table>"), "Expected <table> in rendered HTML: " + html);
         assertTrue(html.contains("<thead>"), "Expected <thead> in rendered HTML: " + html);
         assertTrue(html.contains("<tbody>"), "Expected <tbody> in rendered HTML: " + html);
@@ -141,6 +145,7 @@ public class WorkspaceStartupTest {
         assertTrue(html.contains("<del>Pending</del>"), "Expected <del> for strikethrough: " + html);
         assertTrue(html.contains("<a href=\"https://smile-ai.org\">https://smile-ai.org</a>"),
                 "Expected autolink anchor in rendered HTML: " + html);
+        assertTrue(html.contains("<pre><code"), "Expected fenced code block in rendered HTML: " + html);
 
         assertNotNull(component.contentPane(), "XHTMLPanel should be created without XML parse errors");
         var doc = component.contentPane().getDocument();
@@ -148,6 +153,13 @@ public class WorkspaceStartupTest {
         assertEquals(1, doc.getElementsByTagName("table").getLength(), "DOM should contain 1 <table> element");
         assertEquals(1, doc.getElementsByTagName("del").getLength(), "DOM should contain 1 <del> element");
         assertEquals(1, doc.getElementsByTagName("a").getLength(), "DOM should contain 1 <a> element");
+        assertEquals(1, doc.getElementsByTagName("pre").getLength(), "DOM should contain 1 <pre> element");
+        assertEquals(2, doc.getElementsByTagName("code").getLength(), "DOM should contain 2 <code> elements");
+
+        String styleText = doc.getElementsByTagName("style").item(0).getTextContent();
+        assertTrue(styleText.contains("font-family: \"JetBrains Mono\", Consolas, monospace"),
+                "Style should specify monospace font family for pre and code");
+        assertTrue(styleText.contains("pre code"), "Style should reset inner pre code background/padding");
     }
 
     @Test
