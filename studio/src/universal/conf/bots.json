@@ -143,8 +143,8 @@
           }
         },
         {
-          "routineId": "frank-token-telemetry",
-          "name": "10:30 PM Bot Activity & Token Telemetry",
+          "routineId": "frank-bot-activity-recap",
+          "name": "10:30 PM Bot Activity",
           "enabled": true,
           "trigger": {
             "source": "timer",
@@ -158,7 +158,7 @@
           "workflow": {
             "kind": "PROMPT",
             "target": "",
-            "instructions": "Query Agent Hub's `/v1/admin/runs` (reading host, port, and adminToken from `${smile.home}/conf/studio.json` under `agentHub`, defaulting to `http://localhost:8890` with `Authorization: Bearer dev-admin-token`) and `/q/metrics` to collect routine execution counts, idle-skip savings (`SKIPPED_IDLE`), per-routine model utilization, coalesce ratios, and event telemetry, and write `${smile.home}/bot/pages/token-usage.html`.",
+            "instructions": "Query Agent Hub's `/v1/admin/runs` (reading host, port, and adminToken from `${smile.home}/conf/studio.json` under `agentHub`, defaulting to `http://localhost:8890` with `Authorization: Bearer dev-admin-token`) and `/q/metrics` to collect routine execution counts, idle-skip savings (`SKIPPED_IDLE`), per-routine model utilization, coalesce ratios, and event telemetry, and write `${smile.home}/bot/pages/bot-activity.html`.",
             "requireActivityToday": false,
             "useContextProjects": false,
             "awaitRoutineId": "frank-daily-recap"
