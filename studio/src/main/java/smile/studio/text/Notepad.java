@@ -27,6 +27,7 @@ import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
@@ -51,15 +52,34 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Notepad.class);
     private static final ResourceBundle bundle = ResourceBundle.getBundle(Notepad.class.getName(), Locale.getDefault());
 
+    /**
+     * Display mode for Markdown files.
+     */
+    public enum Mode {
+        /** Raw text/syntax editing mode. */
+        EDIT,
+        /** Rendered HTML preview mode. */
+        PREVIEW
+    }
+
     // TODO: update to lazy constant with Java 25+ (still preview)
     private static SpellingParser dict = null;
     private Path file;
+    private final CardLayout cardLayout = new CardLayout();
+    private final JPanel contentCards = new JPanel(cardLayout);
     private final CollapsibleSectionPanel csp = new CollapsibleSectionPanel();
+    private final JScrollPane previewScroll = new JScrollPane();
+    private final JPanel modeBar;
+    private final JToggleButton editButton;
+    private final JToggleButton previewButton;
     private final Editor editor = new Editor(40, 120);
     /** The search context shared by the inline tool bars. */
     private final SearchContext searchContext = new SearchContext();
     private final FindToolBar findToolBar = new FindToolBar(this);
     private final ReplaceToolBar replaceToolBar = new ReplaceToolBar(this);
+    private boolean markdown = false;
+    private Mode mode = Mode.EDIT;
+    private Markdown markdownView;
     private boolean changed = false;
     /** Notified on every document change, used to schedule a debounced auto save. */
     private Runnable changeListener;
@@ -71,7 +91,36 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
     public Notepad(Path file) {
         super(new BorderLayout());
         this.file = file;
-        add(csp, BorderLayout.CENTER);
+
+        editButton = new JToggleButton(bundle.getString("EditMode"));
+        editButton.setToolTipText(bundle.getString("EditModeTooltip"));
+        editButton.putClientProperty("JButton.buttonType", "roundRect");
+        editButton.setFocusable(false);
+
+        previewButton = new JToggleButton(bundle.getString("PreviewMode"));
+        previewButton.setToolTipText(bundle.getString("PreviewModeTooltip"));
+        previewButton.putClientProperty("JButton.buttonType", "roundRect");
+        previewButton.setFocusable(false);
+
+        ButtonGroup modeGroup = new ButtonGroup();
+        modeGroup.add(editButton);
+        modeGroup.add(previewButton);
+
+        editButton.addActionListener(e -> setMode(Mode.EDIT));
+        previewButton.addActionListener(e -> setMode(Mode.PREVIEW));
+
+        modeBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 2));
+        modeBar.setBorder(new EmptyBorder(2, 6, 2, 6));
+        modeBar.add(editButton);
+        modeBar.add(previewButton);
+
+        previewScroll.setBorder(BorderFactory.createEmptyBorder());
+        previewScroll.getVerticalScrollBar().setUnitIncrement(16);
+
+        contentCards.add(csp, Mode.EDIT.name());
+        contentCards.add(previewScroll, Mode.PREVIEW.name());
+        add(contentCards, BorderLayout.CENTER);
+
         initSearchDialogs();
         initSearchKeyBindings();
 
@@ -123,6 +172,105 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
         // markers.
 
         editor.getDocument().addDocumentListener(this);
+
+        configureMarkdownSupport(Editor.isMarkdown(file), Mode.PREVIEW);
+    }
+
+    /**
+     * Configures whether this Notepad instance is a Markdown file and sets its initial mode.
+     */
+    private void configureMarkdownSupport(boolean isMarkdownFile, Mode initialMarkdownMode) {
+        this.markdown = isMarkdownFile;
+        if (markdown) {
+            if (modeBar.getParent() != this) {
+                add(modeBar, BorderLayout.NORTH);
+            }
+            modeBar.setVisible(true);
+            setMode(initialMarkdownMode);
+        } else {
+            modeBar.setVisible(false);
+            remove(modeBar);
+            setMode(Mode.EDIT);
+        }
+        revalidate();
+        repaint();
+    }
+
+    /**
+     * Returns true if this editor tab is handling a Markdown file.
+     * @return true if Markdown mode switching is enabled for this file.
+     */
+    public boolean isMarkdown() {
+        return markdown;
+    }
+
+    /**
+     * Returns the current display mode of this editor tab.
+     * @return the current {@link Mode}.
+     */
+    public Mode getMode() {
+        return mode;
+    }
+
+    /**
+     * Returns the underlying text editor component.
+     * @return the {@link Editor} component.
+     */
+    public Editor editor() {
+        return editor;
+    }
+
+    /**
+     * Returns the currently rendered {@link Markdown} preview component, or {@code null}
+     * if preview has not been rendered yet.
+     * @return the {@link Markdown} preview component.
+     */
+    public Markdown markdownView() {
+        return markdownView;
+    }
+
+    /**
+     * Switches this file tab between {@link Mode#EDIT} and {@link Mode#PREVIEW}.
+     * If this file is not a Markdown file, the mode remains {@link Mode#EDIT}.
+     *
+     * @param newMode the target mode.
+     */
+    public void setMode(Mode newMode) {
+        if (!markdown || newMode == null) {
+            newMode = Mode.EDIT;
+        }
+        this.mode = newMode;
+        if (newMode == Mode.PREVIEW) {
+            previewButton.setSelected(true);
+            refreshPreview();
+            cardLayout.show(contentCards, Mode.PREVIEW.name());
+        } else {
+            editButton.setSelected(true);
+            cardLayout.show(contentCards, Mode.EDIT.name());
+            editor.requestFocusInWindow();
+        }
+        revalidate();
+        repaint();
+    }
+
+    /**
+     * Re-renders the Markdown preview from the current editor text buffer.
+     */
+    private void refreshPreview() {
+        markdownView = new Markdown(editor.getText());
+        markdownView.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    setMode(Mode.EDIT);
+                }
+            }
+        });
+        previewScroll.setViewportView(markdownView);
+        SwingUtilities.invokeLater(() -> {
+            previewScroll.getVerticalScrollBar().setValue(0);
+            previewScroll.getHorizontalScrollBar().setValue(0);
+        });
     }
 
     @Override
@@ -185,6 +333,9 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
      */
     @Override
     public void searchEvent(SearchEvent e) {
+        if (markdown && mode == Mode.PREVIEW) {
+            setMode(Mode.EDIT);
+        }
         SearchEvent.Type type = e.getType();
         SearchContext context = e.getSearchContext();
 
@@ -230,6 +381,9 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            if (markdown && mode == Mode.PREVIEW) {
+                setMode(Mode.EDIT);
+            }
             GoToDialog dialog = new GoToDialog(owner());
             dialog.setMaxLineNumberAllowed(editor.getLineCount());
             dialog.setVisible(true);
@@ -266,6 +420,9 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
         editor.setText(Files.readString(file));
         editor.setCaretPosition(0);
         changed = false;
+        if (markdown && mode == Mode.PREVIEW) {
+            refreshPreview();
+        }
     }
 
     /**
@@ -286,6 +443,12 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
     @Override
     public void setFile(Path file) {
         this.file = file;
+        var style = Editor.probeSyntaxStyle(file);
+        editor.setSyntaxEditingStyle(style);
+        boolean nowMarkdown = Editor.isMarkdown(file);
+        if (nowMarkdown != this.markdown) {
+            configureMarkdownSupport(nowMarkdown, nowMarkdown ? Mode.PREVIEW : Mode.EDIT);
+        }
         if (SwingUtilities.getAncestorOfClass(JTabbedPane.class, this) instanceof JTabbedPane tabs) {
             for (int i = 0; i < tabs.getTabCount(); i++) {
                 if (SwingUtilities.isDescendingFrom(this, tabs.getComponentAt(i))) {

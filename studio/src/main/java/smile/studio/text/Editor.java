@@ -132,6 +132,15 @@ public class Editor extends ThemedTextArea {
     }
 
     /**
+     * Returns true if the given file is a Markdown document.
+     * @param file the file to check.
+     * @return true if the file uses Markdown syntax.
+     */
+    public static boolean isMarkdown(Path file) {
+        return file != null && SYNTAX_STYLE_MARKDOWN.equals(probeSyntaxStyle(file));
+    }
+
+    /**
      * Probes the syntax style based on the filename extension.
      * @param file the file to probe.
      * @return the syntax style for the file, or {@code SYNTAX_STYLE_NONE} if unknown.
@@ -143,7 +152,7 @@ public class Editor extends ThemedTextArea {
         }
 
         return switch (Paths.getFileExtension(file)) {
-            case "md" -> SYNTAX_STYLE_MARKDOWN;
+            case "md", "markdown" -> SYNTAX_STYLE_MARKDOWN;
             case "java" -> SYNTAX_STYLE_JAVA;
             case "py" -> SYNTAX_STYLE_PYTHON;
             case "sql" -> SYNTAX_STYLE_SQL;

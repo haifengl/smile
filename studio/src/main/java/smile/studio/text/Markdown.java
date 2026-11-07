@@ -21,9 +21,11 @@ import javax.swing.*;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
+import java.awt.event.MouseListener;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
+import java.util.Locale;
 
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
@@ -47,6 +49,7 @@ public class Markdown extends JPanel {
     private static float fontSize = SmileStudio.preferences().getFloat("markdownFontSize", 1.25f);
     private final String text;
     private final XHTMLPanel html;
+    private JComponent view;
 
     /**
      * Constructor.
@@ -69,16 +72,36 @@ public class Markdown extends JPanel {
         return html;
     }
 
+    @Override
+    public synchronized void addMouseListener(MouseListener l) {
+        super.addMouseListener(l);
+        if (view != null) {
+            view.addMouseListener(l);
+        }
+    }
+
+    /** Formats a Color as a CSS hex string. */
+    private static String toHexColor(Color color) {
+        if (color == null) {
+            return "#000000";
+        }
+        return String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
+    }
+
     /** Renders the Markdown content. */
     private XHTMLPanel render() {
         Node document = parser.parse(text);
         String content = renderer.render(document);
 
+        Color fg = UIManager.getColor("Label.foreground");
+        String fgHex = toHexColor(fg != null ? fg : Color.BLACK);
+
         String html = """
                       <html>
-                      <body style="width: 95%; height: auto; margin: 0 auto;">
-                      <div style="font-size:"""
-                + String.format(" %.2fem;\">", fontSize)
+                      <body style="width: 95%; height: auto; margin: 0 auto; color: """
+                + fgHex + ";\">"
+                + "<div style=\"font-size:"
+                + String.format(Locale.ROOT, " %.2fem;\">", fontSize)
                 + content + "</div></body></html>";
 
         try {
@@ -112,11 +135,13 @@ public class Markdown extends JPanel {
             var doc = builder.parse(new InputSource(new StringReader(html)));
             browser.setDocument(doc);
             add(browser, BorderLayout.CENTER);
+            view = browser;
             return browser;
         } catch (ParserConfigurationException | SAXException | IOException ex) {
             logger.error("Failed to process Markdown: {}", ex.getMessage());
             var area = new ThemedTextArea(text);
             add(area, BorderLayout.CENTER);
+            view = area;
         }
         return null;
     }
