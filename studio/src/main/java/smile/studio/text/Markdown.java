@@ -28,6 +28,7 @@ import java.io.StringReader;
 import java.net.URI;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 import org.commonmark.Extension;
 import org.commonmark.ext.autolink.AutolinkExtension;
@@ -58,6 +59,20 @@ public class Markdown extends JPanel implements Scrollable {
     );
     private static final Parser parser = Parser.builder().extensions(EXTENSIONS).build();
     private static final HtmlRenderer renderer = HtmlRenderer.builder().extensions(EXTENSIONS).build();
+    /**
+     * Matches HTML5 void elements that lack a trailing self-closing slash as well as
+     * redundant closing void tags (e.g. {@code </br>}) so the HTML fragment can be
+     * parsed by a strict XML/XHTML parser.
+     */
+    private static final Pattern VOID_ELEMENT_OPEN = Pattern.compile(
+            "<(area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)" +
+            "(\\s(?:[^\"'>]|\"[^\"]*\"|'[^']*')*)?(?<!/)>",
+            Pattern.CASE_INSENSITIVE
+    );
+    private static final Pattern VOID_ELEMENT_CLOSE = Pattern.compile(
+            "</(?:area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\\s*>",
+            Pattern.CASE_INSENSITIVE
+    );
     private static float fontSize = SmileStudio.preferences().getFloat("markdownFontSize", 1.25f);
     private final String text;
     private final XHTMLPanel html;
@@ -110,13 +125,29 @@ public class Markdown extends JPanel implements Scrollable {
     }
 
     /**
-     * Converts Markdown text to an HTML fragment using the configured CommonMark + GFM extensions.
+     * Converts Markdown text to an HTML fragment using the configured CommonMark + GFM extensions,
+     * normalizing HTML5 void elements to valid self-closing XHTML tags.
      * @param markdown the Markdown text.
      * @return the rendered HTML fragment.
      */
     public static String toHtml(String markdown) {
         Node document = parser.parse(markdown);
-        return renderer.render(document);
+        return normalizeVoidElements(renderer.render(document));
+    }
+
+    /**
+     * Normalizes HTML5 void elements (such as {@code <br>}, {@code <hr>}, {@code <img>})
+     * into self-closing XHTML syntax so strict XML parsers accept the document.
+     * @param html the HTML fragment.
+     * @return the normalized XHTML fragment.
+     */
+    static String normalizeVoidElements(String html) {
+        String withoutClose = VOID_ELEMENT_CLOSE.matcher(html).replaceAll("");
+        return VOID_ELEMENT_OPEN.matcher(withoutClose).replaceAll(match -> {
+            String tag = match.group(1).toLowerCase(Locale.ROOT);
+            String attrs = match.group(2);
+            return "<" + tag + (attrs != null ? attrs : "") + "/>";
+        });
     }
 
     /** Renders the Markdown content. */

@@ -251,7 +251,9 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
 
     /**
      * Switches this file tab between {@link Mode#EDIT} and {@link Mode#PREVIEW}.
-     * If this file is not a Markdown file, the mode remains {@link Mode#EDIT}.
+     * If this file is not a Markdown file, or if Markdown preview rendering falls
+     * back to plain text, the mode is set to {@link Mode#EDIT} and the top-right
+     * toggle buttons reflect {@link Mode#EDIT}.
      *
      * @param newMode the target mode.
      */
@@ -259,12 +261,20 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
         if (!markdown || newMode == null) {
             newMode = Mode.EDIT;
         }
-        this.mode = newMode;
         if (newMode == Mode.PREVIEW) {
-            previewButton.setSelected(true);
             refreshPreview();
-            cardLayout.show(contentCards, Mode.PREVIEW.name());
+            if (markdownView.contentPane() != null) {
+                this.mode = Mode.PREVIEW;
+                previewButton.setSelected(true);
+                cardLayout.show(contentCards, Mode.PREVIEW.name());
+            } else {
+                this.mode = Mode.EDIT;
+                editButton.setSelected(true);
+                cardLayout.show(contentCards, Mode.EDIT.name());
+                editor.requestFocusInWindow();
+            }
         } else {
+            this.mode = Mode.EDIT;
             editButton.setSelected(true);
             cardLayout.show(contentCards, Mode.EDIT.name());
             editor.requestFocusInWindow();
@@ -441,7 +451,7 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
         editor.setCaretPosition(0);
         changed = false;
         if (markdown && mode == Mode.PREVIEW) {
-            refreshPreview();
+            setMode(Mode.PREVIEW);
         }
     }
 
