@@ -121,6 +121,48 @@ public class WorkspaceStartupTest {
         pad1.setSize(800, 600);
         pad1.doLayout();
         pad1.getComponent(0).doLayout();
+
+        // When a Markdown file contains malformed raw XML (e.g., an unclosed <div> tag)
+        // that causes Markdown rendering to fall back to ThemedTextArea, Notepad switches
+        // its mode and top-right toggle buttons to EDIT mode rather than staying in PREVIEW.
+        Path brokenMdFile = tempDir.resolve("broken.md");
+        Files.writeString(brokenMdFile, "# Title\n\n<div>unclosed raw html\n");
+        Notepad brokenPad = new Notepad(brokenMdFile);
+        assertTrue(brokenPad.isMarkdown());
+        assertNull(brokenPad.markdownView().contentPane(), "Malformed XML should trigger fallback");
+        assertEquals(Notepad.Mode.EDIT, brokenPad.getMode(), "Fallback should set mode to EDIT");
+        var layered = (javax.swing.JLayeredPane) brokenPad.getComponent(0);
+        var modeBar = (javax.swing.JPanel) layered.getComponentsInLayer(javax.swing.JLayeredPane.PALETTE_LAYER)[0];
+        var editBtn = (javax.swing.JToggleButton) modeBar.getComponent(0);
+        var previewBtn = (javax.swing.JToggleButton) modeBar.getComponent(1);
+        assertTrue(editBtn.isSelected(), "Edit toggle button should be selected on fallback");
+        assertFalse(previewBtn.isSelected(), "Preview toggle button should not be selected on fallback");
+    }
+
+    @Test
+    public void testMarkdownVoidElementsNormalization() {
+        // Given Markdown text containing HTML5 void elements (<br>, <hr>, <img>) in table cells and body
+        String md = """
+                # Void Elements
+
+                | Track | Docs |
+                | :--- | :--- |
+                | Core | [ICP.md](./ICP.md)<br>[WEDGE.md](./WEDGE.md)<BR class="sep"> |
+
+                Line one<hr>Line two<img src="logo.png" alt="logo">
+                """;
+
+        // When converting to HTML and rendering into Markdown component
+        String html = Markdown.toHtml(md);
+        Markdown component = new Markdown(md);
+
+        // Then void elements are normalized to self-closing XHTML and parsed without error
+        assertTrue(html.contains("<br/>"), "Expected normalized <br/> in HTML: " + html);
+        assertTrue(html.contains("<br class=\"sep\"/>"), "Expected normalized <br class=\"sep\"/> in HTML: " + html);
+        assertTrue(html.contains("<hr/>"), "Expected normalized <hr/> in HTML: " + html);
+        assertTrue(html.contains("<img src=\"logo.png\" alt=\"logo\"/>"), "Expected normalized <img .../> in HTML: " + html);
+        assertNotNull(component.contentPane(), "XHTMLPanel should render Markdown with HTML5 void elements without falling back");
+        assertEquals(2, component.contentPane().getDocument().getElementsByTagName("br").getLength());
     }
 
     @Test
