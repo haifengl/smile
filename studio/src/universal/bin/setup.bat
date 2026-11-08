@@ -21,7 +21,6 @@ IF NOT EXIST "%VENV_DIR%\\Scripts\\activate.bat" (
 ECHO Installing Python packages...
 CALL "%VENV_DIR%\\Scripts\\activate.bat"
 python -m pip install --upgrade pip setuptools wheel
-pip install -r %APP_HOME%\\conf\\requirements.txt
+pip install --upgrade --force-reinstall -r %APP_HOME%\\conf\\requirements.txt
 pip install uv
 uv tool install ty@latest --force
-
