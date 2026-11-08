@@ -35,7 +35,7 @@ fi
 echo "Installing Python packages..."
 source "$VENV_DIR/bin/activate"
 python -m pip install --upgrade pip setuptools wheel
-pip install -r "$APP_DIR/../conf/requirements.txt"
+pip install --upgrade --force-reinstall -r "$APP_DIR/../conf/requirements.txt"
 pip install uv
 uv tool install ty@latest --force
 
@@ -51,4 +51,3 @@ if [ -n "$ONNX_LIB" ]; then
     ln -sf `basename ${ONNX_LIB}` ${ONNX_CAPI_DIR}/libonnxruntime.so
   fi
 fi
-
