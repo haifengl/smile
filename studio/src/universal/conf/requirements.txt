@@ -22,3 +22,6 @@ skl2onnx>=1.20.0
 onnxmltools>=1.16.0
 onnxruntime>=1.30.0
 onnxruntime-genai-directml; sys_platform == 'win32'
+onnxruntime-genai-cuda; sys_platform == 'linux'
+onnxruntime-genai; sys_platform == 'darwin'
+onnxruntime-ep-mlx; sys_platform == 'darwin'
