@@ -25,7 +25,10 @@ jobs:
   deploy:
     name: Build & Deploy API Docs (Cloudflare Pages)
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       startsWith(github.event.workflow_run.head_commit.message, 'v'))
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6

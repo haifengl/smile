@@ -22,7 +22,10 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       startsWith(github.event.workflow_run.head_commit.message, 'v'))
     strategy:
       # The images are independent; one failing (e.g. a native build running out of memory) must not cancel the rest.
       fail-fast: false
