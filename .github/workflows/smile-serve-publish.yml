@@ -1,4 +1,4 @@
-name: Publish Serve Container Images
+name: Publish Serve Engine
 
 on:
   workflow_dispatch:

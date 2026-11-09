@@ -1,4 +1,4 @@
-name: Publish Libraries to Maven Central
+name: Publish Libraries
 
 on:
   workflow_dispatch:
