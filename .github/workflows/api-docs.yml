@@ -4,6 +4,10 @@ on:
   workflow_dispatch:
   release:
     types: [ published ]
+  workflow_run:
+    workflows: ["Create Release"]
+    types:
+      - completed
   push:
     branches: [ "master" ]
     paths:
@@ -21,9 +25,12 @@ jobs:
   deploy:
     name: Build & Deploy API Docs (Cloudflare Pages)
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
 
       - name: Set up Java 25
         uses: actions/setup-java@v5
