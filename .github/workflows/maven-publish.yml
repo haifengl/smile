@@ -42,16 +42,27 @@ jobs:
 
       - name: Import GPG signing key
         run: |
-          printf '%s\n' "$GPG_PRIVATE_KEY" | tr -d '\r' | awk '/^-----BEGIN PGP/{p=1} p{print} /^-----END PGP/{p=0}' | gpg --batch --import
           mkdir -p ~/.gnupg
           chmod 700 ~/.gnupg
           printf 'allow-loopback-pinentry\n' >> ~/.gnupg/gpg-agent.conf
           printf 'pinentry-mode loopback\n' >> ~/.gnupg/gpg.conf
           gpgconf --kill gpg-agent || true
+          printf '%s\n' "$GPG_PRIVATE_KEY" | tr -d '\r' | awk '
+            /-----BEGIN PGP/ { print "-----BEGIN PGP PRIVATE KEY BLOCK-----\n"; in_block=1; next }
+            /-----END PGP/   { print "-----END PGP PRIVATE KEY BLOCK-----"; in_block=0; next }
+            in_block {
+              gsub(/^[ \t]+|[ \t]+$/, "")
+              if ($0 != "" && $0 !~ /:/ && $0 ~ /^[A-Za-z0-9+\/=]+$/) print $0
+            }
+          ' | gpg --batch --import || true
           if [ -n "$GPG_KEY_ID" ]; then
             FPR=$(gpg --list-secret-keys --with-colons "$GPG_KEY_ID" | awk -F: '/^fpr:/ { print $10; exit }')
           else
             FPR=$(gpg --list-secret-keys --with-colons | awk -F: '/^fpr:/ { print $10; exit }')
+          fi
+          if [ -z "$FPR" ]; then
+            echo "ERROR: GPG secret key was not imported" >&2
+            exit 1
           fi
           echo "${FPR}:6:" | gpg --batch --import-ownertrust
         env:
