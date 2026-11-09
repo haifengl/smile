@@ -90,13 +90,44 @@ jobs:
 
       - name: Publish libraries to Maven Central
         run: |
+          rm -rf target/sona-staging target/sona-bundle
           sbt publishSigned
           sbt ++2.13.18 scala/publishSigned
           sbt ++2.13.18 json/publishSigned
-          sbt sonaRelease
+          sbt sonaBundle
+          BUNDLE_FILE="target/sona-bundle/bundle.zip"
+          ls -lh "$BUNDLE_FILE"
+          AUTH=$(printf '%s:%s' "$NEXUS_USERNAME" "$NEXUS_PASSWORD" | base64 -w 0)
+          DEPLOY_NAME="com.github.haifengl:smile:$(date +%Y%m%d_%H%M%S)"
+          DEPLOY_ID=$(curl -fsSL --retry 3 --retry-delay 10 --max-time 600 \
+            --request POST \
+            --header "Authorization: Bearer $AUTH" \
+            --form "bundle=@${BUNDLE_FILE};type=application/octet-stream" \
+            "https://central.sonatype.com/api/v1/publisher/upload?name=${DEPLOY_NAME}&publishingType=AUTOMATIC")
+          echo "Uploaded deployment ID: $DEPLOY_ID"
+          for i in $(seq 1 60); do
+            STATUS_JSON=$(curl -fsSL --retry 3 --retry-delay 5 \
+              --request POST \
+              --header "Authorization: Bearer $AUTH" \
+              "https://central.sonatype.com/api/v1/publisher/status?id=${DEPLOY_ID}")
+            STATE=$(printf '%s' "$STATUS_JSON" | jq -r '.deploymentState // empty')
+            echo "Deployment $DEPLOY_ID state ($i/60): $STATE"
+            case "$STATE" in
+              PUBLISHED|PUBLISHING)
+                echo "Deployment $DEPLOY_ID reached $STATE."
+                break
+                ;;
+              FAILED)
+                echo "Deployment $DEPLOY_ID failed:" >&2
+                printf '%s\n' "$STATUS_JSON" | jq . >&2
+                exit 1
+                ;;
+              *)
+                sleep 15
+                ;;
+            esac
+          done
         env:
-          SONATYPE_USERNAME: ${{ secrets.NEXUS_USERNAME }}
-          SONATYPE_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
           NEXUS_USERNAME: ${{ secrets.NEXUS_USERNAME }}
           NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
           PGP_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
