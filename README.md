@@ -68,7 +68,7 @@ See [studio/README.md](studio/README.md) and [studio/BOT.md](studio/BOT.md) to g
    - [Gradle (Kotlin)](#gradle-kotlin)
    - [Native Libraries (BLAS / LAPACK)](#native-libraries-blas--lapack)
 4. [Quick Start](#quick-start)
-5. [SMILE Studio & Shell](#smile-studio--shell)
+5. [SMILE Agent Studio & CLI](#smile-agent-studio--cli)
 6. [Model Serialization](#model-serialization)
 7. [Visualization](#visualization)
 8. [License](#license)
@@ -83,18 +83,19 @@ See [studio/README.md](studio/README.md) and [studio/BOT.md](studio/BOT.md) to g
 
 | Area | Highlights |
 |---|---|
-| **LLM** | LLaMA-3 inference, tiktoken BPE tokenizer, OpenAI-compatible REST server, SSE chat streaming |
-| **Deep Learning** | LibTorch/GPU backend, EfficientNet-V2 image classification, custom layer API |
+| **LLM** | MiniMax-M3 / M3.1-Flash, Qwen3.5 / 3.8, and LLaMA-3 inference (multimodal vision/video, FP8/NVFP4/Marlin quantization, Radix KV cache, MTP & DSpark speculative decoding, tensor/expert parallelism), tiktoken BPE tokenizer, OpenAI-compatible REST server, SSE chat streaming |
+| **Deep Learning** | LibTorch/GPU backend, ONNX Runtime & GenAI, EfficientNet-V2 image classification, custom layer API |
 | **Classification** | SVM, Decision Trees, Random Forest, AdaBoost, Gradient Boosting, Logistic Regression, Neural Networks, RBF Networks, MaxEnt, KNN, Naïve Bayes, LDA/QDA/RDA |
 | **Regression** | SVR, Gaussian Process, Regression Trees, GBDT, Random Forest, RBF, OLS, LASSO, ElasticNet, Ridge |
 | **Clustering** | BIRCH, CLARANS, DBSCAN, DENCLUE, Deterministic Annealing, K-Means, X-Means, G-Means, Neural Gas, Growing Neural Gas, Hierarchical, SIB, SOM, Spectral, Min-Entropy |
 | **Manifold Learning** | IsoMap, LLE, Laplacian Eigenmap, t-SNE, UMAP, PCA, Kernel PCA, Probabilistic PCA, GHA, Random Projection, ICA |
+| **Time Series & Anomaly** | ARIMA, ARMA, Isolation Forest, One-Class SVM, Local Outlier Factor (LOF) |
 | **Feature Engineering** | Genetic Algorithm selection, Ensemble selection, TreeSHAP, KernelSHAP, SNR, Sum-Squares ratio, data transformations, formula API |
 | **NLP** | Sentence / word tokenization, Bigram test, Phrase & Keyword extraction, Stemmer, POS tagging, Relevance ranking |
 | **Association Rules** | FP-growth frequent itemset mining |
 | **Sequence Learning** | Hidden Markov Model, Conditional Random Field |
 | **Nearest Neighbor** | BK-Tree, Cover Tree, KD-Tree, SimHash, LSH |
-| **Numerical Methods** | Linear algebra, numerical optimization (BFGS, L-BFGS), interpolation, wavelets, RBF, distributions, hypothesis tests |
+| **Numerical Methods** | Tensors, pure-Java & native BLAS/LAPACK, numerical optimization (BFGS, L-BFGS), interpolation, wavelets, RBF, distributions, hypothesis tests |
 | **Visualization** | Swing plots (scatter, line, bar, box, histogram, surface, heatmap, contour, …) and declarative Vega-Lite charts |
 
 ---
@@ -147,8 +148,7 @@ the module overview, or drill into individual topic guides.
 | [ANOMALY_DETECTION.md](core/ANOMALY_DETECTION.md) | IsolationForest, one-class SVM, local outlier factor |
 | [ASSOCIATION_RULE_MINING.md](core/ASSOCIATION_RULE_MINING.md) | FP-growth, association rules, frequent itemsets |
 | [SEQUENCE.md](core/SEQUENCE.md) | HMM (Baum-Welch, Viterbi), CRF |
-| [TIME_SERIES.md](core/TIME_SERIES.md) | ARIMA, box-plots, autocorrelation |
-| [REGRESSION.md](core/REGRESSION.md) | Full regression API reference |
+| [TIME_SERIES.md](core/TIME_SERIES.md) | ARIMA, ARMA, autocorrelation |
 | [TRAINING.md](core/TRAINING.md) | Cross-validation, bootstrap, hyper-parameter search |
 | [VALIDATION.md](core/VALIDATION.md) | Hold-out, k-fold, leave-one-out evaluation |
 | [VALIDATION_METRICS.md](core/VALIDATION_METRICS.md) | Accuracy, AUC, F1, RMSE, MAE, confusion matrix |
@@ -156,12 +156,12 @@ the module overview, or drill into individual topic guides.
 | [VECTOR_QUANTIZATION.md](core/VECTOR_QUANTIZATION.md) | LVQ, Neural Gas, SOM as vector quantizers |
 
 ### `deep/` — Deep Learning & LLMs
-> LibTorch-backed GPU/CPU tensor operations, neural network layers, LLaMA-3 inference, EfficientNet, ONNX Runtime & GenAI
+> LibTorch-backed GPU/CPU tensor operations, neural network layers, MiniMax-M3, Qwen3.x, and LLaMA-3 inference, EfficientNet, ONNX Runtime & GenAI
 
 | Document | Topics |
 |---|---|
 | [README](deep/README.md) | Core deep-learning guide (tensors, layers, loss, optimizer, model, metrics, data loading) |
-| [LLM.md](deep/LLM.md) | `smile.llm` — tokenizer, LLaMA-3, Qwen3.5, inference engine, KV cache, quantization, tensor parallelism |
+| [LLM.md](deep/LLM.md) | `smile.llm` — tokenizer, MiniMax-M3, Qwen3.x, LLaMA-3, inference engine, KV cache, quantization, tensor/expert parallelism |
 | [VISION.md](deep/VISION.md) | `smile.vision` — transforms, `ImageDataset`, EfficientNet-V2, ImageNet labels |
 | [ONNX.md](deep/ONNX.md) | ONNX Runtime inference (`smile.onnx`) — sessions, tensors, execution providers |
 | [ONNX_GENAI.md](deep/ONNX_GENAI.md) | ONNX Runtime GenAI (`smile.onnx.genai`) — generate loop, chat model, multimodal |
@@ -180,10 +180,11 @@ The `deep/LLM.md` covers:
 - **`smile.llm`** — `Message`, `Role`, `FinishReason`, `ChatCompletion`, `ChatOptions`, `LanguageModel`
 - **`smile.llm.tokenizer`** — `Tokenizer` interface, `Tiktoken` BPE implementation (LLaMA-3 compatible)
 - **`smile.llm.model.llama`** — Full LLaMA-3 stack: `Llama.build()`, `generate()`, `chat()`, streaming
-- **`smile.llm.model.qwen`** — Qwen3.5 hybrid stack (Gated DeltaNet + gated attention), MTP, vision tower
+- **`smile.llm.model.qwen`** — Qwen3.x hybrid stack (Gated DeltaNet + gated attention), block-FP8 on Marlin, MTP, vision tower
+- **`smile.llm.model.minimax`** — MiniMax-M3 / M3.1-Flash stack (Multi-head Sparse Attention, MoE expert parallelism, DSpark speculative decoding, vision/video encoder)
 - **`smile.llm.engine`** — Continuous-batching `InferenceEngine`, `GenerationRequest`/`GenerationHandle`, speculative decoding
 - **`smile.llm.cache`** — Paged `KvCachePool`, `RadixCache` prefix reuse
-- **`smile.llm.quant`** / **`smile.llm.parallel`** — FP8/NVFP4/Marlin quantization, tensor parallelism
+- **`smile.llm.quant`** / **`smile.llm.parallel`** — FP8/NVFP4/MXFP8/Marlin quantization, tensor & expert parallelism, multi-node NCCL
 
 The `deep/VISION.md` covers:
 - **`smile.vision`** — `VisionModel`, `ImageDataset`, `EfficientNet.V2S/M/L()` pretrained models, ImageNet labels
@@ -217,13 +218,14 @@ The `deep/VISION.md` covers:
 |---|---|
 | [README](serve/README.md) | Building and running the server, `/chat/completions` endpoint, SSE streaming, configuration |
 
-### `studio/` — Interactive Shell & Desktop IDE
-> An agentic IDE for data science using Python or SMILE
+### `studio/` — AI Agent Workspace, Autonomous Bot Hub & Polyglot IDE
+> Local-first multi-agent workspace, 24/7 Bot Hub (`smile hub`), and polyglot notebook/code IDE
 
 | Document                      | Topics |
 |-------------------------------|---|
-| [README.md](studio/README.md) | Desktop Studio UX                                                    |
-| [CLI](studio/CLI.md)    | CLI entry points (`smile`, `smile shell`, `smile scala`, `smile serve`) |
+| [README.md](studio/README.md) | Desktop Agent Studio UX, notebooks, editors, and AI agent team       |
+| [BOT.md](studio/BOT.md)       | Always-on Agent Hub (`smile hub`), autonomous Bot routines, and approval queues |
+| [CLI.md](studio/CLI.md)       | CLI entry points (`smile`, `smile hub`, `smile shell`, `smile scala`, `smile train`, `smile predict`, `smile serve`) |
 
 ### `scala/` — Scala API
 > Idiomatic Scala shim — concise wrappers, symbolic operators, Scala collections integration
@@ -252,7 +254,7 @@ The `deep/VISION.md` covers:
 
 | Document | Topics |
 |---|---|
-| [README](spark/README.md) | `SmileTransformer`, `SmileClassifier`, `SmileRegressor`; training and scoring in Spark DataFrames |
+| [README](spark/README.md) | `SparkDataFrames`, `SmileClassifier`, `SmileRegressor`, `SparkHPO`; training and scoring in Spark DataFrames |
 
 ---
 
@@ -265,49 +267,51 @@ The `deep/VISION.md` covers:
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-core</artifactId>
-  <version>7.1.0</version>
+  <version>7.2.0</version>
 </dependency>
 
 <!-- Deep learning + LLMs (requires LibTorch) -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-deep</artifactId>
-  <version>7.1.0</version>
+  <version>7.2.0</version>
 </dependency>
 
 <!-- Natural language processing -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-nlp</artifactId>
-  <version>7.1.0</version>
+  <version>7.2.0</version>
 </dependency>
 
 <!-- Data visualization -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-plot</artifactId>
-  <version>7.1.0</version>
+  <version>7.2.0</version>
 </dependency>
 ```
 
 ### SBT (Scala)
 
 ```scala
-libraryDependencies += "com.github.haifengl" %% "smile-scala" % "7.1.0"
+libraryDependencies += "com.github.haifengl" %% "smile-scala" % "7.2.0"
 ```
 
 ### Gradle (Kotlin)
 
 ```kotlin
 dependencies {
-    implementation("com.github.haifengl:smile-kotlin:7.1.0")
+    implementation("com.github.haifengl:smile-kotlin:7.2.0")
 }
 ```
 
 ### Native Libraries (BLAS / LAPACK)
 
-Several algorithms (manifold learning, Gaussian Process, MLP, some clustering)
-require BLAS and LAPACK.
+SMILE includes a built-in pure-Java BLAS and LAPACK engine (`JBlas` / `JLapack`)
+so linear algebra and tensor operations work out of the box on any JVM. For
+hardware-accelerated performance on large matrices and ARPACK sparse
+eigensolvers, install native OpenBLAS and ARPACK:
 
 **Linux (Ubuntu / Debian)**
 ```shell
@@ -428,7 +432,7 @@ SMILE provides two visualization layers:
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-plot</artifactId>
-  <version>7.1.0</version>
+  <version>7.2.0</version>
 </dependency>
 ```
 
@@ -479,7 +483,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for build and test instructions.
   <tr>
     <td colspan="3">
       <figure>
-        <a href="/website/src/images/splom.png"><img src="/website/src/images/splom.png" alt="SPLOM"></a>
+        <a href="https://www.aihalo.dev/images/splom.png"><img src="https://www.aihalo.dev/images/splom.png" alt="SPLOM"></a>
         <figcaption style="text-align: center;"><h3>Scatterplot Matrix</h3></figcaption>
       </figure>
     </td>
@@ -487,19 +491,19 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for build and test instructions.
   <tr>
     <td>
       <figure>
-        <a href="/website/src/images/pca.png"><img src="/website/src/images/pca.png" alt="Scatter"></a>
+        <a href="https://www.aihalo.dev/images/pca.png"><img src="https://www.aihalo.dev/images/pca.png" alt="Scatter"></a>
         <figcaption style="text-align: center;"><h3>Scatter Plot</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/images/heart.png"><img src="/website/src/images/heart.png" alt="Heart"></a>
+        <a href="https://www.aihalo.dev/images/heart.png"><img src="https://www.aihalo.dev/images/heart.png" alt="Heart"></a>
         <figcaption style="text-align: center;"><h3>Line Plot</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/images/surface.png"><img src="/website/src/images/surface.png" alt="Surface"></a>
+        <a href="https://www.aihalo.dev/images/surface.png"><img src="https://www.aihalo.dev/images/surface.png" alt="Surface"></a>
         <figcaption style="text-align: center;"><h3>Surface Plot</h3></figcaption>
       </figure>
     </td>
@@ -507,19 +511,19 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for build and test instructions.
   <tr>
     <td>
       <figure>
-        <a href="/website/src/images/bar.png"><img src="/website/src/images/bar.png" alt="Scatter"></a>
+        <a href="https://www.aihalo.dev/images/bar.png"><img src="https://www.aihalo.dev/images/bar.png" alt="Scatter"></a>
         <figcaption style="text-align: center;"><h3>Bar Plot</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/images/box.png"><img src="/website/src/images/box.png" alt="Box Plot"></a>
+        <a href="https://www.aihalo.dev/images/box.png"><img src="https://www.aihalo.dev/images/box.png" alt="Box Plot"></a>
         <figcaption style="text-align: center;"><h3>Box Plot</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/images/histogram2d.png"><img src="/website/src/images/histogram2d.png" alt="Histogram"></a>
+        <a href="https://www.aihalo.dev/images/histogram2d.png"><img src="https://www.aihalo.dev/images/histogram2d.png" alt="Histogram"></a>
         <figcaption style="text-align: center;"><h3>Histogram Heatmap</h3></figcaption>
       </figure>
     </td>
@@ -527,19 +531,19 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for build and test instructions.
   <tr>
     <td>
       <figure>
-        <a href="/website/src/images/rolling.png"><img src="/website/src/images/rolling.png" alt="Rolling"></a>
+        <a href="https://www.aihalo.dev/images/rolling.png"><img src="https://www.aihalo.dev/images/rolling.png" alt="Rolling"></a>
         <figcaption style="text-align: center;"><h3>Rolling Average</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/images/map.png"><img src="/website/src/images/map.png" alt="Map"></a>
+        <a href="https://www.aihalo.dev/images/map.png"><img src="https://www.aihalo.dev/images/map.png" alt="Map"></a>
         <figcaption style="text-align: center;"><h3>Geo Map</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/images/umap.png"><img src="/website/src/images/umap.png" alt="UMAP"></a>
+        <a href="https://www.aihalo.dev/images/umap.png"><img src="https://www.aihalo.dev/images/umap.png" alt="UMAP"></a>
         <figcaption style="text-align: center;"><h3>UMAP</h3></figcaption>
       </figure>
     </td>
@@ -547,19 +551,19 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for build and test instructions.
   <tr>
     <td>
       <figure>
-        <a href="/website/src/images/text.png"><img src="/website/src/images/text.png" alt="Text"></a>
+        <a href="https://www.aihalo.dev/images/text.png"><img src="https://www.aihalo.dev/images/text.png" alt="Text"></a>
         <figcaption style="text-align: center;"><h3>Text Plot</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/images/contour.png"><img src="/website/src/images/contour.png" alt="Contour"></a>
+        <a href="https://www.aihalo.dev/images/contour.png"><img src="https://www.aihalo.dev/images/contour.png" alt="Contour"></a>
         <figcaption style="text-align: center;"><h3>Heatmap with Contour</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/images/hexmap.png"><img src="/website/src/images/hexmap.png" alt="Hexmap"></a>
+        <a href="https://www.aihalo.dev/images/hexmap.png"><img src="https://www.aihalo.dev/images/hexmap.png" alt="Hexmap"></a>
         <figcaption style="text-align: center;"><h3>Hexmap</h3></figcaption>
       </figure>
     </td>
@@ -567,19 +571,19 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for build and test instructions.
   <tr>
     <td>
       <figure>
-        <a href="/website/src/images/isomap.png"><img src="/website/src/images/isomap.png" alt="IsoMap"></a>
+        <a href="https://www.aihalo.dev/images/isomap.png"><img src="https://www.aihalo.dev/images/isomap.png" alt="IsoMap"></a>
         <figcaption style="text-align: center;"><h3>IsoMap</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/images/umap.png"><img src="/website/src/images/lle.png" alt="LLE"></a>
+        <a href="https://www.aihalo.dev/images/lle.png"><img src="https://www.aihalo.dev/images/lle.png" alt="LLE"></a>
         <figcaption style="text-align: center;"><h3>LLE</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/gallery/smile-demo-kpca.png"><img src="/website/src/gallery/smile-demo-kpca-small.png" alt="Kernel PCA"></a>
+        <a href="https://www.aihalo.dev/gallery/smile-demo-kpca.png"><img src="https://www.aihalo.dev/gallery/smile-demo-kpca-small.png" alt="Kernel PCA"></a>
         <figcaption style="text-align: center;"><h3>Kernel PCA</h3></figcaption>
       </figure>
     </td>
@@ -587,19 +591,19 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for build and test instructions.
   <tr>
     <td>
       <figure>
-        <a href="/website/src/gallery/smile-demo-ann.png"><img src="/website/src/gallery/smile-demo-ann-small.png" alt="Neural Network"></a>
+        <a href="https://www.aihalo.dev/gallery/smile-demo-ann.png"><img src="https://www.aihalo.dev/gallery/smile-demo-ann-small.png" alt="Neural Network"></a>
         <figcaption style="text-align: center;"><h3>Neural Network</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/gallery/smile-demo-svm.png"><img src="/website/src/gallery/smile-demo-svm-small.png" alt="SVM"></a>
+        <a href="https://www.aihalo.dev/gallery/smile-demo-svm.png"><img src="https://www.aihalo.dev/gallery/smile-demo-svm-small.png" alt="SVM"></a>
         <figcaption style="text-align: center;"><h3>SVM</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/gallery/smile-demo-agglomerative-clustering.png"><img src="/website/src/gallery/smile-demo-agglomerative-clustering-small.png" alt="Hierarchical Clustering"></a>
+        <a href="https://www.aihalo.dev/gallery/smile-demo-agglomerative-clustering.png"><img src="https://www.aihalo.dev/gallery/smile-demo-agglomerative-clustering-small.png" alt="Hierarchical Clustering"></a>
         <figcaption style="text-align: center;"><h3>Hierarchical Clustering</h3></figcaption>
       </figure>
     </td>
@@ -607,19 +611,19 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for build and test instructions.
   <tr>
     <td>
       <figure>
-        <a href="/website/src/gallery/smile-demo-som.png"><img src="/website/src/gallery/smile-demo-som-small.png" alt="SOM"></a>
+        <a href="https://www.aihalo.dev/gallery/smile-demo-som.png"><img src="https://www.aihalo.dev/gallery/smile-demo-som-small.png" alt="SOM"></a>
         <figcaption style="text-align: center;"><h3>SOM</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/gallery/smile-demo-dbscan.png"><img src="/website/src/gallery/smile-demo-dbscan-small.png" alt="DBSCAN"></a>
+        <a href="https://www.aihalo.dev/gallery/smile-demo-dbscan.png"><img src="https://www.aihalo.dev/gallery/smile-demo-dbscan-small.png" alt="DBSCAN"></a>
         <figcaption style="text-align: center;"><h3>DBSCAN</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/gallery/smile-demo-neural-gas.png"><img src="/website/src/gallery/smile-demo-neural-gas-small.png" alt="Neural Gas"></a>
+        <a href="https://www.aihalo.dev/gallery/smile-demo-neural-gas.png"><img src="https://www.aihalo.dev/gallery/smile-demo-neural-gas-small.png" alt="Neural Gas"></a>
         <figcaption style="text-align: center;"><h3>Neural Gas</h3></figcaption>
       </figure>
     </td>
@@ -627,19 +631,19 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for build and test instructions.
   <tr>
     <td>
       <figure>
-        <a href="/website/src/gallery/smile-demo-wavelet.png"><img src="/website/src/gallery/smile-demo-wavelet-small.png" alt="Wavelet"></a>
+        <a href="https://www.aihalo.dev/gallery/smile-demo-wavelet.png"><img src="https://www.aihalo.dev/gallery/smile-demo-wavelet-small.png" alt="Wavelet"></a>
         <figcaption style="text-align: center;"><h3>Wavelet</h3></figcaption>
       </figure>
     </td>
     <td>
       <figure>
-        <a href="/website/src/gallery/smile-demo-mixture.png"><img src="/website/src/gallery/smile-demo-mixture-small.png" alt="Mixture"></a>
+        <a href="https://www.aihalo.dev/gallery/smile-demo-mixture.png"><img src="https://www.aihalo.dev/gallery/smile-demo-mixture-small.png" alt="Mixture"></a>
         <figcaption style="text-align: center;"><h3>Exponential Family Mixture</h3></figcaption>
     </figure>
     </td>
       <td>
       <figure>
-        <a href="/website/src/images/teapot.png"><img src="/website/src/images/teapot.png" alt="Teapot"></a>
+        <a href="https://www.aihalo.dev/images/teapot.png"><img src="https://www.aihalo.dev/images/teapot.png" alt="Teapot"></a>
         <figcaption style="text-align: center;"><h3>Teapot Wireframe</h3></figcaption>
       </figure>
     </td>
@@ -647,7 +651,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for build and test instructions.
   <tr>
     <td colspan="3">
       <figure>
-        <a href="/website/src/images/grid-interpolation2d.png"><img src="/website/src/images/grid-interpolation2d.png" alt="Interpolation"></a>
+        <a href="https://www.aihalo.dev/images/grid-interpolation2d.png"><img src="https://www.aihalo.dev/images/grid-interpolation2d.png" alt="Interpolation"></a>
         <figcaption style="text-align: center;"><h3>Grid Interpolation</h3></figcaption>
       </figure>
     </td>

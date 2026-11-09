@@ -70,7 +70,7 @@ Add the Gradle dependency:
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("com.github.haifengl:smile-core:6.x.x")
+    implementation("com.github.haifengl:smile-core:7.2.0")
 }
 ```
 
