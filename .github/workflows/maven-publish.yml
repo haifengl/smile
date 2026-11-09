@@ -13,7 +13,10 @@ jobs:
   publish:
     name: Build and Publish (Java 25)
     runs-on: ubuntu-latest
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       startsWith(github.event.workflow_run.head_commit.message, 'v'))
 
     permissions:
       contents: read
