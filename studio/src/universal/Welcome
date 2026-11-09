@@ -8,7 +8,7 @@ Agent Studio is a coding agent on your machine, an AutoML workplace that builds 
 
 ## 1. Quick Start
 
-1. **Explore the Workspace**: The left pane shows your **Project Explorer** and **Kernel Explorer**; the center pane hosts your **Notebooks** and **Text Editors**; the right pane is home to your **AI Agent Team**.
+1. **Explore the Workspace**: The left pane shows your **Project**, **Kernel**, and **Bots** explorers; the center pane hosts your **Bot Activities**, **Notebooks**, **DataFrame Viewers**, and **Text Editors**; the right pane is home to your **AI Agent Team**.
 2. **Run Your First Code**:
    - Click **File > New** (or press `Ctrl+N` / `Cmd+N`) to open a fresh Java notebook.
    - Type an expression (e.g., `var x = 42; x * 2`) and press `Shift+Enter` to run the cell.
@@ -25,35 +25,37 @@ Agent Studio is a coding agent on your machine, an AutoML workplace that builds 
 SMILE Studio uses a three-column horizontal split layout (resizable and persisted across sessions):
 
 ```
-┌──────────────────────────────────────────────────────────────────────────────────────┐
-│  Menu Bar:  File  |  Cell  |  Find  |  Inference  |  Help                            │
-│  Toolbar:   [New] [Open] [Save] [Save As] | [Add Cell] [Run] [Clear] [Restart] [Stop]│
-├───────────────────┬─────────────────────────────────┬────────────────────────────────┤
-│  Explorer Tabs    │  Notebook & Editor Tabs         │  AI Agent Team                 │
-│  ┌────────┬──────┐│  ┌───────────┬───────────────┐  │  👔 Frank  | 💡 Steve          │
-│  │Project │Kernel││  │ Welcome   │ Release Notes │  │  📣 Julien | 🤝 Mike           │
-│  └────────┴──────┘│  └───────────┴───────────────┘  │  📊 Clair  | 📐 Ada            │
-│                   │                                 │  ☕ James  | 🐍 Guido          │
-│  • Project:       │  • Interactive multi-language   │  🖥️ Chuck                      │
-│    File & folder  │    notebook cells (.jsh, .sc,   │  ────────────────────────────  │
-│    tree of cwd    │    .kts, .py, .ipynb)           │  Conversation stream,          │
-│                   │                                 │  tool execution, and           │
-│  • Kernel:        │  • Syntax-highlighted Notepad   │  peer-to-peer delegation       │
-│    Live variables,│    for code, Markdown, SQL,     │  ────────────────────────────  │
-│    trained models,│    JSON, YAML, and CSV files    │  [Composer & Slash Commands]   │
-│    & Serve Engine │                                 │  [Model ▼] [Effort ▼] [Send]   │
-├───────────────────┴─────────────────────────────────┴────────────────────────────────┤
-│  Status Bar: [LSP (JDT / Ty) & MCP Status]                   [Heap Memory  |  CPU]   │
-└──────────────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│  Menu Bar:  File  |  Cell  |  Find  |  Inference  |  Agent Hub  |  Help                │
+├─────────────────────┬─────────────────────────────────┬────────────────────────────────┤
+│  Explorer Tabs      │  Workspace Tabs                 │  AI Agent Team                 │
+│  ┌───────┬──────┬──┐│  ┌──────────────┬─────────┬───┐ │  👔 Frank  | 💡 Steve          │
+│  │Project│Kernel│Bots│ │Bot Activities│ Welcome │ … │ │  📣 Julien | 🤝 Mike           │
+│  └───────┴──────┴──┘│  └──────────────┴─────────┴───┘ │  📊 Clair  | 📐 Ada            │
+│                     │                                 │  ☕ James  | 🐍 Guido          │
+│  • Project:         │  • Bot Activities & Routines:   │  🖥️ Chuck                      │
+│    File & folder    │    24/7 bot runs, transcripts,  │  ────────────────────────────  │
+│    tree of cwd      │    & human-in-the-loop approvals│  Conversation stream,          │
+│                     │                                 │  tool execution, and           │
+│  • Kernel:          │  • Interactive multi-language   │  peer-to-peer delegation       │
+│    Live variables & │    notebook cells (.jsh, .sc,   │  ────────────────────────────  │
+│    persisted models │    .kts, .py, .ipynb)           │  [Composer & Slash Commands]   │
+│                     │                                 │  [Model ▼] [Effort ▼] [Send]   │
+│  • Bots:            │  • DataFrame table viewer &     │                                │
+│    Routines & pages │    Notepad with Markdown preview│                                │
+├─────────────────────┴─────────────────────────────────┴────────────────────────────────┤
+│  Status Bar: [LSP (JDT / Ty), MCP, Serve & Hub Status]        [Heap Memory  |  CPU]    │
+└────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Left Pane — Explorer Tabs**:
-  - **Project Explorer**: Navigate your workspace directory tree. Double-click any notebook (`.ipynb`, `.jsh`, `.sc`, `.kts`, `.py`) or text file (`.md`, `.java`, `.csv`, `.json`, `.sql`) to open it in the center pane.
-  - **Kernel Explorer**: Inspect live in-memory variables from your active notebook, save trained `.sml` models, and launch or manage the built-in SMILE Serve inference service.
-- **Center Pane — Notebook & Editor Tabs**: Houses interactive polyglot notebooks and syntax-highlighted Notepad editors. Opens `Welcome` and `Release Notes` by default when starting fresh.
+  - **Project Explorer**: Navigate your workspace directory tree. Double-click any notebook (`.ipynb`, `.jsh`, `.sc`, `.kts`, `.py`), tabular data file (`.csv`, `.tsv`, `.arff`, `.parquet`, `.avro`, `.sas7bdat`, `.feather` — opens in an interactive `DataFrame` table viewer), or text file (`.md`, `.java`, `.json`, `.sql`) to open it in the center pane.
+  - **Kernel Explorer**: Inspect live in-memory variables from your active notebook and manage persisted `.sml` and `.onnx` models.
+  - **Bots Explorer**: Browse autonomous Bot routines grouped by agent persona, create or delete routines, and open generated **Bot Pages** (`bot-activity.html`, `executive-brief.html`, `sales-pipeline.html`, `community-pulse.html`).
+- **Center Pane — Workspace Tabs**: Houses **Bot Activities** and **Bot Routines**, interactive polyglot notebooks, interactive `DataFrame` table viewers, and syntax-highlighted Notepad editors (with an inline **Edit / Preview** toggle for GitHub-Flavored Markdown). Opens `Welcome`, `Release Notes`, and `Bot Activities` by default.
 - **Right Pane — AI Agent Team**: Dedicated tabs for each domain specialist agent, ordered along your end-to-end product and engineering workflow. Agents can collaborate and delegate tasks to one another (`@frank`, `@steve`, `@julien`, `@mike`, `@clair`, `@ada`, `@james`, `@guido`, `@chuck`), and tabs automatically badge or come to the front when an agent needs your input.
-- **Menu Bar & Toolbar**: Quick access to **File** (including **Settings…** for OS keychain-backed API keys and **Plugins…** for the plugin marketplace), **Cell**, **Find**, **Inference** (start/stop/restart Serve Engine, check health & metrics, open the Web UI), and **Help**.
-- **Status Bar**: Displays background language server (JDT LS, Ty) and MCP server status, active kernel activity, and real-time JVM heap and CPU utilization.
+- **Menu Bar**: Quick access to **File** (including **Dark Theme**, **Settings…** for AI services, Agent Hub, Inference Server, Email, and Calendar accounts, and **Plugins…** for the plugin marketplace), **Cell**, **Find**, **Inference** (start/stop/restart Serve Engine, load models, check health & metrics, open the Web UI), **Agent Hub** (start/attach/stop Hub, open **Bot Routines**, **Bot Activities**, and **Bot Pages**), and **Help** (including **License…**).
+- **Status Bar**: Displays background language server (JDT LS, Ty), MCP server, Inference Server, and Agent Hub status, active kernel activity, and real-time JVM heap and CPU utilization.
 
 ---
 
@@ -163,16 +165,18 @@ SMILE Studio embeds a team of nine specialized AI agents in the right panel, ord
   - `/resume`: Open the session picker to restore and continue a previous conversation.
   - `/compact`: Summarize and compact conversation history to free up context window space.
 - **Shell Commands**: Prefix any prompt with `!` (e.g., `!git status` or `!ls -la`) to run shell commands directly in your workspace.
-- **Model Selection & Reasoning Effort**: Choose your preferred LLM provider/model and reasoning effort level (`Default`, `Low`, `Medium`, `High`) from the dropdown controls at the bottom of each agent tab. Configure API keys securely in your OS keychain via **File > Settings…**.
+- **Model Selection & Reasoning Effort**: Choose your preferred LLM provider/model and reasoning effort level (`Default`, `Low`, `Medium`, `High`) from the dropdown controls at the bottom of each agent tab. Configure multiple AI service connections, Email accounts, and Calendar accounts (including one-click Google and Microsoft OAuth login) via **File > Settings…**.
+- **24/7 Autonomous Bots & Agent Hub**: Studio automatically starts or attaches to the **Agent Hub** (`smile hub`) on launch. Use **Agent Hub > Bot Routines** (or the **Bots** explorer tab) to configure scheduled (`cron` / interval) and event-driven (`email`, `calendar`, `webhook`) routines, and use **Bot Activities** to inspect live session transcripts and approve or reject staged emails and calendar actions in the **Batch Draft Queue**.
 
 ---
 
-## 6. Document Editing with Notepad
+## 6. Document Editing, Markdown Preview & Data Viewer
 
-Double-clicking any non-notebook text file in the Project Explorer opens it in the built-in **Notepad**:
-- Full syntax highlighting for Markdown (`.md`), Java (`.java`), Python (`.py`), SQL (`.sql`), Scala (`.sc`), Kotlin (`.kt`), Shell (`.sh`), JSON, YAML, and CSV.
-- Integrated spell checker with English dictionary.
-- Code folding, occurrence marking, and fast Find & Replace (`Ctrl+F` / `Ctrl+H`).
+- **Interactive DataFrame Table Viewer**: Double-clicking any tabular dataset (`.csv`, `.tsv`, `.arff`, `.parquet`, `.avro`, `.sas7bdat`, `.feather`) in the Project Explorer opens it in an interactive table view with a 100 MB large-file guard and row-limit prompt.
+- **Notepad & Rich Markdown Preview**: Double-clicking any code or text file opens it in the built-in **Notepad**:
+  - Full syntax highlighting for Markdown (`.md`), Java (`.java`), Python (`.py`), SQL (`.sql`), Scala (`.sc`), Kotlin (`.kt`), Shell (`.sh`), JSON, YAML, and XML.
+  - Overlaid **Edit / Preview** toggle buttons in the top-right of Markdown files for live GitHub-Flavored Markdown rendering (tables, strikethrough, autolinks, and theme-aware code blocks).
+  - Integrated spell checker with English dictionary, code folding, occurrence marking, and fast Find & Replace (`Ctrl+F` / `Ctrl+H`).
 
 ---
 
