@@ -97,7 +97,11 @@ jobs:
           sbt sonaBundle
           BUNDLE_FILE="target/sona-bundle/bundle.zip"
           ls -lh "$BUNDLE_FILE"
-          AUTH=$(printf '%s:%s' "$NEXUS_USERNAME" "$NEXUS_PASSWORD" | base64 -w 0)
+          if printf '%s' "$NEXUS_PASSWORD" | base64 -d 2>/dev/null | grep -q ':'; then
+            AUTH=$(printf '%s' "$NEXUS_PASSWORD" | tr -d '[:space:]')
+          else
+            AUTH=$(printf '%s:%s' "$NEXUS_USERNAME" "$NEXUS_PASSWORD" | base64 -w 0)
+          fi
           DEPLOY_NAME="com.github.haifengl:smile:$(date +%Y%m%d_%H%M%S)"
           DEPLOY_ID=$(curl -fsSL --retry 3 --retry-delay 10 --max-time 600 \
             --request POST \
