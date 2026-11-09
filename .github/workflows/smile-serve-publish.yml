@@ -10,6 +10,10 @@ on:
         default: '7.0.0'
   release:
     types: [published]
+  workflow_run:
+    workflows: ["Create Release"]
+    types:
+      - completed
 
 env:
   REGISTRY: ghcr.io
@@ -18,6 +22,7 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     strategy:
       # The images are independent; one failing (e.g. a native build running out of memory) must not cancel the rest.
       fail-fast: false
@@ -59,6 +64,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+          fetch-depth: 0
 
       # The GPU and native images build everything inside Docker (CUDA toolchain and LibTorch, GraalVM, Gradle caches),
       # which together with the 16 GB GPU image does not fit in the ~14 GB a hosted runner has free. Delete the
@@ -110,6 +118,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Resolve version tag
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "tag=v${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+            echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+            echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          else
+            TAG=$(git describe --tags --exact-match HEAD 2>/dev/null || git log -1 --pretty=%B | head -n 1 | tr -d '[:space:]')
+            echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+            echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v6
@@ -117,10 +141,9 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ matrix.image_name }}
           tags: |
             # Apply semantic versioning tags (e.g., 1.2.3, 1.2, 1)
-            type=semver,pattern={{version}},suffix=${{ matrix.tag_suffix }}
-            type=semver,pattern={{major}}.{{minor}},suffix=${{ matrix.tag_suffix }}
-            type=semver,pattern={{major}},suffix=${{ matrix.tag_suffix }}
-            type=raw,value=${{ github.event.inputs.version }}${{ matrix.tag_suffix }}
+            type=semver,pattern={{version}},value=${{ steps.version.outputs.tag }},suffix=${{ matrix.tag_suffix }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.tag }},suffix=${{ matrix.tag_suffix }}
+            type=semver,pattern={{major}},value=${{ steps.version.outputs.tag }},suffix=${{ matrix.tag_suffix }}
             # Apply the 'latest' tag only on the default branch push
             type=raw,value=latest${{ matrix.tag_suffix }},enable={{is_default_branch}}
 

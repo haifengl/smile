@@ -7,6 +7,10 @@
             :url "https://opensource.org/licenses/GPL-3.0"}
   :dependencies [[org.clojure/clojure "1.12.5"]
                  [com.github.haifengl/smile-core "7.2.0"]]
+  :deploy-repositories [["clojars" {:url "https://repo.clojars.org/"
+                                    :username :env/CLOJARS_USERNAME
+                                    :password :env/CLOJARS_PASSWORD
+                                    :sign-releases false}]]
   :plugins [[lein-codox "0.10.8"]]
   :codox {:doc-files ["README.md"]
           :project {:name "SMILE - Clojure" :description "Copyright © 2010-2026 Haifeng Li. All rights reserved. Use is subject to license terms."}
