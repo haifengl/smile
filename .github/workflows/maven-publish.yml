@@ -97,17 +97,23 @@ jobs:
           sbt sonaBundle
           BUNDLE_FILE="target/sona-bundle/bundle.zip"
           ls -lh "$BUNDLE_FILE"
-          if printf '%s' "$NEXUS_PASSWORD" | base64 -d 2>/dev/null | grep -q ':'; then
-            AUTH=$(printf '%s' "$NEXUS_PASSWORD" | tr -d '[:space:]')
-          else
-            AUTH=$(printf '%s:%s' "$NEXUS_USERNAME" "$NEXUS_PASSWORD" | base64 -w 0)
-          fi
+          USER_CLEAN=$(printf '%s' "$NEXUS_USERNAME" | tr -d '[:space:]')
+          PASS_CLEAN=$(printf '%s' "$NEXUS_PASSWORD" | tr -d '[:space:]')
+          AUTH=$(printf '%s:%s' "$USER_CLEAN" "$PASS_CLEAN" | base64 -w 0)
           DEPLOY_NAME="com.github.haifengl:smile:$(date +%Y%m%d_%H%M%S)"
-          DEPLOY_ID=$(curl -fsSL --retry 3 --retry-delay 10 --max-time 600 \
+          HTTP_CODE=$(curl -sS --retry 3 --retry-delay 10 --max-time 600 \
+            -o /tmp/sona_upload.txt -w "%{http_code}" \
             --request POST \
             --header "Authorization: Bearer $AUTH" \
             --form "bundle=@${BUNDLE_FILE};type=application/octet-stream" \
             "https://central.sonatype.com/api/v1/publisher/upload?name=${DEPLOY_NAME}&publishingType=AUTOMATIC")
+          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+            echo "Upload failed with HTTP $HTTP_CODE (username length=${#USER_CLEAN}, password length=${#PASS_CLEAN}):" >&2
+            cat /tmp/sona_upload.txt >&2
+            echo "" >&2
+            exit 1
+          fi
+          DEPLOY_ID=$(cat /tmp/sona_upload.txt | tr -d '[:space:]')
           echo "Uploaded deployment ID: $DEPLOY_ID"
           for i in $(seq 1 60); do
             STATUS_JSON=$(curl -fsSL --retry 3 --retry-delay 5 \
