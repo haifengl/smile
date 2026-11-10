@@ -95,12 +95,10 @@ public class SearchResourceBundleTest {
             "AnswerResolutionNoteLabel", "PreviousDraftBaselineLabel", "PreviousPayloadJsonLabel",
             "CurrentEditablePayloadLabel", "TabStructuredReview", "TabRawJson",
             "ApproveButton", "AlwaysAllowRuleButton", "RulePatternLabel",
-            "DenyButton", "ApproveCheckedBatchButton", "ColRunId", "ColBot", "ColModel",
+            "DenyButton", "ColRunId", "ColBot", "ColModel",
             "ColStartedAt", "ColSummaryError", "SessionTranscriptLabel", "StopCancelRunButton",
             "NoPreviousVersion", "ApprovalItemDefaultTitle", "ChannelPrefix", "AccountPrefix",
-            "BrowserStatePrefix", "ApprovalErrorTitle", "ApprovalErrorMessage",
-            "BatchApprovalTitle", "BatchApprovalSelectMessage", "BatchApprovalErrorTitle",
-            "BatchApprovalErrorMessage");
+            "BrowserStatePrefix", "ApprovalErrorTitle", "ApprovalErrorMessage");
 
     /** Keys the BotManager panel reads at runtime. */
     private static final List<String> BOT_MANAGER_KEYS = List.of(

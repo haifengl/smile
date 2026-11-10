@@ -62,8 +62,8 @@ import smile.swing.ScrollablePanel;
  * <ol>
  *   <li><b>Approvals &amp; Batch Draft Queue</b>: inspect pending questions, tool confirmations,
  *       staged multi-channel drafts, and Secure Handoffs; view prior-draft diffs; edit inline;
- *       and resolve individually ({@code Approve}, {@code Always Allow Rule},
- *       {@code Deny}) or in batch ({@code Approve Selected Batch}).</li>
+ *       and resolve individually or in checked batches ({@code Approve},
+ *       {@code Always Allow Rule}, {@code Deny}).</li>
  *   <li><b>Run History &amp; Transcripts</b>: inspect {@code IoABotRun} execution history and
  *       view full session transcripts.</li>
  * </ol>
@@ -146,6 +146,10 @@ public class BotActivity extends JPanel {
     private JSplitPane rawJsonDiffSplit;
 
     private final JTextField rulePatternField = new JTextField(20);
+    private final JButton approveBtn = new JButton(bundle.getString("ApproveButton"));
+    private final JButton alwaysAllowBtn = new JButton(bundle.getString("AlwaysAllowRuleButton"));
+    private final JButton denyBtn = new JButton(bundle.getString("DenyButton"));
+    private final Map<Long, String> stagedEditsById = new HashMap<>();
 
     private static final ObjectMapper TOOL_MAPPER = JsonMapper.builder()
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
@@ -408,14 +412,15 @@ public class BotActivity extends JPanel {
         filterBar.add(approvalFilterCombo);
 
         JButton selectAllDraftsBtn = new JButton(bundle.getString("SelectAllPendingDrafts"));
-        selectAllDraftsBtn.addActionListener(e -> {
-            for (int i = 0; i < approvalsModel.getRowCount(); i++) {
-                approvalsModel.setValueAt(Boolean.TRUE, i, 0);
-            }
-        });
+        selectAllDraftsBtn.addActionListener(e -> toggleSelectAllApprovals());
         filterBar.add(selectAllDraftsBtn);
         panel.add(filterBar, BorderLayout.NORTH);
 
+        approvalsModel.addTableModelListener(e -> {
+            if (e.getColumn() == 0 || e.getColumn() == javax.swing.event.TableModelEvent.ALL_COLUMNS) {
+                updateApprovalActionButtons();
+            }
+        });
         approvalsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         approvalsTable.getColumnModel().getColumn(0).setMaxWidth(55);
         approvalsTable.getColumnModel().getColumn(1).setMaxWidth(60);
@@ -559,24 +564,15 @@ public class BotActivity extends JPanel {
         detailAndActions.add(detailTabs, BorderLayout.CENTER);
 
         JPanel actionBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
-        JButton approveBtn = new JButton(bundle.getString("ApproveButton"));
-        approveBtn.addActionListener(e -> resolveSelectedSingle("APPROVE"));
-
-        JButton alwaysAllowBtn = new JButton(bundle.getString("AlwaysAllowRuleButton"));
+        approveBtn.addActionListener(e -> resolveTargetedApprovals("APPROVE"));
         alwaysAllowBtn.addActionListener(e -> resolveSelectedSingle("ALWAYS_ALLOW_RULE"));
-
-        JButton denyBtn = new JButton(bundle.getString("DenyButton"));
-        denyBtn.addActionListener(e -> resolveSelectedSingle("DENY"));
-
-        JButton batchApproveBtn = new JButton(bundle.getString("ApproveCheckedBatchButton"));
-        batchApproveBtn.addActionListener(e -> batchResolveChecked("ALLOW_ONCE"));
+        denyBtn.addActionListener(e -> resolveTargetedApprovals("DENY"));
 
         actionBar.add(approveBtn);
         actionBar.add(alwaysAllowBtn);
         actionBar.add(new JLabel(bundle.getString("RulePatternLabel")));
         actionBar.add(rulePatternField);
         actionBar.add(denyBtn);
-        actionBar.add(batchApproveBtn);
         detailAndActions.add(actionBar, BorderLayout.SOUTH);
 
         JSplitPane verticalSplit = new JSplitPane(
@@ -710,6 +706,21 @@ public class BotActivity extends JPanel {
         return approvalsTable;
     }
 
+    /** Package-private accessor for testing the Approve button. */
+    JButton approveButton() {
+        return approveBtn;
+    }
+
+    /** Package-private accessor for testing the Deny button. */
+    JButton denyButton() {
+        return denyBtn;
+    }
+
+    /** Package-private accessor for testing the Always Allow Rule button. */
+    JButton alwaysAllowButton() {
+        return alwaysAllowBtn;
+    }
+
     /** Refreshes Hub status, approvals, and runs in a background thread. */
     public final void refreshAllAsync() {
         Thread.ofPlatform().name("bot-activity-refresh").daemon(true).start(() -> {
@@ -769,6 +780,7 @@ public class BotActivity extends JPanel {
         if (list.equals(currentApprovals) && approvalsModel.getRowCount() == list.size()) {
             return;
         }
+        saveDisplayedEditIfModified();
         Long selectedId = null;
         int prevRow = approvalsTable.getSelectedRow();
         if (prevRow >= 0 && prevRow < currentApprovals.size()) {
@@ -781,6 +793,11 @@ public class BotActivity extends JPanel {
                 checkedById.put(id, Boolean.TRUE);
             }
         }
+        var validIds = list.stream()
+                .map(HubClient.BotApprovalItem::id)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        stagedEditsById.keySet().retainAll(validIds);
 
         currentApprovals = new ArrayList<>(list);
         approvalsModel.setRowCount(0);
@@ -818,14 +835,50 @@ public class BotActivity extends JPanel {
             displayedApprovalId = null;
             displayedApprovalPayloadJson = null;
         }
+        updateApprovalActionButtons();
+    }
+
+    private void saveDisplayedEditIfModified() {
+        if (displayedApprovalId == null) {
+            return;
+        }
+        HubClient.BotApprovalItem prevItem = currentApprovals.stream()
+                .filter(a -> displayedApprovalId.equals(a.id()))
+                .findFirst()
+                .orElse(null);
+        if (prevItem == null) {
+            return;
+        }
+        String currentJson;
+        boolean modified;
+        if (detailTabs.getSelectedIndex() == 1) {
+            currentJson = editablePayloadArea.getText().trim();
+            String origFormatted = formatPayloadForDisplay(prevItem.payloadJson()).trim();
+            modified = !currentJson.isEmpty() && !currentJson.equals(origFormatted);
+        } else {
+            StructuredApprovalPayload currentStructured = readStructuredFieldsFor(prevItem);
+            modified = !currentStructured.equals(parseApprovalPayload(prevItem));
+            currentJson = modified ? serializeStructuredPayload(prevItem, currentStructured) : "";
+        }
+        if (modified && !currentJson.isBlank()) {
+            stagedEditsById.put(displayedApprovalId, currentJson);
+        } else {
+            stagedEditsById.remove(displayedApprovalId);
+        }
     }
 
     private void displaySelectedApproval(HubClient.BotApprovalItem item) {
         if (item == null) {
             return;
         }
+        if (displayedApprovalId != null && !displayedApprovalId.equals(item.id())) {
+            saveDisplayedEditIfModified();
+        }
         displayedApprovalId = item.id();
         displayedApprovalPayloadJson = item.payloadJson();
+        String effectivePayloadJson = (item.id() != null && stagedEditsById.containsKey(item.id()))
+                ? stagedEditsById.get(item.id())
+                : item.payloadJson();
         boolean hasPrevious = item.previousPayloadJson() != null && !item.previousPayloadJson().isBlank();
 
         // Populate Raw JSON tab
@@ -833,7 +886,7 @@ public class BotActivity extends JPanel {
                 ? formatPayloadForDisplay(item.previousPayloadJson())
                 : bundle.getString("NoPreviousVersion"));
         priorDraftArea.setCaretPosition(0);
-        editablePayloadArea.setText(formatPayloadForDisplay(item.payloadJson()));
+        editablePayloadArea.setText(formatPayloadForDisplay(effectivePayloadJson));
         editablePayloadArea.setCaretPosition(0);
 
         rawPriorPanel.setVisible(hasPrevious);
@@ -855,7 +908,7 @@ public class BotActivity extends JPanel {
             }
         }
 
-        StructuredApprovalPayload structured = parseApprovalPayload(item);
+        StructuredApprovalPayload structured = parsePayloadString(effectivePayloadJson, item);
         populateStructuredFields(item, structured);
 
         rulePatternField.setText(item.subject() == null || item.subject().isBlank() ? "*" : item.subject());
@@ -907,6 +960,10 @@ public class BotActivity extends JPanel {
     public StructuredApprovalPayload readStructuredFields() {
         int row = approvalsTable.getSelectedRow();
         HubClient.BotApprovalItem item = (row >= 0 && row < currentApprovals.size()) ? currentApprovals.get(row) : null;
+        return readStructuredFieldsFor(item);
+    }
+
+    private StructuredApprovalPayload readStructuredFieldsFor(HubClient.BotApprovalItem item) {
         StructuredApprovalPayload base = parseApprovalPayload(item);
         if (currentItemDraftMode) {
             return new StructuredApprovalPayload(
@@ -1035,6 +1092,126 @@ public class BotActivity extends JPanel {
         return !readStructuredFields().equals(parseApprovalPayload(item));
     }
 
+    private void toggleSelectAllApprovals() {
+        int rowCount = approvalsModel.getRowCount();
+        if (rowCount == 0) {
+            return;
+        }
+        boolean allChecked = true;
+        for (int i = 0; i < rowCount; i++) {
+            if (!Boolean.TRUE.equals(approvalsModel.getValueAt(i, 0))) {
+                allChecked = false;
+                break;
+            }
+        }
+        Boolean target = allChecked ? Boolean.FALSE : Boolean.TRUE;
+        for (int i = 0; i < rowCount; i++) {
+            approvalsModel.setValueAt(target, i, 0);
+        }
+    }
+
+    /**
+     * Returns the IDs of all rows currently checked in the {@code Select} column.
+     *
+     * @return list of checked approval IDs in table order.
+     */
+    public List<Long> checkedApprovalIds() {
+        List<Long> checkedIds = new ArrayList<>();
+        for (int i = 0; i < approvalsModel.getRowCount() && i < currentApprovals.size(); i++) {
+            if (Boolean.TRUE.equals(approvalsModel.getValueAt(i, 0))) {
+                Long id = currentApprovals.get(i).id();
+                if (id != null) {
+                    checkedIds.add(id);
+                }
+            }
+        }
+        return checkedIds;
+    }
+
+    /**
+     * Returns the approval IDs that {@code Approve} or {@code Deny} will act on:
+     * all checked rows when one or more rows are checked, or the single currently
+     * highlighted row when no rows are checked. Unselected/unchecked rows are never
+     * implicitly included.
+     *
+     * @return list of targeted approval IDs.
+     */
+    public List<Long> targetedApprovalIds() {
+        List<Long> checked = checkedApprovalIds();
+        if (!checked.isEmpty()) {
+            return checked;
+        }
+        int row = approvalsTable.getSelectedRow();
+        if (row >= 0 && row < currentApprovals.size()) {
+            Long id = currentApprovals.get(row).id();
+            if (id != null) {
+                return List.of(id);
+            }
+        }
+        return List.of();
+    }
+
+    /**
+     * Collects all in-progress or staged inline edits for the given target approval IDs.
+     *
+     * @param targetIds the approval IDs being resolved.
+     * @return map of approval ID string to edited payload JSON.
+     */
+    public Map<String, String> collectEditsForIds(List<Long> targetIds) {
+        saveDisplayedEditIfModified();
+        Map<String, String> edits = new HashMap<>();
+        for (Long id : targetIds) {
+            if (id != null && stagedEditsById.containsKey(id)) {
+                String edited = stagedEditsById.get(id);
+                if (edited != null && !edited.isBlank()) {
+                    edits.put(String.valueOf(id), edited);
+                }
+            }
+        }
+        return edits;
+    }
+
+    private void updateApprovalActionButtons() {
+        int checkedCount = checkedApprovalIds().size();
+        String approveBase = bundle.getString("ApproveButton");
+        String denyBase = bundle.getString("DenyButton");
+        if (checkedCount > 0) {
+            approveBtn.setText(approveBase + " (" + checkedCount + ")");
+            denyBtn.setText(denyBase + " (" + checkedCount + ")");
+        } else {
+            approveBtn.setText(approveBase);
+            denyBtn.setText(denyBase);
+        }
+        alwaysAllowBtn.setEnabled(checkedCount <= 1);
+    }
+
+    private void resolveTargetedApprovals(String decision) {
+        List<Long> checkedIds = checkedApprovalIds();
+        if (checkedIds.isEmpty()) {
+            resolveSelectedSingle(decision);
+            return;
+        }
+        String batchDecision = "APPROVE".equals(decision) ? "ALLOW_ONCE" : decision;
+        Map<String, String> edits = "DENY".equals(batchDecision)
+                ? Map.of()
+                : collectEditsForIds(checkedIds);
+        Thread.ofPlatform().name("bot-batch-resolve").daemon(true).start(() -> {
+            try {
+                HubManager.getInstance().client().batchResolveApprovals(checkedIds, batchDecision, edits);
+                SwingUtilities.invokeLater(() -> {
+                    checkedIds.forEach(stagedEditsById::remove);
+                    refreshAllAsync();
+                });
+            } catch (Exception ex) {
+                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                        this,
+                        MessageFormat.format(bundle.getString("ApprovalErrorMessage"), ex.getMessage()),
+                        bundle.getString("ApprovalErrorTitle"),
+                        JOptionPane.ERROR_MESSAGE));
+            }
+        });
+    }
+
     private void resolveSelectedSingle(String decision) {
         int row = approvalsTable.getSelectedRow();
         if (row < 0 || row >= currentApprovals.size()) {
@@ -1044,8 +1221,10 @@ public class BotActivity extends JPanel {
         if (item.id() == null) {
             return;
         }
-        boolean modified = isCurrentApprovalEdited();
-        String edited = modified ? currentEditedPayloadJson() : "";
+        saveDisplayedEditIfModified();
+        String stagedEdit = stagedEditsById.getOrDefault(item.id(), "");
+        boolean modified = !stagedEdit.isBlank();
+        String edited = modified ? stagedEdit : "";
         String effectiveDecision = decision;
         if ("APPROVE".equals(decision) || "ALLOW_ONCE".equals(decision)) {
             effectiveDecision = modified ? "EDIT_AND_APPROVE" : "ALLOW_ONCE";
@@ -1059,48 +1238,15 @@ public class BotActivity extends JPanel {
                     HubManager.getInstance().fireEvent(new HubClient.BotStreamEvent(
                             "config", item.runId(), item.botId(), item.routineId(), ""));
                 }
-                SwingUtilities.invokeLater(this::refreshAllAsync);
+                SwingUtilities.invokeLater(() -> {
+                    stagedEditsById.remove(item.id());
+                    refreshAllAsync();
+                });
             } catch (Exception ex) {
                 SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
                         this,
                         MessageFormat.format(bundle.getString("ApprovalErrorMessage"), ex.getMessage()),
                         bundle.getString("ApprovalErrorTitle"),
-                        JOptionPane.ERROR_MESSAGE));
-            }
-        });
-    }
-
-    private void batchResolveChecked(String decision) {
-        List<Long> checkedIds = new ArrayList<>();
-        Map<String, String> edits = new HashMap<>();
-        int selectedRow = approvalsTable.getSelectedRow();
-        for (int i = 0; i < approvalsModel.getRowCount() && i < currentApprovals.size(); i++) {
-            Boolean checked = (Boolean) approvalsModel.getValueAt(i, 0);
-            HubClient.BotApprovalItem item = currentApprovals.get(i);
-            if (Boolean.TRUE.equals(checked) && item.id() != null) {
-                checkedIds.add(item.id());
-                if (i == selectedRow && isCurrentApprovalEdited()) {
-                    String edited = currentEditedPayloadJson();
-                    if (!edited.isBlank()) {
-                        edits.put(String.valueOf(item.id()), edited);
-                    }
-                }
-            }
-        }
-        if (checkedIds.isEmpty()) {
-            JOptionPane.showMessageDialog(this, bundle.getString("BatchApprovalSelectMessage"),
-                    bundle.getString("BatchApprovalTitle"), JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-        Thread.ofPlatform().name("bot-batch-resolve").daemon(true).start(() -> {
-            try {
-                HubManager.getInstance().client().batchResolveApprovals(checkedIds, decision, edits);
-                SwingUtilities.invokeLater(this::refreshAllAsync);
-            } catch (Exception ex) {
-                SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
-                        this,
-                        MessageFormat.format(bundle.getString("BatchApprovalErrorMessage"), ex.getMessage()),
-                        bundle.getString("BatchApprovalErrorTitle"),
                         JOptionPane.ERROR_MESSAGE));
             }
         });
