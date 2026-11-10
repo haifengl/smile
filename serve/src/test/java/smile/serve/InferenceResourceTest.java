@@ -605,6 +605,47 @@ public class InferenceResourceTest {
             given().when().post("/api/v1/smile/iris_kmeans-1/unload?timeout=5");
             java.nio.file.Files.deleteIfExists(tempModel);
         }
+
+        // And Given an E-Means ClusteringModel saved to a temporary .sml file
+        var emeansModel = smile.model.Model.clustering("emeans", Formula.lhs("class"), data, params);
+        emeansModel.setTag(smile.model.Model.ID, "iris_emeans");
+        emeansModel.setTag(smile.model.Model.VERSION, "1");
+        Path tempEmeansModel = smile.io.Write.object(emeansModel);
+
+        try {
+            String escapedPath = tempEmeansModel.toAbsolutePath().toString().replace("\\", "\\\\");
+            given()
+                .contentType(ContentType.JSON)
+                .body("{\"model\":\"" + escapedPath + "\",\"kind\":\"smile\"}")
+                .when().post("/api/v1/models/load")
+                .then()
+                    .statusCode(200)
+                    .body("id", is("iris_emeans-1"));
+
+            given()
+                .when().get("/api/v1/models/iris_emeans-1")
+                .then()
+                    .statusCode(200)
+                    .body("kind", is("emeans"))
+                    .body("smile.train.k", is(3))
+                    .body("smile.train.size", is(150))
+                    .body("smile.train.distortion", notNullValue())
+                    .body("smile.train.cluster_sizes", hasSize(3))
+                    .body("smile.train.distortions", hasSize(3));
+
+            var sample = "{\"sepallength\":5.1,\"sepalwidth\":3.5,\"petallength\":1.4,\"petalwidth\":0.2}";
+            given()
+                .contentType(ContentType.JSON)
+                .body(sample)
+                .when().post("/api/v1/smile/iris_emeans-1")
+                .then()
+                    .statusCode(200)
+                    .body("prediction", notNullValue())
+                    .body("centroid", hasSize(4));
+        } finally {
+            given().when().post("/api/v1/smile/iris_emeans-1/unload?timeout=5");
+            java.nio.file.Files.deleteIfExists(tempEmeansModel);
+        }
     }
 
     // --------------------------------------------------------------- VectorQuantizerModel & Online Update

@@ -582,6 +582,42 @@ public class Train {
         run();
     }
 
+    @Command(name = "emeans", aliases = {"e-means"}, description = "E-Means Clustering",
+             mixinStandardHelpOptions = true)
+    void emeans(
+            @Option(names = {"--transform"}, paramLabel = "<rule>", description = "The feature transformation <standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>.")
+            String transform,
+            @Option(names = {"-k", "--clusters"}, paramLabel = "<k>", required = true, description = "The number of clusters.")
+            int k,
+            @Option(names = {"--epochs"}, paramLabel = "<value>", description = "The number of training passes over the dataset.")
+            double epochs,
+            @Option(names = {"--batch-law"}, paramLabel = "<mode>", description = "The mini-batch scaling law <AUTO, THROUGHPUT, QUALITY>.")
+            String batchLaw,
+            @Option(names = {"--batch-size"}, paramLabel = "<value>", description = "Manual mini-batch size override.")
+            int batchSize,
+            @Option(names = {"--alpha0"}, paramLabel = "<value>", description = "Manual initial EMA step size in (0, 1].")
+            double alpha0,
+            @Option(names = {"--unused-threshold"}, paramLabel = "<value>", defaultValue = "NaN", description = "Dead-cluster revival threshold (>= 0; 0 disables revival).")
+            double unusedThreshold,
+            @Option(names = {"--spherical"}, description = "Keep centroids on the unit sphere and assign by cosine similarity.")
+            boolean spherical,
+            @Option(names = {"--runs"}, paramLabel = "<value>", description = "The number of runs to pick the best clustering.")
+            int runs) throws Exception {
+
+        algorithm = "emeans";
+        clustering = true;
+        params.setProperty("smile.emeans.k", String.valueOf(k));
+        if (transform != null) params.setProperty("smile.feature.transform", transform);
+        if (epochs > 0) params.setProperty("smile.emeans.epochs", String.valueOf(epochs));
+        if (batchLaw != null) params.setProperty("smile.emeans.batch_law", batchLaw);
+        if (batchSize > 0) params.setProperty("smile.emeans.batch_size", String.valueOf(batchSize));
+        if (alpha0 > 0) params.setProperty("smile.emeans.alpha0", String.valueOf(alpha0));
+        if (!Double.isNaN(unusedThreshold)) params.setProperty("smile.emeans.unused_threshold", String.valueOf(unusedThreshold));
+        if (spherical) params.setProperty("smile.emeans.spherical", "true");
+        if (runs > 0) params.setProperty("smile.clustering.runs", String.valueOf(runs));
+        run();
+    }
+
     @Command(name = "xmeans", description = "X-Means Clustering",
              mixinStandardHelpOptions = true)
     void xmeans(

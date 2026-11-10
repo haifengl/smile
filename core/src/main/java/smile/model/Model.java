@@ -540,7 +540,7 @@ public interface Model {
 
     /**
      * Trains a centroid-based clustering model.
-     * @param algorithm the clustering algorithm ("kmeans", "xmeans", "gmeans", "deterministic-annealing", or "da").
+     * @param algorithm the clustering algorithm ("kmeans", "emeans", "e-means", "xmeans", "gmeans", "deterministic-annealing", or "da").
      * @param formula the feature selection formula; if {@code null}, all columns are included.
      * @param data the training data.
      * @param params the hyperparameters.
@@ -563,7 +563,7 @@ public interface Model {
 
     /**
      * Fits a centroid-based clustering algorithm on a numeric feature matrix.
-     * @param algorithm the clustering algorithm ("kmeans", "xmeans", "gmeans", "deterministic-annealing", or "da").
+     * @param algorithm the clustering algorithm ("kmeans", "emeans", "e-means", "xmeans", "gmeans", "deterministic-annealing", or "da").
      * @param x the input feature matrix.
      * @param params the hyperparameters.
      * @return the fitted centroid clustering.

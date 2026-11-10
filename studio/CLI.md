@@ -545,6 +545,24 @@ smile train -d <file> -m <model> kmeans -k <clusters> [options]
 | `--runs <n>` | | Number of runs to pick the lowest-distortion clustering |
 | `--transform <rule>` | | Feature transformation (see §5.9) |
 
+#### `emeans` (`e-means`) — E-Means Clustering
+
+```
+smile train -d <file> -m <model> emeans -k <clusters> [options]
+```
+
+| Option | Required | Description |
+|---|---|---|
+| `-k`, `--clusters <k>` | ✔ | Number of clusters |
+| `--epochs <T>` | | Number of training passes over the dataset (default: `5.0`) |
+| `--batch-law <mode>` | | Mini-batch scaling law: `AUTO`, `THROUGHPUT`, `QUALITY` (default: `AUTO`) |
+| `--batch-size <B>` | | Manual mini-batch size override |
+| `--alpha0 <α₀>` | | Manual initial EMA step size in `(0, 1]` |
+| `--unused-threshold <τ>` | | Dead-cluster revival threshold (`>= 0`; `0` disables revival) |
+| `--spherical` | | Keep centroids on the unit sphere and assign by cosine similarity |
+| `--runs <n>` | | Number of runs to pick the lowest-distortion clustering |
+| `--transform <rule>` | | Feature transformation (see §5.9) |
+
 #### `xmeans` — X-Means Clustering
 
 ```
@@ -1434,7 +1452,7 @@ REGRESSION ALGORITHMS
   ols  lasso  ridge  elastic-net  gaussian-process
 
 CLUSTERING ALGORITHMS
-  kmeans  xmeans  gmeans  deterministic-annealing (da)
+  kmeans  emeans (e-means)  xmeans  gmeans  deterministic-annealing (da)
 
 VECTOR QUANTIZATION ALGORITHMS
   som  neural-gas  growing-neural-gas (gng)  neural-map  birch
