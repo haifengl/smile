@@ -467,6 +467,16 @@ public class HubClientAndConfigTest {
         assertEquals("frank", pageEv.botId());
         assertEquals("frank-daily-recap", pageEv.routineId());
         assertEquals("executive-brief", pageEv.pageSlug());
+        assertFalse(HubClient.shouldAutoOpenPageEvent(ev));
+        assertTrue(HubClient.shouldAutoOpenPageEvent(pageEv));
+
+        HubClient.BotStreamEvent otherBotActivityEv = HubClient.parseStreamEvent("page",
+                "{\"type\":\"page\",\"runId\":43,\"botId\":\"frank\",\"routineId\":\"frank-inbox\",\"pageSlug\":\"bot-activity\",\"timestamp\":\"2026-11-01T12:02:00Z\"}");
+        assertFalse(HubClient.shouldAutoOpenPageEvent(otherBotActivityEv));
+
+        HubClient.BotStreamEvent recapBotActivityEv = HubClient.parseStreamEvent("page",
+                "{\"type\":\"page\",\"runId\":44,\"botId\":\"frank\",\"routineId\":\"frank-bot-activity-recap\",\"pageSlug\":\"bot-activity\",\"timestamp\":\"2026-11-01T12:03:00Z\"}");
+        assertTrue(HubClient.shouldAutoOpenPageEvent(recapBotActivityEv));
 
         // Verify non-destructive approval refresh preserves user draft edits when the selected approval is unchanged
         BotActivity activity = new BotActivity(0);
@@ -672,5 +682,123 @@ public class HubClientAndConfigTest {
                 "Full transcript text must be rendered without truncation");
         assertFalse(rendered.contains("truncated in the view"),
                 "Rendered transcript must not contain a truncation notice");
+    }
+
+    @Test
+    public void testRunsTableHorizontalScrollColumnWidthsAndSummaryTooltip() {
+        BotActivity activity = new BotActivity(1);
+        javax.swing.JTable table = activity.runsTable();
+
+        assertEquals(javax.swing.JTable.AUTO_RESIZE_OFF, table.getAutoResizeMode(),
+                "Runs table must use AUTO_RESIZE_OFF so horizontal scrolling works");
+
+        var colModel = table.getColumnModel();
+        assertTrue(colModel.getColumn(0).getPreferredWidth() <= 65,
+                "Run ID column should be compact");
+        assertTrue(colModel.getColumn(1).getPreferredWidth() <= 95,
+                "Bot column should be compact");
+        assertTrue(colModel.getColumn(7).getPreferredWidth() >= 400,
+                "Summary / Error column should be wide enough to read messages");
+
+        String longError = "HTTP 401 Unauthorized when connecting to smtp.ionos.com:465 <check & verify credentials>";
+        HubClient.BotRunSummary failedRun = new HubClient.BotRunSummary(
+                99L, "mike", "mike-outreach-sweep", "sales", "gpt-5.4", null,
+                "FAILED", "2026-11-10T08:30:00Z", "2026-11-10T08:31:00Z",
+                "", "", longError
+        );
+        activity.populateRuns(List.of(failedRun));
+
+        java.awt.Rectangle summaryCellRect = table.getCellRect(0, 7, true);
+        java.awt.event.MouseEvent hoverSummary = new java.awt.event.MouseEvent(
+                table,
+                java.awt.event.MouseEvent.MOUSE_MOVED,
+                System.currentTimeMillis(),
+                0,
+                summaryCellRect.x + 5,
+                summaryCellRect.y + 5,
+                0,
+                false
+        );
+        String tooltip = table.getToolTipText(hoverSummary);
+        assertNotNull(tooltip, "Hovering over Summary / Error cell must return a tooltip");
+        assertTrue(tooltip.contains("ERROR: HTTP 401 Unauthorized"));
+        assertTrue(tooltip.contains("&lt;check &amp; verify credentials&gt;"));
+
+        // Verify Approval Queue table tooltip on Subject / Recipient columns
+        HubClient.BotApprovalItem approvalItem = new HubClient.BotApprovalItem(
+                10L, 1L, "mike", "mike-outreach-sweep", "sales",
+                "BATCH_DRAFT", "email", "vp-engineering@enterprise-target.io",
+                "Batch Draft: Outbound Email — Enterprise JVM Inference & Local Agent Hub",
+                "{}", null, "PENDING", null, null, "2026-11-10T09:00:00Z", null
+        );
+        activity.populateApprovals(List.of(approvalItem));
+        javax.swing.JTable approvalsTable = activity.approvalsTable();
+        java.awt.Rectangle subjectRect = approvalsTable.getCellRect(0, 7, true);
+        java.awt.event.MouseEvent hoverSubject = new java.awt.event.MouseEvent(
+                approvalsTable, java.awt.event.MouseEvent.MOUSE_MOVED, System.currentTimeMillis(),
+                0, subjectRect.x + 5, subjectRect.y + 5, 0, false
+        );
+        String subjectTooltip = approvalsTable.getToolTipText(hoverSubject);
+        assertNotNull(subjectTooltip);
+        assertTrue(subjectTooltip.contains("Enterprise JVM Inference &amp; Local Agent Hub"));
+    }
+
+    @Test
+    public void testContextProjectsAndRulesTableCellTooltips(@TempDir Path tempHome) {
+        String prevHome = System.getProperty("smile.home");
+        try {
+            System.setProperty("smile.home", tempHome.toString());
+            ProjectsConfig.ProjectEntry project = new ProjectsConfig.ProjectEntry(
+                    "smile",
+                    "C:/code/smile",
+                    "C:/code/smile/.smile",
+                    "C:/code/smile/.smile/memory",
+                    "C:/code/smile/.smile/MEMORY.md",
+                    List.of("architect", "chief-of-staff", "data-scientist", "desktop-operator",
+                            "evangelist", "java-coder", "product-manager", "python-coder", "sales"),
+                    "2026-11-10T00:00:00Z"
+            );
+            BotsConfig cfg = BotsConfig.defaultConfig().withContextProjects(List.of(project));
+            cfg.save(BotsConfig.resolvePath());
+
+            BotManager manager = new BotManager("frank-daily-recap", null);
+            javax.swing.JTable projectsTable = manager.projectsTable();
+            if (projectsTable.getRowCount() == 0) {
+                ((javax.swing.table.DefaultTableModel) projectsTable.getModel()).addRow(new Object[]{
+                        project.name(),
+                        project.path(),
+                        project.workspaceDir(),
+                        String.join(", ", project.agents())
+                });
+            }
+            assertTrue(projectsTable.getRowCount() >= 1);
+
+            // Hover over Personas column (col 3)
+            java.awt.Rectangle personasRect = projectsTable.getCellRect(0, 3, true);
+            java.awt.event.MouseEvent hoverPersonas = new java.awt.event.MouseEvent(
+                    projectsTable, java.awt.event.MouseEvent.MOUSE_MOVED, System.currentTimeMillis(),
+                    0, personasRect.x + 5, personasRect.y + 5, 0, false
+            );
+            String personasTooltip = projectsTable.getToolTipText(hoverPersonas);
+            assertNotNull(personasTooltip, "Hovering over Personas cell must return a tooltip");
+            assertTrue(personasTooltip.contains("architect, chief-of-staff, data-scientist"));
+            assertTrue(personasTooltip.contains("python-coder, sales"));
+
+            // Hover over Pattern column (col 2) in Review Rules table
+            javax.swing.JTable rulesTable = manager.rulesTable();
+            assertTrue(rulesTable.getRowCount() >= 1);
+            java.awt.Rectangle patternRect = rulesTable.getCellRect(0, 2, true);
+            java.awt.event.MouseEvent hoverPattern = new java.awt.event.MouseEvent(
+                    rulesTable, java.awt.event.MouseEvent.MOUSE_MOVED, System.currentTimeMillis(),
+                    0, patternRect.x + 5, patternRect.y + 5, 0, false
+            );
+            assertNotNull(rulesTable.getToolTipText(hoverPattern));
+        } finally {
+            if (prevHome == null) {
+                System.clearProperty("smile.home");
+            } else {
+                System.setProperty("smile.home", prevHome);
+            }
+        }
     }
 }

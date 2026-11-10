@@ -270,7 +270,7 @@ public class SmileStudio extends JFrame implements SearchListener {
         });
         HubManager.getInstance().addEventListener(ev -> {
             updateHubBadge.run();
-            if (ev != null && "page".equals(ev.type()) && ev.pageSlug() != null && !ev.pageSlug().isBlank()) {
+            if (HubClient.shouldAutoOpenPageEvent(ev)) {
                 String slug = ev.pageSlug().trim();
                 var page = new HubClient.BotPageSummary(slug, slug, "", "");
                 HubManager.getInstance().client().openPageInBrowser(SmileStudio.this, page);
