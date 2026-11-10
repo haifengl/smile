@@ -18,6 +18,7 @@
 package smile.studio.bot;
 
 import java.awt.*;
+import java.awt.event.MouseEvent;
 import java.nio.file.Path;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -88,7 +89,7 @@ public class BotManager extends JPanel {
     // Policy fields
     private final JComboBox<BotsConfig.SessionMode> sessionModeCombo =
             new JComboBox<>(BotsConfig.SessionMode.values());
-    private final JCheckBox confirmConsequentialCheck = new JCheckBox(bundle.getString("ConfirmConsequentialCheckbox"), true);
+    private final JCheckBox confirmConsequentialCheck = new JCheckBox(bundle.getString("ConfirmConsequentialCheckbox"), false);
     private final JSpinner ttlMinutesSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 10080, 5));
 
     // Context Projects table
@@ -104,7 +105,13 @@ public class BotManager extends JPanel {
             return false;
         }
     };
-    private final JTable projectsTable = new JTable(projectsTableModel);
+    private final JTable projectsTable = new JTable(projectsTableModel) {
+        @Override
+        public String getToolTipText(MouseEvent e) {
+            String tip = BotActivity.tableCellTooltip(this, e, 1, 2, 3);
+            return tip != null ? tip : super.getToolTipText(e);
+        }
+    };
 
     // Auto Review Rules table
     private final DefaultTableModel rulesTableModel = new DefaultTableModel(
@@ -119,7 +126,13 @@ public class BotManager extends JPanel {
             return false;
         }
     };
-    private final JTable rulesTable = new JTable(rulesTableModel);
+    private final JTable rulesTable = new JTable(rulesTableModel) {
+        @Override
+        public String getToolTipText(MouseEvent e) {
+            String tip = BotActivity.tableCellTooltip(this, e, 0, 2);
+            return tip != null ? tip : super.getToolTipText(e);
+        }
+    };
 
     /**
      * Creates the Bot Routine Manager panel.
@@ -309,6 +322,13 @@ public class BotManager extends JPanel {
         panel.setBorder(new EmptyBorder(8, 8, 8, 8));
         JLabel info = new JLabel(bundle.getString("ProjectsInfo"));
         panel.add(info, BorderLayout.NORTH);
+        if (projectsTable.getColumnCount() >= 4) {
+            projectsTable.getColumnModel().getColumn(0).setPreferredWidth(100);
+            projectsTable.getColumnModel().getColumn(0).setMaxWidth(180);
+            projectsTable.getColumnModel().getColumn(1).setPreferredWidth(210);
+            projectsTable.getColumnModel().getColumn(2).setPreferredWidth(230);
+            projectsTable.getColumnModel().getColumn(3).setPreferredWidth(360);
+        }
         panel.add(new JScrollPane(projectsTable), BorderLayout.CENTER);
 
         JPanel btns = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
@@ -446,6 +466,16 @@ public class BotManager extends JPanel {
         }
     }
 
+    /** Package-private accessor for testing the Context Projects table. */
+    JTable projectsTable() {
+        return projectsTable;
+    }
+
+    /** Package-private accessor for testing the Auto Review Rules table. */
+    JTable rulesTable() {
+        return rulesTable;
+    }
+
     private void loadRoutineIntoForm(BotsConfig.BotSpec bot, BotsConfig.RoutineSpec routine) {
         botIdCombo.setSelectedItem(bot.botId());
         personaField.setText(bot.persona());
@@ -515,6 +545,7 @@ public class BotManager extends JPanel {
         requireActivityCheck.setSelected(false);
         useContextProjectsCheck.setSelected(false);
         awaitRoutineField.setText("");
+        confirmConsequentialCheck.setSelected(false);
     }
 
     private void updateWorkflowFieldStates() {

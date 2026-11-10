@@ -455,6 +455,27 @@ public final class HubClient {
     }
 
     /**
+     * Returns {@code true} if the given {@link BotStreamEvent} is a {@code "page"}
+     * update event that should automatically open in the system browser.
+     * In particular, {@code "bot-activity"} is only auto-opened when updated by
+     * {@code "frank-bot-activity-recap"}.
+     *
+     * @param ev the stream event to evaluate.
+     * @return {@code true} if the page should be opened in the browser.
+     */
+    public static boolean shouldAutoOpenPageEvent(BotStreamEvent ev) {
+        if (ev == null || !"page".equals(ev.type()) || ev.pageSlug() == null || ev.pageSlug().isBlank()) {
+            return false;
+        }
+        String slug = ev.pageSlug().trim();
+        if ("bot-activity".equalsIgnoreCase(slug)) {
+            return "frank-bot-activity-recap".equalsIgnoreCase(
+                    ev.routineId() == null ? "" : ev.routineId().trim());
+        }
+        return true;
+    }
+
+    /**
      * Opens the specified Bot Page in the system's default web browser.
      * Uses {@code /v1/pages/<slug>} when Agent Hub is running, or falls back to
      * the local HTML file on disk when offline.
