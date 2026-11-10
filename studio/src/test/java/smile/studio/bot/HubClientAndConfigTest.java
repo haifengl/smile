@@ -687,7 +687,7 @@ public class HubClientAndConfigTest {
     }
 
     @Test
-    public void testRunsTableHorizontalScrollColumnWidthsAndSummaryTooltip() {
+    public void testRunsTableHorizontalScrollColumnWidthsAndSummaryTooltip() throws Exception {
         BotActivity activity = new BotActivity(1);
         javax.swing.JTable table = activity.runsTable();
 
@@ -708,41 +708,43 @@ public class HubClientAndConfigTest {
                 "FAILED", "2026-11-10T08:30:00Z", "2026-11-10T08:31:00Z",
                 "", "", longError
         );
-        activity.populateRuns(List.of(failedRun));
+        javax.swing.SwingUtilities.invokeAndWait(() -> {
+            activity.populateRuns(List.of(failedRun));
 
-        java.awt.Rectangle summaryCellRect = table.getCellRect(0, 7, true);
-        java.awt.event.MouseEvent hoverSummary = new java.awt.event.MouseEvent(
-                table,
-                java.awt.event.MouseEvent.MOUSE_MOVED,
-                System.currentTimeMillis(),
-                0,
-                summaryCellRect.x + 5,
-                summaryCellRect.y + 5,
-                0,
-                false
-        );
-        String tooltip = table.getToolTipText(hoverSummary);
-        assertNotNull(tooltip, "Hovering over Summary / Error cell must return a tooltip");
-        assertTrue(tooltip.contains("ERROR: HTTP 401 Unauthorized"));
-        assertTrue(tooltip.contains("&lt;check &amp; verify credentials&gt;"));
+            java.awt.Rectangle summaryCellRect = table.getCellRect(0, 7, true);
+            java.awt.event.MouseEvent hoverSummary = new java.awt.event.MouseEvent(
+                    table,
+                    java.awt.event.MouseEvent.MOUSE_MOVED,
+                    System.currentTimeMillis(),
+                    0,
+                    summaryCellRect.x + 5,
+                    summaryCellRect.y + 5,
+                    0,
+                    false
+            );
+            String tooltip = table.getToolTipText(hoverSummary);
+            assertNotNull(tooltip, "Hovering over Summary / Error cell must return a tooltip");
+            assertTrue(tooltip.contains("ERROR: HTTP 401 Unauthorized"));
+            assertTrue(tooltip.contains("&lt;check &amp; verify credentials&gt;"));
 
-        // Verify Approval Queue table tooltip on Subject / Recipient columns
-        HubClient.BotApprovalItem approvalItem = new HubClient.BotApprovalItem(
-                10L, 1L, "mike", "mike-outreach-sweep", "sales",
-                "BATCH_DRAFT", "email", "vp-engineering@enterprise-target.io",
-                "Batch Draft: Outbound Email — Enterprise JVM Inference & Local Agent Hub",
-                "{}", null, "PENDING", null, null, "2026-11-10T09:00:00Z", null
-        );
-        activity.populateApprovals(List.of(approvalItem));
-        javax.swing.JTable approvalsTable = activity.approvalsTable();
-        java.awt.Rectangle subjectRect = approvalsTable.getCellRect(0, 7, true);
-        java.awt.event.MouseEvent hoverSubject = new java.awt.event.MouseEvent(
-                approvalsTable, java.awt.event.MouseEvent.MOUSE_MOVED, System.currentTimeMillis(),
-                0, subjectRect.x + 5, subjectRect.y + 5, 0, false
-        );
-        String subjectTooltip = approvalsTable.getToolTipText(hoverSubject);
-        assertNotNull(subjectTooltip);
-        assertTrue(subjectTooltip.contains("Enterprise JVM Inference &amp; Local Agent Hub"));
+            // Verify Approval Queue table tooltip on Subject / Recipient columns
+            HubClient.BotApprovalItem approvalItem = new HubClient.BotApprovalItem(
+                    10L, 1L, "mike", "mike-outreach-sweep", "sales",
+                    "BATCH_DRAFT", "email", "vp-engineering@enterprise-target.io",
+                    "Batch Draft: Outbound Email — Enterprise JVM Inference & Local Agent Hub",
+                    "{}", null, "PENDING", null, null, "2026-11-10T09:00:00Z", null
+            );
+            activity.populateApprovals(List.of(approvalItem));
+            javax.swing.JTable approvalsTable = activity.approvalsTable();
+            java.awt.Rectangle subjectRect = approvalsTable.getCellRect(0, 7, true);
+            java.awt.event.MouseEvent hoverSubject = new java.awt.event.MouseEvent(
+                    approvalsTable, java.awt.event.MouseEvent.MOUSE_MOVED, System.currentTimeMillis(),
+                    0, subjectRect.x + 5, subjectRect.y + 5, 0, false
+            );
+            String subjectTooltip = approvalsTable.getToolTipText(hoverSubject);
+            assertNotNull(subjectTooltip);
+            assertTrue(subjectTooltip.contains("Enterprise JVM Inference &amp; Local Agent Hub"));
+        });
     }
 
     @Test
@@ -796,6 +798,45 @@ public class HubClientAndConfigTest {
             );
             assertNotNull(rulesTable.getToolTipText(hoverPattern));
         } finally {
+            if (prevHome == null) {
+                System.clearProperty("smile.home");
+            } else {
+                System.setProperty("smile.home", prevHome);
+            }
+        }
+    }
+
+    @Test
+    public void testBotManagerRefreshesRulesTableWhenAlwaysAllowRuleAddedExternally(@TempDir Path tempHome) throws Exception {
+        String prevHome = System.getProperty("smile.home");
+        try {
+            System.setProperty("smile.home", tempHome.toString());
+            // Configure HubManager to point to an offline port so it reads/writes ${smile.home}/conf/bots.json
+            HubManager.getInstance().refreshClient(new StudioConfig.AgentHub(false, "127.0.0.1", 59998, "dev-admin-token", false));
+
+            BotsConfig initial = BotsConfig.defaultConfig();
+            initial.save(BotsConfig.resolvePath());
+
+            BotManager manager = new BotManager("frank-daily-recap", null);
+            assertEquals(2, manager.rulesTable().getRowCount());
+
+            // Simulate Agent Hub / BotActivity adding an ALWAYS_ALLOW rule to bots.json and firing a "config" event
+            BotsConfig updated = initial.withAddedRule(new BotsConfig.AutoReviewRule(
+                    "rule-allow-8049",
+                    BotsConfig.ActionCategory.SHELL,
+                    "External event action",
+                    BotsConfig.RuleDecision.ALWAYS_ALLOW
+            ));
+            updated.save(BotsConfig.resolvePath());
+
+            HubManager.getInstance().fireEvent(new HubClient.BotStreamEvent("config", 1L, "mike", "mike-outreach-sweep", ""));
+            javax.swing.SwingUtilities.invokeAndWait(() -> {});
+
+            assertEquals(3, manager.rulesTable().getRowCount());
+            assertEquals("rule-allow-8049", manager.rulesTable().getValueAt(2, 0));
+            assertEquals("External event action", manager.rulesTable().getValueAt(2, 2));
+        } finally {
+            HubManager.getInstance().refreshClient(StudioConfig.agentHub());
             if (prevHome == null) {
                 System.clearProperty("smile.home");
             } else {

@@ -626,6 +626,7 @@ public class Workspace extends JSplitPane {
             if (editorTabs.getSelectedComponent() instanceof Notebook notebook) {
                 kernelExplorer.refresh(notebook.kernel());
             } else if (editorTabs.getSelectedComponent() == botManager && botManager != null) {
+                botManager.refreshRulesAndProjectsFromHub();
                 explorerTabs.setSelectedComponent(botExplorer);
                 botExplorer.selectRoutine(botManager.selectedRoutineId());
             }

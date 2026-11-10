@@ -1055,6 +1055,10 @@ public class BotActivity extends JPanel {
         Thread.ofPlatform().name("bot-approval-resolve").daemon(true).start(() -> {
             try {
                 HubManager.getInstance().client().resolveApproval(item.id(), finalDecision, edited, pattern);
+                if ("ALWAYS_ALLOW_RULE".equals(finalDecision)) {
+                    HubManager.getInstance().fireEvent(new HubClient.BotStreamEvent(
+                            "config", item.runId(), item.botId(), item.routineId(), ""));
+                }
                 SwingUtilities.invokeLater(this::refreshAllAsync);
             } catch (Exception ex) {
                 SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
