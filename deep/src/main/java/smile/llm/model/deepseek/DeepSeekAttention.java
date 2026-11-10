@@ -48,7 +48,7 @@ final class DeepSeekAttention {
 
     private final DeepSeekModelArgs args;
     private final int layer;
-    private final Shared shared;
+    private Shared shared;
     private final int heads;
     private final int headDim;
     private final int rd;
@@ -72,11 +72,10 @@ final class DeepSeekAttention {
     private final Indexer indexer;
     private Tensor compressCache;
 
-    DeepSeekAttention(DeepSeekModelArgs args, DeepSeekCheckpoint ck, int layer, Shared shared) {
+    DeepSeekAttention(DeepSeekModelArgs args, DeepSeekCheckpoint ck, int layer) {
         String p = "layers." + layer + ".attn";
         this.args = args;
         this.layer = layer;
-        this.shared = shared;
         this.heads = args.numHeads();
         this.headDim = args.headDim();
         this.rd = args.ropeHeadDim();
@@ -101,7 +100,7 @@ final class DeepSeekAttention {
                 args.betaFast(), args.betaSlow());
         this.compressor = args.isKvSource(layer) ? new Compressor(args, ck, layer) : null;
         this.indexer = args.isIndexSource(layer) ? new Indexer(args, ck, layer, freqs) : null;
-        use(newState());
+        use(newState(new Shared()));
     }
 
     /**
@@ -113,8 +112,10 @@ final class DeepSeekAttention {
      * @param kvState  compressor partial group (ratio above one).
      * @param score    compressor partial group scores.
      * @param indexK   indexer keys (index layers that own keys).
+     * @param shared   what source layers publish to later layers during one pass (one per sequence, because rows of a
+     *                 batched pass are processed one after the other inside each layer).
      */
-    record State(Tensor window, Tensor compress, Tensor kvState, Tensor score, Tensor indexK) {
+    record State(Tensor window, Tensor compress, Tensor kvState, Tensor score, Tensor indexK, Shared shared) {
         void close() {
             for (Tensor t : new Tensor[]{window, compress, kvState, score, indexK}) {
                 if (t != null) {
@@ -125,15 +126,16 @@ final class DeepSeekAttention {
     }
 
     /** Allocates the state of a fresh (empty) sequence; the caller owns it. */
-    State newState() {
+    State newState(Shared shared) {
         Tensor[] c = compressor == null ? new Tensor[2] : compressor.newState();
         return new State(Dsv.zeros(ScalarType.BFloat16, 1, window, headDim),
                 args.isKvSource(layer) ? Dsv.zeros(ScalarType.BFloat16, 1, args.maxSeqLen() / ratio, headDim) : null,
-                c[0], c[1], indexer == null ? null : indexer.newState());
+                c[0], c[1], indexer == null ? null : indexer.newState(), shared);
     }
 
     /** Makes {@code s} the sequence this layer reads and writes. */
     void use(State s) {
+        shared = s.shared();
         windowCache = s.window();
         compressCache = s.compress();
         if (compressor != null) {
@@ -173,6 +175,11 @@ final class DeepSeekAttention {
         Dsv.probe("kv", kv);
         Tensor out = DeepSeekOps.sparseAttention(q, kv, sink, topk, scale);
         Dsv.probe("sattn", out);
+        return output(out, f, seqLen);
+    }
+
+    /** Inverse rope, fp8 fake quantization, grouped low-rank output projection. */
+    private Tensor output(Tensor out, Tensor f, long seqLen) {
         out = ropeTail(out, f, rd, true);
         Dsv.probe("rope_out", out);
         out = DeepSeekOps.fakeQuantFp8(out.reshape(1, seqLen, groups, -1), 32);
@@ -181,6 +188,46 @@ final class DeepSeekAttention {
                 .to(ScalarType.BFloat16);
         Dsv.probe("mid", mid);
         return woB.forward(mid.reshape(1, seqLen, groups * oRank));
+    }
+
+    /**
+     * One decode token for each of several sequences at different positions. Everything that does not depend on the
+     * sequence (projections, norms, rope, the output projection) runs once over the rows, which are laid out along the
+     * sequence axis; the window ring, the compressor, the indexer and the attention itself run per row.
+     *
+     * @param x      normalized hidden states {@code [1, n, dim]}, one row per sequence.
+     * @param pos    absolute position of each row's token ({@code >= 1}: a row at 0 is a prefill).
+     * @param states the sequences' states of this layer.
+     * @return the output {@code [1, n, dim]}.
+     */
+    Tensor forwardBatch(Tensor x, int[] pos, State[] states) {
+        int n = pos.length;
+        long[] p = new long[n];
+        for (int i = 0; i < n; i++) {
+            if (pos[i] < 1) {
+                throw new IllegalArgumentException("batched decode needs positions >= 1");
+            }
+            p[i] = pos[i];
+        }
+        Tensor f = o("aten::index_select", freqs, 0L, Dsv.dev(Tensor.of(p, n)));
+        Tensor qr = DeepSeekOps.rmsNorm(wqA.forward(x), qNorm, eps);
+        Tensor q = ropeTail(wqB.forward(qr).reshape(1, n, heads, headDim), f, rd, false);
+        Tensor kvAll = DeepSeekOps.rmsNorm(wkv.forward(x), kvNorm, eps);
+        kvAll = DeepSeekOps.fakeQuantFp8(ropeTail(kvAll, f, rd, false), 32);
+        Tensor[] outs = new Tensor[n];
+        for (int i = 0; i < n; i++) {
+            use(states[i]);
+            assign(narrow(windowCache, 1, pos[i] % window, 1), narrow(kvAll, 1, i, 1));
+            Tensor kv = windowCache;
+            Tensor topk = DeepSeekOps.windowTopkIdxs(window, 1, pos[i]);
+            if (ratio > 0) {
+                Tensor[] c = compressPart(narrow(x, 1, i, 1), narrow(qr, 1, i, 1), pos[i], kv.size(1));
+                kv = cat(1, kv, c[0]);
+                topk = cat(-1, topk, c[1]);
+            }
+            outs[i] = DeepSeekOps.sparseAttention(narrow(q, 1, i, 1), kv, sink, topk, scale);
+        }
+        return output(n == 1 ? outs[0] : cat(1, outs), f, n);
     }
 
     private Tensor[] windowKv(Tensor x, Tensor f, int startPos) {

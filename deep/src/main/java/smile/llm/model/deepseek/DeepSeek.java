@@ -56,8 +56,8 @@ import smile.llm.template.DeepSeekChatTemplate;
  * collectives need all ranks to be inside the same layer at once. One request's state is a {@link DeepSeekModel.Session}
  * per rank.
  *
- * <p>Current limits (the model code was written for validation first): one sequence per forward pass, so a decode
- * step over {@code B} requests is {@code B} forward passes; a prompt is prefilled in one pass (the engine's chunks are
+ * <p>Current limits (the model code was written for validation first): a decode step over {@code B} requests is one batched
+ * pass (the sequence-independent math runs once, attention state per row); a prompt is prefilled in one pass (the engine's chunks are
  * collected and the work happens with the last one); no prefix reuse, CUDA graphs, speculation or images.
  *
  * @author Haifeng Li
@@ -380,26 +380,22 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
 
     @Override
     public Tensor decodeStep(int[] requestIds, int[] lastTokens, int[] positions) {
-        Tensor[] rows = new Tensor[requestIds.length];
-        for (int i = 0; i < rows.length; i++) {
-            rows[i] = forward(requestIds[i], new int[]{lastTokens[i]}, positions[i]);
+        int n = requestIds.length;
+        DeepSeekModel.Session[][] mine = new DeepSeekModel.Session[workers.length][n];
+        for (int i = 0; i < n; i++) {
+            DeepSeekModel.Session[] s = sessions.get(requestIds[i]);
+            if (s == null) {
+                throw new IllegalArgumentException("unknown request " + requestIds[i]);
+            }
+            for (int r = 0; r < workers.length; r++) {
+                mine[r][i] = s[r];
+            }
         }
-        if (rows.length == 1) {
-            return rows[0];
-        }
-        Tensor all = onAllRanksFirst(() -> Dsv.cat(0, rows));
-        for (Tensor t : rows) {
-            t.close();
-        }
-        return all;
-    }
-
-    private Tensor onAllRanksFirst(java.util.function.Supplier<Tensor> task) {
-        try {
-            return workers[0].submit(task::get).get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+        return onAllRanks(rank -> {
+            try (var guard = Tensor.noGradGuard()) {
+                return Dsv.scoped(() -> replicas[rank].forwardBatch(lastTokens, positions, mine[rank]));
+            }
+        }, Tensor::close);
     }
 
     @Override

@@ -47,12 +47,12 @@ final class DeepSeekBlock {
     private final Tensor attnScale;
     private final Tensor ffnScale;
 
-    DeepSeekBlock(DeepSeekModelArgs args, DeepSeekCheckpoint ck, int layer, DeepSeekAttention.Shared shared,
+    DeepSeekBlock(DeepSeekModelArgs args, DeepSeekCheckpoint ck, int layer,
                   DeepSeekEngram.Rows engramRows) {
         String p = "layers." + layer;
         this.layer = layer;
         this.args = args;
-        this.attention = new DeepSeekAttention(args, ck, layer, shared);
+        this.attention = new DeepSeekAttention(args, ck, layer);
         this.ffn = new DeepSeekMoE(args, ck, layer);
         this.engramSlot = args.engramSlot(layer);
         this.engram = engramSlot >= 0 ? new DeepSeekEngram(args, ck, layer, engramRows) : null;
@@ -66,8 +66,8 @@ final class DeepSeekBlock {
         this.ffnScale = DeepSeekOps.f32(ck.dev(p + ".hc_ffn_scale"));
     }
 
-    DeepSeekAttention.State newState() {
-        return attention.newState();
+    DeepSeekAttention.State newState(DeepSeekAttention.Shared shared) {
+        return attention.newState(shared);
     }
 
     void use(DeepSeekAttention.State s) {
@@ -114,11 +114,21 @@ final class DeepSeekBlock {
      * @return {@code {stream, ffnPre}}.
      */
     Tensor[] forward(Tensor x, int startPos, Tensor preMix, Map<String, Tensor> trace) {
+        return run(x, preMix, trace, h -> attention.forward(h, startPos));
+    }
+
+    /** As {@link #forward} for one decode token of each of several sequences (rows along the sequence axis). */
+    Tensor[] forwardBatch(Tensor x, int[] pos, DeepSeekAttention.State[] states, Tensor preMix) {
+        return run(x, preMix, null, h -> attention.forwardBatch(h, pos, states));
+    }
+
+    private Tensor[] run(Tensor x, Tensor preMix, Map<String, Tensor> trace,
+                         java.util.function.UnaryOperator<Tensor> attend) {
         double eps = args.normEps();
         Tensor residual = x;
         Tensor[] attn = hcMixes(x, attnFn, attnScale, attnBase);
         Tensor h = DeepSeekOps.rmsNorm(hcPre(x, preMix), attnNorm, eps);
-        h = attention.forward(h, startPos);
+        h = attend.apply(h);
         if (trace != null) {
             trace.put("L" + layer + ".attn_out", h);
         }
