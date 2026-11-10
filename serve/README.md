@@ -732,7 +732,7 @@ SMILE `smile.model.Model` framework. Supported model types are:
 
 - `ClassificationModel` — supervised classifiers (`random-forest`, `gradient-boost`, `ada-boost`, `cart`, `logistic`, `fisher`, `lda`, `qda`, `rda`, `mlp`, `svm`, `rbf`)
 - `RegressionModel` — supervised regressors (`random-forest`, `gradient-boost`, `cart`, `ols`, `lasso`, `ridge`, `elastic-net`, `gaussian-process`, `mlp`, `svm`, `rbf`)
-- `ClusteringModel` — centroid-based clustering (`kmeans`, `xmeans`, `gmeans`, `deterministic-annealing`)
+- `ClusteringModel` — centroid-based clustering (`kmeans`, `emeans`, `xmeans`, `gmeans`, `deterministic-annealing`)
 - `VectorQuantizerModel` — online vector quantizers and competitive learning models (`som`, `neural-gas`, `growing-neural-gas`, `neural-map`, `birch`)
 - `AnomalyModel` — anomaly and novelty detectors (`isolation-forest`, `lof`, `ocsvm`)
 

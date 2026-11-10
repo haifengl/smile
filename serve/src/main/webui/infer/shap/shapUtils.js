@@ -32,6 +32,8 @@ const LINEAR_SHAP_ALGORITHMS = new Set([
 
 const CLUSTERING_ALGORITHMS = new Set([
   "kmeans",
+  "emeans",
+  "e-means",
   "xmeans",
   "gmeans",
   "deterministic-annealing",

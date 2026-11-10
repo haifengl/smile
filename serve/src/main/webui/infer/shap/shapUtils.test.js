@@ -164,9 +164,13 @@ describe("shapUtils", () => {
     assert.equal(shapMethodForAlgorithm("mlp"), "KernelSHAP");
     assert.equal(shapMethodForAlgorithm("svm"), "KernelSHAP");
     assert.equal(shapMethodForAlgorithm("gaussian-process"), "KernelSHAP");
+    assert.equal(shapMethodForAlgorithm("kmeans"), null);
+    assert.equal(shapMethodForAlgorithm("emeans"), null);
+    assert.equal(shapMethodForAlgorithm("e-means"), null);
     assert.equal(isKernelShapAlgorithm("logistic"), true);
     assert.equal(isKernelShapAlgorithm("random-forest"), false);
     assert.equal(isKernelShapAlgorithm("ols"), false);
+    assert.equal(isKernelShapAlgorithm("emeans"), false);
   });
 
   it("builds explain URLs with optional KernelSHAP parameters", () => {

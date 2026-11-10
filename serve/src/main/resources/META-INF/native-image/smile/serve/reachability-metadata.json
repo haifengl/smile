@@ -2513,6 +2513,12 @@
    "type": "smile.clustering.DENCLUE"
   },
   {
+   "type": "smile.clustering.EMeans$SphericalDistanceD"
+  },
+  {
+   "type": "smile.clustering.EMeans$SphericalDistanceF"
+  },
+  {
    "type": "smile.clustering.HDBSCAN"
   },
   {
@@ -4068,6 +4074,12 @@
   },
   {
    "type": "smile.clustering.DENCLUE[]"
+  },
+  {
+   "type": "smile.clustering.EMeans$SphericalDistanceD[]"
+  },
+  {
+   "type": "smile.clustering.EMeans$SphericalDistanceF[]"
   },
   {
    "type": "smile.clustering.HDBSCAN[]"

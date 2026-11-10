@@ -526,6 +526,26 @@ public class TrainTest {
     }
 
     @Test
+    public void testTrainEMeansClustering() throws Exception {
+        System.out.println("Train E-Means (clustering)");
+        Path modelFile = tempDir.resolve("emeans.sml");
+        int exit = new CommandLine(new Train()).execute(
+            "-d", irisArff().toString(),
+            "--formula", "class ~ .",
+            "-m", modelFile.toString(),
+            "emeans", "-k", "3", "--epochs", "5", "--batch-law", "QUALITY", "--runs", "2"
+        );
+        assertEquals(0, exit, "Expected exit code 0");
+        assertTrue(Files.exists(modelFile), "Model file should be created");
+        var obj = Read.object(modelFile);
+        assertInstanceOf(smile.model.ClusteringModel.class, obj);
+        var model = (smile.model.ClusteringModel) obj;
+        assertEquals("emeans", model.algorithm());
+        assertEquals(3, model.k());
+        assertEquals(4, model.schema().length());
+    }
+
+    @Test
     public void testTrainXMeansGMeansAndDAClustering() throws Exception {
         System.out.println("Train X-Means, G-Means, and Deterministic Annealing (clustering)");
         Path xmeansFile = tempDir.resolve("xmeans.sml");
