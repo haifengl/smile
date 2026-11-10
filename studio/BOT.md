@@ -422,12 +422,11 @@ Autonomous runs never block on modal desktop popups. Instead, any human-in-the-l
      - **For Questions, Tool Confirmations, Automation Writes & Secure Handoffs (`QUESTION`, `TOOL_CONFIRM`, `AUTOMATION_WRITE`, `SECURE_HANDOFF`):** Displays a formatted **Question / Action Card** with the prompt or command details and an **Answer / Resolution Note (optional)** input field.
    - **Previous Draft Diff Baseline:** Automatically hidden when an item is an initial draft or request so the active view gets 100% of the width, and shown side-by-side on the left whenever a prior version (`previousPayloadJson`) exists.
    - **Raw JSON (Advanced) tab:** Displays the pretty-printed JSON payload side-by-side with any prior JSON payload and stays synchronized with the Structured View.
-2. **Single-Item Actions:**
-   - **Approve** — Approve and unblock the waiting run (or release the draft). If you did not edit the draft or add a resolution note, it resolves as `ALLOW_ONCE` (`ALLOWED_ONCE`); if you modified any field in the Structured Composer, entered an answer in `Answer / Resolution Note`, or edited the Raw JSON, your changes are saved automatically and it resolves as `EDIT_AND_APPROVE` (`EDITED_AND_APPROVED`).
-   - **Always Allow Rule (`ALWAYS_ALLOW_RULE`)** — Approve this item and add a standing `ALWAYS_ALLOW` rule for the pattern in the **Rule Pattern** field (subject to the invariant that `REQUIRE_APPROVAL` rules still take precedence).
-   - **Deny (`DENY`)** — Reject the action or discard the draft.
-3. **Batch Actions:**
-   - Click **Select All Pending Drafts** (or check individual rows in the `Select` column) and click **Approve Checked Batch** to approve an entire morning outreach or community answer batch in one click.
+2. **Resolving Approvals (Single Item or Checked Batch):**
+   - **Target Scope:** If you check one or more rows in the `Select` column (or click **Select All Pending Drafts** to toggle all rows), **Approve** (`✓ Approve (N)`) and **Deny** (`✕ Deny (N)`) act explicitly on only those $N$ checked items. If no rows are checked, **Approve** and **Deny** act on the single currently highlighted row. Unchecked/unselected items are never implicitly approved or denied—they remain `PENDING` in the queue for further review.
+   - **Approve** — Approve the targeted item(s) and unblock waiting runs or release staged drafts. If you did not edit a draft or add a resolution note, it resolves as `ALLOW_ONCE` (`ALLOWED_ONCE`); if you modified any field in the Structured Composer, entered an answer in `Answer / Resolution Note`, or edited the Raw JSON (even across multiple inspected items before clicking Approve), your changes are saved automatically (`EDIT_AND_APPROVE` / `EDITED_AND_APPROVED`).
+   - **Always Allow Rule (`ALWAYS_ALLOW_RULE`)** — Approve the selected item and add a standing `ALWAYS_ALLOW` rule for the pattern in the **Rule Pattern** field (subject to the invariant that `REQUIRE_APPROVAL` rules still take precedence).
+   - **Deny (`DENY`)** — Explicitly reject the targeted item(s) or discard the targeted draft(s).
 
 ### 6.2 Run History
 

@@ -844,4 +844,60 @@ public class HubClientAndConfigTest {
             }
         }
     }
+
+    @Test
+    public void testUnifiedApproveAndDenyTargetResolutionAndButtonLabels() throws Exception {
+        BotActivity activity = new BotActivity(0);
+        HubClient.BotApprovalItem item1 = new HubClient.BotApprovalItem(
+                201L, 1L, "mike", "mike-outreach", "sales",
+                "BATCH_DRAFT", "email", "alice@example.com", "Subject 1",
+                "{\"to\":\"alice@example.com\",\"subject\":\"Subject 1\",\"body\":\"Body 1\"}",
+                null, "PENDING", null, null, "2026-11-10T10:00:00Z", null
+        );
+        HubClient.BotApprovalItem item2 = new HubClient.BotApprovalItem(
+                202L, 2L, "mike", "mike-outreach", "sales",
+                "BATCH_DRAFT", "email", "bob@example.com", "Subject 2",
+                "{\"to\":\"bob@example.com\",\"subject\":\"Subject 2\",\"body\":\"Body 2\"}",
+                null, "PENDING", null, null, "2026-11-10T10:05:00Z", null
+        );
+        HubClient.BotApprovalItem item3 = new HubClient.BotApprovalItem(
+                203L, 3L, "julien", "julien-watch", "evangelist",
+                "BATCH_DRAFT", "community", "thread-9", "Subject 3",
+                "{\"to\":\"thread-9\",\"subject\":\"Subject 3\",\"body\":\"Body 3\"}",
+                null, "PENDING", null, null, "2026-11-10T10:10:00Z", null
+        );
+
+        javax.swing.SwingUtilities.invokeAndWait(() -> {
+            activity.populateApprovals(List.of(item1, item2, item3));
+
+            // Given: 0 rows checked, row 0 highlighted -> targets only highlighted row (201L)
+            assertEquals(List.of(), activity.checkedApprovalIds());
+            assertEquals(List.of(201L), activity.targetedApprovalIds());
+            assertFalse(activity.approveButton().getText().contains("("));
+            assertFalse(activity.denyButton().getText().contains("("));
+            assertTrue(activity.alwaysAllowButton().isEnabled());
+
+            // When: user checks rows 0 and 2, even while row 1 is highlighted
+            activity.approvalsTable().getModel().setValueAt(Boolean.TRUE, 0, 0);
+            activity.approvalsTable().getModel().setValueAt(Boolean.TRUE, 2, 0);
+            activity.approvalsTable().setRowSelectionInterval(1, 1);
+
+            // Then: only checked rows (201L, 203L) are targeted; unchecked row 1 (202L) is untouched
+            assertEquals(List.of(201L, 203L), activity.checkedApprovalIds());
+            assertEquals(List.of(201L, 203L), activity.targetedApprovalIds());
+            assertTrue(activity.approveButton().getText().endsWith(" (2)"));
+            assertTrue(activity.denyButton().getText().endsWith(" (2)"));
+            assertFalse(activity.alwaysAllowButton().isEnabled(),
+                    "Always Allow Rule should be disabled when multiple rows are checked");
+
+            // When: unchecking all rows restores single-item targeting on highlighted row 1 (202L)
+            activity.approvalsTable().getModel().setValueAt(Boolean.FALSE, 0, 0);
+            activity.approvalsTable().getModel().setValueAt(Boolean.FALSE, 2, 0);
+            assertEquals(List.of(), activity.checkedApprovalIds());
+            assertEquals(List.of(202L), activity.targetedApprovalIds());
+            assertFalse(activity.approveButton().getText().contains("("));
+            assertFalse(activity.denyButton().getText().contains("("));
+            assertTrue(activity.alwaysAllowButton().isEnabled());
+        });
+    }
 }
