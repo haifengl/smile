@@ -149,6 +149,26 @@ public class BotManager extends JPanel {
         populateEndpointCombo();
         initComponents();
         reloadFromConfig(initialRoutineId);
+
+        HubManager.getInstance().addEventListener(event -> {
+            if (event != null && ("config".equals(event.type()) || "approval".equals(event.type()))) {
+                refreshRulesAndProjectsFromHub();
+            }
+        });
+    }
+
+    /**
+     * Reloads the latest {@link BotsConfig} from Agent Hub (or disk) and refreshes
+     * the Context Projects and Review Rules tables without clobbering any unsaved
+     * edits in the Routine Definition form.
+     */
+    public void refreshRulesAndProjectsFromHub() {
+        BotsConfig latest = HubManager.getInstance().client().getOverview().config();
+        if (latest != null) {
+            this.config = latest;
+            refreshProjectsTable();
+            refreshRulesTable();
+        }
     }
 
     /**
@@ -339,8 +359,10 @@ public class BotManager extends JPanel {
             if (fc.showOpenDialog(this) == SystemFileChooser.APPROVE_OPTION && fc.getSelectedFile() != null) {
                 Path selected = fc.getSelectedFile().toPath();
                 ProjectsConfig updated = ProjectsConfig.registerProject(selected);
-                config = config.withContextProjects(updated.projects());
+                BotsConfig latest = HubManager.getInstance().client().getOverview().config();
+                config = (latest != null ? latest : config).withContextProjects(updated.projects());
                 refreshProjectsTable();
+                persistConfigPreserveForm();
             }
         });
         JButton removeProjBtn = new JButton(bundle.getString("RemoveSelectedProjectButton"));
@@ -350,8 +372,10 @@ public class BotManager extends JPanel {
                 List<ProjectsConfig.ProjectEntry> next = new ArrayList<>(config.contextProjects());
                 next.remove(sel);
                 new ProjectsConfig(next).save();
-                config = config.withContextProjects(next);
+                BotsConfig latest = HubManager.getInstance().client().getOverview().config();
+                config = (latest != null ? latest : config).withContextProjects(next);
                 refreshProjectsTable();
+                persistConfigPreserveForm();
             }
         });
         btns.add(addProjBtn);
@@ -374,11 +398,15 @@ public class BotManager extends JPanel {
         removeRuleBtn.addActionListener(e -> {
             int sel = rulesTable.getSelectedRow();
             if (sel >= 0 && sel < config.autoReviewRules().size()) {
-                List<BotsConfig.AutoReviewRule> next = new ArrayList<>(config.autoReviewRules());
-                next.remove(sel);
-                config = new BotsConfig(config.primaryBot(), config.dailyLogTime(),
-                        config.contextProjects(), next, config.bots());
+                String removedId = config.autoReviewRules().get(sel).id();
+                BotsConfig latest = HubManager.getInstance().client().getOverview().config();
+                BotsConfig base = latest != null ? latest : config;
+                List<BotsConfig.AutoReviewRule> next = new ArrayList<>(base.autoReviewRules());
+                next.removeIf(r -> r.id().equalsIgnoreCase(removedId));
+                config = new BotsConfig(base.primaryBot(), base.dailyLogTime(),
+                        base.contextProjects(), next, base.bots());
                 refreshRulesTable();
+                persistConfigPreserveForm();
             }
         });
         btns.add(addRuleBtn);
@@ -402,14 +430,17 @@ public class BotManager extends JPanel {
 
         if (JOptionPane.showConfirmDialog(this, p, bundle.getString("AddAutoReviewRuleTitle"),
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION) {
+            BotsConfig latest = HubManager.getInstance().client().getOverview().config();
+            BotsConfig base = latest != null ? latest : config;
             BotsConfig.AutoReviewRule rule = new BotsConfig.AutoReviewRule(
-                    "rule-" + (config.autoReviewRules().size() + 1),
+                    "rule-" + (base.autoReviewRules().size() + 1),
                     (BotsConfig.ActionCategory) catCombo.getSelectedItem(),
                     patternInput.getText().trim(),
                     (BotsConfig.RuleDecision) decCombo.getSelectedItem()
             );
-            config = config.withAddedRule(rule);
+            config = base.withAddedRule(rule);
             refreshRulesTable();
+            persistConfigPreserveForm();
         }
     }
 
@@ -661,8 +692,23 @@ public class BotManager extends JPanel {
             return;
         }
 
-        config = config.withUpsertedRoutine(botId, botId, persona, spec);
+        BotsConfig latest = HubManager.getInstance().client().getOverview().config();
+        BotsConfig base = latest != null ? latest : config;
+        config = base.withUpsertedRoutine(botId, botId, persona, spec);
         persistConfig(routineId);
+    }
+
+    private void persistConfigPreserveForm() {
+        try {
+            HubManager.getInstance().client().saveConfig(config);
+            if (onSavedCallback != null) {
+                onSavedCallback.run();
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    MessageFormat.format(bundle.getString("SaveConfigErrorMessage"), ex.getMessage()),
+                    bundle.getString("ErrorTitle"), JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void persistConfig(String selectRoutineId) {
