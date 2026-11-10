@@ -88,7 +88,7 @@ public class BotManager extends JPanel {
     // Policy fields
     private final JComboBox<BotsConfig.SessionMode> sessionModeCombo =
             new JComboBox<>(BotsConfig.SessionMode.values());
-    private final JCheckBox confirmConsequentialCheck = new JCheckBox(bundle.getString("ConfirmConsequentialCheckbox"), true);
+    private final JCheckBox confirmConsequentialCheck = new JCheckBox(bundle.getString("ConfirmConsequentialCheckbox"), false);
     private final JSpinner ttlMinutesSpinner = new JSpinner(new SpinnerNumberModel(0, 0, 10080, 5));
 
     // Context Projects table
@@ -515,6 +515,7 @@ public class BotManager extends JPanel {
         requireActivityCheck.setSelected(false);
         useContextProjectsCheck.setSelected(false);
         awaitRoutineField.setText("");
+        confirmConsequentialCheck.setSelected(false);
     }
 
     private void updateWorkflowFieldStates() {

@@ -105,7 +105,7 @@ SMILE Bot separates **who** acts, **when** they wake, and **how** they do the wo
 3. **Cross-Project Memory Enrichment (`projects.json`):** Whenever you open a project in SMILE Studio, its path and `.smile/` workspace metadata are registered in `$SMILE_HOME/conf/projects.json`. Cross-project routines (`daily-log` at 19:00 and `frank-daily-recap` at 20:00) inspect both `$SMILE_HOME/bot/` and every tracked Studio project without merging project files.
 4. **Zero-Waste Idle Skipping (`requireActivityToday`):** When `requireActivityToday` is enabled on a routine (such as `daily-log`), Agent Hub checks whether the target persona modified any session files today before calling the LLM. Idle personas are recorded as `SKIPPED_IDLE` with zero token cost.
 5. **Two-Tier Model Routing (Watch vs. Act):** High-frequency scanning routines (such as `julien-community-watch` or `mike-signal-watch`) can specify a fast, low-cost `model` override (e.g., `gemini-3.5-flash-lite`), while synthesis and drafting routines use the persona's default frontier model.
-6. **Batch Draft Queue & Auto Review Guardrails:** Outbound emails, social posts, consequential shell/file actions, and automation writes are intercepted into a durable approval queue. Standing Auto Review rules let you auto-allow trusted patterns while guaranteeing that **`REQUIRE_APPROVAL` always wins over `ALWAYS_ALLOW`**.
+6. **Batch Draft Queue & Auto Review Guardrails:** Outbound emails, outreach drafts, social/community posts, calendar mutations, and automation writes to `bots.json` are intercepted into a durable approval queue, while routine tool calls (shell, workspace/context-project file updates, peer delegation) execute without blocking. Standing Auto Review rules let you customize approval policies while guaranteeing that **`REQUIRE_APPROVAL` always wins over `ALWAYS_ALLOW`**.
 7. **Interactive Bot Pages:** Routines update self-contained HTML dashboards in `$SMILE_HOME/bot/pages/` (`executive-brief.html`, `sales-pipeline.html`, `community-radar.html`, `bot-activity.html`) that you can open directly in your default web browser from **Agent Hub > Bot Pages** or the `BotExplorer` right-click menu.
 
 ---
@@ -211,7 +211,7 @@ Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and ele
   - **Workflow:** Runs `/daily-recap` (`useContextProjects: true`) to synthesize the day's logs across `$SMILE_HOME/bot/` and all Studio projects, promote durable facts to `.smile/MEMORY.md`, and refresh `$SMILE_HOME/bot/pages/executive-brief.html`.
 - **`frank-inbox` (Executive Email Triage)**
   - **Trigger:** `email` (`mailbox: "frank"`, `settleSeconds: 45`, `maxTurnsPerHour: 10`)
-  - **Workflow:** Triages inbound emails against active priorities in `.smile/MEMORY.md`, delegates specialist work to peer agents via `AgentRequest`, and stages outbound replies into the Batch Draft Queue (`confirmConsequential: true`).
+  - **Workflow:** Triages inbound emails against active priorities in `.smile/MEMORY.md`, delegates specialist work to peer agents via `AgentRequest`, and stages outbound replies into the Batch Draft Queue.
 - **`frank-calendar` (Calendar Guard & 15m Pre-Meeting Brief)**
   - **Trigger:** `calendar` (`calendarUrl: "file://${smile.home}/bot/calendar/frank.ics"`, poll interval `300s`, `reminderBeforeSeconds: 900`)
   - **Workflow:** Checks schedule conflicts on `calendar.invite` / `calendar.updated` (asking whether to Accept/Decline with a 15-minute approval TTL) and prepares attendee/project context briefs 15 minutes before meetings (`calendar.reminder`).
@@ -369,7 +369,7 @@ Select any routine in the **Bots** explorer tab (or right-click to choose **New 
 - **Session Mode:**
   - `ISOLATED_PER_RUN` *(default)* — Creates a fresh, isolated session under `$SMILE_HOME/bot/.smile/<persona>/sessions/<timestamp>/` for each run so context never bloats across days.
   - `PERSISTENT_BOT` — Reuses the resident Bot session across wakes.
-- **Require approval for consequential actions (`confirmConsequential`):** Gates consequential tool calls (shell commands, external file writes, peer delegation, outbound communications) through the approval queue.
+- **Require approval for consequential actions (`confirmConsequential`):** Disabled (`false`) by default so routine tool calls do not block autonomous runs; outbound drafts/sends (`OUTBOUND_COMMUNICATION`) and `bots.json` modifications (`AUTOMATION_WRITE`) remain gated by standing Auto Review rules.
 - **Approval TTL:** Time-to-live in minutes for pending approvals (`0` = no expiry, used for Batch Draft Queue items; `> 0` = automatically marks unreviewed items `EXPIRED` and fails closed after the deadline, used for time-sensitive calendar invites).
 
 Click **Save** to persist changes, or click **Run Routine Now** to test the selected routine immediately.
