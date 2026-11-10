@@ -75,14 +75,37 @@ final class DeepSeekEngram {
                 at[i] = p;
             }
             Tensor sel = Tensor.of(at, at.length);
-            Tensor w = Aten.one("aten::view.dtype", o("aten::index_select", weights, 0L, sel), ScalarType.Float8e4m3fn);
-            Tensor s = DeepSeekOps.e8m0ToFloat(o("aten::index_select", scales, 0L, sel));
-            long width = w.size(1);
-            Tensor v = o("aten::mul.Tensor", w.to(ScalarType.Float).reshape(at.length, -1, 32), s.unsqueeze(-1));
-            long[] out = new long[shape.length + 1];
-            System.arraycopy(shape, 0, out, 0, shape.length);
-            out[shape.length] = width;
-            return Dsv.dev(v.reshape(out).to(ScalarType.BFloat16));
+            return dequantRows(o("aten::index_select", weights, 0L, sel), o("aten::index_select", scales, 0L, sel), shape);
+        }
+    }
+
+    /** Dequantizes fp8 rows with their e8m0 group scales (groups of 32) into bf16 {@code [shape..., width]} on the model's device. */
+    static Tensor dequantRows(Tensor weights, Tensor scales, long[] shape) {
+        Tensor w = Aten.one("aten::view.dtype", weights, ScalarType.Float8e4m3fn);
+        Tensor s = DeepSeekOps.e8m0ToFloat(scales);
+        long n = w.size(0);
+        long width = w.size(1);
+        Tensor v = o("aten::mul.Tensor", w.to(ScalarType.Float).reshape(n, -1, 32), s.unsqueeze(-1));
+        long[] out = new long[shape.length + 1];
+        System.arraycopy(shape, 0, out, 0, shape.length);
+        out[shape.length] = width;
+        return Dsv.dev(v.reshape(out).to(ScalarType.BFloat16));
+    }
+
+    /** Rows read on demand from the checkpoint's table (the table stays on disk). */
+    static final class FileRows implements Rows {
+        private final DeepSeekCheckpoint ck;
+        private final String prefix;
+
+        FileRows(DeepSeekCheckpoint ck, int layer) {
+            this.ck = ck;
+            this.prefix = "layers." + layer + ".engram.embed.";
+        }
+
+        @Override
+        public Tensor lookup(Tensor ids) {
+            long[] flat = Dsv.host(ids).longArray();
+            return dequantRows(ck.readRows(prefix + "weight", flat), ck.readRows(prefix + "scale", flat), ids.shape());
         }
     }
 
@@ -104,7 +127,8 @@ final class DeepSeekEngram {
         private final long[][] multipliers;
         private final DeepSeekEngramTokenMap tokenMap;
         private final int pad;
-        private final long[] cache;
+        private long[] cache;
+        private final int maxSeqLen;
 
         /**
          * Constructor. The multipliers are the first {@code ngram} values of {@code numpy.random.default_rng(10007 *
@@ -121,7 +145,8 @@ final class DeepSeekEngram {
             this.layers = args.engramLayers().length;
             this.tokenMap = tokenMap;
             this.pad = tokenMap.map(args.engramPadId());
-            this.cache = new long[args.maxSeqLen()];
+            this.maxSeqLen = args.maxSeqLen();
+            this.cache = new long[maxSeqLen];
             if (args.engramCompressedVocab() != 99092 || tokenMap.size() != args.engramCompressedVocab()) {
                 throw new UnsupportedOperationException("engram multipliers are only tabulated for compressed vocab 99092");
             }
@@ -148,6 +173,16 @@ final class DeepSeekEngram {
                     throw new UnsupportedOperationException("no tabulated multipliers for engram layer " + args.engramLayers()[l]);
                 }
             }
+        }
+
+        /** A fresh token history for one sequence. */
+        long[] newHistory() {
+            return new long[maxSeqLen];
+        }
+
+        /** Makes {@code history} the sequence {@link #forward} reads and extends. */
+        void use(long[] history) {
+            cache = history;
         }
 
         private static long nextPrime(long start, Set<Long> seen) {

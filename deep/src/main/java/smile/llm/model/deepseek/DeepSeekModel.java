@@ -66,6 +66,46 @@ public final class DeepSeekModel implements AutoCloseable {
         }
     }
 
+    /**
+     * All mutable per-sequence state of the model (each layer's caches and the engram token history). The model runs
+     * one sequence at a time; {@link #use} switches which one, so a serving layer can interleave requests.
+     */
+    public static final class Session implements AutoCloseable {
+        private final DeepSeekAttention.State[] layers;
+        private final long[] history;
+
+        private Session(DeepSeekAttention.State[] layers, long[] history) {
+            this.layers = layers;
+            this.history = history;
+        }
+
+        @Override
+        public void close() {
+            for (DeepSeekAttention.State s : layers) {
+                s.close();
+            }
+        }
+    }
+
+    /** Allocates the state of an empty sequence (call outside any tensor scope). */
+    public Session newSession() {
+        DeepSeekAttention.State[] s = new DeepSeekAttention.State[blocks.size()];
+        for (int i = 0; i < s.length; i++) {
+            s[i] = blocks.get(i).newState();
+        }
+        return new Session(s, engramHash == null ? null : engramHash.newHistory());
+    }
+
+    /** Makes {@code session} the sequence the next {@link #forward} calls continue. */
+    public void use(Session session) {
+        for (int i = 0; i < blocks.size(); i++) {
+            blocks.get(i).use(session.layers[i]);
+        }
+        if (engramHash != null) {
+            engramHash.use(session.history);
+        }
+    }
+
     /** Test hook: multiplies the embedding table by {@code 1 + eps * N(0,1)} (a stand-in for kernel rounding noise). */
     void perturbEmbedding(double eps) {
         Tensor noise = o("aten::randn_like", embed.to(smile.deep.tensor.ScalarType.Float));

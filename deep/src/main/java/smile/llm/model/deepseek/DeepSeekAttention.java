@@ -67,10 +67,10 @@ final class DeepSeekAttention {
     private final Tensor kvNorm;
     private final Tensor woA;
     private final Tensor freqs;
-    private final Tensor windowCache;
+    private Tensor windowCache;
     private final Compressor compressor;
     private final Indexer indexer;
-    private final Tensor compressCache;
+    private Tensor compressCache;
 
     DeepSeekAttention(DeepSeekModelArgs args, DeepSeekCheckpoint ck, int layer, Shared shared) {
         String p = "layers." + layer + ".attn";
@@ -99,11 +99,49 @@ final class DeepSeekAttention {
         double theta = ratio > 0 ? args.compressRopeTheta() : args.ropeTheta();
         this.freqs = DeepSeekOps.precomputeFreqsCis(rd, args.maxSeqLen(), original, theta, args.ropeFactor(),
                 args.betaFast(), args.betaSlow());
-        this.windowCache = Dsv.zeros(ScalarType.BFloat16, 1, window, headDim);
         this.compressor = args.isKvSource(layer) ? new Compressor(args, ck, layer) : null;
         this.indexer = args.isIndexSource(layer) ? new Indexer(args, ck, layer, freqs) : null;
-        this.compressCache = args.isKvSource(layer)
-                ? Dsv.zeros(ScalarType.BFloat16, 1, args.maxSeqLen() / ratio, headDim) : null;
+        use(newState());
+    }
+
+    /**
+     * The mutable state of one sequence in this layer: window ring, compressed KV, compressor group state and indexer
+     * keys. Entries that the layer does not have are {@code null}.
+     *
+     * @param window   window ring {@code [1, window, headDim]}.
+     * @param compress compressed KV (KV source layers).
+     * @param kvState  compressor partial group (ratio above one).
+     * @param score    compressor partial group scores.
+     * @param indexK   indexer keys (index layers that own keys).
+     */
+    record State(Tensor window, Tensor compress, Tensor kvState, Tensor score, Tensor indexK) {
+        void close() {
+            for (Tensor t : new Tensor[]{window, compress, kvState, score, indexK}) {
+                if (t != null) {
+                    t.close();
+                }
+            }
+        }
+    }
+
+    /** Allocates the state of a fresh (empty) sequence; the caller owns it. */
+    State newState() {
+        Tensor[] c = compressor == null ? new Tensor[2] : compressor.newState();
+        return new State(Dsv.zeros(ScalarType.BFloat16, 1, window, headDim),
+                args.isKvSource(layer) ? Dsv.zeros(ScalarType.BFloat16, 1, args.maxSeqLen() / ratio, headDim) : null,
+                c[0], c[1], indexer == null ? null : indexer.newState());
+    }
+
+    /** Makes {@code s} the sequence this layer reads and writes. */
+    void use(State s) {
+        windowCache = s.window();
+        compressCache = s.compress();
+        if (compressor != null) {
+            compressor.use(s.kvState(), s.score());
+        }
+        if (indexer != null) {
+            indexer.use(s.indexK());
+        }
     }
 
     /**
@@ -228,12 +266,23 @@ final class DeepSeekAttention {
             if (ratio > 1) {
                 wkv = new DeepSeekLinear(ck, p + ".wkv", ScalarType.Float);
                 wgate = new DeepSeekLinear(ck, p + ".wgate", ScalarType.Float);
-                kvState = Dsv.zeros(ScalarType.Float, 1, ratio, headDim);
-                scoreState = Dsv.full(ScalarType.Float, Double.NEGATIVE_INFINITY, 1, ratio, headDim);
             } else {
                 wkv = new DeepSeekLinear(ck, p + ".wkv", null);
                 wgate = null;
             }
+        }
+
+        Tensor[] newState() {
+            if (ratio <= 1) {
+                return new Tensor[2];
+            }
+            return new Tensor[]{Dsv.zeros(ScalarType.Float, 1, ratio, headDim),
+                    Dsv.full(ScalarType.Float, Double.NEGATIVE_INFINITY, 1, ratio, headDim)};
+        }
+
+        void use(Tensor kv, Tensor score) {
+            kvState = kv;
+            scoreState = score;
         }
 
         Tensor forward(Tensor x, int startPos) {
@@ -316,8 +365,15 @@ final class DeepSeekAttention {
             if (ownsK) {
                 this.wk = new DeepSeekLinear(ck, p + ".wk", null);
                 this.kNorm = ck.dev(p + ".k_norm.weight");
-                this.kCache = Dsv.zeros(ScalarType.BFloat16, 1, args.maxSeqLen() / ratio, hd);
             }
+        }
+
+        Tensor newState() {
+            return ownsK ? Dsv.zeros(ScalarType.BFloat16, 1, args.maxSeqLen() / ratio, hd) : null;
+        }
+
+        void use(Tensor k) {
+            kCache = k;
         }
 
         Tensor forward(Tensor x, Tensor qr, Tensor latent, int startPos, long offset, Shared shared, Tensor groupFreqs) {
