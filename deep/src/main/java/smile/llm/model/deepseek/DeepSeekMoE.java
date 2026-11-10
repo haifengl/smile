@@ -41,6 +41,8 @@ final class DeepSeekMoE {
     static final class Expert {
         private final DeepSeekLinear w1;
         private final DeepSeekLinear w3;
+        /** w1 and w3 fused (same input), or {@code null}. */
+        private final DeepSeekLinear w13;
         private final DeepSeekLinear w2;
         private final double limit;
 
@@ -49,12 +51,23 @@ final class DeepSeekMoE {
             this.w3 = new DeepSeekLinear(ck, prefix + ".w3", null);
             this.w2 = new DeepSeekLinear(ck, prefix + ".w2", null);
             this.limit = limit;
+            this.w13 = w1.packed() && w3.packed() ? DeepSeekLinear.fuse(w1, w3) : null;
         }
 
         Tensor forward(Tensor x, Tensor weights) {
             ScalarType dtype = x.dtype();
-            Tensor gate = DeepSeekOps.f32(w1.forward(x));
-            Tensor up = DeepSeekOps.f32(w3.forward(x));
+            Tensor gate;
+            Tensor up;
+            if (w13 != null) {
+                Tensor y = w13.forward(x);
+                int last = y.dim() - 1;
+                long inter = y.size(last) / 2;
+                gate = DeepSeekOps.f32(o("aten::narrow", y, (long) last, 0L, inter));
+                up = DeepSeekOps.f32(o("aten::narrow", y, (long) last, inter, inter));
+            } else {
+                gate = DeepSeekOps.f32(w1.forward(x));
+                up = DeepSeekOps.f32(w3.forward(x));
+            }
             if (limit > 0) {
                 up = o("aten::clamp", up, -limit, limit);
                 gate = o("aten::clamp", gate, null, limit);

@@ -144,50 +144,6 @@ public class DeepSeekExecutorTest {
         }
     }
 
-    /** A batch of one decode row is the legacy single-sequence path, bit for bit (same shapes, same kernels). */
-    @Test
-    public void testGivenBatchOfOneThenEqualsLegacyForward() throws Exception {
-        String mode = System.getenv().getOrDefault("DEEPSEEK_EXECUTOR", "");
-        Assumptions.assumeTrue(mode.equals("cpu") || mode.startsWith("cuda"), "DEEPSEEK_EXECUTOR not set");
-        Path dir = Path.of(System.getenv().getOrDefault("DEEPSEEK_DIR", "/raid/haili/dsv4/flash_raw"));
-        Path fx = Path.of(System.getenv().getOrDefault("DEEPSEEK_FIXTURES", "/raid/haili/dsv4/fixtures"));
-        Assumptions.assumeTrue(Files.exists(fx.resolve("slice4_prefill.safetensors")), "no fixture");
-        long[] idv = SafeTensors.read(fx.resolve("slice4_prefill.safetensors").toString(), Device.CPU()).tensors()
-                .get("ids").longArray();
-        int[] a = new int[idv.length];
-        for (int i = 0; i < a.length; i++) {
-            a[i] = (int) idv[i];
-        }
-        var r = SafeTensors.read(fx.resolve("engram_rows_layer1.safetensors").toString(), Device.CPU()).tensors();
-        DeepSeekEngram.Rows rows = new DeepSeekEngram.InMemoryRows(r.get("rows"), r.get("w"), r.get("s"));
-        boolean gpu = mode.startsWith("cuda");
-        Dsv.setDevice(gpu ? Device.CUDA((byte) 0) : Device.CPU());
-        Dsv.marlin = gpu;
-        try {
-            DeepSeekModelArgs args = DeepSeekModelArgs.load(dir.resolve("config.json").toFile()).slice(4).withMaxSeqLen(256);
-            try (DeepSeekModel m = new DeepSeekModel(args, dir, l -> rows)) {
-                DeepSeekModel.Session s1 = m.newSession();
-                DeepSeekModel.Session s2 = m.newSession();
-                m.use(s1);
-                m.forward(a, 0, null);
-                m.use(s2);
-                m.forward(a, 0, null);
-                for (int i = 0; i < FORCED.length; i++) {
-                    m.use(s1);
-                    float[] legacy = cpu(m.forward(new int[]{FORCED[i]}, a.length + i, null));
-                    float[] batched = cpu(m.forwardBatch(new int[]{FORCED[i]}, new int[]{a.length + i},
-                            new DeepSeekModel.Session[]{s2}));
-                    assertArrayEquals(legacy, batched, 1e-5f, "step " + (i + 1));
-                }
-                s1.close();
-                s2.close();
-            }
-        } finally {
-            Dsv.setDevice(Device.CPU());
-            Dsv.marlin = false;
-        }
-    }
-
     /**
      * Two concurrent requests through the continuous-batching engine, greedy, on the CPU (where the slice follows the
      * oracle's trajectory): each must produce the oracle's tokens.

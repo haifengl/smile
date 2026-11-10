@@ -63,6 +63,9 @@ final class DeepSeekAttention {
     private final DeepSeekLinear wqB;
     private final DeepSeekLinear wkv;
     private final DeepSeekLinear woB;
+    /** wq_a and wkv fused (they read the same input), or {@code null}. */
+    private final DeepSeekLinear wqaKv;
+    private final int qRank;
     private final Tensor qNorm;
     private final Tensor kvNorm;
     private final Tensor woA;
@@ -90,6 +93,8 @@ final class DeepSeekAttention {
         this.wqB = new DeepSeekLinear(ck, p + ".wq_b", null);
         this.wkv = new DeepSeekLinear(ck, p + ".wkv", null);
         this.woB = new DeepSeekLinear(ck, p + ".wo_b", null);
+        this.qRank = args.qLoraRank();
+        this.wqaKv = wqA.packed() && wkv.packed() ? DeepSeekLinear.fuse(wqA, wkv) : null;
         this.qNorm = ck.dev(p + ".q_norm.weight");
         this.kvNorm = ck.dev(p + ".kv_norm.weight");
         // wo_a is an einsum, not a Linear: the reference converter dequantizes it to bf16
@@ -159,12 +164,13 @@ final class DeepSeekAttention {
         Dsv.probeNext();
         Dsv.probe("x", x);
         Tensor f = narrow(freqs, 0, startPos, seqLen);
-        Tensor qr = DeepSeekOps.rmsNorm(wqA.forward(x), qNorm, eps);
+        Tensor[] proj = projectQkv(x);
+        Tensor qr = DeepSeekOps.rmsNorm(proj[0], qNorm, eps);
         Dsv.probe("qr", qr);
         Tensor q = ropeTail(wqB.forward(qr).reshape(1, seqLen, heads, headDim), f, rd, false);
         Dsv.probe("q", q);
 
-        Tensor[] w = windowKv(x, f, startPos);
+        Tensor[] w = windowKv(proj[1], x.size(1), f, startPos);
         Tensor kv = w[0];
         Tensor topk = w[1];
         if (ratio > 0) {
@@ -176,6 +182,17 @@ final class DeepSeekAttention {
         Tensor out = DeepSeekOps.sparseAttention(q, kv, sink, topk, scale);
         Dsv.probe("sattn", out);
         return output(out, f, seqLen);
+    }
+
+    /** The raw (before norm) low-rank query and key/value of the new tokens: one fused kernel when the weights are packed. */
+    private Tensor[] projectQkv(Tensor x) {
+        if (wqaKv == null) {
+            return new Tensor[]{wqA.forward(x), wkv.forward(x)};
+        }
+        Tensor y = wqaKv.forward(x);
+        int last = y.dim() - 1;
+        return new Tensor[]{o("aten::contiguous", narrow(y, last, 0, qRank)),
+                o("aten::contiguous", narrow(y, last, qRank, headDim))};
     }
 
     /** Inverse rope, fp8 fake quantization, grouped low-rank output projection. */
@@ -210,9 +227,10 @@ final class DeepSeekAttention {
             p[i] = pos[i];
         }
         Tensor f = o("aten::index_select", freqs, 0L, Dsv.dev(Tensor.of(p, n)));
-        Tensor qr = DeepSeekOps.rmsNorm(wqA.forward(x), qNorm, eps);
+        Tensor[] proj = projectQkv(x);
+        Tensor qr = DeepSeekOps.rmsNorm(proj[0], qNorm, eps);
         Tensor q = ropeTail(wqB.forward(qr).reshape(1, n, heads, headDim), f, rd, false);
-        Tensor kvAll = DeepSeekOps.rmsNorm(wkv.forward(x), kvNorm, eps);
+        Tensor kvAll = DeepSeekOps.rmsNorm(proj[1], kvNorm, eps);
         kvAll = DeepSeekOps.fakeQuantFp8(ropeTail(kvAll, f, rd, false), 32);
         Tensor[] outs = new Tensor[n];
         for (int i = 0; i < n; i++) {
@@ -230,9 +248,8 @@ final class DeepSeekAttention {
         return output(n == 1 ? outs[0] : cat(1, outs), f, n);
     }
 
-    private Tensor[] windowKv(Tensor x, Tensor f, int startPos) {
-        long seqLen = x.size(1);
-        Tensor kv = DeepSeekOps.rmsNorm(wkv.forward(x), kvNorm, eps);
+    private Tensor[] windowKv(Tensor kvRaw, long seqLen, Tensor f, int startPos) {
+        Tensor kv = DeepSeekOps.rmsNorm(kvRaw, kvNorm, eps);
         kv = DeepSeekOps.fakeQuantFp8(ropeTail(kv, f, rd, false), 32);
         Tensor windowKv;
         if (startPos == 0) {
