@@ -103,7 +103,13 @@ public class BotActivity extends JPanel {
             return column == 0;
         }
     };
-    private final JTable approvalsTable = new JTable(approvalsModel);
+    private final JTable approvalsTable = new JTable(approvalsModel) {
+        @Override
+        public String getToolTipText(MouseEvent e) {
+            String tip = tableCellTooltip(this, e, 2, 3, 4, 6, 7, 9);
+            return tip != null ? tip : super.getToolTipText(e);
+        }
+    };
     private List<HubClient.BotApprovalItem> currentApprovals = new ArrayList<>();
 
     // Detail Tabs: Tab 0 = Structured Review & Edit, Tab 1 = Raw JSON (Advanced)
@@ -216,7 +222,13 @@ public class BotActivity extends JPanel {
             return false;
         }
     };
-    private final JTable runsTable = new JTable(runsModel);
+    private final JTable runsTable = new JTable(runsModel) {
+        @Override
+        public String getToolTipText(MouseEvent e) {
+            String tip = tableCellTooltip(this, e, 2, 3, 4, 6, 7);
+            return tip != null ? tip : super.getToolTipText(e);
+        }
+    };
     private List<HubClient.BotRunSummary> currentRuns = new ArrayList<>();
     private final JPanel transcriptIntents = new ScrollablePanel();
     private final JScrollPane transcriptScroll = new JScrollPane(transcriptIntents);
@@ -586,6 +598,8 @@ public class BotActivity extends JPanel {
         panel.setBorder(new EmptyBorder(8, 8, 8, 8));
 
         runsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        runsTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        configureRunsTableColumns();
         runsTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int row = runsTable.getSelectedRow();
@@ -609,14 +623,95 @@ public class BotActivity extends JPanel {
         transcriptPanel.add(transcriptTop, BorderLayout.NORTH);
         transcriptPanel.add(transcriptScroll, BorderLayout.CENTER);
 
+        JScrollPane runsScroll = new JScrollPane(
+                runsTable,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED
+        );
         JSplitPane split = new JSplitPane(
                 JSplitPane.VERTICAL_SPLIT,
-                new JScrollPane(runsTable),
+                runsScroll,
                 transcriptPanel
         );
         split.setDividerLocation(280);
         panel.add(split, BorderLayout.CENTER);
         return panel;
+    }
+
+    private void configureRunsTableColumns() {
+        int[] widths = {55, 85, 175, 115, 130, 120, 165, 520};
+        var colModel = runsTable.getColumnModel();
+        for (int i = 0; i < widths.length && i < colModel.getColumnCount(); i++) {
+            var col = colModel.getColumn(i);
+            col.setPreferredWidth(widths[i]);
+            if (i == 0) {
+                col.setMinWidth(45);
+                col.setMaxWidth(80);
+            } else if (i == 1) {
+                col.setMinWidth(65);
+                col.setMaxWidth(130);
+            } else if (i == 7) {
+                col.setMinWidth(260);
+            }
+        }
+    }
+
+    static String tableCellTooltip(JTable table, MouseEvent e, int... modelColumns) {
+        if (table == null || e == null) {
+            return null;
+        }
+        Point p = e.getPoint();
+        int rowIndex = table.rowAtPoint(p);
+        int colIndex = table.columnAtPoint(p);
+        if (rowIndex < 0 || colIndex < 0) {
+            return null;
+        }
+        int modelCol = table.convertColumnIndexToModel(colIndex);
+        if (modelColumns != null && modelColumns.length > 0) {
+            boolean matched = false;
+            for (int c : modelColumns) {
+                if (c == modelCol) {
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) {
+                return null;
+            }
+        }
+        int modelRow = table.convertRowIndexToModel(rowIndex);
+        Object val = table.getModel().getValueAt(modelRow, modelCol);
+        if (val == null || val instanceof Boolean) {
+            return null;
+        }
+        String text = val.toString().strip();
+        return text.isEmpty() ? null : formatTooltipHtml(text);
+    }
+
+    static String formatTooltipHtml(String text) {
+        if (text == null || text.isBlank()) {
+            return null;
+        }
+        String escaped = text
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\r\n", "\n")
+                .replace("\n", "<br/>");
+        if (text.length() > 75 || text.contains("\n")) {
+            return "<html><div style='width: 480px;'>" + escaped + "</div></html>";
+        }
+        return "<html>" + escaped + "</html>";
+    }
+
+    /** Package-private accessor for testing the runs table. */
+    JTable runsTable() {
+        return runsTable;
+    }
+
+    /** Package-private accessor for testing the approvals table. */
+    JTable approvalsTable() {
+        return approvalsTable;
     }
 
     /** Refreshes Hub status, approvals, and runs in a background thread. */
