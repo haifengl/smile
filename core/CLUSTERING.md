@@ -203,6 +203,26 @@ CentroidClustering<double[], double[]> best =
         Clustering.run(10, () -> KMeans.fit(data, 5, 100));
 ```
 
+### E-Means (`EMeans`)
+
+**Algorithm:** Mini-batch Exponential Moving Average (EMA) optimization for k-means (Bessa et al.,
+arXiv:2611.09501). Instead of full-batch Lloyd iterations, `EMeans` updates exponentially decayed
+cluster counts and sums over shuffled mini-batches with a cosine step-size schedule, periodic
+dead-cluster revival via donor splitting, and exact last-epoch-mean finalization. Batch size `B`
+and peak step size `alpha0` are automatically chosen via fitted scaling laws from `(n, k, epochs)`.
+
+```java
+// Default 5 epochs with automatic scaling laws
+CentroidClustering<double[], double[]> model = EMeans.fit(data, 5);
+
+// Custom epoch count (fractional passes supported)
+CentroidClustering<double[], double[]> model = EMeans.fit(data, 5, 2.5);
+
+// Full options (batch law, spherical cosine mode, etc.)
+var opts = new EMeans.Options(5, 5.0, EMeans.BatchLaw.QUALITY);
+CentroidClustering<double[], double[]> model = EMeans.fit(data, opts);
+```
+
 ---
 
 ## 3. K-Medoids (CLARANS)

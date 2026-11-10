@@ -70,6 +70,7 @@ import smile.util.AlgoStatus;
  * <li> Anna D. Peterson, Arka P. Ghosh and Ranjan Maitra. A systematic evaluation of different methods for initializing the K-means clustering algorithm. 2010.</li>
  * </ol>
  * 
+ * @see EMeans
  * @see XMeans
  * @see GMeans
  * @see KMedoids
@@ -110,7 +111,8 @@ public class KMeans {
      * @return the model.
      */
     public static CentroidClustering<float[], float[]> fit(float[][] data, Clustering.Options options) {
-        validateOptions(options, data.length);
+        validateOptions(options.k(), data.length);
+        validateData(data, false);
         return fit(new BBDTree(data), data, options);
     }
 
@@ -122,7 +124,8 @@ public class KMeans {
      * @return the model.
      */
     public static CentroidClustering<float[], float[]> fit(BBDTree bbd, float[][] data, Clustering.Options options) {
-        validateOptions(options, data.length);
+        validateOptions(options.k(), data.length);
+        validateData(data, false);
 
         int k = options.k();
         int maxIter = options.maxIter();
@@ -164,10 +167,7 @@ public class KMeans {
         }
 
         var proximity = clustering.proximity();
-        IntStream.range(0, n).parallel().forEach(i -> {
-            double dist = distance.applyAsDouble(data[i], centroids[group[i]]);
-            proximity[i] = dist * dist;
-        });
+        CentroidClustering.computeProximity(data, centroids, group, distance, proximity);
         return new CentroidClustering<>("K-Means", centroids, distance, group, proximity);
     }
 
@@ -189,7 +189,8 @@ public class KMeans {
      * @return the model.
      */
     public static CentroidClustering<double[], double[]> fit(double[][] data, Clustering.Options options) {
-        validateOptions(options, data.length);
+        validateOptions(options.k(), data.length);
+        validateData(data, false);
         return fit(new BBDTree(data), data, options);
     }
 
@@ -201,7 +202,7 @@ public class KMeans {
      * @return the model.
      */
     public static CentroidClustering<double[], double[]> fit(BBDTree bbd, double[][] data, Clustering.Options options) {
-        validateOptions(options, data.length);
+        validateOptions(options.k(), data.length);
         validateData(data, false);
 
         int k = options.k();
@@ -245,10 +246,7 @@ public class KMeans {
         }
 
         var proximity = clustering.proximity();
-        IntStream.range(0, n).parallel().forEach(i -> {
-            double dist = distance.applyAsDouble(data[i], centroids[group[i]]);
-            proximity[i] = dist * dist;
-        });
+        CentroidClustering.computeProximity(data, centroids, group, distance, proximity);
         return new CentroidClustering<>("K-Means", centroids, distance, group, proximity);
     }
 
@@ -270,7 +268,7 @@ public class KMeans {
      * @return the model.
      */
     public static CentroidClustering<double[], double[]> lloyd(double[][] data, Clustering.Options options) {
-        validateOptions(options, data.length);
+        validateOptions(options.k(), data.length);
         validateData(data, true);
 
         int k = options.k();
@@ -412,24 +410,24 @@ public class KMeans {
     }
 
     /**
-     * Validates the hyperparameters for K-Means.
-     * @param options the clustering options.
+     * Validates the number of clusters against the sample size.
+     * @param k the number of clusters.
      * @param n the number of observations.
      */
-    private static void validateOptions(Clustering.Options options, int n) {
-        if (options.k() > n) {
+    static void validateOptions(int k, int n) {
+        if (k > n) {
             throw new IllegalArgumentException(
                     String.format("Number of clusters %d cannot be greater than the number of observations %d.",
-                            options.k(), n));
+                            k, n));
         }
     }
 
     /**
-     * Validates matrix-shaped finite input data for K-Means.
+     * Validates matrix-shaped finite input data for K-Means and related algorithms.
      * @param data the input data.
      * @param allowNaN true if allows the input data to contain NaN values.
      */
-    private static void validateData(double[][] data, boolean allowNaN) {
+    static void validateData(double[][] data, boolean allowNaN) {
         if (data.length == 0) {
             throw new IllegalArgumentException("Empty input data.");
         }
@@ -449,6 +447,37 @@ public class KMeans {
             for (int j = 0; j < d; j++) {
                 double x = data[i][j];
                 if (Double.isInfinite(x) || (!allowNaN && Double.isNaN(x))) {
+                    throw new IllegalArgumentException(String.format("Invalid value at row %d col %d: %s", i, j, x));
+                }
+            }
+        }
+    }
+
+    /**
+     * Validates single-precision matrix-shaped finite input data.
+     * @param data the input data.
+     * @param allowNaN true if allows the input data to contain NaN values.
+     */
+    static void validateData(float[][] data, boolean allowNaN) {
+        if (data.length == 0) {
+            throw new IllegalArgumentException("Empty input data.");
+        }
+
+        int d = data[0].length;
+        if (d == 0) {
+            throw new IllegalArgumentException("Empty feature vectors.");
+        }
+
+        for (int i = 1; i < data.length; i++) {
+            if (data[i].length != d) {
+                throw new IllegalArgumentException("Ragged input data at row " + i);
+            }
+        }
+
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < d; j++) {
+                float x = data[i][j];
+                if (Float.isInfinite(x) || (!allowNaN && Float.isNaN(x))) {
                     throw new IllegalArgumentException(String.format("Invalid value at row %d col %d: %s", i, j, x));
                 }
             }

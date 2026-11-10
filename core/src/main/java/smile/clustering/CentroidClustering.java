@@ -85,7 +85,9 @@ public record CentroidClustering<T, U>(String name, T[] centers, ToDoubleBiFunct
 
         size[k] = group.length;
         for (int i = 0; i <= k; i++) {
-            distortions[i] /= size[i];
+            if (size[i] > 0) {
+                distortions[i] /= size[i];
+            }
         }
     }
 
@@ -221,10 +223,30 @@ public record CentroidClustering<T, U>(String name, T[] centers, ToDoubleBiFunct
         }).sum();
 
         for (int i = 0; i < k; i++) {
-            distortions[i] /= size[i];
+            if (size[i] > 0) {
+                distortions[i] /= size[i];
+            }
         }
         distortions[k] = MathEx.mean(proximity);
         return new CentroidClustering<>(name, centers, distance, group, proximity, size, distortions);
+    }
+
+    /**
+     * Computes the squared distance of each data point to its assigned cluster center.
+     * @param data the data points.
+     * @param centroids the cluster centers.
+     * @param group the cluster labels.
+     * @param distance the distance function.
+     * @param proximity the output array of squared distances.
+     * @param <T> the type of centroids.
+     * @param <U> the type of observations.
+     */
+    static <T, U> void computeProximity(U[] data, T[] centroids, int[] group,
+                                        ToDoubleBiFunction<T, U> distance, double[] proximity) {
+        IntStream.range(0, data.length).parallel().forEach(i -> {
+            double dist = distance.applyAsDouble(centroids[group[i]], data[i]);
+            proximity[i] = dist * dist;
+        });
     }
 
     /**

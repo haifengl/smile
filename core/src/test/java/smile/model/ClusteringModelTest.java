@@ -117,6 +117,12 @@ public class ClusteringModelTest {
         params.setProperty("smile.clustering.k", "6");
         params.setProperty("smile.clustering.iterations", "50");
 
+        // When / Then: E-Means
+        ClusteringModel emeans = Model.clustering("emeans", iris.formula(), iris.data(), params);
+        assertEquals("emeans", emeans.algorithm());
+        assertEquals(6, emeans.k());
+        assertEquals(4, emeans.infer(iris.data().get(0)).centroid().length);
+
         // When / Then: X-Means
         ClusteringModel xmeans = Model.clustering("xmeans", iris.formula(), iris.data(), params);
         assertEquals("xmeans", xmeans.algorithm());
