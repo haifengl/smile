@@ -900,4 +900,50 @@ public class HubClientAndConfigTest {
             assertTrue(activity.alwaysAllowButton().isEnabled());
         });
     }
+
+    @Test
+    public void testDefaultRulePatternExtractsConcreteActionInsteadOfGenericHeader() throws Exception {
+        // 1. TOOL_CONFIRM shell command (subject is generic "External event action")
+        HubClient.BotApprovalItem toolConfirmItem = new HubClient.BotApprovalItem(
+                301L, 1L, "frank", "frank-daily-recap", "chief-of-staff",
+                "TOOL_CONFIRM", "general", "", "External event action",
+                "{\"header\":\"External event action\",\"question\":\"Approve this action requested during an external event turn?\\n\\nPowerShell: git status --short\"}",
+                null, "PENDING", null, null, "2026-11-10T10:00:00Z", null
+        );
+        assertEquals("PowerShell: git status --short", BotActivity.defaultRulePattern(toolConfirmItem));
+
+        // 2. AUTOMATION_WRITE (subject is generic "Automation Write Approval")
+        HubClient.BotApprovalItem automationWriteItem = new HubClient.BotApprovalItem(
+                302L, 2L, "frank", "frank-daily-recap", "chief-of-staff",
+                "AUTOMATION_WRITE", "general", "", "Automation Write Approval",
+                "{\"header\":\"Automation Write Approval\",\"question\":\"Approve modifying Bot routine configuration (bots.json)?\\n\\nUpsert routine 'clair-weekly-audit' under bot 'clair'\"}",
+                null, "PENDING", null, null, "2026-11-10T10:05:00Z", null
+        );
+        assertEquals("Upsert routine 'clair-weekly-audit' under bot 'clair'", BotActivity.defaultRulePattern(automationWriteItem));
+
+        // 3. BATCH_DRAFT email (subject is generic "Outbound Email Approval" -> defaults to recipient)
+        HubClient.BotApprovalItem emailDraftItem = new HubClient.BotApprovalItem(
+                303L, 3L, "mike", "mike-outreach", "sales",
+                "BATCH_DRAFT", "email", "alice@example.com", "Outbound Email Approval",
+                "{\"header\":\"Outbound Email Approval\",\"question\":\"Approve sending outbound email via account 'mike@aihalo.dev'?\\n\\nTo: alice@example.com\\nSubject: Q4 Benchmark\\n\\nHi Alice\"}",
+                null, "PENDING", null, null, "2026-11-10T10:10:00Z", null
+        );
+        assertEquals("alice@example.com", BotActivity.defaultRulePattern(emailDraftItem));
+
+        // 4. Verify UI populates rulePatternField and sets tooltips on selection
+        javax.swing.SwingUtilities.invokeAndWait(() -> {
+            BotActivity activity = new BotActivity(0);
+            activity.populateApprovals(List.of(toolConfirmItem, automationWriteItem, emailDraftItem));
+            assertEquals("PowerShell: git status --short", activity.rulePatternField().getText());
+            assertNotNull(activity.rulePatternField().getToolTipText());
+            assertFalse(activity.rulePatternField().getToolTipText().isBlank());
+            assertEquals(activity.rulePatternField().getToolTipText(), activity.alwaysAllowButton().getToolTipText());
+
+            activity.approvalsTable().setRowSelectionInterval(1, 1);
+            assertEquals("Upsert routine 'clair-weekly-audit' under bot 'clair'", activity.rulePatternField().getText());
+
+            activity.approvalsTable().setRowSelectionInterval(2, 2);
+            assertEquals("alice@example.com", activity.rulePatternField().getText());
+        });
+    }
 }

@@ -568,9 +568,15 @@ public class BotActivity extends JPanel {
         alwaysAllowBtn.addActionListener(e -> resolveSelectedSingle("ALWAYS_ALLOW_RULE"));
         denyBtn.addActionListener(e -> resolveTargetedApprovals("DENY"));
 
+        String ruleTooltip = bundle.getString("RulePatternTooltip");
+        JLabel rulePatternLabel = new JLabel(bundle.getString("RulePatternLabel"));
+        rulePatternLabel.setToolTipText(ruleTooltip);
+        rulePatternField.setToolTipText(ruleTooltip);
+        alwaysAllowBtn.setToolTipText(ruleTooltip);
+
         actionBar.add(approveBtn);
         actionBar.add(alwaysAllowBtn);
-        actionBar.add(new JLabel(bundle.getString("RulePatternLabel")));
+        actionBar.add(rulePatternLabel);
         actionBar.add(rulePatternField);
         actionBar.add(denyBtn);
         detailAndActions.add(actionBar, BorderLayout.SOUTH);
@@ -719,6 +725,11 @@ public class BotActivity extends JPanel {
     /** Package-private accessor for testing the Always Allow Rule button. */
     JButton alwaysAllowButton() {
         return alwaysAllowBtn;
+    }
+
+    /** Package-private accessor for testing the Rule Pattern text field. */
+    JTextField rulePatternField() {
+        return rulePatternField;
     }
 
     /** Refreshes Hub status, approvals, and runs in a background thread. */
@@ -911,7 +922,78 @@ public class BotActivity extends JPanel {
         StructuredApprovalPayload structured = parsePayloadString(effectivePayloadJson, item);
         populateStructuredFields(item, structured);
 
-        rulePatternField.setText(item.subject() == null || item.subject().isBlank() ? "*" : item.subject());
+        rulePatternField.setText(defaultRulePattern(item, structured));
+    }
+
+    /**
+     * Computes a meaningful default {@code Rule Pattern} for {@link #rulePatternField}
+     * when an approval item is selected, extracting the concrete action line, command,
+     * routine summary, or recipient rather than falling back to a generic category header
+     * such as {@code "External event action"} or {@code "Outbound Email Approval"}.
+     *
+     * @param item the approval item.
+     * @return the suggested substring/regex pattern for an {@code ALWAYS_ALLOW} rule.
+     */
+    public static String defaultRulePattern(HubClient.BotApprovalItem item) {
+        if (item == null) {
+            return "*";
+        }
+        return defaultRulePattern(item, parseApprovalPayload(item));
+    }
+
+    static String defaultRulePattern(HubClient.BotApprovalItem item, StructuredApprovalPayload structured) {
+        if (item == null) {
+            return "*";
+        }
+        if (structured != null && structured.draftMode()) {
+            String recipient = firstNonBlank(structured.to(), item.recipient());
+            if (!recipient.isBlank()) {
+                return recipient;
+            }
+            if (!structured.subject().isBlank() && !isGenericApprovalHeader(structured.subject())) {
+                return structured.subject();
+            }
+        }
+        if (structured != null && !structured.body().isBlank()) {
+            for (String rawLine : structured.body().replace("\r\n", "\n").split("\n")) {
+                String line = rawLine.trim();
+                if (!line.isEmpty() && !isGenericApprovalPreamble(line)) {
+                    return line;
+                }
+            }
+        }
+        if (item.recipient() != null && !item.recipient().isBlank()) {
+            return item.recipient().trim();
+        }
+        if (item.subject() != null && !item.subject().isBlank() && !isGenericApprovalHeader(item.subject())) {
+            return item.subject().trim();
+        }
+        return "*";
+    }
+
+    private static boolean isGenericApprovalHeader(String text) {
+        if (text == null || text.isBlank()) {
+            return true;
+        }
+        String lower = text.trim().toLowerCase(Locale.ROOT);
+        return lower.equals("external event action")
+                || lower.equals("outbound email approval")
+                || lower.equals("outbound calendar approval")
+                || lower.equals("automation write approval")
+                || lower.equals("tool call approval")
+                || lower.equals("computer use");
+    }
+
+    private static boolean isGenericApprovalPreamble(String line) {
+        String lower = line.toLowerCase(Locale.ROOT);
+        return lower.startsWith("approve this action requested during an external event turn")
+                || lower.startsWith("approve modifying bot routine configuration")
+                || lower.startsWith("approve sending outbound email")
+                || lower.startsWith("approve replying to email")
+                || lower.startsWith("approve creating calendar event")
+                || lower.startsWith("approve updating calendar event")
+                || lower.startsWith("approve deleting calendar event")
+                || lower.startsWith("approve responding to calendar invite");
     }
 
     private void populateStructuredFields(HubClient.BotApprovalItem item, StructuredApprovalPayload structured) {
