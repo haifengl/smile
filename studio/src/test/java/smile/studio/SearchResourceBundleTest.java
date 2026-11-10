@@ -94,7 +94,7 @@ public class SearchResourceBundleTest {
             "SubjectTitleLabel", "MessageBodyLabel", "QuestionActionDetailsLabel",
             "AnswerResolutionNoteLabel", "PreviousDraftBaselineLabel", "PreviousPayloadJsonLabel",
             "CurrentEditablePayloadLabel", "TabStructuredReview", "TabRawJson",
-            "ApproveButton", "AlwaysAllowRuleButton", "RulePatternLabel",
+            "ApproveButton", "AlwaysAllowRuleButton", "RulePatternLabel", "RulePatternTooltip",
             "DenyButton", "ColRunId", "ColBot", "ColModel",
             "ColStartedAt", "ColSummaryError", "SessionTranscriptLabel", "StopCancelRunButton",
             "NoPreviousVersion", "ApprovalItemDefaultTitle", "ChannelPrefix", "AccountPrefix",
