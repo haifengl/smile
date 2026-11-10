@@ -84,6 +84,20 @@ final class Dsv {
         }
     }
 
+    /**
+     * Builds a packed layer, freeing the temporaries of the repack at once (the layer itself is not a tensor, so it
+     * stays with its owner).
+     */
+    static <T> T scopedLayer(java.util.function.Supplier<T> build) {
+        smile.util.AutoScope scope = new smile.util.AutoScope();
+        Tensor.push(scope);
+        try {
+            return build.get();
+        } finally {
+            Tensor.pop();
+        }
+    }
+
     /** Debug capture of intermediates (name to a CPU copy) when non-null; see {@link #probe}. */
     static java.util.Map<String, Tensor> probes;
     private static int probeSeq;

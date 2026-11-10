@@ -165,6 +165,38 @@ public final class DeepSeekCheckpoint implements AutoCloseable {
     }
 
     /**
+     * Shape of a tensor, from the shard header (nothing is read).
+     *
+     * @param name the tensor name.
+     * @return the shape.
+     */
+    public long[] shape(String name) {
+        return entry(name).shape();
+    }
+
+    /**
+     * Whether a tensor is stored as int8 (packed fp4 pairs), from the shard header.
+     *
+     * @param name the tensor name.
+     * @return {@code true} for I8.
+     */
+    public boolean isInt8(String name) {
+        return entry(name).dtype().equals("I8");
+    }
+
+    private Entry entry(String name) {
+        try {
+            String file = index.get(name);
+            if (file == null) {
+                throw new IllegalArgumentException("no such tensor: " + name);
+            }
+            return shard(file).entries().get(name);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
      * Reads rows of a 2-D tensor straight from its shard file (for the huge engram tables).
      *
      * @param name the tensor name.
