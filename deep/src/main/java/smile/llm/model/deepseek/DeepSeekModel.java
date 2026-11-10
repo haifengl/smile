@@ -60,9 +60,8 @@ public final class DeepSeekModel implements AutoCloseable {
         this.head = DeepSeekOps.f32(ck.dev("head.weight"));
         this.engramHash = args.engramLayers().length == 0 ? null
                 : new DeepSeekEngram.Hash(args, DeepSeekEngramTokenMap.load(checkpoint.resolve("tokenizer.json"), args.vocabSize()));
-        DeepSeekAttention.Shared shared = new DeepSeekAttention.Shared();
         for (int i = 0; i < args.numLayers(); i++) {
-            blocks.add(new DeepSeekBlock(args, ck, i, shared, args.engramSlot(i) >= 0 ? engramRows.apply(i) : null));
+            blocks.add(new DeepSeekBlock(args, ck, i, args.engramSlot(i) >= 0 ? engramRows.apply(i) : null));
         }
     }
 
@@ -90,8 +89,9 @@ public final class DeepSeekModel implements AutoCloseable {
     /** Allocates the state of an empty sequence (call outside any tensor scope). */
     public Session newSession() {
         DeepSeekAttention.State[] s = new DeepSeekAttention.State[blocks.size()];
+        DeepSeekAttention.Shared shared = new DeepSeekAttention.Shared();
         for (int i = 0; i < s.length; i++) {
-            s[i] = blocks.get(i).newState();
+            s[i] = blocks.get(i).newState(shared);
         }
         return new Session(s, engramHash == null ? null : engramHash.newHistory());
     }
@@ -154,6 +154,53 @@ public final class DeepSeekModel implements AutoCloseable {
         Tensor normed = DeepSeekOps.rmsNorm(collapsed, normWeight, args.normEps());
         Tensor last = o("aten::select.int", normed, 1L, normed.size(1) - 1);
         return o("aten::linear", DeepSeekOps.f32(last), head);
+    }
+
+    /**
+     * One decode token for each of several sequences (different positions), in a single pass over the layers.
+     *
+     * @param ids      each sequence's new token.
+     * @param pos      each token's absolute position.
+     * @param sessions the sequences' states (not interchangeable with {@link #use}).
+     * @return the logits {@code [n, vocab]} (float32).
+     */
+    public Tensor forwardBatch(int[] ids, int[] pos, Session[] sessions) {
+        int n = ids.length;
+        int hc = args.hcMult();
+        Tensor hashes = null;
+        if (engramHash != null) {
+            Tensor[] rows = new Tensor[n];
+            for (int i = 0; i < n; i++) {
+                engramHash.use(sessions[i].history);
+                rows[i] = engramHash.forward(new int[]{ids[i]}, pos[i]);
+            }
+            hashes = n == 1 ? rows[0] : Dsv.cat(1, rows);
+        }
+        long[] idv = new long[n];
+        for (int i = 0; i < n; i++) {
+            idv[i] = ids[i];
+        }
+        Tensor h = o("aten::embedding", embed, Dsv.dev(Tensor.of(idv, 1, n)));
+        h = o("aten::repeat", h.unsqueeze(2), new long[]{1, 1, hc, 1});
+        float[] one = new float[n * hc];
+        for (int i = 0; i < n; i++) {
+            one[i * hc] = 1f;
+        }
+        Tensor pre = Dsv.dev(Tensor.of(one, 1, n, hc));
+        for (DeepSeekBlock block : blocks) {
+            if (block.hasEngram()) {
+                h = block.applyEngram(h, hashes);
+            }
+            DeepSeekAttention.State[] states = new DeepSeekAttention.State[n];
+            for (int i = 0; i < n; i++) {
+                states[i] = sessions[i].layers[block.layer];
+            }
+            Tensor[] r = block.forwardBatch(h, pos, states, pre);
+            h = r[0];
+            pre = r[1];
+        }
+        Tensor normed = DeepSeekOps.rmsNorm(DeepSeekBlock.hcPre(h, pre), normWeight, args.normEps());
+        return o("aten::linear", DeepSeekOps.f32(normed.reshape(n, -1)), head);
     }
 
     @Override
