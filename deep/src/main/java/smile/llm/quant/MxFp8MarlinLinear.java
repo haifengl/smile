@@ -103,6 +103,17 @@ public class MxFp8MarlinLinear implements MxFp8Layer {
     }
 
     /**
+     * Keeps the packed tensors alive when the {@code AutoScope} they were created in closes (a layer built inside a
+     * scope that only exists to free the load-time temporaries).
+     */
+    public void detachFromScopes() {
+        if (qweight != null) {
+            qweight.detachFromScopes();
+            scales.detachFromScopes();
+        }
+    }
+
+    /**
      * Returns the output size N.
      *
      * @return the output size N.
