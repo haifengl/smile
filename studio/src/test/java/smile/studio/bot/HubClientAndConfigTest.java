@@ -316,11 +316,13 @@ public class HubClientAndConfigTest {
         assertTrue(activity.isDraftComposerActive());
         assertFalse(activity.isPriorDraftPanelVisible(), "Prior draft panel should be hidden when previousPayloadJson is null");
         assertEquals("Re: Q4 Evaluation", activity.readStructuredFields().subject());
+        assertFalse(activity.isCurrentApprovalEdited(), "Unmodified draft should not be marked edited");
 
         // Select second row (which has previousPayloadJson and is SECURE_HANDOFF)
         activity.populateApprovals(List.of(handoffItem));
         assertFalse(activity.isDraftComposerActive());
         assertTrue(activity.isPriorDraftPanelVisible(), "Prior draft panel should be visible when previousPayloadJson is present");
+        assertFalse(activity.isCurrentApprovalEdited(), "Unmodified prompt item should not be marked edited");
     }
 
     @Test

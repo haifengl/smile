@@ -62,8 +62,8 @@ import smile.swing.ScrollablePanel;
  * <ol>
  *   <li><b>Approvals &amp; Batch Draft Queue</b>: inspect pending questions, tool confirmations,
  *       staged multi-channel drafts, and Secure Handoffs; view prior-draft diffs; edit inline;
- *       and resolve individually ({@code Allow Once}, {@code Always Allow Rule},
- *       {@code Edit & Approve}, {@code Deny}) or in batch ({@code Approve Selected Batch}).</li>
+ *       and resolve individually ({@code Approve}, {@code Always Allow Rule},
+ *       {@code Deny}) or in batch ({@code Approve Selected Batch}).</li>
  *   <li><b>Run History &amp; Transcripts</b>: inspect {@code IoABotRun} execution history and
  *       view full session transcripts.</li>
  * </ol>
@@ -559,11 +559,8 @@ public class BotActivity extends JPanel {
         detailAndActions.add(detailTabs, BorderLayout.CENTER);
 
         JPanel actionBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
-        JButton allowOnceBtn = new JButton(bundle.getString("AllowOnceButton"));
-        allowOnceBtn.addActionListener(e -> resolveSelectedSingle("ALLOW_ONCE"));
-
-        JButton editApproveBtn = new JButton(bundle.getString("EditApproveButton"));
-        editApproveBtn.addActionListener(e -> resolveSelectedSingle("EDIT_AND_APPROVE"));
+        JButton approveBtn = new JButton(bundle.getString("ApproveButton"));
+        approveBtn.addActionListener(e -> resolveSelectedSingle("APPROVE"));
 
         JButton alwaysAllowBtn = new JButton(bundle.getString("AlwaysAllowRuleButton"));
         alwaysAllowBtn.addActionListener(e -> resolveSelectedSingle("ALWAYS_ALLOW_RULE"));
@@ -574,8 +571,7 @@ public class BotActivity extends JPanel {
         JButton batchApproveBtn = new JButton(bundle.getString("ApproveCheckedBatchButton"));
         batchApproveBtn.addActionListener(e -> batchResolveChecked("ALLOW_ONCE"));
 
-        actionBar.add(allowOnceBtn);
-        actionBar.add(editApproveBtn);
+        actionBar.add(approveBtn);
         actionBar.add(alwaysAllowBtn);
         actionBar.add(new JLabel(bundle.getString("RulePatternLabel")));
         actionBar.add(rulePatternField);
@@ -1019,6 +1015,26 @@ public class BotActivity extends JPanel {
         }
     }
 
+    /**
+     * Returns true when the currently selected approval item has been modified in
+     * either the Structured Review &amp; Edit view or the Raw JSON view.
+     *
+     * @return true if the user modified the draft, payload, or resolution note.
+     */
+    public boolean isCurrentApprovalEdited() {
+        int row = approvalsTable.getSelectedRow();
+        if (row < 0 || row >= currentApprovals.size()) {
+            return false;
+        }
+        HubClient.BotApprovalItem item = currentApprovals.get(row);
+        if (detailTabs.getSelectedIndex() == 1) {
+            String rawEdited = editablePayloadArea.getText().trim();
+            String origFormatted = formatPayloadForDisplay(item.payloadJson()).trim();
+            return !rawEdited.isEmpty() && !rawEdited.equals(origFormatted);
+        }
+        return !readStructuredFields().equals(parseApprovalPayload(item));
+    }
+
     private void resolveSelectedSingle(String decision) {
         int row = approvalsTable.getSelectedRow();
         if (row < 0 || row >= currentApprovals.size()) {
@@ -1028,10 +1044,11 @@ public class BotActivity extends JPanel {
         if (item.id() == null) {
             return;
         }
-        String edited = currentEditedPayloadJson();
+        boolean modified = isCurrentApprovalEdited();
+        String edited = modified ? currentEditedPayloadJson() : "";
         String effectiveDecision = decision;
-        if ("ALLOW_ONCE".equals(decision) && !currentItemDraftMode && !promptNoteField.getText().trim().isEmpty()) {
-            effectiveDecision = "EDIT_AND_APPROVE";
+        if ("APPROVE".equals(decision) || "ALLOW_ONCE".equals(decision)) {
+            effectiveDecision = modified ? "EDIT_AND_APPROVE" : "ALLOW_ONCE";
         }
         String finalDecision = effectiveDecision;
         String pattern = rulePatternField.getText().trim();
@@ -1058,10 +1075,9 @@ public class BotActivity extends JPanel {
             HubClient.BotApprovalItem item = currentApprovals.get(i);
             if (Boolean.TRUE.equals(checked) && item.id() != null) {
                 checkedIds.add(item.id());
-                if (i == selectedRow) {
+                if (i == selectedRow && isCurrentApprovalEdited()) {
                     String edited = currentEditedPayloadJson();
-                    String origFormatted = formatPayloadForDisplay(item.payloadJson());
-                    if (!edited.isBlank() && !edited.equals(origFormatted)) {
+                    if (!edited.isBlank()) {
                         edits.put(String.valueOf(item.id()), edited);
                     }
                 }
