@@ -408,7 +408,7 @@ Autonomous runs never block on modal desktop popups. Instead, any human-in-the-l
 
 | Kind | Source | Description |
 |------|--------|-------------|
-| `BATCH_DRAFT` | Outbound email, LinkedIn, or community post routines | Multi-channel messages staged for batch review, inline editing, and approval |
+| `BATCH_DRAFT` | Outbound email, calendar, LinkedIn, or community post routines | Multi-channel messages and calendar actions staged asynchronously (without pausing the routine run) for batch review, inline editing, and post-approval execution |
 | `TOOL_CONFIRM` | Consequential tool gate (`Bash`, `PowerShell`, `KillShell`, `AgentRequest`, out-of-workspace file edits) | Tool call waiting for permission to execute |
 | `QUESTION` | `AskUserQuestion` tool | Clarifying question or calendar Accept/Decline prompt from a routine |
 | `AUTOMATION_WRITE` | `BotConfig` tool | Agent-proposed creation, modification, or deletion of a routine in `bots.json` |
