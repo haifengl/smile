@@ -418,13 +418,12 @@ Autonomous runs never block on modal desktop popups. Instead, any human-in-the-l
 
 1. **Inspect, Diff & Edit (`Structured Review & Edit` vs. `Raw JSON (Advanced)`):** Select any row in the table. The lower detail pane adapts to the item's `Kind` so you never have to edit raw JSON by hand:
    - **Structured Review & Edit (default tab):**
-     - **For Outbound Drafts (`BATCH_DRAFT` / Email / LinkedIn / Community):** Displays a structured **Message Composer** with editable `To / Recipient`, `Cc`, `Subject / Title`, and multi-line `Message / Post Body` fields. When you click **Edit & Approve**, your edits are serialized back into the approval payload automatically.
+     - **For Outbound Drafts (`BATCH_DRAFT` / Email / LinkedIn / Community):** Displays a structured **Message Composer** with editable `To / Recipient`, `Cc`, `Subject / Title`, and multi-line `Message / Post Body` fields. When you click **Approve**, any edits you made are serialized back into the approval payload automatically.
      - **For Questions, Tool Confirmations, Automation Writes & Secure Handoffs (`QUESTION`, `TOOL_CONFIRM`, `AUTOMATION_WRITE`, `SECURE_HANDOFF`):** Displays a formatted **Question / Action Card** with the prompt or command details and an **Answer / Resolution Note (optional)** input field.
    - **Previous Draft Diff Baseline:** Automatically hidden when an item is an initial draft or request so the active view gets 100% of the width, and shown side-by-side on the left whenever a prior version (`previousPayloadJson`) exists.
    - **Raw JSON (Advanced) tab:** Displays the pretty-printed JSON payload side-by-side with any prior JSON payload and stays synchronized with the Structured View.
 2. **Single-Item Actions:**
-   - **Allow Once (`ALLOW_ONCE`)** — Approve and unblock the waiting run (or release the draft). If you entered an answer in the `Answer / Resolution Note` field on a question item, it is automatically submitted with your approval.
-   - **Edit & Approve (`EDIT_AND_APPROVE`)** — Save your inline edits from the Structured Composer (or Raw JSON tab) and approve (`EDITED_AND_APPROVED`).
+   - **Approve** — Approve and unblock the waiting run (or release the draft). If you did not edit the draft or add a resolution note, it resolves as `ALLOW_ONCE` (`ALLOWED_ONCE`); if you modified any field in the Structured Composer, entered an answer in `Answer / Resolution Note`, or edited the Raw JSON, your changes are saved automatically and it resolves as `EDIT_AND_APPROVE` (`EDITED_AND_APPROVED`).
    - **Always Allow Rule (`ALWAYS_ALLOW_RULE`)** — Approve this item and add a standing `ALWAYS_ALLOW` rule for the pattern in the **Rule Pattern** field (subject to the invariant that `REQUIRE_APPROVAL` rules still take precedence).
    - **Deny (`DENY`)** — Reject the action or discard the draft.
 3. **Batch Actions:**
