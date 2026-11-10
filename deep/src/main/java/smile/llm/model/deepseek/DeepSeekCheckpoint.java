@@ -87,7 +87,7 @@ public final class DeepSeekCheckpoint implements AutoCloseable {
         return file != null && Files.exists(dir.resolve(file));
     }
 
-    private Shard shard(String file) throws IOException {
+    private synchronized Shard shard(String file) throws IOException {
         Shard s = shards.get(file);
         if (s == null) {
             FileChannel ch = FileChannel.open(dir.resolve(file), StandardOpenOption.READ);
@@ -161,6 +161,49 @@ public final class DeepSeekCheckpoint implements AutoCloseable {
             return t;
         } catch (IOException e) {
             throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * Reads rows of a 2-D tensor straight from its shard file (for the huge engram tables).
+     *
+     * @param name the tensor name.
+     * @param rows the row ids.
+     * @return a CPU tensor {@code [rows.length, width]} of the tensor's dtype.
+     */
+    public Tensor readRows(String name, long[] rows) {
+        try {
+            String file = index.get(name);
+            if (file == null) {
+                throw new IllegalArgumentException("no such tensor: " + name);
+            }
+            Shard s = shard(file);
+            Entry e = s.entries().get(name);
+            ScalarType dtype = switch (e.dtype()) {
+                case "F8_E4M3" -> ScalarType.Float8e4m3fn;
+                case "U8", "F8_E8M0" -> ScalarType.UInt8;
+                default -> throw new IllegalArgumentException("readRows: unsupported dtype " + e.dtype() + " of " + name);
+            };
+            long width = e.shape()[1];   // one byte per element for the dtypes above
+            Tensor t = Tensor.empty(new Tensor.Options().dtype(dtype).device(Device.CPU()), rows.length, width);
+            ByteBuffer buf = MemorySegment.ofAddress(Native.dataPtr(t).address()).reinterpret(rows.length * width).asByteBuffer();
+            for (long r : rows) {
+                if (r < 0 || r >= e.shape()[0]) {
+                    throw new IllegalArgumentException(name + ": row " + r + " out of range");
+                }
+                buf.limit(buf.position() + (int) width);
+                long pos = s.dataStart() + e.begin() + r * width;
+                while (buf.hasRemaining()) {
+                    int n = s.channel().read(buf, pos);
+                    if (n < 0) {
+                        throw new IOException("unexpected end of file reading " + name);
+                    }
+                    pos += n;
+                }
+            }
+            return t;
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
         }
     }
 

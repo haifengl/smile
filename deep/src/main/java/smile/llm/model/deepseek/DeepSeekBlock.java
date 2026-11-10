@@ -66,6 +66,14 @@ final class DeepSeekBlock {
         this.ffnScale = DeepSeekOps.f32(ck.dev(p + ".hc_ffn_scale"));
     }
 
+    DeepSeekAttention.State newState() {
+        return attention.newState();
+    }
+
+    void use(DeepSeekAttention.State s) {
+        attention.use(s);
+    }
+
     boolean hasEngram() {
         return engram != null;
     }
