@@ -35,6 +35,8 @@
 #include <c10/core/ScalarType.h>
 #include <c10/core/Device.h>
 #include <c10/core/DeviceType.h>
+#include <ATen/core/dispatch/Dispatcher.h>
+#include <ATen/core/ivalue.h>
 
 // ── standard headers ──────────────────────────────────────────────────────────
 #include <cstdlib>
@@ -3364,6 +3366,81 @@ ST_Tensor smile_flashinfer_ragged_attention(
 #  endif
     return nullptr;
 #endif
+}
+
+
+// ── Generic ATen dispatcher bridge ────────────────────────────────────────────
+
+struct ST_AtenArgs_ { std::vector<c10::IValue> v; };
+
+ST_AtenArgs smile_aten_args_create(void) { return new ST_AtenArgs_{}; }
+void smile_aten_args_free(ST_AtenArgs a) { delete a; }
+void smile_aten_args_push_tensor(ST_AtenArgs a, ST_Tensor t) {
+    if (t) a->v.emplace_back(t->t); else a->v.emplace_back();
+}
+void smile_aten_args_push_none(ST_AtenArgs a) { a->v.emplace_back(); }
+void smile_aten_args_push_int(ST_AtenArgs a, int64_t v) { a->v.emplace_back(v); }
+void smile_aten_args_push_double(ST_AtenArgs a, double v) { a->v.emplace_back(v); }
+void smile_aten_args_push_bool(ST_AtenArgs a, int v) { a->v.emplace_back(static_cast<bool>(v)); }
+void smile_aten_args_push_string(ST_AtenArgs a, const char *s) { a->v.emplace_back(std::string(s ? s : "")); }
+void smile_aten_args_push_ints(ST_AtenArgs a, const int64_t *v, int64_t n) {
+    a->v.emplace_back(std::vector<int64_t>(v, v + n));
+}
+void smile_aten_args_push_tensors(ST_AtenArgs a, const ST_Tensor *v, int64_t n) {
+    c10::List<at::Tensor> list;
+    for (int64_t i = 0; i < n; i++) list.push_back(v[i]->t);
+    a->v.emplace_back(std::move(list));
+}
+void smile_aten_args_push_opt_tensors(ST_AtenArgs a, const ST_Tensor *v, int64_t n) {
+    c10::List<std::optional<at::Tensor>> list;
+    for (int64_t i = 0; i < n; i++) {
+        if (v[i]) list.push_back(std::optional<at::Tensor>(v[i]->t)); else list.push_back(std::optional<at::Tensor>());
+    }
+    a->v.emplace_back(std::move(list));
+}
+
+int smile_aten_call(const char *name, const char *overload, ST_AtenArgs a, ST_Tensor *outputs, int max_outputs) {
+    if (!name || !a || !outputs) { set_error("smile_aten_call: null argument"); return -1; }
+    ST_TRY_BEGIN
+        at::NoGradGuard no_grad;
+        auto op = c10::Dispatcher::singleton().findSchemaOrThrow(name, overload ? overload : "");
+        std::vector<c10::IValue> stack(a->v.begin(), a->v.end());
+        const auto &sargs = op.schema().arguments();
+        if (stack.size() > sargs.size()) throw std::runtime_error(std::string(name) + ": too many arguments");
+        for (size_t i = stack.size(); i < sargs.size(); i++) {
+            if (!sargs[i].default_value().has_value())
+                throw std::runtime_error(std::string(name) + ": missing argument '" + sargs[i].name() + "'");
+            stack.push_back(*sargs[i].default_value());
+        }
+        // Boxed calls skip the device guard of the generated C++ API: make the first tensor's device current so
+        // composite ops (e.g. ldexp) that allocate or launch on the current device work on devices other than 0.
+        c10::OptionalDeviceGuard device_guard;
+        for (const auto &iv : stack) {
+            if (iv.isTensor() && iv.toTensor().defined()) { device_guard.reset_device(iv.toTensor().device()); break; }
+            if (iv.isTensorList()) {
+                bool found = false;
+                for (const at::Tensor &t : iv.toTensorList()) {
+                    if (t.defined()) { device_guard.reset_device(t.device()); found = true; break; }
+                }
+                if (found) break;
+            }
+        }
+        op.callBoxed(&stack);
+        int n = 0;
+        for (auto &iv : stack) {
+            if (iv.isTensor()) {
+                if (n >= max_outputs) throw std::runtime_error(std::string(name) + ": more outputs than max_outputs");
+                outputs[n++] = new ST_Tensor_{ iv.toTensor() };
+            } else if (iv.isTensorList()) {
+                for (const at::Tensor &t : iv.toTensorList()) {
+                    if (n >= max_outputs) throw std::runtime_error(std::string(name) + ": more outputs than max_outputs");
+                    outputs[n++] = new ST_Tensor_{ t };
+                }
+            }
+        }
+        return n;
+    ST_TRY_END
+    return -1;
 }
 
 } // extern "C"

@@ -99,4 +99,15 @@ public final class Gpt2ByteMap {
     public static char byteToUnicode(int unsignedByte) {
         return BYTE_TO_UNICODE[unsignedByte & 0xff];
     }
+
+    /**
+     * Maps a GPT-2 vocab character back to its raw byte.
+     *
+     * @param c a vocab character.
+     * @return the byte value in {@code [0, 255]}, or -1 if the character is outside the GPT-2 alphabet.
+     */
+    public static int unicodeToByte(char c) {
+        Integer b = UNICODE_TO_BYTE.get(c);
+        return b == null ? -1 : b;
+    }
 }

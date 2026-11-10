@@ -1386,6 +1386,34 @@ SMILE_API ST_Tensor smile_flashinfer_ragged_attention(
         int is_causal,
         ST_Tensor attn_mask);
 
+
+/* ── Generic ATen dispatcher bridge ───────────────────────────────────────────
+ * Calls any registered ATen operator by schema name ("aten::cat", overload "" or "dim", ...) with boxed
+ * arguments. Arguments are pushed in schema order; trailing arguments that are not pushed take the schema's
+ * default. Tensor results (and tensor lists, flattened) are returned as new handles the caller frees. */
+typedef struct ST_AtenArgs_ *ST_AtenArgs;
+SMILE_API ST_AtenArgs smile_aten_args_create(void);
+SMILE_API void smile_aten_args_free(ST_AtenArgs args);
+/** Pushes a tensor; a null handle pushes None. */
+SMILE_API void smile_aten_args_push_tensor(ST_AtenArgs args, ST_Tensor t);
+SMILE_API void smile_aten_args_push_none(ST_AtenArgs args);
+SMILE_API void smile_aten_args_push_int(ST_AtenArgs args, int64_t v);
+SMILE_API void smile_aten_args_push_double(ST_AtenArgs args, double v);
+SMILE_API void smile_aten_args_push_bool(ST_AtenArgs args, int v);
+SMILE_API void smile_aten_args_push_string(ST_AtenArgs args, const char *s);
+/** Pushes an int[] argument. */
+SMILE_API void smile_aten_args_push_ints(ST_AtenArgs args, const int64_t *v, int64_t n);
+/** Pushes a Tensor[] argument. */
+SMILE_API void smile_aten_args_push_tensors(ST_AtenArgs args, const ST_Tensor *v, int64_t n);
+/** Pushes a Tensor?[] argument (null handles become None), as taken by aten::index. */
+SMILE_API void smile_aten_args_push_opt_tensors(ST_AtenArgs args, const ST_Tensor *v, int64_t n);
+/**
+ * Runs the operator. Returns the number of tensor outputs written to {@code outputs} (at most {@code max_outputs}),
+ * or -1 on error (see smile_last_error).
+ */
+SMILE_API int smile_aten_call(const char *name, const char *overload, ST_AtenArgs args,
+                              ST_Tensor *outputs, int max_outputs);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
