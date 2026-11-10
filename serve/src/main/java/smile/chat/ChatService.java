@@ -428,7 +428,7 @@ public class ChatService implements OpenAiModelContributor {
         if (checkpointDir == null || !Files.isDirectory(checkpointDir)) {
             return false;
         }
-        if (isQwenCheckpoint(checkpointDir) || isMiniMaxCheckpoint(checkpointDir)) {
+        if (isQwenCheckpoint(checkpointDir) || isMiniMaxCheckpoint(checkpointDir) || isDeepSeekCheckpoint(checkpointDir)) {
             return true;
         }
         // Llama-family: HF config.json model_type llama, or classic tokenizer layout.
@@ -448,7 +448,7 @@ public class ChatService implements OpenAiModelContributor {
      * Returns {@code true} when the HF id looks like a builtin Torch Llama/Qwen family.
      */
     static boolean isBuiltinTorchFamily(String modelSpec) {
-        if (isMiniMaxRepoId(modelSpec)) {
+        if (isMiniMaxRepoId(modelSpec) || isDeepSeekRepoId(modelSpec)) {
             return true;
         }
         return GenAISupportedModels.matchRepoId(modelSpec)
@@ -975,6 +975,9 @@ public class ChatService implements OpenAiModelContributor {
         if (isMiniMaxCheckpoint(localPath)) {
             return buildMiniMax(localPath.toString(), config, memFraction, pageSize);
         }
+        if (isDeepSeekCheckpoint(localPath)) {
+            return buildDeepSeek(localPath.toString(), config);
+        }
         String tokenizerPath = resolveLocalTokenizer(localPath);
         try {
             smile.llm.quant.QuantBackendOverride.set(config.quantization());
@@ -1084,6 +1087,46 @@ public class ChatService implements OpenAiModelContributor {
     /** Returns {@code true} when a Hugging Face repo id names a MiniMax-M3 model. */
     static boolean isMiniMaxRepoId(String modelSpec) {
         return modelSpec != null && modelSpec.toLowerCase(java.util.Locale.ROOT).contains("minimax-m3");
+    }
+
+    /**
+     * Returns {@code true} when {@code config.json} identifies a DeepSeek-V4 checkpoint
+     * ({@code model_type} {@code deepseek_v4*} or an {@code architectures} entry {@code DeepseekV4*}).
+     */
+    static boolean isDeepSeekCheckpoint(Path checkpointDir) throws IOException {
+        Path configJson = checkpointDir.resolve("config.json");
+        if (!Files.isRegularFile(configJson)) {
+            return false;
+        }
+        JsonNode root = new ObjectMapper().readTree(configJson.toFile());
+        String modelType = root.has("model_type") ? root.get("model_type").asString() : "";
+        if (modelType.startsWith("deepseek_v4")) {
+            return true;
+        }
+        if (root.has("architectures") && root.get("architectures").isArray()) {
+            for (JsonNode n : root.get("architectures")) {
+                String arch = n.asString();
+                if (arch != null && arch.startsWith("DeepseekV4")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Returns {@code true} when a Hugging Face repo id names a DeepSeek-V4 model. */
+    static boolean isDeepSeekRepoId(String modelSpec) {
+        return modelSpec != null && modelSpec.toLowerCase(java.util.Locale.ROOT).contains("deepseek-v4");
+    }
+
+    /**
+     * Loads DeepSeek-V4.1 with its routed experts spread over {@code smile.chat.devices} (expert parallelism).
+     * The weights come in the checkpoint's own formats; {@code smile.chat.quantization} has no effect.
+     */
+    private LanguageModel buildDeepSeek(String checkpointDir, ChatServiceConfig config) throws Exception {
+        byte[] devices = parallelConfig(config).devices();
+        logger.infof("Loading DeepSeek-V4 from %s on %d device(s)", checkpointDir, devices.length);
+        return smile.llm.model.deepseek.DeepSeek.build(checkpointDir, 0, config.maxSeqLen(), devices);
     }
 
     /**
