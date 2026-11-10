@@ -17,7 +17,7 @@
   "Clustering Analysis"
   {:author "Haifeng Li"}
   (:import [smile.clustering Clustering HierarchicalClustering
-                             KMeans KMedoids XMeans GMeans SIB DeterministicAnnealing
+                             KMeans EMeans KMedoids XMeans GMeans SIB DeterministicAnnealing
                              DBSCAN DENCLUE MEC SpectralClustering]
            [smile.clustering Clustering$Options
                              DeterministicAnnealing$Options
@@ -106,6 +106,24 @@
    (Clustering/run runs
      (reify java.util.function.Supplier
        (get [this] (KMeans/fit data (Clustering$Options. (int k) (int max-iter) (double tol) nil)))))))
+
+(defn emeans
+  "E-Means clustering.
+
+  E-Means is a mini-batch exponential moving average (EMA) optimization
+  procedure for the k-means objective that converges to lower distortion than
+  Lloyd's algorithm in roughly one-tenth the passes over the dataset.
+
+  `data` is the data set.
+  `k` is the number of clusters.
+  `epochs` is the number of training passes over the dataset.
+  `runs` is the number of runs of E-Means algorithm."
+  ([data k] (emeans data k 5.0 1))
+  ([data k epochs] (emeans data k epochs 1))
+  ([data k epochs runs]
+   (Clustering/run runs
+     (reify java.util.function.Supplier
+       (get [this] (EMeans/fit data (int k) (double epochs)))))))
 
 (defn xmeans
   "X-Means clustering.

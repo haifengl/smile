@@ -197,6 +197,24 @@ package object clustering {
     Clustering.run(runs, () => KMeans.fit(data, k, maxIter))
   }
 
+  /** E-Means clustering. E-Means is a mini-batch exponential moving average (EMA)
+    * optimization procedure for the k-means objective that converges to lower
+    * distortion than Lloyd's algorithm in roughly one-tenth the passes over the
+    * dataset. Mini-batch size and initial step size are chosen automatically via
+    * fitted scaling laws.
+    *
+    * ====References:====
+    *  - Swann Bessa, Pierre-Emmanuel Mazare, Gergely Szilvasy, Hugo Touvron, David Picard, Matthijs Douze, and Herve Jegou. e-means: outperforming k-means (in one-tenth the epochs). arXiv:2611.09501, 2026.
+    *
+    * @param data   the data set.
+    * @param k      the number of clusters.
+    * @param epochs the number of training passes over the dataset.
+    * @param runs   the number of runs of E-Means algorithm.
+    */
+  def emeans(data: Array[Array[Double]], k: Int, epochs: Double = 5.0, runs: Int = 1): CentroidClustering[Array[Double], Array[Double]] = time("E-Means") {
+    Clustering.run(runs, () => EMeans.fit(data, k, epochs))
+  }
+
   /** X-Means clustering algorithm, an extended K-Means which tries to
     * automatically determine the number of clusters based on BIC scores.
     * Starting with only one cluster, the X-Means algorithm goes into action

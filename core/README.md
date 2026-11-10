@@ -182,6 +182,7 @@ System.out.println(ols);
 | Class | Algorithm |
 |---|---|
 | `KMeans` | Lloyd's k-Means (batch) |
+| `EMeans` | Mini-batch EMA k-Means with scaling laws |
 | `GMeans` / `XMeans` | Automatic k selection |
 | `CLARANS` | Clustering Large Applications |
 | `DBScan` | Density-based spatial clustering |

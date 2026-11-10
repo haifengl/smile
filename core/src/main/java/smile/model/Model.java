@@ -31,6 +31,7 @@ import smile.classification.SVM;
 import smile.clustering.CentroidClustering;
 import smile.clustering.Clustering;
 import smile.clustering.DeterministicAnnealing;
+import smile.clustering.EMeans;
 import smile.clustering.GMeans;
 import smile.clustering.KMeans;
 import smile.clustering.XMeans;
@@ -575,6 +576,13 @@ public interface Model {
                 yield runs > 1
                         ? Clustering.run(runs, () -> KMeans.fit(x, options))
                         : KMeans.fit(x, options);
+            }
+            case "emeans", "e-means" -> {
+                int runs = Integer.parseInt(params.getProperty("smile.clustering.runs", "1"));
+                var options = EMeans.Options.of(params);
+                yield runs > 1
+                        ? Clustering.run(runs, () -> EMeans.fit(x, options))
+                        : EMeans.fit(x, options);
             }
             case "xmeans" ->
                     XMeans.fit(x, Clustering.Options.of(params));
