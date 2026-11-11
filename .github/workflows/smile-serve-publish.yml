@@ -21,7 +21,7 @@ env:
 
 jobs:
   build-and-push-image:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
     if: >-
       github.event_name != 'workflow_run' ||
       (github.event.workflow_run.conclusion == 'success' &&
@@ -35,28 +35,63 @@ jobs:
           # entry that needs the host-side Java/Node/Gradle steps below.
           - image_name: smile-serve
             tag_suffix: ""
+            arch_suffix: "-amd64"
             dockerfile: ./serve/src/main/docker/Dockerfile
             context: ./serve
             host_build: true
+            runner: ubuntu-latest
           # The remaining images build everything inside Docker (repo root as context), with the `local`
-          # Quarkus profile by default.
+          # Quarkus profile by default. The GPU image stays single-arch (amd64 only, CUDA), so it pushes
+          # its final tags directly and is not merged.
           - image_name: smile-serve
             tag_suffix: "-gpu"
+            arch_suffix: ""
             dockerfile: ./serve/src/main/docker/Dockerfile.gpu
             context: .
             host_build: false
+            runner: ubuntu-latest
           # Native executable, CPU-only: SMILE, ONNX, CPU chat, auth and the embedded H2 database.
           - image_name: smile-serve
             tag_suffix: "-native"
+            arch_suffix: "-amd64"
             dockerfile: ./serve/src/main/docker/Dockerfile.native
             context: .
             host_build: false
+            runner: ubuntu-latest
           # Native executable, inference-only (no chat, auth or database).
           - image_name: smile-serve
             tag_suffix: "-micro"
+            arch_suffix: "-amd64"
             dockerfile: ./serve/src/main/docker/Dockerfile.micro
             context: .
             host_build: false
+            runner: ubuntu-latest
+          # arm64 variants. GraalVM cannot cross-compile, so the native images build natively on an arm64
+          # runner (ubuntu-24.04-arm is free for public repositories). These push <tag>-arm64; the
+          # merge-manifests job below composes the final multi-arch tags.
+          - image_name: smile-serve
+            tag_suffix: "-native"
+            arch_suffix: "-arm64"
+            dockerfile: ./serve/src/main/docker/Dockerfile.native
+            context: .
+            host_build: false
+            runner: ubuntu-24.04-arm
+          - image_name: smile-serve
+            tag_suffix: "-micro"
+            arch_suffix: "-arm64"
+            dockerfile: ./serve/src/main/docker/Dockerfile.micro
+            context: .
+            host_build: false
+            runner: ubuntu-24.04-arm
+          # arm64 JVM image. The quarkus-app it copies is architecture-independent bytecode, so the same
+          # host build works; only the base image and the ONNX Runtime/GenAI tarballs differ.
+          - image_name: smile-serve
+            tag_suffix: ""
+            arch_suffix: "-arm64"
+            dockerfile: ./serve/src/main/docker/Dockerfile
+            context: ./serve
+            host_build: true
+            runner: ubuntu-24.04-arm
 
     permissions:
       contents: read
@@ -142,13 +177,15 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ matrix.image_name }}
+          # Multi-arch images push <tag>-<arch> (e.g. 7.0.0-micro-amd64) and the merge-manifests job below
+          # composes the final 7.0.0-micro / latest-micro tags. Single-arch images (the amd64-only GPU
+          # build) push the tag directly and are not merged.
           tags: |
-            # Apply semantic versioning tags (e.g., 1.2.3, 1.2, 1)
-            type=semver,pattern={{version}},value=${{ steps.version.outputs.tag }},suffix=${{ matrix.tag_suffix }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.tag }},suffix=${{ matrix.tag_suffix }}
-            type=semver,pattern={{major}},value=${{ steps.version.outputs.tag }},suffix=${{ matrix.tag_suffix }}
+            type=semver,pattern={{version}},value=${{ steps.version.outputs.tag }},suffix=${{ matrix.tag_suffix }}${{ matrix.arch_suffix }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.tag }},suffix=${{ matrix.tag_suffix }}${{ matrix.arch_suffix }}
+            type=semver,pattern={{major}},value=${{ steps.version.outputs.tag }},suffix=${{ matrix.tag_suffix }}${{ matrix.arch_suffix }}
             # Apply the 'latest' tag only on the default branch push
-            type=raw,value=latest${{ matrix.tag_suffix }},enable={{is_default_branch}}
+            type=raw,value=latest${{ matrix.tag_suffix }}${{ matrix.arch_suffix }},enable={{is_default_branch}}
 
       - name: Build and push Docker image
         id: push
@@ -166,3 +203,90 @@ jobs:
           subject-name: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ matrix.image_name }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
+
+  # Compose the per-architecture images into single multi-arch tags. Kept separate from the matrix above so
+  # a partial build cannot publish a tag that points at only one architecture.
+  merge-manifests:
+    needs: build-and-push-image
+    runs-on: ubuntu-latest
+    if: >-
+      success() &&
+      (github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       startsWith(github.event.workflow_run.head_commit.message, 'v')))
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image_name: smile-serve
+            tag_suffix: ""
+          - image_name: smile-serve
+            tag_suffix: "-native"
+          - image_name: smile-serve
+            tag_suffix: "-micro"
+          # no -gpu entry: the GPU image is amd64-only and needs a single-arch manifest.
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.ref }}
+          fetch-depth: 0
+
+      - name: Resolve version tag
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.version }}" ]; then
+            echo "tag=v${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "release" ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          else
+            TAG=$(git describe --tags --exact-match HEAD 2>/dev/null || git log -1 --pretty=%B | head -n 1 | tr -d '[:space:]')
+            echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/${{ matrix.image_name }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ steps.version.outputs.tag }},suffix=${{ matrix.tag_suffix }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.tag }},suffix=${{ matrix.tag_suffix }}
+            type=semver,pattern={{major}},value=${{ steps.version.outputs.tag }},suffix=${{ matrix.tag_suffix }}
+            type=raw,value=latest${{ matrix.tag_suffix }},enable={{is_default_branch}}
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create multi-arch manifest
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          set -euo pipefail
+          while IFS= read -r tag; do
+            [ -n "$tag" ] || continue
+            # `latest-*` is only tagged on the default branch, so a given run may not have every tag.
+            # Merge only what both architecture builds actually pushed.
+            if ! docker buildx imagetools inspect "${tag}-amd64" >/dev/null 2>&1; then
+              echo "skip ${tag}: no -amd64 image"
+              continue
+            fi
+            if ! docker buildx imagetools inspect "${tag}-arm64" >/dev/null 2>&1; then
+              echo "skip ${tag}: no -arm64 image"
+              continue
+            fi
+            echo "Merging ${tag}-amd64 + ${tag}-arm64 -> ${tag}"
+            docker buildx imagetools create \
+              --tag "$tag" \
+              "${tag}-amd64" \
+              "${tag}-arm64"
+          done <<< "$TAGS"

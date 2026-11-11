@@ -121,16 +121,31 @@ RUN microdnf install -y gzip tar && microdnf clean all
 
 # Install ONNX Runtime
 ARG ORT_VERSION=1.30.0
-RUN curl -L https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz \
+# Target architecture. BuildKit supplies TARGETARCH from --platform; the shell fallback keeps a legacy
+# (non-BuildKit) `docker build` on the historical amd64 behaviour.
+ARG TARGETARCH
+# ONNX Runtime names Linux artifacts x64/aarch64; ORT GenAI names the same architectures x64/arm64.
+# GENAI_SHA256 is per-arch as well; the two tarballs are different files.
+ARG GENAI_SHA256_X64=482a17113556ff76c53820b801f391cdcbaac0b6c4089065182683c03fdbc8d9
+ARG GENAI_SHA256_ARM64=0efed33403b0bda566034d9047f6ce9e669aee2b3098d78c39f0b259c9db09d8
+RUN ARCH="${TARGETARCH:-amd64}"; case "$ARCH" in \
+      amd64) echo x64 > /tmp/ort_arch; echo x64 > /tmp/genai_arch; \
+             echo "${GENAI_SHA256_X64}" > /tmp/genai_sha256 ;; \
+      arm64) echo aarch64 > /tmp/ort_arch; echo arm64 > /tmp/genai_arch; \
+             echo "${GENAI_SHA256_ARM64}" > /tmp/genai_sha256 ;; \
+      *) echo "unsupported TARGETARCH=${ARCH}" >&2; exit 1 ;; \
+    esac
+RUN ORT_ARCH=$(cat /tmp/ort_arch); \
+    curl -L "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-${ORT_ARCH}-${ORT_VERSION}.tgz" \
     | tar -zxv -C /usr/local/ \
-    && mv /usr/local/onnxruntime-linux-x64-${ORT_VERSION} /usr/local/onnxruntime
+    && mv /usr/local/onnxruntime-linux-${ORT_ARCH}-${ORT_VERSION} /usr/local/onnxruntime
 
 # Install ONNX Runtime GenAI (libonnxruntime-genai.so): the CPU chat path. Without CUDA the chat engine loads
 # pre-converted GenAI (ONNX) packages through it, not LibTorch (LibTorch chat needs a GPU: Dockerfile.gpu).
 ARG GENAI_VERSION=0.17.0
-ARG GENAI_SHA256=482a17113556ff76c53820b801f391cdcbaac0b6c4089065182683c03fdbc8d9
-RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/genai.tgz \
-        "https://github.com/microsoft/onnxruntime-genai/releases/download/v${GENAI_VERSION}/onnxruntime-genai-${GENAI_VERSION}-linux-x64.tar.gz" \
+RUN GENAI_SHA256=$(cat /tmp/genai_sha256); \
+    curl -fsSL --retry 5 --retry-delay 10 -o /tmp/genai.tgz \
+        "https://github.com/microsoft/onnxruntime-genai/releases/download/v${GENAI_VERSION}/onnxruntime-genai-${GENAI_VERSION}-linux-$(cat /tmp/genai_arch).tar.gz" \
     && echo "${GENAI_SHA256}  /tmp/genai.tgz" | sha256sum -c - \
     && mkdir -p /usr/local/onnxruntime-genai/lib \
     && tar -zx -C /usr/local/onnxruntime-genai/lib --strip-components=2 --wildcards '*/lib/libonnxruntime-genai.so' -f /tmp/genai.tgz \
