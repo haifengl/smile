@@ -109,7 +109,8 @@ models (a random forest, LDA and a small ONNX model), after startup had settled;
 | Idle memory | ~80 MiB | ~115 MiB | ~600 MiB | |
 | With a chat model loaded | n/a | 8 s, 3 GiB (Phi-4-mini, 4.6 GB package) | 11 s, 3.5 GiB (same) | 15 s, ~34 GiB of GPU memory (Llama-3.1-8B-Instruct, BF16, one GPU) |
 | S3 blob storage plugin | no | no | no | yes |
-| Needs | x86-64-v3 CPU | x86-64-v3 CPU | any x86-64 CPU | NVIDIA GPU, driver for CUDA 13.2, NVIDIA Container Toolkit |
+| Platforms | `linux/amd64`, `linux/arm64` | `linux/amd64`, `linux/arm64` | `linux/amd64`, `linux/arm64` | NVIDIA GPU, driver for CUDA 13.2, NVIDIA Container Toolkit (`linux/amd64` only) |
+| Native CPU baseline | x86-64-v3 (AVX2) on amd64; armv8-a on arm64 | same | any x86-64 or arm64 CPU | — |
 
 **`latest-micro`: inference only.** The smallest and fastest to start. It serves SMILE and ONNX models and the
 inference pages of the web UI; there is no chat, no user accounts or conversation history, and no database, so the
@@ -122,7 +123,7 @@ sidecars, serverless or scale-to-zero platforms, and fleets of many small replic
 and for CPU-only machines.
 
 **`latest`: the JVM image.** The same features as `latest-native` on a conventional JVM: JIT-compiled, runs on any
-x86-64 CPU, usable with the usual JVM tooling. It uses far more memory (it sizes its heap to 80% of the container limit,
+x86-64 or arm64 CPU, usable with the usual JVM tooling. It uses far more memory (it sizes its heap to 80% of the container limit,
 so set a memory limit) and takes a few seconds to start. It is the image to pick for small ONNX Runtime GenAI models on
 CPU, for example embeddings, when the CPU does not support the native executables or you prefer a JVM deployment.
 
@@ -132,8 +133,12 @@ that supports CUDA 13.2 and the NVIDIA Container Toolkit (`docker run --gpus all
 example Qwen 27B in BF16 needs two 40 GB GPUs. The image is large (about 16 GB) and startup is dominated by loading the
 model. See [§1.2](#12-gpu-build--run).
 
-Notes for all CPU images: they are `linux/amd64` only, and the native executables are compiled for x86-64-v3 (AVX2), so
-they do not run on CPUs without AVX2 (before Intel Haswell, 2013); use the JVM image there.
+Notes for the CPU images: `latest`, `latest-native` and `latest-micro` are published for both
+`linux/amd64` and `linux/arm64`; the GPU image is `linux/amd64` only. On amd64 the native executables
+are compiled for x86-64-v3 (AVX2), so they do not run on CPUs without AVX2 (before Intel Haswell,
+2013); use the JVM image there. On arm64 they target the armv8-a baseline and run on any 64-bit ARM
+Linux CPU with glibc. To build one architecture directly, pass `--platform` (and, for the native
+images, run the build on a machine of that architecture, since GraalVM does not cross-compile).
 
 ### 1.2 GPU Build & Run
 
