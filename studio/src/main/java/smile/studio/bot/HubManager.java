@@ -21,10 +21,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import javax.swing.SwingUtilities;
+import ioa.agent.AgentDirectory;
+import ioa.agent.AgentLookup;
+import ioa.agent.AgentRequest;
+import ioa.agent.LocalAgentDirectory;
 import ioa.agent.bot.ProjectsConfig;
 import smile.shell.Hub;
 import smile.shell.Serve;
@@ -57,6 +63,7 @@ public final class HubManager {
     private final List<Consumer<ProcessPanel>> startListeners = new CopyOnWriteArrayList<>();
     private final List<Consumer<ProcessPanel>> stopListeners = new CopyOnWriteArrayList<>();
     private final List<Consumer<HubClient.BotStreamEvent>> eventListeners = new CopyOnWriteArrayList<>();
+    private final Map<Long, HubAgentEndpoint.SubmittedRun> pendingPeerRuns = new ConcurrentHashMap<>();
     private final AtomicBoolean sseRunning = new AtomicBoolean(false);
     private volatile Thread sseThread;
 
@@ -211,6 +218,10 @@ public final class HubManager {
                 && event.type() != null && !"disconnected".equals(event.type())) {
             panel.appendLine(formatStreamEventLine(event));
         }
+        if ("run".equals(event.type()) && event.runId() != null && pendingPeerRuns.containsKey(event.runId())) {
+            Thread.ofVirtual().name("hub-peer-run-notice").start(
+                    () -> handlePeerRunStreamEvent(event, LocalAgentDirectory.shared()));
+        }
         if (eventListeners.isEmpty()) {
             return;
         }
@@ -222,6 +233,66 @@ public final class HubManager {
                 }
             }
         });
+    }
+
+    /**
+     * Tracks a peer request run submitted from SMILE Studio to an Agent Hub so
+     * that when the run reaches a terminal status on the SSE stream, a completion
+     * {@link AgentRequest.Kind#NOTICE} is delivered to the sending panel.
+     *
+     * @param runId the Hub run ID.
+     * @param run   the submitted run metadata.
+     */
+    public void trackSubmittedRun(Long runId, HubAgentEndpoint.SubmittedRun run) {
+        if (runId == null || run == null) {
+            return;
+        }
+        pendingPeerRuns.put(runId, run);
+        if (attached || (process != null && process.isAlive())) {
+            ensureEventStreamRunning();
+        }
+    }
+
+    /**
+     * Evaluates a {@code "run"} SSE event against tracked Studio peer requests and,
+     * when the run has reached {@code COMPLETED}, {@code FAILED}, or {@code CANCELLED},
+     * enqueues an {@link AgentRequest.Kind#NOTICE} in the sending panel's session.
+     *
+     * @param event     the received SSE stream event.
+     * @param directory the directory used to resolve the sending Studio panel.
+     * @return {@code true} when a completion notice was enqueued.
+     */
+    public boolean handlePeerRunStreamEvent(HubClient.BotStreamEvent event, AgentDirectory directory) {
+        if (event == null || !"run".equals(event.type()) || event.runId() == null || directory == null) {
+            return false;
+        }
+        HubAgentEndpoint.SubmittedRun tracked = pendingPeerRuns.get(event.runId());
+        if (tracked == null || tracked.client() == null) {
+            return false;
+        }
+        var summaryOpt = tracked.client().findRun(event.runId());
+        if (summaryOpt.isEmpty()) {
+            return false;
+        }
+        HubClient.BotRunSummary summary = summaryOpt.get();
+        if (!HubAgentEndpoint.isTerminalRunStatus(summary.status())) {
+            return false;
+        }
+        if (!pendingPeerRuns.remove(event.runId(), tracked)) {
+            return false;
+        }
+        AgentLookup lookup = directory.resolve(tracked.senderCallName());
+        if (lookup instanceof AgentLookup.Local local) {
+            String noticeText = HubAgentEndpoint.formatCompletionNotice(
+                    tracked.targetInstanceName(), summary, tracked.client());
+            local.endpoint().accept(AgentRequest.notice(
+                    tracked.targetInstanceName(),
+                    tracked.senderCallName(),
+                    noticeText
+            ));
+            return true;
+        }
+        return false;
     }
 
     private static String formatStreamEventLine(HubClient.BotStreamEvent event) {

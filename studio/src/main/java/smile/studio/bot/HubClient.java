@@ -138,6 +138,14 @@ public final class HubClient {
         }
     }
 
+    /** Result of submitting a peer request to {@code POST /v1/admin/requests}. */
+    public record RequestSubmission(Long runId, String status, String error) {
+        /** Returns true when the Hub accepted the request and returned a run ID. */
+        public boolean accepted() {
+            return error == null && runId != null;
+        }
+    }
+
     private final HttpClient client;
     private final String baseUrl;
     private final String adminToken;
@@ -160,9 +168,22 @@ public final class HubClient {
      * @param adminToken the admin bearer token.
      */
     public HubClient(String host, int port, String adminToken) {
-        String h = (host == null || host.isBlank() || "0.0.0.0".equals(host.trim())) ? "127.0.0.1" : host.trim();
-        this.baseUrl = "http://" + h + ":" + port;
-        this.adminToken = adminToken == null ? "dev-admin-token" : adminToken.trim();
+        this("http://" + ((host == null || host.isBlank() || "0.0.0.0".equals(host.trim())) ? "127.0.0.1" : host.trim()) + ":" + port,
+                adminToken);
+    }
+
+    /**
+     * Constructor targeting an explicit Hub HTTP base URL.
+     *
+     * @param baseUrl    the hub HTTP base URL (e.g. {@code "http://lab:8890"}).
+     * @param adminToken the admin bearer token.
+     */
+    public HubClient(String baseUrl, String adminToken) {
+        String url = (baseUrl == null || baseUrl.isBlank())
+                ? "http://127.0.0.1:8890"
+                : baseUrl.trim().replaceAll("/+$", "");
+        this.baseUrl = url;
+        this.adminToken = adminToken == null || adminToken.isBlank() ? "dev-admin-token" : adminToken.trim();
         this.client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(4))
                 .build();
@@ -295,6 +316,102 @@ public final class HubClient {
      */
     public void cancelRun(long runId) throws IOException, InterruptedException {
         postJson("/v1/admin/runs/" + runId + "/cancel", "{}");
+    }
+
+    /**
+     * Finds a run summary by run ID from the running Hub.
+     *
+     * @param runId the run ID.
+     * @return the matching run summary, if found.
+     */
+    public Optional<BotRunSummary> findRun(long runId) {
+        return listRuns(null, null, 100).stream()
+                .filter(r -> r.id() != null && r.id() == runId)
+                .findFirst();
+    }
+
+    /**
+     * Submits a peer request to {@code POST /v1/admin/requests} on the Agent Hub.
+     *
+     * @param from           sender call-out name (e.g. {@code "frank#studio"}).
+     * @param to             recipient call-out name on the Hub (any {@code #<instance>} fragment is stripped).
+     * @param task           task prompt.
+     * @param artifacts      optional workspace-relative or absolute paths.
+     * @param expiresAt      optional RFC 3339 UTC start-by deadline ending in {@code Z}.
+     * @param idempotencyKey optional client-chosen idempotency key.
+     * @return the submission result with {@code runId} when accepted, or an error message.
+     */
+    public RequestSubmission submitRequest(
+            String from,
+            String to,
+            String task,
+            List<String> artifacts,
+            String expiresAt,
+            String idempotencyKey
+    ) {
+        try {
+            var payload = mapper.createObjectNode();
+            payload.put("from", from == null || from.isBlank() ? "studio" : from.trim());
+            payload.put("to", ioa.agent.AgentNames.baseName(to));
+            payload.put("task", task == null ? "" : task);
+            if (artifacts != null && !artifacts.isEmpty()) {
+                var arr = mapper.createArrayNode();
+                for (String path : artifacts) {
+                    if (path != null) {
+                        arr.add(path);
+                    }
+                }
+                payload.set("artifacts", arr);
+            }
+            if (expiresAt != null && !expiresAt.isBlank()) {
+                payload.put("expires_at", expiresAt.trim());
+            }
+            String body = mapper.writeValueAsString(payload);
+            var builder = HttpRequest.newBuilder(URI.create(baseUrl + "/v1/admin/requests"))
+                    .timeout(Duration.ofSeconds(15))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(body));
+            if (!adminToken.isEmpty()) {
+                builder.header("Authorization", "Bearer " + adminToken);
+            }
+            if (idempotencyKey != null && !idempotencyKey.isBlank()) {
+                builder.header("Idempotency-Key", idempotencyKey.trim());
+            }
+            var response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+            int status = response.statusCode();
+            if (status == 202 || status == 200) {
+                JsonNode root = mapper.readTree(response.body());
+                Long runId = root != null && root.hasNonNull("runId") ? root.get("runId").asLong() : null;
+                String runStatus = text(root, "status");
+                return new RequestSubmission(runId, runStatus.isEmpty() ? "RUNNING" : runStatus, null);
+            }
+            String detail = extractProblemDetail(response.body());
+            if (detail.isEmpty()) {
+                detail = "Agent Hub rejected the request (HTTP " + status + ").";
+            }
+            return new RequestSubmission(null, null, detail);
+        } catch (IOException | InterruptedException ex) {
+            if (ex instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+            }
+            return new RequestSubmission(null, null, "Agent Hub is not running at " + baseUrl + ".");
+        }
+    }
+
+    private static String extractProblemDetail(String body) {
+        if (body == null || body.isBlank()) {
+            return "";
+        }
+        try {
+            JsonNode root = mapper.readTree(body);
+            String detail = text(root, "detail");
+            if (!detail.isBlank()) {
+                return detail;
+            }
+            return text(root, "title");
+        } catch (Exception ex) {
+            return "";
+        }
     }
 
     /**
