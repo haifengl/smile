@@ -317,8 +317,10 @@ curl http://localhost:8080/q/health
 ```
 
 The liveness check never touches model state, so a failed model load does not
-trigger a container restart. The readiness check reports the loaded model
-counts. Use `/q/health/live` for Kubernetes `livenessProbe` and
+trigger a container restart. The readiness check reports DOWN (HTTP 503) until
+at least one model is active, and reports the loaded and active model counts.
+In dynamic-load mode (`smile.serve.allow-empty=true`) it reports UP with an empty
+catalog so clients can reach the load endpoint. Use `/q/health/live` for Kubernetes `livenessProbe` and
 `/q/health/ready` for `readinessProbe`.
 
 **Metrics** (Prometheus text format, via optional metrics plugin):
