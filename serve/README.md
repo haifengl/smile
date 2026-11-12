@@ -13,7 +13,7 @@ that brings together three complementary inference capabilities on the JVM:
 | **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`)                    |
 | **LLM Chat** | `/api/v1/chat` | OpenAI-compatible chat completions |
 | **Models** | `/api/v1/models` | OpenAI-compatible list and retrieve for every loaded model — chat, ONNX, and SMILE |
-| **Metrics** | `/q/metrics` | Prometheus scrape for classic, ONNX, and LLM models |
+| **Metrics** | `/q/metrics` | Prometheus scrape for classic, ONNX, and LLM models (when built with the optional `metrics-prometheus` plugin in `serve/plugins/`) |
 
 A React-based web UI is bundled and served from the same process.
 
@@ -95,8 +95,7 @@ and e.g. `latest-micro` or `7.0.0-native` for the others.
 | `latest-native` | GraalVM native executable, CPU | CPU: ONNX Runtime GenAI packages | yes | 0.4 GB |
 | `latest-micro` | GraalVM native executable, CPU, inference only | none | none | 0.2 GB |
 
-All four serve SMILE (`.sml`) and ONNX models, the web UI, health probes (`/q/health`) and Prometheus metrics
-(`/q/metrics`). The published images use the `local` profile: users and conversation history are kept in an embedded
+All four serve SMILE (`.sml`) and ONNX models, the web UI, and health probes (`/q/health`); builds that include the optional `metrics-prometheus` plugin in `serve/plugins/` also expose Prometheus metrics (`/q/metrics`). The published images use the `local` profile: users and conversation history are kept in an embedded
 H2 database file, `/model/smile_serve`, so mount `/model` read-write if you want them to survive restarts.
 User accounts exist only to scope conversation history and personal settings (optional Google login; automatic
 login on localhost; see [§7.6](#76-conversation-history-api)). The SMILE and ONNX inference endpoints are not
@@ -692,6 +691,9 @@ the corresponding profiles.
 | Property | Default | Description |
 |---|---|---|
 | `quarkus.http.port` | `8080` | HTTP listen port (`%dev` default: `8888`) |
+| `quarkus.http.host` | `0.0.0.0` | HTTP bind address (use `127.0.0.1` for loopback-only) |
+| `quarkus.http.domain-socket-enabled` | `false` | Enable Unix domain socket listener on Linux (`quarkus.vertx.prefer-native-transport=true` is enabled by default) |
+| `quarkus.http.domain-socket` | `/var/run/smile-serve.sock` | Unix domain socket path when `quarkus.http.domain-socket-enabled=true` |
 | `quarkus.rest.path` | `/api/v1` | Global REST path prefix |
 | `smile.serve.model` | `../model` | Path to a `.sml` file or directory of `.sml` files |
 | `smile.onnx.model` | `../model` | Path to a `.onnx` file or directory of `.onnx` files |
@@ -822,6 +824,15 @@ curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1 \
   "prediction": 0,
   "probabilities": [0.960, 0.021, 0.019]
 }
+```
+
+**Unix domain socket example (Linux, when started with `-Dquarkus.http.domain-socket-enabled=true -Dquarkus.http.domain-socket=/var/run/smile-serve.sock`):**
+
+```shell
+curl --unix-socket /var/run/smile-serve.sock \
+  -X POST http://localhost/api/v1/smile/iris_random_forest-1 \
+  -H "Content-Type: application/json" \
+  -d '{"sepallength":5.1,"sepalwidth":3.5,"petallength":1.4,"petalwidth":0.2}'
 ```
 
 **Clustering example (`ClusteringModel`):**
