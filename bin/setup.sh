@@ -18,7 +18,7 @@ else
     # Local machine installation (Installs heavy GPU/CUDA libraries)
     echo "Local environment detected. Proceeding with CUDA installation..."
     sudo apt install -y \
-        cuda-toolkit-13-2 \
+        cuda-toolkit-13-4 \
         libnccl2 \
         libnccl-dev \
         libcusparselt0 \

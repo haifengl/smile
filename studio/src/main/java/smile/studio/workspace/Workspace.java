@@ -41,7 +41,9 @@ import smile.studio.ServeManager;
 import smile.studio.SmileStudio;
 import smile.studio.bot.BotActivity;
 import smile.studio.bot.BotManager;
+import smile.studio.bot.HubAgentEndpoint;
 import smile.studio.bot.HubManager;
+import smile.studio.StudioConfig;
 import smile.studio.agent.AgentPanel;
 import smile.studio.notebook.Notebook;
 import smile.studio.text.Notepad;
@@ -256,6 +258,13 @@ public class Workspace extends JSplitPane {
                     openAgent(agent, agentPanel(agent));
                 }
             }
+            HubAgentEndpoint.registerAll(
+                    ioa.agent.LocalAgentDirectory.shared(),
+                    entries.stream().map(ioa.agent.AgentCatalog.Entry::spec).toList(),
+                    HubManager.getInstance()::client,
+                    StudioConfig.instances(),
+                    HubManager.getInstance()::trackSubmittedRun
+            );
         } catch (Exception ex) {
             logger.error("Failed to load the agent catalog: {}", ex.getMessage());
         }

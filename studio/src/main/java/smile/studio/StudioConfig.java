@@ -21,8 +21,13 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import ioa.agent.AgentNames;
 import ioa.agent.email.SharedSecrets;
 import photos.sluice.secrets.SecretHolding;
 import photos.sluice.secrets.SecretId;
@@ -136,6 +141,30 @@ public final class StudioConfig {
      * @param keepAliveOnExit whether to leave the local Agent Hub running when Studio closes.
      */
     public record AgentHub(boolean autoStart, String host, int port, String adminToken, boolean keepAliveOnExit) {
+    }
+
+    /**
+     * A named Agent Hub instance configured in {@code studio.json}'s {@code instances}
+     * map (for example {@code "instances": { "lab-server": "http://lab:8890" }}).
+     *
+     * @param label      concrete instance label (lowercase {@code [a-z][a-z0-9-]{0,31}}, not reserved).
+     * @param baseUrl    Hub HTTP base URL without a trailing slash.
+     * @param adminToken bearer token for this instance (from {@link SecretStore} or fallback).
+     */
+    public record HubInstance(String label, String baseUrl, String adminToken) {
+    }
+
+    /**
+     * Returns the {@link SecretId} used to store the admin bearer token for a
+     * named Hub instance in {@link SecretStore}.
+     *
+     * @param label the instance label (e.g. {@code "lab-server"}).
+     * @return the secret identifier.
+     */
+    public static SecretId instanceAdminTokenSecret(String label) {
+        String clean = label == null ? "" : label.trim().toLowerCase(Locale.ROOT);
+        String envKey = "SMILE_HUB_ADMIN_TOKEN_" + clean.toUpperCase(Locale.ROOT).replace('-', '_');
+        return new SecretId("agent-hub." + clean, envKey);
     }
 
     /**
@@ -461,6 +490,155 @@ public final class StudioConfig {
             }
         } catch (IllegalArgumentException | SecretStoreException ex) {
             logger.warn("Failed to save Agent Hub admin token in SecretStore: {}", ex.getMessage());
+        }
+    }
+
+    /**
+     * Returns the configured named Agent Hub instances from {@code studio.json}'s
+     * {@code instances} map, resolving per-instance admin tokens from {@link SharedSecrets#store()}.
+     *
+     * @return an unmodifiable map from instance label to {@link HubInstance}.
+     */
+    public static Map<String, HubInstance> instances() {
+        return instances(SharedSecrets.store());
+    }
+
+    /**
+     * Returns the configured named Agent Hub instances from {@code studio.json}'s
+     * {@code instances} map using the provided {@link SecretStore}.
+     *
+     * @param secrets the secret store to resolve instance admin tokens from.
+     * @return an unmodifiable map from instance label to {@link HubInstance}.
+     */
+    public static Map<String, HubInstance> instances(SecretStore secrets) {
+        Path path = resolve();
+        if (path == null) {
+            return Map.of();
+        }
+        try {
+            return parseInstances(path, secrets);
+        } catch (IOException ex) {
+            logger.error("Failed to read instances from {}: {}", path, ex.getMessage());
+            return Map.of();
+        }
+    }
+
+    /**
+     * Parses the {@code instances} object from the given {@code studio.json} path.
+     *
+     * @param path the configuration file.
+     * @return an unmodifiable map from instance label to {@link HubInstance}.
+     * @throws IOException if the file cannot be read or parsed.
+     */
+    public static Map<String, HubInstance> parseInstances(Path path) throws IOException {
+        return parseInstances(path, null);
+    }
+
+    /**
+     * Parses the {@code instances} object from the given {@code studio.json} path and
+     * resolves per-instance admin tokens from {@code secrets} (falling back to the
+     * primary {@link #parseAgentHub(Path, SecretStore)} admin token when unset).
+     * Reserved labels ({@code hub}, {@code local}, {@code self}) and invalid labels
+     * are ignored.
+     *
+     * @param path    the configuration file.
+     * @param secrets optional secret store for resolving per-instance tokens.
+     * @return an unmodifiable map from instance label to {@link HubInstance}.
+     * @throws IOException if the file cannot be read or parsed.
+     */
+    public static Map<String, HubInstance> parseInstances(Path path, SecretStore secrets) throws IOException {
+        JsonNode root = mapper.readTree(path.toFile());
+        JsonNode node = root.get("instances");
+        if (node == null || !node.isObject()) {
+            return Map.of();
+        }
+        String fallbackToken = parseAgentHub(path, secrets).adminToken();
+        Map<String, HubInstance> result = new LinkedHashMap<>();
+        for (var entry : node.properties()) {
+            String label = entry.getKey() == null ? "" : entry.getKey().trim();
+            if (!AgentNames.isInstanceLabel(label)) {
+                logger.warn("Ignoring invalid or reserved instance label '{}' in {}", label, path);
+                continue;
+            }
+            JsonNode val = entry.getValue();
+            String rawUrl = "";
+            String inlineToken = "";
+            if (val != null && val.isString()) {
+                rawUrl = val.asString().trim();
+            } else if (val != null && val.isObject()) {
+                if (val.has("url") && val.get("url").isString()) {
+                    rawUrl = val.get("url").asString().trim();
+                } else if (val.has("baseUrl") && val.get("baseUrl").isString()) {
+                    rawUrl = val.get("baseUrl").asString().trim();
+                }
+                if (val.has("adminToken") && val.get("adminToken").isString()) {
+                    inlineToken = val.get("adminToken").asString().trim();
+                }
+            }
+            if (rawUrl.isEmpty()) {
+                continue;
+            }
+            String baseUrl = rawUrl.replaceAll("/+$", "");
+            Optional<String> fromSecrets = readInstanceTokenSecret(secrets, label);
+            if (fromSecrets.isEmpty() && !inlineToken.isEmpty() && secrets != null) {
+                saveInstanceTokenSecret(secrets, label, inlineToken);
+                fromSecrets = Optional.of(inlineToken);
+            }
+            String token = fromSecrets.filter(s -> !s.isBlank())
+                    .orElse(!inlineToken.isEmpty() ? inlineToken : fallbackToken);
+            result.put(label, new HubInstance(label, baseUrl, token));
+        }
+        return Collections.unmodifiableMap(result);
+    }
+
+    /**
+     * Reads the stored admin token for a named Hub instance from {@link SecretStore}.
+     *
+     * @param secrets the secret store.
+     * @param label   the instance label.
+     * @return the stored token, if present.
+     */
+    public static Optional<String> readInstanceTokenSecret(SecretStore secrets, String label) {
+        if (secrets == null || label == null || label.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            return secrets.secret(instanceAdminTokenSecret(label))
+                    .map(String::strip)
+                    .filter(s -> !s.isEmpty());
+        } catch (SecretStoreException ex) {
+            logger.debug("Could not read Hub instance '{}' token from SecretStore: {}", label, ex.getMessage());
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Saves the admin token for a named Hub instance in {@link SecretStore}.
+     *
+     * @param secrets the secret store.
+     * @param label   the instance label.
+     * @param token   the bearer token to store.
+     */
+    public static void saveInstanceTokenSecret(SecretStore secrets, String label, String token) {
+        if (secrets == null || label == null || label.isBlank()) {
+            return;
+        }
+        String stripped = token == null ? "" : token.strip();
+        SecretId id = instanceAdminTokenSecret(label);
+        try {
+            if (stripped.isEmpty()) {
+                boolean hasStored = secrets.holdings(id).stream()
+                        .anyMatch(h -> h.location() instanceof SecretStatus.StoredLocation
+                                && h.holding() == SecretHolding.Holding.HOLDS);
+                if (hasStored) {
+                    secrets.remove(id);
+                }
+            } else if (stripped.length() <= SecretStore.maxSecret()
+                    && secrets.whereASaveWouldStoreIt().isPresent()) {
+                secrets.save(id, stripped);
+            }
+        } catch (IllegalArgumentException | SecretStoreException ex) {
+            logger.warn("Failed to save Hub instance '{}' token in SecretStore: {}", label, ex.getMessage());
         }
     }
 

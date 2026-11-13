@@ -21,7 +21,7 @@
 # This Dockerfile builds a GPU-enabled container that runs the Quarkus
 # smile-serve application in JVM mode on NVIDIA CUDA.
 #
-# Base image: nvidia/cuda:13.2.0-*-ubuntu24.04 (Ubuntu 24.04 + CUDA 13.2)
+# Base image: nvidia/cuda:13.4.0-*-ubuntu24.04 (Ubuntu 24.04 + CUDA 13.4)
 #
 # IMPORTANT: build context must be the repository root (not serve/). The image is built entirely in Docker: one
 # stage compiles the Quarkus JVM app with Gradle, another compiles the CUDA libsmile_torch.so, and no host-side
@@ -58,9 +58,9 @@
 ###
 # Only used for its JDK 25 and package manager to build the Quarkus app; no GraalVM native build happens here.
 ARG MANDREL_BUILDER=quay.io/quarkus/ubi10-quarkus-mandrel-builder-image:jdk-25
-ARG CUDA_VERSION=13.2.0
-ARG TORCH_VERSION=2.14.1
-ARG CU_VERSION=132
+ARG CUDA_VERSION=13.4.0
+ARG TORCH_VERSION=2.15.0
+ARG CU_VERSION=134
 
 # -----------------------------------------------------------------------------
 # Stage 0: build the Quarkus JVM app (serve/build/quarkus-app) with the selected profile
@@ -131,10 +131,8 @@ RUN test -d /src/smile_torch/third_party/flashinfer/include/flashinfer \
 # Bundle flashinfer-jit-cache AOT modules (open attention kernels; not cubin).
 # Note: do not use shell heredocs in RUN — classic Dockerfile parsers end the
 # instruction at <<'PY' and then treat the following "&&" as an unknown opcode.
-ARG FLASHINFER_JIT_CACHE_VERSION=0.6.6
-# LibTorch may be cu132, but FlashInfer only publishes jit-cache through cu130
-# for v0.6.6 (cu128/cu129/cu130). Do not derive this from CU_VERSION.
-ARG FLASHINFER_JIT_CACHE_CU=cu130
+ARG FLASHINFER_JIT_CACHE_VERSION=0.6.18.post1
+ARG FLASHINFER_JIT_CACHE_CU=cu${CU_VERSION}
 RUN mkdir -p /opt/flashinfer/aot \
     && (curl -fsSL --retry 5 --retry-delay 10 -o /tmp/fi_jit.whl \
         "https://github.com/flashinfer-ai/flashinfer/releases/download/v${FLASHINFER_JIT_CACHE_VERSION}/flashinfer_jit_cache-${FLASHINFER_JIT_CACHE_VERSION}%2B${FLASHINFER_JIT_CACHE_CU}-cp39-abi3-manylinux_2_28_x86_64.whl" \
@@ -174,7 +172,7 @@ RUN mkdir -p /opt/flashinfer/aot \
 # -----------------------------------------------------------------------------
 FROM nvidia/cuda:${CUDA_VERSION}-runtime-ubuntu24.04 AS genai-builder
 
-ARG GENAI_VERSION=
+ARG GENAI_VERSION=0.19.0
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -206,7 +204,7 @@ LABEL org.opencontainers.image.title="SMILE Serve (GPU)" \
 
 ARG TORCH_VERSION
 ARG CU_VERSION
-ARG ORT_VERSION=1.30.0
+ARG ORT_VERSION=1.31.1
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \
@@ -226,7 +224,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libcusparselt0 \
         libcudnn9-cuda-13 \
         libnvshmem3-cuda-13 \
-        cuda-cupti-13-2 \
+        cuda-cupti-13-4 \
         openjdk-25-jre-headless \
         tar \
         unzip \

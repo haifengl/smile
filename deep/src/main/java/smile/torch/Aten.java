@@ -80,7 +80,22 @@ public final class Aten {
                 ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT));
 
         private static MethodHandle h(String name, FunctionDescriptor d) {
-            return L.downcallHandle(smile_torch_h.SYMBOL_LOOKUP.findOrThrow(name), d);
+            return smile_torch_h.SYMBOL_LOOKUP.find(name)
+                    .map(s -> L.downcallHandle(s, d))
+                    .orElse(null);
+        }
+    }
+
+    /**
+     * Returns true if the ATen dispatcher entry points are present in {@code smile_torch}.
+     *
+     * @return true if {@link #call(String, Object...)} is supported by the loaded native library.
+     */
+    public static boolean isAvailable() {
+        try {
+            return B.CALL != null;
+        } catch (Throwable t) {
+            return false;
         }
     }
 
@@ -95,6 +110,9 @@ public final class Aten {
      * @return the tensor outputs.
      */
     public static Tensor[] call(String op, Object... args) {
+        if (B.CALL == null) {
+            throw new UnsupportedOperationException("smile_aten_call is not available in this build of smile_torch");
+        }
         int dot = op.indexOf('.');
         String name = dot < 0 ? op : op.substring(0, dot);
         String overload = dot < 0 ? "" : op.substring(dot + 1);

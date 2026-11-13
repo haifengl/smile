@@ -51,29 +51,48 @@ ARG RUNTIME_BASE=registry.access.redhat.com/ubi10/ubi-minimal:10.0
 # -----------------------------------------------------------------------------
 FROM ${MANDREL_BUILDER} AS builder
 
-ARG ORT_VERSION=1.30.0
+ARG ORT_VERSION=1.31.1
 ARG NODE_VERSION=24.11.0
-ARG GENAI_VERSION=0.17.0
-ARG GENAI_SHA256=482a17113556ff76c53820b801f391cdcbaac0b6c4089065182683c03fdbc8d9
+ARG GENAI_VERSION=0.19.0
+# Per-architecture checksums: the x64 and arm64 GenAI tarballs are different files.
+ARG GENAI_SHA256_X64=cc4efa65d90fa43104519cd6a67e321a85645a238c5cfcabf42a128b274083c0
+ARG GENAI_SHA256_ARM64=871562cb62d0a1b6c830ee433215cc33a266d3dfec4538b9da9ac55d7816d486
 ARG QUARKUS_PROFILE=local
 ARG GRADLE_ARGS=""
 
+# Target architecture. BuildKit supplies TARGETARCH from --platform; the shell fallback keeps a legacy
+# (non-BuildKit) `docker build` on the historical amd64 behaviour. The native executable has to be built
+# *on* the target architecture: GraalVM cannot cross-compile.
+ARG TARGETARCH
+
 USER root
+
+# Upstream artifact names differ per architecture and not consistently: ONNX Runtime uses
+# x64/aarch64, Node.js and ORT GenAI use x64/arm64. Resolve each once so the URLs below stay plain.
+RUN ARCH="${TARGETARCH:-amd64}"; case "$ARCH" in \
+      amd64) echo x64 > /tmp/ort_arch; echo x64 > /tmp/node_arch; echo x64 > /tmp/genai_arch; \
+             echo "${GENAI_SHA256_X64}" > /tmp/genai_sha256 ;; \
+      arm64) echo aarch64 > /tmp/ort_arch; echo arm64 > /tmp/node_arch; echo arm64 > /tmp/genai_arch; \
+             echo "${GENAI_SHA256_ARM64}" > /tmp/genai_sha256 ;; \
+      *) echo "unsupported TARGETARCH=${ARCH}" >&2; exit 1 ;; \
+    esac
 
 # Archive tools. Node.js is needed by Quinoa for the web UI.
 RUN microdnf install -y gzip tar xz findutils && microdnf clean all
-RUN curl -fsSL --retry 5 --retry-delay 10 "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
+RUN curl -fsSL --retry 5 --retry-delay 10 "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-$(cat /tmp/node_arch).tar.xz" \
     | tar -xJ -C /usr/local --strip-components=1
 
 # ONNX Runtime (libs copied to the runtime stage)
-RUN curl -fsSL --retry 5 --retry-delay 10 "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz" \
+RUN ORT_ARCH=$(cat /tmp/ort_arch); \
+    curl -fsSL --retry 5 --retry-delay 10 "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-${ORT_ARCH}-${ORT_VERSION}.tgz" \
     | tar -zx -C /usr/local/ \
-    && mv /usr/local/onnxruntime-linux-x64-${ORT_VERSION} /usr/local/onnxruntime
+    && mv /usr/local/onnxruntime-linux-${ORT_ARCH}-${ORT_VERSION} /usr/local/onnxruntime
 
 # ONNX Runtime GenAI (libonnxruntime-genai.so): the CPU chat path. Without CUDA the chat engine loads
 # pre-converted GenAI (ONNX) packages through it.
-RUN curl -fsSL --retry 5 --retry-delay 10 -o /tmp/genai.tgz \
-        "https://github.com/microsoft/onnxruntime-genai/releases/download/v${GENAI_VERSION}/onnxruntime-genai-${GENAI_VERSION}-linux-x64.tar.gz" \
+RUN GENAI_SHA256=$(cat /tmp/genai_sha256); \
+    curl -fsSL --retry 5 --retry-delay 10 -o /tmp/genai.tgz \
+        "https://github.com/microsoft/onnxruntime-genai/releases/download/v${GENAI_VERSION}/onnxruntime-genai-${GENAI_VERSION}-linux-$(cat /tmp/genai_arch).tar.gz" \
     && echo "${GENAI_SHA256}  /tmp/genai.tgz" | sha256sum -c - \
     && mkdir -p /usr/local/onnxruntime-genai \
     && tar -zx -C /usr/local/onnxruntime-genai --strip-components=1 -f /tmp/genai.tgz \

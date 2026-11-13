@@ -13,7 +13,7 @@ that brings together three complementary inference capabilities on the JVM:
 | **ONNX Runtime** | `/api/v1/onnx` | Any model in the ONNX open format (`.onnx`)                    |
 | **LLM Chat** | `/api/v1/chat` | OpenAI-compatible chat completions |
 | **Models** | `/api/v1/models` | OpenAI-compatible list and retrieve for every loaded model — chat, ONNX, and SMILE |
-| **Metrics** | `/q/metrics` | Prometheus scrape for classic, ONNX, and LLM models |
+| **Metrics** | `/q/metrics` | Prometheus scrape for classic, ONNX, and LLM models (when built with the optional `metrics-prometheus` plugin in `serve/plugins/`) |
 
 A React-based web UI is bundled and served from the same process.
 
@@ -95,8 +95,7 @@ and e.g. `latest-micro` or `7.0.0-native` for the others.
 | `latest-native` | GraalVM native executable, CPU | CPU: ONNX Runtime GenAI packages | yes | 0.4 GB |
 | `latest-micro` | GraalVM native executable, CPU, inference only | none | none | 0.2 GB |
 
-All four serve SMILE (`.sml`) and ONNX models, the web UI, health probes (`/q/health`) and Prometheus metrics
-(`/q/metrics`). The published images use the `local` profile: users and conversation history are kept in an embedded
+All four serve SMILE (`.sml`) and ONNX models, the web UI, and health probes (`/q/health`); builds that include the optional `metrics-prometheus` plugin in `serve/plugins/` also expose Prometheus metrics (`/q/metrics`). The published images use the `local` profile: users and conversation history are kept in an embedded
 H2 database file, `/model/smile_serve`, so mount `/model` read-write if you want them to survive restarts.
 User accounts exist only to scope conversation history and personal settings (optional Google login; automatic
 login on localhost; see [§7.6](#76-conversation-history-api)). The SMILE and ONNX inference endpoints are not
@@ -109,7 +108,8 @@ models (a random forest, LDA and a small ONNX model), after startup had settled;
 | Idle memory | ~80 MiB | ~115 MiB | ~600 MiB | |
 | With a chat model loaded | n/a | 8 s, 3 GiB (Phi-4-mini, 4.6 GB package) | 11 s, 3.5 GiB (same) | 15 s, ~34 GiB of GPU memory (Llama-3.1-8B-Instruct, BF16, one GPU) |
 | S3 blob storage plugin | no | no | no | yes |
-| Needs | x86-64-v3 CPU | x86-64-v3 CPU | any x86-64 CPU | NVIDIA GPU, driver for CUDA 13.2, NVIDIA Container Toolkit |
+| Platforms | `linux/amd64`, `linux/arm64` | `linux/amd64`, `linux/arm64` | `linux/amd64`, `linux/arm64` | NVIDIA GPU, driver for CUDA 13.4, NVIDIA Container Toolkit (`linux/amd64` only) |
+| Native CPU baseline | x86-64-v3 (AVX2) on amd64; armv8-a on arm64 | same | any x86-64 or arm64 CPU | — |
 
 **`latest-micro`: inference only.** The smallest and fastest to start. It serves SMILE and ONNX models and the
 inference pages of the web UI; there is no chat, no user accounts or conversation history, and no database, so the
@@ -122,18 +122,22 @@ sidecars, serverless or scale-to-zero platforms, and fleets of many small replic
 and for CPU-only machines.
 
 **`latest`: the JVM image.** The same features as `latest-native` on a conventional JVM: JIT-compiled, runs on any
-x86-64 CPU, usable with the usual JVM tooling. It uses far more memory (it sizes its heap to 80% of the container limit,
+x86-64 or arm64 CPU, usable with the usual JVM tooling. It uses far more memory (it sizes its heap to 80% of the container limit,
 so set a memory limit) and takes a few seconds to start. It is the image to pick for small ONNX Runtime GenAI models on
 CPU, for example embeddings, when the CPU does not support the native executables or you prefer a JVM deployment.
 
 **`latest-gpu`: LLM serving on NVIDIA GPUs.** Runs the LibTorch/CUDA engine for Llama and Qwen checkpoints with CUDA
 graphs, FlashInfer attention and tensor parallelism, plus everything the JVM image does. It needs an NVIDIA GPU, a driver
-that supports CUDA 13.2 and the NVIDIA Container Toolkit (`docker run --gpus all`). GPU memory is set by the model: for
+that supports CUDA 13.4 and the NVIDIA Container Toolkit (`docker run --gpus all`). GPU memory is set by the model: for
 example Qwen 27B in BF16 needs two 40 GB GPUs. The image is large (about 16 GB) and startup is dominated by loading the
 model. See [§1.2](#12-gpu-build--run).
 
-Notes for all CPU images: they are `linux/amd64` only, and the native executables are compiled for x86-64-v3 (AVX2), so
-they do not run on CPUs without AVX2 (before Intel Haswell, 2013); use the JVM image there.
+Notes for the CPU images: `latest`, `latest-native` and `latest-micro` are published for both
+`linux/amd64` and `linux/arm64`; the GPU image is `linux/amd64` only. On amd64 the native executables
+are compiled for x86-64-v3 (AVX2), so they do not run on CPUs without AVX2 (before Intel Haswell,
+2013); use the JVM image there. On arm64 they target the armv8-a baseline and run on any 64-bit ARM
+Linux CPU with glibc. To build one architecture directly, pass `--platform` (and, for the native
+images, run the build on a machine of that architecture, since GraalVM does not cross-compile).
 
 ### 1.2 GPU Build & Run
 
@@ -317,8 +321,10 @@ curl http://localhost:8080/q/health
 ```
 
 The liveness check never touches model state, so a failed model load does not
-trigger a container restart. The readiness check reports the loaded model
-counts. Use `/q/health/live` for Kubernetes `livenessProbe` and
+trigger a container restart. The readiness check reports DOWN (HTTP 503) until
+at least one model is active, and reports the loaded and active model counts.
+In dynamic-load mode (`smile.serve.allow-empty=true`) it reports UP with an empty
+catalog so clients can reach the load endpoint. Use `/q/health/live` for Kubernetes `livenessProbe` and
 `/q/health/ready` for `readinessProbe`.
 
 **Metrics** (Prometheus text format, via optional metrics plugin):
@@ -685,6 +691,9 @@ the corresponding profiles.
 | Property | Default | Description |
 |---|---|---|
 | `quarkus.http.port` | `8080` | HTTP listen port (`%dev` default: `8888`) |
+| `quarkus.http.host` | `0.0.0.0` | HTTP bind address (use `127.0.0.1` for loopback-only) |
+| `quarkus.http.domain-socket-enabled` | `false` | Enable Unix domain socket listener on Linux (`quarkus.vertx.prefer-native-transport=true` is enabled by default) |
+| `quarkus.http.domain-socket` | `/var/run/smile-serve.sock` | Unix domain socket path when `quarkus.http.domain-socket-enabled=true` |
 | `quarkus.rest.path` | `/api/v1` | Global REST path prefix |
 | `smile.serve.model` | `../model` | Path to a `.sml` file or directory of `.sml` files |
 | `smile.onnx.model` | `../model` | Path to a `.onnx` file or directory of `.onnx` files |
@@ -815,6 +824,15 @@ curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1 \
   "prediction": 0,
   "probabilities": [0.960, 0.021, 0.019]
 }
+```
+
+**Unix domain socket example (Linux, when started with `-Dquarkus.http.domain-socket-enabled=true -Dquarkus.http.domain-socket=/var/run/smile-serve.sock`):**
+
+```shell
+curl --unix-socket /var/run/smile-serve.sock \
+  -X POST http://localhost/api/v1/smile/iris_random_forest-1 \
+  -H "Content-Type: application/json" \
+  -d '{"sepallength":5.1,"sepalwidth":3.5,"petallength":1.4,"petalwidth":0.2}'
 ```
 
 **Clustering example (`ClusteringModel`):**
