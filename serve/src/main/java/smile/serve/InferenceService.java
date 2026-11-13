@@ -67,17 +67,33 @@ public class InferenceService implements OpenAiModelContributor {
     private final Map<String, Path> modelPaths = Collections.synchronizedMap(new TreeMap<>());
     /** Registers/removes telemetry meters as models load and unload. */
     private final List<ModelMetricsBinder> metricsBinders;
+    /** Observes inference executions and model lifecycle events. */
+    private final List<InferenceListener> listeners;
+
+    /**
+     * Loads ML models upon application start.
+     *
+     * @param config         the service configuration.
+     * @param metricsBinders telemetry meter binders discovered on the classpath.
+     */
+    public InferenceService(InferenceServiceConfig config, List<ModelMetricsBinder> metricsBinders) {
+        this(config, metricsBinders, List.of());
+    }
 
     /**
      * Loads ML models upon application start.
      * The {@code @ApplicationScoped} scope ensures the models are loaded once and reused.
      *
-     * @param config the service configuration.
+     * @param config         the service configuration.
      * @param metricsBinders telemetry meter binders discovered on the classpath.
+     * @param listeners      inference and lifecycle listeners discovered on the classpath.
      */
     @Inject
-    public InferenceService(InferenceServiceConfig config, @All List<ModelMetricsBinder> metricsBinders) {
+    public InferenceService(InferenceServiceConfig config,
+                            @All List<ModelMetricsBinder> metricsBinders,
+                            @All List<InferenceListener> listeners) {
         this.metricsBinders = metricsBinders == null ? List.of() : List.copyOf(metricsBinders);
+        this.listeners = listeners == null ? List.of() : List.copyOf(listeners);
         var path = Path.of(config.model()).toAbsolutePath().normalize();
         if (Files.isRegularFile(path)) {
             loadModel(path);
@@ -107,6 +123,11 @@ public class InferenceService implements OpenAiModelContributor {
                 models.put(model.id(), model);
                 modelPaths.put(model.id(), path);
                 metricsBinders.forEach(b -> b.register(ModelMetricsBinder.SMILE_NAMESPACE, model.id(), model.metrics()));
+                notifyListeners(InferenceEvent.lifecycle(
+                        ModelMetricsBinder.SMILE_NAMESPACE,
+                        model.id(),
+                        InferenceEvent.Action.MODEL_LOADED,
+                        path.toString()));
                 logger.infof("Model '%s' loaded successfully", model.id());
             } else {
                 logger.errorf("'%s' does not contain a valid SMILE model (got %s)",
@@ -244,7 +265,43 @@ public class InferenceService implements OpenAiModelContributor {
      */
     public Prediction predict(String modelId, JsonObject request, boolean explain, KernelSHAP.Options shapOptions)
             throws BadRequestException, NotFoundException {
-        return getModel(modelId).predict(request, explain, shapOptions);
+        long start = System.nanoTime();
+        Prediction prediction = getModel(modelId).predict(request, explain, shapOptions);
+        if (!listeners.isEmpty()) {
+            notifyListeners(InferenceEvent.smilePredict(
+                    modelId,
+                    InferenceEvent.Action.PREDICT,
+                    request != null ? request.encode() : null,
+                    prediction,
+                    System.nanoTime() - start,
+                    explain));
+        }
+        return prediction;
+    }
+
+    /**
+     * Notifies registered {@link InferenceListener} plugins of an event.
+     *
+     * @param event the event to publish.
+     */
+    void notifyListeners(InferenceEvent event) {
+        for (InferenceListener listener : listeners) {
+            try {
+                listener.onEvent(event);
+            } catch (Throwable ex) {
+                logger.warnf(ex, "InferenceListener '%s' threw an exception on %s",
+                        listener.getClass().getName(), event.action());
+            }
+        }
+    }
+
+    /**
+     * Returns true if at least one {@link InferenceListener} is registered.
+     *
+     * @return true when listeners are present.
+     */
+    boolean hasListeners() {
+        return !listeners.isEmpty();
     }
 
     /**
@@ -258,10 +315,18 @@ public class InferenceService implements OpenAiModelContributor {
      */
     public void update(String modelId, JsonObject request, boolean persist)
             throws BadRequestException, NotFoundException {
+        long start = System.nanoTime();
         InferenceModel model = getModel(modelId);
         model.update(request);
         if (persist) {
             model.persist();
+        }
+        if (!listeners.isEmpty()) {
+            notifyListeners(InferenceEvent.onlineUpdate(
+                    modelId,
+                    request != null ? request.encode() : null,
+                    persist,
+                    System.nanoTime() - start));
         }
     }
 
@@ -296,6 +361,11 @@ public class InferenceService implements OpenAiModelContributor {
                     b.unregister(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id());
                     b.register(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id(), reloaded.metrics());
                 });
+                notifyListeners(InferenceEvent.lifecycle(
+                        ModelMetricsBinder.SMILE_NAMESPACE,
+                        reloaded.id(),
+                        InferenceEvent.Action.MODEL_RELOADED,
+                        path.toString()));
                 logger.infof("Model '%s' reloaded successfully", reloaded.id());
                 return reloaded;
             } else {
@@ -320,6 +390,11 @@ public class InferenceService implements OpenAiModelContributor {
         boolean drained = existing.unload(graceTimeout);
         models.remove(id);
         metricsBinders.forEach(b -> b.unregister(ModelMetricsBinder.SMILE_NAMESPACE, id));
+        notifyListeners(InferenceEvent.lifecycle(
+                ModelMetricsBinder.SMILE_NAMESPACE,
+                id,
+                InferenceEvent.Action.MODEL_UNLOADED,
+                "{\"drained\":" + drained + "}"));
         logger.infof("Model '%s' unloaded (drained in-flight: %s)", id, drained);
         return drained;
     }
@@ -378,6 +453,11 @@ public class InferenceService implements OpenAiModelContributor {
             models.put(model.id(), model);
             modelPaths.put(model.id(), model.path());
             metricsBinders.forEach(b -> b.register(ModelMetricsBinder.SMILE_NAMESPACE, model.id(), model.metrics()));
+            notifyListeners(InferenceEvent.lifecycle(
+                    ModelMetricsBinder.SMILE_NAMESPACE,
+                    model.id(),
+                    InferenceEvent.Action.MODEL_LOADED,
+                    model.path().toString()));
             logger.infof("Dynamically loaded model '%s' from '%s'", model.id(), model.path());
         }
         return loaded;

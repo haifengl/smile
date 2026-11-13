@@ -67,16 +67,32 @@ public class OnnxService implements OpenAiModelContributor {
     private final Map<String, Path> modelPaths = Collections.synchronizedMap(new TreeMap<>());
     /** Registers/removes telemetry meters as models load and unload. */
     private final List<ModelMetricsBinder> metricsBinders;
+    /** Observes inference executions and model lifecycle events. */
+    private final List<InferenceListener> listeners;
 
     /**
      * Loads ONNX models upon application start.
      *
-     * @param config the ONNX service configuration.
+     * @param config         the ONNX service configuration.
      * @param metricsBinders telemetry meter binders discovered on the classpath.
      */
+    public OnnxService(OnnxServiceConfig config, List<ModelMetricsBinder> metricsBinders) {
+        this(config, metricsBinders, List.of());
+    }
+
+    /**
+     * Loads ONNX models upon application start.
+     *
+     * @param config         the ONNX service configuration.
+     * @param metricsBinders telemetry meter binders discovered on the classpath.
+     * @param listeners      inference and lifecycle listeners discovered on the classpath.
+     */
     @Inject
-    public OnnxService(OnnxServiceConfig config, @All List<ModelMetricsBinder> metricsBinders) {
+    public OnnxService(OnnxServiceConfig config,
+                       @All List<ModelMetricsBinder> metricsBinders,
+                       @All List<InferenceListener> listeners) {
         this.metricsBinders = metricsBinders == null ? List.of() : List.copyOf(metricsBinders);
+        this.listeners = listeners == null ? List.of() : List.copyOf(listeners);
         var path = Path.of(config.model()).toAbsolutePath().normalize();
         if (Files.isRegularFile(path) && path.toString().endsWith(".onnx")) {
             loadModel(path);
@@ -106,6 +122,11 @@ public class OnnxService implements OpenAiModelContributor {
             models.put(id, model);
             modelPaths.put(id, path);
             metricsBinders.forEach(b -> b.register(ModelMetricsBinder.ONNX_NAMESPACE, id, model.metrics()));
+            notifyListeners(InferenceEvent.lifecycle(
+                    ModelMetricsBinder.ONNX_NAMESPACE,
+                    id,
+                    InferenceEvent.Action.MODEL_LOADED,
+                    path.toString()));
             logger.infof("ONNX model '%s' loaded successfully (inputs=%s, outputs=%s)",
                     id, session.inputNames(), session.outputNames());
         } catch (Throwable ex) {
@@ -214,7 +235,42 @@ public class OnnxService implements OpenAiModelContributor {
      */
     public JsonObject predict(String modelId, JsonObject request)
             throws BadRequestException, NotFoundException {
-        return getModel(modelId).predict(request);
+        long start = System.nanoTime();
+        JsonObject result = getModel(modelId).predict(request);
+        if (!listeners.isEmpty()) {
+            notifyListeners(InferenceEvent.onnxPredict(
+                    modelId,
+                    InferenceEvent.Action.PREDICT,
+                    request != null ? request.encode() : null,
+                    result != null ? result.encode() : null,
+                    System.nanoTime() - start));
+        }
+        return result;
+    }
+
+    /**
+     * Notifies registered {@link InferenceListener} plugins of an event.
+     *
+     * @param event the event to publish.
+     */
+    void notifyListeners(InferenceEvent event) {
+        for (InferenceListener listener : listeners) {
+            try {
+                listener.onEvent(event);
+            } catch (Throwable ex) {
+                logger.warnf(ex, "InferenceListener '%s' threw an exception on %s",
+                        listener.getClass().getName(), event.action());
+            }
+        }
+    }
+
+    /**
+     * Returns true if at least one {@link InferenceListener} is registered.
+     *
+     * @return true when listeners are present.
+     */
+    boolean hasListeners() {
+        return !listeners.isEmpty();
     }
 
     /**
@@ -247,6 +303,11 @@ public class OnnxService implements OpenAiModelContributor {
                 b.unregister(ModelMetricsBinder.ONNX_NAMESPACE, id);
                 b.register(ModelMetricsBinder.ONNX_NAMESPACE, id, reloaded.metrics());
             });
+            notifyListeners(InferenceEvent.lifecycle(
+                    ModelMetricsBinder.ONNX_NAMESPACE,
+                    id,
+                    InferenceEvent.Action.MODEL_RELOADED,
+                    path.toString()));
             if (old != null) {
                 old.close();
             }
@@ -271,6 +332,11 @@ public class OnnxService implements OpenAiModelContributor {
         boolean drained = existing.unload(graceTimeout);
         models.remove(id);
         metricsBinders.forEach(b -> b.unregister(ModelMetricsBinder.ONNX_NAMESPACE, id));
+        notifyListeners(InferenceEvent.lifecycle(
+                ModelMetricsBinder.ONNX_NAMESPACE,
+                id,
+                InferenceEvent.Action.MODEL_UNLOADED,
+                "{\"drained\":" + drained + "}"));
         logger.infof("ONNX model '%s' unloaded (drained in-flight: %s)", id, drained);
         return drained;
     }
@@ -333,6 +399,11 @@ public class OnnxService implements OpenAiModelContributor {
             models.put(model.id(), model);
             modelPaths.put(model.id(), model.path());
             metricsBinders.forEach(b -> b.register(ModelMetricsBinder.ONNX_NAMESPACE, model.id(), model.metrics()));
+            notifyListeners(InferenceEvent.lifecycle(
+                    ModelMetricsBinder.ONNX_NAMESPACE,
+                    model.id(),
+                    InferenceEvent.Action.MODEL_LOADED,
+                    model.path().toString()));
             logger.infof("Dynamically loaded ONNX model '%s' from '%s'", model.id(), model.path());
         }
         return loaded;
