@@ -120,14 +120,14 @@ RUN ln -s libopenblaso.so.0 /usr/lib64/libopenblas.so
 RUN microdnf install -y gzip tar && microdnf clean all
 
 # Install ONNX Runtime
-ARG ORT_VERSION=1.30.0
+ARG ORT_VERSION=1.31.1
 # Target architecture. BuildKit supplies TARGETARCH from --platform; the shell fallback keeps a legacy
 # (non-BuildKit) `docker build` on the historical amd64 behaviour.
 ARG TARGETARCH
 # ONNX Runtime names Linux artifacts x64/aarch64; ORT GenAI names the same architectures x64/arm64.
 # GENAI_SHA256 is per-arch as well; the two tarballs are different files.
-ARG GENAI_SHA256_X64=482a17113556ff76c53820b801f391cdcbaac0b6c4089065182683c03fdbc8d9
-ARG GENAI_SHA256_ARM64=0efed33403b0bda566034d9047f6ce9e669aee2b3098d78c39f0b259c9db09d8
+ARG GENAI_SHA256_X64=cc4efa65d90fa43104519cd6a67e321a85645a238c5cfcabf42a128b274083c0
+ARG GENAI_SHA256_ARM64=871562cb62d0a1b6c830ee433215cc33a266d3dfec4538b9da9ac55d7816d486
 RUN ARCH="${TARGETARCH:-amd64}"; case "$ARCH" in \
       amd64) echo x64 > /tmp/ort_arch; echo x64 > /tmp/genai_arch; \
              echo "${GENAI_SHA256_X64}" > /tmp/genai_sha256 ;; \
@@ -142,7 +142,7 @@ RUN ORT_ARCH=$(cat /tmp/ort_arch); \
 
 # Install ONNX Runtime GenAI (libonnxruntime-genai.so): the CPU chat path. Without CUDA the chat engine loads
 # pre-converted GenAI (ONNX) packages through it, not LibTorch (LibTorch chat needs a GPU: Dockerfile.gpu).
-ARG GENAI_VERSION=0.17.0
+ARG GENAI_VERSION=0.19.0
 RUN GENAI_SHA256=$(cat /tmp/genai_sha256); \
     curl -fsSL --retry 5 --retry-delay 10 -o /tmp/genai.tgz \
         "https://github.com/microsoft/onnxruntime-genai/releases/download/v${GENAI_VERSION}/onnxruntime-genai-${GENAI_VERSION}-linux-$(cat /tmp/genai_arch).tar.gz" \

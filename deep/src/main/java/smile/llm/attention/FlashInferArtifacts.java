@@ -51,7 +51,7 @@ public final class FlashInferArtifacts {
     public static final String BUNDLED_AOT_DIR = "/opt/flashinfer/aot";
 
     /** Pinned jit-cache release used when {@code smile.chat.flashinfer-download=true}. */
-    public static final String DEFAULT_JIT_CACHE_VERSION = "0.6.6";
+    public static final String DEFAULT_JIT_CACHE_VERSION = "0.6.18.post1";
 
     private FlashInferArtifacts() {}
 
@@ -61,8 +61,7 @@ public final class FlashInferArtifacts {
      * @param aotDir        explicit config path (may be blank).
      * @param cacheDir      download / extract cache (may be blank).
      * @param allowDownload when true, fetch jit-cache into {@code cacheDir} if missing.
-     * @param cudaTag       wheel CUDA tag such as {@code cu130} (FlashInfer
-     *                      jit-cache max for 0.6.6; LibTorch may still be cu132).
+     * @param cudaTag       wheel CUDA tag such as {@code cu134}.
      * @return resolved directory, or empty when none available.
      */
     public static Optional<Path> resolveAndInstall(
@@ -104,7 +103,7 @@ public final class FlashInferArtifacts {
             }
             if (allowDownload) {
                 try {
-                    downloadAndExtract(cache, cudaTag == null || cudaTag.isBlank() ? "cu130" : cudaTag);
+                    downloadAndExtract(cache, cudaTag == null || cudaTag.isBlank() ? "cu134" : cudaTag);
                     if (isUsableAot(extracted)) {
                         return Optional.of(extracted);
                     }
@@ -129,7 +128,6 @@ public final class FlashInferArtifacts {
 
     static void downloadAndExtract(Path cacheDir, String cudaTag) throws IOException, InterruptedException {
         Files.createDirectories(cacheDir);
-        // FlashInfer v0.6.6 publishes jit-cache for cu128/cu129/cu130 only (no cu132).
         // Prefer GitHub release assets; the flashinfer.ai index may 404 for the same file.
         String ver = DEFAULT_JIT_CACHE_VERSION;
         String tag = cudaTag;
