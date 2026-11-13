@@ -108,7 +108,7 @@ models (a random forest, LDA and a small ONNX model), after startup had settled;
 | Idle memory | ~80 MiB | ~115 MiB | ~600 MiB | |
 | With a chat model loaded | n/a | 8 s, 3 GiB (Phi-4-mini, 4.6 GB package) | 11 s, 3.5 GiB (same) | 15 s, ~34 GiB of GPU memory (Llama-3.1-8B-Instruct, BF16, one GPU) |
 | S3 blob storage plugin | no | no | no | yes |
-| Platforms | `linux/amd64`, `linux/arm64` | `linux/amd64`, `linux/arm64` | `linux/amd64`, `linux/arm64` | NVIDIA GPU, driver for CUDA 13.2, NVIDIA Container Toolkit (`linux/amd64` only) |
+| Platforms | `linux/amd64`, `linux/arm64` | `linux/amd64`, `linux/arm64` | `linux/amd64`, `linux/arm64` | NVIDIA GPU, driver for CUDA 13.4, NVIDIA Container Toolkit (`linux/amd64` only) |
 | Native CPU baseline | x86-64-v3 (AVX2) on amd64; armv8-a on arm64 | same | any x86-64 or arm64 CPU | — |
 
 **`latest-micro`: inference only.** The smallest and fastest to start. It serves SMILE and ONNX models and the
@@ -128,7 +128,7 @@ CPU, for example embeddings, when the CPU does not support the native executable
 
 **`latest-gpu`: LLM serving on NVIDIA GPUs.** Runs the LibTorch/CUDA engine for Llama and Qwen checkpoints with CUDA
 graphs, FlashInfer attention and tensor parallelism, plus everything the JVM image does. It needs an NVIDIA GPU, a driver
-that supports CUDA 13.2 and the NVIDIA Container Toolkit (`docker run --gpus all`). GPU memory is set by the model: for
+that supports CUDA 13.4 and the NVIDIA Container Toolkit (`docker run --gpus all`). GPU memory is set by the model: for
 example Qwen 27B in BF16 needs two 40 GB GPUs. The image is large (about 16 GB) and startup is dominated by loading the
 model. See [§1.2](#12-gpu-build--run).
 

@@ -47,9 +47,9 @@
 # see that script for details. To do the same manually:
 #   docker run --rm --gpus all -v /model:/model smile-gpu-test ./gradlew :deep:test --no-daemon
 ###
-ARG CUDA_VERSION=13.2.0
-ARG TORCH_VERSION=2.13.0
-ARG CU_VERSION=132
+ARG CUDA_VERSION=13.4.0
+ARG TORCH_VERSION=2.15.0
+ARG CU_VERSION=134
 
 # -----------------------------------------------------------------------------
 # Stage 1: build libsmile_torch against CUDA LibTorch — identical to
@@ -97,8 +97,8 @@ RUN test -d /src/smile_torch/third_party/flashinfer/include/flashinfer \
 # entry point (smile_flashinfer_paged_attention_verify_cuda's PrefillPlan/
 # BatchPrefillWithPagedKVCacheDispatched call) needs these present at
 # FLASHINFER_AOT_DIR just like the production S==1 decode path does.
-ARG FLASHINFER_JIT_CACHE_VERSION=0.6.6
-ARG FLASHINFER_JIT_CACHE_CU=cu130
+ARG FLASHINFER_JIT_CACHE_VERSION=0.6.18.post1
+ARG FLASHINFER_JIT_CACHE_CU=cu${CU_VERSION}
 RUN mkdir -p /opt/flashinfer/aot \
     && (curl -fsSL --retry 5 --retry-delay 10 -o /tmp/fi_jit.whl \
         "https://github.com/flashinfer-ai/flashinfer/releases/download/v${FLASHINFER_JIT_CACHE_VERSION}/flashinfer_jit_cache-${FLASHINFER_JIT_CACHE_VERSION}%2B${FLASHINFER_JIT_CACHE_CU}-cp39-abi3-manylinux_2_28_x86_64.whl" \
@@ -137,7 +137,7 @@ FROM nvidia/cuda:${CUDA_VERSION}-devel-ubuntu24.04 AS gpu-test
 
 ARG TORCH_VERSION
 ARG CU_VERSION
-ARG ORT_VERSION=1.30.0
+ARG ORT_VERSION=1.31.1
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Same runtime CUDA extras as Dockerfile.gpu's final stage, plus a full
@@ -150,7 +150,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libcusparselt0 \
         libcudnn9-cuda-13 \
         libnvshmem3-cuda-13 \
-        cuda-cupti-13-2 \
+        cuda-cupti-13-4 \
         openjdk-25-jdk-headless \
         unzip \
     && rm -rf /var/lib/apt/lists/*

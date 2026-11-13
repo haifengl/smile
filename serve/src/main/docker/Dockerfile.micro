@@ -58,7 +58,7 @@ FROM ${RUNTIME_BASE} AS micro-ref
 # -----------------------------------------------------------------------------
 FROM ${MANDREL_BUILDER} AS builder
 
-ARG ORT_VERSION=1.30.0
+ARG ORT_VERSION=1.31.1
 ARG NODE_VERSION=24.11.0
 ARG GRADLE_ARGS=""
 
