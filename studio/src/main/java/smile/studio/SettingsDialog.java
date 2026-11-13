@@ -72,7 +72,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
      * Chat Completions–compatible / open-weight hosts — non-frontier families
      * registered in {@link Model}.
      */
-    private static final String[] otherModels = Stream.of("qwen", "deepseek", "glm", "kimi", "minimax")
+    private static final String[] otherModels = Stream.of("qwen", "gemma", "phi", "deepseek", "glm", "kimi", "minimax")
             .flatMap(family -> Model.family(family).stream())
             .map(Model::id)
             .toArray(String[]::new);
@@ -90,7 +90,6 @@ public class SettingsDialog extends JDialog implements ActionListener {
             "http://localhost:8080/v1",     // Llama.cpp or LocalAI
             "http://localhost:1234/v1",     // LM Studio
             "http://localhost:8000/v1",     // vLLM or SGLang
-            "http://localhost:11434/v1",    // Ollama
             "https://api.orcarouter.ai/v1", // OrcaRouter
             "https://openrouter.ai/api/v1"  // OpenRouter
     };
@@ -130,7 +129,14 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private final JSpinner servePortSpinner =
             new JSpinner(new SpinnerNumberModel(StudioConfig.DEFAULT_PORT, 1, 65535, 1));
     private final JTextField serveModelPathField = new JTextField(StudioConfig.DEFAULT_MODEL_PATH, 24);
-    private final JTextField serveLlmField = new JTextField(StudioConfig.DEFAULT_LLM, 24);
+    private final JComboBox<String> serveRuntimeCombo = new JComboBox<>(new String[]{
+            bundle.getString("ServeRuntimeAll"),
+            bundle.getString("ServeRuntimeOnnx"),
+            bundle.getString("ServeRuntimeCuda")
+    });
+    private final JComboBox<String> serveLlmCombo = new JComboBox<>();
+    private final JLabel serveHardwareHintLabel = new JLabel(" ");
+    private boolean suppressServeComboEvents = false;
 
     // Email Accounts tab state & fields
     private EmailConfig emailConfig;
@@ -275,8 +281,11 @@ public class SettingsDialog extends JDialog implements ActionListener {
         addBtn.addActionListener(e -> addNewLlmService());
         JButton removeBtn = new JButton(bundle.getString("ServiceRemove"));
         removeBtn.addActionListener(e -> removeSelectedLlmService());
+        JButton detectBtn = new JButton(bundle.getString("DetectLocalModels"));
+        detectBtn.addActionListener(e -> detectLocalLlmServices(true));
         topBar.add(addBtn);
         topBar.add(removeBtn);
+        topBar.add(detectBtn);
         topBar.add(llmDefaultCheck);
         pane.add(topBar, BorderLayout.NORTH);
 
@@ -340,7 +349,117 @@ public class SettingsDialog extends JDialog implements ActionListener {
         wrapper.add(form, BorderLayout.NORTH);
         pane.add(wrapper, BorderLayout.CENTER);
         refreshLlmServiceCombo(llmConfig.defaultService());
+        // If no Chat Completions models are configured yet, probe loopback endpoints silently in the background.
+        boolean hasChatCompletionsModels = llmConfig.services().stream()
+                .anyMatch(s -> "chatCompletions".equals(s.provider()) && !s.models().isEmpty());
+        if (!hasChatCompletionsModels) {
+            detectLocalLlmServices(false);
+        }
         return pane;
+    }
+
+    /**
+     * Merges discovered local OpenAI-compatible endpoints (SMILE Serve, Ogemma, LM Studio)
+     * into {@code config}, upserting a {@code chatCompletions} {@link LlmConfig.ServiceEntry}
+     * for each responsive server that reports models (or updating the existing entry with
+     * matching {@code baseUrl} or {@code serviceName}).
+     *
+     * @param config    existing LLM configuration.
+     * @param endpoints discovered local endpoints.
+     * @return updated {@link LlmConfig}.
+     */
+    static LlmConfig applyDetectedEndpoints(
+            LlmConfig config,
+            List<LocalLlmDetector.DetectedEndpoint> endpoints) {
+        if (config == null || endpoints == null || endpoints.isEmpty()) {
+            return config;
+        }
+        LlmConfig updated = config;
+        String firstDetectedName = null;
+        for (LocalLlmDetector.DetectedEndpoint ep : endpoints) {
+            List<String> models = ep.models();
+            Optional<LlmConfig.ServiceEntry> existingByName = updated.findService(ep.serviceName());
+            Optional<LlmConfig.ServiceEntry> existingByUrl = updated.services().stream()
+                    .filter(s -> "chatCompletions".equals(s.provider())
+                            && s.baseUrl().equalsIgnoreCase(ep.baseUrl()))
+                    .findFirst();
+            LlmConfig.ServiceEntry prior = existingByName.or(() -> existingByUrl).orElse(null);
+
+            if (prior != null && "chatCompletions".equals(prior.name()) && prior.models().isEmpty()
+                    && !"chatCompletions".equals(ep.serviceName())) {
+                updated = updated.withoutService("chatCompletions");
+                prior = null;
+            }
+            if (models.isEmpty() && prior != null) {
+                models = prior.models();
+            }
+            Optional<LlmConfig.ServiceEntry> emptyDefaultPlaceholder = updated.findService("chatCompletions")
+                    .filter(s -> s.models().isEmpty());
+            String targetName = prior != null ? prior.name() : ep.serviceName();
+            if (prior == null && emptyDefaultPlaceholder.isPresent() && firstDetectedName == null) {
+                updated = updated.withoutService("chatCompletions");
+            }
+            List<String> mergedModels = new ArrayList<>();
+            if (prior != null) {
+                for (String m : prior.models()) {
+                    if (!mergedModels.contains(m)) {
+                        mergedModels.add(m);
+                    }
+                }
+            }
+            for (String m : models) {
+                if (!mergedModels.contains(m)) {
+                    mergedModels.add(m);
+                }
+            }
+            LlmConfig.ServiceEntry entry = new LlmConfig.ServiceEntry(
+                    targetName,
+                    "chatCompletions",
+                    ep.baseUrl(),
+                    null,
+                    null,
+                    mergedModels
+            );
+            updated = updated.withUpsertedService(entry);
+            if (firstDetectedName == null) {
+                firstDetectedName = targetName;
+            }
+        }
+        // If current default service has no models configured, switch default to the first detected local service
+        if (firstDetectedName != null) {
+            boolean currentDefaultHasModels = updated.findService(updated.defaultService())
+                    .map(s -> !s.models().isEmpty())
+                    .orElse(false);
+            if (!currentDefaultHasModels) {
+                updated = updated.withDefaultService(firstDetectedName);
+            }
+        }
+        return updated;
+    }
+
+    private void detectLocalLlmServices(boolean interactive) {
+        int servePort = ((Number) servePortSpinner.getValue()).intValue();
+        Thread.ofVirtual().name("local-llm-detector").start(() -> {
+            List<LocalLlmDetector.DetectedEndpoint> detected =
+                    LocalLlmDetector.detectDefaultEndpoints(servePort);
+            SwingUtilities.invokeLater(() -> {
+                if (detected.isEmpty()) {
+                    if (interactive) {
+                        llmSecretStatusLabel.setText(bundle.getString("DetectLocalNone"));
+                    }
+                    return;
+                }
+                commitCurrentLlmServiceForm();
+                llmConfig = applyDetectedEndpoints(llmConfig, detected);
+                String selectTarget = detected.getFirst().serviceName();
+                refreshLlmServiceCombo(selectTarget);
+                String summary = detected.stream()
+                        .map(ep -> ep.displayName() + " (" + (ep.models().isEmpty() ? ep.baseUrl() : String.join(", ", ep.models())) + ")")
+                        .reduce((a, b) -> a + "; " + b)
+                        .orElse("");
+                llmSecretStatusLabel.setText(MessageFormat.format(bundle.getString("DetectLocalFound"), summary));
+            });
+        });
     }
 
     private String selectedLlmProviderKey() {
@@ -703,17 +822,45 @@ public class SettingsDialog extends JDialog implements ActionListener {
         serveHostField.setText(cfg.host());
         servePortSpinner.setValue(cfg.port());
         serveModelPathField.setText(cfg.modelPath());
-        serveLlmField.setText(cfg.llm());
-        serveLlmField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            private void syncAutoStart() {
-                if (!serveLlmField.getText().trim().isEmpty()) {
-                    serveAutoStartCheck.setSelected(true);
-                }
-            }
-            @Override public void insertUpdate(javax.swing.event.DocumentEvent e) { syncAutoStart(); }
-            @Override public void removeUpdate(javax.swing.event.DocumentEvent e) { syncAutoStart(); }
-            @Override public void changedUpdate(javax.swing.event.DocumentEvent e) { syncAutoStart(); }
+
+        LocalLlmDetector.HardwareProfile hw = LocalLlmDetector.detectHardware();
+        LocalLlmDetector.RuntimeBackend initialBackend = LocalLlmDetector.findCuratedModel(cfg.llm())
+                .map(LocalLlmDetector.CuratedModel::backend)
+                .orElse(hw.recommendedBackend());
+        serveRuntimeCombo.setSelectedIndex(switch (initialBackend) {
+            case ONNX_GENAI -> 1;
+            case NVIDIA_CUDA -> 2;
+            default -> 0;
         });
+
+        serveLlmCombo.setEditable(true);
+        refreshServeLlmCatalog(initialBackend, cfg.llm(), hw);
+
+        serveRuntimeCombo.addActionListener(e -> {
+            if (!suppressServeComboEvents) {
+                LocalLlmDetector.RuntimeBackend backend = selectedServeRuntimeBackend();
+                refreshServeLlmCatalog(backend, comboText(serveLlmCombo), hw);
+            }
+        });
+
+        serveLlmCombo.addActionListener(e -> {
+            if (!suppressServeComboEvents) {
+                updateServeLlmState(hw);
+            }
+        });
+        Component editorComp = serveLlmCombo.getEditor() != null
+                ? serveLlmCombo.getEditor().getEditorComponent()
+                : null;
+        if (editorComp instanceof JTextField editorField) {
+            editorField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+                @Override public void insertUpdate(javax.swing.event.DocumentEvent e) { updateServeLlmState(hw); }
+                @Override public void removeUpdate(javax.swing.event.DocumentEvent e) { updateServeLlmState(hw); }
+                @Override public void changedUpdate(javax.swing.event.DocumentEvent e) { updateServeLlmState(hw); }
+            });
+        }
+
+        serveHardwareHintLabel.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
+        serveHardwareHintLabel.setForeground(UIManager.getColor("Label.disabledForeground"));
 
         JPanel form = new JPanel(new GridBagLayout());
         form.setBorder(new EmptyBorder(10, 10, 10, 10));
@@ -778,7 +925,20 @@ public class SettingsDialog extends JDialog implements ActionListener {
         form.add(modelPathRow, gbc);
         row++;
 
-        // Row 4: LLM Model (Hugging Face ID or directory)
+        // Row 4: LLM Runtime filter (All / ONNX GenAI / NVIDIA CUDA)
+        gbc.gridx = 0;
+        gbc.gridy = row;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0.0;
+        form.add(new JLabel(bundle.getString("ServeRuntime")), gbc);
+
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        form.add(serveRuntimeCombo, gbc);
+        row++;
+
+        // Row 5: LLM Model (Curated selector + custom Hugging Face ID)
         gbc.gridx = 0;
         gbc.gridy = row;
         gbc.fill = GridBagConstraints.NONE;
@@ -788,11 +948,54 @@ public class SettingsDialog extends JDialog implements ActionListener {
         gbc.gridx = 1;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
-        form.add(serveLlmField, gbc);
+        form.add(serveLlmCombo, gbc);
+        row++;
+
+        // Row 6: Hardware & model guidance hint
+        gbc.gridx = 1;
+        gbc.gridy = row;
+        gbc.insets = new Insets(0, 5, 5, 5);
+        form.add(serveHardwareHintLabel, gbc);
+        gbc.insets = new Insets(5, 5, 5, 5);
 
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.add(form, BorderLayout.NORTH);
         return wrapper;
+    }
+
+    private LocalLlmDetector.RuntimeBackend selectedServeRuntimeBackend() {
+        return switch (serveRuntimeCombo.getSelectedIndex()) {
+            case 1 -> LocalLlmDetector.RuntimeBackend.ONNX_GENAI;
+            case 2 -> LocalLlmDetector.RuntimeBackend.NVIDIA_CUDA;
+            default -> LocalLlmDetector.RuntimeBackend.ALL;
+        };
+    }
+
+    private void refreshServeLlmCatalog(
+            LocalLlmDetector.RuntimeBackend backend,
+            String selectedModelId,
+            LocalLlmDetector.HardwareProfile hw) {
+        boolean prevSuppress = suppressServeComboEvents;
+        suppressServeComboEvents = true;
+        try {
+            List<String> options = new ArrayList<>();
+            options.add("");
+            for (LocalLlmDetector.CuratedModel cm : LocalLlmDetector.modelsForBackend(backend)) {
+                options.add(cm.id());
+            }
+            setComboOptionsAndValue(serveLlmCombo, options.toArray(String[]::new), selectedModelId);
+            serveHardwareHintLabel.setText(LocalLlmDetector.describeModelAndHardware(selectedModelId, hw));
+        } finally {
+            suppressServeComboEvents = prevSuppress;
+        }
+    }
+
+    private void updateServeLlmState(LocalLlmDetector.HardwareProfile hw) {
+        String current = comboText(serveLlmCombo);
+        if (!current.isEmpty()) {
+            serveAutoStartCheck.setSelected(true);
+        }
+        serveHardwareHintLabel.setText(LocalLlmDetector.describeModelAndHardware(current, hw));
     }
 
     private void browseServeModelPath() {
@@ -808,7 +1011,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
         String serveHost = serveHostField.getText().trim();
         int servePort = ((Number) servePortSpinner.getValue()).intValue();
         String serveModelPath = serveModelPathField.getText().trim();
-        String serveLlm = serveLlmField.getText().trim();
+        String serveLlm = comboText(serveLlmCombo);
         StudioConfig.InferenceServer inferenceServer = new StudioConfig.InferenceServer(
                 serveAutoStartCheck.isSelected() || !serveLlm.isEmpty(),
                 serveHost.isEmpty() ? StudioConfig.DEFAULT_HOST : serveHost,
