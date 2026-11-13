@@ -17,7 +17,6 @@
 package smile.llm.model.deepseek;
 
 import java.io.File;
-import java.net.URISyntaxException;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -27,11 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class DeepSeekModelArgsTest {
     private static DeepSeekModelArgs load() throws Exception {
-        try {
-            return DeepSeekModelArgs.load(new File(DeepSeekModelArgsTest.class.getResource("/deepseek/config.json").toURI()));
-        } catch (URISyntaxException e) {
-            throw new IllegalStateException(e);
-        }
+        return DeepSeekModelArgs.load(new File("deep/src/test/resources/deepseek/config.json"));
     }
 
     @Test

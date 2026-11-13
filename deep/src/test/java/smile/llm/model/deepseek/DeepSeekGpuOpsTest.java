@@ -17,13 +17,16 @@
 package smile.llm.model.deepseek;
 
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import smile.deep.CUDA;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
 import smile.torch.Aten;
 
 /** Opt-in (CUDA): every op of {@link DeepSeekOps} gives the same result on CUDA as on CPU for random inputs. */
+@Tag("cuda")
 public class DeepSeekGpuOpsTest {
     private static double rel(Tensor a, Tensor b) {
         Tensor x = a.to(Device.CPU()).to(ScalarType.Float);
@@ -39,13 +42,8 @@ public class DeepSeekGpuOpsTest {
 
     @Test
     public void testGivenRandomInputsThenCudaMatchesCpu() {
-        Device cuda;
-        try {
-            cuda = Device.CUDA();
-        } catch (Throwable t) {
-            Assumptions.abort("no CUDA");
-            return;
-        }
+        Assumptions.assumeTrue(CUDA.isAvailable() && CUDA.deviceCount() > 0 && Aten.isAvailable(), "no CUDA");
+        Device cuda = Device.CUDA();
         Tensor x = Aten.one("aten::mul.Tensor", Aten.one("aten::randn", new long[]{40, 4096}),
                 Aten.one("aten::logspace", -2.0, 1.0, 4096L)).to(ScalarType.BFloat16);
         Tensor xg = x.to(cuda);

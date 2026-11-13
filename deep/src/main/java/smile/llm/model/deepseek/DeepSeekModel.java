@@ -86,7 +86,11 @@ public final class DeepSeekModel implements AutoCloseable {
         }
     }
 
-    /** Allocates the state of an empty sequence (call outside any tensor scope). */
+    /**
+     * Allocates the state of an empty sequence (call outside any tensor scope).
+     *
+     * @return the new session state.
+     */
     public Session newSession() {
         DeepSeekAttention.State[] s = new DeepSeekAttention.State[blocks.size()];
         DeepSeekAttention.Shared shared = new DeepSeekAttention.Shared();
@@ -96,7 +100,11 @@ public final class DeepSeekModel implements AutoCloseable {
         return new Session(s, engramHash == null ? null : engramHash.newHistory());
     }
 
-    /** Makes {@code session} the sequence the next {@link #forward} calls continue. */
+    /**
+     * Makes {@code session} the sequence the next {@link #forward} calls continue.
+     *
+     * @param session the session state to activate.
+     */
     public void use(Session session) {
         for (int i = 0; i < blocks.size(); i++) {
             blocks.get(i).use(session.layers[i]);
