@@ -220,10 +220,20 @@ public class OnnxResource {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         if (!line.isBlank()) {
+                            long start = System.nanoTime();
                             JsonObject response = json
                                     ? model.predict(new JsonObject(line))
                                     : model.predict(line);
-                            emitter.emit(response.encode());
+                            String encoded = response.encode();
+                            if (service.hasListeners()) {
+                                service.notifyListeners(InferenceEvent.onnxPredict(
+                                        id,
+                                        InferenceEvent.Action.STREAM_PREDICT,
+                                        line,
+                                        encoded,
+                                        System.nanoTime() - start));
+                            }
+                            emitter.emit(encoded);
                         }
                     }
                     emitter.complete();
