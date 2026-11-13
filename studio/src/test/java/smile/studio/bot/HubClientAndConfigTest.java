@@ -480,6 +480,14 @@ public class HubClientAndConfigTest {
                 "{\"type\":\"page\",\"runId\":44,\"botId\":\"frank\",\"routineId\":\"frank-bot-activity-recap\",\"pageSlug\":\"bot-activity\",\"timestamp\":\"2026-11-01T12:03:00Z\"}");
         assertTrue(HubClient.shouldAutoOpenPageEvent(recapBotActivityEv));
 
+        HubClient.BotStreamEvent peerMikeSalesPageEv = HubClient.parseStreamEvent("page",
+                "{\"type\":\"page\",\"runId\":3221,\"botId\":\"peer:mike\",\"routineId\":\"peer-request:mike\",\"pageSlug\":\"sales-pipeline\",\"timestamp\":\"2026-11-13T19:52:29Z\"}");
+        assertTrue(HubClient.shouldAutoOpenPageEvent(peerMikeSalesPageEv));
+
+        HubClient.BotStreamEvent peerMikeWrongPageEv = HubClient.parseStreamEvent("page",
+                "{\"type\":\"page\",\"runId\":3221,\"botId\":\"peer:mike\",\"routineId\":\"peer-request:mike\",\"pageSlug\":\"community-radar\",\"timestamp\":\"2026-11-13T19:52:29Z\"}");
+        assertFalse(HubClient.shouldAutoOpenPageEvent(peerMikeWrongPageEv));
+
         // Verify non-destructive approval refresh preserves user draft edits when the selected approval is unchanged
         BotActivity activity = new BotActivity(0);
         HubClient.BotApprovalItem item1 = new HubClient.BotApprovalItem(
