@@ -19,7 +19,9 @@ package smile.llm.model.deepseek;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import smile.deep.CUDA;
 import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
@@ -33,18 +35,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *
  * @author Haifeng Li
  */
+@Tag("cuda")
 public class DeepSeekMxfp4Test {
     @Test
     public void testGivenRealExpertsThenNvfp4DequantizeEqualsMxfp4Dequantize() throws Exception {
         Path dir = Path.of(System.getenv().getOrDefault("DEEPSEEK_DIR", "/raid/haili/dsv4/flash_raw"));
         Assumptions.assumeTrue(Files.exists(dir.resolve("model-00003-of-00048.safetensors")), "no shards");
-        Device cuda;
-        try {
-            cuda = Device.CUDA();
-        } catch (Throwable t) {
-            Assumptions.abort("no CUDA");
-            return;
-        }
+        Assumptions.assumeTrue(CUDA.isAvailable() && CUDA.deviceCount() > 0 && Aten.isAvailable(), "no CUDA");
+        Device cuda = Device.CUDA();
         DeepSeekCheckpoint ck = new DeepSeekCheckpoint(dir);
         for (String name : new String[]{"layers.0.ffn.experts.7.w1", "layers.3.ffn.experts.200.w2", "layers.20.ffn.experts.11.w3"}) {
             Tensor w = ck.get(name + ".weight");
