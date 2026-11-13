@@ -57,6 +57,9 @@ public final class LocalhostGuard {
         if (remoteAddress == null) {
             return false;
         }
+        if (remoteAddress.isDomainSocket()) {
+            return true;
+        }
         String host = remoteAddress.hostAddress();
         return isLoopbackAddress(host);
     }

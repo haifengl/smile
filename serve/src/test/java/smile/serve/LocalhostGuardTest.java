@@ -48,6 +48,13 @@ public class LocalhostGuardTest {
     }
 
     @Test
+    public void testRequireLocalhostAcceptsDomainSocket() {
+        RoutingContext ctx = mockDomainSocketRoutingContext("/var/run/smile-serve.sock");
+        assertDoesNotThrow(() -> LocalhostGuard.requireLocalhost(ctx));
+        assertTrue(LocalhostGuard.isLocalhost(ctx));
+    }
+
+    @Test
     public void testRequireLocalhostRejectsExternalIp() {
         RoutingContext ctx = mockRoutingContext("192.168.1.50");
         assertThrows(ForbiddenException.class, () -> LocalhostGuard.requireLocalhost(ctx));
@@ -71,6 +78,12 @@ public class LocalhostGuardTest {
                 (proxy, method, args) -> {
                     if ("hostAddress".equals(method.getName())) {
                         return remoteHost;
+                    }
+                    if ("isDomainSocket".equals(method.getName())) {
+                        return false;
+                    }
+                    if ("isInetSocket".equals(method.getName())) {
+                        return true;
                     }
                     return null;
                 }
@@ -96,6 +109,31 @@ public class LocalhostGuardTest {
                     }
                     return null;
                 }
+        );
+    }
+
+    private static RoutingContext mockDomainSocketRoutingContext(String socketPath) {
+        SocketAddress socketAddress = (SocketAddress) Proxy.newProxyInstance(
+                SocketAddress.class.getClassLoader(),
+                new Class<?>[]{SocketAddress.class},
+                (proxy, method, args) -> switch (method.getName()) {
+                    case "isDomainSocket" -> true;
+                    case "isInetSocket" -> false;
+                    case "path" -> socketPath;
+                    default -> null;
+                }
+        );
+
+        HttpServerRequest request = (HttpServerRequest) Proxy.newProxyInstance(
+                HttpServerRequest.class.getClassLoader(),
+                new Class<?>[]{HttpServerRequest.class},
+                (proxy, method, args) -> "remoteAddress".equals(method.getName()) ? socketAddress : null
+        );
+
+        return (RoutingContext) Proxy.newProxyInstance(
+                RoutingContext.class.getClassLoader(),
+                new Class<?>[]{RoutingContext.class},
+                (proxy, method, args) -> "request".equals(method.getName()) ? request : null
         );
     }
 }

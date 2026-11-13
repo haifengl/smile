@@ -3,38 +3,38 @@
   "defaultModel": "",
   "services": [
     {
-      "name": "openai",
+      "name": "OpenAI",
       "provider": "openai",
       "baseUrl": "https://api.openai.com/v1",
       "models": []
     },
     {
-      "name": "azureOpenAI",
+      "name": "Azure OpenAI",
       "provider": "azureOpenAI",
       "baseUrl": "",
       "models": []
     },
     {
-      "name": "anthropic",
+      "name": "Anthropic",
       "provider": "anthropic",
       "baseUrl": "https://api.anthropic.com",
       "models": []
     },
     {
-      "name": "googleGemini",
+      "name": "Google Gemini",
       "provider": "googleGemini",
       "baseUrl": "https://generativelanguage.googleapis.com",
       "models": []
     },
     {
-      "name": "googleEnterprise",
+      "name": "Google Enterprise",
       "provider": "googleEnterprise",
       "project": "",
       "location": "",
       "models": []
     },
     {
-      "name": "chatCompletions",
+      "name": "SMILE",
       "provider": "chatCompletions",
       "baseUrl": "http://localhost:8888/api/v1",
       "models": []

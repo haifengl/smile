@@ -58,11 +58,25 @@ FROM ${RUNTIME_BASE} AS micro-ref
 # -----------------------------------------------------------------------------
 FROM ${MANDREL_BUILDER} AS builder
 
-ARG ORT_VERSION=1.30.0
+ARG ORT_VERSION=1.31.1
 ARG NODE_VERSION=24.11.0
 ARG GRADLE_ARGS=""
 
+# Target architecture. BuildKit supplies TARGETARCH from --platform; the shell fallback keeps a legacy
+# (non-BuildKit) `docker build` on the historical amd64 behaviour. The native executable has to be built
+# *on* the target architecture: GraalVM cannot cross-compile, so an arm64 image needs an arm64 host (or
+# runner), not --platform emulation.
+ARG TARGETARCH
+
 USER root
+
+# Upstream artifact names differ per architecture and not consistently: ONNX Runtime uses
+# x64/aarch64, Node.js and ORT GenAI use x64/arm64. Resolve both once so the URLs below stay plain.
+RUN ARCH="${TARGETARCH:-amd64}"; case "$ARCH" in \
+      amd64) echo x64 > /tmp/ort_arch; echo x64 > /tmp/node_arch ;; \
+      arm64) echo aarch64 > /tmp/ort_arch; echo arm64 > /tmp/node_arch ;; \
+      *) echo "unsupported TARGETARCH=${ARCH}" >&2; exit 1 ;; \
+    esac
 
 # Archive tools. Node.js is needed by Quinoa for the web UI.
 # The OpenMP build of OpenBLAS (the ubi10 `openblas` package itself ships no libraries) and libgomp are installed here
@@ -70,13 +84,15 @@ USER root
 # the FlexiBLAS/EPEL packages it needs) is deliberately absent: only fit-time code (smile.manifold,
 # SpectralClustering) uses it.
 RUN microdnf install -y gzip tar xz findutils openblas-openmp libgomp && microdnf clean all
-RUN curl -fsSL --retry 5 --retry-delay 10 "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
+RUN curl -fsSL --retry 5 --retry-delay 10 "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-$(cat /tmp/node_arch).tar.xz" \
     | tar -xJ -C /usr/local --strip-components=1
 
-# ONNX Runtime (libs copied to the runtime stage)
-RUN curl -fsSL --retry 5 --retry-delay 10 "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz" \
+# ONNX Runtime (libs copied to the runtime stage). The aarch64 tarball unpacks to a directory with
+# the same flat layout, so only the name differs.
+RUN ORT_ARCH=$(cat /tmp/ort_arch); \
+    curl -fsSL --retry 5 --retry-delay 10 "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-${ORT_ARCH}-${ORT_VERSION}.tgz" \
     | tar -zx -C /usr/local/ \
-    && mv /usr/local/onnxruntime-linux-x64-${ORT_VERSION} /usr/local/onnxruntime
+    && mv /usr/local/onnxruntime-linux-${ORT_ARCH}-${ORT_VERSION} /usr/local/onnxruntime
 
 # Native executable. Copy the whole repo (see .dockerignore) and build with the Gradle wrapper.
 WORKDIR /src

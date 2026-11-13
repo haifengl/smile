@@ -946,4 +946,224 @@ public class HubClientAndConfigTest {
             assertEquals("alice@example.com", activity.rulePatternField().getText());
         });
     }
+
+    @Test
+    public void testStudioConfigParseInstancesRejectsReservedAndInvalidLabels(@TempDir Path dir) throws Exception {
+        Path file = dir.resolve("studio.json");
+        Files.writeString(file, """
+                {
+                  "agentHub": {
+                    "host": "127.0.0.1",
+                    "port": 8890,
+                    "adminToken": "default-hub-token"
+                  },
+                  "instances": {
+                    "lab-server": "http://lab.internal:8890/",
+                    "staging": {
+                      "url": "http://staging.internal:8890",
+                      "adminToken": "staging-token"
+                    },
+                    "hub": "http://evil:8890",
+                    "local": "http://evil:8890",
+                    "self": "http://evil:8890",
+                    "BAD_UPPER": "http://evil:8890"
+                  }
+                }
+                """);
+
+        var instances = StudioConfig.parseInstances(file);
+        assertEquals(2, instances.size());
+        assertTrue(instances.containsKey("lab-server"));
+        assertEquals("http://lab.internal:8890", instances.get("lab-server").baseUrl());
+        assertEquals("default-hub-token", instances.get("lab-server").adminToken());
+
+        assertTrue(instances.containsKey("staging"));
+        assertEquals("http://staging.internal:8890", instances.get("staging").baseUrl());
+        assertEquals("staging-token", instances.get("staging").adminToken());
+
+        assertFalse(instances.containsKey("hub"));
+        assertFalse(instances.containsKey("local"));
+        assertFalse(instances.containsKey("self"));
+        assertFalse(instances.containsKey("BAD_UPPER"));
+    }
+
+    @Test
+    public void testHubAgentEndpointSubmitsRequestResolvesInstancesAndDeliversCompletionNotice() throws Exception {
+        var receivedBodies = new java.util.concurrent.CopyOnWriteArrayList<String>();
+        var receivedIdempotencyKeys = new java.util.concurrent.CopyOnWriteArrayList<String>();
+        var runStatusRef = new AtomicReference<>("RUNNING");
+
+        var server = com.sun.net.httpserver.HttpServer.create(new java.net.InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/v1/admin/requests", exchange -> {
+            String auth = exchange.getRequestHeaders().getFirst("Authorization");
+            String idem = exchange.getRequestHeaders().getFirst("Idempotency-Key");
+            String body = new String(exchange.getRequestBody().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+            receivedBodies.add(body);
+            if (idem != null) {
+                receivedIdempotencyKeys.add(idem);
+            }
+            if (!"Bearer test-hub-token".equals(auth)) {
+                byte[] err = "{\"title\":\"Unauthorized\",\"status\":401,\"detail\":\"Invalid admin bearer token.\"}"
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                exchange.getResponseHeaders().add("Content-Type", "application/problem+json");
+                exchange.sendResponseHeaders(401, err.length);
+                exchange.getResponseBody().write(err);
+                exchange.close();
+                return;
+            }
+            if (body.contains("\"to\":\"unknown\"")) {
+                byte[] err = "{\"title\":\"Not Found\",\"status\":404,\"detail\":\"Unknown agent @unknown. Hosted agents: @mike.\"}"
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                exchange.getResponseHeaders().add("Content-Type", "application/problem+json");
+                exchange.sendResponseHeaders(404, err.length);
+                exchange.getResponseBody().write(err);
+                exchange.close();
+                return;
+            }
+            byte[] resp = "{\"runId\":412,\"status\":\"RUNNING\"}".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(202, resp.length);
+            exchange.getResponseBody().write(resp);
+            exchange.close();
+        });
+        server.createContext("/v1/admin/runs", exchange -> {
+            String status = runStatusRef.get();
+            String json = """
+                    [{
+                      "id": 412,
+                      "botId": "peer:mike",
+                      "routineId": "peer-request:mike",
+                      "persona": "sales",
+                      "modelId": "gpt-5.4",
+                      "status": "%s",
+                      "startedAt": "2026-11-11T12:00:00Z",
+                      "completedAt": "2026-11-11T12:01:00Z",
+                      "summary": "Marked three Batch 4 touches as bounced.",
+                      "error": ""
+                    }]
+                    """.formatted(status);
+            byte[] resp = json.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, resp.length);
+            exchange.getResponseBody().write(resp);
+            exchange.close();
+        });
+        server.start();
+        int port = server.getAddress().getPort();
+
+        try {
+            var directory = new ioa.agent.LocalAgentDirectory();
+            var senderNotices = new java.util.concurrent.CopyOnWriteArrayList<ioa.agent.AgentRequest>();
+            var localMikeRequests = new java.util.concurrent.CopyOnWriteArrayList<ioa.agent.AgentRequest>();
+
+            // Register local Studio panels (@frank and @mike)
+            directory.register(new ioa.agent.AgentEndpoint() {
+                @Override
+                public ioa.agent.AgentCard card() {
+                    return new ioa.agent.AgentCard("frank", "chief of staff", List.of());
+                }
+
+                @Override
+                public String accept(ioa.agent.AgentRequest request) {
+                    senderNotices.add(request);
+                    return null;
+                }
+            });
+            directory.register(new ioa.agent.AgentEndpoint() {
+                @Override
+                public ioa.agent.AgentCard card() {
+                    return new ioa.agent.AgentCard("mike", "local sales panel", List.of());
+                }
+
+                @Override
+                public String accept(ioa.agent.AgentRequest request) {
+                    localMikeRequests.add(request);
+                    return null;
+                }
+            });
+
+            HubClient hubClient = new HubClient("127.0.0.1", port, "test-hub-token");
+            var namedInstances = java.util.Map.of(
+                    "lab-server",
+                    new StudioConfig.HubInstance("lab-server", "http://127.0.0.1:" + port, "test-hub-token")
+            );
+            HubAgentEndpoint.registerAll(
+                    directory,
+                    List.of(ioa.agent.Agent.Spec.of("sales")),
+                    () -> hubClient,
+                    namedInstances,
+                    HubManager.getInstance()::trackSubmittedRun
+            );
+
+            // 1. Unfragmented @mike still resolves to the local Studio panel
+            var localLookup = (ioa.agent.AgentLookup.Local) directory.resolve("@mike");
+            assertNull(localLookup.endpoint().accept(ioa.agent.AgentRequest.fromUser("mike", "local task")));
+            assertEquals(1, localMikeRequests.size());
+            assertTrue(receivedBodies.isEmpty());
+
+            // 2. @mike#hub and @mike#lab-server resolve to HubAgentEndpoints
+            var hubLookup = (ioa.agent.AgentLookup.Local) directory.resolve("@mike#hub");
+            var labLookup = (ioa.agent.AgentLookup.Local) directory.resolve("@mike#lab-server");
+            assertTrue(hubLookup.endpoint() instanceof HubAgentEndpoint);
+            assertTrue(labLookup.endpoint() instanceof HubAgentEndpoint);
+
+            // 3. Accepting a request on @mike#hub posts to /v1/admin/requests with stripped 'to' and 'frank#studio'
+            var peerReq = new ioa.agent.AgentRequest(
+                    "frank",
+                    "mike#hub",
+                    "Mark three Batch 4 touches as bounced.",
+                    List.of(".smile/memory/pipeline.json"),
+                    java.time.Instant.parse("2030-11-12T23:00:00Z"),
+                    ioa.agent.AgentRequest.Kind.TASK
+            );
+            String err = hubLookup.endpoint().accept(peerReq);
+            assertNull(err);
+            assertEquals(1, receivedBodies.size());
+            assertEquals(1, receivedIdempotencyKeys.size());
+            String sentJson = receivedBodies.getFirst();
+            assertTrue(sentJson.contains("\"from\":\"frank#studio\""));
+            assertTrue(sentJson.contains("\"to\":\"mike\""));
+            assertTrue(sentJson.contains("\".smile/memory/pipeline.json\""));
+            assertTrue(sentJson.contains("\"expires_at\":\"2030-11-12T23:00:00Z\""));
+
+            // 4. While status is RUNNING, SSE 'run' event does not emit a completion NOTICE yet
+            HubClient.BotStreamEvent runEvent = new HubClient.BotStreamEvent(
+                    "run", 412L, "peer:mike", "peer-request:mike", "2026-11-11T12:00:10Z");
+            assertFalse(HubManager.getInstance().handlePeerRunStreamEvent(runEvent, directory));
+            assertTrue(senderNotices.isEmpty());
+
+            // 5. When the run reaches COMPLETED, SSE 'run' event enqueues a NOTICE in @frank's panel
+            runStatusRef.set("COMPLETED");
+            assertTrue(HubManager.getInstance().handlePeerRunStreamEvent(runEvent, directory));
+            assertEquals(1, senderNotices.size());
+            ioa.agent.AgentRequest notice = senderNotices.getFirst();
+            assertEquals(ioa.agent.AgentRequest.Kind.NOTICE, notice.kind());
+            assertEquals("mike#hub", notice.from());
+            assertEquals("frank", notice.to());
+            assertTrue(notice.task().contains("@mike#hub finished run 412: Marked three Batch 4 touches as bounced."));
+            assertTrue(notice.task().contains("/v1/admin/runs/412/transcript"));
+
+            // Duplicate SSE 'run' event for the same runId does not enqueue a second notice
+            assertFalse(HubManager.getInstance().handlePeerRunStreamEvent(runEvent, directory));
+            assertEquals(1, senderNotices.size());
+
+            // 6. Offline Hub maps to a clear error, never a false "queued"
+            HubClient offlineClient = new HubClient("127.0.0.1", 59997, "test-hub-token");
+            HubAgentEndpoint offlineEndpoint = new HubAgentEndpoint(
+                    "mike", "hub", "sales", List.of(), () -> offlineClient, null);
+            String offlineErr = offlineEndpoint.accept(peerReq);
+            assertNotNull(offlineErr);
+            assertTrue(offlineErr.contains("Agent Hub is not running"));
+
+            // 7. Unknown agent 404 problem+json detail is surfaced directly
+            HubAgentEndpoint unknownEndpoint = new HubAgentEndpoint(
+                    "unknown", "hub", "unknown", List.of(), () -> hubClient, null);
+            String unknownErr = unknownEndpoint.accept(peerReq);
+            assertNotNull(unknownErr);
+            assertTrue(unknownErr.contains("Unknown agent @unknown"));
+            assertTrue(unknownErr.contains("Hosted agents: @mike"));
+        } finally {
+            server.stop(0);
+        }
+    }
 }

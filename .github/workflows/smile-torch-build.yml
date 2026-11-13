@@ -2,7 +2,7 @@
 # smile-torch-build.yml
 #
 # Builds the smile_torch Hourglass C API shared library on Windows, Linux,
-# and macOS against the official CPU libtorch 2.11.0 release.
+# and macOS against the official CPU libtorch 2.15.0 release.
 #
 # Steps per platform:
 #   1. Download the official libtorch CPU archive from pytorch.org
@@ -36,7 +36,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  TORCH_VERSION: "2.14.1"
+  TORCH_VERSION: "2.15.0"
   BUILD_DIR: build/cpp
 
 jobs:
