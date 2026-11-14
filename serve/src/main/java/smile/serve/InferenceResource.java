@@ -198,12 +198,20 @@ public class InferenceResource {
             String line;
             while ((line = reader.readLine()) != null) {
                 if (!line.isBlank()) {
+                    long start = System.nanoTime();
                     if (json) {
                         model.update(new JsonObject(line));
                     } else {
                         model.update(line);
                     }
                     count++;
+                    if (service.hasListeners()) {
+                        service.notifyListeners(InferenceEvent.onlineUpdate(
+                                id,
+                                line,
+                                persist,
+                                System.nanoTime() - start));
+                    }
                 }
             }
         } catch (BadRequestException ex) {
@@ -285,14 +293,25 @@ public class InferenceResource {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         if (!line.isBlank()) {
+                            long start = System.nanoTime();
+                            boolean rowExplain = explainQuery;
                             Prediction response;
                             if (json) {
                                 var jsonObject = new JsonObject(line);
-                                boolean explain = isExplainRequested(explainQuery, jsonObject);
+                                rowExplain = isExplainRequested(explainQuery, jsonObject);
                                 KernelSHAP.Options rowOptions = resolveShapOptions(samples, ridge, jsonObject);
-                                response = model.predict(jsonObject, explain, rowOptions);
+                                response = model.predict(jsonObject, rowExplain, rowOptions);
                             } else {
                                 response = model.predict(line, explainQuery, queryShapOptions);
+                            }
+                            if (service.hasListeners()) {
+                                service.notifyListeners(InferenceEvent.smilePredict(
+                                        id,
+                                        InferenceEvent.Action.STREAM_PREDICT,
+                                        line,
+                                        response,
+                                        System.nanoTime() - start,
+                                        rowExplain));
                             }
                             emitter.emit(response.toJson());
                         }

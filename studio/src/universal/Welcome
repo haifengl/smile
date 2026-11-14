@@ -25,27 +25,27 @@ Agent Studio is a coding agent on your machine, an AutoML workplace that builds 
 SMILE Studio uses a three-column horizontal split layout (resizable and persisted across sessions):
 
 ```
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│  Menu Bar:  File  |  Cell  |  Find  |  Inference  |  Agent Hub  |  Help                │
-├─────────────────────┬─────────────────────────────────┬────────────────────────────────┤
-│  Explorer Tabs      │  Workspace Tabs                 │  AI Agent Team                 │
-│  ┌───────┬──────┬──┐│  ┌──────────────┬─────────┬───┐ │  👔 Frank  | 💡 Steve          │
-│  │Project│Kernel│Bots│ │Bot Activities│ Welcome │ … │ │  📣 Julien | 🤝 Mike           │
-│  └───────┴──────┴──┘│  └──────────────┴─────────┴───┘ │  📊 Clair  | 📐 Ada            │
-│                     │                                 │  ☕ James  | 🐍 Guido          │
-│  • Project:         │  • Bot Activities & Routines:   │  🖥️ Chuck                      │
-│    File & folder    │    24/7 bot runs, transcripts,  │  ────────────────────────────  │
-│    tree of cwd      │    & human-in-the-loop approvals│  Conversation stream,          │
-│                     │                                 │  tool execution, and           │
-│  • Kernel:          │  • Interactive multi-language   │  peer-to-peer delegation       │
-│    Live variables & │    notebook cells (.jsh, .sc,   │  ────────────────────────────  │
-│    persisted models │    .kts, .py, .ipynb)           │  [Composer & Slash Commands]   │
-│                     │                                 │  [Model ▼] [Effort ▼] [Send]   │
-│  • Bots:            │  • DataFrame table viewer &     │                                │
-│    Routines & pages │    Notepad with Markdown preview│                                │
-├─────────────────────┴─────────────────────────────────┴────────────────────────────────┤
-│  Status Bar: [LSP (JDT / Ty), MCP, Serve & Hub Status]        [Heap Memory  |  CPU]    │
-└────────────────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────────────────────────────┐
+│  Menu Bar:  File  |  Cell  |  Find  |  Inference  |  Agent Hub  |  Help                   │
+├────────────────────────┬─────────────────────────────────┬────────────────────────────────┤
+│  Explorer Tabs         │  Workspace Tabs                 │  AI Agent Team                 │
+│  ┌───────┬──────┬────┐ │  ┌──────────────┬─────────┬───┐ │  👔 Frank  | 💡 Steve          │
+│  │Project│Kernel│Bots│ │  │Bot Activities│ Welcome │ … │ │  📣 Julien | 🤝 Mike           │
+│  └───────┴──────┴────┘ │  └──────────────┴─────────┴───┘ │  📊 Clair  | 📐 Ada            │
+│                        │                                 │  ☕ James  | 🐍 Guido          │
+│  • Project:            │  • Bot Activities & Routines:   │  🖥️ Chuck                      │
+│    File & folder       │    24/7 bot runs, transcripts,  │  ────────────────────────────  │
+│    tree of cwd         │    & human-in-the-loop approvals│  Conversation stream,          │
+│                        │                                 │  tool execution, and           │
+│  • Kernel:             │  • Interactive multi-language   │  peer-to-peer delegation       │
+│    Live variables &    │    notebook cells (.jsh, .sc,   │  ────────────────────────────  │
+│    persisted models    │    .kts, .py, .ipynb)           │  [Composer & Slash Commands]   │
+│                        │                                 │  [Model ▼] [Effort ▼] [Send]   │
+│  • Bots:               │  • DataFrame table viewer &     │                                │
+│    Routines & pages    │    Notepad with Markdown preview│                                │
+├────────────────────────┴─────────────────────────────────┴────────────────────────────────┤
+│  Status Bar: [LSP (JDT / Ty), MCP, Serve & Hub Status]           [Heap Memory  |  CPU]    │
+└───────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 - **Left Pane — Explorer Tabs**:
