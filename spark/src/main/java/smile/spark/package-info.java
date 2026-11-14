@@ -87,10 +87,9 @@
  *
  * <h2>Dependencies</h2>
  * <p>The module depends on {@code smile-core} and on the Spark libraries
- * ({@code spark-core}, {@code spark-sql}, {@code spark-mllib}, and
- * {@code hadoop-common}), which are {@code provided} and expected to be
- * supplied by the Spark runtime environment. All operations require an active
- * {@code SparkSession}.
+ * ({@code spark-core}, {@code spark-sql}, and {@code spark-mllib}), which are
+ * {@code provided} and expected to be supplied by the Spark runtime
+ * environment. All operations require an active {@code SparkSession}.
  *
  * @author Haifeng Li
  */
