@@ -168,6 +168,32 @@
             "confirmConsequential": false,
             "approvalTtlMinutes": 0
           }
+        },
+        {
+          "routineId": "frank-weekly-briefing",
+          "name": "Monday 7:30 AM Weekly Briefing",
+          "enabled": true,
+          "trigger": {
+            "source": "timer",
+            "cron": "30 7 * * MON",
+            "intervalSeconds": 0,
+            "missedFirePolicy": "FIRE_ONCE",
+            "reminderBeforeSeconds": 0,
+            "settleSeconds": 0,
+            "maxTurnsPerHour": 0
+          },
+          "workflow": {
+            "kind": "SKILL",
+            "target": "weekly-briefing",
+            "instructions": "Aggregate the past 7 days of session logs (--scope all --since-days 7) and .smile/memory/YYYY-MM-DD.md files across ${smile.home}/bot/ and all contextProjects into a weekly executive briefing. Write the markdown brief to .smile/briefings/<week>.md and refresh ${smile.home}/bot/pages/executive-brief.html with the week-in-review, open threads, failures/stalls, alignment/drift check, and top priorities for the week.",
+            "requireActivityToday": false,
+            "useContextProjects": true
+          },
+          "policy": {
+            "sessionMode": "ISOLATED_PER_RUN",
+            "confirmConsequential": false,
+            "approvalTtlMinutes": 0
+          }
         }
       ]
     },
