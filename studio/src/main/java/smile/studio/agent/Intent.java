@@ -65,8 +65,8 @@ public class Intent extends JPanel {
      * Display mode for agent output.
      */
     public enum Mode {
-        /** Plain text mode (default). */
-        TEXT,
+        /** Raw Markdown text mode (default). */
+        RAW,
         /** Rendered Markdown preview mode. */
         PREVIEW
     }
@@ -113,7 +113,7 @@ public class Intent extends JPanel {
     private final JPanel outputPane = new JPanel();
     private final JPanel modeBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 2));
     private final JToggleButton modeButton = new JToggleButton(bundle.getString("PreviewMode"));
-    private Mode mode = Mode.TEXT;
+    private Mode mode = Mode.RAW;
     private Markdown markdownView;
     private final Map<Markdown, OutputArea> previewedAreas = new LinkedHashMap<>();
     private final Map<JScrollPane, OutputArea> previewedScrollAreas = new LinkedHashMap<>();
@@ -237,7 +237,7 @@ public class Intent extends JPanel {
         modeButton.setMargin(new Insets(1, 8, 1, 8));
         modeButton.setFocusable(false);
         modeButton.setSelected(false);
-        modeButton.addActionListener(e -> setMode(mode == Mode.TEXT ? Mode.PREVIEW : Mode.TEXT));
+        modeButton.addActionListener(e -> setMode(mode == Mode.RAW ? Mode.PREVIEW : Mode.RAW));
 
         modeBar.setOpaque(false);
         modeBar.setBorder(new EmptyBorder(2, 6, 2, 6));
@@ -248,8 +248,8 @@ public class Intent extends JPanel {
     private void syncModeButton() {
         if (mode == Mode.PREVIEW) {
             modeButton.setSelected(true);
-            modeButton.setText(bundle.getString("TextMode"));
-            modeButton.setToolTipText(bundle.getString("TextModeTooltip"));
+            modeButton.setText(bundle.getString("RawMode"));
+            modeButton.setToolTipText(bundle.getString("RawModeTooltip"));
         } else {
             modeButton.setSelected(false);
             modeButton.setText(bundle.getString("PreviewMode"));
@@ -732,10 +732,10 @@ public class Intent extends JPanel {
     }
 
     /**
-     * Switches the agent output between {@link Mode#TEXT} and {@link Mode#PREVIEW}.
+     * Switches the agent output between {@link Mode#RAW} and {@link Mode#PREVIEW}.
      * If the output cannot be rendered in preview mode (for example when the intent
      * is still editable, has no output text, or XML parsing falls back to plain text),
-     * the mode remains {@link Mode#TEXT}.
+     * the mode remains {@link Mode#RAW}.
      *
      * @param newMode the target mode.
      */
@@ -745,19 +745,19 @@ public class Intent extends JPanel {
                 || getIntentType() == IntentType.Markdown
                 || getIntentType() == IntentType.Raw
                 || !hasOutputText()) {
-            newMode = Mode.TEXT;
+            newMode = Mode.RAW;
         }
         if (newMode == Mode.PREVIEW) {
-            restoreTextMode();
+            restoreRawMode();
             if (renderPreviewMode()) {
                 this.mode = Mode.PREVIEW;
             } else {
-                restoreTextMode();
-                this.mode = Mode.TEXT;
+                restoreRawMode();
+                this.mode = Mode.RAW;
             }
         } else {
-            restoreTextMode();
-            this.mode = Mode.TEXT;
+            restoreRawMode();
+            this.mode = Mode.RAW;
         }
         syncModeButton();
         outputPane.revalidate();
@@ -816,7 +816,7 @@ public class Intent extends JPanel {
         return renderedAny;
     }
 
-    private void restoreTextMode() {
+    private void restoreRawMode() {
         for (var entry : previewedAreas.entrySet()) {
             Markdown md = entry.getKey();
             OutputArea area = entry.getValue();
@@ -847,7 +847,7 @@ public class Intent extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
-                    setMode(Mode.TEXT);
+                    setMode(Mode.RAW);
                 }
             }
         });
@@ -946,7 +946,7 @@ public class Intent extends JPanel {
 
     private void addQuestionTo(JPanel pane, String runId, Question question) {
         if (mode == Mode.PREVIEW) {
-            setMode(Mode.TEXT);
+            setMode(Mode.RAW);
         }
         OutputArea area = runId == null ? output : runOutputs.getOrDefault(runId, output);
         if (area.getText().isBlank()) {
@@ -978,7 +978,7 @@ public class Intent extends JPanel {
      */
     public void beginRun(String runId, String label, String parentTitle) {
         if (mode == Mode.PREVIEW) {
-            setMode(Mode.TEXT);
+            setMode(Mode.RAW);
         }
         if (runs == null) {
             runs = new JTabbedPane();
@@ -1123,7 +1123,7 @@ public class Intent extends JPanel {
         editor.setEditable(editable);
         if (editable) {
             if (mode == Mode.PREVIEW) {
-                setMode(Mode.TEXT);
+                setMode(Mode.RAW);
             }
             editor.setBackground(inputPaneColor);
             inputPane.setBackground(inputPaneColor);
@@ -1210,7 +1210,7 @@ public class Intent extends JPanel {
     public void setProgress(boolean on) {
         if (on) {
             if (mode == Mode.PREVIEW) {
-                setMode(Mode.TEXT);
+                setMode(Mode.RAW);
             }
             // A running turn is no longer waiting, so its queue badge and controls go away.
             clearQueued();
