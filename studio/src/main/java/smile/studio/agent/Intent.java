@@ -28,6 +28,8 @@ import java.util.ResourceBundle;
 import java.util.concurrent.Callable;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultEditorKit;
 import com.formdev.flatlaf.ui.FlatLineBorder;
@@ -57,6 +59,16 @@ public class Intent extends JPanel {
     static final String AGENT_STATUS_PREFIX = "\uD83D\uDCDC ";
     /** The scroll unit increment in pixels for the subagent output scrollbars. */
     private static final int SCROLL_UNIT_INCREMENT = 18;
+
+    /**
+     * Display mode for agent output.
+     */
+    public enum Mode {
+        /** Plain text mode (default). */
+        TEXT,
+        /** Rendered Markdown preview mode. */
+        PREVIEW
+    }
     // Input pane
     private Color inputPaneColor = UIManager.getColor("TextField.background");
     private final JPanel inputPane = new JPanel(new BorderLayout());
@@ -96,7 +108,15 @@ public class Intent extends JPanel {
     private final JButton moveDownButton = new JButton("⬇️");
     private final JButton cancelQueuedButton = new JButton("❌");
     // Output pane. Subagent runs are tabs inside this pane.
+    private final JPanel southPane = new JPanel(new BorderLayout());
     private final JPanel outputPane = new JPanel();
+    private final JPanel modeBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 2));
+    private final JToggleButton textButton = new JToggleButton(bundle.getString("TextMode"));
+    private final JToggleButton previewButton = new JToggleButton(bundle.getString("PreviewMode"));
+    private Mode mode = Mode.TEXT;
+    private Markdown markdownView;
+    private final Map<Markdown, OutputArea> previewedAreas = new LinkedHashMap<>();
+    private final Map<JScrollPane, OutputArea> previewedScrollAreas = new LinkedHashMap<>();
     private OutputArea output = createOutputArea();
     private JTabbedPane runs;
     private final Map<String, JPanel> runPanes = new LinkedHashMap<>();
@@ -117,6 +137,7 @@ public class Intent extends JPanel {
         }
         initModelComboBox(cli);
         initInputPane();
+        initModeBar();
         if (cli != null) {
             initActionMap(cli);
         }
@@ -124,8 +145,12 @@ public class Intent extends JPanel {
         outputPane.setLayout(new BoxLayout(outputPane, BoxLayout.Y_AXIS));
         outputPane.add(output);
 
+        southPane.setOpaque(false);
+        southPane.add(outputPane, BorderLayout.CENTER);
+        southPane.add(modeBar, BorderLayout.SOUTH);
+
         add(inputPane, BorderLayout.CENTER);
-        add(outputPane, BorderLayout.SOUTH);
+        add(southPane, BorderLayout.SOUTH);
         if (cli != null && cli.hintWindow() != null) {
             cli.hintWindow().addEditor(editor);
         }
@@ -178,7 +203,6 @@ public class Intent extends JPanel {
         progressPane.add(stopButton);
 
         initQueuePane();
-
         initIntentTypeComboBox();
         footer.setLayout(new BorderLayout());
         footer.setOpaque(false);
@@ -200,6 +224,34 @@ public class Intent extends JPanel {
         inputPane.add(sidebar, BorderLayout.WEST);
         inputPane.add(editor, BorderLayout.CENTER);
         inputPane.add(footer, BorderLayout.SOUTH);
+    }
+
+    /**
+     * Initializes the bottom-right toggle bar for switching between plain text
+     * and rendered Markdown preview of agent output.
+     */
+    private void initModeBar() {
+        textButton.setToolTipText(bundle.getString("TextModeTooltip"));
+        textButton.putClientProperty("JButton.buttonType", "roundRect");
+        textButton.setFocusable(false);
+        textButton.setSelected(true);
+
+        previewButton.setToolTipText(bundle.getString("PreviewModeTooltip"));
+        previewButton.putClientProperty("JButton.buttonType", "roundRect");
+        previewButton.setFocusable(false);
+
+        ButtonGroup modeGroup = new ButtonGroup();
+        modeGroup.add(textButton);
+        modeGroup.add(previewButton);
+
+        textButton.addActionListener(e -> setMode(Mode.TEXT));
+        previewButton.addActionListener(e -> setMode(Mode.PREVIEW));
+
+        modeBar.setOpaque(false);
+        modeBar.setBorder(new EmptyBorder(2, 6, 2, 6));
+        modeBar.add(textButton);
+        modeBar.add(previewButton);
+        modeBar.setVisible(false);
     }
 
     /**
@@ -253,6 +305,7 @@ public class Intent extends JPanel {
         if (queuePane.getParent() != footer) {
             footer.add(queuePane, BorderLayout.EAST);
         }
+        updateModeBarVisibility();
         footer.revalidate();
         footer.repaint();
     }
@@ -265,6 +318,7 @@ public class Intent extends JPanel {
         if (queuePane.getParent() == footer) {
             footer.remove(queuePane);
         }
+        updateModeBarVisibility();
         footer.revalidate();
         footer.repaint();
     }
@@ -634,12 +688,211 @@ public class Intent extends JPanel {
 
     /** Creates an output area. */
     private OutputArea createOutputArea() {
-        OutputArea output = new OutputArea();
-        output.setFont(Monospaced.getFont());
-        output.setEditable(false);
-        output.setLineWrap(true);
-        output.setWrapStyleWord(true);
-        return output;
+        OutputArea area = new OutputArea();
+        area.setFont(Monospaced.getFont());
+        area.setEditable(false);
+        area.setLineWrap(true);
+        area.setWrapStyleWord(true);
+        area.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                updateModeBarVisibility();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                updateModeBarVisibility();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+            }
+        });
+        return area;
+    }
+
+    /**
+     * Returns the current display mode of the agent output.
+     * @return the current {@link Mode}.
+     */
+    public Mode getMode() {
+        return mode;
+    }
+
+    /**
+     * Returns the currently rendered {@link Markdown} preview component, or {@code null}
+     * if preview has not been rendered yet.
+     * @return the {@link Markdown} preview component.
+     */
+    public Markdown markdownView() {
+        return markdownView;
+    }
+
+    /**
+     * Switches the agent output between {@link Mode#TEXT} and {@link Mode#PREVIEW}.
+     * If the output cannot be rendered in preview mode (for example when the intent
+     * is still editable, has no output text, or XML parsing falls back to plain text),
+     * the mode remains {@link Mode#TEXT}.
+     *
+     * @param newMode the target mode.
+     */
+    public void setMode(Mode newMode) {
+        if (newMode == null
+                || editor.isEditable()
+                || getIntentType() == IntentType.Markdown
+                || getIntentType() == IntentType.Raw
+                || !hasOutputText()) {
+            newMode = Mode.TEXT;
+        }
+        if (newMode == Mode.PREVIEW) {
+            restoreTextMode();
+            if (renderPreviewMode()) {
+                this.mode = Mode.PREVIEW;
+                previewButton.setSelected(true);
+            } else {
+                restoreTextMode();
+                this.mode = Mode.TEXT;
+                textButton.setSelected(true);
+            }
+        } else {
+            restoreTextMode();
+            this.mode = Mode.TEXT;
+            textButton.setSelected(true);
+        }
+        outputPane.revalidate();
+        outputPane.repaint();
+        southPane.revalidate();
+        southPane.repaint();
+        revalidate();
+        repaint();
+    }
+
+    private boolean renderPreviewMode() {
+        markdownView = null;
+        boolean renderedAny = false;
+        JPanel masterContainer = runs == null ? outputPane : runPanes.get("");
+        if (masterContainer != null) {
+            Component[] comps = masterContainer.getComponents();
+            for (int i = 0; i < comps.length; i++) {
+                if (comps[i] instanceof OutputArea area && !area.getText().isBlank()) {
+                    Markdown md = createMarkdownPreview(area.getText());
+                    if (md.contentPane() == null) {
+                        return false;
+                    }
+                    masterContainer.remove(i);
+                    masterContainer.add(md, i);
+                    previewedAreas.put(md, area);
+                    markdownView = md;
+                    renderedAny = true;
+                }
+            }
+        }
+        if (runs != null) {
+            for (var entry : runOutputs.entrySet()) {
+                String runId = entry.getKey();
+                if (runId.isEmpty()) {
+                    continue;
+                }
+                OutputArea area = entry.getValue();
+                if (area != null && !area.getText().isBlank()) {
+                    JPanel runPane = runPanes.get(runId);
+                    if (runPane != null && runPane.getComponentCount() > 0
+                            && runPane.getComponent(0) instanceof JScrollPane sp) {
+                        Markdown md = createMarkdownPreview(area.getText());
+                        if (md.contentPane() == null) {
+                            return false;
+                        }
+                        sp.setViewportView(md);
+                        previewedScrollAreas.put(sp, area);
+                        if (markdownView == null) {
+                            markdownView = md;
+                        }
+                        renderedAny = true;
+                    }
+                }
+            }
+        }
+        return renderedAny;
+    }
+
+    private void restoreTextMode() {
+        for (var entry : previewedAreas.entrySet()) {
+            Markdown md = entry.getKey();
+            OutputArea area = entry.getValue();
+            Container parent = md.getParent();
+            if (parent != null) {
+                Component[] comps = parent.getComponents();
+                for (int i = 0; i < comps.length; i++) {
+                    if (comps[i] == md) {
+                        parent.remove(i);
+                        parent.add(area, i);
+                        break;
+                    }
+                }
+                parent.revalidate();
+                parent.repaint();
+            }
+        }
+        previewedAreas.clear();
+        for (var entry : previewedScrollAreas.entrySet()) {
+            entry.getKey().setViewportView(entry.getValue());
+        }
+        previewedScrollAreas.clear();
+    }
+
+    private Markdown createMarkdownPreview(String text) {
+        Markdown md = new Markdown(text);
+        md.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    setMode(Mode.TEXT);
+                }
+            }
+        });
+        return md;
+    }
+
+    private boolean hasOutputText() {
+        if (output != null && !output.getText().isBlank()) {
+            return true;
+        }
+        if (!previewedAreas.isEmpty() || !previewedScrollAreas.isEmpty()) {
+            return true;
+        }
+        JPanel masterContainer = runs == null ? outputPane : runPanes.get("");
+        if (masterContainer != null) {
+            for (Component comp : masterContainer.getComponents()) {
+                if (comp instanceof OutputArea area && !area.getText().isBlank()) {
+                    return true;
+                }
+            }
+        }
+        for (OutputArea area : runOutputs.values()) {
+            if (area != null && !area.getText().isBlank()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updateModeBarVisibility() {
+        if (modeBar == null) {
+            return;
+        }
+        IntentType type = getIntentType();
+        boolean running = progressPane.getParent() == footer || progress.isIndeterminate();
+        boolean show = !editor.isEditable()
+                && !running
+                && !queuePane.isVisible()
+                && type != IntentType.Markdown
+                && type != IntentType.Raw
+                && hasOutputText();
+        if (modeBar.isVisible() != show) {
+            modeBar.setVisible(show);
+            southPane.revalidate();
+            southPane.repaint();
+        }
     }
 
     /**
@@ -657,8 +910,10 @@ public class Intent extends JPanel {
      */
     public void renderMarkdown(String text) {
         var html = new Markdown(text);
+        markdownView = html;
         outputPane.remove(output);
         outputPane.add(html);
+        updateModeBarVisibility();
     }
 
     /**
@@ -689,6 +944,9 @@ public class Intent extends JPanel {
     }
 
     private void addQuestionTo(JPanel pane, String runId, Question question) {
+        if (mode == Mode.PREVIEW) {
+            setMode(Mode.TEXT);
+        }
         OutputArea area = runId == null ? output : runOutputs.getOrDefault(runId, output);
         if (area.getText().isBlank()) {
             pane.remove(area);
@@ -718,6 +976,9 @@ public class Intent extends JPanel {
      * @param parentTitle the title of the parent tab, added with the first run.
      */
     public void beginRun(String runId, String label, String parentTitle) {
+        if (mode == Mode.PREVIEW) {
+            setMode(Mode.TEXT);
+        }
         if (runs == null) {
             runs = new JTabbedPane();
             outputPane.remove(output);
@@ -860,6 +1121,9 @@ public class Intent extends JPanel {
         intentTypeComboBox.setEnabled(editable);
         editor.setEditable(editable);
         if (editable) {
+            if (mode == Mode.PREVIEW) {
+                setMode(Mode.TEXT);
+            }
             editor.setBackground(inputPaneColor);
             inputPane.setBackground(inputPaneColor);
             controlPane.setBackground(inputPaneColor);
@@ -871,6 +1135,7 @@ public class Intent extends JPanel {
             inputPane.setBackground(getBackground());
             footer.remove(controlPane);
         }
+        updateModeBarVisibility();
         footer.revalidate();
         footer.repaint();
     }
@@ -908,6 +1173,7 @@ public class Intent extends JPanel {
      */
     public void setIntentType(IntentType type) {
         intentTypeComboBox.setSelectedItem(type);
+        updateModeBarVisibility();
     }
 
     /**
@@ -942,6 +1208,9 @@ public class Intent extends JPanel {
      */
     public void setProgress(boolean on) {
         if (on) {
+            if (mode == Mode.PREVIEW) {
+                setMode(Mode.TEXT);
+            }
             // A running turn is no longer waiting, so its queue badge and controls go away.
             clearQueued();
             progress.setIndeterminate(true);
@@ -958,8 +1227,33 @@ public class Intent extends JPanel {
             footer.remove(progressPane);
             stopAction = null;
         }
+        updateModeBarVisibility();
         footer.revalidate();
         footer.repaint();
+    }
+
+    /**
+     * Returns the bottom-right mode toggle bar. Package-private for testing.
+     * @return the mode toggle bar.
+     */
+    JPanel modeBar() {
+        return modeBar;
+    }
+
+    /**
+     * Returns the plain-text mode toggle button. Package-private for testing.
+     * @return the text mode toggle button.
+     */
+    JToggleButton textButton() {
+        return textButton;
+    }
+
+    /**
+     * Returns the Markdown preview mode toggle button. Package-private for testing.
+     * @return the preview mode toggle button.
+     */
+    JToggleButton previewButton() {
+        return previewButton;
     }
 
     /**

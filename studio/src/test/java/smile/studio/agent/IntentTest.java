@@ -434,4 +434,120 @@ class IntentTest {
         intent.appendRun(null, "Tests completed.");
         assertEquals(0, intent.runs().getSelectedIndex());
     }
+
+    /** Keys the output Text/Preview toggle bar reads at runtime. */
+    private static final List<String> MODE_KEYS = List.of(
+            "TextMode", "PreviewMode", "TextModeTooltip", "PreviewModeTooltip");
+
+    @Test
+    void modeKeysExistInEveryLocale() {
+        ResourceBundle base = ResourceBundle.getBundle(Intent.class.getName(), Locale.ROOT);
+        for (String key : MODE_KEYS) {
+            assertTrue(base.containsKey(key), "base Intent bundle is missing key: " + key);
+        }
+        for (Locale locale : QUEUE_LOCALES) {
+            ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), locale);
+            for (String key : MODE_KEYS) {
+                assertTrue(bundle.containsKey(key),
+                        locale + " Intent bundle is missing key: " + key);
+                assertFalse(bundle.getString(key).isBlank(),
+                        locale + " Intent bundle has a blank value for key: " + key);
+            }
+        }
+    }
+
+    @Test
+    void newIntent_defaultsToTextModeAndHidesModeBarUntilTurnFinishesWithOutput() {
+        Intent intent = new Intent(null);
+        assertEquals(Intent.Mode.TEXT, intent.getMode());
+        assertFalse(intent.modeBar().isVisible(), "editable composer must not show modeBar");
+
+        // Submitted turn with no output yet
+        intent.setEditable(false);
+        assertFalse(intent.modeBar().isVisible(), "read-only intent with blank output must hide modeBar");
+
+        // Streaming turn in progress
+        intent.setProgress(true);
+        intent.appendRun(null, "| Col A | Col B |\n| --- | --- |\n| 1 | 2 |\n");
+        assertFalse(intent.modeBar().isVisible(), "modeBar must stay hidden while turn is streaming");
+        assertEquals(Intent.Mode.TEXT, intent.getMode());
+
+        // Turn completes
+        intent.setProgress(false);
+        assertTrue(intent.modeBar().isVisible(), "modeBar must appear at bottom-right once turn finishes with output");
+        assertEquals(Intent.Mode.TEXT, intent.getMode(), "agent output must remain in TEXT mode by default");
+        assertTrue(intent.textButton().isSelected());
+        assertFalse(intent.previewButton().isSelected());
+    }
+
+    @Test
+    void switchingBetweenPreviewAndTextMode_rendersMarkdownAndRestoresPlainText() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        String md = """
+                # Summary Report
+
+                | Metric | Value |
+                | :--- | ---: |
+                | Latency | 1.8 ms |
+
+                ```java
+                int x = 42;
+                ```
+                """;
+        intent.output().setText(md);
+        assertTrue(intent.modeBar().isVisible());
+        assertEquals(Intent.Mode.TEXT, intent.getMode());
+
+        // Switch to Preview mode via the Preview toggle button
+        intent.previewButton().doClick();
+        assertEquals(Intent.Mode.PREVIEW, intent.getMode());
+        assertTrue(intent.previewButton().isSelected());
+        assertNotNull(intent.markdownView());
+        assertNotNull(intent.markdownView().contentPane());
+        assertEquals(1, intent.markdownView().contentPane().getDocument().getElementsByTagName("table").getLength());
+        assertEquals(1, intent.markdownView().contentPane().getDocument().getElementsByTagName("pre").getLength());
+        assertTrue(intent.markdownView().getPreferredSize().height > 0,
+                "embedded Markdown preview must compute a positive preferred height for BorderLayout.SOUTH");
+
+        // Switch back to Text mode via the Text toggle button
+        intent.textButton().doClick();
+        assertEquals(Intent.Mode.TEXT, intent.getMode());
+        assertTrue(intent.textButton().isSelected());
+        assertNotNull(intent.output().getParent(), "OutputArea must be restored to outputPane in TEXT mode");
+        assertEquals(md, intent.output().getText());
+    }
+
+    @Test
+    void previewMode_supportsSubagentTabsAndRestoresOutputAreas() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.appendRun(null, "# Master Output\n\n| A | B |\n| - | - |\n| 1 | 2 |\n");
+        intent.beginRun("run-1", "Explore", "James");
+        intent.appendRun("run-1", "```java\nSystem.out.println(\"subagent\");\n```\n");
+        intent.finishRun("run-1", "Finished");
+        intent.setProgress(false);
+
+        assertTrue(intent.modeBar().isVisible());
+        intent.setMode(Intent.Mode.PREVIEW);
+        assertEquals(Intent.Mode.PREVIEW, intent.getMode());
+        assertNotNull(intent.markdownView());
+
+        // Switch back to TEXT mode and verify both master and subagent OutputAreas are restored
+        intent.setMode(Intent.Mode.TEXT);
+        assertEquals(Intent.Mode.TEXT, intent.getMode());
+        assertTrue(intent.output().getText().contains("Master Output"));
+    }
+
+    @Test
+    void previewMode_fallsBackToTextModeOnMalformedXml() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.output().setText("# Broken\n\n<div>unclosed tag\n");
+
+        intent.setMode(Intent.Mode.PREVIEW);
+        assertEquals(Intent.Mode.TEXT, intent.getMode(), "malformed XML fallback must keep mode as TEXT");
+        assertTrue(intent.textButton().isSelected());
+        assertFalse(intent.previewButton().isSelected());
+    }
 }
