@@ -64,7 +64,7 @@ libraryDependencies += "com.github.haifengl" % "smile-spark" % "<version>"
 ```
 
 The module depends on `smile-core` (pure Java) and the Spark libraries
-(`spark-core`, `spark-sql`, `spark-mllib`, `hadoop-common`) which are marked `provided`
+(`spark-core`, `spark-sql`, `spark-mllib`) which are marked `provided`
 (typically supplied by your Spark runtime environment).
 
 The core import is:
