@@ -453,8 +453,8 @@ public class OutputArea extends ThemedTextArea implements HyperlinkListener, Lin
         return Optional.empty();
     }
 
-    private Workspace findWorkspace() {
-        Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, this);
+    static Workspace findWorkspace(Component source) {
+        Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, source);
         if (ws != null) {
             return ws;
         }
@@ -467,6 +467,10 @@ public class OutputArea extends ThemedTextArea implements HyperlinkListener, Lin
             }
         }
         return null;
+    }
+
+    private Workspace findWorkspace() {
+        return findWorkspace(this);
     }
 
     private static Workspace findWorkspaceIn(Container container) {
