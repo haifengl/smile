@@ -186,12 +186,12 @@ Configure Studio's connection and lifecycle behavior in `$SMILE_HOME/conf/studio
 
 ## 3. Built-In Bot Personas & Default Routines
 
-Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and eleven coordinated routines:
+Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and twelve coordinated routines:
 
 | Bot ID | Persona | Role | Default Routines |
 |--------|---------|------|------------------|
 | `all-agents-memory` | `*` (All active personas) | Daily Memory Logger | `daily-log` (Daily 19:00) |
-| `frank` | `chief-of-staff` | Primary Bot & Executive Coordinator | `frank-daily-recap` (Daily 20:00), `frank-inbox` (Email), `frank-calendar` (Calendar), `frank-bot-activity-recap` (Daily 22:30) |
+| `frank` | `chief-of-staff` | Primary Bot & Executive Coordinator | `frank-daily-recap` (Daily 20:00), `frank-inbox` (Email), `frank-calendar` (Calendar), `frank-bot-activity-recap` (Daily 22:30), `frank-weekly-briefing` (Mon 07:30) |
 | `julien` | `evangelist` | Developer & Product Evangelist | `julien-community-watch` (Every 4h), `julien-community-post` (Mon/Wed/Fri 10:00), `julien-campaign-driver` (Every 2h) |
 | `mike` | `sales` | Founder-Led B2B Sales | `mike-signal-watch` (Mon–Fri 08:00), `mike-outreach-sweep` (Mon–Fri 08:30), `mike-replies` (Email) |
 
@@ -218,6 +218,9 @@ Out of the box, `$SMILE_HOME/conf/bots.json` ships with four Bot entries and ele
 - **`frank-bot-activity-recap` (10:30 PM Bot Activity)**
   - **Trigger:** `timer` (`cron: "30 22 * * *"`, `missedFirePolicy: "FIRE_ONCE"`, `awaitRoutineId: "frank-daily-recap"`)
   - **Workflow:** Queries `/v1/admin/runs` and `/q/metrics` to collect routine execution counts, `SKIPPED_IDLE` savings, model tier breakdown, and event intake telemetry, and updates `$SMILE_HOME/bot/pages/bot-activity.html`.
+- **`frank-weekly-briefing` (Monday 7:30 AM Weekly Briefing)**
+  - **Trigger:** `timer` (`cron: "30 7 * * MON"`, `missedFirePolicy: "FIRE_ONCE"`, `awaitRoutineId: "daily-log"`)
+  - **Workflow:** Runs `/weekly-briefing` (`useContextProjects: true`) across `$SMILE_HOME/bot/` and all tracked Studio projects over the last 7 days, writes the weekly markdown brief to `$SMILE_HOME/bot/.smile/briefings/<YYYY>-W<WW>.md` (and syncs copies to each `<project>/.smile/briefings/<YYYY>-W<WW>.md`), and refreshes `$SMILE_HOME/bot/pages/executive-brief.html` with the week-in-review, open threads & pending approvals, failures/stalls, alignment/drift check, and top priorities for the week.
 
 ### 3.3 `julien` — Developer & Product Evangelist
 

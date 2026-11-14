@@ -185,9 +185,10 @@
           "workflow": {
             "kind": "SKILL",
             "target": "weekly-briefing",
-            "instructions": "Aggregate the past 7 days of session logs (--scope all --since-days 7) and .smile/memory/YYYY-MM-DD.md files across ${smile.home}/bot/ and all contextProjects into a weekly executive briefing. Write the markdown brief to .smile/briefings/<week>.md and refresh ${smile.home}/bot/pages/executive-brief.html with the week-in-review, open threads, failures/stalls, alignment/drift check, and top priorities for the week.",
+            "instructions": "Aggregate the past 7 days of session logs (`python -m ioa.agent.base.skills.weekly-briefing.scripts.collect_sessions \"${smile.home}/bot/.smile\" <each-contextProject>/.smile --scope all --since-days 7 --summary`), `.smile/memory/YYYY-MM-DD.md` files across `${smile.home}/bot/` and all contextProjects, and pending approvals from Agent Hub (`/v1/admin/approvals?status=PENDING`) into a weekly executive briefing. Write the markdown brief to `${smile.home}/bot/.smile/briefings/<YYYY>-W<WW>.md` (and sync a copy to each contextProject's `<project>/.smile/briefings/<YYYY>-W<WW>.md`) and refresh `${smile.home}/bot/pages/executive-brief.html` with the week-in-review, open threads & pending approvals, failures/stalls, alignment/drift check, and top priorities for the week.",
             "requireActivityToday": false,
-            "useContextProjects": true
+            "useContextProjects": true,
+            "awaitRoutineId": "daily-log"
           },
           "policy": {
             "sessionMode": "ISOLATED_PER_RUN",
