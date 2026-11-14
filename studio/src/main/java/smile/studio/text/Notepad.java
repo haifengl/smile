@@ -268,8 +268,8 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
         }
         if (this.mode == Mode.PREVIEW) {
             modeButton.setSelected(true);
-            modeButton.setText(bundle.getString("TextMode"));
-            modeButton.setToolTipText(bundle.getString("TextModeTooltip"));
+            modeButton.setText(bundle.getString("EditMode"));
+            modeButton.setToolTipText(bundle.getString("EditModeTooltip"));
         } else {
             modeButton.setSelected(false);
             modeButton.setText(bundle.getString("PreviewMode"));

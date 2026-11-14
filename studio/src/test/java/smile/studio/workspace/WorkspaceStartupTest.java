@@ -136,6 +136,14 @@ public class WorkspaceStartupTest {
         assertEquals(1, modeBar.getComponentCount(), "modeBar should contain a single JToggleButton");
         var modeBtn = (javax.swing.JToggleButton) modeBar.getComponent(0);
         assertFalse(modeBtn.isSelected(), "Mode toggle button should not be selected on fallback to EDIT");
+        var bundle = java.util.ResourceBundle.getBundle(Notepad.class.getName(), java.util.Locale.getDefault());
+        assertEquals(bundle.getString("PreviewMode"), modeBtn.getText());
+
+        var pad1Layered = (javax.swing.JLayeredPane) pad1.getComponent(0);
+        var pad1ModeBar = (javax.swing.JPanel) pad1Layered.getComponentsInLayer(javax.swing.JLayeredPane.PALETTE_LAYER)[0];
+        var pad1ModeBtn = (javax.swing.JToggleButton) pad1ModeBar.getComponent(0);
+        assertTrue(pad1ModeBtn.isSelected());
+        assertEquals(bundle.getString("EditMode"), pad1ModeBtn.getText());
     }
 
     @Test
