@@ -11,6 +11,6 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlin.jvm:org.jetbrains.kotlin.jvm.gradle.plugin:2.4.21")
-    implementation("org.jetbrains.dokka:dokka-gradle-plugin:2.3.0-Beta")
+    implementation("org.jetbrains.dokka:dokka-gradle-plugin:2.3.0")
 }
 
