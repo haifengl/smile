@@ -550,18 +550,7 @@ public final class HubClient {
         if (bot == null) {
             return Optional.empty();
         }
-        String botId = bot.botId() == null ? "" : bot.botId().toLowerCase();
-        String persona = bot.persona() == null ? "" : bot.persona().toLowerCase();
-        String slug = null;
-        if ("frank".equals(botId) || "chief-of-staff".equals(persona)) {
-            slug = "executive-brief";
-        } else if ("mike".equals(botId) || "sales".equals(persona)) {
-            slug = "sales-pipeline";
-        } else if ("julien".equals(botId) || "evangelist".equals(persona)) {
-            slug = "community-radar";
-        } else if ("*".equals(persona) || botId.contains("all-agents")) {
-            slug = "bot-activity";
-        }
+        String slug = primaryPageSlugForBot(bot.botId(), bot.persona(), null);
         if (slug == null) {
             return Optional.empty();
         }
@@ -571,11 +560,55 @@ public final class HubClient {
                 .findFirst();
     }
 
+    static String primaryPageSlugForBot(String botId, String persona, String routineId) {
+        String cleanBot = normalizeBotToken(botId);
+        String cleanPersona = normalizeBotToken(persona);
+        String cleanRoutine = routineId == null ? "" : routineId.trim().toLowerCase();
+        if (cleanBot.isEmpty() && cleanRoutine.startsWith("peer-request:")) {
+            cleanBot = normalizeBotToken(cleanRoutine.substring("peer-request:".length()));
+        }
+        if ("frank".equals(cleanBot) || "chief-of-staff".equals(cleanPersona) || cleanRoutine.startsWith("frank-")) {
+            return "executive-brief";
+        }
+        if ("mike".equals(cleanBot) || "sales".equals(cleanPersona) || cleanRoutine.startsWith("mike-")) {
+            return "sales-pipeline";
+        }
+        if ("julien".equals(cleanBot) || "evangelist".equals(cleanPersona) || cleanRoutine.startsWith("julien-")) {
+            return "community-radar";
+        }
+        if ("*".equals(cleanPersona) || cleanBot.contains("all-agents")) {
+            return "bot-activity";
+        }
+        return null;
+    }
+
+    private static String normalizeBotToken(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return "";
+        }
+        String s = raw.trim().toLowerCase();
+        if (s.startsWith("peer-request:")) {
+            s = s.substring("peer-request:".length()).trim();
+        } else if (s.startsWith("peer:")) {
+            s = s.substring("peer:".length()).trim();
+        }
+        if (s.startsWith("@")) {
+            s = s.substring(1).trim();
+        }
+        int hashIdx = s.indexOf('#');
+        if (hashIdx >= 0) {
+            s = s.substring(0, hashIdx).trim();
+        }
+        return s;
+    }
+
     /**
      * Returns {@code true} if the given {@link BotStreamEvent} is a {@code "page"}
      * update event that should automatically open in the system browser.
      * In particular, {@code "bot-activity"} is only auto-opened when updated by
-     * {@code "frank-bot-activity-recap"}.
+     * {@code "frank-bot-activity-recap"}, and canonical per-bot pages
+     * ({@code "executive-brief"}, {@code "sales-pipeline"}, {@code "community-radar"})
+     * are only auto-opened when the event belongs to that owning bot.
      *
      * @param ev the stream event to evaluate.
      * @return {@code true} if the page should be opened in the browser.
@@ -588,6 +621,14 @@ public final class HubClient {
         if ("bot-activity".equalsIgnoreCase(slug)) {
             return "frank-bot-activity-recap".equalsIgnoreCase(
                     ev.routineId() == null ? "" : ev.routineId().trim());
+        }
+        if ("executive-brief".equalsIgnoreCase(slug)
+                || "sales-pipeline".equalsIgnoreCase(slug)
+                || "community-radar".equalsIgnoreCase(slug)) {
+            String expectedSlug = primaryPageSlugForBot(ev.botId(), null, ev.routineId());
+            if (expectedSlug != null && !expectedSlug.equalsIgnoreCase(slug)) {
+                return false;
+            }
         }
         return true;
     }
