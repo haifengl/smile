@@ -32,7 +32,11 @@ import './TextContent.css'
 
 function isMermaidChild(children) {
     const child = React.Children.toArray(children)[0]
-    return React.isValidElement(child) && child.props?.['data-mermaid'] != null
+    return (
+        React.isValidElement(child) &&
+        (child.props?.['data-mermaid'] != null ||
+            /\blanguage-mermaid\b/.test(child.props?.className || ''))
+    )
 }
 
 export default function TextContent({
