@@ -32,6 +32,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultEditorKit;
+import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.ui.FlatLineBorder;
 import com.formdev.flatlaf.util.SystemInfo;
 import ioa.llm.client.LLM;
@@ -111,8 +112,7 @@ public class Intent extends JPanel {
     private final JPanel southPane = new JPanel(new BorderLayout());
     private final JPanel outputPane = new JPanel();
     private final JPanel modeBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 2));
-    private final JToggleButton textButton = new JToggleButton(bundle.getString("TextMode"));
-    private final JToggleButton previewButton = new JToggleButton(bundle.getString("PreviewMode"));
+    private final JToggleButton modeButton = new JToggleButton(bundle.getString("PreviewMode"));
     private Mode mode = Mode.TEXT;
     private Markdown markdownView;
     private final Map<Markdown, OutputArea> previewedAreas = new LinkedHashMap<>();
@@ -227,31 +227,34 @@ public class Intent extends JPanel {
     }
 
     /**
-     * Initializes the bottom-right toggle bar for switching between plain text
+     * Initializes the bottom-right toggle button for switching between plain text
      * and rendered Markdown preview of agent output.
      */
     private void initModeBar() {
-        textButton.setToolTipText(bundle.getString("TextModeTooltip"));
-        textButton.putClientProperty("JButton.buttonType", "roundRect");
-        textButton.setFocusable(false);
-        textButton.setSelected(true);
-
-        previewButton.setToolTipText(bundle.getString("PreviewModeTooltip"));
-        previewButton.putClientProperty("JButton.buttonType", "roundRect");
-        previewButton.setFocusable(false);
-
-        ButtonGroup modeGroup = new ButtonGroup();
-        modeGroup.add(textButton);
-        modeGroup.add(previewButton);
-
-        textButton.addActionListener(e -> setMode(Mode.TEXT));
-        previewButton.addActionListener(e -> setMode(Mode.PREVIEW));
+        modeButton.setToolTipText(bundle.getString("PreviewModeTooltip"));
+        modeButton.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_ROUND_RECT);
+        modeButton.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
+        modeButton.setMargin(new Insets(1, 8, 1, 8));
+        modeButton.setFocusable(false);
+        modeButton.setSelected(false);
+        modeButton.addActionListener(e -> setMode(mode == Mode.TEXT ? Mode.PREVIEW : Mode.TEXT));
 
         modeBar.setOpaque(false);
         modeBar.setBorder(new EmptyBorder(2, 6, 2, 6));
-        modeBar.add(textButton);
-        modeBar.add(previewButton);
+        modeBar.add(modeButton);
         modeBar.setVisible(false);
+    }
+
+    private void syncModeButton() {
+        if (mode == Mode.PREVIEW) {
+            modeButton.setSelected(true);
+            modeButton.setText(bundle.getString("TextMode"));
+            modeButton.setToolTipText(bundle.getString("TextModeTooltip"));
+        } else {
+            modeButton.setSelected(false);
+            modeButton.setText(bundle.getString("PreviewMode"));
+            modeButton.setToolTipText(bundle.getString("PreviewModeTooltip"));
+        }
     }
 
     /**
@@ -748,17 +751,15 @@ public class Intent extends JPanel {
             restoreTextMode();
             if (renderPreviewMode()) {
                 this.mode = Mode.PREVIEW;
-                previewButton.setSelected(true);
             } else {
                 restoreTextMode();
                 this.mode = Mode.TEXT;
-                textButton.setSelected(true);
             }
         } else {
             restoreTextMode();
             this.mode = Mode.TEXT;
-            textButton.setSelected(true);
         }
+        syncModeButton();
         outputPane.revalidate();
         outputPane.repaint();
         southPane.revalidate();
@@ -1241,19 +1242,11 @@ public class Intent extends JPanel {
     }
 
     /**
-     * Returns the plain-text mode toggle button. Package-private for testing.
-     * @return the text mode toggle button.
+     * Returns the mode toggle button. Package-private for testing.
+     * @return the mode toggle button.
      */
-    JToggleButton textButton() {
-        return textButton;
-    }
-
-    /**
-     * Returns the Markdown preview mode toggle button. Package-private for testing.
-     * @return the preview mode toggle button.
-     */
-    JToggleButton previewButton() {
-        return previewButton;
+    JToggleButton modeButton() {
+        return modeButton;
     }
 
     /**

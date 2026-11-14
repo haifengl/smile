@@ -124,7 +124,7 @@ public class WorkspaceStartupTest {
 
         // When a Markdown file contains malformed raw XML (e.g., an unclosed <div> tag)
         // that causes Markdown rendering to fall back to ThemedTextArea, Notepad switches
-        // its mode and top-right toggle buttons to EDIT mode rather than staying in PREVIEW.
+        // its mode and top-right toggle button to EDIT mode rather than staying in PREVIEW.
         Path brokenMdFile = tempDir.resolve("broken.md");
         Files.writeString(brokenMdFile, "# Title\n\n<div>unclosed raw html\n");
         Notepad brokenPad = new Notepad(brokenMdFile);
@@ -133,10 +133,9 @@ public class WorkspaceStartupTest {
         assertEquals(Notepad.Mode.EDIT, brokenPad.getMode(), "Fallback should set mode to EDIT");
         var layered = (javax.swing.JLayeredPane) brokenPad.getComponent(0);
         var modeBar = (javax.swing.JPanel) layered.getComponentsInLayer(javax.swing.JLayeredPane.PALETTE_LAYER)[0];
-        var editBtn = (javax.swing.JToggleButton) modeBar.getComponent(0);
-        var previewBtn = (javax.swing.JToggleButton) modeBar.getComponent(1);
-        assertTrue(editBtn.isSelected(), "Edit toggle button should be selected on fallback");
-        assertFalse(previewBtn.isSelected(), "Preview toggle button should not be selected on fallback");
+        assertEquals(1, modeBar.getComponentCount(), "modeBar should contain a single JToggleButton");
+        var modeBtn = (javax.swing.JToggleButton) modeBar.getComponent(0);
+        assertFalse(modeBtn.isSelected(), "Mode toggle button should not be selected on fallback to EDIT");
     }
 
     @Test
