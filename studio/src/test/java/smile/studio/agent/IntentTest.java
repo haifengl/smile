@@ -476,8 +476,7 @@ class IntentTest {
         intent.setProgress(false);
         assertTrue(intent.modeBar().isVisible(), "modeBar must appear at bottom-right once turn finishes with output");
         assertEquals(Intent.Mode.TEXT, intent.getMode(), "agent output must remain in TEXT mode by default");
-        assertTrue(intent.textButton().isSelected());
-        assertFalse(intent.previewButton().isSelected());
+        assertFalse(intent.modeButton().isSelected());
     }
 
     @Test
@@ -499,10 +498,13 @@ class IntentTest {
         assertTrue(intent.modeBar().isVisible());
         assertEquals(Intent.Mode.TEXT, intent.getMode());
 
-        // Switch to Preview mode via the Preview toggle button
-        intent.previewButton().doClick();
+        // Switch to Preview mode via the toggle button
+        ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), Locale.getDefault());
+        assertEquals(bundle.getString("PreviewMode"), intent.modeButton().getText());
+        intent.modeButton().doClick();
         assertEquals(Intent.Mode.PREVIEW, intent.getMode());
-        assertTrue(intent.previewButton().isSelected());
+        assertTrue(intent.modeButton().isSelected());
+        assertEquals(bundle.getString("TextMode"), intent.modeButton().getText());
         assertNotNull(intent.markdownView());
         assertNotNull(intent.markdownView().contentPane());
         assertEquals(1, intent.markdownView().contentPane().getDocument().getElementsByTagName("table").getLength());
@@ -510,10 +512,11 @@ class IntentTest {
         assertTrue(intent.markdownView().getPreferredSize().height > 0,
                 "embedded Markdown preview must compute a positive preferred height for BorderLayout.SOUTH");
 
-        // Switch back to Text mode via the Text toggle button
-        intent.textButton().doClick();
+        // Switch back to Text mode via the toggle button
+        intent.modeButton().doClick();
         assertEquals(Intent.Mode.TEXT, intent.getMode());
-        assertTrue(intent.textButton().isSelected());
+        assertFalse(intent.modeButton().isSelected());
+        assertEquals(bundle.getString("PreviewMode"), intent.modeButton().getText());
         assertNotNull(intent.output().getParent(), "OutputArea must be restored to outputPane in TEXT mode");
         assertEquals(md, intent.output().getText());
     }
@@ -547,7 +550,6 @@ class IntentTest {
 
         intent.setMode(Intent.Mode.PREVIEW);
         assertEquals(Intent.Mode.TEXT, intent.getMode(), "malformed XML fallback must keep mode as TEXT");
-        assertTrue(intent.textButton().isSelected());
-        assertFalse(intent.previewButton().isSelected());
+        assertFalse(intent.modeButton().isSelected());
     }
 }

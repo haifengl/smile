@@ -132,7 +132,7 @@ public class SearchResourceBundleTest {
             "Search", "GoToLine", "Find", "Replace",
             "ShowFindBar", "ShowReplaceBar", "Error",
             "SaveTitle", "SaveMessage", "ReplaceCount", "MarkCount",
-            "EditMode", "PreviewMode", "EditModeTooltip", "PreviewModeTooltip");
+            "TextMode", "PreviewMode", "TextModeTooltip", "PreviewModeTooltip");
 
     @Test
     public void testBaseBundleHasSearchKeys() {
