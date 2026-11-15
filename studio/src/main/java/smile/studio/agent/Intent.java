@@ -116,16 +116,21 @@ public class Intent extends JPanel {
         public void doLayout() {
             int w = getWidth();
             int h = getHeight();
-            outputPane.setBounds(0, 0, w, h);
-            if (modeBar.isVisible()) {
-                Dimension pref = modeBar.getPreferredSize();
+            // The bottom toggle floats over the output, so the output must stop short of
+            // it. Laying the output out at full height put the last two lines of text
+            // directly under the button; reserving the bar's height carves out an empty
+            // strip below the text for it to sit in.
+            Dimension barPref = modeBar.isVisible() ? modeBar.getPreferredSize() : null;
+            int reserved = barPref != null ? barPref.height : 0;
+            outputPane.setBounds(0, 0, w, Math.max(0, h - reserved));
+            if (barPref != null) {
                 int scrollBarWidth = UIManager.getInt("ScrollBar.width");
                 int rightMargin = (scrollBarWidth > 0 ? scrollBarWidth : 14) + 6;
-                int x = Math.max(0, w - pref.width - rightMargin);
-                int bottomY = Math.max(0, h - pref.height - 2);
-                modeBar.setBounds(x, bottomY, pref.width, pref.height);
+                int x = Math.max(0, w - barPref.width - rightMargin);
+                int bottomY = Math.max(0, h - barPref.height);
+                modeBar.setBounds(x, bottomY, barPref.width, barPref.height);
 
-                boolean showTop = h >= Math.max(MIN_TOP_MODE_BAR_HEIGHT, pref.height * 3);
+                boolean showTop = h >= Math.max(MIN_TOP_MODE_BAR_HEIGHT, barPref.height * 3);
                 topModeBar.setVisible(showTop);
                 if (showTop) {
                     Dimension topPref = topModeBar.getPreferredSize();
@@ -142,7 +147,14 @@ public class Intent extends JPanel {
 
         @Override
         public Dimension getPreferredSize() {
-            return outputPane.getPreferredSize();
+            // Include the reserved strip so the enclosing layout gives the bar room
+            // below the text instead of overlapping it.
+            Dimension pref = outputPane.getPreferredSize();
+            if (modeBar.isVisible()) {
+                Dimension barPref = modeBar.getPreferredSize();
+                return new Dimension(Math.max(pref.width, barPref.width), pref.height + barPref.height);
+            }
+            return pref;
         }
     };
     private final JPanel outputPane = new JPanel();
