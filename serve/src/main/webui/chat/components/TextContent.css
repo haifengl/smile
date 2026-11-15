@@ -129,3 +129,8 @@
   font-size: 13px;
   line-height: 1.5;
 }
+
+.text-content .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+}

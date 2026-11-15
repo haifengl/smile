@@ -434,4 +434,216 @@ class IntentTest {
         intent.appendRun(null, "Tests completed.");
         assertEquals(0, intent.runs().getSelectedIndex());
     }
+
+    /** Keys the output Raw/Preview toggle bar reads at runtime. */
+    private static final List<String> MODE_KEYS = List.of(
+            "RawMode", "PreviewMode", "RawModeTooltip", "PreviewModeTooltip");
+
+    @Test
+    void modeKeysExistInEveryLocale() {
+        ResourceBundle base = ResourceBundle.getBundle(Intent.class.getName(), Locale.ROOT);
+        for (String key : MODE_KEYS) {
+            assertTrue(base.containsKey(key), "base Intent bundle is missing key: " + key);
+        }
+        for (Locale locale : QUEUE_LOCALES) {
+            ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), locale);
+            for (String key : MODE_KEYS) {
+                assertTrue(bundle.containsKey(key),
+                        locale + " Intent bundle is missing key: " + key);
+                assertFalse(bundle.getString(key).isBlank(),
+                        locale + " Intent bundle has a blank value for key: " + key);
+            }
+        }
+    }
+
+    @Test
+    void newIntent_defaultsToRawModeAndHidesModeBarUntilTurnFinishesWithOutput() {
+        Intent intent = new Intent(null);
+        assertEquals(Intent.Mode.RAW, intent.getMode());
+        assertFalse(intent.modeBar().isVisible(), "editable composer must not show modeBar");
+
+        // Submitted turn with no output yet
+        intent.setEditable(false);
+        assertFalse(intent.modeBar().isVisible(), "read-only intent with blank output must hide modeBar");
+
+        // Streaming turn in progress
+        intent.setProgress(true);
+        intent.appendRun(null, "| Col A | Col B |\n| --- | --- |\n| 1 | 2 |\n");
+        assertFalse(intent.modeBar().isVisible(), "modeBar must stay hidden while turn is streaming");
+        assertEquals(Intent.Mode.RAW, intent.getMode());
+
+        // Turn completes
+        intent.setProgress(false);
+        assertTrue(intent.modeBar().isVisible(), "modeBar must appear at bottom-right once turn finishes with output");
+        assertEquals(Intent.Mode.RAW, intent.getMode(), "agent output must remain in RAW mode by default");
+        assertFalse(intent.modeButton().isSelected());
+    }
+
+    @Test
+    void switchingBetweenPreviewAndRawMode_rendersMarkdownAndRestoresRawText() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        String md = """
+                # Summary Report
+
+                | Metric | Value |
+                | :--- | ---: |
+                | Latency | 1.8 ms |
+
+                ```java
+                int x = 42;
+                ```
+                """;
+        intent.output().setText(md);
+        assertTrue(intent.modeBar().isVisible());
+        assertEquals(Intent.Mode.RAW, intent.getMode());
+
+        // Switch to Preview mode via the toggle button
+        ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), Locale.getDefault());
+        assertEquals(bundle.getString("PreviewMode"), intent.modeButton().getText());
+        intent.modeButton().doClick();
+        assertEquals(Intent.Mode.PREVIEW, intent.getMode());
+        assertTrue(intent.modeButton().isSelected());
+        assertEquals(bundle.getString("RawMode"), intent.modeButton().getText());
+        assertNotNull(intent.markdownView());
+        assertNotNull(intent.markdownView().contentPane());
+        assertEquals(1, intent.markdownView().contentPane().getDocument().getElementsByTagName("table").getLength());
+        assertEquals(1, intent.markdownView().contentPane().getDocument().getElementsByTagName("pre").getLength());
+        assertTrue(intent.markdownView().getPreferredSize().height > 0,
+                "embedded Markdown preview must compute a positive preferred height for BorderLayout.SOUTH");
+
+        // Switch back to Raw mode via the toggle button
+        intent.modeButton().doClick();
+        assertEquals(Intent.Mode.RAW, intent.getMode());
+        assertFalse(intent.modeButton().isSelected());
+        assertEquals(bundle.getString("PreviewMode"), intent.modeButton().getText());
+        assertNotNull(intent.output().getParent(), "OutputArea must be restored to outputPane in RAW mode");
+        assertEquals(md, intent.output().getText());
+    }
+
+    @Test
+    void previewMode_supportsSubagentTabsAndRestoresOutputAreas() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.appendRun(null, "# Master Output\n\n| A | B |\n| - | - |\n| 1 | 2 |\n");
+        intent.beginRun("run-1", "Explore", "James");
+        intent.appendRun("run-1", "```java\nSystem.out.println(\"subagent\");\n```\n");
+        intent.finishRun("run-1", "Finished");
+        intent.setProgress(false);
+
+        assertTrue(intent.modeBar().isVisible());
+        intent.setMode(Intent.Mode.PREVIEW);
+        assertEquals(Intent.Mode.PREVIEW, intent.getMode());
+        assertNotNull(intent.markdownView());
+
+        // Switch back to RAW mode and verify both master and subagent OutputAreas are restored
+        intent.setMode(Intent.Mode.RAW);
+        assertEquals(Intent.Mode.RAW, intent.getMode());
+        assertTrue(intent.output().getText().contains("Master Output"));
+    }
+
+    @Test
+    void previewMode_fallsBackToRawModeOnMalformedXml() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.output().setText("# Broken\n\n<div>unclosed tag\n");
+
+        intent.setMode(Intent.Mode.PREVIEW);
+        assertEquals(Intent.Mode.RAW, intent.getMode(), "malformed XML fallback must keep mode as RAW");
+        assertFalse(intent.modeButton().isSelected());
+    }
+
+    @Test
+    void southPane_overlaysModeBarInLayeredPanePaletteLayer() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.output().setText("# Heading\n\nBody text.\n");
+
+        assertInstanceOf(javax.swing.JLayeredPane.class, intent.southPane());
+        var defaultComps = intent.southPane().getComponentsInLayer(javax.swing.JLayeredPane.DEFAULT_LAYER);
+        var paletteComps = intent.southPane().getComponentsInLayer(javax.swing.JLayeredPane.PALETTE_LAYER);
+        assertEquals(1, defaultComps.length);
+        assertSame(intent.outputPane(), defaultComps[0]);
+        assertEquals(1, paletteComps.length);
+        assertSame(intent.modeBar(), paletteComps[0]);
+
+        intent.southPane().setSize(600, 200);
+        intent.southPane().doLayout();
+        assertEquals(600, intent.outputPane().getWidth());
+        assertEquals(200, intent.outputPane().getHeight());
+        assertTrue(intent.modeBar().getX() > 0, "modeBar must be positioned near the right edge");
+    }
+
+    @Test
+    void streamRouting_splitsLlmToolAndSystemStatusIntoSeparateWidgets_andPreviewsOnlyLlm() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.setProgress(true);
+
+        // 1. Stream initial LLM reasoning
+        intent.appendRun(null, "Let me inspect the files first.\n");
+        // 2. Stream tool call status updates and TodoWrite checklist
+        intent.appendRun(null, "  ✅ Read C:/code/smile/README.md\n");
+        intent.appendRun(null, "  ✅ Grep pattern in studio/src\n");
+        intent.appendRun(null, "📝 Current Tasks:\n⏳ Task one\n🚧 Task two\n");
+        // 3. Stream a system/compaction status notice
+        intent.appendSystemStatus(null, "[Context compacted. Continuing the task.]");
+        // 4. Stream final LLM Markdown summary with table
+        intent.appendRun(null, "## Results\n\n| File | Matches |\n| :--- | ---: |\n| README.md | 3 |\n");
+        intent.setProgress(false);
+
+        var comps = intent.outputPane().getComponents();
+        assertEquals(4, comps.length, "Expected 4 separate widgets: LLM -> TOOL -> STATUS -> LLM");
+        var llm1 = assertInstanceOf(AgentOutputArea.class, comps[0]);
+        var toolArea = assertInstanceOf(AgentOutputArea.class, comps[1]);
+        var statusArea = assertInstanceOf(AgentOutputArea.class, comps[2]);
+        var llm2 = assertInstanceOf(AgentOutputArea.class, comps[3]);
+
+        assertEquals(AgentOutputArea.Kind.LLM, llm1.kind());
+        assertEquals(AgentOutputArea.Kind.TOOL, toolArea.kind());
+        assertEquals(AgentOutputArea.Kind.STATUS, statusArea.kind());
+        assertEquals(AgentOutputArea.Kind.LLM, llm2.kind());
+
+        assertTrue(toolArea.getText().contains("  ✅ Read C:/code/smile/README.md\n  ✅ Grep pattern in studio/src"));
+        assertTrue(toolArea.getText().contains("📝 Current Tasks:\n⏳ Task one\n🚧 Task two"));
+        assertEquals("[Context compacted. Continuing the task.]", statusArea.getText());
+
+        // Switch to PREVIEW mode: only LLM widgets become Markdown; TOOL and STATUS remain AgentOutputArea
+        intent.setMode(Intent.Mode.PREVIEW);
+        assertEquals(Intent.Mode.PREVIEW, intent.getMode());
+
+        var previewComps = intent.outputPane().getComponents();
+        assertEquals(4, previewComps.length);
+        assertInstanceOf(smile.studio.text.Markdown.class, previewComps[0], "First LLM segment must be rendered as Markdown");
+        assertSame(toolArea, previewComps[1], "TOOL widget must remain AgentOutputArea in PREVIEW mode");
+        assertSame(statusArea, previewComps[2], "STATUS widget must remain AgentOutputArea in PREVIEW mode");
+        var md2 = assertInstanceOf(smile.studio.text.Markdown.class, previewComps[3], "Second LLM segment must be rendered as Markdown");
+        assertEquals(1, md2.contentPane().getDocument().getElementsByTagName("table").getLength());
+
+        // Switch back to RAW mode: both LLM widgets are restored in place
+        intent.setMode(Intent.Mode.RAW);
+        var rawComps = intent.outputPane().getComponents();
+        assertEquals(4, rawComps.length);
+        assertSame(llm1, rawComps[0]);
+        assertSame(toolArea, rawComps[1]);
+        assertSame(statusArea, rawComps[2]);
+        assertSame(llm2, rawComps[3]);
+    }
+
+    @Test
+    void fencedCodeBlock_containingToolLikeLines_staysInLlmSegment() {
+        String raw = """
+                Here is an example output:
+                ```text
+                  ✅ Read foo.txt
+                📝 Current Tasks:
+                ⏳ Do not split inside code fence
+                [status inside fence]
+                ```
+                Done.
+                """;
+        var segments = AgentOutputArea.splitSegments(raw);
+        assertEquals(1, segments.size(), "Tool-like lines inside a fenced code block must remain in the LLM segment");
+        assertEquals(AgentOutputArea.Kind.LLM, segments.getFirst().kind());
+    }
 }

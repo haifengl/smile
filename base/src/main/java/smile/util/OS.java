@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -135,16 +136,26 @@ public interface OS {
         List<String> args = new ArrayList<>();
         if (OS.isWindows()) {
             args.add("powershell.exe");
+            args.add("-NoLogo");
+            args.add("-NoProfile");
+            args.add("-NonInteractive");
             args.add("-Command");
+            // Encode the PowerShell script as Base64 UTF-8 and invoke via [scriptblock]::Create(...)
+            // so Win32 CreateProcessW and powershell.exe CLI argument unquoting never strip inner
+            // double quotes (e.g., python -c "..." or Invoke-RestMethod -Headers @{ Authorization = "Bearer ..." }),
+            // while avoiding -EncodedCommand's #< CLIXML stderr wrapper.
+            String encoded = Base64.getEncoder().encodeToString(command.getBytes(StandardCharsets.UTF_8));
+            args.add("& ([scriptblock]::Create([System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('"
+                    + encoded + "'))))");
         } else {
             args.add("bash");
             args.add("-c");
+            // Shell takes the whole command as a single argument.
+            // DO NOT parse it. Otherwise, the command arguments will
+            // be treated as Bash arguments.
+            args.add(command);
         }
 
-        // Shell takes the whole command as a single argument.
-        // DO NOT parse it. Otherwise, the command arguments will
-        // be treated as Bash arguments.
-        args.add(command);
         return args;
     }
 

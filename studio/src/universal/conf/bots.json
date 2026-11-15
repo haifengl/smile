@@ -168,6 +168,33 @@
             "confirmConsequential": false,
             "approvalTtlMinutes": 0
           }
+        },
+        {
+          "routineId": "frank-weekly-briefing",
+          "name": "Monday 7:30 AM Weekly Briefing",
+          "enabled": true,
+          "trigger": {
+            "source": "timer",
+            "cron": "30 7 * * MON",
+            "intervalSeconds": 0,
+            "missedFirePolicy": "FIRE_ONCE",
+            "reminderBeforeSeconds": 0,
+            "settleSeconds": 0,
+            "maxTurnsPerHour": 0
+          },
+          "workflow": {
+            "kind": "SKILL",
+            "target": "weekly-briefing",
+            "instructions": "Aggregate the past 7 days of session logs (`python -m ioa.agent.base.skills.weekly-briefing.scripts.collect_sessions \"${smile.home}/bot/.smile\" <each-contextProject>/.smile --scope all --since-days 7 --summary`), `.smile/memory/YYYY-MM-DD.md` files across `${smile.home}/bot/` and all contextProjects, and pending approvals from Agent Hub (`/v1/admin/approvals?status=PENDING`) into a weekly executive briefing. Write the markdown brief to `${smile.home}/bot/.smile/briefings/<YYYY>-W<WW>.md` (and sync a copy to each contextProject's `<project>/.smile/briefings/<YYYY>-W<WW>.md`) and refresh `${smile.home}/bot/pages/executive-brief.html` with the week-in-review, open threads & pending approvals, failures/stalls, alignment/drift check, and top priorities for the week.",
+            "requireActivityToday": false,
+            "useContextProjects": true,
+            "awaitRoutineId": "daily-log"
+          },
+          "policy": {
+            "sessionMode": "ISOLATED_PER_RUN",
+            "confirmConsequential": false,
+            "approvalTtlMinutes": 0
+          }
         }
       ]
     },
