@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import smile.anomaly.IsolationForest;
 import smile.anomaly.LOF;
 import smile.anomaly.SVM;
+import smile.anomaly.TimeSeriesAnomaly;
 import smile.model.AnomalyModel;
 import smile.model.ClassificationModel;
 import smile.model.ClusteringModel;
@@ -198,6 +199,12 @@ public record SmileModelDetails(
                 if (svm.vectors() != null) {
                     map.put("support_vectors", svm.vectors().length);
                 }
+            }
+            case TimeSeriesAnomaly ts -> {
+                map.put("underlying_model", ts.model().getClass().getSimpleName());
+                map.put("scale", ts.scale().name());
+                map.put("history_size", ts.history().length);
+                putFinite(map, "sigma", ts.sigma());
             }
             default -> { }
         }

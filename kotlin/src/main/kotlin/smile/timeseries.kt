@@ -113,6 +113,94 @@ fun boxPierce(x: DoubleArray, lag: Int = 1): BoxTest = BoxTest.pierce(x, lag)
  */
 fun ljungBox(x: DoubleArray, lag: Int = 1): BoxTest = BoxTest.ljung(x, lag)
 
+/**
+ * Fits an exponential smoothing state space model (ETS).
+ *
+ * @param x the time series.
+ * @param period the seasonal period; 1 for non-seasonal data.
+ * @param trend the trend component.
+ * @param seasonal the seasonal component.
+ * @return the fitted model.
+ */
+fun ets(
+    x: DoubleArray,
+    period: Int = 1,
+    trend: ETS.Trend = ETS.Trend.NONE,
+    seasonal: ETS.Seasonal = ETS.Seasonal.NONE
+): ETS = ETS.fit(x, ETS.Options(period, trend, seasonal))
+
+/**
+ * Fits an ETS model, selecting the trend and seasonal components by AICc.
+ *
+ * @param x the time series.
+ * @param period the seasonal period; 1 for non-seasonal data.
+ * @return the best model by AICc.
+ */
+fun etsAuto(x: DoubleArray, period: Int = 1): ETS = ETS.auto(x, period)
+
+/**
+ * Fits a seasonal ARMA model SARMA(p, q)(P, Q)[s].
+ *
+ * @param x the (stationary) time series.
+ * @param p the non-seasonal AR order.
+ * @param q the non-seasonal MA order.
+ * @param P the seasonal AR order.
+ * @param Q the seasonal MA order.
+ * @param s the seasonal period.
+ * @return the fitted model.
+ */
+fun sarma(x: DoubleArray, p: Int, q: Int, P: Int, Q: Int, s: Int): SARMA = SARMA.fit(x, p, q, P, Q, s)
+
+/**
+ * Fits a seasonal ARIMA model SARIMA(p, d, q)(P, D, Q)[s].
+ *
+ * @param x the time series.
+ * @param p the non-seasonal AR order.
+ * @param d the non-seasonal differencing order.
+ * @param q the non-seasonal MA order.
+ * @param P the seasonal AR order.
+ * @param D the seasonal differencing order.
+ * @param Q the seasonal MA order.
+ * @param s the seasonal period.
+ * @return the fitted model.
+ */
+fun sarima(x: DoubleArray, p: Int, d: Int, q: Int,
+           P: Int, D: Int, Q: Int, s: Int): SARIMA = SARIMA.fit(x, p, d, q, P, D, Q, s)
+
+/**
+ * Fits a vector autoregressive model VAR(p).
+ *
+ * @param x the series, an n-by-k array of observations in time order.
+ * @param p the order of the model.
+ * @param intercept whether to include an intercept.
+ * @return the fitted model.
+ */
+fun varModel(x: Array<DoubleArray>, p: Int, intercept: Boolean = true): VAR = VAR.fit(x, p, intercept)
+
+/**
+ * Computes forecast accuracy metrics.
+ *
+ * @param truth the actual values.
+ * @param forecast the forecast values.
+ * @return the metrics.
+ */
+fun forecastMetrics(truth: DoubleArray, forecast: DoubleArray): ForecastMetrics =
+    ForecastMetrics.of(truth, forecast)
+
+/**
+ * Runs a rolling-origin backtest.
+ *
+ * @param x the series, in chronological order.
+ * @param fit the model factory.
+ * @param horizon the number of points in each test block.
+ * @param folds the number of test blocks.
+ * @param expanding whether the training window expands (true) or rolls (false).
+ * @return the backtest results.
+ */
+fun backtest(x: DoubleArray, fit: BackTest.Fit, horizon: Int, folds: Int,
+             expanding: Boolean = true): BackTest =
+    BackTest.rollingOrigin(x, fit, horizon, folds, expanding)
+
 // ── Extension Functions on DoubleArray ────────────────────────────────────────
 
 /** Differencing of this time series. */

@@ -71,5 +71,15 @@ class AnomalySpec extends AnyWordSpec with Matchers {
       val scores = model.score(data)
       scores.length must be (50)
     }
+
+    "fit a residual-based time-series detector" in {
+      val history = Array.tabulate(200)(i => 50.0 + 10.0 * Math.sin(2 * Math.PI * i / 12))
+      val detector = tsAnomaly(history, threshold = 3.0)
+      detector.threshold() must be (3.0)
+
+      val test = Array.tabulate(40)(i => 50.0 + 10.0 * Math.sin(2 * Math.PI * (200 + i) / 12))
+      val scores = detector.score(test)
+      scores.length must be (40)
+    }
   }
 }

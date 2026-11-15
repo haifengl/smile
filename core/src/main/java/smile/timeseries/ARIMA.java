@@ -55,7 +55,7 @@ import smile.stat.Hypothesis;
  *
  * @author Haifeng Li
  */
-public class ARIMA implements Serializable {
+public class ARIMA implements TimeSeriesModel {
     @Serial
     private static final long serialVersionUID = 2L;
 

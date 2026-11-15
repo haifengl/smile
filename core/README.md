@@ -51,7 +51,7 @@ smile.manifold         – IsoMap, LLE, t-SNE, UMAP, KPCA, …
 smile.model            – Unified model wrappers (CART, MLP internals)
 smile.regression       – 15+ regressors (RF, GBT, SVM, MLP, OLS, LASSO, …)
 smile.sequence         – HMM, CRF sequence labeling
-smile.timeseries       – ARIMA, GARCH, exponential smoothing, …
+smile.timeseries       – AR, ARMA, ARIMA, SARIMA, ETS, VAR, backtesting
 smile.validation       – Cross-validation, Bootstrap, metrics
 smile.vq               – SOM, Neural Gas, GNG, NeuralMap, BIRCH
 ```
@@ -305,15 +305,21 @@ double[] kphi = explainer.shap(testTuple);
 | `IsolationForest` | Random partitioning; anomaly score ∝ isolation path length |
 | `SVM` (one-class) | Hypersphere in kernel feature space |
 | `LOF` | Local reachability density ratio relative to k-nearest neighbors |
+| `TimeSeriesAnomaly` | Residual-based detection against a time-series forecast |
 
 ```java
 // Isolation Forest
-IsolationForest iforest = IsolationForest.fit(trainData, 100); // 100 trees
+IsolationForest iforest = IsolationForest.fit(trainData, new IsolationForest.Options());
 double[] scores = iforest.score(testData);   // higher = more anomalous
 
 // Local Outlier Factor (LOF)
 LOF<double[]> lof = LOF.fit(trainData, 20); // k = 20
 double[] lofScores = lof.score(testData);    // > 1.5 = local outlier
+
+// Time-series residuals: flag points whose one-step residual is far from typical
+TimeSeriesAnomaly ts = TimeSeriesAnomaly.fit(history, ETS.auto(history, 12),
+        new TimeSeriesAnomaly.Options());    // MAD scale, threshold 3.0
+boolean[] anomalies = ts.predict(continuation);
 ```
 
 📖 **Full guide:** [ANOMALY_DETECTION.md](ANOMALY_DETECTION.md)
@@ -425,20 +431,38 @@ int[] hiddenStates = hmm.predict(observations);
 
 | Class | Algorithm |
 |---|---|
-| `ARIMA` | AutoRegressive Integrated Moving Average |
-| `GARCH` | Generalized Autoregressive Conditional Heteroskedasticity |
-| `AR` | Autoregressive model |
-| `MA` | Moving average model |
-| Utility functions | `acf()`, `pacf()`, `adf()` (ADF unit-root test) |
+| `AR` | Autoregressive model AR(*p*) — Yule–Walker and OLS |
+| `ARMA` | Autoregressive moving-average model ARMA(*p*, *q*) |
+| `ARIMA` | Autoregressive integrated moving-average model ARIMA(*p*, *d*, *q*) |
+| `SARMA` | Seasonal ARMA — SARMA(*p*, *q*)(*P*, *Q*)[*s*] |
+| `SARIMA` | Seasonal ARIMA — SARIMA(*p*, *d*, *q*)(*P*, *D*, *Q*)[*s*] |
+| `ETS` | Exponential smoothing state space models (additive error) |
+| `VAR` | Vector autoregression for multivariate series |
+| `TimeSeries` | Utilities: `diff()`, `cov()`, `acf()`, `pacf()` |
+| `BoxTest` | Box–Pierce / Ljung–Box portmanteau tests |
+| `ForecastMetrics` | MAE, RMSE, MAPE, sMAPE, MASE, bias |
+| `BackTest` | Rolling-origin (walk-forward) backtesting |
 
 ```java
-// Fit ARIMA(1,1,1)
-ARIMA model = ARIMA.fit(timeSeries, 1, 1, 1);
-double[] forecast = model.forecast(12);   // 12 steps ahead
-System.out.println(model);               // AIC, BIC, coefficients
+// Fit ARIMA(1,1,1) and forecast 12 steps
+ARIMA arima = ARIMA.fit(timeSeries, 1, 1, 1);
+double[] forecast = arima.forecast(12);
 
-// Stationarity check
-double adfStat = TimeSeriesModel.adf(timeSeries, 1);
+// Seasonal ARIMA(p,d,q)(P,D,Q)[s]
+SARIMA sarima = SARIMA.fit(monthly, 1, 1, 1, 1, 1, 1, 12);
+double[] annual = sarima.forecast(12);
+
+// Exponential smoothing, chosen by AICc
+ETS ets = ETS.auto(monthly, 12);
+double[] next = ets.forecast(12);
+
+// Vector autoregression on a multivariate series (n × k)
+VAR var = VAR.fit(multivariate, 2);
+double[][] paths = var.forecast(6);          // 6 × k
+
+// Backtest a forecasting procedure
+BackTest bt = BackTest.rollingOrigin(prices, h -> ARIMA.fit(h, 1, 1, 1), 5, 10, true);
+System.out.println(bt.total());              // MAE / RMSE / MAPE / MASE over all folds
 ```
 
 📖 **Full guide:** [TIME_SERIES.md](TIME_SERIES.md)

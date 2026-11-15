@@ -16,7 +16,7 @@
  */
 package smile
 
-import smile.anomaly.{IsolationForest, LOF, SVM}
+import smile.anomaly.{IsolationForest, LOF, SVM, TimeSeriesAnomaly}
 import smile.math.distance.Distance
 import smile.math.kernel.MercerKernel
 import smile.neighbor.KNNSearch
@@ -97,5 +97,23 @@ package object anomaly {
     tol: Double = 1E-3
   ): SVM[T] = time("One-Class SVM") {
     SVM.fit(x, kernel, new SVM.Options(nu, tol))
+  }
+
+  /** Fits a residual-based time-series anomaly detector with an automatically
+    * selected ETS model.
+    *
+    * @param history the training history.
+    * @param scale the robust scale estimator of the residuals.
+    * @param threshold the decision threshold in standardized units.
+    * @param ewmaAlpha the smoothing factor of the EWMA scale.
+    * @return the fitted detector.
+    */
+  def tsAnomaly(
+    history: Array[Double],
+    scale: TimeSeriesAnomaly.Scale = TimeSeriesAnomaly.Scale.MAD,
+    threshold: Double = 3.0,
+    ewmaAlpha: Double = 0.2
+  ): TimeSeriesAnomaly = time("Time-Series Anomaly") {
+    TimeSeriesAnomaly.fit(history, new TimeSeriesAnomaly.Options(scale, threshold, ewmaAlpha))
   }
 }
