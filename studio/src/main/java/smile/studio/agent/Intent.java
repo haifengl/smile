@@ -108,6 +108,8 @@ public class Intent extends JPanel {
     private final JButton moveUpButton = new JButton("⬆️");
     private final JButton moveDownButton = new JButton("⬇️");
     private final JButton cancelQueuedButton = new JButton("❌");
+    /** Minimum output height (in pixels) before the top-right toggle bar is also shown alongside the bottom-right one. */
+    static final int MIN_TOP_MODE_BAR_HEIGHT = 120;
     // Output pane. Subagent runs are tabs inside this pane.
     private final JLayeredPane southPane = new JLayeredPane() {
         @Override
@@ -120,7 +122,21 @@ public class Intent extends JPanel {
                 int scrollBarWidth = UIManager.getInt("ScrollBar.width");
                 int rightMargin = (scrollBarWidth > 0 ? scrollBarWidth : 14) + 6;
                 int x = Math.max(0, w - pref.width - rightMargin);
-                modeBar.setBounds(x, 2, pref.width, pref.height);
+                int bottomY = Math.max(0, h - pref.height - 2);
+                modeBar.setBounds(x, bottomY, pref.width, pref.height);
+
+                boolean showTop = h >= Math.max(MIN_TOP_MODE_BAR_HEIGHT, pref.height * 3);
+                topModeBar.setVisible(showTop);
+                if (showTop) {
+                    Dimension topPref = topModeBar.getPreferredSize();
+                    int topX = Math.max(0, w - topPref.width - rightMargin);
+                    topModeBar.setBounds(topX, 2, topPref.width, topPref.height);
+                } else {
+                    topModeBar.setBounds(0, 0, 0, 0);
+                }
+            } else {
+                topModeBar.setVisible(false);
+                topModeBar.setBounds(0, 0, 0, 0);
             }
         }
 
@@ -130,6 +146,8 @@ public class Intent extends JPanel {
         }
     };
     private final JPanel outputPane = new JPanel();
+    private final JPanel topModeBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 2));
+    private final JToggleButton topModeButton = new JToggleButton(bundle.getString("PreviewMode"));
     private final JPanel modeBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 2));
     private final JToggleButton modeButton = new JToggleButton(bundle.getString("PreviewMode"));
     private Mode mode = Mode.RAW;
@@ -335,6 +353,7 @@ public class Intent extends JPanel {
 
         southPane.setOpaque(false);
         southPane.add(outputPane, JLayeredPane.DEFAULT_LAYER);
+        southPane.add(topModeBar, JLayeredPane.PALETTE_LAYER);
         southPane.add(modeBar, JLayeredPane.PALETTE_LAYER);
 
         add(inputPane, BorderLayout.CENTER);
@@ -415,33 +434,37 @@ public class Intent extends JPanel {
     }
 
     /**
-     * Initializes the bottom-right toggle button for switching between plain text
-     * and rendered Markdown preview of agent output.
+     * Initializes the bottom-right and conditional top-right toggle buttons for
+     * switching between plain text and rendered Markdown view of agent output.
      */
     private void initModeBar() {
-        modeButton.setToolTipText(bundle.getString("PreviewModeTooltip"));
-        modeButton.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_ROUND_RECT);
-        modeButton.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
-        modeButton.setMargin(new Insets(1, 8, 1, 8));
-        modeButton.setFocusable(false);
-        modeButton.setSelected(false);
-        modeButton.addActionListener(e -> setMode(mode == Mode.RAW ? Mode.PREVIEW : Mode.RAW));
+        configureModeBar(modeBar, modeButton);
+        configureModeBar(topModeBar, topModeButton);
+    }
 
-        modeBar.setOpaque(false);
-        modeBar.setBorder(new EmptyBorder(2, 6, 2, 6));
-        modeBar.add(modeButton);
-        modeBar.setVisible(false);
+    private void configureModeBar(JPanel bar, JToggleButton button) {
+        button.setToolTipText(bundle.getString("PreviewModeTooltip"));
+        button.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_ROUND_RECT);
+        button.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
+        button.setMargin(new Insets(1, 8, 1, 8));
+        button.setFocusable(false);
+        button.setSelected(false);
+        button.addActionListener(e -> setMode(mode == Mode.RAW ? Mode.PREVIEW : Mode.RAW));
+
+        bar.setOpaque(false);
+        bar.setBorder(new EmptyBorder(2, 6, 2, 6));
+        bar.add(button);
+        bar.setVisible(false);
     }
 
     private void syncModeButton() {
-        if (mode == Mode.PREVIEW) {
-            modeButton.setSelected(true);
-            modeButton.setText(bundle.getString("RawMode"));
-            modeButton.setToolTipText(bundle.getString("RawModeTooltip"));
-        } else {
-            modeButton.setSelected(false);
-            modeButton.setText(bundle.getString("PreviewMode"));
-            modeButton.setToolTipText(bundle.getString("PreviewModeTooltip"));
+        boolean preview = mode == Mode.PREVIEW;
+        String text = bundle.getString(preview ? "RawMode" : "PreviewMode");
+        String tooltip = bundle.getString(preview ? "RawModeTooltip" : "PreviewModeTooltip");
+        for (JToggleButton button : new JToggleButton[] { modeButton, topModeButton }) {
+            button.setSelected(preview);
+            button.setText(text);
+            button.setToolTipText(tooltip);
         }
     }
 
@@ -1265,6 +1288,9 @@ public class Intent extends JPanel {
                 && hasOutputText();
         if (modeBar.isVisible() != show) {
             modeBar.setVisible(show);
+            if (!show) {
+                topModeBar.setVisible(false);
+            }
             southPane.revalidate();
             southPane.repaint();
         }
@@ -1663,18 +1689,34 @@ public class Intent extends JPanel {
 
     /**
      * Returns the bottom-right mode toggle bar. Package-private for testing.
-     * @return the mode toggle bar.
+     * @return the bottom-right mode toggle bar.
      */
     JPanel modeBar() {
         return modeBar;
     }
 
     /**
-     * Returns the mode toggle button. Package-private for testing.
-     * @return the mode toggle button.
+     * Returns the bottom-right mode toggle button. Package-private for testing.
+     * @return the bottom-right mode toggle button.
      */
     JToggleButton modeButton() {
         return modeButton;
+    }
+
+    /**
+     * Returns the top-right mode toggle bar. Package-private for testing.
+     * @return the top-right mode toggle bar.
+     */
+    JPanel topModeBar() {
+        return topModeBar;
+    }
+
+    /**
+     * Returns the top-right mode toggle button. Package-private for testing.
+     * @return the top-right mode toggle button.
+     */
+    JToggleButton topModeButton() {
+        return topModeButton;
     }
 
     /**

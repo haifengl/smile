@@ -445,6 +445,8 @@ class IntentTest {
         for (String key : MODE_KEYS) {
             assertTrue(base.containsKey(key), "base Intent bundle is missing key: " + key);
         }
+        assertEquals("Text", base.getString("RawMode"));
+        assertEquals("Markdown", base.getString("PreviewMode"));
         for (Locale locale : QUEUE_LOCALES) {
             ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), locale);
             for (String key : MODE_KEYS) {
@@ -498,13 +500,16 @@ class IntentTest {
         assertTrue(intent.modeBar().isVisible());
         assertEquals(Intent.Mode.RAW, intent.getMode());
 
-        // Switch to Preview mode via the toggle button
+        // Switch to Preview mode via the bottom-right toggle button
         ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), Locale.getDefault());
         assertEquals(bundle.getString("PreviewMode"), intent.modeButton().getText());
+        assertEquals(bundle.getString("PreviewMode"), intent.topModeButton().getText());
         intent.modeButton().doClick();
         assertEquals(Intent.Mode.PREVIEW, intent.getMode());
         assertTrue(intent.modeButton().isSelected());
+        assertTrue(intent.topModeButton().isSelected());
         assertEquals(bundle.getString("RawMode"), intent.modeButton().getText());
+        assertEquals(bundle.getString("RawMode"), intent.topModeButton().getText());
         assertNotNull(intent.markdownView());
         assertNotNull(intent.markdownView().contentPane());
         assertEquals(1, intent.markdownView().contentPane().getDocument().getElementsByTagName("table").getLength());
@@ -512,11 +517,13 @@ class IntentTest {
         assertTrue(intent.markdownView().getPreferredSize().height > 0,
                 "embedded Markdown preview must compute a positive preferred height for BorderLayout.SOUTH");
 
-        // Switch back to Raw mode via the toggle button
-        intent.modeButton().doClick();
+        // Switch back to Raw mode via the top-right toggle button
+        intent.topModeButton().doClick();
         assertEquals(Intent.Mode.RAW, intent.getMode());
         assertFalse(intent.modeButton().isSelected());
+        assertFalse(intent.topModeButton().isSelected());
         assertEquals(bundle.getString("PreviewMode"), intent.modeButton().getText());
+        assertEquals(bundle.getString("PreviewMode"), intent.topModeButton().getText());
         assertNotNull(intent.output().getParent(), "OutputArea must be restored to outputPane in RAW mode");
         assertEquals(md, intent.output().getText());
     }
@@ -564,14 +571,32 @@ class IntentTest {
         var paletteComps = intent.southPane().getComponentsInLayer(javax.swing.JLayeredPane.PALETTE_LAYER);
         assertEquals(1, defaultComps.length);
         assertSame(intent.outputPane(), defaultComps[0]);
-        assertEquals(1, paletteComps.length);
-        assertSame(intent.modeBar(), paletteComps[0]);
+        assertEquals(2, paletteComps.length);
+        assertTrue(List.of(paletteComps).contains(intent.modeBar()));
+        assertTrue(List.of(paletteComps).contains(intent.topModeBar()));
 
+        // Short output: only bottom-right modeBar is visible; topModeBar is hidden to avoid crowding
+        intent.southPane().setSize(600, 60);
+        intent.southPane().doLayout();
+        assertTrue(intent.modeBar().isVisible(), "bottom-right modeBar must be visible on short output");
+        assertFalse(intent.topModeBar().isVisible(), "top-right modeBar must be hidden on short output");
+        assertEquals(60 - intent.modeBar().getPreferredSize().height - 2, intent.modeBar().getY(),
+                "modeBar must be positioned near the bottom edge");
+        assertTrue(intent.modeBar().getX() > 0, "modeBar must be positioned near the right edge");
+
+        // Tall output: both bottom-right modeBar and top-right topModeBar are visible
         intent.southPane().setSize(600, 200);
         intent.southPane().doLayout();
         assertEquals(600, intent.outputPane().getWidth());
         assertEquals(200, intent.outputPane().getHeight());
+        assertTrue(intent.modeBar().isVisible(), "bottom-right modeBar must be visible on tall output");
+        assertTrue(intent.topModeBar().isVisible(), "top-right topModeBar must be visible on tall output");
+        assertEquals(200 - intent.modeBar().getPreferredSize().height - 2, intent.modeBar().getY(),
+                "modeBar must be positioned at the bottom-right corner");
+        assertEquals(2, intent.topModeBar().getY(),
+                "topModeBar must be positioned at the top-right corner");
         assertTrue(intent.modeBar().getX() > 0, "modeBar must be positioned near the right edge");
+        assertTrue(intent.topModeBar().getX() > 0, "topModeBar must be positioned near the right edge");
     }
 
     @Test
