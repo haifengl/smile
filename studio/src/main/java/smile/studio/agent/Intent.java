@@ -45,6 +45,7 @@ import smile.studio.SmileStudio;
 import smile.studio.text.Markdown;
 import smile.studio.text.Monospaced;
 import smile.studio.text.OutputArea;
+import smile.swing.ScrollablePanel;
 import static smile.studio.agent.IntentType.*;
 
 /**
@@ -60,6 +61,12 @@ public class Intent extends JPanel {
     static final String AGENT_STATUS_PREFIX = "\uD83D\uDCDC ";
     /** The scroll unit increment in pixels for the subagent output scrollbars. */
     private static final int SCROLL_UNIT_INCREMENT = 18;
+    /**
+     * The number of text rows a subagent output tab shows before its vertical
+     * scrollbar takes over. This is the tab's preferred height, not a hard limit:
+     * the GridBag wrapper lets the tab grow when the parent has room.
+     */
+    static final int RUN_VIEW_ROWS = 10;
 
     /**
      * Display mode for agent output.
@@ -1495,9 +1502,15 @@ public class Intent extends JPanel {
         }
 
         AgentOutputArea area = createOutputArea(AgentOutputArea.Kind.LLM);
-        area.setRows(5);
+        // The output's row count is the scroll pane's preferred height: the tab opens
+        // tall enough for this many lines and scrolls beyond that. The GridBag wrapper
+        // below still lets it grow when the parent has room to spare.
+        area.setRows(RUN_VIEW_ROWS);
 
-        JPanel content = new JPanel();
+        // The content tracks the viewport width, so the output wraps at the visible
+        // width instead of computing a wider preferred one. That is what lets the
+        // horizontal scrollbar stay off: there is nothing to scroll sideways to.
+        JPanel content = new ScrollablePanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setOpaque(false);
         content.add(area);
@@ -1507,6 +1520,9 @@ public class Intent extends JPanel {
         // unless the parent container itself expands to give it more space,
         // wrap the JScrollPane in a panel utilizing GridBagLayout.
         JScrollPane scrollPane = new JScrollPane(content);
+        // The output wraps to the tab's width, so a horizontal scrollbar could only
+        // ever show a clipped sliver of an over-long line; never show one.
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setUnitIncrement(SCROLL_UNIT_INCREMENT);
         runScrollers.put(runId, new AutoScroller(scrollPane));
         JPanel pane = new JPanel(new GridBagLayout());
@@ -1783,6 +1799,25 @@ public class Intent extends JPanel {
      */
     AutoScroller runScroller(String runId) {
         return runScrollers.get(runId);
+    }
+
+    /**
+     * Returns the scroll pane that holds a subagent tab's output, or null when
+     * the tab does not exist. Package-private for testing.
+     * @param runId the subagent run id.
+     * @return the tab's scroll pane, or null.
+     */
+    JScrollPane runScrollPane(String runId) {
+        JPanel tab = runPanes.get(runId);
+        if (tab == null) {
+            return null;
+        }
+        for (Component child : tab.getComponents()) {
+            if (child instanceof JScrollPane scrollPane) {
+                return scrollPane;
+            }
+        }
+        return null;
     }
 
     /**

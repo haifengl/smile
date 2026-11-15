@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.prefs.Preferences;
+import javax.swing.ScrollPaneConstants;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -709,6 +710,75 @@ class IntentTest {
         intent.appendRun("run-1", "line one\n");
         assertTrue(scroller.isFollowing(),
                 "streaming into a tab must keep its view following the newest line");
+    }
+
+    @Test
+    void subagentTab_hasNoHorizontalScrollBarAndOpensTenRowsTall() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.beginRun("run-1", "Explore", "James");
+
+        var scrollPane = intent.runScrollPane("run-1");
+        assertNotNull(scrollPane, "the subagent tab must hold a scroll pane");
+        var content = intent.runContentPane("run-1");
+        assertNotNull(content);
+        var area = (AgentOutputArea) content.getComponent(0);
+
+        // Then a fresh tab reserves the configured rows, and the pane is sized to fit
+        // them. Measured before any output: wrapped text would inflate the area's own
+        // preferred height and obscure the reservation.
+        assertEquals(Intent.RUN_VIEW_ROWS, area.getRows(),
+                "the tab's output must reserve the configured number of rows");
+        int lineHeight = area.getPreferredSize().height / Intent.RUN_VIEW_ROWS;
+        assertEquals(Intent.RUN_VIEW_ROWS, (int) Math.round(
+                        (double) scrollPane.getPreferredSize().height / lineHeight),
+                "the pane's preferred height must work out to the configured number of rows");
+
+        // Given long lines that would otherwise overflow sideways
+        intent.appendRun("run-1", "x".repeat(400) + "\n" + "y".repeat(400) + "\n");
+
+        // Then the pane never offers a horizontal scrollbar: the output wraps instead
+        assertEquals(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER,
+                scrollPane.getHorizontalScrollBarPolicy(),
+                "a subagent tab must not show a horizontal scrollbar");
+    }
+
+    @Test
+    void subagentTab_preferredHeightStaysAtTenRowsAsOutputStreams() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.beginRun("run-1", "Explore", "James");
+        var scrollPane = intent.runScrollPane("run-1");
+        var content = intent.runContentPane("run-1");
+        assertNotNull(scrollPane);
+        assertNotNull(content);
+        var area = (AgentOutputArea) content.getComponent(0);
+
+        int empty = scrollPane.getPreferredSize().height;
+
+        intent.appendRun("run-1", "line\n".repeat(200));
+
+        // The output itself grows without bound; the pane stays the height of the
+        // rows it reserves, which is what puts the overflow behind the scrollbar.
+        assertTrue(area.getPreferredSize().height > empty * 10,
+                "the output must have grown well past the visible rows");
+        assertEquals(empty, scrollPane.getPreferredSize().height,
+                "the pane's preferred height must not grow with the streamed output");
+    }
+
+    @Test
+    void subagentTab_contentTracksTheViewportWidthSoWrappingNeedsNoHorizontalScroll() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.beginRun("run-1", "Explore", "James");
+
+        var content = intent.runContentPane("run-1");
+        assertNotNull(content);
+        assertInstanceOf(javax.swing.Scrollable.class, content,
+                "the tab content must be Scrollable for the viewport to control its width");
+        assertTrue(((javax.swing.Scrollable) content).getScrollableTracksViewportWidth(),
+                "tracking the viewport width is what keeps an over-long line from widening "
+                        + "the view and forcing a horizontal scrollbar");
     }
 
     @Test
