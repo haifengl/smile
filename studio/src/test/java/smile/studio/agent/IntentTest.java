@@ -673,6 +673,22 @@ class IntentTest {
     }
 
     @Test
+    void subagentTab_getsItsOwnAutoScroller_soStreamedOutputStaysInView() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        assertNull(intent.runScroller(null), "the master run scrolls the conversation pane, not a tab");
+
+        intent.beginRun("run-1", "Explore", "James");
+        AutoScroller scroller = intent.runScroller("run-1");
+        assertNotNull(scroller, "a subagent tab must get an auto-scroller for its own output");
+        assertTrue(scroller.isFollowing(), "a fresh tab follows its output");
+
+        intent.appendRun("run-1", "line one\n");
+        assertTrue(scroller.isFollowing(),
+                "streaming into a tab must keep its view following the newest line");
+    }
+
+    @Test
     void addQuestion_afterLongSubagentRun_selectsMasterTabAndPacksQuestionToPreferredHeight() {
         Intent intent = new Intent(null);
         intent.setEditable(false);
