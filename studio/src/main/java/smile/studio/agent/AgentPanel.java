@@ -506,6 +506,26 @@ public class AgentPanel extends JPanel {
     }
 
     /**
+     * Brings a component of the conversation into view, keeping its top edge on
+     * screen. Used for the question box: a fresh empty output area follows it, so
+     * following to the bottom would leave only a slice of the box visible.
+     * @param target the component to show.
+     */
+    void reveal(Component target) {
+        scroller.reveal(target);
+    }
+
+    /**
+     * Re-arms following after a revealed question is answered, so the rest of
+     * the turn's output comes into view. Ignored when a different question box
+     * has since been revealed.
+     * @param answered the box whose answer arrived.
+     */
+    void resumeFollowingAfter(Component answered) {
+        scroller.resumeFollowingAfter(answered);
+    }
+
+    /**
      * Inserts a read-only intent for work that arrived from another agent
      * or as a notice, just above the empty composer. Keeping the composer as
      * the last intent lets the user find it easily to type a new prompt.
