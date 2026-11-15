@@ -580,23 +580,46 @@ class IntentTest {
         intent.southPane().doLayout();
         assertTrue(intent.modeBar().isVisible(), "bottom-right modeBar must be visible on short output");
         assertFalse(intent.topModeBar().isVisible(), "top-right modeBar must be hidden on short output");
-        assertEquals(60 - intent.modeBar().getPreferredSize().height - 2, intent.modeBar().getY(),
-                "modeBar must be positioned near the bottom edge");
+        assertEquals(60 - intent.modeBar().getPreferredSize().height, intent.modeBar().getY(),
+                "modeBar must sit at the bottom edge");
         assertTrue(intent.modeBar().getX() > 0, "modeBar must be positioned near the right edge");
+        assertEquals(60 - intent.modeBar().getPreferredSize().height, intent.outputPane().getHeight(),
+                "the output must stop above the modeBar so the bar never covers text");
 
         // Tall output: both bottom-right modeBar and top-right topModeBar are visible
         intent.southPane().setSize(600, 200);
         intent.southPane().doLayout();
         assertEquals(600, intent.outputPane().getWidth());
-        assertEquals(200, intent.outputPane().getHeight());
+        assertEquals(200 - intent.modeBar().getPreferredSize().height, intent.outputPane().getHeight(),
+                "the output must stop above the modeBar");
         assertTrue(intent.modeBar().isVisible(), "bottom-right modeBar must be visible on tall output");
         assertTrue(intent.topModeBar().isVisible(), "top-right topModeBar must be visible on tall output");
-        assertEquals(200 - intent.modeBar().getPreferredSize().height - 2, intent.modeBar().getY(),
+        assertEquals(200 - intent.modeBar().getPreferredSize().height, intent.modeBar().getY(),
                 "modeBar must be positioned at the bottom-right corner");
         assertEquals(2, intent.topModeBar().getY(),
                 "topModeBar must be positioned at the top-right corner");
         assertTrue(intent.modeBar().getX() > 0, "modeBar must be positioned near the right edge");
         assertTrue(intent.topModeBar().getX() > 0, "topModeBar must be positioned near the right edge");
+    }
+
+    @Test
+    void bottomModeBarSitsBelowTheLastLineOfText_soItNeverCoversOutput() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        StringBuilder text = new StringBuilder();
+        for (int i = 0; i < 12; i++) {
+            text.append("text line ").append(i).append('\n');
+        }
+        intent.output().setText(text.toString());
+        assertTrue(intent.modeBar().isVisible());
+
+        intent.southPane().setSize(600, 200);
+        intent.southPane().doLayout();
+
+        int barTop = intent.modeBar().getY();
+        int outputBottom = intent.outputPane().getY() + intent.outputPane().getHeight();
+        assertEquals(barTop, outputBottom,
+                "the output must end exactly where the modeBar starts, so the bar never covers text");
     }
 
     @Test
