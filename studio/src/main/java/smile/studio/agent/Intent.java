@@ -109,19 +109,207 @@ public class Intent extends JPanel {
     private final JButton moveDownButton = new JButton("⬇️");
     private final JButton cancelQueuedButton = new JButton("❌");
     // Output pane. Subagent runs are tabs inside this pane.
-    private final JPanel southPane = new JPanel(new BorderLayout());
+    private final JLayeredPane southPane = new JLayeredPane() {
+        @Override
+        public void doLayout() {
+            int w = getWidth();
+            int h = getHeight();
+            outputPane.setBounds(0, 0, w, h);
+            if (modeBar.isVisible()) {
+                Dimension pref = modeBar.getPreferredSize();
+                int scrollBarWidth = UIManager.getInt("ScrollBar.width");
+                int rightMargin = (scrollBarWidth > 0 ? scrollBarWidth : 14) + 6;
+                int x = Math.max(0, w - pref.width - rightMargin);
+                modeBar.setBounds(x, 2, pref.width, pref.height);
+            }
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            return outputPane.getPreferredSize();
+        }
+    };
     private final JPanel outputPane = new JPanel();
     private final JPanel modeBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 2));
     private final JToggleButton modeButton = new JToggleButton(bundle.getString("PreviewMode"));
     private Mode mode = Mode.RAW;
     private Markdown markdownView;
-    private final Map<Markdown, OutputArea> previewedAreas = new LinkedHashMap<>();
-    private final Map<JScrollPane, OutputArea> previewedScrollAreas = new LinkedHashMap<>();
-    private OutputArea output = createOutputArea();
+    private final Map<Markdown, AgentOutputArea> previewedAreas = new LinkedHashMap<>();
+    private AgentOutputArea output = createOutputArea(AgentOutputArea.Kind.LLM);
     private JTabbedPane runs;
     private final Map<String, JPanel> runPanes = new LinkedHashMap<>();
-    private final Map<String, OutputArea> runOutputs = new LinkedHashMap<>();
+    private final Map<String, JPanel> runContentPanes = new LinkedHashMap<>();
+    private final Map<String, AgentOutputArea> runOutputs = new LinkedHashMap<>();
+    private final Map<String, StreamRouter> runRouters = new LinkedHashMap<>();
     private boolean selectMasterOnNextOutput;
+
+    /**
+     * Stateful per-run line router that routes streamed chunks to
+     * {@link AgentOutputArea.Kind#LLM}, {@link AgentOutputArea.Kind#TOOL},
+     * or {@link AgentOutputArea.Kind#STATUS} while respecting fenced code blocks.
+     */
+    private final class StreamRouter {
+        private final String runId;
+        private final StringBuilder lineBuffer = new StringBuilder();
+        private boolean holdingLine;
+        private boolean inFence;
+        private String fenceMarker;
+        private boolean inTodoBlock;
+
+        StreamRouter(String runId) {
+            this.runId = runId;
+        }
+
+        void accept(String chunk) {
+            if (chunk == null || chunk.isEmpty()) {
+                return;
+            }
+            int i = 0;
+            int len = chunk.length();
+            while (i < len) {
+                int nl = chunk.indexOf('\n', i);
+                if (nl < 0) {
+                    String tail = chunk.substring(i);
+                    if (lineBuffer.isEmpty()) {
+                        lineBuffer.append(tail);
+                        if (mayBeNonLlmLine(lineBuffer.toString())) {
+                            holdingLine = true;
+                        } else {
+                            holdingLine = false;
+                            appendToKind(runId, AgentOutputArea.Kind.LLM, tail);
+                        }
+                    } else if (holdingLine) {
+                        lineBuffer.append(tail);
+                        if (!mayBeNonLlmLine(lineBuffer.toString())) {
+                            holdingLine = false;
+                            appendToKind(runId, AgentOutputArea.Kind.LLM, lineBuffer.toString());
+                        }
+                    } else {
+                        lineBuffer.append(tail);
+                        appendToKind(runId, AgentOutputArea.Kind.LLM, tail);
+                    }
+                    return;
+                }
+
+                String restOfLine = chunk.substring(i, nl + 1);
+                boolean startedEmpty = lineBuffer.isEmpty();
+                lineBuffer.append(restOfLine);
+                String fullLine = lineBuffer.toString();
+                lineBuffer.setLength(0);
+
+                String content = fullLine;
+                if (content.endsWith("\n")) {
+                    content = content.substring(0, content.length() - 1);
+                }
+                if (content.endsWith("\r")) {
+                    content = content.substring(0, content.length() - 1);
+                }
+
+                updateFenceState(content);
+
+                AgentOutputArea.Kind kind;
+                if (inFence) {
+                    kind = AgentOutputArea.Kind.LLM;
+                    inTodoBlock = false;
+                } else if (content.isBlank()) {
+                    inTodoBlock = false;
+                    kind = null; // keep blank line on whichever widget is active (or LLM)
+                } else {
+                    kind = AgentOutputArea.classifyLine(content, inTodoBlock);
+                    if (content.startsWith(AgentOutputArea.TODO_HEADER_PREFIX)
+                            || (inTodoBlock && AgentOutputArea.isTodoItemLine(content))) {
+                        inTodoBlock = true;
+                    } else {
+                        inTodoBlock = false;
+                    }
+                }
+
+                if (startedEmpty || holdingLine) {
+                    holdingLine = false;
+                    if (kind == null) {
+                        AgentOutputArea current = currentAreaFor(runId);
+                        if (current != null && current.kind() == AgentOutputArea.Kind.LLM
+                                && !current.getText().isEmpty()) {
+                            appendToKind(runId, AgentOutputArea.Kind.LLM, fullLine);
+                        }
+                    } else if (kind == AgentOutputArea.Kind.LLM) {
+                        appendToKind(runId, AgentOutputArea.Kind.LLM, fullLine);
+                    } else {
+                        appendLineToKind(runId, kind, content);
+                    }
+                } else {
+                    // Prefix of this line was already streamed to LLM; append the remainder
+                    appendToKind(runId, AgentOutputArea.Kind.LLM, restOfLine);
+                }
+
+                i = nl + 1;
+            }
+        }
+
+        private boolean mayBeNonLlmLine(String prefix) {
+            if (inFence || prefix.isEmpty()) {
+                return false;
+            }
+            if ("  ✅ ".startsWith(prefix) || prefix.startsWith("  ✅ ")
+                    || "  ❌ ".startsWith(prefix) || prefix.startsWith("  ❌ ")
+                    || AgentOutputArea.TODO_HEADER_PREFIX.startsWith(prefix)
+                    || prefix.startsWith(AgentOutputArea.TODO_HEADER_PREFIX)
+                    || "⏳ ".startsWith(prefix) || prefix.startsWith("⏳ ")
+                    || "🚧 ".startsWith(prefix) || prefix.startsWith("🚧 ")
+                    || "✅ ".startsWith(prefix) || prefix.startsWith("✅ ")
+                    || "❓ ".startsWith(prefix) || prefix.startsWith("❓ ")) {
+                return true;
+            }
+            String stripped = prefix.stripLeading();
+            return stripped.isEmpty() || stripped.startsWith("[");
+        }
+
+        private void updateFenceState(String content) {
+            String stripped = content.stripLeading();
+            int leading = content.length() - stripped.length();
+            if (leading <= 3 && (stripped.startsWith("```") || stripped.startsWith("~~~"))) {
+                char fc = stripped.charAt(0);
+                int count = 0;
+                while (count < stripped.length() && stripped.charAt(count) == fc) {
+                    count++;
+                }
+                String marker = stripped.substring(0, count);
+                if (!inFence) {
+                    inFence = true;
+                    fenceMarker = marker;
+                } else if (stripped.startsWith(fenceMarker)
+                        && stripped.substring(fenceMarker.length()).isBlank()) {
+                    inFence = false;
+                    fenceMarker = null;
+                }
+            }
+        }
+
+        void flush() {
+            if (lineBuffer.isEmpty()) {
+                return;
+            }
+            if (holdingLine) {
+                holdingLine = false;
+                String pending = lineBuffer.toString();
+                lineBuffer.setLength(0);
+                String content = pending;
+                if (content.endsWith("\r")) {
+                    content = content.substring(0, content.length() - 1);
+                }
+                AgentOutputArea.Kind kind = inFence
+                        ? AgentOutputArea.Kind.LLM
+                        : AgentOutputArea.classifyLine(content, inTodoBlock);
+                if (kind == AgentOutputArea.Kind.LLM) {
+                    appendToKind(runId, AgentOutputArea.Kind.LLM, pending);
+                } else {
+                    appendLineToKind(runId, kind, content);
+                }
+            } else {
+                lineBuffer.setLength(0);
+            }
+        }
+    }
 
     /**
      * Constructor.
@@ -146,8 +334,8 @@ public class Intent extends JPanel {
         outputPane.add(output);
 
         southPane.setOpaque(false);
-        southPane.add(outputPane, BorderLayout.CENTER);
-        southPane.add(modeBar, BorderLayout.SOUTH);
+        southPane.add(outputPane, JLayeredPane.DEFAULT_LAYER);
+        southPane.add(modeBar, JLayeredPane.PALETTE_LAYER);
 
         add(inputPane, BorderLayout.CENTER);
         add(southPane, BorderLayout.SOUTH);
@@ -689,13 +877,9 @@ public class Intent extends JPanel {
         }
     }
 
-    /** Creates an output area. */
-    private OutputArea createOutputArea() {
-        OutputArea area = new OutputArea();
-        area.setFont(Monospaced.getFont());
-        area.setEditable(false);
-        area.setLineWrap(true);
-        area.setWrapStyleWord(true);
+    /** Creates an output area of the specified kind. */
+    private AgentOutputArea createOutputArea(AgentOutputArea.Kind kind) {
+        AgentOutputArea area = new AgentOutputArea(kind);
         area.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
@@ -712,6 +896,156 @@ public class Intent extends JPanel {
             }
         });
         return area;
+    }
+
+    /** Returns the vertical BoxLayout container holding output widgets for the given run. */
+    private JPanel containerFor(String runId) {
+        if (runs == null) {
+            return outputPane;
+        }
+        String key = runId == null ? "" : runId;
+        JPanel content = runContentPanes.get(key);
+        return content != null ? content : runContentPanes.get("");
+    }
+
+    /** Returns the active trailing output area for the given run. */
+    private AgentOutputArea currentAreaFor(String runId) {
+        if (runId == null || runId.isEmpty() || runs == null) {
+            return output;
+        }
+        AgentOutputArea area = runOutputs.get(runId);
+        return area != null ? area : output;
+    }
+
+    /** Sets the active trailing output area for the given run. */
+    private void setCurrentAreaFor(String runId, AgentOutputArea area) {
+        if (runId == null || runId.isEmpty()) {
+            output = area;
+            if (runs != null) {
+                runOutputs.put("", area);
+            }
+        } else {
+            runOutputs.put(runId, area);
+        }
+    }
+
+    /** Returns or creates the trailing AgentOutputArea of the requested Kind in the run container. */
+    private AgentOutputArea ensureAreaForKind(String runId, AgentOutputArea.Kind kind) {
+        JPanel container = containerFor(runId);
+        AgentOutputArea current = currentAreaFor(runId);
+        if (current != null && current.getParent() == container) {
+            if (current.kind() == kind) {
+                return current;
+            }
+            if (current.getText().isEmpty()) {
+                int idx = componentIndex(container, current);
+                AgentOutputArea replacement = createOutputArea(kind);
+                if (idx >= 0) {
+                    container.remove(idx);
+                    container.add(replacement, idx);
+                } else {
+                    container.add(replacement);
+                }
+                setCurrentAreaFor(runId, replacement);
+                container.revalidate();
+                return replacement;
+            }
+        }
+        AgentOutputArea next = createOutputArea(kind);
+        if (container != null) {
+            container.add(next);
+            container.revalidate();
+        }
+        setCurrentAreaFor(runId, next);
+        return next;
+    }
+
+    private static int componentIndex(Container container, Component target) {
+        Component[] comps = container.getComponents();
+        for (int i = 0; i < comps.length; i++) {
+            if (comps[i] == target) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private void appendToKind(String runId, AgentOutputArea.Kind kind, String text) {
+        if (text == null || text.isEmpty()) {
+            return;
+        }
+        AgentOutputArea area = ensureAreaForKind(runId, kind);
+        // Strip leading blank lines when starting a fresh LLM widget right after a TOOL/STATUS widget
+        if (kind == AgentOutputArea.Kind.LLM && area.getText().isEmpty() && area.getParent() != null
+                && area.getParent().getComponentCount() > 1) {
+            int start = 0;
+            while (start < text.length() && (text.charAt(start) == '\n' || text.charAt(start) == '\r')) {
+                start++;
+            }
+            if (start == text.length()) {
+                return;
+            }
+            text = text.substring(start);
+        }
+        area.append(text);
+    }
+
+    private void appendLineToKind(String runId, AgentOutputArea.Kind kind, String lineContent) {
+        if (lineContent == null || lineContent.isBlank()) {
+            return;
+        }
+        AgentOutputArea area = ensureAreaForKind(runId, kind);
+        if (!area.getText().isEmpty()) {
+            area.append("\n" + lineContent);
+        } else {
+            area.append(lineContent);
+        }
+    }
+
+    /**
+     * Appends model-generated Markdown text to an {@link AgentOutputArea.Kind#LLM}
+     * widget for the specified run.
+     *
+     * @param runId {@code null} for the parent turn, or the subagent run id.
+     * @param text the Markdown text to append.
+     */
+    public void appendLlmOutput(String runId, String text) {
+        appendToKind(runId, AgentOutputArea.Kind.LLM, text);
+    }
+
+    /**
+     * Appends tool-calling status output (e.g. {@code ✅ Read ...} or {@code TodoWrite}
+     * checklist lines) to an {@link AgentOutputArea.Kind#TOOL} widget for the specified run.
+     *
+     * @param runId {@code null} for the parent turn, or the subagent run id.
+     * @param text the tool status text to append.
+     */
+    public void appendToolStatus(String runId, String text) {
+        if (text == null || text.isBlank()) {
+            return;
+        }
+        String trimmed = AgentOutputArea.trimSurroundingBlankLines(text);
+        if (!trimmed.isBlank()) {
+            appendLineToKind(runId, AgentOutputArea.Kind.TOOL, trimmed);
+        }
+    }
+
+    /**
+     * Appends a subagent or system status notice (e.g. {@code [Searching...]} or
+     * {@code [Context compacted...]}) to an {@link AgentOutputArea.Kind#STATUS}
+     * widget for the specified run.
+     *
+     * @param runId {@code null} for the parent turn, or the subagent run id.
+     * @param text the status notice to append.
+     */
+    public void appendSystemStatus(String runId, String text) {
+        if (text == null || text.isBlank()) {
+            return;
+        }
+        String trimmed = AgentOutputArea.trimSurroundingBlankLines(text);
+        if (!trimmed.isBlank()) {
+            appendLineToKind(runId, AgentOutputArea.Kind.STATUS, trimmed);
+        }
     }
 
     /**
@@ -733,9 +1067,10 @@ public class Intent extends JPanel {
 
     /**
      * Switches the agent output between {@link Mode#RAW} and {@link Mode#PREVIEW}.
-     * If the output cannot be rendered in preview mode (for example when the intent
-     * is still editable, has no output text, or XML parsing falls back to plain text),
-     * the mode remains {@link Mode#RAW}.
+     * Only {@link AgentOutputArea.Kind#LLM} widgets are rendered as HTML {@link Markdown}
+     * in preview mode; {@link AgentOutputArea.Kind#TOOL} and {@link AgentOutputArea.Kind#STATUS}
+     * widgets stay in place as raw text widgets so tool call lines never collapse into a
+     * single paragraph.
      *
      * @param newMode the target mode.
      */
@@ -748,6 +1083,7 @@ public class Intent extends JPanel {
             newMode = Mode.RAW;
         }
         if (newMode == Mode.PREVIEW) {
+            flushAllRouters();
             restoreRawMode();
             if (renderPreviewMode()) {
                 this.mode = Mode.PREVIEW;
@@ -771,46 +1107,92 @@ public class Intent extends JPanel {
     private boolean renderPreviewMode() {
         markdownView = null;
         boolean renderedAny = false;
-        JPanel masterContainer = runs == null ? outputPane : runPanes.get("");
-        if (masterContainer != null) {
-            Component[] comps = masterContainer.getComponents();
-            for (int i = 0; i < comps.length; i++) {
-                if (comps[i] instanceof OutputArea area && !area.getText().isBlank()) {
-                    Markdown md = createMarkdownPreview(area.getText());
-                    if (md.contentPane() == null) {
+        if (runs == null) {
+            splitMixedLlmAreas(outputPane, null);
+            Boolean ok = previewContainer(outputPane);
+            if (ok == null) {
+                return false;
+            }
+            renderedAny = ok;
+        } else {
+            for (var entry : runContentPanes.entrySet()) {
+                String runId = entry.getKey();
+                JPanel container = entry.getValue();
+                if (container != null) {
+                    splitMixedLlmAreas(container, runId.isEmpty() ? null : runId);
+                    Boolean ok = previewContainer(container);
+                    if (ok == null) {
                         return false;
                     }
-                    masterContainer.remove(i);
-                    masterContainer.add(md, i);
-                    previewedAreas.put(md, area);
-                    markdownView = md;
-                    renderedAny = true;
+                    renderedAny |= ok;
                 }
             }
         }
-        if (runs != null) {
-            for (var entry : runOutputs.entrySet()) {
-                String runId = entry.getKey();
-                if (runId.isEmpty()) {
-                    continue;
-                }
-                OutputArea area = entry.getValue();
-                if (area != null && !area.getText().isBlank()) {
-                    JPanel runPane = runPanes.get(runId);
-                    if (runPane != null && runPane.getComponentCount() > 0
-                            && runPane.getComponent(0) instanceof JScrollPane sp) {
-                        Markdown md = createMarkdownPreview(area.getText());
-                        if (md.contentPane() == null) {
-                            return false;
+        return renderedAny;
+    }
+
+    /**
+     * If any {@link AgentOutputArea.Kind#LLM} widget had mixed LLM/tool/status text
+     * assigned directly (e.g. via {@code output().setText(...)}), splits it into
+     * typed {@link AgentOutputArea} widgets in place before rendering preview.
+     */
+    private void splitMixedLlmAreas(JPanel container, String runId) {
+        Component[] comps = container.getComponents();
+        boolean changed = false;
+        for (Component comp : comps) {
+            if (comp instanceof AgentOutputArea area
+                    && area.kind() == AgentOutputArea.Kind.LLM
+                    && !area.getText().isBlank()) {
+                var segments = AgentOutputArea.splitSegments(area.getText());
+                boolean hasNonLlm = segments.stream().anyMatch(s -> s.kind() != AgentOutputArea.Kind.LLM);
+                if (hasNonLlm && segments.size() > 1) {
+                    int idx = componentIndex(container, area);
+                    if (idx >= 0) {
+                        container.remove(idx);
+                        AgentOutputArea lastCreated = null;
+                        for (int s = 0; s < segments.size(); s++) {
+                            var seg = segments.get(s);
+                            AgentOutputArea segArea = createOutputArea(seg.kind());
+                            segArea.setText(seg.text());
+                            container.add(segArea, idx + s);
+                            lastCreated = segArea;
                         }
-                        sp.setViewportView(md);
-                        previewedScrollAreas.put(sp, area);
-                        if (markdownView == null) {
-                            markdownView = md;
+                        if (area == currentAreaFor(runId) && lastCreated != null) {
+                            setCurrentAreaFor(runId, lastCreated);
                         }
-                        renderedAny = true;
+                        changed = true;
                     }
                 }
+            }
+        }
+        if (changed) {
+            container.revalidate();
+        }
+    }
+
+    /**
+     * Replaces {@link AgentOutputArea.Kind#LLM} widgets in {@code container} with
+     * {@link Markdown} views while leaving {@code TOOL} and {@code STATUS} widgets
+     * untouched. Returns {@code null} if XML parsing fails on any LLM block.
+     */
+    private Boolean previewContainer(JPanel container) {
+        boolean renderedAny = false;
+        Component[] comps = container.getComponents();
+        for (int i = 0; i < comps.length; i++) {
+            if (comps[i] instanceof AgentOutputArea area
+                    && area.kind() == AgentOutputArea.Kind.LLM
+                    && !area.getText().isBlank()) {
+                Markdown md = area.createPreview(() -> setMode(Mode.RAW));
+                if (md.contentPane() == null) {
+                    return null;
+                }
+                container.remove(i);
+                container.add(md, i);
+                previewedAreas.put(md, area);
+                if (markdownView == null) {
+                    markdownView = md;
+                }
+                renderedAny = true;
             }
         }
         return renderedAny;
@@ -819,7 +1201,7 @@ public class Intent extends JPanel {
     private void restoreRawMode() {
         for (var entry : previewedAreas.entrySet()) {
             Markdown md = entry.getKey();
-            OutputArea area = entry.getValue();
+            AgentOutputArea area = entry.getValue();
             Container parent = md.getParent();
             if (parent != null) {
                 Component[] comps = parent.getComponents();
@@ -835,37 +1217,29 @@ public class Intent extends JPanel {
             }
         }
         previewedAreas.clear();
-        for (var entry : previewedScrollAreas.entrySet()) {
-            entry.getKey().setViewportView(entry.getValue());
-        }
-        previewedScrollAreas.clear();
-    }
-
-    private Markdown createMarkdownPreview(String text) {
-        Markdown md = new Markdown(text);
-        md.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    setMode(Mode.RAW);
-                }
-            }
-        });
-        return md;
     }
 
     private boolean hasOutputText() {
         if (output != null && !output.getText().isBlank()) {
             return true;
         }
-        if (!previewedAreas.isEmpty() || !previewedScrollAreas.isEmpty()) {
+        if (!previewedAreas.isEmpty()) {
             return true;
         }
-        JPanel masterContainer = runs == null ? outputPane : runPanes.get("");
-        if (masterContainer != null) {
-            for (Component comp : masterContainer.getComponents()) {
+        if (runs == null) {
+            for (Component comp : outputPane.getComponents()) {
                 if (comp instanceof OutputArea area && !area.getText().isBlank()) {
                     return true;
+                }
+            }
+        } else {
+            for (JPanel content : runContentPanes.values()) {
+                if (content != null) {
+                    for (Component comp : content.getComponents()) {
+                        if (comp instanceof OutputArea area && !area.getText().isBlank()) {
+                            return true;
+                        }
+                    }
                 }
             }
         }
@@ -922,8 +1296,7 @@ public class Intent extends JPanel {
      * @param question the question to add.
      */
     public void addQuestion(Question question) {
-        JPanel pane = runs == null ? outputPane : runPanes.get("");
-        addQuestionTo(pane == null ? outputPane : pane, null, question);
+        addQuestion(null, question);
     }
 
     /**
@@ -933,12 +1306,14 @@ public class Intent extends JPanel {
      */
     public void addQuestion(String runId, Question question) {
         if (runId == null || runs == null) {
-            addQuestion(question);
+            JPanel pane = runs == null ? outputPane : runContentPanes.get("");
+            addQuestionTo(pane == null ? outputPane : pane, null, question);
             return;
         }
-        JPanel pane = runPanes.get(runId);
+        JPanel pane = runContentPanes.get(runId);
         if (pane == null) {
-            addQuestion(question);
+            JPanel master = runContentPanes.get("");
+            addQuestionTo(master == null ? outputPane : master, null, question);
             return;
         }
         addQuestionTo(pane, runId, question);
@@ -948,23 +1323,17 @@ public class Intent extends JPanel {
         if (mode == Mode.PREVIEW) {
             setMode(Mode.RAW);
         }
-        OutputArea area = runId == null ? output : runOutputs.getOrDefault(runId, output);
-        if (area.getText().isBlank()) {
+        flushRouter(runId);
+        AgentOutputArea area = currentAreaFor(runId);
+        if (area != null && area.getParent() == pane && area.getText().isBlank()) {
             pane.remove(area);
             pane.add(question.createGUI());
             pane.add(area);
         } else {
             pane.add(question.createGUI());
-            OutputArea next = createOutputArea();
+            AgentOutputArea next = createOutputArea(AgentOutputArea.Kind.LLM);
             pane.add(next);
-            if (runId == null) {
-                output = next;
-                if (runs != null) {
-                    runOutputs.put("", next);
-                }
-            } else {
-                runOutputs.put(runId, next);
-            }
+            setCurrentAreaFor(runId, next);
         }
         pane.revalidate();
     }
@@ -982,11 +1351,16 @@ public class Intent extends JPanel {
         }
         if (runs == null) {
             runs = new JTabbedPane();
-            outputPane.remove(output);
             JPanel parent = new JPanel();
             parent.setLayout(new BoxLayout(parent, BoxLayout.Y_AXIS));
-            parent.add(output);
+            parent.setOpaque(false);
+            Component[] existingMaster = outputPane.getComponents();
+            for (Component comp : existingMaster) {
+                outputPane.remove(comp);
+                parent.add(comp);
+            }
             runPanes.put("", parent);
+            runContentPanes.put("", parent);
             runOutputs.put("", output);
             runs.addTab(displayName(parentTitle), parent);
             outputPane.add(runs);
@@ -1002,16 +1376,20 @@ public class Intent extends JPanel {
             return;
         }
 
-        OutputArea area = createOutputArea();
+        AgentOutputArea area = createOutputArea(AgentOutputArea.Kind.LLM);
         area.setRows(5);
-        area.setLineWrap(true);
-        area.setWrapStyleWord(true);
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setOpaque(false);
+        content.add(area);
 
         // Wraps a subagent output pane in a scroll pane.
         // To prevent the scroll pane from growing past a certain point
         // unless the parent container itself expands to give it more space,
         // wrap the JScrollPane in a panel utilizing GridBagLayout.
-        JScrollPane scrollPane = new JScrollPane(area);
+        JScrollPane scrollPane = new JScrollPane(content);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(SCROLL_UNIT_INCREMENT);
         JPanel pane = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -1023,6 +1401,7 @@ public class Intent extends JPanel {
         // Add scroll pane to wrapper panel, then wrapper panel to tab
         pane.add(scrollPane, gbc);
         runOutputs.put(runId, area);
+        runContentPanes.put(runId, content);
         runPanes.put(runId, pane);
         runs.addTab(label, pane);
         int index = runs.getTabCount() - 1;
@@ -1078,7 +1457,9 @@ public class Intent extends JPanel {
     }
 
     /**
-     * Appends text to the parent output or to one subagent tab.
+     * Appends text to the parent output or to one subagent tab, routing LLM
+     * Markdown chunks, tool-call status updates, and system status lines to
+     * their corresponding {@link AgentOutputArea.Kind} widgets.
      * @param runId null for the parent turn.
      * @param chunk the text to append.
      */
@@ -1087,11 +1468,24 @@ public class Intent extends JPanel {
             selectMasterOnNextOutput = false;
             selectMasterRun();
         }
-        OutputArea area = runId == null || runs == null ? output : runOutputs.get(runId);
-        if (area == null) {
-            area = output;
+        String key = (runId == null || runs == null) ? "" : runId;
+        StreamRouter router = runRouters.computeIfAbsent(
+                key, k -> new StreamRouter(k.isEmpty() ? null : k));
+        router.accept(chunk);
+    }
+
+    private void flushRouter(String runId) {
+        String key = (runId == null || runs == null) ? "" : runId;
+        StreamRouter router = runRouters.get(key);
+        if (router != null) {
+            router.flush();
         }
-        area.append(chunk);
+    }
+
+    private void flushAllRouters() {
+        for (StreamRouter router : runRouters.values()) {
+            router.flush();
+        }
     }
 
     /**
@@ -1103,6 +1497,7 @@ public class Intent extends JPanel {
         if (runs == null || runId == null) {
             return;
         }
+        flushRouter(runId);
         JPanel pane = runPanes.get(runId);
         if (pane == null) {
             return;
@@ -1223,6 +1618,7 @@ public class Intent extends JPanel {
                 footer.add(progressPane, BorderLayout.EAST);
             }
         } else {
+            flushAllRouters();
             progress.setIndeterminate(false);
             progress.setEnabled(false);
             footer.remove(progressPane);
@@ -1231,6 +1627,33 @@ public class Intent extends JPanel {
         updateModeBarVisibility();
         footer.revalidate();
         footer.repaint();
+    }
+
+    /**
+     * Returns the layered south pane that hosts {@link #outputPane()} and
+     * overlays {@link #modeBar()}. Package-private for testing.
+     * @return the south layered pane.
+     */
+    JLayeredPane southPane() {
+        return southPane;
+    }
+
+    /**
+     * Returns the output pane container. Package-private for testing.
+     * @return the output pane container.
+     */
+    JPanel outputPane() {
+        return outputPane;
+    }
+
+    /**
+     * Returns the content panel for a run id ({@code ""} for master when subagents
+     * exist). Package-private for testing.
+     * @param runId the run id, or {@code ""} for master.
+     * @return the vertical BoxLayout content panel.
+     */
+    JPanel runContentPane(String runId) {
+        return runContentPanes.get(runId == null ? "" : runId);
     }
 
     /**
@@ -1333,7 +1756,7 @@ public class Intent extends JPanel {
      * Returns the intent execution output.
      * @return the intent execution output.
      */
-    public OutputArea output() {
+    public AgentOutputArea output() {
         return output;
     }
 
