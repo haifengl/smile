@@ -646,4 +646,55 @@ class IntentTest {
         assertEquals(1, segments.size(), "Tool-like lines inside a fenced code block must remain in the LLM segment");
         assertEquals(AgentOutputArea.Kind.LLM, segments.getFirst().kind());
     }
+
+    @Test
+    void addQuestion_afterLongSubagentRun_selectsMasterTabAndPacksQuestionToPreferredHeight() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.appendRun(null, "Let me explore the codebase.\n");
+
+        // Subagent runs and produces many lines, making JTabbedPane tall
+        intent.beginRun("run-1", "Explore", "James");
+        StringBuilder longSubagentOutput = new StringBuilder();
+        for (int i = 0; i < 80; i++) {
+            longSubagentOutput.append("Subagent line ").append(i).append("\n");
+        }
+        intent.appendRun("run-1", longSubagentOutput.toString());
+        intent.finishRun("run-1", "Finished");
+        assertEquals(1, intent.runs().getSelectedIndex(), "subagent tab is selected before master acts");
+
+        // Master agent asks a question immediately after subagent finishes
+        var question = new ioa.llm.tool.Question(
+                "Approach",
+                "Which approach do you prefer?",
+                List.of("Option A", "Option B", "Other"),
+                false);
+        intent.addQuestion(null, question);
+
+        // Master tab should be selected so the user sees the question
+        assertEquals(0, intent.runs().getSelectedIndex(), "adding a master question must select the master tab");
+
+        // Lay out the master tab inside a tall container (simulating the height of the subagent tab)
+        var masterPane = intent.runContentPane("");
+        assertNotNull(masterPane);
+        masterPane.setSize(600, 1200);
+        masterPane.doLayout();
+
+        // Find the Question GUI component and verify it is not stretched to fill the 1200px height
+        javax.swing.JComponent questionGui = null;
+        for (var comp : masterPane.getComponents()) {
+            if (!(comp instanceof AgentOutputArea) && comp instanceof javax.swing.JComponent jc) {
+                questionGui = jc;
+                break;
+            }
+        }
+        assertNotNull(questionGui, "Question GUI must be added to master content pane");
+        int prefHeight = questionGui.getPreferredSize().height;
+        assertEquals(prefHeight, questionGui.getMaximumSize().height,
+                "Question GUI maximum height must match its preferred height");
+        assertEquals(prefHeight, questionGui.getHeight(),
+                "Question GUI height after layout must equal its preferred height, not stretch to fill the tall tab");
+        assertTrue(questionGui.getHeight() < 300,
+                "Question GUI must stay compact rather than stretching to the subagent tab height");
+    }
 }

@@ -1323,19 +1323,24 @@ public class Intent extends JPanel {
         if (mode == Mode.PREVIEW) {
             setMode(Mode.RAW);
         }
+        if (runId == null || runId.isEmpty()) {
+            selectMasterRun();
+        }
         flushRouter(runId);
+        JComponent gui = question.createGUI();
         AgentOutputArea area = currentAreaFor(runId);
         if (area != null && area.getParent() == pane && area.getText().isBlank()) {
             pane.remove(area);
-            pane.add(question.createGUI());
+            pane.add(gui);
             pane.add(area);
         } else {
-            pane.add(question.createGUI());
+            pane.add(gui);
             AgentOutputArea next = createOutputArea(AgentOutputArea.Kind.LLM);
             pane.add(next);
             setCurrentAreaFor(runId, next);
         }
         pane.revalidate();
+        pane.repaint();
     }
 
     /**
