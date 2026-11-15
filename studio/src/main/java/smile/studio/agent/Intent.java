@@ -159,6 +159,8 @@ public class Intent extends JPanel {
     private final Map<String, JPanel> runContentPanes = new LinkedHashMap<>();
     private final Map<String, AgentOutputArea> runOutputs = new LinkedHashMap<>();
     private final Map<String, StreamRouter> runRouters = new LinkedHashMap<>();
+    /** Keeps each subagent tab's scroll pane pinned to its latest output while it streams. */
+    private final Map<String, AutoScroller> runScrollers = new LinkedHashMap<>();
     private boolean selectMasterOnNextOutput;
 
     /**
@@ -1011,6 +1013,7 @@ public class Intent extends JPanel {
             text = text.substring(start);
         }
         area.append(text);
+        follow(runId);
     }
 
     private void appendLineToKind(String runId, AgentOutputArea.Kind kind, String lineContent) {
@@ -1022,6 +1025,25 @@ public class Intent extends JPanel {
             area.append("\n" + lineContent);
         } else {
             area.append(lineContent);
+        }
+        follow(runId);
+    }
+
+    /**
+     * Pins a subagent tab to its latest output. The master turn scrolls the
+     * conversation scroll pane in {@link AgentPanel}, but a subagent's output
+     * lives in its own tab scroll pane, which nothing else moves. A no-op for
+     * the master run, and while the user has scrolled up in that tab.
+     *
+     * @param runId {@code null} for the parent turn, or the subagent run id.
+     */
+    private void follow(String runId) {
+        if (runId == null || runId.isEmpty()) {
+            return;
+        }
+        AutoScroller scroller = runScrollers.get(runId);
+        if (scroller != null) {
+            scroller.scrollToBottom();
         }
     }
 
@@ -1367,6 +1389,9 @@ public class Intent extends JPanel {
         }
         pane.revalidate();
         pane.repaint();
+        // A question the agent is waiting on is the newest thing in the tab; bring
+        // it into view instead of leaving it below the fold of a long transcript.
+        follow(runId);
     }
 
     /**
@@ -1421,6 +1446,7 @@ public class Intent extends JPanel {
         // wrap the JScrollPane in a panel utilizing GridBagLayout.
         JScrollPane scrollPane = new JScrollPane(content);
         scrollPane.getVerticalScrollBar().setUnitIncrement(SCROLL_UNIT_INCREMENT);
+        runScrollers.put(runId, new AutoScroller(scrollPane));
         JPanel pane = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -1685,6 +1711,16 @@ public class Intent extends JPanel {
      */
     JPanel runContentPane(String runId) {
         return runContentPanes.get(runId == null ? "" : runId);
+    }
+
+    /**
+     * Returns the auto-scroller of a subagent tab, or null for the master run.
+     * Package-private for testing.
+     * @param runId the subagent run id.
+     * @return the tab's auto-scroller, or null.
+     */
+    AutoScroller runScroller(String runId) {
+        return runScrollers.get(runId);
     }
 
     /**

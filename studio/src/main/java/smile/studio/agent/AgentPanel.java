@@ -66,6 +66,8 @@ public class AgentPanel extends JPanel {
     private static final ResourceBundle bundle = ResourceBundle.getBundle(AgentPanel.class.getName(), Locale.getDefault());
     /** The container of conversation. */
     private final JPanel intents = new ScrollablePanel();
+    /** Keeps the conversation pinned to the latest output while a turn streams. */
+    private final AutoScroller scroller;
     /** The agent. */
     private final Agent agent;
     /** The workspace that hosts the file tabs. */
@@ -134,6 +136,7 @@ public class AgentPanel extends JPanel {
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
+        scroller = new AutoScroller(scrollPane);
 
         composer = new Intent(this);
         intents.add(composer);
@@ -344,6 +347,9 @@ public class AgentPanel extends JPanel {
                     activeIntent.clearQueued();
                     activeIntent.setProgress(true);
                     activeIntent.setStatus("Thinking...");
+                    // A new turn re-arms following: the user asked for this work, so its
+                    // output should come into view even if they had scrolled up before.
+                    followToBottom();
                     // Flush output that arrived before this turn was promoted.
                     if (!pendingOutput.isEmpty()) {
                         activeIntent.appendRun(null, pendingOutput.toString());
@@ -469,26 +475,34 @@ public class AgentPanel extends JPanel {
     }
 
     /**
-     * Scrolls the conversation to the bottom so a just-appended turn is visible
-     * without the user having to drag the scrollbar.
+     * Scrolls the conversation to the bottom so a just-appended turn, or the
+     * latest streamed output, is visible without the user having to drag the
+     * scrollbar.
      * <p>Adding an {@link Intent} grows the {@code BoxLayout} panel but touches
      * neither the caret nor the outer scrollbar, so nothing scrolls on its own.
-     * The view only reaches the bottom when output tokens make the caret follow
-     * the text -- the delay this method removes. Called when a submit appends a
-     * turn, before any output has streamed.
+     * The view only reaches the bottom when output tokens make the pane taller
+     * than the viewport -- the delay this method removes.
      * <p>The scroll is deferred with {@link SwingUtilities#invokeLater} so the
      * pending layout pass has resized the viewport and the scrollbar's maximum
      * reflects the new content; scrolling in the same frame would clamp to the
      * old maximum and stop short.
+     * <p>This leaves the follow state alone. Content that arrives while the user
+     * has scrolled up to read (a peer request, a notice) must not pull the view
+     * away from them; call {@link #followToBottom()} instead when the content is
+     * something the user asked for.
      */
     private void scrollToBottom() {
-        SwingUtilities.invokeLater(() -> {
-            JScrollPane scroll = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, intents);
-            if (scroll != null) {
-                JScrollBar bar = scroll.getVerticalScrollBar();
-                bar.setValue(bar.getMaximum());
-            }
-        });
+        scroller.scrollToBottom();
+    }
+
+    /**
+     * Re-arms following and scrolls to the bottom. Used when the user starts a
+     * turn or the transcript is replaced: they asked for this content, so it
+     * should come into view even if they had scrolled up beforehand.
+     */
+    private void followToBottom() {
+        scroller.follow();
+        scroller.scrollToBottom();
     }
 
     /**
@@ -504,6 +518,8 @@ public class AgentPanel extends JPanel {
         intent.setEditable(false);
         intents.add(intent, composerIndex());
         intents.revalidate();
+        // Work that merely arrived must not pull the view away from history the
+        // user scrolled up to read; submitting a prompt re-arms following instead.
         scrollToBottom();
         return intent;
     }
@@ -624,8 +640,9 @@ public class AgentPanel extends JPanel {
             composer = intent;
             intents.revalidate();
             // The new composer sits below the submitted turn; keep it in view so the
-            // user can see where to type the next prompt.
-            scrollToBottom();
+            // user can see where to type the next prompt. They submitted this prompt,
+            // so re-arm following rather than deferring to a previous scroll.
+            followToBottom();
             SwingUtilities.invokeLater(() -> intent.editor().requestFocusInWindow());
         } finally {
             buildingComposer.set(false);
@@ -1096,7 +1113,8 @@ public class AgentPanel extends JPanel {
         intents.revalidate();
         revalidate();
         intents.repaint();
-        scrollToBottom();
+        // A replaced transcript is new content the user asked to see; follow its end.
+        followToBottom();
     }
 
     /**
