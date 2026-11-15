@@ -108,28 +108,58 @@ public class Intent extends JPanel {
     private final JButton moveUpButton = new JButton("⬆️");
     private final JButton moveDownButton = new JButton("⬇️");
     private final JButton cancelQueuedButton = new JButton("❌");
+    /** Minimum output height (in pixels) before the top-right toggle bar is also shown alongside the bottom-right one. */
+    static final int MIN_TOP_MODE_BAR_HEIGHT = 120;
     // Output pane. Subagent runs are tabs inside this pane.
     private final JLayeredPane southPane = new JLayeredPane() {
         @Override
         public void doLayout() {
             int w = getWidth();
             int h = getHeight();
-            outputPane.setBounds(0, 0, w, h);
-            if (modeBar.isVisible()) {
-                Dimension pref = modeBar.getPreferredSize();
+            // The bottom toggle floats over the output, so the output must stop short of
+            // it. Laying the output out at full height put the last two lines of text
+            // directly under the button; reserving the bar's height carves out an empty
+            // strip below the text for it to sit in.
+            Dimension barPref = modeBar.isVisible() ? modeBar.getPreferredSize() : null;
+            int reserved = barPref != null ? barPref.height : 0;
+            outputPane.setBounds(0, 0, w, Math.max(0, h - reserved));
+            if (barPref != null) {
                 int scrollBarWidth = UIManager.getInt("ScrollBar.width");
                 int rightMargin = (scrollBarWidth > 0 ? scrollBarWidth : 14) + 6;
-                int x = Math.max(0, w - pref.width - rightMargin);
-                modeBar.setBounds(x, 2, pref.width, pref.height);
+                int x = Math.max(0, w - barPref.width - rightMargin);
+                int bottomY = Math.max(0, h - barPref.height);
+                modeBar.setBounds(x, bottomY, barPref.width, barPref.height);
+
+                boolean showTop = h >= Math.max(MIN_TOP_MODE_BAR_HEIGHT, barPref.height * 3);
+                topModeBar.setVisible(showTop);
+                if (showTop) {
+                    Dimension topPref = topModeBar.getPreferredSize();
+                    int topX = Math.max(0, w - topPref.width - rightMargin);
+                    topModeBar.setBounds(topX, 2, topPref.width, topPref.height);
+                } else {
+                    topModeBar.setBounds(0, 0, 0, 0);
+                }
+            } else {
+                topModeBar.setVisible(false);
+                topModeBar.setBounds(0, 0, 0, 0);
             }
         }
 
         @Override
         public Dimension getPreferredSize() {
-            return outputPane.getPreferredSize();
+            // Include the reserved strip so the enclosing layout gives the bar room
+            // below the text instead of overlapping it.
+            Dimension pref = outputPane.getPreferredSize();
+            if (modeBar.isVisible()) {
+                Dimension barPref = modeBar.getPreferredSize();
+                return new Dimension(Math.max(pref.width, barPref.width), pref.height + barPref.height);
+            }
+            return pref;
         }
     };
     private final JPanel outputPane = new JPanel();
+    private final JPanel topModeBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 2));
+    private final JToggleButton topModeButton = new JToggleButton(bundle.getString("PreviewMode"));
     private final JPanel modeBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 2));
     private final JToggleButton modeButton = new JToggleButton(bundle.getString("PreviewMode"));
     private Mode mode = Mode.RAW;
@@ -141,6 +171,8 @@ public class Intent extends JPanel {
     private final Map<String, JPanel> runContentPanes = new LinkedHashMap<>();
     private final Map<String, AgentOutputArea> runOutputs = new LinkedHashMap<>();
     private final Map<String, StreamRouter> runRouters = new LinkedHashMap<>();
+    /** Keeps each subagent tab's scroll pane pinned to its latest output while it streams. */
+    private final Map<String, AutoScroller> runScrollers = new LinkedHashMap<>();
     private boolean selectMasterOnNextOutput;
 
     /**
@@ -335,6 +367,7 @@ public class Intent extends JPanel {
 
         southPane.setOpaque(false);
         southPane.add(outputPane, JLayeredPane.DEFAULT_LAYER);
+        southPane.add(topModeBar, JLayeredPane.PALETTE_LAYER);
         southPane.add(modeBar, JLayeredPane.PALETTE_LAYER);
 
         add(inputPane, BorderLayout.CENTER);
@@ -415,33 +448,37 @@ public class Intent extends JPanel {
     }
 
     /**
-     * Initializes the bottom-right toggle button for switching between plain text
-     * and rendered Markdown preview of agent output.
+     * Initializes the bottom-right and conditional top-right toggle buttons for
+     * switching between plain text and rendered Markdown view of agent output.
      */
     private void initModeBar() {
-        modeButton.setToolTipText(bundle.getString("PreviewModeTooltip"));
-        modeButton.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_ROUND_RECT);
-        modeButton.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
-        modeButton.setMargin(new Insets(1, 8, 1, 8));
-        modeButton.setFocusable(false);
-        modeButton.setSelected(false);
-        modeButton.addActionListener(e -> setMode(mode == Mode.RAW ? Mode.PREVIEW : Mode.RAW));
+        configureModeBar(modeBar, modeButton);
+        configureModeBar(topModeBar, topModeButton);
+    }
 
-        modeBar.setOpaque(false);
-        modeBar.setBorder(new EmptyBorder(2, 6, 2, 6));
-        modeBar.add(modeButton);
-        modeBar.setVisible(false);
+    private void configureModeBar(JPanel bar, JToggleButton button) {
+        button.setToolTipText(bundle.getString("PreviewModeTooltip"));
+        button.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_ROUND_RECT);
+        button.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
+        button.setMargin(new Insets(1, 8, 1, 8));
+        button.setFocusable(false);
+        button.setSelected(false);
+        button.addActionListener(e -> setMode(mode == Mode.RAW ? Mode.PREVIEW : Mode.RAW));
+
+        bar.setOpaque(false);
+        bar.setBorder(new EmptyBorder(2, 6, 2, 6));
+        bar.add(button);
+        bar.setVisible(false);
     }
 
     private void syncModeButton() {
-        if (mode == Mode.PREVIEW) {
-            modeButton.setSelected(true);
-            modeButton.setText(bundle.getString("RawMode"));
-            modeButton.setToolTipText(bundle.getString("RawModeTooltip"));
-        } else {
-            modeButton.setSelected(false);
-            modeButton.setText(bundle.getString("PreviewMode"));
-            modeButton.setToolTipText(bundle.getString("PreviewModeTooltip"));
+        boolean preview = mode == Mode.PREVIEW;
+        String text = bundle.getString(preview ? "RawMode" : "PreviewMode");
+        String tooltip = bundle.getString(preview ? "RawModeTooltip" : "PreviewModeTooltip");
+        for (JToggleButton button : new JToggleButton[] { modeButton, topModeButton }) {
+            button.setSelected(preview);
+            button.setText(text);
+            button.setToolTipText(tooltip);
         }
     }
 
@@ -988,6 +1025,7 @@ public class Intent extends JPanel {
             text = text.substring(start);
         }
         area.append(text);
+        follow(runId);
     }
 
     private void appendLineToKind(String runId, AgentOutputArea.Kind kind, String lineContent) {
@@ -999,6 +1037,25 @@ public class Intent extends JPanel {
             area.append("\n" + lineContent);
         } else {
             area.append(lineContent);
+        }
+        follow(runId);
+    }
+
+    /**
+     * Pins a subagent tab to its latest output. The master turn scrolls the
+     * conversation scroll pane in {@link AgentPanel}, but a subagent's output
+     * lives in its own tab scroll pane, which nothing else moves. A no-op for
+     * the master run, and while the user has scrolled up in that tab.
+     *
+     * @param runId {@code null} for the parent turn, or the subagent run id.
+     */
+    private void follow(String runId) {
+        if (runId == null || runId.isEmpty()) {
+            return;
+        }
+        AutoScroller scroller = runScrollers.get(runId);
+        if (scroller != null) {
+            scroller.scrollToBottom();
         }
     }
 
@@ -1265,6 +1322,9 @@ public class Intent extends JPanel {
                 && hasOutputText();
         if (modeBar.isVisible() != show) {
             modeBar.setVisible(show);
+            if (!show) {
+                topModeBar.setVisible(false);
+            }
             southPane.revalidate();
             southPane.repaint();
         }
@@ -1323,19 +1383,27 @@ public class Intent extends JPanel {
         if (mode == Mode.PREVIEW) {
             setMode(Mode.RAW);
         }
+        if (runId == null || runId.isEmpty()) {
+            selectMasterRun();
+        }
         flushRouter(runId);
+        JComponent gui = question.createGUI();
         AgentOutputArea area = currentAreaFor(runId);
         if (area != null && area.getParent() == pane && area.getText().isBlank()) {
             pane.remove(area);
-            pane.add(question.createGUI());
+            pane.add(gui);
             pane.add(area);
         } else {
-            pane.add(question.createGUI());
+            pane.add(gui);
             AgentOutputArea next = createOutputArea(AgentOutputArea.Kind.LLM);
             pane.add(next);
             setCurrentAreaFor(runId, next);
         }
         pane.revalidate();
+        pane.repaint();
+        // A question the agent is waiting on is the newest thing in the tab; bring
+        // it into view instead of leaving it below the fold of a long transcript.
+        follow(runId);
     }
 
     /**
@@ -1390,6 +1458,7 @@ public class Intent extends JPanel {
         // wrap the JScrollPane in a panel utilizing GridBagLayout.
         JScrollPane scrollPane = new JScrollPane(content);
         scrollPane.getVerticalScrollBar().setUnitIncrement(SCROLL_UNIT_INCREMENT);
+        runScrollers.put(runId, new AutoScroller(scrollPane));
         JPanel pane = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -1657,19 +1726,45 @@ public class Intent extends JPanel {
     }
 
     /**
+     * Returns the auto-scroller of a subagent tab, or null for the master run.
+     * Package-private for testing.
+     * @param runId the subagent run id.
+     * @return the tab's auto-scroller, or null.
+     */
+    AutoScroller runScroller(String runId) {
+        return runScrollers.get(runId);
+    }
+
+    /**
      * Returns the bottom-right mode toggle bar. Package-private for testing.
-     * @return the mode toggle bar.
+     * @return the bottom-right mode toggle bar.
      */
     JPanel modeBar() {
         return modeBar;
     }
 
     /**
-     * Returns the mode toggle button. Package-private for testing.
-     * @return the mode toggle button.
+     * Returns the bottom-right mode toggle button. Package-private for testing.
+     * @return the bottom-right mode toggle button.
      */
     JToggleButton modeButton() {
         return modeButton;
+    }
+
+    /**
+     * Returns the top-right mode toggle bar. Package-private for testing.
+     * @return the top-right mode toggle bar.
+     */
+    JPanel topModeBar() {
+        return topModeBar;
+    }
+
+    /**
+     * Returns the top-right mode toggle button. Package-private for testing.
+     * @return the top-right mode toggle button.
+     */
+    JToggleButton topModeButton() {
+        return topModeButton;
     }
 
     /**

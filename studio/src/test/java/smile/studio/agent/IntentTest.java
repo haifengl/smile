@@ -445,6 +445,8 @@ class IntentTest {
         for (String key : MODE_KEYS) {
             assertTrue(base.containsKey(key), "base Intent bundle is missing key: " + key);
         }
+        assertEquals("Text", base.getString("RawMode"));
+        assertEquals("Markdown", base.getString("PreviewMode"));
         for (Locale locale : QUEUE_LOCALES) {
             ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), locale);
             for (String key : MODE_KEYS) {
@@ -498,13 +500,16 @@ class IntentTest {
         assertTrue(intent.modeBar().isVisible());
         assertEquals(Intent.Mode.RAW, intent.getMode());
 
-        // Switch to Preview mode via the toggle button
+        // Switch to Preview mode via the bottom-right toggle button
         ResourceBundle bundle = ResourceBundle.getBundle(Intent.class.getName(), Locale.getDefault());
         assertEquals(bundle.getString("PreviewMode"), intent.modeButton().getText());
+        assertEquals(bundle.getString("PreviewMode"), intent.topModeButton().getText());
         intent.modeButton().doClick();
         assertEquals(Intent.Mode.PREVIEW, intent.getMode());
         assertTrue(intent.modeButton().isSelected());
+        assertTrue(intent.topModeButton().isSelected());
         assertEquals(bundle.getString("RawMode"), intent.modeButton().getText());
+        assertEquals(bundle.getString("RawMode"), intent.topModeButton().getText());
         assertNotNull(intent.markdownView());
         assertNotNull(intent.markdownView().contentPane());
         assertEquals(1, intent.markdownView().contentPane().getDocument().getElementsByTagName("table").getLength());
@@ -512,11 +517,13 @@ class IntentTest {
         assertTrue(intent.markdownView().getPreferredSize().height > 0,
                 "embedded Markdown preview must compute a positive preferred height for BorderLayout.SOUTH");
 
-        // Switch back to Raw mode via the toggle button
-        intent.modeButton().doClick();
+        // Switch back to Raw mode via the top-right toggle button
+        intent.topModeButton().doClick();
         assertEquals(Intent.Mode.RAW, intent.getMode());
         assertFalse(intent.modeButton().isSelected());
+        assertFalse(intent.topModeButton().isSelected());
         assertEquals(bundle.getString("PreviewMode"), intent.modeButton().getText());
+        assertEquals(bundle.getString("PreviewMode"), intent.topModeButton().getText());
         assertNotNull(intent.output().getParent(), "OutputArea must be restored to outputPane in RAW mode");
         assertEquals(md, intent.output().getText());
     }
@@ -564,14 +571,55 @@ class IntentTest {
         var paletteComps = intent.southPane().getComponentsInLayer(javax.swing.JLayeredPane.PALETTE_LAYER);
         assertEquals(1, defaultComps.length);
         assertSame(intent.outputPane(), defaultComps[0]);
-        assertEquals(1, paletteComps.length);
-        assertSame(intent.modeBar(), paletteComps[0]);
+        assertEquals(2, paletteComps.length);
+        assertTrue(List.of(paletteComps).contains(intent.modeBar()));
+        assertTrue(List.of(paletteComps).contains(intent.topModeBar()));
 
+        // Short output: only bottom-right modeBar is visible; topModeBar is hidden to avoid crowding
+        intent.southPane().setSize(600, 60);
+        intent.southPane().doLayout();
+        assertTrue(intent.modeBar().isVisible(), "bottom-right modeBar must be visible on short output");
+        assertFalse(intent.topModeBar().isVisible(), "top-right modeBar must be hidden on short output");
+        assertEquals(60 - intent.modeBar().getPreferredSize().height, intent.modeBar().getY(),
+                "modeBar must sit at the bottom edge");
+        assertTrue(intent.modeBar().getX() > 0, "modeBar must be positioned near the right edge");
+        assertEquals(60 - intent.modeBar().getPreferredSize().height, intent.outputPane().getHeight(),
+                "the output must stop above the modeBar so the bar never covers text");
+
+        // Tall output: both bottom-right modeBar and top-right topModeBar are visible
         intent.southPane().setSize(600, 200);
         intent.southPane().doLayout();
         assertEquals(600, intent.outputPane().getWidth());
-        assertEquals(200, intent.outputPane().getHeight());
+        assertEquals(200 - intent.modeBar().getPreferredSize().height, intent.outputPane().getHeight(),
+                "the output must stop above the modeBar");
+        assertTrue(intent.modeBar().isVisible(), "bottom-right modeBar must be visible on tall output");
+        assertTrue(intent.topModeBar().isVisible(), "top-right topModeBar must be visible on tall output");
+        assertEquals(200 - intent.modeBar().getPreferredSize().height, intent.modeBar().getY(),
+                "modeBar must be positioned at the bottom-right corner");
+        assertEquals(2, intent.topModeBar().getY(),
+                "topModeBar must be positioned at the top-right corner");
         assertTrue(intent.modeBar().getX() > 0, "modeBar must be positioned near the right edge");
+        assertTrue(intent.topModeBar().getX() > 0, "topModeBar must be positioned near the right edge");
+    }
+
+    @Test
+    void bottomModeBarSitsBelowTheLastLineOfText_soItNeverCoversOutput() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        StringBuilder text = new StringBuilder();
+        for (int i = 0; i < 12; i++) {
+            text.append("text line ").append(i).append('\n');
+        }
+        intent.output().setText(text.toString());
+        assertTrue(intent.modeBar().isVisible());
+
+        intent.southPane().setSize(600, 200);
+        intent.southPane().doLayout();
+
+        int barTop = intent.modeBar().getY();
+        int outputBottom = intent.outputPane().getY() + intent.outputPane().getHeight();
+        assertEquals(barTop, outputBottom,
+                "the output must end exactly where the modeBar starts, so the bar never covers text");
     }
 
     @Test
@@ -645,5 +693,72 @@ class IntentTest {
         var segments = AgentOutputArea.splitSegments(raw);
         assertEquals(1, segments.size(), "Tool-like lines inside a fenced code block must remain in the LLM segment");
         assertEquals(AgentOutputArea.Kind.LLM, segments.getFirst().kind());
+    }
+
+    @Test
+    void subagentTab_getsItsOwnAutoScroller_soStreamedOutputStaysInView() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        assertNull(intent.runScroller(null), "the master run scrolls the conversation pane, not a tab");
+
+        intent.beginRun("run-1", "Explore", "James");
+        AutoScroller scroller = intent.runScroller("run-1");
+        assertNotNull(scroller, "a subagent tab must get an auto-scroller for its own output");
+        assertTrue(scroller.isFollowing(), "a fresh tab follows its output");
+
+        intent.appendRun("run-1", "line one\n");
+        assertTrue(scroller.isFollowing(),
+                "streaming into a tab must keep its view following the newest line");
+    }
+
+    @Test
+    void addQuestion_afterLongSubagentRun_selectsMasterTabAndPacksQuestionToPreferredHeight() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.appendRun(null, "Let me explore the codebase.\n");
+
+        // Subagent runs and produces many lines, making JTabbedPane tall
+        intent.beginRun("run-1", "Explore", "James");
+        StringBuilder longSubagentOutput = new StringBuilder();
+        for (int i = 0; i < 80; i++) {
+            longSubagentOutput.append("Subagent line ").append(i).append("\n");
+        }
+        intent.appendRun("run-1", longSubagentOutput.toString());
+        intent.finishRun("run-1", "Finished");
+        assertEquals(1, intent.runs().getSelectedIndex(), "subagent tab is selected before master acts");
+
+        // Master agent asks a question immediately after subagent finishes
+        var question = new ioa.llm.tool.Question(
+                "Approach",
+                "Which approach do you prefer?",
+                List.of("Option A", "Option B", "Other"),
+                false);
+        intent.addQuestion(null, question);
+
+        // Master tab should be selected so the user sees the question
+        assertEquals(0, intent.runs().getSelectedIndex(), "adding a master question must select the master tab");
+
+        // Lay out the master tab inside a tall container (simulating the height of the subagent tab)
+        var masterPane = intent.runContentPane("");
+        assertNotNull(masterPane);
+        masterPane.setSize(600, 1200);
+        masterPane.doLayout();
+
+        // Find the Question GUI component and verify it is not stretched to fill the 1200px height
+        javax.swing.JComponent questionGui = null;
+        for (var comp : masterPane.getComponents()) {
+            if (!(comp instanceof AgentOutputArea) && comp instanceof javax.swing.JComponent jc) {
+                questionGui = jc;
+                break;
+            }
+        }
+        assertNotNull(questionGui, "Question GUI must be added to master content pane");
+        int prefHeight = questionGui.getPreferredSize().height;
+        assertEquals(prefHeight, questionGui.getMaximumSize().height,
+                "Question GUI maximum height must match its preferred height");
+        assertEquals(prefHeight, questionGui.getHeight(),
+                "Question GUI height after layout must equal its preferred height, not stretch to fill the tall tab");
+        assertTrue(questionGui.getHeight() < 300,
+                "Question GUI must stay compact rather than stretching to the subagent tab height");
     }
 }
