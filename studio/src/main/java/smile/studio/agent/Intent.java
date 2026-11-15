@@ -1502,9 +1502,8 @@ public class Intent extends JPanel {
         }
 
         AgentOutputArea area = createOutputArea(AgentOutputArea.Kind.LLM);
-        // The output's row count is the scroll pane's preferred height: the tab opens
-        // tall enough for this many lines and scrolls beyond that. The GridBag wrapper
-        // below still lets it grow when the parent has room to spare.
+        // An empty view reserves this many rows; the scroll pane below caps the
+        // preferred height at the same count once the output exceeds it.
         area.setRows(RUN_VIEW_ROWS);
 
         // The content tracks the viewport width, so the output wraps at the visible
@@ -1515,11 +1514,14 @@ public class Intent extends JPanel {
         content.setOpaque(false);
         content.add(area);
 
-        // Wraps a subagent output pane in a scroll pane.
-        // To prevent the scroll pane from growing past a certain point
-        // unless the parent container itself expands to give it more space,
-        // wrap the JScrollPane in a panel utilizing GridBagLayout.
-        JScrollPane scrollPane = new JScrollPane(content);
+        // Wraps a subagent output pane in a scroll pane. The pane's preferred height
+        // is capped at RUN_VIEW_ROWS instead of following the output: a text area's
+        // preferred height grows with its text, so an uncapped pane would ask its tab
+        // to grow with every streamed line (see RowLimitedScrollPane).
+        // To prevent the scroll pane from growing past that cap unless the parent
+        // container itself expands to give it more space, wrap the JScrollPane in a
+        // panel utilizing GridBagLayout.
+        RowLimitedScrollPane scrollPane = new RowLimitedScrollPane(area, content, RUN_VIEW_ROWS);
         // The output wraps to the tab's width, so a horizontal scrollbar could only
         // ever show a clipped sliver of an over-long line; never show one.
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
