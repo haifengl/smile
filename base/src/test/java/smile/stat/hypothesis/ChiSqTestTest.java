@@ -124,4 +124,22 @@ public class ChiSqTestTest {
         assertEquals(1, table.df(), 1E-10);
         assertEquals(3.520591654384769E-33, table.pvalue(), 1E-39);
     }
+
+    @Test
+    public void testTwoSampleUnequalSizes() {
+        System.out.println("two sample unequal sizes");
+        // Identical proportions (10x scaled) -> chisq == 0.0, p-value == 1.0
+        int[] baseline = {1000, 2000, 3000, 4000};
+        int[] windowSame = {100, 200, 300, 400};
+        ChiSqTest same = ChiSqTest.test(baseline, windowSame);
+        assertEquals(0.0, same.chisq(), 1e-12);
+        assertEquals(3, same.df(), 1e-12);
+        assertEquals(1.0, same.pvalue(), 1e-12);
+
+        // Reversed proportions -> large chisq, tiny p-value
+        int[] windowShifted = {400, 300, 200, 100};
+        ChiSqTest shifted = ChiSqTest.test(baseline, windowShifted);
+        assertTrue(shifted.chisq() > 200.0);
+        assertTrue(shifted.pvalue() < 1e-40);
+    }
 }

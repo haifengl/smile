@@ -292,6 +292,25 @@ double max = agent.quantile(1.0);    // ≈ maximum
 need to wait until all data has been fed. The result is automatically flushed if there
 is a pending partial batch.
 
+### Empirical CDF, summary statistics, and sketch merging
+
+In addition to `quantile(p)`, `IQAgent` supports evaluating the approximate empirical
+cumulative distribution function `cdf(x)` in $O(\log n_q)$ time, inspecting stream bounds,
+and merging two independent sketches in constant memory:
+
+```java
+double p   = agent.cdf(0.0);         // estimated P(X <= 0.0) in [0, 1]
+int n      = agent.count();          // total non-NaN observations seen
+double min = agent.min();            // exact minimum seen
+double max = agent.max();            // exact maximum seen
+
+// Merge another IQAgent sketch (e.g. from another partition or time window)
+agent.merge(otherAgent);
+
+// Reset for reuse in the next window without reallocating buffers
+agent.reset();
+```
+
 ### Accuracy
 
 On a uniform distribution of 100,000 values, each percentile is accurate to within

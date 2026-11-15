@@ -16,8 +16,10 @@
  */
 package smile.stat.hypothesis;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.MathEx;
+import smile.sort.IQAgent;
 import smile.stat.distribution.Distribution;
 
 /**
@@ -55,7 +57,7 @@ import smile.stat.distribution.Distribution;
  * @param pvalue the p-value.
  * @author Haifeng Li
  */
-public record KSTest(String method, double d, double pvalue) {
+public record KSTest(String method, double d, double pvalue) implements Serializable {
     @Override
     public String toString() {
         return String.format("%s Kolmogorov-Smirnov Test(d = %.4f, p-value = %G)", method, d, pvalue);
@@ -254,5 +256,180 @@ public record KSTest(String method, double d, double pvalue) {
         double p = qks((en + 0.12 + 0.11 / en) * d);
 
         return new KSTest("Two Sample", d, p);
+    }
+
+    /**
+     * The one-sample streaming KS test for the null hypothesis that the
+     * observations summarized by {@code x} are drawn from the given distribution.
+     *
+     * @param x the streaming quantile sketch of sample values.
+     * @param dist the reference distribution.
+     * @return the test results.
+     */
+    public static KSTest test(IQAgent x, Distribution dist) {
+        if (x == null || x.isEmpty()) {
+            throw new IllegalArgumentException("Empty IQAgent sketch");
+        }
+        if (dist == null) {
+            throw new IllegalArgumentException("Null distribution");
+        }
+
+        double[] q = x.quantiles();
+        double[] pval = x.probabilities();
+        int m = q.length;
+        double d = 0.0;
+        double fo = 0.0;
+
+        int j = 0;
+        while (j < m) {
+            int start = j;
+            double qv = q[start];
+            while (j + 1 < m && q[j + 1] == qv) {
+                j++;
+            }
+            double fn = pval[j];
+            double ff = dist.cdf(qv);
+            double dt;
+            if (j > start) {
+                // Step jump at qv (e.g. small sample or discrete point mass)
+                double right = (j == m - 1) ? 1.0 : fn;
+                dt = Math.max(Math.abs(fo - ff), Math.abs(right - ff));
+            } else if (start == 0) {
+                dt = Math.max(ff, Math.abs(fn - ff));
+            } else if (j == m - 1) {
+                dt = Math.max(1.0 - ff, Math.abs(fn - ff));
+            } else {
+                dt = Math.abs(fn - ff);
+            }
+            if (dt > d) {
+                d = dt;
+            }
+            fo = fn;
+            j++;
+        }
+
+        double en = Math.sqrt(x.count());
+        double p = qks((en + 0.12 + 0.11 / en) * d);
+
+        return new KSTest(dist.toString(), d, p);
+    }
+
+    /**
+     * The two-sample streaming KS test for the null hypothesis that two
+     * streams summarized by {@code x} and {@code y} are drawn from the same
+     * continuous distribution.
+     *
+     * @param x the streaming quantile sketch of the first sample.
+     * @param y the streaming quantile sketch of the second sample.
+     * @return the test results.
+     */
+    public static KSTest test(IQAgent x, IQAgent y) {
+        if (x == null || x.isEmpty() || y == null || y.isEmpty()) {
+            throw new IllegalArgumentException("Empty IQAgent sketch");
+        }
+
+        double[] qx = x.quantiles();
+        double[] qy = y.quantiles();
+        double d = 0.0;
+
+        for (double z : qx) {
+            double dt = Math.abs(x.cdf(z) - y.cdf(z));
+            if (dt > d) {
+                d = dt;
+            }
+        }
+        for (double z : qy) {
+            double dt = Math.abs(x.cdf(z) - y.cdf(z));
+            if (dt > d) {
+                d = dt;
+            }
+        }
+
+        double en1 = x.count();
+        double en2 = y.count();
+        double en = Math.sqrt(en1 * en2 / (en1 + en2));
+        double p = qks((en + 0.12 + 0.11 / en) * d);
+
+        return new KSTest("Two Sample", d, p);
+    }
+
+    /**
+     * The two-sample KS test comparing a reference sample array {@code x}
+     * against a streaming quantile sketch {@code y}. The input array {@code x}
+     * is not modified.
+     *
+     * @param x the reference sample values.
+     * @param y the streaming quantile sketch of the second sample.
+     * @return the test results.
+     */
+    public static KSTest test(double[] x, IQAgent y) {
+        if (x == null || x.length == 0) {
+            throw new IllegalArgumentException("Empty sample array");
+        }
+        if (y == null || y.isEmpty()) {
+            throw new IllegalArgumentException("Empty IQAgent sketch");
+        }
+
+        double[] xs = x.clone();
+        Arrays.sort(xs);
+
+        int n1 = xs.length;
+        double en1 = n1;
+        double en2 = y.count();
+        double d = 0.0;
+
+        double fo1 = 0.0;
+        int j = 0;
+        while (j < n1) {
+            double v = xs[j];
+            while (j + 1 < n1 && xs[j + 1] == v) {
+                j++;
+            }
+            double fn1 = (j + 1) / en1;
+            double fy = y.cdf(v);
+            double dt = Math.max(Math.abs(fo1 - fy), Math.abs(fn1 - fy));
+            if (dt > d) {
+                d = dt;
+            }
+            fo1 = fn1;
+            j++;
+        }
+
+        for (double z : y.quantiles()) {
+            double fx = ecdf(xs, z);
+            double fy = y.cdf(z);
+            double dt = Math.abs(fx - fy);
+            if (dt > d) {
+                d = dt;
+            }
+        }
+
+        double en = Math.sqrt(en1 * en2 / (en1 + en2));
+        double p = qks((en + 0.12 + 0.11 / en) * d);
+
+        return new KSTest("Two Sample", d, p);
+    }
+
+    /**
+     * Evaluates the empirical CDF of a sorted array at z: fraction of elements <= z.
+     */
+    private static double ecdf(double[] sorted, double z) {
+        int n = sorted.length;
+        if (z < sorted[0]) {
+            return 0.0;
+        }
+        if (z >= sorted[n - 1]) {
+            return 1.0;
+        }
+        int lo = 0, hi = n;
+        while (lo < hi) {
+            int mid = (lo + hi) >>> 1;
+            if (sorted[mid] <= z) {
+                lo = mid + 1;
+            } else {
+                hi = mid;
+            }
+        }
+        return (double) lo / n;
     }
 }

@@ -16,6 +16,7 @@
  */
 package smile.stat.hypothesis;
 
+import java.io.Serializable;
 import smile.math.special.Gamma;
 
 /**
@@ -35,7 +36,7 @@ import smile.math.special.Gamma;
  *                Cramér's V is equal to the Phi coefficient.
  * @author Haifeng Li
  */
-public record ChiSqTest(String method, double chisq, double df, double pvalue, double CramerV) {
+public record ChiSqTest(String method, double chisq, double df, double pvalue, double CramerV) implements Serializable {
     /**
      * Constructor.
      * @param method the type of test.
@@ -143,18 +144,34 @@ public record ChiSqTest(String method, double chisq, double df, double pvalue, d
         }
 
         int nbins = bins1.length;
+        double n1 = 0.0;
+        double n2 = 0.0;
+        for (int j = 0; j < nbins; j++) {
+            if (bins1[j] < 0 || bins2[j] < 0) {
+                throw new IllegalArgumentException("Negative bin count");
+            }
+            n1 += bins1[j];
+            n2 += bins2[j];
+        }
+        if (n1 == 0.0 || n2 == 0.0) {
+            throw new IllegalArgumentException("Empty sample bins");
+        }
+
+        double r = (n1 == n2) ? 1.0 : Math.sqrt(n2 / n1);
+        double s = (n1 == n2) ? 1.0 : Math.sqrt(n1 / n2);
+
         int df = nbins - constraints;
         double chisq = 0.0;
         for (int j = 0; j < nbins; j++) {
             if (bins1[j] == 0 && bins2[j] == 0) {
                 --df;
             } else {
-                double temp = bins1[j] - bins2[j];
+                double temp = r * bins1[j] - s * bins2[j];
                 chisq += temp * temp / (bins1[j] + bins2[j]);
             }
         }
 
-        double p = Gamma.regularizedUpperIncompleteGamma(0.5 * df, 0.5 * chisq);
+        double p = df > 0 ? Gamma.regularizedUpperIncompleteGamma(0.5 * df, 0.5 * chisq) : 1.0;
 
         return new ChiSqTest("Two Sample", chisq, df, p);
     }

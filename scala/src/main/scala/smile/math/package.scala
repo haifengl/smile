@@ -17,9 +17,11 @@
 package smile
 
 import scala.language.implicitConversions
+import smile.data.DataFrame
 import smile.math.special.{Beta, Erf, Gamma}
+import smile.sort.IQAgent
 import smile.stat.distribution.{Distribution, GaussianDistribution}
-import smile.stat.hypothesis.{ChiSqTest, CorTest, FTest, KSTest, TTest}
+import smile.stat.hypothesis.{ChiSqTest, CorTest, FTest, KSTest, PSI, TTest}
 import smile.tensor.*
 import smile.tensor.ScalarType.Float64
 
@@ -180,6 +182,37 @@ package object math {
     * ascending order.
     */
   def kstest(x: Array[Double], y: Array[Double]): KSTest = KSTest.test(x, y)
+
+  /** The one-sample streaming KS test for the null hypothesis that the
+    * observations summarized by x are drawn from the given distribution.
+    */
+  def kstest(x: IQAgent, y: Distribution): KSTest = KSTest.test(x, y)
+
+  /** The two-sample streaming KS test for the null hypothesis that two
+    * streams summarized by x and y are drawn from the same distribution.
+    */
+  def kstest(x: IQAgent, y: IQAgent): KSTest = KSTest.test(x, y)
+
+  /** The two-sample KS test comparing a reference sample array x against a
+    * streaming quantile sketch y.
+    */
+  def kstest(x: Array[Double], y: IQAgent): KSTest = KSTest.test(x, y)
+
+  /** Population Stability Index (PSI) between two continuous samples. */
+  def psitest(expected: Array[Double], actual: Array[Double], nbins: Int = PSI.DEFAULT_BINS): PSI =
+    PSI.test(expected, actual, nbins)
+
+  /** Population Stability Index (PSI) with custom interior breakpoints. */
+  def psitest(expected: Array[Double], actual: Array[Double], breaks: Array[Double]): PSI =
+    PSI.test(expected, actual, breaks)
+
+  /** Categorical frequency shift (PSI) between two nominal code arrays. */
+  def psitest(expected: Array[Int], actual: Array[Int]): PSI =
+    PSI.testCategorical(expected, actual)
+
+  /** Population Stability Index (PSI) across all numeric and nominal columns of two DataFrames. */
+  def psitest(expected: DataFrame, actual: DataFrame, nbins: Int): Array[PSI] =
+    PSI.test(expected, actual, nbins)
 
   /** Pearson correlation coefficient test. */
   def pearsontest(x: Array[Double], y: Array[Double]): CorTest = CorTest.pearson(x, y)
