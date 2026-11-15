@@ -16,6 +16,9 @@
  */
 package smile.stat.hypothesis;
 
+import smile.math.MathEx;
+import smile.sort.IQAgent;
+import smile.stat.Hypothesis;
 import smile.stat.distribution.GaussianDistribution;
 import org.junit.jupiter.api.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -91,5 +94,56 @@ public class KSTestTest {
         KSTest test = KSTest.test(x, y);
         assertEquals(0.46, test.d(), 1E-2);
         assertEquals(0.00041647, test.pvalue(), 1E-7);
+    }
+
+    @Test
+    public void testStreamingOneSample() {
+        System.out.println("streaming one-sample KS test");
+        MathEx.setSeed(19650218);
+        GaussianDistribution stdNormal = GaussianDistribution.getInstance();
+        GaussianDistribution shifted = new GaussianDistribution(0.8, 1.0);
+
+        IQAgent nullSketch = new IQAgent();
+        IQAgent shiftedSketch = new IQAgent();
+        for (int i = 0; i < 5000; i++) {
+            nullSketch.add(stdNormal.rand());
+            shiftedSketch.add(shifted.rand());
+        }
+
+        KSTest nullTest = Hypothesis.KS.test(nullSketch, stdNormal);
+        assertTrue(nullTest.d() < 0.03, "Expected small KS d under H0, got " + nullTest.d());
+        assertTrue(nullTest.pvalue() > 0.05, "Expected non-significant p-value under H0, got " + nullTest.pvalue());
+
+        KSTest shiftedTest = Hypothesis.KS.test(shiftedSketch, stdNormal);
+        assertTrue(shiftedTest.d() > 0.25, "Expected large KS d under shift, got " + shiftedTest.d());
+        assertTrue(shiftedTest.pvalue() < 1e-10, "Expected tiny p-value under shift, got " + shiftedTest.pvalue());
+    }
+
+    @Test
+    public void testStreamingTwoSampleAndHybrid() {
+        System.out.println("streaming two-sample and hybrid KS test");
+        MathEx.setSeed(19650218);
+        GaussianDistribution dist1 = new GaussianDistribution(0.0, 1.0);
+        GaussianDistribution dist2 = new GaussianDistribution(0.5, 1.0);
+
+        double[] raw1 = new double[4000];
+        double[] raw2 = new double[4000];
+        IQAgent sketch1 = new IQAgent();
+        IQAgent sketch2 = new IQAgent();
+        for (int i = 0; i < 4000; i++) {
+            raw1[i] = dist1.rand();
+            raw2[i] = dist2.rand();
+            sketch1.add(raw1[i]);
+            sketch2.add(raw2[i]);
+        }
+
+        KSTest sketchVsSketch = Hypothesis.KS.test(sketch1, sketch2);
+        KSTest hybrid = Hypothesis.KS.test(raw1, sketch2);
+        KSTest exact = KSTest.test(raw1.clone(), raw2.clone());
+
+        assertEquals(exact.d(), sketchVsSketch.d(), 0.02);
+        assertEquals(exact.d(), hybrid.d(), 0.02);
+        assertTrue(sketchVsSketch.pvalue() < 1e-10);
+        assertTrue(hybrid.pvalue() < 1e-10);
     }
 }

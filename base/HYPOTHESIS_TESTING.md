@@ -269,6 +269,29 @@ System.out.println(result);
 // Small p-value → distributions differ significantly
 ```
 
+### Streaming KS Test (with `IQAgent`)
+
+When monitoring unbounded data streams in constant memory, pass an `IQAgent`
+quantile sketch to `KSTest.test(...)` instead of retaining raw sample arrays:
+
+```java
+import smile.sort.IQAgent;
+import smile.stat.distribution.GaussianDistribution;
+
+IQAgent baselineSketch = new IQAgent();
+IQAgent windowSketch   = new IQAgent();
+// ... feed streams via baselineSketch.add(v) and windowSketch.add(v) ...
+
+// One-sample streaming KS test against a theoretical distribution
+KSTest ks1 = KSTest.test(windowSketch, GaussianDistribution.getInstance());
+
+// Two-sample streaming KS test between two sketches
+KSTest ks2 = KSTest.test(baselineSketch, windowSketch);
+
+// Hybrid KS test comparing a reference array against a streaming sketch
+KSTest ks3 = KSTest.test(referenceArray, windowSketch);
+```
+
 ---
 
 ## 6. Correlation Tests
@@ -427,7 +450,54 @@ ChiSqTest result = ChiSqTest.test(table3x3);
 
 ---
 
-## 8. Interpreting Results
+## 8. Population Stability Index (PSI) & Categorical Drift
+
+`PSI` measures distribution shift between a baseline (training) sample and a
+monitoring (production) sample across numerical quantile bins or nominal
+categories:
+
+$$\text{PSI} = \sum_{i=1}^k (q_i - p_i) \ln\left(\frac{q_i}{p_i}\right)$$
+
+| PSI Range | `PSI.Severity` | Interpretation |
+|-----------|----------------|----------------|
+| `< 0.10` | `STABLE` | No significant distribution shift |
+| `[0.10, 0.25)` | `MODERATE` | Moderate shift; investigate |
+| `>= 0.25` | `SIGNIFICANT` | Actionable drift |
+
+### Batch PSI & Categorical Frequency Shift
+
+```java
+// Continuous numerical arrays (10 quantile bins by default)
+PSI numDrift = PSI.test(baselineValues, windowValues);
+System.out.println(numDrift.severity()); // STABLE, MODERATE, or SIGNIFICANT
+
+// Categorical integer code arrays
+PSI catDrift = PSI.testCategorical(baselineCategories, windowCategories);
+
+// Multi-column DataFrame drift report
+PSI[] report = PSI.test(trainDf, prodDf);
+System.out.println(PSI.toString(report));
+```
+
+### Streaming Baseline & Windowed Counter
+
+```java
+// Fit once on training data (or from a streaming IQAgent sketch)
+PSI.Baseline baseline = PSI.Baseline.numeric("score", baselineValues, 10);
+PSI.Counter counter = baseline.newCounter();
+
+// Zero-allocation streaming accumulation in O(bins) memory
+for (double score : inferenceStream) {
+    counter.add(score);
+}
+
+PSI result = counter.test();
+counter.reset(); // reuse for the next monitoring window
+```
+
+---
+
+## 9. Interpreting Results
 
 ### The p-value
 

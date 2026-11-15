@@ -16,6 +16,8 @@
  */
 package smile.stat;
 
+import smile.data.DataFrame;
+import smile.sort.IQAgent;
 import smile.stat.distribution.Distribution;
 import smile.stat.hypothesis.*;
 
@@ -174,6 +176,43 @@ public interface Hypothesis {
         static KSTest test(double[] x, double[] y) {
             return KSTest.test(x, y);
         }
+
+        /**
+         * The one-sample streaming KS test for the null hypothesis that the
+         * observations summarized by {@code x} are drawn from the given distribution.
+         *
+         * @param x the streaming quantile sketch of sample values.
+         * @param dist the reference distribution.
+         * @return the test results.
+         */
+        static KSTest test(IQAgent x, Distribution dist) {
+            return KSTest.test(x, dist);
+        }
+
+        /**
+         * The two-sample streaming KS test for the null hypothesis that two
+         * streams summarized by {@code x} and {@code y} are drawn from the same
+         * continuous distribution.
+         *
+         * @param x the streaming quantile sketch of the first sample.
+         * @param y the streaming quantile sketch of the second sample.
+         * @return the test results.
+         */
+        static KSTest test(IQAgent x, IQAgent y) {
+            return KSTest.test(x, y);
+        }
+
+        /**
+         * The two-sample KS test comparing a reference sample array {@code x}
+         * against a streaming quantile sketch {@code y}.
+         *
+         * @param x the reference sample values.
+         * @param y the streaming quantile sketch of the second sample.
+         * @return the test results.
+         */
+        static KSTest test(double[] x, IQAgent y) {
+            return KSTest.test(x, y);
+        }
     }
 
     /** Correlation test. */
@@ -282,6 +321,93 @@ public interface Hypothesis {
          */
         static ChiSqTest test(int[][] table) {
             return ChiSqTest.test(table);
+        }
+    }
+
+    /** Population Stability Index (PSI) and categorical frequency shift test. */
+    interface psi {
+        /**
+         * Computes PSI between a baseline and an actual continuous sample using
+         * 10 quantile bins fitted on {@code expected}.
+         *
+         * @param expected the baseline sample values.
+         * @param actual the actual sample values.
+         * @return the PSI result.
+         */
+        static PSI test(double[] expected, double[] actual) {
+            return PSI.test(expected, actual);
+        }
+
+        /**
+         * Computes PSI between a baseline and an actual continuous sample using
+         * {@code nbins} quantile bins fitted on {@code expected}.
+         *
+         * @param expected the baseline sample values.
+         * @param actual the actual sample values.
+         * @param nbins the number of quantile bins.
+         * @return the PSI result.
+         */
+        static PSI test(double[] expected, double[] actual, int nbins) {
+            return PSI.test(expected, actual, nbins);
+        }
+
+        /**
+         * Computes PSI between a baseline and an actual continuous sample using
+         * custom interior breakpoints {@code breaks}.
+         *
+         * @param expected the baseline sample values.
+         * @param actual the actual sample values.
+         * @param breaks the strictly increasing interior breakpoints.
+         * @return the PSI result.
+         */
+        static PSI test(double[] expected, double[] actual, double[] breaks) {
+            return PSI.test(expected, actual, breaks);
+        }
+
+        /**
+         * Computes PSI from expected bin probabilities and observed bin counts.
+         *
+         * @param expectedProb the baseline bin probabilities.
+         * @param actualBins the observed counts per bin.
+         * @return the PSI result.
+         */
+        static PSI test(double[] expectedProb, int[] actualBins) {
+            return PSI.test(expectedProb, actualBins);
+        }
+
+        /**
+         * Computes PSI from two sets of binned counts.
+         *
+         * @param expectedBins the baseline bin counts.
+         * @param actualBins the actual bin counts.
+         * @return the PSI result.
+         */
+        static PSI test(int[] expectedBins, int[] actualBins) {
+            return PSI.test(expectedBins, actualBins);
+        }
+
+        /**
+         * Computes categorical frequency shift from two arrays of non-negative
+         * integer category codes.
+         *
+         * @param expected the baseline category codes.
+         * @param actual the actual category codes.
+         * @return the PSI result.
+         */
+        static PSI testCategorical(int[] expected, int[] actual) {
+            return PSI.testCategorical(expected, actual);
+        }
+
+        /**
+         * Computes PSI for all numeric and nominal columns shared between a
+         * baseline {@link DataFrame} and an actual {@link DataFrame}.
+         *
+         * @param expected the baseline DataFrame.
+         * @param actual the actual DataFrame.
+         * @return an array of per-feature PSI results.
+         */
+        static PSI[] test(DataFrame expected, DataFrame actual) {
+            return PSI.test(expected, actual);
         }
     }
 }
