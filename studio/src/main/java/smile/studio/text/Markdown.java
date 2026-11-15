@@ -367,6 +367,12 @@ public class Markdown extends JPanel implements Scrollable {
     }
 
     @Override
+    public Dimension getMaximumSize() {
+        Dimension pref = getPreferredSize();
+        return new Dimension(Integer.MAX_VALUE, pref.height);
+    }
+
+    @Override
     public void doLayout() {
         ensureLayout();
         super.doLayout();

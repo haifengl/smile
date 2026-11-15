@@ -18,6 +18,7 @@
 package smile.studio.agent;
 
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
@@ -100,6 +101,12 @@ public class AgentOutputArea extends OutputArea {
      */
     public Kind kind() {
         return kind;
+    }
+
+    @Override
+    public Dimension getMaximumSize() {
+        Dimension pref = getPreferredSize();
+        return new Dimension(Integer.MAX_VALUE, pref.height);
     }
 
     private void applyKindStyle() {
