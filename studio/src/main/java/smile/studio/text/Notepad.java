@@ -31,6 +31,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
+import com.formdev.flatlaf.FlatClientProperties;
 import org.fife.rsta.ui.CollapsibleSectionPanel;
 import org.fife.rsta.ui.GoToDialog;
 import org.fife.rsta.ui.search.ReplaceToolBar;
@@ -70,8 +71,7 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
     private final CollapsibleSectionPanel csp = new CollapsibleSectionPanel();
     private final JScrollPane previewScroll = new JScrollPane();
     private final JPanel modeBar;
-    private final JToggleButton editButton;
-    private final JToggleButton previewButton;
+    private final JToggleButton modeButton;
     private final Editor editor = new Editor(40, 120);
     /** The search context shared by the inline tool bars. */
     private final SearchContext searchContext = new SearchContext();
@@ -92,28 +92,18 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
         super(new BorderLayout());
         this.file = file;
 
-        editButton = new JToggleButton(bundle.getString("EditMode"));
-        editButton.setToolTipText(bundle.getString("EditModeTooltip"));
-        editButton.putClientProperty("JButton.buttonType", "roundRect");
-        editButton.setFocusable(false);
-
-        previewButton = new JToggleButton(bundle.getString("PreviewMode"));
-        previewButton.setToolTipText(bundle.getString("PreviewModeTooltip"));
-        previewButton.putClientProperty("JButton.buttonType", "roundRect");
-        previewButton.setFocusable(false);
-
-        ButtonGroup modeGroup = new ButtonGroup();
-        modeGroup.add(editButton);
-        modeGroup.add(previewButton);
-
-        editButton.addActionListener(e -> setMode(Mode.EDIT));
-        previewButton.addActionListener(e -> setMode(Mode.PREVIEW));
+        modeButton = new JToggleButton(bundle.getString("PreviewMode"));
+        modeButton.setToolTipText(bundle.getString("PreviewModeTooltip"));
+        modeButton.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_ROUND_RECT);
+        modeButton.putClientProperty(FlatClientProperties.STYLE_CLASS, "small");
+        modeButton.setMargin(new Insets(1, 8, 1, 8));
+        modeButton.setFocusable(false);
+        modeButton.addActionListener(e -> setMode(mode == Mode.EDIT ? Mode.PREVIEW : Mode.EDIT));
 
         modeBar = new JPanel(new FlowLayout(FlowLayout.RIGHT, 4, 2));
         modeBar.setOpaque(false);
         modeBar.setBorder(new EmptyBorder(2, 6, 2, 6));
-        modeBar.add(editButton);
-        modeBar.add(previewButton);
+        modeBar.add(modeButton);
 
         previewScroll.setBorder(BorderFactory.createEmptyBorder());
         previewScroll.getVerticalScrollBar().setUnitIncrement(16);
@@ -253,7 +243,7 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
      * Switches this file tab between {@link Mode#EDIT} and {@link Mode#PREVIEW}.
      * If this file is not a Markdown file, or if Markdown preview rendering falls
      * back to plain text, the mode is set to {@link Mode#EDIT} and the top-right
-     * toggle buttons reflect {@link Mode#EDIT}.
+     * toggle button reflects {@link Mode#EDIT}.
      *
      * @param newMode the target mode.
      */
@@ -265,19 +255,25 @@ public final class Notepad extends JPanel implements OpenFile, DocumentListener 
             refreshPreview();
             if (markdownView.contentPane() != null) {
                 this.mode = Mode.PREVIEW;
-                previewButton.setSelected(true);
                 cardLayout.show(contentCards, Mode.PREVIEW.name());
             } else {
                 this.mode = Mode.EDIT;
-                editButton.setSelected(true);
                 cardLayout.show(contentCards, Mode.EDIT.name());
                 editor.requestFocusInWindow();
             }
         } else {
             this.mode = Mode.EDIT;
-            editButton.setSelected(true);
             cardLayout.show(contentCards, Mode.EDIT.name());
             editor.requestFocusInWindow();
+        }
+        if (this.mode == Mode.PREVIEW) {
+            modeButton.setSelected(true);
+            modeButton.setText(bundle.getString("EditMode"));
+            modeButton.setToolTipText(bundle.getString("EditModeTooltip"));
+        } else {
+            modeButton.setSelected(false);
+            modeButton.setText(bundle.getString("PreviewMode"));
+            modeButton.setToolTipText(bundle.getString("PreviewModeTooltip"));
         }
         revalidate();
         repaint();

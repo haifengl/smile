@@ -23,11 +23,14 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.awt.*;
 import java.awt.event.MouseListener;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.commonmark.Extension;
@@ -44,6 +47,7 @@ import org.xhtmlrenderer.swing.LinkListener;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import smile.studio.SmileStudio;
+import smile.studio.workspace.Workspace;
 
 /**
  * A component to render Markdown text.
@@ -73,10 +77,13 @@ public class Markdown extends JPanel implements Scrollable {
             "</(?:area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)\\s*>",
             Pattern.CASE_INSENSITIVE
     );
+    private static final int DEFAULT_LAYOUT_WIDTH = 640;
+    private static final BufferedImage SCRATCH_IMAGE = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
     private static float fontSize = SmileStudio.preferences().getFloat("markdownFontSize", 1.25f);
     private final String text;
     private final XHTMLPanel html;
     private JComponent view;
+    private int lastLayoutWidth = -1;
 
     /**
      * Constructor.
@@ -253,6 +260,14 @@ public class Markdown extends JPanel implements Scrollable {
                 @Override
                 public void linkClicked(BasicPanel panel, String uri) {
                     try {
+                        Optional<Path> localFile = OutputArea.resolveExistingFile(uri);
+                        if (localFile.isPresent()) {
+                            Workspace ws = OutputArea.findWorkspace(Markdown.this);
+                            if (ws != null) {
+                                ws.openFile(localFile.get());
+                                return;
+                            }
+                        }
                         // Use the Java Desktop API to open the URI in the default browser
                         if (Desktop.isDesktopSupported()) {
                             Desktop.getDesktop().browse(new URI(uri));
@@ -300,6 +315,61 @@ public class Markdown extends JPanel implements Scrollable {
     public static void adjustFontSize(float delta) {
         fontSize += delta;
         SmileStudio.preferences().putFloat("markdownFontSize", fontSize);
+    }
+
+    private int resolveLayoutWidth() {
+        if (getWidth() > 0) {
+            return getWidth();
+        }
+        for (Container p = getParent(); p != null; p = p.getParent()) {
+            if (p.getWidth() > 0) {
+                Insets in = p.getInsets();
+                int w = p.getWidth() - (in != null ? in.left + in.right : 0);
+                if (w > 0) {
+                    return w;
+                }
+            }
+        }
+        return DEFAULT_LAYOUT_WIDTH;
+    }
+
+    private void ensureLayout() {
+        if (html == null || getParent() instanceof JViewport) {
+            return;
+        }
+        int targetWidth = resolveLayoutWidth();
+        Dimension pref = html.getPreferredSize();
+        if (pref == null || pref.height <= 0 || Math.abs(lastLayoutWidth - targetWidth) > 1) {
+            lastLayoutWidth = targetWidth;
+            html.setSize(targetWidth, Math.max(html.getHeight(), 1));
+            Graphics g = html.getGraphics();
+            if (g != null) {
+                try {
+                    html.doDocumentLayout(g);
+                } finally {
+                    g.dispose();
+                }
+            } else {
+                Graphics2D g2 = SCRATCH_IMAGE.createGraphics();
+                try {
+                    html.doDocumentLayout(g2);
+                } finally {
+                    g2.dispose();
+                }
+            }
+        }
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        ensureLayout();
+        return super.getPreferredSize();
+    }
+
+    @Override
+    public void doLayout() {
+        ensureLayout();
+        super.doLayout();
     }
 
     @Override
