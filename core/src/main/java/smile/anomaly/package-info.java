@@ -43,15 +43,21 @@
  * analysis algorithm may be able to detect the micro clusters formed by
  * these patterns.
  * <p>
- * This package provides two anomaly detectors:
+ * This package provides four anomaly detectors:
  * <ul>
  *   <li>{@link smile.anomaly.IsolationForest} – an efficient tree-ensemble
  *       method that isolates anomalies using random splits. Scores are in
  *       {@code (0, 1]}; higher values indicate anomalies.</li>
+ *   <li>{@link smile.anomaly.LOF} – Local Outlier Factor, which compares an
+ *       observation's local density with that of its k-nearest neighbors.
+ *       Scores above 1.0 indicate local outliers; the greater, the stronger.</li>
  *   <li>{@link smile.anomaly.SVM} – One-Class SVM that identifies the
  *       smallest hypersphere enclosing the training data. The raw decision
  *       function returns positive values for inliers and negative values
  *       for anomalies.</li>
+ *   <li>{@link smile.anomaly.TimeSeriesAnomaly} – residual-based detection for
+ *       univariate time series, which scores an observation by its standardized
+ *       one-step-ahead forecast error. Higher values indicate anomalies.</li>
  * </ul>
  *
  * @author Haifeng Li

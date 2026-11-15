@@ -62,7 +62,7 @@ import static smile.tensor.ScalarType.*;
  *
  * @author Haifeng Li
  */
-public class AR implements Serializable {
+public class AR implements TimeSeriesModel {
     @Serial
     private static final long serialVersionUID = 2L;
 

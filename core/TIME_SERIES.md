@@ -1,15 +1,22 @@
 # SMILE — Time Series Analysis
 
 The `smile.timeseries` package provides tools for modeling and forecasting
-univariate time series. It covers four areas:
+univariate and multivariate time series, plus accuracy evaluation.
 
 | Class / Interface | Purpose |
 |---|---|
 | `TimeSeries` | Static utilities: differencing, autocovariance, ACF, PACF |
 | `BoxTest` | Portmanteau autocorrelation tests (Box–Pierce, Ljung–Box) |
+| `TimeSeriesModel` | Common interface of the fitted forecasting models |
 | `AR` | Autoregressive model AR(*p*) — Yule–Walker and OLS fitting |
 | `ARMA` | Autoregressive moving-average model ARMA(*p*, *q*) |
 | `ARIMA` | Autoregressive integrated moving-average model ARIMA(*p*, *d*, *q*) |
+| `SARMA` | Seasonal ARMA — SARMA(*p*, *q*)(*P*, *Q*)[*s*] |
+| `SARIMA` | Seasonal ARIMA — SARIMA(*p*, *d*, *q*)(*P*, *D*, *Q*)[*s*] |
+| `ETS` | Exponential smoothing state space models (additive error) |
+| `VAR` | Vector autoregression for multivariate series |
+| `ForecastMetrics` | MAE, RMSE, MAPE, sMAPE, MASE, bias |
+| `BackTest` | Rolling-origin (walk-forward) backtesting |
 
 ---
 
@@ -609,6 +616,9 @@ double nextForecast = loaded.forecast();
 
 ## 9. Quick-reference API
 
+Signature summary for the classic models. Sections 10–15 cover the interfaces,
+backtesting utilities, and the seasonal/smoothing/multivariate models.
+
 ### `TimeSeries`
 
 ```java
@@ -711,7 +721,161 @@ ARMA      arma()                                      // underlying fitted ARMA 
 
 ---
 
-## 10. Common Pitfalls
+## 10. `TimeSeriesModel` — Common Interface
+
+`AR`, `ARMA`, `ARIMA`, `ETS`, and `SARIMA` all implement `TimeSeriesModel`,
+so generic code (backtesting, residual-based anomaly detection) can treat them
+uniformly:
+
+```java
+public interface TimeSeriesModel extends Serializable {
+    double[] forecast(int steps);
+    double[] fittedValues();
+    double[] residuals();
+    double   logLikelihood();
+    double   aic();
+    double   bic();
+    double   variance();
+}
+```
+
+All quantities are on the original scale of the series, with differencing
+already inverted. `VAR` does **not** implement it (its forecasts are
+`double[][]`).
+
+---
+
+## 11. `ForecastMetrics` — Accuracy of Point Forecasts
+
+```java
+ForecastMetrics m = ForecastMetrics.of(truth, forecast);
+// with a training series to scale the MASE:
+ForecastMetrics m = ForecastMetrics.of(truth, forecast, training);
+// seasonal-naive MASE benchmark:
+ForecastMetrics m = ForecastMetrics.of(truth, forecast, training, period);
+```
+
+| Metric | Definition | Notes |
+|---|---|---|
+| `mae()` | mean \|e\| | same unit as the data |
+| `rmse()` | √mean e² | same unit as the data |
+| `mape()` | 100 · mean(\|e\|/\|x\|) | zero truths skipped; NaN if all zero |
+| `smape()` | 100 · mean(2\|e\|/(\|x\|+\|ŷ\|)) | zero denominators skipped |
+| `mase()` | MAE / naive-MAE | 1.0 = no better than naive; NaN without a training series |
+| `bias()` | mean e | positive = forecast too low |
+
+The MASE scale is the mean absolute error of the in-sample naive (or, with a
+period, seasonal-naive) forecast built from the *training* series.
+
+---
+
+## 12. `BackTest` — Rolling-Origin Evaluation
+
+```java
+BackTest bt = BackTest.rollingOrigin(
+        prices,                                 // the full series
+        history -> ARIMA.fit(history, 1, 1, 1), // model factory
+        5,                                      // horizon
+        10,                                     // folds
+        true);                                  // expanding window
+
+System.out.println(bt);        // per-fold table + pooled metrics
+bt.total().mase();             // aggregate metric
+bt.average("mae");             // mean of per-fold MAE
+```
+
+* Fold *k* trains on the data before its test block and is scored on a
+  multi-step forecast of that block.
+* `expanding = true` keeps all history; `false` uses a fixed-size window equal
+  to the first fold's training length.
+* `folds * horizon` must be smaller than the series length; a fit failure is
+  reported with the fold index.
+
+---
+
+## 13. `ETS` — Exponential Smoothing
+
+```java
+ETS ets = ETS.auto(monthly, 12);                 // choose structure by AICc
+ETS ets = ETS.fit(monthly, new ETS.Options(
+        12, ETS.Trend.ADDITIVE_DAMPED, ETS.Seasonal.MULTIPLICATIVE));
+double[] forecast = ets.forecast(12);
+```
+
+The model has level, trend, and seasonal states:
+
+```
+l_t = l_{t-1} + φ·b_{t-1} + α·e_t
+b_t = φ·b_{t-1} + β·e_t
+s_t = s_{t-m} + γ·e_t            (additive seasonality)
+s_t = s_{t-m} + γ·e_t / l_t      (multiplicative seasonality)
+```
+
+* **Trend**: `NONE`, `ADDITIVE`, `ADDITIVE_DAMPED`.
+* **Seasonality**: `NONE`, `ADDITIVE`, `MULTIPLICATIVE` (requires strictly
+  positive data).
+* `α`, `β`, `γ`, `φ` are estimated by BFGS under the admissibility constraints
+  `0 ≤ α ≤ 1`, `0 ≤ β ≤ α`, `0 ≤ γ ≤ 1 − α`, `0.8 ≤ φ < 1`.
+* `auto(x, period)` fits up to nine candidate structures and picks the lowest
+  AICc, skipping infeasible ones (multiplicative on non-positive data, series
+  shorter than two periods).
+* **Additive-error models only** — multiplicative-error variants and Box-Cox
+  transforms are out of scope.
+* `filter(series)` continues the state recursion over new observations. Use it
+  instead of refitting when you need genuine one-step forecasts of a
+  continuation; `fit` on the concatenated series re-estimates the initial
+  states and can shift the seasonal phase at the junction.
+
+---
+
+## 14. `SARMA` / `SARIMA` — Seasonal Models
+
+```java
+SARIMA model = SARIMA.fit(monthly, 1, 1, 1, 1, 1, 1, 12);   // (p,d,q)(P,D,Q)[s]
+double[] forecast = model.forecast(12);
+```
+
+Estimation pipeline: seasonal-difference `D` times at lag `s`, then
+regular-difference `d` times, fit `SARMA` on the result, and invert both
+differencing layers in `forecast`. The SARMA coefficients are estimated by the
+same two-stage Hannan–Rissanen procedure as `ARMA`.
+
+**Representation caveat.** The seasonal coefficients are *direct lag
+coefficients*: `sar()[j]` multiplies `x_{t-(j+1)s}`, not a factor of a seasonal
+polynomial. The two views coincide for `P = 1` and `Q = 1`; for higher orders
+the product form introduces cross terms that are absorbed into the
+non-seasonal coefficients.
+
+Degenerate cases are exact: `P = Q = D = 0` matches `ARIMA.fit`, and
+`d = D = 0` matches `SARMA.fit`. `SARIMA(0,0,0)(0,D,0)[s]` (a pure seasonal
+random walk) is supported through a mean-only SARMA.
+
+---
+
+## 15. `VAR` — Vector Autoregression
+
+```java
+double[][] x = ...;                    // n observations × k series
+VAR var = VAR.fit(x, 2);               // VAR(2) with intercept
+double[][] paths = var.forecast(6);    // 6 × k
+var.isStable();                        // spectral radius of the companion matrix < 1
+var.coefficients();                    // [lag][response][predictor]
+```
+
+```
+y_t = c + A₁y_{t-1} + … + A_p y_{t-p} + e_t,   e_t ~ N(0, Σ)
+```
+
+* Equation-by-equation OLS, solved once through SVD (rank-deficiency safe).
+* `covariance()` returns the residual covariance `Σ`; `aic()`/`bic()` use the
+  multivariate Gaussian likelihood with `log|Σ|`.
+* `isStable()` examines the companion matrix spectrum; an unstable fit yields
+  exploding forecasts.
+* Requires `k ≥ 2` and `n > p·k + 1`.
+
+---
+
+## 16. Common Pitfalls
 
 **Fitting on a non-stationary series**  
 Applying `AR.ols` or `ARMA.fit` directly to a trending or seasonal series
@@ -728,6 +892,11 @@ white-noise residuals.
 ARMA(5,5) this means at least 51 observations. An `IllegalArgumentException`
 is thrown otherwise.
 
+**Minimum series length for SARMA/SARIMA**  
+The seasonal orders sharply increase the required length: the long
+autoregression is of order `max(p + P·s, q + Q·s) + 20`, and the estimable
+window shrinks by twice that. Seasonal models reject short series explicitly.
+
 **`AR.ols` does not guarantee stationarity**  
 If the fitted AR polynomial has roots near or outside the unit circle, forecasts
 may diverge. Use `AR.fit` (Yule–Walker) or check the characteristic roots
@@ -743,6 +912,33 @@ part. This is expected behaviour, not a bug.
 The `ttest()` matrix for `AR` has `p` rows (one per AR lag). The intercept
 `b` is available via `intercept()` but does not have an associated row in the
 t-test table.
+
+**ETS on non-positive data**  
+Multiplicative seasonality divides by the level. Non-positive observations are
+rejected with an `IllegalArgumentException`; switch to additive seasonality or
+apply a log transform instead.
+
+**`ETS.auto` is not a model-selection guarantee**  
+It picks the lowest AICc among the nine additive-error structures. If none is
+admissible (e.g., a series shorter than two periods with a seasonal period
+requested), it throws rather than silently returning a non-seasonal model.
+
+**Refitting versus filtering in `ETS`**  
+Refitting a concatenated series re-estimates the initial level, trend, and
+seasonal states; the estimates at the junction can differ from the terminal
+state of the original fit. For streaming one-step forecasts use `filter()`,
+which continues the recurrence from the stored terminal state.
+
+**MASE and its scale**  
+`ForecastMetrics.of(truth, forecast)` leaves `mase()` as NaN because the scale
+is unknown. Supply a training series — and a period for seasonal data — to get
+a meaningful value. A MASE of 1.0 means the forecast is exactly as good as the
+naive benchmark, not that it is good.
+
+**VAR stability is not checked during fitting**  
+`VAR.fit` reports an unstable model through `isStable()`/`spectralRadius()`
+rather than throwing. Series that are integrated or explosive will produce
+coefficients outside the unit circle; difference the series first.
 
 ---
 

@@ -70,5 +70,36 @@ class TimeSeriesSpec extends AnyWordSpec with Matchers {
       val lb = ljungBox(series, 5)
       lb.df must be (5)
     }
+
+    "fit ETS and SARIMA and VAR" in {
+      val seasonal = Array.tabulate(120)(i => 20.0 + 3.0 * Math.cos(2 * Math.PI * i / 12))
+      val etsModel = ets(seasonal, period = 12, seasonal = ETS.Seasonal.ADDITIVE)
+      etsModel.forecast(4).length must be (4)
+      etsAuto(seasonal, 12).period() must be (12)
+
+      val sarmaModel = sarma(series, 1, 1, 0, 0, 12)
+      sarmaModel.p() must be (1)
+      sarmaModel.forecast(2).length must be (2)
+
+      val sarimaModel = sarima(seasonal, 0, 0, 0, 0, 1, 0, 12)
+      sarimaModel.D() must be (1)
+      sarimaModel.forecast(3).length must be (3)
+
+      val varFit = varModel(Array.tabulate(100)(i => Array(Math.sin(0.1 * i), Math.cos(0.1 * i))), 1)
+      varFit.k() must be (2)
+      varFit.forecast(3).length must be (3)
+    }
+
+    "compute forecast metrics and backtest" in {
+      val truth = Array(1.0, 2.0, 3.0)
+      val forecast = Array(1.5, 1.5, 3.5)
+      val metrics = forecastMetrics(truth, forecast)
+      metrics.mae() must be > (0.0)
+
+      val bt = backtest(Array.tabulate(60)(i => 10.0 + Math.sin(0.2 * i)),
+        (h: Array[Double]) => AR.fit(h, 2), horizon = 3, folds = 3)
+      bt.folds() must be (3)
+      bt.actual().length must be (9)
+    }
   }
 }

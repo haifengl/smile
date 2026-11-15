@@ -22,6 +22,7 @@ import java.util.Locale;
 import java.util.Properties;
 import smile.anomaly.IsolationForest;
 import smile.anomaly.LOF;
+import smile.timeseries.ARIMA;
 import smile.classification.*;
 import smile.classification.GradientTreeBoost;
 import smile.classification.MLP;
@@ -727,7 +728,7 @@ public interface Model {
 
     /**
      * Trains an anomaly detection model.
-     * @param algorithm the anomaly detection algorithm ("isolation-forest", "iforest", "lof", "ocsvm", or "one-class-svm").
+     * @param algorithm the anomaly detection algorithm ("isolation-forest", "iforest", "lof", "ocsvm", "one-class-svm", or "ts-residual").
      * @param formula the feature selection formula; if {@code null}, all columns are included.
      * @param data the training data.
      * @param params the hyperparameters.
@@ -746,12 +747,16 @@ public interface Model {
         double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
         Serializable detector = fitAnomaly(algorithm, x, effectiveParams);
         double threshold = defaultAnomalyThreshold(algorithm, effectiveParams);
-        return new AnomalyModel(algorithm, schema, expanded, detector, threshold, transform, (Properties) effectiveParams.clone());
+        Properties tags = (Properties) effectiveParams.clone();
+        if (isTimeSeriesAlgorithm(algorithm)) {
+            tags.setProperty("smile.timeseries.order_dependent", "true");
+        }
+        return new AnomalyModel(algorithm, schema, expanded, detector, threshold, transform, tags);
     }
 
     /**
      * Fits an anomaly detection algorithm on a numeric feature matrix.
-     * @param algorithm the anomaly detection algorithm ("isolation-forest", "iforest", "lof", "ocsvm", or "one-class-svm").
+     * @param algorithm the anomaly detection algorithm ("isolation-forest", "iforest", "lof", "ocsvm", "one-class-svm", or "ts-residual").
      * @param x the input feature matrix.
      * @param params the hyperparameters.
      * @return the fitted anomaly detector.
@@ -766,9 +771,77 @@ public interface Model {
                 MercerKernel<double[]> kernel = MercerKernel.of(params.getProperty("smile.svm.kernel", "linear"));
                 yield smile.anomaly.SVM.fit(x, kernel, smile.anomaly.SVM.Options.of(params));
             }
+            case "ts-residual" ->
+                    fitTimeSeriesAnomaly(x, params);
             default ->
                     throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
         };
+    }
+
+    /** Whether the algorithm is a time-series detector (order-dependent input). */
+    private static boolean isTimeSeriesAlgorithm(String algorithm) {
+        return "ts-residual".equals(algorithm);
+    }
+
+    /**
+     * Fits a residual-based time-series anomaly detector on a single-column matrix.
+     */
+    private static smile.anomaly.TimeSeriesAnomaly fitTimeSeriesAnomaly(double[][] x, Properties params) {
+        if (x.length < 8) {
+            throw new IllegalArgumentException("Time-series anomaly detection requires at least 8 observations");
+        }
+        for (int i = 0; i < x.length; i++) {
+            if (x[i].length != 1) {
+                throw new IllegalArgumentException(String.format(
+                        "Time-series anomaly detection requires exactly one numeric column, but got %d",
+                        x[i].length));
+            }
+        }
+
+        double[] history = new double[x.length];
+        for (int i = 0; i < x.length; i++) {
+            history[i] = x[i][0];
+        }
+
+        String modelName = params.getProperty("smile.timeseries.model", "ets").trim().toLowerCase(Locale.ROOT);
+        smile.timeseries.TimeSeriesModel model = switch (modelName) {
+            case "ets" -> {
+                int period = Integer.parseInt(params.getProperty("smile.timeseries.period", "1"));
+                yield smile.timeseries.ETS.auto(history, period);
+            }
+            case "arima" -> {
+                int[] order = parseOrder(params.getProperty("smile.timeseries.order", "1,1,1"));
+                yield ARIMA.fit(history, order[0], order[1], order[2]);
+            }
+            case "sarima" -> {
+                int period = Integer.parseInt(params.getProperty("smile.timeseries.period", "12"));
+                int[] order = parseOrder(params.getProperty("smile.timeseries.order", "1,1,1"));
+                int[] seasonal = parseOrder(params.getProperty("smile.timeseries.seasonal_order", "1,1,1"));
+                yield smile.timeseries.SARIMA.fit(history, order[0], order[1], order[2],
+                        seasonal[0], seasonal[1], seasonal[2], period);
+            }
+            default -> throw new IllegalArgumentException("Unsupported time-series model: " + modelName);
+        };
+
+        return smile.anomaly.TimeSeriesAnomaly.fit(history, model,
+                smile.anomaly.TimeSeriesAnomaly.Options.of(params));
+    }
+
+    /** Parses a comma-separated order triple such as "1,1,1". */
+    private static int[] parseOrder(String value) {
+        String[] parts = value.split(",");
+        if (parts.length != 3) {
+            throw new IllegalArgumentException("Invalid order specification: " + value);
+        }
+        try {
+            return new int[]{
+                    Integer.parseInt(parts[0].trim()),
+                    Integer.parseInt(parts[1].trim()),
+                    Integer.parseInt(parts[2].trim())
+            };
+        } catch (NumberFormatException ex) {
+            throw new IllegalArgumentException("Invalid order specification: " + value, ex);
+        }
     }
 
     /**
@@ -786,6 +859,8 @@ public interface Model {
                     Double.parseDouble(params.getProperty("smile.lof.threshold", "1.5"));
             case "ocsvm", "one-class-svm" ->
                     Double.parseDouble(params.getProperty("smile.svm.threshold", "0.0"));
+            case "ts-residual" ->
+                    Double.parseDouble(params.getProperty("smile.timeseries_anomaly.threshold", "3.0"));
             default ->
                     throw new IllegalArgumentException("Unsupported algorithm: " + algorithm);
         };

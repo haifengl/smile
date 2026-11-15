@@ -73,4 +73,37 @@ class TimeSeriesTest {
         val lb = series.ljungBox(5)
         assertEquals(5, lb.df)
     }
+
+    @Test
+    fun testETSAndSARIMAAndVAR() {
+        val seasonal = DoubleArray(120) { i -> 20.0 + 3.0 * Math.cos(2 * Math.PI * i / 12) }
+        val etsModel = ets(seasonal, period = 12, seasonal = ETS.Seasonal.ADDITIVE)
+        assertEquals(4, etsModel.forecast(4).size)
+        assertEquals(12, etsAuto(seasonal, 12).period())
+
+        val sarmaModel = sarma(series, 1, 1, 0, 0, 12)
+        assertEquals(1, sarmaModel.p())
+        assertEquals(2, sarmaModel.forecast(2).size)
+
+        val sarimaModel = sarima(seasonal, 0, 0, 0, 0, 1, 0, 12)
+        assertEquals(1, sarimaModel.D())
+        assertEquals(3, sarimaModel.forecast(3).size)
+
+        val varFit = varModel(Array(100) { i -> doubleArrayOf(Math.sin(0.1 * i), Math.cos(0.1 * i)) }, p = 1)
+        assertEquals(2, varFit.k())
+        assertEquals(3, varFit.forecast(3).size)
+    }
+
+    @Test
+    fun testForecastMetricsAndBacktest() {
+        val truth = doubleArrayOf(1.0, 2.0, 3.0)
+        val forecast = doubleArrayOf(1.5, 1.5, 3.5)
+        val metrics = forecastMetrics(truth, forecast)
+        assertTrue(metrics.mae() > 0.0)
+
+        val bt = backtest(DoubleArray(60) { i -> 10.0 + Math.sin(0.2 * i) },
+            { h -> AR.fit(h, 2) }, horizon = 3, folds = 3)
+        assertEquals(3, bt.folds())
+        assertEquals(9, bt.actual().size)
+    }
 }

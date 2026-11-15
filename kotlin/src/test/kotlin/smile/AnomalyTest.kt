@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test
 import smile.anomaly.isolationForest
 import smile.anomaly.lof
 import smile.anomaly.ocsvm
+import smile.anomaly.tsAnomaly
 import smile.math.MathEx
 import smile.math.distance.EuclideanDistance
 import smile.math.kernel.GaussianKernel
@@ -64,5 +65,15 @@ class AnomalyTest {
         val model = ocsvm(data, kernel, nu = 0.1)
         val scores = model.score(data)
         assertEquals(50, scores.size)
+    }
+
+    @Test
+    fun testTimeSeriesAnomaly() {
+        val history = DoubleArray(200) { i -> 50.0 + 10.0 * Math.sin(2 * Math.PI * i / 12) }
+        val detector = tsAnomaly(history, threshold = 3.0)
+        assertEquals(3.0, detector.threshold())
+
+        val test = DoubleArray(40) { i -> 50.0 + 10.0 * Math.sin(2 * Math.PI * (200 + i) / 12) }
+        assertEquals(40, detector.score(test).size)
     }
 }

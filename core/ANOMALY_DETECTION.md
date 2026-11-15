@@ -1,6 +1,6 @@
 # SMILE — Anomaly Detection
 
-The package `smile.anomaly` provides three main approaches for unsupervised and
+The package `smile.anomaly` provides four approaches for unsupervised and
 semi-supervised anomaly detection:
 
 - **Isolation Forest** (`IsolationForest`) — tree-ensemble, unsupervised anomaly
@@ -9,6 +9,8 @@ semi-supervised anomaly detection:
   support of a high-dimensional distribution.
 - **Local Outlier Factor** (`LOF<T>`) — density-based local outlier detection
   comparing an observation's local density to its k-nearest neighbors.
+- **Time-Series Residuals** (`TimeSeriesAnomaly`) — sequential detection that
+  scores an observation by its standardized one-step-ahead forecast error.
 
 ---
 
@@ -33,6 +35,11 @@ semi-supervised anomaly detection:
    - [5.3 Metric Spaces & Custom Neighborhood Search](#53-metric-spaces--custom-neighborhood-search)
    - [5.4 Batch Scoring and Prediction](#54-batch-scoring-and-prediction)
    - [5.5 Persistence](#55-persistence)
+5b. [Time-Series Residual Detection](#5b-time-series-residual-detection)
+   - [5b.1 Quick Start](#5b1-quick-start)
+   - [5b.2 Hyperparameters](#5b2-hyperparameters)
+   - [5b.3 Order Dependence](#5b3-order-dependence)
+   - [5b.4 The `Model` Wrapper](#5b4-the-model-wrapper)
 6. [Score Conventions and Thresholding](#6-score-conventions-and-thresholding)
 7. [Validation and Error Handling](#7-validation-and-error-handling)
 8. [End-to-End Examples](#8-end-to-end-examples)
@@ -53,8 +60,9 @@ Package: `smile.anomaly`
 | `IsolationForest` | Random-partition tree ensemble | Higher → more anomalous |
 | `SVM<T>` | One-class support vector machine | Lower (negative) → more anomalous |
 | `LOF<T>` | Local reachability density ratio | Higher (>> 1.0) → more anomalous |
+| `TimeSeriesAnomaly` | Standardized one-step forecast residual | Higher → more anomalous |
 
-All three classes are `Serializable` and support round-trip persistence via
+All four classes are `Serializable` and support round-trip persistence via
 `smile.io.Write.object` / `smile.io.Read.object`.
 
 ---
@@ -81,6 +89,14 @@ All three classes are `Serializable` and support round-trip persistence via
   inliers and values significantly above 1.0 (e.g., > 1.5) indicate local outliers.
 - You are working in metric spaces or moderate-sized feature sets where spatial
   indexing (`KDTree`, `CoverTree`) delivers efficient neighbor queries.
+
+**Use Time-Series Residual Detection when:**
+- Data is a **univariate sequence in time order**, and "normal" means
+  "predictable from its own past".
+- You have a clean training history but no labels for anomalies.
+- Deviations are relative to a forecast, not to a global density: a value can be
+  unremarkable on its own yet anomalous given the preceding values.
+- You already have (or want) an ARIMA / ETS / SARIMA model for the series.
 
 ---
 
@@ -352,6 +368,81 @@ LOF<double[]> loaded = (LOF<double[]>) Read.object(path);
 
 ---
 
+## 5b) Time-Series Residual Detection
+
+`TimeSeriesAnomaly` fits a `smile.timeseries.TimeSeriesModel` to a training
+history, then scores new observations by their **standardized one-step-ahead
+forecast residual**. A point is anomalous when `|z|` exceeds the threshold.
+
+### 5b.1 Quick Start
+
+```java
+double[] history = ...;                       // clean training series
+double[] stream  = ...;                       // continuation to monitor
+
+// Auto-select an ETS structure, standardize with the MAD of the residuals
+TimeSeriesAnomaly detector = TimeSeriesAnomaly.fit(
+        history, new TimeSeriesAnomaly.Options());   // MAD, threshold 3.0
+
+double[]  scores = detector.score(stream);    // |z| per point, in order
+boolean[] flags  = detector.predict(stream);
+
+// Or supply a specific model
+TimeSeriesModel arima = ARIMA.fit(history, 2, 1, 2);
+TimeSeriesAnomaly detector = TimeSeriesAnomaly.fit(
+        history, arima, new TimeSeriesAnomaly.Options(
+                TimeSeriesAnomaly.Scale.STD, 3.5, 0.2));
+```
+
+### 5b.2 Hyperparameters
+
+`TimeSeriesAnomaly.Options(Scale scale, double threshold, double ewmaAlpha)`:
+
+| Parameter | Meaning | Default |
+|---|---|---|
+| `scale` | Robust scale of the residuals: `MAD` (1.4826·median absolute deviation), `STD` (standard deviation), or `EWMA` (exponentially weighted RMS). | `MAD` |
+| `threshold` | Decision threshold in standardized units. | `3.0` |
+| `ewmaAlpha` | Smoothing factor of the `EWMA` scale, in `(0, 1]`. Ignored by the other estimators. | `0.2` |
+
+The detector refuses a degenerate scale (e.g. a constant history whose
+residuals are all zero) with an `IllegalArgumentException`.
+
+Property keys: `smile.timeseries_anomaly.scale`,
+`smile.timeseries_anomaly.threshold`, `smile.timeseries_anomaly.ewma_alpha`.
+
+### 5b.3 Order Dependence
+
+This detector is **the only one in the package whose score depends on the order
+of the input**. `score(double[])` and `predict(double[])` consume the series
+sequentially and carry the model state forward, so the same value scores
+differently depending on what preceded it. `score(double)` scores one
+observation against the training history.
+
+For `ETS`, the continuation is handled by `ETS.filter()`, which continues the
+smoothing recursion from the terminal state of the training fit. This avoids the
+phase shift that refitting on the concatenated series would introduce at the
+junction. Other models are refit once on the extended series and their
+one-step residuals are read back.
+
+### 5b.4 The `Model` Wrapper
+
+```java
+Properties params = new Properties();
+params.setProperty("smile.timeseries.model", "ets");    // or "arima", "sarima"
+params.setProperty("smile.timeseries.period", "12");
+params.setProperty("smile.timeseries_anomaly.threshold", "3.0");
+
+AnomalyModel model = Model.anomaly("ts-residual", Formula.rhs("."), history, params);
+boolean[] flags = model.predict(stream);   // rows consumed in time order
+```
+
+The formula must select exactly one numeric column, and the rows must be in time
+order. The model sets the tag `smile.timeseries.order_dependent=true` to make the
+contract explicit. `EXPLAIN` is reported as `"Not supported"`, as for the other
+detectors.
+
+---
+
 ## 6) Score Conventions and Thresholding
 
 | Model | `score()` return | Anomaly direction |
@@ -359,6 +450,7 @@ LOF<double[]> loaded = (LOF<double[]>) Read.object(path);
 | `IsolationForest` | `(0, 1]` | Higher → anomaly |
 | `SVM` | any real (`f(x) − b`) | Lower (negative) → anomaly |
 | `LOF` | real $\ge 0$ | Higher ($\gg 1.0$) → anomaly |
+| `TimeSeriesAnomaly` | $|z| \ge 0$ | Higher → anomaly |
 
 ### Data-driven threshold
 

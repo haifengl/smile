@@ -22,6 +22,7 @@ import java.util.Properties;
 import smile.anomaly.IsolationForest;
 import smile.anomaly.LOF;
 import smile.anomaly.SVM;
+import smile.anomaly.TimeSeriesAnomaly;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -36,7 +37,8 @@ import smile.feature.importance.KernelSHAP;
  * @param algorithm the algorithm name.
  * @param schema    the schema of input data (without response variable).
  * @param formula   the model formula.
- * @param detector  the underlying anomaly detector ({@link IsolationForest}, {@link LOF}, or {@link SVM}).
+ * @param detector  the underlying anomaly detector ({@link IsolationForest}, {@link LOF},
+ *                  {@link SVM}, or {@link TimeSeriesAnomaly}).
  * @param threshold the anomaly decision threshold.
  * @param transform optional feature preprocessing transform; may be {@code null}.
  * @param tags      the model metadata tags.
@@ -100,19 +102,50 @@ public record AnomalyModel(String algorithm,
             case IsolationForest iforest -> iforest.score(v);
             case LOF<?> lof -> ((LOF<double[]>) lof).score(v);
             case SVM<?> svm -> ((SVM<double[]>) svm).score(v);
+            case TimeSeriesAnomaly ts -> {
+                requireSingleColumn(v, "score(Tuple)");
+                yield ts.score(v[0]);
+            }
             default -> throw new IllegalStateException("Unsupported anomaly detector: " + detector.getClass().getName());
         };
     }
 
     /**
      * Computes the anomaly or decision scores for a data frame.
+     * <p>
+     * For a {@link TimeSeriesAnomaly} detector the rows are consumed
+     * <b>sequentially</b>: row {@code i} is scored against the training history
+     * extended by rows {@code 0..i-1}. The row order must therefore be the time
+     * order. All other detectors are independent of row order.
      *
      * @param data the input data frame.
      * @return the anomaly or decision scores.
      */
     public double[] score(DataFrame data) {
         formula.bind(data.schema());
+        if (detector instanceof TimeSeriesAnomaly ts) {
+            return ts.score(timeSeries(data));
+        }
         return data.stream().mapToDouble(this::score).toArray();
+    }
+
+    /**
+     * Extracts the single time-series column from a data frame, preserving row order.
+     */
+    private double[] timeSeries(DataFrame data) {
+        int n = data.size();
+        double[] series = new double[n];
+        for (int i = 0; i < n; i++) {
+            series[i] = vectorize(data.get(i))[0];
+        }
+        return series;
+    }
+
+    private static void requireSingleColumn(double[] v, String method) {
+        if (v.length != 1) {
+            throw new IllegalArgumentException(
+                    method + " requires a single numeric column for a time-series anomaly model, but got " + v.length);
+        }
     }
 
     /**
@@ -128,18 +161,33 @@ public record AnomalyModel(String algorithm,
             case IsolationForest iforest -> iforest.predict(v, threshold);
             case LOF<?> lof -> ((LOF<double[]>) lof).predict(v, threshold);
             case SVM<?> svm -> ((SVM<double[]>) svm).predict(v, threshold);
+            case TimeSeriesAnomaly ts -> {
+                requireSingleColumn(v, "predict(Tuple)");
+                yield ts.score(v[0]) > threshold;
+            }
             default -> throw new IllegalStateException("Unsupported anomaly detector: " + detector.getClass().getName());
         };
     }
 
     /**
      * Predicts whether each observation in a data frame is an anomaly.
+     * <p>
+     * For a {@link TimeSeriesAnomaly} detector the rows are consumed
+     * sequentially, as in {@link #score(DataFrame)}.
      *
      * @param data the input data frame.
      * @return an array of anomaly flags.
      */
     public boolean[] predict(DataFrame data) {
         formula.bind(data.schema());
+        if (detector instanceof TimeSeriesAnomaly ts) {
+            double[] scores = ts.score(timeSeries(data));
+            boolean[] flags = new boolean[scores.length];
+            for (int i = 0; i < scores.length; i++) {
+                flags[i] = scores[i] > threshold;
+            }
+            return flags;
+        }
         int n = data.size();
         boolean[] predictions = new boolean[n];
         for (int i = 0; i < n; i++) {
@@ -171,6 +219,11 @@ public record AnomalyModel(String algorithm,
             case SVM<?> svm -> {
                 s = ((SVM<double[]>) svm).score(v);
                 isAnomaly = s < threshold;
+            }
+            case TimeSeriesAnomaly ts -> {
+                requireSingleColumn(v, "infer");
+                s = ts.score(v[0]);
+                isAnomaly = s > threshold;
             }
             default -> throw new IllegalStateException("Unsupported anomaly detector: " + detector.getClass().getName());
         }

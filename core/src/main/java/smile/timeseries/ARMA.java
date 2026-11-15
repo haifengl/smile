@@ -41,7 +41,7 @@ import static smile.tensor.ScalarType.*;
  *
  * @author Haifeng Li
  */
-public class ARMA implements Serializable {
+public class ARMA implements TimeSeriesModel {
     @Serial
     private static final long serialVersionUID = 2L;
 

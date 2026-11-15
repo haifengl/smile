@@ -82,3 +82,20 @@ fun <T> ocsvm(
     nu: Double = 0.5,
     tol: Double = 1E-3
 ): SVM<T> = SVM.fit(x, kernel, SVM.Options(nu, tol))
+
+/**
+ * Fits a residual-based time-series anomaly detector with an automatically
+ * selected ETS model.
+ *
+ * @param history the training history.
+ * @param scale the robust scale estimator of the residuals.
+ * @param threshold the decision threshold in standardized units.
+ * @param ewmaAlpha the smoothing factor of the EWMA scale.
+ * @return the fitted detector.
+ */
+fun tsAnomaly(
+    history: DoubleArray,
+    scale: TimeSeriesAnomaly.Scale = TimeSeriesAnomaly.Scale.MAD,
+    threshold: Double = 3.0,
+    ewmaAlpha: Double = 0.2
+): TimeSeriesAnomaly = TimeSeriesAnomaly.fit(history, TimeSeriesAnomaly.Options(scale, threshold, ewmaAlpha))
