@@ -552,4 +552,98 @@ class IntentTest {
         assertEquals(Intent.Mode.RAW, intent.getMode(), "malformed XML fallback must keep mode as RAW");
         assertFalse(intent.modeButton().isSelected());
     }
+
+    @Test
+    void southPane_overlaysModeBarInLayeredPanePaletteLayer() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.output().setText("# Heading\n\nBody text.\n");
+
+        assertInstanceOf(javax.swing.JLayeredPane.class, intent.southPane());
+        var defaultComps = intent.southPane().getComponentsInLayer(javax.swing.JLayeredPane.DEFAULT_LAYER);
+        var paletteComps = intent.southPane().getComponentsInLayer(javax.swing.JLayeredPane.PALETTE_LAYER);
+        assertEquals(1, defaultComps.length);
+        assertSame(intent.outputPane(), defaultComps[0]);
+        assertEquals(1, paletteComps.length);
+        assertSame(intent.modeBar(), paletteComps[0]);
+
+        intent.southPane().setSize(600, 200);
+        intent.southPane().doLayout();
+        assertEquals(600, intent.outputPane().getWidth());
+        assertEquals(200, intent.outputPane().getHeight());
+        assertTrue(intent.modeBar().getX() > 0, "modeBar must be positioned near the right edge");
+    }
+
+    @Test
+    void streamRouting_splitsLlmToolAndSystemStatusIntoSeparateWidgets_andPreviewsOnlyLlm() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.setProgress(true);
+
+        // 1. Stream initial LLM reasoning
+        intent.appendRun(null, "Let me inspect the files first.\n");
+        // 2. Stream tool call status updates and TodoWrite checklist
+        intent.appendRun(null, "  ✅ Read C:/code/smile/README.md\n");
+        intent.appendRun(null, "  ✅ Grep pattern in studio/src\n");
+        intent.appendRun(null, "📝 Current Tasks:\n⏳ Task one\n🚧 Task two\n");
+        // 3. Stream a system/compaction status notice
+        intent.appendSystemStatus(null, "[Context compacted. Continuing the task.]");
+        // 4. Stream final LLM Markdown summary with table
+        intent.appendRun(null, "## Results\n\n| File | Matches |\n| :--- | ---: |\n| README.md | 3 |\n");
+        intent.setProgress(false);
+
+        var comps = intent.outputPane().getComponents();
+        assertEquals(4, comps.length, "Expected 4 separate widgets: LLM -> TOOL -> STATUS -> LLM");
+        var llm1 = assertInstanceOf(AgentOutputArea.class, comps[0]);
+        var toolArea = assertInstanceOf(AgentOutputArea.class, comps[1]);
+        var statusArea = assertInstanceOf(AgentOutputArea.class, comps[2]);
+        var llm2 = assertInstanceOf(AgentOutputArea.class, comps[3]);
+
+        assertEquals(AgentOutputArea.Kind.LLM, llm1.kind());
+        assertEquals(AgentOutputArea.Kind.TOOL, toolArea.kind());
+        assertEquals(AgentOutputArea.Kind.STATUS, statusArea.kind());
+        assertEquals(AgentOutputArea.Kind.LLM, llm2.kind());
+
+        assertTrue(toolArea.getText().contains("  ✅ Read C:/code/smile/README.md\n  ✅ Grep pattern in studio/src"));
+        assertTrue(toolArea.getText().contains("📝 Current Tasks:\n⏳ Task one\n🚧 Task two"));
+        assertEquals("[Context compacted. Continuing the task.]", statusArea.getText());
+
+        // Switch to PREVIEW mode: only LLM widgets become Markdown; TOOL and STATUS remain AgentOutputArea
+        intent.setMode(Intent.Mode.PREVIEW);
+        assertEquals(Intent.Mode.PREVIEW, intent.getMode());
+
+        var previewComps = intent.outputPane().getComponents();
+        assertEquals(4, previewComps.length);
+        assertInstanceOf(smile.studio.text.Markdown.class, previewComps[0], "First LLM segment must be rendered as Markdown");
+        assertSame(toolArea, previewComps[1], "TOOL widget must remain AgentOutputArea in PREVIEW mode");
+        assertSame(statusArea, previewComps[2], "STATUS widget must remain AgentOutputArea in PREVIEW mode");
+        var md2 = assertInstanceOf(smile.studio.text.Markdown.class, previewComps[3], "Second LLM segment must be rendered as Markdown");
+        assertEquals(1, md2.contentPane().getDocument().getElementsByTagName("table").getLength());
+
+        // Switch back to RAW mode: both LLM widgets are restored in place
+        intent.setMode(Intent.Mode.RAW);
+        var rawComps = intent.outputPane().getComponents();
+        assertEquals(4, rawComps.length);
+        assertSame(llm1, rawComps[0]);
+        assertSame(toolArea, rawComps[1]);
+        assertSame(statusArea, rawComps[2]);
+        assertSame(llm2, rawComps[3]);
+    }
+
+    @Test
+    void fencedCodeBlock_containingToolLikeLines_staysInLlmSegment() {
+        String raw = """
+                Here is an example output:
+                ```text
+                  ✅ Read foo.txt
+                📝 Current Tasks:
+                ⏳ Do not split inside code fence
+                [status inside fence]
+                ```
+                Done.
+                """;
+        var segments = AgentOutputArea.splitSegments(raw);
+        assertEquals(1, segments.size(), "Tool-like lines inside a fenced code block must remain in the LLM segment");
+        assertEquals(AgentOutputArea.Kind.LLM, segments.getFirst().kind());
+    }
 }

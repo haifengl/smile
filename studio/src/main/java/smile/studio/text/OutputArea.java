@@ -453,7 +453,7 @@ public class OutputArea extends ThemedTextArea implements HyperlinkListener, Lin
         return Optional.empty();
     }
 
-    static Workspace findWorkspace(Component source) {
+    public static Workspace findWorkspace(Component source) {
         Workspace ws = (Workspace) SwingUtilities.getAncestorOfClass(Workspace.class, source);
         if (ws != null) {
             return ws;

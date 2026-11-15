@@ -213,7 +213,7 @@ public class AgentPanel extends JPanel {
                     if (runId == null) {
                         activeIntent.setStatus(status);
                     } else {
-                        activeIntent.appendRun(runId, "\n[" + status + "]\n");
+                        activeIntent.appendSystemStatus(runId, "[" + status + "]");
                     }
                 });
             }
@@ -254,11 +254,11 @@ public class AgentPanel extends JPanel {
                         continueAfterCompact = false;
                         boolean interrupted = "true".equals(agent.conversation().params().getProperty(LLM.INTERRUPTED));
                         if (alreadyCompacted && !interrupted && activeIntent != null) {
-                            activeIntent.output().append("\n\n[Context compacted. Continuing the task.]\n");
+                            activeIntent.appendSystemStatus(null, "[Context compacted. Continuing the task.]");
                             activeIntent.setStatus("Continuing...");
                             chat(activeIntent, CONTINUE_AFTER_COMPACT);
                         } else if (!alreadyCompacted && activeIntent != null) {
-                            activeIntent.output().append("\n\n[Compaction did not produce a summary, so the task was not resumed.]\n");
+                            activeIntent.appendSystemStatus(null, "[Compaction did not produce a summary, so the task was not resumed.]");
                         }
                         return;
                     }
@@ -274,11 +274,11 @@ public class AgentPanel extends JPanel {
                     if (!alreadyCompacted && (totalTokens > compactAt || (totalTokens > 0 && outputTokens == 0)) && activeIntent != null) {
                         if (compactContinuations >= 2) {
                             compactContinuations = 0;
-                            activeIntent.output().append("\n\n[The conversation is still too long after compaction, so the task was not resumed.]\n");
+                            activeIntent.appendSystemStatus(null, "[The conversation is still too long after compaction, so the task was not resumed.]");
                             return;
                         }
                         compactContinuations++;
-                        activeIntent.output().append("\n\n[The conversation session is too long, a compact command will be executed to summarize conversation.]\n");
+                        activeIntent.appendSystemStatus(null, "[The conversation session is too long, a compact command will be executed to summarize conversation.]");
                         continueAfterCompact = true;
                         compact("", activeIntent);
                     } else {
