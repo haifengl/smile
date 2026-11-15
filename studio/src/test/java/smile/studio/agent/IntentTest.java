@@ -766,6 +766,60 @@ class IntentTest {
                 "the pane's preferred height must not grow with the streamed output");
     }
 
+    /**
+     * The tab must not grow while a subagent streams. That is only observable once
+     * the intent is laid out in a real frame: an unlaid-out intent never asks its
+     * parents to grow, so the pane's preferred height alone does not show the bug.
+     */
+    @Test
+    void subagentTab_doesNotGrowWhileLaidOutInAFrameAsOutputStreams() throws Exception {
+        var heights = new java.util.ArrayList<int[]>();
+        javax.swing.SwingUtilities.invokeAndWait(() -> {
+            Intent intent = new Intent(null);
+            intent.setEditable(false);
+            var frame = new javax.swing.JFrame("subagent tab growth");
+            try {
+                frame.setContentPane(intent);
+                frame.setSize(900, 700);
+                frame.setVisible(true);
+                intent.beginRun("run-1", "Explore", "James");
+                intent.revalidate();
+                frame.validate();
+
+                var scrollPane = intent.runScrollPane("run-1");
+                assertNotNull(scrollPane);
+                int reserved = scrollPane.getPreferredSize().height;
+
+                for (int i = 0; i < 60; i++) {
+                    intent.appendRun("run-1", "subagent output line " + i + "\n");
+                }
+                intent.revalidate();
+                frame.validate();
+                heights.add(new int[] {reserved, scrollPane.getPreferredSize().height});
+
+                for (int i = 0; i < 200; i++) {
+                    intent.appendRun("run-1", "subagent output line " + i + "\n");
+                }
+                intent.revalidate();
+                frame.validate();
+
+                var content = intent.runContentPane("run-1");
+                assertNotNull(content);
+                var area = (AgentOutputArea) content.getComponent(0);
+                assertTrue(area.getPreferredSize().height > reserved * 10,
+                        "the output must have grown well past the reserved rows");
+                heights.add(new int[] {reserved, scrollPane.getPreferredSize().height});
+            } finally {
+                frame.dispose();
+            }
+        });
+
+        for (int[] pair : heights) {
+            assertEquals(pair[0], pair[1],
+                    "the subagent tab must keep its reserved height instead of growing with the output");
+        }
+    }
+
     @Test
     void subagentTab_contentTracksTheViewportWidthSoWrappingNeedsNoHorizontalScroll() {
         Intent intent = new Intent(null);
