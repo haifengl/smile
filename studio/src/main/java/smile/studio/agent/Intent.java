@@ -45,6 +45,7 @@ import smile.studio.SmileStudio;
 import smile.studio.text.Markdown;
 import smile.studio.text.Monospaced;
 import smile.studio.text.OutputArea;
+import smile.swing.ScrollablePanel;
 import static smile.studio.agent.IntentType.*;
 
 /**
@@ -60,6 +61,12 @@ public class Intent extends JPanel {
     static final String AGENT_STATUS_PREFIX = "\uD83D\uDCDC ";
     /** The scroll unit increment in pixels for the subagent output scrollbars. */
     private static final int SCROLL_UNIT_INCREMENT = 18;
+    /**
+     * The number of text rows a subagent output tab shows before its vertical
+     * scrollbar takes over. This is the tab's preferred height, not a hard limit:
+     * the GridBag wrapper lets the tab grow when the parent has room.
+     */
+    static final int RUN_VIEW_ROWS = 10;
 
     /**
      * Display mode for agent output.
@@ -173,6 +180,12 @@ public class Intent extends JPanel {
     private final Map<String, StreamRouter> runRouters = new LinkedHashMap<>();
     /** Keeps each subagent tab's scroll pane pinned to its latest output while it streams. */
     private final Map<String, AutoScroller> runScrollers = new LinkedHashMap<>();
+    /**
+     * The conversation panel that hosts this intent, or null in tests and for
+     * standalone intents. The master turn's output is scrolled by that panel, so
+     * a question rendered in the master tab asks the panel to reveal it.
+     */
+    private final AgentPanel panel;
     private boolean selectMasterOnNextOutput;
 
     /**
@@ -350,6 +363,7 @@ public class Intent extends JPanel {
     public Intent(AgentPanel cli) {
         super(new BorderLayout(5, 5));
         setBorder(new EmptyBorder(8,8,8,8));
+        this.panel = cli;
 
         effortComboBox = initEffortComboBox(cli);
         if (cli != null) {
@@ -1401,9 +1415,52 @@ public class Intent extends JPanel {
         }
         pane.revalidate();
         pane.repaint();
-        // A question the agent is waiting on is the newest thing in the tab; bring
-        // it into view instead of leaving it below the fold of a long transcript.
-        follow(runId);
+        // A question the agent is waiting on is the newest thing in the tab, but a
+        // fresh empty output area follows it, so following to the bottom would push
+        // it above the fold. Reveal the box itself, keeping its header on screen.
+        revealQuestion(runId, gui, question);
+    }
+
+    /**
+     * Scrolls a just-added question box into view instead of the bottom of the
+     * transcript, and re-arms following once it is answered.
+     * <p>A subagent's box is inside its tab's scroll pane, while the tab itself
+     * sits in the conversation pane owned by {@link AgentPanel}; both must move,
+     * so both scrollers are asked to show the box. Intents built without a panel
+     * (tests, standalone widgets) have no conversation pane and simply do
+     * nothing there.
+     *
+     * @param runId {@code null} for the parent turn, or the subagent run id.
+     * @param gui the question's GUI component.
+     * @param question the question, whose answer ends the hold.
+     */
+    private void revealQuestion(String runId, JComponent gui, Question question) {
+        boolean inTab = runId != null && !runId.isEmpty();
+        AutoScroller tabScroller = inTab ? runScrollers.get(runId) : null;
+        if (tabScroller != null) {
+            tabScroller.reveal(gui);
+        }
+        // A master question's box is drawn directly in the conversation pane, so
+        // reveal the box itself. A subagent's box lives in its own tab, whose inner
+        // scroller above already reveals it; what the conversation pane must bring
+        // into view is the tab that holds the box.
+        JPanel tabPane = inTab ? runPanes.get(runId) : null;
+        JComponent panelTarget = tabPane != null ? tabPane : gui;
+        if (panel != null) {
+            panel.reveal(panelTarget);
+        }
+        // A revealed box holds the view still so its own layout growth cannot pull it
+        // away. Once the user answers, the turn's output is what they want to see.
+        // The resume names what was revealed, so a later question that replaced it
+        // keeps the view.
+        question.ask().whenComplete((answer, error) -> SwingUtilities.invokeLater(() -> {
+            if (tabScroller != null) {
+                tabScroller.resumeFollowingAfter(gui);
+            }
+            if (panel != null) {
+                panel.resumeFollowingAfter(panelTarget);
+            }
+        }));
     }
 
     /**
@@ -1445,9 +1502,15 @@ public class Intent extends JPanel {
         }
 
         AgentOutputArea area = createOutputArea(AgentOutputArea.Kind.LLM);
-        area.setRows(5);
+        // The output's row count is the scroll pane's preferred height: the tab opens
+        // tall enough for this many lines and scrolls beyond that. The GridBag wrapper
+        // below still lets it grow when the parent has room to spare.
+        area.setRows(RUN_VIEW_ROWS);
 
-        JPanel content = new JPanel();
+        // The content tracks the viewport width, so the output wraps at the visible
+        // width instead of computing a wider preferred one. That is what lets the
+        // horizontal scrollbar stay off: there is nothing to scroll sideways to.
+        JPanel content = new ScrollablePanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setOpaque(false);
         content.add(area);
@@ -1457,6 +1520,9 @@ public class Intent extends JPanel {
         // unless the parent container itself expands to give it more space,
         // wrap the JScrollPane in a panel utilizing GridBagLayout.
         JScrollPane scrollPane = new JScrollPane(content);
+        // The output wraps to the tab's width, so a horizontal scrollbar could only
+        // ever show a clipped sliver of an over-long line; never show one.
+        scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setUnitIncrement(SCROLL_UNIT_INCREMENT);
         runScrollers.put(runId, new AutoScroller(scrollPane));
         JPanel pane = new JPanel(new GridBagLayout());
@@ -1733,6 +1799,25 @@ public class Intent extends JPanel {
      */
     AutoScroller runScroller(String runId) {
         return runScrollers.get(runId);
+    }
+
+    /**
+     * Returns the scroll pane that holds a subagent tab's output, or null when
+     * the tab does not exist. Package-private for testing.
+     * @param runId the subagent run id.
+     * @return the tab's scroll pane, or null.
+     */
+    JScrollPane runScrollPane(String runId) {
+        JPanel tab = runPanes.get(runId);
+        if (tab == null) {
+            return null;
+        }
+        for (Component child : tab.getComponents()) {
+            if (child instanceof JScrollPane scrollPane) {
+                return scrollPane;
+            }
+        }
+        return null;
     }
 
     /**

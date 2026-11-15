@@ -155,6 +155,14 @@ public class GradientTreeBoostTest {
             }
         }
 
+        // Reseed immediately before the measured cross-validation. The smoke fit
+        // above stops at tree 100 through an async controller, so whether it trains
+        // 100 or 101 trees depends on thread scheduling; every tree draws from
+        // MathEx's thread-local RNG, which would otherwise leave the CV below
+        // starting from a different RNG state on different runs and make these
+        // assertions flake.
+        MathEx.setSeed(19650218);
+
         var options = new GradientTreeBoost.Options(loss, 100);
         RegressionValidations<GradientTreeBoost> result = CrossValidation.regression(5, formula, data,
                 (f, x) -> GradientTreeBoost.fit(f, x, options));
@@ -167,84 +175,84 @@ public class GradientTreeBoostTest {
     @Tag("integration")
     public void testCpuLS() {
         System.out.println("CPU Least Squares");
-        assertEquals(57.9275, test(Loss.ls(), cpu.formula(), cpu.data(), cpu.data()), 0.01);
+        assertEquals(83.1714, test(Loss.ls(), cpu.formula(), cpu.data(), cpu.data()), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testCpuLAD() {
         System.out.println("CPU LAD");
-        assertEquals(72.1033, test(Loss.lad(), cpu.formula(), cpu.data(), cpu.data()), 0.01);
+        assertEquals(76.9545, test(Loss.lad(), cpu.formula(), cpu.data(), cpu.data()), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testCpuQuantile() {
         System.out.println("CPU Quantile");
-        assertEquals(72.1033, test(Loss.quantile(0.5), cpu.formula(), cpu.data(), cpu.data()), 0.01);
+        assertEquals(76.9545, test(Loss.quantile(0.5), cpu.formula(), cpu.data(), cpu.data()), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testCpuHuber() {
         System.out.println("CPU Huber");
-        assertEquals(67.5435, test(Loss.huber(0.9), cpu.formula(), cpu.data(), cpu.data()), 0.5);
+        assertEquals(73.3417, test(Loss.huber(0.9), cpu.formula(), cpu.data(), cpu.data()), 0.5);
     }
 
     @Test
     @Tag("integration")
     public void test2DPlanesLS() {
         System.out.println("2dplanes Least Squares");
-        assertEquals(1.1037, test(Loss.ls(), planes.formula(), planes.data(), null), 0.01);
+        assertEquals(1.1025, test(Loss.ls(), planes.formula(), planes.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void test2DPlanesLAD() {
         System.out.println("2dplanes LAD");
-        assertEquals(1.1359, test(Loss.lad(), planes.formula(), planes.data(), null), 0.01);
+        assertEquals(1.1321, test(Loss.lad(), planes.formula(), planes.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void test2DPlanesQuantile() {
         System.out.println("2dplanes Quantile");
-        assertEquals(1.1359, test(Loss.quantile(0.5), planes.formula(), planes.data(), null), 0.01);
+        assertEquals(1.1321, test(Loss.quantile(0.5), planes.formula(), planes.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void test2DPlanesHuber() {
         System.out.println("2dplanes Huber");
-        assertEquals(1.108, test(Loss.huber(0.9), planes.formula(), planes.data(), null), 0.01);
+        assertEquals(1.1069, test(Loss.huber(0.9), planes.formula(), planes.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testAbaloneLS() {
         System.out.println("abalone Least Squares");
-        assertEquals(2.2045, test(Loss.ls(), abalone.formula(), abalone.train(), abalone.test()), 0.01);
+        assertEquals(2.2021, test(Loss.ls(), abalone.formula(), abalone.train(), abalone.test()), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testAbaloneLAD() {
         System.out.println("abalone LAD");
-        assertEquals(2.3048, test(Loss.lad(), abalone.formula(), abalone.train(), abalone.test()), 0.05);
+        assertEquals(2.3026, test(Loss.lad(), abalone.formula(), abalone.train(), abalone.test()), 0.05);
     }
 
     @Test
     @Tag("integration")
     public void testAbaloneQuantile() {
         System.out.println("abalone Quantile");
-        assertEquals(2.3048, test(Loss.quantile(0.5), abalone.formula(), abalone.train(), abalone.test()), 0.01);
+        assertEquals(2.3026, test(Loss.quantile(0.5), abalone.formula(), abalone.train(), abalone.test()), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testAbaloneHuber() {
         System.out.println("abalone Huber");
-        assertEquals(2.222, test(Loss.huber(0.9), abalone.formula(), abalone.train(), abalone.test()), 0.01);
+        assertEquals(2.2168, test(Loss.huber(0.9), abalone.formula(), abalone.train(), abalone.test()), 0.01);
     }
 
     @Test
@@ -279,139 +287,139 @@ public class GradientTreeBoostTest {
     @Tag("integration")
     public void testBank32nhLS() {
         System.out.println("bank32nh Least Squares");
-        assertEquals(0.0843, test(Loss.ls(), bank32nh.formula(), bank32nh.data(), null), 0.01);
+        assertEquals(0.0846, test(Loss.ls(), bank32nh.formula(), bank32nh.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testBank32nhLAD() {
         System.out.println("bank32nh LAD");
-        assertEquals(0.0915, test(Loss.lad(), bank32nh.formula(), bank32nh.data(), null), 0.01);
+        assertEquals(0.0914, test(Loss.lad(), bank32nh.formula(), bank32nh.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testBank32nhQuantile() {
         System.out.println("bank32nh Quantile");
-        assertEquals(0.0915, test(Loss.quantile(0.5), bank32nh.formula(), bank32nh.data(), null), 0.01);
+        assertEquals(0.0914, test(Loss.quantile(0.5), bank32nh.formula(), bank32nh.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testBank32nhHuber() {
         System.out.println("bank32nh Huber");
-        assertEquals(0.0853, test(Loss.huber(0.9), bank32nh.formula(), bank32nh.data(), null), 0.01);
+        assertEquals(0.0854, test(Loss.huber(0.9), bank32nh.formula(), bank32nh.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testAutoMPGLS() {
         System.out.println("autoMPG Least Squares");
-        assertEquals(3.02, test(Loss.ls(), autoMPG.formula(), autoMPG.data(), null), 0.05);
+        assertEquals(3.0453, test(Loss.ls(), autoMPG.formula(), autoMPG.data(), null), 0.05);
     }
 
     @Test
     @Tag("integration")
     public void testAutoMPGLAD() {
         System.out.println("autoMPG LAD");
-        assertEquals(3.054, test(Loss.lad(), autoMPG.formula(), autoMPG.data(), null), 0.01);
+        assertEquals(3.1212, test(Loss.lad(), autoMPG.formula(), autoMPG.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testAutoMPGQuantile() {
         System.out.println("autoMPG Quantile");
-        assertEquals(3.054, test(Loss.quantile(0.5), autoMPG.formula(), autoMPG.data(), null), 0.05);
+        assertEquals(3.1212, test(Loss.quantile(0.5), autoMPG.formula(), autoMPG.data(), null), 0.05);
     }
 
     @Test
     @Tag("integration")
     public void testAutoMPGHuber() {
         System.out.println("autoMPG Huber");
-        assertEquals(3.0076, test(Loss.huber(0.9), autoMPG.formula(), autoMPG.data(), null), 0.05);
+        assertEquals(3.0496, test(Loss.huber(0.9), autoMPG.formula(), autoMPG.data(), null), 0.05);
     }
 
     @Test
     @Tag("integration")
     public void testCalHousingLS() {
         System.out.println("cal_housing Least Squares");
-        assertEquals(60956.1395, test(Loss.ls(), calHousing.formula(), calHousing.data(), null), 0.01);
+        assertEquals(60880.2724, test(Loss.ls(), calHousing.formula(), calHousing.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testCalHousingLAD() {
         System.out.println("cal_housing LAD");
-        assertEquals(66958.3179, test(Loss.lad(), calHousing.formula(), calHousing.data(), null), 0.01);
+        assertEquals(66833.7838, test(Loss.lad(), calHousing.formula(), calHousing.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testCalHousingQuantile() {
         System.out.println("cal_housing Quantile");
-        assertEquals(66958.3179, test(Loss.quantile(0.5), calHousing.formula(), calHousing.data(), null), 0.01);
+        assertEquals(66833.7838, test(Loss.quantile(0.5), calHousing.formula(), calHousing.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testCalHousingHuber() {
         System.out.println("cal_housing Huber");
-        assertEquals(62514.4449, test(Loss.huber(0.9), calHousing.formula(), calHousing.data(), null), 0.01);
+        assertEquals(62268.6587, test(Loss.huber(0.9), calHousing.formula(), calHousing.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testPuma8nhLS() {
         System.out.println("puma8nh Least Squares");
-        assertEquals(3.2435, test(Loss.ls(), puma.formula(), puma.data(), null), 0.01);
+        assertEquals(3.2411, test(Loss.ls(), puma.formula(), puma.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testPuma8nhLAD() {
         System.out.println("puma8nh LAD");
-        assertEquals(3.2502, test(Loss.lad(), puma.formula(), puma.data(), null), 0.01);
+        assertEquals(3.2577, test(Loss.lad(), puma.formula(), puma.data(), null), 0.01);
     }
 
     @Test
     public void testPuma8nhQuantile() {
         System.out.println("puma8nh Quantile");
-        assertEquals(3.2502, test(Loss.quantile(0.5), puma.formula(), puma.data(), null), 0.01);
+        assertEquals(3.2577, test(Loss.quantile(0.5), puma.formula(), puma.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testPuma8nhHuber() {
         System.out.println("puma8nh Huber");
-        assertEquals(3.2439, test(Loss.huber(0.9), puma.formula(), puma.data(), null), 0.01);
+        assertEquals(3.2396, test(Loss.huber(0.9), puma.formula(), puma.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testKin8nmLS() {
         System.out.println("kin8nm Least Squares");
-        assertEquals(0.1813, test(Loss.ls(), kin8nm.formula(), kin8nm.data(), null), 0.01);
+        assertEquals(0.1809, test(Loss.ls(), kin8nm.formula(), kin8nm.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testKin8nmLAD() {
         System.out.println("kin8nm LAD");
-        assertEquals(0.1833, test(Loss.lad(), kin8nm.formula(), kin8nm.data(), null), 0.01);
+        assertEquals(0.1826, test(Loss.lad(), kin8nm.formula(), kin8nm.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testKin8nmQuantile() {
         System.out.println("kin8nm Quantile");
-        assertEquals(0.1833, test(Loss.quantile(0.5), kin8nm.formula(), kin8nm.data(), null), 0.01);
+        assertEquals(0.1826, test(Loss.quantile(0.5), kin8nm.formula(), kin8nm.data(), null), 0.01);
     }
 
     @Test
     @Tag("integration")
     public void testKin8nmHuber() {
         System.out.println("kin8nm Huber");
-        assertEquals(0.1803, test(Loss.huber(0.9), kin8nm.formula(), kin8nm.data(), null), 0.01);
+        assertEquals(0.1801, test(Loss.huber(0.9), kin8nm.formula(), kin8nm.data(), null), 0.01);
     }
 
     @Test

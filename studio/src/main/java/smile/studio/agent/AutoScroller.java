@@ -17,6 +17,7 @@
  */
 package smile.studio.agent;
 
+import java.awt.Component;
 import java.util.Objects;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
@@ -42,12 +43,20 @@ import javax.swing.SwingUtilities;
  *       as a scroll instead, the first line that overflows the viewport would
  *       stop the follow it is supposed to start.</li>
  * </ul>
+ * <p>A question widget is a special case, handled by {@link ScrollReveal}: the
+ * pane moves to show the box instead of the bottom, and holds still while the
+ * user answers. {@link #reveal(Component)} starts that; {@link #follow()} and
+ * {@link #resumeFollowingAfter(Component)} end it.
  *
  * @author Haifeng Li
  */
 final class AutoScroller {
+    /** How many deferred passes a reveal makes while the widget waits for layout. */
+    private static final int REVEAL_ATTEMPTS = 3;
     /** The scroll pane to keep at the bottom. */
     private final JScrollPane scroll;
+    /** Where the pane must sit to show a pending question box, or null when none is pending. */
+    private final ScrollReveal reveal;
     /** Whether new content should pull the view to the bottom. */
     private boolean follow = true;
     /** Guards the deferred scroll so a fast stream queues one scroll, not one per token. */
@@ -56,6 +65,8 @@ final class AutoScroller {
     private int lastValue;
     /** Set while this class moves the bar, so its own scroll is not read as a user scroll. */
     private boolean scrolling;
+    /** Deferred passes left for the reveal, so a bottom-align queued by the same layout cannot undo it. */
+    private int revealPasses;
 
     /**
      * Constructor.
@@ -63,6 +74,7 @@ final class AutoScroller {
      */
     AutoScroller(JScrollPane scroll) {
         this.scroll = Objects.requireNonNull(scroll, "scroll");
+        this.reveal = new ScrollReveal(scroll, this::onRevealBoundsChanged);
         JScrollBar bar = scroll.getVerticalScrollBar();
         this.lastValue = bar.getValue();
         bar.getModel().addChangeListener(event -> onModelChanged());
@@ -80,15 +92,47 @@ final class AutoScroller {
             return;
         }
         lastValue = value;
+        if (reveal.target() != null) {
+            // A question is on screen: growth must not pull the view off the box
+            // before the user answers, whether or not they scrolled.
+            return;
+        }
         follow = isAtBottom();
     }
 
     /**
      * Re-arms following after it was stopped by a user scroll. Called when a new
      * turn starts or a transcript is replaced, so its output comes into view.
+     * Also ends any pending reveal: the question it belonged to is answered.
      */
     void follow() {
+        reveal.stop();
         follow = true;
+    }
+
+    /**
+     * Brings a component into view, keeping its top edge inside the viewport.
+     * <p>Used for the question box, which sits above a fresh, empty output area;
+     * following to the bottom would push the box's header above the fold. See
+     * {@link ScrollReveal} for the geometry.
+     * <p>The scroll is deferred and repeated for a few passes. Adding the box
+     * grows the panel, and the layout that follows reports the growth through the
+     * scrollbar model, which queues a scroll to the bottom; running after that
+     * scroll, not before it, is what makes the reveal stick.
+     *
+     * @param target the component to show.
+     */
+    void reveal(Component target) {
+        if (target == null) {
+            return;
+        }
+        // The box is what the agent is waiting on, so show it even if the user had
+        // scrolled up to read. Stop following meanwhile so the box's own layout
+        // (the custom-input area opening, say) cannot pull the view off it.
+        follow = false;
+        revealPasses = REVEAL_ATTEMPTS;
+        reveal.start(target);
+        scheduleScroll();
     }
 
     /**
@@ -100,34 +144,96 @@ final class AutoScroller {
     }
 
     /**
+     * Resumes following after the revealed question was answered. While the box
+     * was on screen the pane held still; once the answer is in, the turn's
+     * output is what the user wants to see again.
+     * <p>A no-op when {@code answered} is not the box currently revealed. An
+     * agent can ask several questions in a row, and the earlier answer is
+     * completed around the time the next box is added: resuming then would yank
+     * the view to the bottom of a box the user is still reading.
+     *
+     * @param answered the box whose answer arrived.
+     */
+    void resumeFollowingAfter(Component answered) {
+        if (answered == null || reveal.target() != answered) {
+            return;
+        }
+        follow();
+        scheduleScroll();
+    }
+
+    /**
      * Pins the pane to the bottom on a later EDT pass, so the pending layout has
      * already grown the scrollbar's maximum. Repeated calls before the pass runs
      * are coalesced into one scroll. A no-op once the user has scrolled away.
      */
     void scrollToBottom() {
-        if (!follow || pending) {
+        if (!follow) {
+            return;
+        }
+        scheduleScroll();
+    }
+
+    /**
+     * Queues one deferred scroll pass. A pass shows the pending reveal target, or
+     * otherwise pins the view to the bottom. Repeated calls are coalesced.
+     */
+    private void scheduleScroll() {
+        if (pending) {
             return;
         }
         pending = true;
         SwingUtilities.invokeLater(() -> {
             pending = false;
-            if (follow) {
+            if (reveal.target() != null) {
+                scrollToReveal();
+                // A bottom-align queued by the layout that followed the reveal may
+                // still be behind this pass; repeat so the reveal outlasts it. The
+                // target stays watched either way, so a later layout that moves the
+                // box reveals it again instead of leaving it half-hidden.
+                if (revealPasses > 0) {
+                    revealPasses--;
+                    scheduleScroll();
+                }
+            } else if (follow) {
                 toBottom();
             }
         });
     }
 
+    /** Restarts the reveal after the target's bounds settle. */
+    private void onRevealBoundsChanged() {
+        if (reveal.target() != null) {
+            revealPasses = REVEAL_ATTEMPTS;
+            scheduleScroll();
+        }
+    }
+
+    /** Moves the bar to the revealed component's position. Must run on the EDT. */
+    private void scrollToReveal() {
+        int next = reveal.position();
+        if (next >= 0) {
+            setValue(next);
+        }
+    }
+
     /** Scrolls to the bottom now. Must run on the EDT. */
     private void toBottom() {
         JScrollBar bar = scroll.getVerticalScrollBar();
-        if (isAtBottom()) {
-            lastValue = bar.getValue();
-            return;
-        }
         int bottom = bar.getMaximum() - bar.getVisibleAmount() + bar.getMinimum();
+        if (bar.getValue() != bottom) {
+            setValue(bottom);
+        } else {
+            lastValue = bar.getValue();
+        }
+    }
+
+    /** Moves the bar without letting the model listener read it as a user scroll. */
+    private void setValue(int value) {
+        JScrollBar bar = scroll.getVerticalScrollBar();
         scrolling = true;
         try {
-            bar.setValue(bottom);
+            bar.setValue(value);
             lastValue = bar.getValue();
         } finally {
             scrolling = false;
