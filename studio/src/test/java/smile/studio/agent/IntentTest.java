@@ -679,6 +679,113 @@ class IntentTest {
         assertSame(llm2, rawComps[3]);
     }
 
+    /**
+     * Models do not have to end a sentence with a newline. When the model stops
+     * mid-line and a tool status update arrives in the next chunk, the status must
+     * not be appended to the model's line: that renders as
+     * "Reverting the change. ✅ Read foo", which is what made the transcripts hard
+     * to read.
+     */
+    @Test
+    void toolStatus_afterUnterminatedLlmText_getsItsOwnWidgetInsteadOfRunningOn() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.setProgress(true);
+
+        intent.appendRun(null, "Reverting the partial stash application.");
+        intent.appendRun(null, "  ✅ Snapshot state before revert\n");
+        intent.appendRun(null, "Stash is intact.");
+        intent.appendRun(null, "  ✅ Unstage base\n");
+        intent.setProgress(false);
+
+        var comps = intent.outputPane().getComponents();
+        assertEquals(4, comps.length, "LLM -> TOOL -> LLM -> TOOL");
+
+        var llm1 = assertInstanceOf(AgentOutputArea.class, comps[0]);
+        var tool1 = assertInstanceOf(AgentOutputArea.class, comps[1]);
+        var llm2 = assertInstanceOf(AgentOutputArea.class, comps[2]);
+        var tool2 = assertInstanceOf(AgentOutputArea.class, comps[3]);
+
+        assertEquals(AgentOutputArea.Kind.LLM, llm1.kind());
+        assertEquals(AgentOutputArea.Kind.TOOL, tool1.kind());
+        assertEquals(AgentOutputArea.Kind.LLM, llm2.kind());
+        assertEquals(AgentOutputArea.Kind.TOOL, tool2.kind());
+
+        assertEquals("Reverting the partial stash application.", llm1.getText(),
+                "the model's unterminated line must not absorb the tool status");
+        assertEquals("  ✅ Snapshot state before revert", tool1.getText());
+        assertEquals("Stash is intact.", llm2.getText());
+        assertEquals("  ✅ Unstage base", tool2.getText());
+    }
+
+    /**
+     * The counterpart: an unterminated model line followed by more model text is
+     * one line, so it must stay joined rather than being split apart.
+     */
+    @Test
+    void llmText_continuingAfterUnterminatedChunk_staysOneLine() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.setProgress(true);
+
+        intent.appendRun(null, "Based on my find");
+        intent.appendRun(null, "ings, here it is.\n");
+        intent.setProgress(false);
+
+        var comps = intent.outputPane().getComponents();
+        assertEquals(1, comps.length);
+        var area = assertInstanceOf(AgentOutputArea.class, comps[0]);
+        assertEquals("Based on my findings, here it is.\n", area.getText());
+    }
+
+    /**
+     * Back-to-back tool calls must not pick up a blank line between them. The fix
+     * for the run-on line closes the model's line only when one is actually open,
+     * so a second status line lands directly under the first.
+     */
+    @Test
+    void consecutiveToolStatuses_doNotGainBlankLinesBetweenThem() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.setProgress(true);
+
+        intent.appendRun(null, "Running two reads.");
+        intent.appendRun(null, "  ✅ Read a\n");
+        intent.appendRun(null, "  ✅ Read b\n");
+        intent.appendRun(null, "  ✅ Read c\n");
+        intent.setProgress(false);
+
+        var comps = intent.outputPane().getComponents();
+        assertEquals(2, comps.length, "LLM -> TOOL");
+        var tool = assertInstanceOf(AgentOutputArea.class, comps[1]);
+        assertEquals("  ✅ Read a\n  ✅ Read b\n  ✅ Read c", tool.getText(),
+                "consecutive tool lines must be adjacent, with no blank gaps");
+    }
+
+    /**
+     * A tool-like line inside a fenced code block is code, not a tool call, so it
+     * must stay in the model's text even when it follows an unterminated line.
+     */
+    @Test
+    void unterminatedLlmText_thenFencedToolLikeLine_staysInLlmWidget() {
+        Intent intent = new Intent(null);
+        intent.setEditable(false);
+        intent.setProgress(true);
+
+        intent.appendRun(null, "Example:\n```text\n");
+        intent.appendRun(null, "Some text.");
+        intent.appendRun(null, "  ✅ Read foo.txt\n");
+        intent.appendRun(null, "```\n");
+        intent.setProgress(false);
+
+        var comps = intent.outputPane().getComponents();
+        assertEquals(1, comps.length, "everything here is fenced code");
+        var area = assertInstanceOf(AgentOutputArea.class, comps[0]);
+        assertEquals(AgentOutputArea.Kind.LLM, area.kind());
+        assertTrue(area.getText().contains("  ✅ Read foo.txt"),
+                "a tool-like line inside a fence belongs to the model text");
+    }
+
     @Test
     void fencedCodeBlock_containingToolLikeLines_staysInLlmSegment() {
         String raw = """
@@ -764,6 +871,60 @@ class IntentTest {
                 "the output must have grown well past the visible rows");
         assertEquals(empty, scrollPane.getPreferredSize().height,
                 "the pane's preferred height must not grow with the streamed output");
+    }
+
+    /**
+     * The tab must not grow while a subagent streams. That is only observable once
+     * the intent is laid out in a real frame: an unlaid-out intent never asks its
+     * parents to grow, so the pane's preferred height alone does not show the bug.
+     */
+    @Test
+    void subagentTab_doesNotGrowWhileLaidOutInAFrameAsOutputStreams() throws Exception {
+        var heights = new java.util.ArrayList<int[]>();
+        javax.swing.SwingUtilities.invokeAndWait(() -> {
+            Intent intent = new Intent(null);
+            intent.setEditable(false);
+            var frame = new javax.swing.JFrame("subagent tab growth");
+            try {
+                frame.setContentPane(intent);
+                frame.setSize(900, 700);
+                frame.setVisible(true);
+                intent.beginRun("run-1", "Explore", "James");
+                intent.revalidate();
+                frame.validate();
+
+                var scrollPane = intent.runScrollPane("run-1");
+                assertNotNull(scrollPane);
+                int reserved = scrollPane.getPreferredSize().height;
+
+                for (int i = 0; i < 60; i++) {
+                    intent.appendRun("run-1", "subagent output line " + i + "\n");
+                }
+                intent.revalidate();
+                frame.validate();
+                heights.add(new int[] {reserved, scrollPane.getPreferredSize().height});
+
+                for (int i = 0; i < 200; i++) {
+                    intent.appendRun("run-1", "subagent output line " + i + "\n");
+                }
+                intent.revalidate();
+                frame.validate();
+
+                var content = intent.runContentPane("run-1");
+                assertNotNull(content);
+                var area = (AgentOutputArea) content.getComponent(0);
+                assertTrue(area.getPreferredSize().height > reserved * 10,
+                        "the output must have grown well past the reserved rows");
+                heights.add(new int[] {reserved, scrollPane.getPreferredSize().height});
+            } finally {
+                frame.dispose();
+            }
+        });
+
+        for (int[] pair : heights) {
+            assertEquals(pair[0], pair[1],
+                    "the subagent tab must keep its reserved height instead of growing with the output");
+        }
     }
 
     @Test

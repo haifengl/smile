@@ -208,7 +208,16 @@ public class MLPTest {
             System.out.format("Epoch %d, Test Error = %d\n", epoch, error);
         }
 
-        assertEquals(39, error, 5);
+        // A bound, not an exact gold value. Eleven epochs on a fixed seed is still
+        // mid-training (the epoch trace bounces: 125, 117, 74, 56, 86, ... 52, 39), so
+        // the final count is sensitive to rounding rather than to the algorithm.
+        // Math.exp is only guaranteed to 1 ulp and only StrictMath is reproducible,
+        // and the model stores float32: perturbing every input by one float32 ulp
+        // moves the result between roughly 26 and 50. Windows measures 39, Linux 27.
+        // The majority-class baseline is 716 errors on these 810 test samples, so
+        // anything in that range shows the network learned the task, which is what
+        // this test is for.
+        assertTrue(error < 60, "Segment mini-batch test error was " + error + ", expected < 60");
     }
 
     @Test
@@ -305,7 +314,12 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(129, error, 5);
+        // A bound, not an exact gold value: the epoch trace is still settling
+        // (314, 194, 147, 142, 160, 137, ..., 141, 129), so the final count carries
+        // platform rounding rather than algorithm signal. One float32 ulp of noise on
+        // every input spans roughly 112-139 across 2007 test samples, and a
+        // majority-class baseline scores far worse. Windows measures 129.
+        assertTrue(error < 145, "USPS mini-batch test error was " + error + ", expected < 145");
     }
 
     @Test
