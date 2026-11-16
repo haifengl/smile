@@ -1,4 +1,4 @@
-(defproject org.clojars.haifengl/smile "7.2.0"
+(defproject org.clojars.haifengl/smile "7.3.0"
   :description "SMILE - Statistical Machine Intelligence and Learning Engine"
   :url "https://www.aihalo.dev/"
   :scm {:name "git"
@@ -6,7 +6,7 @@
   :license {:name "GNU General Public License, Version 3"
             :url "https://opensource.org/licenses/GPL-3.0"}
   :dependencies [[org.clojure/clojure "1.12.5"]
-                 [com.github.haifengl/smile-core "7.2.0"]]
+                 [com.github.haifengl/smile-core "7.3.0"]]
   :deploy-repositories [["clojars" {:url "https://repo.clojars.org/"
                                     :username :env/CLOJARS_USERNAME
                                     :password :env/CLOJARS_PASSWORD
