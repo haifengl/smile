@@ -169,11 +169,11 @@ elseif(SMILE_TORCH_USE_CUDA AND SMILE_C10_CUDA_LIBRARY AND NOT CUDAToolkit_FOUND
     message(WARNING
         "LibTorch has c10_cuda but CUDAToolkit was not found — "
         "building CPU-only smile_torch. Install the CUDA Toolkit matching "
-        "this LibTorch (e.g. CUDA 13.2 for cu132) and reconfigure.")
+        "this LibTorch (e.g. CUDA 13.4 for cu134) and reconfigure.")
 elseif(SMILE_TORCH_USE_CUDA AND CUDAToolkit_FOUND AND NOT SMILE_C10_CUDA_LIBRARY)
     message(WARNING
         "CUDAToolkit ${CUDAToolkit_VERSION} found but LibTorch has no c10_cuda — "
-        "building CPU-only smile_torch. Use a CUDA LibTorch build (e.g. cu132).")
+        "building CPU-only smile_torch. Use a CUDA LibTorch build (e.g. cu134).")
 else()
     message(STATUS "CUDA not enabled — building CPU-only smile_torch")
 endif()

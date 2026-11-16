@@ -63,15 +63,17 @@ smile.llm
 ├── model/llama/   LLaMA-3: Llama, LlamaModel, LlamaBlock,
 │                  GroupedQueryAttention, LlamaModelArgs, Tokenizer
 ├── model/qwen/    Qwen3.5 hybrid text stack + vision tower
+├── model/minimax/ MiniMax-M3 / M3.1-Flash: MoE, MSA, DSpark, vision tower
+├── model/deepseek/ DeepSeek-V4.1: MoE, Engram memory, Marlin FP8 experts
 ├── engine/        Continuous-batching runtime: InferenceEngine, ModelExecutor,
 │                  GenerationRequest, GenerationHandle, speculative decoding
 ├── cache/         KvCachePool, RadixCache, KV layout / metadata
 ├── attention/     Attention backend selection (torch-native / FlashInfer)
-├── quant/         FP8 / NVFP4 / Marlin weight quantization
+├── quant/         FP8 / NVFP4 / MXFP4 / Marlin weight quantization
 ├── parallel/      Tensor-parallel primitives
 ├── checkpoint/    SafeTensors loader tuning
-├── template/      ChatTemplate interface + Qwen3 template
-└── tool/          Tool-call parsers (JSON, Qwen3 XML)
+├── template/      ChatTemplate interface + Qwen3 / MiniMax / DeepSeek templates
+└── tool/          Tool-call parsers (JSON, Qwen3 XML, MiniMax)
 ```
 
 ---
