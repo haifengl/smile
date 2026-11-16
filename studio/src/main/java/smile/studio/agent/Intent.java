@@ -283,12 +283,40 @@ public class Intent extends JPanel {
                         appendLineToKind(runId, kind, content);
                     }
                 } else {
-                    // Prefix of this line was already streamed to LLM; append the remainder
-                    appendToKind(runId, AgentOutputArea.Kind.LLM, restOfLine);
+                    // The prefix of this line was already streamed to the LLM widget, so
+                    // the model stopped mid-line. Models are free to end a sentence
+                    // without a newline, and a tool or status update can then follow in
+                    // the next chunk; appending that remainder to the LLM widget would
+                    // render the two as one run-on line. Route the remainder by its own
+                    // kind instead, closing the model's line first only if it is still
+                    // open -- so back-to-back tool calls do not pick up blank lines.
+                    // A fenced code block is the exception: a line that merely looks like
+                    // a tool call inside a fence is code, so it stays with the model text.
+                    String tail = stripLineEnding(restOfLine);
+                    AgentOutputArea.Kind tailKind = inFence || tail.isBlank()
+                            ? AgentOutputArea.Kind.LLM
+                            : AgentOutputArea.classifyLine(tail, inTodoBlock);
+                    if (tailKind == AgentOutputArea.Kind.LLM) {
+                        appendToKind(runId, AgentOutputArea.Kind.LLM, restOfLine);
+                    } else {
+                        appendLineToKind(runId, tailKind, tail);
+                    }
                 }
 
                 i = nl + 1;
             }
+        }
+
+        /** Removes a trailing {@code \n} or {@code \r\n} from a complete line. */
+        private static String stripLineEnding(String line) {
+            String s = line;
+            if (s.endsWith("\n")) {
+                s = s.substring(0, s.length() - 1);
+            }
+            if (s.endsWith("\r")) {
+                s = s.substring(0, s.length() - 1);
+            }
+            return s;
         }
 
         private boolean mayBeNonLlmLine(String prefix) {
@@ -1502,9 +1530,8 @@ public class Intent extends JPanel {
         }
 
         AgentOutputArea area = createOutputArea(AgentOutputArea.Kind.LLM);
-        // The output's row count is the scroll pane's preferred height: the tab opens
-        // tall enough for this many lines and scrolls beyond that. The GridBag wrapper
-        // below still lets it grow when the parent has room to spare.
+        // An empty view reserves this many rows; the scroll pane below caps the
+        // preferred height at the same count once the output exceeds it.
         area.setRows(RUN_VIEW_ROWS);
 
         // The content tracks the viewport width, so the output wraps at the visible
@@ -1515,11 +1542,14 @@ public class Intent extends JPanel {
         content.setOpaque(false);
         content.add(area);
 
-        // Wraps a subagent output pane in a scroll pane.
-        // To prevent the scroll pane from growing past a certain point
-        // unless the parent container itself expands to give it more space,
-        // wrap the JScrollPane in a panel utilizing GridBagLayout.
-        JScrollPane scrollPane = new JScrollPane(content);
+        // Wraps a subagent output pane in a scroll pane. The pane's preferred height
+        // is capped at RUN_VIEW_ROWS instead of following the output: a text area's
+        // preferred height grows with its text, so an uncapped pane would ask its tab
+        // to grow with every streamed line (see RowLimitedScrollPane).
+        // To prevent the scroll pane from growing past that cap unless the parent
+        // container itself expands to give it more space, wrap the JScrollPane in a
+        // panel utilizing GridBagLayout.
+        RowLimitedScrollPane scrollPane = new RowLimitedScrollPane(area, content, RUN_VIEW_ROWS);
         // The output wraps to the tab's width, so a horizontal scrollbar could only
         // ever show a clipped sliver of an over-long line; never show one.
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
