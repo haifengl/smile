@@ -53,8 +53,8 @@ SMILE Studio uses a three-column horizontal split layout (resizable and persiste
   - **Kernel Explorer**: Inspect live in-memory variables from your active notebook and manage persisted `.sml` and `.onnx` models.
   - **Bots Explorer**: Browse autonomous Bot routines grouped by agent persona, create or delete routines, and open generated **Bot Pages** (`bot-activity.html`, `executive-brief.html`, `sales-pipeline.html`, `community-pulse.html`).
 - **Center Pane — Workspace Tabs**: Houses **Bot Activities** and **Bot Routines**, interactive polyglot notebooks, interactive `DataFrame` table viewers, and syntax-highlighted Notepad editors (with an inline **Edit / Preview** toggle for GitHub-Flavored Markdown). Opens `Welcome`, `Release Notes`, and `Bot Activities` by default.
-- **Right Pane — AI Agent Team**: Dedicated tabs for each domain specialist agent, ordered along your end-to-end product and engineering workflow. Agents can collaborate and delegate tasks to one another (`@frank`, `@steve`, `@julien`, `@mike`, `@clair`, `@ada`, `@james`, `@guido`, `@chuck`), and tabs automatically badge or come to the front when an agent needs your input.
-- **Menu Bar**: Quick access to **File** (including **Dark Theme**, **Settings…** for AI services, Agent Hub, Inference Server, Email, and Calendar accounts, and **Plugins…** for the plugin marketplace), **Cell**, **Find**, **Inference** (start/stop/restart Serve Engine, load models, check health & metrics, open the Web UI), **Agent Hub** (start/attach/stop Hub, open **Bot Routines**, **Bot Activities**, and **Bot Pages**), and **Help** (including **License…**).
+- **Right Pane — AI Agent Team**: Dedicated tabs for each domain specialist agent, ordered along your end-to-end product and engineering workflow. Agents can collaborate and delegate tasks to one another (`@frank`, `@steve`, `@julien`, `@mike`, `@clair`, `@ada`, `@james`, `@guido`, `@chuck`), and tabs automatically badge or come to the front when an agent needs your input. Each turn's output is split into separate **LLM**, **tool**, and **status** blocks, with a per-block **Raw / Preview** Markdown toggle.
+- **Menu Bar**: Quick access to **File** (including **Auto Save**, **Dark Theme**, **Settings…** for AI services, Agent Hub, Inference Server, Email, and Calendar accounts, and **Plugins…** for the plugin marketplace), **Cell**, **Find**, **Inference** (start/stop/restart Serve Engine, load models, check health & metrics, open the Web UI), **Agent Hub** (start/attach/stop Hub, open **Bot Routines**, **Bot Activities**, and **Bot Pages**), and **Help** (including **License…**).
 - **Status Bar**: Displays background language server (JDT LS, Ty), MCP server, Inference Server, and Agent Hub status, active kernel activity, and real-time JVM heap and CPU utilization.
 
 ---
@@ -157,7 +157,7 @@ SMILE Studio embeds a team of nine specialized AI agents in the right panel, ord
 
 ### Working with Agents
 - **Prompt Execution**: Press `Ctrl + Enter` (or `Cmd + Enter`) in the composer to send your prompt, or `Shift + Enter` to insert a line break.
-- **Peer-to-Peer Delegation**: Mention any teammate by handle (e.g., `@ada`, `@clair`, `@james`, `@julien`, `@mike`) or let `@frank` coordinate multi-agent workflows automatically.
+- **Peer-to-Peer Delegation**: Mention any teammate by handle (e.g., `@ada`, `@clair`, `@james`, `@julien`, `@mike`) or let `@frank` coordinate multi-agent workflows automatically. Unattended work can be handed to the Agent Hub with `@<name>#hub` (or a named instance, `@<name>#<instance>`); Studio posts a completion notice when that Hub run finishes.
 - **Slash Commands**: Type `/` (or press `Ctrl + Space` / `Cmd + Space` for hints) to invoke built-in and plugin skills:
   - `/help`: List all available slash commands and agent skills.
   - `/init`: Analyze the current workspace and initialize project context (`SMILE.md`).
@@ -165,7 +165,7 @@ SMILE Studio embeds a team of nine specialized AI agents in the right panel, ord
   - `/resume`: Open the session picker to restore and continue a previous conversation.
   - `/compact`: Summarize and compact conversation history to free up context window space.
 - **Shell Commands**: Prefix any prompt with `!` (e.g., `!git status` or `!ls -la`) to run shell commands directly in your workspace.
-- **Model Selection & Reasoning Effort**: Choose your preferred LLM provider/model and reasoning effort level (`Default`, `Low`, `Medium`, `High`) from the dropdown controls at the bottom of each agent tab. Configure multiple AI service connections, Email accounts, and Calendar accounts (including one-click Google and Microsoft OAuth login) via **File > Settings…**.
+- **Model Selection & Reasoning Effort**: Choose your preferred LLM provider/model and reasoning effort level (`Default`, `Low`, `Medium`, `High`) from the dropdown controls at the bottom of each agent tab. Configure multiple AI service connections, Email accounts, and Calendar accounts (including one-click Google and Microsoft OAuth login) via **File > Settings…**. The **AI Services** tab auto-detects running local endpoints (SMILE Serve, Ollama, LM Studio), and the **Inference Server** tab offers a runtime filter and hardware-aware model picker.
 - **24/7 Autonomous Bots & Agent Hub**: Studio automatically starts or attaches to the **Agent Hub** (`smile hub`) on launch. Use **Agent Hub > Bot Routines** (or the **Bots** explorer tab) to configure scheduled (`cron` / interval) and event-driven (`email`, `calendar`, `webhook`) routines, and use **Bot Activities** to inspect live session transcripts and approve or reject staged emails and calendar actions in the **Batch Draft Queue**.
 
 ---
