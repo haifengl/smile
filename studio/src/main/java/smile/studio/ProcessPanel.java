@@ -40,6 +40,9 @@ public class ProcessPanel extends JPanel {
     private static final int TRUNCATE_BATCH = 100;
     private final JTextArea output = new JTextArea();
     private final int scrollback;
+    /** Guards one-time registration of the {@code process-panel-shutdown} hook. */
+    private final java.util.concurrent.atomic.AtomicBoolean shutdownHookRegistered =
+            new java.util.concurrent.atomic.AtomicBoolean(false);
     private Process process;
 
     /**
@@ -74,8 +77,12 @@ public class ProcessPanel extends JPanel {
         try {
             process = OS.exec(Arrays.asList(command), this::appendLine);
 
-            // Gracefully shutdown
-            Runtime.getRuntime().addShutdownHook(new Thread(this::stop));
+            // Register the hook once per panel, not once per start: a restart-heavy
+            // service would otherwise accumulate a hook (and the panel it pins) on
+            // every cycle.
+            if (shutdownHookRegistered.compareAndSet(false, true)) {
+                Runtime.getRuntime().addShutdownHook(new Thread(this::stop, "process-panel-shutdown"));
+            }
         } catch (IOException ex) {
             output.append("Failed to start process: " + ex.getMessage() + "\n");
         }

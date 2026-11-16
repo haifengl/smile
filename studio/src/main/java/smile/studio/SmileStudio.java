@@ -230,7 +230,10 @@ public class SmileStudio extends JFrame implements SearchListener {
                         logger.error("Failed to auto-start the inference service");
                         return;
                     }
-                    if (hasModelPath) {
+                    // Never load into an engine Studio merely attached to: it belongs
+                    // to another session or user, and the drift dialog explains the
+                    // mismatch rather than mutating someone else's catalog.
+                    if (hasModelPath && !manager.isAttached()) {
                         try {
                             manager.loadModel(inference.modelPath());
                         } catch (Exception ex) {
@@ -255,6 +258,22 @@ public class SmileStudio extends JFrame implements SearchListener {
                 });
             });
         }
+
+        // Periodically reconcile the inference service with reality: attach to an
+        // engine started elsewhere (another Studio, `smile serve`, a container) and
+        // detach when it goes away. Attachment never steals focus.
+        var serveProbeTimer = new javax.swing.Timer(10000, e ->
+                Thread.ofPlatform().name("serve-probe").daemon(true).start(() -> {
+                    var manager = ServeManager.getInstance();
+                    boolean before = manager.isRunning();
+                    manager.probe();
+                    if (!before && manager.isRunning()) {
+                        workspace.explorer().refreshLoadedModelIdsAsync();
+                        warnOnDrift();
+                    }
+                }));
+        serveProbeTimer.setInitialDelay(3000);
+        serveProbeTimer.start();
 
         // Periodically poll Agent Hub status & pending approvals for the status bar badge,
         // and also update immediately on Agent Hub Server-Sent Events.
@@ -301,6 +320,9 @@ public class SmileStudio extends JFrame implements SearchListener {
                 workspace.autoSaver().stop();
                 workspace.shutdown();
                 hubBadgeTimer.stop();
+                serveProbeTimer.stop();
+                // Detaches from an engine Studio did not start; only a child this
+                // session spawned is terminated.
                 ServeManager.getInstance().stop();
                 if (!StudioConfig.agentHub().keepAliveOnExit()) {
                     HubManager.getInstance().stop();
@@ -886,11 +908,17 @@ public class SmileStudio extends JFrame implements SearchListener {
         public void actionPerformed(ActionEvent e) {
             var config = StudioConfig.inferenceServer();
             Thread.ofPlatform().name("serve-start").daemon(true).start(() -> {
-                boolean ok = ServeManager.getInstance().start(config.host(), config.port(), config.llm());
+                var manager = ServeManager.getInstance();
+                boolean ok = manager.start(config.host(), config.port(), config.llm());
+                boolean attached = ok && manager.isAttached();
                 workspace.explorer().refreshLoadedModelIdsAsync();
+                if (attached) {
+                    warnOnDrift();
+                }
                 SwingUtilities.invokeLater(() -> statusBar.setStatus(ok
-                        ? java.text.MessageFormat.format(bundle.getString("InferenceStarted"),
-                                ServeManager.getInstance().baseUrl())
+                        ? MessageFormat.format(bundle.getString(
+                                attached ? "InferenceAttached" : "InferenceStarted"),
+                                manager.baseUrl())
                         : bundle.getString("InferenceStartFailed")));
             });
         }
@@ -998,6 +1026,33 @@ public class SmileStudio extends JFrame implements SearchListener {
         public void actionPerformed(ActionEvent e) {
             openInferencePage("");
         }
+    }
+
+    /**
+     * Warns when Studio attached to an engine that is not serving the configured
+     * model. Users rarely read the process panel, so a mismatch is surfaced as a
+     * dialog. Studio never loads or replaces models in an engine it did not start.
+     */
+    private void warnOnDrift() {
+        var manager = ServeManager.getInstance();
+        if (!manager.isAttached()) {
+            return;
+        }
+        String configured = StudioConfig.inferenceServer().llm();
+        var loadedModels = manager.client().fetchModels();
+        var warning = ServeSupport.driftWarningForCatalog(loadedModels, configured);
+        if (warning.isEmpty()) {
+            return;
+        }
+        String loaded = String.join(", ", loadedModels.orElse(List.of()));
+        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(
+                this,
+                MessageFormat.format(bundle.getString("InferenceDriftMessage"),
+                        manager.baseUrl(),
+                        warning.get(),
+                        loaded.isEmpty() ? bundle.getString("InferenceNoModels") : loaded),
+                bundle.getString("InferenceDriftTitle"),
+                JOptionPane.WARNING_MESSAGE));
     }
 
     /**

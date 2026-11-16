@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import com.sun.net.httpserver.HttpServer;
 import org.junit.jupiter.api.AfterEach;
@@ -141,5 +142,129 @@ public class ServeClientTest {
 
         // When / Then
         assertFalse(dead.isReady());
+    }
+
+    @Test
+    public void testIsAliveWhenHealthy() {
+        // Given
+        respond("/q/health/live", 200, "{\"status\":\"UP\",\"checks\":[]}");
+
+        // When / Then
+        assertTrue(client.isAlive());
+    }
+
+    @Test
+    public void testIsAliveWhenDown() {
+        // Given: a liveness probe that reports DOWN.
+        respond("/q/health/live", 503, "{\"status\":\"DOWN\"}");
+
+        // When / Then
+        assertFalse(client.isAlive());
+    }
+
+    @Test
+    public void testIsAliveWhenPathIsNotServe() {
+        // Given: an unrelated HTTP server that serves a JSON 200 on /q/health/live.
+        respond("/q/health/live", 200, "{\"status\":\"ok\"}");
+
+        // When / Then: attaching requires the serve-shaped UP payload.
+        assertFalse(client.isAlive());
+    }
+
+    @Test
+    public void testIsAliveWhenUnreachable() {
+        // Given
+        var dead = new ServeClient(1);
+
+        // When / Then
+        assertFalse(dead.isAlive());
+    }
+
+    @Test
+    public void testBaseUrlUsesConfiguredHost() {
+        // Given / When
+        var remote = new ServeClient("192.0.2.10", 8888);
+
+        // Then
+        assertEquals("http://192.0.2.10:8888", remote.baseUrl());
+    }
+
+    @Test
+    public void testBaseUrlDefaultsToLoopback() {
+        // Given / When
+        var local = new ServeClient("  ", 8888);
+
+        // Then
+        assertEquals("http://127.0.0.1:8888", local.baseUrl());
+    }
+
+    @Test
+    public void testBaseUrlBracketsIpv6Host() {
+        // Given / When
+        var v6 = new ServeClient("::1", 8888);
+
+        // Then
+        assertEquals("http://[::1]:8888", v6.baseUrl());
+    }
+
+    @Test
+    public void testListModelsParsesCatalog() {
+        // Given
+        respond("/api/v1/models", 200,
+                "{\"object\":\"list\",\"data\":[{\"id\":\"iris-1\"},{\"id\":\"squeezenet-1\"}]}");
+
+        // When
+        var ids = client.listModels();
+
+        // Then
+        assertEquals(List.of("iris-1", "squeezenet-1"), ids);
+    }
+
+    @Test
+    public void testListModelsEmptyWhenNotOk() {
+        // Given
+        respond("/api/v1/models", 500, "{\"error\":\"boom\"}");
+
+        // When / Then
+        assertTrue(client.listModels().isEmpty());
+    }
+
+    @Test
+    public void testParseModelIdsToleratesMalformedBody() {
+        // Given / When / Then
+        assertTrue(ServeClient.parseModelIds("not json").isEmpty());
+        assertTrue(ServeClient.parseModelIds("{\"data\":{}}").isEmpty());
+        assertTrue(ServeClient.parseModelIds("").isEmpty());
+        assertTrue(ServeClient.parseModelIds(null).isEmpty());
+    }
+
+    @Test
+    public void testLoadModelForbiddenIsDistinguishable() {
+        // Given: the server refuses a non-loopback caller.
+        respond("/api/v1/models/load", 403, "{\"error\":\"localhost only\"}");
+
+        // When / Then
+        assertThrows(ServeManagementForbiddenException.class,
+                () -> client.loadModel("/models/iris.sml"));
+    }
+
+    @Test
+    public void testUnloadForbiddenIsDistinguishable() {
+        // Given
+        respond("/api/v1/smile/iris-1/unload", 403, "{\"error\":\"localhost only\"}");
+
+        // When / Then
+        assertThrows(ServeManagementForbiddenException.class,
+                () -> client.unloadModel("iris-1"));
+    }
+
+    @Test
+    public void testReloadForbiddenIsDistinguishable() {
+        // Given
+        respond("/api/v1/smile/iris-1/reload", 403, "{\"error\":\"localhost only\"}");
+
+        // When / Then
+        assertThrows(ServeManagementForbiddenException.class,
+                () -> client.reloadModel("iris-1"));
     }
 }

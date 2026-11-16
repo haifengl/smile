@@ -35,6 +35,7 @@ import java.util.List;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import jdk.jshell.VarSnippet;
 import smile.io.Paths;
+import smile.studio.ServeManagementForbiddenException;
 import smile.studio.ServeManager;
 import smile.studio.SmileStudio;
 import smile.studio.StudioConfig;
@@ -260,6 +261,9 @@ public class KernelExplorer extends JPanel {
 
         if (userObj instanceof ModelFileItem modelFile) {
             Optional<String> loadedId = findLoadedId(modelFile);
+            // A remote engine can be inspected but not managed: serve restricts the
+            // load/reload/unload endpoints to localhost.
+            boolean manageable = ServeManager.getInstance().isManageable();
 
             JMenuItem openUiItem = new JMenuItem("▶ Open in Web UI");
             openUiItem.addActionListener(ev -> openModelInWebUi(modelFile.path()));
@@ -267,16 +271,17 @@ public class KernelExplorer extends JPanel {
             popup.addSeparator();
 
             JMenuItem loadItem = new JMenuItem("Load into Inference Service");
+            loadItem.setEnabled(manageable);
             loadItem.addActionListener(ev -> loadModelAsync(modelFile.path(), false));
             popup.add(loadItem);
 
             JMenuItem reloadItem = new JMenuItem("Reload Model");
-            reloadItem.setEnabled(loadedId.isPresent());
+            reloadItem.setEnabled(loadedId.isPresent() && manageable);
             reloadItem.addActionListener(ev -> loadedId.ifPresent(this::reloadModelAsync));
             popup.add(reloadItem);
 
             JMenuItem unloadItem = new JMenuItem("Unload Model");
-            unloadItem.setEnabled(loadedId.isPresent());
+            unloadItem.setEnabled(loadedId.isPresent() && manageable);
             unloadItem.addActionListener(ev -> loadedId.ifPresent(this::unloadModelAsync));
             popup.add(unloadItem);
             popup.addSeparator();
@@ -357,6 +362,8 @@ public class KernelExplorer extends JPanel {
                         Desktop.getDesktop().browse(URI.create(base + "/?model=" + encoded));
                     }
                 }
+            } catch (ServeManagementForbiddenException ex) {
+                showError(localhostOnlyMessage());
             } catch (Exception ex) {
                 logger.error("Failed to load model '{}': {}", modelPath, ex.getMessage());
                 showError(ex.getMessage());
@@ -372,6 +379,8 @@ public class KernelExplorer extends JPanel {
                 SmileStudio.setStatus(this, ok
                         ? "Reloaded model '" + modelId + "'."
                         : "Failed to reload model '" + modelId + "'.");
+            } catch (ServeManagementForbiddenException ex) {
+                showError(localhostOnlyMessage());
             } catch (Exception ex) {
                 showError(ex.getMessage());
             }
@@ -386,10 +395,23 @@ public class KernelExplorer extends JPanel {
                 SmileStudio.setStatus(this, ok
                         ? "Unloaded model '" + modelId + "'."
                         : "Failed to unload model '" + modelId + "'.");
+            } catch (ServeManagementForbiddenException ex) {
+                showError(localhostOnlyMessage());
             } catch (Exception ex) {
                 showError(ex.getMessage());
             }
         });
+    }
+
+    /**
+     * Explains why a model-management action failed on a remote engine.
+     *
+     * @return the localized message.
+     */
+    private String localhostOnlyMessage() {
+        return java.text.MessageFormat.format(
+                bundle.getString("InferenceRemoteManagement"),
+                ServeManager.getInstance().baseUrl());
     }
 
     /**
