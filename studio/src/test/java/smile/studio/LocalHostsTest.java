@@ -19,6 +19,7 @@ package smile.studio;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -59,5 +60,33 @@ public class LocalHostsTest {
         assertFalse(LocalHosts.isLocalHost("192.0.2.10"));
         assertFalse(LocalHosts.isLocalHost("serve.internal.example.com"));
         assertFalse(LocalHosts.isLocalHost("10.0.0.5"));
+    }
+
+    @Test
+    public void testConnectHostRedirectsWildcardToLoopback() {
+        // Given: 0.0.0.0 is a listen-everywhere instruction, not a destination.
+        // When / Then
+        assertEquals("127.0.0.1", LocalHosts.connectHost("0.0.0.0"));
+        assertEquals("127.0.0.1", LocalHosts.connectHost("  0.0.0.0 "));
+        assertEquals("127.0.0.1", LocalHosts.connectHost("::"));
+        assertEquals("127.0.0.1", LocalHosts.connectHost("[::]"));
+    }
+
+    @Test
+    public void testConnectHostDefaultsToLoopback() {
+        // Given / When / Then
+        assertEquals("127.0.0.1", LocalHosts.connectHost(null));
+        assertEquals("127.0.0.1", LocalHosts.connectHost(""));
+        assertEquals("127.0.0.1", LocalHosts.connectHost("   "));
+    }
+
+    @Test
+    public void testConnectHostKeepsExplicitAddresses() {
+        // Given / When / Then: a configured host is always honoured.
+        assertEquals("localhost", LocalHosts.connectHost("localhost"));
+        assertEquals("127.0.0.1", LocalHosts.connectHost("127.0.0.1"));
+        assertEquals("::1", LocalHosts.connectHost("::1"));
+        assertEquals("192.0.2.10", LocalHosts.connectHost(" 192.0.2.10 "));
+        assertEquals("serve.internal", LocalHosts.connectHost("serve.internal"));
     }
 }

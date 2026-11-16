@@ -465,8 +465,14 @@ answers does it launch a local engine. This means two Studio windows share one
 inference service rather than the second one failing to bind the port.
 
 Attachment is deliberately unverified: serve is shared infrastructure, so Studio
-does not require the engine to belong to this `smile.home`. Two consequences:
+does not require the engine to belong to this `smile.home`. Consequences:
 
+- **Load, reload, and unload are allowed on a local engine — including one you
+  attached to.** If project A started the engine and project B attaches to it, B
+  can load its own newly trained model into it. This is the common case: one local
+  engine shared by several Studio windows. Unloading a model from an engine another
+  session started asks for confirmation first, because that session may be serving
+  requests from it.
 - **Stop only stops what Studio started.** If Studio attached to an engine it did
   not launch, **Stop** (and closing Studio) *detaches* and leaves the engine
   running; stop it where you started it. A child launched by this Studio session
@@ -474,6 +480,10 @@ does not require the engine to belong to this `smile.home`. Two consequences:
 - **Remote engines are read-only.** Model load, reload, and unload are restricted
   to localhost by the server, so a remote engine can be inspected but not
   managed from Studio.
+
+A wildcard bind of `0.0.0.0` is a listen-everywhere instruction, not a
+destination, so the client connects to `127.0.0.1` instead. Any other configured
+`host` is used exactly as written.
 
 Studio also polls the configured target in the background, so an engine started
 later from a terminal is picked up automatically without stealing focus.

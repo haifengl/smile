@@ -282,7 +282,7 @@ public class KernelExplorer extends JPanel {
 
             JMenuItem unloadItem = new JMenuItem("Unload Model");
             unloadItem.setEnabled(loadedId.isPresent() && manageable);
-            unloadItem.addActionListener(ev -> loadedId.ifPresent(this::unloadModelAsync));
+            unloadItem.addActionListener(ev -> loadedId.ifPresent(this::confirmAndUnload));
             popup.add(unloadItem);
             popup.addSeparator();
 
@@ -385,6 +385,34 @@ public class KernelExplorer extends JPanel {
                 showError(ex.getMessage());
             }
         });
+    }
+
+    /**
+     * Asks for confirmation before unloading a model from an engine this Studio did
+     * not start, then unloads it.
+     *
+     * <p>Loading is additive and safe to do on a shared engine, but unloading is
+     * destructive: another Studio session or user may be serving requests from the
+     * very model being removed, and Studio has no way to know. The engine this
+     * session started is ours, so that case unloads without a prompt.
+     *
+     * @param modelId the model id to unload.
+     */
+    private void confirmAndUnload(String modelId) {
+        var manager = ServeManager.getInstance();
+        if (manager.isAttached()) {
+            int choice = JOptionPane.showConfirmDialog(
+                    SwingUtilities.getWindowAncestor(this),
+                    java.text.MessageFormat.format(
+                            bundle.getString("UnloadAttachedMessage"), modelId, manager.baseUrl()),
+                    bundle.getString("UnloadAttachedTitle"),
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.WARNING_MESSAGE);
+            if (choice != JOptionPane.OK_OPTION) {
+                return;
+            }
+        }
+        unloadModelAsync(modelId);
     }
 
     private void unloadModelAsync(String modelId) {

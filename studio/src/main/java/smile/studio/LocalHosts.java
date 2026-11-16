@@ -50,4 +50,36 @@ public final class LocalHosts {
                 || "[::1]".equals(normalized)
                 || "0.0.0.0".equals(normalized);
     }
+
+    /**
+     * Returns the address a client should actually connect to for a configured host.
+     *
+     * <p>A wildcard bind address ({@code 0.0.0.0}) tells the server to listen on
+     * every interface; it is not a destination, and connecting to it is unreliable
+     * across platforms. Clients are therefore redirected to loopback, which also
+     * keeps the localhost-only management endpoints working. A blank host falls
+     * back to loopback for the same reason.
+     *
+     * <p>Any other host is returned unchanged, so an explicitly configured remote
+     * engine is still addressed as written.
+     *
+     * @param host the configured bind or target host.
+     * @return the host to connect to.
+     */
+    public static String connectHost(String host) {
+        if (host == null || host.isBlank()) {
+            return LOOPBACK;
+        }
+        String trimmed = host.trim();
+        return isWildcard(trimmed) ? LOOPBACK : trimmed;
+    }
+
+    /** Default loopback address used for local connections. */
+    static final String LOOPBACK = "127.0.0.1";
+
+    private static boolean isWildcard(String host) {
+        return "0.0.0.0".equals(host)
+                || "::".equals(host)
+                || "[::]".equals(host);
+    }
 }
