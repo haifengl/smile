@@ -27,6 +27,7 @@ import smile.studio.bot.BotActivity;
 import smile.studio.bot.BotManager;
 import smile.studio.kernel.ScalaKernel;
 import smile.studio.text.Notepad;
+import smile.studio.workspace.KernelExplorer;
 import smile.studio.workspace.OpenFile;
 import smile.studio.workspace.Workspace;
 
@@ -210,6 +211,36 @@ public class SearchResourceBundleTest {
         assertBundleKeysPresent(BotManager.class.getName(), BOT_MANAGER_KEYS);
         assertBundleKeysPresent(Notepad.class.getName(), NOTEPAD_KEYS);
     }
+
+    @Test
+    public void testKernelExplorerBundlesHaveUnloadConfirmation() {
+        System.out.println("KernelExplorer: every locale defines the shared-service unload confirmation");
+        assertBundleKeysPresent(KernelExplorer.class.getName(), KERNEL_EXPLORER_UNLOAD_KEYS);
+    }
+
+    @Test
+    public void testUnloadConfirmationRendersBothPlaceholders() {
+        System.out.println("KernelExplorer: unload confirmation substitutes the model id and base URL in every locale");
+        // Given: a model id and engine URL to substitute.
+        Object[] args = {"iris-1", "http://127.0.0.1:8888"};
+        // When / Then: a missing or unescaped placeholder shows up as a literal '{'
+        // or a swallowed argument, which this catches per locale.
+        for (Locale locale : LOCALES) {
+            ResourceBundle bundle = ResourceBundle.getBundle(KernelExplorer.class.getName(), locale);
+            String rendered = java.text.MessageFormat.format(
+                    bundle.getString("UnloadAttachedMessage"), args);
+            assertTrue(rendered.contains("iris-1"),
+                    locale + " unload message lost the model id: " + rendered);
+            assertTrue(rendered.contains("http://127.0.0.1:8888"),
+                    locale + " unload message lost the base URL: " + rendered);
+            assertFalse(rendered.contains("{0}") || rendered.contains("{1}"),
+                    locale + " unload message left an unsubstituted placeholder: " + rendered);
+        }
+    }
+
+    /** Keys the KernelExplorer reads when confirming a destructive action on a shared engine. */
+    private static final List<String> KERNEL_EXPLORER_UNLOAD_KEYS = List.of(
+            "UnloadAttachedTitle", "UnloadAttachedMessage");
 
     private static void assertBundleKeysPresent(String baseName, List<String> keys) {
         ResourceBundle baseBundle = ResourceBundle.getBundle(baseName, Locale.ROOT);

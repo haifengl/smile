@@ -208,6 +208,16 @@ public class ServeClientTest {
     }
 
     @Test
+    public void testBaseUrlRedirectsWildcardToLoopback() {
+        // Given: a wildcard bind address is not a valid destination.
+        // When
+        var wildcard = new ServeClient("0.0.0.0", 8888);
+
+        // Then: the client connects to loopback instead of 0.0.0.0.
+        assertEquals("http://127.0.0.1:8888", wildcard.baseUrl());
+    }
+
+    @Test
     public void testListModelsParsesCatalog() {
         // Given
         respond("/api/v1/models", 200,

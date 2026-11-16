@@ -75,11 +75,15 @@ public final class ServeClient {
     /**
      * Constructor.
      *
+     * <p>A wildcard bind address is redirected to loopback: {@code 0.0.0.0} is a
+     * listen-everywhere instruction, not a destination. Any explicitly configured
+     * remote host is used as written.
+     *
      * @param host the serve host.
      * @param port the serve HTTP port.
      */
     public ServeClient(String host, int port) {
-        String h = (host == null || host.isBlank()) ? "127.0.0.1" : host.trim();
+        String h = LocalHosts.connectHost(host);
         // URL literals need brackets around IPv6 addresses.
         if (h.contains(":") && !h.startsWith("[")) {
             h = "[" + h + "]";
