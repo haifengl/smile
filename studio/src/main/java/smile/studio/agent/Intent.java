@@ -283,12 +283,40 @@ public class Intent extends JPanel {
                         appendLineToKind(runId, kind, content);
                     }
                 } else {
-                    // Prefix of this line was already streamed to LLM; append the remainder
-                    appendToKind(runId, AgentOutputArea.Kind.LLM, restOfLine);
+                    // The prefix of this line was already streamed to the LLM widget, so
+                    // the model stopped mid-line. Models are free to end a sentence
+                    // without a newline, and a tool or status update can then follow in
+                    // the next chunk; appending that remainder to the LLM widget would
+                    // render the two as one run-on line. Route the remainder by its own
+                    // kind instead, closing the model's line first only if it is still
+                    // open -- so back-to-back tool calls do not pick up blank lines.
+                    // A fenced code block is the exception: a line that merely looks like
+                    // a tool call inside a fence is code, so it stays with the model text.
+                    String tail = stripLineEnding(restOfLine);
+                    AgentOutputArea.Kind tailKind = inFence || tail.isBlank()
+                            ? AgentOutputArea.Kind.LLM
+                            : AgentOutputArea.classifyLine(tail, inTodoBlock);
+                    if (tailKind == AgentOutputArea.Kind.LLM) {
+                        appendToKind(runId, AgentOutputArea.Kind.LLM, restOfLine);
+                    } else {
+                        appendLineToKind(runId, tailKind, tail);
+                    }
                 }
 
                 i = nl + 1;
             }
+        }
+
+        /** Removes a trailing {@code \n} or {@code \r\n} from a complete line. */
+        private static String stripLineEnding(String line) {
+            String s = line;
+            if (s.endsWith("\n")) {
+                s = s.substring(0, s.length() - 1);
+            }
+            if (s.endsWith("\r")) {
+                s = s.substring(0, s.length() - 1);
+            }
+            return s;
         }
 
         private boolean mayBeNonLlmLine(String prefix) {
