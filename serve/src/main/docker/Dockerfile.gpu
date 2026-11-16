@@ -21,7 +21,7 @@
 # This Dockerfile builds a GPU-enabled container that runs the Quarkus
 # smile-serve application in JVM mode on NVIDIA CUDA.
 #
-# Base image: nvidia/cuda:13.4.0-*-ubuntu24.04 (Ubuntu 24.04 + CUDA 13.4)
+# Base image: nvidia/cuda:13.4.3-*-ubuntu24.04 (Ubuntu 24.04 + CUDA 13.4)
 #
 # IMPORTANT: build context must be the repository root (not serve/). The image is built entirely in Docker: one
 # stage compiles the Quarkus JVM app with Gradle, another compiles the CUDA libsmile_torch.so, and no host-side
@@ -58,7 +58,7 @@
 ###
 # Only used for its JDK 25 and package manager to build the Quarkus app; no GraalVM native build happens here.
 ARG MANDREL_BUILDER=quay.io/quarkus/ubi10-quarkus-mandrel-builder-image:jdk-25
-ARG CUDA_VERSION=13.4.0
+ARG CUDA_VERSION=13.4.3
 ARG TORCH_VERSION=2.15.0
 ARG CU_VERSION=134
 
