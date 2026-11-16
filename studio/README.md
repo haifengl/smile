@@ -531,12 +531,16 @@ which is also where the agents look for `input/` and `output/`. The service is
 started only when `autoStart` is `true` **and** `modelPath` exists on disk; a
 project with no `model/` directory is left alone, and you can start the service
 later from the **Inference** menu or by double-clicking a model in the Kernel tree.
+`modelPath` is loaded only into an engine this session started; Studio never loads
+it into an engine it merely attached to.
 
 If `llm` is configured but the engine Studio attached to is not serving that
 model, Studio attaches anyway and warns once, listing the models that *are*
-loaded. It never stops the engine or swaps its model behind your back. If the
-engine's catalog cannot be read at all, no warning is shown — a transient network
-failure is not reported as a model mismatch.
+loaded. It never stops the engine, never swaps its model behind your back, and the
+warning is informational only: to load the configured model, use **Load into
+Inference Service** on the model in the Kernel tree. If the engine's catalog cannot
+be read at all, no warning is shown — a transient network failure is not reported
+as a model mismatch.
 
 ### 8.6 Plugin Marketplace Configuration
 
