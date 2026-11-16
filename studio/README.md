@@ -449,13 +449,34 @@ models you train. The **Services** node contains a single **Inference Service**
 child; every saved model appears beneath it as a load candidate.
 
 - **Double-click the Inference Service node** to open the **Start Service**
-  dialog (host and port) and launch the service. The service starts empty.
-- **Double-click a saved model** to load it into the running service, starting
-  the service first if it is not already running. Loading a second model reuses
-  the same JVM and port.
+  dialog (host and port) and connect. The service starts empty.
+- **Double-click a saved model** to load it into the running service, connecting
+  first if it is not already running. Loading a second model reuses the same JVM
+  and port.
 
 Models are loaded through `POST /api/v1/models/load`, so one process serves many
 models instead of one process per model.
+
+**Studio attaches to an engine that is already running.** Before starting
+anything it probes `host:port`; if a healthy serve answers — launched by another
+Studio window, by `smile serve` in a terminal, in a container, or on a remote
+host — Studio connects to it instead of spawning a second JVM. Only when nothing
+answers does it launch a local engine. This means two Studio windows share one
+inference service rather than the second one failing to bind the port.
+
+Attachment is deliberately unverified: serve is shared infrastructure, so Studio
+does not require the engine to belong to this `smile.home`. Two consequences:
+
+- **Stop only stops what Studio started.** If Studio attached to an engine it did
+  not launch, **Stop** (and closing Studio) *detaches* and leaves the engine
+  running; stop it where you started it. A child launched by this Studio session
+  is terminated as before.
+- **Remote engines are read-only.** Model load, reload, and unload are restricted
+  to localhost by the server, so a remote engine can be inspected but not
+  managed from Studio.
+
+Studio also polls the configured target in the background, so an engine started
+later from a terminal is picked up automatically without stealing focus.
 
 ### 8.4 Inference Menu
 
@@ -463,8 +484,8 @@ The **Inference** menu manages the service lifecycle:
 
 | Item | Action |
 |------|--------|
-| **Start Inference Service** | Start the service using the configured host and port |
-| **Stop Inference Service** | Stop the service and release its resources |
+| **Start Inference Service** | Attach to an engine at the configured host and port, or start one |
+| **Stop Inference Service** | Stop an engine Studio started; detach from one it did not |
 | **Restart Inference Service** | Stop, then start again |
 | **Health** | Open `/q/health` in the browser |
 | **Metrics** | Open `/q/metrics` (Prometheus) in the browser |
@@ -472,7 +493,7 @@ The **Inference** menu manages the service lifecycle:
 
 ### 8.5 Inference Server Configuration
 
-The service can start automatically when Studio starts. Configure it in
+The service can be started automatically when Studio starts. Configure it in
 `studio.json`, read from `$SMILE_HOME/conf/studio.json` or `~/.smile/studio.json`
 (system-wide only — the project-local `./.smile/studio.json` is deliberately not
 consulted, because a server binding is machine-wide):
@@ -490,8 +511,8 @@ consulted, because a server binding is machine-wide):
 
 | Field | Default | Meaning |
 |-------|---------|---------|
-| `autoStart` | `false` | Start the service when Studio starts |
-| `host` | `localhost` | Bind host (loopback keeps the `@LocalhostOnly` management APIs reachable) |
+| `autoStart` | `false` | Connect to (or start) the service when Studio starts |
+| `host` | `localhost` | Target host. A non-loopback host is attach-only: Studio never launches a local engine for it |
 | `port` | `8888` | HTTP port |
 | `modelPath` | `./model` | A model file or directory to load at startup, relative to the working directory |
 
@@ -500,6 +521,12 @@ which is also where the agents look for `input/` and `output/`. The service is
 started only when `autoStart` is `true` **and** `modelPath` exists on disk; a
 project with no `model/` directory is left alone, and you can start the service
 later from the **Inference** menu or by double-clicking a model in the Kernel tree.
+
+If `llm` is configured but the engine Studio attached to is not serving that
+model, Studio attaches anyway and warns once, listing the models that *are*
+loaded. It never stops the engine or swaps its model behind your back. If the
+engine's catalog cannot be read at all, no warning is shown — a transient network
+failure is not reported as a model mismatch.
 
 ### 8.6 Plugin Marketplace Configuration
 

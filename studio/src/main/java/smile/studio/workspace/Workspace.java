@@ -564,9 +564,11 @@ public class Workspace extends JSplitPane {
      * so their {@link ProcessPanel}s automatically dock into and close from {@link #editorTabs}.
      */
     private void registerServicePanelListeners() {
-        ServeManager.getInstance().addStartListener(panel -> openServicePanel(bundle.getString("InferenceServiceTab"), panel));
+        ServeManager.getInstance().addStartListener(event -> openServicePanel(
+                bundle.getString("InferenceServiceTab"), event.panel(), !event.background()));
         ServeManager.getInstance().addStopListener(this::closeServicePanel);
-        HubManager.getInstance().addStartListener(panel -> openServicePanel(bundle.getString("AgentHubTab"), panel));
+        HubManager.getInstance().addStartListener(panel ->
+                openServicePanel(bundle.getString("AgentHubTab"), panel));
         HubManager.getInstance().addStopListener(this::closeServicePanel);
     }
 
@@ -578,6 +580,19 @@ public class Workspace extends JSplitPane {
      * @param panel the process output panel.
      */
     public void openServicePanel(String title, ProcessPanel panel) {
+        openServicePanel(title, panel, true);
+    }
+
+    /**
+     * Opens a service {@link ProcessPanel} tab in {@link #editorTabs}.
+     *
+     * @param title  the tab title (e.g. {@code "Inference Service"} or {@code "Agent Hub"}).
+     * @param panel  the process output panel.
+     * @param select whether to make the tab the selected tab. A background attach
+     *               passes {@code false} so an engine appearing elsewhere does not
+     *               pull focus out of the editor.
+     */
+    public void openServicePanel(String title, ProcessPanel panel, boolean select) {
         if (panel == null) {
             return;
         }
@@ -586,7 +601,7 @@ public class Workspace extends JSplitPane {
         if (index == -1) {
             editorTabs.addTab(title, panel);
         }
-        if (!keepBotActivityFocused) {
+        if (select && !keepBotActivityFocused) {
             editorTabs.setSelectedComponent(panel);
         }
     }

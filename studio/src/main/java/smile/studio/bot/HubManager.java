@@ -564,15 +564,7 @@ public final class HubManager {
     }
 
     private static boolean isLocalHost(String h) {
-        if (h == null || h.isBlank()) {
-            return true;
-        }
-        String normalized = h.trim().toLowerCase(java.util.Locale.ROOT);
-        return "localhost".equals(normalized)
-                || "127.0.0.1".equals(normalized)
-                || "::1".equals(normalized)
-                || "[::1]".equals(normalized)
-                || "0.0.0.0".equals(normalized);
+        return smile.studio.LocalHosts.isLocalHost(h);
     }
 
     private static void deletePidFile() {
