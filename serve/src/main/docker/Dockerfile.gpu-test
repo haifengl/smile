@@ -47,7 +47,7 @@
 # see that script for details. To do the same manually:
 #   docker run --rm --gpus all -v /model:/model smile-gpu-test ./gradlew :deep:test --no-daemon
 ###
-ARG CUDA_VERSION=13.4.0
+ARG CUDA_VERSION=13.4.3
 ARG TORCH_VERSION=2.15.0
 ARG CU_VERSION=134
 
