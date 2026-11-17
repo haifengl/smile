@@ -18,7 +18,10 @@
 package smile.serve;
 
 import java.io.Serializable;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -31,7 +34,6 @@ import smile.data.Tuple;
 import smile.data.type.StructType;
 import smile.feature.importance.KernelSHAP;
 import smile.io.Paths;
-import smile.io.Write;
 import smile.model.*;
 
 /**
@@ -395,19 +397,32 @@ public class InferenceModel {
     }
 
     /**
-     * Persists the current in-memory model state to its backing {@code .sml} file on disk.
+     * Persists the current in-memory model state to its backing {@code .sml} file on disk
+     * via an atomic move from a temporary sibling file.
      */
     public void persist() {
         if (path == null) {
             throw new BadRequestException("Model '" + id + "' has no backing file path");
         }
-        if (!(model instanceof Serializable s)) {
+        if (!(model instanceof Serializable)) {
             throw new BadRequestException("Model '" + id + "' is not serializable");
         }
         rwLock.readLock().lock();
+        Path tempPath = path.resolveSibling(path.getFileName().toString() + ".tmp");
         try {
-            Write.object(s, path);
+            Model.write(model, tempPath);
+            try {
+                Files.move(tempPath, path,
+                        StandardCopyOption.ATOMIC_MOVE,
+                        StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException ex) {
+                Files.move(tempPath, path, StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (Exception ex) {
+            try {
+                Files.deleteIfExists(tempPath);
+            } catch (Exception ignored) {
+            }
             throw new InternalServerErrorException("Failed to persist model '" + id + "': " + ex.getMessage(), ex);
         } finally {
             rwLock.readLock().unlock();

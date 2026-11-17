@@ -18,9 +18,11 @@
 package smile.serve;
 
 import java.io.IOException;
+import java.io.InvalidClassException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,16 +37,17 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 import smile.feature.importance.KernelSHAP;
-import smile.io.Read;
 import smile.model.Model;
 import smile.model.Prediction;
 import smile.serve.model.ModelObject;
 import smile.serve.model.OpenAiModelContributor;
+import smile.serve.model.QuarantinedModel;
 import smile.serve.model.SmileModelDetails;
 
 /**
@@ -65,10 +68,14 @@ public class InferenceService implements OpenAiModelContributor {
     /** Loaded models, keyed by {@code <id>-<version>}. Sorted for stable list order. */
     private final Map<String, InferenceModel> models = Collections.synchronizedSortedMap(new TreeMap<>());
     private final Map<String, Path> modelPaths = Collections.synchronizedMap(new TreeMap<>());
+    /** Models on disk that failed verification or deserialization. */
+    private final Map<Path, QuarantinedModel> quarantined = Collections.synchronizedMap(new TreeMap<>());
     /** Registers/removes telemetry meters as models load and unload. */
     private final List<ModelMetricsBinder> metricsBinders;
     /** Observes inference executions and model lifecycle events. */
     private final List<InferenceListener> listeners;
+    /** Synchronous pre-deserialization model artifact verifiers. */
+    private final List<ModelArtifactVerifier> verifiers;
 
     /**
      * Loads ML models upon application start.
@@ -77,7 +84,20 @@ public class InferenceService implements OpenAiModelContributor {
      * @param metricsBinders telemetry meter binders discovered on the classpath.
      */
     public InferenceService(InferenceServiceConfig config, List<ModelMetricsBinder> metricsBinders) {
-        this(config, metricsBinders, List.of());
+        this(config, metricsBinders, List.of(), List.of());
+    }
+
+    /**
+     * Loads ML models upon application start.
+     *
+     * @param config         the service configuration.
+     * @param metricsBinders telemetry meter binders discovered on the classpath.
+     * @param listeners      inference and lifecycle listeners discovered on the classpath.
+     */
+    public InferenceService(InferenceServiceConfig config,
+                            List<ModelMetricsBinder> metricsBinders,
+                            List<InferenceListener> listeners) {
+        this(config, metricsBinders, listeners, List.of());
     }
 
     /**
@@ -87,13 +107,16 @@ public class InferenceService implements OpenAiModelContributor {
      * @param config         the service configuration.
      * @param metricsBinders telemetry meter binders discovered on the classpath.
      * @param listeners      inference and lifecycle listeners discovered on the classpath.
+     * @param verifiers      synchronous pre-deserialization model artifact verifiers.
      */
     @Inject
     public InferenceService(InferenceServiceConfig config,
                             @All List<ModelMetricsBinder> metricsBinders,
-                            @All List<InferenceListener> listeners) {
+                            @All List<InferenceListener> listeners,
+                            @All List<ModelArtifactVerifier> verifiers) {
         this.metricsBinders = metricsBinders == null ? List.of() : List.copyOf(metricsBinders);
         this.listeners = listeners == null ? List.of() : List.copyOf(listeners);
+        this.verifiers = verifiers == null ? List.of() : List.copyOf(verifiers);
         var path = Path.of(config.model()).toAbsolutePath().normalize();
         if (Files.isRegularFile(path)) {
             loadModel(path);
@@ -103,6 +126,7 @@ public class InferenceService implements OpenAiModelContributor {
                      .forEach(this::loadModel);
             } catch (IOException ex) {
                 logger.errorf(ex, "Failed to list model directory '%s'", path);
+                recordQuarantine(path, ex);
             }
         } else {
             logger.errorf("'%s' is not a regular file or directory", path);
@@ -115,26 +139,73 @@ public class InferenceService implements OpenAiModelContributor {
      * @param path the model file path.
      */
     private void loadModel(Path path) {
+        Path normalized = path.toAbsolutePath().normalize();
         try {
-            logger.infof("Loading model from '%s'", path);
-            var obj = Read.object(path);
-            if (obj instanceof Model m) {
-                var model = new InferenceModel(m, path);
-                models.put(model.id(), model);
-                modelPaths.put(model.id(), path);
-                metricsBinders.forEach(b -> b.register(ModelMetricsBinder.SMILE_NAMESPACE, model.id(), model.metrics()));
-                notifyListeners(InferenceEvent.lifecycle(
-                        ModelMetricsBinder.SMILE_NAMESPACE,
-                        model.id(),
-                        InferenceEvent.Action.MODEL_LOADED,
-                        path.toString()));
-                logger.infof("Model '%s' loaded successfully", model.id());
-            } else {
-                logger.errorf("'%s' does not contain a valid SMILE model (got %s)",
-                        path, obj == null ? "null" : obj.getClass().getName());
-            }
-        } catch (Exception ex) {
-            logger.errorf(ex, "Failed to load model from '%s'", path);
+            logger.infof("Loading model from '%s'", normalized);
+            Model m = verifyAndReadModel(normalized);
+            var model = new InferenceModel(m, normalized);
+            models.put(model.id(), model);
+            modelPaths.put(model.id(), normalized);
+            quarantined.remove(normalized);
+            metricsBinders.forEach(b -> b.register(ModelMetricsBinder.SMILE_NAMESPACE, model.id(), model.metrics()));
+            notifyListeners(InferenceEvent.lifecycle(
+                    ModelMetricsBinder.SMILE_NAMESPACE,
+                    model.id(),
+                    InferenceEvent.Action.MODEL_LOADED,
+                    normalized.toString()));
+            logger.infof("Model '%s' loaded successfully", model.id());
+        } catch (Throwable ex) {
+            logger.errorf(ex, "Failed to load model from '%s'", normalized);
+            recordQuarantine(normalized, ex);
+        }
+    }
+
+    private Model verifyAndReadModel(Path path) throws Exception {
+        for (ModelArtifactVerifier verifier : verifiers) {
+            verifier.verify(ModelMetricsBinder.SMILE_NAMESPACE, path);
+        }
+        Model m = Model.read(path);
+        for (ModelArtifactVerifier verifier : verifiers) {
+            verifier.verifyLoadedSmileModel(path, m);
+        }
+        return m;
+    }
+
+    private void recordQuarantine(Path path, Throwable ex) {
+        boolean fatal = isFatalLoadFailure(ex);
+        quarantined.put(path, new QuarantinedModel(
+                path.toString(),
+                ModelMetricsBinder.SMILE_NAMESPACE,
+                ex.getClass().getName(),
+                ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName(),
+                fatal,
+                Instant.now().getEpochSecond()));
+    }
+
+    /**
+     * Classifies whether a model load exception is a fatal security/format error
+     * ({@code true}) vs. a benign class-version incompatibility ({@code false}).
+     *
+     * <p>{@link InvalidClassException} thrown by a {@code serialVersionUID}
+     * mismatch is non-fatal (eligible for quarantine when {@code fail-fast=false}),
+     * whereas {@code ObjectInputFilter} rejections ({@code "filter status: REJECTED"}),
+     * {@link SecurityException}, and {@code SMLM} format/CRC errors are always fatal.
+     */
+    static boolean isFatalLoadFailure(Throwable ex) {
+        if (ex instanceof SecurityException) {
+            return true;
+        }
+        if (ex instanceof InvalidClassException ice) {
+            String msg = ice.getMessage();
+            return msg != null && msg.contains("filter status: REJECTED");
+        }
+        return true;
+    }
+
+    @Override
+    public List<QuarantinedModel> listQuarantinedModels() {
+        synchronized (quarantined) {
+            return List.copyOf(quarantined.values());
         }
     }
 
@@ -352,25 +423,26 @@ public class InferenceService implements OpenAiModelContributor {
         }
         try {
             logger.infof("Reloading model '%s' from '%s'", id, path);
-            var obj = Read.object(path);
-            if (obj instanceof Model m) {
-                var reloaded = new InferenceModel(m, path);
-                models.put(reloaded.id(), reloaded);
-                modelPaths.put(reloaded.id(), path);
-                metricsBinders.forEach(b -> {
-                    b.unregister(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id());
-                    b.register(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id(), reloaded.metrics());
-                });
-                notifyListeners(InferenceEvent.lifecycle(
-                        ModelMetricsBinder.SMILE_NAMESPACE,
-                        reloaded.id(),
-                        InferenceEvent.Action.MODEL_RELOADED,
-                        path.toString()));
-                logger.infof("Model '%s' reloaded successfully", reloaded.id());
-                return reloaded;
-            } else {
-                throw new InternalServerErrorException("File does not contain a valid SMILE model: " + path);
-            }
+            Path normalized = path.toAbsolutePath().normalize();
+            Model m = verifyAndReadModel(normalized);
+            var reloaded = new InferenceModel(m, normalized);
+            models.put(reloaded.id(), reloaded);
+            modelPaths.put(reloaded.id(), normalized);
+            quarantined.remove(normalized);
+            metricsBinders.forEach(b -> {
+                b.unregister(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id());
+                b.register(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id(), reloaded.metrics());
+            });
+            notifyListeners(InferenceEvent.lifecycle(
+                    ModelMetricsBinder.SMILE_NAMESPACE,
+                    reloaded.id(),
+                    InferenceEvent.Action.MODEL_RELOADED,
+                    normalized.toString()));
+            logger.infof("Model '%s' reloaded successfully", reloaded.id());
+            return reloaded;
+        } catch (SecurityException ex) {
+            logger.errorf(ex, "Rejected reload of model '%s' from '%s'", id, path);
+            throw new ForbiddenException("Model artifact verification failed: " + ex.getMessage(), ex);
         } catch (Exception ex) {
             logger.errorf(ex, "Failed to reload model '%s' from '%s'", id, path);
             throw new InternalServerErrorException("Failed to reload model: " + ex.getMessage(), ex);
@@ -431,16 +503,16 @@ public class InferenceService implements OpenAiModelContributor {
 
         List<InferenceModel> loaded = new ArrayList<>();
         for (Path file : smlFiles) {
-            Object obj;
+            Path normalized = file.toAbsolutePath().normalize();
+            Model m;
             try {
-                obj = Read.object(file);
+                m = verifyAndReadModel(normalized);
+            } catch (SecurityException e) {
+                throw new ForbiddenException("Model artifact verification failed for " + file + ": " + e.getMessage(), e);
             } catch (Exception e) {
                 throw new BadRequestException("Failed to read model from " + file + ": " + e.getMessage(), e);
             }
-            if (!(obj instanceof Model m)) {
-                throw new BadRequestException("File does not contain a valid SMILE model: " + file);
-            }
-            var model = new InferenceModel(m, file);
+            var model = new InferenceModel(m, normalized);
             if (models.containsKey(model.id())) {
                 throw new ClientErrorException(
                         "Model '" + model.id() + "' is already loaded. Use POST /api/v1/smile/" + model.id() + "/reload to refresh it, or unload it first.",
@@ -452,6 +524,7 @@ public class InferenceService implements OpenAiModelContributor {
         for (InferenceModel model : loaded) {
             models.put(model.id(), model);
             modelPaths.put(model.id(), model.path());
+            quarantined.remove(model.path());
             metricsBinders.forEach(b -> b.register(ModelMetricsBinder.SMILE_NAMESPACE, model.id(), model.metrics()));
             notifyListeners(InferenceEvent.lifecycle(
                     ModelMetricsBinder.SMILE_NAMESPACE,

@@ -566,7 +566,7 @@ public class InferenceResourceTest {
         var clusteringModel = smile.model.Model.clustering("kmeans", Formula.lhs("class"), data, params);
         clusteringModel.setTag(smile.model.Model.ID, "iris_kmeans");
         clusteringModel.setTag(smile.model.Model.VERSION, "1");
-        Path tempModel = smile.io.Write.object(clusteringModel);
+        Path tempModel = smile.model.Model.write(clusteringModel);
 
         try {
             // When loading the clustering model dynamically
@@ -610,7 +610,7 @@ public class InferenceResourceTest {
         var emeansModel = smile.model.Model.clustering("emeans", Formula.lhs("class"), data, params);
         emeansModel.setTag(smile.model.Model.ID, "iris_emeans");
         emeansModel.setTag(smile.model.Model.VERSION, "1");
-        Path tempEmeansModel = smile.io.Write.object(emeansModel);
+        Path tempEmeansModel = smile.model.Model.write(emeansModel);
 
         try {
             String escapedPath = tempEmeansModel.toAbsolutePath().toString().replace("\\", "\\\\");
@@ -660,7 +660,7 @@ public class InferenceResourceTest {
         var somModel = smile.model.Model.quantizer("som", Formula.lhs("class"), data, params);
         somModel.setTag(smile.model.Model.ID, "iris_som");
         somModel.setTag(smile.model.Model.VERSION, "1");
-        Path tempModel = smile.io.Write.object(somModel);
+        Path tempModel = smile.model.Model.write(somModel);
 
         try {
             String escapedPath = tempModel.toAbsolutePath().toString().replace("\\", "\\\\");
@@ -747,7 +747,7 @@ public class InferenceResourceTest {
         var logitModel = smile.model.Model.classification("logistic", Formula.lhs("class"), data, null, new Properties());
         logitModel.setTag(smile.model.Model.ID, "iris_logit");
         logitModel.setTag(smile.model.Model.VERSION, "1");
-        Path tempModel = smile.io.Write.object(logitModel);
+        Path tempModel = smile.model.Model.write(logitModel);
 
         try {
             String escapedPath = tempModel.toAbsolutePath().toString().replace("\\", "\\\\");
@@ -804,7 +804,7 @@ public class InferenceResourceTest {
         var anomalyModel = smile.model.Model.anomaly("isolation-forest", Formula.lhs("class"), data, params);
         anomalyModel.setTag(smile.model.Model.ID, "iris_iforest");
         anomalyModel.setTag(smile.model.Model.VERSION, "1");
-        Path tempModel = smile.io.Write.object(anomalyModel);
+        Path tempModel = smile.model.Model.write(anomalyModel);
 
         try {
             String escapedPath = tempModel.toAbsolutePath().toString().replace("\\", "\\\\");

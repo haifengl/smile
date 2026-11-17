@@ -43,4 +43,34 @@ public interface InferenceServiceConfig {
      */
     @WithDefault("false")
     boolean allowEmpty();
+
+    /**
+     * Whether startup should abort immediately when a model file fails format,
+     * signature, security-filter, or corruption checks.
+     *
+     * <p>Defaults to {@code true}: any format mismatch, CRC/truncation error,
+     * {@link SecurityException}, or {@code ObjectInputFilter} rejection aborts
+     * startup rather than silently serving an incomplete model catalog.
+     *
+     * @return {@code true} when fatal model load failures abort startup.
+     */
+    @WithDefault("true")
+    default boolean failFast() {
+        return true;
+    }
+
+    /**
+     * Whether readiness ({@code /q/health/ready}) may report {@code UP} when
+     * one or more models are quarantined.
+     *
+     * <p>Defaults to {@code false}: if any model on disk failed to load and
+     * was quarantined, readiness reports {@code DOWN} so operators and load
+     * balancers see the degraded state immediately.
+     *
+     * @return {@code true} when readiness ignores quarantined models.
+     */
+    @WithDefault("false")
+    default boolean allowQuarantined() {
+        return false;
+    }
 }

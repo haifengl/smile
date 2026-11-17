@@ -16,7 +16,11 @@
  */
 package smile.model;
 
+import java.io.IOException;
+import java.io.ObjectInputFilter;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
@@ -74,6 +78,64 @@ public interface Model {
     String ID = "id";
     /** The tag key for model version. */
     String VERSION = "version";
+
+    /**
+     * Writes a SMILE {@link Model} to a temporary {@code .sml} file with the
+     * {@link Format} versioned envelope and returns the path. The temporary
+     * file is deleted when the VM exits.
+     *
+     * @param model the model to serialize.
+     * @return the path of the temporary file.
+     * @throws IOException if writing fails.
+     */
+    static Path write(Model model) throws IOException {
+        Path temp = Files.createTempFile("smile-model-", ".sml");
+        write(model, temp);
+        temp.toFile().deleteOnExit();
+        return temp;
+    }
+
+    /**
+     * Writes a SMILE {@link Model} to a file with the {@link Format} versioned
+     * envelope.
+     *
+     * @param model the model to serialize.
+     * @param path  the destination file path.
+     * @throws IOException if writing fails.
+     */
+    static void write(Model model, Path path) throws IOException {
+        Format.write(model, path);
+    }
+
+    /**
+     * Reads a SMILE {@link Model} from a {@code .sml} file, supporting both the
+     * {@link Format} versioned envelope and legacy raw {@code ObjectOutputStream}
+     * model files.
+     *
+     * @param path the model file path.
+     * @return the deserialized model.
+     * @throws IOException            if reading fails, the header is invalid/unsupported,
+     *                                or the file does not contain a {@link Model}.
+     * @throws ClassNotFoundException if a serialized class cannot be found.
+     */
+    static Model read(Path path) throws IOException, ClassNotFoundException {
+        return Format.read(path);
+    }
+
+    /**
+     * Reads a SMILE {@link Model} from a {@code .sml} file using an additional
+     * {@link ObjectInputFilter} merged with the built-in SMILE allow-list.
+     *
+     * @param path        the model file path.
+     * @param extraFilter an additional {@link ObjectInputFilter} to merge.
+     * @return the deserialized model.
+     * @throws IOException            if reading fails, the header is invalid/unsupported,
+     *                                or the file does not contain a {@link Model}.
+     * @throws ClassNotFoundException if a serialized class cannot be found.
+     */
+    static Model read(Path path, ObjectInputFilter extraFilter) throws IOException, ClassNotFoundException {
+        return Format.read(path, extraFilter);
+    }
 
     /**
      * Returns the algorithm name.

@@ -56,25 +56,26 @@ public class Predict implements Callable<Integer> {
         }
 
         var data = Read.data(file.getCanonicalPath(), format);
-        var obj = Read.object(model.toPath());
-        if (obj instanceof Model m) {
-            if (explain && !m.supportsShap()) {
-                System.err.println("Error: Model algorithm '" + m.algorithm() + "' does not support SHAP explanations (only tree-based models are currently supported).");
-                return 1;
-            }
-
-            var predictions = m.infer(data, probability, explain);
-            for (var prediction : predictions) {
-                if (json) {
-                    System.out.println(prediction.toJson());
-                } else {
-                    System.out.println(prediction.toString());
-                }
-            }
-            return 0;
-        } else {
+        final Model m;
+        try {
+            m = Model.read(model.toPath());
+        } catch (Exception ex) {
             System.err.println(model.getName() + " doesn't contain a valid model.");
             return 1;
         }
+        if (explain && !m.supportsShap()) {
+            System.err.println("Error: Model algorithm '" + m.algorithm() + "' does not support SHAP explanations (only tree-based models are currently supported).");
+            return 1;
+        }
+
+        var predictions = m.infer(data, probability, explain);
+        for (var prediction : predictions) {
+            if (json) {
+                System.out.println(prediction.toJson());
+            } else {
+                System.out.println(prediction.toString());
+            }
+        }
+        return 0;
     }
 }

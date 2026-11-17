@@ -31,4 +31,14 @@ public interface OpenAiModelContributor {
      * @return the model object when loaded; otherwise empty.
      */
     Optional<ModelObject> findOpenAiModel(String id, boolean detailed);
+
+    /**
+     * Returns diagnostic records for any models that failed verification or
+     * deserialization and were quarantined by this backend.
+     *
+     * @return quarantined model entries (empty by default).
+     */
+    default List<QuarantinedModel> listQuarantinedModels() {
+        return List.of();
+    }
 }

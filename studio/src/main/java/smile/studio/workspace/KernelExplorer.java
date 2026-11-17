@@ -241,7 +241,7 @@ public class KernelExplorer extends JPanel {
             // replace backslash with slash in case of Windows
             String path = file.getAbsolutePath().replace('\\', '/');
             kernel.eval(String.format("""
-                    smile.io.Write.object(%s, java.nio.file.Path.of("%s"));
+                    smile.model.Model.write(%s, java.nio.file.Path.of("%s"));
                     """, name, path));
             refresh(kernel);
         }

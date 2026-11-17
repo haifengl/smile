@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,6 +36,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.ClientErrorException;
+import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
@@ -44,6 +46,7 @@ import smile.io.Paths;
 import smile.serve.model.ModelObject;
 import smile.serve.model.OnnxModelDetails;
 import smile.serve.model.OpenAiModelContributor;
+import smile.serve.model.QuarantinedModel;
 
 /**
  * Application-scoped service that discovers, loads, and manages ONNX models
@@ -65,10 +68,14 @@ public class OnnxService implements OpenAiModelContributor {
     /** Loaded models, keyed by model ID. Sorted for stable list order. */
     private final Map<String, OnnxModel> models = Collections.synchronizedSortedMap(new TreeMap<>());
     private final Map<String, Path> modelPaths = Collections.synchronizedMap(new TreeMap<>());
+    /** ONNX models on disk that failed verification or session initialization. */
+    private final Map<Path, QuarantinedModel> quarantined = Collections.synchronizedMap(new TreeMap<>());
     /** Registers/removes telemetry meters as models load and unload. */
     private final List<ModelMetricsBinder> metricsBinders;
     /** Observes inference executions and model lifecycle events. */
     private final List<InferenceListener> listeners;
+    /** Synchronous pre-deserialization model artifact verifiers. */
+    private final List<ModelArtifactVerifier> verifiers;
 
     /**
      * Loads ONNX models upon application start.
@@ -77,7 +84,7 @@ public class OnnxService implements OpenAiModelContributor {
      * @param metricsBinders telemetry meter binders discovered on the classpath.
      */
     public OnnxService(OnnxServiceConfig config, List<ModelMetricsBinder> metricsBinders) {
-        this(config, metricsBinders, List.of());
+        this(config, metricsBinders, List.of(), List.of());
     }
 
     /**
@@ -87,12 +94,28 @@ public class OnnxService implements OpenAiModelContributor {
      * @param metricsBinders telemetry meter binders discovered on the classpath.
      * @param listeners      inference and lifecycle listeners discovered on the classpath.
      */
+    public OnnxService(OnnxServiceConfig config,
+                       List<ModelMetricsBinder> metricsBinders,
+                       List<InferenceListener> listeners) {
+        this(config, metricsBinders, listeners, List.of());
+    }
+
+    /**
+     * Loads ONNX models upon application start.
+     *
+     * @param config         the ONNX service configuration.
+     * @param metricsBinders telemetry meter binders discovered on the classpath.
+     * @param listeners      inference and lifecycle listeners discovered on the classpath.
+     * @param verifiers      synchronous pre-deserialization model artifact verifiers.
+     */
     @Inject
     public OnnxService(OnnxServiceConfig config,
                        @All List<ModelMetricsBinder> metricsBinders,
-                       @All List<InferenceListener> listeners) {
+                       @All List<InferenceListener> listeners,
+                       @All List<ModelArtifactVerifier> verifiers) {
         this.metricsBinders = metricsBinders == null ? List.of() : List.copyOf(metricsBinders);
         this.listeners = listeners == null ? List.of() : List.copyOf(listeners);
+        this.verifiers = verifiers == null ? List.of() : List.copyOf(verifiers);
         var path = Path.of(config.model()).toAbsolutePath().normalize();
         if (Files.isRegularFile(path) && path.toString().endsWith(".onnx")) {
             loadModel(path);
@@ -102,6 +125,7 @@ public class OnnxService implements OpenAiModelContributor {
                      .forEach(this::loadModel);
             } catch (IOException ex) {
                 logger.errorf(ex, "Failed to list ONNX model directory '%s'", path);
+                recordQuarantine(path, ex);
             }
         } else {
             logger.infof("ONNX model path '%s' not found or not a .onnx file — ONNX service starting empty.", path);
@@ -114,19 +138,21 @@ public class OnnxService implements OpenAiModelContributor {
      * @param path the {@code .onnx} file path.
      */
     private void loadModel(Path path) {
+        Path normalized = path.toAbsolutePath().normalize();
         try {
-            logger.infof("Loading ONNX model from '%s'", path);
-            String id = Paths.getFileName(path);
-            var session = InferenceSession.create(path.toString());
-            var model = new OnnxModel(id, path, session);
+            logger.infof("Loading ONNX model from '%s'", normalized);
+            String id = Paths.getFileName(normalized);
+            var session = verifyAndCreateSession(normalized);
+            var model = new OnnxModel(id, normalized, session);
             models.put(id, model);
-            modelPaths.put(id, path);
+            modelPaths.put(id, normalized);
+            quarantined.remove(normalized);
             metricsBinders.forEach(b -> b.register(ModelMetricsBinder.ONNX_NAMESPACE, id, model.metrics()));
             notifyListeners(InferenceEvent.lifecycle(
                     ModelMetricsBinder.ONNX_NAMESPACE,
                     id,
                     InferenceEvent.Action.MODEL_LOADED,
-                    path.toString()));
+                    normalized.toString()));
             logger.infof("ONNX model '%s' loaded successfully (inputs=%s, outputs=%s)",
                     id, session.inputNames(), session.outputNames());
         } catch (Throwable ex) {
@@ -138,7 +164,35 @@ public class OnnxService implements OpenAiModelContributor {
                             + "java.library.path (or the OS library search path) and "
                             + "the JVM is started with --enable-native-access=ALL-UNNAMED. "
                             + "ONNX endpoints will return 404 until a model loads.",
-                    path, System.mapLibraryName("onnxruntime"));
+                    normalized, System.mapLibraryName("onnxruntime"));
+            // Do not quarantine when the native onnxruntime library is absent on a JVM without it
+            if (!(ex instanceof LinkageError)) {
+                recordQuarantine(normalized, ex);
+            }
+        }
+    }
+
+    private InferenceSession verifyAndCreateSession(Path path) {
+        for (ModelArtifactVerifier verifier : verifiers) {
+            verifier.verify(ModelMetricsBinder.ONNX_NAMESPACE, path);
+        }
+        return InferenceSession.create(path.toString());
+    }
+
+    private void recordQuarantine(Path path, Throwable ex) {
+        quarantined.put(path, new QuarantinedModel(
+                path.toString(),
+                ModelMetricsBinder.ONNX_NAMESPACE,
+                ex.getClass().getName(),
+                ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName(),
+                true,
+                Instant.now().getEpochSecond()));
+    }
+
+    @Override
+    public List<QuarantinedModel> listQuarantinedModels() {
+        synchronized (quarantined) {
+            return List.copyOf(quarantined.values());
         }
     }
 
@@ -295,10 +349,12 @@ public class OnnxService implements OpenAiModelContributor {
         }
         try {
             logger.infof("Reloading ONNX model '%s' from '%s'", id, path);
-            var session = InferenceSession.create(path.toString());
-            var reloaded = new OnnxModel(id, path, session);
+            Path normalized = path.toAbsolutePath().normalize();
+            var session = verifyAndCreateSession(normalized);
+            var reloaded = new OnnxModel(id, normalized, session);
             OnnxModel old = models.put(id, reloaded);
-            modelPaths.put(id, path);
+            modelPaths.put(id, normalized);
+            quarantined.remove(normalized);
             metricsBinders.forEach(b -> {
                 b.unregister(ModelMetricsBinder.ONNX_NAMESPACE, id);
                 b.register(ModelMetricsBinder.ONNX_NAMESPACE, id, reloaded.metrics());
@@ -307,12 +363,15 @@ public class OnnxService implements OpenAiModelContributor {
                     ModelMetricsBinder.ONNX_NAMESPACE,
                     id,
                     InferenceEvent.Action.MODEL_RELOADED,
-                    path.toString()));
+                    normalized.toString()));
             if (old != null) {
                 old.close();
             }
             logger.infof("ONNX model '%s' reloaded successfully", id);
             return reloaded;
+        } catch (SecurityException ex) {
+            logger.errorf(ex, "Rejected reload of ONNX model '%s' from '%s'", id, path);
+            throw new ForbiddenException("ONNX model artifact verification failed: " + ex.getMessage(), ex);
         } catch (Exception ex) {
             logger.errorf(ex, "Failed to reload ONNX model '%s' from '%s'", id, path);
             throw new InternalServerErrorException("Failed to reload ONNX model: " + ex.getMessage(), ex);
@@ -376,16 +435,22 @@ public class OnnxService implements OpenAiModelContributor {
 
         List<OnnxModel> loaded = new ArrayList<>();
         for (Path file : onnxFiles) {
-            String id = Paths.getFileName(file);
+            Path normalized = file.toAbsolutePath().normalize();
+            String id = Paths.getFileName(normalized);
             if (models.containsKey(id)) {
                 throw new ClientErrorException(
                         "ONNX model '" + id + "' is already loaded. Use POST /api/v1/onnx/" + id + "/reload to refresh it, or unload it first.",
                         Response.Status.CONFLICT);
             }
             try {
-                var session = InferenceSession.create(file.toString());
-                var model = new OnnxModel(id, file, session);
+                var session = verifyAndCreateSession(normalized);
+                var model = new OnnxModel(id, normalized, session);
                 loaded.add(model);
+            } catch (SecurityException ex) {
+                for (var m : loaded) {
+                    m.close();
+                }
+                throw new ForbiddenException("ONNX model artifact verification failed for " + file + ": " + ex.getMessage(), ex);
             } catch (Throwable ex) {
                 // If any session failed, close already opened ones in this batch
                 for (var m : loaded) {
@@ -398,6 +463,7 @@ public class OnnxService implements OpenAiModelContributor {
         for (OnnxModel model : loaded) {
             models.put(model.id(), model);
             modelPaths.put(model.id(), model.path());
+            quarantined.remove(model.path());
             metricsBinders.forEach(b -> b.register(ModelMetricsBinder.ONNX_NAMESPACE, model.id(), model.metrics()));
             notifyListeners(InferenceEvent.lifecycle(
                     ModelMetricsBinder.ONNX_NAMESPACE,

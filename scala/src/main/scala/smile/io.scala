@@ -32,11 +32,7 @@ object write {
   def apply[T <: Serializable](x: T, file: String): Unit = apply(x, Paths.get(file))
 
   /** Serializes a `Serializable` object/model to a file. */
-  def apply[T <: Serializable](x: T, file: Path): Unit = {
-    val oos = new ObjectOutputStream(new FileOutputStream(file.toFile))
-    oos.writeObject(x)
-    oos.close()
-  }
+  def apply[T <: Serializable](x: T, file: Path): Unit = Write.object(x, file)
 
   /** Writes an array to a text file line by line.
     *
@@ -122,12 +118,7 @@ object read {
   def apply(file: String): AnyRef = apply(Paths.get(file))
 
   /** Reads a serialized object from a file. */
-  def apply(file: Path): AnyRef = {
-    val ois = new ObjectInputStream(new FileInputStream(file.toFile))
-    val o = ois.readObject
-    ois.close()
-    o
-  }
+  def apply(file: Path): AnyRef = Read.object(file)
 
   /**
     * Reads a data file. Infers the data format by the file name extension.
