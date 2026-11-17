@@ -192,6 +192,9 @@ public class InferenceResource {
         if (!model.isOnline()) {
             throw new BadRequestException("Model '" + id + "' (" + model.metadata().algorithm() + ") does not support online learning");
         }
+        if (persist) {
+            service.checkBeforePersist(model);
+        }
         boolean json = contentType != null && contentType.startsWith(MediaType.APPLICATION_JSON);
         int count = 0;
         try (var reader = new BufferedReader(new InputStreamReader(input))) {
@@ -220,7 +223,7 @@ public class InferenceResource {
             throw new BadRequestException("Failed to process online update stream: " + ex.getMessage(), ex);
         }
         if (persist && count > 0) {
-            model.persist();
+            service.persistModel(model);
         }
         return Map.of(
                 "status", "updated",

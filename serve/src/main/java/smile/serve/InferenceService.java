@@ -161,14 +161,38 @@ public class InferenceService implements OpenAiModelContributor {
     }
 
     private Model verifyAndReadModel(Path path) throws Exception {
-        for (ModelArtifactVerifier verifier : verifiers) {
-            verifier.verify(ModelMetricsBinder.SMILE_NAMESPACE, path);
+        long t0 = System.nanoTime();
+        String fileName = path.getFileName() != null ? path.getFileName().toString() : path.toString();
+        try {
+            for (ModelArtifactVerifier verifier : verifiers) {
+                verifier.verify(ModelMetricsBinder.SMILE_NAMESPACE, path);
+            }
+            Model m = Model.read(path);
+            for (ModelArtifactVerifier verifier : verifiers) {
+                verifier.verifyLoadedSmileModel(path, m);
+            }
+            if (!verifiers.isEmpty() && !listeners.isEmpty()) {
+                String modelId = m.getTag(Model.ID, smile.io.Paths.getFileName(path)) + "-"
+                        + m.getTag(Model.VERSION, "1");
+                notifyListeners(InferenceEvent.verification(
+                        ModelMetricsBinder.SMILE_NAMESPACE,
+                        modelId,
+                        true,
+                        path.toString(),
+                        System.nanoTime() - t0));
+            }
+            return m;
+        } catch (SecurityException ex) {
+            if (!listeners.isEmpty()) {
+                notifyListeners(InferenceEvent.verification(
+                        ModelMetricsBinder.SMILE_NAMESPACE,
+                        fileName,
+                        false,
+                        ex.getMessage() != null ? ex.getMessage() : path.toString(),
+                        System.nanoTime() - t0));
+            }
+            throw ex;
         }
-        Model m = Model.read(path);
-        for (ModelArtifactVerifier verifier : verifiers) {
-            verifier.verifyLoadedSmileModel(path, m);
-        }
-        return m;
     }
 
     private void recordQuarantine(Path path, Throwable ex) {
@@ -388,9 +412,12 @@ public class InferenceService implements OpenAiModelContributor {
             throws BadRequestException, NotFoundException {
         long start = System.nanoTime();
         InferenceModel model = getModel(modelId);
+        if (persist) {
+            checkBeforePersist(model);
+        }
         model.update(request);
         if (persist) {
-            model.persist();
+            persistModel(model);
         }
         if (!listeners.isEmpty()) {
             notifyListeners(InferenceEvent.onlineUpdate(
@@ -398,6 +425,49 @@ public class InferenceService implements OpenAiModelContributor {
                     request != null ? request.encode() : null,
                     persist,
                     System.nanoTime() - start));
+        }
+    }
+
+    /**
+     * Checks registered {@link ModelArtifactVerifier} hooks before persisting an
+     * online-updated model to disk.
+     *
+     * @param model the inference model.
+     * @throws ForbiddenException if online persistence is disallowed by policy.
+     */
+    public void checkBeforePersist(InferenceModel model) throws ForbiddenException {
+        if (model.path() == null) {
+            return;
+        }
+        Path normalized = model.path().toAbsolutePath().normalize();
+        try {
+            for (ModelArtifactVerifier verifier : verifiers) {
+                verifier.beforeModelPersist(normalized, model.model());
+            }
+        } catch (SecurityException ex) {
+            throw new ForbiddenException("Online model persistence rejected by policy: " + ex.getMessage(), ex);
+        }
+    }
+
+    /**
+     * Atomically persists the in-memory model to disk and invokes post-persist
+     * {@link ModelArtifactVerifier} hooks (such as local node re-signing).
+     *
+     * @param model the inference model.
+     * @throws ForbiddenException if post-persist verification/signing fails.
+     */
+    public void persistModel(InferenceModel model) throws ForbiddenException {
+        checkBeforePersist(model);
+        model.persist();
+        if (model.path() != null) {
+            Path normalized = model.path().toAbsolutePath().normalize();
+            try {
+                for (ModelArtifactVerifier verifier : verifiers) {
+                    verifier.onModelPersisted(normalized, model.model());
+                }
+            } catch (SecurityException ex) {
+                throw new ForbiddenException("Post-persist model signing failed: " + ex.getMessage(), ex);
+            }
         }
     }
 
