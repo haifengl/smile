@@ -11,7 +11,7 @@ ONNX Runtime inference (`smile.onnx`) out of the box — plus ONNX GenAI
 
 | Guide | Covers |
 |---|---|
-| [LLM.md](LLM.md) | `smile.llm` — tokenizer, LLaMA-3, Qwen3.5, inference engine, KV cache, quantization, tensor parallelism |
+| [LLM.md](LLM.md) | `smile.llm` — tokenizer, LLaMA-3, Qwen3.5, MiniMax-M3, DeepSeek-V4.1, inference engine, KV cache, quantization, tensor parallelism |
 | [VISION.md](VISION.md) | `smile.vision` — transforms, `ImageDataset`, EfficientNet-V2, ImageNet labels |
 | [ONNX.md](ONNX.md) | `smile.onnx` — ONNX Runtime sessions, tensors, execution providers |
 | [ONNX_GENAI.md](ONNX_GENAI.md) | `smile.onnx.genai` — generate loop, chat model, multimodal |
@@ -125,6 +125,8 @@ smile.llm
 ├── llama/         LLaMA-3: Llama, LlamaModel, LlamaBlock,
 │                  GroupedQueryAttention, LlamaModelArgs, Tokenizer
 ├── qwen/          Qwen3.5 hybrid text stack
+├── minimax/       MiniMax-M3 / M3.1-Flash multimodal MoE stack
+├── deepseek/      DeepSeek-V4.1 MoE stack with Engram memory
 ├── Message.java   Immutable dialog message (role + content)
 ├── Role.java      system / user / assistant / tool
 ├── ChatCompletion.java  Inference result record

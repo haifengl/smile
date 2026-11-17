@@ -28,7 +28,7 @@ resource-constrained edge gateways to multi-GPU clusters.
 
 ### Key Strengths
 
-- **Comprehensive Breadth in One Engine:** Hundreds of algorithms spanning classification, regression, clustering, manifold learning, time series, anomaly detection, NLP, statistical testing, linear algebra, deep learning, computer vision, and native LLM inference (`MiniMax M3`, `Qwen`, `Llama`, tiktoken, Radix KV cache, MTP speculative decoding).
+- **Comprehensive Breadth in One Engine:** Hundreds of algorithms spanning classification, regression, clustering, manifold learning, time series, anomaly detection, NLP, statistical testing, linear algebra, deep learning, computer vision, and native LLM inference (`DeepSeek V4.1`, `MiniMax M3`, `Qwen`, `Llama`, tiktoken, Radix KV cache, MTP speculative decoding).
 - **State-of-the-Art Speed & Footprint:** Engineered with primitive-backed memory layouts, Panama FFM, and the Java Vector API (SIMD), SMILE routinely outperforms R, Python, Spark, and H2O while scaling down to a **0.2 GB** GraalVM native micro-container that boots in **0.4 s** and idles at **~80 MiB RAM**.
 - **On-Device Training & Adaptation:** Unlike static inference-only runtimes, SMILE trains and updates models (Random Forests, Gradient Boosting, K-Means, DBSCAN, anomaly detectors) directly on live edge or application data.
 - **Built for Agentic & Production Workloads:** Continuous batching, prefix-preserving Radix KV caches, and speculative decoding that retains its speedup under full batch load, paired with atomic model hot-swapping, Kubernetes health probes, and Prometheus metrics.
@@ -83,11 +83,11 @@ See [studio/README.md](studio/README.md) and [studio/BOT.md](studio/BOT.md) to g
 
 | Area | Highlights |
 |---|---|
-| **LLM** | MiniMax-M3 / M3.1-Flash, Qwen3.5 / 3.8, and LLaMA-3 inference (multimodal vision/video, FP8/NVFP4/Marlin quantization, Radix KV cache, MTP & DSpark speculative decoding, tensor/expert parallelism), tiktoken BPE tokenizer, OpenAI-compatible REST server, SSE chat streaming |
+| **LLM** | DeepSeek-V4.1, MiniMax-M3 / M3.1-Flash, Qwen3.5 / 3.8, and LLaMA-3 inference (multimodal vision/video, FP8/NVFP4/MXFP4/Marlin quantization, Engram memory, Radix KV cache, MTP & DSpark speculative decoding, tensor/expert parallelism), tiktoken BPE tokenizer, OpenAI-compatible REST server, SSE chat streaming |
 | **Deep Learning** | LibTorch/GPU backend, ONNX Runtime & GenAI, EfficientNet-V2 image classification, custom layer API |
 | **Classification** | SVM, Decision Trees, Random Forest, AdaBoost, Gradient Boosting, Logistic Regression, Neural Networks, RBF Networks, MaxEnt, KNN, Naïve Bayes, LDA/QDA/RDA |
 | **Regression** | SVR, Gaussian Process, Regression Trees, GBDT, Random Forest, RBF, OLS, LASSO, ElasticNet, Ridge |
-| **Clustering** | BIRCH, CLARANS, DBSCAN, DENCLUE, Deterministic Annealing, K-Means, X-Means, G-Means, Neural Gas, Growing Neural Gas, Hierarchical, SIB, SOM, Spectral, Min-Entropy |
+| **Clustering** | BIRCH, CLARANS, DBSCAN, DENCLUE, Deterministic Annealing, E-Means, K-Means, X-Means, G-Means, Neural Gas, Growing Neural Gas, Hierarchical, SIB, SOM, Spectral, Min-Entropy |
 | **Manifold Learning** | IsoMap, LLE, Laplacian Eigenmap, t-SNE, UMAP, PCA, Kernel PCA, Probabilistic PCA, GHA, Random Projection, ICA |
 | **Time Series & Anomaly** | ARIMA, ARMA, Isolation Forest, One-Class SVM, Local Outlier Factor (LOF) |
 | **Feature Engineering** | Genetic Algorithm selection, Ensemble selection, TreeSHAP, KernelSHAP, SNR, Sum-Squares ratio, data transformations, formula API |
@@ -267,42 +267,42 @@ The `deep/VISION.md` covers:
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-core</artifactId>
-  <version>7.2.0</version>
+  <version>7.3.0</version>
 </dependency>
 
 <!-- Deep learning + LLMs (requires LibTorch) -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-deep</artifactId>
-  <version>7.2.0</version>
+  <version>7.3.0</version>
 </dependency>
 
 <!-- Natural language processing -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-nlp</artifactId>
-  <version>7.2.0</version>
+  <version>7.3.0</version>
 </dependency>
 
 <!-- Data visualization -->
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-plot</artifactId>
-  <version>7.2.0</version>
+  <version>7.3.0</version>
 </dependency>
 ```
 
 ### SBT (Scala)
 
 ```scala
-libraryDependencies += "com.github.haifengl" %% "smile-scala" % "7.2.0"
+libraryDependencies += "com.github.haifengl" %% "smile-scala" % "7.3.0"
 ```
 
 ### Gradle (Kotlin)
 
 ```kotlin
 dependencies {
-    implementation("com.github.haifengl:smile-kotlin:7.2.0")
+    implementation("com.github.haifengl:smile-kotlin:7.3.0")
 }
 ```
 
@@ -432,7 +432,7 @@ SMILE provides two visualization layers:
 <dependency>
   <groupId>com.github.haifengl</groupId>
   <artifactId>smile-plot</artifactId>
-  <version>7.2.0</version>
+  <version>7.3.0</version>
 </dependency>
 ```
 

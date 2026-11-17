@@ -23,12 +23,13 @@ For ONNX-based generative models, see [ONNX_GENAI.md](ONNX_GENAI.md).
 7. [LLaMA (`smile.llm.model.llama`)](#llama-smilellmmodelllama)
 8. [Qwen3.5 (`smile.llm.model.qwen`)](#qwen35-smilellmmodellqwen)
 9. [MiniMax-M3 (`smile.llm.model.minimax`)](#minimax-m3-smilellmmodelminimax)
-10. [Inference Engine (`smile.llm.engine`)](#inference-engine-smilellmengine)
-11. [KV Cache & Radix Prefix Reuse (`smile.llm.cache`)](#kv-cache--radix-prefix-reuse-smilellmcache)
-12. [Attention Backends (`smile.llm.attention`)](#attention-backends-smilellmattention)
-13. [Quantization (`smile.llm.quant`)](#quantization-smilellmquant)
-14. [Tensor Parallelism (`smile.llm.parallel`)](#tensor-parallelism-smilellmparallel)
-15. [Tool Calling & Chat Templates](#tool-calling--chat-templates)
+10. [DeepSeek-V4.1 (`smile.llm.model.deepseek`)](#deepseek-v41-smilellmmodeldeepseek)
+11. [Inference Engine (`smile.llm.engine`)](#inference-engine-smilellmengine)
+12. [KV Cache & Radix Prefix Reuse (`smile.llm.cache`)](#kv-cache--radix-prefix-reuse-smilellmcache)
+13. [Attention Backends (`smile.llm.attention`)](#attention-backends-smilellmattention)
+14. [Quantization (`smile.llm.quant`)](#quantization-smilellmquant)
+15. [Tensor Parallelism (`smile.llm.parallel`)](#tensor-parallelism-smilellmparallel)
+16. [Tool Calling & Chat Templates](#tool-calling--chat-templates)
 
 ---
 
@@ -62,15 +63,17 @@ smile.llm
 ├── model/llama/   LLaMA-3: Llama, LlamaModel, LlamaBlock,
 │                  GroupedQueryAttention, LlamaModelArgs, Tokenizer
 ├── model/qwen/    Qwen3.5 hybrid text stack + vision tower
+├── model/minimax/ MiniMax-M3 / M3.1-Flash: MoE, MSA, DSpark, vision tower
+├── model/deepseek/ DeepSeek-V4.1: MoE, Engram memory, Marlin FP8 experts
 ├── engine/        Continuous-batching runtime: InferenceEngine, ModelExecutor,
 │                  GenerationRequest, GenerationHandle, speculative decoding
 ├── cache/         KvCachePool, RadixCache, KV layout / metadata
 ├── attention/     Attention backend selection (torch-native / FlashInfer)
-├── quant/         FP8 / NVFP4 / Marlin weight quantization
+├── quant/         FP8 / NVFP4 / MXFP4 / Marlin weight quantization
 ├── parallel/      Tensor-parallel primitives
 ├── checkpoint/    SafeTensors loader tuning
-├── template/      ChatTemplate interface + Qwen3 template
-└── tool/          Tool-call parsers (JSON, Qwen3 XML)
+├── template/      ChatTemplate interface + Qwen3 / MiniMax / DeepSeek templates
+└── tool/          Tool-call parsers (JSON, Qwen3 XML, MiniMax)
 ```
 
 ---
@@ -576,6 +579,32 @@ Opt-in tests that need a checkpoint or GPUs read `MINIMAX_*` environment variabl
 
 ---
 
+## DeepSeek-V4.1 (`smile.llm.model.deepseek`)
+
+`DeepSeek` serves the DeepSeek-V4.1 mixture-of-experts stack: gated decoder
+blocks with MLA-style attention, a router over stacked experts, and an **Engram**
+memory layer that keeps recent token rows on disk instead of in the KV budget.
+Dense projection layers stay packed through weight-only Marlin FP8 kernels, and
+expert weights may be stored as **MXFP4**.
+
+| Class | Role |
+|---|---|
+| `DeepSeek` | High-level `LanguageModel` façade: `build`, bind / prefill / decode / finish, `encodeChat` |
+| `DeepSeekModelArgs` | Hyperparameters from `config.json`, weight mode |
+| `DeepSeekModel`, `DeepSeekBlock` | Decoder stack |
+| `DeepSeekAttention` | MLA-style attention with fused `wq_a + wkv` projection |
+| `DeepSeekMoE`, `DeepSeekMarlinExperts` | Router and stacked-experts FFN on Marlin FP8 |
+| `DeepSeekEngram`, `DeepSeekEngramTokenMap` | File-backed Engram token rows |
+| `DeepSeekLinear` | Dense/shared projections, fused `w1 + w3` shared FFN |
+| `DeepSeekMxfp4` | MXFP4 expert weight dequantization |
+| `DeepSeekTokenizer`, `DeepSeekChatTemplate` | Byte-level BPE and the V4.1 chat template |
+
+Each request runs in its own session over a shared engine executor, and several
+sequences decode in one batch. `DeepSeekMarlinExperts` keeps the dense FP8
+layers packed, so a checkpoint never expands into dense projection shells.
+
+---
+
 ## Inference Engine (`smile.llm.engine`)
 
 `InferenceEngine` is the continuous-batching runtime used by serve. It admits
@@ -735,6 +764,7 @@ int[] prompt = model.encodeChat(dialog, options);
 | `ChatTemplate` | Interface for model-specific prompt formatting |
 | `Qwen3ChatTemplate` | Qwen3.5 / Qwen3.8 chat template, byte-exact port of `chat_template.jinja` (thinking, reasoning effort, tools, tool results, history) |
 | `MiniMaxChatTemplate` | MiniMax-M3 chat template (thinking modes, tools, tool results) |
+| `DeepSeekChatTemplate` | DeepSeek-V4.1 chat template |
 | `ToolCallParser` | Interface for parsing tool calls from generated text |
 | `JsonToolCallParser` / `Qwen3XmlToolCallParser` / `MiniMaxToolCallParser` | Concrete parsers |
 | `AssistantTextSanitizer` | Strips tool-call markup from assistant text |

@@ -91,7 +91,7 @@ and e.g. `latest-micro` or `7.0.0-native` for the others.
 | Tag | Image | Chat | User accounts, conversations (database) | Size |
 |---|---|---|---|---|
 | `latest` | JVM (OpenJDK 25), CPU | CPU: ONNX Runtime GenAI packages | yes | 0.6 GB |
-| `latest-gpu` | JVM, NVIDIA CUDA | GPU: LibTorch (Llama, Qwen) and ONNX Runtime GenAI | yes | 16 GB |
+| `latest-gpu` | JVM, NVIDIA CUDA | GPU: LibTorch (Llama, Qwen, MiniMax, DeepSeek) and ONNX Runtime GenAI | yes | 16 GB |
 | `latest-native` | GraalVM native executable, CPU | CPU: ONNX Runtime GenAI packages | yes | 0.4 GB |
 | `latest-micro` | GraalVM native executable, CPU, inference only | none | none | 0.2 GB |
 
@@ -1528,7 +1528,7 @@ does not exist on the file system (and cannot be resolved via Hugging Face /
 OGA), `ChatService` starts in an *unavailable* state and every request to the
 chat endpoints returns **HTTP 503 Service Unavailable**.
 
-**Backend selection:** with CUDA and a builtin Llama/Qwen checkpoint, serve uses
+**Backend selection:** with CUDA and a builtin Llama/Qwen/MiniMax/DeepSeek checkpoint, serve uses
 the Torch path + continuous batching. Otherwise it falls back to ONNX Runtime
 GenAI (`GenAiChatModel`) when the model is already GenAI-ready
 (`genai_config.json` at the repo root or under provider folders such as
@@ -1553,7 +1553,8 @@ There are therefore two ways to run a chat model:
 
 ### 7.1 Supported Models
 
-The native path covers **Llama-3.1** and **Qwen3.5/3.8** checkpoints (see
+The native path covers **Llama-3.1**, **Qwen3.5/3.8**, **MiniMax-M3 / M3.1-Flash**, and
+**DeepSeek-V4.1** checkpoints (see
 [§2](#2-llm-decode-benchmarks) for benchmarks and
 [deep/LLM.md](../deep/LLM.md) for the implementation). Every other family is
 served through ONNX Runtime GenAI and requires only a GenAI-ready package —
