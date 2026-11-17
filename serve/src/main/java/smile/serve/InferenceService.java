@@ -176,21 +176,39 @@ public class InferenceService implements OpenAiModelContributor {
             if (!verifiers.isEmpty() && !listeners.isEmpty()) {
                 String modelId = m.getTag(Model.ID, smile.io.Paths.getFileName(path)) + "-"
                         + m.getTag(Model.VERSION, "1");
+                boolean allVerified = true;
+                String details = path.toString();
+                for (ModelArtifactVerifier verifier : verifiers) {
+                    var outcome = verifier.verificationOutcome(path);
+                    if (outcome.isPresent()) {
+                        allVerified &= outcome.get().verified();
+                        if (outcome.get().details() != null && !outcome.get().details().isBlank()) {
+                            details = outcome.get().details();
+                        }
+                    }
+                }
                 notifyListeners(InferenceEvent.verification(
                         ModelMetricsBinder.SMILE_NAMESPACE,
                         modelId,
-                        true,
-                        path.toString(),
+                        allVerified,
+                        details,
                         System.nanoTime() - t0));
             }
             return m;
         } catch (SecurityException ex) {
             if (!listeners.isEmpty()) {
+                String details = ex.getMessage() != null ? ex.getMessage() : path.toString();
+                for (ModelArtifactVerifier verifier : verifiers) {
+                    var outcome = verifier.verificationOutcome(path);
+                    if (outcome.isPresent() && outcome.get().details() != null && !outcome.get().details().isBlank()) {
+                        details = outcome.get().details();
+                    }
+                }
                 notifyListeners(InferenceEvent.verification(
                         ModelMetricsBinder.SMILE_NAMESPACE,
                         fileName,
                         false,
-                        ex.getMessage() != null ? ex.getMessage() : path.toString(),
+                        details,
                         System.nanoTime() - t0));
             }
             throw ex;

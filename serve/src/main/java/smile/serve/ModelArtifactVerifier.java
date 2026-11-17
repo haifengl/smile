@@ -18,6 +18,7 @@
 package smile.serve;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import smile.model.Model;
 
 /**
@@ -33,6 +34,15 @@ import smile.model.Model;
  * @author Haifeng Li
  */
 public interface ModelArtifactVerifier {
+    /**
+     * Outcome of a verification check reported for tamper-evident audit logging.
+     *
+     * @param verified {@code true} if the artifact passed cryptographic verification;
+     *                 {@code false} if verification failed (e.g., permitted in {@code AUDIT} mode).
+     * @param details  structured verification or rejection summary (such as JSON metadata or error reason).
+     */
+    record VerificationOutcome(boolean verified, String details) {}
+
     /**
      * Verifies a model file on disk before it is deserialized.
      *
@@ -55,6 +65,22 @@ public interface ModelArtifactVerifier {
      */
     default void verifyLoadedSmileModel(Path artifactPath, Model model) throws SecurityException {
         // Default no-op
+    }
+
+    /**
+     * Returns the verification outcome for the most recent check on {@code artifactPath},
+     * or {@link Optional#empty()} if this verifier is disabled or did not evaluate the artifact.
+     *
+     * <p>Used by {@link InferenceService} and {@link OnnxService} to emit accurate
+     * {@link InferenceEvent.Action#MODEL_VERIFIED} vs. {@link InferenceEvent.Action#MODEL_REJECTED}
+     * events (including when a verifier runs in permissive {@code AUDIT} mode) with rich
+     * metadata details (`sha256`, `keyFp`, `signatureFormat`).</p>
+     *
+     * @param artifactPath absolute, normalized path to the model file.
+     * @return the verification outcome if evaluated.
+     */
+    default Optional<VerificationOutcome> verificationOutcome(Path artifactPath) {
+        return Optional.empty();
     }
 
     /**

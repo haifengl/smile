@@ -182,21 +182,39 @@ public class OnnxService implements OpenAiModelContributor {
                 verifier.verify(ModelMetricsBinder.ONNX_NAMESPACE, path);
             }
             if (!verifiers.isEmpty() && !listeners.isEmpty()) {
+                boolean allVerified = true;
+                String details = path.toString();
+                for (ModelArtifactVerifier verifier : verifiers) {
+                    var outcome = verifier.verificationOutcome(path);
+                    if (outcome.isPresent()) {
+                        allVerified &= outcome.get().verified();
+                        if (outcome.get().details() != null && !outcome.get().details().isBlank()) {
+                            details = outcome.get().details();
+                        }
+                    }
+                }
                 notifyListeners(InferenceEvent.verification(
                         ModelMetricsBinder.ONNX_NAMESPACE,
                         id,
-                        true,
-                        path.toString(),
+                        allVerified,
+                        details,
                         System.nanoTime() - t0));
             }
             return InferenceSession.create(path.toString());
         } catch (SecurityException ex) {
             if (!listeners.isEmpty()) {
+                String details = ex.getMessage() != null ? ex.getMessage() : path.toString();
+                for (ModelArtifactVerifier verifier : verifiers) {
+                    var outcome = verifier.verificationOutcome(path);
+                    if (outcome.isPresent() && outcome.get().details() != null && !outcome.get().details().isBlank()) {
+                        details = outcome.get().details();
+                    }
+                }
                 notifyListeners(InferenceEvent.verification(
                         ModelMetricsBinder.ONNX_NAMESPACE,
                         id,
                         false,
-                        ex.getMessage() != null ? ex.getMessage() : path.toString(),
+                        details,
                         System.nanoTime() - t0));
             }
             throw ex;
