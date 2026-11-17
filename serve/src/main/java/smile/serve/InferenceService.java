@@ -25,9 +25,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 import io.quarkus.arc.All;
@@ -221,7 +223,9 @@ public class InferenceService implements OpenAiModelContributor {
         }
         if (ex instanceof InvalidClassException ice) {
             String msg = ice.getMessage();
-            return msg != null && msg.contains("filter status: REJECTED");
+            return msg == null
+                    || msg.contains("filter status: REJECTED")
+                    || !msg.contains("serialVersionUID");
         }
         return true;
     }
@@ -244,13 +248,15 @@ public class InferenceService implements OpenAiModelContributor {
     @Override
     public List<ModelObject> listOpenAiModels() {
         List<ModelObject> result = new ArrayList<>();
-        for (InferenceModel model : models.values()) {
-            var meta = model.metadata();
-            result.add(ModelObject.of(
-                    model.id(),
-                    ModelObject.createdFromPath(model.path()),
-                    ModelObject.ownedByFromTags(meta.tags()),
-                    meta.algorithm()));
+        synchronized (models) {
+            for (InferenceModel model : models.values()) {
+                var meta = model.metadata();
+                result.add(ModelObject.of(
+                        model.id(),
+                        ModelObject.createdFromPath(model.path()),
+                        ModelObject.ownedByFromTags(meta.tags()),
+                        meta.algorithm()));
+            }
         }
         return result;
     }
@@ -458,17 +464,18 @@ public class InferenceService implements OpenAiModelContributor {
      */
     public void persistModel(InferenceModel model) throws ForbiddenException {
         checkBeforePersist(model);
-        model.persist();
-        if (model.path() != null) {
-            Path normalized = model.path().toAbsolutePath().normalize();
-            try {
-                for (ModelArtifactVerifier verifier : verifiers) {
-                    verifier.onModelPersisted(normalized, model.model());
+        model.persist(() -> {
+            if (model.path() != null) {
+                Path normalized = model.path().toAbsolutePath().normalize();
+                try {
+                    for (ModelArtifactVerifier verifier : verifiers) {
+                        verifier.onModelPersisted(normalized, model.model());
+                    }
+                } catch (SecurityException ex) {
+                    throw new ForbiddenException("Post-persist model signing failed: " + ex.getMessage(), ex);
                 }
-            } catch (SecurityException ex) {
-                throw new ForbiddenException("Post-persist model signing failed: " + ex.getMessage(), ex);
             }
-        }
+        });
     }
 
     /**
@@ -496,10 +503,18 @@ public class InferenceService implements OpenAiModelContributor {
             Path normalized = path.toAbsolutePath().normalize();
             Model m = verifyAndReadModel(normalized);
             var reloaded = new InferenceModel(m, normalized);
+            boolean idChanged = !reloaded.id().equals(id);
+            if (idChanged) {
+                models.remove(id);
+                modelPaths.remove(id);
+            }
             models.put(reloaded.id(), reloaded);
             modelPaths.put(reloaded.id(), normalized);
             quarantined.remove(normalized);
             metricsBinders.forEach(b -> {
+                if (idChanged) {
+                    b.unregister(ModelMetricsBinder.SMILE_NAMESPACE, id);
+                }
                 b.unregister(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id());
                 b.register(ModelMetricsBinder.SMILE_NAMESPACE, reloaded.id(), reloaded.metrics());
             });
@@ -572,6 +587,7 @@ public class InferenceService implements OpenAiModelContributor {
         }
 
         List<InferenceModel> loaded = new ArrayList<>();
+        Set<String> batchIds = new HashSet<>();
         for (Path file : smlFiles) {
             Path normalized = file.toAbsolutePath().normalize();
             Model m;
@@ -583,7 +599,7 @@ public class InferenceService implements OpenAiModelContributor {
                 throw new BadRequestException("Failed to read model from " + file + ": " + e.getMessage(), e);
             }
             var model = new InferenceModel(m, normalized);
-            if (models.containsKey(model.id())) {
+            if (models.containsKey(model.id()) || !batchIds.add(model.id())) {
                 throw new ClientErrorException(
                         "Model '" + model.id() + "' is already loaded. Use POST /api/v1/smile/" + model.id() + "/reload to refresh it, or unload it first.",
                         Response.Status.CONFLICT);

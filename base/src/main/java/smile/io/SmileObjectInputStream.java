@@ -22,9 +22,11 @@ import java.io.InputStream;
 import java.io.InvalidClassException;
 import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
+import java.io.ObjectStreamConstants;
 import java.io.PushbackInputStream;
 import java.io.StreamCorruptedException;
 import java.nio.ByteBuffer;
+import java.util.Objects;
 import java.util.zip.CRC32;
 
 /**
@@ -47,7 +49,7 @@ import java.util.zip.CRC32;
  *
  * @author Haifeng Li
  */
-class SmileObjectInputStream extends ObjectInputStream {
+public class SmileObjectInputStream extends ObjectInputStream {
 
     /**
      * The default allow-list pattern accepted by every instance.
@@ -62,7 +64,7 @@ class SmileObjectInputStream extends ObjectInputStream {
      *   <li>{@code !*}                  – reject everything else</li>
      * </ul>
      */
-    static final ObjectInputFilter DEFAULT_FILTER =
+    public static final ObjectInputFilter DEFAULT_FILTER =
             ObjectInputFilter.Config.createFilter(
                     "smile.**" +
                     ";java.lang.**" +
@@ -73,9 +75,30 @@ class SmileObjectInputStream extends ObjectInputStream {
                     ";!*");
 
     /** ASCII magic {@code "SMLM"} ({@code 0x534D4C4D}) for enveloped SMILE model files. */
-    static final int SMLM_MAGIC = 0x534D4C4D;
-    /** Maximum supported {@code SMLM} envelope format version. */
-    static final int SMLM_CURRENT_VERSION = 1;
+    public static final int SMLM_MAGIC = 0x534D4C4D;
+    /** Minimum supported {@code SMLM} envelope format version. */
+    public static final short SMLM_MIN_VERSION = 1;
+    /** Current and maximum supported {@code SMLM} envelope format version. */
+    public static final short SMLM_CURRENT_VERSION = 1;
+    /** Fixed byte length of the {@code SMLM} envelope header. */
+    public static final int SMLM_HEADER_SIZE = 11;
+    /** Legacy Java {@link ObjectOutputStream} stream magic + version ({@code 0xACED0005}). */
+    public static final int LEGACY_STREAM_HEADER =
+            ((Short.toUnsignedInt(ObjectStreamConstants.STREAM_MAGIC) << 16)
+                    | Short.toUnsignedInt(ObjectStreamConstants.STREAM_VERSION));
+
+    /**
+     * Parsed {@code SMLM} envelope header metadata.
+     *
+     * @param version the envelope format version ({@code >= 1} for enveloped artifacts,
+     *                or {@code 0} for legacy raw {@code ObjectOutputStream} artifacts).
+     * @param flags   the envelope flags byte ({@code 0} in v1).
+     * @param crc32   the unsigned 32-bit CRC-32 of the first 7 header bytes
+     *                ({@code 0} for legacy artifacts).
+     * @param legacy  {@code true} if the artifact uses the legacy raw {@code ObjectOutputStream} header.
+     */
+    public record SmlmHeader(int version, int flags, long crc32, boolean legacy) {
+    }
 
     /**
      * Creates a {@code SmileObjectInputStream} with the default allow-list filter.
@@ -83,7 +106,7 @@ class SmileObjectInputStream extends ObjectInputStream {
      * @param in the underlying input stream.
      * @throws IOException if an I/O error occurs while reading the stream header.
      */
-    SmileObjectInputStream(InputStream in) throws IOException {
+    public SmileObjectInputStream(InputStream in) throws IOException {
         this(in, DEFAULT_FILTER);
     }
 
@@ -100,24 +123,71 @@ class SmileObjectInputStream extends ObjectInputStream {
      * the decision falls through to the built-in allow-list.</p>
      *
      * @param in          the underlying input stream.
-     * @param extraFilter an additional {@link ObjectInputFilter} to merge.
+     * @param extraFilter an additional {@link ObjectInputFilter} to merge; must not be {@code null}.
      * @throws IOException if an I/O error occurs while reading the stream header.
      */
-    SmileObjectInputStream(InputStream in, ObjectInputFilter extraFilter) throws IOException {
-        super(stripSmlmHeaderIfPresent(in));
-        ObjectInputFilter combined;
-        if (extraFilter == null) {
-            combined = DEFAULT_FILTER;
-        } else {
-            combined = filterInfo -> {
-                ObjectInputFilter.Status status = extraFilter.checkInput(filterInfo);
-                if (status != ObjectInputFilter.Status.UNDECIDED) {
-                    return status;
-                }
-                return DEFAULT_FILTER.checkInput(filterInfo);
-            };
-        }
+    public SmileObjectInputStream(InputStream in, ObjectInputFilter extraFilter) throws IOException {
+        this(stripSmlmHeaderIfPresent(in), extraFilter, true);
+    }
+
+    /**
+     * Creates a {@code SmileObjectInputStream} on a stream whose {@code SMLM}
+     * envelope header has already been validated and consumed.
+     *
+     * @param payloadStream stream positioned directly at the {@code ObjectOutputStream} header.
+     * @param extraFilter   the {@link ObjectInputFilter} to merge with {@link #DEFAULT_FILTER}.
+     * @param preStripped   marker distinguishing the pre-stripped constructor.
+     * @throws IOException if an I/O error occurs while reading the stream header.
+     */
+    public SmileObjectInputStream(InputStream payloadStream, ObjectInputFilter extraFilter, boolean preStripped)
+            throws IOException {
+        super(preStripped ? payloadStream : stripSmlmHeaderIfPresent(payloadStream));
+        Objects.requireNonNull(extraFilter, "ObjectInputFilter must not be null");
+        ObjectInputFilter combined = extraFilter == DEFAULT_FILTER
+                ? DEFAULT_FILTER
+                : filterInfo -> {
+                    ObjectInputFilter.Status status = extraFilter.checkInput(filterInfo);
+                    if (status != ObjectInputFilter.Status.UNDECIDED) {
+                        return status;
+                    }
+                    return DEFAULT_FILTER.checkInput(filterInfo);
+                };
         setObjectInputFilter(combined);
+    }
+
+    /**
+     * Reads and validates the leading header of a {@code .sml} stream.
+     *
+     * <p>If the stream begins with the 11-byte {@code SMLM} envelope header,
+     * validates the format version, flags, and CRC-32 and leaves {@code pb}
+     * positioned at the Java serialization payload. If the stream begins with
+     * the legacy {@code 0xACED0005} stream header, pushes the 4 bytes back into
+     * {@code pb} and returns a header with {@code legacy == true}. Otherwise
+     * throws {@link StreamCorruptedException}.</p>
+     *
+     * @param pb         a {@link PushbackInputStream} with at least a 4-byte buffer.
+     * @param sourceName human-readable stream or file name for error messages.
+     * @return the parsed {@link SmlmHeader}.
+     * @throws IOException if the stream is truncated or the header is invalid.
+     */
+    public static SmlmHeader readSmlmHeader(PushbackInputStream pb, String sourceName) throws IOException {
+        byte[] prefix = pb.readNBytes(4);
+        if (prefix.length < 4) {
+            throw new EOFException(String.format(
+                    "Truncated .sml artifact '%s' (expected at least 4 bytes, got %d)",
+                    sourceName, prefix.length));
+        }
+        int magic = ByteBuffer.wrap(prefix).getInt();
+        if (magic == SMLM_MAGIC) {
+            return parseSmlmHeaderRest(pb, prefix, sourceName);
+        }
+        if (magic == LEGACY_STREAM_HEADER) {
+            pb.unread(prefix);
+            return new SmlmHeader(0, 0, 0L, true);
+        }
+        throw new StreamCorruptedException(String.format(
+                "Invalid .sml header magic 0x%08X in '%s' (expected SMLM 0x%08X or legacy stream 0x%08X)",
+                magic, sourceName, SMLM_MAGIC, LEGACY_STREAM_HEADER));
     }
 
     /**
@@ -139,10 +209,17 @@ class SmileObjectInputStream extends ObjectInputStream {
             pb.unread(magic);
             return pb;
         }
+        parseSmlmHeaderRest(pb, magic, "<stream>");
+        return pb;
+    }
 
-        byte[] rest = pb.readNBytes(7);
-        if (rest.length < 7) {
-            throw new EOFException("Truncated SMLM envelope header (expected 11 bytes, got " + (4 + rest.length) + ")");
+    private static SmlmHeader parseSmlmHeaderRest(PushbackInputStream pb, byte[] magic, String sourceName)
+            throws IOException {
+        byte[] rest = pb.readNBytes(SMLM_HEADER_SIZE - 4);
+        if (rest.length < SMLM_HEADER_SIZE - 4) {
+            throw new EOFException(String.format(
+                    "Truncated SMLM envelope header in '%s' (expected %d bytes, got %d)",
+                    sourceName, SMLM_HEADER_SIZE, 4 + rest.length));
         }
         ByteBuffer buf = ByteBuffer.wrap(rest);
         int formatVer = Short.toUnsignedInt(buf.getShort());
@@ -155,20 +232,20 @@ class SmileObjectInputStream extends ObjectInputStream {
         long actualCrc = crc.getValue();
         if (actualCrc != expectedCrc) {
             throw new StreamCorruptedException(String.format(
-                    "Corrupted SMLM envelope header: CRC-32 mismatch (expected 0x%08X, got 0x%08X)",
-                    expectedCrc, actualCrc));
+                    "Corrupted SMLM envelope header in '%s': CRC-32 mismatch (expected 0x%08X, got 0x%08X)",
+                    sourceName, expectedCrc, actualCrc));
         }
-        if (formatVer < 1 || formatVer > SMLM_CURRENT_VERSION) {
+        if (formatVer < SMLM_MIN_VERSION || formatVer > SMLM_CURRENT_VERSION) {
             throw new StreamCorruptedException(String.format(
-                    "Unsupported .sml format version v%d; this runtime reads v1–v%d",
-                    formatVer, SMLM_CURRENT_VERSION));
+                    "Unsupported .sml format: '%s' is a v%d .sml; this runtime reads v%d–v%d",
+                    sourceName, formatVer, SMLM_MIN_VERSION, SMLM_CURRENT_VERSION));
         }
         if (flags != 0) {
             throw new StreamCorruptedException(String.format(
-                    "Unsupported SMLM header flags 0x%02X in v%d (expected 0x00)",
-                    flags, formatVer));
+                    "Unsupported SMLM header flags 0x%02X in '%s' (v%d requires 0x00)",
+                    flags, sourceName, formatVer));
         }
-        return pb;
+        return new SmlmHeader(formatVer, flags, actualCrc, false);
     }
 }
 

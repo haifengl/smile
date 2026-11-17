@@ -60,7 +60,7 @@ public class Predict implements Callable<Integer> {
         try {
             m = Model.read(model.toPath());
         } catch (Exception ex) {
-            System.err.println(model.getName() + " doesn't contain a valid model.");
+            System.err.printf("%s doesn't contain a valid model: %s%n", model.getName(), ex.getMessage());
             return 1;
         }
         if (explain && !m.supportsShap()) {

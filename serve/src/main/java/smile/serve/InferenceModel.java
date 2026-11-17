@@ -398,18 +398,35 @@ public class InferenceModel {
 
     /**
      * Persists the current in-memory model state to its backing {@code .sml} file on disk
-     * via an atomic move from a temporary sibling file.
+     * via an atomic move from a unique temporary sibling file.
      */
     public void persist() {
+        persist(() -> {});
+    }
+
+    /**
+     * Persists the current in-memory model state to its backing {@code .sml} file on disk
+     * via an atomic move from a unique temporary sibling file, executing {@code afterMove}
+     * while still holding the exclusive write lock so post-persist hooks (such as local
+     * node re-signing) observe a consistent on-disk and in-memory state.
+     *
+     * @param afterMove hook invoked after the atomic file replacement completes.
+     */
+    void persist(Runnable afterMove) {
         if (path == null) {
             throw new BadRequestException("Model '" + id + "' has no backing file path");
         }
         if (!(model instanceof Serializable)) {
             throw new BadRequestException("Model '" + id + "' is not serializable");
         }
-        rwLock.readLock().lock();
-        Path tempPath = path.resolveSibling(path.getFileName().toString() + ".tmp");
+        rwLock.writeLock().lock();
+        Path tempPath = null;
         try {
+            Path dir = path.toAbsolutePath().normalize().getParent();
+            String prefix = path.getFileName().toString() + ".";
+            tempPath = dir != null
+                    ? Files.createTempFile(dir, prefix, ".tmp")
+                    : Files.createTempFile(prefix, ".tmp");
             Model.write(model, tempPath);
             try {
                 Files.move(tempPath, path,
@@ -418,14 +435,27 @@ public class InferenceModel {
             } catch (AtomicMoveNotSupportedException ex) {
                 Files.move(tempPath, path, StandardCopyOption.REPLACE_EXISTING);
             }
+            if (afterMove != null) {
+                afterMove.run();
+            }
+        } catch (RuntimeException ex) {
+            cleanupTempFile(tempPath);
+            throw ex;
         } catch (Exception ex) {
+            cleanupTempFile(tempPath);
+            throw new InternalServerErrorException("Failed to persist model '" + id + "': " + ex.getMessage(), ex);
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    private static void cleanupTempFile(Path tempPath) {
+        if (tempPath != null) {
             try {
                 Files.deleteIfExists(tempPath);
             } catch (Exception ignored) {
+                // Best-effort cleanup of failed temp file
             }
-            throw new InternalServerErrorException("Failed to persist model '" + id + "': " + ex.getMessage(), ex);
-        } finally {
-            rwLock.readLock().unlock();
         }
     }
 

@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Properties;
 import smile.anomaly.IsolationForest;
 import smile.anomaly.LOF;
@@ -89,10 +90,20 @@ public interface Model {
      * @throws IOException if writing fails.
      */
     static Path write(Model model) throws IOException {
+        Objects.requireNonNull(model, "Model must not be null");
         Path temp = Files.createTempFile("smile-model-", ".sml");
-        write(model, temp);
-        temp.toFile().deleteOnExit();
-        return temp;
+        try {
+            write(model, temp);
+            temp.toFile().deleteOnExit();
+            return temp;
+        } catch (IOException | RuntimeException ex) {
+            try {
+                Files.deleteIfExists(temp);
+            } catch (IOException ignored) {
+                // Best-effort cleanup of failed temp file
+            }
+            throw ex;
+        }
     }
 
     /**

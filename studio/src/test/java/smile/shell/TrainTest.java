@@ -21,8 +21,8 @@ import java.io.*;
 import java.nio.file.*;
 import org.junit.jupiter.api.*;
 import picocli.CommandLine;
-import smile.io.Read;
 import smile.math.MathEx;
+import smile.model.Model;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -123,7 +123,7 @@ public class TrainTest {
         assertTrue(Files.exists(modelFile), "Model file should be created");
         assertTrue(Files.size(modelFile) > 0, "Model file should be non-empty");
         // Verify the serialized object is a ClassificationModel
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.ClassificationModel.class, obj);
     }
 
@@ -138,7 +138,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.ClassificationModel.class, obj);
     }
 
@@ -153,7 +153,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.ClassificationModel.class, obj);
     }
 
@@ -168,7 +168,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.ClassificationModel.class, obj);
     }
 
@@ -183,7 +183,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.ClassificationModel.class, obj);
     }
 
@@ -198,7 +198,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.ClassificationModel.class, obj);
     }
 
@@ -213,7 +213,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.ClassificationModel.class, obj);
     }
 
@@ -228,7 +228,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.ClassificationModel.class, obj);
     }
 
@@ -264,7 +264,7 @@ public class TrainTest {
         System.out.println("Fisher exit=" + exit + " stderr=" + stderr);
         assertEquals(0, exit, "Fisher should succeed. stderr=" + stderr);
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.ClassificationModel.class, obj);
     }
 
@@ -282,7 +282,7 @@ public class TrainTest {
         System.out.println("RBF exit=" + exit + " stderr=" + stderr);
         assertEquals(0, exit, "RBF should succeed. stderr=" + stderr);
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.ClassificationModel.class, obj);
     }
 
@@ -297,7 +297,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.ClassificationModel.class, obj);
     }
 
@@ -317,7 +317,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.RegressionModel.class, obj);
     }
 
@@ -333,7 +333,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.RegressionModel.class, obj);
     }
 
@@ -349,7 +349,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.RegressionModel.class, obj);
     }
 
@@ -365,7 +365,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.RegressionModel.class, obj);
     }
 
@@ -381,7 +381,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.RegressionModel.class, obj);
     }
 
@@ -397,7 +397,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.RegressionModel.class, obj);
     }
 
@@ -413,7 +413,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.RegressionModel.class, obj);
     }
 
@@ -433,7 +433,7 @@ public class TrainTest {
             "random-forest", "--trees", "10"
         );
         assertEquals(0, exit);
-        var model = (smile.model.ClassificationModel) Read.object(modelFile);
+        var model = (smile.model.ClassificationModel) Model.read(modelFile);
         assertEquals("iris-rf", model.getTag(smile.model.Model.ID));
         assertEquals("1.0.0", model.getTag(smile.model.Model.VERSION));
     }
@@ -518,7 +518,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.ClusteringModel.class, obj);
         var model = (smile.model.ClusteringModel) obj;
         assertEquals(3, model.k());
@@ -537,7 +537,7 @@ public class TrainTest {
         );
         assertEquals(0, exit, "Expected exit code 0");
         assertTrue(Files.exists(modelFile), "Model file should be created");
-        var obj = Read.object(modelFile);
+        var obj = Model.read(modelFile);
         assertInstanceOf(smile.model.ClusteringModel.class, obj);
         var model = (smile.model.ClusteringModel) obj;
         assertEquals("emeans", model.algorithm());
@@ -556,7 +556,7 @@ public class TrainTest {
             "xmeans", "-k", "5"
         );
         assertEquals(0, exitX);
-        assertInstanceOf(smile.model.ClusteringModel.class, Read.object(xmeansFile));
+        assertInstanceOf(smile.model.ClusteringModel.class, Model.read(xmeansFile));
 
         Path gmeansFile = tempDir.resolve("gmeans.sml");
         int exitG = new CommandLine(new Train()).execute(
@@ -566,7 +566,7 @@ public class TrainTest {
             "gmeans", "-k", "5"
         );
         assertEquals(0, exitG);
-        assertInstanceOf(smile.model.ClusteringModel.class, Read.object(gmeansFile));
+        assertInstanceOf(smile.model.ClusteringModel.class, Model.read(gmeansFile));
 
         Path daFile = tempDir.resolve("da.sml");
         int exitDa = new CommandLine(new Train()).execute(
@@ -576,7 +576,7 @@ public class TrainTest {
             "da", "-k", "3", "--alpha", "0.8", "--iterations", "30"
         );
         assertEquals(0, exitDa);
-        assertInstanceOf(smile.model.ClusteringModel.class, Read.object(daFile));
+        assertInstanceOf(smile.model.ClusteringModel.class, Model.read(daFile));
     }
 
     // ------------------------------------------------------------------
@@ -594,7 +594,7 @@ public class TrainTest {
             "som", "--nrow", "4", "--ncol", "4", "--epochs", "5"
         );
         assertEquals(0, exitSom);
-        assertInstanceOf(smile.model.VectorQuantizerModel.class, Read.object(somFile));
+        assertInstanceOf(smile.model.VectorQuantizerModel.class, Model.read(somFile));
 
         Path ngFile = tempDir.resolve("ng.sml");
         int exitNg = new CommandLine(new Train()).execute(
@@ -604,7 +604,7 @@ public class TrainTest {
             "neural-gas", "-k", "5", "--epochs", "5"
         );
         assertEquals(0, exitNg);
-        assertInstanceOf(smile.model.VectorQuantizerModel.class, Read.object(ngFile));
+        assertInstanceOf(smile.model.VectorQuantizerModel.class, Model.read(ngFile));
 
         Path gngFile = tempDir.resolve("gng.sml");
         int exitGng = new CommandLine(new Train()).execute(
@@ -614,7 +614,7 @@ public class TrainTest {
             "gng", "--epochs", "5", "--lambda", "50"
         );
         assertEquals(0, exitGng);
-        assertInstanceOf(smile.model.VectorQuantizerModel.class, Read.object(gngFile));
+        assertInstanceOf(smile.model.VectorQuantizerModel.class, Model.read(gngFile));
 
         Path nmFile = tempDir.resolve("nm.sml");
         int exitNm = new CommandLine(new Train()).execute(
@@ -624,7 +624,7 @@ public class TrainTest {
             "neural-map", "--radius", "1.5", "--epochs", "5"
         );
         assertEquals(0, exitNm);
-        assertInstanceOf(smile.model.VectorQuantizerModel.class, Read.object(nmFile));
+        assertInstanceOf(smile.model.VectorQuantizerModel.class, Model.read(nmFile));
 
         Path birchFile = tempDir.resolve("birch.sml");
         int exitBirch = new CommandLine(new Train()).execute(
@@ -634,7 +634,7 @@ public class TrainTest {
             "birch", "--radius", "1.0", "--branching", "5", "--leaves", "5"
         );
         assertEquals(0, exitBirch);
-        assertInstanceOf(smile.model.VectorQuantizerModel.class, Read.object(birchFile));
+        assertInstanceOf(smile.model.VectorQuantizerModel.class, Model.read(birchFile));
     }
 
     // ------------------------------------------------------------------
@@ -652,7 +652,7 @@ public class TrainTest {
             "isolation-forest", "--trees", "50", "--max-depth", "8", "--sampling", "0.7", "--threshold", "0.6"
         );
         assertEquals(0, exitIforest);
-        var iforestModel = (smile.model.AnomalyModel) Read.object(iforestFile);
+        var iforestModel = (smile.model.AnomalyModel) Model.read(iforestFile);
         assertEquals("isolation-forest", iforestModel.algorithm());
         assertEquals(0.6, iforestModel.threshold(), 1E-12);
 
@@ -664,7 +664,7 @@ public class TrainTest {
             "lof", "-k", "15", "--threshold", "1.6", "--transform", "standardizer"
         );
         assertEquals(0, exitLof);
-        var lofModel = (smile.model.AnomalyModel) Read.object(lofFile);
+        var lofModel = (smile.model.AnomalyModel) Model.read(lofFile);
         assertEquals("lof", lofModel.algorithm());
         assertEquals(1.6, lofModel.threshold(), 1E-12);
 
@@ -676,7 +676,7 @@ public class TrainTest {
             "ocsvm", "--kernel", "Gaussian(1.0)", "--nu", "0.1", "--threshold", "-0.05"
         );
         assertEquals(0, exitOcsvm);
-        var ocsvmModel = (smile.model.AnomalyModel) Read.object(ocsvmFile);
+        var ocsvmModel = (smile.model.AnomalyModel) Model.read(ocsvmFile);
         assertEquals("ocsvm", ocsvmModel.algorithm());
         assertEquals(-0.05, ocsvmModel.threshold(), 1E-12);
     }
