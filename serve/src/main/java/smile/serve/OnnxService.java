@@ -173,10 +173,32 @@ public class OnnxService implements OpenAiModelContributor {
     }
 
     private InferenceSession verifyAndCreateSession(Path path) {
-        for (ModelArtifactVerifier verifier : verifiers) {
-            verifier.verify(ModelMetricsBinder.ONNX_NAMESPACE, path);
+        long t0 = System.nanoTime();
+        String id = Paths.getFileName(path);
+        try {
+            for (ModelArtifactVerifier verifier : verifiers) {
+                verifier.verify(ModelMetricsBinder.ONNX_NAMESPACE, path);
+            }
+            if (!verifiers.isEmpty() && !listeners.isEmpty()) {
+                notifyListeners(InferenceEvent.verification(
+                        ModelMetricsBinder.ONNX_NAMESPACE,
+                        id,
+                        true,
+                        path.toString(),
+                        System.nanoTime() - t0));
+            }
+            return InferenceSession.create(path.toString());
+        } catch (SecurityException ex) {
+            if (!listeners.isEmpty()) {
+                notifyListeners(InferenceEvent.verification(
+                        ModelMetricsBinder.ONNX_NAMESPACE,
+                        id,
+                        false,
+                        ex.getMessage() != null ? ex.getMessage() : path.toString(),
+                        System.nanoTime() - t0));
+            }
+            throw ex;
         }
-        return InferenceSession.create(path.toString());
     }
 
     private void recordQuarantine(Path path, Throwable ex) {

@@ -56,4 +56,29 @@ public interface ModelArtifactVerifier {
     default void verifyLoadedSmileModel(Path artifactPath, Model model) throws SecurityException {
         // Default no-op
     }
+
+    /**
+     * Optional pre-persist hook invoked before an online-updated {@code .sml}
+     * model overwrites its backing file on disk.
+     *
+     * @param artifactPath absolute, normalized path to the {@code .sml} file.
+     * @param model        the in-memory {@link Model} instance being persisted.
+     * @throws SecurityException if online persistence is disallowed by policy.
+     */
+    default void beforeModelPersist(Path artifactPath, Model model) throws SecurityException {
+        // Default no-op
+    }
+
+    /**
+     * Optional post-persist hook invoked immediately after an online-updated
+     * {@code .sml} model has been atomically written to disk (e.g., to re-sign
+     * the updated artifact with the node's local key).
+     *
+     * @param artifactPath absolute, normalized path to the persisted {@code .sml} file.
+     * @param model        the persisted {@link Model} instance.
+     * @throws SecurityException if post-persist re-signing fails.
+     */
+    default void onModelPersisted(Path artifactPath, Model model) throws SecurityException {
+        // Default no-op
+    }
 }

@@ -64,7 +64,11 @@ public record InferenceEvent(
         /** Model reloaded from disk. */
         MODEL_RELOADED,
         /** Model unloaded from active memory. */
-        MODEL_UNLOADED
+        MODEL_UNLOADED,
+        /** Model artifact cryptographic signature verified prior to loading. */
+        MODEL_VERIFIED,
+        /** Model artifact rejected by cryptographic signature or format verification. */
+        MODEL_REJECTED
     }
 
     /**
@@ -165,6 +169,33 @@ public record InferenceEvent(
                 0L,
                 false,
                 true
+        );
+    }
+
+    /**
+     * Creates a model artifact verification event ({@link Action#MODEL_VERIFIED}
+     * or {@link Action#MODEL_REJECTED}).
+     *
+     * @param namespace    the model namespace.
+     * @param modelId      the model ID or file name.
+     * @param verified     {@code true} if verification succeeded; {@code false} if rejected.
+     * @param details      verification or rejection metadata (JSON or message).
+     * @param latencyNanos verification duration in nanoseconds.
+     * @return the event instance.
+     */
+    public static InferenceEvent verification(String namespace, String modelId, boolean verified,
+                                              String details, long latencyNanos) {
+        return new InferenceEvent(
+                Instant.now(),
+                namespace,
+                modelId,
+                verified ? Action.MODEL_VERIFIED : Action.MODEL_REJECTED,
+                null,
+                null,
+                details,
+                Math.max(0L, latencyNanos),
+                false,
+                verified
         );
     }
 }
