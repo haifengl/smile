@@ -174,9 +174,67 @@ public class ModelArtifactVerifierTest {
                 "filter status: REJECTED");
         assertTrue(InferenceService.isFatalLoadFailure(filterRejected));
 
+        // Non-UID InvalidClassException (e.g. no valid constructor / null message) -> always fatal
+        InvalidClassException nonUidInvalid = new InvalidClassException(
+                "smile.model.BrokenModel",
+                "no valid constructor");
+        assertTrue(InferenceService.isFatalLoadFailure(nonUidInvalid));
+        assertTrue(InferenceService.isFatalLoadFailure(new InvalidClassException(null)));
+
         // SecurityException and StreamCorruptedException -> always fatal
         assertTrue(InferenceService.isFatalLoadFailure(new SecurityException("Bad signature")));
         assertTrue(InferenceService.isFatalLoadFailure(new StreamCorruptedException("Unsupported .sml format")));
+    }
+
+    @Test
+    public void testReloadModelWhenVersionTagChangesReplacesOldModelId() throws Exception {
+        // Given: a model initially saved with version "1"
+        var iris = Read.arff(Paths.getTestData("weka/iris.arff"));
+        var v1 = Model.classification("logistic", Formula.lhs("class"), iris, null, new Properties());
+        v1.setTag(Model.ID, "iris-reload");
+        v1.setTag(Model.VERSION, "1");
+        Path smlFile = tempDir.resolve("iris-reload.sml");
+        Model.write(v1, smlFile);
+
+        InferenceService service = new InferenceService(
+                configFor(smlFile), List.of(), List.of(), List.of());
+        assertTrue(service.models().containsKey("iris-reload-1"));
+
+        // When: the file on disk is updated to version "2" and reloadModel("iris-reload-1") is called
+        var v2 = Model.classification("logistic", Formula.lhs("class"), iris, null, new Properties());
+        v2.setTag(Model.ID, "iris-reload");
+        v2.setTag(Model.VERSION, "2");
+        Model.write(v2, smlFile);
+
+        InferenceModel reloaded = service.reloadModel("iris-reload-1");
+
+        // Then: the old ID is removed and the new ID is active
+        assertEquals("iris-reload-2", reloaded.id());
+        assertFalse(service.models().containsKey("iris-reload-1"));
+        assertTrue(service.models().containsKey("iris-reload-2"));
+    }
+
+    @Test
+    public void testLoadDirectoryWithDuplicateModelIdsRejectsWithConflict() throws Exception {
+        // Given: two .sml files in the same directory with identical Model.ID and Model.VERSION
+        Path batchDir = tempDir.resolve("batch-dup");
+        Files.createDirectories(batchDir);
+        var iris = Read.arff(Paths.getTestData("weka/iris.arff"));
+        var model = Model.classification("logistic", Formula.lhs("class"), iris, null, new Properties());
+        model.setTag(Model.ID, "iris-dup");
+        model.setTag(Model.VERSION, "1");
+        Model.write(model, batchDir.resolve("copy-a.sml"));
+        Model.write(model, batchDir.resolve("copy-b.sml"));
+
+        InferenceService service = new InferenceService(
+                configFor(tempDir.resolve("empty")), List.of(), List.of(), List.of());
+
+        // When / Then: loading the directory rejects the duplicate ID with 409 Conflict
+        jakarta.ws.rs.ClientErrorException ex = assertThrows(
+                jakarta.ws.rs.ClientErrorException.class,
+                () -> service.load(batchDir));
+        assertEquals(409, ex.getResponse().getStatus());
+        assertTrue(service.models().isEmpty());
     }
 
     @Test

@@ -24,9 +24,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 import io.quarkus.arc.All;
@@ -229,12 +231,14 @@ public class OnnxService implements OpenAiModelContributor {
     @Override
     public List<ModelObject> listOpenAiModels() {
         List<ModelObject> result = new ArrayList<>();
-        for (OnnxModel model : models.values()) {
-            result.add(ModelObject.of(
-                    model.id(),
-                    ModelObject.createdFromPath(model.path()),
-                    ModelObject.ownedByFromMap(model.info().customMeta()),
-                    ModelObject.KIND_ONNX));
+        synchronized (models) {
+            for (OnnxModel model : models.values()) {
+                result.add(ModelObject.of(
+                        model.id(),
+                        ModelObject.createdFromPath(model.path()),
+                        ModelObject.ownedByFromMap(model.info().customMeta()),
+                        ModelObject.KIND_ONNX));
+            }
         }
         return result;
     }
@@ -456,10 +460,14 @@ public class OnnxService implements OpenAiModelContributor {
         }
 
         List<OnnxModel> loaded = new ArrayList<>();
+        Set<String> batchIds = new HashSet<>();
         for (Path file : onnxFiles) {
             Path normalized = file.toAbsolutePath().normalize();
             String id = Paths.getFileName(normalized);
-            if (models.containsKey(id)) {
+            if (models.containsKey(id) || !batchIds.add(id)) {
+                for (var m : loaded) {
+                    m.close();
+                }
                 throw new ClientErrorException(
                         "ONNX model '" + id + "' is already loaded. Use POST /api/v1/onnx/" + id + "/reload to refresh it, or unload it first.",
                         Response.Status.CONFLICT);

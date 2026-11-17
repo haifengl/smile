@@ -18,12 +18,10 @@ package smile.model;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputFilter;
 import java.io.ObjectOutputStream;
-import java.io.ObjectStreamConstants;
 import java.io.OutputStream;
 import java.io.PushbackInputStream;
 import java.io.Serializable;
@@ -36,7 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.CRC32;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import smile.io.Read;
+import smile.io.SmileObjectInputStream;
 
 /**
  * Versioned binary container envelope ({@code SMLM}) for serialized SMILE
@@ -57,7 +55,7 @@ import smile.io.Read;
  * <ul>
  *   <li>If {@code "SMLM"} ({@code 0x534D4C4D}) is present, the format version,
  *       flags, and header CRC-32 are validated before handing the payload to
- *       {@link Read#object(InputStream)}.</li>
+ *       {@link SmileObjectInputStream}.</li>
  *   <li>If the legacy Java serialization magic ({@code 0xACED0005}) is present,
  *       the stream is deserialized via the legacy path and a one-time
  *       deprecation warning is logged.</li>
@@ -69,16 +67,16 @@ public final class Format {
     private static final Logger logger = LoggerFactory.getLogger(Format.class);
 
     /** 4-byte ASCII magic {@code "SMLM"} ({@code 0x534D4C4D}). */
-    public static final int MAGIC = 0x534D4C4D;
+    public static final int MAGIC = SmileObjectInputStream.SMLM_MAGIC;
 
     /** Current envelope format version ({@code 1}). */
-    public static final short CURRENT_VERSION = 1;
+    public static final short CURRENT_VERSION = SmileObjectInputStream.SMLM_CURRENT_VERSION;
 
     /** Minimum supported envelope format version ({@code 1}). */
-    public static final short MIN_VERSION = 1;
+    public static final short MIN_VERSION = SmileObjectInputStream.SMLM_MIN_VERSION;
 
     /** Size in bytes of the fixed {@code SMLM} envelope header ({@code 11}). */
-    public static final int HEADER_SIZE = 11;
+    public static final int HEADER_SIZE = SmileObjectInputStream.SMLM_HEADER_SIZE;
 
     /** Reserved flag bit 0: payload compression. */
     public static final byte FLAG_COMPRESSION = 0x01;
@@ -87,9 +85,7 @@ public final class Format {
     public static final byte FLAG_ENCRYPTION = 0x04;
 
     /** Legacy Java ObjectOutputStream header magic + version ({@code 0xACED0005}). */
-    static final int LEGACY_STREAM_HEADER =
-            ((Short.toUnsignedInt(ObjectStreamConstants.STREAM_MAGIC) << 16)
-                    | Short.toUnsignedInt(ObjectStreamConstants.STREAM_VERSION));
+    static final int LEGACY_STREAM_HEADER = SmileObjectInputStream.LEGACY_STREAM_HEADER;
 
     /** Ensures the legacy-format deprecation warning is logged at most once per JVM run. */
     private static final AtomicBoolean LEGACY_WARNING_LOGGED = new AtomicBoolean(false);
@@ -162,6 +158,7 @@ public final class Format {
 
     /**
      * Writes a SMILE {@link Model} to an output stream with the {@code SMLM} v1 envelope header.
+     * Does not close the caller-supplied {@code out} stream, but flushes the object stream.
      *
      * @param model the model to serialize.
      * @param out   the destination output stream.
@@ -174,9 +171,9 @@ public final class Format {
             throw new IllegalArgumentException("Model is not Serializable: " + model.getClass().getName());
         }
         out.write(buildHeader(CURRENT_VERSION, (byte) 0));
-        try (ObjectOutputStream oos = new ObjectOutputStream(out)) {
-            oos.writeObject(s);
-        }
+        ObjectOutputStream oos = new ObjectOutputStream(out);
+        oos.writeObject(s);
+        oos.flush();
     }
 
     /**
@@ -190,14 +187,14 @@ public final class Format {
      * @throws ClassNotFoundException if a serialized class cannot be found.
      */
     public static Model read(Path path) throws IOException, ClassNotFoundException {
-        return read(path, null);
+        return read(path, SmileObjectInputStream.DEFAULT_FILTER);
     }
 
     /**
      * Reads a SMILE {@link Model} from a file with an additional {@link ObjectInputFilter}.
      *
      * @param path        the model file path.
-     * @param extraFilter optional extra {@link ObjectInputFilter} merged with the built-in allow-list.
+     * @param extraFilter extra {@link ObjectInputFilter} merged with the built-in allow-list; must not be {@code null}.
      * @return the deserialized {@link Model}.
      * @throws IOException            if the file cannot be read, the header is corrupt/unsupported,
      *                                a disallowed class is encountered, or the payload is not a {@link Model}.
@@ -205,6 +202,7 @@ public final class Format {
      */
     public static Model read(Path path, ObjectInputFilter extraFilter) throws IOException, ClassNotFoundException {
         Objects.requireNonNull(path, "Model path must not be null");
+        Objects.requireNonNull(extraFilter, "ObjectInputFilter must not be null");
         try (InputStream file = new BufferedInputStream(Files.newInputStream(path))) {
             return read(file, path.toString(), extraFilter);
         }
@@ -220,12 +218,13 @@ public final class Format {
      * @throws ClassNotFoundException if a serialized class cannot be found.
      */
     public static Model read(InputStream in) throws IOException, ClassNotFoundException {
-        return read(in, "<stream>", null);
+        return read(in, "<stream>", SmileObjectInputStream.DEFAULT_FILTER);
     }
 
     private static Model read(InputStream in, String sourceName, ObjectInputFilter extraFilter)
             throws IOException, ClassNotFoundException {
         Objects.requireNonNull(in, "InputStream must not be null");
+        Objects.requireNonNull(extraFilter, "ObjectInputFilter must not be null");
         PushbackInputStream pb = new PushbackInputStream(in, 4);
         Header header = readHeader(pb, sourceName);
         if (header.legacy()) {
@@ -234,7 +233,10 @@ public final class Format {
                         sourceName, CURRENT_VERSION);
             }
         }
-        Object obj = extraFilter == null ? Read.object(pb) : Read.object(pb, extraFilter);
+        final Object obj;
+        try (SmileObjectInputStream ois = new SmileObjectInputStream(pb, extraFilter, true)) {
+            obj = ois.readObject();
+        }
         if (obj instanceof Model model) {
             return model;
         }
@@ -244,55 +246,8 @@ public final class Format {
     }
 
     private static Header readHeader(PushbackInputStream pb, String sourceName) throws IOException {
-        byte[] prefix = pb.readNBytes(4);
-        if (prefix.length < 4) {
-            throw new EOFException(String.format(
-                    "Truncated .sml artifact '%s' (expected at least 4 bytes, got %d)",
-                    sourceName, prefix.length));
-        }
-        int magic = ByteBuffer.wrap(prefix).getInt();
-        if (magic == MAGIC) {
-            byte[] rest = pb.readNBytes(HEADER_SIZE - 4);
-            if (rest.length < HEADER_SIZE - 4) {
-                throw new EOFException(String.format(
-                        "Truncated SMLM envelope header in '%s' (expected %d bytes, got %d)",
-                        sourceName, HEADER_SIZE, 4 + rest.length));
-            }
-            ByteBuffer buf = ByteBuffer.wrap(rest);
-            int formatVer = Short.toUnsignedInt(buf.getShort());
-            int flags = Byte.toUnsignedInt(buf.get());
-            long expectedCrc = Integer.toUnsignedLong(buf.getInt());
-
-            CRC32 crc = new CRC32();
-            crc.update(prefix);
-            crc.update(rest, 0, 3);
-            long actualCrc = crc.getValue();
-            if (actualCrc != expectedCrc) {
-                throw new StreamCorruptedException(String.format(
-                        "Corrupted SMLM envelope header in '%s': CRC-32 mismatch (expected 0x%08X, got 0x%08X)",
-                        sourceName, expectedCrc, actualCrc));
-            }
-            if (formatVer < MIN_VERSION || formatVer > CURRENT_VERSION) {
-                throw new StreamCorruptedException(String.format(
-                        "Unsupported .sml format: '%s' is a v%d .sml; this runtime reads v%d–v%d",
-                        sourceName, formatVer, MIN_VERSION, CURRENT_VERSION));
-            }
-            if (flags != 0) {
-                throw new StreamCorruptedException(String.format(
-                        "Unsupported SMLM header flags 0x%02X in '%s' (v%d requires 0x00)",
-                        flags, sourceName, formatVer));
-            }
-            return new Header(formatVer, flags, actualCrc, false);
-        }
-
-        if (magic == LEGACY_STREAM_HEADER) {
-            pb.unread(prefix);
-            return new Header(0, 0, 0L, true);
-        }
-
-        throw new StreamCorruptedException(String.format(
-                "Invalid .sml header magic 0x%08X in '%s' (expected SMLM 0x%08X or legacy stream 0x%08X)",
-                magic, sourceName, MAGIC, LEGACY_STREAM_HEADER));
+        SmileObjectInputStream.SmlmHeader h = SmileObjectInputStream.readSmlmHeader(pb, sourceName);
+        return new Header(h.version(), h.flags(), h.crc32(), h.legacy());
     }
 
     /**

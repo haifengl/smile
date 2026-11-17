@@ -188,6 +188,25 @@ public class FormatTest {
     }
 
     @Test
+    public void testGivenDoubleEnvelopedStreamWhenReadViaModelReadThenRejected() throws Exception {
+        // Given: an SMLM header followed by another SMLM header (double-enveloped)
+        DataFrame df = sampleRegressionData();
+        RegressionModel model = Model.regression("ols", Formula.lhs("y"), df, null, new Properties());
+        Path validFile = tempDir.resolve("single-enveloped.sml");
+        Model.write(model, validFile);
+        byte[] validBytes = Files.readAllBytes(validFile);
+
+        Path doubleFile = tempDir.resolve("double-enveloped.sml");
+        try (OutputStream out = Files.newOutputStream(doubleFile)) {
+            out.write(Format.buildHeader(Format.CURRENT_VERSION, (byte) 0));
+            out.write(validBytes);
+        }
+
+        // When / Then: Model.read must not silently strip a second SMLM header
+        assertThrows(StreamCorruptedException.class, () -> Model.read(doubleFile));
+    }
+
+    @Test
     public void testGivenLegacyRawObjectOutputStreamArtifactWhenReadThenLoadsAndLogsOnce() throws Exception {
         // Given: a raw ObjectOutputStream model (no SMLM magic)
         Format.resetLegacyWarningForTests();
