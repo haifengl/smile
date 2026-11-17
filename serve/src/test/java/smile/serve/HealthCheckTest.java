@@ -82,4 +82,14 @@ public class HealthCheckTest {
         // Then: allow-empty clients must reach the load endpoint before any model exists.
         assertTrue(ReadinessCheck.isReady(0, true));
     }
+
+    @Test
+    public void testNotReadyWhenQuarantinedUnlessAllowQuarantinedIsTrue() {
+        // Even with 1 active model, a quarantined startup model marks readiness DOWN by default
+        assertFalse(ReadinessCheck.isReady(1, 1, false, false));
+        assertFalse(ReadinessCheck.isReady(0, 1, true, false));
+        // When allowQuarantined=true, readiness reports UP if activeModels > 0 or allowEmpty
+        assertTrue(ReadinessCheck.isReady(1, 1, false, true));
+        assertTrue(ReadinessCheck.isReady(0, 1, true, true));
+    }
 }

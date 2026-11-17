@@ -102,6 +102,28 @@ public class ModelCatalogTest {
         assertFalse(ModelCatalog.shouldExitOnEmptyStartup(false, true));
     }
 
+    @Test
+    public void testQuarantineStartupPolicyAbortsWhenFailFastOrFatal() {
+        QuarantinedModel benignUidMismatch = new QuarantinedModel(
+                "/models/old.sml", "smile", "java.io.InvalidClassException",
+                "serialVersionUID mismatch", false, 1000L);
+        QuarantinedModel fatalSecurity = new QuarantinedModel(
+                "/models/tampered.sml", "smile", "java.lang.SecurityException",
+                "Signature verification failed", true, 1000L);
+
+        // No quarantined models -> never abort
+        assertFalse(ModelCatalog.shouldExitOnFatalQuarantine(List.of(), true));
+        assertFalse(ModelCatalog.shouldExitOnFatalQuarantine(List.of(), false));
+
+        // Benign InvalidClassException: aborts when failFast=true, quarantined when failFast=false
+        assertTrue(ModelCatalog.shouldExitOnFatalQuarantine(List.of(benignUidMismatch), true));
+        assertFalse(ModelCatalog.shouldExitOnFatalQuarantine(List.of(benignUidMismatch), false));
+
+        // Fatal security/format error: always aborts even when failFast=false
+        assertTrue(ModelCatalog.shouldExitOnFatalQuarantine(List.of(fatalSecurity), true));
+        assertTrue(ModelCatalog.shouldExitOnFatalQuarantine(List.of(fatalSecurity), false));
+    }
+
     @SuppressWarnings("unchecked")
     private static Instance<OpenAiModelContributor> instanceOf(List<OpenAiModelContributor> items) {
         return (Instance<OpenAiModelContributor>) Proxy.newProxyInstance(

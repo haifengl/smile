@@ -16,11 +16,16 @@
  */
 package smile.io;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InvalidClassException;
 import java.io.ObjectInputFilter;
 import java.io.ObjectInputStream;
+import java.io.PushbackInputStream;
+import java.io.StreamCorruptedException;
+import java.nio.ByteBuffer;
+import java.util.zip.CRC32;
 
 /**
  * A hardened {@link ObjectInputStream} that enforces an {@link ObjectInputFilter}
@@ -67,6 +72,11 @@ class SmileObjectInputStream extends ObjectInputStream {
                     ";[*" +
                     ";!*");
 
+    /** ASCII magic {@code "SMLM"} ({@code 0x534D4C4D}) for enveloped SMILE model files. */
+    static final int SMLM_MAGIC = 0x534D4C4D;
+    /** Maximum supported {@code SMLM} envelope format version. */
+    static final int SMLM_CURRENT_VERSION = 1;
+
     /**
      * Creates a {@code SmileObjectInputStream} with the default allow-list filter.
      *
@@ -94,7 +104,7 @@ class SmileObjectInputStream extends ObjectInputStream {
      * @throws IOException if an I/O error occurs while reading the stream header.
      */
     SmileObjectInputStream(InputStream in, ObjectInputFilter extraFilter) throws IOException {
-        super(in);
+        super(stripSmlmHeaderIfPresent(in));
         ObjectInputFilter combined;
         if (extraFilter == null) {
             combined = DEFAULT_FILTER;
@@ -108,6 +118,57 @@ class SmileObjectInputStream extends ObjectInputStream {
             };
         }
         setObjectInputFilter(combined);
+    }
+
+    /**
+     * Sniffs the first 4 bytes of {@code in}. If the stream starts with the
+     * 11-byte {@code SMLM} model envelope header, validates the format version,
+     * flags, and CRC-32 before returning the stream positioned at the Java
+     * serialization payload; otherwise pushes the bytes back so raw
+     * {@link ObjectInputStream} streams load unchanged.
+     */
+    static InputStream stripSmlmHeaderIfPresent(InputStream in) throws IOException {
+        PushbackInputStream pb = new PushbackInputStream(in, 4);
+        byte[] magic = pb.readNBytes(4);
+        if (magic.length < 4) {
+            pb.unread(magic, 0, magic.length);
+            return pb;
+        }
+        int magicInt = ByteBuffer.wrap(magic).getInt();
+        if (magicInt != SMLM_MAGIC) {
+            pb.unread(magic);
+            return pb;
+        }
+
+        byte[] rest = pb.readNBytes(7);
+        if (rest.length < 7) {
+            throw new EOFException("Truncated SMLM envelope header (expected 11 bytes, got " + (4 + rest.length) + ")");
+        }
+        ByteBuffer buf = ByteBuffer.wrap(rest);
+        int formatVer = Short.toUnsignedInt(buf.getShort());
+        int flags = Byte.toUnsignedInt(buf.get());
+        long expectedCrc = Integer.toUnsignedLong(buf.getInt());
+
+        CRC32 crc = new CRC32();
+        crc.update(magic);
+        crc.update(rest, 0, 3);
+        long actualCrc = crc.getValue();
+        if (actualCrc != expectedCrc) {
+            throw new StreamCorruptedException(String.format(
+                    "Corrupted SMLM envelope header: CRC-32 mismatch (expected 0x%08X, got 0x%08X)",
+                    expectedCrc, actualCrc));
+        }
+        if (formatVer < 1 || formatVer > SMLM_CURRENT_VERSION) {
+            throw new StreamCorruptedException(String.format(
+                    "Unsupported .sml format version v%d; this runtime reads v1–v%d",
+                    formatVer, SMLM_CURRENT_VERSION));
+        }
+        if (flags != 0) {
+            throw new StreamCorruptedException(String.format(
+                    "Unsupported SMLM header flags 0x%02X in v%d (expected 0x00)",
+                    flags, formatVer));
+        }
+        return pb;
     }
 }
 

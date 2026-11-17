@@ -70,12 +70,18 @@ public class ReadinessCheck implements HealthCheck {
                 .filter(m -> m.state() == OnnxModel.State.ACTIVE).count();
         long llm = catalog.list().stream()
                 .filter(m -> ModelObject.KIND_LLM.equals(m.kind())).count();
+        long quarantined = catalog.listQuarantined().size();
 
         HealthCheckResponseBuilder builder = HealthCheckResponse.named(NAME);
         builder.withData("smile_models", inferenceService.models().size());
         builder.withData("onnx_models", onnxService.models().size());
         builder.withData("active_models", activeSmile + activeOnnx + llm);
-        return builder.status(isReady(activeSmile + activeOnnx + llm, config.allowEmpty())).build();
+        builder.withData("quarantined_models", quarantined);
+        return builder.status(isReady(
+                activeSmile + activeOnnx + llm,
+                quarantined,
+                config.allowEmpty(),
+                config.allowQuarantined())).build();
     }
 
     /**
@@ -86,6 +92,24 @@ public class ReadinessCheck implements HealthCheck {
      * @return {@code true} when the server should report UP.
      */
     static boolean isReady(long activeModels, boolean allowEmpty) {
+        return isReady(activeModels, 0, allowEmpty, false);
+    }
+
+    /**
+     * Readiness policy with quarantine awareness, extracted as a pure function
+     * for unit testing.
+     *
+     * @param activeModels      the number of models able to serve requests.
+     * @param quarantinedModels the number of models that failed to load and were quarantined.
+     * @param allowEmpty        whether dynamic-load mode is enabled.
+     * @param allowQuarantined  whether readiness may report UP when models are quarantined.
+     * @return {@code true} when the server should report UP.
+     */
+    static boolean isReady(long activeModels, long quarantinedModels,
+                           boolean allowEmpty, boolean allowQuarantined) {
+        if (quarantinedModels > 0 && !allowQuarantined) {
+            return false;
+        }
         return activeModels > 0 || allowEmpty;
     }
 }

@@ -181,7 +181,7 @@ public class ModelsResource {
      */
     @GET
     public ModelList list() {
-        return ModelList.of(catalog.list());
+        return ModelList.of(catalog.list(), catalog.listQuarantined());
     }
 
     /**

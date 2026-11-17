@@ -93,6 +93,43 @@ public interface Read {
     }
 
     /**
+     * Reads a serialized object from an input stream.
+     *
+     * <p>Deserialization is guarded by the built-in {@link ObjectInputFilter}
+     * allow-list.</p>
+     *
+     * @param stream the input stream.
+     * @return the deserialized object.
+     * @throws IOException when fails to read the stream or a disallowed class
+     *         is encountered.
+     * @throws ClassNotFoundException when fails to load the class.
+     */
+    static Object object(InputStream stream) throws IOException, ClassNotFoundException {
+        try (SmileObjectInputStream in = new SmileObjectInputStream(stream)) {
+            return in.readObject();
+        }
+    }
+
+    /**
+     * Reads a serialized object from an input stream using a caller-supplied
+     * {@link ObjectInputFilter} merged with the built-in SMILE allow-list.
+     *
+     * @param stream      the input stream.
+     * @param extraFilter an additional {@link ObjectInputFilter} to merge with
+     *                    the built-in allow-list; must not be {@code null}.
+     * @return the deserialized object.
+     * @throws IOException when fails to read the stream or a disallowed class
+     *         is encountered.
+     * @throws ClassNotFoundException when fails to load the class.
+     */
+    static Object object(InputStream stream, ObjectInputFilter extraFilter)
+            throws IOException, ClassNotFoundException {
+        try (SmileObjectInputStream in = new SmileObjectInputStream(stream, extraFilter)) {
+            return in.readObject();
+        }
+    }
+
+    /**
      * Reads a data file. Infers the data format by the file name extension.
      * @param path the input file path.
      * @throws Exception when fails to read the file.

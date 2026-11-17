@@ -26,7 +26,6 @@ import picocli.CommandLine.Option;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.io.Read;
-import smile.io.Write;
 import smile.math.MathEx;
 import smile.model.*;
 import smile.model.cart.SplitRule;
@@ -168,7 +167,7 @@ public class Train {
         if (version != null) {
             m.setTag(Model.VERSION, version);
         }
-        Write.object(m, path);
+        Model.write(m, path);
     }
 
     @Command(name = "random-forest", description = "Random Forest",

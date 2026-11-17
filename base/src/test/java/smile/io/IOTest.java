@@ -174,6 +174,31 @@ public class IOTest {
                 "java.util.ArrayList must survive the allow-list filter");
     }
 
+    @Test
+    public void testReadObjectInputStreamAndSmlmHeaderStripping() throws Exception {
+        // Given: an SMLM v1 header followed by a serialized String
+        byte[] header = new byte[11];
+        java.nio.ByteBuffer buf = java.nio.ByteBuffer.wrap(header);
+        buf.putInt(0x534D4C4D); // "SMLM"
+        buf.putShort((short) 1);
+        buf.put((byte) 0);
+        java.util.zip.CRC32 crc = new java.util.zip.CRC32();
+        crc.update(header, 0, 7);
+        buf.putInt((int) crc.getValue());
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        baos.write(header);
+        try (ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            oos.writeObject("enveloped-payload");
+        }
+
+        // When: reading via Read.object(InputStream)
+        Object fromStream = Read.object(new ByteArrayInputStream(baos.toByteArray()));
+
+        // Then
+        assertEquals("enveloped-payload", fromStream);
+    }
+
     // -----------------------------------------------------------------------
     // CSV – null format guard (bug fix: no NPE when format == null)
     // -----------------------------------------------------------------------

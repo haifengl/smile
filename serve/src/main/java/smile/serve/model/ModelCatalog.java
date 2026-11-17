@@ -48,13 +48,44 @@ public class ModelCatalog {
      * @param event the startup event.
      */
     void onStart(@Observes @Priority(Interceptor.Priority.PLATFORM_BEFORE) StartupEvent event) {
-        if (shouldExitOnEmptyStartup(isEmpty(), config.allowEmpty())) {
+        List<QuarantinedModel> quarantined = listQuarantined();
+        boolean failFast = config == null || config.failFast();
+        boolean allowEmpty = config != null && config.allowEmpty();
+        if (shouldExitOnFatalQuarantine(quarantined, failFast)) {
+            logger.errorf("Aborting startup: %d model(s) failed verification or deserialization "
+                    + "(smile.serve.fail-fast=%s): %s",
+                    quarantined.size(), failFast, quarantined);
+            Quarkus.asyncExit(1);
+            return;
+        }
+        if (shouldExitOnEmptyStartup(isEmpty(), allowEmpty)) {
             logger.warn("No model found or loaded successfully at startup. Exiting service...");
             Quarkus.asyncExit();
         } else if (isEmpty()) {
             logger.info("No model loaded at startup; waiting for dynamic loads "
                     + "(smile.serve.allow-empty=true)");
         }
+    }
+
+    /**
+     * Decides whether quarantined startup models should terminate the service.
+     *
+     * <p>Security rejections ({@code fatal == true} from {@link SecurityException}
+     * or {@code ObjectInputFilter} rejection) or any failure when
+     * {@code failFast == true} aborts startup.
+     *
+     * @param quarantined quarantined model failure records.
+     * @param failFast    whether {@code smile.serve.fail-fast} is enabled.
+     * @return {@code true} when startup should abort.
+     */
+    static boolean shouldExitOnFatalQuarantine(List<QuarantinedModel> quarantined, boolean failFast) {
+        if (quarantined == null || quarantined.isEmpty()) {
+            return false;
+        }
+        if (failFast) {
+            return true;
+        }
+        return quarantined.stream().anyMatch(QuarantinedModel::fatal);
     }
 
     /**
@@ -92,6 +123,19 @@ public class ModelCatalog {
             data.addAll(contributor.listOpenAiModels());
         }
         return data;
+    }
+
+    /**
+     * Lists all quarantined models that failed to load across every backend.
+     *
+     * @return merged quarantined model entries.
+     */
+    public List<QuarantinedModel> listQuarantined() {
+        List<QuarantinedModel> quarantined = new ArrayList<>();
+        for (OpenAiModelContributor contributor : contributors) {
+            quarantined.addAll(contributor.listQuarantinedModels());
+        }
+        return quarantined;
     }
 
     /**
