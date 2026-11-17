@@ -17,8 +17,10 @@
 package smile.model;
 
 import java.io.EOFException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InvalidClassException;
+import java.io.InvalidObjectException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.StreamCorruptedException;
@@ -84,10 +86,15 @@ public class FormatTest {
         // Then
         assertFalse(header.legacy());
         assertEquals(Format.CURRENT_VERSION, header.version());
-        assertEquals(0, header.flags());
+        assertEquals(Format.FLAG_EXTENDED_HEADER, header.flags());
+        assertEquals("test-cls", header.modelId());
+        assertEquals("1", header.modelVersion());
+        assertEquals("logistic", header.algorithm());
+        assertTrue(header.payloadSize() > 0);
+        assertTrue(header.payloadCrc32() > 0);
 
         byte[] raw = Files.readAllBytes(file);
-        assertTrue(raw.length > Format.HEADER_SIZE);
+        assertEquals(header.headerBytes() + header.payloadSize(), raw.length);
         assertEquals((byte) 'S', raw[0]);
         assertEquals((byte) 'M', raw[1]);
         assertEquals((byte) 'L', raw[2]);
@@ -104,6 +111,40 @@ public class FormatTest {
         // And Read.object(Path) transparently strips the SMLM header for legacy callers
         Object viaReadObject = Read.object(file);
         assertInstanceOf(ClassificationModel.class, viaReadObject);
+    }
+
+    @Test
+    public void testGivenTamperedPayloadByteWhenReadThenRejectsWithPayloadCrcMismatch() throws Exception {
+        // Given
+        DataFrame df = sampleRegressionData();
+        RegressionModel model = Model.regression("ols", Formula.lhs("y"), df, null, new Properties());
+        Path file = tempDir.resolve("corrupt-payload.sml");
+        Model.write(model, file);
+
+        // When: flip the last byte of the payload without touching the header
+        byte[] bytes = Files.readAllBytes(file);
+        bytes[bytes.length - 1] ^= 0xFF;
+        Files.write(file, bytes);
+
+        // Then: payload CRC-32 framing detects the bit-rot on read
+        assertThrows(IOException.class, () -> Model.read(file));
+    }
+
+    @Test
+    public void testGivenModelRecordWithNullRequiredComponentWhenDeserializedThenReadResolveRejects() {
+        // Given: a ClassificationModel constructed with null classifier (e.g. crafted stream)
+        DataFrame df = sampleClassificationData();
+        ClassificationModel invalid = new ClassificationModel(
+                "logistic", df.schema(), Formula.lhs("y"), null, null, null, null, null);
+        // Compact constructor normalizes null tags to non-null Properties
+        assertNotNull(invalid.tags());
+
+        // When: serialized and read back
+        Path file = tempDir.resolve("invalid-record.sml");
+        assertThrows(InvalidObjectException.class, () -> {
+            Model.write(invalid, file);
+            Model.read(file);
+        });
     }
 
     @Test

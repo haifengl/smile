@@ -20,6 +20,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import smile.io.SmileObjectInputStream;
 import smile.math.MathEx;
 
 /**
@@ -114,7 +115,7 @@ public class HMMPOSTagger implements POSTagger, Serializable {
         if (DEFAULT_TAGGER == null) {
             synchronized (HMMPOSTagger.class) {
                 if (DEFAULT_TAGGER == null) {
-                    try (ObjectInputStream ois = new ObjectInputStream(
+                    try (SmileObjectInputStream ois = new SmileObjectInputStream(
                             HMMPOSTagger.class.getResourceAsStream("/smile/nlp/pos/hmm-pos-tagger.sml"))) {
                         DEFAULT_TAGGER = (HMMPOSTagger) ois.readObject();
                     } catch (Exception ex) {

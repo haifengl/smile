@@ -16,6 +16,8 @@
  */
 package smile.model;
 
+import java.io.InvalidObjectException;
+import java.io.ObjectStreamException;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Properties;
@@ -49,6 +51,32 @@ public record ClassificationModel(String algorithm,
                                   Properties tags) implements Model, Serializable {
     @Serial
     private static final long serialVersionUID = 3L;
+
+    /**
+     * Compact constructor normalizing {@code tags} to a non-null {@link Properties}.
+     */
+    public ClassificationModel {
+        if (tags == null) {
+            tags = new Properties();
+        }
+    }
+
+    @Serial
+    private Object readResolve() throws ObjectStreamException {
+        if (algorithm == null || algorithm.isBlank()) {
+            throw new InvalidObjectException("ClassificationModel algorithm must not be null or blank");
+        }
+        if (schema == null) {
+            throw new InvalidObjectException("ClassificationModel schema must not be null");
+        }
+        if (formula == null) {
+            throw new InvalidObjectException("ClassificationModel formula must not be null");
+        }
+        if (classifier == null) {
+            throw new InvalidObjectException("ClassificationModel classifier must not be null");
+        }
+        return this;
+    }
 
     /**
      * Model inference.
