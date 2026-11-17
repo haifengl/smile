@@ -608,6 +608,30 @@ public class InferenceService implements OpenAiModelContributor {
         Set<String> batchIds = new HashSet<>();
         for (Path file : smlFiles) {
             Path normalized = file.toAbsolutePath().normalize();
+            // Pre-deserialization duplicate ID check when SMLM extended header metadata is present
+            try {
+                smile.model.Format.Header header = smile.model.Format.inspect(normalized);
+                if (!header.legacy() && header.payloadSize() >= 0) {
+                    String headerId = header.modelId();
+                    String baseId = (headerId != null && !headerId.isBlank())
+                            ? headerId
+                            : smile.io.Paths.getFileName(normalized);
+                    String version = header.modelVersion() != null && !header.modelVersion().isBlank()
+                            ? header.modelVersion()
+                            : "1";
+                    String candidateId = baseId + "-" + version;
+                    if (models.containsKey(candidateId)) {
+                        throw new ClientErrorException(
+                                "Model '" + candidateId + "' is already loaded. Use POST /api/v1/smile/" + candidateId + "/reload to refresh it, or unload it first.",
+                                Response.Status.CONFLICT);
+                    }
+                }
+            } catch (ClientErrorException e) {
+                throw e;
+            } catch (IOException ignored) {
+                // Header/CRC/framing errors will be surfaced by verifyAndReadModel below
+            }
+
             Model m;
             try {
                 m = verifyAndReadModel(normalized);

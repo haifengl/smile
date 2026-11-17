@@ -16,6 +16,8 @@
  */
 package smile.model;
 
+import java.io.InvalidObjectException;
+import java.io.ObjectStreamException;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Properties;
@@ -48,6 +50,32 @@ public record RegressionModel(String algorithm,
                               Properties tags) implements Model, Serializable {
     @Serial
     private static final long serialVersionUID = 3L;
+
+    /**
+     * Compact constructor normalizing {@code tags} to a non-null {@link Properties}.
+     */
+    public RegressionModel {
+        if (tags == null) {
+            tags = new Properties();
+        }
+    }
+
+    @Serial
+    private Object readResolve() throws ObjectStreamException {
+        if (algorithm == null || algorithm.isBlank()) {
+            throw new InvalidObjectException("RegressionModel algorithm must not be null or blank");
+        }
+        if (schema == null) {
+            throw new InvalidObjectException("RegressionModel schema must not be null");
+        }
+        if (formula == null) {
+            throw new InvalidObjectException("RegressionModel formula must not be null");
+        }
+        if (regression == null) {
+            throw new InvalidObjectException("RegressionModel regression must not be null");
+        }
+        return this;
+    }
 
     /**
      * Model inference.

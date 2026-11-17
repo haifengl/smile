@@ -16,6 +16,8 @@
  */
 package smile.model;
 
+import java.io.InvalidObjectException;
+import java.io.ObjectStreamException;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Properties;
@@ -54,6 +56,35 @@ public record AnomalyModel(String algorithm,
                            Properties tags) implements Model, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
+
+    /**
+     * Compact constructor normalizing {@code tags} to a non-null {@link Properties}.
+     */
+    public AnomalyModel {
+        if (tags == null) {
+            tags = new Properties();
+        }
+    }
+
+    @Serial
+    private Object readResolve() throws ObjectStreamException {
+        if (algorithm == null || algorithm.isBlank()) {
+            throw new InvalidObjectException("AnomalyModel algorithm must not be null or blank");
+        }
+        if (schema == null) {
+            throw new InvalidObjectException("AnomalyModel schema must not be null");
+        }
+        if (formula == null) {
+            throw new InvalidObjectException("AnomalyModel formula must not be null");
+        }
+        if (detector == null) {
+            throw new InvalidObjectException("AnomalyModel detector must not be null");
+        }
+        if (Double.isNaN(threshold)) {
+            throw new InvalidObjectException("AnomalyModel threshold must not be NaN");
+        }
+        return this;
+    }
 
     /**
      * Constructs an anomaly detection model without a preprocessing transform.

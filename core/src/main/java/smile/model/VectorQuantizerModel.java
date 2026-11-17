@@ -16,6 +16,8 @@
  */
 package smile.model;
 
+import java.io.InvalidObjectException;
+import java.io.ObjectStreamException;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Properties;
@@ -54,6 +56,32 @@ public record VectorQuantizerModel(String algorithm,
                                    Properties tags) implements Model, Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
+
+    /**
+     * Compact constructor normalizing {@code tags} to a non-null {@link Properties}.
+     */
+    public VectorQuantizerModel {
+        if (tags == null) {
+            tags = new Properties();
+        }
+    }
+
+    @Serial
+    private Object readResolve() throws ObjectStreamException {
+        if (algorithm == null || algorithm.isBlank()) {
+            throw new InvalidObjectException("VectorQuantizerModel algorithm must not be null or blank");
+        }
+        if (schema == null) {
+            throw new InvalidObjectException("VectorQuantizerModel schema must not be null");
+        }
+        if (formula == null) {
+            throw new InvalidObjectException("VectorQuantizerModel formula must not be null");
+        }
+        if (quantizer == null) {
+            throw new InvalidObjectException("VectorQuantizerModel quantizer must not be null");
+        }
+        return this;
+    }
 
     /**
      * Converts an input tuple into a feature vector.

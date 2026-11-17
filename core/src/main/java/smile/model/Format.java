@@ -21,7 +21,6 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputFilter;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PushbackInputStream;
 import java.io.Serializable;
@@ -29,6 +28,8 @@ import java.io.StreamCorruptedException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.CRC32;
@@ -84,6 +85,9 @@ public final class Format {
     /** Reserved flag bit 2: payload encryption. */
     public static final byte FLAG_ENCRYPTION = 0x04;
 
+    /** Flag bit 3: extended header block with payload size, payload CRC-32, and cleartext metadata. */
+    public static final byte FLAG_EXTENDED_HEADER = SmileObjectInputStream.SMLM_FLAG_EXTENDED_HEADER;
+
     /** Legacy Java ObjectOutputStream header magic + version ({@code 0xACED0005}). */
     static final int LEGACY_STREAM_HEADER = SmileObjectInputStream.LEGACY_STREAM_HEADER;
 
@@ -96,14 +100,51 @@ public final class Format {
     /**
      * Parsed {@code SMLM} envelope header metadata.
      *
-     * @param version the envelope format version ({@code >= 1} for enveloped artifacts,
-     *                or {@code 0} for legacy raw {@code ObjectOutputStream} artifacts).
-     * @param flags   the envelope flags byte ({@code 0} in v1).
-     * @param crc32   the unsigned 32-bit CRC-32 of the first 7 header bytes
-     *                ({@code 0} for legacy artifacts).
-     * @param legacy  {@code true} if the artifact uses the legacy raw {@code ObjectOutputStream} header.
+     * @param version      the envelope format version ({@code >= 1} for enveloped artifacts,
+     *                     or {@code 0} for legacy raw {@code ObjectOutputStream} artifacts).
+     * @param flags        the envelope flags byte ({@code 0x00} minimal or {@code 0x08} extended in v1).
+     * @param crc32        the unsigned 32-bit CRC-32 of the first 7 header bytes
+     *                     ({@code 0} for legacy artifacts).
+     * @param legacy       {@code true} if the artifact uses the legacy raw {@code ObjectOutputStream} header.
+     * @param payloadSize  exact byte length of the serialized payload ({@code -1} if minimal/legacy header).
+     * @param payloadCrc32 unsigned 32-bit CRC-32 of the serialized payload ({@code 0} if minimal/legacy header).
+     * @param metadata     unmodifiable cleartext metadata map from the extended header (empty if none).
+     * @param headerBytes  total byte length of the header before the payload starts ({@code 0} if legacy).
      */
-    public record Header(int version, int flags, long crc32, boolean legacy) {
+    public record Header(
+            int version,
+            int flags,
+            long crc32,
+            boolean legacy,
+            long payloadSize,
+            long payloadCrc32,
+            Map<String, String> metadata,
+            int headerBytes) {
+
+        /** Compact constructor ensuring non-null immutable metadata. */
+        public Header {
+            metadata = metadata == null ? Map.of() : Map.copyOf(metadata);
+        }
+
+        /** Backwards-compatible constructor for minimal/legacy headers. */
+        public Header(int version, int flags, long crc32, boolean legacy) {
+            this(version, flags, crc32, legacy, -1L, 0L, Map.of(), legacy ? 0 : HEADER_SIZE);
+        }
+
+        /** Returns the cleartext {@code id} metadata value from the extended header, or {@code null}. */
+        public String modelId() {
+            return metadata.get(Model.ID);
+        }
+
+        /** Returns the cleartext {@code version} metadata value from the extended header, or {@code null}. */
+        public String modelVersion() {
+            return metadata.get(Model.VERSION);
+        }
+
+        /** Returns the cleartext {@code algorithm} metadata value from the extended header, or {@code null}. */
+        public String algorithm() {
+            return metadata.get("algorithm");
+        }
     }
 
     /**
@@ -127,7 +168,8 @@ public final class Format {
 
     /**
      * Reads and validates the envelope header from a model file without
-     * deserializing the model payload.
+     * deserializing the model payload. When the extended header flag ({@code 0x08})
+     * is present, also verifies that the file size equals {@code headerBytes + payloadSize}.
      *
      * @param path the model file path.
      * @return the parsed {@link Header}.
@@ -135,14 +177,25 @@ public final class Format {
      */
     public static Header inspect(Path path) throws IOException {
         Objects.requireNonNull(path, "Model path must not be null");
+        long fileSize = Files.size(path);
+        Header header;
         try (InputStream in = Files.newInputStream(path);
              PushbackInputStream pb = new PushbackInputStream(in, 4)) {
-            return readHeader(pb, path.toString());
+            header = readHeader(pb, path.toString());
         }
+        if (!header.legacy() && header.payloadSize() >= 0) {
+            long expectedTotal = header.headerBytes() + header.payloadSize();
+            if (fileSize != expectedTotal) {
+                throw new StreamCorruptedException(String.format(
+                        "SMLM payload size mismatch in '%s': header declares %d header + %d payload = %d bytes, but file is %d bytes",
+                        path, header.headerBytes(), header.payloadSize(), expectedTotal, fileSize));
+            }
+        }
+        return header;
     }
 
     /**
-     * Writes a SMILE {@link Model} to a file with the {@code SMLM} v1 envelope header.
+     * Writes a SMILE {@link Model} to a file with the {@code SMLM} v1 extended envelope header.
      *
      * @param model the model to serialize.
      * @param path  the destination file path.
@@ -157,8 +210,10 @@ public final class Format {
     }
 
     /**
-     * Writes a SMILE {@link Model} to an output stream with the {@code SMLM} v1 envelope header.
-     * Does not close the caller-supplied {@code out} stream, but flushes the object stream.
+     * Writes a SMILE {@link Model} to an output stream with the {@code SMLM} v1 extended
+     * envelope header (including {@code payloadSize}, {@code payloadCrc32}, and cleartext
+     * {@code id}, {@code version}, and {@code algorithm} metadata).
+     * Does not close the caller-supplied {@code out} stream, but flushes the output.
      *
      * @param model the model to serialize.
      * @param out   the destination output stream.
@@ -170,10 +225,21 @@ public final class Format {
         if (!(model instanceof Serializable s)) {
             throw new IllegalArgumentException("Model is not Serializable: " + model.getClass().getName());
         }
-        out.write(buildHeader(CURRENT_VERSION, (byte) 0));
-        ObjectOutputStream oos = new ObjectOutputStream(out);
-        oos.writeObject(s);
-        oos.flush();
+        Map<String, String> meta = new LinkedHashMap<>();
+        if (model.tags() != null) {
+            String id = model.getTag(Model.ID);
+            if (id != null && !id.isBlank()) {
+                meta.put(Model.ID, id);
+            }
+            String version = model.getTag(Model.VERSION);
+            if (version != null && !version.isBlank()) {
+                meta.put(Model.VERSION, version);
+            }
+        }
+        if (model.algorithm() != null && !model.algorithm().isBlank()) {
+            meta.put("algorithm", model.algorithm());
+        }
+        SmileObjectInputStream.writeSmlmExtended(s, meta, out);
     }
 
     /**
@@ -226,15 +292,16 @@ public final class Format {
         Objects.requireNonNull(in, "InputStream must not be null");
         Objects.requireNonNull(extraFilter, "ObjectInputFilter must not be null");
         PushbackInputStream pb = new PushbackInputStream(in, 4);
-        Header header = readHeader(pb, sourceName);
-        if (header.legacy()) {
+        SmileObjectInputStream.SmlmHeader rawHeader = SmileObjectInputStream.readSmlmHeader(pb, sourceName);
+        if (rawHeader.legacy()) {
             if (LEGACY_WARNING_LOGGED.compareAndSet(false, true)) {
                 logger.warn("Loading legacy unversioned .sml artifact '{}'; re-save with Model.write() to upgrade to the SMLM v{} envelope.",
                         sourceName, CURRENT_VERSION);
             }
         }
+        InputStream payloadStream = SmileObjectInputStream.wrapPayloadStream(pb, rawHeader, sourceName);
         final Object obj;
-        try (SmileObjectInputStream ois = new SmileObjectInputStream(pb, extraFilter, true)) {
+        try (SmileObjectInputStream ois = new SmileObjectInputStream(payloadStream, extraFilter, true)) {
             obj = ois.readObject();
         }
         if (obj instanceof Model model) {
@@ -247,7 +314,15 @@ public final class Format {
 
     private static Header readHeader(PushbackInputStream pb, String sourceName) throws IOException {
         SmileObjectInputStream.SmlmHeader h = SmileObjectInputStream.readSmlmHeader(pb, sourceName);
-        return new Header(h.version(), h.flags(), h.crc32(), h.legacy());
+        return new Header(
+                h.version(),
+                h.flags(),
+                h.crc32(),
+                h.legacy(),
+                h.payloadSize(),
+                h.payloadCrc32(),
+                h.metadata(),
+                h.headerBytes());
     }
 
     /**
