@@ -205,6 +205,10 @@ public final class DeepSeekCheckpoint implements AutoCloseable {
      */
     public Tensor readRows(String name, long[] rows) {
         try {
+            MemorySegment map = mapped(name);
+            if (map != null) {
+                return readRowsMapped(name, rows, map);
+            }
             String file = index.get(name);
             if (file == null) {
                 throw new IllegalArgumentException("no such tensor: " + name);
@@ -240,6 +244,112 @@ public final class DeepSeekCheckpoint implements AutoCloseable {
     }
 
     /**
+     * Reads a tensor's bytes sequentially so that the operating system caches the whole of it. Engram tables are read
+     * at random (one row per hashed n-gram), and every first touch of a page on a network file system costs a round
+     * trip; one sequential pass at start-up turns that into memory copies.
+     *
+     * @param name the tensor name.
+     * @return the number of bytes read.
+     */
+    public long prefetch(String name) {
+        try {
+            String file = index.get(name);
+            if (file == null) {
+                return 0L;
+            }
+            Shard s = shard(file);
+            Entry e = s.entries().get(name);
+            ByteBuffer buf = ByteBuffer.allocateDirect(16 << 20);
+            long pos = s.dataStart() + e.begin();
+            long end = s.dataStart() + e.end();
+            while (pos < end) {
+                buf.clear();
+                buf.limit((int) Math.min(buf.capacity(), end - pos));
+                int n = s.channel().read(buf, pos);
+                if (n < 0) {
+                    break;
+                }
+                pos += n;
+            }
+            return pos - (s.dataStart() + e.begin());
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+    }
+
+    /** Row tables read at random (engram) are memory-mapped once: a row is then a memory copy, not a system call. */
+    private final Map<String, MemorySegment> mappings = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.lang.foreign.Arena mapArena = java.lang.foreign.Arena.ofShared();
+
+    /** Read engram rows with positional reads instead of through the mapping ({@code -Dsmile.ds.engram.pread=true}). */
+    private static final boolean PREAD = Boolean.getBoolean("smile.ds.engram.pread");
+
+    private MemorySegment mapped(String name) {
+        if (PREAD) {
+            return null;
+        }
+        MemorySegment m = mappings.get(name);
+        if (m != null) {
+            return m.byteSize() == 0 ? null : m;
+        }
+        synchronized (mappings) {
+            m = mappings.get(name);
+            if (m == null) {
+                try {
+                    String file = index.get(name);
+                    if (file == null) {
+                        throw new IllegalArgumentException("no such tensor: " + name);
+                    }
+                    Shard s = shard(file);
+                    Entry e = s.entries().get(name);
+                    m = s.channel().map(FileChannel.MapMode.READ_ONLY, s.dataStart() + e.begin(), e.end() - e.begin(), mapArena);
+                } catch (IOException | UnsupportedOperationException ex) {
+                    m = MemorySegment.NULL;              // cannot map: fall back to positional reads
+                }
+                mappings.put(name, m);
+            }
+        }
+        return m.byteSize() == 0 ? null : m;
+    }
+
+    private Tensor readRowsMapped(String name, long[] rows, MemorySegment map) throws IOException {
+        Shard s = shard(index.get(name));
+        Entry e = s.entries().get(name);
+        ScalarType dtype = switch (e.dtype()) {
+            case "F8_E4M3" -> ScalarType.Float8e4m3fn;
+            case "U8", "F8_E8M0" -> ScalarType.UInt8;
+            default -> throw new IllegalArgumentException("readRows: unsupported dtype " + e.dtype() + " of " + name);
+        };
+        long width = e.shape()[1];
+        Tensor t = Tensor.empty(new Tensor.Options().dtype(dtype).device(Device.CPU()), rows.length, width);
+        MemorySegment dst = MemorySegment.ofAddress(Native.dataPtr(t).address()).reinterpret(rows.length * width);
+        for (int i = 0; i < rows.length; i++) {
+            long r = rows[i];
+            if (r < 0 || r >= e.shape()[0]) {
+                throw new IllegalArgumentException(name + ": row " + r + " out of range");
+            }
+            MemorySegment.copy(map, r * width, dst, i * width, width);
+        }
+        return t;
+    }
+
+    /**
+     * Faults a tensor's whole mapping into the process (page-table entries), so that random row reads are plain memory
+     * accesses instead of one page fault each. Run after {@link #prefetch} has put the pages in the page cache.
+     *
+     * @param name the tensor name.
+     * @return the number of bytes mapped, 0 if the tensor cannot be mapped.
+     */
+    public long populate(String name) {
+        MemorySegment m = mapped(name);
+        if (m == null) {
+            return 0;
+        }
+        m.load();
+        return m.byteSize();
+    }
+
+    /**
      * Loads a tensor to the model's device ({@link Dsv#device()}).
      *
      * @param name the tensor name.
@@ -266,5 +376,7 @@ public final class DeepSeekCheckpoint implements AutoCloseable {
             s.channel().close();
         }
         shards.clear();
+        mappings.clear();
+        mapArena.close();
     }
 }

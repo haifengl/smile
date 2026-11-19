@@ -45,6 +45,11 @@ final class DeepSeekEngram {
          * @return bf16 rows {@code [..., headDim]}.
          */
         Tensor lookup(Tensor ids);
+
+        /** {@link #lookup} for ids that are still on the host: rows {@code [shape..., headDim]} (on the model's device). */
+        default Tensor lookupHost(long[] ids, long[] shape) {
+            return lookup(Dsv.dev(Tensor.of(ids, shape)));
+        }
     }
 
     /** Rows held in memory: int64 ids {@code [R]}, fp8 weights {@code [R, 256]} and e8m0 scale bytes {@code [R, 8]}. */
@@ -81,8 +86,9 @@ final class DeepSeekEngram {
 
     /** Dequantizes fp8 rows with their e8m0 group scales (groups of 32) into bf16 {@code [shape..., width]} on the model's device. */
     static Tensor dequantRows(Tensor weights, Tensor scales, long[] shape) {
-        Tensor w = Aten.one("aten::view.dtype", weights, ScalarType.Float8e4m3fn);
-        Tensor s = DeepSeekOps.e8m0ToFloat(scales);
+        // the raw bytes go to the device first (a few hundred KB): the arithmetic there costs launches, not host time
+        Tensor w = Aten.one("aten::view.dtype", Dsv.dev(weights), ScalarType.Float8e4m3fn);
+        Tensor s = DeepSeekOps.e8m0ToFloat(Dsv.dev(scales));
         long n = w.size(0);
         long width = w.size(1);
         Tensor v = o("aten::mul.Tensor", w.to(ScalarType.Float).reshape(n, -1, 32), s.unsqueeze(-1));
@@ -106,6 +112,65 @@ final class DeepSeekEngram {
         public Tensor lookup(Tensor ids) {
             long[] flat = Dsv.host(ids).longArray();
             return dequantRows(ck.readRows(prefix + "weight", flat), ck.readRows(prefix + "scale", flat), ids.shape());
+        }
+
+        /** Ids of one lookup, compared by content. */
+        private record Key(DeepSeekCheckpoint ck, String prefix, long[] ids) {
+            @Override
+            public boolean equals(Object o) {
+                return o instanceof Key k && ck == k.ck && prefix.equals(k.prefix) && java.util.Arrays.equals(ids, k.ids);
+            }
+
+            @Override
+            public int hashCode() {
+                return 31 * prefix.hashCode() + java.util.Arrays.hashCode(ids);
+            }
+        }
+
+        /**
+         * The rows read for the most recent lookups. Every rank asks for the same rows at the same moment, and eight threads
+         * faulting in the same mapped pages take about ten times as long as one thread reading them once, so the first
+         * caller reads and the others use its host copy (they still upload and dequantize it on their own device).
+         */
+        private static final java.util.Map<Key, java.util.concurrent.CompletableFuture<Tensor[]>> recent =
+                new java.util.LinkedHashMap<>() {
+                    @Override
+                    protected boolean removeEldestEntry(java.util.Map.Entry<Key, java.util.concurrent.CompletableFuture<Tensor[]>> e) {
+                        return size() > 64;
+                    }
+                };
+
+        @Override
+        public Tensor lookupHost(long[] ids, long[] shape) {
+            long t = System.nanoTime();
+            java.util.concurrent.CompletableFuture<Tensor[]> f;
+            boolean mine = false;
+            Key key = new Key(ck, prefix, ids.clone());
+            synchronized (recent) {
+                f = recent.get(key);
+                if (f == null) {
+                    f = new java.util.concurrent.CompletableFuture<>();
+                    recent.put(key, f);
+                    mine = true;
+                }
+            }
+            if (mine) {
+                try {
+                    Tensor w = ck.readRows(prefix + "weight", ids);
+                    Tensor sc = ck.readRows(prefix + "scale", ids);
+                    // other ranks use these after this thread's scope has closed: the cleaner frees them when unreferenced
+                    w.detachFromScopes();
+                    sc.detachFromScopes();
+                    f.complete(new Tensor[]{w, sc});
+                } catch (Throwable ex) {
+                    f.completeExceptionally(ex);
+                }
+            }
+            Tensor[] ws = f.join();
+            t = Dsv.tick("engram.read", t);
+            Tensor r = dequantRows(ws[0], ws[1], shape);
+            Dsv.tick("engram.dequant+upload", t);
+            return r;
         }
     }
 
@@ -213,6 +278,19 @@ final class DeepSeekEngram {
          * @return int64 {@code [1, len, layers, (ngram - 1) * heads]}.
          */
         Tensor forward(int[] ids, int startPos) {
+            return Dsv.dev(Tensor.of(forwardRaw(ids, startPos), 1, ids.length, layers, (ngram - 1) * heads));
+        }
+
+        /** Columns of one layer's hash ids. */
+        int cols() {
+            return (ngram - 1) * heads;
+        }
+
+        /**
+         * {@link #forward} on the host: {@code [len][layers][cols]} flattened. A decode step looks the table rows up
+         * from these directly, without sending them to the device and back.
+         */
+        long[] forwardRaw(int[] ids, int startPos) {
             int cols = (ngram - 1) * heads;
             for (int i = 0; i < ids.length; i++) {
                 cache[startPos + i] = tokenMap.map(ids[i]);
@@ -238,7 +316,7 @@ final class DeepSeekEngram {
                     }
                 }
             }
-            return Dsv.dev(Tensor.of(out, 1, ids.length, layers, cols));
+            return out;
         }
     }
 
@@ -269,8 +347,22 @@ final class DeepSeekEngram {
      * @return the updated stream.
      */
     Tensor forward(Tensor x, Tensor hashIds) {
+        return forwardEmb(x, rows.lookup(hashIds));
+    }
+
+    /** The table rows of {@code hashIds} {@code [1, s, cols]}: {@code [1, s, cols, headDim]} (reads the table, host side). */
+    Tensor embed(Tensor hashIds) {
+        return rows.lookup(hashIds);
+    }
+
+    /** {@link #embed} for ids on the host. */
+    Tensor embedHost(long[] ids, long[] shape) {
+        return rows.lookupHost(ids, shape);
+    }
+
+    /** {@link #forward} with the table rows already looked up (they may be a static input of a captured graph). */
+    Tensor forwardEmb(Tensor x, Tensor emb) {
         long s = x.size(1);
-        Tensor emb = rows.lookup(hashIds);                                          // [1, s, cols, headDim]
         Tensor kv = wkv.forward(emb.reshape(1, s, -1));
         Tensor key = DeepSeekOps.f32(Dsv.narrow(kv, -1, 0, (long) hc * dim)).reshape(1, s, hc, dim);
         Tensor value = DeepSeekOps.f32(Dsv.narrow(kv, -1, (long) hc * dim, dim));

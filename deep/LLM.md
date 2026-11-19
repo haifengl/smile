@@ -599,6 +599,56 @@ expert weights may be stored as **MXFP4**.
 | `DeepSeekMxfp4` | MXFP4 expert weight dequantization |
 | `DeepSeekTokenizer`, `DeepSeekChatTemplate` | Byte-level BPE and the V4.1 chat template |
 
+Decode runs as one CUDA graph per rank for each (batch bucket, position capacity): token ids, positions, the
+per-sequence cache pointers and the engram rows are static device tensors refreshed before every replay, and the
+window slots, group completion and index lengths are derived on the device, so the step has no host work beyond the
+engram table reads. The fused kernels (`smile_deepseek_ops.cu`) replace the chains of small ATen ops; the
+per-sequence window ring, compressor, indexer and sparse attention reach every sequence's caches through pointer
+tables. Environment switches: `SMILE_DS_GRAPH=0` (eager decode), `SMILE_FUSED_OPS=0` (no fused kernels),
+`SMILE_DS_OFF=op,op` (turn single fused ops off, e.g. `batch_attn`, `rope`, `sparse_attn`), `SMILE_FUSED_DEBUG=1`
+(say why a fused op declined), `SMILE_DS_STAMP=1` (GPU time per section of a graph replay, via `DeepSeek.stampReport`),
+`-Dsmile.aten.stats=true` (per-operator host time), `SMILE_DS_ENGRAM_PREFETCH=0` (do not read the engram tables into the
+page cache after loading; first touches of their random rows are network round trips).
+
+Prefill runs eagerly, one layer per scope (a layer's temporaries are freed before the next layer, so the memory of a
+long prompt does not grow with the layer count). For prompts of 32 or more rows the sparse attention is two bf16
+tensor-core GEMMs around the fused `smile_ds_attn_softmax` kernel (keys gathered once per row and shared by all heads,
+float32 scores, bf16 probabilities) and the indexer scores come from one GEMM per chunk of rows; the per-head kernels
+re-read every key once per head and cost 14 ms (attention) and 24 ms (indexer) per layer at 1024 tokens. `SMILE_DS_ATTN_GEMM=0`
+restores the per-head kernels. From 64 sequences the decode graph also uses the gather + GEMM attention over the per-sequence caches (`smile_ds_gather_keys_ptrs`; `-Dsmile.ds.attn.gemm.seqs`): 26.7 -> 8.0 ms of the 128-sequence replay (85.8 -> 73.0 ms). Decode graphs cover batches up to 128 (`SMILE_DS_MAX_GRAPH_BATCH`). Several waiting prompts are prefilled in one pass (`ModelExecutor.prefillBatch`, used by
+`InferenceEngine` for executors that report `supportsBatchedPrefill()`): the sequence-independent math (projections, norms,
+rope, MoE, hyper-connections, output projection) runs once over the concatenated prompts, the window ring, compressor,
+indexer and attention per sequence. 8-GPU A100, one prompt: 16 tokens 98 ms, 1024 tokens 394 ms, 4096 tokens 1450 ms
+(about 2600-2800 prompt tokens/s); 24 short prompts 3.8 s one by one, 1.0 s batched. The same prompt prefilled twice
+differs by relative L2 0.07-0.2 in the logits (non-deterministic Marlin/NCCL reductions), so compare paths against that
+floor, not for bit equality.
+
+**Speculative decoding (DSpark).** The checkpoint ships a draft head under `mtp.*` (three window-attention stages with
+128-expert MoEs, a Markov head that conditions each drafted token on the previous one, and a confidence head). The draft
+reads the main model's hidden states at the inputs of layers 37-39 (`DeepSeekDraft`, taps captured in prefill, decode and
+verify) and drafts a block of 5 tokens greedily. `DeepSeek.speculateStep` verifies the blocks of all speculating sequences
+in one CUDA-graph pass: rows are laid out one position of the block after the other, the window ring has 8 spare slots
+(slot = position % 136, attended span 128) so rejected rows never overwrite keys later queries need, the compressors save
+their partial group after every row and are restored to the last accepted row, and the argmax of every row leaves the
+graph. Greedy requests accept the longest matching prefix; sampled requests use speculative sampling against the
+deterministic draft (`DeepSeekSampler`: accept with the target probability of the drafted token, else draw from the
+target without it; nucleus from the 2048 most probable tokens). A sequence that took a plain step falls out of step with its
+draft and stays plain. The verify rows of each sequence follow each other and each row is independent: the compressor pools a
+row from the saved partial group (positions before the step) and the other rows' projections (positions inside it), and the
+saved group is written once after acceptance. The draft pass is a CUDA graph too (one launch per round). The number of drafts
+verified per sequence is chosen from the confidence head, whose output is calibrated (the hit rate of a position given its
+predecessors were accepted follows `sigmoid(confidence)`): for each graph row bucket the most probable positions fill it and
+the bucket with the most expected tokens per millisecond wins (`SMILE_DS_SPEC_DYNAMIC=0` verifies the full block of 5;
+`-Dsmile.ds.spec.fixed.ms` / `-Dsmile.ds.spec.row.ms` set the cost model). On 8 A100 (warm, 96 tokens, T=0.6, through the
+engine) speculation gives 86 vs 41 tok/s for one request, 207 vs 137 for 4, 361 vs 242 for 8, 542 vs 392 for 16 and 714 vs
+588 for 32; the serve default lets up to 32 requests speculate (`smile.chat.speculative-max-concurrency`; the rest decode
+plain). What made it pay: the verify and draft run batched over all sequences, the engram tables are mapped into the process
+after the page-cache prefetch (eight rank threads faulting random rows of one file serialize: 6 ms per lookup instead of
+0.2 ms; the rows of a lookup are also read once for all ranks), a request near its end stays in the batch
+(`ModelExecutor.speculationMayOvershoot`; the engine drops the extra tokens), and rows are packed per sequence. Tokens per
+step: prose 1.9-2.8, code 3.6-4.5, JSON 5.7-6.0.
+`SMILE_DS_DRAFT=0` does not load the draft head.
+
 Each request runs in its own session over a shared engine executor, and several
 sequences decode in one batch. `DeepSeekMarlinExperts` keeps the dense FP8
 layers packed, so a checkpoint never expands into dense projection shells.

@@ -316,6 +316,44 @@ public class InferenceEngineTest {
         }
     }
 
+    /** StepStub that prefills whole prompts together and records the group sizes. */
+    static final class BatchedPrefillStub extends StepStub {
+        final java.util.List<Integer> groups = java.util.Collections.synchronizedList(new java.util.ArrayList<>());
+        final AtomicInteger singles = new AtomicInteger();
+
+        @Override public boolean supportsBatchedPrefill() { return true; }
+        @Override public smile.deep.tensor.Tensor[] prefillBatch(int[] requestIds, int[][] prompts) {
+            groups.add(requestIds.length);
+            smile.deep.tensor.Tensor[] out = new smile.deep.tensor.Tensor[requestIds.length];
+            for (int i = 0; i < out.length; i++) {
+                out[i] = prefill(requestIds[i], prompts[i], 0);
+            }
+            return out;
+        }
+        @Override public smile.deep.tensor.Tensor prefillChunk(int requestId, int[] prompt, int from, int to) {
+            singles.incrementAndGet();
+            return super.prefillChunk(requestId, prompt, from, to);
+        }
+    }
+
+    @Test
+    public void testGivenSeveralWaitingPromptsWhenModelBatchesPrefillThenTheyArePrefilledTogether() throws Exception {
+        var stub = new BatchedPrefillStub();
+        try (var engine = new InferenceEngine(stub, 4, 4, 64, 5_000, 300L)) {
+            var handles = new java.util.ArrayList<GenerationHandle>();
+            for (int i = 0; i < 4; i++) {
+                handles.add(engine.submit(GenerationRequest.ofTokens(
+                        new int[]{1, 2, 3 + i}, 3, 0.0, 0.9, false, 0, null)));
+            }
+            for (var h : handles) {
+                assertEquals("ok", h.future().get(10, TimeUnit.SECONDS).content());
+            }
+        }
+        int batched = stub.groups.stream().mapToInt(Integer::intValue).sum();
+        assertTrue(stub.groups.stream().anyMatch(g -> g >= 2), "groups=" + stub.groups);
+        assertEquals(4, batched + stub.singles.get(), "every prompt prefilled exactly once");
+    }
+
     @Test
     public void testGivenFullPromptPrefixHitWhenAdmittedThenReplayEndsWhereChunkedPrefillStarts() throws Exception {
         // a prompt that is exactly one page: the radix match covers all of it

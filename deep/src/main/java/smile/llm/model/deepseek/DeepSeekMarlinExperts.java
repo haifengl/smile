@@ -71,6 +71,8 @@ final class DeepSeekMarlinExperts implements AutoCloseable {
         this.experts = experts;
         this.topk = topk;
         this.limit = limit;
+        // the DSpark (mtp.*) experts have smaller scales than the backbone's: one more bit of shift keeps them normal in E4M3
+        final int shift = prefix.startsWith("mtp.") ? 6 : 5;
         final int chunk = 32;   // bounds the repack scratch space to a few GB
         Tensor[] out = new Tensor[6];
         for (int from = 0; from < local; from += chunk) {
@@ -79,17 +81,17 @@ final class DeepSeekMarlinExperts implements AutoCloseable {
             for (int e = first + from; e < first + from + n; e++) {
                 String p = prefix + ".experts." + e;
                 gu.add(Aten.one("aten::cat", new Tensor[]{u8(ck.get(p + ".w1.weight")), u8(ck.get(p + ".w3.weight"))}, 0L));
-                gus.add(Aten.one("aten::cat", new Tensor[]{DeepSeekMxfp4.toNvfp4(ck.get(p + ".w1.scale")),
-                        DeepSeekMxfp4.toNvfp4(ck.get(p + ".w3.scale"))}, 0L));
+                gus.add(Aten.one("aten::cat", new Tensor[]{DeepSeekMxfp4.toNvfp4(ck.get(p + ".w1.scale"), shift),
+                        DeepSeekMxfp4.toNvfp4(ck.get(p + ".w3.scale"), shift)}, 0L));
                 dn.add(u8(ck.get(p + ".w2.weight")));
-                dns.add(DeepSeekMxfp4.toNvfp4(ck.get(p + ".w2.scale")));
+                dns.add(DeepSeekMxfp4.toNvfp4(ck.get(p + ".w2.scale"), shift));
             }
             Tensor g13w = Aten.one("aten::stack", gu.toArray(Tensor[]::new), 0L).to(device);
             Tensor g13s = Aten.one("aten::stack", gus.toArray(Tensor[]::new), 0L).to(device);
             Tensor g2w = Aten.one("aten::stack", dn.toArray(Tensor[]::new), 0L).to(device);
             Tensor g2s = Aten.one("aten::stack", dns.toArray(Tensor[]::new), 0L).to(device);
             float[] global = new float[n];
-            Arrays.fill(global, DeepSeekMxfp4.GLOBAL);
+            Arrays.fill(global, DeepSeekMxfp4.global(shift));
             Tensor g = Tensor.of(global, n).to(device);
             Tensor[] a13 = Native.marlinNvfp4RepackScalesStack(g13s, g);
             Tensor[] a2 = Native.marlinNvfp4RepackScalesStack(g2s, g);
@@ -152,6 +154,7 @@ final class DeepSeekMarlinExperts implements AutoCloseable {
      */
     Tensor forward(Tensor flat, Tensor indices, Tensor weights) {
         int tokens = (int) flat.size(0);
+        long tk = System.nanoTime();
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
         try {
@@ -160,23 +163,41 @@ final class DeepSeekMarlinExperts implements AutoCloseable {
             Tensor w = weights.to(ScalarType.Float).contiguous();
             int block = blockSize(tokens);
             Tensor align = Native.moeAlignBlockSize(idx, first, local, block);
+            Dsv.stamp("moe.prep+align");
+            tk = Dsv.tick("moe.prep+align", tk);
             Tensor gateUp = Native.marlinMoeNvfp4Gemm(x, w13q, w13s, w13g, align, w, block, topk, false);
-            Tensor gate = DeepSeekOps.f32(Aten.one("aten::slice.Tensor", gateUp, 1L, 0L, (long) inter));
-            Tensor up = DeepSeekOps.f32(Aten.one("aten::slice.Tensor", gateUp, 1L, (long) inter, (long) 2 * inter));
-            if (limit > 0) {
-                up = Aten.one("aten::clamp", up, -limit, limit);
-                gate = Aten.one("aten::clamp", gate, null, limit);
-            }
+            Dsv.stamp("moe.gemm1");
+            tk = Dsv.tick("moe.gemm1", tk);
             // as in the reference, the routing weight scales the hidden state before it is rounded to bf16 and to fp8
-            Tensor h = Aten.one("aten::mul.Tensor", Aten.one("aten::mul.Tensor", Aten.one("aten::silu", gate), up),
-                    w.reshape(-1, 1)).to(ScalarType.BFloat16);
-            h = DeepSeekOps.fakeQuantFp8(h, 32).contiguous();
+            Tensor h = smile.torch.Native.dsSwiglu(gateUp, w.reshape(-1), limit, true);
+            if (h == null) {
+                Tensor gate = DeepSeekOps.f32(Aten.one("aten::slice.Tensor", gateUp, 1L, 0L, (long) inter));
+                Tensor up = DeepSeekOps.f32(Aten.one("aten::slice.Tensor", gateUp, 1L, (long) inter, (long) 2 * inter));
+                if (limit > 0) {
+                    up = Aten.one("aten::clamp", up, -limit, limit);
+                    gate = Aten.one("aten::clamp", gate, null, limit);
+                }
+                h = Aten.one("aten::mul.Tensor", Aten.one("aten::mul.Tensor", Aten.one("aten::silu", gate), up),
+                        w.reshape(-1, 1)).to(ScalarType.BFloat16);
+                h = DeepSeekOps.fakeQuantFp8(h, 32).contiguous();
+            }
+            Dsv.stamp("moe.swiglu");
+            tk = Dsv.tick("moe.swiglu", tk);
             Tensor down = Native.marlinMoeNvfp4Gemm(h, w2q, w2s, w2g, align, w, block, 1, false);
-            Tensor out = Aten.one("aten::sum.dim_IntList", DeepSeekOps.f32(down.reshape(tokens, topk, dim)), new long[]{1}, false);
+            Dsv.stamp("moe.gemm2");
+            tk = Dsv.tick("moe.gemm2", tk);
+            Tensor out = smile.torch.Native.dsSumTopk(down, topk);
+            if (out == null) {
+                out = Aten.one("aten::sum.dim_IntList", DeepSeekOps.f32(down.reshape(tokens, topk, dim)), new long[]{1}, false);
+            }
+            Dsv.stamp("moe.sum");
+            tk = Dsv.tick("moe.sum", tk);
             if (ep != null) {
                 out = out.contiguous();
                 ep.group().allReduceSumInPlace(ep.rank(), out);
             }
+            Dsv.stamp("moe.allreduce");
+            tk = Dsv.tick("moe.allreduce", tk);
             out.promoteToParent();
             return out;
         } finally {

@@ -119,10 +119,13 @@ public class DeepSeekOpsTest {
 
     @Test
     public void testWindowIndices() {
-        Tensor pre = Aten.one("aten::select.int", DeepSeekOps.windowTopkIdxs(8, 12, 0), 0L, 0L);
+        Tensor pre = Aten.one("aten::select.int", DeepSeekOps.windowTopkIdxs(8, 8, 12, 0), 0L, 0L);
         assertEquals(0.0, maxDiff(pre.to(ScalarType.Int32), f.get("win.prefill")));
-        Tensor dec = Aten.one("aten::select.int", DeepSeekOps.windowTopkIdxs(8, 1, 19), 0L, 0L);   // [1, width]
-        assertEquals(0.0, maxDiff(dec.to(ScalarType.Int32), f.get("win.decode")));
+        Tensor dec = Aten.one("aten::select.int", DeepSeekOps.windowTopkIdxs(8, 8, 1, 19), 0L, 0L);   // [1, width]
+        // the reference lists the ring slots oldest first, this lists the positions in order: the same slots, so compare as sets
+        Tensor sorted = Aten.call("aten::sort", dec.to(ScalarType.Int32), -1L, false)[0];
+        Tensor want = Aten.call("aten::sort", f.get("win.decode"), -1L, false)[0];
+        assertEquals(0.0, maxDiff(sorted, want));
     }
 
     @Test
