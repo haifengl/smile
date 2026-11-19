@@ -16,6 +16,8 @@
  */
 package smile.llm.model.deepseek;
 
+import java.util.ArrayList;
+
 import smile.deep.tensor.Device;
 import smile.deep.tensor.ScalarType;
 import smile.deep.tensor.Tensor;
@@ -75,10 +77,24 @@ final class Dsv {
     static Tensor scoped(java.util.function.Supplier<Tensor> build) {
         smile.util.AutoScope scope = new smile.util.AutoScope();
         Tensor.push(scope);
+        long t0 = System.nanoTime();
         try {
             Tensor t = build.get();
             t.promoteToParent();
             return t;
+        } finally {
+            t0 = tick("scope.build", t0);
+            Tensor.pop();
+            tick("scope.close", t0);
+        }
+    }
+
+    /** Runs {@code body} in its own scope (temporaries freed at once) and returns its non-tensor result. */
+    static <T> T scoped0(java.util.function.Supplier<T> body) {
+        smile.util.AutoScope scope = new smile.util.AutoScope();
+        Tensor.push(scope);
+        try {
+            return body.get();
         } finally {
             Tensor.pop();
         }
@@ -121,6 +137,115 @@ final class Dsv {
         return t.to(device());
     }
 
+    private static final ThreadLocal<java.util.LinkedHashMap<String, Tensor>> CACHE = ThreadLocal.withInitial(
+            () -> new java.util.LinkedHashMap<>(16, 0.75f, true) {
+                @Override
+                protected boolean removeEldestEntry(java.util.Map.Entry<String, Tensor> e) {
+                    if (size() > 128) {
+                        e.getValue().close();
+                        return true;
+                    }
+                    return false;
+                }
+            });
+
+    /**
+     * A small per-thread (= per device) cache of tensors that are identical for every layer of a decode step (position
+     * indices, window slots); the host-to-device copy that builds them is a blocking transfer. The tensor outlives the
+     * current scope and must not be modified or closed by the caller.
+     */
+    private static final ThreadLocal<int[]> LAYER_DEPTH = ThreadLocal.withInitial(() -> new int[1]);
+
+    /**
+     * Runs one layer of a long forward in its own scope: the layer's temporaries are freed when it returns instead of
+     * piling up until the whole pass ends (prefill memory grows with prompt length times layers otherwise). The
+     * results are promoted to the caller's scope; a tensor that must outlive the layer (shared with later layers) goes
+     * through {@link #keep}.
+     */
+    static Tensor[] layerScoped(java.util.function.Supplier<Tensor[]> layer) {
+        smile.util.AutoScope scope = new smile.util.AutoScope();
+        Tensor.push(scope);
+        LAYER_DEPTH.get()[0]++;
+        try {
+            Tensor[] r = layer.get();
+            for (Tensor t : r) {
+                t.promoteToParent();
+            }
+            return r;
+        } finally {
+            LAYER_DEPTH.get()[0]--;
+            Tensor.pop();
+        }
+    }
+
+    /** Lets {@code t} survive the enclosing {@link #layerScoped} layer (no-op outside one). */
+    static Tensor keep(Tensor t) {
+        if (LAYER_DEPTH.get()[0] > 0 && t != null) {
+            t.promoteToParent();
+        }
+        return t;
+    }
+
+    static Tensor cached(String key, java.util.function.Supplier<Tensor> make) {
+        var m = CACHE.get();
+        Tensor t = m.get(key);
+        if (t == null) {
+            t = make.get();
+            t.detachFromScopes();
+            m.put(key, t);
+        }
+        return t;
+    }
+
+    /** Adds the time since {@code t0} (a {@code System.nanoTime()}) to the {@code Aten.STATS} entry {@code name}; no-op unless stats are on. */
+    private static final boolean TICK_SYNC = System.getenv("SMILE_DS_SYNC") != null;
+
+    /** GPU timestamps taken while a graph is captured (see {@link #beginStamps}); {@code null} when off. */
+    private static final ThreadLocal<Object[]> STAMPS = new ThreadLocal<>();
+
+    /** Starts recording section names and GPU timestamps into {@code buf} (int64) for the calling thread. */
+    static void beginStamps(Tensor buf) {
+        STAMPS.set(new Object[]{buf, new ArrayList<String>()});
+        stamp("start");
+    }
+
+    /** Stops stamping and returns the section names, in stamp order (stamp 0 is the start). */
+    @SuppressWarnings("unchecked")
+    static java.util.List<String> endStamps() {
+        Object[] st = STAMPS.get();
+        STAMPS.remove();
+        return st == null ? null : (java.util.List<String>) st[1];
+    }
+
+    /** Marks the end of the section {@code name} with a GPU timestamp (no-op unless stamping). */
+    @SuppressWarnings("unchecked")
+    static void stamp(String name) {
+        Object[] st = STAMPS.get();
+        if (st == null) {
+            return;
+        }
+        java.util.List<String> names = (java.util.List<String>) st[1];
+        smile.torch.Native.dsStamp((Tensor) st[0], names.size());
+        names.add(name);
+    }
+
+    static long tick(String name, long t0) {
+        stamp(name);
+        if (TICK_SYNC && smile.torch.Aten.STATS != null) {
+            host(zeros(ScalarType.Float, 1)).floatArray();   // wait for the device: section times include the GPU work
+        }
+        long now = System.nanoTime();
+        var stats = smile.torch.Aten.STATS;
+        if (stats != null) {
+            long[] c = stats.computeIfAbsent("~" + name, k -> new long[2]);
+            synchronized (c) {
+                c[0]++;
+                c[1] += now - t0;
+            }
+        }
+        return now;
+    }
+
     static Tensor o(String op, Object... args) {
         return Aten.one(op, args);
     }
@@ -143,6 +268,14 @@ final class Dsv {
         Aten.call("aten::copy_", dst, src, false);
     }
 
+    /** {@code arange(n)} (int64) on the device of {@code like}, without a host copy when the kernel is available. */
+    static Tensor iota(Tensor like, long n) {
+        if (like.device().isCUDA() && smile.torch.Native.dsGraphAvailable()) {
+            return smile.torch.Native.dsIota(like, n);
+        }
+        return dev(Aten.one("aten::arange", n));
+    }
+
     static Tensor zeros(ScalarType dtype, long... shape) {
         return dev(Aten.one("aten::zeros", shape, dtype));
     }
@@ -153,6 +286,10 @@ final class Dsv {
 
     /** Rotates the last {@code rd} dimensions of {@code x} (a new tensor). */
     static Tensor ropeTail(Tensor x, Tensor freqs, int rd, boolean inverse) {
+        Tensor fused = smile.torch.Native.dsRopeTail(x, freqs, rd, inverse);
+        if (fused != null) {
+            return fused;
+        }
         long d = x.shape()[x.shape().length - 1];
         Tensor tail = DeepSeekOps.rope(narrow(x, -1, d - rd, rd), freqs, inverse);
         return cat(-1, narrow(x, -1, 0, d - rd), tail);

@@ -49,7 +49,7 @@ final class DeepSeekBlock {
 
     DeepSeekBlock(DeepSeekModelArgs args, DeepSeekCheckpoint ck, int layer,
                   DeepSeekEngram.Rows engramRows) {
-        String p = "layers." + layer;
+        String p = args.layerPrefix(layer);
         this.layer = layer;
         this.args = args;
         this.attention = new DeepSeekAttention(args, ck, layer);
@@ -78,6 +78,31 @@ final class DeepSeekBlock {
         return engram != null;
     }
 
+    boolean hasCompressorState() {
+        return attention.hasCompressorState();
+    }
+
+    void commitCompressor(Tensor kvPtrs, Tensor scorePtrs, Tensor rowKv, Tensor rowScore, Tensor base, Tensor p0, Tensor last) {
+        attention.commitCompressor(kvPtrs, scorePtrs, rowKv, rowScore, base, p0, last);
+    }
+
+    int engramSlot() {
+        return engramSlot;
+    }
+
+    /** The table rows this layer's engram reads for {@code hashIds} {@code [1, s, cols]}. */
+    Tensor engramEmbed(Tensor hashIds) {
+        return engram.embed(hashIds);
+    }
+
+    Tensor engramEmbedHost(long[] ids, long[] shape) {
+        return engram.embedHost(ids, shape);
+    }
+
+    Tensor applyEngramEmb(Tensor h, Tensor emb) {
+        return engram.forwardEmb(h, emb);
+    }
+
     Tensor applyEngram(Tensor h, Tensor hashIds) {
         // hashIds: [1, s, layers, cols] -> this layer's slice [1, s, cols]
         return engram.forward(h, o("aten::select.int", hashIds, 2L, (long) engramSlot));
@@ -86,6 +111,14 @@ final class DeepSeekBlock {
     private Tensor[] hcMixes(Tensor x, Tensor fn, Tensor scale, Tensor base) {
         long[] s = x.shape();
         Tensor flat = DeepSeekOps.f32(x).reshape(s[0], s[1], -1);
+        Tensor raw = o("aten::linear", flat, fn);
+        Dsv.stamp("hc.linear");
+        Tensor[] fused = smile.torch.Native.dsHcMixes(flat, raw, scale, base, args.hcMult(),
+                args.hcSinkhornIters(), args.hcEps(), args.normEps());
+        Dsv.stamp("hc.mixes");
+        if (fused != null) {
+            return fused;
+        }
         Tensor r = o("aten::rsqrt", o("aten::add.Scalar",
                 o("aten::mean.dim", o("aten::mul.Tensor", flat, flat), new long[]{-1}, true), args.normEps()));
         Tensor mixes = o("aten::mul.Tensor", o("aten::linear", flat, fn), r);
@@ -94,11 +127,19 @@ final class DeepSeekBlock {
 
     /** Collapses the copies: {@code [1, s, hc, dim]} x {@code [1, s, hc]} to {@code [1, s, dim]}. */
     static Tensor hcPre(Tensor x, Tensor pre) {
+        Tensor fused = smile.torch.Native.dsHcPre(x, pre);
+        if (fused != null) {
+            return fused;
+        }
         return o("aten::sum.dim_IntList", o("aten::mul.Tensor", pre.unsqueeze(-1), DeepSeekOps.f32(x)), new long[]{2})
                 .to(x.dtype());
     }
 
     private static Tensor hcPost(Tensor x, Tensor residual, Tensor post, Tensor comb) {
+        Tensor fused = smile.torch.Native.dsHcPost(x, residual, post, comb);
+        if (fused != null) {
+            return fused;
+        }
         Tensor a = o("aten::mul.Tensor", post.unsqueeze(-1), x.unsqueeze(-2));
         Tensor b = o("aten::sum.dim_IntList", o("aten::mul.Tensor", comb.unsqueeze(-1), residual.unsqueeze(-2)), new long[]{2});
         return o("aten::add.Tensor", a, b).to(x.dtype());
@@ -117,31 +158,68 @@ final class DeepSeekBlock {
         return run(x, preMix, trace, h -> attention.forward(h, startPos));
     }
 
+    /** One DSpark stage (see {@link DeepSeekAttention#forwardDraft}). */
+    Tensor[] forwardDraft(Tensor x, Tensor preMix, Tensor mainX, Tensor startPos, Tensor qpos, Tensor idx, Tensor slots,
+                          Tensor perSeq, Tensor rowPtrs, int n, int block) {
+        return run(x, preMix, null, h -> attention.forwardDraft(h, mainX, startPos, qpos, idx, slots, perSeq, rowPtrs, n, block));
+    }
+
+    Tensor draftMainKv(Tensor mainX, long[] positions) {
+        return attention.draftMainKv(mainX, positions);
+    }
+
+    void absorbDraftWindow(DeepSeekAttention.State s, Tensor mainX, int pos) {
+        attention.absorbDraftWindow(s, mainX, pos);
+    }
+
+    void seedDraftWindow(DeepSeekAttention.State s, Tensor mainX) {
+        attention.seedDraftWindow(s, mainX);
+    }
+
+    /** As {@link #forward} for the whole prompts of several new sequences, one after the other along the sequence axis. */
+    Tensor[] forwardPrefillBatch(Tensor x, int[] lens, DeepSeekAttention.State[] states, Tensor preMix) {
+        return run(x, preMix, null, h -> attention.forwardPrefillBatch(h, lens, states));
+    }
+
     /** As {@link #forward} for one decode token of each of several sequences (rows along the sequence axis). */
-    Tensor[] forwardBatch(Tensor x, int[] pos, DeepSeekAttention.State[] states, Tensor preMix) {
-        return run(x, preMix, null, h -> attention.forwardBatch(h, pos, states));
+    Tensor[] forwardBatch(Tensor x, int[] pos, DeepSeekAttention.State[] states, Tensor preMix,
+                          DeepSeekAttention.BatchShared batch) {
+        return run(x, preMix, null, h -> attention.forwardBatch(h, pos, states, batch));
+    }
+
+    /** {@link #forwardBatch} for a captured CUDA graph: everything derives from the static {@code posT}. */
+    Tensor[] forwardBatchGraph(Tensor x, Tensor posT, Tensor preMix, int nb, int lenCap,
+                               DeepSeekAttention.GraphPtrs gp, DeepSeekAttention.BatchShared batch) {
+        return run(x, preMix, null, h -> attention.forwardBatchGraph(h, posT, nb, lenCap, gp, batch));
     }
 
     private Tensor[] run(Tensor x, Tensor preMix, Map<String, Tensor> trace,
                          java.util.function.UnaryOperator<Tensor> attend) {
         double eps = args.normEps();
         Tensor residual = x;
+        long t = System.nanoTime();
         Tensor[] attn = hcMixes(x, attnFn, attnScale, attnBase);
         Tensor h = DeepSeekOps.rmsNorm(hcPre(x, preMix), attnNorm, eps);
+        t = Dsv.tick("block.hc1", t);
         h = attend.apply(h);
+        t = Dsv.tick("block.attention", t);
         if (trace != null) {
             trace.put("L" + layer + ".attn_out", h);
         }
         x = hcPost(h, residual, attn[1], attn[2]);
+        Dsv.stamp("hc.post");
 
         residual = x;
         Tensor[] ff = hcMixes(x, ffnFn, ffnScale, ffnBase);
         h = DeepSeekOps.rmsNorm(hcPre(x, attn[0]), ffnNorm, eps);
+        t = Dsv.tick("block.hc2", t);
         h = ffn.forward(h);
+        t = Dsv.tick("block.ffn", t);
         if (trace != null) {
             trace.put("L" + layer + ".ffn_out", h);
         }
         x = hcPost(h, residual, ff[1], ff[2]);
+        Dsv.stamp("hc.post");
         return new Tensor[]{x, ff[0]};
     }
 }

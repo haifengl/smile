@@ -239,6 +239,17 @@ public record DeepSeekModelArgs(
     }
 
     /**
+     * The checkpoint name prefix of a layer: {@code layers.N} for the backbone, {@code mtp.K} for the DSpark stages
+     * (layer indices {@code numLayers + K}).
+     *
+     * @param layer layer index.
+     * @return the prefix.
+     */
+    public String layerPrefix(int layer) {
+        return layer < numLayers ? "layers." + layer : "mtp." + (layer - numLayers);
+    }
+
+    /**
      * Routed experts and experts per token of a layer (the MTP layers use their own counts).
      *
      * @param layer layer index.

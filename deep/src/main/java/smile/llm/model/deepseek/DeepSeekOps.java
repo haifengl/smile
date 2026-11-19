@@ -73,6 +73,12 @@ public final class DeepSeekOps {
      * @return the fake-quantized tensor.
      */
     public static Tensor fakeQuantFp8(Tensor x, int block) {
+        if (block == 32) {
+            Tensor fused = smile.torch.Native.dsFakeQuantFp8(x);
+            if (fused != null) {
+                return fused;
+            }
+        }
         long[] shape = x.shape();
         long n = shape[shape.length - 1];
         Tensor xf = f32(x).reshape(-1, n / block, block);
@@ -110,6 +116,10 @@ public final class DeepSeekOps {
      * @return the fake-quantized tensor, in the dtype of {@code x}.
      */
     public static Tensor fakeQuantFp4(Tensor x, int block, boolean e4m3Scale) {
+        Tensor fused = smile.torch.Native.dsFakeQuantFp4(x, block, e4m3Scale);
+        if (fused != null) {
+            return fused;
+        }
         long[] shape = x.shape();
         long n = shape[shape.length - 1];
         Tensor xf = f32(x).reshape(-1, n / block, block);
@@ -182,6 +192,10 @@ public final class DeepSeekOps {
      * @return the normalized tensor in the dtype of {@code x}.
      */
     public static Tensor rmsNorm(Tensor x, Tensor weight, double eps) {
+        Tensor fused = smile.torch.Native.dsRmsNorm(x, weight, eps);
+        if (fused != null) {
+            return fused;
+        }
         Tensor xf = f32(x);
         Tensor var = op("aten::mean.dim", op("aten::mul.Tensor", xf, xf), new long[]{-1}, true);
         Tensor r = op("aten::rsqrt", op("aten::add.Scalar", var, eps));
@@ -265,6 +279,10 @@ public final class DeepSeekOps {
      * @return {@code {pre [..., hc], post [..., hc], comb [..., hc, hc]}}.
      */
     public static Tensor[] hcSplitSinkhorn(Tensor mixes, Tensor scale, Tensor base, int hc, int iters, double eps) {
+        Tensor[] fused = smile.torch.Native.dsHcSplitSinkhorn(mixes, scale, base, hc, iters, eps);
+        if (fused != null) {
+            return fused;
+        }
         Tensor s0 = op("aten::select.int", scale, 0L, 0L);
         Tensor s1 = op("aten::select.int", scale, 0L, 1L);
         Tensor s2 = op("aten::select.int", scale, 0L, 2L);
@@ -302,7 +320,112 @@ public final class DeepSeekOps {
      * @param scale  softmax scale.
      * @return the output {@code [1, m, h, d]} in bf16.
      */
+    /** Prefill chunks of at least this many query rows use the tensor-core path (the per-head kernel re-reads every key per head). */
+    static final int GEMM_MIN_ROWS = Integer.getInteger("smile.ds.attn.gemm.rows", 32);
+    /** Tensor-core prefill attention and index scores (default on; {@code SMILE_DS_ATTN_GEMM=0} selects the per-head kernels). */
+    static volatile boolean gemmPrefill = !"0".equals(System.getenv("SMILE_DS_ATTN_GEMM"));
+    private static volatile boolean gemmUnavailable;
+    /** Gathered key rows per chunk of the tensor-core path (each row is 1 KB). */
+    private static final long GEMM_CHUNK_KEYS = Long.getLong("smile.ds.attn.gemm.keys", 160L << 10);
+
+    /**
+     * {@link #sparseAttention} for many query rows as batched bf16 GEMMs on tensor cores (float32 accumulation and
+     * scores, probabilities rounded to bf16 for the value product, as the reference kernel does): the shared keys of
+     * each row are gathered once and serve all heads. Rows go in chunks that bound the gathered copy.
+     *
+     * @return the output, or {@code null} when {@code aten::bmm.dtype} is unavailable.
+     */
+    /** Decode rows from at least this many sequences use the tensor-core attention over per-sequence caches. */
+    static final int GEMM_MIN_SEQS = Integer.getInteger("smile.ds.attn.gemm.seqs", 64);
+
+    /**
+     * Sparse attention for one query per sequence over each sequence's caches (pointer tables) as gather + two GEMMs
+     * (see {@link #sparseAttentionGemm}); {@code null} when unavailable. Graph-capturable: no host reads, static shapes.
+     */
+    static Tensor sparseAttentionPtrsGemm(Tensor q, Tensor windowPtrs, Tensor compressPtrs, int window, Tensor sink,
+                                          Tensor idxs, double scale) {
+        if (!gemmPrefill || gemmUnavailable || q.dtype() != ScalarType.BFloat16 || q.size(0) != 1) {
+            return null;
+        }
+        Tensor keys = smile.torch.Native.dsGatherKeysPtrs(windowPtrs, compressPtrs, idxs, window);   // [m, topk, d]
+        if (keys == null) {
+            return null;
+        }
+        try {
+            Tensor s = op("aten::bmm.dtype", op("aten::select.int", q, 0L, 0L), keys.transpose(1, 2), ScalarType.Float);
+            Tensor ix = op("aten::select.int", idxs, 0L, 0L);
+            Tensor p = smile.torch.Native.dsAttnSoftmax(s, ix, sink, scale);
+            if (p == null) {
+                return null;
+            }
+            return op("aten::bmm", p, keys).unsqueeze(0);
+        } catch (RuntimeException e) {
+            gemmUnavailable = true;
+            return null;
+        }
+    }
+
+    static Tensor sparseAttentionGemm(Tensor q, Tensor kv, Tensor sink, Tensor idxs, double scale) {
+        if (gemmUnavailable || q.dtype() != ScalarType.BFloat16 || kv.dtype() != ScalarType.BFloat16 || q.size(0) != 1) {
+            return null;
+        }
+        long m = q.size(1);
+        long h = q.size(2);
+        long d = q.size(3);
+        long topk = idxs.size(2);
+        long chunk = Math.max(16, Math.min(m, GEMM_CHUNK_KEYS / topk));      // rows per chunk: ~160K gathered key rows
+        Tensor keys = op("aten::select.int", kv, 0L, 0L);                    // [n, d]
+        Tensor q3 = op("aten::select.int", q, 0L, 0L);                       // [m, h, d]
+        Tensor ix = op("aten::select.int", idxs, 0L, 0L);                    // [m, topk]
+        Tensor sinkRow = f32(sink).reshape(1, h, 1);
+        Tensor[] parts = new Tensor[(int) ((m + chunk - 1) / chunk)];
+        try {
+            for (int c = 0; c < parts.length; c++) {
+                long r0 = c * chunk;
+                long rows = Math.min(chunk, m - r0);
+                Tensor idx = op("aten::narrow", ix, 0L, r0, rows);
+                Tensor invalid = op("aten::lt.Scalar", idx, 0);
+                Tensor ids = op("aten::clamp_min", idx, 0).to(ScalarType.Int64).reshape(-1);
+                Tensor gathered = op("aten::index_select", keys, 0L, ids).reshape(rows, topk, d);   // [rows, topk, d]
+                Tensor qc = op("aten::narrow", q3, 0L, r0, rows);                                   // [rows, h, d]
+                Tensor s = op("aten::bmm.dtype", qc, gathered.transpose(1, 2), ScalarType.Float);   // [rows, h, topk]
+                Tensor p = smile.torch.Native.dsAttnSoftmax(s, idx, sink, scale);                    // normalized, bf16
+                if (p != null) {
+                    parts[c] = op("aten::bmm", p, gathered);                                          // [rows, h, d] bf16
+                    continue;
+                }
+                s = op("aten::mul.Scalar", s, scale);
+                s = op("aten::masked_fill.Scalar", s, invalid.unsqueeze(1), Double.NEGATIVE_INFINITY);
+                Tensor mx = op("aten::clamp_min", op("aten::amax", s, new long[]{-1}, true), -1e30);   // [rows, h, 1]
+                Tensor e = op("aten::exp", op("aten::sub.Tensor", s, mx));
+                Tensor denom = op("aten::add.Tensor", op("aten::sum.dim_IntList", e, new long[]{-1}, true),
+                        op("aten::exp", op("aten::sub.Tensor", sinkRow, mx)));                  // [rows, h, 1]
+                p = op("aten::div.Tensor", e, denom).to(ScalarType.BFloat16);
+                parts[c] = op("aten::bmm", p, gathered);
+            }
+        } catch (RuntimeException e) {
+            if (String.valueOf(e.getMessage()).contains("bmm")) {
+                gemmUnavailable = true;
+                return null;
+            }
+            throw e;
+        }
+        Tensor out = parts.length == 1 ? parts[0] : op("aten::cat", parts, 0L);
+        return out.unsqueeze(0);
+    }
+
+
     public static Tensor sparseAttention(Tensor q, Tensor kv, Tensor sink, Tensor idxs, double scale) {
+        if (q.size(1) >= GEMM_MIN_ROWS && q.device().isCUDA() && gemmPrefill) {
+            Tensor g = sparseAttentionGemm(q, kv, sink, idxs, scale);
+            if (g != null) {
+                return g;
+            }
+        }
+        Tensor fused = smile.torch.Native.dsSparseAttention(q, kv, sink, idxs, scale);
+        if (fused != null) {
+            return fused;
+        }
         long m = q.size(1);
         long topk = idxs.size(2);
         long d = q.size(3);
@@ -326,11 +449,20 @@ public final class DeepSeekOps {
      * The sliding-window slots each query attends to, for prefill (one row per query) or one decode step.
      *
      * @param window   window size.
+     * @param ring     slots of the window ring (decode).
      * @param seqLen   number of queries (1 for decode).
      * @param startPos position of the first query.
      * @return int32 {@code [1, seqLen, width]}, {@code -1} for slots holding nothing.
      */
-    public static Tensor windowTopkIdxs(int window, int seqLen, int startPos) {
+    public static Tensor windowTopkIdxs(int window, int ring, int seqLen, int startPos) {
+        if (startPos > 0 && seqLen == 1) {
+            // one decode token: identical for every layer of the step, so build and upload it once
+            return Dsv.cached("window:" + window + ":" + ring + ":" + startPos, () -> windowTopkIdxs0(window, ring, seqLen, startPos));
+        }
+        return windowTopkIdxs0(window, ring, seqLen, startPos);
+    }
+
+    private static Tensor windowTopkIdxs0(int window, int ring, int seqLen, int startPos) {
         int[] data;
         int rows;
         int width;
@@ -349,10 +481,9 @@ public final class DeepSeekOps {
             rows = 1;
             width = window;
             data = new int[width];
-            int oldest = startPos % window + 1;
             for (int j = 0; j < width; j++) {
-                int v = j < window - oldest ? oldest + j : j - (window - oldest);
-                data[j] = v > startPos ? -1 : v;
+                int q = startPos - (window - 1) + j;
+                data[j] = q < 0 ? -1 : q % ring;
             }
         }
         return Dsv.dev(Tensor.of(data, 1, rows, width));

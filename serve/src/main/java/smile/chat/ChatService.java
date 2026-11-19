@@ -370,6 +370,18 @@ public class ChatService implements OpenAiModelContributor {
             if (config.speculativeTokens() <= 0) {
                 this.speculativeTokens = minimax.numSpeculativeTokens();
             }
+        } else if (model instanceof smile.llm.model.deepseek.DeepSeek deepseek) {
+            // DSpark draft head (mtp.* tensors): requests are only flagged speculative when it is loaded, because a flagged
+            // request without a draft would leave the batched decode path and run one plain step at a time.
+            this.speculative = config.speculative() && deepseek.hasDraft();
+            if (this.speculative) {
+                this.speculativeTokens = config.speculativeTokens() > 0
+                        ? Math.min(config.speculativeTokens(), deepseek.draftBlock()) : deepseek.draftBlock();
+                logger.infof("DSpark speculative decoding enabled for DeepSeek (drafts=%d)", this.speculativeTokens);
+            } else if (config.speculative()) {
+                logger.infof("Speculative decoding is on but this DeepSeek checkpoint has no DSpark draft head; "
+                        + "using plain decoding");
+            }
         }
         logQuantBackend(model, config, kvCache);
         if (model instanceof smile.llm.engine.ModelExecutor exec) {
@@ -384,8 +396,11 @@ public class ChatService implements OpenAiModelContributor {
                     config.admissionTimeoutMs(),
                     Math.max(0L, config.admitCoalesceMs()));
             // 0 = no limit beyond the batch size, except for MiniMax: DSpark drafts one request at a time (about 6 ms
-            // each), so speculation stops paying off beyond ~4 concurrent requests (measured on Flash, TP8).
+            // each), so speculation stops paying off beyond ~4 concurrent requests (measured on Flash, TP8). DeepSeek
+            // verifies a block of rows per request: 2.1x for one request, 1.5x at 4, 1.25x at 8, 1.14x at 16, 1.05x at 32
+            // (measured through the engine on 8 A100); beyond 32 requests the verify rows stop paying, the rest decode plain.
             int defaultSpeculators = model instanceof MiniMax ? Math.min(4, Math.max(1, config.maxBatchSize()))
+                    : model instanceof smile.llm.model.deepseek.DeepSeek ? Math.min(32, Math.max(1, config.maxBatchSize()))
                     : Math.max(1, config.maxBatchSize());
             engine.setMaxSpeculativeConcurrency(config.speculativeMaxConcurrency() > 0
                     ? config.speculativeMaxConcurrency()

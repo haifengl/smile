@@ -110,6 +110,26 @@ public final class Aten {
      * @return the tensor outputs.
      */
     public static Tensor[] call(String op, Object... args) {
+        if (STATS == null) {
+            return call0(op, args);
+        }
+        long t = System.nanoTime();
+        try {
+            return call0(op, args);
+        } finally {
+            long[] c = STATS.computeIfAbsent(op, k -> new long[2]);
+            synchronized (c) {
+                c[0]++;
+                c[1] += System.nanoTime() - t;
+            }
+        }
+    }
+
+    /** Per-operator {calls, nanoseconds} when run with {@code -Dsmile.aten.stats=true}, else {@code null}. */
+    public static final java.util.concurrent.ConcurrentHashMap<String, long[]> STATS =
+            Boolean.getBoolean("smile.aten.stats") ? new java.util.concurrent.ConcurrentHashMap<>() : null;
+
+    private static Tensor[] call0(String op, Object... args) {
         if (B.CALL == null) {
             throw new UnsupportedOperationException("smile_aten_call is not available in this build of smile_torch");
         }

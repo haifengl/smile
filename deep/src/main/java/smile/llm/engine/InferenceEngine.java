@@ -687,8 +687,70 @@ public final class InferenceEngine implements AutoCloseable {
         }
     }
 
+    /**
+     * Prefills the waiting whole prompts together when the model supports it (a prompt costs mostly per-layer launch
+     * overhead that several prompts share). Returns the tokens spent; prompts not taken here go through the one-by-one path.
+     */
+    private int runBatchedPrefill(int budget) {
+        if (!executor.supportsBatchedPrefill()) {
+            return 0;
+        }
+        List<Active> group = new ArrayList<>();
+        int tokens = 0;
+        for (Active a : active) {
+            if (a.phase != Phase.PREFILL || a.handle.isAborted() || a.request.hasMultimodal() || a.prefillFrom != 0
+                    || a.promptLen < 1 || a.maxGenLen == 0) {
+                continue;
+            }
+            if (!group.isEmpty() && tokens + a.promptLen > budget) {
+                continue;
+            }
+            group.add(a);
+            tokens += a.promptLen;
+            if (tokens >= budget) {
+                break;
+            }
+        }
+        if (group.size() < 2) {
+            return 0;
+        }
+        int[] ids = new int[group.size()];
+        int[][] prompts = new int[group.size()][];
+        for (int i = 0; i < ids.length; i++) {
+            ids[i] = group.get(i).kvRequestId;
+            prompts[i] = group.get(i).prompt;
+        }
+        long t0 = System.nanoTime();
+        Tensor[] logits;
+        try {
+            logits = executor.prefillBatch(ids, prompts);
+        } catch (Throwable t) {
+            for (Active a : group) {
+                failActive(a, t);
+            }
+            return tokens;
+        }
+        long ms = (System.nanoTime() - t0) / 1_000_000L;
+        prefillMsTotal.addAndGet(ms);
+        logger.info("Batched prefill of {} prompts, {} tokens, {} ms", group.size(), tokens, ms);
+        for (int i = 0; i < group.size(); i++) {
+            Active a = group.get(i);
+            a.prefillFrom = a.promptLen;
+            try (Tensor l = logits[i]) {
+                sampleAndAppend(a, l);
+                if (a.phase != Phase.DONE) {
+                    a.phase = Phase.DECODING;
+                }
+            } catch (Throwable t) {
+                failActive(a, t);
+            }
+        }
+        return tokens;
+    }
+
     private void runPrefills() {
         int budget = prefillTokenBudget;
+        budget -= runBatchedPrefill(budget);
         for (Active a : active) {
             if (a.phase != Phase.PREFILL || budget <= 0) {
                 continue;
@@ -792,11 +854,12 @@ public final class InferenceEngine implements AutoCloseable {
         List<Active> batch = new ArrayList<>();
         List<Active> singles = new ArrayList<>();
         boolean batchable = speculative.size() > 1;
+        boolean overshoot = executor.speculationMayOvershoot();
         for (Active a : speculative) {
             if (batchable) {
                 int remaining = Math.min(a.maxGenLen - a.completion.size(),
                         a.totalCapacity - a.promptLen - a.completion.size());
-                if (remaining >= 1 && remaining - 1 >= maxDrafts) {
+                if (remaining >= 1 && (overshoot || remaining - 1 >= maxDrafts)) {
                     batch.add(a);
                     continue;
                 }
@@ -832,9 +895,9 @@ public final class InferenceEngine implements AutoCloseable {
         if (remaining < 1) {
             return;
         }
-        int maxDrafts = Math.min(
-                Math.max(1, n > 0 ? n : 3),
-                Math.max(0, remaining - 1));
+        int maxDrafts = executor.speculationMayOvershoot() && remaining > 1
+                ? Math.max(1, n > 0 ? n : 3)
+                : Math.min(Math.max(1, n > 0 ? n : 3), Math.max(0, remaining - 1));
         int pos = a.promptLen + a.completion.size() - 1;
         long t0 = System.nanoTime();
         try {

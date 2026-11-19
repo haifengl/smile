@@ -227,6 +227,165 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final MethodHandle DS_HC_SINKHORN = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_hc_split_sinkhorn")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle DS_HC_MIXES = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_hc_mixes")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_DOUBLE,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle DS_RMS_NORM = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_rms_norm")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
+        static final MethodHandle DS_HC_PRE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_hc_pre")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle DS_HC_POST = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_hc_post")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle DS_SPARSE_ATTENTION = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_sparse_attention")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
+        static final MethodHandle DS_ROUTE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_route")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle DS_SWIGLU = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_swiglu")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_SUM_TOPK = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_sum_topk")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_ATTN_SOFTMAX = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_attn_softmax")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
+        static final MethodHandle DS_GATHER_KEYS_PTRS = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_gather_keys_ptrs")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_COMPRESS_ROWS = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_compress_rows")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_COMPRESS_COMMIT = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_compress_commit")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_ROPE_TAIL = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_rope_tail")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_FAKE_QUANT_FP4 = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_fake_quant_fp4")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_INDEX_SCORE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_index_score")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle DS_INDEX_FINALIZE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_index_finalize")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)))
+                .orElse(null);
+        static final MethodHandle DS_PTR_TABLE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_ptr_table")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_WINDOW_WRITE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_window_write")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_CACHE_SCATTER = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_cache_scatter")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle DS_COMPRESS_STATE = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_compress_state")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_INDEX_SCORE_PTRS = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_index_score_ptrs")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_LONG)))
+                .orElse(null);
+        static final MethodHandle DS_SPARSE_ATTENTION_PTRS = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_sparse_attention_ptrs")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
+        static final MethodHandle DS_IOTA = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_iota")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)))
+                .orElse(null);
+        static final MethodHandle DS_WINDOW_TOPK = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_window_topk")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_CACHE_SCATTER_GATED = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_cache_scatter_gated")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_DATA_PTRS = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_data_ptrs")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle DS_PROFILER = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_profiler")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_STAMP = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_stamp")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle DS_FAKE_QUANT_FP8 = smile_torch_h.SYMBOL_LOOKUP
+                .find("smile_ds_fake_quant_fp8")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
         static final MethodHandle SILU_MUL = smile_torch_h.SYMBOL_LOOKUP
                 .find("smile_silu_mul")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -1130,6 +1289,16 @@ public final class Native {
                 globalScale);
     }
 
+    /**
+     * Comma-separated DeepSeek fused ops to disable (hc_mixes, hc_split, hc_pre, hc_post, rms_norm, fake_quant), for
+     * bisecting numeric differences; defaults to the {@code SMILE_DS_OFF} environment variable.
+     */
+    public static volatile String dsOff = System.getenv().getOrDefault("SMILE_DS_OFF", "");
+
+    private static boolean dsOn(String op) {
+        return FUSED_OPS_ENABLED && !dsOff.contains(op);
+    }
+
     private static final boolean FUSED_OPS_ENABLED = !"0".equals(System.getenv("SMILE_FUSED_OPS"));
 
     /** @return {@code true} when the fused decode kernels are compiled in and not disabled by {@code SMILE_FUSED_OPS=0}. */
@@ -1264,6 +1433,465 @@ public final class Native {
         } catch (Throwable t) {
             return false;
         }
+    }
+
+    /**
+     * DeepSeek Hyper-Connections coefficients in one launch (sigmoid pre/post and the Sinkhorn-normalized matrix).
+     *
+     * @return {@code {pre, post, comb}}, or {@code null} when unavailable or unsupported.
+     */
+    public static Tensor[] dsHcSplitSinkhorn(Tensor mixes, Tensor scale, Tensor base, int hc, int iters, double eps) {
+        if (!dsOn("hc_split") || Bindings.DS_HC_SINKHORN == null || !mixes.device().isCUDA()) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment outs = arena.allocate(ValueLayout.ADDRESS, 3);
+            int rc;
+            try {
+                rc = (int) Bindings.DS_HC_SINKHORN.invokeExact(
+                        mixes.handle(), scale.handle(), base.handle(), hc, iters, eps, outs);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (rc != 0) {
+                return null;
+            }
+            return new Tensor[]{new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 0)),
+                    new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 1)),
+                    new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 2))};
+        }
+    }
+
+    /**
+     * DeepSeek RMS scaling of the stream plus the Hyper-Connections coefficients in one launch.
+     *
+     * @param flat the float32 stream rows {@code [.., K]}.
+     * @param raw  the float32 projection of {@code flat}, {@code [.., (2 + hc) * hc]}.
+     * @return {@code {pre, post, comb}}, or {@code null} when unavailable or unsupported.
+     */
+    public static Tensor[] dsHcMixes(Tensor flat, Tensor raw, Tensor scale, Tensor base, int hc, int iters,
+                                     double eps, double normEps) {
+        if (!dsOn("hc_mixes") || Bindings.DS_HC_MIXES == null || !flat.device().isCUDA()) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment outs = arena.allocate(ValueLayout.ADDRESS, 3);
+            int rc;
+            try {
+                rc = (int) Bindings.DS_HC_MIXES.invokeExact(flat.handle(), raw.handle(), scale.handle(),
+                        base.handle(), hc, iters, eps, normEps, outs);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (rc != 0) {
+                return null;
+            }
+            return new Tensor[]{new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 0)),
+                    new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 1)),
+                    new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 2))};
+        }
+    }
+
+    /** DeepSeek {@code w * (x * rsqrt(mean(x^2) + eps))} in one launch, or {@code null} when unavailable or unsupported. */
+    public static Tensor dsRmsNorm(Tensor x, Tensor weight, double eps) {
+        if (!dsOn("rms_norm") || Bindings.DS_RMS_NORM == null || !x.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.DS_RMS_NORM, x.handle(), weight.handle(), eps);
+    }
+
+    /** Hyper-Connections collapse in one launch, or {@code null} when unavailable or unsupported. */
+    public static Tensor dsHcPre(Tensor x, Tensor pre) {
+        if (!dsOn("hc_pre") || Bindings.DS_HC_PRE == null || !x.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.DS_HC_PRE, x.handle(), pre.handle());
+    }
+
+    /** Hyper-Connections expansion in one launch, or {@code null} when unavailable or unsupported. */
+    public static Tensor dsHcPost(Tensor x, Tensor residual, Tensor post, Tensor comb) {
+        if (!dsOn("hc_post") || Bindings.DS_HC_POST == null || !x.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.DS_HC_POST, x.handle(), residual.handle(), post.handle(), comb.handle());
+    }
+
+    /** DeepSeek sparse attention over one shared KV head in one launch, or {@code null} when unavailable or unsupported. */
+    public static Tensor dsSparseAttention(Tensor q, Tensor kv, Tensor sink, Tensor idxs, double scale) {
+        if (!dsOn("sparse_attn") || Bindings.DS_SPARSE_ATTENTION == null || !q.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.DS_SPARSE_ATTENTION, q.handle(), kv.handle(), sink.handle(), idxs.handle(), scale);
+    }
+
+    /**
+     * DeepSeek MoE routing in one launch.
+     *
+     * @param logits float32 {@code [n, experts]} (the gate projection).
+     * @return {@code {indices int64 [n, topk], weights float32 [n, topk]}}, or {@code null} when unavailable or unsupported.
+     */
+    public static Tensor[] dsRoute(Tensor logits, Tensor bias, int topk, double routeScale) {
+        if (!dsOn("route") || Bindings.DS_ROUTE == null || !logits.device().isCUDA()) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment outs = arena.allocate(ValueLayout.ADDRESS, 2);
+            int rc;
+            try {
+                rc = (int) Bindings.DS_ROUTE.invokeExact(logits.handle(), bias.handle(), topk, routeScale, outs);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (rc != 0) {
+                return null;
+            }
+            return new Tensor[]{new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 0)),
+                    new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 1))};
+        }
+    }
+
+    /**
+     * Expert SwiGLU ({@code silu(min(gate, limit)) * clamp(up) [* weights]} rounded to bf16, optionally fp8 fake-quantized)
+     * in one launch, or {@code null} when unavailable or unsupported.
+     *
+     * @param gateUp  bf16 {@code [rows, 2 * inter]}, gate first.
+     * @param weights float32 {@code [rows]}, or {@code null}.
+     */
+    public static Tensor dsSwiglu(Tensor gateUp, Tensor weights, double limit, boolean quant) {
+        if (!dsOn("swiglu") || Bindings.DS_SWIGLU == null || !gateUp.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.DS_SWIGLU, gateUp.handle(), weights == null ? MemorySegment.NULL : weights.handle(),
+                limit, quant ? 1 : 0);
+    }
+
+    /** Sums the topk rows of each token in float32 ({@code [tokens * topk, dim]} bf16 in), or {@code null} when unsupported. */
+    public static Tensor dsSumTopk(Tensor x, int topk) {
+        if (!dsOn("sum_topk") || Bindings.DS_SUM_TOPK == null || !x.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.DS_SUM_TOPK, x.handle(), topk);
+    }
+
+    /**
+     * Softmax of prefill attention scores with masking and the sink (see {@code smile_ds_attn_softmax}): float32
+     * {@code [rows, heads, topk]} scores and int32 {@code [rows, topk]} indices in, bf16 probabilities out; or
+     * {@code null} when unavailable or unsupported.
+     */
+    public static Tensor dsAttnSoftmax(Tensor scores, Tensor idxs, Tensor sink, double scale) {
+        if (!dsOn("attn_softmax") || Bindings.DS_ATTN_SOFTMAX == null || !scores.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.DS_ATTN_SOFTMAX, scores.handle(), idxs.handle(), sink.handle(), scale);
+    }
+
+    /** Rotary embedding of the last {@code rd} dims in one launch, or {@code null} when unavailable or unsupported. */
+    public static Tensor dsRopeTail(Tensor x, Tensor freqs, int rd, boolean inverse) {
+        if (!dsOn("rope") || Bindings.DS_ROPE_TAIL == null || !x.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.DS_ROPE_TAIL, x.handle(), freqs.handle(), rd, inverse ? 1 : 0);
+    }
+
+    /** Block-wise fp4 fake quantization in one launch, or {@code null} when unavailable or unsupported. */
+    public static Tensor dsFakeQuantFp4(Tensor x, int block, boolean e4m3Scale) {
+        if (!dsOn("fake_quant_fp4") || Bindings.DS_FAKE_QUANT_FP4 == null || !x.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.DS_FAKE_QUANT_FP4, x.handle(), block, e4m3Scale ? 1 : 0);
+    }
+
+    /** Indexer scores {@code sum_h relu(q.k) * w} in one launch, or {@code null} when unavailable or unsupported. */
+    public static Tensor dsIndexScore(Tensor q, Tensor k, Tensor w) {
+        if (!dsOn("index_score") || Bindings.DS_INDEX_SCORE == null || !q.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.DS_INDEX_SCORE, q.handle(), k.handle(), w.handle());
+    }
+
+    /** {@code idx < lens ? idx + offset : -1} as int32 in one launch, or {@code null} when unavailable or unsupported. */
+    public static Tensor dsIndexFinalize(Tensor idxs, Tensor lens, long offset) {
+        if (!dsOn("index_finalize") || Bindings.DS_INDEX_FINALIZE == null || !idxs.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.DS_INDEX_FINALIZE, idxs.handle(), lens.handle(), offset);
+    }
+
+    // ---------------------------------------------------------------- DeepSeek: decode over several sequences
+
+    /** Whether the kernels of the batched decode path are available (and not switched off). */
+    public static boolean dsBatchAvailable() {
+        return dsOn("batch_attn") && Bindings.DS_PTR_TABLE != null && Bindings.DS_WINDOW_WRITE != null
+                && Bindings.DS_CACHE_SCATTER != null && Bindings.DS_COMPRESS_STATE != null
+                && Bindings.DS_INDEX_SCORE_PTRS != null && Bindings.DS_SPARSE_ATTENTION_PTRS != null;
+    }
+
+    /** An int64 device tensor holding the data pointers of {@code ts} (which must stay alive and in place). */
+    public static Tensor dsPtrTable(Tensor... ts) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment seg = arena.allocate(ValueLayout.ADDRESS, ts.length);
+            for (int i = 0; i < ts.length; i++) {
+                seg.setAtIndex(ValueLayout.ADDRESS, i, ts[i].handle());
+            }
+            MemorySegment out = (MemorySegment) Bindings.DS_PTR_TABLE.invokeExact(seg, ts.length);
+            if (out == null || out.address() == 0) {
+                throw new IllegalStateException("smile_ds_ptr_table: " + lastError());
+            }
+            return new Tensor(out);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    private static void check(int rc, String what) {
+        if (rc != 0) {
+            throw new IllegalStateException(what + ": " + lastError());
+        }
+    }
+
+    /** Window ring write of row i of {@code src} to slot {@code pos[i] % window} of sequence i's window. */
+    public static void dsWindowWrite(Tensor src, Tensor ptrs, Tensor pos, int window) {
+        try {
+            check((int) Bindings.DS_WINDOW_WRITE.invokeExact(src.handle(), ptrs.handle(), pos.handle(), window),
+                    "smile_ds_window_write");
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    /** Row i of {@code src} to row {@code pos[i] / div} of sequence i's cache, where {@code emit[i]} ({@code null}: all). */
+    public static void dsCacheScatter(Tensor src, Tensor ptrs, Tensor pos, int div, Tensor emit) {
+        try {
+            MemorySegment em = MemorySegment.NULL;
+            if (emit != null) {
+                em = emit.handle();
+            }
+            check((int) Bindings.DS_CACHE_SCATTER.invokeExact(src.handle(), ptrs.handle(), pos.handle(), div, em),
+                    "smile_ds_cache_scatter");
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    /** Compressor decode step for several sequences; returns the pooled groups (float32 {@code [1, n, hd]}). */
+    public static Tensor dsCompressState(Tensor kv, Tensor score, Tensor kvPtrs, Tensor scorePtrs, Tensor pos, int ratio) {
+        try {
+            MemorySegment out = (MemorySegment) Bindings.DS_COMPRESS_STATE.invokeExact(kv.handle(), score.handle(),
+                    kvPtrs.handle(), scorePtrs.handle(), pos.handle(), ratio);
+            if (out == null || out.address() == 0) {
+                throw new IllegalStateException("smile_ds_compress_state: " + lastError());
+            }
+            return new Tensor(out);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    /** Indexer scores with one key cache per query row; bf16 {@code [1, s, tmax]}, {@code -inf} beyond each row's length. */
+    public static Tensor dsIndexScorePtrs(Tensor q, Tensor keyPtrs, Tensor lens, Tensor w, long tmax) {
+        try {
+            MemorySegment out = (MemorySegment) Bindings.DS_INDEX_SCORE_PTRS.invokeExact(q.handle(), keyPtrs.handle(),
+                    lens.handle(), w.handle(), tmax);
+            if (out == null || out.address() == 0) {
+                throw new IllegalStateException("smile_ds_index_score_ptrs: " + lastError());
+            }
+            return new Tensor(out);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    /**
+     * Dense bf16 {@code [rows, topk, 512]} block of the keys each row attends to, read from its sequence's window ring and
+     * compressed cache through the pointer tables, or {@code null} when unavailable.
+     */
+    public static Tensor dsGatherKeysPtrs(Tensor windowPtrs, Tensor compressPtrs, Tensor idxs, int window) {
+        if (Bindings.DS_GATHER_KEYS_PTRS == null || !idxs.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.DS_GATHER_KEYS_PTRS, windowPtrs.handle(),
+                compressPtrs == null ? MemorySegment.NULL : compressPtrs.handle(), idxs.handle(), window);
+    }
+
+    /** Whether the verify-step compressor kernels exist. */
+    public static boolean dsStateAvailable() {
+        return Bindings.DS_COMPRESS_ROWS != null && Bindings.DS_COMPRESS_COMMIT != null;
+    }
+
+    /**
+     * Compressor pooling for the rows of a verify step: float32 {@code [1, rows, hd]} (rows that complete no group are zero).
+     *
+     * @param jidx the index of each row within its sequence's block.
+     */
+    public static Tensor dsCompressRows(Tensor kv, Tensor score, Tensor kvPtrs, Tensor scorePtrs, Tensor pos, Tensor jidx,
+                                        int ratio) {
+        try {
+            MemorySegment out = (MemorySegment) Bindings.DS_COMPRESS_ROWS.invokeExact(kv.handle(), score.handle(),
+                    kvPtrs.handle(), scorePtrs.handle(), pos.handle(), jidx.handle(), ratio);
+            if (out == null || out.address() == 0) {
+                throw new IllegalStateException("smile_ds_compress_rows: " + lastError());
+            }
+            return new Tensor(out);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    /**
+     * After a verify step, writes each sequence's unfinished compressor group from the rows it processed.
+     *
+     * @param base first row of each sequence, {@code p0} the position of that row, {@code last} the index of its last
+     *             processed row (all int64 {@code [n]}).
+     */
+    public static void dsCompressCommit(Tensor kv, Tensor score, Tensor kvPtrs, Tensor scorePtrs, Tensor base, Tensor p0,
+                                        Tensor last, int ratio) {
+        try {
+            int rc = (int) Bindings.DS_COMPRESS_COMMIT.invokeExact(kv.handle(), score.handle(), kvPtrs.handle(),
+                    scorePtrs.handle(), base.handle(), p0.handle(), last.handle(), ratio);
+            if (rc != 0) {
+                throw new IllegalStateException("smile_ds_compress_commit: " + lastError());
+            }
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    /** Sparse attention for one query per sequence over each sequence's window ring and compressed cache. */
+    public static Tensor dsSparseAttentionPtrs(Tensor q, Tensor windowPtrs, Tensor compressPtrs, int window, Tensor sink,
+                                               Tensor idxs, double scale) {
+        try {
+            MemorySegment cp = MemorySegment.NULL;
+            if (compressPtrs != null) {
+                cp = compressPtrs.handle();
+            }
+            MemorySegment out = (MemorySegment) Bindings.DS_SPARSE_ATTENTION_PTRS.invokeExact(q.handle(),
+                    windowPtrs.handle(), cp, window, sink.handle(), idxs.handle(), scale);
+            if (out == null || out.address() == 0) {
+                throw new IllegalStateException("smile_ds_sparse_attention_ptrs: " + lastError());
+            }
+            return new Tensor(out);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    // ---------------------------------------------------------------- DeepSeek: CUDA-graph-safe helpers
+
+    /** Whether the helpers the captured decode step needs are available. */
+    public static boolean dsGraphAvailable() {
+        return dsBatchAvailable() && Bindings.DS_IOTA != null && Bindings.DS_WINDOW_TOPK != null
+                && Bindings.DS_CACHE_SCATTER_GATED != null && Bindings.DS_DATA_PTRS != null && cudaGraphAvailable();
+    }
+
+    /** {@code [0, 1, ..., n - 1]} as int64 on the device of {@code like}, built by a kernel (no host copy). */
+    public static Tensor dsIota(Tensor like, long n) {
+        try {
+            MemorySegment out = (MemorySegment) Bindings.DS_IOTA.invokeExact(like.handle(), n);
+            if (out == null || out.address() == 0) {
+                throw new IllegalStateException("smile_ds_iota: " + lastError());
+            }
+            return new Tensor(out);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    /**
+     * The ring slots a decode token at {@code pos[i]} attends to (its last {@code window} positions in a ring of
+     * {@code ring} slots): int32 {@code [1, n, window]}, -1 before the start of the sequence.
+     */
+    public static Tensor dsWindowTopk(Tensor pos, int ring, int window) {
+        try {
+            MemorySegment out = (MemorySegment) Bindings.DS_WINDOW_TOPK.invokeExact(pos.handle(), ring, window);
+            if (out == null || out.address() == 0) {
+                throw new IllegalStateException("smile_ds_window_topk: " + lastError());
+            }
+            return new Tensor(out);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    /** Cache scatter for every row, written only where a compressed group completes ({@code (pos + 1) % div == 0}). */
+    public static void dsCacheScatterGated(Tensor src, Tensor ptrs, Tensor pos, int div) {
+        try {
+            check((int) Bindings.DS_CACHE_SCATTER_GATED.invokeExact(src.handle(), ptrs.handle(), pos.handle(), div),
+                    "smile_ds_cache_scatter_gated");
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    /** The device data pointers of {@code ts} ({@code null} entries give 0). */
+    public static long[] dsDataPtrs(Tensor[] ts) {
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment in = arena.allocate(ValueLayout.ADDRESS, ts.length);
+            for (int i = 0; i < ts.length; i++) {
+                in.setAtIndex(ValueLayout.ADDRESS, i, ts[i] == null ? MemorySegment.NULL : ts[i].handle());
+            }
+            MemorySegment out = arena.allocate(ValueLayout.JAVA_LONG, ts.length);
+            check((int) Bindings.DS_DATA_PTRS.invokeExact(in, ts.length, out), "smile_ds_data_ptrs");
+            return out.toArray(ValueLayout.JAVA_LONG);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    /** Records the GPU timer into {@code buf[idx]} (an int64 tensor) as a kernel on the current stream. */
+    public static void dsStamp(Tensor buf, int idx) {
+        try {
+            check((int) Bindings.DS_STAMP.invokeExact(buf.handle(), idx), "smile_ds_stamp");
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    /** Starts or stops the CUDA profiler range on the calling thread's device (for {@code ncu --profile-from-start off}). */
+    public static void dsProfiler(boolean start) {
+        try {
+            int rc = (int) Bindings.DS_PROFILER.invokeExact(start ? 1 : 0);
+            if (rc != 0) {
+                throw new IllegalStateException("cudaProfiler" + (start ? "Start" : "Stop") + " failed");
+            }
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new IllegalStateException(t);
+        }
+    }
+
+    /** DeepSeek block-32 fp8 fake quantization in one launch, or {@code null} when unavailable or unsupported. */
+    public static Tensor dsFakeQuantFp8(Tensor x) {
+        if (!dsOn("fake_quant") || Bindings.DS_FAKE_QUANT_FP8 == null || !x.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.DS_FAKE_QUANT_FP8, x.handle());
     }
 
     /** {@code silu(gate) * up} in one launch, or {@code null} when unavailable or unsupported. */

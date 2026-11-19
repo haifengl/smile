@@ -46,16 +46,29 @@ final class DeepSeekMxfp4 {
      * @return float8_e4m3fn scales, each input scale repeated for its two 16-wide groups.
      */
     static Tensor toNvfp4(Tensor e8m0) {
+        return toNvfp4(e8m0, SHIFT);
+    }
+
+    /** The global scale paired with scales converted with {@code shift}: {@code 2^shift}. */
+    static float global(int shift) {
+        return (float) (1L << shift);
+    }
+
+    /**
+     * {@link #toNvfp4(Tensor)} with a larger shift for layers whose E8M0 exponents reach below the range the default
+     * shift covers (the DSpark stages use {@code -12..-3}; shift 6 maps them into E4M3's normal range).
+     */
+    static Tensor toNvfp4(Tensor e8m0, int shift) {
         Tensor b = e8m0.dtype() == ScalarType.UInt8 ? e8m0 : Aten.one("aten::view.dtype", e8m0, ScalarType.UInt8);
         Tensor k = Aten.one("aten::sub.Scalar", b.to(ScalarType.Int32), 127);
         long min = Aten.one("aten::min", k).longValue();
         long max = Aten.one("aten::max", k).longValue();
         // E4M3 power of two 2^j has exponent field j + 7 (normal numbers, j >= -6), or mantissa bit 2^(j+9) (j >= -9)
-        if (min + SHIFT < -6 || max + SHIFT > 8) {
-            throw new IllegalArgumentException("E8M0 exponents " + min + ".." + max + " do not fit E4M3 with global scale 32");
+        if (min + shift < -6 || max + shift > 8) {
+            throw new IllegalArgumentException("E8M0 exponents " + min + ".." + max + " do not fit E4M3 with global scale " + global(shift));
         }
         Tensor field = Aten.one("aten::bitwise_left_shift.Tensor_Scalar",
-                Aten.one("aten::add.Scalar", k, 7 + SHIFT), 3);
+                Aten.one("aten::add.Scalar", k, 7 + shift), 3);
         Tensor bytes = Aten.one("aten::repeat_interleave.self_int", field.to(ScalarType.UInt8), 2L, 1L);
         return Aten.one("aten::view.dtype", bytes, ScalarType.Float8e4m3fn);
     }

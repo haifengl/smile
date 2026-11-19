@@ -60,6 +60,12 @@ final class DeepSeekMoE {
             Tensor up;
             if (w13 != null) {
                 Tensor y = w13.forward(x);
+                if (weights == null && y.dtype() == ScalarType.BFloat16 && dtype == ScalarType.BFloat16 && y.dim() == 2) {
+                    Tensor h = smile.torch.Native.dsSwiglu(y, null, limit, false);
+                    if (h != null) {
+                        return w2.forward(h);
+                    }
+                }
                 int last = y.dim() - 1;
                 long inter = y.size(last) / 2;
                 gate = DeepSeekOps.f32(o("aten::narrow", y, (long) last, 0L, inter));
@@ -84,6 +90,8 @@ final class DeepSeekMoE {
     private final DeepSeekCheckpoint ck;
     private final String prefix;
     private final Tensor gateWeight;
+    private final Tensor gateBf16;
+    private boolean gateMmUnavailable;
     private final Tensor gateBias;
     private final Expert shared;
     private final int topk;
@@ -94,8 +102,14 @@ final class DeepSeekMoE {
     DeepSeekMoE(DeepSeekModelArgs args, DeepSeekCheckpoint ck, int layer) {
         this.args = args;
         this.ck = ck;
-        this.prefix = "layers." + layer + ".ffn";
-        this.gateWeight = DeepSeekOps.f32(ck.dev(prefix + ".gate.weight"));
+        this.prefix = args.layerPrefix(layer) + ".ffn";
+        Tensor gate = ck.dev(prefix + ".gate.weight");
+        // a bf16 gate multiplies the bf16 activations exactly in a bf16 GEMM with float32 output: no float32 copies per step
+        this.gateBf16 = gate.dtype() == ScalarType.BFloat16 ? o("aten::t", gate) : null;
+        if (gateBf16 != null) {
+            gateBf16.detachFromScopes();
+        }
+        this.gateWeight = DeepSeekOps.f32(gate);
         this.gateBias = DeepSeekOps.f32(ck.dev(prefix + ".gate.bias"));
         this.shared = new Expert(ck, prefix + ".shared_experts", args.swigluLimit());
         int[] cfg = args.moeConfig(layer);
@@ -122,7 +136,22 @@ final class DeepSeekMoE {
      * @return {@code {indices [n, topk] int64, weights [n, topk] float32}}.
      */
     Tensor[] route(Tensor flat) {
-        Tensor scores = o("aten::sqrt", o("aten::softplus", o("aten::linear", DeepSeekOps.f32(flat), gateWeight)));
+        Tensor logits = null;
+        if (gateBf16 != null && flat.dtype() == ScalarType.BFloat16 && !gateMmUnavailable) {
+            try {
+                logits = o("aten::mm.dtype", flat, gateBf16, ScalarType.Float);
+            } catch (RuntimeException e) {
+                gateMmUnavailable = true;
+            }
+        }
+        if (logits == null) {
+            logits = o("aten::linear", DeepSeekOps.f32(flat), gateWeight);
+        }
+        Tensor[] fused = smile.torch.Native.dsRoute(logits, gateBias, topk, args.routeScale());
+        if (fused != null) {
+            return fused;
+        }
+        Tensor scores = o("aten::sqrt", o("aten::softplus", logits));
         Tensor indices = Aten.call("aten::topk", o("aten::add.Tensor", scores, gateBias), (long) topk, -1L, true, true)[1];
         Tensor weights = o("aten::gather", scores, 1L, indices);
         if (topk > 1) {
@@ -169,9 +198,16 @@ final class DeepSeekMoE {
         long[] shape = x.shape();
         Tensor flat = x.reshape(-1, shape[shape.length - 1]);
         long n = flat.size(0);
+        long tk = System.nanoTime();
         Tensor[] r = route(flat);
+        Dsv.stamp("ffn.route");
+        tk = Dsv.tick("ffn.route", tk);
         Tensor y = marlin != null ? marlin.forward(flat, r[0], r[1]) : routed(flat, r[0], r[1]);
+        Dsv.stamp("ffn.routed");
+        tk = Dsv.tick("ffn.routed", tk);
         y = o("aten::add.Tensor", y, DeepSeekOps.f32(shared.forward(flat, null)));
+        Dsv.stamp("ffn.shared+add");
+        Dsv.tick("ffn.shared", tk);
         return y.to(x.dtype()).reshape(shape);
     }
 }

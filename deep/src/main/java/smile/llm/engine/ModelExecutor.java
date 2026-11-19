@@ -135,6 +135,37 @@ public interface ModelExecutor {
     }
 
     /**
+     * Whether {@link #speculateStep} may be asked for more drafts than a request has tokens left (the extra tokens
+     * are dropped by the engine). Lets a request near its end stay in the batched round instead of speculating alone.
+     */
+    default boolean speculationMayOvershoot() {
+        return false;
+    }
+
+    /**
+     * Whether {@link #prefillBatch} processes several prompts in one pass (cheaper than one {@link #prefill} each).
+     * The engine only batches whole prompts that start at position 0.
+     */
+    default boolean supportsBatchedPrefill() {
+        return false;
+    }
+
+    /**
+     * Prefills several complete prompts (each from position 0) together.
+     *
+     * @param requestIds request ids.
+     * @param prompts    the prompts, one per request.
+     * @return last-position logits {@code [1, vocab]} per request (caller owns each).
+     */
+    default Tensor[] prefillBatch(int[] requestIds, int[][] prompts) {
+        Tensor[] out = new Tensor[requestIds.length];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = prefill(requestIds[i], prompts[i], 0);
+        }
+        return out;
+    }
+
+    /**
      * After a radix KV prefix hit of length {@code prefixLen}, restores any
      * non-KV state required before suffix prefill may start at {@code prefixLen}.
      *
