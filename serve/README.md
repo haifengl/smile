@@ -27,6 +27,10 @@ A React-based web UI is bundled and served from the same process.
    - [Test Run a Model](#13-test-run-a-model)
    - [Health and Metrics Endpoints](#14-health-and-metrics-endpoints)
 2. [LLM Decode Benchmarks](#2-llm-decode-benchmarks)
+   - [DeepSeek-V4.1-Flash](#21-deepseek-v41-flash)
+   - [MiniMax-M3.1-Flash](#22-minimax-m31-flash)
+   - [Qwen3.8 27B](#23-qwen38-27b)
+   - [Llama 3.1 8B Instruct](#24-llama-31-8b-instruct)
 3. [Building and Running](#3-building-and-running)
    - [Dev Mode](#31-dev-mode)
    - [Packaging as a JAR](#32-packaging-as-a-jar)
@@ -350,59 +354,7 @@ engine decode-step throughput (`batch / step_ms`); **aggregate** is
 `AggregateTokenThroughput` over a ~3 s window (includes streaming / logging
 overhead).
 
-### Llama 3.1 8B Instruct
-
-| Checkpoint | Weight path | Step | Aggregate | Step time | Forward / sample |
-|---|---|---|---|---|---|
-| [meta-llama/Llama-3.1-8B-Instruct](https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct) | BF16 dense | **2087 tok/s** | ~2036 tok/s | 23 ms | 22 / 1 ms |
-| [hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4](https://huggingface.co/hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4) | AWQ INT4 (Marlin) | **2667 tok/s** | ~2543 tok/s | 18 ms | 17 / 0 ms |
-
-Both runs used a full batch of 48 active requests at locked positions
-(e.g. `positions=[417..417]`). AWQ is ~28% faster at the same concurrency;
-lighter weights also leave more free KV slots for longer context.
-
-### Qwen3.8 27B
-
-| Checkpoint | Setup | Step | Aggregate | Step time | Forward / sample |
-|---|---|---|---|---|---|
-| [Qwen/Qwen3.8-27B](https://huggingface.co/Qwen/Qwen3.8-27B) | BF16, TP=4 | **906 tok/s** | ~896 tok/s | 53 ms | 51 / 1 ms |
-
-Hybrid Qwen3.5 stack (Gated DeltaNet + full attention) at the same concurrency
-and locked positions (e.g. `positions=[466..466]`). Absolute throughput is
-lower than 8B Llama as expected for a ~27B hybrid model across four GPUs;
-per-request generation stays ~17 tok/s with the batch saturated. Qwen AWQ via
-`compressed-tensors` / Marlin is not supported yet (detector currently treats
-cards such as `cyankiwi/Qwen3.8-27B-AWQ-INT4` as dense).
-
-### MiniMax-M3.1-Flash with DSpark speculative decoding
-
-MiniMax-M3.1-Flash ships a small draft model (`dspark/`, 2.3 GB) that proposes 7 tokens per round; the target verifies them in one
-CUDA-graph forward and keeps the longest matching prefix, so the output distribution is unchanged (greedy output can differ from
-plain decoding only through bf16 near-ties, which this model has plenty of). It is on by default when the checkpoint has the
-`dspark/` folder (`smile.chat.speculative=false` or `SMILE_MINIMAX_DSPARK=0` turns it off). It works with prefix reuse, sampling,
-chunked prefill and image requests (exercised through `InferenceEngine`; the HTTP checks below cover tool-call requests).
-
-Setup: 8x A100 40 GB, tensor-parallel non-expert weights, greedy, 8 chat prompts, 128 new tokens, warm graphs.
-
-| | Plain decode | DSpark (7 drafts) |
-|---|---|---|
-| One request | 25.4 ms/token (39 tok/s) | **11.7 ms/token (85 tok/s, 2.2x)** |
-| Drafts per round 3 / 4 / 5 / 6 | n/a | 71 / 77 / 79 / 80 tok/s |
-| 2 concurrent requests (aggregate) | 64 tok/s | 126 tok/s |
-| 4 concurrent requests (aggregate) | 123 tok/s | 160 tok/s |
-| 8 concurrent requests (aggregate) | 210 tok/s | 214 tok/s |
-
-The gain shrinks with concurrency (the batched plain decode gets more efficient too) and is gone at 8 concurrent requests, so the
-service lets at most 4 requests speculate at once unless `smile.chat.speculative-max-concurrency` says otherwise (the rest use
-batched plain decode). Image and video requests speculate as well.
-Through the HTTP API (4 reasoning-heavy prompts, 160 tokens each, one request at a time, prefill and request overhead included)
-Flash answers at 67.8 tok/s with DSpark against 37.9 tok/s without (1.8x); the 19 checks of `http_check.py` (tools, tool-result round
-trip, streaming, thinking modes, 4 concurrent requests, a 2.8k-token prompt, prefix cache) pass with speculation on.
-The draft is only loaded when `smile.chat.speculative=true`. It costs about 3 GB on GPU 0: lower `smile.chat.mem-fraction-static` accordingly or set `SMILE_MINIMAX_VISION=0`
-(on 40 GB cards 0.92 worked without the vision tower; with `speculative=false` nothing is loaded and the old settings apply). Other knobs: `SMILE_MINIMAX_DSPARK_SNAPSHOTS` (draft contexts kept for prefix
-reuse, default 8), `SMILE_MINIMAX_SPARSE_KERNEL=0` (reference attention path, slower).
-
-### DeepSeek-V4.1-Flash with DSpark speculative decoding
+### 2.1 DeepSeek-V4.1-Flash
 
 DeepSeek-V4.1-Flash (a 475 GB checkpoint: MoE with 384 routed experts, Hyper-Connections, Engram memory and compressed-KV attention) runs on 8 A100 80 GB in
 one JVM, one thread per GPU: routed experts (MXFP4, Marlin) are split over the GPUs, attention and the dense layers are replicated.
@@ -449,7 +401,35 @@ are slower until it finishes, and the host needs about 190 GB of free page cache
 is in use after loading; CUDA graphs add 0.1-1.5 GB each (captured on first use of a batch size or row count, 0.3-3 s). Other switches: `SMILE_DS_GRAPH=0` (eager decode, much slower), `SMILE_FUSED_OPS=0`, `SMILE_DS_ATTN_GEMM=0`
 (per-head attention kernels in prefill), `SMILE_DS_MAX_GRAPH_BATCH` (largest decode graph, default 128).
 
-### Qwen3.8 27B with MTP speculative decoding
+### 2.2 MiniMax-M3.1-Flash
+
+MiniMax-M3.1-Flash ships a small draft model (`dspark/`, 2.3 GB) that proposes 7 tokens per round; the target verifies them in one
+CUDA-graph forward and keeps the longest matching prefix, so the output distribution is unchanged (greedy output can differ from
+plain decoding only through bf16 near-ties, which this model has plenty of). It is on by default when the checkpoint has the
+`dspark/` folder (`smile.chat.speculative=false` or `SMILE_MINIMAX_DSPARK=0` turns it off). It works with prefix reuse, sampling,
+chunked prefill and image requests (exercised through `InferenceEngine`; the HTTP checks below cover tool-call requests).
+
+Setup: 8x A100 40 GB, tensor-parallel non-expert weights, greedy, 8 chat prompts, 128 new tokens, warm graphs.
+
+| | Plain decode | DSpark (7 drafts) |
+|---|---|---|
+| One request | 25.4 ms/token (39 tok/s) | **11.7 ms/token (85 tok/s, 2.2x)** |
+| Drafts per round 3 / 4 / 5 / 6 | n/a | 71 / 77 / 79 / 80 tok/s |
+| 2 concurrent requests (aggregate) | 64 tok/s | 126 tok/s |
+| 4 concurrent requests (aggregate) | 123 tok/s | 160 tok/s |
+| 8 concurrent requests (aggregate) | 210 tok/s | 214 tok/s |
+
+The gain shrinks with concurrency (the batched plain decode gets more efficient too) and is gone at 8 concurrent requests, so the
+service lets at most 4 requests speculate at once unless `smile.chat.speculative-max-concurrency` says otherwise (the rest use
+batched plain decode). Image and video requests speculate as well.
+Through the HTTP API (4 reasoning-heavy prompts, 160 tokens each, one request at a time, prefill and request overhead included)
+Flash answers at 67.8 tok/s with DSpark against 37.9 tok/s without (1.8x); the 19 checks of `http_check.py` (tools, tool-result round
+trip, streaming, thinking modes, 4 concurrent requests, a 2.8k-token prompt, prefix cache) pass with speculation on.
+The draft is only loaded when `smile.chat.speculative=true`. It costs about 3 GB on GPU 0: lower `smile.chat.mem-fraction-static` accordingly or set `SMILE_MINIMAX_VISION=0`
+(on 40 GB cards 0.92 worked without the vision tower; with `speculative=false` nothing is loaded and the old settings apply). Other knobs: `SMILE_MINIMAX_DSPARK_SNAPSHOTS` (draft contexts kept for prefix
+reuse, default 8), `SMILE_MINIMAX_SPARSE_KERNEL=0` (reference attention path, slower).
+
+### 2.3 Qwen3.8 27B
 
 Qwen3.5/3.8 checkpoints ship a native multi-token-prediction (MTP) head. With
 `smile.chat.speculative=true` the engine drafts `speculative-tokens` tokens with
@@ -460,110 +440,7 @@ decode). **MTP is a latency feature for low concurrency**: it speeds up a lone
 request about 2-3x, and it automatically stays out of the way once several
 requests are active.
 
-Setup: BF16, TP=4 on A100 40 GB, greedy, `speculative-tokens=2` (the default depth of 3 measures the same or slightly better), prompt
-"What is the history of China?", 512 new tokens, warm run, wall time including
-prefill.
-
-| Single request | Throughput | Verify forward / round | Draft accept rate |
-|---|---|---|---|
-| Plain decode | 18.7 tok/s | n/a | n/a |
-| MTP + persistent draft context (+ checkpoint replay) | 23 tok/s | 91 ms | ~73 % |
-| + fused DeltaNet window + FlashInfer verify attention | 38 tok/s | 49 ms | ~75 % |
-| + verify CUDA graph (default) | **52.8 tok/s (2.8x plain)** | **~32 ms** | ~77 % |
-
-Before the draft head received its prefix context (it only saw the current
-round's own draft tokens), MTP was ~15 % *slower* than plain decode with a
-~50 % accept rate (27.5 vs 32.5 tok/s in an earlier measurement on a quieter
-system; absolute numbers differ between sessions, compare within a table).
-
-A round (draft + one verify + bookkeeping) takes ~48 ms and commits 2.5 tokens
-on average (mean accepted draft depth 1.5 of 2). Throughput gains hold at long
-context (6.6k-token prompt, 256 new tokens: 16.7 s with the verify graph vs
-26.5 s plain).
-
-**Concurrency.** Speculating requests are drafted and verified together as one batched
-round, each with its own persistent draft context, so the gain holds well beyond a single
-request. Aggregate throughput (tok/s, 512 new tokens, identical prompts, decode CUDA graph
-on, `max-batch-size=48`, `admit-coalesce-ms=50`, BF16 TP=4 on A100 40 GB, default
-`mem-fraction-static=0.85`):
-
-| Active requests | Plain decode | `speculative=true` | Speedup |
-|---|---|---|---|
-| 1 | 25 | **53** | 2.1x |
-| 2 | 48 | 62 | 1.3x |
-| 4 | 94 | 121 | 1.3x |
-| 8 | 187 | 216-236 | 1.2x |
-| 16 | 335 | 408-441 | 1.2-1.3x |
-| 32 | 484 | **694** | 1.4x |
-| 48 | 688-702 | **811** | 1.15x |
-
-Per-request speed at 16 requests is ~26-28 tok/s versus ~21 for plain decode. A batched
-round of 16 requests takes ~80 ms (draft ~8 ms, verify forward ~52 ms, bookkeeping ~14-19 ms)
-and commits ~2.5 tokens per request. Outputs match plain decode for the same prompt up to
-bf16 near-tie flips: plain decode itself is not batch-invariant, and a plain batch of 8
-diverges from the same prompts run alone at the same places a speculative batch does.
-
-**Memory.** Each speculating request needs DeltaNet checkpoint buffers: about 0.04 GB per GPU
-per draft slot for a 27B hybrid model, i.e. ~0.11 GB at the default depth 3 (~0.075 GB at
-depth 2), reserved at load for `min(max-batch-size, speculative-max-concurrency)` rows, before the KV pool is
-sized, so the KV budget already excludes it (48 rows at depth 3 = ~5.3 GB per GPU on a 27B hybrid
-model; it shrinks the KV pool, e.g. from ~734k to ~455k token slots on 40 GB GPUs at
-`mem-fraction-static=0.85`). Only the slots a partial accept can restore from are stored (positions
-`1..depth`; the pre-window copy and the final position are not needed). A cohort larger than the
-reservation (only possible after a depth change) is still checked at run time and, if it does not
-fit, the engine logs one warning and serves it with plain batched decode instead of failing
-requests. To keep more KV, lower `smile.chat.speculative-max-concurrency` (smaller reservation) or
-set `smile.chat.speculative=false`.
-
-Speculation is on by default for Qwen3.5/3.8 checkpoints with MTP weights; budget the memory
-above on small GPUs or very large batches, or set `smile.chat.speculative=false`.
-
-Controls (all default to the values that were benchmarked):
-
-| Setting | Default | Meaning |
-|---|---|---|
-| `smile.chat.speculative` | `true` | MTP speculation for Qwen3.5/3.8 checkpoints with MTP weights, DSpark speculation for MiniMax-M3.1-Flash checkpoints with a `dspark/` folder and for DeepSeek-V4.1 checkpoints with `mtp.*` tensors (ignored for other models). Set `false` to disable. |
-| `smile.chat.speculative-tokens` | `0` (model default; 3 for Qwen3.8-27B, 7 for MiniMax DSpark, 5 for DeepSeek DSpark, which is also its maximum) | Draft depth. Measured aggregate tok/s at 1 / 8 / 16 requests: depth 1: 47 / 203 / 387; depth 2: 53 / 216-236 / 408-441; depth 3 (default): 55 / 232 / 446; depth 4: 54 / 241 / 439. Depths 2-4 are within noise; depth 1 is slower. |
-| `smile.chat.speculative-max-concurrency` | `0` (= `max-batch-size`; 4 for MiniMax, up to 32 for DeepSeek) | Requests that may speculate at once. A request keeps its speculation slot for its whole life; requests beyond the limit use batched plain decode. Speculating only part of a large cohort is slower than all or none, so leave unlimited unless you need to bound checkpoint memory. |
-| `SMILE_DECODE_CUDA_GRAPH` | on | Capture plain decode steps as CUDA graphs (needs FlashInfer attention, the default backend; uniform batches only). A capture failure turns graphs off for the process and decode continues eagerly. `0` disables. |
-| `SMILE_VERIFY_CUDA_GRAPH` | on | Capture the verify forward as one CUDA graph (one capture per session). `0` disables. |
-| `SMILE_MTP_HISTORY` | on | Draft head keeps a persistent per-request KV of the whole prefix (prompt and accepted tokens). `0` restores the context-free legacy head (about half the accept rate). |
-| `SMILE_MTP_VERIFY_CHECKPOINT_REPLAY` | on | On a partial accept, restore the DeltaNet state saved during the verify pass instead of running a second forward. `0` disables. |
-| `SMILE_VERIFY_CUDA_GRAPH_RAGGED` | on | Also graph cohorts of 2+ requests at different positions. `0` limits the graph to a lone request (or equal positions). |
-| `SMILE_VERIFY_CUDA_GRAPH_MAX_BATCH` | `16` | Largest cohort that uses a verify graph. |
-| `SMILE_VERIFY_FLASHINFER_EAGER` | on | Use FlashInfer's paged prefill kernel for verify windows when the graph is not replaying. `0` disables. |
-
-Notes and limits:
-
-- The MTP draft head's KV cache is a second, request-bound pool sized like the
-  main pool (capped at half of the free device memory when it is created, at
-  first use). A request that cannot get one, is multimodal, or takes a plain
-  decode step (for example it holds no speculation slot, or the cohort did not
-  fit in memory) simply continues with plain decode: output is unaffected, it
-  just stops speculating.
-- Cohorts of up to 16 speculating requests replay a verify CUDA graph keyed by batch
-  size (rows may sit at different positions; positions, RoPE rows, KV slots and the page
-  table are rewritten in place before each replay, one ~10 ms capture per batch size).
-  Larger cohorts verify eagerly because each captured batch size keeps its own activation
-  pool. Same-session A/B against the eager batched verify (512 tokens): 4 requests 145 -> 176
-  tok/s, 8 requests 255 -> 331, 16 requests 461 -> 498. The decode CUDA graph is not used
-  while any request is speculating.
-- The chat endpoint returns the final answer without the model's hidden
-  reasoning. When comparing a speculative and a plain response at a short
-  `max_tokens`, differences can appear from the first visible character only
-  because the token limit falls before/after the end of the hidden reasoning;
-  compare at a limit inside the reasoning, or at a long limit.
-- Capture happens once per `(batch, window length)`; the 2-token verify window
-  at the very end of a request triggers one extra capture (~0.1 s).
-- Troubleshooting: `SMILE_DECODE_PROFILE=1` adds a per-round breakdown to the
-  `MTP verify:` log line; `SMILE_VERIFY_CUDA_GRAPH_DEBUG_DIFF=1` (diagnostic,
-  doubles verify cost) logs the numeric gap between graph replay and an eager
-  reference every round; `SMILE_VERIFY_GRAPH_TRACE=1` logs each round's
-  replay / warmup / capture decision.
-
-### Qwen3.8 27B FP8 on one 40 GB A100
-
-[Qwen/Qwen3.8-27B-FP8](https://huggingface.co/Qwen/Qwen3.8-27B-FP8) (block FP8, 29 GB) runs on a single A100-40GB through
+Setup: [Qwen/Qwen3.8-27B-FP8](https://huggingface.co/Qwen/Qwen3.8-27B-FP8) (block FP8, 29 GB) runs on a single A100-40GB through
 the weight-only FP8 Marlin kernel (`smile.chat.devices=0`, `mem-fraction-static=0.93`, FlashInfer attention, decode CUDA
 graphs, no tensor parallelism). Greedy, batch 1, 11 different prompts x 256 new tokens, wall time per request:
 
@@ -599,6 +476,17 @@ Notes:
 - `SMILE_GATED_DELTA_UNFUSED=1` goes back to the multi-kernel DeltaNet path, `SMILE_GATED_DELTA_REFERENCE=1` to the
   original recurrent kernel and `SMILE_FUSED_OPS=0` disables all fused elementwise kernels (A/B and debugging only).
 - With MTP the draft depth matters little: 2 / 3 / 4 / 5 drafts gave 65 / 72 / 74 / 73 tok/s on a 3-prompt set.
+
+### 2.4 Llama 3.1 8B Instruct
+
+| Checkpoint | Weight path | Step | Aggregate | Step time | Forward / sample |
+|---|---|---|---|---|---|
+| [meta-llama/Llama-3.1-8B-Instruct](https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct) | BF16 dense | **2087 tok/s** | ~2036 tok/s | 23 ms | 22 / 1 ms |
+| [hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4](https://huggingface.co/hugging-quants/Meta-Llama-3.1-8B-Instruct-AWQ-INT4) | AWQ INT4 (Marlin) | **2667 tok/s** | ~2543 tok/s | 18 ms | 17 / 0 ms |
+
+Both runs used a full batch of 48 active requests at locked positions
+(e.g. `positions=[417..417]`). AWQ is ~28% faster at the same concurrency;
+lighter weights also leave more free KV slots for longer context.
 
 ---
 
