@@ -16,8 +16,6 @@
  */
 package smile.util;
 
-import java.util.List;
-import java.util.LinkedList;
 
 /**
  * AutoScope allows for predictable, deterministic resource deallocation.
@@ -27,7 +25,24 @@ import java.util.LinkedList;
  */
 public class AutoScope implements AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AutoScope.class);
-    private final List<AutoCloseable> resources = new LinkedList<>();
+    /**
+     * Identity key: scopes hold tensors whose equals() compares native addresses (reusable once freed), and
+     * membership must be O(1) because one scope can hold tens of thousands of temporaries (a model forward).
+     */
+    private record Ref(AutoCloseable resource) {
+        @Override
+        public boolean equals(Object o) {
+            return o instanceof Ref r && r.resource == resource;
+        }
+
+        @Override
+        public int hashCode() {
+            return System.identityHashCode(resource);
+        }
+    }
+
+    /** Resources in registration order (closed in reverse). */
+    private final java.util.LinkedHashSet<Ref> resources = new java.util.LinkedHashSet<>();
 
     /**
      * Constructors.
@@ -48,12 +63,7 @@ public class AutoScope implements AutoCloseable {
     public <T extends AutoCloseable> T add(T resource) {
         // Idempotent by reference: promoteToParent + explicit add must not
         // register the same tensor twice (double-close on scope teardown).
-        for (var existing : resources) {
-            if (existing == resource) {
-                return resource;
-            }
-        }
-        this.resources.add(resource);
+        this.resources.add(new Ref(resource));
         return resource;
     }
 
@@ -69,13 +79,13 @@ public class AutoScope implements AutoCloseable {
      * @param resource the resource to detach.
      */
     public void remove(AutoCloseable resource) {
-        resources.removeIf(r -> r == resource);
+        resources.remove(new Ref(resource));
     }
 
     @Override
     public void close() {
         // Snapshot + clear first so resource.close() may safely detach itself.
-        AutoCloseable[] snapshot = resources.toArray(AutoCloseable[]::new);
+        AutoCloseable[] snapshot = resources.stream().map(Ref::resource).toArray(AutoCloseable[]::new);
         resources.clear();
         // Reverse order: dependents (views) before bases, matching try-with.
         for (int i = snapshot.length - 1; i >= 0; i--) {
