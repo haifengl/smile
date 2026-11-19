@@ -36,16 +36,22 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotFoundException;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import io.vertx.ext.web.RoutingContext;
+import smile.auth.AuthConfig;
 import smile.auth.AuthContext;
 import smile.chat.blob.BlobKeys;
 import smile.chat.blob.BlobNamespaceResolver;
 import smile.chat.blob.BlobStore;
+import smile.chat.blob.ClientIdentity;
 import smile.chat.blob.MediaTypeValidator;
 import smile.chat.blob.MediaUrls;
+import smile.chat.blob.UploadRateLimiter;
 import smile.llm.ContentPart;
 import smile.llm.ImageUrlPart;
 import smile.llm.Message;
@@ -64,29 +70,37 @@ public class MediaService {
 
     private final BlobStore blobStore;
     private final BlobStorageConfig config;
+    private final AuthConfig authConfig;
     private final AuthContext authContext;
     private final ConversationService conversationService;
     private final BlobNamespaceResolver namespaceResolver;
+    private final UploadRateLimiter uploadRateLimiter;
     private final Set<String> allowedMimeTypes;
 
     /**
      * @param blobStore           object storage backend.
-     * @param config              upload limits, allowlist, and backend settings.
+     * @param config              upload limits, allowlist, quotas, and backend settings.
+     * @param authConfig          authentication configuration (forwarded header trust).
      * @param authContext         request-scoped authenticated identity.
      * @param conversationService conversation ownership access checker.
      * @param namespaceResolver   storage namespace resolver (OAuth user vs. shared/date).
+     * @param uploadRateLimiter   per-IP sliding-window rate limiter for guest uploads.
      */
     @Inject
     public MediaService(BlobStore blobStore,
                         BlobStorageConfig config,
+                        AuthConfig authConfig,
                         AuthContext authContext,
                         ConversationService conversationService,
-                        BlobNamespaceResolver namespaceResolver) {
+                        BlobNamespaceResolver namespaceResolver,
+                        UploadRateLimiter uploadRateLimiter) {
         this.blobStore = blobStore;
         this.config = config;
+        this.authConfig = authConfig;
         this.authContext = authContext;
         this.conversationService = conversationService;
         this.namespaceResolver = namespaceResolver;
+        this.uploadRateLimiter = uploadRateLimiter;
         this.allowedMimeTypes = MediaTypeValidator.parseAllowlist(config.allowedMimeTypes());
     }
 
@@ -113,6 +127,20 @@ public class MediaService {
                                 HttpHeaders headers) {
         if (upload == null) {
             throw new BadRequestException("file is required");
+        }
+        if (!authContext.isLoggedIn() && uploadRateLimiter != null) {
+            boolean trustForwarded = authConfig != null && authConfig.trustForwardedHeaders();
+            String clientIp = ClientIdentity.normalizeIp(
+                    ClientIdentity.resolveClientIp(routingContext, headers, trustForwarded));
+            UploadRateLimiter.Decision decision = uploadRateLimiter.tryAcquire(clientIp);
+            if (!decision.allowed()) {
+                throw new WebApplicationException(
+                        Response.status(429)
+                                .header("Retry-After", Long.toString(decision.retryAfterSeconds()))
+                                .type(MediaType.APPLICATION_JSON)
+                                .entity("{\"error\":\"Guest upload rate limit exceeded; retry later\"}")
+                                .build());
+            }
         }
         long maxBytes = config.maxUploadBytes();
         long declaredSize = upload.size();
@@ -144,6 +172,7 @@ public class MediaService {
         String contentId = UUID.randomUUID().toString();
         String safeFilename = MediaTypeValidator.sanitizeFilename(upload.fileName(), contentId);
         String namespace = namespaceResolver.resolve(authContext);
+        enforceQuota(namespace, conversation.userId, data.length);
         String storageKey = BlobKeys.of(namespace, conversation.id, null, contentId);
 
         String sha256 = sha256Hex(data);
@@ -329,6 +358,76 @@ public class MediaService {
             }
         }
         return changed ? out : messages;
+    }
+
+    /**
+     * Enforces per-OAuth-user and daily shared-space storage quotas prior to
+     * writing bytes to the underlying {@link BlobStore}.
+     *
+     * @param namespace     resolved storage namespace.
+     * @param ownerUserId   owning user primary key (may be {@code null} for guests).
+     * @param incomingBytes size of the incoming attachment in bytes.
+     */
+    void enforceQuota(String namespace, Long ownerUserId, long incomingBytes) {
+        if (namespace.startsWith(BlobNamespaceResolver.USERS_PREFIX) && ownerUserId != null) {
+            long limit = config.maxUserBytes();
+            if (limit > 0) {
+                long used = userStorageBytes(ownerUserId);
+                if (used + incomingBytes > limit) {
+                    throw new WebApplicationException(
+                            Response.status(413)
+                                    .type(MediaType.APPLICATION_JSON)
+                                    .entity("{\"error\":\"Per-user attachment storage quota exceeded ("
+                                            + limit + " bytes)\"}")
+                                    .build());
+                }
+            }
+        } else if (namespace.startsWith(BlobNamespaceResolver.SHARED_PREFIX)) {
+            long limit = config.sharedMaxDailyBytes();
+            if (limit > 0) {
+                long used = namespaceStorageBytes(namespace);
+                if (used + incomingBytes > limit) {
+                    throw new WebApplicationException(
+                            Response.status(413)
+                                    .type(MediaType.APPLICATION_JSON)
+                                    .entity("{\"error\":\"Daily shared attachment storage quota exceeded ("
+                                            + limit + " bytes)\"}")
+                                    .build());
+                }
+            }
+        }
+    }
+
+    /**
+     * Returns total stored attachment bytes currently owned by {@code ownerUserId}.
+     *
+     * @param ownerUserId user primary key.
+     * @return sum of {@code sizeBytes}.
+     */
+    public long userStorageBytes(long ownerUserId) {
+        Number sum = ConversationContent.getEntityManager()
+                .createQuery(
+                        "SELECT COALESCE(SUM(c.sizeBytes), 0) FROM ConversationContent c WHERE c.ownerUserId = :uid",
+                        Number.class)
+                .setParameter("uid", ownerUserId)
+                .getSingleResult();
+        return sum != null ? sum.longValue() : 0L;
+    }
+
+    /**
+     * Returns total stored attachment bytes currently stored under {@code namespace}.
+     *
+     * @param namespace storage namespace (e.g. {@code shared/2026/11/19}).
+     * @return sum of {@code sizeBytes}.
+     */
+    public long namespaceStorageBytes(String namespace) {
+        Number sum = ConversationContent.getEntityManager()
+                .createQuery(
+                        "SELECT COALESCE(SUM(c.sizeBytes), 0) FROM ConversationContent c WHERE c.userId = :ns",
+                        Number.class)
+                .setParameter("ns", namespace)
+                .getSingleResult();
+        return sum != null ? sum.longValue() : 0L;
     }
 
     private Optional<String> toDataUrl(String url, Long callerUserId, String clientIp) {

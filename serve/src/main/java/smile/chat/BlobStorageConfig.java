@@ -61,4 +61,85 @@ public interface BlobStorageConfig {
     @WithDefault("image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/flac,audio/webm,application/pdf,text/plain,text/markdown,text/csv,application/json")
     @WithName("allowed-mime-types")
     String allowedMimeTypes();
+
+    /**
+     * Enables application-layer AES-256-GCM envelope encryption at rest with
+     * key-bound AAD across whichever {@link smile.chat.blob.BlobStore} backend
+     * is active.
+     */
+    @WithDefault("false")
+    @WithName("encryption.enabled")
+    boolean encryptionEnabled();
+
+    /**
+     * Optional inline 256-bit AES key encoded as Base64, Base64URL, or 64-char hex.
+     * Falls back to {@code SMILE_BLOB_KEY} environment variable and then
+     * {@link #encryptionKeyFile()}.
+     */
+    @WithName("encryption.key")
+    Optional<String> encryptionKey();
+
+    /**
+     * Path to the 256-bit AES key file (auto-generated with {@code 0600} permissions
+     * if absent on first boot). Defaults to {@code <local.path>/.blob.key} when
+     * using the local backend.
+     */
+    @WithName("encryption.key-file")
+    Optional<String> encryptionKeyFile();
+
+    /**
+     * When {@code true}, allows reading legacy unencrypted blobs that lack the
+     * {@code SMILEBLB} header while still writing all new blobs encrypted.
+     * Defaults to {@code false} (fail closed).
+     */
+    @WithDefault("false")
+    @WithName("encryption.allow-plaintext-read")
+    boolean encryptionAllowPlaintextRead();
+
+    /**
+     * Per-OAuth-user storage quota in bytes (default 1 GiB; {@code 0} disables).
+     */
+    @WithDefault("1073741824")
+    @WithName("max-user-bytes")
+    long maxUserBytes();
+
+    /**
+     * Daily shared-space ({@code shared/YYYY/MM/DD/}) storage quota in bytes
+     * (default 512 MiB; {@code 0} disables).
+     */
+    @WithDefault("536870912")
+    @WithName("shared.max-daily-bytes")
+    long sharedMaxDailyBytes();
+
+    /**
+     * Maximum unauthenticated guest uploads per client IP per minute
+     * (default 10; {@code 0} disables).
+     */
+    @WithDefault("10")
+    @WithName("guest-uploads-per-minute")
+    int guestUploadsPerMinute();
+
+    /**
+     * Retention TTL in hours for unlinked {@code pending/} uploads
+     * ({@code messageId IS NULL}; default 24 hours; {@code 0} disables).
+     */
+    @WithDefault("24")
+    @WithName("pending-ttl-hours")
+    int pendingTtlHours();
+
+    /**
+     * Retention TTL in days for {@code shared/YYYY/MM/DD/} attachments
+     * (default 7 days; {@code 0} disables).
+     */
+    @WithDefault("7")
+    @WithName("shared-retention-days")
+    int sharedRetentionDays();
+
+    /**
+     * Interval in minutes for the background retention &amp; orphan sweeper
+     * (default 60 minutes; {@code 0} disables periodic background sweeping).
+     */
+    @WithDefault("60")
+    @WithName("sweep-interval-minutes")
+    int sweepIntervalMinutes();
 }
