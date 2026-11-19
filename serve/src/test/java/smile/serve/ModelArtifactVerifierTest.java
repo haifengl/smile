@@ -58,6 +58,16 @@ public class ModelArtifactVerifierTest {
             public boolean allowEmpty() {
                 return false;
             }
+
+            @Override
+            public boolean failFast() {
+                return true;
+            }
+
+            @Override
+            public boolean allowQuarantined() {
+                return false;
+            }
         };
     }
 

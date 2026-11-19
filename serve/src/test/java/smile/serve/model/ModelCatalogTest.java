@@ -149,6 +149,16 @@ public class ModelCatalogTest {
             public boolean allowEmpty() {
                 return allowEmpty;
             }
+
+            @Override
+            public boolean failFast() {
+                return true;
+            }
+
+            @Override
+            public boolean allowQuarantined() {
+                return false;
+            }
         };
     }
 }
