@@ -267,22 +267,34 @@ public class VAR implements Serializable {
         }
     }
 
-    /** Returns the number of series. @return k. */
+    /**
+     * Returns the number of series.
+     * @return k.
+     */
     public int k() {
         return k;
     }
 
-    /** Returns the order of the model. @return p. */
+    /**
+     * Returns the order of the model.
+     * @return p.
+     */
     public int p() {
         return p;
     }
 
-    /** Returns whether the model includes an intercept. @return true if an intercept is fitted. */
+    /**
+     * Returns whether the model includes an intercept.
+     * @return true if an intercept is fitted.
+     */
     public boolean hasIntercept() {
         return intercept;
     }
 
-    /** Returns the intercept vector. @return the intercept vector (zero when absent). */
+    /**
+     * Returns the intercept vector.
+     * @return the intercept vector (zero when absent).
+     */
     public double[] intercept() {
         return c.clone();
     }
@@ -302,7 +314,10 @@ public class VAR implements Serializable {
         return copy;
     }
 
-    /** Returns the residual covariance matrix. @return a copy of the covariance matrix. */
+    /**
+     * Returns the residual covariance matrix.
+     * @return a copy of the covariance matrix.
+     */
     public double[][] covariance() {
         double[][] copy = new double[k][];
         for (int i = 0; i < k; i++) {
@@ -311,12 +326,18 @@ public class VAR implements Serializable {
         return copy;
     }
 
-    /** Returns the fitted values. @return a copy of the fitted values (n-p × k). */
+    /**
+     * Returns the fitted values.
+     * @return a copy of the fitted values (n-p × k).
+     */
     public double[][] fittedValues() {
         return deepCopy(fittedValues);
     }
 
-    /** Returns the residuals. @return a copy of the residuals (n-p × k). */
+    /**
+     * Returns the residuals.
+     * @return a copy of the residuals (n-p × k).
+     */
     public double[][] residuals() {
         return deepCopy(residuals);
     }
@@ -329,17 +350,26 @@ public class VAR implements Serializable {
         return copy;
     }
 
-    /** Returns the log-likelihood. @return the log-likelihood. */
+    /**
+     * Returns the log-likelihood.
+     * @return the log-likelihood.
+     */
     public double logLikelihood() {
         return logLikelihood;
     }
 
-    /** Returns the Akaike information criterion. @return the AIC. */
+    /**
+     * Returns the Akaike information criterion.
+     * @return the AIC.
+     */
     public double aic() {
         return aic;
     }
 
-    /** Returns the Bayesian information criterion. @return the BIC. */
+    /**
+     * Returns the Bayesian information criterion.
+     * @return the BIC.
+     */
     public double bic() {
         return bic;
     }

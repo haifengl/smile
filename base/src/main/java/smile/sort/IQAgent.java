@@ -39,14 +39,24 @@ public class IQAgent implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** The batch buffer size. */
     private final int nbuf;
+    /** The number of quantile grid points. */
     private final int nq;
+    /** The total number of data values processed prior to the current batch. */
     private int nt;
+    /** The number of data values buffered in the current batch. */
     private int nd;
+    /** The target quantile probabilities. */
     private final double[] pval;
+    /** The data batch buffer. */
     private final double[] dbuf;
+    /** The current quantile estimates corresponding to {@link #pval}. */
     private double[] qile;
-    private double q0, qm;
+    /** The minimum data value seen so far. */
+    private double q0;
+    /** The maximum data value seen so far. */
+    private double qm;
 
     /**
      * Constructor. The batch size is set to 1000.

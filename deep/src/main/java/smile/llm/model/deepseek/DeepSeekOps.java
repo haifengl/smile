@@ -309,17 +309,6 @@ public final class DeepSeekOps {
         return new Tensor[]{pre, post, comb};
     }
 
-    /**
-     * Attention over gathered key/value rows with an attention-sink logit per head (the reference
-     * {@code sparse_attn}); a query with no valid index gets a zero output.
-     *
-     * @param q      queries {@code [1, m, h, d]}.
-     * @param kv     shared keys/values {@code [1, n, d]}.
-     * @param sink   sink logits {@code [h]} float32.
-     * @param idxs   int32 indices into {@code kv} {@code [1, m, topk]}, {@code -1} for none.
-     * @param scale  softmax scale.
-     * @return the output {@code [1, m, h, d]} in bf16.
-     */
     /** Prefill chunks of at least this many query rows use the tensor-core path (the per-head kernel re-reads every key per head). */
     static final int GEMM_MIN_ROWS = Integer.getInteger("smile.ds.attn.gemm.rows", 32);
     /** Tensor-core prefill attention and index scores (default on; {@code SMILE_DS_ATTN_GEMM=0} selects the per-head kernels). */
@@ -327,14 +316,6 @@ public final class DeepSeekOps {
     private static volatile boolean gemmUnavailable;
     /** Gathered key rows per chunk of the tensor-core path (each row is 1 KB). */
     private static final long GEMM_CHUNK_KEYS = Long.getLong("smile.ds.attn.gemm.keys", 160L << 10);
-
-    /**
-     * {@link #sparseAttention} for many query rows as batched bf16 GEMMs on tensor cores (float32 accumulation and
-     * scores, probabilities rounded to bf16 for the value product, as the reference kernel does): the shared keys of
-     * each row are gathered once and serve all heads. Rows go in chunks that bound the gathered copy.
-     *
-     * @return the output, or {@code null} when {@code aten::bmm.dtype} is unavailable.
-     */
     /** Decode rows from at least this many sequences use the tensor-core attention over per-sequence caches. */
     static final int GEMM_MIN_SEQS = Integer.getInteger("smile.ds.attn.gemm.seqs", 64);
 
@@ -365,6 +346,13 @@ public final class DeepSeekOps {
         }
     }
 
+    /**
+     * {@link #sparseAttention} for many query rows as batched bf16 GEMMs on tensor cores (float32 accumulation and
+     * scores, probabilities rounded to bf16 for the value product, as the reference kernel does): the shared keys of
+     * each row are gathered once and serve all heads. Rows go in chunks that bound the gathered copy.
+     *
+     * @return the output, or {@code null} when {@code aten::bmm.dtype} is unavailable.
+     */
     static Tensor sparseAttentionGemm(Tensor q, Tensor kv, Tensor sink, Tensor idxs, double scale) {
         if (gemmUnavailable || q.dtype() != ScalarType.BFloat16 || kv.dtype() != ScalarType.BFloat16 || q.size(0) != 1) {
             return null;
@@ -414,7 +402,17 @@ public final class DeepSeekOps {
         return out.unsqueeze(0);
     }
 
-
+    /**
+     * Attention over gathered key/value rows with an attention-sink logit per head (the reference
+     * {@code sparse_attn}); a query with no valid index gets a zero output.
+     *
+     * @param q      queries {@code [1, m, h, d]}.
+     * @param kv     shared keys/values {@code [1, n, d]}.
+     * @param sink   sink logits {@code [h]} float32.
+     * @param idxs   int32 indices into {@code kv} {@code [1, m, topk]}, {@code -1} for none.
+     * @param scale  softmax scale.
+     * @return the output {@code [1, m, h, d]} in bf16.
+     */
     public static Tensor sparseAttention(Tensor q, Tensor kv, Tensor sink, Tensor idxs, double scale) {
         if (q.size(1) >= GEMM_MIN_ROWS && q.device().isCUDA() && gemmPrefill) {
             Tensor g = sparseAttentionGemm(q, kv, sink, idxs, scale);

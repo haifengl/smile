@@ -126,22 +126,38 @@ public final class Format {
             metadata = metadata == null ? Map.of() : Map.copyOf(metadata);
         }
 
-        /** Backwards-compatible constructor for minimal/legacy headers. */
+        /**
+         * Backwards-compatible constructor for minimal/legacy headers.
+         *
+         * @param version the envelope format version.
+         * @param flags   the envelope flags byte.
+         * @param crc32   the unsigned 32-bit CRC-32 of the first 7 header bytes.
+         * @param legacy  {@code true} if the artifact uses the legacy raw {@code ObjectOutputStream} header.
+         */
         public Header(int version, int flags, long crc32, boolean legacy) {
             this(version, flags, crc32, legacy, -1L, 0L, Map.of(), legacy ? 0 : HEADER_SIZE);
         }
 
-        /** Returns the cleartext {@code id} metadata value from the extended header, or {@code null}. */
+        /**
+         * Returns the cleartext {@code id} metadata value from the extended header, or {@code null}.
+         * @return the model ID, or {@code null}.
+         */
         public String modelId() {
             return metadata.get(Model.ID);
         }
 
-        /** Returns the cleartext {@code version} metadata value from the extended header, or {@code null}. */
+        /**
+         * Returns the cleartext {@code version} metadata value from the extended header, or {@code null}.
+         * @return the model version, or {@code null}.
+         */
         public String modelVersion() {
             return metadata.get(Model.VERSION);
         }
 
-        /** Returns the cleartext {@code algorithm} metadata value from the extended header, or {@code null}. */
+        /**
+         * Returns the cleartext {@code algorithm} metadata value from the extended header, or {@code null}.
+         * @return the algorithm name, or {@code null}.
+         */
         public String algorithm() {
             return metadata.get("algorithm");
         }

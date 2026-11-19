@@ -137,6 +137,8 @@ public interface ModelExecutor {
     /**
      * Whether {@link #speculateStep} may be asked for more drafts than a request has tokens left (the extra tokens
      * are dropped by the engine). Lets a request near its end stay in the batched round instead of speculating alone.
+     *
+     * @return {@code true} if speculation may overshoot the remaining token budget.
      */
     default boolean speculationMayOvershoot() {
         return false;
@@ -145,6 +147,8 @@ public interface ModelExecutor {
     /**
      * Whether {@link #prefillBatch} processes several prompts in one pass (cheaper than one {@link #prefill} each).
      * The engine only batches whole prompts that start at position 0.
+     *
+     * @return {@code true} if batched prefill is supported.
      */
     default boolean supportsBatchedPrefill() {
         return false;

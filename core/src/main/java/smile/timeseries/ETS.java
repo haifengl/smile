@@ -141,23 +141,41 @@ public class ETS implements TimeSeriesModel {
         }
     }
 
+    /** The observed time series. */
     private final double[] x;
+    /** The seasonal period. */
     private final int period;
+    /** The trend component type. */
     private final Trend trend;
+    /** The seasonal component type. */
     private final Seasonal seasonal;
+    /** The level smoothing parameter. */
     private final double alpha;
+    /** The trend smoothing parameter. */
     private final double beta;
+    /** The seasonal smoothing parameter. */
     private final double gamma;
+    /** The trend damping parameter. */
     private final double phi;
+    /** The initial level state. */
     private final double level0;
+    /** The initial trend state. */
     private final double trend0;
+    /** The initial seasonal states. */
     private final double[] seasonal0;
+    /** The in-sample one-step-ahead fitted values. */
     private final double[] fittedValues;
+    /** The in-sample one-step-ahead residuals. */
     private final double[] residuals;
+    /** The residual variance. */
     private final double sigma2;
+    /** The Gaussian log-likelihood. */
     private final double logLikelihood;
+    /** The Akaike information criterion. */
     private final double aic;
+    /** The bias-corrected Akaike information criterion. */
     private final double aicc;
+    /** The Bayesian information criterion. */
     private final double bic;
     /** The terminal level state. */
     private final double lastLevel;
@@ -532,7 +550,10 @@ public class ETS implements TimeSeriesModel {
         return states;
     }
 
-    /** Returns the smoothing parameters alpha, beta, gamma, phi. */
+    /**
+     * Returns the smoothing parameters alpha, beta, gamma, phi.
+     * @return the smoothing parameters {@code [alpha, beta, gamma, phi]}.
+     */
     public double[] smoothingParameters() {
         return new double[]{alpha, beta, gamma, phi};
     }

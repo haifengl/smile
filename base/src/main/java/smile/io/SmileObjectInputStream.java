@@ -168,7 +168,14 @@ public class SmileObjectInputStream extends ObjectInputStream {
                     : Collections.unmodifiableMap(new LinkedHashMap<>(metadata));
         }
 
-        /** Backwards-compatible constructor for minimal/legacy headers. */
+        /**
+         * Backwards-compatible constructor for minimal/legacy headers.
+         *
+         * @param version the envelope format version.
+         * @param flags   the envelope flags byte.
+         * @param crc32   the unsigned 32-bit CRC-32 of the first 7 header bytes.
+         * @param legacy  {@code true} if the artifact uses the legacy raw {@code ObjectOutputStream} header.
+         */
         public SmlmHeader(int version, int flags, long crc32, boolean legacy) {
             this(version, flags, crc32, legacy, -1L, 0L, Map.of(), legacy ? 0 : SMLM_HEADER_SIZE);
         }
