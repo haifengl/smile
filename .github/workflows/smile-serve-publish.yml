@@ -4,16 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Custom version number (e.g., 7.0.1)'
+        description: 'Custom version number (e.g., 7.3.0)'
         required: true
         type: string
-        default: '7.0.0'
-  release:
-    types: [published]
-  workflow_run:
-    workflows: ["Create Release"]
-    types:
-      - completed
+        default: '7.3.0'
 
 env:
   REGISTRY: ghcr.io
@@ -22,10 +16,6 @@ env:
 jobs:
   build-and-push-image:
     runs-on: ${{ matrix.runner }}
-    if: >-
-      github.event_name != 'workflow_run' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       startsWith(github.event.workflow_run.head_commit.message, 'v'))
     strategy:
       # The images are independent; one failing (e.g. a native build running out of memory) must not cancel the rest.
       fail-fast: false
@@ -209,11 +199,7 @@ jobs:
   merge-manifests:
     needs: build-and-push-image
     runs-on: ubuntu-latest
-    if: >-
-      success() &&
-      (github.event_name != 'workflow_run' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       startsWith(github.event.workflow_run.head_commit.message, 'v')))
+    if: success()
     strategy:
       fail-fast: false
       matrix:
