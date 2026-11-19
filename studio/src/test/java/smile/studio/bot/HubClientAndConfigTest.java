@@ -665,11 +665,73 @@ public class HubClientAndConfigTest {
                 emailOptions
         );
 
+        List<String> timerOptions = BotManager.resolveEndpointOptions("timer", emailConfig, calendarConfig);
+        assertEquals(
+                List.of("inbox", "haifeng.hli@gmail.com", "haifengl@outlook.com", "haifeng.li@aihalo.dev"),
+                timerOptions
+        );
+
         List<String> calendarOptions = BotManager.resolveEndpointOptions("calendar", emailConfig, calendarConfig);
         assertEquals(
-                List.of("primary", "haifeng.hli@gmail.com", "haifengl@outlook.com"),
+                List.of("primary", "all", "haifeng.hli@gmail.com", "haifengl@outlook.com"),
                 calendarOptions
         );
+
+        List<String> webhookOptions = BotManager.resolveEndpointOptions("webhook", emailConfig, calendarConfig);
+        assertEquals(List.of(), webhookOptions);
+    }
+
+    @Test
+    public void testBotManagerBuildTriggerSpecPersistsTimerMailboxAndLocalizedLabels() {
+        // Timer routine (e.g. mike-outreach-sweep) saves selected mailbox
+        BotsConfig.TriggerSpec timerWithMailbox = BotManager.buildTriggerSpec(
+                "timer", "30 8 * * MON-FRI", 0L, "FIRE_ONCE",
+                "haifeng.li@aihalo.dev", 0, "", "", 0, null
+        );
+        assertEquals("timer", timerWithMailbox.source());
+        assertEquals("haifeng.li@aihalo.dev", timerWithMailbox.mailbox());
+        assertNull(timerWithMailbox.calendarUrl());
+
+        BotsConfig.RoutineSpec sweepRoutine = new BotsConfig.RoutineSpec(
+                "mike-outreach-sweep", "Outreach Sweep", true, null,
+                timerWithMailbox,
+                new BotsConfig.WorkflowSpec(BotsConfig.WorkflowKind.SKILL, "cold-email", "Run sweep", false, true, null),
+                BotsConfig.PolicySpec.defaultPolicy()
+        );
+        assertDoesNotThrow(sweepRoutine::toEventSubscription);
+
+        // Timer routine with blank mailbox leaves mailbox null (unscoped)
+        BotsConfig.TriggerSpec timerUnscoped = BotManager.buildTriggerSpec(
+                "timer", "0 19 * * *", 0L, "FIRE_ONCE",
+                "", 0, "", "", 0, null
+        );
+        assertNull(timerUnscoped.mailbox());
+
+        // Calendar routine supports "all" and preserves existing reminderBeforeSeconds
+        BotsConfig.TriggerSpec existingCal = new BotsConfig.TriggerSpec(
+                "calendar", null, 300L, "FIRE_ONCE", null,
+                "primary", 1200L, null, "calendar.*", List.of("*"), null, 30, null, null, 12);
+        BotsConfig.TriggerSpec updatedCal = BotManager.buildTriggerSpec(
+                "calendar", "", 300L, "FIRE_ONCE",
+                "all", 30, "", "", 12, existingCal
+        );
+        assertEquals("all", updatedCal.calendarUrl());
+        assertNull(updatedCal.mailbox());
+        assertEquals(1200L, updatedCal.reminderBeforeSeconds());
+        assertEquals("calendar.*", updatedCal.typeMatch());
+
+        // Verify new BotManager labels exist in all five localized resource bundles
+        for (java.util.Locale locale : List.of(
+                java.util.Locale.US,
+                java.util.Locale.SIMPLIFIED_CHINESE,
+                java.util.Locale.JAPAN,
+                java.util.Locale.FRANCE,
+                java.util.Locale.forLanguageTag("es-ES"))) {
+            java.util.ResourceBundle rb = java.util.ResourceBundle.getBundle(BotManager.class.getName(), locale);
+            assertFalse(rb.getString("EndpointLabel").isBlank(), "Missing EndpointLabel for " + locale);
+            assertFalse(rb.getString("CalendarLabel").isBlank(), "Missing CalendarLabel for " + locale);
+            assertFalse(rb.getString("WebhookPathLabel").isBlank(), "Missing WebhookPathLabel for " + locale);
+        }
     }
 
     @Test

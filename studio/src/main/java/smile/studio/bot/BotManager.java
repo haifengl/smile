@@ -70,6 +70,7 @@ public class BotManager extends JPanel {
     private final JComboBox<String> missedFireCombo = new JComboBox<>(new String[]{
             "FIRE_ONCE", "SKIP"
     });
+    private final JLabel endpointLabel = new JLabel(bundle.getString("EndpointLabel"));
     private final JComboBox<String> endpointCombo = new JComboBox<>();
     private final JTextField quietStartField = new JTextField(8);
     private final JTextField quietEndField = new JTextField(8);
@@ -220,6 +221,7 @@ public class BotManager extends JPanel {
         endpointCombo.removeAllItems();
         endpointCombo.setEditable(true);
         String src = (String) sourceCombo.getSelectedItem();
+        updateEndpointLabel(src);
         for (String item : resolveEndpointOptions(src, EmailConfig.load(), CalendarConfig.load())) {
             endpointCombo.addItem(item);
         }
@@ -228,10 +230,21 @@ public class BotManager extends JPanel {
         }
     }
 
+    private void updateEndpointLabel(String source) {
+        if ("calendar".equalsIgnoreCase(source)) {
+            endpointLabel.setText(bundle.getString("CalendarLabel"));
+        } else if ("webhook".equalsIgnoreCase(source)) {
+            endpointLabel.setText(bundle.getString("WebhookPathLabel"));
+        } else {
+            endpointLabel.setText(bundle.getString("EndpointLabel"));
+        }
+    }
+
     static List<String> resolveEndpointOptions(String source, EmailConfig emailConfig, CalendarConfig calendarConfig) {
         Set<String> options = new LinkedHashSet<>();
         if ("calendar".equalsIgnoreCase(source)) {
             options.add("primary");
+            options.add("all");
             for (CalendarConfig.AccountSpec acc : calendarConfig.accounts()) {
                 if (acc.accountId() != null && !acc.accountId().isBlank()) {
                     options.add(acc.accountId());
@@ -243,6 +256,8 @@ public class BotManager extends JPanel {
                     options.add(acc.emailAddress());
                 }
             }
+        } else if ("webhook".equalsIgnoreCase(source)) {
+            return List.of();
         } else {
             options.add("inbox");
             for (EmailConfig.AccountSpec acc : emailConfig.accounts()) {
@@ -305,7 +320,7 @@ public class BotManager extends JPanel {
                 bundle.getString("CronLabel"), cronField, bundle.getString("CronTooltip"),
                 bundle.getString("IntervalLabel"), intervalSpinner, bundle.getString("IntervalTooltip"));
         addSingleRow(form, gbc, row++,
-                bundle.getString("EndpointLabel"), endpointCombo, bundle.getString("EndpointTooltip"));
+                endpointLabel, endpointCombo, bundle.getString("EndpointTooltip"));
         addFormRow(form, gbc, row++,
                 bundle.getString("QuietStartLabel"), quietStartField, bundle.getString("QuietStartTooltip"),
                 bundle.getString("QuietEndLabel"), quietEndField, bundle.getString("QuietEndTooltip"));
@@ -519,14 +534,19 @@ public class BotManager extends JPanel {
 
         BotsConfig.TriggerSpec t = routine.trigger();
         sourceCombo.setSelectedItem(t.source());
+        updateEndpointLabel(t.source());
         cronField.setText(t.cron() == null ? "" : t.cron());
         intervalSpinner.setValue((int) Math.max(0, t.intervalSeconds()));
         missedFireCombo.setSelectedItem(t.missedFirePolicy());
 
-        String endpoint = "";
-        if (t.mailbox() != null && !t.mailbox().isBlank()) endpoint = t.mailbox();
-        else if (t.calendarUrl() != null && !t.calendarUrl().isBlank()) endpoint = t.calendarUrl();
-        else if (t.path() != null && !t.path().isBlank()) endpoint = t.path();
+        String endpoint;
+        if ("calendar".equalsIgnoreCase(t.source())) {
+            endpoint = t.calendarUrl() == null ? "" : t.calendarUrl();
+        } else if ("webhook".equalsIgnoreCase(t.source())) {
+            endpoint = t.path() == null ? "" : t.path();
+        } else {
+            endpoint = t.mailbox() == null ? "" : t.mailbox();
+        }
         endpointCombo.setSelectedItem(endpoint);
 
         quietStartField.setText(t.quietStart() == null ? "" : t.quietStart());
@@ -614,26 +634,21 @@ public class BotManager extends JPanel {
         Object epItem = endpointCombo.getSelectedItem();
         String ep = epItem == null ? "" : epItem.toString().trim();
 
-        String mailbox = "email".equals(source) ? ep : null;
-        String calUrl = "calendar".equals(source) ? ep : null;
-        String path = "webhook".equals(source) ? ep : null;
+        BotsConfig.TriggerSpec existingTrigger = config.findRoutine(routineId)
+                .map(BotsConfig.RoutineSpec::trigger)
+                .orElse(null);
 
-        BotsConfig.TriggerSpec trigger = new BotsConfig.TriggerSpec(
+        BotsConfig.TriggerSpec trigger = buildTriggerSpec(
                 source,
-                cron.isEmpty() ? null : cron,
+                cron,
                 interval,
                 missed,
-                mailbox,
-                calUrl,
-                "calendar".equals(source) ? 900L : 0L,
-                path,
-                null,
-                ("email".equals(source) || "calendar".equals(source)) ? List.of("*") : null,
-                null,
+                ep,
                 ((Number) settleSpinner.getValue()).intValue(),
-                quietStartField.getText().isBlank() ? null : quietStartField.getText().trim(),
-                quietEndField.getText().isBlank() ? null : quietEndField.getText().trim(),
-                ((Number) maxTurnsSpinner.getValue()).intValue()
+                quietStartField.getText(),
+                quietEndField.getText(),
+                ((Number) maxTurnsSpinner.getValue()).intValue(),
+                existingTrigger
         );
 
         BotsConfig.WorkflowKind wfKind = (BotsConfig.WorkflowKind) workflowKindCombo.getSelectedItem();
@@ -696,6 +711,62 @@ public class BotManager extends JPanel {
         BotsConfig base = latest != null ? latest : config;
         config = base.withUpsertedRoutine(botId, botId, persona, spec);
         persistConfig(routineId);
+    }
+
+    static BotsConfig.TriggerSpec buildTriggerSpec(
+            String source,
+            String cron,
+            long interval,
+            String missed,
+            String endpoint,
+            int settleSeconds,
+            String quietStart,
+            String quietEnd,
+            int maxTurnsPerHour,
+            BotsConfig.TriggerSpec existing
+    ) {
+        String src = source == null ? "timer" : source.trim().toLowerCase(Locale.ROOT);
+        String ep = endpoint == null ? "" : endpoint.trim();
+        String trimmedCron = cron == null ? "" : cron.trim();
+        boolean sameSource = existing != null && src.equalsIgnoreCase(existing.source());
+
+        String mailbox = ("email".equals(src) || "timer".equals(src))
+                ? (ep.isEmpty() ? null : ep)
+                : null;
+        String calUrl = "calendar".equals(src)
+                ? (ep.isEmpty() ? null : ep)
+                : ("timer".equals(src) && sameSource ? existing.calendarUrl() : null);
+        String path = "webhook".equals(src)
+                ? (ep.isEmpty() ? null : ep)
+                : null;
+        long reminderSeconds = "calendar".equals(src)
+                ? (sameSource && existing.reminderBeforeSeconds() > 0 ? existing.reminderBeforeSeconds() : 900L)
+                : 0L;
+        String typeMatch = sameSource ? existing.typeMatch() : null;
+        List<String> allowlist = ("email".equals(src) || "calendar".equals(src))
+                ? (sameSource && existing.senderAllowlist() != null && !existing.senderAllowlist().isEmpty()
+                        ? existing.senderAllowlist()
+                        : List.of("*"))
+                : null;
+        String subjectRegex = sameSource ? existing.subjectRegex() : null;
+
+        return new BotsConfig.TriggerSpec(
+                src,
+                trimmedCron.isEmpty() ? null : trimmedCron,
+                interval,
+                missed,
+                mailbox,
+                calUrl,
+                reminderSeconds,
+                path,
+                typeMatch,
+                allowlist,
+                subjectRegex,
+                settleSeconds,
+                quietStart == null || quietStart.isBlank() ? null : quietStart.trim(),
+                quietEnd == null || quietEnd.isBlank() ? null : quietEnd.trim(),
+                maxTurnsPerHour
+        );
     }
 
     private void persistConfigPreserveForm() {
