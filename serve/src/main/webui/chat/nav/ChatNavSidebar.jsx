@@ -12,6 +12,7 @@ import { useConversations } from '../hooks/useConversations'
 import { deleteConversation, patchConversation } from '../api'
 import ConversationRow from './ConversationRow'
 import GoogleIcon from './GoogleIcon'
+import MicrosoftIcon from './MicrosoftIcon'
 import SettingsPanel from './SettingsPanel'
 import './ChatNavSidebar.css'
 
@@ -24,7 +25,16 @@ export default function ChatNavSidebar({
   embedded = false,
   model,
 }) {
-  const { user, loggedIn, loading: authLoading, loginWithGoogle, logout, refresh: refreshAuth } = useAuth()
+  const {
+    user,
+    loggedIn,
+    agentMode,
+    loading: authLoading,
+    loginWithGoogle,
+    loginWithMicrosoft,
+    logout,
+    refresh: refreshAuth,
+  } = useAuth()
   const { pinned, recent, loading, search, setSearch, refresh } = useConversations(loggedIn)
   const [showSettings, setShowSettings] = useState(false)
 
@@ -54,13 +64,23 @@ export default function ChatNavSidebar({
     onConversationMutated?.(conv.id)
   }
 
-  function handleLogin() {
+  function handleGoogleLogin() {
     if (embedded) {
       loginWithGoogle({ returnTo: '/', inferModelId: model })
       return
     }
     loginWithGoogle({ returnTo: '/chat/' })
   }
+
+  function handleMicrosoftLogin() {
+    if (embedded) {
+      loginWithMicrosoft({ returnTo: '/', inferModelId: model })
+      return
+    }
+    loginWithMicrosoft({ returnTo: '/chat/' })
+  }
+
+  const isLocalMe = loggedIn && user?.external_id === 'me'
 
   return (
     <nav className="chat-nav" aria-label="Chat navigation">
@@ -141,41 +161,68 @@ export default function ChatNavSidebar({
               {authLoading ? (
                 <p className="chat-nav__hint">Loading…</p>
               ) : loggedIn ? (
-                <div className="chat-nav__user">
-                  <button
-                    type="button"
-                    className="chat-nav__avatar-btn"
-                    onClick={() => setShowSettings(true)}
-                    aria-label="Account settings"
-                    title="Account settings"
-                  >
-                    {user?.avatar_url ? (
-                      <img src={user.avatar_url} alt="" className="chat-nav__avatar" />
-                    ) : (
-                      <span className="chat-nav__avatar chat-nav__avatar--placeholder">
-                        {(user?.display_name || '?')[0]}
+                <>
+                  <div className="chat-nav__user">
+                    <button
+                      type="button"
+                      className="chat-nav__avatar-btn"
+                      onClick={() => setShowSettings(true)}
+                      aria-label="Account settings"
+                      title="Account settings"
+                    >
+                      {user?.avatar_url ? (
+                        <img src={user.avatar_url} alt="" className="chat-nav__avatar" />
+                      ) : (
+                        <span className="chat-nav__avatar chat-nav__avatar--placeholder">
+                          {(user?.display_name || '?')[0]}
+                        </span>
+                      )}
+                    </button>
+                    <div className="chat-nav__user-info">
+                      <span className="chat-nav__user-name">
+                        {user?.display_name}
+                        {agentMode && (
+                          <span className="chat-nav__agent-badge" title="Kirin Personal Assistant Active">
+                            Kirin
+                          </span>
+                        )}
                       </span>
-                    )}
-                  </button>
-                  <div className="chat-nav__user-info">
-                    <span className="chat-nav__user-name">{user?.display_name}</span>
-                    {user?.email && (
-                      <span className="chat-nav__user-email">{user.email}</span>
-                    )}
+                      {user?.email && (
+                        <span className="chat-nav__user-email">{user.email}</span>
+                      )}
+                    </div>
+                    <button type="button" className="chat-nav__logout" onClick={logout}>
+                      Log out
+                    </button>
                   </div>
-                  <button type="button" className="chat-nav__logout" onClick={logout}>
-                    Log out
-                  </button>
-                </div>
+                  {isLocalMe && (
+                    <div className="chat-nav__login-group chat-nav__login-group--compact">
+                      <button type="button" className="chat-nav__login" onClick={handleGoogleLogin}>
+                        <GoogleIcon className="chat-nav__login-icon" />
+                        Login with Google
+                      </button>
+                      <button type="button" className="chat-nav__login" onClick={handleMicrosoftLogin}>
+                        <MicrosoftIcon className="chat-nav__login-icon" />
+                        Login with Microsoft
+                      </button>
+                    </div>
+                  )}
+                </>
               ) : (
                 <>
                   <p className="chat-nav__hint">
-                    Sign in to browse history, pin chats, and manage settings.
+                    Sign in to browse history, pin chats, and activate Kirin personal assistant.
                   </p>
-                  <button type="button" className="chat-nav__login" onClick={handleLogin}>
-                    <GoogleIcon className="chat-nav__login-icon" />
-                    Login with Google
-                  </button>
+                  <div className="chat-nav__login-group">
+                    <button type="button" className="chat-nav__login" onClick={handleGoogleLogin}>
+                      <GoogleIcon className="chat-nav__login-icon" />
+                      Login with Google
+                    </button>
+                    <button type="button" className="chat-nav__login" onClick={handleMicrosoftLogin}>
+                      <MicrosoftIcon className="chat-nav__login-icon" />
+                      Login with Microsoft
+                    </button>
+                  </div>
                 </>
               )}
             </div>

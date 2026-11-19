@@ -17,12 +17,35 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
  */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record AuthMeResponse(boolean loggedIn, UserProfile user) {
+public record AuthMeResponse(
+        boolean loggedIn,
+        UserProfile user,
+        Boolean agentMode,
+        Boolean googleEnabled,
+        Boolean microsoftEnabled
+) {
+    public AuthMeResponse(boolean loggedIn, UserProfile user) {
+        this(loggedIn, user, null, null, null);
+    }
+
     public static AuthMeResponse guest() {
-        return new AuthMeResponse(false, null);
+        return new AuthMeResponse(false, null, false, null, null);
+    }
+
+    public static AuthMeResponse guest(boolean googleEnabled, boolean microsoftEnabled) {
+        return new AuthMeResponse(false, null, false, googleEnabled, microsoftEnabled);
     }
 
     public static AuthMeResponse of(User user) {
-        return new AuthMeResponse(true, UserProfile.from(user));
+        return new AuthMeResponse(true, UserProfile.from(user), null, null, null);
+    }
+
+    public static AuthMeResponse of(
+            User user,
+            boolean agentMode,
+            boolean googleEnabled,
+            boolean microsoftEnabled
+    ) {
+        return new AuthMeResponse(true, UserProfile.from(user), agentMode, googleEnabled, microsoftEnabled);
     }
 }

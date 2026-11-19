@@ -26,6 +26,7 @@ import jakarta.ws.rs.core.Response;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.vertx.ext.web.RoutingContext;
 import org.jboss.logging.Logger;
+import smile.chat.agent.ChatAgentBridge;
 import smile.chat.blob.ClientIdentity;
 import io.quarkus.arc.profile.UnlessBuildProfile;
 
@@ -51,22 +52,35 @@ public class AuthResource {
     @Inject
     GoogleOAuthService googleOAuth;
 
+    @Inject
+    MicrosoftOAuthService microsoftOAuth;
+
+    @Inject
+    ChatAgentBridge agentBridge;
+
     /**
-     * Returns the current user, if any.
+     * Returns the current user, if any, along with OAuth provider availability
+     * and whether server-side {@code kirin} Agent Mode is active for this session.
      *
      * @return auth status and profile.
      */
     @GET
     @Path("/me")
     public AuthMeResponse me() {
+        boolean googleEnabled = googleOAuth != null && googleOAuth.isEnabled();
+        boolean microsoftEnabled = microsoftOAuth != null && microsoftOAuth.isEnabled();
         if (!authContext.isLoggedIn()) {
-            return AuthMeResponse.guest();
+            return AuthMeResponse.guest(googleEnabled, microsoftEnabled);
         }
-        return AuthMeResponse.of(authContext.user());
+        boolean agentMode = authContext.isOAuthUser()
+                && agentBridge != null
+                && agentBridge.isAvailable();
+        return AuthMeResponse.of(authContext.user(), agentMode, googleEnabled, microsoftEnabled);
     }
 
     /**
-     * Starts Google OAuth (redirects to Google). Requires OAuth credentials.
+     * Starts Google OAuth (redirects to Google). Uses configured credentials or
+     * falls back to Studio's built-in {@code OAuthClientVault}.
      *
      * @param requestContext request context.
      * @param returnTo       optional post-login SPA path ({@code /} or {@code /chat/}).
@@ -84,28 +98,19 @@ public class AuthResource {
         }
         String origin = origin(requestContext);
         String state = googleOAuth.newState();
+        String codeVerifier = googleOAuth.newCodeVerifier();
         String returnPath = OAuthReturnPath.normalize(returnTo);
-        NewCookie stateCookie = new NewCookie.Builder(AuthFilter.OAUTH_STATE_COOKIE)
-                .value(state)
-                .path("/")
-                .maxAge(600)
-                .httpOnly(true)
-                .build();
-        NewCookie returnCookie = new NewCookie.Builder(AuthFilter.OAUTH_RETURN_COOKIE)
-                .value(returnPath)
-                .path("/")
-                .maxAge(600)
-                .httpOnly(true)
-                .build();
-        return Response.temporaryRedirect(googleOAuth.authorizationRedirect(origin, state))
-                .cookie(stateCookie)
-                .cookie(returnCookie)
+        return Response.temporaryRedirect(googleOAuth.authorizationRedirect(origin, state, codeVerifier))
+                .cookie(oauthCookie(AuthFilter.OAUTH_STATE_COOKIE, state, 600))
+                .cookie(oauthCookie(AuthFilter.OAUTH_PKCE_COOKIE, codeVerifier, 600))
+                .cookie(oauthCookie(AuthFilter.OAUTH_RETURN_COOKIE, returnPath, 600))
                 .build();
     }
 
     /**
-     * Google OAuth callback — establishes a session and redirects to the SPA route
-     * stored at login ({@code /} for the inference shell, {@code /chat/} for chat).
+     * Google OAuth callback — establishes a session, provisions the user's
+     * {@code /smile} home directory and {@code kirin} agent credentials when
+     * Agent Mode is available, and redirects to the SPA route stored at login.
      *
      * @param requestContext request context.
      * @param code           authorization code.
@@ -118,43 +123,139 @@ public class AuthResource {
     public Response callbackGoogle(@Context ContainerRequestContext requestContext,
                                    @QueryParam("code") String code,
                                    @QueryParam("state") String state) {
-        if (!googleOAuth.isEnabled()) {
-            return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
-        }
         var stateCookie = requestContext.getCookies().get(AuthFilter.OAUTH_STATE_COOKIE);
         if (stateCookie == null || state == null || !state.equals(stateCookie.getValue())) {
+            if (!googleOAuth.isEnabled()) {
+                return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
+            }
             LOG.warn("Google OAuth state mismatch");
             return Response.status(Response.Status.BAD_REQUEST).entity("Invalid OAuth state").build();
+        }
+        if (!googleOAuth.isEnabled()) {
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
         }
         if (code == null || code.isBlank()) {
             return Response.status(Response.Status.BAD_REQUEST).entity("Missing code").build();
         }
+        var pkceCookie = requestContext.getCookies().get(AuthFilter.OAUTH_PKCE_COOKIE);
+        String codeVerifier = pkceCookie != null ? pkceCookie.getValue() : null;
         try {
             GoogleOAuthService.GoogleProfile profile =
-                    googleOAuth.exchangeCode(origin(requestContext), code);
+                    googleOAuth.exchangeCode(origin(requestContext), code, codeVerifier);
             User user = userService.upsertGoogleUser(
                     profile.sub(), profile.email(), profile.name(), profile.picture());
             userService.mergeGuestConversations(user.id,
                     ClientIdentity.resolveClientIp(routingContext, null));
+            if (agentBridge != null) {
+                agentBridge.onOAuthLogin(user, new ChatAgentBridge.OAuthLoginPayload(
+                        AuthProviderKind.GOOGLE,
+                        profile.email(),
+                        profile.name(),
+                        profile.refreshToken(),
+                        profile.accessToken(),
+                        profile.customClientId(),
+                        null
+                ));
+            }
             AuthFilter.queueSession(requestContext, user.id);
-            NewCookie clearedState = new NewCookie.Builder(AuthFilter.OAUTH_STATE_COOKIE)
-                    .value("")
-                    .path("/")
-                    .maxAge(0)
-                    .httpOnly(true)
-                    .build();
-            NewCookie clearedReturn = new NewCookie.Builder(AuthFilter.OAUTH_RETURN_COOKIE)
-                    .value("")
-                    .path("/")
-                    .maxAge(0)
-                    .httpOnly(true)
-                    .build();
             return Response.temporaryRedirect(postLoginUri(requestContext))
-                    .cookie(clearedState)
-                    .cookie(clearedReturn)
+                    .cookie(oauthCookie(AuthFilter.OAUTH_STATE_COOKIE, "", 0))
+                    .cookie(oauthCookie(AuthFilter.OAUTH_PKCE_COOKIE, "", 0))
+                    .cookie(oauthCookie(AuthFilter.OAUTH_RETURN_COOKIE, "", 0))
                     .build();
         } catch (RuntimeException e) {
             LOG.warn("Google OAuth callback failed", e);
+            return Response.status(Response.Status.BAD_REQUEST).entity("Login failed").build();
+        }
+    }
+
+    /**
+     * Starts Microsoft OAuth (redirects to Microsoft Entra / Outlook.com).
+     * Uses configured credentials or falls back to Studio's built-in {@code OAuthClientVault}.
+     *
+     * @param requestContext request context.
+     * @param returnTo       optional post-login SPA path ({@code /} or {@code /chat/}).
+     * @return redirect to Microsoft.
+     */
+    @GET
+    @Path("/login/microsoft")
+    public Response loginMicrosoft(@Context ContainerRequestContext requestContext,
+                                   @QueryParam("return_to") String returnTo) {
+        if (!microsoftOAuth.isEnabled()) {
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE)
+                    .entity("{\"error\":\"Microsoft login is not configured\"}")
+                    .type(MediaType.APPLICATION_JSON)
+                    .build();
+        }
+        String origin = origin(requestContext);
+        String state = microsoftOAuth.newState();
+        String codeVerifier = googleOAuth.newCodeVerifier();
+        String returnPath = OAuthReturnPath.normalize(returnTo);
+        return Response.temporaryRedirect(microsoftOAuth.authorizationRedirect(origin, state, codeVerifier))
+                .cookie(oauthCookie(AuthFilter.OAUTH_STATE_COOKIE, state, 600))
+                .cookie(oauthCookie(AuthFilter.OAUTH_PKCE_COOKIE, codeVerifier, 600))
+                .cookie(oauthCookie(AuthFilter.OAUTH_RETURN_COOKIE, returnPath, 600))
+                .build();
+    }
+
+    /**
+     * Microsoft OAuth callback — establishes a session, provisions the user's
+     * {@code /smile} home directory and {@code kirin} agent credentials when
+     * Agent Mode is available, and redirects to the SPA route stored at login.
+     *
+     * @param requestContext request context.
+     * @param code           authorization code.
+     * @param state          CSRF state.
+     * @return redirect to chat UI.
+     */
+    @GET
+    @Path("/callback/microsoft")
+    @Transactional
+    public Response callbackMicrosoft(@Context ContainerRequestContext requestContext,
+                                      @QueryParam("code") String code,
+                                      @QueryParam("state") String state) {
+        var stateCookie = requestContext.getCookies().get(AuthFilter.OAUTH_STATE_COOKIE);
+        if (stateCookie == null || state == null || !state.equals(stateCookie.getValue())) {
+            if (!microsoftOAuth.isEnabled()) {
+                return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
+            }
+            LOG.warn("Microsoft OAuth state mismatch");
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid OAuth state").build();
+        }
+        if (!microsoftOAuth.isEnabled()) {
+            return Response.status(Response.Status.SERVICE_UNAVAILABLE).build();
+        }
+        if (code == null || code.isBlank()) {
+            return Response.status(Response.Status.BAD_REQUEST).entity("Missing code").build();
+        }
+        var pkceCookie = requestContext.getCookies().get(AuthFilter.OAUTH_PKCE_COOKIE);
+        String codeVerifier = pkceCookie != null ? pkceCookie.getValue() : null;
+        try {
+            MicrosoftOAuthService.MicrosoftProfile profile =
+                    microsoftOAuth.exchangeCode(origin(requestContext), code, codeVerifier);
+            User user = userService.upsertMicrosoftUser(
+                    profile.sub(), profile.email(), profile.name(), null);
+            userService.mergeGuestConversations(user.id,
+                    ClientIdentity.resolveClientIp(routingContext, null));
+            if (agentBridge != null) {
+                agentBridge.onOAuthLogin(user, new ChatAgentBridge.OAuthLoginPayload(
+                        AuthProviderKind.MICROSOFT,
+                        profile.email(),
+                        profile.name(),
+                        profile.refreshToken(),
+                        profile.accessToken(),
+                        profile.customClientId(),
+                        profile.tenantId()
+                ));
+            }
+            AuthFilter.queueSession(requestContext, user.id);
+            return Response.temporaryRedirect(postLoginUri(requestContext))
+                    .cookie(oauthCookie(AuthFilter.OAUTH_STATE_COOKIE, "", 0))
+                    .cookie(oauthCookie(AuthFilter.OAUTH_PKCE_COOKIE, "", 0))
+                    .cookie(oauthCookie(AuthFilter.OAUTH_RETURN_COOKIE, "", 0))
+                    .build();
+        } catch (RuntimeException e) {
+            LOG.warn("Microsoft OAuth callback failed", e);
             return Response.status(Response.Status.BAD_REQUEST).entity("Login failed").build();
         }
     }
@@ -173,9 +274,22 @@ public class AuthResource {
         return Response.noContent().cookie(AuthFilter.clearedSessionCookie()).build();
     }
 
+    private static NewCookie oauthCookie(String name, String value, int maxAge) {
+        return new NewCookie.Builder(name)
+                .value(value)
+                .path("/")
+                .maxAge(maxAge)
+                .httpOnly(true)
+                .build();
+    }
+
     private static String origin(ContainerRequestContext requestContext) {
         URI uri = requestContext.getUriInfo().getRequestUri();
         String scheme = uri.getScheme();
+        String forwardedProto = requestContext.getHeaderString("X-Forwarded-Proto");
+        if (forwardedProto != null && !forwardedProto.isBlank()) {
+            scheme = forwardedProto.split(",")[0].trim();
+        }
         String host = requestContext.getHeaderString(HttpHeaders.HOST);
         if (host == null || host.isBlank()) {
             host = uri.getHost();

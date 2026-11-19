@@ -7,13 +7,16 @@
  * License, or (at your option) any later version.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { fetchAuthMe, loginWithGoogle, logout as apiLogout } from '../api'
+import { fetchAuthMe, loginWithGoogle, loginWithMicrosoft, logout as apiLogout } from '../api'
 
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loggedIn, setLoggedIn] = useState(false)
+  const [agentMode, setAgentMode] = useState(false)
+  const [googleEnabled, setGoogleEnabled] = useState(true)
+  const [microsoftEnabled, setMicrosoftEnabled] = useState(true)
   const [loading, setLoading] = useState(true)
 
   const refresh = useCallback(async () => {
@@ -21,9 +24,17 @@ export function AuthProvider({ children }) {
       const data = await fetchAuthMe()
       setLoggedIn(Boolean(data.logged_in))
       setUser(data.user ?? null)
+      setAgentMode(Boolean(data.agent_mode))
+      if (data.google_enabled != null) {
+        setGoogleEnabled(Boolean(data.google_enabled))
+      }
+      if (data.microsoft_enabled != null) {
+        setMicrosoftEnabled(Boolean(data.microsoft_enabled))
+      }
     } catch {
       setLoggedIn(false)
       setUser(null)
+      setAgentMode(false)
     } finally {
       setLoading(false)
     }
@@ -42,18 +53,22 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       loggedIn,
+      agentMode,
+      googleEnabled,
+      microsoftEnabled,
       loading,
       refresh,
       loginWithGoogle,
+      loginWithMicrosoft,
       logout,
     }),
-    [user, loggedIn, loading, refresh, logout],
+    [user, loggedIn, agentMode, googleEnabled, microsoftEnabled, loading, refresh, logout],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-/** @returns {{ user, loggedIn, loading, refresh, loginWithGoogle, logout }} */
+/** @returns {{ user, loggedIn, agentMode, googleEnabled, microsoftEnabled, loading, refresh, loginWithGoogle, loginWithMicrosoft, logout }} */
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) {
