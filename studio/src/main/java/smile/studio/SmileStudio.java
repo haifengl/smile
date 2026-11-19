@@ -281,8 +281,12 @@ public class SmileStudio extends JFrame implements SearchListener {
         hubBadgeTimer.start();
 
         addWindowListener(new WindowAdapter() {
+            private boolean exiting;
             @Override
             public void windowClosing(WindowEvent e) {
+                if (exiting) {
+                    return;
+                }
                 // Persist the open-file list *before* closing files so that
                 // fileWatcher.files() still contains all paths at save time.
                 // closeFile() calls fileWatcher.removeFile() for each file,
@@ -305,7 +309,8 @@ public class SmileStudio extends JFrame implements SearchListener {
                 if (!StudioConfig.agentHub().keepAliveOnExit()) {
                     HubManager.getInstance().stop();
                 }
-                System.exit(0);
+                exiting = true;
+                Thread.ofPlatform().name("studio-exit").start(() -> System.exit(0));
             }
 
             @Override
