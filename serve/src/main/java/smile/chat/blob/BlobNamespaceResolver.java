@@ -49,6 +49,11 @@ import smile.auth.User;
 @UnlessBuildProfile("micro")
 @ApplicationScoped
 public class BlobNamespaceResolver {
+    /** Prefix for OAuth-authenticated per-user storage namespaces. */
+    public static final String USERS_PREFIX = "users/";
+    /** Prefix for UTC date-grouped shared storage namespaces. */
+    public static final String SHARED_PREFIX = "shared/";
+
     private static final DateTimeFormatter UTC_DATE =
             DateTimeFormatter.ofPattern("yyyy/MM/dd", Locale.ROOT).withZone(ZoneOffset.UTC);
 

@@ -44,6 +44,11 @@ public class LocalBlobStoreProvider implements BlobStoreProvider {
 
     @Override
     public BlobStore create() {
-        return new LocalBlobStore(Path.of(config.localPath()), config.maxUploadBytes());
+        long maxBytes = config.maxUploadBytes();
+        if (config.encryptionEnabled() && maxBytes > 0
+                && maxBytes <= Long.MAX_VALUE - EncryptingBlobStore.ENVELOPE_OVERHEAD_BYTES) {
+            maxBytes += EncryptingBlobStore.ENVELOPE_OVERHEAD_BYTES;
+        }
+        return new LocalBlobStore(Path.of(config.localPath()), maxBytes);
     }
 }

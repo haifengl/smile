@@ -52,9 +52,17 @@ public class ConfigurableBlobStore implements BlobStore {
                 .orElseThrow(() -> new IllegalStateException(
                         "smile.blob.storage=" + backend + " has no provider on the classpath; available: "
                                 + providers.stream().map(BlobStoreProvider::name).sorted().toList()));
-        this.delegate = provider.create();
+        BlobStore rawStore = provider.create();
+        if (config.encryptionEnabled()) {
+            byte[] key = EncryptingBlobStore.resolveOrCreateKey(config);
+            this.delegate = new EncryptingBlobStore(
+                    rawStore, key, config.maxUploadBytes(), config.encryptionAllowPlaintextRead());
+            logger.infof("Blob storage backend: %s (AES-256-GCM envelope encryption enabled)", provider.name());
+        } else {
+            this.delegate = rawStore;
+            logger.infof("Blob storage backend: %s", provider.name());
+        }
         this.closeable = delegate instanceof AutoCloseable c ? c : null;
-        logger.infof("Blob storage backend: %s", provider.name());
     }
 
     @Override

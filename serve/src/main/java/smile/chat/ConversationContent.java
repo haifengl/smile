@@ -42,7 +42,11 @@ import org.hibernate.annotations.CreationTimestamp;
                @Index(name = "idx_conversation_content_message_id",
                       columnList = "message_id"),
                @Index(name = "idx_conversation_content_owner_user_id",
-                      columnList = "owner_user_id")
+                      columnList = "owner_user_id"),
+               @Index(name = "idx_conversation_content_user_id",
+                      columnList = "user_id"),
+               @Index(name = "idx_conversation_content_created_at",
+                      columnList = "created_at")
        })
 public class ConversationContent extends PanacheEntityBase {
     /** Opaque UUID primary key ({@code content_id}). */
