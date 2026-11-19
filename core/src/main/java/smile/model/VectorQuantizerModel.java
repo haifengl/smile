@@ -66,6 +66,12 @@ public record VectorQuantizerModel(String algorithm,
         }
     }
 
+    /**
+     * Validates deserialized state.
+     *
+     * @return the validated model instance.
+     * @throws ObjectStreamException if any required field is invalid.
+     */
     @Serial
     private Object readResolve() throws ObjectStreamException {
         if (algorithm == null || algorithm.isBlank()) {

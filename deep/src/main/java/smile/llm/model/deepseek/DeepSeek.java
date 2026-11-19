@@ -458,12 +458,20 @@ public final class DeepSeek implements LanguageModel, ModelExecutor, AutoCloseab
         return to < prompt.length ? null : prefill(requestId, prompt, 0);
     }
 
-    /** Whether the model has a DSpark draft head (and it is not turned off with {@code SMILE_DS_DRAFT=0}). */
+    /**
+     * Whether the model has a DSpark draft head (and it is not turned off with {@code SMILE_DS_DRAFT=0}).
+     *
+     * @return {@code true} if the model has an active draft head.
+     */
     public boolean hasDraft() {
         return replicas[0] != null && replicas[0].hasDraft();
     }
 
-    /** Tokens the DSpark head drafts per round (0 without a draft head). */
+    /**
+     * Tokens the DSpark head drafts per round (0 without a draft head).
+     *
+     * @return the number of tokens drafted per round.
+     */
     public int draftBlock() {
         return hasDraft() ? replicas[0].draft().block() : 0;
     }

@@ -419,10 +419,15 @@ public record PSI(
         @Serial
         private static final long serialVersionUID = 1L;
 
+        /** The feature name. */
         private final String feature;
+        /** The expected bin probabilities. */
         private final double[] expectedProb;
+        /** The expected bin observation counts. */
         private final long[] expectedBins;
+        /** The interior numeric breakpoints, or {@code null} for categorical features. */
         private final double[] breaks;
+        /** The total baseline observation count. */
         private final long expectedCount;
 
         private Baseline(
@@ -661,32 +666,50 @@ public record PSI(
                     .toArray(Baseline[]::new);
         }
 
-        /** Returns the feature name. */
+        /**
+         * Returns the feature name.
+         * @return the feature name.
+         */
         public String feature() {
             return feature;
         }
 
-        /** Returns true if this baseline represents a categorical feature. */
+        /**
+         * Returns true if this baseline represents a categorical feature.
+         * @return {@code true} if categorical.
+         */
         public boolean isCategorical() {
             return breaks == null;
         }
 
-        /** Returns the number of baseline bins. */
+        /**
+         * Returns the number of baseline bins.
+         * @return the number of bins.
+         */
         public int numBins() {
             return expectedProb.length;
         }
 
-        /** Returns a copy of the expected bin probabilities. */
+        /**
+         * Returns a copy of the expected bin probabilities.
+         * @return the expected bin probabilities.
+         */
         public double[] expectedProb() {
             return expectedProb.clone();
         }
 
-        /** Returns a copy of the interior breakpoints, or {@code null} if categorical. */
+        /**
+         * Returns a copy of the interior breakpoints, or {@code null} if categorical.
+         * @return the interior breakpoints, or {@code null}.
+         */
         public double[] breaks() {
             return breaks == null ? null : breaks.clone();
         }
 
-        /** Returns the total baseline observation count (0 if created from probabilities only). */
+        /**
+         * Returns the total baseline observation count (0 if created from probabilities only).
+         * @return the baseline observation count.
+         */
         public long expectedCount() {
             return expectedCount;
         }
@@ -768,9 +791,13 @@ public record PSI(
         @Serial
         private static final long serialVersionUID = 1L;
 
+        /** The associated baseline distribution. */
         private final Baseline baseline;
+        /** The accumulated bin counts. */
         private final long[] bins;
+        /** The total number of valid observations assimilated. */
         private long count;
+        /** The number of out-of-vocabulary categorical observations seen. */
         private long unseenCount;
 
         private Counter(Baseline baseline) {
@@ -778,7 +805,10 @@ public record PSI(
             this.bins = new long[baseline.numBins()];
         }
 
-        /** Returns the associated baseline. */
+        /**
+         * Returns the associated baseline.
+         * @return the baseline.
+         */
         public Baseline baseline() {
             return baseline;
         }
@@ -838,17 +868,26 @@ public record PSI(
             }
         }
 
-        /** Returns the total number of valid observations assimilated. */
+        /**
+         * Returns the total number of valid observations assimilated.
+         * @return the observation count.
+         */
         public long count() {
             return count;
         }
 
-        /** Returns the number of out-of-vocabulary categorical observations seen. */
+        /**
+         * Returns the number of out-of-vocabulary categorical observations seen.
+         * @return the unseen category observation count.
+         */
         public long unseenCount() {
             return unseenCount;
         }
 
-        /** Returns a copy of the accumulated bin counts. */
+        /**
+         * Returns a copy of the accumulated bin counts.
+         * @return the accumulated bin counts.
+         */
         public long[] bins() {
             return bins.clone();
         }

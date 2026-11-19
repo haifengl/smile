@@ -57,18 +57,31 @@ public class SARIMA implements TimeSeriesModel {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** The original time series. */
     private final double[] x;
+    /** The non-seasonal AR order. */
     private final int p;
+    /** The non-seasonal differencing order. */
     private final int d;
+    /** The non-seasonal MA order. */
     private final int q;
+    /** The seasonal AR order. */
     private final int P;
+    /** The seasonal differencing order. */
     private final int D;
+    /** The seasonal MA order. */
     private final int Q;
+    /** The seasonal period. */
     private final int s;
+    /** The SARMA model fitted on the fully differenced series. */
     private final SARMA sarma;
+    /** The intermediate regular differencing stages. */
     private final double[][] regularDiff;
+    /** The intermediate seasonal differencing stages. */
     private final double[][] seasonalDiff;
+    /** The in-sample one-step-ahead fitted values on the original scale. */
     private final double[] fittedValues;
+    /** The in-sample one-step-ahead residuals. */
     private final double[] residuals;
 
     /**
@@ -175,77 +188,122 @@ public class SARIMA implements TimeSeriesModel {
         return new SARIMA(x, p, d, q, P, D, Q, s, sarma, regularDiff, seasonalDiff);
     }
 
-    /** Returns the original time series. @return the time series. */
+    /**
+     * Returns the original time series.
+     * @return the time series.
+     */
     public double[] x() {
         return x;
     }
 
-    /** Returns the non-seasonal AR order. @return p. */
+    /**
+     * Returns the non-seasonal AR order.
+     * @return p.
+     */
     public int p() {
         return p;
     }
 
-    /** Returns the non-seasonal differencing order. @return d. */
+    /**
+     * Returns the non-seasonal differencing order.
+     * @return d.
+     */
     public int d() {
         return d;
     }
 
-    /** Returns the non-seasonal MA order. @return q. */
+    /**
+     * Returns the non-seasonal MA order.
+     * @return q.
+     */
     public int q() {
         return q;
     }
 
-    /** Returns the seasonal AR order. @return P. */
+    /**
+     * Returns the seasonal AR order.
+     * @return P.
+     */
     public int P() {
         return P;
     }
 
-    /** Returns the seasonal differencing order. @return D. */
+    /**
+     * Returns the seasonal differencing order.
+     * @return D.
+     */
     public int D() {
         return D;
     }
 
-    /** Returns the seasonal MA order. @return Q. */
+    /**
+     * Returns the seasonal MA order.
+     * @return Q.
+     */
     public int Q() {
         return Q;
     }
 
-    /** Returns the seasonal period. @return s. */
+    /**
+     * Returns the seasonal period.
+     * @return s.
+     */
     public int period() {
         return s;
     }
 
-    /** Returns the underlying SARMA model on the differenced series. @return the SARMA model. */
+    /**
+     * Returns the underlying SARMA model on the differenced series.
+     * @return the SARMA model.
+     */
     public SARMA sarma() {
         return sarma;
     }
 
-    /** Returns the non-seasonal AR coefficients. @return the AR coefficients. */
+    /**
+     * Returns the non-seasonal AR coefficients.
+     * @return the AR coefficients.
+     */
     public double[] ar() {
         return sarma.ar();
     }
 
-    /** Returns the seasonal AR coefficients. @return the SAR coefficients. */
+    /**
+     * Returns the seasonal AR coefficients.
+     * @return the SAR coefficients.
+     */
     public double[] sar() {
         return sarma.sar();
     }
 
-    /** Returns the non-seasonal MA coefficients. @return the MA coefficients. */
+    /**
+     * Returns the non-seasonal MA coefficients.
+     * @return the MA coefficients.
+     */
     public double[] ma() {
         return sarma.ma();
     }
 
-    /** Returns the seasonal MA coefficients. @return the SMA coefficients. */
+    /**
+     * Returns the seasonal MA coefficients.
+     * @return the SMA coefficients.
+     */
     public double[] sma() {
         return sarma.sma();
     }
 
-    /** Returns the intercept. @return the intercept. */
+    /**
+     * Returns the intercept.
+     * @return the intercept.
+     */
     public double intercept() {
         return sarma.intercept();
     }
 
-    /** Returns the mean of the fitted (differenced) series. @return the mean. */
+    /**
+     * Returns the mean of the fitted (differenced) series.
+     * @return the mean.
+     */
     public double mean() {
         return MathEx.mean(x);
     }
@@ -260,7 +318,10 @@ public class SARIMA implements TimeSeriesModel {
         return residuals;
     }
 
-    /** Returns the residual sum of squares. @return the RSS. */
+    /**
+     * Returns the residual sum of squares.
+     * @return the RSS.
+     */
     public double RSS() {
         return sarma.RSS();
     }
@@ -270,17 +331,26 @@ public class SARIMA implements TimeSeriesModel {
         return sarma.variance();
     }
 
-    /** Returns the residual degrees of freedom. @return the degrees of freedom. */
+    /**
+     * Returns the residual degrees of freedom.
+     * @return the degrees of freedom.
+     */
     public int df() {
         return sarma.df();
     }
 
-    /** Returns the coefficient of determination. @return R². */
+    /**
+     * Returns the coefficient of determination.
+     * @return R².
+     */
     public double R2() {
         return sarma.R2();
     }
 
-    /** Returns the t-tests of the coefficients. @return the t-tests. */
+    /**
+     * Returns the t-tests of the coefficients.
+     * @return the t-tests.
+     */
     public double[][] ttest() {
         return sarma.ttest();
     }

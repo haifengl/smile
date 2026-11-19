@@ -242,37 +242,58 @@ public class TimeSeriesAnomaly implements Serializable {
         };
     }
 
-    /** Returns the fitted model. @return the model. */
+    /**
+     * Returns the fitted model.
+     * @return the model.
+     */
     public TimeSeriesModel model() {
         return model;
     }
 
-    /** Returns the training history. @return a copy of the history. */
+    /**
+     * Returns the training history.
+     * @return a copy of the history.
+     */
     public double[] history() {
         return history.clone();
     }
 
-    /** Returns the one-step residuals of the history. @return the residuals. */
+    /**
+     * Returns the one-step residuals of the history.
+     * @return the residuals.
+     */
     public double[] residuals() {
         return residuals.clone();
     }
 
-    /** Returns the standardization method. @return the scale estimator. */
+    /**
+     * Returns the standardization method.
+     * @return the scale estimator.
+     */
     public Scale scale() {
         return scale;
     }
 
-    /** Returns the robust scale of the residuals. @return the sigma. */
+    /**
+     * Returns the robust scale of the residuals.
+     * @return the sigma.
+     */
     public double sigma() {
         return sigma;
     }
 
-    /** Returns the decision threshold in standardized units. @return the threshold. */
+    /**
+     * Returns the decision threshold in standardized units.
+     * @return the threshold.
+     */
     public double threshold() {
         return threshold;
     }
 
-    /** Returns the EWMA smoothing factor. @return the EWMA alpha. */
+    /**
+     * Returns the EWMA smoothing factor.
+     * @return the EWMA alpha.
+     */
     public double ewmaAlpha() {
         return ewmaAlpha;
     }

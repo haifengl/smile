@@ -70,21 +70,37 @@ public class SARMA implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** The time series. */
     private final double[] x;
+    /** The non-seasonal AR order. */
     private final int p;
+    /** The non-seasonal MA order. */
     private final int q;
+    /** The seasonal AR order. */
     private final int P;
+    /** The seasonal MA order. */
     private final int Q;
+    /** The seasonal period. */
     private final int s;
+    /** The non-seasonal AR coefficients. */
     private final double[] ar;
+    /** The seasonal AR coefficients. */
     private final double[] sar;
+    /** The non-seasonal MA coefficients. */
     private final double[] ma;
+    /** The seasonal MA coefficients. */
     private final double[] sma;
+    /** The intercept. */
     private final double b;
+    /** The in-sample fitted values. */
     private final double[] fittedValues;
+    /** The in-sample residuals. */
     private final double[] residuals;
+    /** The t-tests of coefficients. */
     private final double[][] ttest;
+    /** The residual sum of squares. */
     private final double RSS;
+    /** The innovation variance. */
     private final double variance;
 
     /**
@@ -292,62 +308,98 @@ public class SARMA implements Serializable {
         return x;
     }
 
-    /** Returns the non-seasonal AR order. @return p. */
+    /**
+     * Returns the non-seasonal AR order.
+     * @return p.
+     */
     public int p() {
         return p;
     }
 
-    /** Returns the non-seasonal MA order. @return q. */
+    /**
+     * Returns the non-seasonal MA order.
+     * @return q.
+     */
     public int q() {
         return q;
     }
 
-    /** Returns the seasonal AR order. @return P. */
+    /**
+     * Returns the seasonal AR order.
+     * @return P.
+     */
     public int P() {
         return P;
     }
 
-    /** Returns the seasonal MA order. @return Q. */
+    /**
+     * Returns the seasonal MA order.
+     * @return Q.
+     */
     public int Q() {
         return Q;
     }
 
-    /** Returns the seasonal period. @return s. */
+    /**
+     * Returns the seasonal period.
+     * @return s.
+     */
     public int period() {
         return s;
     }
 
-    /** Returns the non-seasonal AR coefficients. @return the AR coefficients. */
+    /**
+     * Returns the non-seasonal AR coefficients.
+     * @return the AR coefficients.
+     */
     public double[] ar() {
         return ar;
     }
 
-    /** Returns the seasonal AR coefficients. @return the SAR coefficients. */
+    /**
+     * Returns the seasonal AR coefficients.
+     * @return the SAR coefficients.
+     */
     public double[] sar() {
         return sar;
     }
 
-    /** Returns the non-seasonal MA coefficients. @return the MA coefficients. */
+    /**
+     * Returns the non-seasonal MA coefficients.
+     * @return the MA coefficients.
+     */
     public double[] ma() {
         return ma;
     }
 
-    /** Returns the seasonal MA coefficients. @return the SMA coefficients. */
+    /**
+     * Returns the seasonal MA coefficients.
+     * @return the SMA coefficients.
+     */
     public double[] sma() {
         return sma;
     }
 
-    /** Returns the intercept. @return the intercept. */
+    /**
+     * Returns the intercept.
+     * @return the intercept.
+     */
     public double intercept() {
         return b;
     }
 
-    /** Returns the fitted values. @return the fitted values. */
+    /**
+     * Returns the fitted values.
+     * @return the fitted values.
+     */
     public double[] fittedValues() {
         return fittedValues;
     }
 
-    /** Returns the residuals. @return the residuals. */
+    /**
+     * Returns the residuals.
+     * @return the residuals.
+     */
     public double[] residuals() {
         return residuals;
     }
@@ -362,22 +414,34 @@ public class SARMA implements Serializable {
         return ttest;
     }
 
-    /** Returns the residual sum of squares. @return the RSS. */
+    /**
+     * Returns the residual sum of squares.
+     * @return the RSS.
+     */
     public double RSS() {
         return RSS;
     }
 
-    /** Returns the innovation variance. @return the variance. */
+    /**
+     * Returns the innovation variance.
+     * @return the variance.
+     */
     public double variance() {
         return variance;
     }
 
-    /** Returns the residual degrees of freedom. @return the degrees of freedom. */
+    /**
+     * Returns the residual degrees of freedom.
+     * @return the degrees of freedom.
+     */
     public int df() {
         return residuals.length;
     }
 
-    /** Returns the coefficient of determination. @return R². */
+    /**
+     * Returns the coefficient of determination.
+     * @return R².
+     */
     public double R2() {
         int n = residuals.length;
         double ybar = 0.0;
@@ -393,19 +457,28 @@ public class SARMA implements Serializable {
         return 1.0 - RSS / tss;
     }
 
-    /** Returns the log-likelihood of the model. @return the log-likelihood. */
+    /**
+     * Returns the log-likelihood of the model.
+     * @return the log-likelihood.
+     */
     public double logLikelihood() {
         int n = residuals.length;
         return -0.5 * n * (Math.log(2 * Math.PI) + 1.0 + Math.log(Math.max(RSS / n, 1E-300)));
     }
 
-    /** Returns the Akaike information criterion. @return the AIC. */
+    /**
+     * Returns the Akaike information criterion.
+     * @return the AIC.
+     */
     public double aic() {
         int k = p + P + q + Q + 1;
         return 2 * k - 2 * logLikelihood();
     }
 
-    /** Returns the Bayesian information criterion. @return the BIC. */
+    /**
+     * Returns the Bayesian information criterion.
+     * @return the BIC.
+     */
     public double bic() {
         int k = p + P + q + Q + 1;
         return k * Math.log(residuals.length) - 2 * logLikelihood();
