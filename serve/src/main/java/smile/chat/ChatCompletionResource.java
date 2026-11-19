@@ -47,6 +47,7 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
 import smile.llm.Role;
+import smile.auth.AuthConfig;
 import smile.auth.AuthContext;
 import smile.auth.User;
 import smile.chat.agent.ChatAgentBridge;
@@ -101,6 +102,9 @@ public class ChatCompletionResource {
     MediaService mediaService;
 
     @Inject
+    AuthConfig authConfig;
+
+    @Inject
     AuthContext authContext;
 
     @Inject
@@ -131,13 +135,17 @@ public class ChatCompletionResource {
         long created = Instant.now().getEpochSecond();
         String modelName = service.modelName();
 
+        Long callerUserId = authContext.userId();
+        String callerIp = ClientIdentity.resolveClientIp(
+                routingContext, headers, authConfig.trustForwardedHeaders());
+
         ChatCompletion completion;
         if (shouldRouteToKirinAgent(headers, request)) {
             User oauthUser = authContext.user();
             int localPort = resolveLocalPort();
             completion = agentBridge.complete(oauthUser, request, localPort, modelName, null);
         } else {
-            completion = service.complete(request, null);
+            completion = service.complete(request, null, callerUserId, callerIp);
         }
         if (completion != null && !internalHop) {
             saveConversation(conversation, headers, request, completion);
@@ -164,6 +172,9 @@ public class ChatCompletionResource {
         boolean internalHop = isInternalAgentHop(headers);
         boolean useKirin = shouldRouteToKirinAgent(headers, request);
         User oauthUser = useKirin ? authContext.user() : null;
+        Long callerUserId = authContext.userId();
+        String callerIp = ClientIdentity.resolveClientIp(
+                routingContext, headers, authConfig.trustForwardedHeaders());
         int localPort = useKirin ? resolveLocalPort() : configuredHttpPort;
         Conversation conversation = internalHop ? null : newConversation(headers);
         String id = newCompletionId();
@@ -281,7 +292,7 @@ public class ChatCompletionResource {
 
             executor.supplyAsync(() -> {
                 try {
-                    var handle = service.submitCompletion(request, publisher);
+                    var handle = service.submitCompletion(request, publisher, callerUserId, callerIp);
                     handleRef.set(handle);
                     if (emitter.isCancelled()) {
                         handle.abort();
@@ -450,7 +461,7 @@ public class ChatCompletionResource {
 
     private Conversation newConversation(HttpHeaders headers) {
         Conversation conversation = new Conversation();
-        conversation.setContext(routingContext, headers);
+        conversation.setContext(routingContext, headers, authConfig.trustForwardedHeaders());
         if (authContext.isLoggedIn()) {
             conversation.userId = authContext.userId();
         }
@@ -476,7 +487,8 @@ public class ChatCompletionResource {
                                   ChatCompletion completion) {
         Long conversationId = ConversationIds.parseOptional(request.conversation);
         Conversation conversation;
-        String clientIp = ClientIdentity.resolveClientIp(routingContext, headers);
+        String clientIp = ClientIdentity.resolveClientIp(
+                routingContext, headers, authConfig.trustForwardedHeaders());
         if (conversationId != null) {
             conversation = Conversation.findById(conversationId);
             if (conversation == null) {

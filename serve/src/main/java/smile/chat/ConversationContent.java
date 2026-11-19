@@ -40,7 +40,9 @@ import org.hibernate.annotations.CreationTimestamp;
                @Index(name = "idx_conversation_content_conversation_id",
                       columnList = "conversation_id"),
                @Index(name = "idx_conversation_content_message_id",
-                      columnList = "message_id")
+                      columnList = "message_id"),
+               @Index(name = "idx_conversation_content_owner_user_id",
+                      columnList = "owner_user_id")
        })
 public class ConversationContent extends PanacheEntityBase {
     /** Opaque UUID primary key ({@code content_id}). */
@@ -58,9 +60,19 @@ public class ConversationContent extends PanacheEntityBase {
     @Column(name = "message_id")
     public Long messageId;
 
-    /** Hashed client identity used in the storage key namespace. */
-    @Column(name = "user_id", nullable = false, length = 64)
+    /**
+     * Storage namespace prefix ({@code users/<provider>-<24hex>} for OAuth users,
+     * or {@code shared/<YYYY>/<MM>/<DD>} for guests and localhost {@code me}).
+     */
+    @Column(name = "user_id", nullable = false, length = 128)
     public String userId;
+
+    /**
+     * Owning {@link smile.auth.User#id} when the conversation belongs to a logged-in
+     * user; {@code null} for unauthenticated guest uploads.
+     */
+    @Column(name = "owner_user_id")
+    public Long ownerUserId;
 
     /** Speaker role, e.g. {@code user} or {@code assistant}. */
     @Column(nullable = false, length = 32)

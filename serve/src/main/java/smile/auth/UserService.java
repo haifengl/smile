@@ -10,10 +10,12 @@ package smile.auth;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import smile.chat.Conversation;
+import smile.chat.ConversationContent;
 
 /**
  * User persistence and guest-conversation merge on login.
@@ -143,8 +145,16 @@ public class UserService {
             return;
         }
         Instant since = Instant.now().minus(config.guestMergeHours(), ChronoUnit.HOURS);
-        Conversation.update(
-                "userId = ?1 where userId is null and clientIP = ?2 and createdAt >= ?3",
-                userId, clientIp, since);
+        List<Conversation> guestConversations = Conversation.list(
+                "userId is null and clientIP = ?1 and createdAt >= ?2", clientIp, since);
+        if (guestConversations.isEmpty()) {
+            return;
+        }
+        List<Long> ids = guestConversations.stream().map(c -> c.id).toList();
+        for (Conversation c : guestConversations) {
+            c.userId = userId;
+        }
+        ConversationContent.update(
+                "ownerUserId = ?1 where conversationId in ?2", userId, ids);
     }
 }

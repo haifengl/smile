@@ -38,29 +38,64 @@ public final class ClientIdentity {
     private ClientIdentity() {}
 
     /**
-     * Resolves client IP (honouring {@code X-Forwarded-For}) and returns a
-     * 16-character hex prefix of {@code SHA-256(normalized_ip)}.
+     * Resolves client IP (ignoring {@code X-Forwarded-For} unless trusted proxy
+     * mode is enabled) and returns a 16-character hex prefix of
+     * {@code SHA-256(normalized_ip)}.
      *
      * @param routingContext Vert.x routing context.
      * @param headers        JAX-RS headers.
      * @return hashed user id for blob keys.
      */
     public static String fromRequest(RoutingContext routingContext, HttpHeaders headers) {
-        return hashIp(normalizeIp(resolveClientIp(routingContext, headers)));
+        return fromRequest(routingContext, headers, false);
     }
 
     /**
-     * Same IP resolution as {@link smile.chat.Conversation#setContext}.
+     * Resolves client IP (honouring {@code X-Forwarded-For} only when
+     * {@code trustForwardedHeaders} is {@code true}) and returns a 16-character
+     * hex prefix of {@code SHA-256(normalized_ip)}.
+     *
+     * @param routingContext        Vert.x routing context.
+     * @param headers               JAX-RS headers.
+     * @param trustForwardedHeaders whether to trust {@code X-Forwarded-For} from a reverse proxy.
+     * @return hashed client identifier.
+     */
+    public static String fromRequest(RoutingContext routingContext,
+                                     HttpHeaders headers,
+                                     boolean trustForwardedHeaders) {
+        return hashIp(normalizeIp(resolveClientIp(routingContext, headers, trustForwardedHeaders)));
+    }
+
+    /**
+     * Resolves client IP from the TCP peer address without trusting
+     * {@code X-Forwarded-For}.
      *
      * @param routingContext Vert.x routing context.
      * @param headers        JAX-RS headers.
      * @return client IP string.
      */
     public static String resolveClientIp(RoutingContext routingContext, HttpHeaders headers) {
+        return resolveClientIp(routingContext, headers, false);
+    }
+
+    /**
+     * Resolves client IP, honouring {@code X-Forwarded-For} only when
+     * {@code trustForwardedHeaders} is {@code true} (i.e. behind a trusted reverse proxy).
+     *
+     * @param routingContext        Vert.x routing context.
+     * @param headers               JAX-RS headers.
+     * @param trustForwardedHeaders whether to trust {@code X-Forwarded-For}.
+     * @return client IP string.
+     */
+    public static String resolveClientIp(RoutingContext routingContext,
+                                         HttpHeaders headers,
+                                         boolean trustForwardedHeaders) {
         String clientIP = routingContext.request().remoteAddress().hostAddress();
-        String forwardedFor = headers != null ? headers.getHeaderString("X-Forwarded-For") : null;
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            clientIP = forwardedFor.split(",")[0].trim();
+        if (trustForwardedHeaders && headers != null) {
+            String forwardedFor = headers.getHeaderString("X-Forwarded-For");
+            if (forwardedFor != null && !forwardedFor.isBlank()) {
+                clientIP = forwardedFor.split(",")[0].trim();
+            }
         }
         return clientIP;
     }

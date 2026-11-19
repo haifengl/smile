@@ -44,6 +44,6 @@ public class LocalBlobStoreProvider implements BlobStoreProvider {
 
     @Override
     public BlobStore create() {
-        return new LocalBlobStore(Path.of(config.localPath()));
+        return new LocalBlobStore(Path.of(config.localPath()), config.maxUploadBytes());
     }
 }

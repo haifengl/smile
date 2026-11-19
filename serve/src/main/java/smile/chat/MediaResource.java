@@ -17,19 +17,26 @@
  */
 package smile.chat;
 
+import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import jakarta.inject.Inject;
-import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.quarkus.arc.profile.UnlessBuildProfile;
+import io.smallrye.common.annotation.RunOnVirtualThread;
+import io.vertx.ext.web.RoutingContext;
+import smile.auth.AuthConfig;
+import smile.chat.blob.ClientIdentity;
+import smile.chat.blob.MediaTypeValidator;
 
 /**
- * Serves stored multimedia blobs at {@code /api/v1/media/{content_id}}.
+ * Serves stored multimedia blobs at {@code /api/v1/media/{content_id}} with
+ * conversation ownership verification and defensive response headers.
  *
  * @author Haifeng Li
  */
@@ -41,39 +48,48 @@ public class MediaResource {
     @Inject
     MediaService mediaService;
 
+    @Inject
+    RoutingContext routingContext;
+
+    @Inject
+    AuthConfig authConfig;
+
     /**
-     * Streams a stored blob.
+     * Streams a stored blob to its authorized owner.
      *
      * @param contentId opaque content UUID.
-     * @param download  when {@code true}, set {@code Content-Disposition: attachment}.
-     * @return binary response.
+     * @param download  when {@code true}, forces {@code Content-Disposition: attachment}.
+     * @param headers   HTTP request headers.
+     * @return binary response with defensive security headers.
      */
     @GET
     @Path("/{content_id}")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response get(@PathParam("content_id") String contentId,
-                        @QueryParam("download") Boolean download) {
-        MediaService.MediaBytes media = mediaService.getBytes(contentId);
+                        @QueryParam("download") Boolean download,
+                        @Context HttpHeaders headers) {
+        String clientIp = ClientIdentity.resolveClientIp(
+                routingContext, headers, authConfig.trustForwardedHeaders());
+        MediaService.MediaBytes media = mediaService.getBytes(contentId, clientIp);
         ConversationContent meta = media.meta();
         String mime = meta.mimeType;
         if (mime == null || mime.isBlank()) {
             mime = MediaType.APPLICATION_OCTET_STREAM;
         }
-        Response.ResponseBuilder builder = Response.ok(media.bytes())
-                .type(mime);
-        String filename = meta.filename;
-        if (filename == null || filename.isBlank()) {
-            filename = contentId;
-        }
-        boolean asAttachment = download != null && download;
-        String disposition = (asAttachment ? "attachment" : "inline")
-                + "; filename=\"" + sanitizeFilename(filename) + "\"";
-        builder.header("Content-Disposition", disposition);
-        builder.header("Content-Length", media.bytes().length);
-        return builder.build();
-    }
+        boolean asAttachment = Boolean.TRUE.equals(download)
+                || !MediaTypeValidator.isSafeInline(mime);
+        String disposition = MediaTypeValidator.contentDisposition(
+                asAttachment, meta.filename, contentId);
 
-    private static String sanitizeFilename(String name) {
-        return name.replace("\"", "").replace("\r", "").replace("\n", "");
+        return Response.ok(media.bytes())
+                .type(mime)
+                .header("Content-Disposition", disposition)
+                .header("Content-Length", media.bytes().length)
+                .header("X-Content-Type-Options", "nosniff")
+                .header("Content-Security-Policy", "default-src 'none'; sandbox")
+                .header("Referrer-Policy", "no-referrer")
+                .header("Cross-Origin-Resource-Policy", "same-origin")
+                .header("Cache-Control", "private, no-store")
+                .build();
     }
 }

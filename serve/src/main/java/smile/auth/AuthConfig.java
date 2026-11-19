@@ -55,6 +55,9 @@ public class AuthConfig {
     @ConfigProperty(name = "smile.auth.guest-merge-hours", defaultValue = "24")
     int guestMergeHours;
 
+    @ConfigProperty(name = "smile.auth.trust-forwarded-headers", defaultValue = "false")
+    boolean trustForwardedHeaders;
+
     public boolean localMeEnabled() {
         return localMeEnabled;
     }
@@ -109,5 +112,9 @@ public class AuthConfig {
 
     public int guestMergeHours() {
         return guestMergeHours;
+    }
+
+    public boolean trustForwardedHeaders() {
+        return trustForwardedHeaders;
     }
 }

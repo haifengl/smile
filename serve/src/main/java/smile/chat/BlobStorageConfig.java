@@ -52,4 +52,13 @@ public interface BlobStorageConfig {
     @WithDefault("20971520")
     @WithName("max-upload-bytes")
     long maxUploadBytes();
+
+    /**
+     * Comma-separated allowlist of permitted attachment MIME types. Active web
+     * formats ({@code text/html}, {@code image/svg+xml}, JavaScript, XML) are
+     * excluded by default to prevent stored XSS.
+     */
+    @WithDefault("image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm,video/quicktime,audio/mpeg,audio/wav,audio/ogg,audio/mp4,audio/flac,audio/webm,application/pdf,text/plain,text/markdown,text/csv,application/json")
+    @WithName("allowed-mime-types")
+    String allowedMimeTypes();
 }
