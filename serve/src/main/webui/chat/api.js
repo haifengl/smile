@@ -48,6 +48,20 @@ export function loginWithGoogle(options = {}) {
   window.location.href = `/api/v1/auth/login/google?${params}`
 }
 
+/**
+ * Redirects the browser to Microsoft OAuth.
+ *
+ * @param {{ returnTo?: string, inferModelId?: string }} [options]
+ */
+export function loginWithMicrosoft(options = {}) {
+  const returnTo = options.returnTo ?? defaultOAuthReturnTo()
+  if (options.inferModelId) {
+    sessionStorage.setItem(INFER_RESUME_MODEL_KEY, options.inferModelId)
+  }
+  const params = new URLSearchParams({ return_to: returnTo })
+  window.location.href = `/api/v1/auth/login/microsoft?${params}`
+}
+
 /** @returns {Promise<void>} */
 export async function logout() {
   const response = await fetch('/api/v1/auth/logout', {

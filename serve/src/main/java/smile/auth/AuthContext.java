@@ -41,6 +41,17 @@ public class AuthContext {
     }
 
     /**
+     * {@code true} strictly when authenticated via Google or Microsoft OAuth
+     * (never {@code true} for unauthenticated guests or the localhost auto-login {@code me} user).
+     */
+    public boolean isOAuthUser() {
+        return user != null
+                && !localMeAuto
+                && (user.authProvider == AuthProviderKind.GOOGLE
+                    || user.authProvider == AuthProviderKind.MICROSOFT);
+    }
+
+    /**
      * Returns the current user.
      *
      * @return user or {@code null} for guests.

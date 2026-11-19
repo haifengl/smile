@@ -147,6 +147,30 @@
   color: #5a5a72;
 }
 
+.chat-nav__login-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chat-nav__login-group--compact {
+  margin-top: 10px;
+}
+
+.chat-nav__agent-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  background: rgba(47, 164, 231, 0.16);
+  color: #2fa4e7;
+  vertical-align: middle;
+}
+
 .chat-nav__login {
   display: inline-flex;
   align-items: center;

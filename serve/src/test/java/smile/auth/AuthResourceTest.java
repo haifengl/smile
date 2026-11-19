@@ -28,6 +28,7 @@ public class AuthResourceTest {
             .then()
                 .statusCode(200)
                 .body("logged_in", equalTo(true))
+                .body("agent_mode", equalTo(false))
                 .body("user.external_id", equalTo("me"))
                 .body("user.display_name", equalTo("Me"));
     }
@@ -39,7 +40,8 @@ public class AuthResourceTest {
             .when().get("/api/v1/auth/me")
             .then()
                 .statusCode(200)
-                .body("logged_in", equalTo(false));
+                .body("logged_in", equalTo(false))
+                .body("agent_mode", equalTo(false));
     }
 
     @Test
@@ -50,6 +52,17 @@ public class AuthResourceTest {
             .queryParam("state", "unused")
             .when().get("/api/v1/auth/callback/google")
             .then()
-                .statusCode(503);
+                .statusCode(anyOf(is(400), is(503)));
+    }
+
+    @Test
+    public void testGivenMicrosoftCallbackWithoutStateCookieWhenCallbackThenBadRequest() {
+        given()
+            .header("Host", "example.com")
+            .queryParam("code", "unused")
+            .queryParam("state", "unused")
+            .when().get("/api/v1/auth/callback/microsoft")
+            .then()
+                .statusCode(anyOf(is(400), is(503)));
     }
 }

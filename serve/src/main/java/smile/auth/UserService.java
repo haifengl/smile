@@ -70,11 +70,46 @@ public class UserService {
      */
     @Transactional
     public User upsertGoogleUser(String sub, String email, String name, String picture) {
+        return upsertOAuthUser(AuthProviderKind.GOOGLE, sub, email, name, picture);
+    }
+
+    /**
+     * Upserts a Microsoft account from Microsoft Graph / Entra OAuth profile claims.
+     *
+     * @param sub     Microsoft subject identifier ({@code ms:<id>}).
+     * @param email   email address.
+     * @param name    display name.
+     * @param picture avatar URL.
+     * @return persisted user.
+     */
+    @Transactional
+    public User upsertMicrosoftUser(String sub, String email, String name, String picture) {
+        return upsertOAuthUser(AuthProviderKind.MICROSOFT, sub, email, name, picture);
+    }
+
+    /**
+     * Upserts an OAuth user account ({@code GOOGLE} or {@code MICROSOFT}).
+     *
+     * @param provider {@link AuthProviderKind#GOOGLE} or {@link AuthProviderKind#MICROSOFT}.
+     * @param sub      provider subject identifier.
+     * @param email    email address.
+     * @param name     display name.
+     * @param picture  avatar URL.
+     * @return persisted user.
+     */
+    @Transactional
+    public User upsertOAuthUser(
+            AuthProviderKind provider,
+            String sub,
+            String email,
+            String name,
+            String picture
+    ) {
         User user = User.findByExternalId(sub);
         if (user == null) {
             user = new User();
             user.externalId = sub;
-            user.authProvider = AuthProviderKind.GOOGLE;
+            user.authProvider = provider;
             user.displayName = name != null && !name.isBlank() ? name : "User";
             user.email = email;
             user.avatarUrl = picture;
@@ -82,6 +117,7 @@ public class UserService {
             userCache.register(user);
             return user;
         }
+        user.authProvider = provider;
         if (email != null && !email.isBlank()) {
             user.email = email;
         }

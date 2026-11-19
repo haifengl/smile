@@ -43,7 +43,7 @@
 #
 # docker run -i --rm --gpus all -p 8888:8080 \
 #   -e JAVA_OPTS_APPEND="-Dsmile.chat.model=Qwen/Qwen3.8-27B -Dsmile.chat.devices=0,7 -Dsmile.chat.max-seq-len=8192 -XX:ErrorFile=/model/hs_err_pid%p.log" \
-#   -u root -v "$(pwd)/model":/model quarkus/smile-serve-gpu
+#   -u root -v "$(pwd)/model":/model -v "$(pwd)/smile":/smile quarkus/smile-serve-gpu
 #
 # Optional JVM flags:
 # - JAVA_OPTS: replaces the default JVM options
@@ -238,8 +238,12 @@ ENV JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 # Non-root user (UID 185 matches Quarkus UBI convention / COPY --chown below)
+# and persistent /smile volume for per-user Kirin agent homes (/smile/users/<user-key>/.smile/)
 RUN groupadd --system --gid 185 smile \
-    && useradd --system --uid 185 --gid 185 --home-dir /deployments --shell /sbin/nologin smile
+    && useradd --system --uid 185 --gid 185 --home-dir /deployments --shell /sbin/nologin smile \
+    && mkdir -p /smile/users \
+    && chown -R 185:185 /smile \
+    && chmod 0750 /smile /smile/users
 
 # Install ONNX Runtime
 RUN curl -fsSL "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz" \
@@ -283,10 +287,12 @@ RUN printf '%s\n' \
     && chmod 0755 /deployments/run-java.sh \
     && chown 185:185 /deployments/run-java.sh
 
+VOLUME ["/smile"]
 EXPOSE 8080
 USER 185
 
 ENV HF_HOME="/model/huggingface"
+ENV SMILE_USERS_DIR="/smile/users"
 ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
 ENV JAVA_OPTS_APPEND="${JAVA_OPTS_APPEND} -Djava.util.logging.manager=org.jboss.logmanager.LogManager --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --enable-native-access=ALL-UNNAMED"
 

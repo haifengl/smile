@@ -8,6 +8,35 @@ val quarkusPlatformGroupId = extra["quarkusPlatformGroupId"] as String
 val quarkusPlatformArtifactId = extra["quarkusPlatformArtifactId"] as String
 val quarkusPlatformVersion = extra["quarkusPlatformVersion"] as String
 
+val profiles = providers.systemProperty("quarkus.profile")
+    .orElse(providers.gradleProperty("quarkus.profile"))
+    .orElse(providers.environmentVariable("QUARKUS_PROFILE"))
+    .getOrElse("prod")
+    .split(",").map(String::trim).filter(String::isNotEmpty)
+
+val nativeBuild = providers.systemProperty("quarkus.native.enabled")
+    .orElse(providers.gradleProperty("quarkus.native.enabled"))
+    .getOrElse("false") == "true"
+
+val studioLibDir = rootProject.file("studio/lib")
+val hasIoaAgentJar = studioLibDir.exists() &&
+    studioLibDir.listFiles { _, name -> name.startsWith("ioa-agent") && name.endsWith(".jar") }?.isNotEmpty() == true
+
+// Enable server-side kirin agent in JVM builds when studio/lib/ioa-agent-*.jar is present
+// (pass -Pserve.agent=false or -Dserve.agent=false to force the NoOpChatAgentBridge fallback).
+val enableAgent = providers.gradleProperty("serve.agent")
+    .orElse(providers.systemProperty("serve.agent"))
+    .getOrElse("true") != "false" && hasIoaAgentJar && !nativeBuild && "micro" !in profiles
+
+if (enableAgent) {
+    sourceSets.named("main") {
+        java.srcDir("src/agent/java")
+    }
+    sourceSets.named("test") {
+        java.srcDir("src/agentTest/java")
+    }
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":deep"))
@@ -21,15 +50,25 @@ dependencies {
     implementation("org.jboss.slf4j:slf4j-jboss-logmanager:2.1.0.Final")
     implementation("io.quarkus:quarkus-hibernate-orm-panache")
     implementation("io.quarkus:quarkus-jdbc-h2")
-    val profiles = providers.systemProperty("quarkus.profile")
-        .orElse(providers.gradleProperty("quarkus.profile"))
-        .orElse(providers.environmentVariable("QUARKUS_PROFILE"))
-        .getOrElse("prod")
-        .split(",").map(String::trim).filter(String::isNotEmpty)
     if ("prod" in profiles) {
         implementation("io.quarkus:quarkus-jdbc-postgresql")
     }
     implementation("io.quarkiverse.quinoa:quarkus-quinoa:2.9.3")
+    if (enableAgent) {
+        implementation(project(":nlp"))
+        implementation(project(":plot"))
+        implementation(fileTree("$rootDir/studio/lib") { include("ioa-*.jar") })
+        implementation(libs.bundles.jackson)
+        implementation("com.openai:openai-java:4.105.0")
+        implementation("com.anthropic:anthropic-java:3.8.0")
+        implementation("com.google.genai:google-genai:2.3.0")
+        implementation("io.modelcontextprotocol.sdk:mcp:2.2.0")
+        implementation(libs.lsp4j)
+        implementation("io.github.furstenheim:copy_down:1.1")
+        implementation("org.jsoup:jsoup:1.24.1")
+        implementation(libs.secret.store)
+        implementation(libs.angus.mail)
+    }
     // Optional plugins dropped into serve/plugins/ (default: include all; pass -Pserve.plugins=false to skip).
     if (providers.gradleProperty("serve.plugins").getOrElse("true") != "false") {
         implementation(fileTree("plugins") { include("*.jar") })

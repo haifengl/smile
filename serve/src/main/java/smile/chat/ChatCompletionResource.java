@@ -41,12 +41,15 @@ import jakarta.ws.rs.core.MediaType;
 import io.smallrye.common.annotation.Blocking;
 import io.smallrye.mutiny.Multi;
 import io.vertx.ext.web.RoutingContext;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.resteasy.reactive.RestStreamElementType;
 import smile.llm.ChatCompletion;
 import smile.llm.FinishReason;
 import smile.llm.Role;
 import smile.auth.AuthContext;
+import smile.auth.User;
+import smile.chat.agent.ChatAgentBridge;
 import smile.chat.blob.ClientIdentity;
 import io.quarkus.arc.profile.UnlessBuildProfile;
 
@@ -61,11 +64,26 @@ import io.quarkus.arc.profile.UnlessBuildProfile;
  * sets {@code Accept} from the body {@code stream} flag so the correct method is
  * selected even when clients send {@code Accept: application/json}.
  *
+ * <p>When the caller is authenticated via Google or Microsoft OAuth
+ * ({@link AuthContext#isOAuthUser()}), the server-side {@code kirin} agent runtime
+ * ({@link ChatAgentBridge}) is active, and the request is a top-level user chat turn
+ * without custom external tools, the turn is routed through {@code kirin} with
+ * {@code [WebFetch, WebSearch, Email, Calendar, Skill, TodoWrite]}. Unauthenticated
+ * guests and the localhost auto-login {@code me} user always run raw LLM completions.
+ *
  * @author Haifeng Li
  */
 @UnlessBuildProfile("micro")
 @Path("/chat/completions")
 public class ChatCompletionResource {
+
+    /**
+     * Internal HTTP header added by {@code KirinAgentBridge}'s loopback
+     * {@code ChatCompletions} client so inner LLM tool-loop rounds hit
+     * {@link ChatService} directly without re-entering {@code kirin} or
+     * creating duplicate database conversation rows.
+     */
+    public static final String INTERNAL_AGENT_HEADER = "X-Smile-Internal-Agent";
 
     @Inject
     ChatService service;
@@ -88,6 +106,12 @@ public class ChatCompletionResource {
     @Inject
     ConversationService conversationService;
 
+    @Inject
+    ChatAgentBridge agentBridge;
+
+    @ConfigProperty(name = "quarkus.http.port", defaultValue = "8080")
+    int configuredHttpPort;
+
     /**
      * Non-streaming chat completion ({@code stream: false} or omitted).
      *
@@ -101,13 +125,21 @@ public class ChatCompletionResource {
     @Blocking
     public ChatCompletionObject completeJson(@Context HttpHeaders headers, CompletionRequest request) {
         validate(request);
-        Conversation conversation = newConversation(headers);
+        boolean internalHop = isInternalAgentHop(headers);
+        Conversation conversation = internalHop ? null : newConversation(headers);
         String id = newCompletionId();
         long created = Instant.now().getEpochSecond();
         String modelName = service.modelName();
 
-        ChatCompletion completion = service.complete(request, null);
-        if (completion != null) {
+        ChatCompletion completion;
+        if (shouldRouteToKirinAgent(headers, request)) {
+            User oauthUser = authContext.user();
+            int localPort = resolveLocalPort();
+            completion = agentBridge.complete(oauthUser, request, localPort, modelName, null);
+        } else {
+            completion = service.complete(request, null);
+        }
+        if (completion != null && !internalHop) {
             saveConversation(conversation, headers, request, completion);
         }
         return ChatCompletionObject.of(id, created, modelName, completion);
@@ -129,10 +161,18 @@ public class ChatCompletionResource {
     @RestStreamElementType(MediaType.TEXT_PLAIN)
     public Multi<String> completeStream(@Context HttpHeaders headers, CompletionRequest request) {
         validate(request);
-        Conversation conversation = newConversation(headers);
+        boolean internalHop = isInternalAgentHop(headers);
+        boolean useKirin = shouldRouteToKirinAgent(headers, request);
+        User oauthUser = useKirin ? authContext.user() : null;
+        int localPort = useKirin ? resolveLocalPort() : configuredHttpPort;
+        Conversation conversation = internalHop ? null : newConversation(headers);
         String id = newCompletionId();
         long created = Instant.now().getEpochSecond();
         String modelName = service.modelName();
+
+        if (useKirin && oauthUser != null) {
+            return streamKirinAgent(oauthUser, conversation, headers, request, id, created, modelName, localPort);
+        }
 
         return Multi.createFrom().emitter(emitter -> {
             AtomicBoolean isFirst = new AtomicBoolean(true);
@@ -248,7 +288,7 @@ public class ChatCompletionResource {
                     }
                     var completion = handle.future().join();
                     resultFuture.complete(completion);
-                    if (completion != null) {
+                    if (completion != null && !internalHop) {
                         saveConversation(conversation, headers, request, completion);
                     }
                     if (!publisher.isClosed()) {
@@ -264,6 +304,124 @@ public class ChatCompletionResource {
                 }
             });
         });
+    }
+
+    private Multi<String> streamKirinAgent(
+            User oauthUser,
+            Conversation conversation,
+            HttpHeaders headers,
+            CompletionRequest request,
+            String id,
+            long created,
+            String modelName,
+            int localPort
+    ) {
+        return Multi.createFrom().emitter(emitter -> {
+            AtomicBoolean isFirst = new AtomicBoolean(true);
+            executor.supplyAsync(() -> {
+                try {
+                    ChatCompletion completion = agentBridge.complete(
+                            oauthUser,
+                            request,
+                            localPort,
+                            modelName,
+                            chunk -> {
+                                if (emitter.isCancelled() || chunk == null || chunk.isEmpty()) {
+                                    return;
+                                }
+                                boolean first = isFirst.compareAndSet(true, false);
+                                var delta = first
+                                        ? new ChatCompletionChunk.Delta("assistant", chunk)
+                                        : new ChatCompletionChunk.Delta(null, chunk);
+                                var choice = new ChatCompletionChunk.Choice(0, delta, null, null);
+                                var event = new ChatCompletionChunk(
+                                        id, "chat.completion.chunk", created, modelName, List.of(choice));
+                                emitter.emit(toJson(event));
+                            }
+                    );
+                    if (completion != null && !emitter.isCancelled()) {
+                        saveConversation(conversation, headers, request, completion);
+                    }
+                    if (!emitter.isCancelled()) {
+                        FinishReason reason = completion != null && completion.reason() != null
+                                ? completion.reason()
+                                : FinishReason.stop;
+                        var delta = new ChatCompletionChunk.Delta(null, null);
+                        var choice = new ChatCompletionChunk.Choice(0, delta, null, reason);
+                        var event = new ChatCompletionChunk(
+                                id, "chat.completion.chunk", created, modelName, List.of(choice));
+                        emitter.emit(toJson(event));
+                        emitter.emit("[DONE]");
+                        emitter.complete();
+                    }
+                    return completion;
+                } catch (Throwable t) {
+                    if (!emitter.isCancelled()) {
+                        emitter.fail(t);
+                    }
+                    return null;
+                }
+            });
+        });
+    }
+
+    /**
+     * Returns {@code true} when the request is an internal loopback LLM call
+     * from {@code KirinAgentBridge}.
+     */
+    static boolean isInternalAgentHop(HttpHeaders headers) {
+        return headers != null
+                && "true".equalsIgnoreCase(headers.getHeaderString(INTERNAL_AGENT_HEADER));
+    }
+
+    /**
+     * Evaluates the strict OAuth activation gate ({@code REQ-KIRIN-03}):
+     * <ol>
+     *   <li>User is authenticated via Google or Microsoft OAuth (not guest, not localhost {@code me} auto-login).</li>
+     *   <li>Request is not an internal loopback hop ({@code X-Smile-Internal-Agent: true}).</li>
+     *   <li>Request does not carry custom external {@code tools} or multimodal media.</li>
+     *   <li>The server-side {@code kirin} {@link ChatAgentBridge} is available.</li>
+     * </ol>
+     */
+    boolean shouldRouteToKirinAgent(HttpHeaders headers, CompletionRequest request) {
+        if (authContext == null || !authContext.isOAuthUser()) {
+            return false;
+        }
+        if (isInternalAgentHop(headers)) {
+            return false;
+        }
+        if (agentBridge == null || !agentBridge.isAvailable()) {
+            return false;
+        }
+        try {
+            if (request.toChatOptions().hasTools()) {
+                return false;
+            }
+        } catch (IllegalArgumentException ignored) {
+            return false;
+        }
+        if (request.messages != null) {
+            for (var m : request.messages) {
+                if (m != null && m.hasMedia()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private int resolveLocalPort() {
+        try {
+            if (routingContext != null && routingContext.request() != null
+                    && routingContext.request().localAddress() != null) {
+                int port = routingContext.request().localAddress().port();
+                if (port > 0) {
+                    return port;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return configuredHttpPort > 0 ? configuredHttpPort : 8080;
     }
 
     private void validate(CompletionRequest request) {
@@ -306,9 +464,10 @@ public class ChatCompletionResource {
     /**
      * Persists the user message and assistant reply for this turn.
      *
-     * @param conversation the conversation context captured from the request.
-     * @param request      the original completion request.
-     * @param completion   the generated completion returned by the model.
+     * @param scratch    the conversation context captured from the request.
+     * @param headers    HTTP headers.
+     * @param request    the original completion request.
+     * @param completion the generated completion returned by the model.
      */
     @Transactional
     public void saveConversation(Conversation scratch,
