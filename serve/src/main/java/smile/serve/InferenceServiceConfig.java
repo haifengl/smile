@@ -55,9 +55,7 @@ public interface InferenceServiceConfig {
      * @return {@code true} when fatal model load failures abort startup.
      */
     @WithDefault("true")
-    default boolean failFast() {
-        return true;
-    }
+    boolean failFast();
 
     /**
      * Whether readiness ({@code /q/health/ready}) may report {@code UP} when
@@ -70,7 +68,5 @@ public interface InferenceServiceConfig {
      * @return {@code true} when readiness ignores quarantined models.
      */
     @WithDefault("false")
-    default boolean allowQuarantined() {
-        return false;
-    }
+    boolean allowQuarantined();
 }
