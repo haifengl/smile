@@ -37,10 +37,13 @@ import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.event.Observes;
 import jakarta.inject.Inject;
+import io.quarkus.arc.All;
 import io.quarkus.arc.profile.UnlessBuildProfile;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.runtime.StartupEvent;
 import org.jboss.logging.Logger;
+import smile.chat.blob.BlobAuditEvent;
+import smile.chat.blob.BlobAuditListener;
 import smile.chat.blob.BlobNamespaceResolver;
 import smile.chat.blob.BlobStore;
 import smile.chat.blob.ConfigurableBlobStore;
@@ -71,6 +74,7 @@ public class BlobRetentionSweeper {
 
     private final BlobStore blobStore;
     private final BlobStorageConfig config;
+    private final List<BlobAuditListener> auditListeners;
     private volatile ScheduledExecutorService scheduler;
 
     /**
@@ -89,13 +93,17 @@ public class BlobRetentionSweeper {
     ) {}
 
     /**
-     * @param blobStore active blob storage backend.
-     * @param config    retention and sweep schedule settings.
+     * @param blobStore      active blob storage backend.
+     * @param config         retention and sweep schedule settings.
+     * @param auditListeners pluggable attachment audit listeners.
      */
     @Inject
-    public BlobRetentionSweeper(BlobStore blobStore, BlobStorageConfig config) {
+    public BlobRetentionSweeper(BlobStore blobStore,
+                                BlobStorageConfig config,
+                                @All List<BlobAuditListener> auditListeners) {
         this.blobStore = blobStore;
         this.config = config;
+        this.auditListeners = auditListeners != null ? List.copyOf(auditListeners) : List.of();
     }
 
     void onStart(@Observes StartupEvent event) {
@@ -168,6 +176,7 @@ public class BlobRetentionSweeper {
             for (ConversationContent row : orphans) {
                 deleteBlobQuietly(row.storageKey);
                 bytesReclaimed += Math.max(0L, row.sizeBytes);
+                emitSweepAudit(row, "pending orphan TTL expired");
                 row.delete();
                 pendingDeleted++;
             }
@@ -189,6 +198,7 @@ public class BlobRetentionSweeper {
                         expiredDateNamespaces.add(row.userId);
                     }
                 });
+                emitSweepAudit(row, "shared retention TTL expired");
                 row.delete();
                 sharedDeleted++;
             }
@@ -213,6 +223,34 @@ public class BlobRetentionSweeper {
         }
 
         return new SweepResult(pendingDeleted, sharedDeleted, prefixesCleaned, bytesReclaimed);
+    }
+
+    private void emitSweepAudit(ConversationContent row, String reason) {
+        if (auditListeners == null || auditListeners.isEmpty()) {
+            return;
+        }
+        BlobAuditEvent event = new BlobAuditEvent(
+                Instant.now(),
+                BlobAuditEvent.Action.SWEEP_DELETE,
+                row.userId,
+                row.ownerUserId,
+                row.conversationId,
+                row.id,
+                row.mimeType,
+                Math.max(0L, row.sizeBytes),
+                row.sha256,
+                true,
+                reason);
+        for (BlobAuditListener listener : auditListeners) {
+            if (listener == null) {
+                continue;
+            }
+            try {
+                listener.onBlobEvent(event);
+            } catch (Throwable t) {
+                logger.warnf(t, "BlobAuditListener %s threw exception", listener.getClass().getSimpleName());
+            }
+        }
     }
 
     private void deleteBlobQuietly(String storageKey) {

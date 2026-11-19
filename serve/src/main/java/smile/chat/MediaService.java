@@ -20,17 +20,21 @@ package smile.chat;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import io.quarkus.arc.All;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -45,10 +49,14 @@ import org.jboss.resteasy.reactive.multipart.FileUpload;
 import io.vertx.ext.web.RoutingContext;
 import smile.auth.AuthConfig;
 import smile.auth.AuthContext;
+import smile.chat.blob.BlobAuditEvent;
+import smile.chat.blob.BlobAuditListener;
+import smile.chat.blob.BlobContentScanner;
 import smile.chat.blob.BlobKeys;
 import smile.chat.blob.BlobNamespaceResolver;
 import smile.chat.blob.BlobStore;
 import smile.chat.blob.ClientIdentity;
+import smile.chat.blob.ImageSafetyProcessor;
 import smile.chat.blob.MediaTypeValidator;
 import smile.chat.blob.MediaUrls;
 import smile.chat.blob.UploadRateLimiter;
@@ -75,6 +83,8 @@ public class MediaService {
     private final ConversationService conversationService;
     private final BlobNamespaceResolver namespaceResolver;
     private final UploadRateLimiter uploadRateLimiter;
+    private final List<BlobContentScanner> contentScanners;
+    private final List<BlobAuditListener> auditListeners;
     private final Set<String> allowedMimeTypes;
 
     /**
@@ -85,6 +95,8 @@ public class MediaService {
      * @param conversationService conversation ownership access checker.
      * @param namespaceResolver   storage namespace resolver (OAuth user vs. shared/date).
      * @param uploadRateLimiter   per-IP sliding-window rate limiter for guest uploads.
+     * @param contentScanners     pluggable pre-storage malware/DLP scanners.
+     * @param auditListeners      pluggable attachment security audit listeners.
      */
     @Inject
     public MediaService(BlobStore blobStore,
@@ -93,7 +105,9 @@ public class MediaService {
                         AuthContext authContext,
                         ConversationService conversationService,
                         BlobNamespaceResolver namespaceResolver,
-                        UploadRateLimiter uploadRateLimiter) {
+                        UploadRateLimiter uploadRateLimiter,
+                        @All List<BlobContentScanner> contentScanners,
+                        @All List<BlobAuditListener> auditListeners) {
         this.blobStore = blobStore;
         this.config = config;
         this.authConfig = authConfig;
@@ -101,6 +115,8 @@ public class MediaService {
         this.conversationService = conversationService;
         this.namespaceResolver = namespaceResolver;
         this.uploadRateLimiter = uploadRateLimiter;
+        this.contentScanners = contentScanners != null ? List.copyOf(contentScanners) : List.of();
+        this.auditListeners = auditListeners != null ? List.copyOf(auditListeners) : List.of();
         this.allowedMimeTypes = MediaTypeValidator.parseAllowlist(config.allowedMimeTypes());
     }
 
@@ -128,12 +144,16 @@ public class MediaService {
         if (upload == null) {
             throw new BadRequestException("file is required");
         }
+        String namespace = namespaceResolver.resolve(authContext);
         if (!authContext.isLoggedIn() && uploadRateLimiter != null) {
             boolean trustForwarded = authConfig != null && authConfig.trustForwardedHeaders();
             String clientIp = ClientIdentity.normalizeIp(
                     ClientIdentity.resolveClientIp(routingContext, headers, trustForwarded));
             UploadRateLimiter.Decision decision = uploadRateLimiter.tryAcquire(clientIp);
             if (!decision.allowed()) {
+                emitAudit(BlobAuditEvent.Action.RATE_LIMITED, namespace, conversation.userId,
+                        conversation.id, null, upload.contentType(), Math.max(0L, upload.size()),
+                        null, false, "guest upload rate limit exceeded");
                 throw new WebApplicationException(
                         Response.status(429)
                                 .header("Retry-After", Long.toString(decision.retryAfterSeconds()))
@@ -162,17 +182,35 @@ public class MediaService {
             throw new BadRequestException("Failed to read upload", e);
         }
 
+        String contentId = UUID.randomUUID().toString();
         String verifiedMime;
         try {
             verifiedMime = MediaTypeValidator.validate(upload.contentType(), data, allowedMimeTypes);
         } catch (IllegalArgumentException e) {
+            emitAudit(BlobAuditEvent.Action.SCAN_REJECTED, namespace, conversation.userId,
+                    conversation.id, contentId, upload.contentType(), data.length,
+                    null, false, e.getMessage());
             throw new BadRequestException(e.getMessage());
         }
 
-        String contentId = UUID.randomUUID().toString();
+        try {
+            data = ImageSafetyProcessor.validateAndSanitize(
+                    verifiedMime,
+                    data,
+                    config.maxImagePixels(),
+                    config.maxImageDimension(),
+                    config.stripImageMetadata());
+        } catch (IllegalArgumentException e) {
+            emitAudit(BlobAuditEvent.Action.SCAN_REJECTED, namespace, conversation.userId,
+                    conversation.id, contentId, verifiedMime, data.length,
+                    null, false, e.getMessage());
+            throw new BadRequestException(e.getMessage());
+        }
+
         String safeFilename = MediaTypeValidator.sanitizeFilename(upload.fileName(), contentId);
-        String namespace = namespaceResolver.resolve(authContext);
-        enforceQuota(namespace, conversation.userId, data.length);
+        enforceQuota(namespace, conversation.userId, conversation.id, contentId, verifiedMime, data.length);
+        runContentScanners(namespace, conversation.userId, conversation.id, contentId, safeFilename, verifiedMime, data);
+
         String storageKey = BlobKeys.of(namespace, conversation.id, null, contentId);
 
         String sha256 = sha256Hex(data);
@@ -196,6 +234,8 @@ public class MediaService {
         content.storageKey = storageKey;
         content.persist();
 
+        emitAudit(BlobAuditEvent.Action.UPLOAD, namespace, conversation.userId,
+                conversation.id, contentId, verifiedMime, data.length, sha256, true, null);
         logger.infof("Stored media contentId=%s conversationId=%d namespace=%s size=%d mime=%s",
                 contentId, conversation.id, namespace, data.length, verifiedMime);
         return ContentObject.from(content);
@@ -236,13 +276,37 @@ public class MediaService {
         if (conversation == null) {
             throw new NotFoundException("Media not found: " + contentId);
         }
-        conversationService.ensureAccess(conversation, callerUserId, clientIp);
+        try {
+            conversationService.ensureAccess(conversation, callerUserId, clientIp);
+        } catch (NotFoundException e) {
+            emitAudit(BlobAuditEvent.Action.ACCESS_DENIED, meta.userId, callerUserId,
+                    meta.conversationId, contentId, meta.mimeType, meta.sizeBytes, meta.sha256,
+                    false, "caller does not own parent conversation");
+            throw e;
+        }
         try {
             Optional<byte[]> bytes = blobStore.get(meta.storageKey);
             if (bytes.isEmpty()) {
                 throw new NotFoundException("Media blob missing: " + contentId);
             }
-            return new MediaBytes(meta, bytes.get());
+            byte[] payload = bytes.get();
+            if (config.verifyChecksumOnRead() && meta.sha256 != null && !meta.sha256.isBlank()) {
+                String actualSha256 = sha256Hex(payload);
+                if (!MessageDigest.isEqual(
+                        actualSha256.getBytes(StandardCharsets.US_ASCII),
+                        meta.sha256.toLowerCase(Locale.ROOT).getBytes(StandardCharsets.US_ASCII))) {
+                    logger.errorf("SECURITY ALERT: Blob SHA-256 mismatch contentId=%s key=%s expected=%s actual=%s",
+                            contentId, meta.storageKey, meta.sha256, actualSha256);
+                    emitAudit(BlobAuditEvent.Action.INTEGRITY_FAILURE, meta.userId, callerUserId,
+                            meta.conversationId, contentId, meta.mimeType, payload.length, actualSha256,
+                            false, "SHA-256 checksum mismatch");
+                    throw new IllegalStateException("Blob integrity verification failed for " + contentId);
+                }
+            }
+            emitAudit(BlobAuditEvent.Action.DOWNLOAD, meta.userId, callerUserId,
+                    meta.conversationId, contentId, meta.mimeType, payload.length, meta.sha256,
+                    true, null);
+            return new MediaBytes(meta, payload);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to read blob " + contentId, e);
         }
@@ -294,6 +358,9 @@ public class MediaService {
             } catch (IOException e) {
                 logger.warnf(e, "Failed to delete blob key=%s", row.storageKey);
             }
+            emitAudit(BlobAuditEvent.Action.DELETE, row.userId, row.ownerUserId,
+                    row.conversationId, row.id, row.mimeType, row.sizeBytes, row.sha256,
+                    true, null);
             row.delete();
         }
         for (String prefix : prefixes) {
@@ -369,11 +436,23 @@ public class MediaService {
      * @param incomingBytes size of the incoming attachment in bytes.
      */
     void enforceQuota(String namespace, Long ownerUserId, long incomingBytes) {
+        enforceQuota(namespace, ownerUserId, null, null, null, incomingBytes);
+    }
+
+    private void enforceQuota(String namespace,
+                              Long ownerUserId,
+                              Long conversationId,
+                              String contentId,
+                              String mimeType,
+                              long incomingBytes) {
         if (namespace.startsWith(BlobNamespaceResolver.USERS_PREFIX) && ownerUserId != null) {
             long limit = config.maxUserBytes();
             if (limit > 0) {
                 long used = userStorageBytes(ownerUserId);
                 if (used + incomingBytes > limit) {
+                    emitAudit(BlobAuditEvent.Action.QUOTA_EXCEEDED, namespace, ownerUserId,
+                            conversationId, contentId, mimeType, incomingBytes, null, false,
+                            "Per-user attachment storage quota exceeded (" + limit + " bytes)");
                     throw new WebApplicationException(
                             Response.status(413)
                                     .type(MediaType.APPLICATION_JSON)
@@ -387,6 +466,9 @@ public class MediaService {
             if (limit > 0) {
                 long used = namespaceStorageBytes(namespace);
                 if (used + incomingBytes > limit) {
+                    emitAudit(BlobAuditEvent.Action.QUOTA_EXCEEDED, namespace, ownerUserId,
+                            conversationId, contentId, mimeType, incomingBytes, null, false,
+                            "Daily shared attachment storage quota exceeded (" + limit + " bytes)");
                     throw new WebApplicationException(
                             Response.status(413)
                                     .type(MediaType.APPLICATION_JSON)
@@ -396,6 +478,104 @@ public class MediaService {
                 }
             }
         }
+    }
+
+    private void runContentScanners(String namespace,
+                                    Long ownerUserId,
+                                    long conversationId,
+                                    String contentId,
+                                    String filename,
+                                    String mimeType,
+                                    byte[] data) {
+        if (contentScanners == null || contentScanners.isEmpty()) {
+            return;
+        }
+        BlobContentScanner.ScanContext ctx = new BlobContentScanner.ScanContext(
+                namespace, ownerUserId, conversationId, filename, mimeType, data);
+        for (BlobContentScanner scanner : contentScanners) {
+            if (scanner == null) {
+                continue;
+            }
+            BlobContentScanner.ScanResult result;
+            try {
+                result = scanner.scan(ctx);
+            } catch (IOException e) {
+                logger.warnf(e, "Content scanner %s unavailable; failing closed for contentId=%s",
+                        scanner.getClass().getSimpleName(), contentId);
+                emitAudit(BlobAuditEvent.Action.SCAN_REJECTED, namespace, ownerUserId,
+                        conversationId, contentId, mimeType, data.length, null, false,
+                        "SCANNER_UNAVAILABLE: " + scanner.getClass().getSimpleName());
+                throw new WebApplicationException(
+                        Response.status(503)
+                                .type(MediaType.APPLICATION_JSON)
+                                .entity("{\"error\":\"Attachment security scanner unavailable\"}")
+                                .build());
+            }
+            if (result == null || !result.clean()) {
+                String verdict = result != null ? result.verdict() : "REJECTED";
+                String reason = (result != null && result.reason() != null && !result.reason().isBlank())
+                        ? result.reason()
+                        : "Attachment rejected by security scanner";
+                logger.warnf("Content scanner rejected upload contentId=%s verdict=%s reason=%s",
+                        contentId, verdict, reason);
+                emitAudit(BlobAuditEvent.Action.SCAN_REJECTED, namespace, ownerUserId,
+                        conversationId, contentId, mimeType, data.length, null, false,
+                        verdict + ": " + reason);
+                throw new WebApplicationException(
+                        Response.status(422)
+                                .type(MediaType.APPLICATION_JSON)
+                                .entity("{\"error\":\"" + escapeJson(reason)
+                                        + "\",\"verdict\":\"" + escapeJson(verdict) + "\"}")
+                                .build());
+            }
+        }
+    }
+
+    private void emitAudit(BlobAuditEvent.Action action,
+                           String namespace,
+                           Long ownerUserId,
+                           Long conversationId,
+                           String contentId,
+                           String mimeType,
+                           long sizeBytes,
+                           String sha256,
+                           boolean success,
+                           String reason) {
+        if (auditListeners == null || auditListeners.isEmpty()) {
+            return;
+        }
+        BlobAuditEvent event = new BlobAuditEvent(
+                Instant.now(),
+                action,
+                namespace,
+                ownerUserId,
+                conversationId,
+                contentId,
+                mimeType,
+                Math.max(0L, sizeBytes),
+                sha256,
+                success,
+                reason);
+        for (BlobAuditListener listener : auditListeners) {
+            if (listener == null) {
+                continue;
+            }
+            try {
+                listener.onBlobEvent(event);
+            } catch (Throwable t) {
+                logger.warnf(t, "BlobAuditListener %s threw exception", listener.getClass().getSimpleName());
+            }
+        }
+    }
+
+    private static String escapeJson(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\r", " ")
+                .replace("\n", " ");
     }
 
     /**
