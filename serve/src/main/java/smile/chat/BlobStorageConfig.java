@@ -142,4 +142,38 @@ public interface BlobStorageConfig {
     @WithDefault("60")
     @WithName("sweep-interval-minutes")
     int sweepIntervalMinutes();
+
+    /**
+     * When {@code true} (default), verifies {@code SHA-256(bytes)} against the
+     * recorded {@code ConversationContent.sha256} on every read and fails closed
+     * if out-of-band tampering or corruption is detected.
+     */
+    @WithDefault("true")
+    @WithName("verify-checksum-on-read")
+    boolean verifyChecksumOnRead();
+
+    /**
+     * Maximum decoded pixel count ({@code width * height}) permitted for image
+     * attachments to prevent decompression-bomb OOMs (default 64 megapixels;
+     * {@code 0} disables).
+     */
+    @WithDefault("67108864")
+    @WithName("max-image-pixels")
+    long maxImagePixels();
+
+    /**
+     * Maximum image width or height in pixels (default 16384; {@code 0} disables).
+     */
+    @WithDefault("16384")
+    @WithName("max-image-dimension")
+    int maxImageDimension();
+
+    /**
+     * When {@code true} (default), losslessly strips EXIF, GPS, XMP, IPTC, and
+     * comment metadata segments/chunks from uploaded PNG, JPEG, and WebP images
+     * without re-encoding pixel data.
+     */
+    @WithDefault("true")
+    @WithName("strip-image-metadata")
+    boolean stripImageMetadata();
 }
