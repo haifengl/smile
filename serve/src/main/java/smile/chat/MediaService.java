@@ -17,14 +17,19 @@
  */
 package smile.chat;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -35,10 +40,11 @@ import jakarta.ws.rs.core.HttpHeaders;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import io.vertx.ext.web.RoutingContext;
+import smile.auth.AuthContext;
 import smile.chat.blob.BlobKeys;
-import smile.chat.BlobStorageConfig;
+import smile.chat.blob.BlobNamespaceResolver;
 import smile.chat.blob.BlobStore;
-import smile.chat.blob.ClientIdentity;
+import smile.chat.blob.MediaTypeValidator;
 import smile.chat.blob.MediaUrls;
 import smile.llm.ContentPart;
 import smile.llm.ImageUrlPart;
@@ -46,7 +52,9 @@ import smile.llm.Message;
 import smile.llm.VideoUrlPart;
 
 /**
- * Upload, fetch, link, and resolve conversation multimedia blobs.
+ * Upload, fetch, link, and resolve conversation multimedia blobs with
+ * per-user OAuth namespace isolation, UTC date-grouped shared space,
+ * magic-byte MIME validation, and ownership access control.
  *
  * @author Haifeng Li
  */
@@ -56,25 +64,45 @@ public class MediaService {
 
     private final BlobStore blobStore;
     private final BlobStorageConfig config;
+    private final AuthContext authContext;
+    private final ConversationService conversationService;
+    private final BlobNamespaceResolver namespaceResolver;
+    private final Set<String> allowedMimeTypes;
 
     /**
-     * @param blobStore object storage backend.
-     * @param config    upload limits and backend settings.
+     * @param blobStore           object storage backend.
+     * @param config              upload limits, allowlist, and backend settings.
+     * @param authContext         request-scoped authenticated identity.
+     * @param conversationService conversation ownership access checker.
+     * @param namespaceResolver   storage namespace resolver (OAuth user vs. shared/date).
      */
     @Inject
-    public MediaService(BlobStore blobStore, BlobStorageConfig config) {
+    public MediaService(BlobStore blobStore,
+                        BlobStorageConfig config,
+                        AuthContext authContext,
+                        ConversationService conversationService,
+                        BlobNamespaceResolver namespaceResolver) {
         this.blobStore = blobStore;
         this.config = config;
+        this.authContext = authContext;
+        this.conversationService = conversationService;
+        this.namespaceResolver = namespaceResolver;
+        this.allowedMimeTypes = MediaTypeValidator.parseAllowlist(config.allowedMimeTypes());
     }
 
     /**
      * Stores an uploaded file under the conversation and returns metadata.
      *
-     * @param conversation   parent conversation.
+     * <p>OAuth-authenticated users (Google / Microsoft) are isolated into
+     * {@code users/<provider>-<24hex>/<conversationId>/...}. Unauthenticated guests
+     * and the localhost {@code me} account are grouped by UTC date under
+     * {@code shared/<YYYY>/<MM>/<DD>/<conversationId>/...}.
+     *
+     * @param conversation   parent conversation (access already verified by caller).
      * @param upload         multipart file.
      * @param role           {@code user} or {@code assistant}.
-     * @param routingContext request context for client IP hashing.
-     * @param headers        HTTP headers.
+     * @param routingContext request context (retained for API compatibility).
+     * @param headers        HTTP headers (retained for API compatibility).
      * @return content API object.
      */
     @Transactional
@@ -86,41 +114,41 @@ public class MediaService {
         if (upload == null) {
             throw new BadRequestException("file is required");
         }
-        long size = upload.size();
-        if (size < 0) {
-            size = 0;
-        }
-        if (size > config.maxUploadBytes()) {
+        long maxBytes = config.maxUploadBytes();
+        long declaredSize = upload.size();
+        if (declaredSize > maxBytes) {
             throw new BadRequestException(
-                    "file exceeds max upload size of " + config.maxUploadBytes() + " bytes");
+                    "file exceeds max upload size of " + maxBytes + " bytes");
         }
-        String mime = upload.contentType();
-        if (mime == null || mime.isBlank()) {
-            mime = "application/octet-stream";
-        }
-        String filename = upload.fileName();
-        String userId = ClientIdentity.fromRequest(routingContext, headers);
-        String contentId = UUID.randomUUID().toString();
-        String storageKey = BlobKeys.of(userId, conversation.id, null, contentId);
 
         byte[] data;
         try {
-            var path = upload.uploadedFile();
+            Path path = upload.uploadedFile();
             if (path == null || !Files.isRegularFile(path)) {
                 throw new BadRequestException("empty upload");
             }
-            data = Files.readAllBytes(path);
+            data = readBounded(path, maxBytes);
+        } catch (BadRequestException e) {
+            throw e;
         } catch (IOException e) {
             throw new BadRequestException("Failed to read upload", e);
         }
-        if (data.length > config.maxUploadBytes()) {
-            throw new BadRequestException(
-                    "file exceeds max upload size of " + config.maxUploadBytes() + " bytes");
+
+        String verifiedMime;
+        try {
+            verifiedMime = MediaTypeValidator.validate(upload.contentType(), data, allowedMimeTypes);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException(e.getMessage());
         }
+
+        String contentId = UUID.randomUUID().toString();
+        String safeFilename = MediaTypeValidator.sanitizeFilename(upload.fileName(), contentId);
+        String namespace = namespaceResolver.resolve(authContext);
+        String storageKey = BlobKeys.of(namespace, conversation.id, null, contentId);
 
         String sha256 = sha256Hex(data);
         try {
-            blobStore.put(storageKey, data, mime);
+            blobStore.put(storageKey, data, verifiedMime);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to store blob", e);
         }
@@ -129,31 +157,57 @@ public class MediaService {
         content.id = contentId;
         content.conversationId = conversation.id;
         content.messageId = null;
-        content.userId = userId;
+        content.userId = namespace;
+        content.ownerUserId = conversation.userId;
         content.role = (role == null || role.isBlank()) ? "user" : role.trim();
-        content.mimeType = mime;
-        content.filename = filename;
+        content.mimeType = verifiedMime;
+        content.filename = safeFilename;
         content.sizeBytes = data.length;
         content.sha256 = sha256;
         content.storageKey = storageKey;
         content.persist();
 
-        logger.infof("Stored media contentId=%s conversationId=%d size=%d mime=%s",
-                contentId, conversation.id, data.length, mime);
+        logger.infof("Stored media contentId=%s conversationId=%d namespace=%s size=%d mime=%s",
+                contentId, conversation.id, namespace, data.length, verifiedMime);
         return ContentObject.from(content);
     }
 
     /**
-     * Loads blob bytes and metadata for streaming.
+     * Loads blob bytes and metadata after verifying that the current request
+     * caller owns the parent conversation.
      *
      * @param contentId opaque UUID.
+     * @param clientIp  resolved request client IP (for guest conversations).
      * @return metadata and bytes.
+     * @throws NotFoundException when the attachment does not exist or the caller is not authorized.
      */
-    public MediaBytes getBytes(String contentId) {
+    public MediaBytes getBytes(String contentId, String clientIp) {
+        return getBytes(contentId, authContext.userId(), clientIp);
+    }
+
+    /**
+     * Loads blob bytes and metadata after verifying that {@code callerUserId} /
+     * {@code clientIp} owns the parent conversation.
+     *
+     * @param contentId    opaque UUID.
+     * @param callerUserId authenticated user id, or {@code null} for guests.
+     * @param clientIp     resolved request client IP (for guest conversations).
+     * @return metadata and bytes.
+     * @throws NotFoundException when the attachment does not exist or the caller is not authorized.
+     */
+    public MediaBytes getBytes(String contentId, Long callerUserId, String clientIp) {
+        if (contentId == null || contentId.isBlank()) {
+            throw new NotFoundException("Media not found");
+        }
         ConversationContent meta = ConversationContent.findById(contentId);
         if (meta == null) {
             throw new NotFoundException("Media not found: " + contentId);
         }
+        Conversation conversation = Conversation.findById(meta.conversationId);
+        if (conversation == null) {
+            throw new NotFoundException("Media not found: " + contentId);
+        }
+        conversationService.ensureAccess(conversation, callerUserId, clientIp);
         try {
             Optional<byte[]> bytes = blobStore.get(meta.storageKey);
             if (bytes.isEmpty()) {
@@ -191,7 +245,9 @@ public class MediaService {
     }
 
     /**
-     * Deletes all content metadata and blobs for a conversation.
+     * Deletes all content metadata and blobs for a conversation across all
+     * storage namespaces (e.g., if the conversation spanned multiple UTC days or
+     * was merged from guest to OAuth).
      *
      * @param conversationId conversation primary key.
      */
@@ -199,7 +255,11 @@ public class MediaService {
     public void deleteConversationMedia(long conversationId) {
         List<ConversationContent> rows = ConversationContent
                 .list("conversationId", conversationId);
+        Set<String> prefixes = new LinkedHashSet<>();
         for (ConversationContent row : rows) {
+            if (row.userId != null && !row.userId.isBlank()) {
+                prefixes.add(BlobKeys.conversationPrefix(row.userId, conversationId));
+            }
             try {
                 blobStore.delete(row.storageKey);
             } catch (IOException e) {
@@ -207,25 +267,26 @@ public class MediaService {
             }
             row.delete();
         }
-        // Best-effort prefix cleanup (orphans under pending/).
-        if (!rows.isEmpty()) {
-            String userId = rows.getFirst().userId;
+        for (String prefix : prefixes) {
             try {
-                blobStore.deletePrefix(BlobKeys.conversationPrefix(userId, conversationId));
+                blobStore.deletePrefix(prefix);
             } catch (IOException e) {
-                logger.warnf(e, "Failed to delete blob prefix for conversation %d", conversationId);
+                logger.warnf(e, "Failed to delete blob prefix=%s for conversation %d",
+                        prefix, conversationId);
             }
         }
     }
 
     /**
-     * Rewrites internal {@code /api/v1/media/...} URLs to {@code data:} URLs so
-     * the VL processor does not HTTP-loopback to this service.
+     * Rewrites internal {@code /api/v1/media/...} URLs to {@code data:} URLs
+     * after verifying that the caller owns every referenced attachment.
      *
-     * @param messages request messages.
+     * @param messages     request messages.
+     * @param callerUserId authenticated user id captured on the HTTP thread, or {@code null}.
+     * @param clientIp     client IP captured on the HTTP thread.
      * @return messages with resolved media parts (same array when unchanged).
      */
-    public Message[] resolveInternalMedia(Message[] messages) {
+    public Message[] resolveInternalMedia(Message[] messages, Long callerUserId, String clientIp) {
         if (messages == null || messages.length == 0) {
             return messages;
         }
@@ -241,7 +302,7 @@ public class MediaService {
             boolean partChanged = false;
             for (ContentPart part : m.parts()) {
                 if (part instanceof ImageUrlPart image) {
-                    Optional<String> dataUrl = toDataUrl(image.url());
+                    Optional<String> dataUrl = toDataUrl(image.url(), callerUserId, clientIp);
                     if (dataUrl.isPresent()) {
                         parts.add(new ImageUrlPart(dataUrl.get()));
                         partChanged = true;
@@ -249,7 +310,7 @@ public class MediaService {
                         parts.add(part);
                     }
                 } else if (part instanceof VideoUrlPart video) {
-                    Optional<String> dataUrl = toDataUrl(video.url());
+                    Optional<String> dataUrl = toDataUrl(video.url(), callerUserId, clientIp);
                     if (dataUrl.isPresent()) {
                         parts.add(new VideoUrlPart(dataUrl.get(), video.fps()));
                         partChanged = true;
@@ -270,18 +331,41 @@ public class MediaService {
         return changed ? out : messages;
     }
 
-    private Optional<String> toDataUrl(String url) {
+    private Optional<String> toDataUrl(String url, Long callerUserId, String clientIp) {
         Optional<String> contentId = MediaUrls.parseContentId(url);
         if (contentId.isEmpty()) {
             return Optional.empty();
         }
-        MediaBytes media = getBytes(contentId.get());
+        MediaBytes media = getBytes(contentId.get(), callerUserId, clientIp);
         String mime = media.meta().mimeType;
         if (mime == null || mime.isBlank()) {
             mime = "application/octet-stream";
         }
         String encoded = Base64.getEncoder().encodeToString(media.bytes());
         return Optional.of("data:" + mime + ";base64," + encoded);
+    }
+
+    private static byte[] readBounded(Path path, long maxBytes) throws IOException {
+        long size = Files.size(path);
+        if (size > maxBytes) {
+            throw new BadRequestException(
+                    "file exceeds max upload size of " + maxBytes + " bytes");
+        }
+        try (InputStream in = Files.newInputStream(path)) {
+            ByteArrayOutputStream out = new ByteArrayOutputStream((int) Math.min(Math.max(size, 0), 65536));
+            byte[] buf = new byte[8192];
+            long total = 0;
+            int n;
+            while ((n = in.read(buf)) != -1) {
+                total += n;
+                if (total > maxBytes) {
+                    throw new BadRequestException(
+                            "file exceeds max upload size of " + maxBytes + " bytes");
+                }
+                out.write(buf, 0, n);
+            }
+            return out.toByteArray();
+        }
     }
 
     private static boolean conversationIdEquals(Long a, long b) {

@@ -41,6 +41,7 @@ import io.vertx.ext.web.RoutingContext;
 import smile.chat.blob.ClientIdentity;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
+import smile.auth.AuthConfig;
 import smile.auth.AuthContext;
 import io.quarkus.arc.profile.UnlessBuildProfile;
 
@@ -68,13 +69,17 @@ public class ConversationResource {
     MediaService mediaService;
 
     @Inject
+    AuthConfig authConfig;
+
+    @Inject
     AuthContext authContext;
 
     @Inject
     ConversationService conversationService;
 
     private String clientIp(HttpHeaders headers) {
-        return ClientIdentity.resolveClientIp(routingContext, headers);
+        return ClientIdentity.resolveClientIp(
+                routingContext, headers, authConfig.trustForwardedHeaders());
     }
 
     /**
@@ -134,7 +139,7 @@ public class ConversationResource {
         }
 
         Conversation conversation = new Conversation();
-        conversation.setContext(routingContext, headers);
+        conversation.setContext(routingContext, headers, authConfig.trustForwardedHeaders());
         if (authContext.isLoggedIn()) {
             conversation.userId = authContext.userId();
         }

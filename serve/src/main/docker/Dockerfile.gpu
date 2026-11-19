@@ -238,12 +238,14 @@ ENV JAVA_HOME=/usr/lib/jvm/java-25-openjdk-amd64
 ENV PATH="${JAVA_HOME}/bin:${PATH}"
 
 # Non-root user (UID 185 matches Quarkus UBI convention / COPY --chown below)
-# and persistent /smile volume for per-user Kirin agent homes (/smile/users/<user-key>/.smile/)
+# and persistent /smile volume for per-user Kirin agent homes (/smile/users/)
+# and isolated local attachment blobs (/smile/blobs/)
 RUN groupadd --system --gid 185 smile \
     && useradd --system --uid 185 --gid 185 --home-dir /deployments --shell /sbin/nologin smile \
-    && mkdir -p /smile/users \
+    && mkdir -p /smile/users /smile/blobs \
     && chown -R 185:185 /smile \
-    && chmod 0750 /smile /smile/users
+    && chmod 0750 /smile /smile/users \
+    && chmod 0700 /smile/blobs
 
 # Install ONNX Runtime
 RUN curl -fsSL "https://github.com/microsoft/onnxruntime/releases/download/v${ORT_VERSION}/onnxruntime-linux-x64-${ORT_VERSION}.tgz" \
@@ -293,6 +295,7 @@ USER 185
 
 ENV HF_HOME="/model/huggingface"
 ENV SMILE_USERS_DIR="/smile/users"
+ENV SMILE_BLOB_LOCAL_PATH="/smile/blobs"
 ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
 ENV JAVA_OPTS_APPEND="${JAVA_OPTS_APPEND} -Djava.util.logging.manager=org.jboss.logmanager.LogManager --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.nio=ALL-UNNAMED --enable-native-access=ALL-UNNAMED"
 

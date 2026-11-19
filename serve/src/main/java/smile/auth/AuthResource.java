@@ -41,6 +41,9 @@ public class AuthResource {
     private static final Logger LOG = Logger.getLogger(AuthResource.class);
 
     @Inject
+    AuthConfig authConfig;
+
+    @Inject
     AuthContext authContext;
 
     @Inject
@@ -145,7 +148,8 @@ public class AuthResource {
             User user = userService.upsertGoogleUser(
                     profile.sub(), profile.email(), profile.name(), profile.picture());
             userService.mergeGuestConversations(user.id,
-                    ClientIdentity.resolveClientIp(routingContext, null));
+                    ClientIdentity.resolveClientIp(
+                            routingContext, null, authConfig.trustForwardedHeaders()));
             if (agentBridge != null) {
                 agentBridge.onOAuthLogin(user, new ChatAgentBridge.OAuthLoginPayload(
                         AuthProviderKind.GOOGLE,
@@ -236,7 +240,8 @@ public class AuthResource {
             User user = userService.upsertMicrosoftUser(
                     profile.sub(), profile.email(), profile.name(), null);
             userService.mergeGuestConversations(user.id,
-                    ClientIdentity.resolveClientIp(routingContext, null));
+                    ClientIdentity.resolveClientIp(
+                            routingContext, null, authConfig.trustForwardedHeaders()));
             if (agentBridge != null) {
                 agentBridge.onOAuthLogin(user, new ChatAgentBridge.OAuthLoginPayload(
                         AuthProviderKind.MICROSOFT,

@@ -47,12 +47,25 @@ public class ConversationService {
      * @throws NotFoundException when access denied (same as not found).
      */
     public void ensureAccess(Conversation conversation, String clientIp) {
+        ensureAccess(conversation, authContext.userId(), clientIp);
+    }
+
+    /**
+     * Ensures the specified caller identity may access the conversation.
+     * Suitable for async worker threads where request-scoped {@link AuthContext}
+     * has already been captured on the HTTP thread.
+     *
+     * @param conversation entity.
+     * @param callerUserId authenticated user primary key, or {@code null} for guests.
+     * @param clientIp     request client IP for guest access.
+     * @throws NotFoundException when access denied (same as not found).
+     */
+    public void ensureAccess(Conversation conversation, Long callerUserId, String clientIp) {
         if (conversation == null) {
             throw new NotFoundException("Conversation not found");
         }
-        Long uid = authContext.userId();
         if (conversation.userId != null) {
-            if (uid == null || !conversation.userId.equals(uid)) {
+            if (callerUserId == null || !conversation.userId.equals(callerUserId)) {
                 throw new NotFoundException("Conversation not found");
             }
             return;

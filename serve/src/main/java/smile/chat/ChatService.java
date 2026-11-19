@@ -755,7 +755,25 @@ public class ChatService implements OpenAiModelContributor {
      * @return the completion result for the request.
      */
     public ChatCompletion complete(CompletionRequest request, SubmissionPublisher<String> publisher) {
-        var handle = submitCompletion(request, publisher);
+        return complete(request, publisher, null, null);
+    }
+
+    /**
+     * Completes a chat dialog via {@link smile.llm.engine.InferenceEngine},
+     * verifying ownership of any internal {@code /api/v1/media/...} references
+     * against the caller identity captured on the HTTP thread.
+     *
+     * @param request      the chat completion request.
+     * @param publisher    the flow publisher that receives streamed token chunks.
+     * @param callerUserId authenticated user id, or {@code null} for guests.
+     * @param callerIp     resolved client IP for guest ownership verification.
+     * @return the completion result for the request.
+     */
+    public ChatCompletion complete(CompletionRequest request,
+                                   SubmissionPublisher<String> publisher,
+                                   Long callerUserId,
+                                   String callerIp) {
+        var handle = submitCompletion(request, publisher, callerUserId, callerIp);
         try {
             return handle.future().join();
         } finally {
@@ -776,8 +794,28 @@ public class ChatService implements OpenAiModelContributor {
      */
     public smile.llm.engine.GenerationHandle submitCompletion(
             CompletionRequest request, SubmissionPublisher<String> publisher) {
+        return submitCompletion(request, publisher, null, null);
+    }
+
+    /**
+     * Submits a chat completion and returns the handle so streaming callers can
+     * {@link smile.llm.engine.GenerationHandle#abort()} on client disconnect,
+     * verifying ownership of any internal {@code /api/v1/media/...} references
+     * against the caller identity captured on the HTTP thread.
+     *
+     * @param request      the chat completion request.
+     * @param publisher    optional streaming publisher; may be {@code null}.
+     * @param callerUserId authenticated user id, or {@code null} for guests.
+     * @param callerIp     resolved client IP for guest ownership verification.
+     * @return generation handle whose future completes with the reply.
+     */
+    public smile.llm.engine.GenerationHandle submitCompletion(
+            CompletionRequest request,
+            SubmissionPublisher<String> publisher,
+            Long callerUserId,
+            String callerIp) {
         Message[] messages = mediaService != null
-                ? mediaService.resolveInternalMedia(request.messages)
+                ? mediaService.resolveInternalMedia(request.messages, callerUserId, callerIp)
                 : request.messages;
         smile.llm.ChatOptions chatOptions;
         try {

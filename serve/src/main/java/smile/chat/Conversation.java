@@ -73,22 +73,31 @@ public class Conversation extends PanacheEntityBase {
     public Map<String, String> metadata = new HashMap<>();
 
     /**
-     * Captures the client IP and user-agent from the current HTTP request.
-     * The {@code X-Forwarded-For} header is honoured so that the real client
-     * IP is recorded when the service runs behind a reverse proxy.
+     * Captures the client IP and user-agent from the current HTTP request without
+     * trusting {@code X-Forwarded-For}.
      *
      * @param routingContext the Vert.x routing context for the current request.
      * @param headers        the JAX-RS HTTP headers for the current request.
      */
     public void setContext(RoutingContext routingContext, HttpHeaders headers) {
-        userAgent = headers.getHeaderString("User-Agent");
-        clientIP = routingContext.request().remoteAddress().hostAddress();
+        setContext(routingContext, headers, false);
+    }
 
-        // Prefer the leftmost address in X-Forwarded-For when behind a proxy.
-        String forwardedFor = headers.getHeaderString("X-Forwarded-For");
-        if (forwardedFor != null && !forwardedFor.isBlank()) {
-            clientIP = forwardedFor.split(",")[0].trim();
-        }
+    /**
+     * Captures the client IP and user-agent from the current HTTP request.
+     * The {@code X-Forwarded-For} header is honoured only when
+     * {@code trustForwardedHeaders} is {@code true} (service behind a trusted proxy).
+     *
+     * @param routingContext        the Vert.x routing context for the current request.
+     * @param headers               the JAX-RS HTTP headers for the current request.
+     * @param trustForwardedHeaders whether to honour {@code X-Forwarded-For}.
+     */
+    public void setContext(RoutingContext routingContext,
+                           HttpHeaders headers,
+                           boolean trustForwardedHeaders) {
+        userAgent = headers != null ? headers.getHeaderString("User-Agent") : null;
+        clientIP = smile.chat.blob.ClientIdentity.resolveClientIp(
+                routingContext, headers, trustForwardedHeaders);
     }
 
     /**
