@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import CollapsiblePanel from '../shared/CollapsiblePanel'
 import { AuthProvider, useAuth } from './auth/AuthProvider'
+import SsoSignInGate from './auth/SsoSignInGate'
 import { createConversation } from './api'
 import ChatApp from './ChatApp'
 import ChatNavSidebar from './nav/ChatNavSidebar'
@@ -27,12 +28,21 @@ const NAV_WIDTH = 300
  * @param {Array<object>} [props.tools] optional tools
  */
 function ChatShellInner({ model, title, embedded = false, tools }) {
-  const { loggedIn } = useAuth()
+  const {
+    loggedIn,
+    loading: authLoading,
+    ssoRequired,
+    oidcLabel,
+    authError,
+    loginWithOidc,
+  } = useAuth()
   const wasLoggedInRef = useRef(loggedIn)
   const [conversationId, setConversationId] = useState(null)
   const [chatEpoch, setChatEpoch] = useState(0)
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0)
   const [ready, setReady] = useState(false)
+
+  const blockedBySso = Boolean(!authLoading && (authError || (ssoRequired && !loggedIn)))
 
   const startNewChat = useCallback(async () => {
     const conv = await createConversation()
@@ -42,6 +52,12 @@ function ChatShellInner({ model, title, embedded = false, tools }) {
   }, [])
 
   useEffect(() => {
+    if (authLoading) return
+    if (authError || (ssoRequired && !loggedIn)) {
+      setConversationId(null)
+      setReady(false)
+      return
+    }
     let cancelled = false
     startNewChat()
       .catch((e) => console.error('Failed to create conversation', e))
@@ -51,14 +67,19 @@ function ChatShellInner({ model, title, embedded = false, tools }) {
     return () => {
       cancelled = true
     }
-  }, [startNewChat])
+  }, [authLoading, authError, ssoRequired, loggedIn, startNewChat])
 
   useEffect(() => {
     if (wasLoggedInRef.current && !loggedIn) {
-      startNewChat().catch((e) => console.error('Failed to start guest chat after logout', e))
+      if (ssoRequired) {
+        setConversationId(null)
+        setReady(false)
+      } else {
+        startNewChat().catch((e) => console.error('Failed to start guest chat after logout', e))
+      }
     }
     wasLoggedInRef.current = loggedIn
-  }, [loggedIn, startNewChat])
+  }, [loggedIn, ssoRequired, startNewChat])
 
   const handleSelectConversation = useCallback((conv) => {
     setConversationId(conv.id)
@@ -68,12 +89,20 @@ function ChatShellInner({ model, title, embedded = false, tools }) {
   const handleMutated = useCallback(
     (deletedId) => {
       setSidebarRefreshKey((key) => key + 1)
-      if (deletedId && deletedId === conversationId) {
+      if (deletedId && deletedId === conversationId && (!ssoRequired || loggedIn)) {
         startNewChat()
       }
     },
-    [conversationId, startNewChat],
+    [conversationId, ssoRequired, loggedIn, startNewChat],
   )
+
+  const handleSsoSignIn = useCallback(() => {
+    if (embedded) {
+      loginWithOidc({ returnTo: '/', inferModelId: model })
+      return
+    }
+    loginWithOidc({ returnTo: '/chat/' })
+  }, [embedded, model, loginWithOidc])
 
   return (
     <div
@@ -83,16 +112,25 @@ function ChatShellInner({ model, title, embedded = false, tools }) {
       ].join(' ')}
     >
       <div className="chat-shell__main">
-        {ready && conversationId && (
-          <ChatApp
-            key={`${conversationId}-${chatEpoch}`}
-            model={model}
-            title={title}
-            embedded={embedded}
-            tools={tools}
-            conversationId={conversationId}
-            onActivity={handleMutated}
+        {blockedBySso ? (
+          <SsoSignInGate
+            label={oidcLabel || 'SSO'}
+            error={authError}
+            onSignIn={handleSsoSignIn}
           />
+        ) : (
+          ready &&
+          conversationId && (
+            <ChatApp
+              key={`${conversationId}-${chatEpoch}`}
+              model={model}
+              title={title}
+              embedded={embedded}
+              tools={tools}
+              conversationId={conversationId}
+              onActivity={handleMutated}
+            />
+          )
         )}
       </div>
       <CollapsiblePanel

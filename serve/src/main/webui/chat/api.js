@@ -12,12 +12,25 @@ const JSON_HEADERS = { 'Content-Type': 'application/json', Accept: 'application/
 async function parseJson(response) {
   if (!response.ok) {
     const text = await response.text()
-    throw new Error(text || response.statusText)
+    const error = new Error(text || response.statusText)
+    error.status = response.status
+    throw error
   }
   return response.json()
 }
 
-/** @returns {Promise<{logged_in: boolean, user?: object}>} */
+/**
+ * @returns {Promise<{
+ *   logged_in: boolean,
+ *   user?: object,
+ *   agent_mode?: boolean,
+ *   google_enabled?: boolean,
+ *   microsoft_enabled?: boolean,
+ *   oidc_enabled?: boolean,
+ *   sso_required?: boolean,
+ *   oidc_label?: string
+ * }>}
+ */
 export async function fetchAuthMe() {
   const response = await fetch('/api/v1/auth/me', { credentials: 'include' })
   return parseJson(response)
@@ -32,6 +45,20 @@ function defaultOAuthReturnTo() {
     return '/chat/'
   }
   return '/'
+}
+
+/**
+ * Redirects the browser to Enterprise OIDC SSO login.
+ *
+ * @param {{ returnTo?: string, inferModelId?: string }} [options]
+ */
+export function loginWithOidc(options = {}) {
+  const returnTo = options.returnTo ?? defaultOAuthReturnTo()
+  if (options.inferModelId) {
+    sessionStorage.setItem(INFER_RESUME_MODEL_KEY, options.inferModelId)
+  }
+  const params = new URLSearchParams({ return_to: returnTo })
+  window.location.href = `/api/v1/auth/login/oidc?${params}`
 }
 
 /**
@@ -62,15 +89,26 @@ export function loginWithMicrosoft(options = {}) {
   window.location.href = `/api/v1/auth/login/microsoft?${params}`
 }
 
-/** @returns {Promise<void>} */
+/** @returns {Promise<{ logoutUrl?: string } | null>} */
 export async function logout() {
   const response = await fetch('/api/v1/auth/logout', {
     method: 'POST',
     credentials: 'include',
   })
-  if (!response.ok && response.status !== 204) {
+  if (response.status === 204) {
+    return null
+  }
+  if (!response.ok) {
     throw new Error('Logout failed')
   }
+  const contentType = response.headers.get('content-type') || ''
+  if (contentType.includes('application/json')) {
+    const data = await response.json().catch(() => null)
+    if (data?.logout_url) {
+      return { logoutUrl: data.logout_url }
+    }
+  }
+  return null
 }
 
 /** @returns {Promise<object>} */

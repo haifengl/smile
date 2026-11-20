@@ -11,6 +11,7 @@ package smile.auth;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -90,10 +91,80 @@ public class UserService {
     }
 
     /**
-     * Upserts an OAuth user account ({@code GOOGLE} or {@code MICROSOFT}).
+     * Upserts an enterprise OIDC user account with collision-free issuer-namespaced
+     * external id and column-bounded profile fields.
      *
-     * @param provider {@link AuthProviderKind#GOOGLE} or {@link AuthProviderKind#MICROSOFT}.
-     * @param sub      provider subject identifier.
+     * @param externalId issuer-namespaced external id ({@code <= 128} chars).
+     * @param email      email address.
+     * @param name       display name.
+     * @param picture    avatar URL.
+     * @return persisted user.
+     */
+    @Transactional
+    public User upsertOidcUser(String externalId, String email, String name, String picture) {
+        return upsertOAuthUser(
+                AuthProviderKind.OIDC,
+                truncate(externalId, 128),
+                truncate(email, 256),
+                truncate(name, 128),
+                truncate(picture, 1024)
+        );
+    }
+
+    /**
+     * Lazily ensures that an OIDC-authenticated request context (for example a
+     * stateless M2M Bearer JWT caller accessing conversations, media, or profile)
+     * has a persisted {@link User} entity bound to {@code ctx} and indexed in
+     * {@link UserCache}. Performs zero database queries when already resolved or cached.
+     *
+     * @param ctx request-scoped auth context.
+     * @return resolved user, or {@code null} when unauthenticated.
+     */
+    public User ensureAuthenticatedUser(AuthContext ctx) {
+        if (ctx == null || !ctx.isOidcAuthenticated()) {
+            return ctx == null ? null : ctx.user();
+        }
+        if (ctx.user() != null) {
+            return ctx.user();
+        }
+        OidcPrincipal principal = ctx.oidcPrincipal();
+        if (principal.sessionUserId() != null) {
+            User cachedById = userCache != null ? userCache.getById(principal.sessionUserId()) : null;
+            if (cachedById != null && cachedById.authProvider == AuthProviderKind.OIDC) {
+                ctx.setOidcPrincipal(principal, cachedById);
+                return cachedById;
+            }
+            User found = QuarkusTransaction.joiningExisting().call(() -> findById(principal.sessionUserId()));
+            if (found != null && found.authProvider == AuthProviderKind.OIDC) {
+                if (userCache != null) {
+                    userCache.register(found);
+                }
+                ctx.setOidcPrincipal(principal, found);
+                return found;
+            }
+            return null;
+        }
+        User cached = userCache != null ? userCache.getByExternalId(principal.externalId()) : null;
+        if (cached != null) {
+            ctx.setOidcPrincipal(principal, cached);
+            return cached;
+        }
+        String fallbackName = principal.displayName() != null && !principal.displayName().isBlank()
+                ? principal.displayName()
+                : (principal.email() != null && !principal.email().isBlank()
+                        ? principal.email()
+                        : principal.subject());
+        User user = QuarkusTransaction.joiningExisting().call(() ->
+                upsertOidcUser(principal.externalId(), principal.email(), fallbackName, principal.avatarUrl()));
+        ctx.setOidcPrincipal(principal, user);
+        return user;
+    }
+
+    /**
+     * Upserts an OAuth / OIDC user account.
+     *
+     * @param provider {@link AuthProviderKind#GOOGLE}, {@link AuthProviderKind#MICROSOFT}, or {@link AuthProviderKind#OIDC}.
+     * @param sub      provider subject / external identifier.
      * @param email    email address.
      * @param name     display name.
      * @param picture  avatar URL.
@@ -107,30 +178,46 @@ public class UserService {
             String name,
             String picture
     ) {
-        User user = User.findByExternalId(sub);
+        String safeSub = truncate(sub, 128);
+        String safeEmail = truncate(email, 256);
+        String safeName = truncate(name, 128);
+        String safePicture = truncate(picture, 1024);
+        User user = User.findByExternalId(safeSub);
         if (user == null) {
             user = new User();
-            user.externalId = sub;
+            user.externalId = safeSub;
             user.authProvider = provider;
-            user.displayName = name != null && !name.isBlank() ? name : "User";
-            user.email = email;
-            user.avatarUrl = picture;
+            user.displayName = safeName != null && !safeName.isBlank() ? safeName : "User";
+            user.email = safeEmail;
+            user.avatarUrl = safePicture;
             user.persist();
-            userCache.register(user);
+            if (userCache != null) {
+                userCache.register(user);
+            }
             return user;
         }
         user.authProvider = provider;
-        if (email != null && !email.isBlank()) {
-            user.email = email;
+        if (safeEmail != null && !safeEmail.isBlank()) {
+            user.email = safeEmail;
         }
-        if (name != null && !name.isBlank()) {
-            user.displayName = name;
+        if (safeName != null && !safeName.isBlank()) {
+            user.displayName = safeName;
         }
-        if (picture != null && !picture.isBlank()) {
-            user.avatarUrl = picture;
+        if (safePicture != null && !safePicture.isBlank()) {
+            user.avatarUrl = safePicture;
         }
-        userCache.register(user);
+        if (userCache != null) {
+            userCache.register(user);
+        }
         return user;
+    }
+
+    private static String truncate(String value, int maxLength) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.length() <= maxLength ? trimmed : trimmed.substring(0, maxLength);
     }
 
     /**

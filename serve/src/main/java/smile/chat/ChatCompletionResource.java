@@ -50,7 +50,9 @@ import smile.llm.Role;
 import smile.auth.AuthConfig;
 import smile.auth.AuthContext;
 import smile.auth.User;
+import smile.auth.UserService;
 import smile.chat.agent.ChatAgentBridge;
+import smile.chat.agent.InternalAgentAuth;
 import smile.chat.blob.ClientIdentity;
 import io.quarkus.arc.profile.UnlessBuildProfile;
 
@@ -108,6 +110,9 @@ public class ChatCompletionResource {
     AuthContext authContext;
 
     @Inject
+    UserService userService;
+
+    @Inject
     ConversationService conversationService;
 
     @Inject
@@ -130,6 +135,9 @@ public class ChatCompletionResource {
     public ChatCompletionObject completeJson(@Context HttpHeaders headers, CompletionRequest request) {
         validate(request);
         boolean internalHop = isInternalAgentHop(headers);
+        if (!internalHop && userService != null) {
+            userService.ensureAuthenticatedUser(authContext);
+        }
         Conversation conversation = internalHop ? null : newConversation(headers);
         String id = newCompletionId();
         long created = Instant.now().getEpochSecond();
@@ -170,6 +178,9 @@ public class ChatCompletionResource {
     public Multi<String> completeStream(@Context HttpHeaders headers, CompletionRequest request) {
         validate(request);
         boolean internalHop = isInternalAgentHop(headers);
+        if (!internalHop && userService != null) {
+            userService.ensureAuthenticatedUser(authContext);
+        }
         boolean useKirin = shouldRouteToKirinAgent(headers, request);
         User oauthUser = useKirin ? authContext.user() : null;
         Long callerUserId = authContext.userId();
@@ -377,12 +388,17 @@ public class ChatCompletionResource {
     }
 
     /**
-     * Returns {@code true} when the request is an internal loopback LLM call
-     * from {@code KirinAgentBridge}.
+     * Returns {@code true} when the request is a verified internal loopback LLM call
+     * from {@code KirinAgentBridge} carrying the per-process cryptographic secret.
      */
-    static boolean isInternalAgentHop(HttpHeaders headers) {
-        return headers != null
-                && "true".equalsIgnoreCase(headers.getHeaderString(INTERNAL_AGENT_HEADER));
+    boolean isInternalAgentHop(HttpHeaders headers) {
+        if (headers == null) {
+            return false;
+        }
+        return InternalAgentAuth.isValidInternalHop(
+                routingContext,
+                headers.getHeaderString(InternalAgentAuth.HEADER_TOKEN),
+                headers.getHeaderString(INTERNAL_AGENT_HEADER));
     }
 
     /**

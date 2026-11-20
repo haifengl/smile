@@ -92,7 +92,8 @@ public class BlobNamespaceResolver {
     public static String resolve(User user, Instant now) {
         if (user != null
                 && (user.authProvider == AuthProviderKind.GOOGLE
-                    || user.authProvider == AuthProviderKind.MICROSOFT)
+                    || user.authProvider == AuthProviderKind.MICROSOFT
+                    || user.authProvider == AuthProviderKind.OIDC)
                 && user.externalId != null
                 && !user.externalId.isBlank()) {
             return oauthUserNamespace(user.authProvider, user.externalId);
@@ -103,13 +104,15 @@ public class BlobNamespaceResolver {
     /**
      * Computes the opaque per-user namespace {@code users/<provider>-<24hex>}.
      *
-     * @param provider   {@link AuthProviderKind#GOOGLE} or {@link AuthProviderKind#MICROSOFT}.
-     * @param externalId immutable OAuth subject / Graph ID.
+     * @param provider   {@link AuthProviderKind#GOOGLE}, {@link AuthProviderKind#MICROSOFT}, or {@link AuthProviderKind#OIDC}.
+     * @param externalId immutable OAuth/OIDC subject or external ID.
      * @return opaque namespace string.
      */
     public static String oauthUserNamespace(AuthProviderKind provider, String externalId) {
-        if (provider != AuthProviderKind.GOOGLE && provider != AuthProviderKind.MICROSOFT) {
-            throw new IllegalArgumentException("OAuth provider must be GOOGLE or MICROSOFT, got: " + provider);
+        if (provider != AuthProviderKind.GOOGLE
+                && provider != AuthProviderKind.MICROSOFT
+                && provider != AuthProviderKind.OIDC) {
+            throw new IllegalArgumentException("OAuth provider must be GOOGLE, MICROSOFT, or OIDC, got: " + provider);
         }
         if (externalId == null || externalId.isBlank()) {
             throw new IllegalArgumentException("OAuth externalId must not be blank");

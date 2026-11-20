@@ -1,0 +1,119 @@
+/*
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ *
+ * SMILE Serve is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ */
+.sso-gate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.sso-gate__card {
+  width: 100%;
+  max-width: 400px;
+  padding: 32px 28px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: #1a1a2e;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+.sso-gate__icon-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+  margin-bottom: 14px;
+}
+
+.sso-gate__icon {
+  width: 26px;
+  height: 26px;
+}
+
+.sso-gate__title {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.sso-gate__subtitle {
+  margin: 0 0 22px;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #52526c;
+}
+
+.sso-gate__error {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.sso-gate__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sso-gate__button:hover {
+  background: #1d4ed8;
+}
+
+.sso-gate__button-icon {
+  width: 18px;
+  height: 18px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .sso-gate__card {
+    background: #1e1e2f;
+    color: rgba(255, 255, 255, 0.92);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.32);
+  }
+
+  .sso-gate__icon-wrap {
+    background: rgba(96, 165, 250, 0.16);
+    color: #60a5fa;
+  }
+
+  .sso-gate__subtitle {
+    color: rgba(255, 255, 255, 0.7);
+  }
+
+  .sso-gate__error {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+  }
+}

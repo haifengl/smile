@@ -104,6 +104,48 @@ public class KirinAgentBridge implements ChatAgentBridge {
 
     private static final Set<String> ALLOWED_KIRIN_TOOLS = Set.copyOf(DEFAULT_KIRIN_TOOLS);
 
+    /**
+     * Strictly enforced 4-tool allowlist for Enterprise OIDC users ({@code REQ-OIDC-08}).
+     * Excludes {@code Email} and {@code Calendar} (no consumer Gmail/Graph delegation tokens)
+     * as well as all host shell and filesystem mutation tools.
+     */
+    public static final List<String> OIDC_KIRIN_TOOLS = List.of(
+            "WebFetch",
+            "WebSearch",
+            "Skill",
+            "TodoWrite"
+    );
+
+    private static final Set<String> ALLOWED_OIDC_KIRIN_TOOLS = Set.copyOf(OIDC_KIRIN_TOOLS);
+
+    /** Default {@code AGENT.md} seeded for OIDC SSO users (4-tool scoped mode). */
+    public static final String DEFAULT_OIDC_KIRIN_AGENT_MD = """
+            ---
+            name: kirin
+            description: >
+              Enterprise AI assistant for web research, reusable skills, and task tracking.
+            callName: kirin
+            title: "Kirin Assistant"
+            subagent: false
+            tools:
+              - WebFetch
+              - WebSearch
+              - Skill
+              - TodoWrite
+            ---
+            ## Role and Persona
+            You are **Kirin**, a helpful, accurate, and privacy-first enterprise AI assistant running on SMILE Serve.
+
+            ## Capabilities
+            - **Web Research (`WebSearch`, `WebFetch`):** Search the live web for current facts, news, and documentation, and fetch full web pages as clean Markdown.
+            - **Custom Skills (`Skill`):** Execute specialized workflows and domain skills installed in your `.smile/agents/kirin/skills/` directory.
+            - **Task Tracking (`TodoWrite`):** Track multi-step tasks transparently as you work.
+
+            ## Operating Guidelines
+            1. **Verify before answering:** Use `WebSearch` or `WebFetch` when up-to-date external information is required rather than guessing.
+            2. **Clear, concise answers:** Format responses in clean Markdown with relevant links and summaries.
+            """;
+
     /** Default {@code AGENT.md} seeded into {@code <userHome>/.smile/agents/kirin/AGENT.md}. */
     public static final String DEFAULT_KIRIN_AGENT_MD = """
             ---
@@ -212,6 +254,16 @@ public class KirinAgentBridge implements ChatAgentBridge {
         if (user == null || payload == null) {
             return;
         }
+        if (payload.provider() == AuthProviderKind.OIDC || user.authProvider == AuthProviderKind.OIDC) {
+            try {
+                UserWorkspaceContext ctx = ensureUserWorkspace(user);
+                LOG.infof("Provisioned scoped OIDC kirin workspace for %s at %s",
+                        user.externalId, ctx.userHome());
+            } catch (Exception e) {
+                LOG.warnf(e, "Failed to provision OIDC kirin workspace for user %s", user.externalId);
+            }
+            return;
+        }
         if (payload.provider() != AuthProviderKind.GOOGLE
                 && payload.provider() != AuthProviderKind.MICROSOFT) {
             return;
@@ -289,20 +341,36 @@ public class KirinAgentBridge implements ChatAgentBridge {
             throw new SecurityException("Invalid user home path outside base directory: " + userHome);
         }
 
-        UserWorkspaceContext ctx = workspacesByKey.computeIfAbsent(userKey, key -> createWorkspaceContext(key, userHome));
+        UserWorkspaceContext ctx = workspacesByKey.computeIfAbsent(
+                userKey, key -> createWorkspaceContext(user, key, userHome));
         seedKirinFiles(user, ctx);
         return ctx;
     }
 
-    private UserWorkspaceContext createWorkspaceContext(String userKey, Path userHome) {
+    private UserWorkspaceContext createWorkspaceContext(User user, String userKey, Path userHome) {
         try {
             Path smileDir = userHome.resolve(".smile");
             Path kirinDir = smileDir.resolve("agents").resolve(KIRIN_AGENT_NAME);
             Path skillsDir = kirinDir.resolve("skills");
-            Path confDir = smileDir.resolve("conf");
-            Path credsDir = smileDir.resolve("credentials");
 
             Files.createDirectories(skillsDir);
+
+            if (isOidcUser(user, userKey)) {
+                // OIDC users are strictly scoped to [WebFetch, WebSearch, Skill, TodoWrite]
+                // without conf/email.json, conf/calendar.json, or credentials/ secrets.
+                return new UserWorkspaceContext(
+                        userKey,
+                        userHome,
+                        smileDir,
+                        kirinDir,
+                        null,
+                        null,
+                        null
+                );
+            }
+
+            Path confDir = smileDir.resolve("conf");
+            Path credsDir = smileDir.resolve("credentials");
             Files.createDirectories(confDir);
             Files.createDirectories(credsDir);
 
@@ -332,10 +400,13 @@ public class KirinAgentBridge implements ChatAgentBridge {
             Files.createDirectories(ctx.kirinDir().resolve("skills"));
             Path agentMd = ctx.kirinDir().resolve("AGENT.md");
             if (!Files.exists(agentMd)) {
-                Files.writeString(agentMd, DEFAULT_KIRIN_AGENT_MD, StandardCharsets.UTF_8);
+                String template = isOidcUser(user, ctx.userKey())
+                        ? DEFAULT_OIDC_KIRIN_AGENT_MD
+                        : DEFAULT_KIRIN_AGENT_MD;
+                Files.writeString(agentMd, template, StandardCharsets.UTF_8);
             }
             Path localMd = ctx.smileDir().resolve("SMILE.local.md");
-            if (user.personalInstructions != null && !user.personalInstructions.isBlank()) {
+            if (user != null && user.personalInstructions != null && !user.personalInstructions.isBlank()) {
                 Files.writeString(localMd, user.personalInstructions.trim() + "\n", StandardCharsets.UTF_8);
             }
         } catch (IOException e) {
@@ -345,21 +416,38 @@ public class KirinAgentBridge implements ChatAgentBridge {
 
     /**
      * Loads and sanitizes the user's {@code kirin} {@link Agent.Spec} from
-     * {@code <userHome>/.smile/agents/kirin/AGENT.md}, enforcing {@link #ALLOWED_KIRIN_TOOLS}.
+     * {@code <userHome>/.smile/agents/kirin/AGENT.md}, enforcing the provider-appropriate
+     * host-safety tool allowlist.
      *
      * @param ctx user workspace context.
      * @return sanitized {@link Agent.Spec}.
      */
     public Agent.Spec loadKirinSpec(UserWorkspaceContext ctx) {
+        return loadKirinSpec(null, ctx);
+    }
+
+    /**
+     * Loads and sanitizes the user's {@code kirin} {@link Agent.Spec} enforcing
+     * {@link #ALLOWED_OIDC_KIRIN_TOOLS} for {@link AuthProviderKind#OIDC} users and
+     * {@link #ALLOWED_KIRIN_TOOLS} for Google/Microsoft OAuth users.
+     *
+     * @param user authenticated user (may be {@code null}; OIDC is also detected via workspace key).
+     * @param ctx  user workspace context.
+     * @return sanitized {@link Agent.Spec}.
+     */
+    public Agent.Spec loadKirinSpec(User user, UserWorkspaceContext ctx) {
+        boolean oidc = isOidcUser(user, ctx != null ? ctx.userKey() : null);
+        List<String> defaultTools = oidc ? OIDC_KIRIN_TOOLS : DEFAULT_KIRIN_TOOLS;
+        Set<String> allowedTools = oidc ? ALLOWED_OIDC_KIRIN_TOOLS : ALLOWED_KIRIN_TOOLS;
         try {
             Agent.Spec raw = Agent.Spec.from(ctx.kirinDir());
             List<String> requestedTools = raw.tools() == null || raw.tools().isEmpty()
-                    ? DEFAULT_KIRIN_TOOLS
+                    ? defaultTools
                     : raw.tools().stream()
-                            .filter(ALLOWED_KIRIN_TOOLS::contains)
+                            .filter(allowedTools::contains)
                             .distinct()
                             .toList();
-            List<String> safeTools = requestedTools.isEmpty() ? DEFAULT_KIRIN_TOOLS : requestedTools;
+            List<String> safeTools = requestedTools.isEmpty() ? defaultTools : requestedTools;
             return new Agent.Spec(
                     KIRIN_AGENT_NAME,
                     raw.description(),
@@ -377,15 +465,17 @@ public class KirinAgentBridge implements ChatAgentBridge {
             LOG.warnf(e, "Could not parse custom AGENT.md in %s; falling back to default kirin spec", ctx.kirinDir());
             return new Agent.Spec(
                     KIRIN_AGENT_NAME,
-                    "Personal and small-office AI assistant for web research, email, calendar, skills, and task tracking.",
-                    DEFAULT_KIRIN_AGENT_MD,
+                    oidc
+                            ? "Enterprise AI assistant for web research, skills, and task tracking."
+                            : "Personal and small-office AI assistant for web research, email, calendar, skills, and task tracking.",
+                    oidc ? DEFAULT_OIDC_KIRIN_AGENT_MD : DEFAULT_KIRIN_AGENT_MD,
                     null,
-                    DEFAULT_KIRIN_TOOLS,
+                    defaultTools,
                     List.of(),
                     List.of(),
                     List.of(),
                     KIRIN_AGENT_NAME,
-                    "Kirin Personal Assistant",
+                    oidc ? "Kirin Assistant" : "Kirin Personal Assistant",
                     false
             );
         }
@@ -397,19 +487,46 @@ public class KirinAgentBridge implements ChatAgentBridge {
      * @param ctx         user workspace context.
      * @param llm         LLM client to use for the turn.
      * @param loadedModel loaded model name.
-     * @return configured {@link Agent} instance with isolated {@code EmailServices} and {@code CalendarServices}.
+     * @return configured {@link Agent} instance.
      */
     public Agent createAgent(UserWorkspaceContext ctx, LLM llm, String loadedModel) {
-        Agent.Spec spec = loadKirinSpec(ctx);
+        return createAgent(null, ctx, llm, loadedModel);
+    }
+
+    /**
+     * Instantiates an isolated {@link Agent} for the given user and workspace context.
+     * Omits {@link EmailServices} and {@link CalendarServices} attributes for
+     * {@link AuthProviderKind#OIDC} users.
+     *
+     * @param user        authenticated user.
+     * @param ctx         user workspace context.
+     * @param llm         LLM client to use for the turn.
+     * @param loadedModel loaded model name.
+     * @return configured {@link Agent} instance.
+     */
+    public Agent createAgent(User user, UserWorkspaceContext ctx, LLM llm, String loadedModel) {
+        boolean oidc = isOidcUser(user, ctx != null ? ctx.userKey() : null);
+        Agent.Spec spec = loadKirinSpec(user, ctx);
         Agent agent = new Agent(spec, () -> llm, ctx.userHome(), false);
         String effectiveModel = (loadedModel != null && !loadedModel.isBlank() && !"unknown".equals(loadedModel))
                 ? loadedModel
                 : "local-llm";
         agent.setDefaultModel(() -> Model.of(effectiveModel));
         agent.conversation().params().setProperty(LLM.MODEL, effectiveModel);
-        agent.conversation().attributes().put(EmailServices.CONVERSATION_KEY, ctx.emailServices());
-        agent.conversation().attributes().put(CalendarServices.CONVERSATION_KEY, ctx.calendarServices());
+        if (!oidc && ctx.emailServices() != null) {
+            agent.conversation().attributes().put(EmailServices.CONVERSATION_KEY, ctx.emailServices());
+        }
+        if (!oidc && ctx.calendarServices() != null) {
+            agent.conversation().attributes().put(CalendarServices.CONVERSATION_KEY, ctx.calendarServices());
+        }
         return agent;
+    }
+
+    private static boolean isOidcUser(User user, String userKey) {
+        if (user != null && user.authProvider == AuthProviderKind.OIDC) {
+            return true;
+        }
+        return userKey != null && userKey.startsWith("oidc-");
     }
 
     @Override
@@ -426,7 +543,7 @@ public class KirinAgentBridge implements ChatAgentBridge {
                 ? request.model.trim()
                 : ((loadedModel != null && !loadedModel.isBlank()) ? loadedModel : "local-llm");
 
-        Agent agent = createAgent(ctx, llm, modelId);
+        Agent agent = createAgent(user, ctx, llm, modelId);
         if (request != null && request.temperature >= 0.0) {
             agent.conversation().params().setProperty(LLM.TEMPERATURE, Double.toString(request.temperature));
         }
@@ -556,7 +673,7 @@ public class KirinAgentBridge implements ChatAgentBridge {
             OpenAIClientAsync client = OpenAIOkHttpClientAsync.builder()
                     .baseUrl(baseUrl)
                     .apiKey("kirin-internal-loopback")
-                    .putHeader(ChatCompletionResource.INTERNAL_AGENT_HEADER, "true")
+                    .putHeader(InternalAgentAuth.HEADER_TOKEN, InternalAgentAuth.token())
                     .timeout(Timeout.builder()
                             .connect(Duration.ofMinutes(1))
                             .read(Duration.ofMinutes(10))
