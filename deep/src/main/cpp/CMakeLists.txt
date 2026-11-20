@@ -244,7 +244,9 @@ if(SMILE_TORCH_CUDA_ENABLED AND USE_MARLIN_FP8)
         smile_mxfp8_convert.cu
         smile_minimax_ops.cu
         smile_deepseek_ops.cu
+        smile_glm_ops.cu
         ${VLLM_MARLIN_DIR}/moe/marlin_moe_wna16/sm80_kernel_bfloat16_fe4m3fn_bfloat16.cu
+        ${VLLM_MARLIN_DIR}/moe/marlin_moe_wna16/sm80_kernel_bfloat16_fe4m3fn_bfloat16_bf16scales.cu
         ${VLLM_MARLIN_DIR}/moe/marlin_moe_wna16/sm80_kernel_bfloat16_fe2m1f_bfloat16.cu)
     target_include_directories(smile_marlin_fp8 PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}

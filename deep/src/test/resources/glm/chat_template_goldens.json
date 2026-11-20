@@ -1,0 +1,1457 @@
+[
+ {
+  "name": "basic",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Hello"
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|user|>Hello<|assistant|><think>"
+ },
+ {
+  "name": "system+user",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are terse."
+   },
+   {
+    "role": "user",
+    "content": "Hi"
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>You are terse.<|user|>Hi<|assistant|><think>"
+ },
+ {
+  "name": "multi-turn",
+  "messages": [
+   {
+    "role": "user",
+    "content": "What is 2+2?"
+   },
+   {
+    "role": "assistant",
+    "content": "4"
+   },
+   {
+    "role": "user",
+    "content": "And 3+3?"
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|user|>What is 2+2?<|assistant|><think></think>4<|user|>And 3+3?<|assistant|><think>"
+ },
+ {
+  "name": "multi-turn with system",
+  "messages": [
+   {
+    "role": "system",
+    "content": "Be brief."
+   },
+   {
+    "role": "user",
+    "content": "Q1"
+   },
+   {
+    "role": "assistant",
+    "content": "A1"
+   },
+   {
+    "role": "user",
+    "content": "Q2"
+   },
+   {
+    "role": "assistant",
+    "content": "A2"
+   },
+   {
+    "role": "user",
+    "content": "Q3"
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>Be brief.<|user|>Q1<|assistant|><think></think>A1<|user|>Q2<|assistant|><think></think>A2<|user|>Q3<|assistant|><think>"
+ },
+ {
+  "name": "assistant content carries think block",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Q1"
+   },
+   {
+    "role": "assistant",
+    "content": "<think>reasoning here</think>Answer 1"
+   },
+   {
+    "role": "user",
+    "content": "Q2"
+   },
+   {
+    "role": "assistant",
+    "content": "<think>more\n</think>\n\nAnswer 2"
+   },
+   {
+    "role": "user",
+    "content": "Q3"
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|user|>Q1<|assistant|><think>reasoning here</think>Answer 1<|user|>Q2<|assistant|><think>more\n</think>Answer 2<|user|>Q3<|assistant|><think>"
+ },
+ {
+  "name": "think block with clear_thinking",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Q1"
+   },
+   {
+    "role": "assistant",
+    "content": "<think>reasoning here</think>Answer 1"
+   },
+   {
+    "role": "user",
+    "content": "Q2"
+   },
+   {
+    "role": "assistant",
+    "content": "<think>more</think>Answer 2"
+   }
+  ],
+  "tools": null,
+  "kwargs": {
+   "clear_thinking": true
+  },
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|user|>Q1<|assistant|><think></think>Answer 1<|user|>Q2<|assistant|><think>more</think>Answer 2<|assistant|><think>"
+ },
+ {
+  "name": "clear_thinking false explicit",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Q1"
+   },
+   {
+    "role": "assistant",
+    "content": "<think>r</think>A1"
+   },
+   {
+    "role": "user",
+    "content": "Q2"
+   }
+  ],
+  "tools": null,
+  "kwargs": {
+   "clear_thinking": false
+  },
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|user|>Q1<|assistant|><think>r</think>A1<|user|>Q2<|assistant|><think>"
+ },
+ {
+  "name": "assistant without think",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Q1"
+   },
+   {
+    "role": "assistant",
+    "content": "A1"
+   },
+   {
+    "role": "user",
+    "content": "Q2"
+   }
+  ],
+  "tools": null,
+  "kwargs": {
+   "clear_thinking": true
+  },
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|user|>Q1<|assistant|><think></think>A1<|user|>Q2<|assistant|><think>"
+ },
+ {
+  "name": "whitespace trimmed",
+  "messages": [
+   {
+    "role": "system",
+    "content": "  sys  \n"
+   },
+   {
+    "role": "user",
+    "content": "  hi there  \n\n"
+   },
+   {
+    "role": "assistant",
+    "content": "  ok  "
+   },
+   {
+    "role": "user",
+    "content": "\tnext\t"
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>  sys  \n<|user|>  hi there  \n\n<|assistant|><think></think>ok<|user|>\tnext\t<|assistant|><think>"
+ },
+ {
+  "name": "empty system",
+  "messages": [
+   {
+    "role": "system",
+    "content": ""
+   },
+   {
+    "role": "user",
+    "content": "Hi"
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|><|user|>Hi<|assistant|><think>"
+ },
+ {
+  "name": "system after user",
+  "messages": [
+   {
+    "role": "user",
+    "content": "a"
+   },
+   {
+    "role": "system",
+    "content": "late"
+   },
+   {
+    "role": "user",
+    "content": "b"
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|user|>a<|system|>late<|user|>b<|assistant|><think>"
+ },
+ {
+  "name": "unicode",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Héllo, 世界!   spaced "
+   },
+   {
+    "role": "assistant",
+    "content": "¿Qué?"
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|user|>Héllo, 世界!   spaced <|assistant|><think></think>¿Qué?<|assistant|><think>"
+ },
+ {
+  "name": "effort low",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Hi"
+   }
+  ],
+  "tools": null,
+  "kwargs": {
+   "reasoning_effort": "low"
+  },
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Low<|user|>Hi<|assistant|><think>"
+ },
+ {
+  "name": "effort high",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Hi"
+   }
+  ],
+  "tools": null,
+  "kwargs": {
+   "reasoning_effort": "high"
+  },
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: High<|user|>Hi<|assistant|><think>"
+ },
+ {
+  "name": "effort max",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Hi"
+   }
+  ],
+  "tools": null,
+  "kwargs": {
+   "reasoning_effort": "max"
+  },
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|user|>Hi<|assistant|><think>"
+ },
+ {
+  "name": "effort invalid",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Hi"
+   }
+  ],
+  "tools": null,
+  "kwargs": {
+   "reasoning_effort": "medium"
+  },
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|user|>Hi<|assistant|><think>"
+ },
+ {
+  "name": "effort low + system",
+  "messages": [
+   {
+    "role": "system",
+    "content": "Be brief."
+   },
+   {
+    "role": "user",
+    "content": "Hi"
+   }
+  ],
+  "tools": null,
+  "kwargs": {
+   "reasoning_effort": "low"
+  },
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Low<|system|>Be brief.<|user|>Hi<|assistant|><think>"
+ },
+ {
+  "name": "tools",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Weather in Paris?"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string",
+        "description": "City name"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "celsius",
+         "fahrenheit"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"get_weather\", \"description\": \"Get the weather for a city\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\", \"description\": \"City name\"}, \"unit\": {\"type\": \"string\", \"enum\": [\"celsius\", \"fahrenheit\"]}}, \"required\": [\"city\"]}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>Weather in Paris?<|assistant|><think>"
+ },
+ {
+  "name": "two tools",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Find it"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string",
+        "description": "City name"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "celsius",
+         "fahrenheit"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   },
+   {
+    "type": "function",
+    "function": {
+     "name": "search",
+     "description": "Recherche à travers 日本語 docs",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "q": {
+        "type": "string"
+       },
+       "limit": {
+        "type": "integer",
+        "default": 5
+       },
+       "filters": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"get_weather\", \"description\": \"Get the weather for a city\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\", \"description\": \"City name\"}, \"unit\": {\"type\": \"string\", \"enum\": [\"celsius\", \"fahrenheit\"]}}, \"required\": [\"city\"]}}\n{\"name\": \"search\", \"description\": \"Recherche à travers 日本語 docs\", \"parameters\": {\"type\": \"object\", \"properties\": {\"q\": {\"type\": \"string\"}, \"limit\": {\"type\": \"integer\", \"default\": 5}, \"filters\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}}}}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>Find it<|assistant|><think>"
+ },
+ {
+  "name": "tools + system",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a weather bot."
+   },
+   {
+    "role": "user",
+    "content": "Weather in Paris?"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string",
+        "description": "City name"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "celsius",
+         "fahrenheit"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"get_weather\", \"description\": \"Get the weather for a city\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\", \"description\": \"City name\"}, \"unit\": {\"type\": \"string\", \"enum\": [\"celsius\", \"fahrenheit\"]}}, \"required\": [\"city\"]}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|system|>You are a weather bot.<|user|>Weather in Paris?<|assistant|><think>"
+ },
+ {
+  "name": "tools + effort high",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Weather?"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string",
+        "description": "City name"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "celsius",
+         "fahrenheit"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "kwargs": {
+   "reasoning_effort": "high"
+  },
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: High<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"get_weather\", \"description\": \"Get the weather for a city\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\", \"description\": \"City name\"}, \"unit\": {\"type\": \"string\", \"enum\": [\"celsius\", \"fahrenheit\"]}}, \"required\": [\"city\"]}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>Weather?<|assistant|><think>"
+ },
+ {
+  "name": "tool round trip",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Weather in Paris and Rome?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let me check.",
+    "tool_calls": [
+     {
+      "id": "c1",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "Paris",
+        "unit": "celsius"
+       }
+      }
+     },
+     {
+      "id": "c2",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "Rome"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "c1",
+    "content": "18C sunny"
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "c2",
+    "content": "22C clear"
+   },
+   {
+    "role": "assistant",
+    "content": "Paris is 18C, Rome is 22C."
+   },
+   {
+    "role": "user",
+    "content": "Thanks, and Oslo?"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string",
+        "description": "City name"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "celsius",
+         "fahrenheit"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"get_weather\", \"description\": \"Get the weather for a city\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\", \"description\": \"City name\"}, \"unit\": {\"type\": \"string\", \"enum\": [\"celsius\", \"fahrenheit\"]}}, \"required\": [\"city\"]}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>Weather in Paris and Rome?<|assistant|><think></think>Let me check.<tool_call>get_weather<arg_key>city</arg_key><arg_value>Paris</arg_value><arg_key>unit</arg_key><arg_value>celsius</arg_value></tool_call><tool_call>get_weather<arg_key>city</arg_key><arg_value>Rome</arg_value></tool_call><|observation|><tool_response>18C sunny</tool_response><tool_response>22C clear</tool_response><|assistant|><think></think>Paris is 18C, Rome is 22C.<|user|>Thanks, and Oslo?<|assistant|><think>"
+ },
+ {
+  "name": "tool results out of order",
+  "messages": [
+   {
+    "role": "user",
+    "content": "two"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "id": "c1",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "A"
+       }
+      }
+     },
+     {
+      "id": "c2",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "B"
+       }
+      }
+     },
+     {
+      "id": "c3",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "C"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "c3",
+    "content": "third"
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "c1",
+    "content": "first"
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "c2",
+    "content": "second"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string",
+        "description": "City name"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "celsius",
+         "fahrenheit"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"get_weather\", \"description\": \"Get the weather for a city\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\", \"description\": \"City name\"}, \"unit\": {\"type\": \"string\", \"enum\": [\"celsius\", \"fahrenheit\"]}}, \"required\": [\"city\"]}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>two<|assistant|><think></think><tool_call>get_weather<arg_key>city</arg_key><arg_value>A</arg_value></tool_call><tool_call>get_weather<arg_key>city</arg_key><arg_value>B</arg_value></tool_call><tool_call>get_weather<arg_key>city</arg_key><arg_value>C</arg_value></tool_call><|observation|><tool_response>first</tool_response><tool_response>second</tool_response><tool_response>third</tool_response><|assistant|><think>"
+ },
+ {
+  "name": "tool results unknown id",
+  "messages": [
+   {
+    "role": "user",
+    "content": "go"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "id": "c1",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "A"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "zzz",
+    "content": "stranger"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string",
+        "description": "City name"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "celsius",
+         "fahrenheit"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"get_weather\", \"description\": \"Get the weather for a city\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\", \"description\": \"City name\"}, \"unit\": {\"type\": \"string\", \"enum\": [\"celsius\", \"fahrenheit\"]}}, \"required\": [\"city\"]}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>go<|assistant|><think></think><tool_call>get_weather<arg_key>city</arg_key><arg_value>A</arg_value></tool_call><|observation|><tool_response>stranger</tool_response><|assistant|><think>"
+ },
+ {
+  "name": "tool results without ids",
+  "messages": [
+   {
+    "role": "user",
+    "content": "go"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "type": "function",
+      "function": {
+       "name": "f",
+       "arguments": {
+        "a": 1
+       }
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "content": "res"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string",
+        "description": "City name"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "celsius",
+         "fahrenheit"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"get_weather\", \"description\": \"Get the weather for a city\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\", \"description\": \"City name\"}, \"unit\": {\"type\": \"string\", \"enum\": [\"celsius\", \"fahrenheit\"]}}, \"required\": [\"city\"]}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>go<|assistant|><think></think><tool_call>f<arg_key>a</arg_key><arg_value>1</arg_value></tool_call><|observation|><tool_response>res</tool_response><|assistant|><think>"
+ },
+ {
+  "name": "duplicate tool result ids",
+  "messages": [
+   {
+    "role": "user",
+    "content": "go"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "id": "c1",
+      "type": "function",
+      "function": {
+       "name": "f",
+       "arguments": {}
+      }
+     },
+     {
+      "id": "c2",
+      "type": "function",
+      "function": {
+       "name": "f",
+       "arguments": {}
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "c1",
+    "content": "a"
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "c1",
+    "content": "b"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string",
+        "description": "City name"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "celsius",
+         "fahrenheit"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"get_weather\", \"description\": \"Get the weather for a city\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\", \"description\": \"City name\"}, \"unit\": {\"type\": \"string\", \"enum\": [\"celsius\", \"fahrenheit\"]}}, \"required\": [\"city\"]}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>go<|assistant|><think></think><tool_call>f</tool_call><tool_call>f</tool_call><|observation|><tool_response>a</tool_response><tool_response>b</tool_response><|assistant|><think>"
+ },
+ {
+  "name": "tool call without content",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Search cats"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "id": "s1",
+      "type": "function",
+      "function": {
+       "name": "search",
+       "arguments": {
+        "q": "cats",
+        "limit": 3,
+        "filters": [
+         "a",
+         "b"
+        ],
+        "nested": {
+         "x": 1.5,
+         "y": null,
+         "z": true
+        }
+       }
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "s1",
+    "content": "{\"hits\": 3}"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "search",
+     "description": "Recherche à travers 日本語 docs",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "q": {
+        "type": "string"
+       },
+       "limit": {
+        "type": "integer",
+        "default": 5
+       },
+       "filters": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"search\", \"description\": \"Recherche à travers 日本語 docs\", \"parameters\": {\"type\": \"object\", \"properties\": {\"q\": {\"type\": \"string\"}, \"limit\": {\"type\": \"integer\", \"default\": 5}, \"filters\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}}}}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>Search cats<|assistant|><think></think><tool_call>search<arg_key>q</arg_key><arg_value>cats</arg_value><arg_key>limit</arg_key><arg_value>3</arg_value><arg_key>filters</arg_key><arg_value>[\"a\", \"b\"]</arg_value><arg_key>nested</arg_key><arg_value>{\"x\": 1.5, \"y\": null, \"z\": true}</arg_value></tool_call><|observation|><tool_response>{\"hits\": 3}</tool_response><|assistant|><think>"
+ },
+ {
+  "name": "tool call argument types",
+  "messages": [
+   {
+    "role": "user",
+    "content": "go"
+   },
+   {
+    "role": "assistant",
+    "content": "ok",
+    "tool_calls": [
+     {
+      "id": "t1",
+      "type": "function",
+      "function": {
+       "name": "f",
+       "arguments": {
+        "s": "text\nwith newline",
+        "i": 7,
+        "f": 2.5,
+        "tiny": 1e-05,
+        "b": false,
+        "n": null,
+        "l": [
+         1,
+         "two",
+         3.0
+        ],
+        "d": {
+         "k": "v"
+        },
+        "u": "日本語"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "t1",
+    "content": "done"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string",
+        "description": "City name"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "celsius",
+         "fahrenheit"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"get_weather\", \"description\": \"Get the weather for a city\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\", \"description\": \"City name\"}, \"unit\": {\"type\": \"string\", \"enum\": [\"celsius\", \"fahrenheit\"]}}, \"required\": [\"city\"]}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>go<|assistant|><think></think>ok<tool_call>f<arg_key>s</arg_key><arg_value>text\nwith newline</arg_value><arg_key>i</arg_key><arg_value>7</arg_value><arg_key>f</arg_key><arg_value>2.5</arg_value><arg_key>tiny</arg_key><arg_value>1e-05</arg_value><arg_key>b</arg_key><arg_value>false</arg_value><arg_key>n</arg_key><arg_value>null</arg_value><arg_key>l</arg_key><arg_value>[1, \"two\", 3.0]</arg_value><arg_key>d</arg_key><arg_value>{\"k\": \"v\"}</arg_value><arg_key>u</arg_key><arg_value>日本語</arg_value></tool_call><|observation|><tool_response>done</tool_response><|assistant|><think>"
+ },
+ {
+  "name": "tool call without arguments",
+  "messages": [
+   {
+    "role": "user",
+    "content": "go"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "id": "n1",
+      "type": "function",
+      "function": {
+       "name": "noargs",
+       "arguments": {}
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "n1",
+    "content": "ok"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string",
+        "description": "City name"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "celsius",
+         "fahrenheit"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"get_weather\", \"description\": \"Get the weather for a city\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\", \"description\": \"City name\"}, \"unit\": {\"type\": \"string\", \"enum\": [\"celsius\", \"fahrenheit\"]}}, \"required\": [\"city\"]}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>go<|assistant|><think></think><tool_call>noargs</tool_call><|observation|><tool_response>ok</tool_response><|assistant|><think>"
+ },
+ {
+  "name": "tool result then user",
+  "messages": [
+   {
+    "role": "user",
+    "content": "a"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "id": "w1",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "X"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "w1",
+    "content": "res"
+   },
+   {
+    "role": "assistant",
+    "content": "final"
+   },
+   {
+    "role": "user",
+    "content": "b"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string",
+        "description": "City name"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "celsius",
+         "fahrenheit"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"get_weather\", \"description\": \"Get the weather for a city\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\", \"description\": \"City name\"}, \"unit\": {\"type\": \"string\", \"enum\": [\"celsius\", \"fahrenheit\"]}}, \"required\": [\"city\"]}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>a<|assistant|><think></think><tool_call>get_weather<arg_key>city</arg_key><arg_value>X</arg_value></tool_call><|observation|><tool_response>res</tool_response><|assistant|><think></think>final<|user|>b<|assistant|><think>"
+ },
+ {
+  "name": "tool result multi-line",
+  "messages": [
+   {
+    "role": "user",
+    "content": "a"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "id": "w1",
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "X"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "w1",
+    "content": "line1\nline2\n"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather for a city",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string",
+        "description": "City name"
+       },
+       "unit": {
+        "type": "string",
+        "enum": [
+         "celsius",
+         "fahrenheit"
+        ]
+       }
+      },
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"get_weather\", \"description\": \"Get the weather for a city\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\", \"description\": \"City name\"}, \"unit\": {\"type\": \"string\", \"enum\": [\"celsius\", \"fahrenheit\"]}}, \"required\": [\"city\"]}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>a<|assistant|><think></think><tool_call>get_weather<arg_key>city</arg_key><arg_value>X</arg_value></tool_call><|observation|><tool_response>line1\nline2\n</tool_response><|assistant|><think>"
+ },
+ {
+  "name": "tool call in last turn",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q"
+   },
+   {
+    "role": "assistant",
+    "content": "thinking aloud",
+    "tool_calls": [
+     {
+      "id": "q1",
+      "type": "function",
+      "function": {
+       "name": "search",
+       "arguments": {
+        "q": "z"
+       }
+      }
+     }
+    ]
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "search",
+     "description": "Recherche à travers 日本語 docs",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "q": {
+        "type": "string"
+       },
+       "limit": {
+        "type": "integer",
+        "default": 5
+       },
+       "filters": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   }
+  ],
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"search\", \"description\": \"Recherche à travers 日本語 docs\", \"parameters\": {\"type\": \"object\", \"properties\": {\"q\": {\"type\": \"string\"}, \"limit\": {\"type\": \"integer\", \"default\": 5}, \"filters\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}}}}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>q<|assistant|><think></think>thinking aloud<tool_call>search<arg_key>q</arg_key><arg_value>z</arg_value></tool_call><|assistant|><think>"
+ },
+ {
+  "name": "history with tools clear_thinking",
+  "messages": [
+   {
+    "role": "user",
+    "content": "q1"
+   },
+   {
+    "role": "assistant",
+    "content": "<think>t</think>",
+    "tool_calls": [
+     {
+      "id": "a1",
+      "type": "function",
+      "function": {
+       "name": "search",
+       "arguments": {
+        "q": "a"
+       }
+      }
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "tool_call_id": "a1",
+    "content": "r"
+   },
+   {
+    "role": "assistant",
+    "content": "done"
+   },
+   {
+    "role": "user",
+    "content": "q2"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "search",
+     "description": "Recherche à travers 日本語 docs",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "q": {
+        "type": "string"
+       },
+       "limit": {
+        "type": "integer",
+        "default": 5
+       },
+       "filters": {
+        "type": "array",
+        "items": {
+         "type": "string"
+        }
+       }
+      }
+     }
+    }
+   }
+  ],
+  "kwargs": {
+   "clear_thinking": true
+  },
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>\n# Tools\n\nYou may call one or more functions to assist with the user query.\n\nYou are provided with function signatures within <tools></tools> XML tags:\n<tools>\n{\"name\": \"search\", \"description\": \"Recherche à travers 日本語 docs\", \"parameters\": {\"type\": \"object\", \"properties\": {\"q\": {\"type\": \"string\"}, \"limit\": {\"type\": \"integer\", \"default\": 5}, \"filters\": {\"type\": \"array\", \"items\": {\"type\": \"string\"}}}}}\n</tools>\n\nFor each function call, output the function name and arguments within the following XML format:\n<tool_call>{function-name}<arg_key>{arg-key-1}</arg_key><arg_value>{arg-value-1}</arg_value><arg_key>{arg-key-2}</arg_key><arg_value>{arg-value-2}</arg_value>...</tool_call><|user|>q1<|assistant|><think></think><tool_call>search<arg_key>q</arg_key><arg_value>a</arg_value></tool_call><|observation|><tool_response>r</tool_response><|assistant|><think></think>done<|user|>q2<|assistant|><think>"
+ },
+ {
+  "name": "assistant first (no user)",
+  "messages": [
+   {
+    "role": "assistant",
+    "content": "hi"
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|assistant|><think></think>hi<|assistant|><think>"
+ },
+ {
+  "name": "only tool results",
+  "messages": [
+   {
+    "role": "tool",
+    "tool_call_id": "x",
+    "content": "x"
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|observation|><tool_response>x</tool_response><|assistant|><think>"
+ },
+ {
+  "name": "image and video parts",
+  "messages": [
+   {
+    "role": "user",
+    "content": [
+     {
+      "type": "image"
+     },
+     {
+      "type": "text",
+      "text": "What is this?"
+     },
+     {
+      "type": "video"
+     }
+    ]
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|user|><|begin_of_image|><|image|><|end_of_image|>What is this?<|begin_of_video|><|video|><|end_of_video|><|assistant|><think>"
+ },
+ {
+  "name": "two images with system",
+  "messages": [
+   {
+    "role": "system",
+    "content": "Describe."
+   },
+   {
+    "role": "user",
+    "content": [
+     {
+      "type": "text",
+      "text": "Compare"
+     },
+     {
+      "type": "image"
+     },
+     {
+      "type": "image"
+     }
+    ]
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|system|>Describe.<|user|>Compare<|begin_of_image|><|image|><|end_of_image|><|begin_of_image|><|image|><|end_of_image|><|assistant|><think>"
+ },
+ {
+  "name": "list text content",
+  "messages": [
+   {
+    "role": "user",
+    "content": [
+     {
+      "type": "text",
+      "text": "part one "
+     },
+     {
+      "type": "text",
+      "text": "part two"
+     }
+    ]
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|user|>part one part two<|assistant|><think>"
+ },
+ {
+  "name": "assistant list content",
+  "messages": [
+   {
+    "role": "user",
+    "content": "a"
+   },
+   {
+    "role": "assistant",
+    "content": [
+     {
+      "type": "text",
+      "text": "x"
+     },
+     {
+      "type": "text",
+      "text": "y"
+     }
+    ]
+   },
+   {
+    "role": "user",
+    "content": "b"
+   }
+  ],
+  "tools": null,
+  "kwargs": {},
+  "text": "[gMASK]<sop><|system|>Reasoning Effort: Max<|user|>a<|assistant|><think></think>xy<|user|>b<|assistant|><think>"
+ }
+]

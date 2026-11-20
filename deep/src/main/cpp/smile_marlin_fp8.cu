@@ -226,6 +226,10 @@ extern "C" ST_Tensor smile_marlin_fp8_repack_scales_stack(ST_Tensor s) {
     SMILE_GUARD("smile_marlin_fp8_repack_scales_stack", stack_impl(s->t, repack_scales_impl))
 }
 
+extern "C" ST_Tensor smile_marlin_fp8_repack_block_scales_stack(ST_Tensor s) {
+    SMILE_GUARD("smile_marlin_fp8_repack_block_scales_stack", stack_impl(s->t, repack_block_scales_impl))
+}
+
 extern "C" ST_Tensor smile_marlin_fp8_gemm(ST_Tensor a, ST_Tensor qweight, ST_Tensor scales) {
     try {
         smile_torch_clear_error();
