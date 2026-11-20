@@ -17,22 +17,37 @@ import jakarta.enterprise.context.RequestScoped;
 public class AuthContext {
     private User user;
     private boolean localMeAuto;
+    private OidcPrincipal oidcPrincipal;
 
     /** Sets the resolved user for this request. */
     public void setUser(User user, boolean localMeAuto) {
         this.user = user;
         this.localMeAuto = localMeAuto;
+        this.oidcPrincipal = null;
     }
 
-    /** Clears any resolved user. */
-    public void clear() {
-        this.user = null;
+    /**
+     * Sets the verified OIDC principal and optional cached/persisted user for this request.
+     *
+     * @param principal verified OIDC identity.
+     * @param user      resolved {@link User} entity, or {@code null} for stateless M2M Bearer calls.
+     */
+    public void setOidcPrincipal(OidcPrincipal principal, User user) {
+        this.oidcPrincipal = principal;
+        this.user = user;
         this.localMeAuto = false;
     }
 
-    /** {@code true} when a user is associated with this request. */
+    /** Clears any resolved user or OIDC principal. */
+    public void clear() {
+        this.user = null;
+        this.localMeAuto = false;
+        this.oidcPrincipal = null;
+    }
+
+    /** {@code true} when a user or verified OIDC principal is associated with this request. */
     public boolean isLoggedIn() {
-        return user != null;
+        return user != null || oidcPrincipal != null;
     }
 
     /** {@code true} when the user was auto-assigned as local {@code me}. */
@@ -40,15 +55,38 @@ public class AuthContext {
         return localMeAuto;
     }
 
+    /** Returns the verified OIDC principal, or {@code null} when not OIDC-authenticated. */
+    public OidcPrincipal oidcPrincipal() {
+        return oidcPrincipal;
+    }
+
+    /** {@code true} when authenticated via an active OIDC provider (Bearer JWT or OIDC cookie). */
+    public boolean isOidcAuthenticated() {
+        return oidcPrincipal != null;
+    }
+
+    /** {@code true} when authenticated via an {@code Authorization: Bearer} JWT. */
+    public boolean isBearerTokenAuth() {
+        return oidcPrincipal != null && oidcPrincipal.fromBearerToken();
+    }
+
+    /** {@code true} when the OIDC principal carries the configured admin role claim. */
+    public boolean hasAdminRole() {
+        return oidcPrincipal != null && oidcPrincipal.adminAuthorized();
+    }
+
     /**
-     * {@code true} strictly when authenticated via Google or Microsoft OAuth
-     * (never {@code true} for unauthenticated guests or the localhost auto-login {@code me} user).
+     * {@code true} strictly when authenticated via browser Google, Microsoft, or OIDC
+     * SSO session (never {@code true} for unauthenticated guests, localhost auto-login
+     * {@code me}, or M2M {@code Authorization: Bearer} API callers).
      */
     public boolean isOAuthUser() {
         return user != null
                 && !localMeAuto
+                && !isBearerTokenAuth()
                 && (user.authProvider == AuthProviderKind.GOOGLE
-                    || user.authProvider == AuthProviderKind.MICROSOFT);
+                    || user.authProvider == AuthProviderKind.MICROSOFT
+                    || user.authProvider == AuthProviderKind.OIDC);
     }
 
     /**

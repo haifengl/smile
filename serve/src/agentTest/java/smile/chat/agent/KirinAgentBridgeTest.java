@@ -281,6 +281,76 @@ public class KirinAgentBridgeTest {
                 "Custom user skill in .smile/agents/kirin/skills/ must be discovered and injected into Kirin's context");
     }
 
+    @Test
+    void provisionsScopedOidcWorkspaceWithoutEmailOrCalendarAndEnforcesFourToolAllowlist() throws Exception {
+        KirinAgentBridge bridge = new KirinAgentBridge();
+
+        User oidcUser = new User();
+        oidcUser.id = 404L;
+        oidcUser.externalId = "oidc:0123456789abcdef:carol";
+        oidcUser.email = "carol@enterprise.example";
+        oidcUser.displayName = "Carol Enterprise";
+        oidcUser.authProvider = AuthProviderKind.OIDC;
+
+        bridge.onOAuthLogin(oidcUser, new ChatAgentBridge.OAuthLoginPayload(
+                AuthProviderKind.OIDC,
+                oidcUser.email,
+                oidcUser.displayName,
+                null,
+                null,
+                null,
+                null
+        ));
+
+        KirinAgentBridge.UserWorkspaceContext ctx = bridge.ensureUserWorkspace(oidcUser);
+        assertTrue(ctx.userKey().startsWith("oidc-"), "OIDC workspace key must start with oidc-: " + ctx.userKey());
+        assertTrue(Files.isRegularFile(ctx.kirinDir().resolve("AGENT.md")));
+        assertTrue(Files.isDirectory(ctx.kirinDir().resolve("skills")));
+
+        // No email.json, calendar.json, or credentials/ directory created for OIDC users
+        assertFalse(Files.exists(ctx.smileDir().resolve("conf").resolve("email.json")));
+        assertFalse(Files.exists(ctx.smileDir().resolve("conf").resolve("calendar.json")));
+        assertFalse(Files.exists(ctx.smileDir().resolve("credentials")));
+        assertNull(ctx.secretStore());
+        assertNull(ctx.emailServices());
+        assertNull(ctx.calendarServices());
+
+        // Default seeded OIDC spec strictly exposes only [WebFetch, WebSearch, Skill, TodoWrite]
+        Agent.Spec defaultSpec = bridge.loadKirinSpec(oidcUser, ctx);
+        assertEquals(List.of("WebFetch", "WebSearch", "Skill", "TodoWrite"), defaultSpec.tools());
+        assertFalse(defaultSpec.prompt().contains("Gmail"));
+
+        // Even if AGENT.md is manually edited to add Email, Calendar, Bash, Write -> stripped!
+        Files.writeString(ctx.kirinDir().resolve("AGENT.md"), """
+                ---
+                name: kirin
+                description: Tampered OIDC Kirin
+                tools:
+                  - WebFetch
+                  - WebSearch
+                  - Email
+                  - Calendar
+                  - Skill
+                  - TodoWrite
+                  - Bash
+                  - Write
+                ---
+                Tampered prompt.
+                """, StandardCharsets.UTF_8);
+
+        Agent.Spec sanitized = bridge.loadKirinSpec(oidcUser, ctx);
+        assertEquals(List.of("WebFetch", "WebSearch", "Skill", "TodoWrite"), sanitized.tools());
+        assertFalse(sanitized.tools().contains("Email"));
+        assertFalse(sanitized.tools().contains("Calendar"));
+        assertFalse(sanitized.tools().contains("Bash"));
+        assertFalse(sanitized.tools().contains("Write"));
+
+        // Agent instantiated for OIDC user must NOT bind EmailServices or CalendarServices
+        Agent oidcAgent = bridge.createAgent(oidcUser, ctx, createStubLlm("OK"), "test-model");
+        assertFalse(oidcAgent.conversation().attributes().containsKey(EmailServices.CONVERSATION_KEY));
+        assertFalse(oidcAgent.conversation().attributes().containsKey(CalendarServices.CONVERSATION_KEY));
+    }
+
     private static LLM createStubLlm(String reply) {
         return new LLM() {
             @Override

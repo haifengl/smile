@@ -32,6 +32,12 @@ public class UserResource {
     @Inject
     AuthContext authContext;
 
+    @Inject
+    UserService userService;
+
+    @Inject
+    UserCache userCache;
+
     /**
      * Returns the authenticated user's profile.
      *
@@ -39,6 +45,9 @@ public class UserResource {
      */
     @GET
     public UserProfile getProfile() {
+        if (userService != null) {
+            userService.ensureAuthenticatedUser(authContext);
+        }
         return UserProfile.from(authContext.requireUser());
     }
 
@@ -51,7 +60,14 @@ public class UserResource {
     @PATCH
     @Transactional
     public UserProfile updateProfile(UpdateUserRequest request) {
-        User user = authContext.requireUser();
+        if (userService != null) {
+            userService.ensureAuthenticatedUser(authContext);
+        }
+        User current = authContext.requireUser();
+        User user = current.id != null ? User.findById(current.id) : null;
+        if (user == null) {
+            user = current;
+        }
         if (request == null) {
             return UserProfile.from(user);
         }
@@ -68,6 +84,9 @@ public class UserResource {
             user.personalInstructions = request.personalInstructions.isBlank()
                     ? null
                     : request.personalInstructions;
+        }
+        if (userCache != null) {
+            userCache.register(user);
         }
         return UserProfile.from(user);
     }

@@ -13,6 +13,7 @@ import { deleteConversation, patchConversation } from '../api'
 import ConversationRow from './ConversationRow'
 import GoogleIcon from './GoogleIcon'
 import MicrosoftIcon from './MicrosoftIcon'
+import SsoIcon from './SsoIcon'
 import SettingsPanel from './SettingsPanel'
 import './ChatNavSidebar.css'
 
@@ -29,7 +30,12 @@ export default function ChatNavSidebar({
     user,
     loggedIn,
     agentMode,
+    oidcEnabled,
+    ssoRequired,
+    oidcLabel,
+    authError,
     loading: authLoading,
+    loginWithOidc,
     loginWithGoogle,
     loginWithMicrosoft,
     logout,
@@ -64,6 +70,14 @@ export default function ChatNavSidebar({
     onConversationMutated?.(conv.id)
   }
 
+  function handleOidcLogin() {
+    if (embedded) {
+      loginWithOidc({ returnTo: '/', inferModelId: model })
+      return
+    }
+    loginWithOidc({ returnTo: '/chat/' })
+  }
+
   function handleGoogleLogin() {
     if (embedded) {
       loginWithGoogle({ returnTo: '/', inferModelId: model })
@@ -80,7 +94,9 @@ export default function ChatNavSidebar({
     loginWithMicrosoft({ returnTo: '/chat/' })
   }
 
-  const isLocalMe = loggedIn && user?.external_id === 'me'
+  const ssoMode = Boolean(oidcEnabled || ssoRequired)
+  const isLocalMe = !ssoMode && loggedIn && user?.external_id === 'me'
+  const newChatDisabled = ssoMode && !loggedIn
 
   return (
     <nav className="chat-nav" aria-label="Chat navigation">
@@ -96,7 +112,12 @@ export default function ChatNavSidebar({
       ) : (
         <>
           <div className="chat-nav__section">
-            <button type="button" className="chat-nav__new-chat" onClick={onNewChat}>
+            <button
+              type="button"
+              className="chat-nav__new-chat"
+              onClick={onNewChat}
+              disabled={newChatDisabled}
+            >
               + New Chat
             </button>
           </div>
@@ -206,6 +227,24 @@ export default function ChatNavSidebar({
                         Login with Microsoft
                       </button>
                     </div>
+                  )}
+                </>
+              ) : ssoMode ? (
+                <>
+                  {authError ? (
+                    <p className="chat-nav__hint">{authError}</p>
+                  ) : (
+                    <>
+                      <p className="chat-nav__hint">
+                        Sign in with your organization account to start chatting.
+                      </p>
+                      <div className="chat-nav__login-group">
+                        <button type="button" className="chat-nav__login" onClick={handleOidcLogin}>
+                          <SsoIcon className="chat-nav__login-icon" />
+                          Sign in with {oidcLabel || 'SSO'}
+                        </button>
+                      </div>
+                    </>
                   )}
                 </>
               ) : (

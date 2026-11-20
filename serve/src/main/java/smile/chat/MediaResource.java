@@ -31,6 +31,8 @@ import io.quarkus.arc.profile.UnlessBuildProfile;
 import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.vertx.ext.web.RoutingContext;
 import smile.auth.AuthConfig;
+import smile.auth.AuthContext;
+import smile.auth.UserService;
 import smile.chat.blob.ClientIdentity;
 import smile.chat.blob.MediaTypeValidator;
 
@@ -54,6 +56,12 @@ public class MediaResource {
     @Inject
     AuthConfig authConfig;
 
+    @Inject
+    AuthContext authContext;
+
+    @Inject
+    UserService userService;
+
     /**
      * Streams a stored blob to its authorized owner.
      *
@@ -68,6 +76,9 @@ public class MediaResource {
     public Response get(@PathParam("content_id") String contentId,
                         @QueryParam("download") Boolean download,
                         @Context HttpHeaders headers) {
+        if (userService != null) {
+            userService.ensureAuthenticatedUser(authContext);
+        }
         String clientIp = ClientIdentity.resolveClientIp(
                 routingContext, headers, authConfig.trustForwardedHeaders());
         MediaService.MediaBytes media = mediaService.getBytes(contentId, clientIp);
