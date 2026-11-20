@@ -42,6 +42,8 @@ SMILE_API ST_Tensor smile_marlin_fp8_repack_block_scales(ST_Tensor s);
  */
 SMILE_API ST_Tensor smile_marlin_fp8_repack_weight_stack(ST_Tensor w);
 SMILE_API ST_Tensor smile_marlin_fp8_repack_scales_stack(ST_Tensor s);
+/** Block-FP8 scales (float32 [E, N/128, K/128], W = fp8 * scale) of all experts -> bfloat16 [E, K/128, N] (Marlin group-128 layout). */
+SMILE_API ST_Tensor smile_marlin_fp8_repack_block_scales_stack(ST_Tensor s);
 
 /**
  * NVFP4 experts (FP4 E2M1 weights, E4M3 scales per 16 elements, one float32 global scale per expert).

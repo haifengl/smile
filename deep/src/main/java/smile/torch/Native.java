@@ -144,6 +144,12 @@ public final class Native {
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final java.util.Optional<MemorySegment> MARLIN_FP8_REPACK_BLOCK_SCALES_STACK_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_fp8_repack_block_scales_stack");
+        static final MethodHandle MARLIN_FP8_REPACK_BLOCK_SCALES_STACK = MARLIN_FP8_REPACK_BLOCK_SCALES_STACK_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
         static final java.util.Optional<MemorySegment> MARLIN_FP8_REPACK_SCALES_STACK_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_marlin_fp8_repack_scales_stack");
         static final MethodHandle MARLIN_FP8_REPACK_SCALES_STACK = MARLIN_FP8_REPACK_SCALES_STACK_SYM
@@ -411,6 +417,43 @@ public final class Native {
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE,
                         ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> KDA_FORWARD_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_kda_forward");
+        static final MethodHandle KDA_FORWARD = KDA_FORWARD_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> INDEXER_SCORES_SYM =
+                smile_torch_h.SYMBOL_LOOKUP.find("smile_indexer_scores");
+        static final MethodHandle INDEXER_SCORES = INDEXER_SCORES_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG,
+                        ValueLayout.JAVA_LONG, ValueLayout.JAVA_LONG, ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MLA_APPEND_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_mla_decode_append");
+        static final MethodHandle MLA_APPEND = MLA_APPEND_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MLA_SCORES_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_mla_decode_scores");
+        static final MethodHandle MLA_SCORES = MLA_SCORES_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_LONG, ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MLA_TOPK_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_mla_decode_topk");
+        static final MethodHandle MLA_TOPK = MLA_TOPK_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MLA_ATTEND_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_mla_decode_attend");
+        static final MethodHandle MLA_ATTEND = MLA_ATTEND_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)))
                 .orElse(null);
         static final java.util.Optional<MemorySegment> MSA_DECODE_MASK_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_msa_decode_mask");
@@ -1169,6 +1212,19 @@ public final class Native {
      * @param scales uint8 {@code [E, N, K / 32]}.
      * @return uint8 {@code [E, K / 32, N]}.
      */
+    /**
+     * Repacks the block-FP8 scales of a stack of experts ({@code float32 [E, N/128, K/128]}, weight = fp8 * scale)
+     * to the Marlin group-128 layout {@code bfloat16 [E, K/128, N]}; pairs with {@link #marlinFp8RepackWeightStack}
+     * and {@link #marlinMoeFp8Gemm}, which detects the bfloat16 scales.
+     *
+     * @param scales the checkpoint's {@code weight_scale_inv} of every expert, stacked.
+     * @return the repacked scales.
+     */
+    public static Tensor marlinFp8RepackBlockScalesStack(Tensor scales) {
+        return marlinFp8Result(Bindings.MARLIN_FP8_REPACK_BLOCK_SCALES_STACK,
+                "smile_marlin_fp8_repack_block_scales_stack", scales.handle());
+    }
+
     public static Tensor marlinFp8RepackScalesStack(Tensor scales) {
         return marlinFp8Result(Bindings.MARLIN_FP8_REPACK_SCALES_STACK, "smile_marlin_fp8_repack_scales_stack",
                 scales.handle());
@@ -1297,6 +1353,182 @@ public final class Native {
 
     private static boolean dsOn(String op) {
         return FUSED_OPS_ENABLED && !dsOff.contains(op);
+    }
+
+    /**
+     * Whether the GLM KDA kernel is available in the loaded native library.
+     *
+     * @return {@code true} if {@link #kdaForward} can be called.
+     */
+    public static boolean kdaAvailable() {
+        return Bindings.KDA_FORWARD != null;
+    }
+
+    /**
+     * Kimi delta-rule linear attention of GLM-5.3-Flash for {@code T} new tokens of each of {@code B} requests:
+     * causal convolution, L2 norms, forget gate, beta and the recurrence in one kernel; the conv and recurrent
+     * states of the requests' slots are updated in place. See {@code smile_glm_ops.h}.
+     *
+     * @param raw       float32 {@code [B, T, 3W]} q|k|v projections before the convolution.
+     * @param fg        float32 {@code [B, T, W]} forget-gate projection without bias.
+     * @param braw      float32 {@code [B, T, H]} beta logits.
+     * @param convw     float32 {@code [3W, 4]} convolution taps.
+     * @param aLog      float32 {@code [H]}.
+     * @param dtBias    float32 {@code [W]}.
+     * @param convState float32 {@code [S, 3, 3W]}.
+     * @param recState  float32 {@code [S, H, 128, 128]}.
+     * @param slots     int32 {@code [B]} slot of each request.
+     * @param gateBound the (negative) gate lower bound.
+     * @return float32 {@code [B, T, H, 128]}.
+     */
+    public static Tensor kdaForward(Tensor raw, Tensor fg, Tensor braw, Tensor convw, Tensor aLog, Tensor dtBias,
+                                    Tensor convState, Tensor recState, Tensor slots, double gateBound) {
+        MethodHandle handle = Bindings.KDA_FORWARD;
+        if (handle == null) {
+            throw new IllegalStateException("smile_kda_forward symbol not found (rebuild libsmile_torch)");
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) handle.invokeExact(raw.handle(), fg.handle(), braw.handle(), convw.handle(),
+                    aLog.handle(), dtBias.handle(), convState.handle(), recState.handle(), slots.handle(), gateBound);
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_kda_forward failed: " + t.getMessage(), t);
+        }
+        if (out == null || out.address() == 0) {
+            throw new RuntimeException("smile_kda_forward: " + lastError());
+        }
+        return new Tensor(out);
+    }
+
+    /**
+     * Whether the fused GLM indexer scoring kernel is available.
+     *
+     * @return {@code true} if {@link #indexerScores} can be called.
+     */
+    public static boolean indexerScoresAvailable() {
+        return Bindings.INDEXER_SCORES != null;
+    }
+
+    /**
+     * GLM indexer scores of {@code n} queries against pooled keys {@code [pool0, pool0 + count)}, fused on tensor
+     * cores: {@code out[s, j] = sum_h w[s, h] * relu(scale * q[s, h] . pk[pool0 + j])}, float32 lowest where the pool's
+     * last token is after the query's position. See {@code smile_glm_ops.h}.
+     *
+     * @param q     bfloat16 {@code [n, 32, 128]} indexer queries.
+     * @param w     float32 {@code [n, 32]} head weights.
+     * @param pk    bfloat16 {@code [P, 128]} pooled keys.
+     * @param pool0 first pool of the range.
+     * @param count number of pools.
+     * @param p0    position of the first query.
+     * @param scale score scale.
+     * @return float32 {@code [n, count]}.
+     */
+    public static Tensor indexerScores(Tensor q, Tensor w, Tensor pk, long pool0, long count, long p0, double scale) {
+        MethodHandle handle = Bindings.INDEXER_SCORES;
+        if (handle == null) {
+            throw new IllegalStateException("smile_indexer_scores symbol not found (rebuild libsmile_torch)");
+        }
+        MemorySegment out;
+        try {
+            out = (MemorySegment) handle.invokeExact(q.handle(), w.handle(), pk.handle(), pool0, count, p0, scale);
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_indexer_scores failed: " + t.getMessage(), t);
+        }
+        if (out == null || out.address() == 0) {
+            throw new RuntimeException("smile_indexer_scores: " + lastError());
+        }
+        return new Tensor(out);
+    }
+
+    /**
+     * Whether the graph-safe GLM MLA decode kernels are available.
+     *
+     * @return {@code true} if {@link #mlaDecodeAppend} and friends can be called.
+     */
+    public static boolean mlaDecodeAvailable() {
+        return Bindings.MLA_APPEND != null && Bindings.MLA_SCORES != null && Bindings.MLA_TOPK != null
+                && Bindings.MLA_ATTEND != null;
+    }
+
+    private static Tensor mlaResult(MethodHandle handle, String name, Object... args) {
+        MemorySegment out;
+        try {
+            out = (MemorySegment) handle.invokeWithArguments(args);
+        } catch (Throwable t) {
+            throw new RuntimeException(name + " failed: " + t.getMessage(), t);
+        }
+        if (out == null || out.address() == 0) {
+            throw new RuntimeException(name + ": " + lastError());
+        }
+        return new Tensor(out);
+    }
+
+    /**
+     * Appends one decode token of each of {@code B} requests to their MLA caches (latent row, indexer ring, completed
+     * pool); see {@code smile_glm_ops.h}.
+     *
+     * @param latNew   float32 {@code [B, 512]}.
+     * @param keyNew   float32 {@code [B, 128]}.
+     * @param gateNew  float32 {@code [B, 128]}.
+     * @param ape      float32 {@code [4, 128]}.
+     * @param latPtrs  int64 {@code [B]} base addresses of the latent caches.
+     * @param poolPtrs int64 {@code [B]} base addresses of the pooled-key caches.
+     * @param pendPtrs int64 {@code [B]} base addresses of the pending rings {@code [4, 256]}.
+     * @param lens     int32 {@code [B]} tokens before this step.
+     */
+    public static void mlaDecodeAppend(Tensor latNew, Tensor keyNew, Tensor gateNew, Tensor ape, Tensor latPtrs,
+                                       Tensor poolPtrs, Tensor pendPtrs, Tensor lens) {
+        int rc;
+        try {
+            rc = (int) Bindings.MLA_APPEND.invokeExact(latNew.handle(), keyNew.handle(), gateNew.handle(), ape.handle(),
+                    latPtrs.handle(), poolPtrs.handle(), pendPtrs.handle(), lens.handle());
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_mla_decode_append failed: " + t.getMessage(), t);
+        }
+        if (rc != 0) {
+            throw new RuntimeException("smile_mla_decode_append: " + lastError());
+        }
+    }
+
+    /**
+     * Indexer scores of the new tokens against each request's complete pools.
+     *
+     * @param q        bfloat16 {@code [B, 32, 128]}.
+     * @param w        float32 {@code [B, 32]}.
+     * @param poolPtrs int64 {@code [B]}.
+     * @param lens     int32 {@code [B]} tokens before this step.
+     * @param maxPools row stride of the result.
+     * @param scale    score scale.
+     * @return float32 {@code [B, maxPools]}.
+     */
+    public static Tensor mlaDecodeScores(Tensor q, Tensor w, Tensor poolPtrs, Tensor lens, long maxPools, double scale) {
+        return mlaResult(Bindings.MLA_SCORES, "smile_mla_decode_scores", q.handle(), w.handle(), poolPtrs.handle(),
+                lens.handle(), maxPools, scale);
+    }
+
+    /**
+     * Top pools per request expanded to token ids.
+     *
+     * @param scores    float32 {@code [B, maxPools]}.
+     * @param lens      int32 {@code [B]}.
+     * @param topkPools pools selected per request.
+     * @return int32 {@code [B, 4 * topkPools + 3]}, {@code -1} where unused.
+     */
+    public static Tensor mlaDecodeTopk(Tensor scores, Tensor lens, long topkPools) {
+        return mlaResult(Bindings.MLA_TOPK, "smile_mla_decode_topk", scores.handle(), lens.handle(), topkPools);
+    }
+
+    /**
+     * Latent-space multi-query attention over the selected tokens.
+     *
+     * @param qabs    bfloat16 {@code [B, heads, 512]}.
+     * @param latPtrs int64 {@code [B]}.
+     * @param idx     int32 {@code [B, W]}.
+     * @param scale   score scale.
+     * @return float32 {@code [B, heads, 512]}.
+     */
+    public static Tensor mlaDecodeAttend(Tensor qabs, Tensor latPtrs, Tensor idx, double scale) {
+        return mlaResult(Bindings.MLA_ATTEND, "smile_mla_decode_attend", qabs.handle(), latPtrs.handle(), idx.handle(), scale);
     }
 
     private static final boolean FUSED_OPS_ENABLED = !"0".equals(System.getenv("SMILE_FUSED_OPS"));
