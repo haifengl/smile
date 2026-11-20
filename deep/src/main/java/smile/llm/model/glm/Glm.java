@@ -57,8 +57,8 @@ import smile.llm.template.GlmChatTemplate;
  * per rank: a slot in the KDA state pools and the MLA latent and indexer caches of the sparse layers.
  *
  * <p>A prompt is prefilled in chunks (the engine's chunk boundaries carry the KDA and cache state across calls); a
- * decode step over {@code B} requests is one batched pass. Not yet: prefix reuse, CUDA graphs, speculation (MTP),
- * images.
+ * decode step over {@code B} requests is one batched pass. Prefix reuse restores whole-request snapshots
+ * ({@link GlmPrefixCache}). Not yet: speculation (MTP), images.
  *
  * @author Haifeng Li
  */
@@ -77,8 +77,22 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
     private static final boolean GRAPHS = !"0".equals(System.getenv("SMILE_GLM_GRAPH"));
     private static final int MAX_GRAPH_BATCH = Integer.getInteger("smile.glm.graph.maxbatch", 32);
     private final Map<Integer, GlmDecodeGraph>[] graphs;
+    private final Map<Integer, GlmWindowGraph>[] windowGraphs;
+    private final Map<Integer, GlmMtpGraph>[] mtpGraphs;
+    private volatile boolean mtpGraphsDisabled;
+    private volatile boolean windowGraphsDisabled;
+    private static final boolean WINDOW_GRAPHS = !"0".equals(System.getenv("SMILE_GLM_WINDOW_GRAPH"));
+    private static final boolean MTP_GRAPHS = !"0".equals(System.getenv("SMILE_GLM_MTP_GRAPH"));
+    private static final int MAX_WINDOW_BATCH = Integer.getInteger("smile.glm.window.maxbatch", 8);
     private final boolean onCuda;
     private volatile boolean graphsDisabled;
+    /** Graph keys captured on every rank (checked on the calling thread so that a ready graph costs no round trip to the rank threads). */
+    private final Set<String> readyGraphs = ConcurrentHashMap.newKeySet();
+    /** Snapshot budget per rank in MB ({@code -Dsmile.glm.prefix.cache.mb}, 0 = prefix reuse off). */
+    /** Prompts shorter than this are not worth a snapshot. */
+    private final int prefixMinTokens = Integer.getInteger("smile.glm.prefix.min.tokens", 512);
+    private GlmPrefixCache prefixCache;
+    private final Map<Integer, GlmPrefixCache.Entry> prefixMatches = new ConcurrentHashMap<>();
 
     @SuppressWarnings("unchecked")
     private Glm(String name, GlmModelArgs args, GlmTokenizer tokenizer, Path dir, byte[] devices, int maxSessions) {
@@ -88,11 +102,18 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         this.maxSessions = maxSessions;
         int ranks = devices == null ? 1 : devices.length;
         this.group = ranks > 1 ? new TensorParallelGroup(ParallelConfig.tensorParallel(devices)) : null;
+        if (group != null && !"0".equals(System.getenv("SMILE_GLM_CUSTOM_AR"))) {
+            group.enableCustomAllReduce();
+        }
         this.workers = new ExecutorService[ranks];
         this.replicas = new GlmModel[ranks];
         this.graphs = new Map[ranks];
+        this.windowGraphs = new Map[ranks];
+        this.mtpGraphs = new Map[ranks];
         for (int r = 0; r < ranks; r++) {
             graphs[r] = new java.util.HashMap<>();
+            windowGraphs[r] = new java.util.HashMap<>();
+            mtpGraphs[r] = new java.util.HashMap<>();
         }
         this.onCuda = devices != null;
         for (int r = 0; r < ranks; r++) {
@@ -113,6 +134,36 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
             }));
         }
         await(loading);
+        long cacheMb = Long.getLong("smile.glm.prefix.cache.mb", 4096L);
+        if (cacheMb > 0) {
+            prefixCache = new GlmPrefixCache(cacheMb << 20, this::disposeEntry);
+        }
+    }
+
+    /** Frees a snapshot on every rank thread. */
+    private void disposeEntry(GlmPrefixCache.Entry e) {
+        List<Future<?>> frees = new ArrayList<>();
+        for (int r = 0; r < workers.length; r++) {
+            final GlmModel.Snapshot snap = e.ranks[r];
+            frees.add(workers[r].submit(() -> {
+                snap.close();
+                return null;
+            }));
+        }
+        try {
+            await(frees);
+        } catch (RuntimeException ex) {
+            logger.warn("GLM prefix snapshot release failed: {}", ex.toString());
+        }
+    }
+
+    /**
+     * Prefix cache statistics.
+     *
+     * @return a one-line summary, or {@code "disabled"}.
+     */
+    public String prefixCacheStats() {
+        return prefixCache == null ? "disabled" : prefixCache.stats();
     }
 
     /**
@@ -370,21 +421,74 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         }
         int id = nextId.getAndIncrement();
         sessions.put(id, s);
+        if (prefixCache != null && prompt != null) {
+            GlmPrefixCache.Entry hit = prefixCache.acquire(prompt);
+            if (hit != null) {
+                prefixMatches.put(id, hit);
+            }
+        }
         return id;
     }
 
     @Override
     public int prefixLen(int requestId) {
-        return 0;
+        GlmPrefixCache.Entry hit = prefixMatches.get(requestId);
+        return hit == null ? 0 : hit.position();
+    }
+
+    /** Loads the matched snapshot into the request's (empty) session; the engine then prefills from its position. */
+    @Override
+    public void warmPrefix(int requestId, int[] prompt, int prefixLen) {
+        GlmPrefixCache.Entry hit = prefixMatches.remove(requestId);
+        if (hit == null) {
+            if (prefixLen != 0) {
+                throw new IllegalStateException("request " + requestId + " has no prefix snapshot for " + prefixLen + " tokens");
+            }
+            return;
+        }
+        try {
+            if (hit.position() != prefixLen) {
+                throw new IllegalStateException("prefix snapshot at " + hit.position() + " cannot serve a restart at " + prefixLen);
+            }
+            GlmModel.Session[] s = session(requestId);
+            gatherAllRanks(rank -> {
+                try (var guard = Tensor.noGradGuard()) {
+                    replicas[rank].restore(hit.ranks[rank], s[rank]);
+                }
+                return null;
+            });
+            logger.info("GLM prefix reuse: request {} resumes at token {} of {}", requestId, prefixLen, prompt.length);
+        } finally {
+            prefixCache.unpin(hit);
+        }
     }
 
     @Override
     public Tensor prefill(int requestId, int[] prompt, int prefixLen) {
-        if (prefixLen != 0) {
-            throw new UnsupportedOperationException("prefix reuse is not supported");
-        }
-        return prefillChunk(requestId, prompt, 0, prompt.length);
+        return prefillChunk(requestId, prompt, prefixLen, prompt.length);
     }
+
+    /** Positions in {@code (from, to]} where a snapshot is worth taking: powers of two from 4096 and the token before the last. */
+    private List<Integer> snapshotCuts(int[] prompt, int from, int to) {
+        List<Integer> cuts = new ArrayList<>();
+        if (prefixCache == null) {
+            return cuts;
+        }
+        int limit = prompt.length - 1;              // the last token is always processed (its logits are sampled)
+        long perToken = 1088L * Math.max(1, replicas[0].mlaLayerCount());
+        for (int p = Math.max(from + 1, prefixMinTokens); p <= Math.min(to, limit); p++) {
+            boolean wanted = p == limit || (p >= 4096 && Integer.bitCount(p) == 1);
+            if (wanted && prefixCache.fits(p * perToken + (24L << 20)) && !prefixCache.has(prompt, p)) {
+                cuts.add(p);
+            }
+            if (p >= 4096 && Integer.bitCount(p) != 1 && p < limit) {
+                p = Math.min(Integer.highestOneBit(p) << 1, limit) - 1;     // skip ahead to the next power of two
+            }
+        }
+        return cuts;
+    }
+
+    private record ChunkResult(Tensor logits, GlmModel.Snapshot[] snaps) { }
 
     @Override
     public Tensor prefillChunk(int requestId, int[] prompt, int from, int to) {
@@ -392,24 +496,467 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         if (s[0].length() != from) {
             throw new IllegalStateException("request " + requestId + " is at position " + s[0].length() + ", not " + from);
         }
-        int[] ids = Arrays.copyOfRange(prompt, from, to);
         boolean last = to == prompt.length;
-        Tensor logits = onAllRanks(rank -> {
+        List<Integer> cuts = snapshotCuts(prompt, from, to);
+        List<Integer> ends = new ArrayList<>(cuts);
+        if (ends.isEmpty() || ends.get(ends.size() - 1) != to) {
+            ends.add(to);
+        }
+        List<ChunkResult> results = gatherAllRanks(rank -> {
+            GlmModel.Snapshot[] mine = new GlmModel.Snapshot[cuts.size()];
             try (var guard = Tensor.noGradGuard()) {
                 GlmModel m = replicas[rank];
-                return Gx.layerScoped(() -> {
-                    Tensor hidden = m.forward(ids, s[rank], null);
-                    // only the last row of the last chunk is sampled; other chunks return a placeholder
-                    Tensor row = Gx.narrow(hidden, 0, hidden.size(0) - 1, 1);
-                    return last ? m.logits(row) : Gx.zeros(smile.deep.tensor.ScalarType.Float, 1);
-                });
+                Tensor out = null;
+                int segStart = from;
+                for (int end : ends) {
+                    final int start = segStart;
+                    int[] ids = Arrays.copyOfRange(prompt, start, end);
+                    boolean finalSegment = end == to;
+                    Tensor r = Gx.layerScoped(() -> {
+                        Tensor hidden = m.forward(ids, s[rank], null);
+                        if (m.hasMtp()) {
+                            // slot q of the MTP layer pairs the hidden row of position q with the token at q + 1
+                            int rows = end == prompt.length ? ids.length - 1 : ids.length;
+                            if (rows > 0) {
+                                m.mtpAbsorb(s[rank], Arrays.copyOfRange(prompt, start + 1, start + 1 + rows), hidden);
+                            }
+                            m.setLastHidden(s[rank], hidden);
+                        }
+                        // only the last row of the last chunk is sampled; other chunks return a placeholder
+                        Tensor row = Gx.narrow(hidden, 0, hidden.size(0) - 1, 1);
+                        return last && finalSegment ? m.logits(row) : Gx.zeros(smile.deep.tensor.ScalarType.Float, 1);
+                    });
+                    int k = cuts.indexOf(end);
+                    if (k >= 0) {
+                        mine[k] = m.snapshot(s[rank]);
+                    }
+                    if (finalSegment) {
+                        out = r;
+                    } else {
+                        r.close();
+                    }
+                    segStart = end;
+                }
+                return new ChunkResult(out, mine);
+            } catch (RuntimeException | Error e) {
+                for (GlmModel.Snapshot snap : mine) {
+                    if (snap != null) {
+                        snap.close();
+                    }
+                }
+                throw e;
             }
-        }, Tensor::close);
+        });
+        for (int r = 1; r < results.size(); r++) {
+            results.get(r).logits().close();
+        }
+        for (int k = 0; k < cuts.size(); k++) {
+            GlmModel.Snapshot[] ranks = new GlmModel.Snapshot[workers.length];
+            for (int r = 0; r < ranks.length; r++) {
+                ranks[r] = results.get(r).snaps()[k];
+            }
+            prefixCache.put(new GlmPrefixCache.Entry(Arrays.copyOf(prompt, cuts.get(k)), ranks));
+        }
+        Tensor logits = results.get(0).logits();
         if (!last) {
             logits.close();
             return null;
         }
         return logits;
+    }
+
+    /**
+     * Whether the MTP layer is loaded (speculation available).
+     *
+     * @return {@code true} with MTP.
+     */
+    public boolean hasMtp() {
+        return mtpOn();
+    }
+
+    /** A round may verify more rows than a request has tokens left: the engine drops the extra, and the window shape stays fixed. */
+    @Override
+    public boolean speculationMayOvershoot() {
+        return true;
+    }
+
+    /** Plain steps keep the MTP caches in sync ({@link #syncMtpBeforePlain}), so speculation can switch per tick. */
+    @Override
+    public boolean speculationSwitchable() {
+        return mtpOn();
+    }
+
+    private long plainSteps;
+    private long plainSyncNs;
+    private long plainAfterNs;
+    private long plainStepNs;
+    private long plainRows;
+
+    private void notePlain(long syncNs, long afterNs, long stepNs, int rows) {
+        plainSteps++;
+        plainSyncNs += syncNs;
+        plainAfterNs += afterNs;
+        plainStepNs += stepNs;
+        plainRows += rows;
+        if (plainSteps % 200 == 0) {
+            logger.info("GLM plain decode: {} steps, avg {} rows, {} ms per step incl. {} ms MTP catch-up before and {} ms bookkeeping after",
+                    plainSteps, String.format("%.1f", (double) plainRows / plainSteps),
+                    String.format("%.1f", (plainStepNs + plainSyncNs) / 1e6 / plainSteps),
+                    String.format("%.2f", plainSyncNs / 1e6 / plainSteps), String.format("%.2f", plainAfterNs / 1e6 / plainSteps));
+            plainSteps = 0;
+            plainSyncNs = 0;
+            plainAfterNs = 0;
+            plainStepNs = 0;
+            plainRows = 0;
+        }
+    }
+
+    private boolean mtpOn() {
+        return replicas.length > 0 && replicas[0].hasMtp();
+    }
+
+    @Override
+    public int[][] speculateStep(int[] requestIds, int[] lastTokens, int[] positions, int numDrafts,
+                                 double temperature, double topp) {
+        double[] t = new double[requestIds.length];
+        double[] p = new double[requestIds.length];
+        Arrays.fill(t, temperature);
+        Arrays.fill(p, topp);
+        return speculateStep(requestIds, lastTokens, positions, numDrafts, t, p);
+    }
+
+    @Override
+    public int[][] speculateStep(int[] requestIds, int[] lastTokens, int[] positions, int numDrafts,
+                                 double[] temperatures, double[] topps) {
+        if (!mtpOn()) {
+            throw new UnsupportedOperationException("the GLM checkpoint has no MTP layer loaded");
+        }
+        if (windowGraphEligible(Math.min(requestIds.length, MAX_WINDOW_BATCH), positions, numDrafts)) {
+            // groups of at most MAX_WINDOW_BATCH requests, one graph replay each
+            int[][] all = new int[requestIds.length][];
+            boolean ok = true;
+            for (int from = 0; from < requestIds.length && ok; from += MAX_WINDOW_BATCH) {
+                int to = Math.min(requestIds.length, from + MAX_WINDOW_BATCH);
+                int[][] part = speculateWindow(Arrays.copyOfRange(requestIds, from, to), Arrays.copyOfRange(lastTokens, from, to),
+                        Arrays.copyOfRange(positions, from, to), numDrafts, Arrays.copyOfRange(temperatures, from, to),
+                        Arrays.copyOfRange(topps, from, to));
+                if (part == null) {
+                    ok = false;
+                } else {
+                    System.arraycopy(part, 0, all, from, part.length);
+                }
+            }
+            if (ok) {
+                return all;
+            }
+        }
+        int[][] out = new int[requestIds.length][];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = speculateOne(requestIds[i], lastTokens[i], positions[i], numDrafts, temperatures[i], topps[i]);
+        }
+        return out;
+    }
+
+    private boolean windowGraphEligible(int n, int[] positions, int drafts) {
+        if (!WINDOW_GRAPHS || windowGraphsDisabled || !onCuda || n > MAX_WINDOW_BATCH || !smile.torch.Native.dsGraphAvailable()
+                || !smile.torch.Native.windowAvailable() || !smile.torch.Native.kdaAvailable()
+                || !smile.torch.Native.mlaDecodeAvailable() || drafts > 6) {
+            return false;
+        }
+        for (int p : positions) {
+            if (p + drafts + 1 > args.maxSeqLen()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean prepareMtpGraph(int rank, int nb, java.util.concurrent.CyclicBarrier barrier) {
+        return prepareMtpGraph(rank, nb, barrier, true);
+    }
+
+    /** Graph key of an MTP bucket: the catch-up variant without the head is stored under {@code nb + 1000}. */
+    private static int mtpKey(int nb, boolean head) {
+        return head ? nb : nb + 1000;
+    }
+
+    private boolean prepareMtpGraph(int rank, int nb, java.util.concurrent.CyclicBarrier barrier, boolean head) {
+        try {
+            if (mtpGraphs[rank].containsKey(mtpKey(nb, head))) {
+                return true;
+            }
+            long t0 = System.nanoTime();
+            long maxPools = ((args.maxSeqLen() + 1L) / 4 + 511) / 512 * 512;
+            mtpGraphs[rank].put(mtpKey(nb, head), GlmMtpGraph.capture(replicas[rank], nb, maxPools, args.dim(), Gx.device().index(), barrier, head));
+            if (rank == 0) {
+                logger.info("Captured GLM MTP graph for {} request(s) in {} ms", nb, (System.nanoTime() - t0) / 1_000_000L);
+            }
+            return true;
+        } catch (Throwable t) {
+            logger.warn("GLM MTP graph capture failed on rank {}: {}", rank, t.toString());
+            if (System.getenv("SMILE_GLM_DEBUG") != null) {
+                t.printStackTrace();
+            }
+            barrier.reset();
+            return false;
+        }
+    }
+
+    private boolean prepareWindowGraph(int rank, int nb, int rows, java.util.concurrent.CyclicBarrier barrier) {
+        int key = nb * 16 + rows;
+        try {
+            if (windowGraphs[rank].containsKey(key)) {
+                return true;
+            }
+            long t0 = System.nanoTime();
+            long maxPools = ((args.maxSeqLen() + 1L) / 4 + 511) / 512 * 512;
+            windowGraphs[rank].put(key, GlmWindowGraph.capture(replicas[rank], nb, rows, maxPools, Gx.device().index(), barrier));
+            if (rank == 0) {
+                logger.info("Captured GLM verify-window graph for {} request(s) x {} rows in {} ms", nb, rows,
+                        (System.nanoTime() - t0) / 1_000_000L);
+            }
+            return true;
+        } catch (Throwable t) {
+            logger.warn("GLM verify-window graph capture failed on rank {}: {}", rank, t.toString());
+            if (System.getenv("SMILE_GLM_DEBUG") != null) {
+                t.printStackTrace();
+            }
+            barrier.reset();
+            return false;
+        }
+    }
+
+    /**
+     * The speculative round of a group of requests with the verify window in a CUDA graph: the MTP layer drafts for every
+     * request (eager), one graph replay scores all windows, the accepted rows are kept by the commit kernels (no model
+     * rerun on a partial accept), and the kept rows are absorbed into the MTP caches. Returns {@code null} if the graph
+     * cannot be used (capture failed).
+     */
+    private int[][] speculateWindow(int[] requestIds, int[] lastTokens, int[] positions, int n, double[] temperatures,
+                                    double[] topps) {
+        long t0 = System.nanoTime();
+        int b = requestIds.length;
+        int rows = Math.max(1, n) + 1;
+        int drafts = rows - 1;
+        GlmModel.Session[][] mine = new GlmModel.Session[workers.length][b];
+        for (int i = 0; i < b; i++) {
+            GlmModel.Session[] s = session(requestIds[i]);
+            if (s[0].length() != positions[i]) {
+                throw new IllegalStateException("request " + requestIds[i] + " is at position " + s[0].length() + ", not " + positions[i]);
+            }
+            for (int r = 0; r < workers.length; r++) {
+                mine[r][i] = s[r];
+            }
+        }
+        long tp = System.nanoTime();
+        int[][] tokens = new int[b][rows];
+        final int mnb = b <= 1 ? 1 : Integer.highestOneBit(b - 1) << 1;
+        boolean mtpGraph = MTP_GRAPHS && !mtpGraphsDisabled;
+        if (mtpGraph && !readyGraphs.contains("m" + mnb)) {
+            java.util.concurrent.CyclicBarrier mb = new java.util.concurrent.CyclicBarrier(workers.length);
+            for (boolean ok : gatherAllRanks(rank -> prepareMtpGraph(rank, mnb, mb))) {
+                mtpGraph &= ok;
+            }
+            if (mtpGraph) {
+                readyGraphs.add("m" + mnb);
+            } else {
+                mtpGraphsDisabled = true;
+                logger.warn("GLM MTP graph capture failed on a rank; using the eager MTP passes");
+            }
+        }
+        final boolean useMtpGraph = mtpGraph;
+        List<int[][]> dr = gatherAllRanks(rank -> {
+            try (var guard = Tensor.noGradGuard()) {
+                return replicas[rank].mtpDraftBatch(mine[rank], lastTokens, drafts, useMtpGraph ? mtpGraphs[rank].get(mnb) : null);
+            }
+        });
+        int[][] d = dr.get(0);
+        for (int i = 0; i < b; i++) {
+            if (d[i] == null) {
+                throw new UnsupportedOperationException("the MTP state of request " + requestIds[i] + " does not follow its position");
+            }
+            tokens[i][0] = lastTokens[i];
+            System.arraycopy(d[i], 0, tokens[i], 1, drafts);
+        }
+        specPhase.addAndGet(0, System.nanoTime() - tp);
+        tp = System.nanoTime();
+        int nb = b <= 1 ? 1 : Integer.highestOneBit(b - 1) << 1;
+        java.util.concurrent.CyclicBarrier barrier = new java.util.concurrent.CyclicBarrier(workers.length);
+        boolean ready = true;
+        if (!readyGraphs.contains("w" + nb + "x" + rows)) {
+            for (boolean ok : gatherAllRanks(rank -> prepareWindowGraph(rank, nb, rows, barrier))) {
+                ready &= ok;
+            }
+            if (ready) {
+                readyGraphs.add("w" + nb + "x" + rows);
+            }
+        }
+        if (!ready) {
+            windowGraphsDisabled = true;
+            logger.warn("GLM verify-window graph capture failed on a rank; using the eager verify");
+            return null;
+        }
+        final int key = nb * 16 + rows;
+        List<Tensor> lg = gatherAllRanks(rank -> {
+            try (var guard = Tensor.noGradGuard()) {
+                return windowGraphs[rank].get(key).replay(tokens, mine[rank]);
+            }
+        });
+        for (int r = 1; r < lg.size(); r++) {
+            lg.get(r).close();
+        }
+        specPhase.addAndGet(1, System.nanoTime() - tp);
+        tp = System.nanoTime();
+        int[][] emitted = new int[b][];
+        int[] accept = new int[b];
+        try (Tensor logits = lg.get(0)) {
+            for (int i = 0; i < b; i++) {
+                int[] sampled;
+                try (Tensor slice = smile.torch.Aten.one("aten::narrow", logits, 0L, (long) i * rows, (long) rows)) {
+                    sampled = Sampling.sampleTokenIds(slice, temperatures[i], topps[i]);
+                }
+                int k = 0;
+                while (k < drafts && sampled[k] == tokens[i][k + 1]) {
+                    k++;
+                }
+                accept[i] = k + 1;
+                emitted[i] = Arrays.copyOf(sampled, k + 1);
+            }
+        }
+        specPhase.addAndGet(2, System.nanoTime() - tp);
+        tp = System.nanoTime();
+        gatherAllRanks(rank -> {
+            try (var guard = Tensor.noGradGuard()) {
+                windowGraphs[rank].get(key).commit(mine[rank], accept);
+                replicas[rank].mtpFinishBatch(mine[rank], emitted, useMtpGraph ? mtpGraphs[rank].get(mnb) : null);
+                for (int i = 0; i < b; i++) {
+                    replicas[rank].endRound(mine[rank][i]);
+                }
+                return null;
+            }
+        });
+        specPhase.addAndGet(3, System.nanoTime() - tp);
+        specRounds.addAndGet(b);
+        specDrafts.addAndGet((long) b * drafts);
+        for (int i = 0; i < b; i++) {
+            specAccepted.addAndGet(accept[i] - 1);
+        }
+        specNanos.addAndGet(System.nanoTime() - t0);
+        return emitted;
+    }
+
+    private final java.util.concurrent.atomic.AtomicLong specRounds = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong specDrafts = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong specAccepted = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong specNanos = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLongArray specPhase = new java.util.concurrent.atomic.AtomicLongArray(4);
+
+    /**
+     * Speculation counters.
+     *
+     * @return {rounds, drafts proposed, drafts accepted, nanoseconds}.
+     */
+    public long[] speculationCounters() {
+        return new long[]{specRounds.get(), specDrafts.get(), specAccepted.get(), specNanos.get()};
+    }
+
+    /**
+     * Speculation statistics.
+     *
+     * @return rounds, drafts proposed, drafts accepted.
+     */
+    public String speculationStats() {
+        long r = specRounds.get();
+        double per = r == 0 ? 0 : 1e-6 / r;
+        return String.format("%d rounds, %d drafts proposed, %d accepted (%.2f per round, %.1f%%), %.1f ms per round "
+                        + "(draft %.1f, verify %.1f, sample %.1f, rollback+absorb %.1f)",
+                r, specDrafts.get(), specAccepted.get(), r == 0 ? 0 : (double) specAccepted.get() / r,
+                specDrafts.get() == 0 ? 0 : 100.0 * specAccepted.get() / specDrafts.get(),
+                specNanos.get() * per, specPhase.get(0) * per, specPhase.get(1) * per, specPhase.get(2) * per, specPhase.get(3) * per)
+                + "; window graph host: " + GlmWindowGraph.hostTimes();
+    }
+
+    /**
+     * One draft + verify round of a request: the MTP layer drafts {@code n} greedy tokens, the main model scores
+     * {@code [last, drafts]} in one pass, the longest prefix of drafts that equals what the main model samples is kept
+     * together with the sample that follows it. A partly accepted window is rolled back and the kept rows replayed (the
+     * KDA state cannot be rewound otherwise). Sampling from the target at every row keeps the output distribution exact
+     * for the point-mass (greedy) draft.
+     */
+    private int[] speculateOne(int requestId, int last, int p, int n, double temperature, double topp) {
+        long t0 = System.nanoTime();
+        GlmModel.Session[] s = session(requestId);
+        if (s[0].length() != p) {
+            throw new IllegalStateException("request " + requestId + " is at position " + s[0].length() + ", not " + p);
+        }
+        n = Math.max(1, n);
+        final int drafts = n;
+        long tp = System.nanoTime();
+        List<int[]> dr = gatherAllRanks(rank -> {
+            try (var guard = Tensor.noGradGuard()) {
+                return replicas[rank].mtpDraft(s[rank], last, drafts);
+            }
+        });
+        int[] d = dr.get(0);
+        if (d == null) {
+            throw new UnsupportedOperationException("the MTP state of request " + requestId + " does not follow its position");
+        }
+        specPhase.addAndGet(0, System.nanoTime() - tp);
+        tp = System.nanoTime();
+        int[] ids = new int[n + 1];
+        ids[0] = last;
+        System.arraycopy(d, 0, ids, 1, n);
+        List<Tensor> lg = gatherAllRanks(rank -> {
+            try (var guard = Tensor.noGradGuard()) {
+                GlmModel m = replicas[rank];
+                m.keepMark(s[rank], m.mark(s[rank]));
+                return Gx.layerScoped(() -> {
+                    Tensor hidden = m.forward(ids, s[rank], null);
+                    m.keepPending(s[rank], hidden);
+                    return m.logits(hidden);
+                });
+            }
+        });
+        for (int r = 1; r < lg.size(); r++) {
+            lg.get(r).close();
+        }
+        specPhase.addAndGet(1, System.nanoTime() - tp);
+        tp = System.nanoTime();
+        int[] sampled;
+        try (Tensor logits = lg.get(0)) {
+            sampled = Sampling.sampleTokenIds(logits, temperature, topp);
+        }
+        int k = 0;
+        while (k < n && sampled[k] == d[k]) {
+            k++;
+        }
+        final int accepted = k;
+        specPhase.addAndGet(2, System.nanoTime() - tp);
+        tp = System.nanoTime();
+        int[] emitted = Arrays.copyOf(sampled, k + 1);
+        gatherAllRanks(rank -> {
+            try (var guard = Tensor.noGradGuard()) {
+                GlmModel m = replicas[rank];
+                GlmModel.Session ss = s[rank];
+                if (accepted < drafts) {
+                    m.rewind(ss, m.markOf(ss));
+                    int[] replay = Arrays.copyOf(ids, accepted + 1);
+                    Gx.layerScoped(() -> {
+                        m.forward(replay, ss, null);
+                        return Gx.zeros(smile.deep.tensor.ScalarType.Float, 1);
+                    }).close();
+                }
+                m.mtpFinish(ss, emitted);
+                m.endRound(ss);
+                return null;
+            }
+        });
+        specPhase.addAndGet(3, System.nanoTime() - tp);
+        specRounds.incrementAndGet();
+        specDrafts.addAndGet(n);
+        specAccepted.addAndGet(k);
+        specNanos.addAndGet(System.nanoTime() - t0);
+        return emitted;
     }
 
     @Override
@@ -426,17 +973,39 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
                 mine[r][i] = s[r];
             }
         }
+        final boolean mtp = mtpOn();
+        long syncT0 = System.nanoTime();
+        if (mtp) {
+            syncMtpBeforePlain(mine, lastTokens);
+        }
+        long syncNs = System.nanoTime() - syncT0;
+        long stepT0 = System.nanoTime();
         if (graphEligible(n, positions)) {
             int nb = n <= 1 ? 1 : Integer.highestOneBit(n - 1) << 1;
-            boolean ready = true;
-            java.util.concurrent.CyclicBarrier barrier = new java.util.concurrent.CyclicBarrier(workers.length);
-            for (boolean ok : gatherAllRanks(rank -> prepareGraph(rank, nb, barrier))) {
-                ready &= ok;
+            boolean ready = readyGraphs.contains("d" + nb);
+            if (!ready) {
+                ready = true;
+                java.util.concurrent.CyclicBarrier barrier = new java.util.concurrent.CyclicBarrier(workers.length);
+                for (boolean ok : gatherAllRanks(rank -> prepareGraph(rank, nb, barrier))) {
+                    ready &= ok;
+                }
+                if (ready) {
+                    readyGraphs.add("d" + nb);
+                }
             }
             if (ready) {
                 return onAllRanks(rank -> {
                     try (var guard = Tensor.noGradGuard()) {
-                        return graphs[rank].get(nb).replay(lastTokens, mine[rank]);
+                        GlmDecodeGraph g = graphs[rank].get(nb);
+                        Tensor logits = g.replay(lastTokens, mine[rank]);
+                        long a0 = System.nanoTime();
+                        if (mtp) {
+                            replicas[rank].mtpAfterPlain(mine[rank], g.hidden());
+                        }
+                        if (rank == 0) {
+                            notePlain(syncNs, System.nanoTime() - a0, System.nanoTime() - stepT0, n);
+                        }
+                        return logits;
                     }
                 }, Tensor::close);
             }
@@ -446,9 +1015,53 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         return onAllRanks(rank -> {
             try (var guard = Tensor.noGradGuard()) {
                 GlmModel m = replicas[rank];
-                return Gx.layerScoped(() -> m.logits(m.forwardBatch(lastTokens, mine[rank])));
+                return Gx.layerScoped(() -> {
+                    Tensor hidden = m.forwardBatch(lastTokens, mine[rank]);
+                    if (mtp) {
+                        m.mtpAfterPlain(mine[rank], hidden);
+                    }
+                    return m.logits(hidden);
+                });
             }
         }, Tensor::close);
+    }
+
+    /**
+     * Keeps the MTP caches in sync with plain decoding: the requests whose MTP cache lags (after a prefill or an earlier
+     * plain step) absorb the slot of their previous position now that the step's input token is known, so speculation
+     * can start again at any tick.
+     */
+    private void syncMtpBeforePlain(GlmModel.Session[][] mine, int[] lastTokens) {
+        int pending = 0;
+        for (int i = 0; i < mine[0].length; i++) {
+            if (replicas[0].mtpPending(mine[0][i])) {
+                pending++;
+            }
+        }
+        if (pending == 0) {
+            return;
+        }
+        final int nb = pending <= 1 ? 1 : Integer.highestOneBit(pending - 1) << 1;
+        boolean graph = MTP_GRAPHS && !mtpGraphsDisabled && onCuda && nb <= 32;
+        if (graph && !readyGraphs.contains("c" + nb)) {
+            java.util.concurrent.CyclicBarrier barrier = new java.util.concurrent.CyclicBarrier(workers.length);
+            for (boolean ok : gatherAllRanks(rank -> prepareMtpGraph(rank, nb, barrier, false))) {
+                graph &= ok;
+            }
+            if (graph) {
+                readyGraphs.add("c" + nb);
+            } else {
+                mtpGraphsDisabled = true;
+                logger.warn("GLM MTP graph capture failed on a rank; using the eager MTP passes");
+            }
+        }
+        final boolean useGraph = graph;
+        gatherAllRanks(rank -> {
+            try (var guard = Tensor.noGradGuard()) {
+                replicas[rank].mtpBeforePlain(mine[rank], lastTokens, useGraph ? mtpGraphs[rank].get(mtpKey(nb, false)) : null);
+                return null;
+            }
+        });
     }
 
     private boolean graphEligible(int n, int[] positions) {
@@ -513,6 +1126,10 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
 
     @Override
     public void evict(int requestId) {
+        GlmPrefixCache.Entry hit = prefixMatches.remove(requestId);
+        if (hit != null) {
+            prefixCache.unpin(hit);
+        }
         GlmModel.Session[] s = sessions.remove(requestId);
         if (s != null) {
             release(s);
@@ -564,6 +1181,14 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
                     g.close();
                 }
                 graphs[rank].clear();
+                for (GlmWindowGraph g : windowGraphs[rank].values()) {
+                    g.close();
+                }
+                windowGraphs[rank].clear();
+                for (GlmMtpGraph g : mtpGraphs[rank].values()) {
+                    g.close();
+                }
+                mtpGraphs[rank].clear();
                 return null;
             }));
         }
@@ -571,6 +1196,13 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
             await(teardown);
         } catch (RuntimeException e) {
             logger.warn("GLM graph teardown failed: {}", e.toString());
+        }
+        if (prefixCache != null) {
+            try {
+                prefixCache.clear();
+            } catch (RuntimeException e) {
+                logger.warn("GLM prefix cache teardown failed: {}", e.toString());
+            }
         }
         for (ExecutorService w : workers) {
             w.shutdownNow();

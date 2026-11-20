@@ -33,6 +33,7 @@ final class GlmRows {
     final ScalarType type;
     private Tensor buf;
     private long len;
+    private long ptr;       // cached device address of buf (0 = not read yet); the buffer moves only in ensure/close
 
     GlmRows(int width, ScalarType type) {
         this.width = width;
@@ -62,6 +63,7 @@ final class GlmRows {
                 buf.close();
             }
             buf = next;
+            ptr = 0;
         }
     }
 
@@ -83,7 +85,10 @@ final class GlmRows {
 
     /** The device address of the buffer ({@link #ensure} must have been called). */
     long pointer() {
-        return smile.torch.Native.dsDataPtrs(new Tensor[]{buf})[0];
+        if (ptr == 0) {
+            ptr = smile.torch.Native.dsDataPtrs(new Tensor[]{buf})[0];
+        }
+        return ptr;
     }
 
     /** The valid rows {@code [len, width]} (a view of the cache). */
@@ -96,6 +101,7 @@ final class GlmRows {
             buf.close();
             buf = null;
         }
+        ptr = 0;
         len = 0;
     }
 }

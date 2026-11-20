@@ -36,6 +36,65 @@ SMILE_API ST_Tensor smile_kda_forward(ST_Tensor raw, ST_Tensor fg, ST_Tensor bra
                                       double gate_bound);
 
 /**
+ * KDA over a speculative window: like {@link smile_kda_forward} but the conv state is left untouched and the state after
+ * every row is stored in rec_save float32 [B, T, H, 128, 128]; rec_state holds the state after the whole window.
+ */
+SMILE_API ST_Tensor smile_kda_forward_window(ST_Tensor raw, ST_Tensor fg, ST_Tensor braw, ST_Tensor convw, ST_Tensor a_log,
+                                             ST_Tensor dt_bias, ST_Tensor conv_state, ST_Tensor rec_state, ST_Tensor slots,
+                                             ST_Tensor rec_save, double gate_bound);
+
+/**
+ * Keeps the first accept[b] (>= 1) rows of a window run by smile_kda_forward_window: recurrent state = state after row
+ * accept[b] - 1, conv state = the last three of (old conv state, raw rows 0..accept[b] - 1). raw_save is the raw
+ * float32 [B, T, 3W] given to the window forward. Returns 0, or -1 with the error set.
+ */
+SMILE_API int smile_kda_commit(ST_Tensor raw_save, ST_Tensor conv_state, ST_Tensor rec_state, ST_Tensor rec_save,
+                               ST_Tensor slots, ST_Tensor accept);
+
+/**
+ * MLA append of a window of `rows` consecutive tokens per request (request-major rows: b * rows + j): latent rows and the
+ * pools the window completes; the ring is only read. lens int32 [B] = tokens before the window.
+ */
+SMILE_API int smile_mla_window_append(ST_Tensor lat_new, ST_Tensor key_new, ST_Tensor gate_new, ST_Tensor ape,
+                                      ST_Tensor lat_ptrs, ST_Tensor pool_ptrs, ST_Tensor pend_ptrs, ST_Tensor lens,
+                                      long long rows);
+
+/** Writes the ring slots of the first accept[b] rows of a window (after smile_mla_window_append). */
+SMILE_API int smile_mla_window_commit(ST_Tensor key_new, ST_Tensor gate_new, ST_Tensor pend_ptrs, ST_Tensor lens,
+                                      ST_Tensor accept, long long rows);
+
+/**
+ * GLM's clamped SwiGLU of a fused gate|up projection: out[r, c] = silu(min(gu[r, c], limit)) * clamp(gu[r, inter + c],
+ * -limit, limit) (no clamp when limit <= 0), float32 math, bfloat16 result [rows, inter]. gu: contiguous CUDA
+ * float32/bfloat16 [rows, 2 * inter].
+ */
+SMILE_API ST_Tensor smile_glm_swiglu(ST_Tensor gu, double limit);
+
+/**
+ * The elementwise tail of GLM's MLA projections in one launch. y: contiguous CUDA float32 [n, 2336] = x . [W_q_a (1536);
+ * W_kv_a (512); W_indexer_k (128); W_compress_gate (128); W_indexer_weights (32)]^T. Writes out[0] = rms_norm(y[:, :1536]) *
+ * qa_w as bfloat16 [n, 1536], out[1] = rms_norm(y[:, 1536:2048]) * kv_w float32 [n, 512], out[2] = layer_norm(y[:, 2048:2176])
+ * * ln_w + ln_b float32 [n, 128], out[3] = y[:, 2176:2304] [n, 128], out[4] = y[:, 2304:] * w_scale [n, 32]. Returns 0, or -1
+ * with the error set.
+ */
+SMILE_API int smile_glm_mla_proj_epilogue(ST_Tensor y, ST_Tensor qa_w, ST_Tensor kv_w, ST_Tensor ln_w, ST_Tensor ln_b,
+                                          double eps, double ln_eps, double w_scale, ST_Tensor *out);
+
+/**
+ * Decode-step absorption of W_UK into the MLA queries and conversion of the indexer queries, in one launch.
+ * qi: contiguous CUDA float32 [B, heads * 256 + 4096] (q_b | indexer q); wuk: contiguous bfloat16 [heads, 256, 512].
+ * out[0] = bfloat16 [B, heads, 512] with sum_n bf16(q[b, h, n]) * wuk[h, n, r]; out[1] = bfloat16 [B, 32, 128] indexer
+ * queries. Returns 0, or -1 with the error set.
+ */
+SMILE_API int smile_glm_mla_absorb(ST_Tensor qi, ST_Tensor wuk, long long heads, ST_Tensor *out);
+
+/**
+ * Decode-step value expansion: out[b, h * 256 + v] = bf16(sum_r bf16(ctx[b, h, r]) * wuvt[h, r, v]).
+ * ctx: contiguous float32 [B, heads, 512]; wuvt: contiguous bfloat16 [heads, 512, 256]. Returns bfloat16 [B, heads * 256].
+ */
+SMILE_API ST_Tensor smile_glm_mla_wuv(ST_Tensor ctx, ST_Tensor wuvt);
+
+/**
  * Indexer scores of GLM-5.3-Flash for {@code n} queries against a range of pooled keys, fused on tensor cores:
  *   out[s, j] = sum_h w[s, h] * relu(scale * q[s, h] . pk[pool0 + j])   when pool (pool0 + j) is visible to query s,
  * i.e. 4 * (pool0 + j) + 3 <= p0 + s (pools hold 4 tokens), otherwise -3.4028235e38 (float32 lowest). Nothing of
@@ -86,6 +145,14 @@ SMILE_API ST_Tensor smile_mla_decode_topk(ST_Tensor scores, ST_Tensor lens, long
  * [B, W] with W <= 2056. Returns float32 [B, 64, 512].
  */
 SMILE_API ST_Tensor smile_mla_decode_attend(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor idx, double scale);
+
+/**
+ * As smile_mla_decode_attend, but with the row lengths: lens int32 [B] (tokens before the row, as given to smile_mla_decode_topk)
+ * and the top_pools it was run with (idx width == 4 * top_pools + 3). Only the valid prefix of each id row (4 * min((len + 1) /
+ * 4, top_pools) tokens) and the three open-pool slots are processed, which makes short contexts much cheaper.
+ */
+SMILE_API ST_Tensor smile_mla_decode_attend2(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor idx, ST_Tensor lens,
+                                             long long top_pools, double scale);
 
 #ifdef __cplusplus
 }

@@ -426,6 +426,80 @@ public final class Native {
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)))
                 .orElse(null);
+        static final java.util.Optional<MemorySegment> GLM_SWIGLU_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_glm_swiglu");
+        static final MethodHandle GLM_SWIGLU = GLM_SWIGLU_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> GLM_MLA_EPI_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_glm_mla_proj_epilogue");
+        static final MethodHandle GLM_MLA_EPI = GLM_MLA_EPI_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_DOUBLE,
+                        ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> GLM_MLA_ABS_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_glm_mla_absorb");
+        static final MethodHandle GLM_MLA_ABS = GLM_MLA_ABS_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> GLM_MLA_WUV_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_glm_mla_wuv");
+        static final MethodHandle GLM_MLA_WUV = GLM_MLA_WUV_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle PROF_START = smile_torch_h.SYMBOL_LOOKUP.find("smile_prof_start")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle PROF_STOP = smile_torch_h.SYMBOL_LOOKUP.find("smile_prof_stop")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle MLA_ATTEND2 = smile_torch_h.SYMBOL_LOOKUP.find("smile_mla_decode_attend2")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_LONG, ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
+        static final MethodHandle AR_CREATE = smile_torch_h.SYMBOL_LOOKUP.find("smile_ar_create")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle AR_ALL_REDUCE = smile_torch_h.SYMBOL_LOOKUP.find("smile_ar_all_reduce")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.JAVA_LONG,
+                        ValueLayout.JAVA_INT, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle AR_DESTROY = smile_torch_h.SYMBOL_LOOKUP.find("smile_ar_destroy")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.ofVoid(ValueLayout.JAVA_LONG)))
+                .orElse(null);
+        static final MethodHandle DS_HC_MIXES_FUSED = smile_torch_h.SYMBOL_LOOKUP.find("smile_ds_hc_mixes_fused")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_DOUBLE, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> KDA_WINDOW_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_kda_forward_window");
+        static final MethodHandle KDA_WINDOW = KDA_WINDOW_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.JAVA_DOUBLE)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> KDA_COMMIT_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_kda_commit");
+        static final MethodHandle KDA_COMMIT = KDA_COMMIT_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MLA_WAPPEND_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_mla_window_append");
+        static final MethodHandle MLA_WAPPEND = MLA_WAPPEND_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_LONG)))
+                .orElse(null);
+        static final java.util.Optional<MemorySegment> MLA_WCOMMIT_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_mla_window_commit");
+        static final MethodHandle MLA_WCOMMIT = MLA_WCOMMIT_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_LONG)))
+                .orElse(null);
         static final java.util.Optional<MemorySegment> INDEXER_SCORES_SYM =
                 smile_torch_h.SYMBOL_LOOKUP.find("smile_indexer_scores");
         static final MethodHandle INDEXER_SCORES = INDEXER_SCORES_SYM
@@ -1440,6 +1514,247 @@ public final class Native {
         return new Tensor(out);
     }
 
+
+    /**
+     * GLM's clamped SwiGLU of a fused gate|up projection in one launch, or {@code null} when unavailable or unsupported.
+     *
+     * @param gu    contiguous CUDA float32 or bfloat16 {@code [rows, 2 * inter]} (gate columns first).
+     * @param limit the clamp ({@code <= 0}: none).
+     * @return bfloat16 {@code [rows, inter]}.
+     */
+    public static boolean glmSwigluAvailable() {
+        return FUSED_OPS_ENABLED && Bindings.GLM_SWIGLU != null;
+    }
+
+    /** See {@link #glmSwigluAvailable}. */
+    public static Tensor glmSwiglu(Tensor gu, double limit) {
+        if (!FUSED_OPS_ENABLED || Bindings.GLM_SWIGLU == null || !gu.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.GLM_SWIGLU, gu.handle(), limit);
+    }
+
+    /**
+     * Starts recording kernel durations on one device with CUPTI (graph kernels included).
+     *
+     * @param device the CUDA device ordinal to record.
+     * @return {@code true} if recording started.
+     */
+    public static boolean profStart(int device) {
+        if (Bindings.PROF_START == null) {
+            return false;
+        }
+        try {
+            return (int) Bindings.PROF_START.invokeExact(device) == 0;
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /**
+     * Stops the recording.
+     *
+     * @return one line per kernel name (total microseconds, launches, microseconds per launch), longest first.
+     */
+    public static String profStop() {
+        if (Bindings.PROF_STOP == null) {
+            return "";
+        }
+        try {
+            MemorySegment p = (MemorySegment) Bindings.PROF_STOP.invokeExact();
+            return p.reinterpret(1 << 24).getString(0);
+        } catch (Throwable t) {
+            return "";
+        }
+    }
+
+    /**
+     * Creates a one-shot peer-to-peer all-reduce group for small float32 messages over devices of this process.
+     *
+     * @param devices CUDA device ordinals, one per rank.
+     * @return the group handle, or 0 when peer access is not available.
+     */
+    public static long arCreate(int[] devices) {
+        if (Bindings.AR_CREATE == null) {
+            return 0;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment d = arena.allocate(ValueLayout.JAVA_INT, devices.length);
+            for (int i = 0; i < devices.length; i++) {
+                d.setAtIndex(ValueLayout.JAVA_INT, i, devices[i]);
+            }
+            return (long) Bindings.AR_CREATE.invokeExact(devices.length, d);
+        } catch (Throwable t) {
+            return 0;
+        }
+    }
+
+    /**
+     * Sums a float32 tensor over the ranks of a group in place; every rank calls it in the same order.
+     *
+     * @return {@code true} if done, {@code false} if the tensor does not qualify (use another all-reduce).
+     */
+    public static boolean arAllReduce(long handle, int rank, Tensor t) {
+        try {
+            return (int) Bindings.AR_ALL_REDUCE.invokeExact(handle, rank, t.handle()) == 0;
+        } catch (Throwable e) {
+            return false;
+        }
+    }
+
+    /** Frees a group created by {@link #arCreate}. */
+    public static void arDestroy(long handle) {
+        if (Bindings.AR_DESTROY != null && handle != 0) {
+            try {
+                Bindings.AR_DESTROY.invokeExact(handle);
+            } catch (Throwable t) {
+                // ignore
+            }
+        }
+    }
+
+    /** Whether the fused MLA decode absorb and value-expansion kernels are available. */
+    public static boolean glmMlaDecodeFusedAvailable() {
+        return FUSED_OPS_ENABLED && Bindings.GLM_MLA_ABS != null && Bindings.GLM_MLA_WUV != null;
+    }
+
+    /**
+     * Absorbs W_UK into the decode queries and converts the indexer queries; see {@code smile_glm_ops.h}.
+     *
+     * @return {@code {qAbs bf16 [B, heads, 512], indexerQ bf16 [B, 32, 128]}}, or {@code null} when unsupported.
+     */
+    public static Tensor[] glmMlaAbsorb(Tensor qi, Tensor wuk, long heads) {
+        if (!glmMlaDecodeFusedAvailable() || !qi.device().isCUDA()) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment outs = arena.allocate(ValueLayout.ADDRESS, 2);
+            int rc;
+            try {
+                rc = (int) Bindings.GLM_MLA_ABS.invokeExact(qi.handle(), wuk.handle(), heads, outs);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (rc != 0) {
+                return null;
+            }
+            return new Tensor[]{new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 0)), new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 1))};
+        }
+    }
+
+    /** Value expansion of the decode step ({@code bfloat16 [B, heads * 256]}), or {@code null} when unsupported. */
+    public static Tensor glmMlaWuv(Tensor ctx, Tensor wuvt) {
+        if (!glmMlaDecodeFusedAvailable() || !ctx.device().isCUDA()) {
+            return null;
+        }
+        return fusedResult(Bindings.GLM_MLA_WUV, ctx.handle(), wuvt.handle());
+    }
+
+    /** Whether the fused MLA projection epilogue is available. */
+    public static boolean glmMlaEpilogueAvailable() {
+        return FUSED_OPS_ENABLED && Bindings.GLM_MLA_EPI != null;
+    }
+
+    /**
+     * The elementwise tail of GLM's MLA projections (norms, copies, scaling) in one launch; see {@code smile_glm_ops.h}.
+     *
+     * @return {@code {qResid bf16 [n, 1536], latent [n, 512], key [n, 128], gate [n, 128], weights [n, 32]}} (float32
+     *         except the first), or {@code null} when unavailable or unsupported.
+     */
+    public static Tensor[] glmMlaEpilogue(Tensor y, Tensor qaW, Tensor kvW, Tensor lnW, Tensor lnB, double eps, double lnEps,
+                                          double wScale) {
+        if (!glmMlaEpilogueAvailable() || !y.device().isCUDA()) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment outs = arena.allocate(ValueLayout.ADDRESS, 5);
+            int rc;
+            try {
+                rc = (int) Bindings.GLM_MLA_EPI.invokeExact(y.handle(), qaW.handle(), kvW.handle(), lnW.handle(), lnB.handle(),
+                        eps, lnEps, wScale, outs);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (rc != 0) {
+                return null;
+            }
+            Tensor[] r = new Tensor[5];
+            for (int i = 0; i < 5; i++) {
+                r[i] = new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, i));
+            }
+            return r;
+        }
+    }
+
+    /**
+     * Whether the speculative-window kernels (KDA window + commit, MLA window append + commit) are available.
+     *
+     * @return {@code true} if the window calls can be made.
+     */
+    public static boolean windowAvailable() {
+        return Bindings.KDA_WINDOW != null && Bindings.KDA_COMMIT != null && Bindings.MLA_WAPPEND != null
+                && Bindings.MLA_WCOMMIT != null;
+    }
+
+    /**
+     * KDA over a window of {@code T} rows per request that keeps the state after every row: see
+     * {@code smile_kda_forward_window}. The conv state is not changed; the recurrent state is the one after the window.
+     *
+     * @param recSave float32 {@code [B, T, H, 128, 128]} receives the state after each row.
+     * @return float32 {@code [B, T, H, 128]}.
+     */
+    public static Tensor kdaForwardWindow(Tensor raw, Tensor fg, Tensor braw, Tensor convw, Tensor aLog, Tensor dtBias,
+                                          Tensor convState, Tensor recState, Tensor slots, Tensor recSave, double gateBound) {
+        return mlaResult(Bindings.KDA_WINDOW, "smile_kda_forward_window", raw.handle(), fg.handle(), braw.handle(),
+                convw.handle(), aLog.handle(), dtBias.handle(), convState.handle(), recState.handle(), slots.handle(),
+                recSave.handle(), gateBound);
+    }
+
+    private static void windowCall(MethodHandle handle, String name, Object... args) {
+        int rc;
+        try {
+            rc = (int) handle.invokeWithArguments(args);
+        } catch (Throwable t) {
+            throw new RuntimeException(name + " failed: " + t.getMessage(), t);
+        }
+        if (rc != 0) {
+            throw new RuntimeException(name + ": " + lastError());
+        }
+    }
+
+    /**
+     * Keeps the first {@code accept[b]} rows of a KDA window: recurrent and conv state of each slot.
+     *
+     * @param rawSave float32 {@code [B, T, 3W]} the raw rows given to the window call.
+     * @param accept  int32 {@code [B]} rows kept per request (at least 1).
+     */
+    public static void kdaCommit(Tensor rawSave, Tensor convState, Tensor recState, Tensor recSave, Tensor slots, Tensor accept) {
+        windowCall(Bindings.KDA_COMMIT, "smile_kda_commit", rawSave.handle(), convState.handle(), recState.handle(),
+                recSave.handle(), slots.handle(), accept.handle());
+    }
+
+    /**
+     * Appends a window of {@code rows} tokens per request to the MLA caches (latents and completed pools; the ring is not
+     * written, see {@link #mlaWindowCommit}). Rows are request-major.
+     *
+     * @param lens int32 {@code [B]} tokens before the window.
+     */
+    public static void mlaWindowAppend(Tensor latNew, Tensor keyNew, Tensor gateNew, Tensor ape, Tensor latPtrs,
+                                       Tensor poolPtrs, Tensor pendPtrs, Tensor lens, long rows) {
+        windowCall(Bindings.MLA_WAPPEND, "smile_mla_window_append", latNew.handle(), keyNew.handle(), gateNew.handle(),
+                ape.handle(), latPtrs.handle(), poolPtrs.handle(), pendPtrs.handle(), lens.handle(), rows);
+    }
+
+    /**
+     * Writes the ring slots of the first {@code accept[b]} rows of a window.
+     *
+     * @param accept int32 {@code [B]} rows kept.
+     */
+    public static void mlaWindowCommit(Tensor keyNew, Tensor gateNew, Tensor pendPtrs, Tensor lens, Tensor accept, long rows) {
+        windowCall(Bindings.MLA_WCOMMIT, "smile_mla_window_commit", keyNew.handle(), gateNew.handle(), pendPtrs.handle(),
+                lens.handle(), accept.handle(), rows);
+    }
+
     /**
      * Whether the graph-safe GLM MLA decode kernels are available.
      *
@@ -1527,6 +1842,15 @@ public final class Native {
      * @param scale   score scale.
      * @return float32 {@code [B, heads, 512]}.
      */
+    public static Tensor mlaDecodeAttend(Tensor qabs, Tensor latPtrs, Tensor idx, Tensor lens, long topPools, double scale) {
+        if (Bindings.MLA_ATTEND2 == null) {
+            return mlaDecodeAttend(qabs, latPtrs, idx, scale);
+        }
+        return mlaResult(Bindings.MLA_ATTEND2, "smile_mla_decode_attend2", qabs.handle(), latPtrs.handle(), idx.handle(),
+                lens.handle(), topPools, scale);
+    }
+
+    /** @see #mlaDecodeAttend(Tensor, Tensor, Tensor, Tensor, long, double) */
     public static Tensor mlaDecodeAttend(Tensor qabs, Tensor latPtrs, Tensor idx, double scale) {
         return mlaResult(Bindings.MLA_ATTEND, "smile_mla_decode_attend", qabs.handle(), latPtrs.handle(), idx.handle(), scale);
     }
@@ -1721,6 +2045,32 @@ public final class Native {
             return new Tensor[]{new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 0)),
                     new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 1)),
                     new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 2))};
+        }
+    }
+
+    /**
+     * Hyper-connection coefficients with the projection by {@code fn} included (hc = 4, few rows), in one launch.
+     *
+     * @return {@code {pre, post, comb}}, or {@code null} when unavailable or unsupported.
+     */
+    public static Tensor[] dsHcMixesFused(Tensor flat, Tensor fn, Tensor scale, Tensor base, int iters, double eps, double normEps) {
+        if (!dsOn("hc_mixes") || Bindings.DS_HC_MIXES_FUSED == null || !flat.device().isCUDA()) {
+            return null;
+        }
+        try (Arena arena = Arena.ofConfined()) {
+            MemorySegment outs = arena.allocate(ValueLayout.ADDRESS, 3);
+            int rc;
+            try {
+                rc = (int) Bindings.DS_HC_MIXES_FUSED.invokeExact(flat.handle(), fn.handle(), scale.handle(), base.handle(),
+                        iters, eps, normEps, outs);
+            } catch (Throwable t) {
+                return null;
+            }
+            if (rc != 0) {
+                return null;
+            }
+            return new Tensor[]{new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 0)),
+                    new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 1)), new Tensor(outs.getAtIndex(ValueLayout.ADDRESS, 2))};
         }
     }
 

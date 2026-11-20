@@ -382,6 +382,14 @@ public class ChatService implements OpenAiModelContributor {
                 logger.infof("Speculative decoding is on but this DeepSeek checkpoint has no DSpark draft head; "
                         + "using plain decoding");
             }
+        } else if (model instanceof smile.llm.model.glm.Glm glm) {
+            // The MTP layer is loaded only with -Dsmile.glm.speculative=true (or SMILE_GLM_MTP=1): the first version verifies
+            // eagerly and is slower than the plain CUDA-graph decode.
+            this.speculative = config.speculative() && glm.hasMtp();
+            if (this.speculative) {
+                this.speculativeTokens = config.speculativeTokens() > 0 ? config.speculativeTokens() : 3;
+                logger.infof("MTP speculative decoding enabled for GLM (drafts=%d)", this.speculativeTokens);
+            }
         }
         logQuantBackend(model, config, kvCache);
         if (model instanceof smile.llm.engine.ModelExecutor exec) {
@@ -401,6 +409,7 @@ public class ChatService implements OpenAiModelContributor {
             // (measured through the engine on 8 A100); beyond 32 requests the verify rows stop paying, the rest decode plain.
             int defaultSpeculators = model instanceof MiniMax ? Math.min(4, Math.max(1, config.maxBatchSize()))
                     : model instanceof smile.llm.model.deepseek.DeepSeek ? Math.min(32, Math.max(1, config.maxBatchSize()))
+                    : model instanceof smile.llm.model.glm.Glm ? Math.min(8, Math.max(1, config.maxBatchSize()))   // one verify-window graph; plain batching wins beyond ~8
                     : Math.max(1, config.maxBatchSize());
             engine.setMaxSpeculativeConcurrency(config.speculativeMaxConcurrency() > 0
                     ? config.speculativeMaxConcurrency()

@@ -92,7 +92,7 @@ public class GlmModelArgsTest {
         assertEquals(6, s.kdaLayerCount());
         assertTrue(s.isSparseAttention(3) && s.isSparseAttention(7));
         assertTrue(s.isMoe(7) && !s.isMoe(2));
-        assertEquals(0, s.numMtpLayers());
+        assertEquals(1, s.numMtpLayers());
         assertEquals("model.language_model.layers.5", s.layerPrefix(5));
         assertThrows(IllegalArgumentException.class, () -> load().slice(46));
         assertEquals(4096, load().withMaxSeqLen(4096).maxSeqLen());

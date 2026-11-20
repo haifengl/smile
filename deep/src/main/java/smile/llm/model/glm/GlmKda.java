@@ -82,6 +82,21 @@ final class GlmKda {
         this.wo = shard(ck, p + "o_proj", 1);
     }
 
+    /** Heads of this rank's share. */
+    int heads() {
+        return heads;
+    }
+
+    /** Width of this rank's share ({@code heads * headDim}). */
+    int width() {
+        return width;
+    }
+
+    /** {@code x} in the dtype of the projection weights (once, so that every {@code linear} on it skips its own conversion). */
+    private Tensor asWeightType(Tensor x) {
+        return x.dtype() == wqkv.dtype() ? x : x.to(wqkv.dtype());
+    }
+
     Pool newPool(int slots) {
         int c = 3 * width;
         return new Pool(keep(zeros(ScalarType.Float, slots, args.kdaConvKernel() - 1, c)),
@@ -199,6 +214,7 @@ final class GlmKda {
         int b = (int) x.size(0);
         int h = heads;
         int d = args.kdaHeadDim();
+        x = asWeightType(x);                                       // converted once for the four projections of x
         Tensor raw = o("aten::reshape", linear(x, wqkv), new long[]{b, 1, 3L * width});
         Tensor fgRaw = o("aten::reshape", linear(linear(x, wFa), wFb), new long[]{b, 1, width});
         Tensor betaRaw = o("aten::reshape", linear(x, wBeta), new long[]{b, 1, h});
@@ -208,5 +224,41 @@ final class GlmKda {
         Tensor gate = o("aten::reshape", linear(linear(x, wGa), wGb), new long[]{b, h, d});
         Tensor on = mul(rms(core, oNorm, args.normEps()), sigmoid(gate));
         return allReduce(linear(o("aten::reshape", on, new long[]{b, width}), wo));
+    }
+
+    /**
+     * The verify window of a speculative round: {@code rows} consecutive tokens of each of {@code B} requests (request-major
+     * rows) in one kernel call that keeps the recurrent state after every row (the conv state is left alone). A later
+     * {@link #windowCommit} keeps the accepted rows only.
+     *
+     * @param x       {@code [B * rows, dim]} normalized hidden rows.
+     * @param pool    the layer's state pool.
+     * @param slotT   int32 {@code [B]} the requests' slots.
+     * @param rows    window length.
+     * @param recSave float32 {@code [B, rows, H, 128, 128]} receives the state after each row.
+     * @param rawSave float32 {@code [B, rows, 3W]} receives the raw q|k|v rows (for the conv state commit).
+     * @return {@code [B * rows, dim]}.
+     */
+    Tensor forwardWindow(Tensor x, Pool pool, Tensor slotT, int rows, Tensor recSave, Tensor rawSave) {
+        long n = x.size(0);
+        int b = (int) (n / rows);
+        int h = heads;
+        int d = args.kdaHeadDim();
+        x = asWeightType(x);
+        Tensor raw = o("aten::reshape", linear(x, wqkv), new long[]{b, rows, 3L * width});
+        smile.torch.Aten.call("aten::copy_", rawSave, raw, false);
+        Tensor fgRaw = o("aten::reshape", linear(linear(x, wFa), wFb), new long[]{b, rows, width});
+        Tensor betaRaw = o("aten::reshape", linear(x, wBeta), new long[]{b, rows, h});
+        Tensor fused = smile.torch.Native.kdaForwardWindow(raw, fgRaw, betaRaw, convW, aLog, dtBias, pool.conv(), pool.rec(),
+                slotT, recSave, args.kdaGateLowerBound());
+        Tensor core = o("aten::reshape", fused, new long[]{n, h, d});
+        Tensor gate = o("aten::reshape", linear(linear(x, wGa), wGb), new long[]{n, h, d});
+        Tensor on = mul(rms(core, oNorm, args.normEps()), sigmoid(gate));
+        return allReduce(linear(o("aten::reshape", on, new long[]{n, width}), wo));
+    }
+
+    /** Keeps the first {@code accept[b]} rows of the last {@link #forwardWindow} (state of every slot). */
+    void windowCommit(Pool pool, Tensor slotT, Tensor rawSave, Tensor recSave, Tensor accept) {
+        smile.torch.Native.kdaCommit(rawSave, pool.conv(), pool.rec(), recSave, slotT, accept);
     }
 }

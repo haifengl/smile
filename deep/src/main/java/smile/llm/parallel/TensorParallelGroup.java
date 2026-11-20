@@ -52,6 +52,9 @@ public final class TensorParallelGroup implements AutoCloseable {
     private final CyclicBarrier allReduceBarrier;
     private final AtomicReference<RuntimeException> allReduceError = new AtomicReference<>();
     private boolean closed;
+    /** One-shot peer-to-peer all-reduce group for small messages (0 = NCCL only). */
+    private long customAllReduce;
+    private int customAllReduceMaxBytes;
 
     /**
      * Creates a TP group for the given mesh configuration.
@@ -124,6 +127,28 @@ public final class TensorParallelGroup implements AutoCloseable {
         this.ncclComm = Native.ncclCommCreateRanks(idxs, worldSize, rankOffset, uniqueId);
         logger.info("NCCL communicator joined: world ranks {}..{} of {} on devices {}",
                 rankOffset, rankOffset + idxs.length - 1, worldSize, java.util.Arrays.toString(idxs));
+    }
+
+    /**
+     * Enables a one-shot peer-to-peer all-reduce for small float32 messages (about 12 us instead of 40 us for NCCL's ring
+     * on 8 A100s); larger messages and other types keep using NCCL. Only for a group whose ranks are all in this process.
+     * Every rank must then call {@link #allReduceSumInPlace} in the same order.
+     *
+     * @return {@code true} if enabled (peer access between all devices is needed).
+     */
+    public boolean enableCustomAllReduce() {
+        if (customAllReduce != 0 || worldSize != states.length || rankOffset != 0 || ncclComm == null) {
+            return customAllReduce != 0;
+        }
+        int[] idx = new int[devices.length];
+        for (int i = 0; i < idx.length; i++) {
+            idx[i] = devices[i].index();
+        }
+        customAllReduce = Native.arCreate(idx);
+        customAllReduceMaxBytes = Integer.getInteger("smile.allreduce.custom.max.kb", 256) << 10;
+        logger.info("custom peer-to-peer all-reduce for messages up to {} KB: {}", customAllReduceMaxBytes >> 10,
+                customAllReduce != 0 ? "enabled" : "not available");
+        return customAllReduce != 0;
     }
 
     /**
@@ -208,6 +233,10 @@ public final class TensorParallelGroup implements AutoCloseable {
             return;
         }
         tpRank -= rankOffset;   // the collectives index this process's communicators locally
+        if (customAllReduce != 0 && local.dtype() == smile.deep.tensor.ScalarType.Float && bytesOf(local) <= customAllReduceMaxBytes
+                && Native.arAllReduce(customAllReduce, tpRank, local)) {
+            return;
+        }
         boolean profile = smile.llm.engine.DecodeForwardProfile.enabled();
         long t0 = profile ? System.nanoTime() : 0L;
         if (ncclComm != null) {
@@ -236,6 +265,14 @@ public final class TensorParallelGroup implements AutoCloseable {
         if (err != null) {
             throw err;
         }
+    }
+
+    private static long bytesOf(Tensor t) {
+        long n = 4;
+        for (long d : t.shape()) {
+            n *= d;
+        }
+        return n;
     }
 
     private void runAllReduce() {
@@ -273,6 +310,10 @@ public final class TensorParallelGroup implements AutoCloseable {
             return;
         }
         closed = true;
+        if (customAllReduce != 0) {
+            Native.arDestroy(customAllReduce);
+            customAllReduce = 0;
+        }
         if (ncclComm != null) {
             Native.ncclCommFree(ncclComm);
         }

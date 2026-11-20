@@ -38,6 +38,13 @@ SMILE_API ST_Tensor smile_ds_fake_quant_fp8(ST_Tensor x);
 SMILE_API int smile_ds_hc_mixes(ST_Tensor flat, ST_Tensor raw, ST_Tensor scale, ST_Tensor base, int hc, int iters,
                                 double eps, double norm_eps, ST_Tensor *out);
 
+/**
+ * smile_ds_hc_mixes with the projection included, for hc == 4 and few rows: flat float32 [rows, K] (K % 4 == 0), fn float32
+ * [24, K]; writes out[0..2] = pre [rows, 4], post [rows, 4], comb [rows, 4, 4]. Returns 0 on success.
+ */
+SMILE_API int smile_ds_hc_mixes_fused(ST_Tensor flat, ST_Tensor fn, ST_Tensor scale, ST_Tensor base, int iters, double eps,
+                                      double norm_eps, ST_Tensor *out);
+
 /** y = w * (x * rsqrt(mean(x^2) + eps)) per last-dim row, float32 math, in x's dtype. w: 1-D float32/bf16/f16. */
 SMILE_API ST_Tensor smile_ds_rms_norm(ST_Tensor x, ST_Tensor w, double eps);
 
