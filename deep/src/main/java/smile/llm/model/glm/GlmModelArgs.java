@@ -66,6 +66,7 @@ import tools.jackson.databind.ObjectMapper;
  * @param eosTokenIds        end-of-sequence token ids.
  * @param padTokenId         padding token id.
  * @param maxSeqLen          maximum sequence length served.
+ * @param mtpLayerIndex      checkpoint index of the (first) MTP layer, kept when the backbone is truncated.
  *
  * @author Haifeng Li
  */
@@ -105,7 +106,8 @@ public record GlmModelArgs(
         int imageTokenId,
         int[] eosTokenIds,
         int padTokenId,
-        int maxSeqLen) {
+        int maxSeqLen,
+        int mtpLayerIndex) {
 
     /**
      * Validates the shape relations the model code relies on.
@@ -132,7 +134,7 @@ public record GlmModelArgs(
      * @return {@code true} for MLA + indexer, {@code false} for KDA.
      */
     public boolean isSparseAttention(int layer) {
-        return sparseAttention[layer];
+        return layer >= sparseAttention.length || sparseAttention[layer];   // the MTP layer is an MLA layer
     }
 
     /**
@@ -142,7 +144,7 @@ public record GlmModelArgs(
      * @return {@code true} for MoE, {@code false} for the dense MLP.
      */
     public boolean isMoe(int layer) {
-        return sparseMlp[layer];
+        return layer >= sparseMlp.length || sparseMlp[layer];                // ... with an MoE
     }
 
     /**
@@ -192,7 +194,7 @@ public record GlmModelArgs(
      * Returns the arguments of a truncated model made of the first layers, for slice validation.
      *
      * @param layers number of backbone layers to keep.
-     * @return the truncated arguments (no MTP layer).
+     * @return the truncated arguments (the MTP layer is kept).
      */
     public GlmModelArgs slice(int layers) {
         if (layers < 1 || layers > numLayers) {
@@ -202,8 +204,8 @@ public record GlmModelArgs(
                 Arrays.copyOf(sparseMlp, layers), denseInterSize, numHeads, qkHeadDim, ropeHeadDim, vHeadDim,
                 qLoraRank, kvLoraRank, kdaHeads, kdaHeadDim, kdaConvKernel, kdaGateLowerBound, indexHeads,
                 indexHeadDim, indexTopk, indexKpool, indexAlwaysSelectTail, numRoutedExperts, numSharedExperts,
-                numExpertsPerTok, moeInterSize, routeScale, swigluLimit, hcMult, hcSinkhornIters, hcEps, 0,
-                imageTokenId, eosTokenIds, padTokenId, maxSeqLen);
+                numExpertsPerTok, moeInterSize, routeScale, swigluLimit, hcMult, hcSinkhornIters, hcEps, numMtpLayers,
+                imageTokenId, eosTokenIds, padTokenId, maxSeqLen, mtpLayerIndex);
     }
 
     /**
@@ -218,7 +220,7 @@ public record GlmModelArgs(
                 kdaConvKernel, kdaGateLowerBound, indexHeads, indexHeadDim, indexTopk, indexKpool,
                 indexAlwaysSelectTail, numRoutedExperts, numSharedExperts, numExpertsPerTok, moeInterSize,
                 routeScale, swigluLimit, hcMult, hcSinkhornIters, hcEps, numMtpLayers, imageTokenId, eosTokenIds,
-                padTokenId, maxSeqLen);
+                padTokenId, maxSeqLen, mtpLayerIndex);
     }
 
     /**
@@ -283,7 +285,8 @@ public record GlmModelArgs(
                 root.path("image_token_id").asInt(154854),
                 ints(t.path("eos_token_id")),
                 t.path("pad_token_id").asInt(154820),
-                t.path("max_position_embeddings").asInt(1 << 20));
+                t.path("max_position_embeddings").asInt(1 << 20),
+                t.get("num_hidden_layers").asInt());
     }
 
     private static int[] ints(JsonNode node) {

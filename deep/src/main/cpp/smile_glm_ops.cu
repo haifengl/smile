@@ -15,6 +15,13 @@
 #include <string>
 
 /* smile_torch.cpp */
+#include <cupti.h>
+#include <unordered_map>
+#include <memory>
+#include <mutex>
+#include <algorithm>
+#include <cstdlib>
+
 extern "C" void smile_torch_set_error(const char *msg);
 extern "C" void smile_torch_clear_error(void);
 
@@ -42,7 +49,7 @@ __global__ void __launch_bounds__(128) kda_kernel(
         const float* __restrict__ raw, const float* __restrict__ fg, const float* __restrict__ braw,
         const float* __restrict__ convw, const float* __restrict__ a_log, const float* __restrict__ dt_bias,
         const float* __restrict__ conv_state, float* __restrict__ rec_state, const int* __restrict__ slots,
-        float* __restrict__ out, int T, int H, float bound) {
+        float* __restrict__ out, float* __restrict__ rec_save, int T, int H, float bound) {
     const int v0 = blockIdx.x * kCols;
     const int bh = blockIdx.y;
     const int b = bh / H;
@@ -156,6 +163,12 @@ __global__ void __launch_bounds__(128) kda_kernel(
             const int row = warp * kRows + r;
             st[r] = s_w[p][3][row] * st[r] + s_w[p][2][row] * delta;
         }
+        if (rec_save != nullptr) {
+            // the state after token t of this request, for rolling a speculative window back to any row
+            float* dst = rec_save + (((int64_t) b * T + t) * H + h) * kKD * kKD;
+#pragma unroll
+            for (int r = 0; r < kRows; ++r) dst[(int64_t) (warp * kRows + r) * kKD + col] = st[r];
+        }
     }
 #pragma unroll
     for (int r = 0; r < kRows; ++r) S[(int64_t) (warp * kRows + r) * kKD + col] = st[r];
@@ -172,6 +185,187 @@ __global__ void kda_conv_state_kernel(const float* __restrict__ raw, float* __re
     for (int j = 0; j < 3; ++j) {
         const int tau = T - 3 + j;
         cs[(int64_t) j * C + c] = tau >= 0 ? rawb[(int64_t) tau * C + c] : cs[(int64_t) (3 + tau) * C + c];
+    }
+}
+
+/**
+ * Keeps the first accept[b] rows of a speculative window: the recurrent state becomes the state after row accept[b] - 1
+ * and the conv state the last three raw rows of (old conv state, rows 0..accept[b]-1). The verify pass left the conv
+ * state untouched and the recurrent state after the whole window.
+ */
+__global__ void kda_commit_kernel(const float* __restrict__ raw, float* __restrict__ conv_state,
+                                  float* __restrict__ rec_state, const float* __restrict__ rec_save,
+                                  const int* __restrict__ slots, const int* __restrict__ accept, int T, int C, int H) {
+    const int b = blockIdx.y;
+    const int a = accept[b];
+    const int slot = slots[b];
+    const int64_t sz = (int64_t) H * kKD * kKD;
+    float* dst = rec_state + (int64_t) slot * sz;
+    const float* src = rec_save + ((int64_t) b * T + (a - 1)) * sz;
+    for (int64_t i = (int64_t) blockIdx.x * blockDim.x + threadIdx.x; i < sz; i += (int64_t) gridDim.x * blockDim.x) {
+        dst[i] = src[i];
+    }
+    // conv state: one thread per channel (blocks of the first grid row only; the others skip it)
+    if (blockIdx.x * blockDim.x + threadIdx.x < C) {
+        const int c = blockIdx.x * blockDim.x + threadIdx.x;
+        const float* rawb = raw + (int64_t) b * T * C;
+        float* cs = conv_state + (int64_t) slot * 3 * C;
+        for (int j = 0; j < 3; ++j) {
+            const int tau = a - 3 + j;
+            cs[(int64_t) j * C + c] = tau >= 0 ? rawb[(int64_t) tau * C + c] : cs[(int64_t) (3 + tau) * C + c];
+        }
+    }
+}
+
+/** out[r, c] = silu(min(gu[r, c], limit)) * clamp(gu[r, inter + c], -limit, limit) in float32 math, written as bfloat16. */
+template <typename T>
+__global__ void glm_swiglu_kernel(const T* __restrict__ gu, __nv_bfloat16* __restrict__ out, int64_t total, int inter,
+                                  float limit) {
+    const int64_t i = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+    if (i >= total) return;
+    const int64_t r = i / inter;
+    const int c = (int) (i % inter);
+    float g = (float) gu[r * 2 * inter + c];
+    float u = (float) gu[r * 2 * inter + inter + c];
+    if (limit > 0.f) {
+        g = fminf(g, limit);
+        u = fminf(fmaxf(u, -limit), limit);
+    }
+    out[i] = __float2bfloat16(g / (1.f + expf(-g)) * u);
+}
+
+constexpr int kLat = 512;           // latent width
+constexpr int kPoolDim = 128;       // indexer key width
+constexpr int kProjQa = 1536;
+constexpr int kProjKv = 512;
+constexpr int kProjIdx = 128;
+constexpr int kProjGate = 128;
+constexpr int kProjW = 32;
+constexpr int kProjCols = kProjQa + kProjKv + kProjIdx + kProjGate + kProjW;
+
+__device__ __forceinline__ float block_sum(float v, float* red) {
+#pragma unroll
+    for (int o = 16; o > 0; o >>= 1) v += __shfl_xor_sync(0xffffffffu, v, o);
+    __syncthreads();
+    if ((threadIdx.x & 31) == 0) red[threadIdx.x >> 5] = v;
+    __syncthreads();
+    float t = 0.f;
+    for (int w = 0; w < (int) (blockDim.x >> 5); ++w) t += red[w];
+    return t;
+}
+
+/**
+ * The elementwise tail of GLM's MLA projections of one row y = x . [W_qa; W_kva; W_idxk; W_gate; W_idxw]^T:
+ * qresid = rms_norm(y[0:1536]) * w (bfloat16: it only feeds bf16 GEMMs), latent = rms_norm(y[1536:2048]) * w,
+ * key = layer_norm(y[2048:2176]) * w + b, gate = y[2176:2304], weights = y[2304:2336] * w_scale.
+ */
+__global__ void __launch_bounds__(256) glm_mla_proj_epilogue_kernel(
+        const float* __restrict__ y, const float* __restrict__ qa_w, const float* __restrict__ kv_w,
+        const float* __restrict__ ln_w, const float* __restrict__ ln_b, float eps, float ln_eps, float w_scale,
+        __nv_bfloat16* __restrict__ qresid, float* __restrict__ latent, float* __restrict__ key,
+        float* __restrict__ gate, float* __restrict__ weights) {
+    __shared__ float red[8];
+    const int row = blockIdx.x;
+    const float* r = y + (int64_t) row * kProjCols;
+    const int t = threadIdx.x;
+    // q-lora residual
+    float ss = 0.f;
+    for (int i = t; i < kProjQa; i += 256) ss += r[i] * r[i];
+    float inv = rsqrtf(block_sum(ss, red) / kProjQa + eps);
+    for (int i = t; i < kProjQa; i += 256) qresid[(int64_t) row * kProjQa + i] = __float2bfloat16(r[i] * inv * qa_w[i]);
+    // kv latent
+    const float* kv = r + kProjQa;
+    ss = 0.f;
+    for (int i = t; i < kProjKv; i += 256) ss += kv[i] * kv[i];
+    inv = rsqrtf(block_sum(ss, red) / kProjKv + eps);
+    for (int i = t; i < kProjKv; i += 256) latent[(int64_t) row * kProjKv + i] = kv[i] * inv * kv_w[i];
+    // indexer key: layer norm
+    const float* k = kv + kProjKv;
+    float v = t < kProjIdx ? k[t] : 0.f;
+    const float mean = block_sum(v, red) / kProjIdx;
+    const float d = t < kProjIdx ? k[t] - mean : 0.f;
+    const float var = block_sum(d * d, red) / kProjIdx;
+    if (t < kProjIdx) key[(int64_t) row * kProjIdx + t] = d * rsqrtf(var + ln_eps) * ln_w[t] + ln_b[t];
+    // gate and head weights
+    const float* g = k + kProjIdx;
+    if (t < kProjGate) gate[(int64_t) row * kProjGate + t] = g[t];
+    const float* w = g + kProjGate;
+    if (t < kProjW) weights[(int64_t) row * kProjW + t] = w[t] * w_scale;
+}
+
+constexpr int kNope = 256;          // per-head query width (no rotary part)
+constexpr int kValueDim = 256;
+
+__device__ __forceinline__ float bf16_round(float x) { return __bfloat162float(__float2bfloat16(x)); }
+
+/**
+ * Absorbs W_UK into the queries of the decode step: qabs[b, h, r] = sum_n bf16(q[b, h, n]) * w_uk[h, n, r] (float32
+ * accumulation, bfloat16 result), and converts the indexer queries to bfloat16. Grid (B, heads + 1, 4): block (b, h, z) for
+ * h < heads computes the 128 latent columns [128 z, 128 z + 128) with 8 groups of 128 threads, each reducing 32 of the 256
+ * query values (all loads in flight), the groups meet in shared memory; block (b, heads, 0) converts the 4096 indexer
+ * query values of row b. qi: float32 [B, ld] = q_b | indexer q.
+ */
+__global__ void __launch_bounds__(1024) glm_mla_absorb_kernel(
+        const float* __restrict__ qi, int ld, const __nv_bfloat16* __restrict__ wuk, __nv_bfloat16* __restrict__ qabs,
+        __nv_bfloat16* __restrict__ idxq, int heads) {
+    const int b = blockIdx.x;
+    const int h = blockIdx.y;
+    const int tid = threadIdx.x;
+    const float* row = qi + (int64_t) b * ld;
+    if (h == heads) {
+        if (blockIdx.z == 0) {
+            for (int i = tid; i < 4096; i += 1024) idxq[(int64_t) b * 4096 + i] = __float2bfloat16(row[heads * kNope + i]);
+        }
+        return;
+    }
+    __shared__ float qs[kNope];
+    __shared__ float part[8][128];
+    if (tid < kNope) qs[tid] = bf16_round(row[h * kNope + tid]);
+    __syncthreads();
+    const int g = tid >> 7;
+    const int rr = tid & 127;
+    const int r = blockIdx.z * 128 + rr;
+    const __nv_bfloat16* w = wuk + ((int64_t) h * kNope + g * 32) * kLat + r;
+    float acc = 0.f;
+#pragma unroll
+    for (int n = 0; n < 32; ++n) acc += qs[g * 32 + n] * __bfloat162float(w[(int64_t) n * kLat]);
+    part[g][rr] = acc;
+    __syncthreads();
+    if (g == 0) {
+        float t = 0.f;
+#pragma unroll
+        for (int k = 0; k < 8; ++k) t += part[k][rr];
+        qabs[((int64_t) b * heads + h) * kLat + r] = __float2bfloat16(t);
+    }
+}
+
+/**
+ * out[b, h * 256 + v] = bf16(sum_r bf16(ctx[b, h, r]) * w_uv_t[h, r, v]): the value expansion and head merge of the decode
+ * step. Grid (B, heads, 2); 8 groups of 128 threads each reduce 64 of the 512 latent values for the 128 outputs of a tile.
+ */
+__global__ void __launch_bounds__(1024) glm_mla_wuv_kernel(
+        const float* __restrict__ ctx, const __nv_bfloat16* __restrict__ wuvt, __nv_bfloat16* __restrict__ out, int heads) {
+    const int b = blockIdx.x;
+    const int h = blockIdx.y;
+    const int tid = threadIdx.x;
+    __shared__ float cs[kLat];
+    __shared__ float part[8][128];
+    if (tid < kLat) cs[tid] = bf16_round(ctx[((int64_t) b * heads + h) * kLat + tid]);
+    __syncthreads();
+    const int g = tid >> 7;
+    const int vv = tid & 127;
+    const int v = blockIdx.z * 128 + vv;
+    const __nv_bfloat16* w = wuvt + ((int64_t) h * kLat + g * 64) * kValueDim + v;
+    float acc = 0.f;
+#pragma unroll
+    for (int r = 0; r < 64; ++r) acc += cs[g * 64 + r] * __bfloat162float(w[(int64_t) r * kValueDim]);
+    part[g][vv] = acc;
+    __syncthreads();
+    if (g == 0) {
+        float t = 0.f;
+#pragma unroll
+        for (int k = 0; k < 8; ++k) t += part[k][vv];
+        out[(int64_t) b * heads * kValueDim + h * kValueDim + v] = __float2bfloat16(t);
     }
 }
 
@@ -284,8 +478,6 @@ __global__ void __launch_bounds__(256) indexer_score_kernel(
 
 // ---------------------------------------------------------------- MLA decode step (graph-safe)
 
-constexpr int kLat = 512;           // latent width
-constexpr int kPoolDim = 128;       // indexer key width
 
 __global__ void mla_append_kernel(const float* __restrict__ lat_new, const float* __restrict__ key_new,
                                   const float* __restrict__ gate_new, const float* __restrict__ ape,
@@ -318,6 +510,71 @@ __global__ void mla_append_kernel(const float* __restrict__ lat_new, const float
         }
         __nv_bfloat16* pool = reinterpret_cast<__nv_bfloat16*>(pool_ptrs[b]);
         pool[(int64_t) (len >> 2) * kPoolDim + d] = __float2bfloat16(acc / sum);
+    }
+}
+
+
+/**
+ * Appends a window of R consecutive tokens per request in order (block = request, thread = indexer channel): latent rows,
+ * and the pools the window completes. The ring is read but not written: a window may be only partly accepted, and a
+ * rejected row would overwrite a pending slot of a later group; {@code mla_window_commit_kernel} writes the ring.
+ */
+__global__ void mla_window_append_kernel(const float* __restrict__ lat_new, const float* __restrict__ key_new,
+                                         const float* __restrict__ gate_new, const float* __restrict__ ape,
+                                         const long long* __restrict__ lat_ptrs, const long long* __restrict__ pool_ptrs,
+                                         const long long* __restrict__ pend_ptrs, const int* __restrict__ lens, int R) {
+    const int b = blockIdx.x;
+    const int d = threadIdx.x;
+    const int base = lens[b];
+    __nv_bfloat16* lat = reinterpret_cast<__nv_bfloat16*>(lat_ptrs[b]);
+    __nv_bfloat16* pool = reinterpret_cast<__nv_bfloat16*>(pool_ptrs[b]);
+    const float* pend = reinterpret_cast<const float*>(pend_ptrs[b]);
+    float k[4], g[4];
+#pragma unroll
+    for (int j = 0; j < 4; ++j) {
+        k[j] = pend[j * 256 + d];
+        g[j] = pend[j * 256 + 128 + d];
+    }
+    for (int j = 0; j < R; ++j) {
+        const int len = base + j;
+        const int64_t row = (int64_t) b * R + j;
+        for (int i = d; i < kLat; i += kPoolDim) {
+            lat[(int64_t) len * kLat + i] = __float2bfloat16(lat_new[row * kLat + i]);
+        }
+        const int slot = len & 3;
+        k[slot] = key_new[row * kPoolDim + d];
+        g[slot] = gate_new[row * kPoolDim + d];
+        if (((len + 1) & 3) == 0) {
+            float lg[4], mx = -INFINITY;
+#pragma unroll
+            for (int q = 0; q < 4; ++q) {
+                lg[q] = g[q] + ape[q * kPoolDim + d];
+                mx = fmaxf(mx, lg[q]);
+            }
+            float sum = 0.f, acc = 0.f;
+#pragma unroll
+            for (int q = 0; q < 4; ++q) {
+                const float e = expf(lg[q] - mx);
+                sum += e;
+                acc += e * k[q];
+            }
+            pool[(int64_t) (len >> 2) * kPoolDim + d] = __float2bfloat16(acc / sum);
+        }
+    }
+}
+
+/** Writes the ring slots of the accepted rows of a window (the part of the append that was deferred). */
+__global__ void mla_window_commit_kernel(const float* __restrict__ key_new, const float* __restrict__ gate_new,
+                                         const long long* __restrict__ pend_ptrs, const int* __restrict__ lens,
+                                         const int* __restrict__ accept, int R) {
+    const int b = blockIdx.x;
+    const int d = threadIdx.x;
+    const int base = lens[b];
+    float* pend = reinterpret_cast<float*>(pend_ptrs[b]);
+    for (int j = 0; j < accept[b]; ++j) {
+        const int slot = (base + j) & 3;
+        pend[slot * 256 + d] = key_new[((int64_t) b * R + j) * kPoolDim + d];
+        pend[slot * 256 + 128 + d] = gate_new[((int64_t) b * R + j) * kPoolDim + d];
     }
 }
 
@@ -455,7 +712,7 @@ __global__ void __launch_bounds__(1024) mla_topk_kernel(
     }
 }
 
-constexpr int kAttnHeads = 4;       // heads per block
+constexpr int kAttnHeads = 4;       // most heads per block
 constexpr int kAttnMaxW = 2056;
 
 /**
@@ -464,23 +721,35 @@ constexpr int kAttnMaxW = 2056;
  * in shared memory; scores are computed 4 tokens per warp at a time with all loads in flight, softmax per head, then each
  * thread (2 latent dims) accumulates 8 tokens per step. Invalid tokens (id < 0) get probability 0 and read row 0.
  */
+template <int HPB>
 __global__ void __launch_bounds__(256, 2) mla_attend_kernel(
         const __nv_bfloat16* __restrict__ qabs, const long long* __restrict__ lat_ptrs, const int* __restrict__ idx,
-        int width, int heads, float scale, float* __restrict__ ctx) {
+        const int* __restrict__ lens, int top_pools, int width_all, int heads, float scale, float* __restrict__ ctx) {
     extern __shared__ float smem[];
-    float* sc = smem;                                                // [8][kAttnMaxW]
-    int* sid = reinterpret_cast<int*>(smem + kAttnHeads * kAttnMaxW);  // [kAttnMaxW]
+    float* sc = smem;                                                // [HPB][kAttnMaxW]
+    int* sid = reinterpret_cast<int*>(smem + HPB * kAttnMaxW);  // [kAttnMaxW]
     const int b = blockIdx.x;
-    const int h0 = blockIdx.y * kAttnHeads;
+    const int h0 = blockIdx.y * HPB;
     const int tid = threadIdx.x;
     const int lane = tid & 31;
     const int warp = tid >> 5;
     const __nv_bfloat16* lat = reinterpret_cast<const __nv_bfloat16*>(lat_ptrs[b]);
-    for (int j = tid; j < width; j += 256) sid[j] = idx[(long long) b * width + j];
+    // the ids of a row: the tokens of the selected pools first, -1 padding, the tokens of the open pool in the last three
+    // slots; with the row length known only the valid prefix and those three are processed
+    int width = width_all;
+    if (lens != nullptr) {
+        const int kp = min((lens[b] + 1) >> 2, top_pools);
+        const int nv = 4 * kp;
+        for (int j = tid; j < nv; j += 256) sid[j] = idx[(long long) b * width_all + j];
+        if (tid < 3) sid[nv + tid] = idx[(long long) b * width_all + width_all - 3 + tid];
+        width = nv + 3;
+    } else {
+        for (int j = tid; j < width; j += 256) sid[j] = idx[(long long) b * width_all + j];
+    }
     // this lane's slice of every head's query: dims lane*8..+7 and 256 + lane*8..+7
-    uint4 qr[kAttnHeads][2];
+    uint4 qr[HPB][2];
 #pragma unroll
-    for (int h = 0; h < kAttnHeads; ++h) {
+    for (int h = 0; h < HPB; ++h) {
         const __nv_bfloat16* qp = qabs + ((long long) b * heads + h0 + h) * kLat;
         qr[h][0] = *reinterpret_cast<const uint4*>(qp + lane * 8);
         qr[h][1] = *reinterpret_cast<const uint4*>(qp + 256 + lane * 8);
@@ -511,9 +780,9 @@ __global__ void __launch_bounds__(256, 2) mla_attend_kernel(
                 x[8 + 2 * i] = __low2float(c2[i]);
                 x[8 + 2 * i + 1] = __high2float(c2[i]);
             }
-            float part[kAttnHeads];
+            float part[HPB];
 #pragma unroll
-            for (int h = 0; h < kAttnHeads; ++h) {
+            for (int h = 0; h < HPB; ++h) {
                 const __nv_bfloat162* q0 = reinterpret_cast<const __nv_bfloat162*>(&qr[h][0]);
                 const __nv_bfloat162* q1 = reinterpret_cast<const __nv_bfloat162*>(&qr[h][1]);
                 float s = 0.f;
@@ -525,21 +794,21 @@ __global__ void __launch_bounds__(256, 2) mla_attend_kernel(
                 part[h] = s;
             }
 #pragma unroll
-            for (int h = 0; h < kAttnHeads; ++h) {
+            for (int h = 0; h < HPB; ++h) {
 #pragma unroll
                 for (int o = 16; o > 0; o >>= 1) part[h] += __shfl_xor_sync(0xffffffffu, part[h], o);
             }
-            if (lane < kAttnHeads && j < width) {
+            if (lane < HPB && j < width) {
                 float v = part[0];
 #pragma unroll
-                for (int h = 1; h < kAttnHeads; ++h) if (lane == h) v = part[h];
+                for (int h = 1; h < HPB; ++h) if (lane == h) v = part[h];
                 sc[lane * kAttnMaxW + j] = sid[j] < 0 ? -INFINITY : v * scale;
             }
         }
     }
     __syncthreads();
     // softmax: warp h owns head h
-    if (warp < kAttnHeads) {
+    if (warp < HPB) {
         float* row = sc + warp * kAttnMaxW;
         float mx = -INFINITY;
         for (int j = lane; j < width; j += 32) mx = fmaxf(mx, row[j]);
@@ -558,9 +827,9 @@ __global__ void __launch_bounds__(256, 2) mla_attend_kernel(
     }
     __syncthreads();
     // weighted sum: thread t owns latent dims 2t, 2t + 1; 8 tokens per step with the loads in flight
-    float acc[kAttnHeads][2];
+    float acc[HPB][2];
 #pragma unroll
-    for (int h = 0; h < kAttnHeads; ++h) acc[h][0] = acc[h][1] = 0.f;
+    for (int h = 0; h < HPB; ++h) acc[h][0] = acc[h][1] = 0.f;
     constexpr int V = 8;
     for (int j0 = 0; j0 < width; j0 += V) {
         __nv_bfloat162 v[V];
@@ -576,7 +845,7 @@ __global__ void __launch_bounds__(256, 2) mla_attend_kernel(
             const int j = j0 + u;
             const float v0 = __low2float(v[u]), v1 = __high2float(v[u]);
 #pragma unroll
-            for (int h = 0; h < kAttnHeads; ++h) {
+            for (int h = 0; h < HPB; ++h) {
                 const float p = j < width ? sc[h * kAttnMaxW + j] : 0.f;
                 acc[h][0] += p * v0;
                 acc[h][1] += p * v1;
@@ -584,7 +853,7 @@ __global__ void __launch_bounds__(256, 2) mla_attend_kernel(
         }
     }
 #pragma unroll
-    for (int h = 0; h < kAttnHeads; ++h) {
+    for (int h = 0; h < HPB; ++h) {
         *reinterpret_cast<float2*>(ctx + (((long long) b * heads + h0 + h) * kLat + 2 * tid)) = make_float2(acc[h][0], acc[h][1]);
     }
 }
@@ -600,6 +869,371 @@ bool check(const at::Tensor& t, const char* name, at::ScalarType type, int dim, 
 }  // namespace
 
 extern "C" int smile_glm_ops_available(void) { return 1; }
+
+// ---------------------------------------------------------------- one-shot peer-to-peer all-reduce (small messages)
+
+namespace {
+
+constexpr int kArMaxWorld = 8;
+constexpr int kArMaxBlocks = 32;
+constexpr size_t kArCapacity = 1 << 20;           // bytes per staging buffer (two per rank)
+
+struct ArGroup {
+    int world = 0;
+    int dev[kArMaxWorld] = {0};
+    float* buf[kArMaxWorld][2] = {{nullptr}};
+    float* res[kArMaxWorld][2] = {{nullptr}};     // two-shot: the reduced slices, written by their owners
+    unsigned* flags[kArMaxWorld] = {nullptr};     // [kArMaxBlocks]: the epoch each block of the rank has staged
+    unsigned* flags2[kArMaxWorld] = {nullptr};    // two-shot: the epoch each block of the rank has reduced
+    unsigned* epoch[kArMaxWorld] = {nullptr};     // [kArMaxBlocks]: calls so far of each block (private to the block)
+};
+
+struct ArPtrs {
+    float* buf[kArMaxWorld][2];
+    float* res[kArMaxWorld][2];
+    unsigned* flags[kArMaxWorld];
+    unsigned* flags2[kArMaxWorld];
+};
+
+__device__ __forceinline__ unsigned ld_volatile(const unsigned* p) {
+    unsigned v;
+    asm volatile("ld.volatile.global.u32 %0, [%1];" : "=r"(v) : "l"(p) : "memory");
+    return v;
+}
+
+/**
+ * Block b of every rank handles the same chunk of the vector: it copies the chunk of its own input into its rank's staging
+ * buffer (the buffer alternates with the call number), raises its flag, waits for the flags of the same block of every other
+ * rank and then sums the staged chunks of all ranks in rank order, so every rank produces identical bits. The epochs are
+ * kept in device memory and advance with every call, so the kernel can be captured in a CUDA graph and replayed.
+ */
+__global__ void __launch_bounds__(256) ar_kernel(ArPtrs a, int rank, int world, float* __restrict__ data, int n4, int chunk4,
+                                                 unsigned* __restrict__ epochs) {
+    const int b = blockIdx.x;
+    const int tid = threadIdx.x;
+    __shared__ unsigned s_epoch;
+    if (tid == 0) {
+        s_epoch = epochs[b] + 1;
+        epochs[b] = s_epoch;
+    }
+    __syncthreads();
+    const unsigned e = s_epoch;
+    const int par = e & 1;
+    const int lo = b * chunk4;
+    const int hi = min(n4, lo + chunk4);
+    float4* mine = reinterpret_cast<float4*>(a.buf[rank][par]);
+    const float4* in = reinterpret_cast<const float4*>(data);
+    for (int i = lo + tid; i < hi; i += 256) mine[i] = in[i];
+    __threadfence_system();
+    __syncthreads();
+    if (tid == 0) {
+        asm volatile("st.volatile.global.u32 [%0], %1;" ::"l"(a.flags[rank] + b), "r"(e) : "memory");
+    }
+    if (tid < world) {
+        const unsigned* f = a.flags[tid] + b;
+        long long spins = 0;
+        while ((int) (ld_volatile(f) - e) < 0) {
+            if (++spins > 4000000000LL) {
+                printf("smile all-reduce: rank %d block %d timed out waiting for rank %d (epoch %u)\n", rank, b, tid, e);
+                __trap();
+            }
+        }
+    }
+    __syncthreads();
+    __threadfence();
+    float4* out = reinterpret_cast<float4*>(data);
+    for (int i = lo + tid; i < hi; i += 256) {
+        float4 sum = __ldcg(reinterpret_cast<const float4*>(a.buf[0][par]) + i);
+        for (int p = 1; p < world; ++p) {
+            const float4 v = __ldcg(reinterpret_cast<const float4*>(a.buf[p][par]) + i);
+            sum.x += v.x;
+            sum.y += v.y;
+            sum.z += v.z;
+            sum.w += v.w;
+        }
+        out[i] = sum;
+    }
+}
+
+/**
+ * Two-shot variant for larger messages: the vector is cut into one slice per rank; every rank stages its input, then reduces
+ * only its own slice (reading 1/world of every rank's data, in rank order) and writes the sum into the result buffer of every
+ * rank; after a second barrier every rank copies the gathered result back. About a quarter of the NVLink traffic of the
+ * one-shot kernel at 8 ranks. Block b owns sub-slice b of every slice, so both barriers are per block.
+ */
+__global__ void __launch_bounds__(256) ar2_kernel(ArPtrs a, int rank, int world, float* __restrict__ data, int n4, int slice4,
+                                                  int sub4, unsigned* __restrict__ epochs) {
+    const int b = blockIdx.x;
+    const int tid = threadIdx.x;
+    __shared__ unsigned s_epoch;
+    if (tid == 0) {
+        s_epoch = epochs[b] + 1;
+        epochs[b] = s_epoch;
+    }
+    __syncthreads();
+    const unsigned e = s_epoch;
+    const int par = e & 1;
+    float4* mine = reinterpret_cast<float4*>(a.buf[rank][par]);
+    const float4* in = reinterpret_cast<const float4*>(data);
+    const int off = b * sub4;
+    const int cnt = max(0, min(sub4, slice4 - off));
+    for (int q = 0; q < world; ++q) {
+        const int base = q * slice4 + off;
+        const int len = max(0, min(cnt, n4 - base));
+        for (int i = tid; i < len; i += 256) mine[base + i] = in[base + i];
+    }
+    __threadfence_system();
+    __syncthreads();
+    if (tid == 0) asm volatile("st.volatile.global.u32 [%0], %1;" ::"l"(a.flags[rank] + b), "r"(e) : "memory");
+    if (tid < world) {
+        const unsigned* f = a.flags[tid] + b;
+        long long spins = 0;
+        while ((int) (ld_volatile(f) - e) < 0) {
+            if (++spins > 4000000000LL) {
+                printf("smile all-reduce(2): rank %d block %d timed out in stage waiting for rank %d (epoch %u)\n", rank, b, tid, e);
+                __trap();
+            }
+        }
+    }
+    __syncthreads();
+    __threadfence();
+    {
+        const int base = rank * slice4 + off;
+        const int len = max(0, min(cnt, n4 - base));
+        for (int i = tid; i < len; i += 256) {
+            float4 sum = __ldcg(reinterpret_cast<const float4*>(a.buf[0][par]) + base + i);
+            for (int p = 1; p < world; ++p) {
+                const float4 v = __ldcg(reinterpret_cast<const float4*>(a.buf[p][par]) + base + i);
+                sum.x += v.x;
+                sum.y += v.y;
+                sum.z += v.z;
+                sum.w += v.w;
+            }
+            for (int w = 0; w < world; ++w) reinterpret_cast<float4*>(a.res[w][par])[base + i] = sum;
+        }
+    }
+    __threadfence_system();
+    __syncthreads();
+    if (tid == 0) asm volatile("st.volatile.global.u32 [%0], %1;" ::"l"(a.flags2[rank] + b), "r"(e) : "memory");
+    if (tid < world) {
+        const unsigned* f = a.flags2[tid] + b;
+        long long spins = 0;
+        while ((int) (ld_volatile(f) - e) < 0) {
+            if (++spins > 4000000000LL) {
+                printf("smile all-reduce(2): rank %d block %d timed out in gather waiting for rank %d (epoch %u)\n", rank, b, tid, e);
+                __trap();
+            }
+        }
+    }
+    __syncthreads();
+    __threadfence();
+    float4* out = reinterpret_cast<float4*>(data);
+    const float4* res = reinterpret_cast<const float4*>(a.res[rank][par]);
+    for (int q = 0; q < world; ++q) {
+        const int base = q * slice4 + off;
+        const int len = max(0, min(cnt, n4 - base));
+        for (int i = tid; i < len; i += 256) out[base + i] = __ldcg(res + base + i);
+    }
+}
+
+}  // namespace
+
+/** Creates a peer-to-peer all-reduce group over the devices (peer access enabled between all pairs); 0 if unsupported. */
+extern "C" long long smile_ar_create(int world, const int* devices) {
+    try {
+        smile_torch_clear_error();
+        if (world < 2 || world > kArMaxWorld) {
+            set_err("smile_ar_create: 2 to 8 ranks");
+            return 0;
+        }
+        std::unique_ptr<ArGroup> g(new ArGroup());
+        g->world = world;
+        for (int i = 0; i < world; ++i) g->dev[i] = devices[i];
+        int saved = 0;
+        cudaGetDevice(&saved);
+        for (int i = 0; i < world; ++i) {
+            cudaSetDevice(g->dev[i]);
+            for (int j = 0; j < world; ++j) {
+                if (i == j) continue;
+                int can = 0;
+                cudaDeviceCanAccessPeer(&can, g->dev[i], g->dev[j]);
+                if (!can) {
+                    cudaSetDevice(saved);
+                    set_err("smile_ar_create: no peer access between devices " + std::to_string(g->dev[i]) + " and " + std::to_string(g->dev[j]));
+                    return 0;
+                }
+                cudaError_t e = cudaDeviceEnablePeerAccess(g->dev[j], 0);
+                if (e != cudaSuccess && e != cudaErrorPeerAccessAlreadyEnabled) {
+                    cudaSetDevice(saved);
+                    set_err(std::string("smile_ar_create: cannot enable peer access: ") + cudaGetErrorString(e));
+                    return 0;
+                }
+                cudaGetLastError();
+            }
+            for (int k = 0; k < 2; ++k) {
+                if (cudaMalloc(&g->buf[i][k], kArCapacity) != cudaSuccess) {
+                    cudaSetDevice(saved);
+                    set_err("smile_ar_create: out of memory");
+                    return 0;
+                }
+            }
+            for (int k = 0; k < 2; ++k) {
+                if (cudaMalloc(&g->res[i][k], kArCapacity) != cudaSuccess) {
+                    cudaSetDevice(saved);
+                    set_err("smile_ar_create: out of memory");
+                    return 0;
+                }
+            }
+            cudaMalloc(&g->flags[i], kArMaxBlocks * sizeof(unsigned));
+            cudaMalloc(&g->flags2[i], kArMaxBlocks * sizeof(unsigned));
+            cudaMalloc(&g->epoch[i], kArMaxBlocks * sizeof(unsigned));
+            cudaMemset(g->flags[i], 0, kArMaxBlocks * sizeof(unsigned));
+            cudaMemset(g->flags2[i], 0, kArMaxBlocks * sizeof(unsigned));
+            cudaMemset(g->epoch[i], 0, kArMaxBlocks * sizeof(unsigned));
+            cudaDeviceSynchronize();
+        }
+        cudaSetDevice(saved);
+        return (long long) g.release();
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return 0;
+    }
+}
+
+/** Sums a float32 tensor over the ranks in place (rank = index in the group). Returns 0, -1 if the tensor does not qualify. */
+extern "C" int smile_ar_all_reduce(long long handle, int rank, ST_Tensor t) {
+    try {
+        smile_torch_clear_error();
+        ArGroup* g = reinterpret_cast<ArGroup*>(handle);
+        const at::Tensor& x = t->t;
+        const int64_t n = x.numel();
+        if (g == nullptr || rank < 0 || rank >= g->world || !x.is_cuda() || x.scalar_type() != at::kFloat || !x.is_contiguous()
+                || n % 4 != 0 || n == 0 || (size_t) n * sizeof(float) > kArCapacity || x.get_device() != g->dev[rank]
+                || ((uintptr_t) x.data_ptr()) % 16 != 0) {
+            set_err("smile_ar_all_reduce: unsupported tensor");
+            return -1;
+        }
+        c10::cuda::CUDAGuard guard(g->dev[rank]);
+        ArPtrs a;
+        for (int i = 0; i < g->world; ++i) {
+            a.buf[i][0] = g->buf[i][0];
+            a.buf[i][1] = g->buf[i][1];
+            a.res[i][0] = g->res[i][0];
+            a.res[i][1] = g->res[i][1];
+            a.flags[i] = g->flags[i];
+            a.flags2[i] = g->flags2[i];
+        }
+        const int n4 = (int) (n / 4);
+        cudaStream_t stream = at::cuda::getCurrentCUDAStream(g->dev[rank]);
+        static const int two_shot_from = std::getenv("SMILE_AR_TWO_SHOT_FLOATS") != nullptr
+                ? std::atoi(std::getenv("SMILE_AR_TWO_SHOT_FLOATS")) : 16384;
+        if (n >= two_shot_from) {
+            const int slice4 = (n4 + g->world - 1) / g->world;
+            const int blocks = (int) std::min<int64_t>(kArMaxBlocks, std::max<int64_t>(1, slice4 / 256));
+            const int sub4 = (slice4 + blocks - 1) / blocks;
+            ar2_kernel<<<blocks, 256, 0, stream>>>(a, rank, g->world, x.data_ptr<float>(), n4, slice4, sub4, g->epoch[rank]);
+        } else {
+            const int blocks = (int) std::min<int64_t>(kArMaxBlocks, std::max<int64_t>(1, n4 / 256));
+            const int chunk4 = (n4 + blocks - 1) / blocks;
+            ar_kernel<<<blocks, 256, 0, stream>>>(a, rank, g->world, x.data_ptr<float>(), n4, chunk4, g->epoch[rank]);
+        }
+        cudaError_t e = cudaGetLastError();
+        if (e != cudaSuccess) {
+            set_err(std::string("smile_ar_all_reduce: CUDA error: ") + cudaGetErrorString(e));
+            return -1;
+        }
+        return 0;
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return -1;
+    }
+}
+
+extern "C" void smile_ar_destroy(long long handle) {
+    ArGroup* g = reinterpret_cast<ArGroup*>(handle);
+    if (g == nullptr) return;
+    int saved = 0;
+    cudaGetDevice(&saved);
+    for (int i = 0; i < g->world; ++i) {
+        cudaSetDevice(g->dev[i]);
+        cudaFree(g->buf[i][0]);
+        cudaFree(g->buf[i][1]);
+        cudaFree(g->res[i][0]);
+        cudaFree(g->res[i][1]);
+        cudaFree(g->flags2[i]);
+        cudaFree(g->flags[i]);
+        cudaFree(g->epoch[i]);
+    }
+    cudaSetDevice(saved);
+    delete g;
+}
+
+
+// ---------------------------------------------------------------- kernel time profile (CUPTI activity records)
+
+namespace {
+
+std::mutex g_prof_mu;
+std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> g_prof;   // name -> {count, nanoseconds}
+int g_prof_device = 0;
+std::string g_prof_report;
+
+void CUPTIAPI prof_buffer_requested(uint8_t** buffer, size_t* size, size_t* max_records) {
+    *size = 8 << 20;
+    *buffer = (uint8_t*) std::aligned_alloc(8, *size);
+    *max_records = 0;
+}
+
+void CUPTIAPI prof_buffer_completed(CUcontext, uint32_t, uint8_t* buffer, size_t, size_t valid) {
+    CUpti_Activity* rec = nullptr;
+    while (cuptiActivityGetNextRecord(buffer, valid, &rec) == CUPTI_SUCCESS) {
+        if (rec->kind == CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL || rec->kind == CUPTI_ACTIVITY_KIND_KERNEL) {
+            const CUpti_ActivityKernel10* k = reinterpret_cast<const CUpti_ActivityKernel10*>(rec);
+            if ((int) k->deviceId == g_prof_device && k->name != nullptr) {
+                std::lock_guard<std::mutex> lock(g_prof_mu);
+                auto& e = g_prof[k->name];
+                e.first++;
+                e.second += k->end - k->start;
+            }
+        }
+    }
+    std::free(buffer);
+}
+
+}  // namespace
+
+/** Starts recording the duration of every kernel (including the kernels of replayed CUDA graphs) that runs on one device. */
+extern "C" int smile_prof_start(int device) {
+    {
+        std::lock_guard<std::mutex> lock(g_prof_mu);
+        g_prof.clear();
+        g_prof_device = device;
+    }
+    if (cuptiActivityRegisterCallbacks(prof_buffer_requested, prof_buffer_completed) != CUPTI_SUCCESS) return -1;
+    if (cuptiActivityEnable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL) != CUPTI_SUCCESS) return -2;
+    return 0;
+}
+
+/** Stops the recording and returns the report (one line per kernel name, longest total first); valid until the next call. */
+extern "C" const char* smile_prof_stop(void) {
+    cudaDeviceSynchronize();
+    cuptiActivityFlushAll(1);
+    cuptiActivityDisable(CUPTI_ACTIVITY_KIND_CONCURRENT_KERNEL);
+    std::lock_guard<std::mutex> lock(g_prof_mu);
+    std::vector<std::pair<std::string, std::pair<uint64_t, uint64_t>>> v(g_prof.begin(), g_prof.end());
+    std::sort(v.begin(), v.end(), [](const auto& a, const auto& b) { return a.second.second > b.second.second; });
+    std::string out;
+    for (const auto& e : v) {
+        char line[512];
+        std::string name = e.first.substr(0, 150);
+        std::snprintf(line, sizeof line, "%10.1f us %7llu x %8.2f us  %s\n", e.second.second / 1e3, (unsigned long long) e.second.first,
+                      e.second.second / 1e3 / (double) e.second.first, name.c_str());
+        out += line;
+    }
+    g_prof_report = out;
+    return g_prof_report.c_str();
+}
+
 
 extern "C" ST_Tensor smile_indexer_scores(ST_Tensor q, ST_Tensor w, ST_Tensor pk, long long pool0, long long count,
                                           long long p0, double scale) {
@@ -680,13 +1314,335 @@ extern "C" ST_Tensor smile_kda_forward(ST_Tensor raw, ST_Tensor fg, ST_Tensor br
         kda_kernel<<<grid, 128, 0, stream>>>(R.data_ptr<float>(), F.data_ptr<float>(), Bt.data_ptr<float>(),
                                              CW.data_ptr<float>(), AL.data_ptr<float>(), DT.data_ptr<float>(),
                                              CS.data_ptr<float>(), RS.data_ptr<float>(), SL.data_ptr<int>(),
-                                             out.data_ptr<float>(), (int) T, (int) H, (float) gate_bound);
+                                             out.data_ptr<float>(), nullptr, (int) T, (int) H, (float) gate_bound);
         dim3 cgrid((unsigned) ((C + 255) / 256), (unsigned) B);
         kda_conv_state_kernel<<<cgrid, 256, 0, stream>>>(R.data_ptr<float>(), CS.data_ptr<float>(),
                                                          SL.data_ptr<int>(), (int) T, (int) C);
         cudaError_t st = cudaGetLastError();
         if (st != cudaSuccess) {
             set_err(std::string("smile_kda_forward: CUDA error: ") + cudaGetErrorString(st));
+            return nullptr;
+        }
+        return new ST_Tensor_{ out };
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return nullptr;
+    }
+}
+
+
+extern "C" ST_Tensor smile_kda_forward_window(ST_Tensor raw, ST_Tensor fg, ST_Tensor braw, ST_Tensor convw,
+                                              ST_Tensor a_log, ST_Tensor dt_bias, ST_Tensor conv_state,
+                                              ST_Tensor rec_state, ST_Tensor slots, ST_Tensor rec_save,
+                                              double gate_bound) {
+    try {
+        smile_torch_clear_error();
+        std::string err;
+        const at::Tensor& R = raw->t;
+        const at::Tensor& F = fg->t;
+        const at::Tensor& Bt = braw->t;
+        const at::Tensor& CW = convw->t;
+        const at::Tensor& AL = a_log->t;
+        const at::Tensor& DT = dt_bias->t;
+        const at::Tensor& CS = conv_state->t;
+        const at::Tensor& RS = rec_state->t;
+        const at::Tensor& SL = slots->t;
+        const at::Tensor& SV = rec_save->t;
+        if (!check(R, "raw", at::kFloat, 3, err) || !check(F, "fg", at::kFloat, 3, err)
+                || !check(Bt, "braw", at::kFloat, 3, err) || !check(CW, "convw", at::kFloat, 2, err)
+                || !check(AL, "a_log", at::kFloat, 1, err) || !check(DT, "dt_bias", at::kFloat, 1, err)
+                || !check(CS, "conv_state", at::kFloat, 3, err) || !check(RS, "rec_state", at::kFloat, 4, err)
+                || !check(SL, "slots", at::kInt, 1, err) || !check(SV, "rec_save", at::kFloat, 5, err)) {
+            set_err("smile_kda_forward_window: " + err);
+            return nullptr;
+        }
+        const int64_t B = R.size(0), T = R.size(1), C = R.size(2), H = Bt.size(2), W = H * kKD;
+        if (C != 3 * W || F.size(0) != B || F.size(1) != T || F.size(2) != W || Bt.size(0) != B || Bt.size(1) != T
+                || CW.size(0) != C || CW.size(1) != 4 || AL.size(0) != H || DT.size(0) != W
+                || CS.size(1) != 3 || CS.size(2) != C || RS.size(1) != H || RS.size(2) != kKD || RS.size(3) != kKD
+                || CS.size(0) != RS.size(0) || SL.size(0) != B
+                || SV.size(0) != B || SV.size(1) != T || SV.size(2) != H || SV.size(3) != kKD || SV.size(4) != kKD) {
+            set_err("smile_kda_forward_window: inconsistent shapes");
+            return nullptr;
+        }
+        const int dev = R.get_device();
+        c10::cuda::CUDAGuard guard(dev);
+        at::Tensor out = torch::empty({B, T, H, (int64_t) kKD}, R.options());
+        dim3 grid(kKD / kCols, (unsigned) (B * H));
+        kda_kernel<<<grid, 128, 0, at::cuda::getCurrentCUDAStream(dev)>>>(
+                R.data_ptr<float>(), F.data_ptr<float>(), Bt.data_ptr<float>(), CW.data_ptr<float>(),
+                AL.data_ptr<float>(), DT.data_ptr<float>(), CS.data_ptr<float>(), RS.data_ptr<float>(),
+                SL.data_ptr<int>(), out.data_ptr<float>(), SV.data_ptr<float>(), (int) T, (int) H, (float) gate_bound);
+        cudaError_t st = cudaGetLastError();
+        if (st != cudaSuccess) {
+            set_err(std::string("smile_kda_forward_window: CUDA error: ") + cudaGetErrorString(st));
+            return nullptr;
+        }
+        return new ST_Tensor_{ out };
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return nullptr;
+    }
+}
+
+extern "C" int smile_kda_commit(ST_Tensor raw_save, ST_Tensor conv_state, ST_Tensor rec_state, ST_Tensor rec_save,
+                                ST_Tensor slots, ST_Tensor accept) {
+    try {
+        smile_torch_clear_error();
+        std::string err;
+        const at::Tensor& R = raw_save->t;
+        const at::Tensor& CS = conv_state->t;
+        const at::Tensor& RS = rec_state->t;
+        const at::Tensor& SV = rec_save->t;
+        if (!check(R, "raw_save", at::kFloat, 3, err) || !check(CS, "conv_state", at::kFloat, 3, err)
+                || !check(RS, "rec_state", at::kFloat, 4, err) || !check(SV, "rec_save", at::kFloat, 5, err)
+                || !check(slots->t, "slots", at::kInt, 1, err) || !check(accept->t, "accept", at::kInt, 1, err)) {
+            set_err("smile_kda_commit: " + err);
+            return -1;
+        }
+        const int64_t B = R.size(0), T = R.size(1), C = R.size(2), H = RS.size(1);
+        if (SV.size(0) != B || SV.size(1) != T || SV.size(2) != H || slots->t.size(0) != B || accept->t.size(0) != B
+                || CS.size(2) != C || C != 3 * H * kKD) {
+            set_err("smile_kda_commit: inconsistent shapes");
+            return -1;
+        }
+        const int dev = R.get_device();
+        c10::cuda::CUDAGuard guard(dev);
+        const int64_t sz = H * kKD * kKD;
+        dim3 grid((unsigned) std::min<int64_t>((std::max<int64_t>(sz, C) + 255) / 256, 256), (unsigned) B);
+        kda_commit_kernel<<<grid, 256, 0, at::cuda::getCurrentCUDAStream(dev)>>>(
+                R.data_ptr<float>(), CS.data_ptr<float>(), RS.data_ptr<float>(), SV.data_ptr<float>(),
+                slots->t.data_ptr<int>(), accept->t.data_ptr<int>(), (int) T, (int) C, (int) H);
+        cudaError_t st = cudaGetLastError();
+        if (st != cudaSuccess) {
+            set_err(std::string("smile_kda_commit: CUDA error: ") + cudaGetErrorString(st));
+            return -1;
+        }
+        return 0;
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return -1;
+    }
+}
+
+extern "C" int smile_mla_window_append(ST_Tensor lat_new, ST_Tensor key_new, ST_Tensor gate_new, ST_Tensor ape,
+                                       ST_Tensor lat_ptrs, ST_Tensor pool_ptrs, ST_Tensor pend_ptrs, ST_Tensor lens,
+                                       long long rows) {
+    try {
+        smile_torch_clear_error();
+        std::string err;
+        if (!check(lat_new->t, "lat_new", at::kFloat, 2, err) || !check(key_new->t, "key_new", at::kFloat, 2, err)
+                || !check(gate_new->t, "gate_new", at::kFloat, 2, err) || !check(ape->t, "ape", at::kFloat, 2, err)
+                || !check(lat_ptrs->t, "lat_ptrs", at::kLong, 1, err) || !check(pool_ptrs->t, "pool_ptrs", at::kLong, 1, err)
+                || !check(pend_ptrs->t, "pend_ptrs", at::kLong, 1, err) || !check(lens->t, "lens", at::kInt, 1, err)) {
+            set_err("smile_mla_window_append: " + err);
+            return -1;
+        }
+        const int64_t B = lens->t.size(0);
+        if (rows < 1 || lat_new->t.size(0) != B * rows || lat_new->t.size(1) != kLat || key_new->t.size(0) != B * rows
+                || key_new->t.size(1) != kPoolDim || gate_new->t.size(0) != B * rows || gate_new->t.size(1) != kPoolDim
+                || ape->t.size(0) != 4 || ape->t.size(1) != kPoolDim || lat_ptrs->t.size(0) != B
+                || pool_ptrs->t.size(0) != B || pend_ptrs->t.size(0) != B) {
+            set_err("smile_mla_window_append: inconsistent shapes");
+            return -1;
+        }
+        const int dev = lat_new->t.get_device();
+        c10::cuda::CUDAGuard guard(dev);
+        mla_window_append_kernel<<<(unsigned) B, kPoolDim, 0, at::cuda::getCurrentCUDAStream(dev)>>>(
+                lat_new->t.data_ptr<float>(), key_new->t.data_ptr<float>(), gate_new->t.data_ptr<float>(),
+                ape->t.data_ptr<float>(), reinterpret_cast<const long long*>(lat_ptrs->t.data_ptr<int64_t>()),
+                reinterpret_cast<const long long*>(pool_ptrs->t.data_ptr<int64_t>()),
+                reinterpret_cast<const long long*>(pend_ptrs->t.data_ptr<int64_t>()), lens->t.data_ptr<int>(), (int) rows);
+        cudaError_t st = cudaGetLastError();
+        if (st != cudaSuccess) {
+            set_err(std::string("smile_mla_window_append: CUDA error: ") + cudaGetErrorString(st));
+            return -1;
+        }
+        return 0;
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return -1;
+    }
+}
+
+extern "C" int smile_mla_window_commit(ST_Tensor key_new, ST_Tensor gate_new, ST_Tensor pend_ptrs, ST_Tensor lens,
+                                       ST_Tensor accept, long long rows) {
+    try {
+        smile_torch_clear_error();
+        std::string err;
+        if (!check(key_new->t, "key_new", at::kFloat, 2, err) || !check(gate_new->t, "gate_new", at::kFloat, 2, err)
+                || !check(pend_ptrs->t, "pend_ptrs", at::kLong, 1, err) || !check(lens->t, "lens", at::kInt, 1, err)
+                || !check(accept->t, "accept", at::kInt, 1, err)) {
+            set_err("smile_mla_window_commit: " + err);
+            return -1;
+        }
+        const int64_t B = lens->t.size(0);
+        if (rows < 1 || key_new->t.size(0) != B * rows || key_new->t.size(1) != kPoolDim || gate_new->t.size(0) != B * rows
+                || pend_ptrs->t.size(0) != B || accept->t.size(0) != B) {
+            set_err("smile_mla_window_commit: inconsistent shapes");
+            return -1;
+        }
+        const int dev = key_new->t.get_device();
+        c10::cuda::CUDAGuard guard(dev);
+        mla_window_commit_kernel<<<(unsigned) B, kPoolDim, 0, at::cuda::getCurrentCUDAStream(dev)>>>(
+                key_new->t.data_ptr<float>(), gate_new->t.data_ptr<float>(),
+                reinterpret_cast<const long long*>(pend_ptrs->t.data_ptr<int64_t>()), lens->t.data_ptr<int>(),
+                accept->t.data_ptr<int>(), (int) rows);
+        cudaError_t st = cudaGetLastError();
+        if (st != cudaSuccess) {
+            set_err(std::string("smile_mla_window_commit: CUDA error: ") + cudaGetErrorString(st));
+            return -1;
+        }
+        return 0;
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return -1;
+    }
+}
+
+
+extern "C" ST_Tensor smile_glm_swiglu(ST_Tensor gu, double limit) {
+    try {
+        smile_torch_clear_error();
+        const at::Tensor& G = gu->t;
+        if (!G.is_cuda() || G.dim() != 2 || !G.is_contiguous() || G.size(1) % 2 != 0
+                || (G.scalar_type() != at::kFloat && G.scalar_type() != at::kBFloat16)) {
+            set_err("smile_glm_swiglu: needs a contiguous CUDA float32/bfloat16 [rows, 2 * inter]");
+            return nullptr;
+        }
+        const int64_t rows = G.size(0);
+        const int inter = (int) (G.size(1) / 2);
+        c10::cuda::CUDAGuard guard(G.get_device());
+        at::Tensor out = torch::empty({rows, (int64_t) inter}, G.options().dtype(at::kBFloat16));
+        const int64_t total = rows * inter;
+        if (total > 0) {
+            const unsigned grid = (unsigned) ((total + 255) / 256);
+            cudaStream_t st = at::cuda::getCurrentCUDAStream(G.get_device());
+            if (G.scalar_type() == at::kFloat) {
+                glm_swiglu_kernel<float><<<grid, 256, 0, st>>>(G.data_ptr<float>(),
+                        reinterpret_cast<__nv_bfloat16*>(out.data_ptr()), total, inter, (float) limit);
+            } else {
+                glm_swiglu_kernel<__nv_bfloat16><<<grid, 256, 0, st>>>(reinterpret_cast<const __nv_bfloat16*>(G.data_ptr()),
+                        reinterpret_cast<__nv_bfloat16*>(out.data_ptr()), total, inter, (float) limit);
+            }
+        }
+        cudaError_t e = cudaGetLastError();
+        if (e != cudaSuccess) {
+            set_err(std::string("smile_glm_swiglu: CUDA error: ") + cudaGetErrorString(e));
+            return nullptr;
+        }
+        return new ST_Tensor_{ out };
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return nullptr;
+    }
+}
+
+
+extern "C" int smile_glm_mla_proj_epilogue(ST_Tensor y, ST_Tensor qa_w, ST_Tensor kv_w, ST_Tensor ln_w, ST_Tensor ln_b,
+                                           double eps, double ln_eps, double w_scale, ST_Tensor *out) {
+    try {
+        smile_torch_clear_error();
+        std::string err;
+        const at::Tensor& Y = y->t;
+        if (!check(Y, "y", at::kFloat, 2, err) || !Y.is_contiguous() || Y.size(1) != kProjCols
+                || !check(qa_w->t, "qa_w", at::kFloat, 1, err) || qa_w->t.size(0) != kProjQa
+                || !check(kv_w->t, "kv_w", at::kFloat, 1, err) || kv_w->t.size(0) != kProjKv
+                || !check(ln_w->t, "ln_w", at::kFloat, 1, err) || ln_w->t.size(0) != kProjIdx
+                || !check(ln_b->t, "ln_b", at::kFloat, 1, err) || ln_b->t.size(0) != kProjIdx) {
+            set_err("smile_glm_mla_proj_epilogue: needs a contiguous float32 [n, 2336] and float32 norm weights " + err);
+            return -1;
+        }
+        const int64_t n = Y.size(0);
+        c10::cuda::CUDAGuard guard(Y.get_device());
+        at::Tensor qresid = torch::empty({n, (int64_t) kProjQa}, Y.options().dtype(at::kBFloat16));
+        at::Tensor latent = torch::empty({n, (int64_t) kProjKv}, Y.options());
+        at::Tensor key = torch::empty({n, (int64_t) kProjIdx}, Y.options());
+        at::Tensor gate = torch::empty({n, (int64_t) kProjGate}, Y.options());
+        at::Tensor weights = torch::empty({n, (int64_t) kProjW}, Y.options());
+        if (n > 0) {
+            glm_mla_proj_epilogue_kernel<<<(unsigned) n, 256, 0, at::cuda::getCurrentCUDAStream(Y.get_device())>>>(
+                    Y.data_ptr<float>(), qa_w->t.data_ptr<float>(), kv_w->t.data_ptr<float>(), ln_w->t.data_ptr<float>(),
+                    ln_b->t.data_ptr<float>(), (float) eps, (float) ln_eps, (float) w_scale,
+                    reinterpret_cast<__nv_bfloat16*>(qresid.data_ptr()), latent.data_ptr<float>(), key.data_ptr<float>(),
+                    gate.data_ptr<float>(), weights.data_ptr<float>());
+        }
+        cudaError_t e = cudaGetLastError();
+        if (e != cudaSuccess) {
+            set_err(std::string("smile_glm_mla_proj_epilogue: CUDA error: ") + cudaGetErrorString(e));
+            return -1;
+        }
+        out[0] = new ST_Tensor_{ qresid };
+        out[1] = new ST_Tensor_{ latent };
+        out[2] = new ST_Tensor_{ key };
+        out[3] = new ST_Tensor_{ gate };
+        out[4] = new ST_Tensor_{ weights };
+        return 0;
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return -1;
+    }
+}
+
+
+extern "C" int smile_glm_mla_absorb(ST_Tensor qi, ST_Tensor wuk, long long heads, ST_Tensor *out) {
+    try {
+        smile_torch_clear_error();
+        std::string err;
+        const at::Tensor& Q = qi->t;
+        const at::Tensor& W = wuk->t;
+        if (!check(Q, "qi", at::kFloat, 2, err) || !Q.is_contiguous() || !check(W, "wuk", at::kBFloat16, 3, err)
+                || !W.is_contiguous() || W.size(0) != heads || W.size(1) != kNope || W.size(2) != kLat
+                || Q.size(1) != heads * kNope + 4096) {
+            set_err("smile_glm_mla_absorb: needs contiguous float32 qi [B, heads * 256 + 4096] and bfloat16 w_uk [heads, 256, 512] " + err);
+            return -1;
+        }
+        const int64_t B = Q.size(0);
+        c10::cuda::CUDAGuard guard(Q.get_device());
+        at::Tensor qabs = torch::empty({B, heads, (int64_t) kLat}, Q.options().dtype(at::kBFloat16));
+        at::Tensor idxq = torch::empty({B, 32, 128}, Q.options().dtype(at::kBFloat16));
+        if (B > 0) {
+            glm_mla_absorb_kernel<<<dim3((unsigned) B, (unsigned) heads + 1, 4), 1024, 0, at::cuda::getCurrentCUDAStream(Q.get_device())>>>(
+                    Q.data_ptr<float>(), (int) Q.size(1), reinterpret_cast<const __nv_bfloat16*>(W.data_ptr()),
+                    reinterpret_cast<__nv_bfloat16*>(qabs.data_ptr()), reinterpret_cast<__nv_bfloat16*>(idxq.data_ptr()), (int) heads);
+        }
+        cudaError_t e = cudaGetLastError();
+        if (e != cudaSuccess) {
+            set_err(std::string("smile_glm_mla_absorb: CUDA error: ") + cudaGetErrorString(e));
+            return -1;
+        }
+        out[0] = new ST_Tensor_{ qabs };
+        out[1] = new ST_Tensor_{ idxq };
+        return 0;
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return -1;
+    }
+}
+
+extern "C" ST_Tensor smile_glm_mla_wuv(ST_Tensor ctx, ST_Tensor wuvt) {
+    try {
+        smile_torch_clear_error();
+        std::string err;
+        const at::Tensor& C = ctx->t;
+        const at::Tensor& W = wuvt->t;
+        if (!check(C, "ctx", at::kFloat, 3, err) || !C.is_contiguous() || !check(W, "wuvt", at::kBFloat16, 3, err)
+                || !W.is_contiguous() || W.size(0) != C.size(1) || W.size(1) != kLat || W.size(2) != kValueDim
+                || C.size(2) != kLat) {
+            set_err("smile_glm_mla_wuv: needs contiguous float32 ctx [B, heads, 512] and bfloat16 w_uv_t [heads, 512, 256] " + err);
+            return nullptr;
+        }
+        const int64_t B = C.size(0), heads = C.size(1);
+        c10::cuda::CUDAGuard guard(C.get_device());
+        at::Tensor out = torch::empty({B, heads * kValueDim}, C.options().dtype(at::kBFloat16));
+        if (B > 0) {
+            glm_mla_wuv_kernel<<<dim3((unsigned) B, (unsigned) heads, 2), 1024, 0, at::cuda::getCurrentCUDAStream(C.get_device())>>>(
+                    C.data_ptr<float>(), reinterpret_cast<const __nv_bfloat16*>(W.data_ptr()),
+                    reinterpret_cast<__nv_bfloat16*>(out.data_ptr()), (int) heads);
+        }
+        cudaError_t e = cudaGetLastError();
+        if (e != cudaSuccess) {
+            set_err(std::string("smile_glm_mla_wuv: CUDA error: ") + cudaGetErrorString(e));
             return nullptr;
         }
         return new ST_Tensor_{ out };
@@ -798,45 +1754,60 @@ extern "C" ST_Tensor smile_mla_decode_topk(ST_Tensor scores, ST_Tensor lens, lon
     }
 }
 
-extern "C" ST_Tensor smile_mla_decode_attend(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor idx, double scale) {
+static ST_Tensor mla_attend_launch(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor idx, ST_Tensor lens, long long top_pools,
+                                   double scale, const char* name) {
     try {
         smile_torch_clear_error();
         std::string err;
         if (!check(qabs->t, "qabs", at::kBFloat16, 3, err) || !check(lat_ptrs->t, "lat_ptrs", at::kLong, 1, err)
-                || !check(idx->t, "idx", at::kInt, 2, err)) {
-            set_err("smile_mla_decode_attend: " + err);
+                || !check(idx->t, "idx", at::kInt, 2, err) || (lens != nullptr && !check(lens->t, "lens", at::kInt, 1, err))) {
+            set_err(std::string(name) + ": " + err);
             return nullptr;
         }
         const int64_t B = qabs->t.size(0), H = qabs->t.size(1), W = idx->t.size(1);
-        if (qabs->t.size(2) != kLat || H % kAttnHeads != 0 || idx->t.size(0) != B || lat_ptrs->t.size(0) != B || W > kAttnMaxW) {
-            set_err("smile_mla_decode_attend: inconsistent shapes");
+        if (qabs->t.size(2) != kLat || H % 4 != 0 || idx->t.size(0) != B || lat_ptrs->t.size(0) != B || W > kAttnMaxW
+                || (lens != nullptr && (lens->t.size(0) != B || top_pools * 4 + 3 != W))) {
+            set_err(std::string(name) + ": inconsistent shapes");
             return nullptr;
         }
         const int dev = qabs->t.get_device();
         c10::cuda::CUDAGuard guard(dev);
         at::Tensor out = torch::empty({B, H, (int64_t) kLat}, qabs->t.options().dtype(at::kFloat));
-        const size_t smem = (size_t) (kAttnHeads * kAttnMaxW + kAttnMaxW) * sizeof(float);
+        // enough blocks to fill the GPU: with few rows give each block fewer heads
+        const int hpb = B * (H / 4) >= 96 ? 4 : (B * (H / 2) >= 96 ? 2 : 1);
+        const size_t smem = (size_t) (hpb * kAttnMaxW + kAttnMaxW) * sizeof(float);
         // the opt-in to more than 48 KB of dynamic shared memory is a property of the function on each device
         static std::mutex configure_mutex;
-        static bool configured[64] = {false};
+        static bool configured[3][64] = {{false}};
+        const int variant = hpb == 4 ? 0 : (hpb == 2 ? 1 : 2);
         {
             std::lock_guard<std::mutex> lock(configure_mutex);
-            if (dev >= 0 && dev < 64 && !configured[dev]) {
-                cudaError_t attr = cudaFuncSetAttribute(mla_attend_kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, (int) smem);
+            if (dev >= 0 && dev < 64 && !configured[variant][dev]) {
+                cudaError_t attr = hpb == 4 ? cudaFuncSetAttribute(mla_attend_kernel<4>, cudaFuncAttributeMaxDynamicSharedMemorySize, (int) smem)
+                        : hpb == 2 ? cudaFuncSetAttribute(mla_attend_kernel<2>, cudaFuncAttributeMaxDynamicSharedMemorySize, (int) smem)
+                        : cudaFuncSetAttribute(mla_attend_kernel<1>, cudaFuncAttributeMaxDynamicSharedMemorySize, (int) smem);
                 if (attr != cudaSuccess) {
-                    set_err(std::string("smile_mla_decode_attend: cannot raise the shared memory limit: ") + cudaGetErrorString(attr));
+                    set_err(std::string(name) + ": cannot raise the shared memory limit: " + cudaGetErrorString(attr));
                     return nullptr;
                 }
-                configured[dev] = true;
+                configured[variant][dev] = true;
             }
         }
-        dim3 grid((unsigned) B, (unsigned) (H / kAttnHeads));
-        mla_attend_kernel<<<grid, 256, smem, at::cuda::getCurrentCUDAStream(dev)>>>(
-                reinterpret_cast<const __nv_bfloat16*>(qabs->t.data_ptr()), reinterpret_cast<const long long*>(lat_ptrs->t.data_ptr<int64_t>()),
-                idx->t.data_ptr<int>(), (int) W, (int) H, (float) scale, out.data_ptr<float>());
+        dim3 grid((unsigned) B, (unsigned) (H / hpb));
+        const __nv_bfloat16* q = reinterpret_cast<const __nv_bfloat16*>(qabs->t.data_ptr());
+        const long long* lp = reinterpret_cast<const long long*>(lat_ptrs->t.data_ptr<int64_t>());
+        const int* ln = lens == nullptr ? nullptr : lens->t.data_ptr<int>();
+        cudaStream_t stream = at::cuda::getCurrentCUDAStream(dev);
+        if (hpb == 4) {
+            mla_attend_kernel<4><<<grid, 256, smem, stream>>>(q, lp, idx->t.data_ptr<int>(), ln, (int) top_pools, (int) W, (int) H, (float) scale, out.data_ptr<float>());
+        } else if (hpb == 2) {
+            mla_attend_kernel<2><<<grid, 256, smem, stream>>>(q, lp, idx->t.data_ptr<int>(), ln, (int) top_pools, (int) W, (int) H, (float) scale, out.data_ptr<float>());
+        } else {
+            mla_attend_kernel<1><<<grid, 256, smem, stream>>>(q, lp, idx->t.data_ptr<int>(), ln, (int) top_pools, (int) W, (int) H, (float) scale, out.data_ptr<float>());
+        }
         cudaError_t st = cudaGetLastError();
         if (st != cudaSuccess) {
-            set_err(std::string("smile_mla_decode_attend: CUDA error: ") + cudaGetErrorString(st));
+            set_err(std::string(name) + ": CUDA error: " + cudaGetErrorString(st));
             return nullptr;
         }
         return new ST_Tensor_{ out };
@@ -844,4 +1815,13 @@ extern "C" ST_Tensor smile_mla_decode_attend(ST_Tensor qabs, ST_Tensor lat_ptrs,
         smile_torch_set_error(ex.what());
         return nullptr;
     }
+}
+
+extern "C" ST_Tensor smile_mla_decode_attend(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor idx, double scale) {
+    return mla_attend_launch(qabs, lat_ptrs, idx, nullptr, 0, scale, "smile_mla_decode_attend");
+}
+
+extern "C" ST_Tensor smile_mla_decode_attend2(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor idx, ST_Tensor lens,
+                                              long long top_pools, double scale) {
+    return mla_attend_launch(qabs, lat_ptrs, idx, lens, top_pools, scale, "smile_mla_decode_attend2");
 }

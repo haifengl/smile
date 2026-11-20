@@ -43,6 +43,7 @@ final class GlmMlp {
     // dense MLP or shared expert
     private final Tensor wGate;
     private final Tensor wUp;
+    private final Tensor wGateUp;       // gate|up as one weight (the fused path computes both with one GEMM)
     private final Tensor wDown;
     // router
     private final Tensor routerW;
@@ -61,6 +62,7 @@ final class GlmMlp {
         this.wGate = shard(ck, dense + "gate_proj", 0);
         this.wUp = shard(ck, dense + "up_proj", 0);
         this.wDown = shard(ck, dense + "down_proj", 1);
+        this.wGateUp = device().isCUDA() && smile.torch.Native.glmSwigluAvailable() ? keep(cat(0, wGate, wUp)) : null;
         this.routerW = moe ? vector(ck, prefix + "gate.weight") : null;
         this.routerBias = moe ? vector(ck, prefix + "gate.e_score_correction_bias") : null;
         if (moe && device().isCUDA() && !"0".equals(System.getenv("GLM_MARLIN")) && smile.torch.Native.marlinMoeFp8Available()
@@ -96,6 +98,12 @@ final class GlmMlp {
     /** {@code down(silu(min(gate, limit)) * clamp(up, -limit, limit))}. */
     private Tensor swiglu(Tensor x, Tensor gateW, Tensor upW, Tensor downW) {
         double limit = args.swigluLimit();
+        if (wGateUp != null && gateW == wGate) {
+            Tensor act = smile.torch.Native.glmSwiglu(linear(x, wGateUp), limit);
+            if (act != null) {
+                return linear(act, downW);
+            }
+        }
         Tensor gate = linear(x, gateW);
         Tensor up = linear(x, upW);
         if (limit > 0) {
@@ -113,6 +121,10 @@ final class GlmMlp {
      */
     Tensor[] route(Tensor flat) {
         Tensor logits = linear(f32(flat), routerW);
+        Tensor[] fused = smile.torch.Native.moeRoute(logits, routerBias, args.numExpertsPerTok(), args.routeScale());
+        if (fused != null) {
+            return fused;                       // int32 ids, float32 weights: sigmoid, bias-corrected top-k, normalise, scale
+        }
         Tensor scores = sigmoid(logits);
         // a single expert group: the group-limited step selects the only group
         Tensor idx = Aten.call("aten::topk", add(scores, routerBias), (long) args.numExpertsPerTok(), -1L, true, true)[1];
@@ -127,14 +139,15 @@ final class GlmMlp {
         }
         Tensor[] r = route(x);
         if (trace != null) {
-            trace.put("router.idx", keep(host(r[0])));
+            trace.put("router.idx", keep(host(r[0].to(ScalarType.Int64))));
             trace.put("router.w", keep(host(r[1])));
         }
         if (marlin != null) {
             // the routed experts' partial sum and the shared expert's partial sum ride one all-reduce
-            return allReduce(add(marlin.forward(x, r[0], r[1]), swiglu(x, wGate, wUp, wDown)));
+            Tensor xb = x.dtype() == ScalarType.BFloat16 ? x : x.to(ScalarType.BFloat16);       // converted once for both
+            return allReduce(add(marlin.forward(xb, r[0], r[1]), swiglu(xb, wGate, wUp, wDown)));
         }
-        long[] idx = host(r[0]).longArray();
+        long[] idx = host(r[0].to(ScalarType.Int64)).longArray();
         float[] w = host(r[1]).floatArray();
         int topk = args.numExpertsPerTok();
         Map<Long, List<long[]>> byExpert = new TreeMap<>();     // expert -> [{row, slot}]

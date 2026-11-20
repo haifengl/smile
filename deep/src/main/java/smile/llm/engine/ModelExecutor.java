@@ -145,6 +145,18 @@ public interface ModelExecutor {
     }
 
     /**
+     * Whether a request can switch between speculative rounds and plain decode steps at any tick without losing its
+     * draft state (the executor keeps its draft model in sync through plain steps). The engine then decides per tick
+     * whether to speculate (while at most {@code maxSpeculativeConcurrency} speculative requests are decoding)
+     * instead of giving the first arrivals a sticky speculation slot.
+     *
+     * @return {@code true} if speculation can be switched on and off per tick.
+     */
+    default boolean speculationSwitchable() {
+        return false;
+    }
+
+    /**
      * Whether {@link #prefillBatch} processes several prompts in one pass (cheaper than one {@link #prefill} each).
      * The engine only batches whole prompts that start at position 0.
      *

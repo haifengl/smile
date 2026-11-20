@@ -42,6 +42,7 @@ final class GlmDecodeGraph {
     private final Tensor lens;
     private final Tensor tables;
     private Tensor logits;
+    private Tensor hidden;
     private MemorySegment graph;
 
     private GlmDecodeGraph(GlmModel model, int nb, long maxPools) {
@@ -72,20 +73,26 @@ final class GlmDecodeGraph {
         g.fill(new GlmModel.Session[0], new int[0]);
         try (var guard = Tensor.noGradGuard()) {
             // eager warm-up: libraries initialise their workspaces outside the capture
-            Tensor warm = layerScoped(() -> model.forwardGraph(g.ids, g.slots, g.lens, g.tables, maxPools));
-            Aten.one("aten::sum", warm).doubleValue();       // wait for this rank's warm-up work on the device
-            warm.close();
+            Tensor[] warm = scopedAll(() -> model.forwardGraph(g.ids, g.slots, g.lens, g.tables, maxPools));
+            Aten.one("aten::sum", warm[1]).doubleValue();    // wait for this rank's warm-up work on the device
+            for (Tensor t : warm) {
+                t.close();
+            }
             if (barrier != null) {
                 barrier.await(5, java.util.concurrent.TimeUnit.MINUTES);
             }
             g.graph = Native.cudaGraphCreate();
             Native.cudaGraphCaptureBegin(g.graph, deviceIndex);
+            Tensor[] out;
             try {
-                g.logits = layerScoped(() -> model.forwardGraph(g.ids, g.slots, g.lens, g.tables, maxPools));
+                out = scopedAll(() -> model.forwardGraph(g.ids, g.slots, g.lens, g.tables, maxPools));
             } finally {
                 Native.cudaGraphCaptureEnd(g.graph);
             }
+            g.hidden = out[0];
+            g.logits = out[1];
         }
+        g.hidden.detachFromScopes();
         g.logits.detachFromScopes();
         return g;
     }
@@ -117,6 +124,11 @@ final class GlmDecodeGraph {
         return Aten.one("aten::clone", narrow(logits, 0, 0, rows.length));
     }
 
+    /** The hidden rows of the last replay {@code [nb, dim]} (a view of the graph's buffer). */
+    Tensor hidden() {
+        return hidden;
+    }
+
     /** Destroys the CUDA graph (on the rank thread; before the NCCL communicators it uses are freed). */
     void close() {
         if (graph != null) {
@@ -126,6 +138,10 @@ final class GlmDecodeGraph {
         if (logits != null) {
             logits.close();
             logits = null;
+        }
+        if (hidden != null) {
+            hidden.close();
+            hidden = null;
         }
     }
 }

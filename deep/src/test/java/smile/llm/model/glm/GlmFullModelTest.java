@@ -115,7 +115,7 @@ public class GlmFullModelTest {
                             common++;
                         }
                         System.out.printf("    repeat of [%s]: identical for %d of %d tokens%n", name, common, first.size());
-                        assertTrue(common >= Math.min(32, first.size()), "repeated greedy run of " + name + " diverges at token " + common);
+                        assertTrue(common >= Math.min(env("GLM_FULL_MINCOMMON", 32), first.size()), "repeated greedy run of " + name + " diverges at token " + common);
                     }
                 }
                 double s = (System.nanoTime() - t1) / 1e9;

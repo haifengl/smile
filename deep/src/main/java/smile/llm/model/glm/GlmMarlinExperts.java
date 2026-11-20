@@ -127,13 +127,16 @@ final class GlmMarlinExperts {
         int block = moeBlockSize(n);
         Tensor align = Native.moeAlignBlockSize(ids, expertStart, localExperts, block);
         Tensor gateUp = Native.marlinMoeFp8Gemm(flat, w13q, w13s, align, w, block, topk, false);
-        Tensor gate = f32(narrow(gateUp, 1, 0, inter));
-        Tensor up = f32(narrow(gateUp, 1, inter, inter));
-        if (limit > 0) {
-            gate = o("aten::clamp", gate, null, limit);
-            up = o("aten::clamp", up, -limit, limit);
+        Tensor act = Native.glmSwiglu(gateUp, limit);
+        if (act == null) {
+            Tensor gate = f32(narrow(gateUp, 1, 0, inter));
+            Tensor up = f32(narrow(gateUp, 1, inter, inter));
+            if (limit > 0) {
+                gate = o("aten::clamp", gate, null, limit);
+                up = o("aten::clamp", up, -limit, limit);
+            }
+            act = o("aten::contiguous", mul(o("aten::silu", gate), up).to(ScalarType.BFloat16));
         }
-        Tensor act = o("aten::contiguous", mul(o("aten::silu", gate), up).to(ScalarType.BFloat16));
         Tensor down = Native.marlinMoeFp8Gemm(act, w2q, w2s, align, w, block, 1, true);
         return sumDim(o("aten::reshape", f32(down), new long[]{n, topk, dim}), 1, false);
     }

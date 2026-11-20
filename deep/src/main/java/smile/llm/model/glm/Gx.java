@@ -98,8 +98,51 @@ final class Gx {
         return ep == null ? 0 : ep.rank();
     }
 
+    /** Per-stage wall time with a device sync after each stage ({@code GLM_STAGE_TIMING=1}, eager execution only). */
+    static final boolean STAGE_TIMING = "1".equals(System.getenv("GLM_STAGE_TIMING"));
+    private static final java.util.Map<String, long[]> STAGES = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final ThreadLocal<long[]> STAGE_T = ThreadLocal.withInitial(() -> new long[]{0});
+
+    /** Marks the end of a stage: waits for the device and adds the elapsed time to {@code name}. */
+    static void stage(String name, Tensor t) {
+        if (!STAGE_TIMING) {
+            return;
+        }
+        Aten.one("aten::sum", t).doubleValue();
+        long now = System.nanoTime();
+        long[] last = STAGE_T.get();
+        if (last[0] != 0) {
+            long[] acc = STAGES.computeIfAbsent(name, k -> new long[2]);
+            synchronized (acc) {
+                acc[0] += now - last[0];
+                acc[1]++;
+            }
+        }
+        last[0] = System.nanoTime();
+    }
+
+    /** Resets the stage clock (call before the first stage of a block). */
+    static void stageStart(Tensor t) {
+        if (STAGE_TIMING) {
+            Aten.one("aten::sum", t).doubleValue();
+            STAGE_T.get()[0] = System.nanoTime();
+        }
+    }
+
+    static String stageReport() {
+        StringBuilder sb = new StringBuilder();
+        new java.util.TreeMap<>(STAGES).forEach((k, v) -> sb.append(String.format("  %-14s %7.1f us x %d%n", k, v[0] / 1e3 / Math.max(1, v[1]), v[1])));
+        return sb.toString();
+    }
+
+    /** Profiling ablation switches (comma separated, env {@code GLM_PROF_SKIP}): moe, attn, ar. Changes the numbers: for timing only. */
+    static final String PROF_SKIP = System.getenv().getOrDefault("GLM_PROF_SKIP", "");
+
     /** Sums a float32 tensor over the ranks in place (a row-parallel product's partial results); a no-op on one rank. */
     static Tensor allReduce(Tensor t) {
+        if (PROF_SKIP.contains("ar")) {
+            return t;
+        }
         Ep ep = EP.get();
         if (ep != null) {
             ep.group().allReduceSumInPlace(ep.rank(), t);
@@ -319,6 +362,12 @@ final class Gx {
     /** Plain RMS norm over the last dimension in float32 with an optional weight. */
     static Tensor rms(Tensor x, Tensor weight, double eps) {
         Tensor xf = f32(x);
+        if (weight != null) {
+            Tensor fused = smile.torch.Native.dsRmsNorm(xf, weight, eps);       // one launch; null when unavailable or unsupported
+            if (fused != null) {
+                return fused;
+            }
+        }
         Tensor var = o("aten::mean.dim", mul(xf, xf), new long[]{-1}, true);
         Tensor y = mul(xf, o("aten::rsqrt", o("aten::add.Scalar", var, eps)));
         return weight == null ? y : mul(weight, y);

@@ -3,6 +3,7 @@
  *
  * DeepSeek-V4.1 fused kernels; see smile_deepseek_ops.h.
  */
+#include <type_traits>
 #include "smile_deepseek_ops.h"
 
 #include <ATen/ATen.h>
@@ -136,7 +137,16 @@ __global__ void hc_mixes_warp_kernel(const float* __restrict__ flat, const float
     const int64_t row = blockIdx.x;
     const float* f = flat + row * k;
     float ss = 0.f;
-    for (int64_t i = threadIdx.x; i < k; i += blockDim.x) ss += f[i] * f[i];
+    if ((k & 3) == 0) {
+        // 16-byte loads: a quarter of the dependent iterations (the rows are 16-byte aligned: k % 4 == 0)
+        const float4* f4 = reinterpret_cast<const float4*>(f);
+        for (int64_t i = threadIdx.x; i < k / 4; i += blockDim.x) {
+            const float4 v = f4[i];
+            ss += (v.x * v.x + v.y * v.y) + (v.z * v.z + v.w * v.w);
+        }
+    } else {
+        for (int64_t i = threadIdx.x; i < k; i += blockDim.x) ss += f[i] * f[i];
+    }
     __shared__ float partial[32];
     ss = warp_sum(ss);
     if ((threadIdx.x & 31) == 0) partial[threadIdx.x >> 5] = ss;
@@ -176,6 +186,87 @@ __global__ void hc_mixes_warp_kernel(const float* __restrict__ flat, const float
     if (active) comb[row * hc * hc + lane] = c;
 }
 
+/**
+ * hc == 4 (24 mixes), K % 4 == 0, few rows: the projection of the flattened streams by fn [24, K] and the mixes in one launch.
+ * One block per row: every thread accumulates the 24 dot products and the sum of squares over its float4 slice of the row,
+ * the block reduces them, then warp 0 finishes exactly like hc_mixes_warp_kernel.
+ */
+__global__ void __launch_bounds__(256) hc_mixes_fused_kernel(
+        const float* __restrict__ flat, const float* __restrict__ fn, const float* __restrict__ scale,
+        const float* __restrict__ base, float* __restrict__ pre, float* __restrict__ post, float* __restrict__ comb,
+        int64_t k, int iters, float eps, float norm_eps) {
+    constexpr int hc = 4;
+    constexpr int M = 24;
+    const int64_t row = blockIdx.x;
+    const int tid = threadIdx.x;
+    const int64_t k4 = k / 4;
+    const float4* f4 = reinterpret_cast<const float4*>(flat + row * k);
+    const float4* w4 = reinterpret_cast<const float4*>(fn);
+    float acc[M];
+#pragma unroll
+    for (int o = 0; o < M; ++o) acc[o] = 0.f;
+    float ss = 0.f;
+    for (int64_t i = tid; i < k4; i += 256) {
+        const float4 v = f4[i];
+        ss += (v.x * v.x + v.y * v.y) + (v.z * v.z + v.w * v.w);
+#pragma unroll
+        for (int o = 0; o < M; ++o) {
+            const float4 w = __ldg(w4 + (int64_t) o * k4 + i);
+            acc[o] += (v.x * w.x + v.y * w.y) + (v.z * w.z + v.w * w.w);
+        }
+    }
+    __shared__ float red[8][M + 1];
+#pragma unroll
+    for (int o = 0; o < M; ++o) acc[o] = warp_sum(acc[o]);
+    ss = warp_sum(ss);
+    if ((tid & 31) == 0) {
+#pragma unroll
+        for (int o = 0; o < M; ++o) red[tid >> 5][o] = acc[o];
+        red[tid >> 5][M] = ss;
+    }
+    __syncthreads();
+    if (tid >= 32) return;
+    const int lane = tid;
+    float rawv = 0.f;
+    if (lane <= M) {
+#pragma unroll
+        for (int w = 0; w < 8; ++w) rawv += red[w][lane];
+    }
+    const float r = rsqrtf(__shfl_sync(0xffffffffu, rawv, M) / (float) k + norm_eps);
+    const float s0 = scale[0], s1 = scale[1], s2 = scale[2];
+    if (lane < hc) {
+        const float m0 = __shfl_sync(0xffffffffu, rawv, lane);
+        const float m1 = __shfl_sync(0xffffffffu, rawv, hc + lane);
+        pre[row * hc + lane] = 1.0f / (1.0f + expf(-((m0 * r) * s0 + base[lane]))) + eps;
+        post[row * hc + lane] = 2.0f * (1.0f / (1.0f + expf(-((m1 * r) * s1 + base[hc + lane]))));
+    } else {
+        // the shuffles above are executed by the whole warp: keep them convergent
+        (void) __shfl_sync(0xffffffffu, rawv, 0);
+        (void) __shfl_sync(0xffffffffu, rawv, 0);
+    }
+    const bool active = lane < hc * hc;
+    const int i = active ? lane / hc : 0, j = active ? lane % hc : 0;
+    const float craw = __shfl_sync(0xffffffffu, rawv, 2 * hc + (active ? lane : 0));
+    float c = active ? (craw * r) * s2 + base[2 * hc + lane] : 0.f;
+    float mxv = -INFINITY;
+    for (int jj = 0; jj < hc; jj++) mxv = fmaxf(mxv, __shfl_sync(0xffffffffu, c, i * hc + jj));
+    c = expf(c - mxv);
+    float sum = 0.f;
+    for (int jj = 0; jj < hc; jj++) sum += __shfl_sync(0xffffffffu, c, i * hc + jj);
+    c = c / sum + eps;
+    for (int it = 0; it < iters; it++) {
+        if (it > 0) {
+            float sm = 0.f;
+            for (int jj = 0; jj < hc; jj++) sm += __shfl_sync(0xffffffffu, c, i * hc + jj);
+            c /= (sm + eps);
+        }
+        float sm = 0.f;
+        for (int ii = 0; ii < hc; ii++) sm += __shfl_sync(0xffffffffu, c, ii * hc + j);
+        c /= (sm + eps);
+    }
+    if (active) comb[row * hc * hc + lane] = c;
+}
+
 // ---------------------------------------------------------------- RMSNorm, hyper-connection combine
 
 /** y = w * (x * rsqrt(mean(x^2) + eps)) in float32, rounded to T once; one block per row. */
@@ -184,9 +275,19 @@ __global__ void rms_norm_kernel(const T* __restrict__ x, const W* __restrict__ w
     const T* xr = x + (int64_t) blockIdx.x * d;
     T* yr = y + (int64_t) blockIdx.x * d;
     float ss = 0.f;
-    for (int i = threadIdx.x; i < d; i += blockDim.x) {
-        float v = static_cast<float>(xr[i]);
-        ss += v * v;
+    constexpr bool kF32 = std::is_same<T, float>::value && std::is_same<W, float>::value;
+    const bool vec = kF32 && (d & 3) == 0;
+    if (vec) {
+        const float4* x4 = reinterpret_cast<const float4*>(xr);
+        for (int i = threadIdx.x; i < d / 4; i += blockDim.x) {
+            const float4 v = x4[i];
+            ss += (v.x * v.x + v.y * v.y) + (v.z * v.z + v.w * v.w);
+        }
+    } else {
+        for (int i = threadIdx.x; i < d; i += blockDim.x) {
+            float v = static_cast<float>(xr[i]);
+            ss += v * v;
+        }
     }
     __shared__ float partial[32];
     ss = warp_sum(ss);
@@ -199,8 +300,19 @@ __global__ void rms_norm_kernel(const T* __restrict__ x, const W* __restrict__ w
     }
     __syncthreads();
     const float r = rsqrtf(partial[0] / (float) d + eps);
-    for (int i = threadIdx.x; i < d; i += blockDim.x) {
-        yr[i] = static_cast<T>(static_cast<float>(w[i]) * (static_cast<float>(xr[i]) * r));
+    if (vec) {
+        const float4* x4 = reinterpret_cast<const float4*>(xr);
+        const float4* w4 = reinterpret_cast<const float4*>(w);
+        float4* y4 = reinterpret_cast<float4*>(yr);
+        for (int i = threadIdx.x; i < d / 4; i += blockDim.x) {
+            const float4 xv = x4[i];
+            const float4 wv = w4[i];
+            y4[i] = make_float4(wv.x * (xv.x * r), wv.y * (xv.y * r), wv.z * (xv.z * r), wv.w * (xv.w * r));
+        }
+    } else {
+        for (int i = threadIdx.x; i < d; i += blockDim.x) {
+            yr[i] = static_cast<T>(static_cast<float>(w[i]) * (static_cast<float>(xr[i]) * r));
+        }
     }
 }
 
@@ -229,6 +341,48 @@ __global__ void hc_post_kernel(const T* __restrict__ x, const T* __restrict__ re
     float acc = 0.f;
     for (int i = 0; i < hc; i++) acc += comb[(row * hc + i) * hc + j] * static_cast<float>(res[(row * hc + i) * dim + d]);
     out[idx] = static_cast<T>(post[row * hc + j] * static_cast<float>(x[row * dim + d]) + acc);
+}
+
+/** hc == 4, float32, dim % 4 == 0: one thread per row and four consecutive d, 16-byte loads and stores, no divisions per element. */
+__global__ void hc_pre_f4_kernel(const float* __restrict__ x, const float* __restrict__ pre, float* __restrict__ out,
+                                 int64_t rows, int dim4) {
+    const int64_t idx = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= rows * dim4) return;
+    const int64_t row = idx / dim4;
+    const int d = (int) (idx - row * dim4);
+    const float4* x4 = reinterpret_cast<const float4*>(x) + row * 4 * dim4 + d;
+    const float p0 = pre[row * 4], p1 = pre[row * 4 + 1], p2 = pre[row * 4 + 2], p3 = pre[row * 4 + 3];
+    const float4 a = x4[0], b = x4[dim4], c = x4[2 * dim4], e = x4[3 * dim4];
+    float4 o;
+    o.x = p0 * a.x + p1 * b.x + p2 * c.x + p3 * e.x;
+    o.y = p0 * a.y + p1 * b.y + p2 * c.y + p3 * e.y;
+    o.z = p0 * a.z + p1 * b.z + p2 * c.z + p3 * e.z;
+    o.w = p0 * a.w + p1 * b.w + p2 * c.w + p3 * e.w;
+    reinterpret_cast<float4*>(out)[idx] = o;
+}
+
+/** out[row, j] = post[row, j] * x[row] + sum_i comb[row, i, j] * res[row, i] for the four streams, four d per thread. */
+__global__ void hc_post_f4_kernel(const float* __restrict__ x, const float* __restrict__ res, const float* __restrict__ post,
+                                  const float* __restrict__ comb, float* __restrict__ out, int64_t rows, int dim4) {
+    const int64_t idx = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= rows * dim4) return;
+    const int64_t row = idx / dim4;
+    const int d = (int) (idx - row * dim4);
+    const float4* r4 = reinterpret_cast<const float4*>(res) + row * 4 * dim4 + d;
+    const float4 xv = reinterpret_cast<const float4*>(x)[idx];
+    const float4 r[4] = {r4[0], r4[dim4], r4[2 * dim4], r4[3 * dim4]};
+    float4* o4 = reinterpret_cast<float4*>(out) + row * 4 * dim4 + d;
+#pragma unroll
+    for (int j = 0; j < 4; ++j) {
+        const float pj = post[row * 4 + j];
+        const float c0 = comb[row * 16 + j], c1 = comb[row * 16 + 4 + j], c2 = comb[row * 16 + 8 + j], c3 = comb[row * 16 + 12 + j];
+        float4 o;
+        o.x = pj * xv.x + (((c0 * r[0].x) + (c1 * r[1].x)) + (c2 * r[2].x) + (c3 * r[3].x));
+        o.y = pj * xv.y + (((c0 * r[0].y) + (c1 * r[1].y)) + (c2 * r[2].y) + (c3 * r[3].y));
+        o.z = pj * xv.z + (((c0 * r[0].z) + (c1 * r[1].z)) + (c2 * r[2].z) + (c3 * r[3].z));
+        o.w = pj * xv.w + (((c0 * r[0].w) + (c1 * r[1].w)) + (c2 * r[2].w) + (c3 * r[3].w));
+        o4[(int64_t) j * dim4] = o;
+    }
 }
 
 // ---------------------------------------------------------------- fp8 fake quantization
@@ -880,6 +1034,39 @@ extern "C" int smile_ds_hc_mixes(ST_Tensor flat, ST_Tensor raw, ST_Tensor scale,
     }
 }
 
+extern "C" int smile_ds_hc_mixes_fused(ST_Tensor flat, ST_Tensor fn, ST_Tensor scale, ST_Tensor base, int iters, double eps,
+                                       double norm_eps, ST_Tensor *out) {
+    try {
+        smile_torch_clear_error();
+        const at::Tensor& fl = require_cuda(flat, "smile_ds_hc_mixes_fused: flat");
+        const at::Tensor& fw = require_cuda(fn, "smile_ds_hc_mixes_fused: fn");
+        const at::Tensor& sc = require_cuda(scale, "smile_ds_hc_mixes_fused: scale");
+        const at::Tensor& bs = require_cuda(base, "smile_ds_hc_mixes_fused: base");
+        if (fl.scalar_type() != at::kFloat || fw.scalar_type() != at::kFloat || sc.scalar_type() != at::kFloat
+                || bs.scalar_type() != at::kFloat || fl.dim() != 2 || fw.dim() != 2 || !fl.is_contiguous() || !fw.is_contiguous()
+                || fw.size(0) != 24 || fw.size(1) != fl.size(1) || fl.size(1) % 4 != 0 || sc.numel() != 3 || bs.numel() != 24
+                || fl.size(0) == 0) {
+            throw std::runtime_error("smile_ds_hc_mixes_fused: needs float32 flat [rows, K], fn [24, K], K % 4 == 0");
+        }
+        c10::cuda::CUDAGuard guard(fl.get_device());
+        const int64_t rows = fl.size(0);
+        at::Tensor pre = at::empty({rows, 4}, fl.options());
+        at::Tensor post = at::empty({rows, 4}, fl.options());
+        at::Tensor comb = at::empty({rows, 4, 4}, fl.options());
+        hc_mixes_fused_kernel<<<(unsigned) rows, 256, 0, at::cuda::getCurrentCUDAStream(fl.get_device())>>>(
+                fl.data_ptr<float>(), fw.data_ptr<float>(), sc.data_ptr<float>(), bs.data_ptr<float>(), pre.data_ptr<float>(),
+                post.data_ptr<float>(), comb.data_ptr<float>(), fl.size(1), iters, (float) eps, (float) norm_eps);
+        check_launch("smile_ds_hc_mixes_fused");
+        out[0] = new ST_Tensor_{ pre };
+        out[1] = new ST_Tensor_{ post };
+        out[2] = new ST_Tensor_{ comb };
+        return 0;
+    } catch (const std::exception& e) {
+        set_err(e.what());
+        return -1;
+    }
+}
+
 extern "C" ST_Tensor smile_ds_rms_norm(ST_Tensor x, ST_Tensor w, double eps) {
     try {
         smile_torch_clear_error();
@@ -931,9 +1118,14 @@ extern "C" ST_Tensor smile_ds_hc_pre(ST_Tensor x, ST_Tensor pre) {
         at::Tensor out = at::empty(shape, xt.options());
         const unsigned grid = (unsigned) ((rows * dim + 255) / 256);
         cudaStream_t st = at::cuda::getCurrentCUDAStream(xt.get_device());
-        DS_DISPATCH(xt.scalar_type(), "smile_ds_hc_pre",
-                    hc_pre_kernel<T><<<grid, 256, 0, st>>>((const T*) xt.data_ptr(), pt.data_ptr<float>(),
-                                                           (T*) out.data_ptr(), rows, hc, dim));
+        if (xt.scalar_type() == at::kFloat && hc == 4 && dim % 4 == 0) {
+            const unsigned g4 = (unsigned) ((rows * (dim / 4) + 255) / 256);
+            hc_pre_f4_kernel<<<g4, 256, 0, st>>>(xt.data_ptr<float>(), pt.data_ptr<float>(), out.data_ptr<float>(), rows, dim / 4);
+        } else {
+            DS_DISPATCH(xt.scalar_type(), "smile_ds_hc_pre",
+                        hc_pre_kernel<T><<<grid, 256, 0, st>>>((const T*) xt.data_ptr(), pt.data_ptr<float>(),
+                                                               (T*) out.data_ptr(), rows, hc, dim));
+        }
         check_launch("smile_ds_hc_pre");
         return new ST_Tensor_{ out };
     } catch (const std::exception& e) {
@@ -963,10 +1155,16 @@ extern "C" ST_Tensor smile_ds_hc_post(ST_Tensor x, ST_Tensor residual, ST_Tensor
         at::Tensor out = at::empty_like(rt);
         const unsigned grid = (unsigned) ((rows * hc * dim + 255) / 256);
         cudaStream_t st = at::cuda::getCurrentCUDAStream(rt.get_device());
-        DS_DISPATCH(rt.scalar_type(), "smile_ds_hc_post",
-                    hc_post_kernel<T><<<grid, 256, 0, st>>>((const T*) xt.data_ptr(), (const T*) rt.data_ptr(),
-                                                            pt.data_ptr<float>(), ct.data_ptr<float>(),
-                                                            (T*) out.data_ptr(), rows, hc, dim));
+        if (rt.scalar_type() == at::kFloat && hc == 4 && dim % 4 == 0) {
+            const unsigned g4 = (unsigned) ((rows * (dim / 4) + 255) / 256);
+            hc_post_f4_kernel<<<g4, 256, 0, st>>>(xt.data_ptr<float>(), rt.data_ptr<float>(), pt.data_ptr<float>(),
+                                                  ct.data_ptr<float>(), out.data_ptr<float>(), rows, dim / 4);
+        } else {
+            DS_DISPATCH(rt.scalar_type(), "smile_ds_hc_post",
+                        hc_post_kernel<T><<<grid, 256, 0, st>>>((const T*) xt.data_ptr(), (const T*) rt.data_ptr(),
+                                                                pt.data_ptr<float>(), ct.data_ptr<float>(),
+                                                                (T*) out.data_ptr(), rows, hc, dim));
+        }
         check_launch("smile_ds_hc_post");
         return new ST_Tensor_{ out };
     } catch (const std::exception& e) {

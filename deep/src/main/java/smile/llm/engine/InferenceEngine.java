@@ -1181,6 +1181,23 @@ public final class InferenceEngine implements AutoCloseable {
     }
 
     private void assignSpeculationSlots() {
+        if (executor.speculationSwitchable()) {
+            // the executor keeps drafts valid through plain steps: speculate this tick iff few enough requests decode
+            int eligible = 0;
+            for (Active a : active) {
+                if (a.phase == Phase.DECODING && !a.handle.isAborted() && a.request.speculative() && speculationAllowed(a)) {
+                    eligible++;
+                }
+            }
+            boolean on = eligible <= maxSpeculativeConcurrency;
+            for (Active a : active) {
+                if (a.phase == Phase.DECODING && a.request.speculative()) {
+                    a.specAssigned = true;
+                    a.speculating = on && speculationAllowed(a);
+                }
+            }
+            return;
+        }
         int held = 0;
         for (Active a : active) {
             if (a.specAssigned && a.speculating && a.phase != Phase.DONE && !a.handle.isAborted()) {

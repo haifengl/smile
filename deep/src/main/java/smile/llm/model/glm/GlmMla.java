@@ -59,12 +59,21 @@ final class GlmMla {
          * address the ring with the position alone.
          */
         final Tensor ring;
+        private long ringPtr;
         long length;
 
         State(GlmRows latent, GlmRows pool, Tensor ring) {
             this.latent = latent;
             this.pool = pool;
             this.ring = ring;
+        }
+
+        /** The device address of the ring (it never moves). */
+        long ringPointer() {
+            if (ringPtr == 0) {
+                ringPtr = smile.torch.Native.dsDataPtrs(new Tensor[]{ring})[0];
+            }
+            return ringPtr;
         }
 
         void close() {
@@ -93,6 +102,8 @@ final class GlmMla {
     private final Tensor wIdxW;
     private final Tensor idxApe;
     private final Tensor idxGateW;
+    private Tensor wProj1;     // [2336, dim]: q_a | kv_a | indexer k | compress gate | indexer weights, one GEMM
+    private Tensor wProj2;     // [heads * 256 + 4096, q_lora]: q_b | indexer q, one GEMM
 
     GlmMla(GlmModelArgs args, DeepSeekCheckpoint ck, int layer) {
         this.args = args;
@@ -126,6 +137,11 @@ final class GlmMla {
         this.wIdxW = weight(ck, p + "indexer.weights_proj");
         this.idxApe = vector(ck, p + "indexer.index_kpool_compress_ape");
         this.idxGateW = vector(ck, p + "indexer.index_kpool_compress_gate");
+        if (device().isCUDA() && smile.torch.Native.glmMlaEpilogueAvailable() && args.qLoraRank() == 1536 && args.kvLoraRank() == 512
+                && args.indexHeads() * args.indexHeadDim() == 4096 && args.indexHeadDim() == 128 && args.indexHeads() == 32) {
+            this.wProj1 = keep(cat(0, wQa, wKva, wIdxK, idxGateW.to(wQa.dtype()), wIdxW));
+            this.wProj2 = keep(cat(0, wQb, wIdxQ));
+        }
     }
 
     /** dtype of the caches: float32 on the CPU reference path, bfloat16 on a GPU. */
@@ -171,7 +187,12 @@ final class GlmMla {
     Tensor forwardBatch(Tensor x, State[] states) {
         Proj p = project(x);
         if (decodeKernels()) {
-            return allReduce(linear(decodeKernel(p, states), wo));
+            Tensor merged = decodeKernel(p, states);
+            Tensor o1 = linear(merged, wo);
+            stage("mla.o_proj", o1);
+            Tensor red = allReduce(o1);
+            stage("mla.allreduce", red);
+            return red;
         }
         Tensor[] rows = new Tensor[states.length];
         for (int i = 0; i < rows.length; i++) {
@@ -258,31 +279,117 @@ final class GlmMla {
      * @return {@code [b, heads * v]} the merged heads before the output projection.
      */
     private Tensor decodeCore(Proj p, Tensor latPtrs, Tensor poolPtrs, Tensor ringPtrs, Tensor lens, long maxPools, int b) {
-        int nope = args.qkHeadDim();
         smile.torch.Native.mlaDecodeAppend(p.latent(), p.key(), p.gate(), idxApe, latPtrs, poolPtrs, ringPtrs, lens);
-        Tensor q = o("aten::contiguous", o("aten::reshape", p.idxQ(), new long[]{b, args.indexHeads(), args.indexHeadDim()})).to(ScalarType.BFloat16);
+        stage("mla.append", p.latent());
+        return decodeAttend(p, latPtrs, poolPtrs, lens, maxPools, b);
+    }
+
+    /** The scoring, selection and attention of the decode kernels, after the new rows are in the caches. */
+    private Tensor decodeAttend(Proj p, Tensor latPtrs, Tensor poolPtrs, Tensor lens, long maxPools, int b) {
+        int nope = args.qkHeadDim();
+        Tensor[] fused = p.qi() != null && wUk.dtype() == ScalarType.BFloat16 && wUvT.dtype() == ScalarType.BFloat16
+                && nope == 256 && args.vHeadDim() == 256 && args.kvLoraRank() == 512
+                ? smile.torch.Native.glmMlaAbsorb(p.qi(), wUk, heads) : null;
+        Tensor q;
+        Tensor qAbs;
+        if (fused != null) {
+            qAbs = fused[0];
+            q = fused[1];
+        } else {
+            q = o("aten::contiguous", o("aten::reshape", p.idxQ(), new long[]{b, args.indexHeads(), args.indexHeadDim()})).to(ScalarType.BFloat16);
+            qAbs = null;
+        }
+        stage("mla.absorb+idxq", q);
         Tensor scores = smile.torch.Native.mlaDecodeScores(q, p.weights(), poolPtrs, lens, maxPools, Math.pow(args.indexHeadDim(), -0.5));
+        stage("mla.scores", scores);
         Tensor idx = smile.torch.Native.mlaDecodeTopk(scores, lens, args.indexPools());
-        Tensor qh = o("aten::permute", p.q(), new long[]{1, 0, 2}).to(wUk.dtype());                    // [heads, b, nope]
-        Tensor qAbs = o("aten::contiguous", o("aten::permute", bmmF32(qh, wUk), new long[]{1, 0, 2})).to(ScalarType.BFloat16);   // [b, heads, r]
-        Tensor ctx = smile.torch.Native.mlaDecodeAttend(qAbs, latPtrs, idx, Math.pow(nope, -0.5));    // [b, heads, r] f32
+        stage("mla.topk", idx);
+        if (qAbs == null) {
+            Tensor qh = o("aten::permute", p.q(), new long[]{1, 0, 2}).to(wUk.dtype());                    // [heads, b, nope]
+            qAbs = o("aten::contiguous", o("aten::permute", bmmF32(qh, wUk), new long[]{1, 0, 2})).to(ScalarType.BFloat16);   // [b, heads, r]
+        }
+        Tensor ctx = smile.torch.Native.mlaDecodeAttend(qAbs, latPtrs, idx, lens, args.indexPools(), Math.pow(nope, -0.5));    // [b, heads, r] f32
+        stage("mla.attend", ctx);
+        if (fused != null) {
+            Tensor merged = smile.torch.Native.glmMlaWuv(ctx, wUvT);
+            if (merged != null) {
+                stage("mla.w_uv", merged);
+                return merged;
+            }
+        }
         Tensor hv = o("aten::permute", ctx, new long[]{1, 0, 2}).to(wUvT.dtype());                    // [heads, b, r]
         Tensor v = bmmF32(hv, wUvT);                                                                   // [heads, b, v]
-        return o("aten::reshape", o("aten::permute", v, new long[]{1, 0, 2}), new long[]{b, (long) heads * args.vHeadDim()});
+        Tensor merged = o("aten::reshape", o("aten::permute", v, new long[]{1, 0, 2}), new long[]{b, (long) heads * args.vHeadDim()});
+        stage("mla.w_uv", merged);
+        return merged;
+    }
+
+    /**
+     * The verify window of a speculative round on device tensors only (CUDA-graph capture): {@code rows} consecutive
+     * tokens of each of {@code B} requests (request-major rows). The window is appended in one kernel (the ring is only
+     * written by {@link #windowCommit}), then every row attends as a decode row with its own length over its request's
+     * caches.
+     *
+     * @param x        {@code [B * rows, dim]} normalized hidden rows.
+     * @param req      latent, pooled-key and ring addresses per request, int64 {@code [3, B]}.
+     * @param rowPtrs  latent and pooled-key addresses per row, int64 {@code [2, B * rows]}.
+     * @param lensReq  tokens before the window, int32 {@code [B]}.
+     * @param lensRow  tokens before each row, int32 {@code [B * rows]}.
+     * @param maxPools row stride of the score buffer.
+     * @param rows     window length.
+     * @param keySave  float32 {@code [B * rows, 128]} receives the indexer keys (for the ring commit).
+     * @param gateSave float32 {@code [B * rows, 128]} receives the gates.
+     * @return {@code [B * rows, dim]}.
+     */
+    Tensor forwardWindow(Tensor x, Tensor req, Tensor rowPtrs, Tensor lensReq, Tensor lensRow, long maxPools, int rows,
+                         Tensor keySave, Tensor gateSave) {
+        Proj p = project(x);
+        smile.torch.Aten.call("aten::copy_", keySave, p.key(), false);
+        smile.torch.Aten.call("aten::copy_", gateSave, p.gate(), false);
+        smile.torch.Native.mlaWindowAppend(p.latent(), p.key(), p.gate(), idxApe, o("aten::select.int", req, 0L, 0L),
+                o("aten::select.int", req, 0L, 1L), o("aten::select.int", req, 0L, 2L), lensReq, rows);
+        Tensor merged = decodeAttend(p, o("aten::select.int", rowPtrs, 0L, 0L), o("aten::select.int", rowPtrs, 0L, 1L),
+                lensRow, maxPools, (int) x.size(0));
+        return allReduce(linear(merged, wo));
     }
 
     /** The batched projections of the new rows. */
-    private record Proj(Tensor q, Tensor latent, Tensor idxQ, Tensor key, Tensor gate, Tensor weights) { }
+    private record Proj(Tensor q, Tensor latent, Tensor idxQ, Tensor key, Tensor gate, Tensor weights, Tensor qi) {
+        Proj(Tensor q, Tensor latent, Tensor idxQ, Tensor key, Tensor gate, Tensor weights) {
+            this(q, latent, idxQ, key, gate, weights, null);
+        }
+    }
 
     private Proj project(Tensor x) {
         long n = x.size(0);
-        Tensor qResid = rms(linear(x, wQa), qaNorm, args.normEps());
+        stageStart(x);
+        if (wProj1 != null) {
+            Tensor[] e = smile.torch.Native.glmMlaEpilogue(linear(x, wProj1), qaNorm, kvaNorm, idxNormW, idxNormB, args.normEps(), 1e-6,
+                    Math.pow(args.indexHeads(), -0.5));
+            if (e != null) {
+                Tensor qi = linear(e[0], wProj2);                                    // [n, heads * 256 + 4096]
+                long qw = (long) heads * args.qkHeadDim();
+                Tensor q = o("aten::reshape", narrow(qi, 1, 0, qw), new long[]{n, heads, args.qkHeadDim()});
+                Tensor idxQ = o("aten::reshape", narrow(qi, 1, qw, 4096), new long[]{n, args.indexHeads(), args.indexHeadDim()});
+                return new Proj(q, e[1], idxQ, e[2], e[3], e[4], qi);
+            }
+        }
+        Tensor qa = linear(x, wQa);
+        stage("mla.qa", qa);
+        Tensor qResid = rms(qa, qaNorm, args.normEps());
+        stage("mla.qa_norm", qResid);
         Tensor q = o("aten::reshape", linear(qResid, wQb), new long[]{n, heads, args.qkHeadDim()});
+        stage("mla.q_b", q);
         Tensor latent = rms(linear(x, wKva), kvaNorm, args.normEps());
+        stage("mla.kv_a", latent);
         Tensor idxQ = o("aten::reshape", linear(qResid, wIdxQ), new long[]{n, args.indexHeads(), args.indexHeadDim()});
+        stage("mla.idx_q", idxQ);
         Tensor key = o("aten::layer_norm", linear(x, wIdxK), new long[]{args.indexHeadDim()}, idxNormW, idxNormB, 1e-6, true);
+        stage("mla.idx_k", key);
         Tensor gate = linear(x, idxGateW);
+        stage("mla.idx_gate", gate);
         Tensor weights = o("aten::contiguous", o("aten::mul.Scalar", linear(x, wIdxW), Math.pow(args.indexHeads(), -0.5)));
+        stage("mla.idx_w", weights);
         return new Proj(q, latent, idxQ, key, gate, weights);
     }
 
