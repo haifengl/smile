@@ -22,22 +22,46 @@ public record AuthMeResponse(
         UserProfile user,
         Boolean agentMode,
         Boolean googleEnabled,
-        Boolean microsoftEnabled
+        Boolean microsoftEnabled,
+        Boolean oidcEnabled,
+        Boolean ssoRequired,
+        String oidcLabel
 ) {
     public AuthMeResponse(boolean loggedIn, UserProfile user) {
-        this(loggedIn, user, null, null, null);
+        this(loggedIn, user, null, null, null, false, false, null);
+    }
+
+    public AuthMeResponse(
+            boolean loggedIn,
+            UserProfile user,
+            Boolean agentMode,
+            Boolean googleEnabled,
+            Boolean microsoftEnabled
+    ) {
+        this(loggedIn, user, agentMode, googleEnabled, microsoftEnabled, false, false, null);
     }
 
     public static AuthMeResponse guest() {
-        return new AuthMeResponse(false, null, false, null, null);
+        return new AuthMeResponse(false, null, false, null, null, false, false, null);
     }
 
     public static AuthMeResponse guest(boolean googleEnabled, boolean microsoftEnabled) {
-        return new AuthMeResponse(false, null, false, googleEnabled, microsoftEnabled);
+        return new AuthMeResponse(false, null, false, googleEnabled, microsoftEnabled, false, false, null);
+    }
+
+    public static AuthMeResponse guest(
+            boolean googleEnabled,
+            boolean microsoftEnabled,
+            boolean oidcEnabled,
+            boolean ssoRequired,
+            String oidcLabel
+    ) {
+        return new AuthMeResponse(
+                false, null, false, googleEnabled, microsoftEnabled, oidcEnabled, ssoRequired, oidcLabel);
     }
 
     public static AuthMeResponse of(User user) {
-        return new AuthMeResponse(true, UserProfile.from(user), null, null, null);
+        return new AuthMeResponse(true, UserProfile.from(user), null, null, null, false, false, null);
     }
 
     public static AuthMeResponse of(
@@ -46,6 +70,27 @@ public record AuthMeResponse(
             boolean googleEnabled,
             boolean microsoftEnabled
     ) {
-        return new AuthMeResponse(true, UserProfile.from(user), agentMode, googleEnabled, microsoftEnabled);
+        return new AuthMeResponse(
+                true, UserProfile.from(user), agentMode, googleEnabled, microsoftEnabled, false, false, null);
+    }
+
+    public static AuthMeResponse of(
+            User user,
+            boolean agentMode,
+            boolean googleEnabled,
+            boolean microsoftEnabled,
+            boolean oidcEnabled,
+            boolean ssoRequired,
+            String oidcLabel
+    ) {
+        return new AuthMeResponse(
+                true,
+                UserProfile.from(user),
+                agentMode,
+                googleEnabled,
+                microsoftEnabled,
+                oidcEnabled,
+                ssoRequired,
+                oidcLabel);
     }
 }

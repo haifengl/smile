@@ -43,6 +43,7 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 import smile.auth.AuthConfig;
 import smile.auth.AuthContext;
+import smile.auth.UserService;
 import io.quarkus.arc.profile.UnlessBuildProfile;
 
 /**
@@ -75,7 +76,16 @@ public class ConversationResource {
     AuthContext authContext;
 
     @Inject
+    UserService userService;
+
+    @Inject
     ConversationService conversationService;
+
+    private void ensureUser() {
+        if (userService != null) {
+            userService.ensureAuthenticatedUser(authContext);
+        }
+    }
 
     private String clientIp(HttpHeaders headers) {
         return ClientIdentity.resolveClientIp(
@@ -96,6 +106,7 @@ public class ConversationResource {
                                          @QueryParam("pageSize") @DefaultValue("25") int pageSize,
                                          @QueryParam("q") String q,
                                          @QueryParam("pinned") Boolean pinned) {
+        ensureUser();
         List<Conversation> rows = conversationService.listForUser(pageIndex, pageSize, q, pinned);
         Map<Long, Long> counts = conversationService.messageCounts(
                 rows.stream().map(c -> c.id).toList());
@@ -115,6 +126,7 @@ public class ConversationResource {
     @Path("/{conversation_id}")
     public ConversationObject get(@PathParam("conversation_id") String conversationId,
                                   @Context HttpHeaders headers) {
+        ensureUser();
         Conversation conversation = ConversationIds.findRequired(conversationId);
         conversationService.ensureAccess(conversation, clientIp(headers));
         return ConversationObject.from(conversation);
@@ -130,6 +142,7 @@ public class ConversationResource {
     @POST
     @Transactional
     public ConversationObject create(@Context HttpHeaders headers, CreateConversationRequest request) {
+        ensureUser();
         if (request == null) {
             request = new CreateConversationRequest();
         }
@@ -178,6 +191,7 @@ public class ConversationResource {
     public ConversationObject update(@PathParam("conversation_id") String conversationId,
                                      UpdateConversationRequest request,
                                      @Context HttpHeaders headers) {
+        ensureUser();
         Conversation conversation = ConversationIds.findRequired(conversationId);
         conversationService.ensureAccess(conversation, clientIp(headers));
         if (request != null && request.metadata != null) {
@@ -201,6 +215,7 @@ public class ConversationResource {
     public ConversationObject patch(@PathParam("conversation_id") String conversationId,
                                       PatchConversationRequest request,
                                       @Context HttpHeaders headers) {
+        ensureUser();
         Conversation conversation = ConversationIds.findRequired(conversationId);
         conversationService.ensureAccess(conversation, clientIp(headers));
         if (authContext.userId() == null
@@ -233,6 +248,7 @@ public class ConversationResource {
     @Transactional
     public ConversationDeleted delete(@PathParam("conversation_id") String conversationId,
                                       @Context HttpHeaders headers) {
+        ensureUser();
         Conversation conversation = ConversationIds.findRequired(conversationId);
         conversationService.ensureAccess(conversation, clientIp(headers));
         String externalId = ConversationIds.toExternalId(conversation.id);
@@ -260,6 +276,7 @@ public class ConversationResource {
                                        @Context HttpHeaders headers,
                                        @RestForm("file") FileUpload file,
                                        @RestForm("role") String role) {
+        ensureUser();
         Conversation conversation = ConversationIds.findRequired(conversationId);
         conversationService.ensureAccess(conversation, clientIp(headers));
         return mediaService.upload(conversation, file, role, routingContext, headers);
@@ -280,6 +297,7 @@ public class ConversationResource {
                                            @QueryParam("pageIndex") @DefaultValue("0") int pageIndex,
                                            @QueryParam("pageSize") @DefaultValue("100") int pageSize,
                                            @Context HttpHeaders headers) {
+        ensureUser();
         Conversation conversation = ConversationIds.findRequired(conversationId);
         conversationService.ensureAccess(conversation, clientIp(headers));
         return ConversationItem.find("conversationId", io.quarkus.panache.common.Sort.by("createdAt"),
