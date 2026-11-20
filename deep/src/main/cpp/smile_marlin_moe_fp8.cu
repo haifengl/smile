@@ -125,7 +125,9 @@ namespace {
 ST_Tensor moe_gemm(const char* name, ST_Tensor a, ST_Tensor qweight, ST_Tensor scales, ST_Tensor global_scale,
                    ST_Tensor align, ST_Tensor topk_weights, int block_size, int top_k, int mul_topk_weights) {
     const bool fp4 = global_scale != nullptr;
-    const int group = fp4 ? kFp4ScaleGroup : kScaleGroup;
+    // bfloat16 scales: block FP8 (one scale per 128 input channels), otherwise MXFP8 (E8M0 per 32)
+    const bool block = !fp4 && scales->t.scalar_type() == at::kBFloat16;
+    const int group = fp4 ? kFp4ScaleGroup : (block ? 128 : kScaleGroup);
     const std::string who = name;
     try {
         smile_torch_clear_error();
@@ -157,7 +159,7 @@ ST_Tensor moe_gemm(const char* name, ST_Tensor a, ST_Tensor qweight, ST_Tensor s
             set_err(who + ": qweight must be int32 [E, K/16, N*" + std::to_string(pack / 2) + "]");
             return nullptr;
         }
-        if (S.dim() != 3 || S.scalar_type() != at::kByte || !S.is_contiguous() || S.size(0) != experts
+        if (S.dim() != 3 || S.scalar_type() != (block ? at::kBFloat16 : at::kByte) || !S.is_contiguous() || S.size(0) != experts
                 || S.size(1) != size_k / group || S.size(2) != size_n) {
             set_err(who + ": scales must be uint8 [E, K/" + std::to_string(group) + ", N]");
             return nullptr;
@@ -209,7 +211,7 @@ ST_Tensor moe_gemm(const char* name, ST_Tensor a, ST_Tensor qweight, ST_Tensor s
                      TW.data_ptr(), block_size, (int) experts, top_k, mul_topk_weights != 0,
                      (int) size_m, (int) size_n, (int) size_k, workspace.data_ptr(), vllm::kBFloat16,
                      fp4 ? vllm::kFE2M1f : vllm::kFE4M3fn, vllm::kBFloat16,
-                     fp4 ? vllm::kFE4M3fn : vllm::kFE8M0fnu, /*has_bias=*/false,
+                     fp4 ? vllm::kFE4M3fn : (block ? vllm::kBFloat16 : vllm::kFE8M0fnu), /*has_bias=*/false,
                      /*has_zp=*/false, group, dev, at::cuda::getCurrentCUDAStream(dev),
                      /*thread_k=*/-1, /*thread_n=*/-1, sms, /*blocks_per_sm=*/-1,
                      /*use_atomic_add=*/false, /*use_fp32_reduce=*/true, /*is_zp_float=*/false);
