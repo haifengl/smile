@@ -29,6 +29,9 @@ import smile.llm.FinishReason;
 public final class ToolCallPostProcessor {
     private static final ToolCallParser QWEN3_XML = new Qwen3XmlToolCallParser();
     private static final ToolCallParser JSON = new JsonToolCallParser();
+    /** A GLM call without arguments: {@code <tool_call>name</tool_call>}. */
+    private static final java.util.regex.Pattern GLM_NO_ARGS = java.util.regex.Pattern.compile(
+            "<tool_call>\\s*[A-Za-z_][\\w.\\-]*\\s*</tool_call>");
 
     private ToolCallPostProcessor() {}
 
@@ -108,6 +111,12 @@ public final class ToolCallPostProcessor {
             ParseResult qwen = QWEN3_XML.parse(raw, lengthLimited);
             if (qwen.hasToolCalls()) {
                 return qwen;
+            }
+        }
+        if (raw.contains("<arg_key>") || GLM_NO_ARGS.matcher(raw).find()) {
+            ParseResult glm = new GlmToolCallParser(tools).parse(raw, lengthLimited);
+            if (glm.hasToolCalls()) {
+                return glm;
             }
         }
         ParseResult json = JSON.parse(raw, lengthLimited);

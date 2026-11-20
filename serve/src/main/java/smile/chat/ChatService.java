@@ -443,7 +443,8 @@ public class ChatService implements OpenAiModelContributor {
         if (checkpointDir == null || !Files.isDirectory(checkpointDir)) {
             return false;
         }
-        if (isQwenCheckpoint(checkpointDir) || isMiniMaxCheckpoint(checkpointDir) || isDeepSeekCheckpoint(checkpointDir)) {
+        if (isQwenCheckpoint(checkpointDir) || isMiniMaxCheckpoint(checkpointDir) || isDeepSeekCheckpoint(checkpointDir)
+                || isGlmCheckpoint(checkpointDir)) {
             return true;
         }
         // Llama-family: HF config.json model_type llama, or classic tokenizer layout.
@@ -463,7 +464,7 @@ public class ChatService implements OpenAiModelContributor {
      * Returns {@code true} when the HF id looks like a builtin Torch Llama/Qwen family.
      */
     static boolean isBuiltinTorchFamily(String modelSpec) {
-        if (isMiniMaxRepoId(modelSpec) || isDeepSeekRepoId(modelSpec)) {
+        if (isMiniMaxRepoId(modelSpec) || isDeepSeekRepoId(modelSpec) || isGlmRepoId(modelSpec)) {
             return true;
         }
         return GenAISupportedModels.matchRepoId(modelSpec)
@@ -1031,6 +1032,9 @@ public class ChatService implements OpenAiModelContributor {
         if (isDeepSeekCheckpoint(localPath)) {
             return buildDeepSeek(localPath.toString(), config);
         }
+        if (isGlmCheckpoint(localPath)) {
+            return buildGlm(localPath.toString(), config);
+        }
         String tokenizerPath = resolveLocalTokenizer(localPath);
         try {
             smile.llm.quant.QuantBackendOverride.set(config.quantization());
@@ -1165,6 +1169,48 @@ public class ChatService implements OpenAiModelContributor {
             }
         }
         return false;
+    }
+
+    /**
+     * Returns {@code true} when {@code config.json} identifies a GLM-5.x checkpoint ({@code model_type} {@code glm5_next*}
+     * or an {@code architectures} entry {@code Glm5Next*}).
+     */
+    static boolean isGlmCheckpoint(Path checkpointDir) throws IOException {
+        Path configJson = checkpointDir.resolve("config.json");
+        if (!Files.isRegularFile(configJson)) {
+            return false;
+        }
+        JsonNode root = new ObjectMapper().readTree(configJson.toFile());
+        String modelType = root.has("model_type") ? root.get("model_type").asString() : "";
+        if (modelType.startsWith("glm5_next")) {
+            return true;
+        }
+        if (root.has("architectures") && root.get("architectures").isArray()) {
+            for (JsonNode n : root.get("architectures")) {
+                String arch = n.asString();
+                if (arch != null && arch.startsWith("Glm5Next")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Returns {@code true} when a Hugging Face repo id names a GLM-5.x model. */
+    static boolean isGlmRepoId(String modelSpec) {
+        return modelSpec != null && modelSpec.toLowerCase(java.util.Locale.ROOT).matches(".*glm-5(\\.\\d+)?-.*|.*glm-5(\\.\\d+)?$");
+    }
+
+    /**
+     * Loads GLM-5.3-Flash with its routed experts spread over {@code smile.chat.devices} (expert parallelism). The weights
+     * come in the checkpoint's own FP8 format; {@code smile.chat.quantization} has no effect. One request slot of the
+     * linear-attention state pools is reserved per batch entry ({@code smile.chat.max-batch-size}).
+     */
+    private LanguageModel buildGlm(String checkpointDir, ChatServiceConfig config) throws Exception {
+        byte[] devices = parallelConfig(config).devices();
+        logger.infof("Loading GLM-5.x from %s on %d device(s) for %d concurrent request(s)", checkpointDir, devices.length,
+                Math.max(1, config.maxBatchSize()));
+        return smile.llm.model.glm.Glm.build(checkpointDir, 0, config.maxSeqLen(), devices, Math.max(1, config.maxBatchSize()));
     }
 
     /** Returns {@code true} when a Hugging Face repo id names a DeepSeek-V4 model. */
