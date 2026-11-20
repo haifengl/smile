@@ -71,6 +71,10 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
     private volatile Kernel<?> kernel;
     /** The lifecycle state of the execution engine. */
     private volatile KernelState kernelState = KernelState.STARTING;
+    /** Background worker initializing {@link #kernel}. */
+    private volatile SwingWorker<Kernel<?>, Void> kernelWorker;
+    /** True once {@link #close()} has been invoked. */
+    private volatile boolean closed;
     // TODO: Use LazyConstant as kernel initialization is expensive and
     // we want to delay it until first run. For now, we initialize it
     // in constructor as LazyConstant is still in preview.
@@ -345,25 +349,45 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
         SwingWorker<Kernel<?>, Void> worker = new SwingWorker<>() {
             @Override
             protected Kernel<?> doInBackground() throws IOException {
-                return switch (lang) {
+                if (closed) {
+                    return null;
+                }
+                Kernel<?> created = switch (lang) {
                     case "Java" -> new JavaKernel();
                     case "Scala" -> new ScalaKernel();
                     case "Kotlin" -> new KotlinKernel();
                     case "Python" -> new PythonKernel();
                     default -> null;
                 };
+                if (closed && created != null) {
+                    created.close();
+                    return null;
+                }
+                return created;
             }
 
             @Override
             protected void done() {
+                if (closed || isCancelled()) {
+                    return;
+                }
                 try {
-                    kernel = get();
+                    Kernel<?> created = get();
+                    if (closed) {
+                        if (created != null) {
+                            created.close();
+                        }
+                        return;
+                    }
+                    kernel = created;
                     kernelState = kernel == null ? KernelState.UNSUPPORTED : KernelState.READY;
                     if (kernelState == KernelState.READY) {
                         SmileStudio.setStatus(Notebook.this, bundle.getString("KernelReady"));
                     } else {
                         SmileStudio.setStatus(Notebook.this, "");
                     }
+                } catch (java.util.concurrent.CancellationException ex) {
+                    kernelState = KernelState.UNSUPPORTED;
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                     kernelState = KernelState.UNSUPPORTED;
@@ -373,13 +397,16 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
                     logger.error("Failed to initialize {} kernel: {}", lang, ex.getCause().getMessage());
                     kernelState = KernelState.UNSUPPORTED;
                     SmileStudio.setStatus(Notebook.this, "");
-                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Notebook.this,
-                            MessageFormat.format(bundle.getString("KernelInitErrorMessage"), lang),
-                            "Error",
-                            JOptionPane.ERROR_MESSAGE));
+                    if (!closed) {
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(Notebook.this,
+                                MessageFormat.format(bundle.getString("KernelInitErrorMessage"), lang),
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE));
+                    }
                 }
             }
         };
+        kernelWorker = worker;
         worker.execute();
     }
 
@@ -410,8 +437,15 @@ public class Notebook extends JPanel implements OpenFile, DocumentListener {
      */
     @Override
     public void close() {
-        if (kernel != null) {
-            kernel.close();
+        closed = true;
+        SwingWorker<Kernel<?>, Void> worker = kernelWorker;
+        if (worker != null) {
+            worker.cancel(true);
+        }
+        Kernel<?> k = kernel;
+        kernel = null;
+        if (k != null) {
+            k.close();
         }
 
         // close autocomplete providers

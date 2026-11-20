@@ -18,6 +18,7 @@
 package smile.studio;
 
 import java.awt.*;
+import java.awt.desktop.QuitStrategy;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -90,8 +91,14 @@ public class SmileStudio extends JFrame implements SearchListener {
     private final Workspace workspace;
     private final LicenseStore licenseStore = new LicenseStore(prefs, secrets);
     private LicenseState licenseState;
-    /** Kept as a field so {@code windowClosing} can stop it before shutdown. */
+    /** Kept as a field so {@code requestExit} can stop it before shutdown. */
     private AutoSaveAction autoSaveAction;
+    /** Coordinates bounded parallel teardown off the EDT and handles SIGTERM. */
+    private final StudioShutdown shutdown = new StudioShutdown();
+    private final javax.swing.Timer serveProbeTimer;
+    private final javax.swing.Timer hubBadgeTimer;
+    /** Re-entry guard for {@link #requestExit()} on the Swing EDT. */
+    private boolean exiting;
 
     /**
      * Constructor.
@@ -143,44 +150,65 @@ public class SmileStudio extends JFrame implements SearchListener {
         contentPane.add(statusBar, BorderLayout.SOUTH);
         setContentPane(contentPane);
 
+        // Register all subsystem teardown tasks under a single coordinated shutdown
+        // handler shared between normal GUI exit and external termination signals.
+        shutdown.register("workspace", workspace::shutdown);
+        shutdown.register("serve", () -> ServeManager.getInstance().stop());
+        shutdown.register("hub", () -> {
+            if (StudioConfig.agentHub().keepAliveOnExit()) {
+                HubManager.getInstance().stopEventStream();
+            } else {
+                HubManager.getInstance().stop();
+            }
+        });
+        shutdown.register("lsp", LanguageService::closeAll);
+        shutdown.register("mcp", MCP::close);
+        shutdown.installJvmHook(StudioShutdown.DEFAULT_TIMEOUT);
+
         // Starts the Ty server in a background thread.
-        Thread.ofPlatform().name("ty-server-starter").daemon(true).start(() -> {
+        shutdown.trackStarter(Thread.ofPlatform().name("ty-server-starter").daemon(true).start(() -> {
             try {
+                if (shutdown.isShuttingDown()) return;
                 var handler = new LspServerNotificationHandler("Ty", statusBar);
                 var ty = LanguageService.of(cwd, "ty server");
                 ty.start(handler, null);
                 if (ty.isInitialized()) {
-                    LanguageService.put("python", ty);
-                    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                        logger.info("Shutting down Ty server...");
+                    if (shutdown.isShuttingDown()) {
                         ty.close();
-                    }));
+                    } else {
+                        LanguageService.put("python", ty);
+                    }
                 }
             } catch (Exception ex) {
-                logger.error("Failed to start Ty server: {}", ex.getMessage());
+                if (!shutdown.isShuttingDown()) {
+                    logger.error("Failed to start Ty server: {}", ex.getMessage());
+                }
             }
-        });
+        }));
 
         // Starts the JDT LS server in a background thread.
         if (Files.exists(Path.of(System.getProperty("smile.home"), "jdtls"))) {
-            Thread.ofPlatform().name("jdt-server-starter").daemon(true).start(() -> {
+            shutdown.trackStarter(Thread.ofPlatform().name("jdt-server-starter").daemon(true).start(() -> {
                 try {
+                    if (shutdown.isShuttingDown()) return;
                     var handler = new LspServerNotificationHandler("JDT", statusBar);
                     var command = (SystemInfo.isWindows ? "cmd.exe /c " : "bash -c ")
                             + System.getProperty("smile.home") + "/jdtls/bin/jdtls";
                     var jdtls = LanguageService.of(cwd, command);
                     jdtls.start(handler, getJtdInitOptions());
                     if (jdtls.isInitialized()) {
-                        LanguageService.put("java", jdtls);
-                        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                            logger.info("Shutting down JDT LS server...");
+                        if (shutdown.isShuttingDown()) {
                             jdtls.close();
-                        }));
+                        } else {
+                            LanguageService.put("java", jdtls);
+                        }
                     }
                 } catch (Exception ex) {
-                    logger.error("Failed to start JDT LS server: {}", ex.getMessage());
+                    if (!shutdown.isShuttingDown()) {
+                        logger.error("Failed to start JDT LS server: {}", ex.getMessage());
+                    }
                 }
-            });
+            }));
         }
 
         // Load enabled plugins before MCP starts: the loader stages subagents and
@@ -188,28 +216,34 @@ public class SmileStudio extends JFrame implements SearchListener {
         var pluginLoader = smile.studio.plugin.PluginLoader.bootstrapShared(cwd);
 
         // Starts MCP services in background
-        Thread.ofPlatform().name("mcp-service-starter").daemon(true).start(() -> {
+        shutdown.trackStarter(Thread.ofPlatform().name("mcp-service-starter").daemon(true).start(() -> {
             try {
                 var handler = new McpServerNotificationHandler(statusBar);
-                var path = Path.of(System.getProperty("smile.home"), "conf", "mcp.json");
-                if (Files.exists(path)) MCP.connect(path, handler);
-                path = Path.of(System.getProperty("user.home"), ".smile", "mcp.json");
-                if (Files.exists(path)) MCP.connect(path, handler);
-                path = Path.of(System.getProperty("user.dir"), ".smile", "mcp.json");
-                if (Files.exists(path)) MCP.connect(path, handler);
+                List<Path> configs = new ArrayList<>();
+                configs.add(Path.of(System.getProperty("smile.home"), "conf", "mcp.json"));
+                configs.add(Path.of(System.getProperty("user.home"), ".smile", "mcp.json"));
+                configs.add(Path.of(System.getProperty("user.dir"), ".smile", "mcp.json"));
                 // Plugin MCP servers: each fragment already carries `disabled: true`
                 // on every server the user has not opted into, so ioa skips them.
-                for (Path fragment : pluginLoader.mcpFragments()) {
-                    if (Files.exists(fragment)) MCP.connect(fragment, handler);
+                configs.addAll(pluginLoader.mcpFragments());
+                for (Path config : configs) {
+                    if (shutdown.isShuttingDown()) {
+                        MCP.close();
+                        return;
+                    }
+                    if (Files.exists(config)) {
+                        MCP.connect(config, handler);
+                    }
                 }
-                Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                    logger.info("Shutting down MCP servers...");
+                if (shutdown.isShuttingDown()) {
                     MCP.close();
-                }));
+                }
             } catch (Throwable ex) {
-                logger.error("Failed to start MCP services: {}", ex.getMessage());
+                if (!shutdown.isShuttingDown()) {
+                    logger.error("Failed to start MCP services: {}", ex.getMessage());
+                }
             }
-        });
+        }));
 
         // Optionally start the shared inference service (conf/studio.json).
         // Only start when there is actually a model or LLM to serve: a service with an
@@ -224,7 +258,8 @@ public class SmileStudio extends JFrame implements SearchListener {
                 logger.info("Not auto-starting the inference service: model path '{}' does not exist and no llm is configured",
                         modelPath);
             } else {
-                Thread.ofPlatform().name("serve-autostart").daemon(true).start(() -> {
+                shutdown.trackStarter(Thread.ofPlatform().name("serve-autostart").daemon(true).start(() -> {
+                    if (shutdown.isShuttingDown()) return;
                     var manager = ServeManager.getInstance();
                     if (!manager.start(inference.host(), inference.port(), inference.llm())) {
                         logger.error("Failed to auto-start the inference service");
@@ -233,36 +268,43 @@ public class SmileStudio extends JFrame implements SearchListener {
                     // Never load into an engine Studio merely attached to: it belongs
                     // to another session or user, and the drift dialog explains the
                     // mismatch rather than mutating someone else's catalog.
-                    if (hasModelPath && !manager.isAttached()) {
+                    if (hasModelPath && !manager.isAttached() && !shutdown.isShuttingDown()) {
                         try {
                             manager.loadModel(inference.modelPath());
                         } catch (Exception ex) {
                             logger.error("Failed to load model '{}': {}", inference.modelPath(), ex.getMessage());
                         }
                     }
-                    workspace.explorer().refreshLoadedModelIdsAsync();
-                });
+                    if (!shutdown.isShuttingDown()) {
+                        workspace.explorer().refreshLoadedModelIdsAsync();
+                    }
+                }));
             }
         }
 
         var hubCfg = StudioConfig.agentHub();
         if (hubCfg.autoStart()) {
-            Thread.ofPlatform().name("hub-autostart").daemon(true).start(() -> {
+            shutdown.trackStarter(Thread.ofPlatform().name("hub-autostart").daemon(true).start(() -> {
+                if (shutdown.isShuttingDown()) return;
                 var manager = HubManager.getInstance();
                 if (!manager.start(hubCfg.host(), hubCfg.port(), hubCfg.adminToken())) {
-                    logger.error("Failed to auto-start Agent Hub");
+                    if (!shutdown.isShuttingDown()) {
+                        logger.error("Failed to auto-start Agent Hub");
+                    }
                 }
-                SwingUtilities.invokeLater(() -> {
-                    workspace.botExplorer().refresh();
-                    workspace.openBotActivity(0);
-                });
-            });
+                if (!shutdown.isShuttingDown()) {
+                    SwingUtilities.invokeLater(() -> {
+                        workspace.botExplorer().refresh();
+                        workspace.openBotActivity(0);
+                    });
+                }
+            }));
         }
 
         // Periodically reconcile the inference service with reality: attach to an
         // engine started elsewhere (another Studio, `smile serve`, a container) and
         // detach when it goes away. Attachment never steals focus.
-        var serveProbeTimer = new javax.swing.Timer(10000, e ->
+        serveProbeTimer = new javax.swing.Timer(10000, e ->
                 Thread.ofPlatform().name("serve-probe").daemon(true).start(() -> {
                     var manager = ServeManager.getInstance();
                     boolean before = manager.isRunning();
@@ -278,14 +320,17 @@ public class SmileStudio extends JFrame implements SearchListener {
         // Periodically poll Agent Hub status & pending approvals for the status bar badge,
         // and also update immediately on Agent Hub Server-Sent Events.
         Runnable updateHubBadge = () -> Thread.ofPlatform().name("hub-badge-poll").daemon(true).start(() -> {
+            if (shutdown.isShuttingDown()) return;
             var manager = HubManager.getInstance();
             var client = manager.client();
             boolean running = client.isReady();
-            if (running) {
+            if (running && !shutdown.isShuttingDown()) {
                 manager.attachIfRunning();
             }
             int pending = running ? client.getOverview().pendingApprovalCount() : 0;
-            SwingUtilities.invokeLater(() -> statusBar.updateBotBadge(running, pending));
+            if (!shutdown.isShuttingDown()) {
+                SwingUtilities.invokeLater(() -> statusBar.updateBotBadge(running, pending));
+            }
         });
         HubManager.getInstance().addEventListener(ev -> {
             updateHubBadge.run();
@@ -295,39 +340,14 @@ public class SmileStudio extends JFrame implements SearchListener {
                 HubManager.getInstance().client().openPageInBrowser(SmileStudio.this, page);
             }
         });
-        var hubBadgeTimer = new javax.swing.Timer(10000, e -> updateHubBadge.run());
+        hubBadgeTimer = new javax.swing.Timer(10000, e -> updateHubBadge.run());
         hubBadgeTimer.setInitialDelay(3000);
         hubBadgeTimer.start();
 
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                // Persist the open-file list *before* closing files so that
-                // fileWatcher.files() still contains all paths at save time.
-                // closeFile() calls fileWatcher.removeFile() for each file,
-                // so saving after the loop would always write an empty list.
-                workspace.saveOpenFilePaths();
-
-                // Iterate over a snapshot — closeFile() removes from the list.
-                List<OpenFile> openFiles = new ArrayList<>(workspace.openFiles());
-                for (OpenFile openFile : openFiles) {
-                    if (!workspace.closeFile(openFile)) {
-                        // User canceled saving — abort the close operation.
-                        return;
-                    }
-                }
-
-                workspace.autoSaver().stop();
-                workspace.shutdown();
-                hubBadgeTimer.stop();
-                serveProbeTimer.stop();
-                // Detaches from an engine Studio did not start; only a child this
-                // session spawned is terminated.
-                ServeManager.getInstance().stop();
-                if (!StudioConfig.agentHub().keepAliveOnExit()) {
-                    HubManager.getInstance().stop();
-                }
-                System.exit(0);
+                requestExit();
             }
 
             @Override
@@ -344,6 +364,42 @@ public class SmileStudio extends JFrame implements SearchListener {
                 });
             }
         });
+    }
+
+    /**
+     * Performs a two-phase application exit:
+     * <ol>
+     *   <li>Phase 1 (EDT): prompts to save all dirty files without tearing down any
+     *       tabs/kernels yet, persists open-file paths once confirmed, stops Swing
+     *       timers, and immediately hides and disposes the window.</li>
+     *   <li>Phase 2 (off EDT): delegates bounded parallel teardown of workspace,
+     *       services, LSP, and MCP to {@link StudioShutdown}.</li>
+     * </ol>
+     */
+    private void requestExit() {
+        if (exiting) {
+            return;
+        }
+        exiting = true;
+
+        if (!workspace.confirmAndSaveAll()) {
+            exiting = false;
+            return;
+        }
+
+        workspace.saveOpenFilePaths();
+
+        workspace.autoSaver().stop();
+        hubBadgeTimer.stop();
+        serveProbeTimer.stop();
+        statusBar.stop();
+
+        findDialog.dispose();
+        replaceDialog.dispose();
+        setVisible(false);
+        dispose();
+
+        shutdown.exitAsync(StudioShutdown.DEFAULT_TIMEOUT);
     }
 
     /**
@@ -934,9 +990,12 @@ public class SmileStudio extends JFrame implements SearchListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            ServeManager.getInstance().stop();
-            workspace.explorer().refreshLoadedModelIdsAsync();
-            statusBar.setStatus(bundle.getString("InferenceStopped"));
+            Thread.ofPlatform().name("serve-stop").daemon(true).start(() -> {
+                ServeManager.getInstance().stop();
+                workspace.explorer().refreshLoadedModelIdsAsync();
+                SwingUtilities.invokeLater(() ->
+                        statusBar.setStatus(bundle.getString("InferenceStopped")));
+            });
         }
     }
 
@@ -1108,9 +1167,13 @@ public class SmileStudio extends JFrame implements SearchListener {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            HubManager.getInstance().stop();
-            workspace.botExplorer().refresh();
-            statusBar.setStatus(bundle.getString("AgentHubStopped"));
+            Thread.ofPlatform().name("hub-stop").daemon(true).start(() -> {
+                HubManager.getInstance().stop();
+                SwingUtilities.invokeLater(() -> {
+                    workspace.botExplorer().refresh();
+                    statusBar.setStatus(bundle.getString("AgentHubStopped"));
+                });
+            });
         }
     }
 
@@ -1431,6 +1494,13 @@ public class SmileStudio extends JFrame implements SearchListener {
         SmileStudio studio = new SmileStudio();
         studio.setMinimumSize(new Dimension(800, 600));
         studio.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+
+        // Route macOS Cmd+Q / Dock Quit through WINDOW_CLOSING so save prompts
+        // and the two-phase exit sequence run instead of bypassing windowClosing.
+        if (Desktop.isDesktopSupported()
+                && Desktop.getDesktop().isSupported(Desktop.Action.APP_QUIT_STRATEGY)) {
+            Desktop.getDesktop().setQuitStrategy(QuitStrategy.CLOSE_ALL_WINDOWS);
+        }
 
         // macOS window settings
         if (SystemInfo.isMacFullWindowContentSupported) {
