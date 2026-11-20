@@ -102,6 +102,8 @@ final class GlmMla {
     private final Tensor wIdxW;
     private final Tensor idxApe;
     private final Tensor idxGateW;
+    /** The latent cache holds fp8 records ({@code SMILE_GLM_KV_FP8=1} / {@code -Dsmile.glm.kv.fp8=true}, CUDA only). */
+    private final boolean kvFp8 = kvFp8Enabled();
     private Tensor wProj1;     // [2336, dim]: q_a | kv_a | indexer k | compress gate | indexer weights, one GEMM
     private Tensor wProj2;     // [heads * 256 + 4096, q_lora]: q_b | indexer q, one GEMM
 
@@ -149,8 +151,19 @@ final class GlmMla {
         return weightType() == ScalarType.Float ? ScalarType.Float : ScalarType.BFloat16;
     }
 
+    /** Whether the latent caches of new requests are fp8. */
+    static boolean kvFp8Enabled() {
+        return device().isCUDA() && smile.torch.Native.glmLatentFp8Available()
+                && ("1".equals(System.getenv("SMILE_GLM_KV_FP8")) || Boolean.getBoolean("smile.glm.kv.fp8"));
+    }
+
+    private static final java.util.concurrent.atomic.AtomicBoolean FP8_LOGGED = new java.util.concurrent.atomic.AtomicBoolean();
+
     State newState() {
-        return new State(new GlmRows(args.kvLoraRank(), cacheType()), new GlmRows(args.indexHeadDim(), cacheType()),
+        if (kvFp8 && FP8_LOGGED.compareAndSet(false, true)) {
+            org.slf4j.LoggerFactory.getLogger(GlmMla.class).info("GLM latent KV cache: fp8 (528 bytes per token and layer instead of 1024)");
+        }
+        return new State(kvFp8 ? GlmRows.fp8Latent() : new GlmRows(args.kvLoraRank(), cacheType()), new GlmRows(args.indexHeadDim(), cacheType()),
                 keep(zeros(ScalarType.Float, args.indexKpool(), 2L * args.indexHeadDim())));
     }
 
@@ -279,7 +292,7 @@ final class GlmMla {
      * @return {@code [b, heads * v]} the merged heads before the output projection.
      */
     private Tensor decodeCore(Proj p, Tensor latPtrs, Tensor poolPtrs, Tensor ringPtrs, Tensor lens, long maxPools, int b) {
-        smile.torch.Native.mlaDecodeAppend(p.latent(), p.key(), p.gate(), idxApe, latPtrs, poolPtrs, ringPtrs, lens);
+        smile.torch.Native.mlaDecodeAppend(p.latent(), p.key(), p.gate(), idxApe, latPtrs, poolPtrs, ringPtrs, lens, kvFp8);
         stage("mla.append", p.latent());
         return decodeAttend(p, latPtrs, poolPtrs, lens, maxPools, b);
     }
@@ -308,7 +321,7 @@ final class GlmMla {
             Tensor qh = o("aten::permute", p.q(), new long[]{1, 0, 2}).to(wUk.dtype());                    // [heads, b, nope]
             qAbs = o("aten::contiguous", o("aten::permute", bmmF32(qh, wUk), new long[]{1, 0, 2})).to(ScalarType.BFloat16);   // [b, heads, r]
         }
-        Tensor ctx = smile.torch.Native.mlaDecodeAttend(qAbs, latPtrs, idx, lens, args.indexPools(), Math.pow(nope, -0.5));    // [b, heads, r] f32
+        Tensor ctx = smile.torch.Native.mlaDecodeAttend(qAbs, latPtrs, idx, lens, args.indexPools(), Math.pow(nope, -0.5), kvFp8);    // [b, heads, r] f32
         stage("mla.attend", ctx);
         if (fused != null) {
             Tensor merged = smile.torch.Native.glmMlaWuv(ctx, wUvT);
@@ -347,7 +360,7 @@ final class GlmMla {
         smile.torch.Aten.call("aten::copy_", keySave, p.key(), false);
         smile.torch.Aten.call("aten::copy_", gateSave, p.gate(), false);
         smile.torch.Native.mlaWindowAppend(p.latent(), p.key(), p.gate(), idxApe, o("aten::select.int", req, 0L, 0L),
-                o("aten::select.int", req, 0L, 1L), o("aten::select.int", req, 0L, 2L), lensReq, rows);
+                o("aten::select.int", req, 0L, 1L), o("aten::select.int", req, 0L, 2L), lensReq, rows, kvFp8);
         Tensor merged = decodeAttend(p, o("aten::select.int", rowPtrs, 0L, 0L), o("aten::select.int", rowPtrs, 0L, 1L),
                 lensRow, maxPools, (int) x.size(0));
         return allReduce(linear(merged, wo));
@@ -488,7 +501,7 @@ final class GlmMla {
         long[] ptr = new long[(int) n];
         java.util.Arrays.fill(ptr, st.latent.pointer());
         Tensor latPtrs = Tensor.of(ptr, n).to(device());
-        Tensor ctx = smile.torch.Native.mlaDecodeAttend(qAbs, latPtrs, idx, Math.pow(args.qkHeadDim(), -0.5));   // [n, heads, r]
+        Tensor ctx = smile.torch.Native.mlaDecodeAttend(qAbs, latPtrs, idx, null, 0, Math.pow(args.qkHeadDim(), -0.5), kvFp8);   // [n, heads, r]
         long t2 = PROFILE ? sync(ctx) : 0;
         Tensor hv = o("aten::permute", ctx, new long[]{1, 0, 2}).to(wUvT.dtype());
         Tensor v = bmmF32(hv, wUvT);                                                                   // [heads, n, v]
@@ -637,8 +650,10 @@ final class GlmMla {
             outs.add(scopedAll(() -> {
                 Tensor idx = narrow(topk, 0, from, qn);                                       // [qn, width]
                 Tensor safe = o("aten::clamp", idx, 0L, total - 1);
-                Tensor keys = o("aten::reshape", o("aten::index_select", latent, 0L, o("aten::reshape", safe, new long[]{-1L})),
-                        new long[]{qn, width, st.latent.width});                              // [qn, width, r]
+                Tensor flatIds = o("aten::reshape", safe, new long[]{-1L});
+                Tensor gathered = st.latent.fp8 ? smile.torch.Native.glmLatentGather(latent, flatIds)       // dequantized rows
+                        : o("aten::index_select", latent, 0L, flatIds);
+                Tensor keys = o("aten::reshape", gathered, new long[]{qn, width, st.latent.valueWidth()});  // [qn, width, r]
                 Tensor qa = o("aten::permute", narrow(qAbs, 1, from, qn), new long[]{1, 0, 2}).to(ct);   // [qn, heads, r]
                 Tensor scores = o("aten::mul.Scalar", bmmF32(qa, o("aten::transpose.int", keys, 1L, 2L)), scale);   // [qn, heads, width]
                 scores = o("aten::masked_fill.Scalar", scores, unsqueeze(o("aten::lt.Scalar", idx, 0L), 1), Double.NEGATIVE_INFINITY);

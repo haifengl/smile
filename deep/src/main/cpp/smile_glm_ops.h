@@ -57,7 +57,7 @@ SMILE_API int smile_kda_commit(ST_Tensor raw_save, ST_Tensor conv_state, ST_Tens
  */
 SMILE_API int smile_mla_window_append(ST_Tensor lat_new, ST_Tensor key_new, ST_Tensor gate_new, ST_Tensor ape,
                                       ST_Tensor lat_ptrs, ST_Tensor pool_ptrs, ST_Tensor pend_ptrs, ST_Tensor lens,
-                                      long long rows);
+                                      long long rows, int fp8);
 
 /** Writes the ring slots of the first accept[b] rows of a window (after smile_mla_window_append). */
 SMILE_API int smile_mla_window_commit(ST_Tensor key_new, ST_Tensor gate_new, ST_Tensor pend_ptrs, ST_Tensor lens,
@@ -122,7 +122,7 @@ SMILE_API ST_Tensor smile_indexer_scores(ST_Tensor q, ST_Tensor w, ST_Tensor pk,
  * lat_new/key_new/gate_new float32 [B, 512]/[B, 128]/[B, 128]; ape float32 [4, 128]. Returns 0, or -1 with the error set.
  */
 SMILE_API int smile_mla_decode_append(ST_Tensor lat_new, ST_Tensor key_new, ST_Tensor gate_new, ST_Tensor ape,
-                                      ST_Tensor lat_ptrs, ST_Tensor pool_ptrs, ST_Tensor pend_ptrs, ST_Tensor lens);
+                                      ST_Tensor lat_ptrs, ST_Tensor pool_ptrs, ST_Tensor pend_ptrs, ST_Tensor lens, int fp8);
 
 /**
  * Indexer scores of the new token against all complete pools (after the append): scores[b, p] for p < (lens[b] + 1) / 4,
@@ -152,7 +152,19 @@ SMILE_API ST_Tensor smile_mla_decode_attend(ST_Tensor qabs, ST_Tensor lat_ptrs, 
  * 4, top_pools) tokens) and the three open-pool slots are processed, which makes short contexts much cheaper.
  */
 SMILE_API ST_Tensor smile_mla_decode_attend2(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor idx, ST_Tensor lens,
-                                             long long top_pools, double scale);
+                                             long long top_pools, double scale, int fp8);
+
+/*
+ * fp8 latent cache. With fp8 != 0 the latent cache rows are 528-byte records: 512 e4m3 values followed by four float32
+ * scales (one per 128 dimensions, scale = max|x| / 448), instead of 512 bfloat16. The append calls quantize the new rows,
+ * the attend call dequantizes while loading (lens may be null for the full id width).
+ */
+
+/** Quantizes float32 [n, 512] rows into the fp8 cache layout uint8 [n, 528]. Returns 0, or -1 with the error set. */
+SMILE_API int smile_glm_latent_quantize(ST_Tensor src, ST_Tensor dst);
+
+/** Dequantizes rows ids (int64 [n]) of an fp8 cache uint8 [T, 528] into bfloat16 [n, 512]. */
+SMILE_API ST_Tensor smile_glm_latent_gather(ST_Tensor cache, ST_Tensor ids);
 
 #ifdef __cplusplus
 }

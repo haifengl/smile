@@ -16,6 +16,7 @@
 
 /* smile_torch.cpp */
 #include <cupti.h>
+#include <cuda_fp8.h>
 #include <unordered_map>
 #include <memory>
 #include <mutex>
@@ -236,6 +237,39 @@ __global__ void glm_swiglu_kernel(const T* __restrict__ gu, __nv_bfloat16* __res
 
 constexpr int kLat = 512;           // latent width
 constexpr int kPoolDim = 128;       // indexer key width
+
+// ---- fp8 latent cache: a row is 512 e4m3 values followed by four float32 scales (one per 128 dimensions)
+constexpr int kLatRow8 = 528;
+
+__device__ __forceinline__ float fp8_to_f(unsigned char b) {
+    const __half_raw h = __nv_cvt_fp8_to_halfraw(b, __NV_E4M3);
+    return __half2float(__half(h));
+}
+
+/** Quantizes one 512-value row with a block of 128 threads (thread d owns dimension d of every tile); red: [4][4] floats. */
+__device__ __forceinline__ void quantize_latent_row(const float* __restrict__ src, unsigned char* __restrict__ dst, float (*red)[4]) {
+    const int d = threadIdx.x;
+    const int lane = d & 31;
+    const int warp = d >> 5;
+    float v[4];
+#pragma unroll
+    for (int t = 0; t < 4; ++t) {
+        v[t] = src[t * 128 + d];
+        float a = fabsf(v[t]);
+#pragma unroll
+        for (int o = 16; o > 0; o >>= 1) a = fmaxf(a, __shfl_xor_sync(0xffffffffu, a, o));
+        if (lane == 0) red[t][warp] = a;
+    }
+    __syncthreads();
+#pragma unroll
+    for (int t = 0; t < 4; ++t) {
+        const float m = fmaxf(fmaxf(red[t][0], red[t][1]), fmaxf(red[t][2], red[t][3]));
+        const float scale = m > 0.f ? m / 448.f : 1.f;
+        dst[t * 128 + d] = __nv_cvt_float_to_fp8(v[t] / scale, __NV_SATFINITE, __NV_E4M3);
+        if (d == 0) reinterpret_cast<float*>(dst + 512)[t] = scale;
+    }
+    __syncthreads();
+}
 constexpr int kProjQa = 1536;
 constexpr int kProjKv = 512;
 constexpr int kProjIdx = 128;
@@ -482,13 +516,18 @@ __global__ void __launch_bounds__(256) indexer_score_kernel(
 __global__ void mla_append_kernel(const float* __restrict__ lat_new, const float* __restrict__ key_new,
                                   const float* __restrict__ gate_new, const float* __restrict__ ape,
                                   const long long* __restrict__ lat_ptrs, const long long* __restrict__ pool_ptrs,
-                                  const long long* __restrict__ pend_ptrs, const int* __restrict__ lens) {
+                                  const long long* __restrict__ pend_ptrs, const int* __restrict__ lens, int fp8) {
     const int b = blockIdx.x;
     const int d = threadIdx.x;               // 128 threads: one indexer channel each
     const int len = lens[b];
-    __nv_bfloat16* lat = reinterpret_cast<__nv_bfloat16*>(lat_ptrs[b]);
-    for (int i = d; i < kLat; i += kPoolDim) {
-        lat[(int64_t) len * kLat + i] = __float2bfloat16(lat_new[(int64_t) b * kLat + i]);
+    if (fp8) {
+        __shared__ float red[4][4];
+        quantize_latent_row(lat_new + (int64_t) b * kLat, reinterpret_cast<unsigned char*>(lat_ptrs[b]) + (int64_t) len * kLatRow8, red);
+    } else {
+        __nv_bfloat16* lat = reinterpret_cast<__nv_bfloat16*>(lat_ptrs[b]);
+        for (int i = d; i < kLat; i += kPoolDim) {
+            lat[(int64_t) len * kLat + i] = __float2bfloat16(lat_new[(int64_t) b * kLat + i]);
+        }
     }
     float* pend = reinterpret_cast<float*>(pend_ptrs[b]);
     const int slot = len & 3;
@@ -522,10 +561,11 @@ __global__ void mla_append_kernel(const float* __restrict__ lat_new, const float
 __global__ void mla_window_append_kernel(const float* __restrict__ lat_new, const float* __restrict__ key_new,
                                          const float* __restrict__ gate_new, const float* __restrict__ ape,
                                          const long long* __restrict__ lat_ptrs, const long long* __restrict__ pool_ptrs,
-                                         const long long* __restrict__ pend_ptrs, const int* __restrict__ lens, int R) {
+                                         const long long* __restrict__ pend_ptrs, const int* __restrict__ lens, int R, int fp8) {
     const int b = blockIdx.x;
     const int d = threadIdx.x;
     const int base = lens[b];
+    __shared__ float red[4][4];
     __nv_bfloat16* lat = reinterpret_cast<__nv_bfloat16*>(lat_ptrs[b]);
     __nv_bfloat16* pool = reinterpret_cast<__nv_bfloat16*>(pool_ptrs[b]);
     const float* pend = reinterpret_cast<const float*>(pend_ptrs[b]);
@@ -538,8 +578,12 @@ __global__ void mla_window_append_kernel(const float* __restrict__ lat_new, cons
     for (int j = 0; j < R; ++j) {
         const int len = base + j;
         const int64_t row = (int64_t) b * R + j;
-        for (int i = d; i < kLat; i += kPoolDim) {
-            lat[(int64_t) len * kLat + i] = __float2bfloat16(lat_new[row * kLat + i]);
+        if (fp8) {
+            quantize_latent_row(lat_new + row * kLat, reinterpret_cast<unsigned char*>(lat_ptrs[b]) + (int64_t) len * kLatRow8, red);
+        } else {
+            for (int i = d; i < kLat; i += kPoolDim) {
+                lat[(int64_t) len * kLat + i] = __float2bfloat16(lat_new[row * kLat + i]);
+            }
         }
         const int slot = len & 3;
         k[slot] = key_new[row * kPoolDim + d];
@@ -576,6 +620,23 @@ __global__ void mla_window_commit_kernel(const float* __restrict__ key_new, cons
         pend[slot * 256 + d] = key_new[((int64_t) b * R + j) * kPoolDim + d];
         pend[slot * 256 + 128 + d] = gate_new[((int64_t) b * R + j) * kPoolDim + d];
     }
+}
+
+
+/** dst[r] = quantized row of src[r] (float32 [rows, 512]) in the fp8 cache layout; one block of 128 threads per row. */
+__global__ void __launch_bounds__(128) latent_quantize_kernel(const float* __restrict__ src, unsigned char* __restrict__ dst) {
+    __shared__ float red[4][4];
+    quantize_latent_row(src + (int64_t) blockIdx.x * kLat, dst + (int64_t) blockIdx.x * kLatRow8, red);
+}
+
+/** out[i] = dequantized row ids[i] of the fp8 cache (bfloat16 [n, 512]); one block of 128 threads per row. */
+__global__ void __launch_bounds__(128) latent_gather_kernel(const unsigned char* __restrict__ cache, const long long* __restrict__ ids,
+                                                           __nv_bfloat16* __restrict__ out) {
+    const unsigned char* row = cache + ids[blockIdx.x] * kLatRow8;
+    const float* sc = reinterpret_cast<const float*>(row + 512);
+    __nv_bfloat16* o = out + (int64_t) blockIdx.x * kLat;
+#pragma unroll
+    for (int t = 0; t < 4; ++t) o[t * 128 + threadIdx.x] = __float2bfloat16(fp8_to_f(row[t * 128 + threadIdx.x]) * sc[t]);
 }
 
 /** One query per request; the 8 warps of a block split its 512 pools (8 groups of 8 per warp), B fragments straight from global. */
@@ -721,7 +782,7 @@ constexpr int kAttnMaxW = 2056;
  * in shared memory; scores are computed 4 tokens per warp at a time with all loads in flight, softmax per head, then each
  * thread (2 latent dims) accumulates 8 tokens per step. Invalid tokens (id < 0) get probability 0 and read row 0.
  */
-template <int HPB>
+template <int HPB, bool FP8>
 __global__ void __launch_bounds__(256, 2) mla_attend_kernel(
         const __nv_bfloat16* __restrict__ qabs, const long long* __restrict__ lat_ptrs, const int* __restrict__ idx,
         const int* __restrict__ lens, int top_pools, int width_all, int heads, float scale, float* __restrict__ ctx) {
@@ -734,6 +795,7 @@ __global__ void __launch_bounds__(256, 2) mla_attend_kernel(
     const int lane = tid & 31;
     const int warp = tid >> 5;
     const __nv_bfloat16* lat = reinterpret_cast<const __nv_bfloat16*>(lat_ptrs[b]);
+    const unsigned char* latb = reinterpret_cast<const unsigned char*>(lat_ptrs[b]);
     // the ids of a row: the tokens of the selected pools first, -1 padding, the tokens of the open pool in the last three
     // slots; with the row length known only the valid prefix and those three are processed
     int width = width_all;
@@ -758,27 +820,49 @@ __global__ void __launch_bounds__(256, 2) mla_attend_kernel(
     constexpr int U = 4;
     for (int j0 = warp; j0 < width; j0 += 8 * U) {
         uint4 r0[U], r1[U];
+        float4 s4[U];
 #pragma unroll
         for (int u = 0; u < U; ++u) {
             const int j = j0 + 8 * u;
             int id = j < width ? sid[j] : 0;
             if (id < 0) id = 0;
-            const __nv_bfloat16* row = lat + (long long) id * kLat;
-            r0[u] = *reinterpret_cast<const uint4*>(row + lane * 8);
-            r1[u] = *reinterpret_cast<const uint4*>(row + 256 + lane * 8);
+            if constexpr (FP8) {
+                const unsigned char* row = latb + (long long) id * kLatRow8;
+                const uint2 a8 = *reinterpret_cast<const uint2*>(row + lane * 8);
+                const uint2 b8 = *reinterpret_cast<const uint2*>(row + 256 + lane * 8);
+                r0[u] = make_uint4(a8.x, a8.y, 0u, 0u);
+                r1[u] = make_uint4(b8.x, b8.y, 0u, 0u);
+                s4[u] = *reinterpret_cast<const float4*>(row + 512);
+            } else {
+                const __nv_bfloat16* row = lat + (long long) id * kLat;
+                r0[u] = *reinterpret_cast<const uint4*>(row + lane * 8);
+                r1[u] = *reinterpret_cast<const uint4*>(row + 256 + lane * 8);
+            }
         }
 #pragma unroll
         for (int u = 0; u < U; ++u) {
             const int j = j0 + 8 * u;
             float x[16];
-            const __nv_bfloat162* a = reinterpret_cast<const __nv_bfloat162*>(&r0[u]);
-            const __nv_bfloat162* c2 = reinterpret_cast<const __nv_bfloat162*>(&r1[u]);
+            if constexpr (FP8) {
+                const float sA = (lane >> 4) ? s4[u].y : s4[u].x;      // dims lane * 8 .. lane * 8 + 7 lie in tile lane / 16
+                const float sB = (lane >> 4) ? s4[u].w : s4[u].z;      // dims 256 + lane * 8 .. in tile 2 + lane / 16
+                const unsigned int w0[2] = {r0[u].x, r0[u].y};
+                const unsigned int w1[2] = {r1[u].x, r1[u].y};
 #pragma unroll
-            for (int i = 0; i < 4; ++i) {
-                x[2 * i] = __low2float(a[i]);
-                x[2 * i + 1] = __high2float(a[i]);
-                x[8 + 2 * i] = __low2float(c2[i]);
-                x[8 + 2 * i + 1] = __high2float(c2[i]);
+                for (int i = 0; i < 8; ++i) {
+                    x[i] = fp8_to_f((unsigned char) ((w0[i >> 2] >> (8 * (i & 3))) & 0xFF)) * sA;
+                    x[8 + i] = fp8_to_f((unsigned char) ((w1[i >> 2] >> (8 * (i & 3))) & 0xFF)) * sB;
+                }
+            } else {
+                const __nv_bfloat162* a = reinterpret_cast<const __nv_bfloat162*>(&r0[u]);
+                const __nv_bfloat162* c2 = reinterpret_cast<const __nv_bfloat162*>(&r1[u]);
+#pragma unroll
+                for (int i = 0; i < 4; ++i) {
+                    x[2 * i] = __low2float(a[i]);
+                    x[2 * i + 1] = __high2float(a[i]);
+                    x[8 + 2 * i] = __low2float(c2[i]);
+                    x[8 + 2 * i + 1] = __high2float(c2[i]);
+                }
             }
             float part[HPB];
 #pragma unroll
@@ -833,17 +917,32 @@ __global__ void __launch_bounds__(256, 2) mla_attend_kernel(
     constexpr int V = 8;
     for (int j0 = 0; j0 < width; j0 += V) {
         __nv_bfloat162 v[V];
+        unsigned short b2[V];
+        float vs[V];
 #pragma unroll
         for (int u = 0; u < V; ++u) {
             const int j = j0 + u;
             int id = j < width ? sid[j] : 0;
             if (id < 0) id = 0;
-            v[u] = *reinterpret_cast<const __nv_bfloat162*>(lat + (long long) id * kLat + 2 * tid);
+            if constexpr (FP8) {
+                const unsigned char* row = latb + (long long) id * kLatRow8;
+                b2[u] = *reinterpret_cast<const unsigned short*>(row + 2 * tid);
+                vs[u] = reinterpret_cast<const float*>(row + 512)[tid >> 6];
+            } else {
+                v[u] = *reinterpret_cast<const __nv_bfloat162*>(lat + (long long) id * kLat + 2 * tid);
+            }
         }
 #pragma unroll
         for (int u = 0; u < V; ++u) {
             const int j = j0 + u;
-            const float v0 = __low2float(v[u]), v1 = __high2float(v[u]);
+            float v0, v1;
+            if constexpr (FP8) {
+                v0 = fp8_to_f((unsigned char) (b2[u] & 0xFF)) * vs[u];
+                v1 = fp8_to_f((unsigned char) (b2[u] >> 8)) * vs[u];
+            } else {
+                v0 = __low2float(v[u]);
+                v1 = __high2float(v[u]);
+            }
 #pragma unroll
             for (int h = 0; h < HPB; ++h) {
                 const float p = j < width ? sc[h * kAttnMaxW + j] : 0.f;
@@ -1427,7 +1526,7 @@ extern "C" int smile_kda_commit(ST_Tensor raw_save, ST_Tensor conv_state, ST_Ten
 
 extern "C" int smile_mla_window_append(ST_Tensor lat_new, ST_Tensor key_new, ST_Tensor gate_new, ST_Tensor ape,
                                        ST_Tensor lat_ptrs, ST_Tensor pool_ptrs, ST_Tensor pend_ptrs, ST_Tensor lens,
-                                       long long rows) {
+                                       long long rows, int fp8) {
     try {
         smile_torch_clear_error();
         std::string err;
@@ -1452,7 +1551,7 @@ extern "C" int smile_mla_window_append(ST_Tensor lat_new, ST_Tensor key_new, ST_
                 lat_new->t.data_ptr<float>(), key_new->t.data_ptr<float>(), gate_new->t.data_ptr<float>(),
                 ape->t.data_ptr<float>(), reinterpret_cast<const long long*>(lat_ptrs->t.data_ptr<int64_t>()),
                 reinterpret_cast<const long long*>(pool_ptrs->t.data_ptr<int64_t>()),
-                reinterpret_cast<const long long*>(pend_ptrs->t.data_ptr<int64_t>()), lens->t.data_ptr<int>(), (int) rows);
+                reinterpret_cast<const long long*>(pend_ptrs->t.data_ptr<int64_t>()), lens->t.data_ptr<int>(), (int) rows, fp8);
         cudaError_t st = cudaGetLastError();
         if (st != cudaSuccess) {
             set_err(std::string("smile_mla_window_append: CUDA error: ") + cudaGetErrorString(st));
@@ -1652,8 +1751,68 @@ extern "C" ST_Tensor smile_glm_mla_wuv(ST_Tensor ctx, ST_Tensor wuvt) {
     }
 }
 
+
+extern "C" int smile_glm_latent_quantize(ST_Tensor src, ST_Tensor dst) {
+    try {
+        smile_torch_clear_error();
+        const at::Tensor& S = src->t;
+        const at::Tensor& D = dst->t;
+        if (!S.is_cuda() || S.scalar_type() != at::kFloat || S.dim() != 2 || S.size(1) != kLat || !S.is_contiguous()
+                || !D.is_cuda() || D.scalar_type() != at::kByte || D.dim() != 2 || D.size(0) != S.size(0) || D.size(1) != kLatRow8
+                || !D.is_contiguous()) {
+            set_err("smile_glm_latent_quantize: needs contiguous float32 [n, 512] -> uint8 [n, 528] on the GPU");
+            return -1;
+        }
+        const int64_t n = S.size(0);
+        c10::cuda::CUDAGuard guard(S.get_device());
+        if (n > 0) {
+            latent_quantize_kernel<<<(unsigned) n, 128, 0, at::cuda::getCurrentCUDAStream(S.get_device())>>>(
+                    S.data_ptr<float>(), D.data_ptr<unsigned char>());
+        }
+        cudaError_t e = cudaGetLastError();
+        if (e != cudaSuccess) {
+            set_err(std::string("smile_glm_latent_quantize: CUDA error: ") + cudaGetErrorString(e));
+            return -1;
+        }
+        return 0;
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return -1;
+    }
+}
+
+extern "C" ST_Tensor smile_glm_latent_gather(ST_Tensor cache, ST_Tensor ids) {
+    try {
+        smile_torch_clear_error();
+        const at::Tensor& C = cache->t;
+        const at::Tensor& I = ids->t;
+        if (!C.is_cuda() || C.scalar_type() != at::kByte || C.dim() != 2 || C.size(1) != kLatRow8 || !C.is_contiguous()
+                || !I.is_cuda() || I.scalar_type() != at::kLong || I.dim() != 1 || !I.is_contiguous()) {
+            set_err("smile_glm_latent_gather: needs a contiguous uint8 [T, 528] cache and int64 [n] ids on the GPU");
+            return nullptr;
+        }
+        const int64_t n = I.size(0);
+        c10::cuda::CUDAGuard guard(C.get_device());
+        at::Tensor out = torch::empty({n, (int64_t) kLat}, C.options().dtype(at::kBFloat16));
+        if (n > 0) {
+            latent_gather_kernel<<<(unsigned) n, 128, 0, at::cuda::getCurrentCUDAStream(C.get_device())>>>(
+                    C.data_ptr<unsigned char>(), I.data_ptr<int64_t>() == nullptr ? nullptr : reinterpret_cast<const long long*>(I.data_ptr<int64_t>()),
+                    reinterpret_cast<__nv_bfloat16*>(out.data_ptr()));
+        }
+        cudaError_t e = cudaGetLastError();
+        if (e != cudaSuccess) {
+            set_err(std::string("smile_glm_latent_gather: CUDA error: ") + cudaGetErrorString(e));
+            return nullptr;
+        }
+        return new ST_Tensor_{ out };
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return nullptr;
+    }
+}
+
 extern "C" int smile_mla_decode_append(ST_Tensor lat_new, ST_Tensor key_new, ST_Tensor gate_new, ST_Tensor ape,
-                                       ST_Tensor lat_ptrs, ST_Tensor pool_ptrs, ST_Tensor pend_ptrs, ST_Tensor lens) {
+                                       ST_Tensor lat_ptrs, ST_Tensor pool_ptrs, ST_Tensor pend_ptrs, ST_Tensor lens, int fp8) {
     try {
         smile_torch_clear_error();
         std::string err;
@@ -1675,7 +1834,7 @@ extern "C" int smile_mla_decode_append(ST_Tensor lat_new, ST_Tensor key_new, ST_
         mla_append_kernel<<<(unsigned) B, kPoolDim, 0, at::cuda::getCurrentCUDAStream(dev)>>>(
                 lat_new->t.data_ptr<float>(), key_new->t.data_ptr<float>(), gate_new->t.data_ptr<float>(),
                 ape->t.data_ptr<float>(), reinterpret_cast<const long long*>(lat_ptrs->t.data_ptr<int64_t>()), reinterpret_cast<const long long*>(pool_ptrs->t.data_ptr<int64_t>()),
-                reinterpret_cast<const long long*>(pend_ptrs->t.data_ptr<int64_t>()), lens->t.data_ptr<int>());
+                reinterpret_cast<const long long*>(pend_ptrs->t.data_ptr<int64_t>()), lens->t.data_ptr<int>(), fp8);
         cudaError_t st = cudaGetLastError();
         if (st != cudaSuccess) {
             set_err(std::string("smile_mla_decode_append: CUDA error: ") + cudaGetErrorString(st));
@@ -1755,7 +1914,7 @@ extern "C" ST_Tensor smile_mla_decode_topk(ST_Tensor scores, ST_Tensor lens, lon
 }
 
 static ST_Tensor mla_attend_launch(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor idx, ST_Tensor lens, long long top_pools,
-                                   double scale, const char* name) {
+                                   double scale, int fp8, const char* name) {
     try {
         smile_torch_clear_error();
         std::string err;
@@ -1778,14 +1937,19 @@ static ST_Tensor mla_attend_launch(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor
         const size_t smem = (size_t) (hpb * kAttnMaxW + kAttnMaxW) * sizeof(float);
         // the opt-in to more than 48 KB of dynamic shared memory is a property of the function on each device
         static std::mutex configure_mutex;
-        static bool configured[3][64] = {{false}};
-        const int variant = hpb == 4 ? 0 : (hpb == 2 ? 1 : 2);
+        static bool configured[6][64] = {{false}};
+        const int variant = (hpb == 4 ? 0 : (hpb == 2 ? 1 : 2)) + (fp8 ? 3 : 0);
         {
             std::lock_guard<std::mutex> lock(configure_mutex);
             if (dev >= 0 && dev < 64 && !configured[variant][dev]) {
-                cudaError_t attr = hpb == 4 ? cudaFuncSetAttribute(mla_attend_kernel<4>, cudaFuncAttributeMaxDynamicSharedMemorySize, (int) smem)
-                        : hpb == 2 ? cudaFuncSetAttribute(mla_attend_kernel<2>, cudaFuncAttributeMaxDynamicSharedMemorySize, (int) smem)
-                        : cudaFuncSetAttribute(mla_attend_kernel<1>, cudaFuncAttributeMaxDynamicSharedMemorySize, (int) smem);
+                const int sz = (int) smem;
+                cudaError_t attr = fp8
+                        ? (hpb == 4 ? cudaFuncSetAttribute(mla_attend_kernel<4, true>, cudaFuncAttributeMaxDynamicSharedMemorySize, sz)
+                           : hpb == 2 ? cudaFuncSetAttribute(mla_attend_kernel<2, true>, cudaFuncAttributeMaxDynamicSharedMemorySize, sz)
+                           : cudaFuncSetAttribute(mla_attend_kernel<1, true>, cudaFuncAttributeMaxDynamicSharedMemorySize, sz))
+                        : (hpb == 4 ? cudaFuncSetAttribute(mla_attend_kernel<4, false>, cudaFuncAttributeMaxDynamicSharedMemorySize, sz)
+                           : hpb == 2 ? cudaFuncSetAttribute(mla_attend_kernel<2, false>, cudaFuncAttributeMaxDynamicSharedMemorySize, sz)
+                           : cudaFuncSetAttribute(mla_attend_kernel<1, false>, cudaFuncAttributeMaxDynamicSharedMemorySize, sz));
                 if (attr != cudaSuccess) {
                     set_err(std::string(name) + ": cannot raise the shared memory limit: " + cudaGetErrorString(attr));
                     return nullptr;
@@ -1798,13 +1962,16 @@ static ST_Tensor mla_attend_launch(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor
         const long long* lp = reinterpret_cast<const long long*>(lat_ptrs->t.data_ptr<int64_t>());
         const int* ln = lens == nullptr ? nullptr : lens->t.data_ptr<int>();
         cudaStream_t stream = at::cuda::getCurrentCUDAStream(dev);
-        if (hpb == 4) {
-            mla_attend_kernel<4><<<grid, 256, smem, stream>>>(q, lp, idx->t.data_ptr<int>(), ln, (int) top_pools, (int) W, (int) H, (float) scale, out.data_ptr<float>());
-        } else if (hpb == 2) {
-            mla_attend_kernel<2><<<grid, 256, smem, stream>>>(q, lp, idx->t.data_ptr<int>(), ln, (int) top_pools, (int) W, (int) H, (float) scale, out.data_ptr<float>());
+        const int* ip = idx->t.data_ptr<int>();
+        float* op = out.data_ptr<float>();
+#define ATTEND_LAUNCH(H, F) mla_attend_kernel<H, F><<<grid, 256, smem, stream>>>(q, lp, ip, ln, (int) top_pools, (int) W, (int) H_, (float) scale, op)
+        const int H_ = (int) H;
+        if (fp8) {
+            if (hpb == 4) { ATTEND_LAUNCH(4, true); } else if (hpb == 2) { ATTEND_LAUNCH(2, true); } else { ATTEND_LAUNCH(1, true); }
         } else {
-            mla_attend_kernel<1><<<grid, 256, smem, stream>>>(q, lp, idx->t.data_ptr<int>(), ln, (int) top_pools, (int) W, (int) H, (float) scale, out.data_ptr<float>());
+            if (hpb == 4) { ATTEND_LAUNCH(4, false); } else if (hpb == 2) { ATTEND_LAUNCH(2, false); } else { ATTEND_LAUNCH(1, false); }
         }
+#undef ATTEND_LAUNCH
         cudaError_t st = cudaGetLastError();
         if (st != cudaSuccess) {
             set_err(std::string(name) + ": CUDA error: " + cudaGetErrorString(st));
@@ -1818,10 +1985,10 @@ static ST_Tensor mla_attend_launch(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor
 }
 
 extern "C" ST_Tensor smile_mla_decode_attend(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor idx, double scale) {
-    return mla_attend_launch(qabs, lat_ptrs, idx, nullptr, 0, scale, "smile_mla_decode_attend");
+    return mla_attend_launch(qabs, lat_ptrs, idx, nullptr, 0, scale, 0, "smile_mla_decode_attend");
 }
 
 extern "C" ST_Tensor smile_mla_decode_attend2(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor idx, ST_Tensor lens,
-                                              long long top_pools, double scale) {
-    return mla_attend_launch(qabs, lat_ptrs, idx, lens, top_pools, scale, "smile_mla_decode_attend2");
+                                              long long top_pools, double scale, int fp8) {
+    return mla_attend_launch(qabs, lat_ptrs, idx, lens, top_pools, scale, fp8, "smile_mla_decode_attend2");
 }
