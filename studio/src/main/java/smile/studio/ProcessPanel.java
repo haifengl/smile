@@ -21,6 +21,7 @@ import java.awt.BorderLayout;
 import java.awt.Font;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
@@ -40,10 +41,7 @@ public class ProcessPanel extends JPanel {
     private static final int TRUNCATE_BATCH = 100;
     private final JTextArea output = new JTextArea();
     private final int scrollback;
-    /** Guards one-time registration of the {@code process-panel-shutdown} hook. */
-    private final java.util.concurrent.atomic.AtomicBoolean shutdownHookRegistered =
-            new java.util.concurrent.atomic.AtomicBoolean(false);
-    private Process process;
+    private final AtomicReference<Process> process = new AtomicReference<>();
 
     /**
      * Constructor.
@@ -71,20 +69,13 @@ public class ProcessPanel extends JPanel {
      * @param command a string array containing the program and its arguments.
      */
     public void start(String... command) {
-        // Clear previous output
-        output.setText("");
+        // Clear previous output on the EDT.
+        setMessage("");
 
         try {
-            process = OS.exec(Arrays.asList(command), this::appendLine);
-
-            // Register the hook once per panel, not once per start: a restart-heavy
-            // service would otherwise accumulate a hook (and the panel it pins) on
-            // every cycle.
-            if (shutdownHookRegistered.compareAndSet(false, true)) {
-                Runtime.getRuntime().addShutdownHook(new Thread(this::stop, "process-panel-shutdown"));
-            }
+            process.set(OS.exec(Arrays.asList(command), this::appendLine));
         } catch (IOException ex) {
-            output.append("Failed to start process: " + ex.getMessage() + "\n");
+            appendLine("Failed to start process: " + ex.getMessage());
         }
     }
 
@@ -130,8 +121,7 @@ public class ProcessPanel extends JPanel {
      * Stops the underlying process and any descendant processes.
      */
     public void stop() {
-        Process p = process;
-        process = null;
+        Process p = process.getAndSet(null);
         if (p != null) {
             p.descendants().forEach(ProcessHandle::destroy);
             p.destroy();
@@ -154,7 +144,7 @@ public class ProcessPanel extends JPanel {
      * @return the process.
      */
     public Process getProcess() {
-        return process;
+        return process.get();
     }
 
     /**

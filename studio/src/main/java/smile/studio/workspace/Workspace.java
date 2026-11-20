@@ -28,6 +28,8 @@ import java.nio.file.*;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.IntConsumer;
 import com.formdev.flatlaf.util.SystemFileChooser;
 import ioa.agent.Agent;
@@ -136,12 +138,12 @@ public class Workspace extends JSplitPane {
     /**
      * The opened files, notebooks and plain text alike.
      */
-    private final List<OpenFile> openFiles = new ArrayList<>();
+    private final List<OpenFile> openFiles = new CopyOnWriteArrayList<>();
     /**
      * Index from absolute, normalized path string to the open {@link OpenFile},
      * enabling O(1) lookup in {@link #handleFileChanged} and {@link #openFile(Path)}.
      */
-    private final Map<String, OpenFile> openFileIndex = new HashMap<>();
+    private final Map<String, OpenFile> openFileIndex = new ConcurrentHashMap<>();
     /**
      * The file explorer of current working directory.
      */
@@ -1114,17 +1116,30 @@ public class Workspace extends JSplitPane {
     }
 
     /**
+     * Prompts to save every unsaved open file without closing tabs or kernels.
+     * Call this on the Swing EDT during Phase 1 of application exit so that
+     * cancelling on any file leaves the entire workspace intact.
+     *
+     * @return {@code true} if every file was saved or explicitly discarded;
+     *         {@code false} if the user cancelled.
+     */
+    public boolean confirmAndSaveAll() {
+        for (OpenFile openFile : List.copyOf(openFiles)) {
+            if (!confirmAndSave(openFile)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
      * Closes a file with prompt to save if there are unsaved changes.
      *
      * @param openFile the file to close.
      * @return true if the file is closed, false if the close operation is canceled.
      */
     public boolean closeFile(OpenFile openFile) {
-        boolean confirmed = switch (confirmSave(openFile)) {
-            case JOptionPane.YES_OPTION -> saveFile(openFile, false);
-            case JOptionPane.NO_OPTION -> true;
-            default -> false;
-        };
+        boolean confirmed = confirmAndSave(openFile);
 
         if (confirmed) {
             // Shuts down the execution engines and frees resources.
@@ -1135,6 +1150,20 @@ public class Workspace extends JSplitPane {
             fileWatcher.removeFile(absPath);
         }
         return confirmed;
+    }
+
+    /**
+     * Prompts the user to save {@code openFile} if it has unsaved changes.
+     *
+     * @param openFile the file to check.
+     * @return {@code true} to proceed, {@code false} if cancelled or save failed.
+     */
+    private boolean confirmAndSave(OpenFile openFile) {
+        return switch (confirmSave(openFile)) {
+            case JOptionPane.YES_OPTION -> saveFile(openFile, false);
+            case JOptionPane.NO_OPTION -> true;
+            default -> false;
+        };
     }
 
     /**
@@ -1325,10 +1354,22 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Shuts down the file-change watcher.  Should be called when the
-     * workspace is being disposed (e.g. application shutdown).
+     * Shuts down the auto-saver, file-change watcher, and all remaining open
+     * files (including notebook kernels). Safe to invoke off the Swing EDT
+     * during Phase 2 exit or from a JVM shutdown hook.
      */
     public void shutdown() {
+        autoSaver.stop();
+        List<OpenFile> remaining = List.copyOf(openFiles);
+        openFiles.clear();
+        openFileIndex.clear();
+        for (OpenFile openFile : remaining) {
+            try {
+                openFile.close();
+            } catch (Exception ex) {
+                logger.warn("Failed to close {}: {}", openFile.getFile(), ex.getMessage());
+            }
+        }
         fileWatcher.shutdown();
     }
 }
