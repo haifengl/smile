@@ -272,7 +272,7 @@ public final class GlmModel implements AutoCloseable {
                     for (long d : t.shape()) {
                         n *= d;
                     }
-                    b += n * (t.dtype() == smile.deep.tensor.ScalarType.Float ? 4 : 2);
+                    b += n * (t.dtype() == smile.deep.tensor.ScalarType.Float ? 4 : t.dtype() == smile.deep.tensor.ScalarType.UInt8 ? 1 : 2);
                 }
             }
             this.bytes = b;

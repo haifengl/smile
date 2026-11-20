@@ -457,7 +457,13 @@ public final class Native {
         static final MethodHandle MLA_ATTEND2 = smile_torch_h.SYMBOL_LOOKUP.find("smile_mla_decode_attend2")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-                        ValueLayout.JAVA_LONG, ValueLayout.JAVA_DOUBLE)))
+                        ValueLayout.JAVA_LONG, ValueLayout.JAVA_DOUBLE, ValueLayout.JAVA_INT)))
+                .orElse(null);
+        static final MethodHandle LATENT_QUANTIZE = smile_torch_h.SYMBOL_LOOKUP.find("smile_glm_latent_quantize")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
+        static final MethodHandle LATENT_GATHER = smile_torch_h.SYMBOL_LOOKUP.find("smile_glm_latent_gather")
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
                 .orElse(null);
         static final MethodHandle AR_CREATE = smile_torch_h.SYMBOL_LOOKUP.find("smile_ar_create")
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT, ValueLayout.ADDRESS)))
@@ -492,7 +498,7 @@ public final class Native {
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-                        ValueLayout.JAVA_LONG)))
+                        ValueLayout.JAVA_LONG, ValueLayout.JAVA_INT)))
                 .orElse(null);
         static final java.util.Optional<MemorySegment> MLA_WCOMMIT_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_mla_window_commit");
         static final MethodHandle MLA_WCOMMIT = MLA_WCOMMIT_SYM
@@ -511,7 +517,8 @@ public final class Native {
         static final MethodHandle MLA_APPEND = MLA_APPEND_SYM
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.JAVA_INT,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
-                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS, ValueLayout.ADDRESS,
+                        ValueLayout.JAVA_INT)))
                 .orElse(null);
         static final java.util.Optional<MemorySegment> MLA_SCORES_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_mla_decode_scores");
         static final MethodHandle MLA_SCORES = MLA_SCORES_SYM
@@ -1741,8 +1748,17 @@ public final class Native {
      */
     public static void mlaWindowAppend(Tensor latNew, Tensor keyNew, Tensor gateNew, Tensor ape, Tensor latPtrs,
                                        Tensor poolPtrs, Tensor pendPtrs, Tensor lens, long rows) {
+        mlaWindowAppend(latNew, keyNew, gateNew, ape, latPtrs, poolPtrs, pendPtrs, lens, rows, false);
+    }
+
+    /**
+     * As {@link #mlaWindowAppend(Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, Tensor, long)}; with {@code fp8} the
+     * latent rows are quantized into the 528-byte fp8 cache records.
+     */
+    public static void mlaWindowAppend(Tensor latNew, Tensor keyNew, Tensor gateNew, Tensor ape, Tensor latPtrs,
+                                       Tensor poolPtrs, Tensor pendPtrs, Tensor lens, long rows, boolean fp8) {
         windowCall(Bindings.MLA_WAPPEND, "smile_mla_window_append", latNew.handle(), keyNew.handle(), gateNew.handle(),
-                ape.handle(), latPtrs.handle(), poolPtrs.handle(), pendPtrs.handle(), lens.handle(), rows);
+                ape.handle(), latPtrs.handle(), poolPtrs.handle(), pendPtrs.handle(), lens.handle(), rows, fp8 ? 1 : 0);
     }
 
     /**
@@ -1793,10 +1809,16 @@ public final class Native {
      */
     public static void mlaDecodeAppend(Tensor latNew, Tensor keyNew, Tensor gateNew, Tensor ape, Tensor latPtrs,
                                        Tensor poolPtrs, Tensor pendPtrs, Tensor lens) {
+        mlaDecodeAppend(latNew, keyNew, gateNew, ape, latPtrs, poolPtrs, pendPtrs, lens, false);
+    }
+
+    /** As the call without {@code fp8}; with it the latent row is quantized into the 528-byte fp8 cache record. */
+    public static void mlaDecodeAppend(Tensor latNew, Tensor keyNew, Tensor gateNew, Tensor ape, Tensor latPtrs,
+                                       Tensor poolPtrs, Tensor pendPtrs, Tensor lens, boolean fp8) {
         int rc;
         try {
             rc = (int) Bindings.MLA_APPEND.invokeExact(latNew.handle(), keyNew.handle(), gateNew.handle(), ape.handle(),
-                    latPtrs.handle(), poolPtrs.handle(), pendPtrs.handle(), lens.handle());
+                    latPtrs.handle(), poolPtrs.handle(), pendPtrs.handle(), lens.handle(), fp8 ? 1 : 0);
         } catch (Throwable t) {
             throw new RuntimeException("smile_mla_decode_append failed: " + t.getMessage(), t);
         }
@@ -1843,11 +1865,48 @@ public final class Native {
      * @return float32 {@code [B, heads, 512]}.
      */
     public static Tensor mlaDecodeAttend(Tensor qabs, Tensor latPtrs, Tensor idx, Tensor lens, long topPools, double scale) {
+        return mlaDecodeAttend(qabs, latPtrs, idx, lens, topPools, scale, false);
+    }
+
+    /**
+     * Latent attention reading the fp8 cache when {@code fp8} ({@code lens} may be {@code null}: the whole id width is processed).
+     */
+    public static Tensor mlaDecodeAttend(Tensor qabs, Tensor latPtrs, Tensor idx, Tensor lens, long topPools, double scale,
+                                         boolean fp8) {
         if (Bindings.MLA_ATTEND2 == null) {
+            if (fp8) {
+                throw new IllegalStateException("the fp8 latent cache needs smile_mla_decode_attend2 (rebuild libsmile_torch)");
+            }
             return mlaDecodeAttend(qabs, latPtrs, idx, scale);
         }
         return mlaResult(Bindings.MLA_ATTEND2, "smile_mla_decode_attend2", qabs.handle(), latPtrs.handle(), idx.handle(),
-                lens.handle(), topPools, scale);
+                lens == null ? MemorySegment.NULL : lens.handle(), topPools, scale, fp8 ? 1 : 0);
+    }
+
+    /** Whether the fp8 latent cache kernels are available. */
+    public static boolean glmLatentFp8Available() {
+        return Bindings.LATENT_QUANTIZE != null && Bindings.LATENT_GATHER != null && Bindings.MLA_ATTEND2 != null;
+    }
+
+    /**
+     * Quantizes float32 rows {@code [n, 512]} into the fp8 cache records {@code uint8 [n, 528]} (512 e4m3 values and four
+     * float32 scales).
+     */
+    public static void glmLatentQuantize(Tensor src, Tensor dst) {
+        int rc;
+        try {
+            rc = (int) Bindings.LATENT_QUANTIZE.invokeExact(src.handle(), dst.handle());
+        } catch (Throwable t) {
+            throw new RuntimeException("smile_glm_latent_quantize failed: " + t.getMessage(), t);
+        }
+        if (rc != 0) {
+            throw new RuntimeException("smile_glm_latent_quantize: " + lastError());
+        }
+    }
+
+    /** Dequantizes rows {@code ids} (int64 {@code [n]}) of an fp8 cache {@code uint8 [T, 528]} into bfloat16 {@code [n, 512]}. */
+    public static Tensor glmLatentGather(Tensor cache, Tensor ids) {
+        return mlaResult(Bindings.LATENT_GATHER, "smile_glm_latent_gather", cache.handle(), ids.handle());
     }
 
     /** @see #mlaDecodeAttend(Tensor, Tensor, Tensor, Tensor, long, double) */
