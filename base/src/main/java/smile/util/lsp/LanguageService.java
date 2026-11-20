@@ -66,8 +66,12 @@ public class LanguageService implements AutoCloseable {
 
     /** Default timeout for individual LSP request futures (seconds). */
     private static final int REQUEST_TIMEOUT_SECONDS = 30;
+    /** Maximum seconds to wait for an LSP {@code shutdown} response. */
+    private static final int SHUTDOWN_TIMEOUT_SECONDS = 3;
+    /** Maximum seconds to wait for the language server process to exit after destroy. */
+    private static final int PROCESS_EXIT_TIMEOUT_SECONDS = 2;
     /** Available language services, keyed by language ID. */
-    private static final Map<String, LanguageService> services = new HashMap<>();
+    private static final Map<String, LanguageService> services = new ConcurrentHashMap<>();
 
     /** The command used to launch the language server. */
     private final List<String> command;
@@ -137,6 +141,21 @@ public class LanguageService implements AutoCloseable {
      */
     public static void put(String lang, LanguageService service) {
         services.put(lang, service);
+    }
+
+    /**
+     * Closes and unregisters all language services registered via {@link #put}.
+     */
+    public static void closeAll() {
+        List<LanguageService> active = List.copyOf(services.values());
+        services.clear();
+        for (LanguageService service : active) {
+            try {
+                service.close();
+            } catch (Exception ex) {
+                logger.warn("Error closing language server: {}", ex.getMessage());
+            }
+        }
     }
 
     /**
@@ -340,22 +359,33 @@ public class LanguageService implements AutoCloseable {
      */
     @Override
     public synchronized void close() {
-        if (!initialized.get()) return;
-        initialized.set(false);
+        if (!initialized.getAndSet(false)) return;
+        int shutdownTimeout = Math.min(timeoutSeconds, SHUTDOWN_TIMEOUT_SECONDS);
         try {
-            server.shutdown().get(timeoutSeconds, TimeUnit.SECONDS);
+            server.shutdown().get(shutdownTimeout, TimeUnit.SECONDS);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            logger.warn("Interrupted waiting for LSP shutdown response", ex);
         } catch (Exception ex) {
             logger.warn("LSP shutdown request failed", ex);
         }
-        server.exit();
+        try {
+            server.exit();
+        } catch (Exception ex) {
+            logger.debug("LSP exit notification failed: {}", ex.getMessage());
+        }
         if (serverProcess != null && serverProcess.isAlive()) {
+            serverProcess.descendants().forEach(ProcessHandle::destroy);
             serverProcess.destroy();
             try {
-                if (!serverProcess.waitFor(10, TimeUnit.SECONDS)) {
+                if (!serverProcess.waitFor(PROCESS_EXIT_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
+                    serverProcess.descendants().forEach(ProcessHandle::destroyForcibly);
                     serverProcess.destroyForcibly();
                 }
             } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
                 logger.warn("Interrupted while waiting for language server process to exit", ex);
+                serverProcess.descendants().forEach(ProcessHandle::destroyForcibly);
                 serverProcess.destroyForcibly();
             }
         }

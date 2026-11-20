@@ -24,7 +24,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import javax.swing.SwingUtilities;
 import smile.shell.Serve;
@@ -66,9 +65,6 @@ public final class ServeManager {
     private static final long READY_POLL_MS = 500L;
 
     private static final ServeManager INSTANCE = new ServeManager();
-
-    /** Guards one-time registration of the {@code serve-manager-shutdown} hook. */
-    private final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
 
     private final ProcessPanel panel = new ProcessPanel(1000);
     private final List<Consumer<ServiceEvent>> startListeners = new CopyOnWriteArrayList<>();
@@ -391,13 +387,6 @@ public final class ServeManager {
         attached = false;
         ServePidFile.write(child);
         notifyStarted(false);
-
-        // Register the shutdown hook once for the singleton's lifetime. The hook
-        // calls stop(), which is idempotent and reads the current process field,
-        // so a single hook covers every start/restart cycle.
-        if (shutdownHookRegistered.compareAndSet(false, true)) {
-            Runtime.getRuntime().addShutdownHook(new Thread(this::stop, "serve-manager-shutdown"));
-        }
         return child;
     }
 

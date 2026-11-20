@@ -58,7 +58,6 @@ public final class HubManager {
 
     private static final HubManager INSTANCE = new HubManager();
 
-    private final AtomicBoolean shutdownHookRegistered = new AtomicBoolean(false);
     private final ProcessPanel panel = new ProcessPanel(1000);
     private final List<Consumer<ProcessPanel>> startListeners = new CopyOnWriteArrayList<>();
     private final List<Consumer<ProcessPanel>> stopListeners = new CopyOnWriteArrayList<>();
@@ -67,6 +66,7 @@ public final class HubManager {
     private final AtomicBoolean sseRunning = new AtomicBoolean(false);
     private volatile Thread sseThread;
 
+    // ---- State guarded by `this`. Never perform network or blocking I/O while holding it. ----
     private Process process;
     private String host;
     private int port;
@@ -74,6 +74,8 @@ public final class HubManager {
     private HubClient client;
     private volatile boolean attached;
     private volatile boolean stoppedByUser;
+    /** Incremented by start() and stop() to invalidate in-flight starts and probes. */
+    private long generation;
 
     private HubManager() {
     }
@@ -87,11 +89,15 @@ public final class HubManager {
      * Returns {@code true} when either the managed child process is alive or
      * a remote/attached Agent Hub responds ready at {@link #baseUrl()}.
      */
-    public synchronized boolean isRunning() {
-        if (process != null && process.isAlive()) {
-            return true;
+    public boolean isRunning() {
+        HubClient c;
+        synchronized (this) {
+            if (process != null && process.isAlive()) {
+                return true;
+            }
+            c = client;
         }
-        return client != null && client.isReady();
+        return c != null && c.isReady();
     }
 
     /** Returns the base URL of the connected Agent Hub, or {@code null} when not connected. */
@@ -319,14 +325,24 @@ public final class HubManager {
      * Attaches to an already-running Agent Hub (if not explicitly stopped by the user)
      * and notifies start listeners so the {@code Agent Hub} tab opens in the workspace.
      */
-    public synchronized void attachIfRunning() {
-        if (stoppedByUser || attached || (process != null && process.isAlive())) {
-            return;
+    public void attachIfRunning() {
+        HubClient c;
+        long ticket;
+        synchronized (this) {
+            if (stoppedByUser || attached || (process != null && process.isAlive())) {
+                return;
+            }
+            c = client();
+            ticket = generation;
         }
-        HubClient c = client();
         if (c != null && c.isReady()) {
+            synchronized (this) {
+                if (ticket != generation || stoppedByUser || attached || (process != null && process.isAlive())) {
+                    return;
+                }
+                attached = true;
+            }
             logger.info("Attached to running Agent Hub at {}", c.baseUrl());
-            attached = true;
             populateAttachedPanel();
             notifyStarted();
             syncTrackedProjects();
@@ -341,6 +357,18 @@ public final class HubManager {
         if (sseRunning.compareAndSet(false, true)) {
             Thread t = Thread.ofVirtual().name("hub-sse-listener").start(this::runEventStreamLoop);
             this.sseThread = t;
+        }
+    }
+
+    /**
+     * Stops the background SSE subscription loop without terminating the Agent Hub process.
+     */
+    public void stopEventStream() {
+        sseRunning.set(false);
+        Thread t = this.sseThread;
+        this.sseThread = null;
+        if (t != null) {
+            t.interrupt();
         }
     }
 
@@ -370,7 +398,7 @@ public final class HubManager {
     /**
      * Starts or attaches to the Agent Hub using the settings in {@code studio.json}.
      */
-    public synchronized boolean start() {
+    public boolean start() {
         var cfg = StudioConfig.agentHub();
         return start(cfg.host(), cfg.port(), cfg.adminToken());
     }
@@ -378,39 +406,67 @@ public final class HubManager {
     /**
      * Starts the local Agent Hub (or attaches if one is already running on {@code host:port}).
      *
+     * <p>Never holds the manager monitor across network probes or {@link #awaitReady} so
+     * concurrent {@link #stop()} calls take effect immediately.
+     *
      * @param host       the bind or target host.
      * @param port       the HTTP port.
      * @param adminToken the admin bearer token.
      * @return {@code true} when the service is running and ready.
      */
-    public synchronized boolean start(String host, int port, String adminToken) {
-        String prevHost = this.host;
-        int prevPort = this.port;
-        String prevToken = this.adminToken;
-        this.stoppedByUser = false;
-        this.host = (host == null || host.isBlank()) ? StudioConfig.DEFAULT_HOST : host.trim();
-        this.port = port > 0 ? port : StudioConfig.DEFAULT_HUB_PORT;
-        this.adminToken = (adminToken == null || adminToken.isBlank())
+    public boolean start(String host, int port, String adminToken) {
+        String targetHost = (host == null || host.isBlank()) ? StudioConfig.DEFAULT_HOST : host.trim();
+        int targetPort = port > 0 ? port : StudioConfig.DEFAULT_HUB_PORT;
+        String targetToken = (adminToken == null || adminToken.isBlank())
                 ? StudioConfig.DEFAULT_HUB_ADMIN_TOKEN
                 : adminToken.trim();
-        this.client = new HubClient(this.host, this.port, this.adminToken);
+        HubClient probe = new HubClient(targetHost, targetPort, targetToken);
+
+        boolean sameRunningChild;
+        boolean mustStopExisting;
+        long ticket;
+        synchronized (this) {
+            boolean childAlive = process != null && process.isAlive();
+            sameRunningChild = childAlive
+                    && targetHost.equals(this.host)
+                    && targetPort == this.port
+                    && targetToken.equals(this.adminToken);
+            mustStopExisting = childAlive && !sameRunningChild;
+            this.stoppedByUser = false;
+            this.host = targetHost;
+            this.port = targetPort;
+            this.adminToken = targetToken;
+            this.client = probe;
+            ticket = ++generation;
+        }
 
         // If our own managed local child process is already running on a different
         // host/port/token, stop and restart it; otherwise, if an external Agent Hub
         // is already reachable on host:port (e.g., started via `smile hub` or running
         // on a remote host), attach to it directly.
-        if (process != null && process.isAlive()) {
-            if (this.host.equals(prevHost) && this.port == prevPort && this.adminToken.equals(prevToken) && this.client.isReady()) {
-                notifyStarted();
-                syncTrackedProjects();
-                return true;
-            }
+        if (sameRunningChild && probe.isReady()) {
+            notifyStarted();
+            syncTrackedProjects();
+            return true;
+        }
+        if (mustStopExisting) {
             stop();
-            this.stoppedByUser = false;
-            this.client = new HubClient(this.host, this.port, this.adminToken);
-        } else if (this.client.isReady()) {
-            logger.info("Attached to running Agent Hub at {}", this.client.baseUrl());
-            attached = true;
+            synchronized (this) {
+                this.stoppedByUser = false;
+                this.host = targetHost;
+                this.port = targetPort;
+                this.adminToken = targetToken;
+                this.client = probe;
+                ticket = ++generation;
+            }
+        } else if (!sameRunningChild && probe.isReady()) {
+            synchronized (this) {
+                if (ticket != generation || stoppedByUser) {
+                    return false;
+                }
+                attached = true;
+            }
+            logger.info("Attached to running Agent Hub at {}", probe.baseUrl());
             populateAttachedPanel();
             notifyStarted();
             syncTrackedProjects();
@@ -434,38 +490,38 @@ public final class HubManager {
         }
 
         Path logFile = botWorkspace.resolve("hub.log");
-        panel.start(Serve.javaExecutable(),
-                "--add-opens", "java.base/java.lang=ALL-UNNAMED",
-                "--add-opens", "java.base/java.nio=ALL-UNNAMED",
-                "--enable-native-access", "ALL-UNNAMED",
-                "-Dsmile.home=" + homePath,
-                "-Dquarkus.profile=local",
-                "-Dhub.agent.workspace=" + botWorkspace,
-                "-Dhub.admin.token=" + this.adminToken,
-                "-Dquarkus.http.host=" + this.host,
-                "-Dquarkus.http.port=" + this.port,
-                "-Dquarkus.log.file.enable=true",
-                "-Dquarkus.log.file.path=" + logFile,
-                "-jar", jar.toString());
-        process = panel.getProcess();
-        attached = false;
-        writePidFile(botWorkspace.resolve("hub.pid"), process);
+        Process child;
+        synchronized (this) {
+            if (ticket != generation || stoppedByUser) {
+                return false;
+            }
+            panel.start(Serve.javaExecutable(),
+                    "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+                    "--add-opens", "java.base/java.nio=ALL-UNNAMED",
+                    "--enable-native-access", "ALL-UNNAMED",
+                    "-Dsmile.home=" + homePath,
+                    "-Dquarkus.profile=local",
+                    "-Dhub.agent.workspace=" + botWorkspace,
+                    "-Dhub.admin.token=" + targetToken,
+                    "-Dquarkus.http.host=" + targetHost,
+                    "-Dquarkus.http.port=" + targetPort,
+                    "-Dquarkus.log.file.enable=true",
+                    "-Dquarkus.log.file.path=" + logFile,
+                    "-jar", jar.toString());
+            child = panel.getProcess();
+            process = child;
+            attached = false;
+            writePidFile(botWorkspace.resolve("hub.pid"), child);
+        }
         notifyStarted();
 
-        if (shutdownHookRegistered.compareAndSet(false, true)) {
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                if (!StudioConfig.agentHub().keepAliveOnExit()) {
-                    stop();
-                }
-            }, "hub-manager-shutdown"));
-        }
-
-        boolean ready = awaitReady();
-        if (ready) {
+        boolean ready = awaitReady(child, probe, ticket);
+        if (ready && isGenerationCurrent(ticket)) {
             syncTrackedProjects();
             ensureEventStreamRunning();
+            return true;
         }
-        return ready;
+        return false;
     }
 
     /**
@@ -523,14 +579,21 @@ public final class HubManager {
         }
     }
 
-    private boolean awaitReady() {
+    private synchronized boolean isGenerationCurrent(long ticket) {
+        return ticket == generation && !stoppedByUser;
+    }
+
+    private boolean awaitReady(Process child, HubClient probe, long ticket) {
         long deadline = System.currentTimeMillis() + READY_TIMEOUT.toMillis();
         while (System.currentTimeMillis() < deadline) {
-            if (process == null || !process.isAlive()) {
+            if (!isGenerationCurrent(ticket)) {
+                return false;
+            }
+            if (child == null || !child.isAlive()) {
                 logger.error("Agent Hub exited before becoming ready");
                 return false;
             }
-            if (client.isReady()) {
+            if (probe.isReady()) {
                 return true;
             }
             try {
@@ -544,19 +607,30 @@ public final class HubManager {
         return false;
     }
 
-    /** Stops the managed local Agent Hub process. */
-    public synchronized void stop() {
-        stoppedByUser = true;
-        boolean wasRunning = process != null || panel.getProcess() != null || attached;
-        attached = false;
-        panel.stop();
-        if (process != null) {
-            process.descendants().forEach(ProcessHandle::destroy);
-            process.destroy();
-        } else if (isLocalHost(this.host) && this.port > 0) {
-            wasRunning |= stopLocalHubProcess(this.port);
+    /** Stops the managed local Agent Hub process and the background SSE listener. */
+    public void stop() {
+        Process child;
+        String stopHost;
+        int stopPort;
+        boolean wasRunning;
+        synchronized (this) {
+            stoppedByUser = true;
+            generation++;
+            wasRunning = process != null || panel.getProcess() != null || attached;
+            attached = false;
+            child = process;
+            process = null;
+            stopHost = this.host;
+            stopPort = this.port;
         }
-        process = null;
+        stopEventStream();
+        panel.stop();
+        if (child != null) {
+            child.descendants().forEach(ProcessHandle::destroy);
+            child.destroy();
+        } else if (isLocalHost(stopHost) && stopPort > 0) {
+            wasRunning |= stopLocalHubProcess(stopPort);
+        }
         deletePidFile();
         if (wasRunning) {
             notifyStopped();

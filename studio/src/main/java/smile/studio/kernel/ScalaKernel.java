@@ -234,6 +234,7 @@ public class ScalaKernel extends Kernel<String> {
             pump = null;
         }
         if (process != null) {
+            process.descendants().forEach(ProcessHandle::destroy);
             process.destroy();
             process = null;
         }

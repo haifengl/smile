@@ -53,6 +53,7 @@ public class PythonKernel extends Kernel<String> {
     @Override
     public synchronized void close() {
         if (process != null) {
+            process.descendants().forEach(ProcessHandle::destroy);
             process.destroy();
             writer.close();
             process = null;

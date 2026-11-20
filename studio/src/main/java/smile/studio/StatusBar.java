@@ -62,6 +62,8 @@ public class StatusBar extends JPanel {
     private final MemoryMXBean memory = ManagementFactory.getMemoryMXBean();
     /** The timer to reset status message. */
     private final Timer timer = new Timer(60000, e -> status.setText(READY));
+    /** The timer to refresh CPU/Memory usage. */
+    private final Timer refresher = createRefresher();
 
     /**
      * Constructor.
@@ -117,9 +119,16 @@ public class StatusBar extends JPanel {
         add(eastPane, BorderLayout.EAST);
 
         // Timer to refresh CPU/Memory usage
-        var refresher = createRefresher();
         refresher.setInitialDelay(5000);
         refresher.start();
+    }
+
+    /**
+     * Stops the status bar's background Swing timers.
+     */
+    public void stop() {
+        refresher.stop();
+        timer.stop();
     }
 
     /**

@@ -26,8 +26,6 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * Script execution engine.
@@ -38,7 +36,6 @@ public class ScriptKernel extends Kernel<Object> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ScriptKernel.class);
     private final PrintStream printer = new PrintStream(console, true, StandardCharsets.UTF_8);
     private final PrintWriter writer = new PrintWriter(console, true, StandardCharsets.UTF_8);
-    private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private final String name;
     private ScriptEngine engine;
 
