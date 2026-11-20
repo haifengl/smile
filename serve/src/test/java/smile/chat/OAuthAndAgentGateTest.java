@@ -8,13 +8,19 @@
  */
 package smile.chat;
 
+import java.lang.reflect.Proxy;
 import java.net.URI;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
+import io.vertx.core.http.HttpServerRequest;
+import io.vertx.core.net.SocketAddress;
+import io.vertx.ext.web.RoutingContext;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.HttpHeaders;
 import jakarta.ws.rs.core.MediaType;
@@ -28,8 +34,10 @@ import smile.auth.AuthMeResponse;
 import smile.auth.AuthProviderKind;
 import smile.auth.GoogleOAuthService;
 import smile.auth.MicrosoftOAuthService;
+import smile.auth.OidcPrincipal;
 import smile.auth.User;
 import smile.chat.agent.ChatAgentBridge;
+import smile.chat.agent.InternalAgentAuth;
 import smile.chat.agent.NoOpChatAgentBridge;
 import smile.llm.ChatCompletion;
 import smile.llm.Message;
@@ -86,6 +94,34 @@ public class OAuthAndAgentGateTest {
         ctx.setUser(msUser, false);
         assertTrue(ctx.isLoggedIn());
         assertTrue(ctx.isOAuthUser());
+
+        // Browser OIDC session user qualifies for kirin (4-tool scoped mode)
+        User oidcUser = new User();
+        oidcUser.id = 4L;
+        oidcUser.externalId = "oidc:0123456789abcdef:carol";
+        oidcUser.email = "carol@corp.example";
+        oidcUser.displayName = "Carol";
+        oidcUser.authProvider = AuthProviderKind.OIDC;
+        OidcPrincipal browserPrincipal = new OidcPrincipal(
+                "https://idp.corp.example", "carol", oidcUser.externalId,
+                oidcUser.email, oidcUser.displayName, null, Set.of("analyst"),
+                false, 4L, Instant.now().plusSeconds(3600), false);
+        ctx.setOidcPrincipal(browserPrincipal, oidcUser);
+        assertTrue(ctx.isLoggedIn());
+        assertTrue(ctx.isOidcAuthenticated());
+        assertFalse(ctx.isBearerTokenAuth());
+        assertTrue(ctx.isOAuthUser());
+
+        // M2M / Studio Bearer JWT caller does NOT qualify for server-side kirin
+        OidcPrincipal bearerPrincipal = new OidcPrincipal(
+                "https://idp.corp.example", "svc-studio", oidcUser.externalId,
+                oidcUser.email, oidcUser.displayName, null, Set.of("smile-admin"),
+                true, null, Instant.now().plusSeconds(3600), true);
+        ctx.setOidcPrincipal(bearerPrincipal, oidcUser);
+        assertTrue(ctx.isLoggedIn());
+        assertTrue(ctx.isBearerTokenAuth());
+        assertTrue(ctx.hasAdminRole());
+        assertFalse(ctx.isOAuthUser());
     }
 
     @Test
@@ -142,9 +178,23 @@ public class OAuthAndAgentGateTest {
         authContext.setUser(googleUser, false);
         assertTrue(resource.shouldRouteToKirinAgent(normalHeaders, plainRequest));
 
-        // 4. Internal loopback hop (X-Smile-Internal-Agent: true) -> false (prevents infinite recursion)
-        HttpHeaders internalHeaders = stubHeaders("true");
-        assertFalse(resource.shouldRouteToKirinAgent(internalHeaders, plainRequest));
+        // 4. Hardened internal loopback hop:
+        //    - Spoofed bare "true" MUST NOT be treated as an internal hop
+        resource.routingContext = mockRoutingContext("127.0.0.1");
+        HttpHeaders spoofedHeaders = stubHeaders(null, "true");
+        assertFalse(resource.isInternalAgentHop(spoofedHeaders));
+        assertTrue(resource.shouldRouteToKirinAgent(spoofedHeaders, plainRequest));
+
+        //    - Valid per-process secret on remote IP MUST NOT be treated as internal hop
+        resource.routingContext = mockRoutingContext("10.0.0.99");
+        HttpHeaders validTokenHeaders = stubHeaders(InternalAgentAuth.token(), null);
+        assertFalse(resource.isInternalAgentHop(validTokenHeaders));
+        assertTrue(resource.shouldRouteToKirinAgent(validTokenHeaders, plainRequest));
+
+        //    - Valid per-process secret on loopback IS treated as internal hop (prevents recursion)
+        resource.routingContext = mockRoutingContext("127.0.0.1");
+        assertTrue(resource.isInternalAgentHop(validTokenHeaders));
+        assertFalse(resource.shouldRouteToKirinAgent(validTokenHeaders, plainRequest));
 
         // 5. Microsoft OAuth user -> true
         User msUser = new User();
@@ -242,7 +292,14 @@ public class OAuthAndAgentGateTest {
     }
 
     private static HttpHeaders stubHeaders(String internalAgentHeader) {
+        return stubHeaders(null, internalAgentHeader);
+    }
+
+    private static HttpHeaders stubHeaders(String internalTokenHeader, String internalAgentHeader) {
         MultivaluedMap<String, String> map = new MultivaluedHashMap<>();
+        if (internalTokenHeader != null) {
+            map.putSingle(InternalAgentAuth.HEADER_TOKEN, internalTokenHeader);
+        }
         if (internalAgentHeader != null) {
             map.putSingle(ChatCompletionResource.INTERNAL_AGENT_HEADER, internalAgentHeader);
         }
@@ -297,6 +354,26 @@ public class OAuthAndAgentGateTest {
                 return 0;
             }
         };
+    }
+
+    private static RoutingContext mockRoutingContext(String remoteHost) {
+        SocketAddress addr = (SocketAddress) Proxy.newProxyInstance(
+                SocketAddress.class.getClassLoader(),
+                new Class<?>[] { SocketAddress.class },
+                (proxy, method, args) -> switch (method.getName()) {
+                    case "hostAddress" -> remoteHost;
+                    case "isDomainSocket" -> false;
+                    case "isInetSocket" -> true;
+                    default -> null;
+                });
+        HttpServerRequest req = (HttpServerRequest) Proxy.newProxyInstance(
+                HttpServerRequest.class.getClassLoader(),
+                new Class<?>[] { HttpServerRequest.class },
+                (proxy, method, args) -> "remoteAddress".equals(method.getName()) ? addr : null);
+        return (RoutingContext) Proxy.newProxyInstance(
+                RoutingContext.class.getClassLoader(),
+                new Class<?>[] { RoutingContext.class },
+                (proxy, method, args) -> "request".equals(method.getName()) ? req : null);
     }
 
     private static void setField(Object target, String fieldName, Object value) throws Exception {

@@ -17,6 +17,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class UserCache {
     private final ConcurrentHashMap<Long, User> byId = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, User> byExternalId = new ConcurrentHashMap<>();
     private volatile User localMe;
 
     /**
@@ -29,6 +30,9 @@ public class UserCache {
             return;
         }
         byId.put(user.id, user);
+        if (user.externalId != null && !user.externalId.isBlank()) {
+            byExternalId.put(user.externalId, user);
+        }
         if (UserService.LOCAL_ME_EXTERNAL_ID.equals(user.externalId)) {
             localMe = user;
         }
@@ -42,6 +46,19 @@ public class UserCache {
      */
     public User getById(long id) {
         return byId.get(id);
+    }
+
+    /**
+     * Returns a cached user by external id without touching the database.
+     *
+     * @param externalId provider-namespaced external id.
+     * @return user or {@code null}.
+     */
+    public User getByExternalId(String externalId) {
+        if (externalId == null || externalId.isBlank()) {
+            return null;
+        }
+        return byExternalId.get(externalId);
     }
 
     /**

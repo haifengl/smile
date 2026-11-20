@@ -14,5 +14,6 @@ package smile.auth;
 public enum AuthProviderKind {
     LOCAL,
     GOOGLE,
-    MICROSOFT
+    MICROSOFT,
+    OIDC
 }

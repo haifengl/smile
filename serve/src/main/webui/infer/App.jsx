@@ -20,6 +20,8 @@ import Sidebar from "./Sidebar";
 import InferenceForm from "./InferenceForm";
 import ChatShell from "../chat/ChatShell";
 import CollapsiblePanel from "../shared/CollapsiblePanel";
+import { AuthProvider, useAuth } from "../chat/auth/AuthProvider";
+import SsoSignInGate from "../chat/auth/SsoSignInGate";
 import { INFER_RESUME_MODEL_KEY } from "../chat/api";
 import "./App.css";
 
@@ -30,14 +32,27 @@ function panelType(kind) {
   return "smile";
 }
 
-function App() {
+function AppInner() {
+  const {
+    loggedIn,
+    loading: authLoading,
+    ssoRequired,
+    oidcLabel,
+    authError,
+    loginWithOidc,
+  } = useAuth();
   const [models, setModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState(null);
   /** Panels kept mounted so switching models preserves chat / form state. */
   const [mountedModels, setMountedModels] = useState([]);
 
+  const blockedBySso = Boolean(!authLoading && (authError || (ssoRequired && !loggedIn)));
+
   useEffect(() => {
-    fetch("/api/v1/models")
+    if (authLoading || authError || (ssoRequired && !loggedIn)) {
+      return;
+    }
+    fetch("/api/v1/models", { credentials: "include" })
       .then((res) => (res.ok ? res.json() : { data: [] }))
       .catch(() => ({ data: [] }))
       .then((catalog) => {
@@ -52,7 +67,7 @@ function App() {
             }))
         );
       });
-  }, []);
+  }, [authLoading, authError, ssoRequired, loggedIn]);
 
   const selectModel = useCallback((model) => {
     setSelectedModel(model);
@@ -77,6 +92,22 @@ function App() {
       selectModel(model);
     }
   }, [models, selectModel]);
+
+  const handleSsoSignIn = useCallback(() => {
+    loginWithOidc({ returnTo: "/" });
+  }, [loginWithOidc]);
+
+  if (blockedBySso) {
+    return (
+      <div className="app">
+        <SsoSignInGate
+          label={oidcLabel || "SSO"}
+          error={authError}
+          onSignIn={handleSsoSignIn}
+        />
+      </div>
+    );
+  }
 
   const isChat = selectedModel?.type === "chat";
 
@@ -117,6 +148,14 @@ function App() {
         })}
       </div>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppInner />
+    </AuthProvider>
   );
 }
 
