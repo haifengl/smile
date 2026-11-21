@@ -101,7 +101,8 @@ public final class InternalAgentAuth {
 
     /**
      * Validates that a request is an authorized internal loopback hop scoped
-     * strictly to {@code POST /chat/completions} (or {@code /api/v1/chat/completions}).
+     * strictly to {@code POST /chat/completions}, {@code /v1/chat/completions},
+     * or {@code /api/v1/chat/completions}.
      *
      * @param routingContext Vert.x routing context.
      * @param method         HTTP method.
@@ -121,7 +122,9 @@ public final class InternalAgentAuth {
             return false;
         }
         String normalized = normalizePath(path);
-        if (!"/chat/completions".equals(normalized) && !"/api/v1/chat/completions".equals(normalized)) {
+        if (!"/chat/completions".equals(normalized)
+                && !"/v1/chat/completions".equals(normalized)
+                && !"/api/v1/chat/completions".equals(normalized)) {
             return false;
         }
         return isValidInternalHop(routingContext, tokenHeader, legacyHeader);

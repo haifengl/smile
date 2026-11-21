@@ -38,7 +38,7 @@ import smile.chat.blob.ClientIdentity;
  * Authentication endpoints under {@code /api/v1/auth}.
  */
 @UnlessBuildProfile("micro")
-@Path("/auth")
+@Path("/api/v1/auth")
 @RunOnVirtualThread
 @Produces(MediaType.APPLICATION_JSON)
 public class AuthResource {

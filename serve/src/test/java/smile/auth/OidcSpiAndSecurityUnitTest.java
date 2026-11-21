@@ -71,6 +71,8 @@ public class OidcSpiAndSecurityUnitTest {
         assertTrue(InternalAgentAuth.isInternalChatCompletionHop(
                 loopback, "POST", "/chat/completions", secret, null));
         assertTrue(InternalAgentAuth.isInternalChatCompletionHop(
+                loopback, "POST", "/v1/chat/completions", secret, null));
+        assertTrue(InternalAgentAuth.isInternalChatCompletionHop(
                 loopback, "POST", "/api/v1/chat/completions", null, secret));
 
         // Spoofed static "true" -> rejected even on loopback
@@ -130,9 +132,13 @@ public class OidcSpiAndSecurityUnitTest {
         assertNotNull(aborted.get());
         assertEquals(401, aborted.get().getStatus());
 
-        // 3. Valid InternalAgentAuth secret on loopback POST /chat/completions -> allowed
+        // 3. Valid InternalAgentAuth secret on loopback POST /v1/chat/completions & /chat/completions -> allowed
         aborted.set(null);
         filter.filter(mockRequest("POST", "/chat/completions",
+                Map.of(InternalAgentAuth.HEADER_TOKEN, InternalAgentAuth.token()), Map.of(), aborted));
+        assertNull(aborted.get());
+        aborted.set(null);
+        filter.filter(mockRequest("POST", "/v1/chat/completions",
                 Map.of(InternalAgentAuth.HEADER_TOKEN, InternalAgentAuth.token()), Map.of(), aborted));
         assertNull(aborted.get());
 

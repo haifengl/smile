@@ -44,22 +44,22 @@ import smile.model.Prediction;
 
 /**
  * REST resource exposing the classic SMILE model inference and control API at
- * {@code /api/v1/smile}.
+ * {@code /v1/smile}.
  *
  * <ul>
- *   <li>{@code GET  /smile/{id}}         – retrieve model metadata.</li>
- *   <li>{@code GET  /smile/{id}/health}  – inspect model operational status.</li>
- *   <li>{@code POST /smile/{id}}         – single JSON inference request.</li>
- *   <li>{@code POST /smile/{id}/stream}  – streaming inference (JSON lines or CSV).</li>
- *   <li>{@code POST /smile/{id}/reload}  – reload model from disk (localhost only).</li>
- *   <li>{@code POST /smile/{id}/unload}  – unload model from memory (localhost only).</li>
+ *   <li>{@code GET  /v1/smile/{id}}         – retrieve model metadata.</li>
+ *   <li>{@code GET  /v1/smile/{id}/health}  – inspect model operational status.</li>
+ *   <li>{@code POST /v1/smile/{id}}         – single JSON inference request.</li>
+ *   <li>{@code POST /v1/smile/{id}/stream}  – streaming inference (JSON lines or CSV).</li>
+ *   <li>{@code POST /v1/smile/{id}/reload}  – reload model from disk (localhost only).</li>
+ *   <li>{@code POST /v1/smile/{id}/unload}  – unload model from memory (localhost only).</li>
  * </ul>
  *
- * <p>The unified model catalog is {@code GET /api/v1/models}.
+ * <p>The unified model catalog is {@code GET /v1/models}.
  *
  * @author Haifeng Li
  */
-@Path("/smile")
+@Path("/v1/smile")
 public class InferenceResource {
 
     @Inject

@@ -58,7 +58,7 @@ import io.quarkus.arc.profile.UnlessBuildProfile;
 
 /**
  * REST resource exposing the OpenAI-compatible chat completion API at
- * {@code /api/v1/chat/completions}.
+ * {@code /v1/chat/completions}.
  *
  * <p>When {@code stream} is true, the method returns a
  * {@link Multi} of SSE payloads directly (required for Quarkus SSE framing).
@@ -77,7 +77,7 @@ import io.quarkus.arc.profile.UnlessBuildProfile;
  * @author Haifeng Li
  */
 @UnlessBuildProfile("micro")
-@Path("/chat/completions")
+@Path("/v1/chat/completions")
 public class ChatCompletionResource {
 
     /**

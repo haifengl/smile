@@ -43,7 +43,7 @@ import smile.chat.blob.MediaTypeValidator;
  * @author Haifeng Li
  */
 @UnlessBuildProfile("micro")
-@Path("/media")
+@Path("/api/v1/media")
 @RunOnVirtualThread
 public class MediaResource {
 

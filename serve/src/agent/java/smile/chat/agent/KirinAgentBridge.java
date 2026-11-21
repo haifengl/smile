@@ -669,7 +669,7 @@ public class KirinAgentBridge implements ChatAgentBridge {
     private ChatCompletions loopbackClient(int localPort) {
         int port = localPort > 0 ? localPort : 8080;
         return loopbackClientsByPort.computeIfAbsent(port, p -> {
-            String baseUrl = "http://127.0.0.1:" + p + "/api/v1";
+            String baseUrl = "http://127.0.0.1:" + p + "/v1";
             OpenAIClientAsync client = OpenAIOkHttpClientAsync.builder()
                     .baseUrl(baseUrl)
                     .apiKey("kirin-internal-loopback")

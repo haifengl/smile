@@ -23,7 +23,7 @@ import io.quarkus.arc.profile.UnlessBuildProfile;
  * User profile API at {@code /api/v1/users/me}.
  */
 @UnlessBuildProfile("micro")
-@Path("/users/me")
+@Path("/api/v1/users/me")
 @RunOnVirtualThread
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
