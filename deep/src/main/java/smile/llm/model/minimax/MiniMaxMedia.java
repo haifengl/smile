@@ -36,7 +36,7 @@ import javax.imageio.ImageIO;
  *
  * @author Haifeng Li
  */
-final class MiniMaxMedia {
+public final class MiniMaxMedia {
     /** Default sampling rate of videos (frames per second). */
     static final double DEFAULT_FPS = 1.0;
     /** A video is sampled to at least this many frames when its duration is known. */
@@ -51,7 +51,14 @@ final class MiniMaxMedia {
     /** Sampled video frames and the time of each in seconds. */
     record Video(List<BufferedImage> frames, double[] timestamps) { }
 
-    static BufferedImage image(String url) throws IOException {
+    /**
+     * Reads an image from a data URL, an http(s) URL or a file (at most 64 MiB).
+     *
+     * @param url the image location.
+     * @return the decoded image.
+     * @throws IOException if it cannot be read or decoded.
+     */
+    public static BufferedImage image(String url) throws IOException {
         byte[] bytes = bytes(url, MAX_IMAGE_BYTES);
         try (InputStream in = new ByteArrayInputStream(bytes)) {
             BufferedImage image = ImageIO.read(in);

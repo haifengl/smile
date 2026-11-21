@@ -1042,6 +1042,23 @@ public final class GlmModel implements AutoCloseable {
         }
     }
 
+    private GlmVisionTower visionTower;
+
+    /**
+     * Encodes images with the vision tower (loaded on first use on the calling rank thread).
+     *
+     * @param va     the vision arguments.
+     * @param pixels patch rows {@code [N, C * P * P]} (CPU float32) of all images.
+     * @param grids  one grid per image.
+     * @return the features {@code [N / merge^2, dim]} float32 on this rank's device (the caller closes them).
+     */
+    Tensor encodeImages(GlmVisionArgs va, Tensor pixels, int[][] grids) {
+        if (visionTower == null) {
+            visionTower = new GlmVisionTower(va, ck);
+        }
+        return keep(visionTower.forward(pixels, grids));
+    }
+
     private Session pad;
 
     /**
@@ -1292,9 +1309,36 @@ public final class GlmModel implements AutoCloseable {
      * @return the hidden rows after the hyper-connection mean and the final norm {@code [n, dim]}.
      */
     public Tensor forward(int[] ids, Session session, Map<String, Tensor> trace) {
+        return forward(ids, session, trace, null, -1);
+    }
+
+    /**
+     * As {@link #forward(int[], Session, Map)}, with the embeddings of the {@code imageToken} positions replaced by vision
+     * features.
+     *
+     * @param imageRows {@code [k, dim]} the features of the {@code k} image tokens of {@code ids}, in order (or {@code null}).
+     * @param imageToken the placeholder token id.
+     */
+    Tensor forward(int[] ids, Session session, Map<String, Tensor> trace, Tensor imageRows, int imageToken) {
         long n = ids.length;
         Tensor tokens = Tensor.of(ids, n).to(device());
         Tensor emb = f32(o("aten::index_select", embed, 0L, tokens));            // [n, dim]
+        if (imageRows != null && imageRows.size(0) > 0) {
+            long[] pos = new long[(int) imageRows.size(0)];
+            int k = 0;
+            for (int i = 0; i < ids.length; i++) {
+                if (ids[i] == imageToken) {
+                    if (k == pos.length) {
+                        throw new IllegalArgumentException("more image tokens than image features in this chunk");
+                    }
+                    pos[k++] = i;
+                }
+            }
+            if (k != pos.length) {
+                throw new IllegalArgumentException("the chunk has " + k + " image tokens for " + pos.length + " image features");
+            }
+            emb = o("aten::index_copy", emb, 0L, Tensor.of(pos, pos.length).to(device()), f32(imageRows));
+        }
         Tensor streams = o("aten::contiguous", o("aten::expand", unsqueeze(emb, 1),
                 new long[]{n, args.hcMult(), args.dim()}, false));
         for (int i = 0; i < blocks.length; i++) {

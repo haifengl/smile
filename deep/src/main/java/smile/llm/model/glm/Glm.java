@@ -73,6 +73,9 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
     private final Map<Integer, GlmModel.Session[]> sessions = new ConcurrentHashMap<>();
     private final AtomicInteger nextId = new AtomicInteger(1);
     private final int maxSessions;
+    /** The vision encoder's arguments, or {@code null} when the checkpoint has no vision weights. */
+    private final GlmVisionArgs visionArgs;
+    private final GlmVisionProcessor visionProcessor;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Glm.class);
     private static final boolean GRAPHS = !"0".equals(System.getenv("SMILE_GLM_GRAPH"));
     private static final int MAX_GRAPH_BATCH = Integer.getInteger("smile.glm.graph.maxbatch", 32);
@@ -100,6 +103,18 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         this.args = args;
         this.tokenizer = tokenizer;
         this.maxSessions = maxSessions;
+        GlmVisionArgs va = null;
+        try {
+            Path index = dir.resolve("model.safetensors.index.json");
+            if (!"0".equals(System.getenv("SMILE_GLM_VISION")) && java.nio.file.Files.exists(index)
+                    && java.nio.file.Files.readString(index).contains("\"model.visual.patch_embed.proj.weight\"")) {
+                va = GlmVisionArgs.load(dir);
+            }
+        } catch (IOException e) {
+            logger.warn("cannot read the vision config: {}", e.toString());
+        }
+        this.visionArgs = va;
+        this.visionProcessor = va == null ? null : new GlmVisionProcessor(va);
         int ranks = devices == null ? 1 : devices.length;
         this.group = ranks > 1 ? new TensorParallelGroup(ParallelConfig.tensorParallel(devices)) : null;
         if (group != null && !"0".equals(System.getenv("SMILE_GLM_CUSTOM_AR"))) {
@@ -268,7 +283,7 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         }
         for (Message m : dialog) {
             if (m.hasMedia()) {
-                throw new IllegalArgumentException("GLM-5.3 image input is not supported yet");
+                throw new IllegalArgumentException("images need processMultimodal (use the multimodal request path)");
             }
         }
         return tokenizer.encodeWithSpecials(template.encode(Arrays.asList(dialog), options));
@@ -461,6 +476,191 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         } finally {
             prefixCache.unpin(hit);
         }
+    }
+
+    /**
+     * Whether images can be encoded (the checkpoint has the vision weights).
+     *
+     * @return {@code true} when {@link #processMultimodal} may be called.
+     */
+    public boolean isMultimodal() {
+        return visionArgs != null;
+    }
+
+    private static final String IMAGE_MARKER = "<|image|>";
+
+    /**
+     * Renders a dialog with images: the chat template puts one image marker per image, every marker is expanded to one
+     * placeholder per vision token (as the reference processor does), and the images are preprocessed to patch rows.
+     *
+     * @param dialog  the messages (image parts only: no video or audio).
+     * @param options chat options.
+     * @return the expanded token ids and the patches to encode during prefill.
+     * @throws IOException              if an image cannot be read or decoded.
+     * @throws IllegalArgumentException if the request is malformed.
+     */
+    public GlmMultimodal processMultimodal(Message[] dialog, ChatOptions options) throws IOException {
+        if (visionArgs == null) {
+            throw new IllegalArgumentException("this GLM-5.3 checkpoint has no vision weights");
+        }
+        if (dialog == null || dialog.length == 0) {
+            throw new IllegalArgumentException("No messages provided.");
+        }
+        List<String> urls = new ArrayList<>();
+        for (Message m : dialog) {
+            for (var part : m.parts()) {
+                if (part instanceof smile.llm.ImageUrlPart image) {
+                    urls.add(image.url());
+                } else if (part instanceof smile.llm.VideoUrlPart) {
+                    throw new IllegalArgumentException("GLM-5.3 video input is not supported yet");
+                } else if (part instanceof smile.llm.AudioUrlPart) {
+                    throw new IllegalArgumentException("GLM-5.3 does not accept audio input");
+                }
+            }
+        }
+        String text = template.encode(Arrays.asList(dialog), options);
+        int markers = 0;
+        for (int i = text.indexOf(IMAGE_MARKER); i >= 0; i = text.indexOf(IMAGE_MARKER, i + IMAGE_MARKER.length())) {
+            markers++;
+        }
+        if (markers != urls.size()) {
+            throw new IllegalArgumentException("the prompt contains " + markers + " image markers for " + urls.size()
+                    + " images (do not type the placeholder tokens into message text)");
+        }
+        int merge2 = visionArgs.mergeSize() * visionArgs.mergeSize();
+        List<GlmVisionProcessor.Patches> images = new ArrayList<>();
+        try {
+            for (String url : urls) {
+                try {
+                    images.add(visionProcessor.image(smile.llm.model.minimax.MiniMaxMedia.image(url)));
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("unusable image: " + e.getMessage(), e);
+                }
+            }
+            StringBuilder out = new StringBuilder(text.length() + 8 * images.size() * 256);
+            int at = 0;
+            for (GlmVisionProcessor.Patches p : images) {
+                int next = text.indexOf(IMAGE_MARKER, at);
+                int[] g = p.grid();
+                out.append(text, at, next).append(IMAGE_MARKER.repeat(g[0] * g[1] * g[2] / merge2));
+                at = next + IMAGE_MARKER.length();
+            }
+            out.append(text, at, text.length());
+            int[] ids = tokenizer.encodeWithSpecials(out.toString());
+            if (ids.length > args.maxSeqLen()) {
+                throw new IllegalArgumentException("the prompt (" + ids.length + " tokens with its images) is longer than max_seq_len");
+            }
+            Tensor pixels = images.isEmpty() ? null
+                    : images.size() == 1 ? images.get(0).pixels().copy()
+                    : Tensor.vstack(images.stream().map(GlmVisionProcessor.Patches::pixels).toArray(Tensor[]::new));
+            return new GlmMultimodal(ids, pixels, images.stream().map(GlmVisionProcessor.Patches::grid).toArray(int[][]::new));
+        } finally {
+            for (var p : images) {
+                p.pixels().close();
+            }
+        }
+    }
+
+    /** Tokens of a multimodal prefill chunk (the forward over a long image prompt is cut to bound the activations). */
+    private static final int MM_CHUNK = Integer.getInteger("smile.glm.vision.chunk", 1024);
+
+    @Override
+    public Tensor prefillMultimodal(int requestId, smile.llm.engine.MultimodalPrompt prompt, int from, int to) {
+        if (!(prompt instanceof GlmMultimodal mm)) {
+            throw new IllegalArgumentException("a GLM-5.3 multimodal prompt is required");
+        }
+        if (visionArgs == null) {
+            throw new IllegalStateException("vision encoder not loaded");
+        }
+        int[] ids = mm.inputIds();
+        if (from < 0 || to < from || to > ids.length) {
+            throw new IllegalArgumentException("invalid prefill range [" + from + ", " + to + ") for len " + ids.length);
+        }
+        if (from == to) {
+            return null;
+        }
+        final int imageId = visionArgs.imageTokenId();
+        int imageCount = 0;
+        for (int id : ids) {
+            if (id == imageId) {
+                imageCount++;
+            }
+        }
+        final int imageTokens = imageCount;
+        int merge2 = visionArgs.mergeSize() * visionArgs.mergeSize();
+        long patches = 0;
+        for (int[] g : mm.imageGrids()) {
+            patches += (long) g[0] * g[1] * g[2];
+        }
+        if (imageTokens != patches / merge2) {
+            throw new IllegalArgumentException("the prompt has " + imageTokens + " image tokens for " + patches / merge2 + " vision features");
+        }
+        GlmModel.Session[] s = session(requestId);
+        if (s[0].length() != from) {
+            throw new IllegalStateException("request " + requestId + " is at position " + s[0].length() + ", not " + from);
+        }
+        final boolean last = to == ids.length;
+        int before = 0;
+        for (int i = 0; i < from; i++) {
+            if (ids[i] == imageId) {
+                before++;
+            }
+        }
+        final int imagesBefore = before;
+        List<Tensor> results = gatherAllRanks(rank -> {
+            try (var guard = Tensor.noGradGuard()) {
+                GlmModel m = replicas[rank];
+                Tensor features = imageTokens == 0 ? null : m.encodeImages(visionArgs, mm.imagePixels(), mm.imageGrids());
+                try {
+                    Tensor out = null;
+                    int seen = imagesBefore;
+                    for (int start = from; start < to; start += MM_CHUNK) {
+                        final int st = start;
+                        final int en = Math.min(to, start + MM_CHUNK);
+                        int[] chunk = Arrays.copyOfRange(ids, st, en);
+                        int nImage = 0;
+                        for (int id : chunk) {
+                            if (id == imageId) {
+                                nImage++;
+                            }
+                        }
+                        final Tensor rows = nImage == 0 ? null : Gx.narrow(features, 0, seen, nImage);
+                        seen += nImage;
+                        Tensor r = Gx.layerScoped(() -> {
+                            Tensor hidden = m.forward(chunk, s[rank], null, rows, imageId);
+                            if (m.hasMtp()) {
+                                int n = en == ids.length ? chunk.length - 1 : chunk.length;
+                                if (n > 0) {
+                                    m.mtpAbsorb(s[rank], Arrays.copyOfRange(ids, st + 1, st + 1 + n), hidden);
+                                }
+                                m.setLastHidden(s[rank], hidden);
+                            }
+                            Tensor row = Gx.narrow(hidden, 0, hidden.size(0) - 1, 1);
+                            return last && en == to ? m.logits(row) : Gx.zeros(smile.deep.tensor.ScalarType.Float, 1);
+                        });
+                        if (en == to) {
+                            out = r;
+                        } else {
+                            r.close();
+                        }
+                    }
+                    return out;
+                } finally {
+                    if (features != null) {
+                        features.close();
+                    }
+                }
+            }
+        });
+        for (int r = 1; r < results.size(); r++) {
+            results.get(r).close();
+        }
+        Tensor logits = results.get(0);
+        if (!last) {
+            logits.close();
+            return null;
+        }
+        return logits;
     }
 
     @Override
