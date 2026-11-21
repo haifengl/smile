@@ -20,47 +20,59 @@
   flex-direction: column;
   width: 100%;
   box-sizing: border-box;
-  font-family: inherit;
+  font-family: var(--font-sans);
 }
 
 .shap-plot-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding: 0 4px;
+  margin-bottom: 0.75rem;
+  padding: 0 0.25rem;
 }
 
 .shap-plot-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #111827;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
   margin: 0;
 }
 
 .shap-plot-subtitle {
-  font-size: 13px;
-  color: #6b7280;
-  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin: 0.15rem 0 0;
 }
 
 .shap-badge-base {
-  color: #4b5563;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
   font-weight: 600;
 }
 
 .shap-badge-pred {
-  color: #111827;
+  color: var(--text);
+  font-family: var(--font-mono);
   font-weight: 700;
+}
+
+.shap-legend-pos {
+  color: var(--shap-pos);
+  font-weight: 600;
+}
+
+.shap-legend-neg {
+  color: var(--shap-neg);
+  font-weight: 600;
 }
 
 .shap-svg-wrapper {
   width: 100%;
   overflow-x: auto;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
 }
 
 .shap-plot-svg {
@@ -70,27 +82,28 @@
 
 /* Tooltip */
 .shap-tooltip {
-  position: absolute;
+  position: fixed;
   pointer-events: none;
-  background: rgba(17, 24, 39, 0.92);
-  color: #ffffff;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 12px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
   line-height: 1.4;
-  z-index: 100;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 1000;
+  box-shadow: var(--shadow);
   white-space: nowrap;
 }
 
-/* Waterfall specifics */
+/* Waterfall & Force & Decision SVG tokens */
 .shap-wf-bar-pos {
-  fill: #ff0051;
+  fill: var(--shap-pos);
   transition: opacity 0.15s ease;
 }
 
 .shap-wf-bar-neg {
-  fill: #008bfb;
+  fill: var(--shap-neg);
   transition: opacity 0.15s ease;
 }
 
@@ -101,32 +114,98 @@
 }
 
 .shap-wf-connector {
-  stroke: #cbd5e1;
+  stroke: var(--shap-axis);
   stroke-width: 1;
   stroke-dasharray: 2, 2;
 }
 
 .shap-wf-grid {
-  stroke: #f1f5f9;
+  stroke: var(--shap-grid);
   stroke-width: 1;
 }
 
 .shap-wf-axis {
-  stroke: #94a3b8;
+  stroke: var(--shap-axis);
   stroke-width: 1;
+}
+
+.shap-wf-base-line {
+  stroke: var(--shap-axis);
+  stroke-width: 1.5;
+  stroke-dasharray: 4, 3;
+}
+
+.shap-wf-pred-line {
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
+.shap-wf-pred-text {
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--text);
 }
 
 .shap-wf-text-label {
   font-size: 12px;
-  fill: #374151;
+  fill: var(--text);
+}
+
+.shap-wf-text-label--base {
+  fill: var(--text-muted);
 }
 
 .shap-wf-text-val {
   font-size: 11px;
-  fill: #6b7280;
+  fill: var(--text-muted);
 }
 
 .shap-wf-text-delta {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.shap-wf-text-delta--pos {
+  fill: var(--shap-pos);
+}
+
+.shap-wf-text-delta--neg {
+  fill: var(--shap-neg);
+}
+
+.shap-force-block-pos {
+  fill: var(--shap-pos);
+  stroke: var(--bg-base);
+  stroke-width: 0.75;
+  cursor: pointer;
+}
+
+.shap-force-block-neg {
+  fill: var(--shap-neg);
+  stroke: var(--bg-base);
+  stroke-width: 0.75;
+  cursor: pointer;
+}
+
+.shap-decision-path {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.shap-decision-node {
+  fill: var(--accent);
+  stroke: var(--bg-base);
+  stroke-width: 1.5;
+  cursor: pointer;
+}
+
+.shap-decision-node--base {
+  fill: var(--text-muted);
+}
+
+.shap-decision-node--final {
+  fill: var(--text);
 }

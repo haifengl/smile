@@ -104,7 +104,11 @@ export default function ShapModal({
   const handleExportPng = async () => {
     if (!plotRef.current) return;
     try {
-      const dataUrl = await toPng(plotRef.current, { backgroundColor: "#ffffff" });
+      const bg =
+        getComputedStyle(document.documentElement)
+          .getPropertyValue("--bg-elevated")
+          .trim() || "#ffffff";
+      const dataUrl = await toPng(plotRef.current, { backgroundColor: bg });
       const link = document.createElement("a");
       link.download = `shap-${activeTab}-row-${displayRowNum}.png`;
       link.href = dataUrl;

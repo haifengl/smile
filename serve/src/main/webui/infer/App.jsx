@@ -20,6 +20,7 @@ import Sidebar from "./Sidebar";
 import InferenceForm from "./InferenceForm";
 import ChatShell from "../chat/ChatShell";
 import CollapsiblePanel from "../shared/CollapsiblePanel";
+import ThemeToggle from "../shared/ThemeToggle";
 import { AuthProvider, useAuth } from "../chat/auth/AuthProvider";
 import SsoSignInGate from "../chat/auth/SsoSignInGate";
 import { INFER_RESUME_MODEL_KEY } from "../chat/api";
@@ -30,6 +31,30 @@ function panelType(kind) {
   if (kind === "LLM") return "chat";
   if (kind === "ONNX") return "onnx";
   return "smile";
+}
+
+function ServeHeader() {
+  return (
+    <header className="site-header">
+      <div className="site-header__brand">
+        <img
+          src="/smile.png"
+          alt="SMILE"
+          className="site-header__logo"
+          width="28"
+          height="28"
+        />
+        <span className="site-header__wordmark">SMILE</span>
+        <span className="site-header__product">Serve</span>
+        <span className="site-header__tagline">
+          Statistical Machine Intelligence &amp; Learning Engine
+        </span>
+      </div>
+      <div className="site-header__actions">
+        <ThemeToggle />
+      </div>
+    </header>
+  );
 }
 
 function AppInner() {
@@ -99,12 +124,15 @@ function AppInner() {
 
   if (blockedBySso) {
     return (
-      <div className="app">
-        <SsoSignInGate
-          label={oidcLabel || "SSO"}
-          error={authError}
-          onSignIn={handleSsoSignIn}
-        />
+      <div className="serve-shell">
+        <ServeHeader />
+        <div className="app">
+          <SsoSignInGate
+            label={oidcLabel || "SSO"}
+            error={authError}
+            onSignIn={handleSsoSignIn}
+          />
+        </div>
       </div>
     );
   }
@@ -112,40 +140,45 @@ function AppInner() {
   const isChat = selectedModel?.type === "chat";
 
   return (
-    <div className="app">
-      <CollapsiblePanel
-        side="left"
-        storageKey="smile.infer.model-sidebar.expanded"
-        defaultExpanded={true}
-        width={280}
-        className="infer-model-sidebar"
-        ariaLabel="Models"
-      >
-        <Sidebar
-          models={models}
-          selectedModel={selectedModel}
-          onSelect={selectModel}
-        />
-      </CollapsiblePanel>
-      <div className={isChat ? "content content-chat" : "content"}>
-        {!selectedModel && (
-          <p className="toast">Select a model for inference...</p>
-        )}
-        {mountedModels.map((model) => {
-          const active = selectedModel?.id === model.id;
-          if (model.type === "chat") {
+    <div className="serve-shell">
+      <ServeHeader />
+      <div className="app">
+        <CollapsiblePanel
+          side="left"
+          storageKey="smile.infer.model-sidebar.expanded"
+          defaultExpanded={true}
+          width={280}
+          className="infer-model-sidebar"
+          ariaLabel="Models"
+        >
+          <Sidebar
+            models={models}
+            selectedModel={selectedModel}
+            onSelect={selectModel}
+          />
+        </CollapsiblePanel>
+        <div className={isChat ? "content content-chat" : "content"}>
+          {!selectedModel && (
+            <div className="infer-empty-state">
+              <p className="toast">Select a model from the sidebar to run inference or chat.</p>
+            </div>
+          )}
+          {mountedModels.map((model) => {
+            const active = selectedModel?.id === model.id;
+            if (model.type === "chat") {
+              return (
+                <div key={model.id} className="panel-session" hidden={!active}>
+                  <ChatShell embedded model={model.id} title={model.id} />
+                </div>
+              );
+            }
             return (
               <div key={model.id} className="panel-session" hidden={!active}>
-                <ChatShell embedded model={model.id} title={model.id} />
+                <InferenceForm model={model} />
               </div>
             );
-          }
-          return (
-            <div key={model.id} className="panel-session" hidden={!active}>
-              <InferenceForm model={model} />
-            </div>
-          );
-        })}
+          })}
+        </div>
       </div>
     </div>
   );

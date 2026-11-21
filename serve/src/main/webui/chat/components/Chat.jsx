@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
  * SMILE Serve is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -15,12 +15,12 @@
  * License along with SMILE Serve. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-import React, { } from 'react'
+import React from 'react'
 import ChatHeader from './ChatHeader'
 import MessageInput from './MessageInput'
 import MessageList from './MessageList'
 import ChatbotIcon from '../assets/chatbot.svg'
-import "./Chat.css"
+import './Chat.css'
 
 export default function Chat({
     style,
@@ -30,15 +30,16 @@ export default function Chat({
     showTypingIndicator,
     conversationId,
     disabled = false,
+    embedded = false,
     logo = ChatbotIcon,
-    title = "Smile Assistant",
-    placeholder = "Type prompt here",
-    theme = '#8dd4e8',
+    title = 'Smile Assistant',
+    placeholder = 'Type prompt here',
+    theme = 'var(--accent)',
 }) {
     return (
         <div className="chat-container" style={style}>
             <div className="message-container">
-                <ChatHeader logo={logo} title={title} />
+                <ChatHeader logo={logo} title={title} showThemeToggle={!embedded} />
                 <MessageList
                     messages={messages}
                     userId={userId}

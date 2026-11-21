@@ -15,15 +15,8 @@
  * License along with SMILE Serve. If not, see
  * <https://www.gnu.org/licenses/>.
  */
-/*
- * Button colors:
- *   Submit / Run → #1da1f2
- */
 .infer-form {
-  --infer-btn-primary: #1da1f2;
-  --infer-btn-primary-hover: #1a91da;
-  /* Identical width for Submit and Run (wide enough for "Submit") */
-  --infer-action-btn-width: 7.5em;
+  --infer-action-btn-width: 8em;
 
   display: flex;
   flex-direction: column;
@@ -35,7 +28,7 @@
 .infer-layout {
   display: grid;
   grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr);
-  gap: 20px;
+  gap: 1.25rem;
   flex: 1;
   min-height: 0;
   height: 100%;
@@ -45,79 +38,112 @@
 .infer-inputs {
   min-width: 0;
   overflow: auto;
-  padding-right: 4px;
+  padding: 1.25rem 1.35rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
 }
 
 .infer-batch {
-  margin-top: 28px;
-  padding-top: 20px;
-  border-top: 1px solid #e5e7eb;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
 }
 
 .infer-batch h3 {
-  margin: 0 0 8px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #111827;
+  margin: 0 0 0.45rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
 .infer-hint {
-  margin: 0 0 14px;
-  font-size: 13px;
-  line-height: 1.45;
-  color: #6b7280;
+  margin: 0 0 0.85rem;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--text-muted);
 }
 
 .infer-hint code {
-  font-size: 12px;
-  background: #f3f4f6;
-  padding: 1px 5px;
-  border-radius: 4px;
-  color: #374151;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  padding: 0.08rem 0.35rem;
+  border-radius: 0.35rem;
+  color: var(--text);
 }
 
 .infer-file-label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 13px;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--text);
 }
 
 .infer-file-label input[type="file"] {
   font-weight: 400;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.infer-file-label input[type="file"]::file-selector-button {
+  margin-right: 0.75rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-base);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.infer-file-label input[type="file"]::file-selector-button:hover {
+  background: var(--bg-muted);
+  border-color: var(--accent);
 }
 
 .infer-file-name {
-  margin: 8px 0 0;
-  font-size: 13px;
-  color: #111827;
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  font-family: var(--font-mono);
+  color: var(--text);
 }
 
 .infer-muted {
-  color: #6b7280;
+  color: var(--text-muted);
   font-weight: 400;
 }
 
 .infer-btn {
   appearance: none;
-  border: 1px solid #d1d5db;
-  background: #fff;
-  color: #111827;
-  border-radius: 8px;
-  padding: 8px 14px;
-  font-size: 13px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--text);
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.8rem;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .infer-btn:hover:not(:disabled) {
-  background: #f9fafb;
+  background: var(--bg-muted);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .infer-btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
@@ -126,67 +152,71 @@
 .infer-inputs .infer-submit,
 .infer-primary-actions .infer-btn-run {
   box-sizing: border-box;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: var(--infer-action-btn-width);
   min-width: var(--infer-action-btn-width);
   max-width: 100%;
   align-self: flex-start;
   flex: 0 0 auto;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  border-radius: 8px;
-  color: #fff;
+  padding: 0.55rem 1.15rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: var(--font-sans);
+  border-radius: 0.65rem;
+  color: var(--accent-fg);
   text-align: center;
   white-space: nowrap;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .infer-inputs .rjsf button[type="submit"]:disabled,
 .infer-inputs .infer-submit:disabled,
 .infer-primary-actions .infer-btn-run:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
-/* Submit — default Primary */
+/* Submit — Primary CTA */
 .infer-inputs .rjsf button[type="submit"],
 .infer-inputs .infer-submit {
-  border: 1px solid var(--infer-btn-primary);
-  background-color: var(--infer-btn-primary);
+  border: 1px solid var(--accent);
+  background-color: var(--accent);
 }
 
 .infer-inputs .rjsf button[type="submit"]:hover:not(:disabled),
 .infer-inputs .infer-submit:hover:not(:disabled) {
-  background-color: var(--infer-btn-primary-hover);
-  border-color: var(--infer-btn-primary-hover);
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+  box-shadow: var(--accent-glow);
 }
 
-/* Run — same color as Submit */
+/* Run — Primary CTA */
 .infer-primary-actions .infer-btn-run {
   width: auto;
   min-width: var(--infer-action-btn-width);
-  border: 1px solid var(--infer-btn-primary);
-  background-color: var(--infer-btn-primary);
+  border: 1px solid var(--accent);
+  background-color: var(--accent);
 }
 
 .infer-primary-actions .infer-btn-run:hover:not(:disabled) {
-  background-color: var(--infer-btn-primary-hover);
-  border-color: var(--infer-btn-primary-hover);
+  background-color: var(--accent-hover);
+  border-color: var(--accent-hover);
+  box-shadow: var(--accent-glow);
 }
 
 .infer-action-footer {
-  margin-top: 8px;
+  margin-top: 0.5rem;
 }
 
 .infer-file-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .infer-file-row .infer-file-name {
@@ -194,30 +224,34 @@
 }
 
 .infer-file-row .infer-btn {
-  padding: 4px 10px;
-  font-size: 12px;
+  padding: 0.25rem 0.65rem;
+  font-size: 0.75rem;
 }
 
 .infer-primary-actions {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
-  margin-top: 28px;
-  padding-top: 20px;
-  border-top: 1px solid #e5e7eb;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
 }
 
 .infer-action-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .infer-error {
-  margin-top: 12px;
-  color: #b00020;
-  font-size: 14px;
+  margin-top: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.65rem;
+  background: var(--status-danger-soft);
+  border: 1px solid color-mix(in srgb, var(--status-danger) 30%, transparent);
+  color: var(--status-danger);
+  font-size: 0.8125rem;
 }
 
 .infer-results {
@@ -226,9 +260,10 @@
   min-width: 0;
   min-height: 0;
   height: 100%;
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
   overflow: hidden;
 }
 
@@ -236,47 +271,48 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  border-bottom: 1px solid #e5e7eb;
-  background: #fff;
+  gap: 0.75rem;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated);
 }
 
 .infer-results-header h3 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  color: #111827;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
 .infer-results-header .infer-muted {
-  margin: 4px 0 0;
-  font-size: 12px;
+  margin: 0.2rem 0 0;
+  font-size: 0.75rem;
 }
 
 .infer-results-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 0.4rem;
   justify-content: flex-end;
 }
 
 .infer-results-actions .infer-btn {
-  padding: 6px 10px;
-  font-size: 12px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
 }
 
 .infer-results-empty {
   margin: auto;
-  padding: 24px;
+  padding: 1.5rem;
   text-align: center;
-  color: #9ca3af;
-  font-size: 14px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
 .infer-table-header-wrap {
-  background: #fff;
-  border-bottom: 1px solid #e5e7eb;
+  background: var(--bg-muted);
+  border-bottom: 1px solid var(--border);
   overflow: hidden;
 }
 
@@ -284,7 +320,7 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
-  background: #fff;
+  background: var(--bg-elevated);
 }
 
 .infer-table-spacer {
@@ -296,13 +332,12 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  font-size: 12.5px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+  font-size: 0.78125rem;
+  font-family: var(--font-mono);
 }
 
 .infer-table-header {
-  background: #f1f5f9;
+  background: var(--bg-muted);
 }
 
 .infer-table-body {
@@ -315,20 +350,20 @@
 
 .infer-table th,
 .infer-table td {
-  padding: 0 10px;
+  padding: 0 0.65rem;
   text-align: left;
   vertical-align: middle;
-  border-bottom: 1px solid #eef2f7;
+  border-bottom: 1px solid var(--border);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: #0f172a;
+  color: var(--text);
 }
 
 .infer-table th {
   height: 32px;
   font-weight: 600;
-  color: #475569;
+  color: var(--text-muted);
   text-transform: none;
   letter-spacing: 0;
 }
@@ -341,7 +376,7 @@
 .infer-table th.infer-col-index,
 .infer-table .infer-col-index {
   width: 56px;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -350,26 +385,26 @@
 }
 
 .infer-row-expandable:hover {
-  background: #f8fafc;
+  background: var(--bg-muted);
 }
 
 .infer-row-selected {
-  background: #eff6ff;
+  background: var(--accent-soft);
 }
 
 .infer-row-selected:hover {
-  background: #dbeafe;
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
 }
 
 .infer-row-error td {
-  color: #b00020;
-  background: #fef2f2;
+  color: var(--status-danger);
+  background: var(--status-danger-soft);
 }
 
 .infer-row-detail {
-  border-top: 1px solid #e5e7eb;
-  background: #0f172a;
-  color: #e2e8f0;
+  border-top: 1px solid var(--border);
+  background: var(--code-bg);
+  color: var(--text);
   max-height: 160px;
   overflow: auto;
 }
@@ -378,26 +413,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 8px 12px 0;
-  font-size: 12px;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem 0;
+  font-size: 0.75rem;
   font-weight: 600;
-  color: #cbd5e1;
+  color: var(--text-muted);
 }
 
 .infer-row-detail-title .infer-btn {
-  padding: 4px 8px;
-  font-size: 11px;
-  background: #1e293b;
-  border-color: #334155;
-  color: #e2e8f0;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.7rem;
 }
 
 .infer-row-detail pre {
   margin: 0;
-  padding: 8px 12px 12px;
-  font-size: 12px;
-  line-height: 1.45;
+  padding: 0.5rem 0.75rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -406,43 +439,45 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 7px;
-  margin-left: 6px;
-  font-size: 11px;
+  padding: 0.15rem 0.45rem;
+  margin-left: 0.4rem;
+  font-size: 0.6875rem;
   font-weight: 600;
-  border-radius: 4px;
-  border: 1px solid #c7d2fe;
-  background-color: #e0e7ff;
-  color: #4338ca;
+  border-radius: 0.35rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  background-color: var(--accent-soft);
+  color: var(--accent);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .infer-explain-btn:hover {
-  background-color: #c7d2fe;
-  color: #312e81;
+  background-color: var(--accent);
+  color: var(--accent-fg);
 }
 
 .infer-explain-controls {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
   width: 100%;
 }
 
 .infer-explain-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #374151;
+  gap: 0.45rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text);
   cursor: pointer;
   user-select: none;
 }
 
 .infer-explain-toggle input[type="checkbox"] {
-  width: 15px;
-  height: 15px;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
   cursor: pointer;
 }
 
@@ -450,51 +485,52 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
-  padding: 8px 10px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
 }
 
 .infer-shap-param {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  color: #475569;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
 }
 
 .infer-shap-param input[type="number"] {
   width: 90px;
-  padding: 4px 6px;
-  font-size: 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  background: #ffffff;
-  color: #0f172a;
+  padding: 0.25rem 0.45rem;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.4rem;
+  background: var(--bg-elevated);
+  color: var(--text);
 }
 
 .onnx-form .model-meta h2 {
-  margin: 0 0 4px;
+  margin: 0 0 0.25rem;
 }
 
 .onnx-form .mode-toggle {
-  margin: 12px 0;
+  margin: 0.75rem 0;
 }
 
 .onnx-form .image-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.75rem;
   max-width: 560px;
 }
 
 .onnx-form .image-preview-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 10px;
+  gap: 0.65rem;
 }
 
 .onnx-form .image-preview img {
@@ -502,14 +538,14 @@
   max-height: 120px;
   width: 100%;
   object-fit: contain;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--bg-base);
 }
 
 .onnx-form .image-preview .infer-muted {
-  margin: 4px 0 0;
-  font-size: 11px;
+  margin: 0.25rem 0 0;
+  font-size: 0.6875rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

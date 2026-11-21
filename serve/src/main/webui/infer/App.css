@@ -15,27 +15,29 @@
  * License along with SMILE Serve. If not, see
  * <https://www.gnu.org/licenses/>.
  */
+.serve-shell {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  background: var(--bg-base);
+  color: var(--text);
+}
+
 .app {
   display: flex;
-  height: calc(100vh - 72px); /* leave room for site header on /infer */
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  font-family: Arial, sans-serif;
+  font-family: var(--font-sans);
   overflow: hidden;
+  background: var(--bg-base);
 }
 
 .infer-model-sidebar.collapsible-panel-host--left {
-  background: #1e1e2f;
-  color: white;
-}
-
-.infer-model-sidebar .collapsible-panel__toggle {
-  background: #2a2a3d;
-  color: rgba(255, 255, 255, 0.8);
-  border-color: rgba(255, 255, 255, 0.14);
-}
-
-.infer-model-sidebar .collapsible-panel__toggle:hover {
-  background: #363650;
+  background: var(--bg-elevated);
+  color: var(--text);
 }
 
 .sidebar {
@@ -44,58 +46,73 @@
   box-sizing: border-box;
   background: transparent;
   color: inherit;
-  padding: 16px;
+  padding: 1rem 0.875rem;
   overflow-y: auto;
 }
 
 .sidebar h2 {
-  margin-top: 0;
+  margin: 0 0 0.75rem;
+  padding: 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
 .sidebar ul {
   list-style: none;
+  margin: 0;
   padding: 0;
 }
 
 .sidebar-group {
-  margin: 16px 0 8px;
-  font-size: 12px;
-  letter-spacing: 0.06em;
+  margin: 1rem 0 0.45rem;
+  padding: 0 0.5rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #9aa0b5;
-  font-weight: 600;
+  color: var(--text-muted);
+  font-weight: 700;
 }
 
 .sidebar-empty {
-  color: #9aa0b5;
-  font-size: 14px;
+  padding: 0 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
 .sidebar li {
-  padding: 10px;
+  padding: 0.55rem 0.65rem;
   cursor: pointer;
-  border-radius: 4px;
-  margin-bottom: 6px;
-  font-size: 15px;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 0.5rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .sidebar li .model-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
 }
 
 .badge {
   flex-shrink: 0;
-  font-size: 10px;
+  font-size: 0.625rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 2px 6px;
-  border-radius: 3px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
   max-width: 110px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -103,74 +120,100 @@
 }
 
 .badge-smile {
-  background: #3d6b4f;
-  color: #d8f5e4;
+  background: var(--status-success-soft);
+  color: var(--status-success);
 }
 
 .badge-onnx {
-  background: #4a5a8a;
-  color: #dce4ff;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .badge-chat {
-  background: #6b4a3d;
-  color: #ffe8dc;
+  background: var(--status-warning-soft);
+  color: var(--status-warning);
 }
 
 .sidebar li:hover {
-  background: #2e2e4f;
+  background: var(--bg-muted);
 }
 
 .sidebar li.active {
-  background: #3e3e6f;
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 32%, transparent);
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .onnx-form .model-meta h2 {
-  margin: 0 0 4px;
+  margin: 0 0 0.25rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
 .onnx-form .muted,
 .hint {
-  color: #666;
-  font-size: 14px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
 .onnx-form .mode-toggle {
-  margin: 12px 0;
+  margin: 0.75rem 0;
+}
+
+.onnx-form .mode-toggle label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.onnx-form .mode-toggle select {
+  padding: 0.4rem 0.65rem;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.5rem;
+  background: var(--bg-base);
+  color: var(--text);
 }
 
 .onnx-form .form-error {
-  color: #b00020;
+  color: var(--status-danger);
 }
 
 .image-form {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.75rem;
   max-width: 480px;
 }
 
 .file-label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.35rem;
   font-weight: 600;
 }
 
 .image-preview img {
   max-width: 320px;
   max-height: 320px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
 }
 
 .content {
   flex: 1;
   min-width: 0;
   min-height: 0;
-  padding: 24px;
-  background: white;
-  color: black;
+  padding: 1.5rem;
+  background: var(--bg-base);
+  color: var(--text);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -197,36 +240,51 @@
   display: none !important;
 }
 
+.infer-empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .toast {
   text-align: center;
-  font-size: 20px;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: auto;
 }
 
-/* Basic styling for the dialog box */
+/* Dialog box styling */
 dialog {
-  background-color: #1e1e2f;
-  padding: 10px 16px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px lightblue;
+  background-color: var(--bg-elevated);
+  color: var(--text);
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
 }
 
-/* Styling the overlay that appears behind the modal */
 dialog::backdrop {
-  background-color: rgba(0, 0, 0, 0.7);
-  /* Add an animation to the backdrop */
-  animation: backdrop-fadein 0.3s forwards;
+  background-color: var(--backdrop);
+  backdrop-filter: blur(4px);
+  animation: backdrop-fadein 0.2s forwards;
 }
 
 @keyframes backdrop-fadein {
-    from { opacity: 0; }
-    to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .json-container pre {
-  outline: 1px solid #ccc;
-
-  background-color: #f5f5f5;
-  color: #333;
-  overflow: auto; /* Adds scrollbars if data is too wide */
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--code-bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  overflow: auto;
 }

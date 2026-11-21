@@ -1,0 +1,229 @@
+/*
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ *
+ * SMILE Serve is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * SMILE Serve is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with SMILE Serve. If not, see
+ * <https://www.gnu.org/licenses/>.
+ */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --bg-base: #f8fafc;
+  --bg-elevated: #ffffff;
+  --bg-muted: #eef6fd;
+  --bg-glass: rgba(255, 255, 255, 0.72);
+  --bg-header: rgba(248, 250, 252, 0.88);
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --accent: #2fa4e7;
+  --accent-hover: #1d8fd0;
+  --accent-fg: #ffffff;
+  --accent-soft: rgba(47, 164, 231, 0.12);
+  --accent-glow: 0 0 40px rgba(47, 164, 231, 0.25);
+  --border: rgba(15, 23, 42, 0.1);
+  --border-strong: rgba(15, 23, 42, 0.2);
+  --border-glass: rgba(255, 255, 255, 0.55);
+  --code-bg: #f1f5f9;
+  --shadow: 0 10px 40px rgba(15, 23, 42, 0.08);
+  --backdrop: rgba(15, 23, 42, 0.55);
+
+  --status-success: #15803d;
+  --status-success-soft: rgba(21, 128, 61, 0.12);
+  --status-warning: #b45309;
+  --status-warning-soft: rgba(180, 83, 9, 0.12);
+  --status-danger: #b91c1c;
+  --status-danger-soft: rgba(185, 28, 28, 0.12);
+
+  --shap-pos: #e11d48;
+  --shap-neg: #0284c7;
+  --shap-grid: rgba(15, 23, 42, 0.08);
+  --shap-axis: #94a3b8;
+
+  --header-height: 3.5rem;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-base: #0b1220;
+  --bg-elevated: #111827;
+  --bg-muted: #1e293b;
+  --bg-glass: rgba(15, 23, 42, 0.65);
+  --bg-header: rgba(11, 18, 32, 0.88);
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent: #38bdf8;
+  --accent-hover: #7dd3fc;
+  --accent-fg: #0b1220;
+  --accent-soft: rgba(56, 189, 248, 0.16);
+  --accent-glow: 0 0 48px rgba(56, 189, 248, 0.35);
+  --border: rgba(226, 232, 240, 0.12);
+  --border-strong: rgba(226, 232, 240, 0.22);
+  --border-glass: rgba(255, 255, 255, 0.12);
+  --code-bg: #0f172a;
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --backdrop: rgba(2, 6, 23, 0.72);
+
+  --status-success: #34d399;
+  --status-success-soft: rgba(52, 211, 153, 0.15);
+  --status-warning: #fbbf24;
+  --status-warning-soft: rgba(251, 191, 36, 0.15);
+  --status-danger: #f87171;
+  --status-danger-soft: rgba(248, 113, 113, 0.15);
+
+  --shap-pos: #fb7185;
+  --shap-neg: #38bdf8;
+  --shap-grid: rgba(226, 232, 240, 0.1);
+  --shap-axis: #64748b;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background-color: var(--bg-base);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Shared translucent sticky top bar */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: var(--header-height);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 1.25rem;
+  background: var(--bg-header);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.site-header__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.site-header__logo {
+  display: block;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.site-header__wordmark {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  line-height: 1;
+}
+
+.site-header__product {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.site-header__tagline {
+  margin-left: 0.35rem;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.site-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Standardized icon button (theme toggle and compact actions) */
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border-radius: 0.6rem;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.icon-btn:hover {
+  background: var(--bg-muted);
+  border-color: var(--border-strong);
+  color: var(--accent);
+}
+
+.icon-btn svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  display: block;
+}
+
+@media (max-width: 720px) {
+  .site-header__tagline {
+    display: none;
+  }
+}

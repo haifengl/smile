@@ -20,7 +20,7 @@ import './TypingIndicator.css'
 
 export default function TypingIndicator({
     content,
-    theme = '#8dd4e8'
+    theme = 'var(--accent)'
 }) {
     return (
         <div className="typing-indicator">

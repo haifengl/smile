@@ -183,9 +183,7 @@ export default function DecisionPlot({
             y1={marginTop - 10}
             x2={scaleX(baseValue)}
             y2={height - marginBottom + 10}
-            stroke="#94a3b8"
-            strokeWidth="1.5"
-            strokeDasharray="4, 3"
+            className="shap-wf-base-line"
           />
 
           {/* Horizontal feature level guide lines and feature labels */}
@@ -199,16 +197,14 @@ export default function DecisionPlot({
                   y1={y}
                   x2={width - marginRight}
                   y2={y}
-                  stroke="#f1f5f9"
-                  strokeWidth="1"
+                  className="shap-wf-grid"
                 />
                 <text
                   x={marginLeft - 14}
                   y={y + 4}
                   textAnchor="end"
-                  className="shap-wf-text-label"
+                  className={`shap-wf-text-label${isBase ? " shap-wf-text-label--base" : ""}`}
                   fontWeight={isBase ? "600" : "500"}
-                  fill={isBase ? "#64748b" : "#374151"}
                 >
                   {point.name}
                   {point.value != null && (
@@ -220,14 +216,7 @@ export default function DecisionPlot({
           })}
 
           {/* Decision Path Line */}
-          <path
-            d={pathD}
-            fill="none"
-            stroke="#6366f1"
-            strokeWidth="2.5"
-            strokeLinejoin="round"
-            strokeLinecap="round"
-          />
+          <path d={pathD} className="shap-decision-path" />
 
           {/* Trajectory Points */}
           {trajectory.map((point, i) => {
@@ -235,7 +224,11 @@ export default function DecisionPlot({
             const y = scaleY(i);
             const isBase = i === 0;
             const isFinal = i === trajectory.length - 1;
-            const color = isBase ? "#64748b" : isFinal ? "#111827" : "#6366f1";
+            const nodeClass = isBase
+              ? "shap-decision-node shap-decision-node--base"
+              : isFinal
+                ? "shap-decision-node shap-decision-node--final"
+                : "shap-decision-node";
 
             return (
               <circle
@@ -243,10 +236,7 @@ export default function DecisionPlot({
                 cx={x}
                 cy={y}
                 r={isFinal || isBase ? 5 : 4}
-                fill={color}
-                stroke="#ffffff"
-                strokeWidth="1.5"
-                style={{ cursor: "pointer" }}
+                className={nodeClass}
                 onMouseEnter={(e) => {
                   setTooltip({
                     x: e.clientX,

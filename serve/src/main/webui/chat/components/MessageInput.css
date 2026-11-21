@@ -21,6 +21,8 @@
   width: 100%;
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
+  background: var(--bg-base);
 }
 
 /* Keep the native file picker out of the layout (no "Choose Files" chrome). */
@@ -39,17 +41,14 @@
 }
 
 .input-form {
-  background-color: #f3f4f6;
-  padding-top: 8px;
-  padding-bottom: 8px;
-  padding-left: 12px;
-  border-bottom-right-radius: 16px;
-  border-bottom-left-radius: 16px;
-  box-shadow: 0px -1px 0px rgba(0, 0, 0, 0.07999999821186066);
+  background-color: var(--bg-base);
+  padding: 0.65rem 0.75rem 0.75rem;
+  border-top: 1px solid var(--border);
   position: relative;
   width: 100%;
   display: flex;
   align-items: center;
+  gap: 0.5rem;
   box-sizing: border-box;
 }
 
@@ -60,17 +59,23 @@
   justify-content: flex-start;
   position: relative;
   box-sizing: border-box;
-  min-height: 2.4em;
+  min-height: 2.6rem;
 }
 
 .input-background {
-  opacity: 0.4;
   height: 100%;
   width: 100%;
-  border-radius: 0.8rem;
+  border-radius: 0.75rem;
   position: absolute;
   inset: 0;
-  border: 1px solid #ecebeb;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.input-container:focus-within .input-background {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .upload-button {
@@ -84,18 +89,18 @@
   border: none;
   border-radius: 50%;
   background: transparent;
+  color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  opacity: 0.75;
-  transition: opacity 0.15s ease, background-color 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .upload-button:hover:not(:disabled) {
-  opacity: 1;
-  background-color: rgba(0, 0, 0, 0.06);
+  color: var(--accent);
+  background-color: var(--bg-muted);
 }
 
 .upload-button:disabled {
@@ -104,7 +109,7 @@
 }
 
 .input-element-container {
-  padding: 8px 12px 8px 4px;
+  padding: 8px 12px 8px 6px;
   width: 100%;
   position: relative;
   box-sizing: border-box;
@@ -118,14 +123,14 @@
   resize: none;
   max-height: 6.4em;
   position: relative;
-  font-size: 14px;
+  font-size: 0.875rem;
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
 
-  color: rgba(0,0,0,.87);
+  color: var(--text);
   background-color: transparent;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-family: var(--font-sans);
 
   text-align: left;
   opacity: 1;
@@ -136,34 +141,45 @@
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-wrap: anywhere;
-
-  &:focus {
-    outline: none;
-  }
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
+.input-element::placeholder {
+  color: var(--text-muted);
+}
+
+.input-element:focus {
+  outline: none;
+}
+
+.input-element::-webkit-scrollbar {
+  display: none;
+}
+
 .send-container {
   position: relative;
-  padding-left: 16px;
-  padding-right: 16px;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.65rem;
   cursor: pointer;
   display: flex;
   align-items: center;
+  justify-content: center;
   opacity: 0.4;
   flex-shrink: 0;
-  padding-top: 8px;
-  padding-bottom: 8px;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.send-container.active {
+  opacity: 1;
+}
+
+.send-container.active:hover {
+  background: var(--accent-soft);
 }
 
 .input-form.drag-over {
-  outline: 2px dashed #8dd4e8;
+  outline: 2px dashed var(--accent);
   outline-offset: -2px;
 }
 
@@ -173,7 +189,7 @@
   align-items: center;
   gap: 8px;
   padding: 8px 12px 0;
-  background: #f3f4f6;
+  background: var(--bg-base);
 }
 
 .attachment-chip {
@@ -181,10 +197,11 @@
   align-items: center;
   gap: 6px;
   padding: 4px 8px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  font-size: 12px;
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
   max-width: 220px;
 }
 
@@ -197,14 +214,14 @@
 
 .chip-file-icon {
   flex-shrink: 0;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .chip-icon {
   text-transform: uppercase;
   font-size: 10px;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--text-muted);
 }
 
 .chip-name {
@@ -220,14 +237,14 @@
   cursor: pointer;
   font-size: 16px;
   line-height: 1;
-  color: #9ca3af;
+  color: var(--text-muted);
   padding: 0 2px;
   border-radius: 4px;
 }
 
 .chip-remove:hover:not(:disabled) {
-  color: #b91c1c;
-  background-color: rgba(185, 28, 28, 0.08);
+  color: var(--status-danger);
+  background-color: var(--status-danger-soft);
 }
 
 .chip-remove:disabled {
@@ -236,12 +253,8 @@
 }
 
 .input-error {
-  color: #b91c1c;
-  font-size: 12px;
+  color: var(--status-danger);
+  font-size: 0.75rem;
   padding: 4px 16px 0;
-  background: #f3f4f6;
-}
-
-.send-container.active {
-  opacity: 1;
+  background: var(--bg-base);
 }

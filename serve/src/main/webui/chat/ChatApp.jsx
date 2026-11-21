@@ -393,8 +393,8 @@ export default function ChatApp({
         conversationId={conversationId}
         disabled={sending || loadingHistory}
         title={headerTitle}
+        embedded={embedded}
         placeholder={loadingHistory ? 'Loading conversation…' : 'Type prompt here'}
-        theme="#8dd4e8"
       />
     </div>
   )

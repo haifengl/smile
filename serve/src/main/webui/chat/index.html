@@ -16,24 +16,29 @@
   ~ License along with SMILE Serve. If not, see
   ~ <https://www.gnu.org/licenses/>.
   -->
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Smile Chat</title>
+    <title>SMILE Chat</title>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
     <link rel="shortcut icon" href="/favicon.ico">
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-57GD08QCML"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-57GD08QCML');
+      (function () {
+        try {
+          var stored = localStorage.getItem('smile-theme');
+          var theme = stored === 'dark' || stored === 'light' ? stored : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      })();
     </script>
+    <style>
+      html, body { margin: 0; background: #f8fafc; color: #0f172a; }
+      html[data-theme="dark"], html[data-theme="dark"] body { background: #0b1220; color: #e2e8f0; }
+    </style>
   </head>
   <body>
     <div id="root"></div>

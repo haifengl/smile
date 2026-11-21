@@ -164,9 +164,7 @@ export default function WaterfallPlot({
             y1={marginTop - 20}
             x2={scaleX(baseValue)}
             y2={height - marginBottom + 10}
-            stroke="#94a3b8"
-            strokeWidth="1.5"
-            strokeDasharray="4, 3"
+            className="shap-wf-base-line"
           />
           <text
             x={scaleX(baseValue)}
@@ -184,16 +182,13 @@ export default function WaterfallPlot({
             y1={marginTop - 20}
             x2={scaleX(predictionValue)}
             y2={height - marginBottom + 10}
-            stroke="#111827"
-            strokeWidth="1.5"
+            className="shap-wf-pred-line"
           />
           <text
             x={scaleX(predictionValue)}
             y={marginTop - 26}
             textAnchor="middle"
-            className="shap-wf-text-val"
-            fontWeight="700"
-            fill="#111827"
+            className="shap-wf-pred-text"
           >
             f(x) = {formatShapNumber(predictionValue)}
           </text>
@@ -256,8 +251,7 @@ export default function WaterfallPlot({
                   x={isPos ? barX + barW + 6 : barX - 6}
                   y={barY + barH / 2 + 4}
                   textAnchor={isPos ? "start" : "end"}
-                  className="shap-wf-text-delta"
-                  fill={isPos ? "#ff0051" : "#008bfb"}
+                  className={`shap-wf-text-delta ${isPos ? "shap-wf-text-delta--pos" : "shap-wf-text-delta--neg"}`}
                 >
                   {formatSignedShap(row.attribution)}
                 </text>

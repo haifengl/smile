@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
  * SMILE Serve is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -17,8 +17,17 @@
  */
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
+import '@fontsource/ibm-plex-sans/400.css'
+import '@fontsource/ibm-plex-sans/500.css'
+import '@fontsource/ibm-plex-sans/600.css'
+import '@fontsource/ibm-plex-sans/700.css'
+import '@fontsource/ibm-plex-mono/400.css'
+import '@fontsource/ibm-plex-mono/500.css'
+import '@fontsource/ibm-plex-mono/600.css'
+import '../shared/tokens.css'
+import '../shared/rjsf.css'
 import './index.css'
+import App from './App.jsx'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

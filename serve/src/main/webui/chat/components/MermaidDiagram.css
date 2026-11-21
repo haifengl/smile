@@ -19,9 +19,9 @@
   position: relative;
   margin: 0.75em 0;
   padding: 12px 16px;
-  background: #f8fafc;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
   overflow-x: auto;
   text-align: center;
   line-height: normal;
@@ -46,20 +46,23 @@
 .mermaid-download-btn {
   width: 32px;
   height: 32px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(17, 24, 39, 0.72);
-  color: #fff;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.5rem;
+  background: var(--bg-elevated);
+  color: var(--text);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow);
+  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .mermaid-download-btn:hover {
-  background: rgba(17, 24, 39, 0.9);
+  background: var(--bg-muted);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .mermaid-download-menu {
@@ -68,10 +71,10 @@
   right: 0;
   min-width: 140px;
   padding: 4px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+  box-shadow: var(--shadow);
   text-align: left;
 }
 
@@ -82,14 +85,16 @@
   background: transparent;
   text-align: left;
   padding: 8px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  color: #111827;
+  border-radius: 0.45rem;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--text);
   cursor: pointer;
 }
 
 .mermaid-download-item:hover:not(:disabled) {
-  background: #f3f4f6;
+  background: var(--bg-muted);
+  color: var(--accent);
 }
 
 .mermaid-download-item:disabled {
@@ -99,8 +104,8 @@
 
 .mermaid-download-error {
   padding: 6px 10px;
-  font-size: 12px;
-  color: #b91c1c;
+  font-size: 0.75rem;
+  color: var(--status-danger);
 }
 
 .mermaid-block--loading,
@@ -111,24 +116,24 @@
 }
 
 .mermaid-loading {
-  color: #6b7280;
-  font-size: 13px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
 }
 
 .mermaid-error {
-  color: #b91c1c;
-  font-size: 13px;
+  color: var(--status-danger);
+  font-size: 0.8125rem;
   margin-bottom: 8px;
 }
 
 .mermaid-fallback {
   margin: 0;
   padding: 8px 0 0;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   white-space: pre-wrap;
   word-break: break-word;
-  color: #374151;
+  color: var(--text-muted);
   background: transparent;
   border: none;
 }

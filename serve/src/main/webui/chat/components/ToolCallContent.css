@@ -23,15 +23,18 @@
 }
 
 .tool-call-card {
-  border-left: 3px solid var(--chat-accent, #0d6efd);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 0.5rem 0.5rem 0;
   padding: 0.5rem 0.75rem;
-  background: color-mix(in srgb, var(--chat-accent, #0d6efd) 8%, transparent);
+  background: var(--accent-soft);
+  color: var(--text);
   font-size: 0.875rem;
 }
 
 .tool-call-name {
   font-weight: 600;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
+  color: var(--accent);
   margin-bottom: 0.25rem;
 }
 
@@ -39,6 +42,7 @@
   margin: 0;
   white-space: pre-wrap;
   word-break: break-word;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: 0.8rem;
+  color: var(--text);
 }

@@ -5,6 +5,15 @@
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
+ *
+ * SMILE Serve is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with SMILE Serve. If not, see
+ * <https://www.gnu.org/licenses/>.
  */
 .sso-gate {
   display: flex;
@@ -13,19 +22,20 @@
   width: 100%;
   height: 100%;
   min-height: 320px;
-  padding: 24px;
+  padding: 1.5rem;
   box-sizing: border-box;
+  background: var(--bg-base);
 }
 
 .sso-gate__card {
   width: 100%;
-  max-width: 400px;
-  padding: 32px 28px;
-  border-radius: 14px;
-  background: #ffffff;
-  color: #1a1a2e;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.06);
+  max-width: 420px;
+  padding: 2rem 1.75rem;
+  border-radius: 1rem;
+  background: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
   text-align: center;
 }
 
@@ -35,10 +45,10 @@
   justify-content: center;
   width: 48px;
   height: 48px;
-  border-radius: 12px;
-  background: rgba(37, 99, 235, 0.1);
-  color: #2563eb;
-  margin-bottom: 14px;
+  border-radius: 0.75rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+  margin-bottom: 0.9rem;
 }
 
 .sso-gate__icon {
@@ -47,25 +57,28 @@
 }
 
 .sso-gate__title {
-  margin: 0 0 8px;
+  margin: 0 0 0.5rem;
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
 }
 
 .sso-gate__subtitle {
-  margin: 0 0 22px;
-  font-size: 0.92rem;
-  line-height: 1.5;
-  color: #52526c;
+  margin: 0 0 1.4rem;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-muted);
 }
 
 .sso-gate__error {
-  margin: 8px 0 0;
-  padding: 12px 14px;
-  border-radius: 8px;
-  background: rgba(220, 38, 38, 0.08);
-  color: #b91c1c;
-  font-size: 0.9rem;
+  margin: 0.5rem 0 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.65rem;
+  background: var(--status-danger-soft);
+  border: 1px solid color-mix(in srgb, var(--status-danger) 30%, transparent);
+  color: var(--status-danger);
+  font-size: 0.875rem;
   line-height: 1.45;
   word-break: break-word;
 }
@@ -74,46 +87,27 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 0.5rem;
   width: 100%;
-  padding: 11px 16px;
-  border: none;
-  border-radius: 8px;
-  background: #2563eb;
-  color: #ffffff;
-  font-size: 0.95rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--accent);
+  border-radius: 0.65rem;
+  background: var(--accent);
+  color: var(--accent-fg);
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .sso-gate__button:hover {
-  background: #1d4ed8;
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  box-shadow: var(--accent-glow);
 }
 
 .sso-gate__button-icon {
   width: 18px;
   height: 18px;
-}
-
-@media (prefers-color-scheme: dark) {
-  .sso-gate__card {
-    background: #1e1e2f;
-    color: rgba(255, 255, 255, 0.92);
-    border-color: rgba(255, 255, 255, 0.12);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.32);
-  }
-
-  .sso-gate__icon-wrap {
-    background: rgba(96, 165, 250, 0.16);
-    color: #60a5fa;
-  }
-
-  .sso-gate__subtitle {
-    color: rgba(255, 255, 255, 0.7);
-  }
-
-  .sso-gate__error {
-    background: rgba(239, 68, 68, 0.15);
-    color: #fca5a5;
-  }
 }

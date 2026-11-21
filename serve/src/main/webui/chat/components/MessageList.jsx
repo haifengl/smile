@@ -26,7 +26,7 @@ export default function MessageList({
     userId,
     showTypingIndicator,
     typingIndicatorContent,
-    theme = '#8dd4e8',
+    theme = 'var(--accent)',
 }) {
     const bottomBufferRef = useRef();
     const scrollContainerRef = useRef();
