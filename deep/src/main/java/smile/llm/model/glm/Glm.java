@@ -553,7 +553,8 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
             Tensor pixels = images.isEmpty() ? null
                     : images.size() == 1 ? images.get(0).pixels().copy()
                     : Tensor.vstack(images.stream().map(GlmVisionProcessor.Patches::pixels).toArray(Tensor[]::new));
-            return new GlmMultimodal(ids, pixels, images.stream().map(GlmVisionProcessor.Patches::grid).toArray(int[][]::new));
+            return new GlmMultimodal(ids, pixels, images.stream().map(GlmVisionProcessor.Patches::grid).toArray(int[][]::new),
+                    images.stream().map(Glm::imageKey).toArray(String[]::new));
         } finally {
             for (var p : images) {
                 p.pixels().close();
@@ -610,7 +611,7 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         List<Tensor> results = gatherAllRanks(rank -> {
             try (var guard = Tensor.noGradGuard()) {
                 GlmModel m = replicas[rank];
-                Tensor features = imageTokens == 0 ? null : m.encodeImages(visionArgs, mm.imagePixels(), mm.imageGrids());
+                Tensor features = imageTokens == 0 ? null : m.imageFeatures(visionArgs, mm.imagePixels(), mm.imageGrids(), mm.imageKeys());
                 try {
                     Tensor out = null;
                     int seen = imagesBefore;
@@ -661,6 +662,31 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
             return null;
         }
         return logits;
+    }
+
+    /** The content key of an image: SHA-256 over its patch grid and patch rows. */
+    private static String imageKey(GlmVisionProcessor.Patches p) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            for (int v : p.grid()) {
+                md.update((byte) (v >>> 24));
+                md.update((byte) (v >>> 16));
+                md.update((byte) (v >>> 8));
+                md.update((byte) v);
+            }
+            float[] px = p.pixels().floatArray();
+            java.nio.ByteBuffer buf = java.nio.ByteBuffer.allocate(1 << 16);
+            for (int i = 0; i < px.length; ) {
+                buf.clear();
+                for (; i < px.length && buf.remaining() >= 4; i++) {
+                    buf.putFloat(px[i]);
+                }
+                md.update(buf.array(), 0, buf.position());
+            }
+            return java.util.HexFormat.of().formatHex(md.digest());
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     @Override
