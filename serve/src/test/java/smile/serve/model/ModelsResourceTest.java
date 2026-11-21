@@ -27,7 +27,7 @@ public class ModelsResourceTest {
     public void testGivenLoadedSmileAndOnnxWhenListThenIncludesThem() {
         // %test profile: chat unavailable; iris .sml (+ optional onnx) present
         given()
-            .when().get("/api/v1/models")
+            .when().get("/v1/models")
             .then()
                 .statusCode(200)
                 .body("object", equalTo("list"))
@@ -40,7 +40,7 @@ public class ModelsResourceTest {
     @Test
     public void testGivenLoadedSmileWhenRetrieveThenReturnsModelObject() {
         given()
-            .when().get("/api/v1/models/iris_random_forest-1")
+            .when().get("/v1/models/iris_random_forest-1")
             .then()
                 .statusCode(200)
                 .body("id", equalTo("iris_random_forest-1"))
@@ -58,7 +58,7 @@ public class ModelsResourceTest {
     @Test
     public void testGivenListWhenSmileModelThenOmitsDetailBlocks() {
         given()
-            .when().get("/api/v1/models")
+            .when().get("/v1/models")
             .then()
                 .statusCode(200)
                 .body("data.find { it.id == 'iris_random_forest-1' }.smile", nullValue())
@@ -69,7 +69,7 @@ public class ModelsResourceTest {
     @Test
     public void testGivenUnknownIdWhenRetrieveThenReturns404() {
         given()
-            .when().get("/api/v1/models/does-not-exist")
+            .when().get("/v1/models/does-not-exist")
             .then()
                 .statusCode(404);
     }
@@ -111,7 +111,7 @@ public class ModelsResourceTest {
         given()
             .contentType(io.restassured.http.ContentType.JSON)
             .body("{\"model\":\"serve/src/test/resources/model/iris_random_forest.sml\"}")
-            .when().post("/api/v1/models/load")
+            .when().post("/v1/models/load")
             .then()
                 .statusCode(409);
     }
@@ -121,14 +121,14 @@ public class ModelsResourceTest {
         given()
             .contentType(io.restassured.http.ContentType.JSON)
             .body("{\"model\":\"   \"}")
-            .when().post("/api/v1/models/load")
+            .when().post("/v1/models/load")
             .then()
                 .statusCode(400);
 
         given()
             .contentType(io.restassured.http.ContentType.JSON)
             .body("{\"kind\":\"sml\"}")
-            .when().post("/api/v1/models/load")
+            .when().post("/v1/models/load")
             .then()
                 .statusCode(400);
     }
@@ -138,7 +138,7 @@ public class ModelsResourceTest {
         given()
             .contentType(io.restassured.http.ContentType.JSON)
             .body("{\"model\":\"serve/src/test/resources/model/non_existent.sml\",\"kind\":\"sml\"}")
-            .when().post("/api/v1/models/load")
+            .when().post("/v1/models/load")
             .then()
                 .statusCode(404);
     }
@@ -147,7 +147,7 @@ public class ModelsResourceTest {
     public void testGivenUnloadedModelWhenDynamicLoadWithSmileAliasThenSucceeds() {
         // Unload iris_random_forest-1
         given()
-            .when().post("/api/v1/smile/iris_random_forest-1/unload?timeout=5")
+            .when().post("/v1/smile/iris_random_forest-1/unload?timeout=5")
             .then()
                 .statusCode(200);
 
@@ -155,7 +155,7 @@ public class ModelsResourceTest {
         given()
             .contentType(io.restassured.http.ContentType.JSON)
             .body("{\"model\":\"serve/src/test/resources/model/iris_random_forest.sml\",\"kind\":\"smile\"}")
-            .when().post("/api/v1/models/load")
+            .when().post("/v1/models/load")
             .then()
                 .statusCode(200)
                 .body("status", equalTo("loaded"))
@@ -166,7 +166,7 @@ public class ModelsResourceTest {
         given()
             .contentType(io.restassured.http.ContentType.JSON)
             .body("{\"model\":\"serve/src/test/resources/model/iris_random_forest.sml\",\"kind\":\"sml\"}")
-            .when().post("/api/v1/models/load")
+            .when().post("/v1/models/load")
             .then()
                 .statusCode(409);
     }
@@ -175,14 +175,14 @@ public class ModelsResourceTest {
     public void testGivenUnloadedOnnxWhenDynamicLoadThenSucceeds() {
         // Unload squeezenet if loaded
         given()
-            .when().post("/api/v1/onnx/squeezenet/unload?timeout=5")
+            .when().post("/v1/onnx/squeezenet/unload?timeout=5")
             .then();
 
         // Dynamically load using kind="onnx"
         given()
             .contentType(io.restassured.http.ContentType.JSON)
             .body("{\"model\":\"serve/src/test/resources/model/squeezenet.onnx\",\"kind\":\"onnx\"}")
-            .when().post("/api/v1/models/load")
+            .when().post("/v1/models/load")
             .then()
                 .statusCode(200)
                 .body("status", equalTo("loaded"))
@@ -193,7 +193,7 @@ public class ModelsResourceTest {
         given()
             .contentType(io.restassured.http.ContentType.JSON)
             .body("{\"model\":\"serve/src/test/resources/model/squeezenet.onnx\"}")
-            .when().post("/api/v1/models/load")
+            .when().post("/v1/models/load")
             .then()
                 .statusCode(409);
     }
@@ -203,7 +203,7 @@ public class ModelsResourceTest {
         given()
             .contentType(io.restassured.http.ContentType.JSON)
             .body("{\"model\":\"dummy\",\"kind\":\"unsupported\"}")
-            .when().post("/api/v1/models/load")
+            .when().post("/v1/models/load")
             .then()
                 .statusCode(400);
     }
@@ -214,14 +214,14 @@ public class ModelsResourceTest {
         given()
             .contentType(io.restassured.http.ContentType.JSON)
             .body("{\"model\":\"serve/src/test/resources/no-such-model\",\"kind\":\"chat\",\"config\":{\"max_batch_size\":8}}")
-            .when().post("/api/v1/models/load")
+            .when().post("/v1/models/load")
             .then()
                 .statusCode(400);
 
         given()
             .contentType(io.restassured.http.ContentType.JSON)
             .body("{\"model\":\"serve/src/test/resources/no-such-model\",\"kind\":\"llm\",\"config\":{\"devices\":\"0\"}}")
-            .when().post("/api/v1/models/load")
+            .when().post("/v1/models/load")
             .then()
                 .statusCode(400);
     }

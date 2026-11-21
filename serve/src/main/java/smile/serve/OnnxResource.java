@@ -41,32 +41,32 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
 
 /**
  * REST resource exposing the ONNX model inference and control API at
- * {@code /api/v1/onnx}.
+ * {@code /v1/onnx}.
  *
  * <ul>
- *   <li>{@code GET  /onnx/{id}}          – retrieve ONNX model metadata.</li>
- *   <li>{@code GET  /onnx/{id}/health}   – inspect model operational status.</li>
- *   <li>{@code POST /onnx/{id}}          – single JSON inference request.</li>
- *   <li>{@code POST /onnx/{id}/stream}   – streaming inference (JSON lines
+ *   <li>{@code GET  /v1/onnx/{id}}          – retrieve ONNX model metadata.</li>
+ *   <li>{@code GET  /v1/onnx/{id}/health}   – inspect model operational status.</li>
+ *   <li>{@code POST /v1/onnx/{id}}          – single JSON inference request.</li>
+ *   <li>{@code POST /v1/onnx/{id}/stream}   – streaming inference (JSON lines
  *       or CSV text for single-input models).</li>
- *   <li>{@code POST /onnx/{id}/reload}   – reload ONNX model from disk (localhost only).</li>
- *   <li>{@code POST /onnx/{id}/unload}   – unload ONNX model from memory (localhost only).</li>
+ *   <li>{@code POST /v1/onnx/{id}/reload}   – reload ONNX model from disk (localhost only).</li>
+ *   <li>{@code POST /v1/onnx/{id}/unload}   – unload ONNX model from memory (localhost only).</li>
  * </ul>
  *
- * <p>The unified model catalog is {@code GET /api/v1/models}.
+ * <p>The unified model catalog is {@code GET /v1/models}.
  *
  * <h2>Request format</h2>
  * <p>For single-shot inference, the request body is a JSON object mapping
  * each input name to a flat array of numeric or string values:
  * <pre>{@code
- * POST /api/v1/onnx/resnet50
+ * POST /v1/onnx/resnet50
  * Content-Type: application/json
  *
  * { "input": [0.1, 0.2, ..., 0.3] }
  * }</pre>
  * or for models with string inputs:
  * <pre>{@code
- * POST /api/v1/onnx/text_classifier
+ * POST /v1/onnx/text_classifier
  * Content-Type: application/json
  *
  * { "text": ["positive", "neutral"] }
@@ -84,7 +84,7 @@ import org.jboss.resteasy.reactive.RestStreamElementType;
  *
  * @author Haifeng Li
  */
-@Path("/onnx")
+@Path("/v1/onnx")
 public class OnnxResource {
 
     @Inject

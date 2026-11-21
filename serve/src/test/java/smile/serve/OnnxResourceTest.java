@@ -25,7 +25,7 @@ public class OnnxResourceTest {
     @Test
     public void testGetOnnxModelInfo() {
         given()
-            .when().get("/api/v1/onnx/squeezenet")
+            .when().get("/v1/onnx/squeezenet")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -37,7 +37,7 @@ public class OnnxResourceTest {
     @Test
     public void testGetOnnxModelHealth() {
         given()
-            .when().get("/api/v1/onnx/squeezenet/health")
+            .when().get("/v1/onnx/squeezenet/health")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -50,7 +50,7 @@ public class OnnxResourceTest {
     @Test
     public void testReloadOnnxModel() {
         given()
-            .when().post("/api/v1/onnx/squeezenet/reload")
+            .when().post("/v1/onnx/squeezenet/reload")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -63,7 +63,7 @@ public class OnnxResourceTest {
     public void testUnloadAndReloadOnnxModel() {
         // Unload the ONNX model
         given()
-            .when().post("/api/v1/onnx/squeezenet/unload?timeout=5")
+            .when().post("/v1/onnx/squeezenet/unload?timeout=5")
             .then()
                 .statusCode(200)
                 .contentType(ContentType.JSON)
@@ -73,19 +73,19 @@ public class OnnxResourceTest {
 
         // Subsequent info request should return 404
         given()
-            .when().get("/api/v1/onnx/squeezenet")
+            .when().get("/v1/onnx/squeezenet")
             .then()
                 .statusCode(404);
 
         // Subsequent health request should return 404
         given()
-            .when().get("/api/v1/onnx/squeezenet/health")
+            .when().get("/v1/onnx/squeezenet/health")
             .then()
                 .statusCode(404);
 
         // Reload unloaded model from disk should restore it
         given()
-            .when().post("/api/v1/onnx/squeezenet/reload")
+            .when().post("/v1/onnx/squeezenet/reload")
             .then()
                 .statusCode(200)
                 .body("status", is("reloaded"))
@@ -93,7 +93,7 @@ public class OnnxResourceTest {
 
         // Verify model is accessible again
         given()
-            .when().get("/api/v1/onnx/squeezenet")
+            .when().get("/v1/onnx/squeezenet")
             .then()
                 .statusCode(200)
                 .body("id", is("squeezenet"));
@@ -102,7 +102,7 @@ public class OnnxResourceTest {
     @Test
     public void testGetNonExistentOnnxModelReturns404() {
         given()
-            .when().get("/api/v1/onnx/non_existent_model")
+            .when().get("/v1/onnx/non_existent_model")
             .then()
                 .statusCode(404);
     }
