@@ -36,7 +36,7 @@ public interface InferenceServiceConfig {
      * <p>Defaults to {@code false}: a standalone {@code smile serve} that finds
      * no model exits at startup rather than idling with nothing to serve. Set
      * {@code smile.serve.allow-empty=true} for dynamic-load mode, where models
-     * arrive later via {@code POST /api/v1/models/load} — Studio starts the
+     * arrive later via {@code POST /v1/models/load} — Studio starts the
      * service this way so one process can serve many models.
      *
      * @return {@code true} when an empty catalog is permitted at startup.

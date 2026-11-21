@@ -212,8 +212,8 @@ public final class LocalLlmDetector {
                 new ProbeTarget(
                         "local-serve",
                         "SMILE Serve",
-                        "http://localhost:" + port + "/api/v1",
-                        "http://127.0.0.1:" + port + "/api/v1/models"
+                        "http://localhost:" + port + "/v1",
+                        "http://127.0.0.1:" + port + "/v1/models"
                 ),
                 new ProbeTarget(
                         "ollama",

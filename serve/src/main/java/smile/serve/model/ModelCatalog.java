@@ -41,7 +41,7 @@ public class ModelCatalog {
      *
      * <p>When {@code smile.serve.allow-empty=true} the service stays up with an
      * empty catalog so models can be loaded later through
-     * {@code POST /api/v1/models/load}. Without this, a dynamic-load client
+     * {@code POST /v1/models/load}. Without this, a dynamic-load client
      * (Studio) would race the exit: it starts the service empty and loads a
      * model immediately after, but the service would already have shut down.
      *

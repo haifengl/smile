@@ -23,8 +23,8 @@ import java.io.IOException;
  * Raised when SMILE Serve rejects a model-management request because it did not
  * originate from localhost.
  *
- * <p>The management endpoints ({@code POST /api/v1/models/load},
- * {@code /smile/{id}/reload}, {@code /unload}) are annotated {@code @LocalhostOnly}
+ * <p>The management endpoints ({@code POST /v1/models/load},
+ * {@code /v1/smile/{id}/reload}, {@code /v1/smile/{id}/unload}) are annotated {@code @LocalhostOnly}
  * and answer {@code 403 Forbidden} to every non-loopback caller. Studio can
  * therefore attach to a remote engine to inspect it, but cannot load, reload, or
  * unload models in it. This exception lets the UI say so explicitly instead of

@@ -46,7 +46,7 @@ import smile.shell.Serve;
  * authorization to kill (see {@link ServePidFile}).
  *
  * <p>Once running, N models share one JVM: models are loaded into it through
- * {@code POST /api/v1/models/load} rather than by starting a process per model.
+ * {@code POST /v1/models/load} rather than by starting a process per model.
  *
  * <p><strong>Threading.</strong> No network call is ever made while holding the
  * manager monitor, because the Swing EDT reads state through

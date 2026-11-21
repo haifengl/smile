@@ -35,8 +35,8 @@ import tools.jackson.databind.ObjectMapper;
  *
  * <p>The client targets the engine at the configured {@code host:port}, so it can
  * talk to a locally launched serve instance or to a shared/remote one. Note that
- * the model-management endpoints ({@code /api/v1/models/load},
- * {@code /smile/{id}/reload}, {@code /unload}) are {@code @LocalhostOnly} on the
+ * the model-management endpoints ({@code /v1/models/load},
+ * {@code /v1/smile/{id}/reload}, {@code /v1/smile/{id}/unload}) are {@code @LocalhostOnly} on the
  * server: a remote engine answers {@code 403}, which this class reports as
  * {@link ServeManagementForbiddenException} rather than a generic failure.
  *
@@ -177,7 +177,7 @@ public final class ServeClient {
      * @throws InterruptedException if the request is interrupted.
      */
     public String loadModel(String modelPath) throws IOException, InterruptedException {
-        var response = post("/api/v1/models/load", Map.of("model", modelPath, "kind", "auto"));
+        var response = post("/v1/models/load", Map.of("model", modelPath, "kind", "auto"));
         int status = response.statusCode();
         if (status == 409) {
             return null;
@@ -209,9 +209,9 @@ public final class ServeClient {
      * @throws InterruptedException if the request is interrupted.
      */
     public boolean unloadModel(String id) throws IOException, InterruptedException {
-        var response = post("/api/v1/smile/" + id + "/unload", Map.of());
+        var response = post("/v1/smile/" + id + "/unload", Map.of());
         if (response.statusCode() == 404) {
-            response = post("/api/v1/onnx/" + id + "/unload", Map.of());
+            response = post("/v1/onnx/" + id + "/unload", Map.of());
         }
         if (response.statusCode() == 403) {
             throw forbidden("unload a model");
@@ -230,9 +230,9 @@ public final class ServeClient {
      * @throws InterruptedException if the request is interrupted.
      */
     public boolean reloadModel(String id) throws IOException, InterruptedException {
-        var response = post("/api/v1/smile/" + id + "/reload", Map.of());
+        var response = post("/v1/smile/" + id + "/reload", Map.of());
         if (response.statusCode() == 404) {
-            response = post("/api/v1/onnx/" + id + "/reload", Map.of());
+            response = post("/v1/onnx/" + id + "/reload", Map.of());
         }
         if (response.statusCode() == 403) {
             throw forbidden("reload a model");
@@ -261,7 +261,7 @@ public final class ServeClient {
      */
     public Optional<List<String>> fetchModels() {
         try {
-            var response = get("/api/v1/models");
+            var response = get("/v1/models");
             if (response.statusCode() != 200) {
                 return Optional.empty();
             }

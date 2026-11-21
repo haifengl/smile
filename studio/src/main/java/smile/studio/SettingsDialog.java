@@ -85,7 +85,7 @@ public class SettingsDialog extends JDialog implements ActionListener {
     private static final String[] anthropicBaseUrls = { "https://api.anthropic.com" };
     private static final String[] geminiBaseUrls = { "https://generativelanguage.googleapis.com" };
     private static final String[] otherBaseUrls = {
-            "http://localhost:8888/api/v1", // SMILE Serve
+            "http://localhost:8888/v1",     // SMILE Serve
             "http://localhost:11434/v1",    // Ollama
             "http://localhost:8080/v1",     // Llama.cpp or LocalAI
             "http://localhost:1234/v1",     // LM Studio

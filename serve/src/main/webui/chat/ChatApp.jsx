@@ -35,7 +35,7 @@ const server = {
 }
 
 const client = new OpenAI({
-  baseURL: `${window.location.origin}/api/v1`,
+  baseURL: `${window.location.origin}/v1`,
   apiKey: 'not-needed',
   dangerouslyAllowBrowser: true,
 })

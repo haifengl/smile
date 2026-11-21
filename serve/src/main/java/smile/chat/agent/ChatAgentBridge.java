@@ -25,7 +25,7 @@ import smile.chat.CompletionRequest;
 import smile.llm.ChatCompletion;
 
 /**
- * SPI bridging SMILE Serve's OAuth authentication and {@code /api/v1/chat/completions}
+ * SPI bridging SMILE Serve's OAuth authentication and {@code /v1/chat/completions}
  * endpoint to the server-side {@code kirin} personal assistant agent when the
  * {@code ioa-agent} runtime is packaged (specifically in {@code Dockerfile.gpu}).
  *
