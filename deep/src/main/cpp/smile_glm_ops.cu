@@ -175,6 +175,178 @@ __global__ void __launch_bounds__(128) kda_kernel(
     for (int r = 0; r < kRows; ++r) S[(int64_t) (warp * kRows + r) * kKD + col] = st[r];
 }
 
+/**
+ * Prefill, step 1: everything of a token that does not depend on the recurrent state, computed for all tokens in parallel.
+ * One block per (token, head), thread d = key/value dimension d: the causal conv over q, k, v (the three rows before the
+ * chunk come from the conv state), SiLU, the L2 norms of q and k, the per-channel decay. Writes per row
+ * w = {k_n g, q_n g, k_n, g}, v, and {beta, q_n . k_n}.
+ */
+__global__ void __launch_bounds__(128) kda_prep_kernel(
+        const float* __restrict__ raw, const float* __restrict__ fg, const float* __restrict__ braw,
+        const float* __restrict__ convw, const float* __restrict__ a_log, const float* __restrict__ dt_bias,
+        const float* __restrict__ conv_state, const int* __restrict__ slots,
+        float* __restrict__ pw, float* __restrict__ pv, float* __restrict__ ps, int T, int H, float bound) {
+    const int t = blockIdx.x;
+    const int bh = blockIdx.y;
+    const int b = bh / H;
+    const int h = bh % H;
+    const int tid = threadIdx.x;
+    const int W = H * kKD;
+    const int C = 3 * W;
+    const float* rawb = raw + (int64_t) b * T * C;
+    const float* cs = conv_state + (int64_t) slots[b] * 3 * C;
+    const int qc = h * kKD + tid;
+    const int kc = W + h * kKD + tid;
+    const int vc = 2 * W + h * kKD + tid;
+    float qx[4], kx[4], vx[4];
+#pragma unroll
+    for (int j = 0; j < 4; ++j) {
+        const int tau = t - 3 + j;
+        if (tau >= 0) {
+            qx[j] = rawb[(int64_t) tau * C + qc];
+            kx[j] = rawb[(int64_t) tau * C + kc];
+            vx[j] = rawb[(int64_t) tau * C + vc];
+        } else {
+            qx[j] = cs[(int64_t) (3 + tau) * C + qc];
+            kx[j] = cs[(int64_t) (3 + tau) * C + kc];
+            vx[j] = cs[(int64_t) (3 + tau) * C + vc];
+        }
+    }
+    const float4 wq = *reinterpret_cast<const float4*>(convw + (int64_t) qc * 4);
+    const float4 wk = *reinterpret_cast<const float4*>(convw + (int64_t) kc * 4);
+    const float4 wv = *reinterpret_cast<const float4*>(convw + (int64_t) vc * 4);
+    float qv = silu_f(wq.x * qx[0] + wq.y * qx[1] + wq.z * qx[2] + wq.w * qx[3]);
+    float kv = silu_f(wk.x * kx[0] + wk.y * kx[1] + wk.z * kx[2] + wk.w * kx[3]);
+    float vv = silu_f(wv.x * vx[0] + wv.y * vx[1] + wv.z * vx[2] + wv.w * vx[3]);
+    float qq = qv * qv, kk = kv * kv, qk = qv * kv;
+#pragma unroll
+    for (int o = 16; o > 0; o >>= 1) {
+        qq += __shfl_xor_sync(0xffffffffu, qq, o);
+        kk += __shfl_xor_sync(0xffffffffu, kk, o);
+        qk += __shfl_xor_sync(0xffffffffu, qk, o);
+    }
+    __shared__ float s_norm[4][3];
+    if ((tid & 31) == 0) {
+        s_norm[tid >> 5][0] = qq;
+        s_norm[tid >> 5][1] = kk;
+        s_norm[tid >> 5][2] = qk;
+    }
+    __syncthreads();
+    qq = s_norm[0][0] + s_norm[1][0] + s_norm[2][0] + s_norm[3][0];
+    kk = s_norm[0][1] + s_norm[1][1] + s_norm[2][1] + s_norm[3][1];
+    qk = s_norm[0][2] + s_norm[1][2] + s_norm[2][2] + s_norm[3][2];
+    const float q_inv = 1.f / sqrtf(qq + 1e-6f);
+    const float k_inv = 1.f / sqrtf(kk + 1e-6f);
+    const float kn = kv * k_inv;
+    const float qn = qv * q_inv * rsqrtf((float) kKD);
+    const float gk = expf(bound * sigmoid_f(expf(a_log[h]) * (fg[((int64_t) b * T + t) * W + h * kKD + tid] + dt_bias[h * kKD + tid])));
+    const int64_t row = ((int64_t) b * T + t) * H + h;
+    float* w = pw + row * 4 * kKD;
+    w[tid] = kn * gk;
+    w[kKD + tid] = qn * gk;
+    w[2 * kKD + tid] = kn;
+    w[3 * kKD + tid] = gk;
+    pv[row * kKD + tid] = vv;
+    if (tid == 0) {
+        ps[row * 2] = sigmoid_f(braw[row]);
+        ps[row * 2 + 1] = qk * q_inv * k_inv * rsqrtf((float) kKD);
+    }
+}
+
+/**
+ * Prefill, step 2: the recurrence over the prepared rows. The row weights of a token sit in the registers of the lane that
+ * owns the row; a warp only reads rows of its own 32 (shared memory + __syncwarp), so a token costs one block barrier
+ * (the cross-warp sum of the two dot products).
+ */
+__global__ void __launch_bounds__(128) kda_scan_kernel(
+        const float* __restrict__ pw, const float* __restrict__ pv, const float* __restrict__ ps,
+        float* __restrict__ rec_state, const int* __restrict__ slots, float* __restrict__ out, int T, int H) {
+    const int v0 = blockIdx.x * kCols;
+    const int bh = blockIdx.y;
+    const int b = bh / H;
+    const int h = bh % H;
+    const int tid = threadIdx.x;
+    const int lane = tid & 31;
+    const int warp = tid >> 5;
+    const int col = v0 + lane;
+    float* S = rec_state + ((int64_t) slots[b] * H + h) * kKD * kKD;
+
+    __shared__ float4 s_w[2][kKD];
+    __shared__ float2 s_red[2][4][kCols];
+
+    float st[kRows];
+#pragma unroll
+    for (int r = 0; r < kRows; ++r) st[r] = S[(int64_t) (warp * kRows + r) * kKD + col];
+
+    // the rows of the next group of kU tokens are loaded while the current group runs (an L2 round trip is longer than a token)
+    constexpr int kU = 4;
+    const int64_t row0 = (int64_t) b * T * H + h;
+    float4 cw[kU], nw[kU];
+    float cv[kU], nv[kU];
+    float2 cs[kU], ns[kU];
+#pragma unroll
+    for (int u = 0; u < kU; ++u) {
+        const int64_t row = row0 + (int64_t) u * H;
+        if (u < T) {
+            cw[u] = make_float4(pw[row * 4 * kKD + tid], pw[row * 4 * kKD + kKD + tid],
+                                pw[row * 4 * kKD + 2 * kKD + tid], pw[row * 4 * kKD + 3 * kKD + tid]);
+            cv[u] = pv[row * kKD + col];
+            cs[u] = *reinterpret_cast<const float2*>(ps + row * 2);
+        }
+    }
+    for (int t0 = 0; t0 < T; t0 += kU) {
+#pragma unroll
+        for (int u = 0; u < kU; ++u) {
+            const int64_t row = row0 + (int64_t) (t0 + kU + u) * H;
+            if (t0 + kU + u < T) {
+                nw[u] = make_float4(pw[row * 4 * kKD + tid], pw[row * 4 * kKD + kKD + tid],
+                                    pw[row * 4 * kKD + 2 * kKD + tid], pw[row * 4 * kKD + 3 * kKD + tid]);
+                nv[u] = pv[row * kKD + col];
+                ns[u] = *reinterpret_cast<const float2*>(ps + row * 2);
+            }
+        }
+#pragma unroll
+        for (int u = 0; u < kU; ++u) {
+            const int t = t0 + u;
+            if (t < T) {
+                s_w[u & 1][tid] = cw[u];
+                __syncwarp();
+                float a0 = 0.f, a1 = 0.f, b0 = 0.f, b1 = 0.f;
+#pragma unroll
+                for (int r = 0; r < kRows; r += 2) {
+                    const float4 x0 = s_w[u & 1][warp * kRows + r];
+                    const float4 x1 = s_w[u & 1][warp * kRows + r + 1];
+                    a0 += st[r] * x0.x;
+                    b0 += st[r] * x0.y;
+                    a1 += st[r + 1] * x1.x;
+                    b1 += st[r + 1] * x1.y;
+                }
+                s_red[u & 1][warp][lane] = make_float2(a0 + a1, b0 + b1);
+                __syncthreads();
+                const float a = s_red[u & 1][0][lane].x + s_red[u & 1][1][lane].x + s_red[u & 1][2][lane].x + s_red[u & 1][3][lane].x;
+                const float bsum = s_red[u & 1][0][lane].y + s_red[u & 1][1][lane].y + s_red[u & 1][2][lane].y + s_red[u & 1][3][lane].y;
+                const float delta = (cv[u] - a) * cs[u].x;
+                if (warp == 0) {
+                    out[(((int64_t) b * T + t) * H + h) * kKD + col] = bsum + cs[u].y * delta;
+                }
+#pragma unroll
+                for (int r = 0; r < kRows; ++r) {
+                    const float4 x = s_w[u & 1][warp * kRows + r];
+                    st[r] = x.w * st[r] + x.z * delta;
+                }
+            }
+        }
+#pragma unroll
+        for (int u = 0; u < kU; ++u) {
+            cw[u] = nw[u];
+            cv[u] = nv[u];
+            cs[u] = ns[u];
+        }
+    }
+#pragma unroll
+    for (int r = 0; r < kRows; ++r) S[(int64_t) (warp * kRows + r) * kKD + col] = st[r];
+}
+
 /** Rolls the last three raw rows into the conv state (a thread handles all three steps of its channel, in order). */
 __global__ void kda_conv_state_kernel(const float* __restrict__ raw, float* __restrict__ conv_state,
                                       const int* __restrict__ slots, int T, int C) {
@@ -1410,10 +1582,27 @@ extern "C" ST_Tensor smile_kda_forward(ST_Tensor raw, ST_Tensor fg, ST_Tensor br
         at::Tensor out = torch::empty({B, T, H, (int64_t) kKD}, R.options());
         cudaStream_t stream = at::cuda::getCurrentCUDAStream(dev);
         dim3 grid(kKD / kCols, (unsigned) (B * H));
-        kda_kernel<<<grid, 128, 0, stream>>>(R.data_ptr<float>(), F.data_ptr<float>(), Bt.data_ptr<float>(),
-                                             CW.data_ptr<float>(), AL.data_ptr<float>(), DT.data_ptr<float>(),
-                                             CS.data_ptr<float>(), RS.data_ptr<float>(), SL.data_ptr<int>(),
-                                             out.data_ptr<float>(), nullptr, (int) T, (int) H, (float) gate_bound);
+        static const bool two_step = std::getenv("SMILE_KDA_ONE_PASS") == nullptr;
+        if (two_step && T >= 64) {
+            // prefill: the state-independent terms of all tokens in parallel, then the recurrence with one barrier per token
+            at::Tensor pw = torch::empty({B, T, H, 4, (int64_t) kKD}, R.options());
+            at::Tensor pv = torch::empty({B, T, H, (int64_t) kKD}, R.options());
+            at::Tensor ps = torch::empty({B, T, H, 2}, R.options());
+            dim3 pgrid((unsigned) T, (unsigned) (B * H));
+            kda_prep_kernel<<<pgrid, 128, 0, stream>>>(R.data_ptr<float>(), F.data_ptr<float>(), Bt.data_ptr<float>(),
+                                                       CW.data_ptr<float>(), AL.data_ptr<float>(), DT.data_ptr<float>(),
+                                                       CS.data_ptr<float>(), SL.data_ptr<int>(), pw.data_ptr<float>(),
+                                                       pv.data_ptr<float>(), ps.data_ptr<float>(), (int) T, (int) H,
+                                                       (float) gate_bound);
+            kda_scan_kernel<<<grid, 128, 0, stream>>>(pw.data_ptr<float>(), pv.data_ptr<float>(), ps.data_ptr<float>(),
+                                                      RS.data_ptr<float>(), SL.data_ptr<int>(), out.data_ptr<float>(),
+                                                      (int) T, (int) H);
+        } else {
+            kda_kernel<<<grid, 128, 0, stream>>>(R.data_ptr<float>(), F.data_ptr<float>(), Bt.data_ptr<float>(),
+                                                 CW.data_ptr<float>(), AL.data_ptr<float>(), DT.data_ptr<float>(),
+                                                 CS.data_ptr<float>(), RS.data_ptr<float>(), SL.data_ptr<int>(),
+                                                 out.data_ptr<float>(), nullptr, (int) T, (int) H, (float) gate_bound);
+        }
         dim3 cgrid((unsigned) ((C + 255) / 256), (unsigned) B);
         kda_conv_state_kernel<<<cgrid, 256, 0, stream>>>(R.data_ptr<float>(), CS.data_ptr<float>(),
                                                          SL.data_ptr<int>(), (int) T, (int) C);

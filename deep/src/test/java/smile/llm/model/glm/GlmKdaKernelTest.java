@@ -119,7 +119,7 @@ public class GlmKdaKernelTest {
             ref[i].conv = o("aten::zeros", new long[]{3, c}, ScalarType.Float).to(dev);
             ref[i].rec = o("aten::zeros", new long[]{h, d, d}, ScalarType.Float).to(dev);
         }
-        int[] steps = {37, 1, 1, 5, 2, 1};
+        int[] steps = {37, 1, 1, 5, 2, 1, 300, 1, 70, 2};
         for (int t : steps) {
             Tensor raw = o("aten::mul.Scalar", randn(dev, 2, t, c), 2.0);
             Tensor fg = randn(dev, 2, t, w);
