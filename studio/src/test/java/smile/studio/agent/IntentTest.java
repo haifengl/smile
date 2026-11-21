@@ -464,22 +464,30 @@ class IntentTest {
         Intent intent = new Intent(null);
         assertEquals(Intent.Mode.RAW, intent.getMode());
         assertFalse(intent.modeBar().isVisible(), "editable composer must not show modeBar");
+        assertFalse(intent.topModeBar().isVisible(), "editable composer must not show topModeBar");
+        assertNull(intent.topModeBar().getParent(), "editable composer must not attach topModeBar to footer");
 
         // Submitted turn with no output yet
         intent.setEditable(false);
         assertFalse(intent.modeBar().isVisible(), "read-only intent with blank output must hide modeBar");
+        assertFalse(intent.topModeBar().isVisible(), "read-only intent with blank output must hide topModeBar");
 
         // Streaming turn in progress
         intent.setProgress(true);
         intent.appendRun(null, "| Col A | Col B |\n| --- | --- |\n| 1 | 2 |\n");
         assertFalse(intent.modeBar().isVisible(), "modeBar must stay hidden while turn is streaming");
+        assertFalse(intent.topModeBar().isVisible(), "topModeBar must stay hidden while turn is streaming");
+        assertNull(intent.topModeBar().getParent(), "topModeBar must not occupy footer while progressPane is shown");
         assertEquals(Intent.Mode.RAW, intent.getMode());
 
         // Turn completes
         intent.setProgress(false);
         assertTrue(intent.modeBar().isVisible(), "modeBar must appear at bottom-right once turn finishes with output");
+        assertTrue(intent.topModeBar().isVisible(), "topModeBar must appear in input footer once turn finishes with output");
+        assertSame(intent.footer(), intent.topModeBar().getParent(), "topModeBar must live in inputPane's footer");
         assertEquals(Intent.Mode.RAW, intent.getMode(), "agent output must remain in RAW mode by default");
         assertFalse(intent.modeButton().isSelected());
+        assertFalse(intent.topModeButton().isSelected());
     }
 
     @Test
@@ -562,7 +570,7 @@ class IntentTest {
     }
 
     @Test
-    void southPane_overlaysModeBarInLayeredPanePaletteLayer() {
+    void southPane_overlaysOnlyBottomModeBar_andPlacesTopModeBarInFooterEast() {
         Intent intent = new Intent(null);
         intent.setEditable(false);
         intent.output().setText("# Heading\n\nBody text.\n");
@@ -572,35 +580,49 @@ class IntentTest {
         var paletteComps = intent.southPane().getComponentsInLayer(javax.swing.JLayeredPane.PALETTE_LAYER);
         assertEquals(1, defaultComps.length);
         assertSame(intent.outputPane(), defaultComps[0]);
-        assertEquals(2, paletteComps.length);
-        assertTrue(List.of(paletteComps).contains(intent.modeBar()));
-        assertTrue(List.of(paletteComps).contains(intent.topModeBar()));
+        assertEquals(1, paletteComps.length, "southPane must only host the bottom-right modeBar on PALETTE_LAYER");
+        assertSame(intent.modeBar(), paletteComps[0]);
 
-        // Short output: only bottom-right modeBar is visible; topModeBar is hidden to avoid crowding
+        // topModeBar lives in inputPane's footer (BorderLayout.EAST), never overlaying output content
+        assertSame(intent.footer(), intent.topModeBar().getParent());
+        var footerLayout = assertInstanceOf(java.awt.BorderLayout.class, intent.footer().getLayout());
+        assertSame(intent.topModeBar(), footerLayout.getLayoutComponent(java.awt.BorderLayout.EAST));
+        assertTrue(intent.topModeBar().isVisible());
+
+        // Bottom-right modeBar sits below outputPane on both short and tall output
         intent.southPane().setSize(600, 60);
         intent.southPane().doLayout();
         assertTrue(intent.modeBar().isVisible(), "bottom-right modeBar must be visible on short output");
-        assertFalse(intent.topModeBar().isVisible(), "top-right modeBar must be hidden on short output");
         assertEquals(60 - intent.modeBar().getPreferredSize().height, intent.modeBar().getY(),
                 "modeBar must sit at the bottom edge");
         assertTrue(intent.modeBar().getX() > 0, "modeBar must be positioned near the right edge");
         assertEquals(60 - intent.modeBar().getPreferredSize().height, intent.outputPane().getHeight(),
                 "the output must stop above the modeBar so the bar never covers text");
 
-        // Tall output: both bottom-right modeBar and top-right topModeBar are visible
         intent.southPane().setSize(600, 200);
         intent.southPane().doLayout();
         assertEquals(600, intent.outputPane().getWidth());
         assertEquals(200 - intent.modeBar().getPreferredSize().height, intent.outputPane().getHeight(),
                 "the output must stop above the modeBar");
         assertTrue(intent.modeBar().isVisible(), "bottom-right modeBar must be visible on tall output");
-        assertTrue(intent.topModeBar().isVisible(), "top-right topModeBar must be visible on tall output");
         assertEquals(200 - intent.modeBar().getPreferredSize().height, intent.modeBar().getY(),
                 "modeBar must be positioned at the bottom-right corner");
-        assertEquals(2, intent.topModeBar().getY(),
-                "topModeBar must be positioned at the top-right corner");
         assertTrue(intent.modeBar().getX() > 0, "modeBar must be positioned near the right edge");
-        assertTrue(intent.topModeBar().getX() > 0, "topModeBar must be positioned near the right edge");
+
+        // Re-entering queued or running state removes topModeBar from footer EAST cleanly
+        intent.showQueued(1, 2);
+        assertFalse(intent.topModeBar().isVisible());
+        assertNull(intent.topModeBar().getParent());
+        assertSame(intent.queuePane(), footerLayout.getLayoutComponent(java.awt.BorderLayout.EAST));
+
+        intent.setProgress(true);
+        assertFalse(intent.topModeBar().isVisible());
+        assertNull(intent.topModeBar().getParent());
+        assertNotSame(intent.topModeBar(), footerLayout.getLayoutComponent(java.awt.BorderLayout.EAST));
+
+        intent.setProgress(false);
+        assertTrue(intent.topModeBar().isVisible());
+        assertSame(intent.topModeBar(), footerLayout.getLayoutComponent(java.awt.BorderLayout.EAST));
     }
 
     @Test
