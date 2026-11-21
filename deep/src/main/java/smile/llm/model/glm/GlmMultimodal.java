@@ -27,10 +27,12 @@ import smile.llm.engine.MultimodalPrompt;
  * @param imagePixels patch rows of all images back to back, {@code [N, C * P * P]} float32 on the CPU, or {@code null}.
  * @param imageGrids  one {@code (t, h, w)} patch grid per image, in prompt order.
  * @param imageKeys   one content key (SHA-256 of grid and patch rows) per image: the key of the encoded-image cache.
+ * @param cacheKey    the ids the prefix cache keys the prompt by: {@code inputIds} with every image placeholder replaced by a
+ *                    negative id derived from the image's content key and the position in the image.
  *
  * @author Haifeng Li
  */
-public record GlmMultimodal(int[] inputIds, Tensor imagePixels, int[][] imageGrids, String[] imageKeys) implements MultimodalPrompt {
+public record GlmMultimodal(int[] inputIds, Tensor imagePixels, int[][] imageGrids, String[] imageKeys, int[] cacheKey) implements MultimodalPrompt {
     @Override
     public boolean hasVision() {
         return imagePixels != null;

@@ -528,6 +528,7 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
                     + " images (do not type the placeholder tokens into message text)");
         }
         int merge2 = visionArgs.mergeSize() * visionArgs.mergeSize();
+        final long procT0 = System.nanoTime();
         List<GlmVisionProcessor.Patches> images = new ArrayList<>();
         try {
             for (String url : urls) {
@@ -553,8 +554,13 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
             Tensor pixels = images.isEmpty() ? null
                     : images.size() == 1 ? images.get(0).pixels().copy()
                     : Tensor.vstack(images.stream().map(GlmVisionProcessor.Patches::pixels).toArray(Tensor[]::new));
-            return new GlmMultimodal(ids, pixels, images.stream().map(GlmVisionProcessor.Patches::grid).toArray(int[][]::new),
-                    images.stream().map(Glm::imageKey).toArray(String[]::new));
+            int[][] grids = images.stream().map(GlmVisionProcessor.Patches::grid).toArray(int[][]::new);
+            long procT1 = System.nanoTime();
+            String[] keys = images.stream().map(Glm::imageKey).toArray(String[]::new);
+            logger.info("GLM multimodal prompt: {} image(s), {} tokens; load+resize {} ms, hash {} ms", images.size(), ids.length,
+                    (procT1 - procT0) / 1_000_000L, (System.nanoTime() - procT1) / 1_000_000L);
+            return new GlmMultimodal(ids, pixels, grids, keys,
+                    mediaCacheKey(ids, visionArgs.imageTokenId(), grids, keys, merge2));
         } finally {
             for (var p : images) {
                 p.pixels().close();
@@ -608,16 +614,42 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
             }
         }
         final int imagesBefore = before;
-        List<Tensor> results = gatherAllRanks(rank -> {
+        int inRange = 0;
+        for (int i = from; i < to; i++) {
+            if (ids[i] == imageId) {
+                inRange++;
+            }
+        }
+        final boolean needFeatures = inRange > 0;
+        // snapshots for prefix reuse (keyed by the media content, see GlmMultimodal.cacheKey): the chunks are cut at them
+        final int[] key = mm.cacheKey();
+        // ... and just after the last image (the end-of-image token): another question about the same images resumes there
+        int mediaEnd = -1;
+        for (int i = ids.length - 1; i >= 0; i--) {
+            if (ids[i] == imageId) {
+                mediaEnd = Math.min(ids.length, i + 2);
+                break;
+            }
+        }
+        final List<Integer> cuts = snapshotCuts(key, from, to, mediaEnd);
+        List<ChunkResult> results = gatherAllRanks(rank -> {
+            GlmModel.Snapshot[] mine = new GlmModel.Snapshot[cuts.size()];
             try (var guard = Tensor.noGradGuard()) {
                 GlmModel m = replicas[rank];
-                Tensor features = imageTokens == 0 ? null : m.imageFeatures(visionArgs, mm.imagePixels(), mm.imageGrids(), mm.imageKeys());
+                Tensor features = !needFeatures ? null : m.imageFeatures(visionArgs, mm.imagePixels(), mm.imageGrids(), mm.imageKeys());
                 try {
                     Tensor out = null;
                     int seen = imagesBefore;
-                    for (int start = from; start < to; start += MM_CHUNK) {
+                    int start = from;
+                    while (start < to) {
                         final int st = start;
-                        final int en = Math.min(to, start + MM_CHUNK);
+                        int stop = Math.min(to, start + MM_CHUNK);
+                        for (int c : cuts) {
+                            if (c > st && c < stop) {
+                                stop = c;
+                            }
+                        }
+                        final int en = stop;
                         int[] chunk = Arrays.copyOfRange(ids, st, en);
                         int nImage = 0;
                         for (int id : chunk) {
@@ -639,29 +671,80 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
                             Tensor row = Gx.narrow(hidden, 0, hidden.size(0) - 1, 1);
                             return last && en == to ? m.logits(row) : Gx.zeros(smile.deep.tensor.ScalarType.Float, 1);
                         });
+                        int k = cuts.indexOf(en);
+                        if (k >= 0) {
+                            mine[k] = m.snapshot(s[rank]);
+                        }
                         if (en == to) {
                             out = r;
                         } else {
                             r.close();
                         }
+                        start = en;
                     }
-                    return out;
+                    return new ChunkResult(out, mine);
                 } finally {
                     if (features != null) {
                         features.close();
                     }
                 }
+            } catch (RuntimeException | Error e) {
+                for (GlmModel.Snapshot snap : mine) {
+                    if (snap != null) {
+                        snap.close();
+                    }
+                }
+                throw e;
             }
         });
         for (int r = 1; r < results.size(); r++) {
-            results.get(r).close();
+            results.get(r).logits().close();
         }
-        Tensor logits = results.get(0);
+        for (int k = 0; k < cuts.size(); k++) {
+            GlmModel.Snapshot[] ranks = new GlmModel.Snapshot[workers.length];
+            for (int r = 0; r < ranks.length; r++) {
+                ranks[r] = results.get(r).snaps()[k];
+            }
+            prefixCache.put(new GlmPrefixCache.Entry(Arrays.copyOf(key, cuts.get(k)), ranks));
+        }
+        Tensor logits = results.get(0).logits();
         if (!last) {
             logits.close();
             return null;
         }
         return logits;
+    }
+
+    @Override
+    public boolean supportsMultimodalPrefixReuse() {
+        return prefixCache != null;
+    }
+
+    /**
+     * The prefix-cache key of an expanded multimodal prompt: every image placeholder becomes a negative id derived from the
+     * image's content key and the position inside the image (the placeholder id itself is the same for every image).
+     */
+    private static int[] mediaCacheKey(int[] ids, int imageId, int[][] grids, String[] keys, int merge2) {
+        int[] out = ids.clone();
+        int img = 0;
+        int j = 0;
+        for (int i = 0; i < out.length; i++) {
+            if (ids[i] != imageId) {
+                continue;
+            }
+            while (img < grids.length && j >= grids[img][0] * grids[img][1] * grids[img][2] / merge2) {
+                img++;
+                j = 0;
+            }
+            int seed = img < keys.length ? (int) Long.parseLong(keys[img].substring(0, 8), 16) : 0;
+            int h = seed ^ (j * 0x9E3779B1);
+            h ^= h >>> 15;
+            h *= 0x85EBCA6B;
+            h ^= h >>> 13;
+            out[i] = ~(h & 0x7fffffff);
+            j++;
+        }
+        return out;
     }
 
     /** The content key of an image: SHA-256 over its patch grid and patch rows. */
@@ -696,6 +779,11 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
 
     /** Positions in {@code (from, to]} where a snapshot is worth taking: powers of two from 4096 and the token before the last. */
     private List<Integer> snapshotCuts(int[] prompt, int from, int to) {
+        return snapshotCuts(prompt, from, to, -1);
+    }
+
+    /** As {@link #snapshotCuts(int[], int, int)}, also taking one at position {@code extra} (when inside the range). */
+    private List<Integer> snapshotCuts(int[] prompt, int from, int to, int extra) {
         List<Integer> cuts = new ArrayList<>();
         if (prefixCache == null) {
             return cuts;
@@ -703,11 +791,11 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         int limit = prompt.length - 1;              // the last token is always processed (its logits are sampled)
         long perToken = 1088L * Math.max(1, replicas[0].mlaLayerCount());
         for (int p = Math.max(from + 1, prefixMinTokens); p <= Math.min(to, limit); p++) {
-            boolean wanted = p == limit || (p >= 4096 && Integer.bitCount(p) == 1);
+            boolean wanted = p == limit || p == extra || (p >= 4096 && Integer.bitCount(p) == 1);
             if (wanted && prefixCache.fits(p * perToken + (24L << 20)) && !prefixCache.has(prompt, p)) {
                 cuts.add(p);
             }
-            if (p >= 4096 && Integer.bitCount(p) != 1 && p < limit) {
+            if (p >= 4096 && Integer.bitCount(p) != 1 && p < limit && p != extra && !(extra > p && extra < Math.min(Integer.highestOneBit(p) << 1, limit))) {
                 p = Math.min(Integer.highestOneBit(p) << 1, limit) - 1;     // skip ahead to the next power of two
             }
         }

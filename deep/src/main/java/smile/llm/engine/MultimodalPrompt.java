@@ -37,4 +37,15 @@ public interface MultimodalPrompt {
      * @return {@code true} when media must be encoded during prefill.
      */
     boolean hasVision();
+
+    /**
+     * Returns the ids a prefix cache keys this prompt by: {@link #inputIds()} with every media placeholder replaced by an
+     * id that identifies the media content and the position in it, so two prompts share a cached prefix only when their
+     * media are identical (placeholder ids alone are the same for every image).
+     *
+     * @return the cache key, as long as {@link #inputIds()}.
+     */
+    default int[] cacheKey() {
+        return inputIds();
+    }
 }

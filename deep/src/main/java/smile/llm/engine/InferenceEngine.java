@@ -620,9 +620,12 @@ public final class InferenceEngine implements AutoCloseable {
             // Honor max_tokens and max-seq-len: reserve the full window. If KV cannot
             // fit it, leave the request queued (Fluid Injection waits for Instant Eviction).
             int desired = Math.min(lm.maxSeqLen(), promptLen + maxGen);
+            // a multimodal prompt of a model that reuses media prefixes is keyed by its media content
+            final boolean mmReuse = next.request.hasMultimodal() && executor.supportsMultimodalPrefixReuse();
+            final int[] keyPrompt = mmReuse ? next.request.multimodal().cacheKey() : prompt;
             int kvId;
             try {
-                kvId = executor.bind(prompt, desired);
+                kvId = executor.bind(keyPrompt, desired);
             } catch (KvCacheExhaustedException ex) {
                 logKvAdmissionDeferred(promptLen, maxGen, desired, ex.getMessage());
                 break;
@@ -648,7 +651,7 @@ public final class InferenceEngine implements AutoCloseable {
 
             int matched = executor.prefixLen(kvId);
             // Multimodal prompts must not reuse KV prefixes (vision embeds + mRoPE).
-            if (next.request.hasMultimodal()) {
+            if (next.request.hasMultimodal() && !mmReuse) {
                 matched = 0;
             }
             int from = matched;
@@ -662,7 +665,7 @@ public final class InferenceEngine implements AutoCloseable {
                 // prefill at promptLen - 1 would apply that token to the recurrent state twice.
                 try {
                     long tw = System.nanoTime();
-                    executor.warmPrefix(kvId, prompt, from);
+                    executor.warmPrefix(kvId, keyPrompt, from);
                     prefillMsTotal.addAndGet((System.nanoTime() - tw) / 1_000_000L);
                 } catch (RuntimeException ex) {
                     executor.evict(kvId);

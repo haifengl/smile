@@ -198,6 +198,17 @@ public interface ModelExecutor {
     }
 
     /**
+     * Whether multimodal prompts take part in prefix reuse: the engine then binds and resumes them by
+     * {@link MultimodalPrompt#cacheKey()} and starts {@link #prefillMultimodal} at the matched position. Off by default
+     * (vision embeds + mRoPE state cannot be rebuilt from ids).
+     *
+     * @return {@code true} if multimodal prefixes can be reused.
+     */
+    default boolean supportsMultimodalPrefixReuse() {
+        return false;
+    }
+
+    /**
      * Prefills a multimodal prompt using vision embeds + interleaved mRoPE.
      * Default throws; Qwen and MiniMax override.
      *
