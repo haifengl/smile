@@ -206,7 +206,7 @@ public class Workspace extends JSplitPane {
 
         for (var file : getOpenFilePaths()) {
             try {
-                openFile(file);
+                openFile(file, false);
             } catch (Exception ex) {
                 logger.error("Failed to restore open file {}: {}", file, ex.getMessage());
             }
@@ -217,11 +217,11 @@ public class Workspace extends JSplitPane {
             Path welcome = resolveHomeFile("Welcome");
             Path releaseNotes = resolveHomeFile("Release Notes");
 
-            if (Files.exists(welcome)) {
-                openFile(welcome);
+            if (Files.isRegularFile(welcome)) {
+                openFile(welcome, false);
             }
-            if (Files.exists(releaseNotes)) {
-                openFile(releaseNotes);
+            if (Files.isRegularFile(releaseNotes)) {
+                openFile(releaseNotes, false);
             }
         }
 
@@ -762,10 +762,21 @@ public class Workspace extends JSplitPane {
     }
 
     /**
-     * Gets the list of opened file paths in previous session from a local properties file.
+     * Gets the list of opened file paths in previous session from a local properties file,
+     * skipping entries that are invalid, deleted, moved, or not regular files.
      */
     public List<Path> getOpenFilePaths() {
-        Path path = cwd.resolve(".smile", "studio.properties");
+        return readOpenFilePaths(cwd.resolve(".smile", "studio.properties"));
+    }
+
+    /**
+     * Reads previously opened file paths from a properties file, skipping
+     * malformed, missing, or non-regular entries.
+     *
+     * @param path the path to {@code studio.properties}.
+     * @return the list of existing regular file paths to restore.
+     */
+    static List<Path> readOpenFilePaths(Path path) {
         List<Path> files = new ArrayList<>();
         if (Files.exists(path)) {
             Properties properties = new Properties();
@@ -773,10 +784,21 @@ public class Workspace extends JSplitPane {
                 properties.load(input);
                 for (int i = 1; i <= 100; i++) {
                     String file = properties.getProperty("file." + i);
-                    if (file != null) {
-                        files.add(Path.of(file));
-                    } else {
+                    if (file == null) {
                         break;
+                    }
+                    if (file.isBlank()) {
+                        continue;
+                    }
+                    try {
+                        Path filePath = Path.of(file);
+                        if (Files.isRegularFile(filePath)) {
+                            files.add(filePath);
+                        } else {
+                            logger.warn("Skipping missing or non-regular file from studio.properties: {}", file);
+                        }
+                    } catch (InvalidPathException ex) {
+                        logger.warn("Skipping invalid file path from studio.properties '{}': {}", file, ex.getMessage());
                     }
                 }
             } catch (IOException ex) {
@@ -1024,8 +1046,28 @@ public class Workspace extends JSplitPane {
      * @param path the file path.
      */
     public void openFile(Path path) {
+        openFile(path, true);
+    }
+
+    /**
+     * Opens a file, optionally suppressing modal dialogs and external desktop
+     * launches when restoring files non-interactively at startup.
+     *
+     * @param path        the file path.
+     * @param interactive {@code true} for user-initiated opens that may display
+     *                    confirmation or error dialogs; {@code false} for
+     *                    non-interactive startup restoration.
+     */
+    void openFile(Path path, boolean interactive) {
         path = path.toAbsolutePath().normalize();
-        var filename = path.getFileName().toString();
+        Path fileNamePath = path.getFileName();
+        String filename = fileNamePath != null ? fileNamePath.toString() : path.toString();
+
+        if (!interactive && !Files.isRegularFile(path)) {
+            logger.warn("Skipping missing or non-regular file: {}", path);
+            return;
+        }
+
         // already opened — just switch to its tab
         if (fileWatcher.isOpen(path)) {
             OpenFile openFile = openFileIndex.get(path.toString());
@@ -1048,6 +1090,10 @@ public class Workspace extends JSplitPane {
             if (Arrays.asList(SMILE_FILE_EXTENSIONS).contains(ext)) {
                 openFile = new Notebook(path, coders, kernelExplorer::refresh);
             } else if (isDataFile(path)) {
+                if (!interactive) {
+                    logger.warn("Skipping data file during startup restore: {}", path);
+                    return;
+                }
                 OptionalInt limit = promptDataFileRowLimit(path);
                 if (limit.isEmpty()) {
                     return;
@@ -1056,11 +1102,24 @@ public class Workspace extends JSplitPane {
                 SmileUtilities.show(df, filename + " [" + df.nrow() + " × " + df.ncol() + "]");
                 return;
             } else if (!Paths.isBinary(path)) {
-                if (!confirmOpenTextFile(path)) {
-                    return;
+                if (interactive) {
+                    if (!confirmOpenTextFile(path)) {
+                        return;
+                    }
+                } else {
+                    long size = Files.size(path);
+                    if (size > LARGE_TEXT_FILE_WARNING_BYTES) {
+                        logger.warn("Skipping large text file during startup restore ({}): {}",
+                                formatSizeMB(size), path);
+                        return;
+                    }
                 }
                 openFile = new Notepad(path);
             } else {
+                if (!interactive) {
+                    logger.warn("Skipping binary file during startup restore: {}", path);
+                    return;
+                }
                 var desktop = Desktop.getDesktop();
                 if (desktop.isSupported(Desktop.Action.OPEN)) {
                     try {
@@ -1075,9 +1134,11 @@ public class Workspace extends JSplitPane {
             }
         } catch (Exception ex) {
             logger.error("Failed to open file {}: {}", path, ex.getMessage());
-            JOptionPane.showMessageDialog(this,
-                    "Failed to open " + filename + ": " + ex.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
+            if (interactive) {
+                JOptionPane.showMessageDialog(this,
+                        "Failed to open " + filename + ": " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+            }
             return;
         }
 

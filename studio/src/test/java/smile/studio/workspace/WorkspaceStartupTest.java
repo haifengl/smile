@@ -434,4 +434,54 @@ public class WorkspaceStartupTest {
         assertEquals("50.0 MB", Workspace.formatSizeMB(Workspace.MAX_TEXT_FILE_BYTES));
         assertEquals("12.5 MB", Workspace.formatSizeMB(12L * 1024 * 1024 + 512L * 1024));
     }
+
+    @Test
+    public void testReadOpenFilePathsSkipsMissingMovedDirectoryAndInvalidEntries(@TempDir Path tempDir) throws Exception {
+        // Given a studio.properties listing existing, deleted, directory, blank, and invalid paths
+        Path existing1 = tempDir.resolve("first.yaml");
+        Path existing2 = tempDir.resolve("second.md");
+        Path deleted = tempDir.resolve("deleted.yaml");
+        Path directory = Files.createDirectory(tempDir.resolve("subdir"));
+        Files.writeString(existing1, "kind: Deployment\n");
+        Files.writeString(existing2, "# Notes\n");
+
+        Path propsFile = tempDir.resolve(".smile").resolve("studio.properties");
+        Files.createDirectories(propsFile.getParent());
+        var props = new java.util.Properties();
+        props.setProperty("file.1", deleted.toString());
+        props.setProperty("file.2", existing1.toString());
+        props.setProperty("file.3", directory.toString());
+        props.setProperty("file.4", "   ");
+        props.setProperty("file.5", "invalid\u0000path.yaml");
+        props.setProperty("file.6", existing2.toString());
+        try (var out = Files.newOutputStream(propsFile)) {
+            props.store(out, "Test Studio Properties");
+        }
+
+        // When reading the saved open file paths
+        var paths = Workspace.readOpenFilePaths(propsFile);
+
+        // Then only existing regular files are returned in their saved order
+        assertEquals(java.util.List.of(existing1, existing2), paths);
+    }
+
+    @Test
+    public void testReadOpenFilePathsWhenMissingOrAllFilesDeleted(@TempDir Path tempDir) throws Exception {
+        // Given a non-existent studio.properties file
+        Path missingProps = tempDir.resolve(".smile").resolve("studio.properties");
+
+        // When / Then reading returns an empty list
+        assertTrue(Workspace.readOpenFilePaths(missingProps).isEmpty());
+
+        // Given a studio.properties where every referenced file has been deleted
+        Files.createDirectories(missingProps.getParent());
+        var props = new java.util.Properties();
+        props.setProperty("file.1", tempDir.resolve("moved-away.yaml").toString());
+        try (var out = Files.newOutputStream(missingProps)) {
+            props.store(out, "Test Studio Properties");
+        }
+
+        // When / Then reading returns an empty list without throwing
+        assertTrue(Workspace.readOpenFilePaths(missingProps).isEmpty());
+    }
 }
