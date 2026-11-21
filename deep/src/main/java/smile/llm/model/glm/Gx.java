@@ -178,12 +178,20 @@ final class Gx {
         return Tensor.zeros(new Tensor.Options().dtype(dtype).device(device()), shape);
     }
 
+    /** 3xTF32 tensor-core kernel for skinny fp32 products ({@code GLM_X3_GEMM=0} disables). */
+    private static final boolean X3_GEMM = !"0".equals(System.getenv("GLM_X3_GEMM"));
+
     /**
      * {@code x w^T}; a lower-precision weight rounds the input to its dtype, the product is accumulated and returned in
      * float32 (no intermediate rounding of the output, which matters for row-parallel partial sums).
      */
     static Tensor linear(Tensor x, Tensor w) {
         if (w.dtype() == ScalarType.Float) {
+            if (X3_GEMM && x.dtype() == ScalarType.Float && w.dim() == 2 && x.dim() == 2 && x.size(0) >= 256 && w.size(0) <= 64
+                    && w.size(0) % 8 == 0 && w.size(1) % 8 == 0 && x.device().isCUDA() && smile.torch.Native.f32GemmX3Available()) {
+                // the HC projection (N = 24, K = 16384): 3xTF32 tensor cores, ~1.7x faster than sgemm (the router, N = 288, is not)
+                return smile.torch.Native.f32GemmX3(o("aten::contiguous", x), o("aten::contiguous", w));
+            }
             return o("aten::linear", x, w);
         }
         Tensor xb = x.dtype() == w.dtype() ? x : x.to(w.dtype());

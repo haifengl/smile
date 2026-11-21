@@ -347,6 +347,92 @@ __global__ void __launch_bounds__(128) kda_scan_kernel(
     for (int r = 0; r < kRows; ++r) S[(int64_t) (warp * kRows + r) * kKD + col] = st[r];
 }
 
+
+// ---- fp32 GEMM on tensor cores (3xTF32) for the skinny fp32 products of prefill: HC projection (N = 24), router (N = 288)
+__device__ __forceinline__ void tf32_split(float x, uint32_t& hi, uint32_t& lo) {
+    uint32_t h;
+    asm("cvt.rna.tf32.f32 %0, %1;" : "=r"(h) : "f"(x));
+    const float r = x - __uint_as_float(h);
+    uint32_t l;
+    asm("cvt.rna.tf32.f32 %0, %1;" : "=r"(l) : "f"(r));
+    hi = h;
+    lo = l;
+}
+
+__device__ __forceinline__ void mma_tf32(float* c, const uint32_t* a, uint32_t b0, uint32_t b1) {
+    asm volatile("mma.sync.aligned.m16n8k8.row.col.f32.tf32.tf32.f32 {%0,%1,%2,%3}, {%4,%5,%6,%7}, {%8,%9}, {%0,%1,%2,%3};"
+                 : "+f"(c[0]), "+f"(c[1]), "+f"(c[2]), "+f"(c[3])
+                 : "r"(a[0]), "r"(a[1]), "r"(a[2]), "r"(a[3]), "r"(b0), "r"(b1));
+}
+
+constexpr int kGemmNT = 6;      // n8 tiles per warp
+
+/**
+ * One warp computes a 16-row x (up to 48)-column tile of A W^T over one K range: hi*hi + hi*lo + lo*hi of the TF32 splits
+ * of both operands (about fp32 accuracy). Partial sums go to part[split][M][N]; a second kernel adds the splits in order.
+ */
+__global__ void __launch_bounds__(128) gemm_x3_kernel(
+        const float* __restrict__ A, const float* __restrict__ W, float* __restrict__ part,
+        int M, int N, int K, int nsplit, int kchunk, int numNg) {
+    const int lane = threadIdx.x & 31;
+    const long task = (long) blockIdx.x * 4 + (threadIdx.x >> 5);
+    const int s = (int) (task % nsplit);
+    const long r = task / nsplit;
+    const int ng = (int) (r % numNg);
+    const int mt = (int) (r / numNg);
+    if (mt * 16 >= M) return;
+    const int g = lane >> 2;
+    const int t = lane & 3;
+    const int row0 = mt * 16 + g;
+    const int row1 = row0 + 8;
+    const float* a0p = A + (long) min(row0, M - 1) * K;
+    const float* a1p = A + (long) min(row1, M - 1) * K;
+    const int nbase = ng * kGemmNT * 8;
+    int nt = min(kGemmNT, (N - nbase) / 8);
+    const float* wp[kGemmNT];
+#pragma unroll
+    for (int j = 0; j < kGemmNT; ++j) wp[j] = W + (long) min(nbase + j * 8 + g, N - 1) * K;
+    float c[kGemmNT][4];
+#pragma unroll
+    for (int j = 0; j < kGemmNT; ++j) { c[j][0] = c[j][1] = c[j][2] = c[j][3] = 0.f; }
+    const int kend = min(K, (s + 1) * kchunk);
+    for (int k = s * kchunk; k < kend; k += 8) {
+        uint32_t ah[4], al[4];
+        tf32_split(row0 < M ? a0p[k + t] : 0.f, ah[0], al[0]);
+        tf32_split(row1 < M ? a1p[k + t] : 0.f, ah[1], al[1]);
+        tf32_split(row0 < M ? a0p[k + t + 4] : 0.f, ah[2], al[2]);
+        tf32_split(row1 < M ? a1p[k + t + 4] : 0.f, ah[3], al[3]);
+#pragma unroll
+        for (int j = 0; j < kGemmNT; ++j) {
+            if (j < nt) {
+                uint32_t bh0, bl0, bh1, bl1;
+                tf32_split(wp[j][k + t], bh0, bl0);
+                tf32_split(wp[j][k + t + 4], bh1, bl1);
+                mma_tf32(c[j], al, bh0, bh1);
+                mma_tf32(c[j], ah, bl0, bl1);
+                mma_tf32(c[j], ah, bh0, bh1);
+            }
+        }
+    }
+    float* dst = part + (long) s * M * N;
+#pragma unroll
+    for (int j = 0; j < kGemmNT; ++j) {
+        if (j < nt) {
+            const int n = nbase + j * 8 + t * 2;
+            if (row0 < M) { dst[(long) row0 * N + n] = c[j][0]; dst[(long) row0 * N + n + 1] = c[j][1]; }
+            if (row1 < M) { dst[(long) row1 * N + n] = c[j][2]; dst[(long) row1 * N + n + 1] = c[j][3]; }
+        }
+    }
+}
+
+__global__ void gemm_x3_reduce_kernel(const float* __restrict__ part, float* __restrict__ out, long mn, int nsplit) {
+    for (long i = (long) blockIdx.x * blockDim.x + threadIdx.x; i < mn; i += (long) gridDim.x * blockDim.x) {
+        float v = 0.f;
+        for (int s = 0; s < nsplit; ++s) v += part[(long) s * mn + i];
+        out[i] = v;
+    }
+}
+
 /** Rolls the last three raw rows into the conv state (a thread handles all three steps of its channel, in order). */
 __global__ void kda_conv_state_kernel(const float* __restrict__ raw, float* __restrict__ conv_state,
                                       const int* __restrict__ slots, int T, int C) {
@@ -2180,4 +2266,49 @@ extern "C" ST_Tensor smile_mla_decode_attend(ST_Tensor qabs, ST_Tensor lat_ptrs,
 extern "C" ST_Tensor smile_mla_decode_attend2(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor idx, ST_Tensor lens,
                                               long long top_pools, double scale, int fp8) {
     return mla_attend_launch(qabs, lat_ptrs, idx, lens, top_pools, scale, fp8, "smile_mla_decode_attend2");
+}
+
+extern "C" ST_Tensor smile_f32_gemm_x3(ST_Tensor a, ST_Tensor w) {
+    try {
+        smile_torch_clear_error();
+        std::string err;
+        const at::Tensor& A = a->t;
+        const at::Tensor& Wt = w->t;
+        if (!check(A, "a", at::kFloat, 2, err) || !check(Wt, "w", at::kFloat, 2, err)) {
+            set_err("smile_f32_gemm_x3: " + err);
+            return nullptr;
+        }
+        const int64_t M = A.size(0), K = A.size(1), N = Wt.size(0);
+        if (Wt.size(1) != K || K % 8 != 0 || N % 8 != 0 || !A.is_contiguous() || !Wt.is_contiguous()) {
+            set_err("smile_f32_gemm_x3: need contiguous [M,K] x [N,K] with K and N multiples of 8");
+            return nullptr;
+        }
+        const int dev = A.get_device();
+        c10::cuda::CUDAGuard guard(dev);
+        cudaStream_t stream = at::cuda::getCurrentCUDAStream(dev);
+        const int numMt = (int) ((M + 15) / 16);
+        const int numNg = (int) ((N + kGemmNT * 8 - 1) / (kGemmNT * 8));
+        // enough warps to fill the device: split K until there are ~4096 of them, chunks of at least 256
+        int nsplit = (int) std::max<int64_t>(1, std::min<int64_t>(K / 256, (4096 + (int64_t) numMt * numNg - 1) / ((int64_t) numMt * numNg)));
+        int kchunk = (int) ((((K + nsplit - 1) / nsplit) + 7) / 8 * 8);
+        nsplit = (int) ((K + kchunk - 1) / kchunk);
+        at::Tensor out = torch::empty({M, N}, A.options());
+        at::Tensor part = nsplit == 1 ? out : torch::empty({nsplit, M, N}, A.options());
+        const long tasks = (long) numMt * numNg * nsplit;
+        gemm_x3_kernel<<<(unsigned) ((tasks + 3) / 4), 128, 0, stream>>>(
+                A.data_ptr<float>(), Wt.data_ptr<float>(), part.data_ptr<float>(), (int) M, (int) N, (int) K, nsplit, kchunk, numNg);
+        if (nsplit > 1) {
+            gemm_x3_reduce_kernel<<<(unsigned) std::min<int64_t>(1024, (M * N + 255) / 256), 256, 0, stream>>>(
+                    part.data_ptr<float>(), out.data_ptr<float>(), M * N, nsplit);
+        }
+        cudaError_t st = cudaGetLastError();
+        if (st != cudaSuccess) {
+            set_err(std::string("smile_f32_gemm_x3: CUDA error: ") + cudaGetErrorString(st));
+            return nullptr;
+        }
+        return new ST_Tensor_{ out };
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return nullptr;
+    }
 }
