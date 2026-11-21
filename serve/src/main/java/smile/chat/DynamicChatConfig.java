@@ -105,6 +105,11 @@ public final class DynamicChatConfig {
     public static ChatServiceConfig overlay(ChatServiceConfig base, String modelSpec, JsonObject overrides) {
         JsonObject nested = (overrides != null && overrides.getValue("config") instanceof JsonObject n) ? n : null;
 
+        String servedModelName = optString(overrides, nested, null,
+                "served_model_name", "servedModelName", "served-model-name");
+        Optional<String> resolvedServedModelName = Optional.ofNullable(servedModelName)
+                .map(String::trim)
+                .filter(s -> !s.isBlank());
         int maxSeqLen = optInt(overrides, nested, base.maxSeqLen(), "max_seq_len", "maxSeqLen", "max-seq-len");
         int maxBatchSize = optInt(overrides, nested, base.maxBatchSize(), "max_batch_size", "maxBatchSize", "max-batch-size");
         int maxDecodeBatch = optInt(overrides, nested, base.maxDecodeBatch(), "max_decode_batch", "maxDecodeBatch", "max-decode-batch");
@@ -125,6 +130,7 @@ public final class DynamicChatConfig {
 
         return new ChatServiceConfig() {
             @Override public Optional<String> model() { return Optional.ofNullable(modelSpec); }
+            @Override public Optional<String> servedModelName() { return resolvedServedModelName; }
             @Override public int maxSeqLen() { return maxSeqLen; }
             @Override public int maxBatchSize() { return maxBatchSize; }
             @Override public int maxDecodeBatch() { return maxDecodeBatch; }
