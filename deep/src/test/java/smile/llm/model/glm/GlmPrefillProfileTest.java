@@ -63,6 +63,9 @@ public class GlmPrefillProfileTest {
                 int from = c * chunk;
                 int to = Math.min(total, from + chunk);
                 boolean prof = kernels && c == nChunks - profChunks;
+                if (prof && Aten.STATS != null) {
+                    Aten.STATS.clear();
+                }
                 if (prof) {
                     smile.torch.Native.profStart(env("GLM_PROF_DEV", 0));
                 }
@@ -75,6 +78,13 @@ public class GlmPrefillProfileTest {
                 double ms = (System.nanoTime() - t0) / 1e6;
                 all += ms;
                 line.append(String.format(" %.0f", ms));
+                if (kernels && c == nChunks - 1 && Aten.STATS != null) {
+                    // ATen calls of the profiled chunks, summed over the 8 ranks (-Dsmile.aten.stats=true)
+                    StringBuilder sb = new StringBuilder("ATEN CALLS per chunk and rank:\n");
+                    Aten.STATS.entrySet().stream().sorted((x, y) -> Long.compare(y.getValue()[0], x.getValue()[0])).limit(45)
+                            .forEach(e -> sb.append(String.format("  %6.1f  %s%n", e.getValue()[0] / (double) (profChunks * devices), e.getKey())));
+                    System.out.println(sb);
+                }
                 if (kernels && c == nChunks - 1) {
                     System.out.println("KERNELS (device 0, last " + profChunks + " chunks)\n" + smile.torch.Native.profStop());
                 }

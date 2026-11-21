@@ -542,6 +542,27 @@ __global__ void __launch_bounds__(128) gemm_bf16x3_kernel(
     }
 }
 
+
+// ---- MoE combine: out[n, dim] = sum_k down[n * topk + k, :] (+ extra[n, dim]) in fp32, straight from the bf16 expert outputs
+__global__ void moe_sum_topk_kernel(const __nv_bfloat16* __restrict__ down, const float* __restrict__ extra,
+                                    float* __restrict__ out, int topk, int dim) {
+    const long row = blockIdx.x;
+    for (int d = (blockIdx.y * blockDim.x + threadIdx.x) * 4; d < dim; d += gridDim.y * blockDim.x * 4) {
+        float4 acc = extra != nullptr ? *reinterpret_cast<const float4*>(extra + row * dim + d) : make_float4(0.f, 0.f, 0.f, 0.f);
+#pragma unroll 8
+        for (int k = 0; k < topk; ++k) {
+            const uint2 v = *reinterpret_cast<const uint2*>(down + (row * topk + k) * dim + d);
+            const __nv_bfloat162 lo = *reinterpret_cast<const __nv_bfloat162*>(&v.x);
+            const __nv_bfloat162 hi = *reinterpret_cast<const __nv_bfloat162*>(&v.y);
+            acc.x += __low2float(lo);
+            acc.y += __high2float(lo);
+            acc.z += __low2float(hi);
+            acc.w += __high2float(hi);
+        }
+        *reinterpret_cast<float4*>(out + row * dim + d) = acc;
+    }
+}
+
 /** Rolls the last three raw rows into the conv state (a thread handles all three steps of its channel, in order). */
 __global__ void kda_conv_state_kernel(const float* __restrict__ raw, float* __restrict__ conv_state,
                                       const int* __restrict__ slots, int T, int C) {
@@ -2651,6 +2672,44 @@ extern "C" ST_Tensor smile_f32_gemm_bf16x3(ST_Tensor a, ST_Tensor wsplit) {
         cudaError_t st = cudaGetLastError();
         if (st != cudaSuccess) {
             set_err(std::string("smile_f32_gemm_bf16x3: CUDA error: ") + cudaGetErrorString(st));
+            return nullptr;
+        }
+        return new ST_Tensor_{ out };
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return nullptr;
+    }
+}
+
+extern "C" ST_Tensor smile_moe_sum_topk(ST_Tensor down, long long topk, ST_Tensor extra) {
+    try {
+        smile_torch_clear_error();
+        std::string err;
+        const at::Tensor& D = down->t;
+        if (!check(D, "down", at::kBFloat16, 2, err) || (extra != nullptr && !check(extra->t, "extra", at::kFloat, 2, err))) {
+            set_err("smile_moe_sum_topk: " + err);
+            return nullptr;
+        }
+        const int64_t dim = D.size(1);
+        if (topk <= 0 || D.size(0) % topk != 0 || dim % 4 != 0) {
+            set_err("smile_moe_sum_topk: rows must be a multiple of topk and dim of 4");
+            return nullptr;
+        }
+        const int64_t n = D.size(0) / topk;
+        if (extra != nullptr && (extra->t.size(0) != n || extra->t.size(1) != dim)) {
+            set_err("smile_moe_sum_topk: extra has the wrong shape");
+            return nullptr;
+        }
+        const int dev = D.get_device();
+        c10::cuda::CUDAGuard guard(dev);
+        at::Tensor out = torch::empty({n, dim}, D.options().dtype(at::kFloat));
+        dim3 grid((unsigned) n, (unsigned) std::max<int64_t>(1, std::min<int64_t>(4, dim / 1024)));
+        moe_sum_topk_kernel<<<grid, 256, 0, at::cuda::getCurrentCUDAStream(dev)>>>(
+                reinterpret_cast<const __nv_bfloat16*>(D.data_ptr()), extra == nullptr ? nullptr : extra->t.data_ptr<float>(),
+                out.data_ptr<float>(), (int) topk, (int) dim);
+        cudaError_t st = cudaGetLastError();
+        if (st != cudaSuccess) {
+            set_err(std::string("smile_moe_sum_topk: CUDA error: ") + cudaGetErrorString(st));
             return nullptr;
         }
         return new ST_Tensor_{ out };

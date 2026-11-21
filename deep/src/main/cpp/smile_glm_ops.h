@@ -179,6 +179,12 @@ SMILE_API ST_Tensor smile_f32_gemm_x3(ST_Tensor a, ST_Tensor w);
  */
 SMILE_API ST_Tensor smile_f32_gemm_bf16x3(ST_Tensor a, ST_Tensor wsplit);
 
+/**
+ * MoE combine: sums the topk expert rows of every token straight from the bf16 outputs and adds an optional fp32 extra
+ * (the shared expert): down bfloat16 [n * topk, dim] (token-major), extra float32 [n, dim] or NULL. Returns float32 [n, dim].
+ */
+SMILE_API ST_Tensor smile_moe_sum_topk(ST_Tensor down, long long topk, ST_Tensor extra);
+
 #ifdef __cplusplus
 }
 #endif

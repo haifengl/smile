@@ -120,6 +120,14 @@ final class GlmMarlinExperts {
      * @return {@code [n, dim]} float32; assignments to experts of other ranks contribute zero.
      */
     Tensor forward(Tensor x, Tensor indices, Tensor weights) {
+        return forward(x, indices, weights, null);
+    }
+
+    /**
+     * The routed experts of every token summed in float32, plus {@code extra} (float32 {@code [n, dim]}, the shared expert's
+     * partial sum) when given.
+     */
+    Tensor forward(Tensor x, Tensor indices, Tensor weights, Tensor extra) {
         long n = x.size(0);
         Tensor flat = o("aten::contiguous", x.to(ScalarType.BFloat16));
         Tensor ids = o("aten::contiguous", indices);
@@ -138,6 +146,13 @@ final class GlmMarlinExperts {
             act = o("aten::contiguous", mul(o("aten::silu", gate), up).to(ScalarType.BFloat16));
         }
         Tensor down = Native.marlinMoeFp8Gemm(act, w2q, w2s, align, w, block, 1, true);
-        return sumDim(o("aten::reshape", f32(down), new long[]{n, topk, dim}), 1, false);
+        if (down.dtype() == ScalarType.BFloat16 && dim % 4 == 0 && (extra == null || extra.dtype() == ScalarType.Float)) {
+            Tensor fused = Native.moeSumTopk(down, topk, extra);
+            if (fused != null) {
+                return fused;
+            }
+        }
+        Tensor sum = sumDim(o("aten::reshape", f32(down), new long[]{n, topk, dim}), 1, false);
+        return extra == null ? sum : add(sum, extra);
     }
 }
