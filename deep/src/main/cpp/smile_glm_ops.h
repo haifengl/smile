@@ -166,6 +166,12 @@ SMILE_API int smile_glm_latent_quantize(ST_Tensor src, ST_Tensor dst);
 /** Dequantizes rows ids (int64 [n]) of an fp8 cache uint8 [T, 528] into bfloat16 [n, 512]. */
 SMILE_API ST_Tensor smile_glm_latent_gather(ST_Tensor cache, ST_Tensor ids);
 
+/**
+ * fp32 product a w^T on tensor cores with 3xTF32 splits (about fp32 accuracy, deterministic): a float32 contiguous [M, K],
+ * w float32 contiguous [N, K], K and N multiples of 8. Returns float32 [M, N]. For skinny products (N <= ~512, many rows).
+ */
+SMILE_API ST_Tensor smile_f32_gemm_x3(ST_Tensor a, ST_Tensor w);
+
 #ifdef __cplusplus
 }
 #endif
