@@ -472,16 +472,6 @@ plain decoding only through bf16 near-ties, which this model has plenty of). It 
 `dspark/` folder (`smile.chat.speculative=false` or `SMILE_MINIMAX_DSPARK=0` turns it off). It works with prefix reuse, sampling,
 chunked prefill and image requests (exercised through `InferenceEngine`; the HTTP checks below cover tool-call requests).
 
-Setup: 8x A100 40 GB, tensor-parallel non-expert weights, greedy, 8 chat prompts, 128 new tokens, warm graphs.
-
-| | Plain decode | DSpark (7 drafts) |
-|---|---|---|
-| One request | 25.4 ms/token (39 tok/s) | **11.7 ms/token (85 tok/s, 2.2x)** |
-| Drafts per round 3 / 4 / 5 / 6 | n/a | 71 / 77 / 79 / 80 tok/s |
-| 2 concurrent requests (aggregate) | 64 tok/s | 126 tok/s |
-| 4 concurrent requests (aggregate) | 123 tok/s | 160 tok/s |
-| 8 concurrent requests (aggregate) | 210 tok/s | 214 tok/s |
-
 The gain shrinks with concurrency (the batched plain decode gets more efficient too) and is gone at 8 concurrent requests, so the
 service lets at most 4 requests speculate at once unless `smile.chat.speculative-max-concurrency` says otherwise (the rest use
 batched plain decode). Image and video requests speculate as well.
