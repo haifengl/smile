@@ -433,6 +433,115 @@ __global__ void gemm_x3_reduce_kernel(const float* __restrict__ part, float* __r
     }
 }
 
+
+// ---- bf16x3: the same skinny fp32 products with the weights pre-split into two bf16 tensors (hi, lo) and the activations
+// split in the kernel: hi*hi + hi*lo + lo*hi on m16n8k16 bf16 tensor cores (~1e-5 relative error; one mma instruction covers
+// twice the K of the TF32 version and the weights need no per-step conversion)
+__device__ __forceinline__ uint32_t pack_bf16(float lo, float hi_) {
+    uint32_t d;
+    asm("cvt.rn.bf16x2.f32 %0, %1, %2;" : "=r"(d) : "f"(hi_), "f"(lo));
+    return d;
+}
+
+__device__ __forceinline__ void split_bf16x2(float x, float y, uint32_t& hi, uint32_t& lo) {
+    hi = pack_bf16(x, y);
+    const float xh = __uint_as_float(hi << 16);
+    const float yh = __uint_as_float(hi & 0xffff0000u);
+    lo = pack_bf16(x - xh, y - yh);
+}
+
+__device__ __forceinline__ void mma_x3_bf16(float* c, const uint32_t* a, uint32_t b0, uint32_t b1) {
+    asm volatile("mma.sync.aligned.m16n8k16.row.col.f32.bf16.bf16.f32 {%0,%1,%2,%3}, {%4,%5,%6,%7}, {%8,%9}, {%0,%1,%2,%3};"
+                 : "+f"(c[0]), "+f"(c[1]), "+f"(c[2]), "+f"(c[3])
+                 : "r"(a[0]), "r"(a[1]), "r"(a[2]), "r"(a[3]), "r"(b0), "r"(b1));
+}
+
+__global__ void __launch_bounds__(128) gemm_bf16x3_kernel(
+        const float* __restrict__ A, const uint4* __restrict__ Wf,
+        float* __restrict__ part, int M, int N, int K, int nsplit, int kchunk, int numNg) {
+    const int lane = threadIdx.x & 31;
+    const long task = (long) blockIdx.x * 4 + (threadIdx.x >> 5);
+    const int s = (int) (task % nsplit);
+    const long r = task / nsplit;
+    const int ng = (int) (r % numNg);
+    const int mt = (int) (r / numNg);
+    if (mt * 16 >= M) return;
+    const int g = lane >> 2;
+    const int t = lane & 3;
+    const int row0 = mt * 16 + g;
+    const int row1 = row0 + 8;
+    const float* a0p = A + (long) min(row0, M - 1) * K + 2 * t;
+    const float* a1p = A + (long) min(row1, M - 1) * K + 2 * t;
+    const int nbase = ng * kGemmNT * 8;
+    const int nt = min(kGemmNT, (N - nbase) / 8);
+    // weight fragments: [N/8 tiles][K/16 steps][32 lanes] x {hi b0, hi b1, lo b0, lo b1}: one coalesced 16-byte load per lane
+    const long ks = K / 16;
+    const uint4* wfp[kGemmNT];
+#pragma unroll
+    for (int j = 0; j < kGemmNT; ++j) {
+        wfp[j] = Wf + ((long) min(nbase / 8 + j, N / 8 - 1) * ks) * 32 + lane;
+    }
+    float c[kGemmNT][4];
+#pragma unroll
+    for (int j = 0; j < kGemmNT; ++j) { c[j][0] = c[j][1] = c[j][2] = c[j][3] = 0.f; }
+    const int kend = min(K, (s + 1) * kchunk);
+    const int kbeg = s * kchunk;
+    const bool r0ok = row0 < M, r1ok = row1 < M;
+    float2 x0, x1, x2, x3, y0, y1, y2, y3;
+    uint32_t bh0[kGemmNT], bh1[kGemmNT], bl0[kGemmNT], bl1[kGemmNT], nh0[kGemmNT], nh1[kGemmNT], nl0[kGemmNT], nl1[kGemmNT];
+    auto load = [&](int k, float2& l0, float2& l1, float2& l2, float2& l3, uint32_t* h0, uint32_t* h1, uint32_t* l0w, uint32_t* l1w) {
+        l0 = r0ok ? *reinterpret_cast<const float2*>(a0p + k) : make_float2(0.f, 0.f);
+        l1 = r1ok ? *reinterpret_cast<const float2*>(a1p + k) : make_float2(0.f, 0.f);
+        l2 = r0ok ? *reinterpret_cast<const float2*>(a0p + k + 8) : make_float2(0.f, 0.f);
+        l3 = r1ok ? *reinterpret_cast<const float2*>(a1p + k + 8) : make_float2(0.f, 0.f);
+#pragma unroll
+        for (int j = 0; j < kGemmNT; ++j) {
+            if (j < nt) {
+                const uint4 w = wfp[j][(long) (k / 16) * 32];
+                h0[j] = w.x;
+                h1[j] = w.y;
+                l0w[j] = w.z;
+                l1w[j] = w.w;
+            }
+        }
+    };
+    if (kbeg < kend) {
+        load(kbeg, x0, x1, x2, x3, bh0, bh1, bl0, bl1);
+    }
+    for (int k = kbeg; k < kend; k += 16) {
+        if (k + 16 < kend) {
+            load(k + 16, y0, y1, y2, y3, nh0, nh1, nl0, nl1);       // the next step's loads are in flight during this step's mma
+        }
+        uint32_t ah[4], al[4];
+        split_bf16x2(x0.x, x0.y, ah[0], al[0]);
+        split_bf16x2(x1.x, x1.y, ah[1], al[1]);
+        split_bf16x2(x2.x, x2.y, ah[2], al[2]);
+        split_bf16x2(x3.x, x3.y, ah[3], al[3]);
+#pragma unroll
+        for (int j = 0; j < kGemmNT; ++j) {
+            if (j < nt) {
+                mma_x3_bf16(c[j], al, bh0[j], bh1[j]);
+                mma_x3_bf16(c[j], ah, bl0[j], bl1[j]);
+                mma_x3_bf16(c[j], ah, bh0[j], bh1[j]);
+            }
+        }
+        x0 = y0; x1 = y1; x2 = y2; x3 = y3;
+#pragma unroll
+        for (int j = 0; j < kGemmNT; ++j) {
+            bh0[j] = nh0[j]; bh1[j] = nh1[j]; bl0[j] = nl0[j]; bl1[j] = nl1[j];
+        }
+    }
+    float* dst = part + (long) s * M * N;
+#pragma unroll
+    for (int j = 0; j < kGemmNT; ++j) {
+        if (j < nt) {
+            const int n = nbase + j * 8 + t * 2;
+            if (row0 < M) { dst[(long) row0 * N + n] = c[j][0]; dst[(long) row0 * N + n + 1] = c[j][1]; }
+            if (row1 < M) { dst[(long) row1 * N + n] = c[j][2]; dst[(long) row1 * N + n + 1] = c[j][3]; }
+        }
+    }
+}
+
 /** Rolls the last three raw rows into the conv state (a thread handles all three steps of its channel, in order). */
 __global__ void kda_conv_state_kernel(const float* __restrict__ raw, float* __restrict__ conv_state,
                                       const int* __restrict__ slots, int T, int C) {
@@ -2304,6 +2413,50 @@ extern "C" ST_Tensor smile_f32_gemm_x3(ST_Tensor a, ST_Tensor w) {
         cudaError_t st = cudaGetLastError();
         if (st != cudaSuccess) {
             set_err(std::string("smile_f32_gemm_x3: CUDA error: ") + cudaGetErrorString(st));
+            return nullptr;
+        }
+        return new ST_Tensor_{ out };
+    } catch (const std::exception& ex) {
+        smile_torch_set_error(ex.what());
+        return nullptr;
+    }
+}
+
+extern "C" ST_Tensor smile_f32_gemm_bf16x3(ST_Tensor a, ST_Tensor wsplit) {
+    try {
+        smile_torch_clear_error();
+        std::string err;
+        const at::Tensor& A = a->t;
+        const at::Tensor& Ws = wsplit->t;
+        if (!check(A, "a", at::kFloat, 2, err) || !check(Ws, "wsplit", at::kBFloat16, 4, err)) {
+            set_err("smile_f32_gemm_bf16x3: " + err);
+            return nullptr;
+        }
+        const int64_t M = A.size(0), K = A.size(1), N = Ws.size(0) * 8;
+        if (Ws.size(1) * 16 != K || Ws.size(2) != 32 || Ws.size(3) != 8 || K % 16 != 0) {
+            set_err("smile_f32_gemm_bf16x3: need a [M,K] fp32 and a [N/8, K/16, 32, 8] bf16 fragment-ordered split weight");
+            return nullptr;
+        }
+        const int dev = A.get_device();
+        c10::cuda::CUDAGuard guard(dev);
+        cudaStream_t stream = at::cuda::getCurrentCUDAStream(dev);
+        const int numMt = (int) ((M + 15) / 16);
+        const int numNg = (int) ((N + kGemmNT * 8 - 1) / (kGemmNT * 8));
+        int nsplit = (int) std::max<int64_t>(1, std::min<int64_t>(K / 256, (4096 + (int64_t) numMt * numNg - 1) / ((int64_t) numMt * numNg)));
+        int kchunk = (int) ((((K + nsplit - 1) / nsplit) + 15) / 16 * 16);
+        nsplit = (int) ((K + kchunk - 1) / kchunk);
+        at::Tensor out = torch::empty({M, N}, A.options());
+        at::Tensor part = nsplit == 1 ? out : torch::empty({nsplit, M, N}, A.options());
+        const long tasks = (long) numMt * numNg * nsplit;
+        gemm_bf16x3_kernel<<<(unsigned) ((tasks + 3) / 4), 128, 0, stream>>>(
+                A.data_ptr<float>(), reinterpret_cast<const uint4*>(Ws.data_ptr()), part.data_ptr<float>(), (int) M, (int) N, (int) K, nsplit, kchunk, numNg);
+        if (nsplit > 1) {
+            gemm_x3_reduce_kernel<<<(unsigned) std::min<int64_t>(1024, (M * N + 255) / 256), 256, 0, stream>>>(
+                    part.data_ptr<float>(), out.data_ptr<float>(), M * N, nsplit);
+        }
+        cudaError_t st = cudaGetLastError();
+        if (st != cudaSuccess) {
+            set_err(std::string("smile_f32_gemm_bf16x3: CUDA error: ") + cudaGetErrorString(st));
             return nullptr;
         }
         return new ST_Tensor_{ out };
