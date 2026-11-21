@@ -622,7 +622,7 @@ public class InferenceService implements OpenAiModelContributor {
                     String candidateId = baseId + "-" + version;
                     if (models.containsKey(candidateId)) {
                         throw new ClientErrorException(
-                                "Model '" + candidateId + "' is already loaded. Use POST /api/v1/smile/" + candidateId + "/reload to refresh it, or unload it first.",
+                                "Model '" + candidateId + "' is already loaded. Use POST /v1/smile/" + candidateId + "/reload to refresh it, or unload it first.",
                                 Response.Status.CONFLICT);
                     }
                 }
@@ -643,7 +643,7 @@ public class InferenceService implements OpenAiModelContributor {
             var model = new InferenceModel(m, normalized);
             if (models.containsKey(model.id()) || !batchIds.add(model.id())) {
                 throw new ClientErrorException(
-                        "Model '" + model.id() + "' is already loaded. Use POST /api/v1/smile/" + model.id() + "/reload to refresh it, or unload it first.",
+                        "Model '" + model.id() + "' is already loaded. Use POST /v1/smile/" + model.id() + "/reload to refresh it, or unload it first.",
                         Response.Status.CONFLICT);
             }
             loaded.add(model);

@@ -77,7 +77,7 @@ function AppInner() {
     if (authLoading || authError || (ssoRequired && !loggedIn)) {
       return;
     }
-    fetch("/api/v1/models", { credentials: "include" })
+    fetch("/v1/models", { credentials: "include" })
       .then((res) => (res.ok ? res.json() : { data: [] }))
       .catch(() => ({ data: [] }))
       .then((catalog) => {

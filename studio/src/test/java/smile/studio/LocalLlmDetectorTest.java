@@ -44,8 +44,8 @@ class LocalLlmDetectorTest {
     void givenMockLocalServers_whenDetectEndpoints_thenDiscoversLlmModelsAndFiltersOutTabularModels() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         try {
-            // Mock SMILE Serve /api/v1/models (contains SMILE, ONNX, and LLM entries)
-            server.createContext("/serve/api/v1/models", ex -> {
+            // Mock SMILE Serve /v1/models (contains SMILE, ONNX, and LLM entries)
+            server.createContext("/serve/v1/models", ex -> {
                 String body = """
                         {
                           "object": "list",
@@ -89,8 +89,8 @@ class LocalLlmDetectorTest {
                     new ProbeTarget(
                             "local-serve",
                             "SMILE Serve",
-                            "http://localhost:8888/api/v1",
-                            "http://127.0.0.1:" + port + "/serve/api/v1/models"
+                            "http://localhost:8888/v1",
+                            "http://127.0.0.1:" + port + "/serve/v1/models"
                     ),
                     new ProbeTarget(
                             "ollama",
@@ -130,6 +130,17 @@ class LocalLlmDetectorTest {
         } finally {
             server.stop(0);
         }
+    }
+
+    @Test
+    void givenDefaultTargets_whenRequestedForServePort_thenUsesCanonicalV1Endpoints() {
+        List<ProbeTarget> targets = LocalLlmDetector.defaultTargets(8888);
+        ProbeTarget serve = targets.stream()
+                .filter(t -> "local-serve".equals(t.serviceName()))
+                .findFirst()
+                .orElseThrow();
+        assertEquals("http://localhost:8888/v1", serve.baseUrl());
+        assertEquals("http://127.0.0.1:8888/v1/models", serve.modelsUrl());
     }
 
     @Test

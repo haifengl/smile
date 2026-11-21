@@ -125,7 +125,7 @@ function SmileForm({ modelId }) {
     setStartedAt(null);
     setFinishedAt(null);
 
-    fetch(`/api/v1/smile/${modelId}`)
+    fetch(`/v1/smile/${modelId}`)
       .then((res) => {
         if (!res.ok) {
           throw new Error("Failed to fetch model schema");
@@ -215,8 +215,8 @@ function SmileForm({ modelId }) {
 
     if (onlineMode) {
       const updateUrl = persistUpdate
-        ? `/api/v1/smile/${modelId}/update?persist=true`
-        : `/api/v1/smile/${modelId}/update`;
+        ? `/v1/smile/${modelId}/update?persist=true`
+        : `/v1/smile/${modelId}/update`;
       fetch(updateUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -245,7 +245,7 @@ function SmileForm({ modelId }) {
       ? { samples: shapSamples, ridge: shapRidge }
       : null;
     const url = buildExplainUrl(
-      `/api/v1/smile/${modelId}`,
+      `/v1/smile/${modelId}`,
       Boolean(shapMethod) && explain,
       shapOptions
     );
@@ -309,8 +309,8 @@ function SmileForm({ modelId }) {
 
       if (onlineMode) {
         const updateStreamUrl = persistUpdate
-          ? `/api/v1/smile/${modelId}/update/stream?persist=true`
-          : `/api/v1/smile/${modelId}/update/stream`;
+          ? `/v1/smile/${modelId}/update/stream?persist=true`
+          : `/v1/smile/${modelId}/update/stream`;
         const res = await fetch(updateStreamUrl, {
           method: "POST",
           headers: { "Content-Type": contentType },
@@ -331,7 +331,7 @@ function SmileForm({ modelId }) {
         ? { samples: shapSamples, ridge: shapRidge }
         : null;
       const streamUrl = buildExplainUrl(
-        `/api/v1/smile/${modelId}/stream`,
+        `/v1/smile/${modelId}/stream`,
         Boolean(shapMethod) && explain,
         shapOptions
       );

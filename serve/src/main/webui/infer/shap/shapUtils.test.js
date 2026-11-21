@@ -175,24 +175,24 @@ describe("shapUtils", () => {
 
   it("builds explain URLs with optional KernelSHAP parameters", () => {
     assert.equal(
-      buildExplainUrl("/api/v1/smile/iris_lda-1", false, { samples: 128, ridge: 1e-6 }),
-      "/api/v1/smile/iris_lda-1"
+      buildExplainUrl("/v1/smile/iris_lda-1", false, { samples: 128, ridge: 1e-6 }),
+      "/v1/smile/iris_lda-1"
     );
     assert.equal(
-      buildExplainUrl("/api/v1/smile/iris_lda-1", true, null),
-      "/api/v1/smile/iris_lda-1?explain=true"
+      buildExplainUrl("/v1/smile/iris_lda-1", true, null),
+      "/v1/smile/iris_lda-1?explain=true"
     );
     assert.equal(
-      buildExplainUrl("/api/v1/smile/iris_lda-1", true, { samples: "", ridge: "" }),
-      "/api/v1/smile/iris_lda-1?explain=true"
+      buildExplainUrl("/v1/smile/iris_lda-1", true, { samples: "", ridge: "" }),
+      "/v1/smile/iris_lda-1?explain=true"
     );
     assert.equal(
-      buildExplainUrl("/api/v1/smile/iris_lda-1", true, { samples: "256", ridge: "1e-5" }),
-      "/api/v1/smile/iris_lda-1?explain=true&samples=256&ridge=0.00001"
+      buildExplainUrl("/v1/smile/iris_lda-1", true, { samples: "256", ridge: "1e-5" }),
+      "/v1/smile/iris_lda-1?explain=true&samples=256&ridge=0.00001"
     );
     assert.equal(
-      buildExplainUrl("/api/v1/smile/iris_lda-1/stream", true, { samples: 64 }),
-      "/api/v1/smile/iris_lda-1/stream?explain=true&samples=64"
+      buildExplainUrl("/v1/smile/iris_lda-1/stream", true, { samples: 64 }),
+      "/v1/smile/iris_lda-1/stream?explain=true&samples=64"
     );
   });
 });

@@ -227,7 +227,7 @@ public class ChatService implements OpenAiModelContributor {
         String targetModelId = resolveServedModelName(modelSpec, effConfig);
         if (isAvailable() && targetModelId.equals(modelId)) {
             throw new ClientErrorException(
-                    "Chat model '" + modelId + "' is already loaded. Use POST /api/v1/models/load with a different model, or unload it first.",
+                    "Chat model '" + modelId + "' is already loaded. Use POST /v1/models/load with a different model, or unload it first.",
                     Response.Status.CONFLICT);
         }
 

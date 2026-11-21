@@ -579,7 +579,7 @@ public class InferenceResourceTest {
                     .statusCode(200)
                     .body("id", is("iris_kmeans-1"));
 
-            // Then GET /api/v1/models/iris_kmeans-1 includes clustering details in smile.train
+            // Then GET /v1/models/iris_kmeans-1 includes clustering details in smile.train
             given()
                 .when().get("/v1/models/iris_kmeans-1")
                 .then()
@@ -591,7 +591,7 @@ public class InferenceResourceTest {
                     .body("smile.train.cluster_sizes", hasSize(3))
                     .body("smile.train.distortions", hasSize(3));
 
-            // And POST /api/v1/smile/iris_kmeans-1 returns cluster prediction and centroid
+            // And POST /v1/smile/iris_kmeans-1 returns cluster prediction and centroid
             var sample = "{\"sepallength\":5.1,\"sepalwidth\":3.5,\"petallength\":1.4,\"petalwidth\":0.2}";
             given()
                 .contentType(ContentType.JSON)
@@ -680,7 +680,7 @@ public class InferenceResourceTest {
                     .body("algorithm", is("som"))
                     .body("online", is(true));
 
-            // GET /api/v1/models/iris_som-1 includes SOM lattice details
+            // GET /v1/models/iris_som-1 includes SOM lattice details
             given()
                 .when().get("/v1/models/iris_som-1")
                 .then()
@@ -691,7 +691,7 @@ public class InferenceResourceTest {
                     .body("smile.train.ncol", is(3))
                     .body("smile.train.neurons", is(9));
 
-            // POST /api/v1/smile/iris_som-1 returns 2D grid prediction [row, col], centroid, and error
+            // POST /v1/smile/iris_som-1 returns 2D grid prediction [row, col], centroid, and error
             var sample = "{\"sepallength\":5.1,\"sepalwidth\":3.5,\"petallength\":1.4,\"petalwidth\":0.2}";
             given()
                 .contentType(ContentType.JSON)
@@ -816,7 +816,7 @@ public class InferenceResourceTest {
                     .statusCode(200)
                     .body("id", is("iris_iforest-1"));
 
-            // GET /api/v1/models/iris_iforest-1 includes IsolationForest details in smile.train
+            // GET /v1/models/iris_iforest-1 includes IsolationForest details in smile.train
             given()
                 .when().get("/v1/models/iris_iforest-1")
                 .then()
@@ -826,7 +826,7 @@ public class InferenceResourceTest {
                     .body("smile.train.extension_level", is(0))
                     .body("smile.train.threshold", is(0.55f));
 
-            // POST /api/v1/smile/iris_iforest-1 on normal sample returns boolean prediction and score
+            // POST /v1/smile/iris_iforest-1 on normal sample returns boolean prediction and score
             var inlier = "{\"sepallength\":5.1,\"sepalwidth\":3.5,\"petallength\":1.4,\"petalwidth\":0.2}";
             given()
                 .contentType(ContentType.JSON)
@@ -837,7 +837,7 @@ public class InferenceResourceTest {
                     .body("prediction", is(false))
                     .body("score", notNullValue());
 
-            // POST /api/v1/smile/iris_iforest-1 on extreme outlier returns prediction = true
+            // POST /v1/smile/iris_iforest-1 on extreme outlier returns prediction = true
             var outlier = "{\"sepallength\":100.0,\"sepalwidth\":100.0,\"petallength\":100.0,\"petalwidth\":100.0}";
             given()
                 .contentType(ContentType.JSON)
