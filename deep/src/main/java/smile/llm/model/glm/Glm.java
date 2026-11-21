@@ -1025,8 +1025,13 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         tp = System.nanoTime();
         gatherAllRanks(rank -> {
             try (var guard = Tensor.noGradGuard()) {
-                windowGraphs[rank].get(key).commit(mine[rank], accept);
-                replicas[rank].mtpFinishBatch(mine[rank], emitted, useMtpGraph ? mtpGraphs[rank].get(mnb) : null);
+                GlmWindowGraph wg = windowGraphs[rank].get(key);
+                wg.commit(mine[rank], accept);
+                if (wg.hasMtpWindow()) {
+                    wg.absorb(mine[rank], emitted);
+                } else {
+                    replicas[rank].mtpFinishBatch(mine[rank], emitted, useMtpGraph ? mtpGraphs[rank].get(mnb) : null);
+                }
                 for (int i = 0; i < b; i++) {
                     replicas[rank].endRound(mine[rank][i]);
                 }
