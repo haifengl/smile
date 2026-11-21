@@ -180,6 +180,27 @@ final class Gx {
 
     /** 3xTF32 tensor-core kernel for skinny fp32 products ({@code GLM_X3_GEMM=0} disables). */
     private static final boolean X3_GEMM = !"0".equals(System.getenv("GLM_X3_GEMM"));
+    /** Widest fp32 product that takes the tensor-core path ({@code GLM_X3_MAX_N}). */
+    private static final int X3_MAX_COLUMNS = Integer.parseInt(System.getenv().getOrDefault("GLM_X3_MAX_N", "512"));
+    private static final java.util.Map<Tensor, Tensor> SPLITS = java.util.Collections.synchronizedMap(new java.util.IdentityHashMap<>());
+
+    /**
+     * The hi and lo bf16 parts of an fp32 weight {@code [N, K]} in mma fragment order {@code [N/8, K/16, 32, 8]} (per n8 tile,
+     * k16 step and lane: hi b0, hi b1, lo b0, lo b1 as bf16 pairs), cached per weight.
+     */
+    static Tensor splitBf16(Tensor w) {
+        return SPLITS.computeIfAbsent(w, k -> {
+            long n = w.size(0);
+            long kk = w.size(1);
+            Tensor hi = o("aten::_to_copy", w, ScalarType.BFloat16);
+            Tensor lo = o("aten::_to_copy", o("aten::sub.Tensor", w, hi.to(ScalarType.Float)), ScalarType.BFloat16);
+            Tensor both = cat(0, unsqueeze(hi, 0), unsqueeze(lo, 0));                              // [hl, N, K]
+            // [hl, nt, g, ks, half, t4, pair] -> [nt, ks, g, t4, hl, half, pair]
+            Tensor v = o("aten::reshape", both, new long[]{2, n / 8, 8, kk / 16, 2, 4, 2});
+            Tensor perm = o("aten::permute", v, new long[]{1, 3, 2, 5, 0, 4, 6});
+            return keep(o("aten::reshape", o("aten::contiguous", perm), new long[]{n / 8, kk / 16, 32, 8}));
+        });
+    }
 
     /**
      * {@code x w^T}; a lower-precision weight rounds the input to its dtype, the product is accumulated and returned in
@@ -187,10 +208,12 @@ final class Gx {
      */
     static Tensor linear(Tensor x, Tensor w) {
         if (w.dtype() == ScalarType.Float) {
-            if (X3_GEMM && x.dtype() == ScalarType.Float && w.dim() == 2 && x.dim() == 2 && x.size(0) >= 256 && w.size(0) <= 64
-                    && w.size(0) % 8 == 0 && w.size(1) % 8 == 0 && x.device().isCUDA() && smile.torch.Native.f32GemmX3Available()) {
-                // the HC projection (N = 24, K = 16384): 3xTF32 tensor cores, ~1.7x faster than sgemm (the router, N = 288, is not)
-                return smile.torch.Native.f32GemmX3(o("aten::contiguous", x), o("aten::contiguous", w));
+            if (X3_GEMM && x.dtype() == ScalarType.Float && w.dim() == 2 && x.dim() == 2 && x.size(0) >= 256
+                    && w.size(0) <= X3_MAX_COLUMNS && w.size(0) % 8 == 0 && w.size(1) % 16 == 0 && x.device().isCUDA()
+                    && smile.torch.Native.f32GemmBf16x3Available()) {
+                // skinny fp32 products of prefill (HC projection N = 24, router N = 288) on bf16 tensor cores with hi/lo
+                // splits of both operands (the weight's split is made once)
+                return smile.torch.Native.f32GemmBf16x3(o("aten::contiguous", x), splitBf16(w));
             }
             return o("aten::linear", x, w);
         }

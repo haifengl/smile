@@ -431,6 +431,11 @@ public final class Native {
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final java.util.Optional<MemorySegment> F32_GEMM_BF16X3_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_f32_gemm_bf16x3");
+        static final MethodHandle F32_GEMM_BF16X3 = F32_GEMM_BF16X3_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
+                .orElse(null);
         static final java.util.Optional<MemorySegment> GLM_SWIGLU_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_glm_swiglu");
         static final MethodHandle GLM_SWIGLU = GLM_SWIGLU_SYM
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -1800,6 +1805,22 @@ public final class Native {
      */
     public static Tensor f32GemmX3(Tensor a, Tensor w) {
         return mlaResult(Bindings.F32_GEMM_X3, "smile_f32_gemm_x3", a.handle(), w.handle());
+    }
+
+    /** Whether {@link #f32GemmBf16x3} is available. */
+    public static boolean f32GemmBf16x3Available() {
+        return Bindings.F32_GEMM_BF16X3 != null;
+    }
+
+    /**
+     * fp32 {@code a w^T} on bf16 tensor cores with a hi/lo split of both operands (about 1e-5 relative error).
+     *
+     * @param a      float32 contiguous CUDA {@code [M, K]}, K a multiple of 16.
+     * @param wsplit bfloat16 contiguous {@code [2, N, K]}: the hi and lo bf16 parts of the fp32 weight, N a multiple of 8.
+     * @return float32 {@code [M, N]}.
+     */
+    public static Tensor f32GemmBf16x3(Tensor a, Tensor wsplit) {
+        return mlaResult(Bindings.F32_GEMM_BF16X3, "smile_f32_gemm_bf16x3", a.handle(), wsplit.handle());
     }
 
     private static Tensor mlaResult(MethodHandle handle, String name, Object... args) {

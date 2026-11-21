@@ -51,6 +51,13 @@ public class GlmF32GemmTest {
             Tensor a = o("aten::randn", new long[]{sh[0], sh[1]}, ScalarType.Float).to(dev);
             Tensor w = o("aten::randn", new long[]{sh[2], sh[1]}, ScalarType.Float).to(dev);
             Tensor got = Native.f32GemmX3(a, w);
+            if (Native.f32GemmBf16x3Available()) {
+                Tensor b3 = Native.f32GemmBf16x3(a, Gx.splitBf16(w));
+                Tensor wantB = o("aten::mm", o("aten::_cast_Double", a, false), o("aten::t", o("aten::_cast_Double", w, false)));
+                double eb = rel(o("aten::_cast_Double", b3, false), wantB);
+                System.out.printf("   bf16x3 rel err %.2e%n", eb);
+                assertTrue(eb < 5e-5, "bf16x3 rel err " + eb);
+            }
             Tensor want = o("aten::mm", o("aten::_cast_Double", a, false), o("aten::t", o("aten::_cast_Double", w, false)));
             double e = rel(o("aten::_cast_Double", got, false), want);
             Tensor tf = o("aten::linear", a, w);
@@ -65,7 +72,7 @@ public class GlmF32GemmTest {
             for (long[] sh : new long[][]{{2048, 16384, 24}, {2048, 4096, 288}}) {
                 Tensor a = o("aten::randn", new long[]{sh[0], sh[1]}, ScalarType.Float).to(dev);
                 Tensor w = o("aten::randn", new long[]{sh[2], sh[1]}, ScalarType.Float).to(dev);
-                for (int variant = 0; variant < 2; variant++) {
+                for (int variant = 0; variant < 3; variant++) {
                     for (int i = 0; i < 5; i++) {
                         run(variant, a, w);
                     }
@@ -73,7 +80,7 @@ public class GlmF32GemmTest {
                     for (int i = 0; i < 20; i++) {
                         run(variant, a, w);
                     }
-                    System.out.printf("M=%d K=%d N=%d %s: %.0f us%n", sh[0], sh[1], sh[2], variant == 0 ? "x3" : "cuBLAS",
+                    System.out.printf("M=%d K=%d N=%d %s: %.0f us%n", sh[0], sh[1], sh[2], variant == 0 ? "tf32x3" : variant == 1 ? "cuBLAS" : "bf16x3",
                             (System.nanoTime() - t0) / 20e3);
                 }
             }
@@ -81,7 +88,7 @@ public class GlmF32GemmTest {
     }
 
     private static void run(int variant, Tensor a, Tensor w) {
-        Tensor r = variant == 0 ? Native.f32GemmX3(a, w) : o("aten::linear", a, w);
+        Tensor r = variant == 0 ? Native.f32GemmX3(a, w) : variant == 1 ? o("aten::linear", a, w) : Native.f32GemmBf16x3(a, Gx.splitBf16(w));
         o("aten::sum", r).doubleValue();
         r.close();
     }

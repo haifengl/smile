@@ -172,6 +172,13 @@ SMILE_API ST_Tensor smile_glm_latent_gather(ST_Tensor cache, ST_Tensor ids);
  */
 SMILE_API ST_Tensor smile_f32_gemm_x3(ST_Tensor a, ST_Tensor w);
 
+/**
+ * As smile_f32_gemm_x3 with bf16 splits (about 1e-5 relative error, faster): a float32 contiguous [M, K] (K a multiple of
+ * 16), wsplit bfloat16 contiguous [N/8, K/16, 32, 8] = the hi and lo bf16 parts of the fp32 weight [N, K] (N a multiple of 8)
+ * in mma fragment order: per (n8 tile, k16 step, lane) the words {hi b0, hi b1, lo b0, lo b1} of that lane.
+ */
+SMILE_API ST_Tensor smile_f32_gemm_bf16x3(ST_Tensor a, ST_Tensor wsplit);
+
 #ifdef __cplusplus
 }
 #endif
