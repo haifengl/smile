@@ -2297,6 +2297,171 @@ extern "C" ST_Tensor smile_mla_decode_topk(ST_Tensor scores, ST_Tensor lens, lon
     }
 }
 
+// ---- tensor-core latent attention for prefill chunks (bf16 latent cache): one block per row and 8 heads, the keys of the
+// row gathered in tiles of 32 (cp.async, double buffered) and read ONCE (scores and values are the same latent rows), online
+// softmax, m16n8k16 bf16 mma with the 8 heads padded to 16 rows, the probabilities split in hi/lo bf16 for ~fp32 accuracy.
+namespace tc {
+constexpr int kKeys = 32;
+constexpr int kTileBytes = kKeys * kLat * 2;                 // 32 KB
+constexpr int kSmemBytes = 8192 + 2 * kTileBytes + 1056 + 2 * 640 + 64 + 2 * kKeys * 4 + 64;
+
+__device__ __forceinline__ uint32_t su32(const void* p) { return (uint32_t) __cvta_generic_to_shared(p); }
+__device__ __forceinline__ void ldsm_x2(uint32_t& r0, uint32_t& r1, const void* p) {
+    asm volatile("ldmatrix.sync.aligned.m8n8.x2.shared.b16 {%0,%1}, [%2];" : "=r"(r0), "=r"(r1) : "r"(su32(p)));
+}
+__device__ __forceinline__ void ldsm_x4t(uint32_t& r0, uint32_t& r1, uint32_t& r2, uint32_t& r3, const void* p) {
+    asm volatile("ldmatrix.sync.aligned.m8n8.x4.trans.shared.b16 {%0,%1,%2,%3}, [%4];"
+                 : "=r"(r0), "=r"(r1), "=r"(r2), "=r"(r3) : "r"(su32(p)));
+}
+__device__ __forceinline__ void cp16(void* dst, const void* src) {
+    asm volatile("cp.async.cg.shared.global [%0], [%1], 16;" :: "r"(su32(dst)), "l"(src));
+}
+__device__ __forceinline__ void mma16816(float* c, const uint32_t* a, uint32_t b0, uint32_t b1) {
+    asm volatile("mma.sync.aligned.m16n8k16.row.col.f32.bf16.bf16.f32 {%0,%1,%2,%3}, {%4,%5,%6,%7}, {%8,%9}, {%0,%1,%2,%3};"
+                 : "+f"(c[0]), "+f"(c[1]), "+f"(c[2]), "+f"(c[3])
+                 : "r"(a[0]), "r"(a[1]), "r"(a[2]), "r"(a[3]), "r"(b0), "r"(b1));
+}
+}  // namespace tc
+
+__global__ void __launch_bounds__(128, 2) mla_attend_tc_kernel(
+        const __nv_bfloat16* __restrict__ qabs, const long long* __restrict__ lat_ptrs, const int* __restrict__ idx,
+        const int* __restrict__ lens, int top_pools, int width_all, int heads, float scale, float* __restrict__ ctx) {
+    extern __shared__ __align__(16) unsigned char tsm[];
+    unsigned char* Qs = tsm;                                              // [8 heads][1024 B], 16 B chunks XOR-swizzled by row
+    unsigned char* Ks = tsm + 8192;                                       // 2 x [32 keys][1024 B], swizzled by key
+    float* Ss = reinterpret_cast<float*>(tsm + 8192 + 2 * tc::kTileBytes);   // [8][33] scores of the tile
+    __nv_bfloat16* Ph = reinterpret_cast<__nv_bfloat16*>(Ss + 8 * 33);       // [8][40] probabilities, hi part
+    __nv_bfloat16* Pl = Ph + 8 * 40;                                         // lo part
+    float* alpha_s = reinterpret_cast<float*>(Pl + 8 * 40);                  // [8] rescale of the running sum
+    float* l_s = alpha_s + 8;                                                // [8] final sums
+    int* tid_s = reinterpret_cast<int*>(l_s + 8);                            // [2][32] ids of the tile's keys
+    const int b = blockIdx.x;
+    const int h0 = blockIdx.y * 8;
+    const int tid = threadIdx.x;
+    const int lane = tid & 31;
+    const int warp = tid >> 5;
+    const int g = lane >> 2;
+    const int t4 = lane & 3;
+    const unsigned char* latb = reinterpret_cast<const unsigned char*>(lat_ptrs[b]);
+    const int* rowIds = idx + (long long) b * width_all;
+    int width = width_all;
+    int nv = width_all;
+    if (lens != nullptr) {
+        nv = 4 * min((lens[b] + 1) >> 2, top_pools);
+        width = nv + 3;
+    }
+    // queries of the 8 heads into shared memory
+    for (int e = tid; e < 8 * 64; e += 128) {
+        const int row = e >> 6, ch = e & 63;
+        *reinterpret_cast<uint4*>(Qs + row * 1024 + ((ch ^ (row & 7)) << 4)) =
+                *reinterpret_cast<const uint4*>(qabs + ((long long) b * heads + h0 + row) * kLat + ch * 8);
+    }
+    auto issue = [&](int t, int buf) {
+        for (int e = tid; e < tc::kKeys * 64; e += 128) {
+            const int key = e >> 6, ch = e & 63;
+            const int j = t * tc::kKeys + key;
+            int id = -1;
+            if (j < width) id = j < nv ? rowIds[j] : rowIds[width_all - 3 + (j - nv)];
+            if (ch == 0) tid_s[buf * tc::kKeys + key] = id;
+            tc::cp16(Ks + buf * tc::kTileBytes + key * 1024 + ((ch ^ (key & 7)) << 4),
+                     latb + (long long) (id < 0 ? 0 : id) * (kLat * 2) + ch * 16);
+        }
+        asm volatile("cp.async.commit_group;");
+    };
+    float O[16][4];
+#pragma unroll
+    for (int j = 0; j < 16; ++j) O[j][0] = O[j][1] = O[j][2] = O[j][3] = 0.f;
+    const int head = tid >> 4;
+    const int jj = tid & 15;
+    float m = -INFINITY, l = 0.f;
+    const int ntiles = (width + tc::kKeys - 1) / tc::kKeys;
+    issue(0, 0);
+    for (int t = 0; t < ntiles; ++t) {
+        const int buf = t & 1;
+        asm volatile("cp.async.wait_group 0;");
+        __syncthreads();                                   // tile t (and Q, ids) visible; everyone is done with tile t - 1
+        if (t + 1 < ntiles) issue(t + 1, buf ^ 1);         // loads of the next tile run during this tile's math
+        const unsigned char* Kb = Ks + buf * tc::kTileBytes;
+        // scores: warp w takes the 8 keys 8w..8w+7
+        {
+            float c[4] = {0.f, 0.f, 0.f, 0.f};
+            const int key = warp * 8 + (lane & 7);
+#pragma unroll 8
+            for (int ks = 0; ks < 32; ++ks) {
+                const int half = (lane >> 3) & 1;
+                uint32_t a0, a2, b0, b1;
+                tc::ldsm_x2(a0, a2, Qs + (lane & 7) * 1024 + (((2 * ks + half) ^ (lane & 7)) << 4));
+                tc::ldsm_x2(b0, b1, Kb + key * 1024 + (((2 * ks + half) ^ (key & 7)) << 4));
+                const uint32_t af[4] = {a0, 0u, a2, 0u};
+                tc::mma16816(c, af, b0, b1);
+            }
+            const int k0 = warp * 8 + 2 * t4;
+            const int id0 = tid_s[buf * tc::kKeys + k0], id1 = tid_s[buf * tc::kKeys + k0 + 1];
+            Ss[g * 33 + k0] = id0 < 0 ? -INFINITY : c[0] * scale;
+            Ss[g * 33 + k0 + 1] = id1 < 0 ? -INFINITY : c[1] * scale;
+        }
+        __syncthreads();
+        // online softmax: 16 threads per head, two keys each
+        {
+            const float s0 = Ss[head * 33 + jj], s1 = Ss[head * 33 + jj + 16];
+            float mx = fmaxf(s0, s1);
+#pragma unroll
+            for (int o = 8; o > 0; o >>= 1) mx = fmaxf(mx, __shfl_xor_sync(0xffffffffu, mx, o));
+            const float mnew = fmaxf(m, mx);
+            float alpha = 1.f, p0 = 0.f, p1 = 0.f;
+            if (mnew != -INFINITY) {
+                alpha = m == -INFINITY ? 0.f : __expf(m - mnew);
+                p0 = __expf(s0 - mnew);
+                p1 = __expf(s1 - mnew);
+            }
+            float sum = p0 + p1;
+#pragma unroll
+            for (int o = 8; o > 0; o >>= 1) sum += __shfl_xor_sync(0xffffffffu, sum, o);
+            l = l * alpha + sum;
+            m = mnew;
+            const __nv_bfloat16 h0b = __float2bfloat16(p0), h1b = __float2bfloat16(p1);
+            Ph[head * 40 + jj] = h0b;
+            Ph[head * 40 + jj + 16] = h1b;
+            Pl[head * 40 + jj] = __float2bfloat16(p0 - __bfloat162float(h0b));
+            Pl[head * 40 + jj + 16] = __float2bfloat16(p1 - __bfloat162float(h1b));
+            if (jj == 0) alpha_s[head] = alpha;
+        }
+        __syncthreads();
+        // values: warp w owns the dims 128w..128w+127 (16 n8 tiles)
+        {
+            const float al = alpha_s[g];
+#pragma unroll
+            for (int j = 0; j < 16; ++j) { O[j][0] *= al; O[j][1] *= al; }
+#pragma unroll
+            for (int ks = 0; ks < 2; ++ks) {
+                const uint32_t ah[4] = {*reinterpret_cast<const uint32_t*>(Ph + g * 40 + ks * 16 + 2 * t4), 0u,
+                                        *reinterpret_cast<const uint32_t*>(Ph + g * 40 + ks * 16 + 8 + 2 * t4), 0u};
+                const uint32_t alo[4] = {*reinterpret_cast<const uint32_t*>(Pl + g * 40 + ks * 16 + 2 * t4), 0u,
+                                         *reinterpret_cast<const uint32_t*>(Pl + g * 40 + ks * 16 + 8 + 2 * t4), 0u};
+                const int key = 16 * ks + ((lane >> 3) & 1) * 8 + (lane & 7);
+#pragma unroll
+                for (int jp = 0; jp < 8; ++jp) {
+                    const int c = warp * 16 + 2 * jp + (lane >> 4);
+                    uint32_t b0, b1, b2, b3;
+                    tc::ldsm_x4t(b0, b1, b2, b3, Kb + key * 1024 + ((c ^ (key & 7)) << 4));
+                    tc::mma16816(O[2 * jp], alo, b0, b1);
+                    tc::mma16816(O[2 * jp], ah, b0, b1);
+                    tc::mma16816(O[2 * jp + 1], alo, b2, b3);
+                    tc::mma16816(O[2 * jp + 1], ah, b2, b3);
+                }
+            }
+        }
+    }
+    if (jj == 0) l_s[head] = l;
+    __syncthreads();
+    const float inv = 1.f / l_s[g];
+    float* dst = ctx + ((long long) b * heads + h0 + g) * kLat + warp * 128;
+#pragma unroll
+    for (int j = 0; j < 16; ++j) {
+        *reinterpret_cast<float2*>(dst + j * 8 + 2 * t4) = make_float2(O[j][0] * inv, O[j][1] * inv);
+    }
+}
+
 static ST_Tensor mla_attend_launch(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor idx, ST_Tensor lens, long long top_pools,
                                    double scale, int fp8, const char* name) {
     try {
@@ -2340,6 +2505,35 @@ static ST_Tensor mla_attend_launch(ST_Tensor qabs, ST_Tensor lat_ptrs, ST_Tensor
                 }
                 configured[variant][dev] = true;
             }
+        }
+        static const bool tc_on = std::getenv("GLM_ATTEND_TC") == nullptr || std::string(std::getenv("GLM_ATTEND_TC")) != "0";
+        if (tc_on && !fp8 && H % 8 == 0 && B >= 32) {
+            // prefill chunks: the tensor-core kernel (each latent row read once)
+            static std::mutex tc_mutex;
+            static bool tc_configured[64] = {false};
+            {
+                std::lock_guard<std::mutex> lock(tc_mutex);
+                if (dev >= 0 && dev < 64 && !tc_configured[dev]) {
+                    cudaError_t attr = cudaFuncSetAttribute(mla_attend_tc_kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, tc::kSmemBytes);
+                    if (attr != cudaSuccess) {
+                        set_err(std::string(name) + ": cannot raise the shared memory limit: " + cudaGetErrorString(attr));
+                        return nullptr;
+                    }
+                    tc_configured[dev] = true;
+                }
+            }
+            dim3 tgrid((unsigned) B, (unsigned) (H / 8));
+            mla_attend_tc_kernel<<<tgrid, 128, tc::kSmemBytes, at::cuda::getCurrentCUDAStream(dev)>>>(
+                    reinterpret_cast<const __nv_bfloat16*>(qabs->t.data_ptr()),
+                    reinterpret_cast<const long long*>(lat_ptrs->t.data_ptr<int64_t>()), idx->t.data_ptr<int>(),
+                    lens == nullptr ? nullptr : lens->t.data_ptr<int>(), (int) top_pools, (int) W, (int) H, (float) scale,
+                    out.data_ptr<float>());
+            cudaError_t tst = cudaGetLastError();
+            if (tst != cudaSuccess) {
+                set_err(std::string(name) + ": CUDA error: " + cudaGetErrorString(tst));
+                return nullptr;
+            }
+            return new ST_Tensor_{ out };
         }
         dim3 grid((unsigned) B, (unsigned) (H / hpb));
         const __nv_bfloat16* q = reinterpret_cast<const __nv_bfloat16*>(qabs->t.data_ptr());
