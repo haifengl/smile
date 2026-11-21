@@ -86,7 +86,7 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
     private volatile boolean windowGraphsDisabled;
     private static final boolean WINDOW_GRAPHS = !"0".equals(System.getenv("SMILE_GLM_WINDOW_GRAPH"));
     private static final boolean MTP_GRAPHS = !"0".equals(System.getenv("SMILE_GLM_MTP_GRAPH"));
-    private static final int MAX_WINDOW_BATCH = Integer.getInteger("smile.glm.window.maxbatch", 8);
+    private static final int MAX_WINDOW_BATCH = Integer.getInteger("smile.glm.window.maxbatch", 32);
     private final boolean onCuda;
     private volatile boolean graphsDisabled;
     /** Graph keys captured on every rank (checked on the calling thread so that a ready graph costs no round trip to the rank threads). */
@@ -1010,11 +1010,9 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         int[][] emitted = new int[b][];
         int[] accept = new int[b];
         try (Tensor logits = lg.get(0)) {
+            int[][] sampledAll = sampleWindowRows(logits, temperatures, topps, b, rows);
             for (int i = 0; i < b; i++) {
-                int[] sampled;
-                try (Tensor slice = smile.torch.Aten.one("aten::narrow", logits, 0L, (long) i * rows, (long) rows)) {
-                    sampled = Sampling.sampleTokenIds(slice, temperatures[i], topps[i]);
-                }
+                int[] sampled = sampledAll[i];
                 int k = 0;
                 while (k < drafts && sampled[k] == tokens[i][k + 1]) {
                     k++;
@@ -1042,9 +1040,59 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
             specAccepted.addAndGet(accept[i] - 1);
         }
         specNanos.addAndGet(System.nanoTime() - t0);
+        specGroups.incrementAndGet();
+        specGroupRequests.addAndGet(b);
+        if (specGroups.get() % 40 == 0) {
+            logger.info("GLM speculation: {}", speculationStats());
+        }
         return emitted;
     }
 
+    /**
+     * Samples every row of the verify windows: {@code logits} holds {@code rows} consecutive rows per request. Requests
+     * with the same temperature and top-p are sampled in one batched call (one kernel set and one host copy for all of
+     * them instead of one per request).
+     */
+    private static int[][] sampleWindowRows(Tensor logits, double[] temperatures, double[] topps, int b, int rows) {
+        int[][] out = new int[b][];
+        boolean[] done = new boolean[b];
+        for (int i = 0; i < b; i++) {
+            if (done[i]) {
+                continue;
+            }
+            List<Integer> group = new ArrayList<>();
+            for (int j = i; j < b; j++) {
+                if (!done[j] && temperatures[j] == temperatures[i] && topps[j] == topps[i]) {
+                    group.add(j);
+                    done[j] = true;
+                }
+            }
+            int[] flat;
+            if (group.size() == b) {
+                try (Tensor all = smile.torch.Aten.one("aten::narrow", logits, 0L, 0L, (long) b * rows)) {
+                    flat = Sampling.sampleTokenIds(all, temperatures[i], topps[i]);
+                }
+            } else {
+                long[] idx = new long[group.size() * rows];
+                for (int g = 0; g < group.size(); g++) {
+                    for (int r = 0; r < rows; r++) {
+                        idx[g * rows + r] = (long) group.get(g) * rows + r;
+                    }
+                }
+                try (Tensor it = Tensor.of(idx, idx.length).to(logits.device());
+                     Tensor sel = smile.torch.Aten.one("aten::index_select", logits, 0L, it)) {
+                    flat = Sampling.sampleTokenIds(sel, temperatures[i], topps[i]);
+                }
+            }
+            for (int g = 0; g < group.size(); g++) {
+                out[group.get(g)] = Arrays.copyOfRange(flat, g * rows, (g + 1) * rows);
+            }
+        }
+        return out;
+    }
+
+    private final java.util.concurrent.atomic.AtomicLong specGroups = new java.util.concurrent.atomic.AtomicLong();
+    private final java.util.concurrent.atomic.AtomicLong specGroupRequests = new java.util.concurrent.atomic.AtomicLong();
     private final java.util.concurrent.atomic.AtomicLong specRounds = new java.util.concurrent.atomic.AtomicLong();
     private final java.util.concurrent.atomic.AtomicLong specDrafts = new java.util.concurrent.atomic.AtomicLong();
     private final java.util.concurrent.atomic.AtomicLong specAccepted = new java.util.concurrent.atomic.AtomicLong();
@@ -1068,8 +1116,13 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
     public String speculationStats() {
         long r = specRounds.get();
         double per = r == 0 ? 0 : 1e-6 / r;
-        return String.format("%d rounds, %d drafts proposed, %d accepted (%.2f per round, %.1f%%), %.1f ms per round "
+        long g = specGroups.get();
+        double perGroup = g == 0 ? 0 : 1e-6 / g;
+        return String.format("%d group rounds of %.1f requests: %.1f ms (draft %.1f, verify %.1f, sample %.1f, commit+absorb %.1f); "
+                        + "%d rounds, %d drafts proposed, %d accepted (%.2f per round, %.1f%%), %.1f ms per round "
                         + "(draft %.1f, verify %.1f, sample %.1f, rollback+absorb %.1f)",
+                g, g == 0 ? 0 : (double) specGroupRequests.get() / g, specNanos.get() * perGroup, specPhase.get(0) * perGroup,
+                specPhase.get(1) * perGroup, specPhase.get(2) * perGroup, specPhase.get(3) * perGroup,
                 r, specDrafts.get(), specAccepted.get(), r == 0 ? 0 : (double) specAccepted.get() / r,
                 specDrafts.get() == 0 ? 0 : 100.0 * specAccepted.get() / specDrafts.get(),
                 specNanos.get() * per, specPhase.get(0) * per, specPhase.get(1) * per, specPhase.get(2) * per, specPhase.get(3) * per)

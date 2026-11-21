@@ -409,7 +409,7 @@ public class ChatService implements OpenAiModelContributor {
             // (measured through the engine on 8 A100); beyond 32 requests the verify rows stop paying, the rest decode plain.
             int defaultSpeculators = model instanceof MiniMax ? Math.min(4, Math.max(1, config.maxBatchSize()))
                     : model instanceof smile.llm.model.deepseek.DeepSeek ? Math.min(32, Math.max(1, config.maxBatchSize()))
-                    : model instanceof smile.llm.model.glm.Glm ? Math.min(8, Math.max(1, config.maxBatchSize()))   // one verify-window graph; plain batching wins beyond ~8
+                    : model instanceof smile.llm.model.glm.Glm ? Math.min(32, Math.max(1, config.maxBatchSize()))   // batched verify windows pay up to 32 (+1.25x at 8, 1.2x at 16, 1.07x at 32 aggregate)
                     : Math.max(1, config.maxBatchSize());
             engine.setMaxSpeculativeConcurrency(config.speculativeMaxConcurrency() > 0
                     ? config.speculativeMaxConcurrency()
