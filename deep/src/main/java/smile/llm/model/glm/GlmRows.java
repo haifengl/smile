@@ -75,7 +75,9 @@ final class GlmRows {
             while (cap < rows) {
                 cap *= 2;
             }
-            Tensor next = keep(o("aten::zeros", new long[]{cap, width}, type).to(device()));
+            // allocated on the device: building the zeros on the host and copying them took seconds at 32k+ tokens (every layer of
+            // every rank doubles at the same position)
+            Tensor next = keep(Tensor.zeros(new Tensor.Options().dtype(type).device(device()), cap, width));
             if (buf != null) {
                 if (len > 0) {
                     smile.torch.Aten.call("aten::copy_", narrow(next, 0, 0, len), narrow(buf, 0, 0, len), false);

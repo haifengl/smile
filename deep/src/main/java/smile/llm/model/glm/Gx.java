@@ -175,7 +175,7 @@ final class Gx {
     }
 
     static Tensor zeros(ScalarType dtype, long... shape) {
-        return o("aten::zeros", shape, dtype).to(device());
+        return Tensor.zeros(new Tensor.Options().dtype(dtype).device(device()), shape);
     }
 
     /**

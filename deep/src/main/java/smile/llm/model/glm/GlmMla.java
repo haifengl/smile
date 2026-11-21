@@ -421,7 +421,8 @@ final class GlmMla {
             if (trace != null) {
                 trace.put("topk", keep(host(idx)));
             }
-            // chunks: the tensor-core batched matmuls beat the one-block-per-query kernel; small steps: the kernel
+            // the latent attention kernel (4 heads per block) beats gather + batched matmuls at every chunk size (A100, 2048-row
+            // chunks: 83 ms vs ~200 ms per chunk over the 11 sparse layers); smile.glm.attend.kernel.rows caps it
             Tensor out = n <= ATTEND_KERNEL_ROWS ? attendKernel(narrow(p.q(), 0, row0, n), idx, state)
                     : attend(narrow(p.q(), 0, row0, n), idx.to(ScalarType.Int64), state);
             if (PROFILE) {
@@ -452,8 +453,8 @@ final class GlmMla {
         return System.nanoTime();
     }
 
-    /** Largest chunk whose attention runs on the latent attention kernel (larger ones use batched matmuls). */
-    private static final int ATTEND_KERNEL_ROWS = Integer.getInteger("smile.glm.attend.kernel.rows", 16);
+    /** Largest chunk whose attention runs on the latent attention kernel (larger ones use gather + batched matmuls). */
+    private static final int ATTEND_KERNEL_ROWS = Integer.getInteger("smile.glm.attend.kernel.rows", Integer.MAX_VALUE);
 
     /** Switch of the prefill kernels (tests flip it to compare with the torch-op path). */
     static volatile boolean prefillKernelsEnabled = !"0".equals(System.getenv("GLM_PREFILL_KERNELS"));
