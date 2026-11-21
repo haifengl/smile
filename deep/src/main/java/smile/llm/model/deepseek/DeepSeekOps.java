@@ -313,6 +313,12 @@ public final class DeepSeekOps {
     static final int GEMM_MIN_ROWS = Integer.getInteger("smile.ds.attn.gemm.rows", 32);
     /** Tensor-core prefill attention and index scores (default on; {@code SMILE_DS_ATTN_GEMM=0} selects the per-head kernels). */
     static volatile boolean gemmPrefill = !"0".equals(System.getenv("SMILE_DS_ATTN_GEMM"));
+    /**
+     * The tensor-core attention kernel (one block per query row and 16 heads, keys read once) serves both the prefill chunks
+     * and the pointer-table decode rows instead of the gather + GEMM and the per-head kernels (default on;
+     * {@code SMILE_DS_ATTN_TC=0} turns it off; the native library falls back to the per-head kernel by itself).
+     */
+    static final boolean TC_ATTENTION = !"0".equals(System.getenv("SMILE_DS_ATTN_TC"));
     private static volatile boolean gemmUnavailable;
     /** Gathered key rows per chunk of the tensor-core path (each row is 1 KB). */
     private static final long GEMM_CHUNK_KEYS = Long.getLong("smile.ds.attn.gemm.keys", 160L << 10);
@@ -414,7 +420,7 @@ public final class DeepSeekOps {
      * @return the output {@code [1, m, h, d]} in bf16.
      */
     public static Tensor sparseAttention(Tensor q, Tensor kv, Tensor sink, Tensor idxs, double scale) {
-        if (q.size(1) >= GEMM_MIN_ROWS && q.device().isCUDA() && gemmPrefill) {
+        if (!TC_ATTENTION && q.size(1) >= GEMM_MIN_ROWS && q.device().isCUDA() && gemmPrefill) {
             Tensor g = sparseAttentionGemm(q, kv, sink, idxs, scale);
             if (g != null) {
                 return g;

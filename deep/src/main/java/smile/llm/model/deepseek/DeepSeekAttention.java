@@ -657,7 +657,7 @@ final class DeepSeekAttention {
             topk = cat(-1, topk, bs.topkIdxs);
             Dsv.stamp("attn.cache");
         }
-        Tensor out = nb >= DeepSeekOps.GEMM_MIN_SEQS
+        Tensor out = !DeepSeekOps.TC_ATTENTION && nb >= DeepSeekOps.GEMM_MIN_SEQS
                 ? DeepSeekOps.sparseAttentionPtrsGemm(q, windowPtrs, compressPtrs, ring, sink, topk, scale) : null;
         if (out == null) {
             out = Native.dsSparseAttentionPtrs(q, windowPtrs, compressPtrs, ring, sink, topk, scale);
@@ -741,7 +741,7 @@ final class DeepSeekAttention {
             compressPtrs = bs.compressPtrs;
             topk = cat(-1, topk, bs.topkIdxs);
         }
-        Tensor out = n >= DeepSeekOps.GEMM_MIN_SEQS
+        Tensor out = !DeepSeekOps.TC_ATTENTION && n >= DeepSeekOps.GEMM_MIN_SEQS
                 ? DeepSeekOps.sparseAttentionPtrsGemm(q, t.window, compressPtrs, ring, sink, topk, scale) : null;
         if (out == null) {
             out = Native.dsSparseAttentionPtrs(q, t.window, compressPtrs, ring, sink, topk, scale);

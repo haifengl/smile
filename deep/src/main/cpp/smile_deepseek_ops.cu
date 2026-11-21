@@ -12,6 +12,9 @@
 #include <torch/torch.h>
 
 #include <cmath>
+#include <mutex>
+#include <cstdlib>
+#include <cstdint>
 #include <cuda_bf16.h>
 #include <cuda_fp16.h>
 #include <cuda_fp8.h>
@@ -343,6 +346,149 @@ __global__ void hc_post_kernel(const T* __restrict__ x, const T* __restrict__ re
     out[idx] = static_cast<T>(post[row * hc + j] * static_cast<float>(x[row * dim + d]) + acc);
 }
 
+// ---- 8 bf16 per thread (16-byte loads and stores) variants of the memory-bound prefill kernels. The per-element arithmetic is
+// the same expression in the same order as the scalar kernels (results are bit-identical); only the memory access changes.
+
+__device__ __forceinline__ void ld8(const __nv_bfloat16* p, float* f) {
+    const uint4 v = *reinterpret_cast<const uint4*>(p);
+    const __nv_bfloat162* h = reinterpret_cast<const __nv_bfloat162*>(&v);
+#pragma unroll
+    for (int i = 0; i < 4; i++) {
+        const float2 x = __bfloat1622float2(h[i]);
+        f[2 * i] = x.x;
+        f[2 * i + 1] = x.y;
+    }
+}
+
+__device__ __forceinline__ void st8(__nv_bfloat16* p, const float* f) {
+    uint4 v;
+    __nv_bfloat162* h = reinterpret_cast<__nv_bfloat162*>(&v);
+#pragma unroll
+    for (int i = 0; i < 4; i++) h[i] = __floats2bfloat162_rn(f[2 * i], f[2 * i + 1]);
+    *reinterpret_cast<uint4*>(p) = v;
+}
+
+static bool ds_vec_enabled() {
+    static const bool on = [] { const char* e = getenv("SMILE_DS_VEC"); return !(e != nullptr && e[0] == '0'); }();
+    return on;
+}
+
+static bool aligned16(const void* p) { return (reinterpret_cast<uintptr_t>(p) & 15) == 0; }
+
+/** hc == 4, bfloat16, dim % 8 == 0: out[row, d] = sum_h pre[row, h] * x[row, h, d], eight d per thread. */
+__global__ void hc_pre_bf16_v8_kernel(const __nv_bfloat16* __restrict__ x, const float* __restrict__ pre,
+                                      __nv_bfloat16* __restrict__ out, int64_t rows, int dim8) {
+    const int64_t idx = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= rows * dim8) return;
+    const int64_t row = idx / dim8;
+    const int d = (int) (idx - row * dim8) * 8;
+    const int64_t dim = (int64_t) dim8 * 8;
+    float acc[8];
+#pragma unroll
+    for (int k = 0; k < 8; k++) acc[k] = 0.f;
+#pragma unroll
+    for (int h = 0; h < 4; h++) {
+        float v[8];
+        ld8(x + (row * 4 + h) * dim + d, v);
+        const float p = pre[row * 4 + h];
+#pragma unroll
+        for (int k = 0; k < 8; k++) acc[k] += p * v[k];
+    }
+    st8(out + row * dim + d, acc);
+}
+
+/** hc == 4, bfloat16, dim % 8 == 0: out[row, j, d] = post[row, j] * x[row, d] + sum_i comb[row, i, j] * res[row, i, d]. */
+__global__ void hc_post_bf16_v8_kernel(const __nv_bfloat16* __restrict__ x, const __nv_bfloat16* __restrict__ res,
+                                       const float* __restrict__ post, const float* __restrict__ comb,
+                                       __nv_bfloat16* __restrict__ out, int64_t rows, int dim8) {
+    const int64_t idx = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx >= rows * dim8) return;
+    const int64_t row = idx / dim8;
+    const int d = (int) (idx - row * dim8) * 8;
+    const int64_t dim = (int64_t) dim8 * 8;
+    float xv[8], r[4][8];
+    ld8(x + row * dim + d, xv);
+#pragma unroll
+    for (int i = 0; i < 4; i++) ld8(res + (row * 4 + i) * dim + d, r[i]);
+    const float* cb = comb + row * 16;
+#pragma unroll
+    for (int j = 0; j < 4; j++) {
+        const float pj = post[row * 4 + j];
+        float o[8];
+#pragma unroll
+        for (int k = 0; k < 8; k++) {
+            float acc = 0.f;
+#pragma unroll
+            for (int i = 0; i < 4; i++) acc += cb[i * 4 + j] * r[i][k];
+            o[k] = pj * xv[k] + acc;
+        }
+        st8(out + (row * 4 + j) * dim + d, o);
+    }
+}
+
+/** The block scale and the e4m3 round trip of fake_quant_fp8_kernel for one element (the block's amax is already reduced). */
+__device__ __forceinline__ float fq_fp8_scale(float amax) {
+    amax = fmaxf(amax, 1e-4f);
+    const float t = amax * (float) (1.0 / 448.0);
+    int e;
+    const float m = frexpf(t, &e);
+    const int ce = (m == 0.5f) ? e - 1 : e;
+    return ldexpf(1.0f, ce);
+}
+
+/** Four threads (eight bf16 each) per 32-element block. All lanes of a warp take part in the shuffles (n8 % 4 == 0). */
+__global__ void fake_quant_fp8_bf16_v8_kernel(const __nv_bfloat16* __restrict__ x, __nv_bfloat16* __restrict__ y, int64_t n8) {
+    const int64_t t = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+    const bool live = t < n8;
+    float v[8];
+#pragma unroll
+    for (int k = 0; k < 8; k++) v[k] = 0.f;
+    if (live) ld8(x + t * 8, v);
+    float amax = 0.f;
+#pragma unroll
+    for (int k = 0; k < 8; k++) amax = fmaxf(amax, fabsf(v[k]));
+    amax = fmaxf(amax, __shfl_xor_sync(0xffffffffu, amax, 1));
+    amax = fmaxf(amax, __shfl_xor_sync(0xffffffffu, amax, 2));
+    const float s = fq_fp8_scale(amax);
+    const float inv = 1.0f / s;                       // s is a power of two: v * inv == v / s exactly
+    float o[8];
+#pragma unroll
+    for (int k = 0; k < 8; k++) {
+        const float q = fminf(fmaxf(v[k] * inv, -448.0f), 448.0f);
+        const __nv_fp8_e4m3 f(q);
+        o[k] = static_cast<float>(f) * s;
+    }
+    if (live) st8(y + t * 8, o);
+}
+
+/** bfloat16, d % 8 == 0, rd % 8 == 0: eight columns per thread, the untouched head of each row is a 16-byte copy. */
+__global__ void rope_tail_bf16_v8_kernel(const __nv_bfloat16* __restrict__ x, const float2* __restrict__ freqs,
+                                         __nv_bfloat16* __restrict__ out, int64_t total8, int64_t per_row, int d, int rd,
+                                         int inverse) {
+    const int64_t t = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+    if (t >= total8) return;
+    const int64_t e = t * 8;
+    const int col = (int) (e % d);
+    const int rot0 = d - rd;
+    if (col < rot0) {
+        *reinterpret_cast<uint4*>(out + e) = *reinterpret_cast<const uint4*>(x + e);
+        return;
+    }
+    const int j = col - rot0;
+    const int64_t row = e / per_row;
+    float v[8], o[8];
+    ld8(x + e, v);
+#pragma unroll
+    for (int p = 0; p < 4; p++) {
+        const float a = v[2 * p], b = v[2 * p + 1];
+        const float2 f = freqs[row * (rd / 2) + ((j + 2 * p) >> 1)];
+        const float fi = inverse ? -f.y : f.y;
+        o[2 * p] = a * f.x - b * fi;
+        o[2 * p + 1] = a * fi + b * f.x;
+    }
+    st8(out + e, o);
+}
+
 /** hc == 4, float32, dim % 4 == 0: one thread per row and four consecutive d, 16-byte loads and stores, no divisions per element. */
 __global__ void hc_pre_f4_kernel(const float* __restrict__ x, const float* __restrict__ pre, float* __restrict__ out,
                                  int64_t rows, int dim4) {
@@ -586,6 +732,52 @@ __global__ void route_kernel(const float* __restrict__ logits, const float* __re
             idx[tok * topk + k] = chosen[k];
         }
     }
+}
+
+/** Eight columns per thread (four threads per 32-column quantization block); the same arithmetic as swiglu_kernel. */
+__global__ void swiglu_v8_kernel(const __nv_bfloat16* __restrict__ gu, const float* __restrict__ w,
+                                 __nv_bfloat16* __restrict__ out, int64_t rows, int inter, float limit, int quant) {
+    const int64_t t = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+    const int per_row8 = inter / 8;
+    const bool live = t < rows * per_row8;
+    const int64_t row = live ? t / per_row8 : 0;
+    const int col = live ? (int) (t - row * per_row8) * 8 : 0;
+    float g[8], u[8], o[8];
+#pragma unroll
+    for (int k = 0; k < 8; k++) { g[k] = 0.f; u[k] = 0.f; }
+    if (live) {
+        ld8(gu + row * 2 * inter + col, g);
+        ld8(gu + row * 2 * inter + inter + col, u);
+    }
+    float wr = 1.f;
+    if (live && w != nullptr) wr = w[row];
+#pragma unroll
+    for (int k = 0; k < 8; k++) {
+        float gk = g[k], uk = u[k];
+        if (limit > 0.f) {
+            uk = fminf(fmaxf(uk, -limit), limit);
+            gk = fminf(gk, limit);
+        }
+        float h = (gk / (1.0f + expf(-gk))) * uk;
+        if (w != nullptr) h = wr * h;
+        o[k] = static_cast<float>(__float2bfloat16_rn(h));
+    }
+    if (quant) {
+        float amax = 0.f;
+#pragma unroll
+        for (int k = 0; k < 8; k++) amax = fmaxf(amax, fabsf(o[k]));
+        amax = fmaxf(amax, __shfl_xor_sync(0xffffffffu, amax, 1));
+        amax = fmaxf(amax, __shfl_xor_sync(0xffffffffu, amax, 2));
+        const float s = fq_fp8_scale(amax);
+        const float inv = 1.0f / s;
+#pragma unroll
+        for (int k = 0; k < 8; k++) {
+            const float q = fminf(fmaxf(o[k] * inv, -448.0f), 448.0f);
+            const __nv_fp8_e4m3 f(q);
+            o[k] = static_cast<float>(f) * s;
+        }
+    }
+    if (live) st8(out + row * inter + col, o);
 }
 
 /**
@@ -947,6 +1139,12 @@ extern "C" ST_Tensor smile_ds_fake_quant_fp8(ST_Tensor x) {
                     fake_quant_fp8_kernel<float><<<grid, 256, 0, st>>>(xt.data_ptr<float>(), out.data_ptr<float>(), blocks);
                     break;
                 case at::kBFloat16:
+                    if (ds_vec_enabled() && aligned16(xt.data_ptr()) && aligned16(out.data_ptr())) {
+                        const int64_t n8 = xt.numel() / 8;
+                        fake_quant_fp8_bf16_v8_kernel<<<(unsigned) ((n8 + 255) / 256), 256, 0, st>>>(
+                                (const __nv_bfloat16*) xt.data_ptr(), (__nv_bfloat16*) out.data_ptr(), n8);
+                        break;
+                    }
                     fake_quant_fp8_kernel<__nv_bfloat16><<<grid, 256, 0, st>>>(
                             (const __nv_bfloat16*) xt.data_ptr(), (__nv_bfloat16*) out.data_ptr(), blocks);
                     break;
@@ -1118,7 +1316,12 @@ extern "C" ST_Tensor smile_ds_hc_pre(ST_Tensor x, ST_Tensor pre) {
         at::Tensor out = at::empty(shape, xt.options());
         const unsigned grid = (unsigned) ((rows * dim + 255) / 256);
         cudaStream_t st = at::cuda::getCurrentCUDAStream(xt.get_device());
-        if (xt.scalar_type() == at::kFloat && hc == 4 && dim % 4 == 0) {
+        if (xt.scalar_type() == at::kBFloat16 && hc == 4 && dim % 8 == 0 && ds_vec_enabled() && aligned16(xt.data_ptr())
+                && aligned16(out.data_ptr())) {
+            const unsigned g8 = (unsigned) ((rows * (dim / 8) + 255) / 256);
+            hc_pre_bf16_v8_kernel<<<g8, 256, 0, st>>>((const __nv_bfloat16*) xt.data_ptr(), pt.data_ptr<float>(),
+                                                      (__nv_bfloat16*) out.data_ptr(), rows, dim / 8);
+        } else if (xt.scalar_type() == at::kFloat && hc == 4 && dim % 4 == 0) {
             const unsigned g4 = (unsigned) ((rows * (dim / 4) + 255) / 256);
             hc_pre_f4_kernel<<<g4, 256, 0, st>>>(xt.data_ptr<float>(), pt.data_ptr<float>(), out.data_ptr<float>(), rows, dim / 4);
         } else {
@@ -1155,7 +1358,13 @@ extern "C" ST_Tensor smile_ds_hc_post(ST_Tensor x, ST_Tensor residual, ST_Tensor
         at::Tensor out = at::empty_like(rt);
         const unsigned grid = (unsigned) ((rows * hc * dim + 255) / 256);
         cudaStream_t st = at::cuda::getCurrentCUDAStream(rt.get_device());
-        if (rt.scalar_type() == at::kFloat && hc == 4 && dim % 4 == 0) {
+        if (rt.scalar_type() == at::kBFloat16 && hc == 4 && dim % 8 == 0 && ds_vec_enabled() && aligned16(xt.data_ptr())
+                && aligned16(rt.data_ptr()) && aligned16(out.data_ptr())) {
+            const unsigned g8 = (unsigned) ((rows * (dim / 8) + 255) / 256);
+            hc_post_bf16_v8_kernel<<<g8, 256, 0, st>>>((const __nv_bfloat16*) xt.data_ptr(), (const __nv_bfloat16*) rt.data_ptr(),
+                                                       pt.data_ptr<float>(), ct.data_ptr<float>(),
+                                                       (__nv_bfloat16*) out.data_ptr(), rows, dim / 8);
+        } else if (rt.scalar_type() == at::kFloat && hc == 4 && dim % 4 == 0) {
             const unsigned g4 = (unsigned) ((rows * (dim / 4) + 255) / 256);
             hc_post_f4_kernel<<<g4, 256, 0, st>>>(xt.data_ptr<float>(), rt.data_ptr<float>(), pt.data_ptr<float>(),
                                                   ct.data_ptr<float>(), out.data_ptr<float>(), rows, dim / 4);
@@ -1170,6 +1379,283 @@ extern "C" ST_Tensor smile_ds_hc_post(ST_Tensor x, ST_Tensor residual, ST_Tensor
     } catch (const std::exception& e) {
         set_err(e.what());
         return nullptr;
+    }
+}
+
+
+// ---------------------------------------------------------------- tensor-core sparse attention (one shared KV head)
+// One block per (query row, 32 heads) = two groups of four warps, each group owning 16 heads whose queries stay in registers as
+// mma A fragments for the whole row. The row's keys are gathered in tiles of 64 (cp.async with zero fill for masked slots,
+// double buffered, 1 KB rows swizzled) shared by both groups: each key row is read ONCE per 32 heads for scores and values
+// (K == V). Scores are fp32 (bf16 x bf16 products), online softmax, the attention sink joins the denominator at the end.
+// The probabilities go to the value product as bf16 (hi) and, with SPLIT, a second bf16 (lo) for ~fp32 accuracy.
+namespace dstc {
+constexpr int kKeys = 64;
+constexpr int kRowBytes = ATT_D * 2;                              // 1 KB per key row
+constexpr int kTileBytes = kKeys * kRowBytes;                     // 64 KB
+constexpr int kMaxTopk = 2048;                                    // ids of the row are kept in shared memory
+constexpr int kSStride = kKeys + 1;                               // floats per head row of the scores
+constexpr int kPStride = kKeys + 8;                               // bf16 per head row of the probabilities
+// per group: scores, P hi, P lo, then alpha / m / l of its 16 heads
+constexpr int kGroupBytes = 16 * kSStride * 4 + 2 * 16 * kPStride * 2 + 3 * 16 * 4;
+constexpr int kSmemBytes = 2 * kTileBytes + 2 * kGroupBytes + kMaxTopk * 4 + 64;
+
+__device__ __forceinline__ uint32_t su32(const void* p) { return (uint32_t) __cvta_generic_to_shared(p); }
+__device__ __forceinline__ void ldsm_x4(uint32_t& r0, uint32_t& r1, uint32_t& r2, uint32_t& r3, const void* p) {
+    asm volatile("ldmatrix.sync.aligned.m8n8.x4.shared.b16 {%0,%1,%2,%3}, [%4];"
+                 : "=r"(r0), "=r"(r1), "=r"(r2), "=r"(r3) : "r"(su32(p)));
+}
+__device__ __forceinline__ void ldsm_x4t(uint32_t& r0, uint32_t& r1, uint32_t& r2, uint32_t& r3, const void* p) {
+    asm volatile("ldmatrix.sync.aligned.m8n8.x4.trans.shared.b16 {%0,%1,%2,%3}, [%4];"
+                 : "=r"(r0), "=r"(r1), "=r"(r2), "=r"(r3) : "r"(su32(p)));
+}
+__device__ __forceinline__ void cp16z(void* dst, const void* src, int bytes) {
+    asm volatile("cp.async.cg.shared.global [%0], [%1], 16, %2;" :: "r"(su32(dst)), "l"(src), "r"(bytes));
+}
+__device__ __forceinline__ void mma16816(float* c, const uint32_t* a, uint32_t b0, uint32_t b1) {
+    asm volatile("mma.sync.aligned.m16n8k16.row.col.f32.bf16.bf16.f32 {%0,%1,%2,%3}, {%4,%5,%6,%7}, {%8,%9}, {%0,%1,%2,%3};"
+                 : "+f"(c[0]), "+f"(c[1]), "+f"(c[2]), "+f"(c[3])
+                 : "r"(a[0]), "r"(a[1]), "r"(a[2]), "r"(a[3]), "r"(b0), "r"(b1));
+}
+}  // namespace dstc
+
+template <bool SPLIT>
+__global__ void __launch_bounds__(256, 1) sparse_attention_tc_kernel(
+        const __nv_bfloat16* __restrict__ q, const __nv_bfloat16* __restrict__ kv, const float* __restrict__ sink,
+        const int* __restrict__ idxs, __nv_bfloat16* __restrict__ out, int heads, int topk, float scale,
+        const int64_t* __restrict__ wptrs, const int64_t* __restrict__ cptrs, int window) {
+    extern __shared__ __align__(16) unsigned char tsm[];
+    unsigned char* Ks = tsm;                                                         // 2 x [64 keys][1 KB], 16 B chunks XOR (key & 7)
+    const int row = blockIdx.x;
+    const int tid = threadIdx.x;
+    const int grp = tid >> 7;                                                        // the head group of this thread
+    const int lt = tid & 127;
+    const int lane = tid & 31, warp = lt >> 5;
+    const int g = lane >> 2, t4 = lane & 3;
+    const int h0 = blockIdx.y * 32 + grp * 16;
+    unsigned char* gs = tsm + 2 * dstc::kTileBytes + grp * dstc::kGroupBytes;
+    float* Ss = reinterpret_cast<float*>(gs);                                        // [16][65] scores of the tile
+    __nv_bfloat16* Ph = reinterpret_cast<__nv_bfloat16*>(Ss + 16 * dstc::kSStride);  // [16][72] probabilities, hi part
+    __nv_bfloat16* Pl = Ph + 16 * dstc::kPStride;                                    // lo part
+    float* alpha_s = reinterpret_cast<float*>(Pl + 16 * dstc::kPStride);             // [16] rescale of the running sum
+    float* m_s = alpha_s + 16;                                                       // [16] final running max
+    float* l_s = m_s + 16;                                                           // [16] final running sum
+    int* ids_s = reinterpret_cast<int*>(tsm + 2 * dstc::kTileBytes + 2 * dstc::kGroupBytes);   // [topk] ids of the row's keys
+    const int* ix = idxs + (int64_t) row * topk;
+    const __nv_bfloat16* wbase = wptrs ? reinterpret_cast<const __nv_bfloat16*>(wptrs[row]) : nullptr;
+    const __nv_bfloat16* cbase = cptrs ? reinterpret_cast<const __nv_bfloat16*>(cptrs[row]) : nullptr;
+    auto key_row = [&](int id) -> const __nv_bfloat16* {
+        return wbase ? (id < window ? wbase + (int64_t) id * ATT_D : cbase + (int64_t) (id - window) * ATT_D)
+                     : kv + (int64_t) id * ATT_D;
+    };
+    const __nv_bfloat16* safe_row = key_row(0);                                      // a readable address for masked slots
+
+    // the 32 queries into shared memory (the second tile buffer, before it is first used), then into A fragments
+    unsigned char* Qs = Ks + dstc::kTileBytes;
+    for (int e = tid; e < 32 * 64; e += 256) {
+        const int r = e >> 6, ch = e & 63;
+        *reinterpret_cast<uint4*>(Qs + r * 1024 + ((ch ^ (r & 7)) << 4)) =
+                *reinterpret_cast<const uint4*>(q + ((int64_t) row * heads + blockIdx.y * 32 + r) * ATT_D + ch * 8);
+    }
+    for (int j = tid; j < topk; j += 256) ids_s[j] = ix[j];
+    __syncthreads();
+    uint32_t qa[32][4];
+#pragma unroll
+    for (int ks = 0; ks < 32; ++ks) {
+        const int r = grp * 16 + (lane & 7) + ((lane >> 3) & 1) * 8;
+        const int ch = 2 * ks + (lane >> 4);
+        dstc::ldsm_x4(qa[ks][0], qa[ks][1], qa[ks][2], qa[ks][3], Qs + r * 1024 + ((ch ^ (r & 7)) << 4));
+    }
+    __syncthreads();
+
+    auto issue = [&](int t, int buf) {
+        for (int e = tid; e < dstc::kKeys * 64; e += 256) {
+            const int key = e >> 6, ch = e & 63;
+            const int j = t * dstc::kKeys + key;
+            const int id = j < topk ? ids_s[j] : -1;
+            dstc::cp16z(Ks + buf * dstc::kTileBytes + key * 1024 + ((ch ^ (key & 7)) << 4),
+                        (id >= 0 ? key_row(id) : safe_row) + ch * 8, id >= 0 ? 16 : 0);
+        }
+        asm volatile("cp.async.commit_group;");
+    };
+
+    float O[16][4];
+#pragma unroll
+    for (int j = 0; j < 16; ++j) O[j][0] = O[j][1] = O[j][2] = O[j][3] = 0.f;
+    const int head = lt >> 3;                     // softmax: 8 threads per head, keys jj + 8 i, i < 8
+    const int jj = lt & 7;
+    float m = -INFINITY, l = 0.f;
+    const int ntiles = (topk + dstc::kKeys - 1) / dstc::kKeys;
+    issue(0, 0);
+    for (int t = 0; t < ntiles; ++t) {
+        const int buf = t & 1;
+        asm volatile("cp.async.wait_group 0;");
+        // tile t visible; everyone is done with tile t - 1. A tile without any valid key changes nothing (p = 0, alpha = 1)
+        const int jt = t * dstc::kKeys + (tid & 63);
+        const bool any = __syncthreads_or(tid < 64 && jt < topk && ids_s[jt] >= 0);
+        if (t + 1 < ntiles) issue(t + 1, buf ^ 1);
+        if (!any) continue;
+        const unsigned char* Kb = Ks + buf * dstc::kTileBytes;
+        // scores: warp w takes the 16 keys 16w..16w+15 (two n8 tiles), all 16 heads of its group, the whole 512-dim contraction
+        {
+            float ca[2][2][4];                     // [ks parity][n tile][4]: four independent mma chains
+#pragma unroll
+            for (int a = 0; a < 2; ++a)
+#pragma unroll
+                for (int b = 0; b < 2; ++b) ca[a][b][0] = ca[a][b][1] = ca[a][b][2] = ca[a][b][3] = 0.f;
+            // lanes 0-7: keys 0-7 chunk 2ks, 8-15: keys 0-7 chunk 2ks+1, 16-23: keys 8-15 chunk 2ks, 24-31: keys 8-15 chunk 2ks+1
+            const int key = warp * 16 + (lane & 7) + (lane >> 4) * 8;
+            const int half = (lane >> 3) & 1;
+#pragma unroll
+            for (int ks = 0; ks < 32; ++ks) {
+                uint32_t b0, b1, b2, b3;
+                dstc::ldsm_x4(b0, b1, b2, b3, Kb + key * 1024 + (((2 * ks + half) ^ (key & 7)) << 4));
+                dstc::mma16816(ca[ks & 1][0], qa[ks], b0, b1);
+                dstc::mma16816(ca[ks & 1][1], qa[ks], b2, b3);
+            }
+#pragma unroll
+            for (int nt = 0; nt < 2; ++nt) {
+                float c[4];
+#pragma unroll
+                for (int i = 0; i < 4; ++i) c[i] = ca[0][nt][i] + ca[1][nt][i];
+                const int k0 = warp * 16 + nt * 8 + 2 * t4;
+                const int j0 = t * dstc::kKeys + k0;
+                const int id0 = j0 < topk ? ids_s[j0] : -1, id1 = j0 + 1 < topk ? ids_s[j0 + 1] : -1;
+                Ss[g * dstc::kSStride + k0] = id0 < 0 ? -INFINITY : c[0] * scale;
+                Ss[g * dstc::kSStride + k0 + 1] = id1 < 0 ? -INFINITY : c[1] * scale;
+                Ss[(g + 8) * dstc::kSStride + k0] = id0 < 0 ? -INFINITY : c[2] * scale;
+                Ss[(g + 8) * dstc::kSStride + k0 + 1] = id1 < 0 ? -INFINITY : c[3] * scale;
+            }
+        }
+        __syncthreads();
+        // online softmax of the tile
+        {
+            float s[8];
+            float mx = -INFINITY;
+#pragma unroll
+            for (int i = 0; i < 8; ++i) {
+                s[i] = Ss[head * dstc::kSStride + jj + 8 * i];
+                mx = fmaxf(mx, s[i]);
+            }
+#pragma unroll
+            for (int o = 4; o > 0; o >>= 1) mx = fmaxf(mx, __shfl_xor_sync(0xffffffffu, mx, o));
+            const float mnew = fmaxf(m, mx);
+            float alpha = 1.f, p[8];
+#pragma unroll
+            for (int i = 0; i < 8; ++i) p[i] = 0.f;
+            if (mnew != -INFINITY) {
+                alpha = m == -INFINITY ? 0.f : __expf(m - mnew);
+#pragma unroll
+                for (int i = 0; i < 8; ++i) p[i] = __expf(s[i] - mnew);
+            }
+            float sum = 0.f;
+#pragma unroll
+            for (int i = 0; i < 8; ++i) sum += p[i];
+#pragma unroll
+            for (int o = 4; o > 0; o >>= 1) sum += __shfl_xor_sync(0xffffffffu, sum, o);
+            l = l * alpha + sum;
+            m = mnew;
+#pragma unroll
+            for (int i = 0; i < 8; ++i) {
+                const __nv_bfloat16 hb = __float2bfloat16(p[i]);
+                Ph[head * dstc::kPStride + jj + 8 * i] = hb;
+                if (SPLIT) Pl[head * dstc::kPStride + jj + 8 * i] = __float2bfloat16(p[i] - __bfloat162float(hb));
+            }
+            if (jj == 0) alpha_s[head] = alpha;
+        }
+        __syncthreads();
+        // values: warp w owns the dims 128w..128w+127 (16 n8 tiles), all 16 heads of its group
+        {
+            const float al0 = alpha_s[g], al1 = alpha_s[g + 8];
+#pragma unroll
+            for (int j = 0; j < 16; ++j) { O[j][0] *= al0; O[j][1] *= al0; O[j][2] *= al1; O[j][3] *= al1; }
+#pragma unroll
+            for (int ks = 0; ks < dstc::kKeys / 16; ++ks) {
+                const uint32_t ah[4] = {*reinterpret_cast<const uint32_t*>(Ph + g * dstc::kPStride + ks * 16 + 2 * t4),
+                                        *reinterpret_cast<const uint32_t*>(Ph + (g + 8) * dstc::kPStride + ks * 16 + 2 * t4),
+                                        *reinterpret_cast<const uint32_t*>(Ph + g * dstc::kPStride + ks * 16 + 8 + 2 * t4),
+                                        *reinterpret_cast<const uint32_t*>(Ph + (g + 8) * dstc::kPStride + ks * 16 + 8 + 2 * t4)};
+                uint32_t alo[4] = {0u, 0u, 0u, 0u};
+                if (SPLIT) {
+                    alo[0] = *reinterpret_cast<const uint32_t*>(Pl + g * dstc::kPStride + ks * 16 + 2 * t4);
+                    alo[1] = *reinterpret_cast<const uint32_t*>(Pl + (g + 8) * dstc::kPStride + ks * 16 + 2 * t4);
+                    alo[2] = *reinterpret_cast<const uint32_t*>(Pl + g * dstc::kPStride + ks * 16 + 8 + 2 * t4);
+                    alo[3] = *reinterpret_cast<const uint32_t*>(Pl + (g + 8) * dstc::kPStride + ks * 16 + 8 + 2 * t4);
+                }
+                const int key = 16 * ks + ((lane >> 3) & 1) * 8 + (lane & 7);
+#pragma unroll
+                for (int jp = 0; jp < 8; ++jp) {
+                    const int c = warp * 16 + 2 * jp + (lane >> 4);
+                    uint32_t b0, b1, b2, b3;
+                    dstc::ldsm_x4t(b0, b1, b2, b3, Kb + key * 1024 + ((c ^ (key & 7)) << 4));
+                    if (SPLIT) {
+                        dstc::mma16816(O[2 * jp], alo, b0, b1);
+                        dstc::mma16816(O[2 * jp + 1], alo, b2, b3);
+                    }
+                    dstc::mma16816(O[2 * jp], ah, b0, b1);
+                    dstc::mma16816(O[2 * jp + 1], ah, b2, b3);
+                }
+            }
+        }
+    }
+    if (jj == 0) {
+        m_s[head] = m;
+        l_s[head] = l;
+    }
+    __syncthreads();
+    // normalise (the sink only adds to the denominator); a row with no valid key gets zeros
+    float inv0 = 0.f, inv1 = 0.f;
+    {
+        const float mg0 = m_s[g], mg1 = m_s[g + 8];
+        if (mg0 != -INFINITY) inv0 = 1.f / (l_s[g] + expf(sink[h0 + g] - mg0));
+        if (mg1 != -INFINITY) inv1 = 1.f / (l_s[g + 8] + expf(sink[h0 + g + 8] - mg1));
+    }
+    __nv_bfloat16* dst0 = out + ((int64_t) row * heads + h0 + g) * ATT_D + warp * 128;
+    __nv_bfloat16* dst1 = out + ((int64_t) row * heads + h0 + g + 8) * ATT_D + warp * 128;
+#pragma unroll
+    for (int j = 0; j < 16; ++j) {
+        *reinterpret_cast<__nv_bfloat162*>(dst0 + j * 8 + 2 * t4) = __floats2bfloat162_rn(O[j][0] * inv0, O[j][1] * inv0);
+        *reinterpret_cast<__nv_bfloat162*>(dst1 + j * 8 + 2 * t4) = __floats2bfloat162_rn(O[j][2] * inv1, O[j][3] * inv1);
+    }
+}
+
+static bool ds_attn_tc_enabled() {
+    static const bool on = [] { const char* e = getenv("SMILE_DS_ATTN_TC"); return !(e != nullptr && e[0] == '0'); }();
+    return on;
+}
+
+/** Rows from which the tensor-core kernel is used: fewer rows leave most SMs idle and its chain of key tiles is latency bound. */
+static int ds_attn_tc_min_rows() {
+    static const int n = [] { const char* e = getenv("SMILE_DS_ATTN_TC_MIN_ROWS"); return e != nullptr ? atoi(e) : 8; }();
+    return n;
+}
+
+/** Launches the tensor-core attention; {@code split}: bf16 hi + lo probabilities. */
+static void launch_sparse_attention_tc(const at::Tensor& qt, const __nv_bfloat16* kv, const float* sink, const int* idxs,
+                                       at::Tensor& out, int m, int heads, int topk, float scale, const int64_t* wptrs,
+                                       const int64_t* cptrs, int window, bool split) {
+    const int dev = qt.get_device();
+    static std::mutex configure_mutex;
+    static bool configured[2][64] = {{false}};
+    {
+        std::lock_guard<std::mutex> lock(configure_mutex);
+        if (dev >= 0 && dev < 64 && !configured[split][dev]) {
+            const cudaError_t attr = split
+                    ? cudaFuncSetAttribute(sparse_attention_tc_kernel<true>, cudaFuncAttributeMaxDynamicSharedMemorySize, dstc::kSmemBytes)
+                    : cudaFuncSetAttribute(sparse_attention_tc_kernel<false>, cudaFuncAttributeMaxDynamicSharedMemorySize, dstc::kSmemBytes);
+            if (attr != cudaSuccess) throw std::runtime_error(std::string("sparse attention smem attribute: ") + cudaGetErrorString(attr));
+            configured[split][dev] = true;
+        }
+    }
+    const dim3 grid((unsigned) m, (unsigned) (heads / 32));
+    cudaStream_t st = at::cuda::getCurrentCUDAStream(dev);
+    if (topk > dstc::kMaxTopk) throw std::runtime_error("sparse attention: topk too large for the tensor-core kernel");
+    if (split) {
+        sparse_attention_tc_kernel<true><<<grid, 256, dstc::kSmemBytes, st>>>(
+                (const __nv_bfloat16*) qt.data_ptr(), kv, sink, idxs, (__nv_bfloat16*) out.data_ptr(), heads, topk, scale, wptrs, cptrs, window);
+    } else {
+        sparse_attention_tc_kernel<false><<<grid, 256, dstc::kSmemBytes, st>>>(
+                (const __nv_bfloat16*) qt.data_ptr(), kv, sink, idxs, (__nv_bfloat16*) out.data_ptr(), heads, topk, scale, wptrs, cptrs, window);
     }
 }
 
@@ -1191,6 +1677,13 @@ extern "C" ST_Tensor smile_ds_sparse_attention(ST_Tensor q, ST_Tensor kv, ST_Ten
         c10::cuda::CUDAGuard guard(qt.get_device());
         const int m = (int) qt.size(1), heads = (int) qt.size(2), topk = (int) it.size(2);
         at::Tensor out = at::empty_like(qt);
+        if (m >= ds_attn_tc_min_rows() && m > 0 && ds_attn_tc_enabled() && heads % 32 == 0 && topk <= dstc::kMaxTopk) {
+            static const bool split = [] { const char* e = getenv("SMILE_DS_ATTN_TC_SPLIT"); return e != nullptr && e[0] == '1'; }();
+            launch_sparse_attention_tc(qt, (const __nv_bfloat16*) kt.data_ptr(), st.data_ptr<float>(), it.data_ptr<int>(), out,
+                                       m, heads, topk, (float) scale, nullptr, nullptr, 0, split);
+            check_launch("smile_ds_sparse_attention");
+            return new ST_Tensor_{ out };
+        }
         if (m > 0) {
             sparse_attention_kernel<<<(unsigned) (m * heads), ATT_THREADS, (topk + ATT_WARPS * ATT_D) * sizeof(float),
                                       at::cuda::getCurrentCUDAStream(qt.get_device())>>>(
@@ -1253,6 +1746,13 @@ extern "C" ST_Tensor smile_ds_swiglu(ST_Tensor gate_up, ST_Tensor weights, doubl
         const int inter = (int) (gt.size(1) / 2);
         at::Tensor out = at::empty({rows, inter}, gt.options());
         const int64_t warps = rows * (inter / 32);
+        if (ds_vec_enabled() && inter % 32 == 0 && aligned16(gt.data_ptr()) && aligned16(out.data_ptr())) {
+            const int64_t t8 = rows * (inter / 8);
+            swiglu_v8_kernel<<<(unsigned) ((t8 + 255) / 256), 256, 0, at::cuda::getCurrentCUDAStream(gt.get_device())>>>(
+                    (const __nv_bfloat16*) gt.data_ptr(), w, (__nv_bfloat16*) out.data_ptr(), rows, inter, (float) limit, quant);
+            check_launch("smile_ds_swiglu");
+            return new ST_Tensor_{ out };
+        }
         swiglu_kernel<<<(unsigned) ((warps * 32 + 255) / 256), 256, 0, at::cuda::getCurrentCUDAStream(gt.get_device())>>>(
                 (const __nv_bfloat16*) gt.data_ptr(), w, (__nv_bfloat16*) out.data_ptr(), rows, inter, (float) limit, quant);
         check_launch("smile_ds_swiglu");
@@ -1363,6 +1863,14 @@ extern "C" ST_Tensor smile_ds_rope_tail(ST_Tensor x, ST_Tensor freqs, int rd, in
         const unsigned grid = (unsigned) ((total + 255) / 256);
         cudaStream_t st = at::cuda::getCurrentCUDAStream(xt.get_device());
         const float2* fp = reinterpret_cast<const float2*>(ft.data_ptr());
+        if (xt.scalar_type() == at::kBFloat16 && d % 8 == 0 && rd % 8 == 0 && ds_vec_enabled() && aligned16(xt.data_ptr())
+                && aligned16(out.data_ptr())) {
+            const int64_t total8 = total / 8;
+            rope_tail_bf16_v8_kernel<<<(unsigned) ((total8 + 255) / 256), 256, 0, st>>>(
+                    (const __nv_bfloat16*) xt.data_ptr(), fp, (__nv_bfloat16*) out.data_ptr(), total8, per_row, d, rd, inverse);
+            check_launch("smile_ds_rope_tail");
+            return new ST_Tensor_{ out };
+        }
         DS_DISPATCH(xt.scalar_type(), "smile_ds_rope_tail",
                     rope_tail_kernel<T><<<grid, 256, 0, st>>>((const T*) xt.data_ptr(), fp, (T*) out.data_ptr(), total,
                                                               per_row, d, rd, inverse));
@@ -1604,6 +2112,12 @@ extern "C" ST_Tensor smile_ds_sparse_attention_ptrs(ST_Tensor q, ST_Tensor wptrs
         c10::cuda::CUDAGuard guard(qt.get_device());
         const int m = (int) qt.size(1), heads = (int) qt.size(2), topk = (int) it.size(2);
         at::Tensor out = at::empty_like(qt);
+        if (m >= ds_attn_tc_min_rows() && ds_attn_tc_enabled() && heads % 32 == 0 && topk <= dstc::kMaxTopk) {
+            launch_sparse_attention_tc(qt, nullptr, st.data_ptr<float>(), it.data_ptr<int>(), out, m, heads, topk, (float) scale,
+                                       wp.data_ptr<int64_t>(), cp, window, true);
+            check_launch("smile_ds_sparse_attention_ptrs");
+            return new ST_Tensor_{ out };
+        }
         sparse_attention_kernel<<<(unsigned) (m * heads), ATT_THREADS, (topk + ATT_WARPS * ATT_D) * sizeof(float),
                                   at::cuda::getCurrentCUDAStream(qt.get_device())>>>(
                 (const __nv_bfloat16*) qt.data_ptr(), nullptr, st.data_ptr<float>(), it.data_ptr<int>(),
