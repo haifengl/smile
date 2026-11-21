@@ -42,6 +42,18 @@ public interface ChatServiceConfig {
     Optional<String> model();
 
     /**
+     * Optional public model name advertised by {@code /v1/models} and matched against
+     * the {@code model} field in {@code /v1/chat/completions} requests, analogous to
+     * vLLM's {@code --served-model-name}.
+     *
+     * <p>When omitted or blank, defaults to the Hugging Face repository id or local
+     * directory name derived from {@link #model()}.
+     *
+     * <p>Property: {@code smile.chat.served-model-name}.
+     */
+    Optional<String> servedModelName();
+
+    /**
      * Maximum sequence length in tokens (prompt + output), analogous to vLLM
      * {@code --max-model-len} / SGLang {@code --context-length}.
      *
