@@ -1322,6 +1322,57 @@ public final class Glm implements LanguageModel, ModelExecutor, AutoCloseable {
         });
     }
 
+    /**
+     * Captures the CUDA graphs of every batch bucket up front (decode graphs, and with the MTP layer the MTP draft and
+     * catch-up graphs and the verify windows of {@code numDrafts + 1} rows), so that the first requests of a burst do not
+     * wait 0.4-1.5 s for the capture of a new bucket. Opt out with {@code -Dsmile.glm.warm.graphs=false}. A capture that
+     * fails leaves that bucket to the lazy path (and its fallbacks).
+     *
+     * @param numDrafts drafts per speculative round, 0 when speculation is off.
+     */
+    public void warmGraphs(int numDrafts) {
+        logger.info("GLM graph warm-up requested (drafts={}, cuda={}, graphs={}/{}/{})", numDrafts, onCuda, smile.torch.Native.dsGraphAvailable(),
+                smile.torch.Native.kdaAvailable(), smile.torch.Native.mlaDecodeAvailable());
+        if (!onCuda || "false".equals(System.getProperty("smile.glm.warm.graphs")) || !smile.torch.Native.dsGraphAvailable()
+                || !smile.torch.Native.kdaAvailable() || !smile.torch.Native.mlaDecodeAvailable()) {
+            return;
+        }
+        long t0 = System.nanoTime();
+        int top = Math.min(MAX_GRAPH_BATCH, maxSessions <= 1 ? 1 : Integer.highestOneBit(maxSessions - 1) << 1);
+        int captured = 0;
+        for (int nb = 1; nb <= top; nb <<= 1) {
+            final int b = nb;
+            if (GRAPHS && !graphsDisabled) {
+                captured += ensureGraph("d" + nb, (rank, barrier) -> prepareGraph(rank, b, barrier)) ? 1 : 0;
+            }
+            if (numDrafts > 0 && mtpOn() && MTP_GRAPHS && !mtpGraphsDisabled) {
+                captured += ensureGraph("m" + nb, (rank, barrier) -> prepareMtpGraph(rank, b, barrier)) ? 1 : 0;
+                captured += ensureGraph("c" + nb, (rank, barrier) -> prepareMtpGraph(rank, b, barrier, false)) ? 1 : 0;
+            }
+            if (numDrafts > 0 && mtpOn() && WINDOW_GRAPHS && !windowGraphsDisabled && nb <= MAX_WINDOW_BATCH) {
+                final int rows = numDrafts + 1;
+                captured += ensureGraph("w" + nb + "x" + rows, (rank, barrier) -> prepareWindowGraph(rank, b, rows, barrier)) ? 1 : 0;
+            }
+        }
+        logger.info("GLM graphs warmed up: {} captured in {} ms (buckets up to {}, {} drafts)", captured,
+                (System.nanoTime() - t0) / 1_000_000L, top, numDrafts);
+    }
+
+    private boolean ensureGraph(String key, java.util.function.BiPredicate<Integer, java.util.concurrent.CyclicBarrier> prepare) {
+        if (readyGraphs.contains(key)) {
+            return false;
+        }
+        java.util.concurrent.CyclicBarrier barrier = new java.util.concurrent.CyclicBarrier(workers.length);
+        boolean ok = true;
+        for (boolean r : gatherAllRanks(rank -> prepare.test(rank, barrier))) {
+            ok &= r;
+        }
+        if (ok) {
+            readyGraphs.add(key);
+        }
+        return ok;
+    }
+
     private boolean graphEligible(int n, int[] positions) {
         if (!GRAPHS || graphsDisabled || !onCuda || n > MAX_GRAPH_BATCH || !smile.torch.Native.dsGraphAvailable()
                 || !smile.torch.Native.kdaAvailable() || !smile.torch.Native.mlaDecodeAvailable()) {

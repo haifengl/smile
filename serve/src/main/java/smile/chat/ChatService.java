@@ -390,6 +390,7 @@ public class ChatService implements OpenAiModelContributor {
                 this.speculativeTokens = config.speculativeTokens() > 0 ? config.speculativeTokens() : 3;
                 logger.infof("MTP speculative decoding enabled for GLM (drafts=%d)", this.speculativeTokens);
             }
+            glm.warmGraphs(this.speculative ? this.speculativeTokens : 0);
         }
         logQuantBackend(model, config, kvCache);
         if (model instanceof smile.llm.engine.ModelExecutor exec) {
