@@ -408,7 +408,14 @@ public class MiniMaxMoE extends LayerBlock {
     private Tensor[] routeOnDevice(Tensor flat) {
         Tensor x = flat.to(ScalarType.Float);
         Tensor w = routerWeight != null ? routerWeight : gateWeight.to(ScalarType.Float);
-        Tensor logits = x.matmul(w.transpose(0, 1));
+        Tensor logits;
+        if (ROUTER_X3 && routerWeight != null && x.size(0) >= 256 && x.device().isCUDA() && w.dim() == 2
+                && w.size(0) % 8 == 0 && w.size(1) % 16 == 0 && smile.torch.Native.f32GemmBf16x3Available()) {
+            // prefill: the skinny fp32 router product on bf16 tensor cores with hi/lo splits (about 1e-5 relative error)
+            logits = smile.torch.Native.f32GemmBf16x3(x.contiguous(), routerSplit(w));
+        } else {
+            logits = x.matmul(w.transpose(0, 1));
+        }
         Tensor biasF = routerBias != null ? routerBias : bias.to(ScalarType.Float);
         Tensor[] fused = smile.torch.Native.moeRoute(logits, biasF, topK, scale);
         if (fused != null) {
@@ -421,6 +428,29 @@ public class MiniMaxMoE extends LayerBlock {
         Tensor picked = scores.gather(1, idx);
         Tensor weights = picked.div(picked.sum(1, true)).mul(scale).contiguous();
         return new Tensor[]{idx.contiguous(), weights};
+    }
+
+    private static final boolean ROUTER_X3 = !"0".equals(System.getenv("SMILE_MM_ROUTER_X3"));
+    private static final boolean FUSED_COMBINE = !"0".equals(System.getenv("SMILE_MM_FUSED_COMBINE"));
+    private Tensor routerSplit;
+
+    /** The hi and lo bf16 parts of the fp32 router weight {@code [N, K]} in mma fragment order, made once. */
+    private synchronized Tensor routerSplit(Tensor w) {
+        if (routerSplit == null) {
+            long n = w.size(0);
+            long k = w.size(1);
+            Tensor hi = smile.torch.Aten.one("aten::_to_copy", w, ScalarType.BFloat16);
+            Tensor lo = smile.torch.Aten.one("aten::_to_copy",
+                    smile.torch.Aten.one("aten::sub.Tensor", w, hi.to(ScalarType.Float)), ScalarType.BFloat16);
+            Tensor both = smile.torch.Aten.one("aten::cat", new Tensor[]{hi.unsqueeze(0), lo.unsqueeze(0)}, 0L);
+            Tensor v = smile.torch.Aten.one("aten::reshape", both, new long[]{2, n / 8, 8, k / 16, 2, 4, 2});
+            Tensor perm = smile.torch.Aten.one("aten::permute", v, new long[]{1, 3, 2, 5, 0, 4, 6});
+            Tensor out = smile.torch.Aten.one("aten::reshape", smile.torch.Aten.one("aten::contiguous", perm),
+                    new long[]{n / 8, k / 16, 32, 8});
+            out.detachFromScopes();
+            routerSplit = out;
+        }
+        return routerSplit;
     }
 
     private Tensor forwardMarlin(Tensor input) {
@@ -449,12 +479,25 @@ public class MiniMaxMoE extends LayerBlock {
             Tensor down = nvfp4
                     ? smile.torch.Native.marlinMoeNvfp4Gemm(act, w2q, w2s, w2g, align, routed[1], block, 1, true)
                     : smile.torch.Native.marlinMoeFp8Gemm(act, w2q, w2s, align, routed[1], block, 1, true);
-            Tensor out = down.reshape(tokens, topK, dim).to(ScalarType.Float).sum(1, false);
+            boolean fuse = FUSED_COMBINE && down.dtype() == ScalarType.BFloat16 && dim % 4 == 0;
+            Tensor out = null;
             if (shard.tp() && shared != null) {
                 // The shared expert is split across ranks too: its partial sums ride the routed experts' all-reduce.
-                out = out.add(shared.forward(flat).to(ScalarType.Float));
+                Tensor extra = shared.forward(flat).to(ScalarType.Float);
+                if (fuse) {
+                    out = smile.torch.Native.moeSumTopk(down, topK, extra);
+                }
+                if (out == null) {
+                    out = down.reshape(tokens, topK, dim).to(ScalarType.Float).sum(1, false).add(extra);
+                }
                 group.allReduceSumInPlace(shard.rank(), out);
             } else {
+                if (fuse) {
+                    out = smile.torch.Native.moeSumTopk(down, topK, null);
+                }
+                if (out == null) {
+                    out = down.reshape(tokens, topK, dim).to(ScalarType.Float).sum(1, false);
+                }
                 if (group != null) {
                     group.allReduceSumInPlace(shard.rank(), out);
                 }

@@ -12,6 +12,8 @@
 
 #include <algorithm>
 #include <cfloat>
+#include <cstdlib>
+#include <cstring>
 #include <cuda_bf16.h>
 #include <string>
 
@@ -667,6 +669,361 @@ __global__ void sparse_decode_combine_kernel(const float* __restrict__ part_o, c
     }
 }
 
+// ---------------------------------------------------------------- tensor-core prefill kernels
+// For prompts: the same math as the per-token kernels above, but one CTA handles several consecutive query tokens of one
+// request, so a key block is read once for all of them (the per-token kernels re-read every block per token, which makes them
+// L2-bound) and the dot products run on mma.sync m16n8k16 (bf16 inputs, fp32 accumulation).
+
+namespace mmtc {
+constexpr int kKeys = 128;                       // keys per block
+constexpr int kD = 128;                          // head dim
+constexpr int kRowStride = kD * 2 + 16;          // 272 bytes: conflict-free fragment loads and 16-byte aligned rows
+constexpr int kTileBytes = kKeys * kRowStride;   // 34816
+constexpr int kAttnTokens = 8;                   // query tokens of an attention CTA (8 heads each)
+
+__device__ __forceinline__ uint32_t su32(const void* p) { return (uint32_t) __cvta_generic_to_shared(p); }
+__device__ __forceinline__ void ldsm_x4t(uint32_t& r0, uint32_t& r1, uint32_t& r2, uint32_t& r3, const void* p) {
+    asm volatile("ldmatrix.sync.aligned.m8n8.x4.trans.shared.b16 {%0,%1,%2,%3}, [%4];"
+                 : "=r"(r0), "=r"(r1), "=r"(r2), "=r"(r3) : "r"(su32(p)));
+}
+__device__ __forceinline__ void cp16z(void* dst, const void* src, int bytes) {
+    asm volatile("cp.async.cg.shared.global [%0], [%1], 16, %2;" :: "r"(su32(dst)), "l"(src), "r"(bytes));
+}
+__device__ __forceinline__ void cp_commit() { asm volatile("cp.async.commit_group;"); }
+template <int N>
+__device__ __forceinline__ void cp_wait() { asm volatile("cp.async.wait_group %0;" :: "n"(N)); }
+__device__ __forceinline__ void mma16816(float* c, const uint32_t* a, uint32_t b0, uint32_t b1) {
+    asm volatile("mma.sync.aligned.m16n8k16.row.col.f32.bf16.bf16.f32 {%0,%1,%2,%3}, {%4,%5,%6,%7}, {%8,%9}, {%0,%1,%2,%3};"
+                 : "+f"(c[0]), "+f"(c[1]), "+f"(c[2]), "+f"(c[3])
+                 : "r"(a[0]), "r"(a[1]), "r"(a[2]), "r"(a[3]), "r"(b0), "r"(b1));
+}
+__device__ __forceinline__ uint32_t pack_bf16(float lo, float hi) {
+    __nv_bfloat162 v = __floats2bfloat162_rn(lo, hi);
+    return *reinterpret_cast<uint32_t*>(&v);
+}
+
+/** Loads the 128 keys {@code first..first+127} (rows of 256 bytes at {@code base + slot * stride}) into a padded tile. */
+__device__ __forceinline__ void load_keys(unsigned char* tile, const at::BFloat16* base, int64_t slot_stride,
+                                          const int64_t* __restrict__ slot_row, int first, int limit, int tid) {
+    for (int c = tid; c < kKeys * 16; c += 128) {
+        const int row = c >> 4;
+        const int chunk = c & 15;
+        const int key = first + row;
+        const bool ok = key < limit;
+        const at::BFloat16* src = base;
+        if (ok) src = base + slot_row[key] * slot_stride + chunk * 8;
+        cp16z(tile + row * kRowStride + chunk * 16, src, ok ? 16 : 0);
+    }
+}
+
+/**
+ * Block-max of the raw index dot products for 128 / G consecutive tokens of one request and one 128-key block.
+ * Grid (num_blocks, ceil(tokens / (128 / G))), 128 threads; q [tokens, G, 128] bf16 (rows = token * G + group),
+ * same output as msa_block_score_kernel.
+ */
+template <int G>
+__global__ void __launch_bounds__(128) msa_score_tc_kernel(const at::BFloat16* __restrict__ q,
+                                                           const at::BFloat16* __restrict__ cache,
+                                                           const int64_t* __restrict__ slots,
+                                                           const int* __restrict__ positions, float* __restrict__ scores,
+                                                           int length, int num_blocks, int seqlen, int tokens) {
+    constexpr int TOK = 128 / G;
+    const int blk = blockIdx.x;
+    const int t0 = blockIdx.y * TOK;
+    const int n_tok = min(TOK, tokens - t0);
+    const int b = t0 / seqlen;
+    const int pos0 = positions[b] + t0 % seqlen;
+    const int pos_last = pos0 + n_tok - 1;
+    const int first = blk * kKeys;
+    const int tid = threadIdx.x;
+    const int warp = tid >> 5;
+    const int lane = tid & 31;
+    const int gid = lane >> 2;
+    const int t4 = lane & 3;
+    const int64_t row0 = (int64_t) t0 * G;                   // first flat row of the tile
+    const int n_rows = n_tok * G;
+    if (first > pos_last) {
+        for (int i = tid; i < n_rows; i += 128) scores[(row0 + i) * num_blocks + blk] = -INFINITY;
+        return;
+    }
+    extern __shared__ __align__(16) unsigned char smem_raw[];
+    load_keys(smem_raw, cache, kD, slots + (int64_t) b * length, first, min(length, pos_last + 1), tid);
+    cp_commit();
+    // A fragments of this warp's two m-tiles, straight from global memory; fragment row r of m-tile mt is tile row 16 * (2w + mt) + r
+    uint32_t qa[2][8][4];
+    int pos_row[2][2];
+    for (int mt = 0; mt < 2; mt++) {
+        for (int half = 0; half < 2; half++) {
+            const int r = 16 * (2 * warp + mt) + gid + 8 * half;
+            const bool ok = r < n_rows;
+            pos_row[mt][half] = ok ? pos0 + r / G : -1;
+            const uint32_t* rp = reinterpret_cast<const uint32_t*>(q + (row0 + r) * kD);
+            for (int ks = 0; ks < 8; ks++) {
+                qa[mt][ks][half] = ok ? rp[ks * 8 + t4] : 0u;
+                qa[mt][ks][2 + half] = ok ? rp[ks * 8 + 4 + t4] : 0u;
+            }
+        }
+    }
+    cp_wait<0>();
+    __syncthreads();
+    float mx[2][2];
+    for (int mt = 0; mt < 2; mt++) mx[mt][0] = mx[mt][1] = -INFINITY;
+    for (int nt = 0; nt < 16; nt++) {
+        float acc[2][4];
+        for (int mt = 0; mt < 2; mt++) acc[mt][0] = acc[mt][1] = acc[mt][2] = acc[mt][3] = 0.f;
+        const unsigned char* brow = smem_raw + (nt * 8 + gid) * kRowStride + t4 * 4;
+        for (int ks = 0; ks < 8; ks++) {
+            const uint32_t b0 = *reinterpret_cast<const uint32_t*>(brow + ks * 32);
+            const uint32_t b1 = *reinterpret_cast<const uint32_t*>(brow + ks * 32 + 16);
+            mma16816(acc[0], qa[0][ks], b0, b1);
+            mma16816(acc[1], qa[1][ks], b0, b1);
+        }
+        const int key = first + nt * 8 + 2 * t4;
+        for (int mt = 0; mt < 2; mt++) {
+            for (int half = 0; half < 2; half++) {
+                const int pr = pos_row[mt][half];
+                float v = mx[mt][half];
+                if (key <= pr && key < length) v = fmaxf(v, acc[mt][2 * half]);
+                if (key + 1 <= pr && key + 1 < length) v = fmaxf(v, acc[mt][2 * half + 1]);
+                mx[mt][half] = v;
+            }
+        }
+    }
+    for (int mt = 0; mt < 2; mt++) {
+        for (int half = 0; half < 2; half++) {
+            float v = mx[mt][half];
+            v = fmaxf(v, __shfl_xor_sync(0xffffffffu, v, 1));
+            v = fmaxf(v, __shfl_xor_sync(0xffffffffu, v, 2));
+            const int r = 16 * (2 * warp + mt) + gid + 8 * half;
+            if (t4 == 0 && r < n_rows) scores[(row0 + r) * num_blocks + blk] = v;
+        }
+    }
+}
+
+/**
+ * Attention of the 8 query heads of one KV group for kAttnTokens consecutive tokens of one request over the union of the
+ * blocks they selected (rows of a token that did not select a block ignore it): online softmax, bf16 mma for QK and PV.
+ * Grid (ceil(tokens / 8), kv_heads), 128 threads (4 warps of 16 rows = 2 tokens x 8 heads), k/v [slots, kv_heads, 128].
+ */
+__global__ void __launch_bounds__(128, 2) sparse_attn_tc_kernel(
+        const at::BFloat16* __restrict__ q, const at::BFloat16* __restrict__ kc, const at::BFloat16* __restrict__ vc,
+        const int64_t* __restrict__ slots, const int* __restrict__ positions, const int* __restrict__ sel,
+        at::BFloat16* __restrict__ out, int heads, int kv_heads, int length, int topk, int num_blocks, float scale,
+        int seqlen, int tokens) {
+    constexpr int REP = 8;
+    const int t0 = blockIdx.x * kAttnTokens;
+    const int g = blockIdx.y;
+    const int n_tok = min(kAttnTokens, tokens - t0);
+    const int b = t0 / seqlen;
+    const int pos0 = positions[b] + t0 % seqlen;
+    const int pos_last = pos0 + n_tok - 1;
+    const int tid = threadIdx.x;
+    const int warp = tid >> 5;
+    const int lane = tid & 31;
+    const int gid = lane >> 2;
+    const int t4 = lane & 3;
+    extern __shared__ __align__(16) unsigned char smem_raw[];
+    unsigned char* kt = smem_raw;
+    unsigned char* vt = smem_raw + kTileBytes;
+    uint32_t* mask = reinterpret_cast<uint32_t*>(smem_raw + 2 * kTileBytes);       // 4 blocks per word, one byte each
+    const int mask_words = (num_blocks + 3) >> 2;
+    for (int i = tid; i < mask_words; i += 128) mask[i] = 0u;
+    __syncthreads();
+    for (int i = tid; i < n_tok * topk; i += 128) {
+        const int tl = i / topk;
+        const int blk = sel[((int64_t) (t0 + tl) * kv_heads + g) * topk + (i - tl * topk)];
+        if (blk >= 0 && blk < num_blocks) atomicOr(&mask[blk >> 2], 1u << ((blk & 3) * 8 + tl));
+    }
+    // Q fragments: this warp's rows are tokens 2w, 2w+1 x 8 heads
+    uint32_t qa[8][4];
+    int pos_row[2];
+    for (int half = 0; half < 2; half++) {
+        const int tl = 2 * warp + half;
+        const bool ok = tl < n_tok;
+        pos_row[half] = ok ? pos0 + tl : -1;
+        const uint32_t* rp = reinterpret_cast<const uint32_t*>(q + ((int64_t) (t0 + tl) * heads + (int64_t) g * REP + gid) * kD);
+        for (int ks = 0; ks < 8; ks++) {
+            qa[ks][half] = ok ? rp[ks * 8 + t4] : 0u;
+            qa[ks][2 + half] = ok ? rp[ks * 8 + 4 + t4] : 0u;
+        }
+    }
+    float o[16][4];
+    for (int d = 0; d < 16; d++) o[d][0] = o[d][1] = o[d][2] = o[d][3] = 0.f;
+    float m_run[2] = {-INFINITY, -INFINITY};     // base-2 scaled scores
+    float l_run[2] = {0.f, 0.f};                 // per-thread partial sums (quad-reduced at the end)
+    const float sc = scale * 1.4426950408889634f;
+    const int last_blk = min(pos_last / kKeys, num_blocks - 1);
+    const int64_t* slot_row = slots + (int64_t) b * length;
+    const int limit = min(length, pos_last + 1);
+    __syncthreads();
+    for (int blk = 0; blk <= last_blk; blk++) {
+        const uint32_t bits = (mask[blk >> 2] >> ((blk & 3) * 8)) & 0xffu;
+        if (bits == 0u) continue;                      // uniform across the CTA
+        const int first = blk * kKeys;
+        load_keys(kt, kc + (int64_t) g * kD, (int64_t) kv_heads * kD, slot_row, first, limit, tid);
+        cp_commit();
+        load_keys(vt, vc + (int64_t) g * kD, (int64_t) kv_heads * kD, slot_row, first, limit, tid);
+        cp_commit();
+        cp_wait<1>();
+        __syncthreads();
+        float s[16][4];
+        for (int nt = 0; nt < 16; nt++) {
+            s[nt][0] = s[nt][1] = s[nt][2] = s[nt][3] = 0.f;
+            const unsigned char* brow = kt + (nt * 8 + gid) * kRowStride + t4 * 4;
+            for (int ks = 0; ks < 8; ks++) {
+                mma16816(s[nt], qa[ks], *reinterpret_cast<const uint32_t*>(brow + ks * 32),
+                         *reinterpret_cast<const uint32_t*>(brow + ks * 32 + 16));
+            }
+        }
+        // mask, scale and the new running max of the two rows (token 2w + half, head gid)
+        float rmax[2] = {-INFINITY, -INFINITY};
+        for (int half = 0; half < 2; half++) {
+            const bool selected = ((bits >> (2 * warp + half)) & 1u) != 0u;
+            const int pr = pos_row[half];
+            for (int nt = 0; nt < 16; nt++) {
+                const int key = first + nt * 8 + 2 * t4;
+                for (int e = 0; e < 2; e++) {
+                    const bool ok = selected && key + e <= pr && key + e < length;
+                    const float v = ok ? s[nt][2 * half + e] * sc : -INFINITY;
+                    s[nt][2 * half + e] = v;
+                    rmax[half] = fmaxf(rmax[half], v);
+                }
+            }
+            rmax[half] = fmaxf(rmax[half], __shfl_xor_sync(0xffffffffu, rmax[half], 1));
+            rmax[half] = fmaxf(rmax[half], __shfl_xor_sync(0xffffffffu, rmax[half], 2));
+        }
+        float alpha[2];
+        float mnew[2];
+        for (int half = 0; half < 2; half++) {
+            mnew[half] = fmaxf(m_run[half], rmax[half]);
+            alpha[half] = mnew[half] == -INFINITY ? 1.f : exp2f(m_run[half] - mnew[half]);   // exp2(-inf) = 0 when m_run = -inf
+            m_run[half] = mnew[half];
+            l_run[half] *= alpha[half];
+        }
+        for (int d = 0; d < 16; d++) {
+            o[d][0] *= alpha[0];
+            o[d][1] *= alpha[0];
+            o[d][2] *= alpha[1];
+            o[d][3] *= alpha[1];
+        }
+        uint32_t pa[8][4];
+        for (int nt = 0; nt < 16; nt++) {
+            float p[4];
+            for (int e = 0; e < 4; e++) {
+                const int half = e >> 1;
+                p[e] = mnew[half] == -INFINITY ? 0.f : exp2f(s[nt][e] - mnew[half]);
+            }
+            l_run[0] += p[0] + p[1];
+            l_run[1] += p[2] + p[3];
+            const int j = nt >> 1;
+            if ((nt & 1) == 0) {
+                pa[j][0] = pack_bf16(p[0], p[1]);
+                pa[j][1] = pack_bf16(p[2], p[3]);
+            } else {
+                pa[j][2] = pack_bf16(p[0], p[1]);
+                pa[j][3] = pack_bf16(p[2], p[3]);
+            }
+        }
+        cp_wait<0>();
+        __syncthreads();
+        for (int j = 0; j < 8; j++) {
+            for (int dt = 0; dt < 16; dt += 2) {
+                uint32_t r0, r1, r2, r3;
+                const int mrow = lane & 7;
+                const int mat = lane >> 3;                       // 0: (keys lo, dt) 1: (keys hi, dt) 2: (lo, dt+1) 3: (hi, dt+1)
+                const unsigned char* addr = vt + (16 * j + mrow + (mat & 1) * 8) * kRowStride + ((dt + (mat >> 1)) * 8) * 2;
+                ldsm_x4t(r0, r1, r2, r3, addr);
+                mma16816(o[dt], pa[j], r0, r1);
+                mma16816(o[dt + 1], pa[j], r2, r3);
+            }
+        }
+        __syncthreads();                                          // both tiles are rewritten by the next block
+    }
+    for (int half = 0; half < 2; half++) {
+        float l = l_run[half];
+        l += __shfl_xor_sync(0xffffffffu, l, 1);
+        l += __shfl_xor_sync(0xffffffffu, l, 2);
+        const float inv = l > 0.f ? 1.f / l : 0.f;
+        const int tl = 2 * warp + half;
+        if (tl >= n_tok) continue;
+        at::BFloat16* orow = out + ((int64_t) (t0 + tl) * heads + (int64_t) g * REP + gid) * kD;
+        for (int dt = 0; dt < 16; dt++) {
+            *reinterpret_cast<uint32_t*>(orow + dt * 8 + 2 * t4) = pack_bf16(o[dt][2 * half] * inv, o[dt][2 * half + 1] * inv);
+        }
+    }
+}
+
+/**
+ * Decode / short-window scoring: one thread per key, the 128 keys of a block in parallel (the per-token kernel above walks them
+ * one after the other and is latency-bound at small batch). Grid (num_blocks, tokens), 128 threads, d = 128.
+ */
+__global__ void __launch_bounds__(128) msa_score_keys_kernel(const at::BFloat16* __restrict__ q,
+                                                             const at::BFloat16* __restrict__ cache,
+                                                             const int64_t* __restrict__ slots,
+                                                             const int* __restrict__ positions, float* __restrict__ scores,
+                                                             int groups, int length, int num_blocks, int seqlen, int t0) {
+    const int blk = blockIdx.x;
+    const int t = t0 + blockIdx.y;
+    const int b = t / seqlen;
+    const int pos = positions[b] + t % seqlen;
+    const int first = blk * kKeys;
+    const int tid = threadIdx.x;
+    float* out = scores + ((int64_t) t * groups) * num_blocks + blk;
+    if (first > pos) {
+        if (tid < groups) out[(int64_t) tid * num_blocks] = -INFINITY;
+        return;
+    }
+    __shared__ float qs[8 * kD];
+    __shared__ float red[4][8];
+    for (int i = tid; i < groups * kD; i += 128) qs[i] = static_cast<float>(q[(int64_t) t * groups * kD + i]);
+    const int key = first + tid;
+    const bool valid = key < length && key <= pos;
+    // the slot load does not depend on the staged query: issue it first
+    int64_t slot = 0;
+    if (valid) slot = slots[(int64_t) b * length + key];
+    __syncthreads();
+    float acc[8];
+    for (int g = 0; g < 8; g++) acc[g] = 0.f;
+    if (valid) {
+        const uint4* row = reinterpret_cast<const uint4*>(cache + slot * kD);
+        uint4 v[16];
+        for (int c = 0; c < 16; c++) v[c] = row[c];
+        for (int c = 0; c < 16; c++) {
+            const uint32_t w[4] = {v[c].x, v[c].y, v[c].z, v[c].w};
+            float kv[8];
+            for (int e = 0; e < 4; e++) {
+                kv[2 * e] = __uint_as_float(w[e] << 16);
+                kv[2 * e + 1] = __uint_as_float(w[e] & 0xffff0000u);
+            }
+            for (int g = 0; g < 8; g++) {
+                if (g < groups) {
+                    float a = acc[g];
+                    for (int e = 0; e < 8; e++) a += qs[g * kD + c * 8 + e] * kv[e];
+                    acc[g] = a;
+                }
+            }
+        }
+    }
+    const int warp = tid >> 5;
+    const int lane = tid & 31;
+    for (int g = 0; g < 8; g++) {
+        if (g >= groups) break;
+        float m = valid ? acc[g] : -INFINITY;
+        for (int o = 16; o > 0; o >>= 1) m = fmaxf(m, __shfl_xor_sync(0xffffffffu, m, o));
+        if (lane == 0) red[warp][g] = m;
+    }
+    __syncthreads();
+    if (tid < groups) {
+        out[(int64_t) tid * num_blocks] = fmaxf(fmaxf(red[0][tid], red[1][tid]), fmaxf(red[2][tid], red[3][tid]));
+    }
+}
+
+bool tc_enabled() {
+    static const bool on = [] { const char* e = std::getenv("SMILE_MM_TC"); return e == nullptr || std::strcmp(e, "0") != 0; }();
+    return on;
+}
+}  // namespace mmtc
+
 at::Tensor require_cuda(const ST_Tensor t, const char* what) {
     if (!t || !t->t.defined() || !t->t.is_cuda()) {
         throw std::runtime_error(std::string(what) + " must be a CUDA tensor");
@@ -1130,6 +1487,48 @@ extern "C" ST_Tensor smile_msa_decode_select(ST_Tensor q, ST_Tensor cache, ST_Te
         const int threads1 = 128;
         const size_t smem1 = ((size_t) groups * d + (threads1 / 32) * groups) * sizeof(float);
         const size_t smem2 = (size_t) num_blocks * (sizeof(float) + 1);
+        const int score_tok = groups == 1 || groups == 2 || groups == 4 || groups == 8 ? 128 / groups : 0;
+        if (mmtc::tc_enabled() && qt.scalar_type() == at::kBFloat16 && score_tok > 0 && d == mmtc::kD && block_size == mmtc::kKeys
+            && tokens >= score_tok && (batch == 1 || seqlen % score_tok == 0)
+            && (tokens + score_tok - 1) / score_tok <= 65535) {
+            static bool attr_done[64][4] = {};
+            const int dev = qt.get_device();
+            const int variant = groups == 1 ? 0 : groups == 2 ? 1 : groups == 4 ? 2 : 3;
+            const dim3 grid(num_blocks, (tokens + score_tok - 1) / score_tok);
+            const bool set_attr = dev >= 0 && dev < 64 && !attr_done[dev][variant];
+            const size_t tile = mmtc::kTileBytes;
+#define MM_SCORE_TC(G)                                                                                                    \
+            if (groups == G) {                                                                                           \
+                if (set_attr) cudaFuncSetAttribute(mmtc::msa_score_tc_kernel<G>, cudaFuncAttributeMaxDynamicSharedMemorySize, (int) tile); \
+                mmtc::msa_score_tc_kernel<G><<<grid, 128, tile, stream_of(qt)>>>(                                        \
+                        qt.data_ptr<at::BFloat16>(), ct.data_ptr<at::BFloat16>(), st.data_ptr<int64_t>(), pt.data_ptr<int>(), \
+                        scores.data_ptr<float>(), length, num_blocks, seqlen, tokens);                                   \
+            }
+            MM_SCORE_TC(1) MM_SCORE_TC(2) MM_SCORE_TC(4) MM_SCORE_TC(8)
+#undef MM_SCORE_TC
+            if (set_attr) attr_done[dev][variant] = true;
+            for (int t0 = 0; t0 < tokens; t0 += kMaxGridY) {
+                const int n = std::min(kMaxGridY, tokens - t0);
+                msa_select_mask_kernel<at::BFloat16><<<dim3(groups, n), 256, smem2, stream_of(qt)>>>(
+                        scores.data_ptr<float>(), pt.data_ptr<int>(), nullptr, sel.data_ptr<int>(), groups, length,
+                        block_size, num_blocks, topk, init_blocks, local_blocks, seqlen, t0);
+            }
+            check_launch("smile_msa_decode_select");
+            return new ST_Tensor_{ sel };
+        }
+        if (mmtc::tc_enabled() && qt.scalar_type() == at::kBFloat16 && d == mmtc::kD && block_size == mmtc::kKeys) {
+            for (int t0 = 0; t0 < tokens; t0 += kMaxGridY) {
+                const int n = std::min(kMaxGridY, tokens - t0);
+                mmtc::msa_score_keys_kernel<<<dim3(num_blocks, n), 128, 0, stream_of(qt)>>>(
+                        qt.data_ptr<at::BFloat16>(), ct.data_ptr<at::BFloat16>(), st.data_ptr<int64_t>(), pt.data_ptr<int>(),
+                        scores.data_ptr<float>(), groups, length, num_blocks, seqlen, t0);
+                msa_select_mask_kernel<at::BFloat16><<<dim3(groups, n), 256, smem2, stream_of(qt)>>>(
+                        scores.data_ptr<float>(), pt.data_ptr<int>(), nullptr, sel.data_ptr<int>(), groups, length,
+                        block_size, num_blocks, topk, init_blocks, local_blocks, seqlen, t0);
+            }
+            check_launch("smile_msa_decode_select");
+            return new ST_Tensor_{ sel };
+        }
         DISPATCH_FLOAT(qt.scalar_type(), "smile_msa_decode_select", [&] {
             for (int t0 = 0; t0 < tokens; t0 += kMaxGridY) {
                 const int n = std::min(kMaxGridY, tokens - t0);
@@ -1201,6 +1600,25 @@ extern "C" ST_Tensor smile_sparse_decode_attention(ST_Tensor q, ST_Tensor k_laye
                 throw std::runtime_error(std::string("smile_sparse_decode_attention: ") + cudaGetErrorString(attr));
             }
             attr_done[dev][variant] = true;
+        }
+        if (mmtc::tc_enabled() && rep == 8 && kv_heads <= 65535 && tokens >= 512 && (batch == 1 || seqlen % mmtc::kAttnTokens == 0)) {
+            const int num_blocks = (length + kSdBlock - 1) / kSdBlock;
+            const size_t smem = 2 * (size_t) mmtc::kTileBytes + (size_t) ((num_blocks + 3) / 4) * 4;
+            static bool attr_done_tc[64] = {};
+            if (dev >= 0 && dev < 64 && !attr_done_tc[dev]) {
+                cudaFuncSetAttribute(mmtc::sparse_attn_tc_kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, 100 * 1024);
+                attr_done_tc[dev] = true;
+            }
+            if (smem <= 100 * 1024) {
+                at::Tensor out_tc = at::empty({tokens, heads, kSdDim}, qt.options());
+                mmtc::sparse_attn_tc_kernel<<<dim3((tokens + mmtc::kAttnTokens - 1) / mmtc::kAttnTokens, kv_heads), 128, smem,
+                                              stream_of(qt)>>>(
+                        qt.data_ptr<at::BFloat16>(), kt.data_ptr<at::BFloat16>(), vt.data_ptr<at::BFloat16>(),
+                        st.data_ptr<int64_t>(), pt.data_ptr<int>(), lt.data_ptr<int>(), out_tc.data_ptr<at::BFloat16>(), heads,
+                        kv_heads, length, topk, num_blocks, (float) scale, seqlen, tokens);
+                check_launch("smile_sparse_decode_attention");
+                return new ST_Tensor_{ out_tc };
+            }
         }
         // Partial softmax state is chunk-local: bound the workspace (~256 MB) and loop over token chunks.
         const int64_t per_token = (int64_t) kv_heads * topk * rep * kSdDim * 4;

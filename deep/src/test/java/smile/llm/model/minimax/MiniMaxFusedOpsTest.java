@@ -419,8 +419,11 @@ public class MiniMaxFusedOpsTest {
     }
 
     private void checkSparseWindow(int length, int[] start, int seqlen, int topk, int init, int local, int rep) {
+        checkSparseWindow(length, start, seqlen, topk, init, local, rep, 4);
+    }
+
+    private void checkSparseWindow(int length, int[] start, int seqlen, int topk, int init, int local, int rep, int groups) {
         int batch = start.length;
-        int groups = 4;
         int d = 128;
         int tokens = batch * seqlen;
         int slotsTotal = batch * length + 3;
@@ -559,6 +562,16 @@ public class MiniMaxFusedOpsTest {
         assumeTrue(available(), "needs CUDA and the fused kernels");   // 64 heads over 8 tensor-parallel ranks
         checkSparseDecodeAttention(2048, new int[]{700, 130, 2047}, 4, 0, 1, 8);
         checkSparseDecodeAttention(3000, new int[]{5, 2999, 1500, 640}, 16, 1, 2, 8);
+    }
+
+    @Test
+    public void testGivenOneGroupPerRankWhenSparseWindowThenSelectionAndAttentionMatchReference() {
+        assumeTrue(available(), "needs CUDA and the fused kernels");
+        checkSparseWindow(1500, new int[]{1000}, 300, 16, 1, 2, 8, 1);
+        checkSparseWindow(2600, new int[]{0}, 517, 16, 1, 2, 8, 1);
+        checkSparseWindow(1500, new int[]{900}, 211, 16, 1, 2, 8, 2);
+        checkSparseWindow(2200, new int[]{0, 700}, 520, 16, 1, 2, 8, 1);     // two requests, tensor-core attention
+        checkSparseWindow(3300, new int[]{1000}, 1000, 16, 1, 2, 8, 4);
     }
 
     @Test

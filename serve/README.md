@@ -488,6 +488,31 @@ batched plain decode). Image and video requests speculate as well.
 Through the HTTP API (4 reasoning-heavy prompts, 160 tokens each, one request at a time, prefill and request overhead included)
 Flash answers at 67.8 tok/s with DSpark against 37.9 tok/s without (1.8x); the 19 checks of `http_check.py` (tools, tool-result round
 trip, streaming, thinking modes, 4 concurrent requests, a 2.8k-token prompt, prefix cache) pass with speculation on.
+Prefill and long context (8x A100 80 GB, 2026-11-21, NVFP4 experts, `smile.chat.max-seq-len=70000`). The block-sparse attention used to
+read every selected key block once per query token; prompts now run the block scoring and the attention on tensor cores, sharing each
+key block across consecutive tokens, and decode scores the 128 keys of a block in parallel. The MoE combine (with the shared expert) is
+one kernel and the fp32 router GEMM runs on bf16 tensor cores for prompts. Model-only (no HTTP), chunk 2048, one request:
+
+| | Before | Now |
+|---|---|---|
+| Prefill 1024 / 4096 / 8192 tokens | 204 / 1013 / 2517 ms (5.0k / 4.0k / 3.3k tok/s) | **153 / 557 / 1137 ms (6.7k / 7.4k / 7.2k tok/s)** |
+| Decode step, batch 1 / 8 / 32 | 28.6 / 32.9 / 35.2 ms | **19.7 / 22.9 / 29.2 ms** |
+
+Through the HTTP API (warm, second of two passes; a retrieval question about one record of a long list, 48 new tokens, wall time
+includes the prompt and DSpark on):
+
+| Prompt | Before | Now |
+|---|---|---|
+| 7k tokens | 2.8 s (2.6k prompt tok/s) | **2.2 s (3.3k)** |
+| 16.6k tokens | 8.0 s (2.1k) | **4.0 s (4.1k)** |
+| 34k tokens | 24.2 s (1.4k) | **7.0 s (4.9k)** |
+| 62.6k tokens | not measured | **13.6 s (4.6k)**; the answer was correct at every length |
+
+The prompt cost used to grow faster than linearly (the scoring kernel is quadratic in the prompt); it is now close to linear up to 62k.
+Plain decode over HTTP (128 tokens per request, 1 / 2 / 4 / 8 / 16 concurrent requests, aggregate tok/s): 38.0 / 63.6 / 125.9 / 215.5 / 345.1
+before, **45.9 / 73.7 / 145.2 / 246.6 / 375.0** now. DSpark through HTTP is within run-to-run noise of before at one request (64.1 against 64.2 tok/s; 1.4x over
+plain on these reasoning prompts) and 1.0-1.2x better at 2-4 requests (103 / 157 against 89 / 145): its round is dominated by the verify forward
+and the draft, which these changes barely touch. `SMILE_MM_TC=0`, `SMILE_MM_FUSED_COMBINE=0` and `SMILE_MM_ROUTER_X3=0` restore the previous kernels.
 The draft is only loaded when `smile.chat.speculative=true`. It costs about 3 GB on GPU 0: lower `smile.chat.mem-fraction-static` accordingly or set `SMILE_MINIMAX_VISION=0`
 (on 40 GB cards 0.92 worked without the vision tower; with `speculative=false` nothing is loaded and the old settings apply). Other knobs: `SMILE_MINIMAX_DSPARK_SNAPSHOTS` (draft contexts kept for prefix
 reuse, default 8), `SMILE_MINIMAX_SPARSE_KERNEL=0` (reference attention path, slower).
