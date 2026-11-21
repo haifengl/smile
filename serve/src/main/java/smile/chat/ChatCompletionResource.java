@@ -121,6 +121,9 @@ public class ChatCompletionResource {
     @ConfigProperty(name = "quarkus.http.port", defaultValue = "8080")
     int configuredHttpPort;
 
+    @ConfigProperty(name = "smile.chat.agent.enabled", defaultValue = "true")
+    boolean agentEnabled = true;
+
     /**
      * Non-streaming chat completion ({@code stream: false} or omitted).
      *
@@ -411,6 +414,9 @@ public class ChatCompletionResource {
      * </ol>
      */
     boolean shouldRouteToKirinAgent(HttpHeaders headers, CompletionRequest request) {
+        if (!agentEnabled) {
+            return false;
+        }
         if (authContext == null || !authContext.isOAuthUser()) {
             return false;
         }
