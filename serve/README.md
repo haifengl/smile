@@ -475,9 +475,8 @@ chunked prefill and image requests (exercised through `InferenceEngine`; the HTT
 The gain shrinks with concurrency (the batched plain decode gets more efficient too) and is gone at 8 concurrent requests, so the
 service lets at most 4 requests speculate at once unless `smile.chat.speculative-max-concurrency` says otherwise (the rest use
 batched plain decode). Image and video requests speculate as well.
-Through the HTTP API (4 reasoning-heavy prompts, 160 tokens each, one request at a time, prefill and request overhead included)
-Flash answers at 67.8 tok/s with DSpark against 37.9 tok/s without (1.8x); the 19 checks of `http_check.py` (tools, tool-result round
-trip, streaming, thinking modes, 4 concurrent requests, a 2.8k-token prompt, prefix cache) pass with speculation on.
+The 19 checks of `http_check.py` (tools, tool-result round trip, streaming, thinking modes, 4 concurrent requests, a 2.8k-token
+prompt, prefix cache) pass with speculation on.
 Prefill and long context (8x A100 80 GB, 2026-11-21, NVFP4 experts, `smile.chat.max-seq-len=70000`). The block-sparse attention used to
 read every selected key block once per query token; prompts now run the block scoring and the attention on tensor cores, sharing each
 key block across consecutive tokens, and decode scores the 128 keys of a block in parallel. The MoE combine (with the shared expert) is
