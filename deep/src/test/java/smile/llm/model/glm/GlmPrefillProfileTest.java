@@ -27,7 +27,7 @@ import smile.torch.Aten;
  * Prefill time per chunk of one long prompt, and the device-0 kernels of the last chunks (CUPTI) for attributing it.
  * Opt-in: {@code GLM_FULL=<checkpoint dir>}, {@code GLM_PREFILL_TOKENS} (default 32768), {@code GLM_PREFILL_CHUNK}
  * (default 2048), {@code GLM_PROF_KERNELS=1} to print the kernel table of the last {@code GLM_PROF_CHUNKS} chunks (2),
- * {@code GLM_PROF_LAYERS}, {@code GLM_FULL_DEVICES}.
+ * {@code GLM_PROF_LAYERS}, {@code GLM_FULL_DEVICES}, {@code GLM_PREFILL_FILE} (a text file used as the prompt).
  */
 public class GlmPrefillProfileTest {
     private static int env(String name, int def) {
@@ -55,6 +55,15 @@ public class GlmPrefillProfileTest {
             prompt[i] = 1000 + (int) ((seed >>> 33) % 50000);
         }
         try (Glm m = Glm.build(dir, layers, total + 1024, dev, 2)) {
+            String file = System.getenv("GLM_PREFILL_FILE");
+            if (file != null) {
+                // real text instead of random token ids (expert routing depends on it)
+                String text = Files.readString(Path.of(file));
+                int[] ids = m.encodeChat(smile.llm.Message.user(text.substring(0, Math.min(text.length(), total * 6))));
+                for (int i = 0; i < total; i++) {
+                    prompt[i] = ids[i % ids.length];
+                }
+            }
             int id = m.bind(prompt, 16);
             int nChunks = (total + chunk - 1) / chunk;
             StringBuilder line = new StringBuilder("PREFILL layers=" + (layers == 0 ? 45 : layers) + " chunk=" + chunk + " ms/chunk:");
