@@ -374,27 +374,33 @@ tok/s over the whole run; no errors in any run.
 
 | Concurrent requests | Plain decode | DSpark | Speedup | Latency p50 (DSpark) |
 |---|---|---|---|---|
-| 1 | 39.8 tok/s | **81.6 tok/s** | 2.05x | 1.6 s |
-| 4 | 135 tok/s | **213 tok/s** | 1.57x | 2.1 s |
-| 8 | 243 tok/s | **349 tok/s** | 1.44x | 2.4 s |
-| 16 | 394 tok/s | **560 tok/s** | 1.42x | 3.1 s |
-| 32 | 614 tok/s | **762 tok/s** | 1.24x | 4.8 s |
+| 1 | 39.9 tok/s | **92.8 tok/s** | 2.33x | 1.4 s |
+| 4 | 137 tok/s | **242 tok/s** | 1.77x | 1.8 s |
+| 8 | 258 tok/s | **415 tok/s** | 1.61x | 2.1 s |
+| 16 | 447 tok/s | **652 tok/s** | 1.46x | 2.8 s |
+| 32 | 745 tok/s | **888 tok/s** | 1.19x | 4.1 s |
 
 Tokens per verify step (including the one the model adds itself) depend on the text: prose 1.9-2.8, code 3.6-4.5, JSON and other
 structured output 5.7-6.0 (up to the 6 of a full block). The service lets up to 32 requests speculate at once
 (`smile.chat.speculative-max-concurrency`, default `0` = 32 for DeepSeek); the rest use batched plain decode.
 
-How the time splits (one request, 8 GPUs): a round is about 35 ms, of which the draft takes 4 ms (a CUDA graph), the verify pass 29 ms
-(the same graph machinery as a plain decode step, which takes 26 ms for one token) and the host-side accept and commit 2 ms.
-Verifying a block of 6 rows therefore costs little more than one row at small batch; at 32 requests the verify pass is about 68 ms
-for about 112 rows, and the number of drafts verified per sequence is chosen from the confidence head (its output is calibrated: the
+How the time splits (one request, 8 GPUs): a round is about 36 ms, of which the draft takes 5 ms (a CUDA graph), the verify pass 29 ms
+(the same graph machinery as a plain decode step, which takes 24 ms for one token) and the host-side accept and commit 2 ms.
+Verifying a block of 6 rows therefore costs little more than one row at small batch; at 32 requests the verify pass is about 58 ms
+for about 116 rows, and the number of drafts verified per sequence is chosen from the confidence head (its output is calibrated: the
 hit rate of a draft position given the earlier ones were accepted follows `sigmoid(confidence)`) so that the rows that fill a graph
 bucket are the most probable ones. `SMILE_DS_SPEC_DYNAMIC=0` verifies the full block instead.
 
-Plain decode, for reference (the whole step is one CUDA graph per GPU; 128 sequences is the largest graph): GPU time per step
-26 ms for 1 sequence, 29 ms for 4, 35 ms for 16, 43-48 ms for 32 and 71 ms for 128 (about 0.3 ms per extra sequence from 32 up).
-Prefill of one prompt: 98 ms for 16 tokens, 394 ms for 1024, 797 ms for 2048, 1450 ms for 4096 (2.6-2.8k prompt tokens/s); waiting
+Plain decode, for reference (the whole step is one CUDA graph per GPU; 128 sequences is the largest graph): step time
+24 ms for 1 sequence, 27 ms for 4, 28 ms for 16 and 31 ms for 32 (larger batches were not re-measured).
+Prefill of one prompt: 99 ms for 16 tokens, 351 ms for 1024, 621 ms for 2048, 1165 ms for 4096 (3.3-3.5k prompt tokens/s); waiting
 prompts are prefilled together (32 short prompts in about 0.6 s instead of 3-5 s one by one).
+
+The attention over the selected keys (64 query heads sharing one KV head, window plus top-512 compressed positions) runs on tensor
+cores from 8 query rows up: one block per row and 32 heads keeps the queries in registers and reads each key row once for scores and
+values, so the sparse attention is 150 ms of a 4096-token prompt (about 300 ms with gather + GEMM) and 1.6 ms of a 32-sequence decode
+step (13 ms with the per-head kernel). The memory-bound prefill kernels (hyper-connection pre/post, activation fake-quantisation, rope,
+swiglu) move eight values per thread. `SMILE_DS_ATTN_TC=0` and `SMILE_DS_VEC=0` select the earlier kernels.
 
 Start-up and memory: loading the checkpoint (475 GB) takes about 4 minutes; a background thread then reads the two 94 GB Engram
 tables into the page cache and maps them into the process (about 3 minutes, `SMILE_DS_ENGRAM_PREFETCH=0` skips it; the first requests
