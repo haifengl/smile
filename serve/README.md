@@ -470,41 +470,49 @@ MiniMax-M3.1-Flash ships a small draft model (`dspark/`, 2.3 GB) that proposes 7
 CUDA-graph forward and keeps the longest matching prefix, so the output distribution is unchanged (greedy output can differ from
 plain decoding only through bf16 near-ties, which this model has plenty of). It is on by default when the checkpoint has the
 `dspark/` folder (`smile.chat.speculative=false` or `SMILE_MINIMAX_DSPARK=0` turns it off). It works with prefix reuse, sampling,
-chunked prefill and image requests (exercised through `InferenceEngine`; the HTTP checks below cover tool-call requests).
+chunked prefill and image requests (exercised through `InferenceEngine`).
 
-The gain shrinks with concurrency (the batched plain decode gets more efficient too) and is gone at 8 concurrent requests, so the
-service lets at most 4 requests speculate at once unless `smile.chat.speculative-max-concurrency` says otherwise (the rest use
-batched plain decode). Image and video requests speculate as well.
-The 19 checks of `http_check.py` (tools, tool-result round trip, streaming, thinking modes, 4 concurrent requests, a 2.8k-token
-prompt, prefix cache) pass with speculation on.
-Prefill and long context (8x A100 80 GB, 2026-11-21, NVFP4 experts, `smile.chat.max-seq-len=70000`). The block-sparse attention used to
-read every selected key block once per query token; prompts now run the block scoring and the attention on tensor cores, sharing each
-key block across consecutive tokens, and decode scores the 128 keys of a block in parallel. The MoE combine (with the shared expert) is
-one kernel and the fp32 router GEMM runs on bf16 tensor cores for prompts. Model-only (no HTTP), chunk 2048, one request:
+Setup: 8x A100 80 GB, NVFP4 experts expert-parallel, `smile.chat.max-seq-len=70000`, CUDA graphs. The block-sparse attention scores
+and attends on tensor cores for prompts (each key block is read once for a run of consecutive tokens) and scores the 128 keys of a
+block in parallel for decode; the MoE combine is one kernel and the fp32 router GEMM runs on bf16 tensor cores for prompts.
 
-| | Before | Now |
-|---|---|---|
-| Prefill 1024 / 4096 / 8192 tokens | 204 / 1013 / 2517 ms (5.0k / 4.0k / 3.3k tok/s) | **153 / 557 / 1137 ms (6.7k / 7.4k / 7.2k tok/s)** |
-| Decode step, batch 1 / 8 / 32 | 28.6 / 32.9 / 35.2 ms | **19.7 / 22.9 / 29.2 ms** |
+Model only, chunked prefill (2048), one request:
 
-Through the HTTP API (warm, second of two passes; a retrieval question about one record of a long list, 48 new tokens, wall time
-includes the prompt and DSpark on):
+| Prompt tokens | 1024 | 4096 | 8192 |
+|---|---|---|---|
+| Prefill | 153 ms (6.7k tok/s) | 557 ms (7.4k tok/s) | 1137 ms (7.2k tok/s) |
 
-| Prompt | Before | Now |
-|---|---|---|
-| 7k tokens | 2.8 s (2.6k prompt tok/s) | **2.2 s (3.3k)** |
-| 16.6k tokens | 8.0 s (2.1k) | **4.0 s (4.1k)** |
-| 34k tokens | 24.2 s (1.4k) | **7.0 s (4.9k)** |
-| 62.6k tokens | not measured | **13.6 s (4.6k)**; the answer was correct at every length |
+| Decode batch | 1 | 8 | 32 |
+|---|---|---|---|
+| Step time | 19.7 ms | 22.9 ms | 29.2 ms |
 
-The prompt cost used to grow faster than linearly (the scoring kernel is quadratic in the prompt); it is now close to linear up to 62k.
-Plain decode over HTTP (128 tokens per request, 1 / 2 / 4 / 8 / 16 concurrent requests, aggregate tok/s): 38.0 / 63.6 / 125.9 / 215.5 / 345.1
-before, **45.9 / 73.7 / 145.2 / 246.6 / 375.0** now. DSpark through HTTP is within run-to-run noise of before at one request (64.1 against 64.2 tok/s; 1.4x over
-plain on these reasoning prompts) and 1.0-1.2x better at 2-4 requests (103 / 157 against 89 / 145): its round is dominated by the verify forward
-and the draft, which these changes barely touch. `SMILE_MM_TC=0`, `SMILE_MM_FUSED_COMBINE=0` and `SMILE_MM_ROUTER_X3=0` restore the previous kernels.
+Through the HTTP API, 128 new tokens per request on reasoning-style prompts, aggregate tok/s with 1 / 2 / 4 / 8 / 16 concurrent requests:
+
+| Concurrent requests | 1 | 2 | 4 | 8 | 16 |
+|---|---|---|---|---|---|
+| Plain decode | 45.9 | 73.7 | 145.2 | 246.6 | 375.0 |
+| DSpark (7 drafts) | **64.1** | **103.0** | **156.6** | 147.8 | 203.3 |
+
+DSpark pays off at low concurrency: 1.4x for one request, 1.4x for two, 1.1x for four. Beyond that the batched plain decode is
+more efficient and speculation is slower (at most 4 requests speculate at once unless `smile.chat.speculative-max-concurrency`
+says otherwise), so set `smile.chat.speculative=false` for services that routinely run 8 or more requests at the same time.
+Image and video requests speculate as well.
+
+Long prompts, wall time of one request that asks for one record of a long list (48 new tokens, DSpark on, warm):
+
+| Prompt tokens | 7k | 16.6k | 34k | 62.6k |
+|---|---|---|---|---|
+| Wall time | 2.2 s | 4.0 s | 7.0 s | 13.6 s |
+| Prompt tokens / s | 3.3k | 4.1k | 4.9k | 4.6k |
+
+The prompt cost is close to linear up to 62k tokens and every answer was correct. A repeat of the 62k-token prompt takes 3.9 s
+instead of 12.8 s with prefix reuse. An 18-check HTTP script (plain, repeated request, multi-turn, tool call and tool-result round
+trip, streaming, 4 and 16 concurrent requests, retrieval from a 7k and a 62k prompt, prefix cache) passes with speculation on.
+
 The draft is only loaded when `smile.chat.speculative=true`. It costs about 3 GB on GPU 0: lower `smile.chat.mem-fraction-static` accordingly or set `SMILE_MINIMAX_VISION=0`
-(on 40 GB cards 0.92 worked without the vision tower; with `speculative=false` nothing is loaded and the old settings apply). Other knobs: `SMILE_MINIMAX_DSPARK_SNAPSHOTS` (draft contexts kept for prefix
-reuse, default 8), `SMILE_MINIMAX_SPARSE_KERNEL=0` (reference attention path, slower).
+(with `speculative=false` nothing is loaded and the old settings apply). Other knobs: `SMILE_MINIMAX_DSPARK_SNAPSHOTS` (draft contexts kept for prefix
+reuse, default 8), `SMILE_MINIMAX_SPARSE_KERNEL=0` (reference attention path, slower), `SMILE_MM_TC=0` (per-token sparse-attention kernels),
+`SMILE_MM_FUSED_COMBINE=0` and `SMILE_MM_ROUTER_X3=0` (composed MoE combine and fp32 router GEMM).
 
 ### 2.4 Qwen3.8 27B
 
