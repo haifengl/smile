@@ -115,8 +115,6 @@ public class Intent extends JPanel {
     private final JButton moveUpButton = new JButton("⬆️");
     private final JButton moveDownButton = new JButton("⬇️");
     private final JButton cancelQueuedButton = new JButton("❌");
-    /** Minimum output height (in pixels) before the top-right toggle bar is also shown alongside the bottom-right one. */
-    static final int MIN_TOP_MODE_BAR_HEIGHT = 120;
     // Output pane. Subagent runs are tabs inside this pane.
     private final JLayeredPane southPane = new JLayeredPane() {
         @Override
@@ -136,19 +134,6 @@ public class Intent extends JPanel {
                 int x = Math.max(0, w - barPref.width - rightMargin);
                 int bottomY = Math.max(0, h - barPref.height);
                 modeBar.setBounds(x, bottomY, barPref.width, barPref.height);
-
-                boolean showTop = h >= Math.max(MIN_TOP_MODE_BAR_HEIGHT, barPref.height * 3);
-                topModeBar.setVisible(showTop);
-                if (showTop) {
-                    Dimension topPref = topModeBar.getPreferredSize();
-                    int topX = Math.max(0, w - topPref.width - rightMargin);
-                    topModeBar.setBounds(topX, 2, topPref.width, topPref.height);
-                } else {
-                    topModeBar.setBounds(0, 0, 0, 0);
-                }
-            } else {
-                topModeBar.setVisible(false);
-                topModeBar.setBounds(0, 0, 0, 0);
             }
         }
 
@@ -409,7 +394,6 @@ public class Intent extends JPanel {
 
         southPane.setOpaque(false);
         southPane.add(outputPane, JLayeredPane.DEFAULT_LAYER);
-        southPane.add(topModeBar, JLayeredPane.PALETTE_LAYER);
         southPane.add(modeBar, JLayeredPane.PALETTE_LAYER);
 
         add(inputPane, BorderLayout.CENTER);
@@ -490,7 +474,7 @@ public class Intent extends JPanel {
     }
 
     /**
-     * Initializes the bottom-right and conditional top-right toggle buttons for
+     * Initializes the bottom-right and input-footer toggle buttons for
      * switching between plain text and rendered Markdown view of agent output.
      */
     private void initModeBar() {
@@ -572,6 +556,10 @@ public class Intent extends JPanel {
         if (progressPane.getParent() == footer) {
             footer.remove(progressPane);
         }
+        if (topModeBar.getParent() == footer) {
+            footer.remove(topModeBar);
+        }
+        topModeBar.setVisible(false);
         if (queuePane.getParent() != footer) {
             footer.add(queuePane, BorderLayout.EAST);
         }
@@ -1364,11 +1352,32 @@ public class Intent extends JPanel {
                 && hasOutputText();
         if (modeBar.isVisible() != show) {
             modeBar.setVisible(show);
-            if (!show) {
-                topModeBar.setVisible(false);
-            }
             southPane.revalidate();
             southPane.repaint();
+        }
+        boolean footerChanged = false;
+        if (show) {
+            if (!topModeBar.isVisible()) {
+                topModeBar.setVisible(true);
+                footerChanged = true;
+            }
+            if (topModeBar.getParent() != footer) {
+                footer.add(topModeBar, BorderLayout.EAST);
+                footerChanged = true;
+            }
+        } else {
+            if (topModeBar.isVisible()) {
+                topModeBar.setVisible(false);
+                footerChanged = true;
+            }
+            if (topModeBar.getParent() == footer) {
+                footer.remove(topModeBar);
+                footerChanged = true;
+            }
+        }
+        if (footerChanged) {
+            footer.revalidate();
+            footer.repaint();
         }
     }
 
@@ -1772,13 +1781,17 @@ public class Intent extends JPanel {
             if (mode == Mode.PREVIEW) {
                 setMode(Mode.RAW);
             }
-            // A running turn is no longer waiting, so its queue badge and controls go away.
-            clearQueued();
             progress.setIndeterminate(true);
             progress.setEnabled(true);
+            // A running turn is no longer waiting, so its queue badge and controls go away.
+            clearQueued();
             stopButton.setText("❌");
             stopButton.setToolTipText(bundle.getString("Stop"));
             stopButton.setEnabled(true);
+            if (topModeBar.getParent() == footer) {
+                footer.remove(topModeBar);
+            }
+            topModeBar.setVisible(false);
             if (progressPane.getParent() != footer) {
                 footer.add(progressPane, BorderLayout.EAST);
             }
@@ -1867,16 +1880,24 @@ public class Intent extends JPanel {
     }
 
     /**
-     * Returns the top-right mode toggle bar. Package-private for testing.
-     * @return the top-right mode toggle bar.
+     * Returns the input pane footer. Package-private for testing.
+     * @return the input pane footer.
+     */
+    JPanel footer() {
+        return footer;
+    }
+
+    /**
+     * Returns the input-footer mode toggle bar. Package-private for testing.
+     * @return the input-footer mode toggle bar.
      */
     JPanel topModeBar() {
         return topModeBar;
     }
 
     /**
-     * Returns the top-right mode toggle button. Package-private for testing.
-     * @return the top-right mode toggle button.
+     * Returns the input-footer mode toggle button. Package-private for testing.
+     * @return the input-footer mode toggle button.
      */
     JToggleButton topModeButton() {
         return topModeButton;
