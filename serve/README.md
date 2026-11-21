@@ -28,9 +28,10 @@ A React-based web UI is bundled and served from the same process.
    - [Health and Metrics Endpoints](#14-health-and-metrics-endpoints)
 2. [LLM Decode Benchmarks](#2-llm-decode-benchmarks)
    - [DeepSeek-V4.1-Flash](#21-deepseek-v41-flash)
-   - [MiniMax-M3.1-Flash](#22-minimax-m31-flash)
-   - [Qwen3.8 27B](#23-qwen38-27b)
-   - [Llama 3.1 8B Instruct](#24-llama-31-8b-instruct)
+   - [GLM-5.3-Flash](#22-glm-53-flash)
+   - [MiniMax-M3.1-Flash](#23-minimax-m31-flash)
+   - [Qwen3.8 27B](#24-qwen38-27b)
+   - [Llama 3.1 8B Instruct](#25-llama-31-8b-instruct)
 3. [Building and Running](#3-building-and-running)
    - [Dev Mode](#31-dev-mode)
    - [Packaging as a JAR](#32-packaging-as-a-jar)
@@ -401,7 +402,63 @@ are slower until it finishes, and the host needs about 190 GB of free page cache
 is in use after loading; CUDA graphs add 0.1-1.5 GB each (captured on first use of a batch size or row count, 0.3-3 s). Other switches: `SMILE_DS_GRAPH=0` (eager decode, much slower), `SMILE_FUSED_OPS=0`, `SMILE_DS_ATTN_GEMM=0`
 (per-head attention kernels in prefill), `SMILE_DS_MAX_GRAPH_BATCH` (largest decode graph, default 128).
 
-### 2.2 MiniMax-M3.1-Flash
+### 2.2 GLM-5.3-Flash
+
+GLM-5.3-Flash (a 321B FP8 checkpoint: hybrid Kimi-Delta-Attention (KDA) and sparse-MLA layers with a top-k indexer, hyper-connections
+(mHC), a MoE with 288 routed experts and a shared expert, a vision tower and an MTP layer) runs on 8 A100 80 GB in one
+JVM, one thread per GPU: attention and dense weights are tensor-parallel, the routed experts are split over the GPUs (TP8 + EP8) and
+run as weight-only FP8 with the Marlin MoE kernel (no FP8 tensor cores needed). Decode, the speculative verify window and the MTP
+draft are CUDA graphs. Loading takes about 55 s and leaves about 37.7 GB free on each GPU for the KV caches and snapshots.
+The model is served as `GLM-5.3-Flash` (`smile.chat.model=zai-org/GLM-5.3-Flash` or a local directory).
+
+Decode, through the HTTP API (8x A100 80 GB, `smile.chat.max-batch-size=32`, temperature 0.6, 256-token essays, all requests
+started together, warm graphs; aggregate tok/s with prefill and request handling included):
+
+| Concurrent requests | Plain decode | MTP speculation (3 drafts) | Speedup |
+|---|---|---|---|
+| 1 | 66 tok/s | **95 tok/s** | 1.44x |
+| 8 | 325 tok/s | **475 tok/s** | 1.46x |
+| 16 | 519 tok/s | **681 tok/s** | 1.31x |
+| 32 | 787 tok/s | **906 tok/s** | 1.15x |
+
+A plain decode step takes 13.6 ms for one sequence, 19.1 ms for 8 and 25.6 ms for 32. Speculation uses the checkpoint's MTP layer:
+it drafts 3 tokens per round, the target verifies them in one CUDA-graph window and keeps the longest matching prefix, so the output
+distribution is unchanged (greedy output can differ from plain decoding at bf16 near-ties). It is **off by default**: the MTP layer is
+loaded only with `-Dsmile.glm.speculative=true` (or `SMILE_GLM_MTP=1`), and `smile.chat.speculative=true` turns it on
+(`smile.chat.speculative-tokens` sets the drafts, default 3). Up to 32 requests speculate at once; the graphs are captured at start-up.
+
+Prefill and long context (same machine):
+
+| | |
+|---|---|
+| 2048-token chunk at 32k context | **321 ms** (about 6.4k prompt tok/s; 620 ms before the prefill kernels below) |
+| 115k-token prompt through HTTP | **10.8 s** (73 s before) |
+| Needle-in-a-haystack, 12 positions up to 115k tokens | 12/12 retrieved |
+| Image prompt (7,951 tokens), first request | about 11 s (fp32 vision tower about 7 s, CPU decode and resize about 1 s) |
+| Same image, another question | 2.6 s |
+| Same image and question | 1.8 s |
+
+The prefill speed comes from a tensor-core single-pass kernel for the sparse latent attention (7.6 -> 3.2 ms per layer), a two-kernel
+KDA prep and scan, a bf16x3 tensor-core GEMM for the router and hyper-connection projections (fp32 accuracy), and a fused MoE
+top-k combine. A 524k-token prompt also completes (348 s, measured before these kernels; memory is tight at that length with 4 slots).
+Prefix reuse keeps whole-request snapshots per GPU (KDA state plus the sparse-attention caches, `-Dsmile.glm.prefix.cache.mb`,
+default 4096; `-Dsmile.glm.prefix.min.tokens`, default 512); the KDA state cannot be rewound, so a prompt resumes from the longest
+stored snapshot that is a prefix of it. Image prompts take part: the cache key replaces each image by an id derived from its pixels,
+and every GPU keeps an LRU of encoded images, so a follow-up turn skips the vision tower.
+
+Fidelity against an fp32 Hugging Face reference: 98-99.8 % on short prompts (two runs of the same code differ by 97.7-99.8 %) and
+99.5-99.7 % on long ones; the HTTP suite (plain and multi-turn chat, tools with a tool-result round trip, streaming, 16 concurrent requests, a
+6.5k-token retrieval prompt) passes.
+
+Notes and switches:
+- `smile.chat.prefill-token-budget` defaults to 2048 rows per scheduler tick (about 320 ms during which decode waits); 4096 prefills
+  long prompts about 10 % faster but each tick takes about 580 ms.
+- About 64 ms of a 320 ms chunk is waiting at the 90 all-reduces; neither expert load balancing (at most about 2 %) nor a bf16
+  all-reduce (2.5 %, but it rounds the partial sums) was worth it.
+- `SMILE_GLM_GRAPH=0` (eager decode), `SMILE_GLM_MTP_WINDOW=0` (verify without the one-replay MTP absorb), `GLM_ATTEND_TC=0` and
+  `GLM_X3_GEMM=0` (earlier prefill attention and GEMM), `SMILE_KDA_ONE_PASS=1` (single-kernel KDA prefill).
+
+### 2.3 MiniMax-M3.1-Flash
 
 MiniMax-M3.1-Flash ships a small draft model (`dspark/`, 2.3 GB) that proposes 7 tokens per round; the target verifies them in one
 CUDA-graph forward and keeps the longest matching prefix, so the output distribution is unchanged (greedy output can differ from
@@ -429,7 +486,7 @@ The draft is only loaded when `smile.chat.speculative=true`. It costs about 3 GB
 (on 40 GB cards 0.92 worked without the vision tower; with `speculative=false` nothing is loaded and the old settings apply). Other knobs: `SMILE_MINIMAX_DSPARK_SNAPSHOTS` (draft contexts kept for prefix
 reuse, default 8), `SMILE_MINIMAX_SPARSE_KERNEL=0` (reference attention path, slower).
 
-### 2.3 Qwen3.8 27B
+### 2.4 Qwen3.8 27B
 
 Qwen3.5/3.8 checkpoints ship a native multi-token-prediction (MTP) head. With
 `smile.chat.speculative=true` the engine drafts `speculative-tokens` tokens with
@@ -477,7 +534,7 @@ Notes:
   original recurrent kernel and `SMILE_FUSED_OPS=0` disables all fused elementwise kernels (A/B and debugging only).
 - With MTP the draft depth matters little: 2 / 3 / 4 / 5 drafts gave 65 / 72 / 74 / 73 tok/s on a 3-prompt set.
 
-### 2.4 Llama 3.1 8B Instruct
+### 2.5 Llama 3.1 8B Instruct
 
 | Checkpoint | Weight path | Step | Aggregate | Step time | Forward / sample |
 |---|---|---|---|---|---|
@@ -1488,8 +1545,8 @@ There are therefore two ways to run a chat model:
 
 ### 7.1 Supported Models
 
-The native path covers **Llama-3.1**, **Qwen3.5/3.8**, **MiniMax-M3 / M3.1-Flash**, and
-**DeepSeek-V4.1** checkpoints (see
+The native path covers **Llama-3.1**, **Qwen3.5/3.8**, **MiniMax-M3 / M3.1-Flash**,
+**DeepSeek-V4.1**, and **GLM-5.3-Flash** checkpoints (see
 [§2](#2-llm-decode-benchmarks) for benchmarks and
 [deep/LLM.md](../deep/LLM.md) for the implementation). Every other family is
 served through ONNX Runtime GenAI and requires only a GenAI-ready package —
