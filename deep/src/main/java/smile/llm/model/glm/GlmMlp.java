@@ -145,7 +145,8 @@ final class GlmMlp {
         if (marlin != null) {
             // the routed experts' partial sum and the shared expert's partial sum ride one all-reduce
             Tensor xb = x.dtype() == ScalarType.BFloat16 ? x : x.to(ScalarType.BFloat16);       // converted once for both
-            return allReduce(add(marlin.forward(xb, r[0], r[1]), swiglu(xb, wGate, wUp, wDown)));
+            Tensor shared = f32(swiglu(xb, wGate, wUp, wDown));
+            return allReduce(marlin.forward(xb, r[0], r[1], shared));
         }
         long[] idx = host(r[0].to(ScalarType.Int64)).longArray();
         float[] w = host(r[1]).floatArray();

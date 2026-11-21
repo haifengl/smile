@@ -436,6 +436,11 @@ public final class Native {
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
                         ValueLayout.ADDRESS, ValueLayout.ADDRESS)))
                 .orElse(null);
+        static final java.util.Optional<MemorySegment> MOE_SUM_TOPK_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_moe_sum_topk");
+        static final MethodHandle MOE_SUM_TOPK = MOE_SUM_TOPK_SYM
+                .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
+                        ValueLayout.ADDRESS, ValueLayout.JAVA_LONG, ValueLayout.ADDRESS)))
+                .orElse(null);
         static final java.util.Optional<MemorySegment> GLM_SWIGLU_SYM = smile_torch_h.SYMBOL_LOOKUP.find("smile_glm_swiglu");
         static final MethodHandle GLM_SWIGLU = GLM_SWIGLU_SYM
                 .map(s -> LINKER.downcallHandle(s, FunctionDescriptor.of(ValueLayout.ADDRESS,
@@ -1805,6 +1810,23 @@ public final class Native {
      */
     public static Tensor f32GemmX3(Tensor a, Tensor w) {
         return mlaResult(Bindings.F32_GEMM_X3, "smile_f32_gemm_x3", a.handle(), w.handle());
+    }
+
+    /**
+     * MoE combine: the sum of the {@code topk} expert rows of every token, straight from the bf16 outputs, plus an optional
+     * fp32 {@code extra} (the shared expert).
+     *
+     * @param down  bfloat16 {@code [n * topk, dim]}, token-major.
+     * @param topk  expert rows per token.
+     * @param extra float32 {@code [n, dim]} added to the sum, or {@code null}.
+     * @return float32 {@code [n, dim]}, or {@code null} when the native library has no such kernel.
+     */
+    public static Tensor moeSumTopk(Tensor down, int topk, Tensor extra) {
+        MethodHandle handle = Bindings.MOE_SUM_TOPK;
+        if (handle == null) {
+            return null;
+        }
+        return mlaResult(handle, "smile_moe_sum_topk", down.handle(), (long) topk, extra == null ? MemorySegment.NULL : extra.handle());
     }
 
     /** Whether {@link #f32GemmBf16x3} is available. */
