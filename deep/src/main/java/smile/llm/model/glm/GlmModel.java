@@ -1064,6 +1064,75 @@ public final class GlmModel implements AutoCloseable {
         return keep(visionTower.forward(pixels, grids));
     }
 
+    /** Encoded images of this rank by content key, least recently used first (only this rank's thread touches it). */
+    private final java.util.LinkedHashMap<String, Tensor> featureCache = new java.util.LinkedHashMap<>(16, 0.75f, true);
+    private long featureCacheBytes;
+    private long featureCacheHits;
+    private long featureCacheMisses;
+    /** Device bytes of encoded images kept per rank ({@code -Dsmile.glm.vision.cache.mb}, 0 = no cache). */
+    private static final long FEATURE_CACHE_BUDGET = Long.getLong("smile.glm.vision.cache.mb", 512L) << 20;
+
+    /**
+     * The vision features of a prompt's images, encoding only the images this rank has not encoded before (a follow-up
+     * turn repeats its images, and a long prompt prefills in several chunks that all need the features).
+     *
+     * @param va     the vision arguments.
+     * @param pixels patch rows of all images {@code [N, C * P * P]} (CPU float32).
+     * @param grids  one grid per image.
+     * @param keys   one content key per image.
+     * @return the features of all images back to back {@code [N / merge^2, dim]} float32 (the caller closes them).
+     */
+    Tensor imageFeatures(GlmVisionArgs va, Tensor pixels, int[][] grids, String[] keys) {
+        if (FEATURE_CACHE_BUDGET <= 0 || keys == null || keys.length != grids.length) {
+            return encodeImages(va, pixels, grids);
+        }
+        if (visionTower == null) {
+            visionTower = new GlmVisionTower(va, ck);
+        }
+        Tensor[] parts = new Tensor[grids.length];
+        long row = 0;
+        for (int i = 0; i < grids.length; i++) {
+            long patches = (long) grids[i][0] * grids[i][1] * grids[i][2];
+            Tensor f = featureCache.get(keys[i]);
+            if (f == null) {
+                Tensor px = o("aten::contiguous", narrow(pixels, 0, row, patches));
+                f = keep(visionTower.forward(px, new int[][]{grids[i]}));
+                featureCache.put(keys[i], f);
+                featureCacheBytes += bytesOf(f);
+                featureCacheMisses++;
+            } else {
+                featureCacheHits++;
+            }
+            parts[i] = f;
+            row += patches;
+        }
+        Tensor all = keep(parts.length == 1 ? o("aten::clone", parts[0]) : cat(0, parts));
+        // evict least recently used images until the budget holds (this call's own images are the most recent, and `all` is
+        // a copy, so even an image larger than the budget is simply not kept)
+        var it = featureCache.entrySet().iterator();
+        while (featureCacheBytes > FEATURE_CACHE_BUDGET && it.hasNext()) {
+            var e = it.next();
+            featureCacheBytes -= bytesOf(e.getValue());
+            e.getValue().close();
+            it.remove();
+        }
+        return all;
+    }
+
+    private static long bytesOf(Tensor t) {
+        long n = 4;
+        for (long d : t.shape()) {
+            n *= d;
+        }
+        return n;
+    }
+
+    /** Hits, misses and bytes of this rank's image feature cache. */
+    String featureCacheStats() {
+        return featureCache.size() + " images, " + featureCacheBytes / (1 << 20) + " MB, " + featureCacheHits + " hits, "
+                + featureCacheMisses + " misses";
+    }
+
     private Session pad;
 
     /**
