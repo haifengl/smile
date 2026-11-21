@@ -878,10 +878,26 @@ public class ChatService implements OpenAiModelContributor {
                             mm, maxGenLen, request.temperature, request.topP,
                             request.logprobs, request.seed, listener, chatOptions,
                             speculative, speculativeTokens);
+                } else if (model instanceof smile.llm.model.glm.Glm glm && glm.isMultimodal()) {
+                    smile.llm.model.glm.GlmMultimodal mm;
+                    try {
+                        mm = glm.processMultimodal(messages, chatOptions);
+                    } catch (IllegalArgumentException e) {
+                        throw new jakarta.ws.rs.BadRequestException(e.getMessage(), e);
+                    } catch (java.io.IOException e) {
+                        // an unreadable, undecodable or missing image is the client's problem
+                        throw new jakarta.ws.rs.BadRequestException("cannot read media: " + e.getMessage(), e);
+                    }
+                    int maxGenLen = request.resolveMaxTokens(model.maxSeqLen(), mm.inputIds().length);
+                    promptLen = mm.inputIds().length;
+                    genReq = smile.llm.engine.GenerationRequest.ofMultimodal(
+                            mm, maxGenLen, request.temperature, request.topP,
+                            request.logprobs, request.seed, listener, chatOptions,
+                            speculative, speculativeTokens);
                 } else if (!(model instanceof Qwen qwen) || !qwen.isMultimodal()) {
                     // A client error (HTTP 400), not a server failure: this model is text-only.
                     throw new jakarta.ws.rs.BadRequestException(
-                            "Multimodal content requires a vision checkpoint (Qwen3.8 or MiniMax-M3 with its "
+                            "Multimodal content requires a vision checkpoint (Qwen3.8, MiniMax-M3 or GLM-5.3 with its "
                                     + "vision weights) or a GenAI multimodal model; model '" + modelId
                                     + "' is text-only");
                 } else {
