@@ -18,11 +18,12 @@
 import React, { memo, useCallback, useEffect, useId, useRef, useState } from 'react'
 import mermaid from 'mermaid'
 import { downloadMermaidDiagram } from '../mermaidExport.js'
+import { useTheme } from '../../shared/useTheme'
 import './MermaidDiagram.css'
 
-let mermaidReady = false
+let initializedTheme = null
 
-/** Completed diagrams keyed by chart source — survives remounts while streaming. */
+/** Completed diagrams keyed by `${theme}:${source}` — survives remounts while streaming. */
 const svgCache = new Map()
 
 const DOWNLOAD_FORMATS = [
@@ -31,17 +32,17 @@ const DOWNLOAD_FORMATS = [
   { id: 'pdf', label: 'PDF' },
 ]
 
-function ensureMermaid() {
-  if (mermaidReady) return
+function ensureMermaid(mermaidTheme) {
+  if (initializedTheme === mermaidTheme) return
   mermaid.initialize({
     startOnLoad: false,
     securityLevel: 'strict',
-    theme: 'neutral',
-    fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+    theme: mermaidTheme,
+    fontFamily: '"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif',
     // Avoid injecting "Syntax error in text" SVGs into the document.
     suppressErrorRendering: true,
   })
-  mermaidReady = true
+  initializedTheme = mermaidTheme
 }
 
 /**
@@ -125,16 +126,20 @@ function MermaidDownloadMenu({ svg, diagramElement, onClose }) {
 
 /**
  * Renders a {@code ```mermaid} fenced code block as an SVG diagram.
- * Once a chart source has been rendered successfully it is locked/cached so
- * later stream tokens (outside the fence) do not re-trigger Mermaid.
+ * Once a chart source has been rendered successfully for the active theme it
+ * is locked/cached so later stream tokens (outside the fence) do not
+ * re-trigger Mermaid, while toggling Light/Dark re-renders in the matching theme.
  *
  * @param {{ chart: string, streaming?: boolean }} props
  */
 function MermaidDiagram({ chart, streaming = false }) {
+  const { isDark } = useTheme()
+  const mermaidTheme = isDark ? 'dark' : 'neutral'
   const reactId = useId().replace(/:/g, '')
   const source = (chart ?? '').trim()
-  const lockedSourceRef = useRef('')
-  const [svg, setSvg] = useState(() => (source ? svgCache.get(source) ?? '' : ''))
+  const cacheKey = source ? `${mermaidTheme}:${source}` : ''
+  const lockedKeyRef = useRef('')
+  const [svg, setSvg] = useState(() => (cacheKey ? svgCache.get(cacheKey) ?? '' : ''))
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -144,27 +149,26 @@ function MermaidDiagram({ chart, streaming = false }) {
 
   useEffect(() => {
     if (!source) {
-      lockedSourceRef.current = ''
+      lockedKeyRef.current = ''
       setSvg('')
       setError('')
       setPending(false)
       return undefined
     }
 
-    // Already rendered this exact chart — reuse cache / lock; skip Mermaid.
-    const cached = svgCache.get(source)
+    const cached = svgCache.get(cacheKey)
     if (cached) {
-      lockedSourceRef.current = source
+      lockedKeyRef.current = cacheKey
       setSvg(cached)
       setError('')
       setPending(false)
       return undefined
     }
-    if (lockedSourceRef.current === source) {
+    if (lockedKeyRef.current === cacheKey) {
       return undefined
     }
 
-    ensureMermaid()
+    ensureMermaid(mermaidTheme)
     const gen = ++renderGen.current
     let cancelled = false
 
@@ -180,12 +184,14 @@ function MermaidDiagram({ chart, streaming = false }) {
         }
       }
 
+      // Re-apply theme right before render in case another instance initialized differently.
+      ensureMermaid(mermaidTheme)
       const renderId = `mermaid-${reactId}-${gen}`
       try {
         const { svg: rendered } = await mermaid.render(renderId, source)
         if (cancelled || gen !== renderGen.current) return
-        svgCache.set(source, rendered)
-        lockedSourceRef.current = source
+        svgCache.set(cacheKey, rendered)
+        lockedKeyRef.current = cacheKey
         setSvg(rendered)
         setError('')
         setPending(false)
@@ -205,7 +211,7 @@ function MermaidDiagram({ chart, streaming = false }) {
     return () => {
       cancelled = true
     }
-  }, [source, reactId, streaming])
+  }, [source, cacheKey, mermaidTheme, reactId, streaming])
 
   if (pending || (streaming && !svg && !error)) {
     return (

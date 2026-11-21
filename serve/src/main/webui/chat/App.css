@@ -21,11 +21,13 @@
   overflow: hidden;
   text-align: center;
   box-sizing: border-box;
+  background: var(--bg-base);
+  color: var(--text);
 }
 
 .chat-app--standalone {
   width: 100%;
-  max-width: 800px;
+  max-width: 880px;
   height: 100%;
   margin: 0 auto;
 }
@@ -35,43 +37,11 @@
   min-height: 0;
 }
 
-.logo {
-  height: 4em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
 .bot-select select {
-  font-size: 24px;
-  background-color: #f3f4f6;
+  font-size: 1rem;
+  font-family: var(--font-sans);
+  background-color: var(--bg-elevated);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.5rem;
 }

@@ -26,12 +26,12 @@ import './MessageInput.css'
 
 const ACCEPT = 'image/*,video/*,audio/*,.txt,.md,.csv,.json,text/plain'
 
-function PlusIcon({ color }) {
+function PlusIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true">
       <path
         d="M12 5v14M5 12h14"
-        stroke={color}
+        stroke="currentColor"
         strokeWidth="2.2"
         strokeLinecap="round"
       />
@@ -44,7 +44,7 @@ export default function MessageInput({
     conversationId,
     disabled = false,
     placeholder = 'Send a message...',
-    theme = '#8dd4e8'
+    theme = 'var(--accent)'
 }) {
     const [text, setText] = useState('')
     const [submit, setSubmit] = useState(false)
@@ -257,7 +257,7 @@ export default function MessageInput({
                     }}
                 />
                 <div className="input-container">
-                    <div className="input-background" style={{ backgroundColor: theme }}/>
+                    <div className="input-background" />
                     <button
                         type="button"
                         className="upload-button"
@@ -266,7 +266,7 @@ export default function MessageInput({
                         title="Upload files"
                         aria-label="Upload files"
                     >
-                        <PlusIcon color={canAttach ? '#374151' : '#9ca3af'} />
+                        <PlusIcon />
                     </button>
                     <div className="input-element-container">
                         <textarea

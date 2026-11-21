@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010-2025 Haifeng Li. All rights reserved.
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
  *
  * SMILE Serve is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
@@ -16,19 +16,26 @@
  * <https://www.gnu.org/licenses/>.
  */
 import React from 'react'
+import ThemeToggle from '../../shared/ThemeToggle'
 import './ChatHeader.css'
 
 export default function ChatHeader({
     logo,
-    title
+    title,
+    showThemeToggle = false,
 }) {
     return (
         <div className="chat-header">
             <div className="inner-container">
                 <div className="heading-container">
-                    <img src={logo} height='32px' />
+                    <img src={logo} alt="" className="chat-header__logo" height="28" />
                     <div className="title">{title}</div>
                 </div>
+                {showThemeToggle && (
+                    <div className="chat-header__actions">
+                        <ThemeToggle />
+                    </div>
+                )}
             </div>
         </div>
     )

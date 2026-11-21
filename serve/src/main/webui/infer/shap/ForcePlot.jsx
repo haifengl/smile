@@ -142,8 +142,8 @@ export default function ForcePlot({
         <div>
           <h4 className="shap-plot-title">Force Plot</h4>
           <p className="shap-plot-subtitle">
-            <span style={{ color: "#ff0051", fontWeight: 600 }}>higher (red)</span> vs{" "}
-            <span style={{ color: "#008bfb", fontWeight: 600 }}>lower (blue)</span> forces balancing at{" "}
+            <span className="shap-legend-pos">higher (red)</span> vs{" "}
+            <span className="shap-legend-neg">lower (blue)</span> forces balancing at{" "}
             <span className="shap-badge-pred">{formatShapNumber(predictionValue)}</span>
           </p>
         </div>
@@ -163,8 +163,7 @@ export default function ForcePlot({
             y1={barY + barHeight + 20}
             x2={width - marginRight}
             y2={barY + barHeight + 20}
-            stroke="#cbd5e1"
-            strokeWidth="1"
+            className="shap-wf-axis"
           />
           {ticks.map((tick, i) => {
             const x = scaleX(tick);
@@ -175,8 +174,7 @@ export default function ForcePlot({
                   y1={barY + barHeight + 20}
                   x2={x}
                   y2={barY + barHeight + 26}
-                  stroke="#94a3b8"
-                  strokeWidth="1"
+                  className="shap-wf-axis"
                 />
                 <text
                   x={x}
@@ -196,9 +194,7 @@ export default function ForcePlot({
             y1={barY - 15}
             x2={baseX}
             y2={barY + barHeight + 15}
-            stroke="#64748b"
-            strokeWidth="1.5"
-            strokeDasharray="3, 3"
+            className="shap-wf-base-line"
           />
           <text
             x={baseX}
@@ -222,9 +218,7 @@ export default function ForcePlot({
                   y={barY}
                   width={w}
                   height={barHeight}
-                  fill="#ff0051"
-                  stroke="#ffffff"
-                  strokeWidth="0.5"
+                  className="shap-force-block-pos"
                   onMouseEnter={(e) => {
                     setTooltip({
                       x: e.clientX,
@@ -235,7 +229,6 @@ export default function ForcePlot({
                   onMouseMove={(e) => {
                     setTooltip((prev) => (prev ? { ...prev, x: e.clientX, y: e.clientY } : null));
                   }}
-                  style={{ cursor: "pointer" }}
                 />
                 {w > 40 && (
                   <text
@@ -244,7 +237,7 @@ export default function ForcePlot({
                     textAnchor="middle"
                     fill="#ffffff"
                     fontSize="11"
-                    fontWeight="500"
+                    fontWeight="600"
                     pointerEvents="none"
                   >
                     {block.name.length > 8 ? `${block.name.slice(0, 7)}…` : block.name}
@@ -266,9 +259,7 @@ export default function ForcePlot({
                   y={barY}
                   width={w}
                   height={barHeight}
-                  fill="#008bfb"
-                  stroke="#ffffff"
-                  strokeWidth="0.5"
+                  className="shap-force-block-neg"
                   onMouseEnter={(e) => {
                     setTooltip({
                       x: e.clientX,
@@ -279,7 +270,6 @@ export default function ForcePlot({
                   onMouseMove={(e) => {
                     setTooltip((prev) => (prev ? { ...prev, x: e.clientX, y: e.clientY } : null));
                   }}
-                  style={{ cursor: "pointer" }}
                 />
                 {w > 40 && (
                   <text
@@ -288,7 +278,7 @@ export default function ForcePlot({
                     textAnchor="middle"
                     fill="#ffffff"
                     fontSize="11"
-                    fontWeight="500"
+                    fontWeight="600"
                     pointerEvents="none"
                   >
                     {block.name.length > 8 ? `${block.name.slice(0, 7)}…` : block.name}
@@ -301,22 +291,21 @@ export default function ForcePlot({
           {/* Equilibrium Output Value Marker (Center pointer triangle) */}
           <polygon
             points={`${predX - 6},${barY - 8} ${predX + 6},${barY - 8} ${predX},${barY}`}
-            fill="#111827"
+            className="shap-wf-pred-text"
           />
           <line
             x1={predX}
             y1={barY}
             x2={predX}
             y2={barY + barHeight + 5}
-            stroke="#111827"
+            className="shap-wf-pred-line"
             strokeWidth="2"
           />
           <text
             x={predX}
             y={barY - 14}
             textAnchor="middle"
-            fill="#111827"
-            fontWeight="700"
+            className="shap-wf-pred-text"
             fontSize="13"
           >
             f(x) = {formatShapNumber(predictionValue)}
