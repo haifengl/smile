@@ -38,6 +38,14 @@ final class GlmWindowGraph {
     private Tensor hidden;
     private Tensor logits;
     private MemorySegment graph;
+    /** The MTP layer over the same window (absorbs the kept rows into the MTP caches in one replay), or null. */
+    private GlmWindow mtpWindow;
+    private Tensor mtpOut;
+    private Tensor mtpNext;
+    private MemorySegment mtpGraph;
+
+    /** {@code SMILE_GLM_MTP_WINDOW=0} keeps the sequential single-row MTP passes for the absorb. */
+    private static final boolean MTP_WINDOW = !"0".equals(System.getenv("SMILE_GLM_MTP_WINDOW"));
 
     private GlmWindowGraph(GlmModel model, int nb, int rows, long maxPools) {
         this.model = model;
@@ -73,7 +81,73 @@ final class GlmWindowGraph {
         }
         g.hidden.detachFromScopes();
         g.logits.detachFromScopes();
+        if (MTP_WINDOW && model.hasMtp()) {
+            g.captureMtp(maxPools, deviceIndex, barrier);
+        }
         return g;
+    }
+
+    private void captureMtp(long maxPools, int deviceIndex, java.util.concurrent.CyclicBarrier barrier) throws Exception {
+        mtpWindow = model.newMtpWindow(nb, rows, maxPools);
+        model.fillMtpWindow(mtpWindow, new GlmModel.Session[0], new int[0][]);
+        try (var guard = Tensor.noGradGuard()) {
+            Tensor[] warm = scopedAll(() -> model.mtpWindowBody(mtpWindow, hidden));
+            Aten.one("aten::sum", warm[0]).doubleValue();
+            for (Tensor t : warm) {
+                t.close();
+            }
+            if (barrier != null) {
+                barrier.await(5, java.util.concurrent.TimeUnit.MINUTES);
+            }
+            mtpGraph = Native.cudaGraphCreate();
+            Native.cudaGraphCaptureBegin(mtpGraph, deviceIndex);
+            Tensor[] out;
+            try {
+                out = scopedAll(() -> model.mtpWindowBody(mtpWindow, hidden));
+            } finally {
+                Native.cudaGraphCaptureEnd(mtpGraph);
+            }
+            mtpOut = out[0];
+            mtpNext = out[1];
+        }
+        mtpOut.detachFromScopes();
+        mtpNext.detachFromScopes();
+    }
+
+    /** Whether {@link #absorb} is available (the MTP layer is loaded and its window graph was captured). */
+    boolean hasMtpWindow() {
+        return mtpGraph != null;
+    }
+
+    /**
+     * After {@link #commit}: absorbs the kept rows of every request into its MTP cache in one replay (slot
+     * {@code mtp.length + j} takes the token {@code emitted[i][j]} and the main hidden row {@code j} of the window), and
+     * stores each request's MTP hidden row and first draft of the next round (the output of its last kept row).
+     *
+     * @param sess    the requests of the replay.
+     * @param emitted the tokens kept per request ({@code emitted[i].length} rows are kept).
+     */
+    void absorb(GlmModel.Session[] sess, int[][] emitted) {
+        int b = sess.length;
+        int[][] tokens = new int[b][rows];
+        int[] accept = new int[b];
+        for (int i = 0; i < b; i++) {
+            accept[i] = emitted[i].length;
+            System.arraycopy(emitted[i], 0, tokens[i], 0, accept[i]);
+        }
+        model.fillMtpWindow(mtpWindow, sess, tokens);
+        Native.cudaGraphReplay(mtpGraph);
+        model.commitMtpWindow(mtpWindow, sess, accept);
+        long[] vals;
+        try (Tensor next = Aten.one("aten::clone", narrow(mtpNext, 0, 0, (long) b * rows));
+             Tensor cpu = next.to(smile.deep.tensor.Device.CPU())) {
+            vals = cpu.longArray();
+        }
+        for (int i = 0; i < b; i++) {
+            int row = i * rows + accept[i] - 1;
+            model.setMtpHiddenFrom(sess[i], mtpOut, row);
+            model.setNextDraft(sess[i], (int) vals[row]);
+        }
     }
 
     /**
@@ -89,8 +163,10 @@ final class GlmWindowGraph {
         long t1 = System.nanoTime();
         Native.cudaGraphReplay(graph);
         long t2 = System.nanoTime();
-        for (int i = 0; i < sess.length; i++) {
-            model.keepPending(sess[i], narrow(hidden, 0, (long) i * rows, rows));
+        if (mtpGraph == null) {
+            for (int i = 0; i < sess.length; i++) {
+                model.keepPending(sess[i], narrow(hidden, 0, (long) i * rows, rows));
+            }
         }
         Tensor out = Aten.one("aten::clone", narrow(logits, 0, 0, (long) sess.length * rows));
         long t3 = System.nanoTime();
@@ -124,10 +200,17 @@ final class GlmWindowGraph {
             Native.cudaGraphDestroy(graph);
             graph = null;
         }
-        for (Tensor t : new Tensor[]{hidden, logits}) {
+        if (mtpGraph != null) {
+            Native.cudaGraphDestroy(mtpGraph);
+            mtpGraph = null;
+        }
+        for (Tensor t : new Tensor[]{hidden, logits, mtpOut, mtpNext}) {
             if (t != null) {
                 t.close();
             }
+        }
+        if (mtpWindow != null) {
+            mtpWindow.close();
         }
         window.close();
     }

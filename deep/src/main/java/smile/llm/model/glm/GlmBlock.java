@@ -286,6 +286,27 @@ final class GlmBlock {
         return expand(f[0], f[1], mlp.forward(y, null), mid);
     }
 
+    /**
+     * The MTP layer over a verify window of {@code rows} consecutive rows per request on device tensors only (CUDA-graph
+     * capture): {@code r = x + attn(norm(x)); r + mlp(norm(r))}, the attention appending the window to the MTP caches.
+     *
+     * @param x {@code [B * rows, dim]} the projected input rows.
+     * @param w a window made for this block alone (one MLA layer).
+     * @return {@code [B * rows, dim]}.
+     */
+    Tensor forwardPlainWindow(Tensor x, GlmWindow w) {
+        Tensor attn = mla.forwardWindow(rms(x, inputNorm, args.normEps()), narrow(w.req, 0, 0, 3), narrow(w.rowPtrs, 0, 0, 2),
+                w.lensReq, w.lensRow, w.maxPools, w.rows, w.keySave[0], w.gateSave[0]);
+        Tensor r = add(f32(x), f32(attn));
+        Tensor ffn = mlp.forward(rms(r, postNorm, args.normEps()), null);
+        return add(r, f32(ffn));
+    }
+
+    /** Keeps the accepted rows of the last {@link #forwardPlainWindow}: the MLA ring. */
+    void windowCommitPlain(GlmWindow w) {
+        smile.torch.Native.mlaWindowCommit(w.keySave[0], w.gateSave[0], o("aten::select.int", w.req, 0L, 2L), w.lensReq, w.accept, w.rows);
+    }
+
     /** Keeps the accepted rows of the last {@link #forwardWindow}: KDA state or the MLA ring. */
     void windowCommit(GlmWindow w) {
         if (kda != null) {

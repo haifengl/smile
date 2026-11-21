@@ -750,12 +750,17 @@ public final class GlmModel implements AutoCloseable {
 
     /** MTP cache addresses {@code [3, nb]} flattened (latent, pooled key, ring); the unused rows use the padding session. */
     long[] mtpTables(Session[] rows, int nb) {
+        return mtpTables(rows, nb, 1);
+    }
+
+    /** As {@link #mtpTables(Session[], int)}, making room for {@code extra} more MTP slots per request. */
+    long[] mtpTables(Session[] rows, int nb, int extra) {
         Session pad = padSession();
         long[] out = new long[3 * nb];
         for (int i = 0; i < nb; i++) {
             GlmMla.State st = i < rows.length ? rows[i].mtp : pad.mtp;
             if (i < rows.length) {
-                GlmBlock.reserve(st);
+                GlmBlock.reserve(st, extra);
             }
             long[] one = new long[3 * nb];
             GlmBlock.addresses(st, one, i, nb);
@@ -1140,6 +1145,73 @@ public final class GlmModel implements AutoCloseable {
      */
     GlmWindow newWindow(int b, int rows, long maxPools) {
         return new GlmWindow(blocks, mlaLayerCount(), b, rows, maxPools);
+    }
+
+    /** The inputs and saved buffers of an MTP window graph (the MTP layer is the window's only MLA layer). */
+    GlmWindow newMtpWindow(int b, int rows, long maxPools) {
+        return new GlmWindow(new GlmBlock[]{mtpBlock}, 1, b, rows, maxPools);
+    }
+
+    /**
+     * Writes the inputs of an MTP window: slot {@code mtp.length + j} of request {@code i} takes token {@code tokens[i][j]}
+     * (the hidden rows are the verify graph's own output buffer).
+     */
+    void fillMtpWindow(GlmWindow w, Session[] sess, int[][] tokens) {
+        long[] idv = new long[w.n];
+        for (int i = 0; i < tokens.length; i++) {
+            for (int j = 0; j < w.rows; j++) {
+                idv[i * w.rows + j] = tokens[i][j];
+            }
+        }
+        int[] lens = mtpLengths(sess, w.b);
+        int[] lensRow = new int[w.n];
+        for (int i = 0; i < w.b; i++) {
+            for (int j = 0; j < w.rows; j++) {
+                lensRow[i * w.rows + j] = lens[i] + j;
+            }
+        }
+        long[] t = mtpTables(sess, w.b, w.rows);
+        long[] rp = new long[2 * w.n];
+        for (int i = 0; i < w.b; i++) {
+            for (int j = 0; j < w.rows; j++) {
+                rp[i * w.rows + j] = t[i];
+                rp[w.n + i * w.rows + j] = t[w.b + i];
+            }
+        }
+        smile.torch.Aten.call("aten::copy_", w.ids, Tensor.of(idv, w.n).to(device()), false);
+        smile.torch.Aten.call("aten::copy_", w.lensReq, Tensor.of(lens, w.b).to(device()), false);
+        smile.torch.Aten.call("aten::copy_", w.lensRow, Tensor.of(lensRow, w.n).to(device()), false);
+        smile.torch.Aten.call("aten::copy_", w.req, Tensor.of(t, 3, w.b).to(device()), false);
+        smile.torch.Aten.call("aten::copy_", w.rowPtrs, Tensor.of(rp, 2, w.n).to(device()), false);
+    }
+
+    /**
+     * The MTP layer over a verify window on device tensors only (graph body).
+     *
+     * @param w      the MTP window.
+     * @param hidden {@code [n, dim]} the main model's post-norm rows of the window (the verify graph's output buffer).
+     * @return {@code {out [n, dim], next int64 [n]}}: the post-norm MTP output and its greedy token of every row.
+     */
+    Tensor[] mtpWindowBody(GlmWindow w, Tensor hidden) {
+        Tensor e = f32(o("aten::index_select", embed, 0L, w.ids));
+        Tensor x = linear(cat(1, rms(e, enorm, args.normEps()), rms(hidden, hnorm, args.normEps())), ehProj);
+        Tensor out = rms(mtpBlock.forwardPlainWindow(f32(x), w), mtpNorm, args.normEps());
+        return new Tensor[]{out, o("aten::argmax", logits(out), -1L, false)};
+    }
+
+    /** Keeps the first {@code accept[i]} slots of the MTP window just run for request {@code i}. */
+    void commitMtpWindow(GlmWindow w, Session[] sess, int[] accept) {
+        int[] acc = new int[w.b];
+        java.util.Arrays.fill(acc, 1);
+        System.arraycopy(accept, 0, acc, 0, accept.length);
+        smile.torch.Aten.call("aten::copy_", w.accept, Tensor.of(acc, w.b).to(device()), false);
+        mtpBlock.windowCommitPlain(w);
+        for (int i = 0; i < sess.length; i++) {
+            GlmMla.State st = sess[i].mtp;
+            st.length += accept[i];
+            st.latent.setLength(st.length);
+            st.pool.setLength(st.length >> 2);
+        }
     }
 
     /**
