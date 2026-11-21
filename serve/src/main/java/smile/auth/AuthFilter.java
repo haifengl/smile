@@ -209,6 +209,10 @@ public class AuthFilter implements ContainerRequestFilter, ContainerResponseFilt
             path = path.substring("/api/v1".length());
         } else if ("/api/v1".equals(path)) {
             path = "/";
+        } else if (path.startsWith("/v1/")) {
+            path = path.substring("/v1".length());
+        } else if ("/v1".equals(path)) {
+            path = "/";
         }
         while (path.length() > 1 && path.endsWith("/")) {
             path = path.substring(0, path.length() - 1);

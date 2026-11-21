@@ -61,6 +61,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 NAME="smile-smoke-$$"
 WORK=$(mktemp -d)
 BASE="http://localhost:$PORT"
+V1="$BASE/v1"
 API="$BASE/api/v1"
 PASS=0
 FAIL=0
@@ -140,33 +141,33 @@ else
 fi
 http_status "web UI" 200 "$BASE/"
 json_check  "model list has the SMILE and ONNX models" \
-    "{'iris_random_forest-1','iris_lda-1','logreg_iris'} <= {m['id'] for m in d['data']}" "$API/models"
+    "{'iris_random_forest-1','iris_lda-1','logreg_iris'} <= {m['id'] for m in d['data']}" "$V1/models"
 json_check  "random forest prediction with SHAP" \
     "d['prediction']==2 and len(d['probabilities'])==3 and d['explanations']['shap']" \
-    -X POST -H "$JSON" -d "$SAMPLE" "$API/smile/iris_random_forest-1?explain=true"
+    -X POST -H "$JSON" -d "$SAMPLE" "$V1/smile/iris_random_forest-1?explain=true"
 json_check  "LDA prediction (native BLAS/LAPACK)" \
     "d['prediction']==2 and abs(sum(d['probabilities'])-1)<0.01" \
-    -X POST -H "$JSON" -d "$SAMPLE" "$API/smile/iris_lda-1"
+    -X POST -H "$JSON" -d "$SAMPLE" "$V1/smile/iris_lda-1"
 json_check  "LDA prediction with KernelSHAP" \
     "d['prediction']==2 and d['explanations']['shap'] and len(d['explanations']['shap'])==3" \
-    -X POST -H "$JSON" -d "$SAMPLE" "$API/smile/iris_lda-1?explain=true&samples=32&ridge=1e-6"
-json_check  "ONNX model info" "d['id']=='logreg_iris' and d['inputs'][0]['name']=='float_input'" "$API/onnx/logreg_iris"
+    -X POST -H "$JSON" -d "$SAMPLE" "$V1/smile/iris_lda-1?explain=true&samples=32&ridge=1e-6"
+json_check  "ONNX model info" "d['id']=='logreg_iris' and d['inputs'][0]['name']=='float_input'" "$V1/onnx/logreg_iris"
 json_check  "ONNX inference (ONNX Runtime)" "len(d['label'])==3" \
-    -X POST -H "$JSON" -d '{"float_input":[1,2,3,4,5,6]}' "$API/onnx/logreg_iris"
+    -X POST -H "$JSON" -d '{"float_input":[1,2,3,4,5,6]}' "$V1/onnx/logreg_iris"
 
 # --- flavor specific
 if [ "$FLAVOR" = full ]; then
     http_status "user endpoint (auth + database)" 200 "$API/users/me"
     http_status "conversation endpoint (database)" 200 "$API/conversations"
     if [ -n "$CHAT_MODEL" ]; then
-        MODEL_ID=$(curl -s "$API/models" | python3 -c "import sys,json; print(next((m['id'] for m in json.load(sys.stdin)['data'] if m['kind']=='LLM'), ''))")
+        MODEL_ID=$(curl -s "$V1/models" | python3 -c "import sys,json; print(next((m['id'] for m in json.load(sys.stdin)['data'] if m['kind']=='LLM'), ''))")
         if [ -z "$MODEL_ID" ]; then
             bad "chat model loaded" "no LLM in /models; chat model spec: $CHAT_MODEL"
         else
             REQ="{\"model\":\"$MODEL_ID\",\"messages\":[{\"role\":\"user\",\"content\":\"What is the capital of France? Answer in one short sentence.\"}],\"max_tokens\":40,\"temperature\":0"
             json_check "chat completion" "'Paris' in d['choices'][0]['message']['content']" \
-                -X POST -H "$JSON" -d "$REQ}" "$API/chat/completions"
-            CHUNKS=$(curl -sN --max-time 120 -X POST -H "$JSON" -d "$REQ,\"stream\":true}" "$API/chat/completions")
+                -X POST -H "$JSON" -d "$REQ}" "$V1/chat/completions"
+            CHUNKS=$(curl -sN --max-time 120 -X POST -H "$JSON" -d "$REQ,\"stream\":true}" "$V1/chat/completions")
             if printf '%s' "$CHUNKS" | grep -q '"content":"' && printf '%s' "$CHUNKS" | grep -q '^data:\[DONE\]'; then
                 ok "chat completion streaming"
             else
@@ -177,8 +178,8 @@ if [ "$FLAVOR" = full ]; then
 else
     http_status "no user endpoint (404)" 404 "$API/users/me"
     http_status "no conversation endpoint (404)" 404 "$API/conversations"
-    http_status "no chat endpoint (404)" 404 -X POST -H "$JSON" -d '{"model":"x","messages":[]}' "$API/chat/completions"
-    json_check  "model list has no LLM" "all(m['kind']!='LLM' for m in d['data'])" "$API/models"
+    http_status "no chat endpoint (404)" 404 -X POST -H "$JSON" -d '{"model":"x","messages":[]}' "$V1/chat/completions"
+    json_check  "model list has no LLM" "all(m['kind']!='LLM' for m in d['data'])" "$V1/models"
 fi
 
 # --- the log must be free of errors

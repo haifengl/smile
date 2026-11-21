@@ -109,7 +109,7 @@ public class ServeManagerTest {
                 .map(id -> "{\"id\":\"" + id + "\"}")
                 .reduce((a, b) -> a + "," + b)
                 .orElse("");
-        route("/api/v1/models", 200, "{\"object\":\"list\",\"data\":[" + ids + "]}");
+        route("/v1/models", 200, "{\"object\":\"list\",\"data\":[" + ids + "]}");
     }
 
     @Test

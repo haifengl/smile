@@ -27,7 +27,7 @@ import smile.model.Model;
  *
  * <p>Registered CDI beans implementing {@code ModelArtifactVerifier} are
  * invoked by {@link InferenceService} and {@link OnnxService} across startup
- * model discovery, {@code reloadModel}, and dynamic {@code POST /api/v1/models/load}
+ * model discovery, {@code reloadModel}, and dynamic {@code POST /v1/models/load}
  * <em>before</em> any payload bytes are deserialized by {@code Model.read(Path)}
  * or native {@code InferenceSession.create(String)}.
  *

@@ -36,7 +36,7 @@
     {
       "name": "SMILE",
       "provider": "chatCompletions",
-      "baseUrl": "http://localhost:8888/api/v1",
+      "baseUrl": "http://localhost:8888/v1",
       "models": []
     }
   ]

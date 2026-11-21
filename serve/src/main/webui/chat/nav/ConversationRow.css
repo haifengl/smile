@@ -20,26 +20,42 @@
   align-items: center;
   gap: 4px;
   padding: 2px 0;
-  border-radius: 6px;
+  border-radius: 0.5rem;
+  transition: background-color 0.15s ease;
+}
+
+.conv-row:hover {
+  background: var(--bg-muted);
 }
 
 .conv-row--active {
-  background: rgba(47, 164, 231, 0.12);
+  background: var(--accent-soft);
+}
+
+.conv-row--active:hover {
+  background: var(--accent-soft);
 }
 
 .conv-row__title {
   flex: 1;
   min-width: 0;
   text-align: left;
-  padding: 6px 8px;
+  padding: 0.4rem 0.55rem;
   border: none;
   background: transparent;
-  font-size: 13px;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 500;
   cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: inherit;
+  color: var(--text);
+}
+
+.conv-row--active .conv-row__title {
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .conv-row__actions {
@@ -59,26 +75,20 @@
   height: 24px;
   padding: 0;
   border: none;
-  border-radius: 4px;
+  border-radius: 0.35rem;
   background: transparent;
   cursor: pointer;
   font-size: 14px;
   line-height: 1;
-  color: inherit;
-  opacity: 0.7;
+  color: var(--text-muted);
 }
 
 .conv-row__icon:hover {
-  opacity: 1;
-  background: rgba(0, 0, 0, 0.06);
+  color: var(--text);
+  background: var(--bg-base);
 }
 
 .conv-row__icon--danger:hover {
-  color: #b00020;
-}
-
-@media (prefers-color-scheme: dark) {
-  .conv-row__icon:hover {
-    background: rgba(255, 255, 255, 0.08);
-  }
+  color: var(--status-danger);
+  background: var(--status-danger-soft);
 }

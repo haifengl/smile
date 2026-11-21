@@ -35,7 +35,7 @@ const server = {
 }
 
 const client = new OpenAI({
-  baseURL: `${window.location.origin}/api/v1`,
+  baseURL: `${window.location.origin}/v1`,
   apiKey: 'not-needed',
   dangerouslyAllowBrowser: true,
 })
@@ -393,8 +393,8 @@ export default function ChatApp({
         conversationId={conversationId}
         disabled={sending || loadingHistory}
         title={headerTitle}
+        embedded={embedded}
         placeholder={loadingHistory ? 'Loading conversation…' : 'Type prompt here'}
-        theme="#8dd4e8"
       />
     </div>
   )

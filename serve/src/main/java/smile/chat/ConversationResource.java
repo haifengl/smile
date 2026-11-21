@@ -57,7 +57,7 @@ import io.quarkus.arc.profile.UnlessBuildProfile;
  * @author Haifeng Li
  */
 @UnlessBuildProfile("micro")
-@Path("/conversations")
+@Path("/api/v1/conversations")
 @RunOnVirtualThread
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

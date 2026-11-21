@@ -1,0 +1,321 @@
+/*
+ * Copyright (c) 2010-2026 Haifeng Li. All rights reserved.
+ *
+ * SMILE Serve is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as
+ * published by the Free Software Foundation, either version 3 of the
+ * License, or (at your option) any later version.
+ *
+ * SMILE Serve is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+ * Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public
+ * License along with SMILE Serve. If not, see
+ * <https://www.gnu.org/licenses/>.
+ */
+/* Native token-driven styles for @rjsf/core forms (zero Bootstrap dependency). */
+
+.rjsf {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+.rjsf fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.rjsf fieldset fieldset {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  background: var(--bg-base);
+  margin-bottom: 0.75rem;
+}
+
+.rjsf legend {
+  display: block;
+  width: 100%;
+  margin: 0 0 0.9rem;
+  padding: 0 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.rjsf fieldset fieldset > legend {
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0.65rem;
+  color: var(--text);
+}
+
+.rjsf .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.rjsf .form-group:last-child {
+  margin-bottom: 0;
+}
+
+.rjsf .control-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.rjsf .required {
+  color: var(--status-danger);
+  font-weight: 700;
+}
+
+.rjsf .field-description,
+.rjsf .help-block {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.rjsf .form-control {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text);
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-strong);
+  border-radius: 0.5rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rjsf textarea.form-control {
+  min-height: 5.5rem;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
+
+.rjsf .form-control:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.rjsf .form-control:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.rjsf .form-control:disabled,
+.rjsf .form-control[readonly] {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.rjsf .checkbox,
+.rjsf .radio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
+}
+
+.rjsf .checkbox label,
+.rjsf .radio label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.rjsf input[type="checkbox"],
+.rjsf input[type="radio"] {
+  accent-color: var(--accent);
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Array fields */
+.rjsf .array-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.5rem;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 0.65rem;
+}
+
+.rjsf .array-item > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.rjsf .array-item-toolbox {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.rjsf .btn-group {
+  display: inline-flex;
+  gap: 0.25rem;
+}
+
+.rjsf .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.rjsf .btn:hover:not(:disabled) {
+  background: var(--bg-muted);
+  border-color: var(--accent);
+}
+
+.rjsf .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rjsf .btn-info,
+.rjsf .btn-add {
+  background: var(--accent-soft);
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  color: var(--accent);
+}
+
+.rjsf .btn-info:hover:not(:disabled),
+.rjsf .btn-add:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.rjsf .btn-danger,
+.rjsf .array-item-remove {
+  background: var(--status-danger-soft);
+  border-color: color-mix(in srgb, var(--status-danger) 30%, transparent);
+  color: var(--status-danger);
+}
+
+.rjsf .btn-danger:hover:not(:disabled),
+.rjsf .array-item-remove:hover:not(:disabled) {
+  background: var(--status-danger);
+  color: #ffffff;
+}
+
+/* Glyphicon text fallbacks so @rjsf/core array icons render clearly without Bootstrap fonts */
+.rjsf .glyphicon {
+  display: inline-block;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.rjsf .glyphicon-plus::before {
+  content: "+";
+}
+
+.rjsf .glyphicon-remove::before {
+  content: "×";
+}
+
+.rjsf .glyphicon-arrow-up::before {
+  content: "↑";
+}
+
+.rjsf .glyphicon-arrow-down::before {
+  content: "↓";
+}
+
+.rjsf .glyphicon-copy::before {
+  content: "⧉";
+}
+
+/* Validation errors */
+.rjsf .has-error .form-control {
+  border-color: var(--status-danger);
+}
+
+.rjsf .has-error .control-label,
+.rjsf .text-danger,
+.rjsf .error-detail {
+  color: var(--status-danger);
+}
+
+.rjsf .error-detail {
+  list-style: none;
+  margin: 0.3rem 0 0;
+  padding: 0;
+  font-size: 0.75rem;
+}
+
+.rjsf .panel-danger {
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.65rem;
+  background: var(--status-danger-soft);
+  border: 1px solid color-mix(in srgb, var(--status-danger) 30%, transparent);
+  color: var(--status-danger);
+  font-size: 0.8125rem;
+}
+
+.rjsf .panel-danger .panel-title {
+  margin: 0 0 0.4rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.rjsf .panel-danger ul {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.rjsf .list-group {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.rjsf .list-group-item {
+  font-size: 0.8125rem;
+}

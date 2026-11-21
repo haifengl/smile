@@ -205,6 +205,11 @@ public class OAuthAndAgentGateTest {
         authContext.setUser(msUser, false);
         assertTrue(resource.shouldRouteToKirinAgent(normalHeaders, plainRequest));
 
+        // 5b. Runtime kill-switch (smile.chat.agent.enabled=false) -> false even for OAuth user
+        resource.agentEnabled = false;
+        assertFalse(resource.shouldRouteToKirinAgent(normalHeaders, plainRequest));
+        resource.agentEnabled = true;
+
         // 6. Non-GPU build (NoOpChatAgentBridge) -> false even for OAuth user
         resource.agentBridge = new NoOpChatAgentBridge();
         assertFalse(resource.shouldRouteToKirinAgent(normalHeaders, plainRequest));

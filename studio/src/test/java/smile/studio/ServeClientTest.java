@@ -72,7 +72,7 @@ public class ServeClientTest {
     @Test
     public void testLoadModelReturnsId() throws Exception {
         // Given
-        respond("/api/v1/models/load", 200, "{\"status\":\"loaded\",\"id\":\"iris-1\"}");
+        respond("/v1/models/load", 200, "{\"status\":\"loaded\",\"id\":\"iris-1\"}");
 
         // When
         String id = client.loadModel("/models/iris.sml");
@@ -86,7 +86,7 @@ public class ServeClientTest {
     @Test
     public void testLoadModelConflictIsTreatedAsLoaded() throws Exception {
         // Given: the model id is already loaded.
-        respond("/api/v1/models/load", 409, "{\"error\":\"already loaded\"}");
+        respond("/v1/models/load", 409, "{\"error\":\"already loaded\"}");
 
         // When
         String id = client.loadModel("/models/iris.sml");
@@ -98,7 +98,7 @@ public class ServeClientTest {
     @Test
     public void testLoadModelFailureThrows() {
         // Given
-        respond("/api/v1/models/load", 400, "{\"error\":\"bad model\"}");
+        respond("/v1/models/load", 400, "{\"error\":\"bad model\"}");
 
         // When / Then
         assertThrows(IOException.class, () -> client.loadModel("/models/bad.sml"));
@@ -107,8 +107,8 @@ public class ServeClientTest {
     @Test
     public void testUnloadFallsBackToOnnx() throws Exception {
         // Given: the SMILE endpoint 404s, the ONNX endpoint succeeds.
-        respond("/api/v1/smile/squeezenet/unload", 404, "{}");
-        respond("/api/v1/onnx/squeezenet/unload", 200, "{\"status\":\"unloaded\"}");
+        respond("/v1/smile/squeezenet/unload", 404, "{}");
+        respond("/v1/onnx/squeezenet/unload", 200, "{\"status\":\"unloaded\"}");
 
         // When
         boolean unloaded = client.unloadModel("squeezenet");
@@ -220,7 +220,7 @@ public class ServeClientTest {
     @Test
     public void testListModelsParsesCatalog() {
         // Given
-        respond("/api/v1/models", 200,
+        respond("/v1/models", 200,
                 "{\"object\":\"list\",\"data\":[{\"id\":\"iris-1\"},{\"id\":\"squeezenet-1\"}]}");
 
         // When
@@ -233,7 +233,7 @@ public class ServeClientTest {
     @Test
     public void testListModelsEmptyWhenNotOk() {
         // Given
-        respond("/api/v1/models", 500, "{\"error\":\"boom\"}");
+        respond("/v1/models", 500, "{\"error\":\"boom\"}");
 
         // When / Then
         assertTrue(client.listModels().isEmpty());
@@ -251,7 +251,7 @@ public class ServeClientTest {
     @Test
     public void testLoadModelForbiddenIsDistinguishable() {
         // Given: the server refuses a non-loopback caller.
-        respond("/api/v1/models/load", 403, "{\"error\":\"localhost only\"}");
+        respond("/v1/models/load", 403, "{\"error\":\"localhost only\"}");
 
         // When / Then
         assertThrows(ServeManagementForbiddenException.class,
@@ -261,7 +261,7 @@ public class ServeClientTest {
     @Test
     public void testUnloadForbiddenIsDistinguishable() {
         // Given
-        respond("/api/v1/smile/iris-1/unload", 403, "{\"error\":\"localhost only\"}");
+        respond("/v1/smile/iris-1/unload", 403, "{\"error\":\"localhost only\"}");
 
         // When / Then
         assertThrows(ServeManagementForbiddenException.class,
@@ -271,7 +271,7 @@ public class ServeClientTest {
     @Test
     public void testReloadForbiddenIsDistinguishable() {
         // Given
-        respond("/api/v1/smile/iris-1/reload", 403, "{\"error\":\"localhost only\"}");
+        respond("/v1/smile/iris-1/reload", 403, "{\"error\":\"localhost only\"}");
 
         // When / Then
         assertThrows(ServeManagementForbiddenException.class,

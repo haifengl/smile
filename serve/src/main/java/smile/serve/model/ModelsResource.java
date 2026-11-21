@@ -36,17 +36,17 @@ import smile.serve.OnnxModel;
 import smile.serve.OnnxService;
 
 /**
- * OpenAI-compatible models API at {@code /api/v1/models}.
+ * OpenAI-compatible models API at {@code /v1/models}.
  *
  * <p>Lists and retrieves every loaded model in one catalog: chat LLMs, ONNX
  * graphs, and SMILE {@code .sml} models. Classic SMILE inference remains under
- * {@code /api/v1/smile/{id}}; ONNX inference under {@code /api/v1/onnx/{id}}.
+ * {@code /v1/smile/{id}}; ONNX inference under {@code /v1/onnx/{id}}.
  *
  * @author Haifeng Li
  * @see <a href="https://developers.openai.com/api/reference/resources/models/methods/list">OpenAI List models</a>
  * @see <a href="https://developers.openai.com/api/reference/resources/models/methods/retrieve">OpenAI Retrieve model</a>
  */
-@Path("/models")
+@Path("/v1/models")
 @RunOnVirtualThread
 @Produces(MediaType.APPLICATION_JSON)
 public class ModelsResource {

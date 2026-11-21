@@ -19,14 +19,15 @@ import React, { useMemo } from 'react'
 import Markdown from 'react-markdown'
 import remarkGemoji from 'remark-gemoji'
 import remarkGfm from 'remark-gfm'
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { atomOneLight } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import SyntaxHighlighter from 'react-syntax-highlighter'
+import { atomOneDark, atomOneLight } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 import rehypeKatex from 'rehype-katex'
 import remarkMath from 'remark-math'
-import CopyButton from './CopyButton';
-import { MarkdownImage, MarkdownLink } from './MediaContent';
+import CopyButton from './CopyButton'
+import { MarkdownImage, MarkdownLink } from './MediaContent'
 import MermaidDiagram from './MermaidDiagram'
 import { formatThinkingAsMarkdown } from '../thinkingUtils'
+import { useTheme } from '../../shared/useTheme'
 import 'katex/dist/katex.min.css' // rehype-katex does not import the CSS
 import './TextContent.css'
 
@@ -45,6 +46,8 @@ export default function TextContent({
     compact = false,
     streaming = false,
 }) {
+    const { isDark } = useTheme()
+
     // react-markdown only accepts a string; join if callers pass multiple children.
     const raw = typeof children === 'string'
         ? children
@@ -54,6 +57,8 @@ export default function TextContent({
     const markdown = formatThinkingAsMarkdown(raw)
 
     const components = useMemo(() => {
+        const syntaxStyle = isDark ? atomOneDark : atomOneLight
+
         const Pre = ({ children: preChildren }) => {
             // Mermaid renders its own frame; avoid wrapping in <pre>.
             if (isMermaidChild(preChildren)) {
@@ -89,7 +94,7 @@ export default function TextContent({
                         PreTag="div"
                         children={code}
                         language={lang}
-                        style={atomOneLight}
+                        style={syntaxStyle}
                         showLineNumbers={true}
                         wrapLongLines={true}
                     />
@@ -102,7 +107,7 @@ export default function TextContent({
                 )
             },
         }
-    }, [downloadable, streaming])
+    }, [downloadable, streaming, isDark])
 
     return (
         <div className={`text-content line-break${compact ? ' text-content--compact' : ''}`}>

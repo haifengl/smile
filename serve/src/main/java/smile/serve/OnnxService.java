@@ -487,7 +487,7 @@ public class OnnxService implements OpenAiModelContributor {
                     m.close();
                 }
                 throw new ClientErrorException(
-                        "ONNX model '" + id + "' is already loaded. Use POST /api/v1/onnx/" + id + "/reload to refresh it, or unload it first.",
+                        "ONNX model '" + id + "' is already loaded. Use POST /v1/onnx/" + id + "/reload to refresh it, or unload it first.",
                         Response.Status.CONFLICT);
             }
             try {

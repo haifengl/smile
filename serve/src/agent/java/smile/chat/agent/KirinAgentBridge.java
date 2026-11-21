@@ -40,6 +40,7 @@ import com.openai.client.OpenAIClientAsync;
 import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import com.openai.core.Timeout;
 import io.quarkus.arc.profile.UnlessBuildProfile;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import ioa.agent.Agent;
 import ioa.agent.calendar.CalendarConfig;
@@ -186,6 +187,9 @@ public class KirinAgentBridge implements ChatAgentBridge {
     @Inject
     AuthConfig authConfig;
 
+    @ConfigProperty(name = "smile.chat.agent.enabled", defaultValue = "true")
+    boolean agentEnabled = true;
+
     private final Map<String, UserWorkspaceContext> workspacesByKey = new ConcurrentHashMap<>();
     private final Map<Integer, ChatCompletions> loopbackClientsByPort = new ConcurrentHashMap<>();
     private volatile LLM testLlmOverride;
@@ -211,7 +215,7 @@ public class KirinAgentBridge implements ChatAgentBridge {
 
     @Override
     public boolean isAvailable() {
-        return true;
+        return agentEnabled;
     }
 
     @Override
@@ -669,7 +673,7 @@ public class KirinAgentBridge implements ChatAgentBridge {
     private ChatCompletions loopbackClient(int localPort) {
         int port = localPort > 0 ? localPort : 8080;
         return loopbackClientsByPort.computeIfAbsent(port, p -> {
-            String baseUrl = "http://127.0.0.1:" + p + "/api/v1";
+            String baseUrl = "http://127.0.0.1:" + p + "/v1";
             OpenAIClientAsync client = OpenAIOkHttpClientAsync.builder()
                     .baseUrl(baseUrl)
                     .apiKey("kirin-internal-loopback")

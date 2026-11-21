@@ -28,7 +28,7 @@ import smile.serve.model.ModelObject;
  *
  * <p>In dynamic-load mode ({@code smile.serve.allow-empty=true}) the server is
  * ready as soon as it accepts management requests, because clients must be able
- * to reach {@code POST /api/v1/models/load} before any model exists.
+ * to reach {@code POST /v1/models/load} before any model exists.
  *
  * <p>Active and loaded model counts are surfaced as response data for operators.
  *

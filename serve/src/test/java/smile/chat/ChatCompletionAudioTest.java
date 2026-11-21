@@ -42,7 +42,7 @@ public class ChatCompletionAudioTest {
                       {"type":"audio_url","audio_url":{"url":"/api/v1/media/x"}}
                     ]}],"max_tokens":8}
                     """)
-            .when().post("/api/v1/chat/completions")
+            .when().post("/v1/chat/completions")
             .then()
             .statusCode(400);
     }

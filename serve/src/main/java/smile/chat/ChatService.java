@@ -175,7 +175,7 @@ public class ChatService implements OpenAiModelContributor {
     }
 
     private void loadInternal(String modelSpec, ChatServiceConfig effConfig, KvCacheConfig effKvCache) throws Exception {
-        this.modelId = publicModelId(modelSpec);
+        this.modelId = resolveServedModelName(modelSpec, effConfig);
         this.speculative = effConfig.speculative();
         this.speculativeTokens = effConfig.speculativeTokens();
 
@@ -221,10 +221,13 @@ public class ChatService implements OpenAiModelContributor {
         if (modelSpec == null || modelSpec.isBlank()) {
             throw new BadRequestException("Model spec must not be blank");
         }
-        String targetModelId = publicModelId(modelSpec);
+        ChatServiceConfig effConfig = DynamicChatConfig.overlay(config, modelSpec, overrides);
+        KvCacheConfig effKvCache = DynamicChatConfig.overlay(kvCache, overrides);
+
+        String targetModelId = resolveServedModelName(modelSpec, effConfig);
         if (isAvailable() && targetModelId.equals(modelId)) {
             throw new ClientErrorException(
-                    "Chat model '" + modelId + "' is already loaded. Use POST /api/v1/models/load with a different model, or unload it first.",
+                    "Chat model '" + modelId + "' is already loaded. Use POST /v1/models/load with a different model, or unload it first.",
                     Response.Status.CONFLICT);
         }
 
@@ -232,9 +235,6 @@ public class ChatService implements OpenAiModelContributor {
             logger.infof("Unloading currently active chat model '%s' before loading '%s'", modelId, targetModelId);
             shutdown();
         }
-
-        ChatServiceConfig effConfig = DynamicChatConfig.overlay(config, modelSpec, overrides);
-        KvCacheConfig effKvCache = DynamicChatConfig.overlay(kvCache, overrides);
 
         try {
             loadInternal(modelSpec, effConfig, effKvCache);
@@ -623,6 +623,26 @@ public class ChatService implements OpenAiModelContributor {
         } catch (Exception e) {
             logger.warnf(e, "Weight quant backend probe failed (model still usable if dense)");
         }
+    }
+
+    /**
+     * Resolves the public API model name from an explicit {@code smile.chat.served-model-name}
+     * override when configured, otherwise falling back to {@link #publicModelId(String)}.
+     *
+     * @param modelSpec the configured {@code smile.chat.model} value.
+     * @param config    effective chat service configuration.
+     * @return the served model name.
+     */
+    static String resolveServedModelName(String modelSpec, ChatServiceConfig config) {
+        if (config != null) {
+            Optional<String> override = config.servedModelName()
+                    .map(String::trim)
+                    .filter(s -> !s.isBlank());
+            if (override.isPresent()) {
+                return override.get();
+            }
+        }
+        return publicModelId(modelSpec);
     }
 
     /**

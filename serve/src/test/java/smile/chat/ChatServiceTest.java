@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import io.vertx.core.json.JsonObject;
 import jakarta.inject.Inject;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +41,9 @@ public class ChatServiceTest {
 
     @Inject
     ChatService chatService;
+
+    @Inject
+    ChatServiceConfig chatServiceConfig;
 
     @Test
     public void testGivenNoConfiguredModelWhenStartedThenChatServiceIsUnavailable() {
@@ -62,7 +66,7 @@ public class ChatServiceTest {
         given()
             .contentType(ContentType.JSON)
             .body(body)
-            .when().post("/api/v1/chat/completions")
+            .when().post("/v1/chat/completions")
             .then()
                 .statusCode(503);
     }
@@ -76,7 +80,7 @@ public class ChatServiceTest {
             .contentType(ContentType.JSON)
             .accept(ContentType.JSON)
             .body(body)
-            .when().post("/api/v1/chat/completions")
+            .when().post("/v1/chat/completions")
             .then()
                 .statusCode(503);
     }
@@ -197,6 +201,37 @@ public class ChatServiceTest {
                     }
                 });
             }
+        }
+    }
+
+    @Test
+    public void testGivenServedModelNameOverrideWhenResolvedThenOverridesLocalPath() throws Exception {
+        Path dir = Files.createTempDirectory("current-deepseek-primary");
+        try {
+            ChatServiceConfig withSnake = DynamicChatConfig.overlay(
+                    chatServiceConfig, dir.toString(),
+                    new JsonObject().put("served_model_name", "deepseek-ai/DeepSeek-V4.1-Flash-1017"));
+            assertEquals("deepseek-ai/DeepSeek-V4.1-Flash-1017",
+                    ChatService.resolveServedModelName(dir.toString(), withSnake));
+
+            ChatServiceConfig withCamel = DynamicChatConfig.overlay(
+                    chatServiceConfig, dir.toString(),
+                    new JsonObject().put("servedModelName", "  Qwen/Qwen3.8-27B  "));
+            assertEquals("Qwen/Qwen3.8-27B",
+                    ChatService.resolveServedModelName(dir.toString(), withCamel));
+
+            ChatServiceConfig blankOverride = DynamicChatConfig.overlay(
+                    chatServiceConfig, dir.toString(),
+                    new JsonObject().put("served_model_name", "   "));
+            assertEquals(dir.getFileName().toString(),
+                    ChatService.resolveServedModelName(dir.toString(), blankOverride));
+
+            ChatServiceConfig withoutOverride = DynamicChatConfig.overlay(
+                    chatServiceConfig, dir.toString(), null);
+            assertEquals(dir.getFileName().toString(),
+                    ChatService.resolveServedModelName(dir.toString(), withoutOverride));
+        } finally {
+            Files.deleteIfExists(dir);
         }
     }
 }

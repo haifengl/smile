@@ -39,7 +39,7 @@
   display: block;
   max-width: min(100%, 480px);
   max-height: 360px;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   object-fit: contain;
 }
 
@@ -51,7 +51,7 @@
   display: block;
   max-width: min(100%, 560px);
   max-height: 360px;
-  border-radius: 8px;
+  border-radius: 0.5rem;
 }
 
 .media-audio {
@@ -65,20 +65,22 @@
 
 .media-frame--file {
   padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 8px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
 }
 
 .media-file-icon,
 .file-type-icon {
   display: inline-flex;
   flex-shrink: 0;
-  color: #4b5563;
+  color: var(--text-muted);
 }
 
 .media-filename {
   flex: 1;
-  font-size: 13px;
+  font-size: 0.8125rem;
+  color: var(--text);
   word-break: break-all;
 }
 
@@ -88,17 +90,17 @@
   right: 8px;
   width: 32px;
   height: 32px;
-  border: none;
+  border: 1px solid var(--border);
   border-radius: 50%;
-  background: rgba(17, 24, 39, 0.72);
-  color: #fff;
+  background: var(--bg-elevated);
+  color: var(--text);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.15s ease, background-color 0.15s ease;
+  transition: opacity 0.15s ease, background-color 0.15s ease, color 0.15s ease;
   z-index: 2;
   padding: 0;
 }
@@ -109,8 +111,8 @@
   flex-shrink: 0;
   opacity: 0;
   pointer-events: none;
-  background: rgba(17, 24, 39, 0.08);
-  color: #374151;
+  background: var(--bg-muted);
+  color: var(--text);
 }
 
 .media-block--hoverable:hover .media-download-icon,
@@ -120,12 +122,8 @@
 }
 
 .media-download-icon:hover {
-  background: rgba(17, 24, 39, 0.9);
-}
-
-.media-frame--audio .media-download-icon:hover,
-.media-frame--file .media-download-icon:hover {
-  background: rgba(17, 24, 39, 0.16);
+  background: var(--bg-muted);
+  color: var(--accent);
 }
 
 .markdown-media {
@@ -136,8 +134,8 @@
   position: fixed;
   inset: 0;
   z-index: 10000;
-  background: rgba(15, 23, 42, 0.72);
-  backdrop-filter: blur(2px);
+  background: var(--backdrop);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -159,9 +157,10 @@
   flex-direction: column;
   width: min(92vw, 880px);
   max-height: 88vh;
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 0.85rem;
+  box-shadow: var(--shadow);
   line-height: normal;
   overflow: hidden;
 }
@@ -169,10 +168,10 @@
 .media-lightbox-text-header {
   flex-shrink: 0;
   padding: 14px 52px 12px 16px;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #111827;
-  border-bottom: 1px solid #e5e7eb;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
   word-break: break-all;
 }
 
@@ -180,28 +179,28 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
-  background: #f8fafc;
+  background: var(--code-bg);
 }
 
 .media-lightbox-text-pre {
   margin: 0;
   padding: 16px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 13px;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
   line-height: 1.5;
-  color: #111827;
+  color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 .media-lightbox-text-status {
   padding: 24px 16px;
-  color: #6b7280;
-  font-size: 14px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
 .media-lightbox-text-status--error {
-  color: #b91c1c;
+  color: var(--status-danger);
 }
 
 .media-frame--file-clickable {
@@ -209,7 +208,7 @@
 }
 
 .media-frame--file-clickable:hover {
-  background: rgba(0, 0, 0, 0.07);
+  background: var(--bg-muted);
 }
 
 .media-lightbox-image {
@@ -217,8 +216,8 @@
   max-width: min(96vw, 1400px);
   max-height: 92vh;
   object-fit: contain;
-  border-radius: 4px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.45);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow);
 }
 
 .media-lightbox-close {
@@ -227,19 +226,20 @@
   right: 8px;
   width: 36px;
   height: 36px;
-  border: none;
+  border: 1px solid var(--border);
   border-radius: 50%;
-  background: rgba(17, 24, 39, 0.72);
-  color: #fff;
+  background: var(--bg-elevated);
+  color: var(--text);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   z-index: 1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow);
 }
 
 .media-lightbox-close:hover {
-  background: rgba(17, 24, 39, 0.9);
+  background: var(--bg-muted);
+  color: var(--accent);
 }

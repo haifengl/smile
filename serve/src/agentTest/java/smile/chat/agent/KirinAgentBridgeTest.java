@@ -76,6 +76,9 @@ public class KirinAgentBridgeTest {
     void resolvesBuiltInGoogleAndMicrosoftOAuthCredentialsFromVault() {
         KirinAgentBridge bridge = new KirinAgentBridge();
         assertTrue(bridge.isAvailable());
+        bridge.agentEnabled = false;
+        assertFalse(bridge.isAvailable());
+        bridge.agentEnabled = true;
 
         Optional<ChatAgentBridge.OAuthAppCredentials> google =
                 bridge.resolveOAuthCredentials(AuthProviderKind.GOOGLE, null, null, null);
