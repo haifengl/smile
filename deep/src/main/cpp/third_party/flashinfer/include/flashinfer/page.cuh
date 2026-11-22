@@ -308,7 +308,9 @@ __device__ __forceinline__ uint8_t nvfp4_append_quantize_e2m1(float value) {
   return sign | code;
 }
 
-template <typename DType>
+// precise_rounding uses IEEE-rounded reciprocals so the output stays
+// bit-reproducible under -use_fast_math (which lowers 1/x to rcp.approx).
+template <typename DType, bool precise_rounding = false>
 __device__ __forceinline__ void nvfp4_append_quantize_block(
     const DType* __restrict__ input, const float global_scale, const size_t input_base,
     const uint32_t dim_base, uint8_t* __restrict__ packed_out, uint8_t* __restrict__ sf_out) {
@@ -323,14 +325,36 @@ __device__ __forceinline__ void nvfp4_append_quantize_block(
 
   float sf_value = 0.0f;
   if (amax > 0.0f && global_scale > 0.0f) {
-    sf_value = amax / (6.0f * global_scale);
+    sf_value =
+        precise_rounding ? amax * __frcp_rn(6.0f * global_scale) : amax / (6.0f * global_scale);
   }
   __nv_fp8_e4m3 sf_fp8 = __nv_fp8_e4m3(sf_value);
+#ifdef FLASHINFER_NVFP4_APPEND_4OVER6
+  // page_nvfp4_4over6 also tries the block scale mapping amax to 4, kept on a strictly lower MSE.
+  auto error = [&](float sf) {
+    const float scale =
+        precise_rounding ? __frcp_rn(sf * global_scale) : 1.0f / (sf * global_scale);
+    float sum = 0.0f;
+#pragma unroll
+    for (uint32_t i = 0; i < 16; ++i) {
+      const uint32_t level = nvfp4_append_quantize_e2m1(values[i] * scale) & 0x7;
+      const float mag = level < 4 ? 0.5f * level : (level < 6 ? level - 2.0f : 2.0f * level - 8.0f);
+      const float diff = mag * sf * global_scale - fabsf(values[i]);
+      sum += diff * diff;
+    }
+    return sum;
+  };
+  const __nv_fp8_e4m3 sf4_fp8 = __nv_fp8_e4m3(sf_value * 1.5f);
+  if (error(static_cast<float>(sf4_fp8)) < error(static_cast<float>(sf_fp8))) {
+    sf_fp8 = sf4_fp8;
+  }
+#endif
   *sf_out = sf_fp8.__x;
 
   const float sf_rounded = static_cast<float>(sf_fp8);
   const float output_scale = (amax > 0.0f && sf_rounded > 0.0f && global_scale > 0.0f)
-                                 ? (1.0f / (sf_rounded * global_scale))
+                                 ? (precise_rounding ? __frcp_rn(sf_rounded * global_scale)
+                                                     : (1.0f / (sf_rounded * global_scale)))
                                  : 0.0f;
 
 #pragma unroll
@@ -703,6 +727,180 @@ cudaError_t NVFP4QuantizeAppendPagedKVCacheWithSlotMapping(
   return cudaSuccess;
 }
 
+// Block-wide max reduction. ``kNumThreads`` must equal ``blockDim.x``. ``red`` is
+// shared scratch of at least ``(kNumThreads + 31) / 32`` floats; pass a distinct
+// buffer per reduction.
+template <uint32_t kNumThreads>
+__device__ __forceinline__ float fp8_pth_block_max(float val, float* red) {
+  static_assert(kNumThreads % 32 == 0, "kNumThreads must be a multiple of 32");
+#pragma unroll
+  for (uint32_t offset = 16; offset > 0; offset >>= 1) {
+    val = fmaxf(val, __shfl_xor_sync(0xffffffffu, val, offset));
+  }
+  const uint32_t warp = threadIdx.x >> 5;
+  const uint32_t lane = threadIdx.x & 31;
+  if (lane == 0) {
+    red[warp] = val;
+  }
+  __syncthreads();
+  constexpr uint32_t kWarpCount = (kNumThreads + 31) / 32;
+  val = lane < kWarpCount ? red[lane] : 0.0f;
+  if (warp == 0) {
+#pragma unroll
+    for (uint32_t offset = 16; offset > 0; offset >>= 1) {
+      val = fmaxf(val, __shfl_xor_sync(0xffffffffu, val, offset));
+    }
+    if (lane == 0) {
+      red[0] = val;
+    }
+  }
+  __syncthreads();
+  return red[0];
+}
+
+// Largest finite value representable by the FP8 target type (the normalization
+// reference for per-(token, head) absmax quantization).
+template <typename FP8Type>
+__device__ __forceinline__ float fp8_pth_max_value();
+
+template <>
+__device__ __forceinline__ float fp8_pth_max_value<__nv_fp8_e4m3>() {
+  return 448.0f;
+}
+template <>
+__device__ __forceinline__ float fp8_pth_max_value<__nv_fp8_e5m2>() {
+  return 57344.0f;
+}
+
+/*!
+ * \brief Quantize one (token, head) of K and V to per-(token, head) FP8 and append
+ *        them to the paged KV cache by slot mapping.
+ *
+ * Each block owns a single (token, head) pair and handles both K and V. The scale is
+ * computed on device as ``max(amax(head) / fp8_max, 1e-12)`` (no host scalar), so the
+ * kernel is CUDA-graph-capture safe. The FP8 data is written to the paged slot and the
+ * float32 scale to the (possibly non-contiguous, inline-carved) scale view.
+ * \tparam HEAD_DIM The dimension of each head.
+ * \tparam DType The input (append) data type, fp16 or bf16.
+ * \tparam IdType The index data type of the slot mapping.
+ * \tparam FP8Type The FP8 output type (__nv_fp8_e4m3 or __nv_fp8_e5m2).
+ */
+template <uint32_t HEAD_DIM, typename DType, typename IdType, typename FP8Type>
+__global__ void FP8TokenHeadQuantizeAppendPagedKVCacheWithSlotMappingKernel(
+    const DType* __restrict__ append_key, const DType* __restrict__ append_value,
+    const IdType* __restrict__ slot_mapping, uint32_t page_size, uint32_t max_num_pages,
+    size_t append_k_stride_n, size_t append_k_stride_h, size_t append_v_stride_n,
+    size_t append_v_stride_h, uint8_t* __restrict__ paged_k_cache,
+    uint8_t* __restrict__ paged_v_cache, float* __restrict__ k_scale_cache,
+    float* __restrict__ v_scale_cache, size_t k_stride_page, size_t k_stride_n, size_t k_stride_h,
+    size_t v_stride_page, size_t v_stride_n, size_t v_stride_h, size_t k_sf_stride_page,
+    size_t k_sf_stride_n, size_t k_sf_stride_h, size_t v_sf_stride_page, size_t v_sf_stride_n,
+    size_t v_sf_stride_h) {
+  constexpr uint32_t kNumThreads =
+      (HEAD_DIM / 8) < 32 ? 32 : ((HEAD_DIM / 8) > 128 ? 128 : (HEAD_DIM / 8));
+  constexpr uint32_t EPT = HEAD_DIM / kNumThreads;
+  static_assert(EPT * kNumThreads == HEAD_DIM, "head_dim must be evenly divisible");
+
+  // The grid is launched with gridDim.x == nnz, so blockIdx.x is always in range.
+  const uint32_t token_idx = blockIdx.x;
+  const uint32_t head_idx = blockIdx.y;
+
+  const IdType slot = slot_mapping[token_idx];
+  if (slot < 0 || static_cast<size_t>(slot) >= static_cast<size_t>(max_num_pages) * page_size) {
+    return;
+  }
+  const size_t page_idx = static_cast<size_t>(slot) / page_size;
+  const size_t entry_idx = static_cast<size_t>(slot) % page_size;
+
+  const size_t append_k_base =
+      static_cast<size_t>(token_idx) * append_k_stride_n + head_idx * append_k_stride_h;
+  const size_t append_v_base =
+      static_cast<size_t>(token_idx) * append_v_stride_n + head_idx * append_v_stride_h;
+
+  float k_vals[EPT];
+  float v_vals[EPT];
+  float amax_k = 0.0f;
+  float amax_v = 0.0f;
+#pragma unroll
+  for (uint32_t i = 0; i < EPT; ++i) {
+    const uint32_t dim = threadIdx.x * EPT + i;
+    k_vals[i] = nvfp4_append_to_float(append_key[append_k_base + dim]);
+    v_vals[i] = nvfp4_append_to_float(append_value[append_v_base + dim]);
+    amax_k = fmaxf(amax_k, fabsf(k_vals[i]));
+    amax_v = fmaxf(amax_v, fabsf(v_vals[i]));
+  }
+
+  constexpr uint32_t kWarpCount = (kNumThreads + 31) / 32;
+  __shared__ float red_k[kWarpCount];
+  __shared__ float red_v[kWarpCount];
+  amax_k = fp8_pth_block_max<kNumThreads>(amax_k, red_k);
+  amax_v = fp8_pth_block_max<kNumThreads>(amax_v, red_v);
+
+  const float fp8_max = fp8_pth_max_value<FP8Type>();
+  const float k_scale = fmaxf(__fdiv_rn(amax_k, fp8_max), 1e-12f);
+  const float v_scale = fmaxf(__fdiv_rn(amax_v, fp8_max), 1e-12f);
+
+  uint8_t* k_out =
+      paged_k_cache + page_idx * k_stride_page + entry_idx * k_stride_n + head_idx * k_stride_h;
+  uint8_t* v_out =
+      paged_v_cache + page_idx * v_stride_page + entry_idx * v_stride_n + head_idx * v_stride_h;
+  float* k_sf = k_scale_cache + page_idx * k_sf_stride_page + entry_idx * k_sf_stride_n +
+                head_idx * k_sf_stride_h;
+  float* v_sf = v_scale_cache + page_idx * v_sf_stride_page + entry_idx * v_sf_stride_n +
+                head_idx * v_sf_stride_h;
+
+  if (threadIdx.x == 0) {
+    *k_sf = k_scale;
+    *v_sf = v_scale;
+  }
+#pragma unroll
+  for (uint32_t i = 0; i < EPT; ++i) {
+    const uint32_t dim = threadIdx.x * EPT + i;
+    k_out[dim] = FP8Type(__fdiv_rn(k_vals[i], k_scale)).__x;
+    v_out[dim] = FP8Type(__fdiv_rn(v_vals[i], v_scale)).__x;
+  }
+}
+
+/*!
+ * \brief Host launcher for the per-(token, head) FP8 quantize-and-append kernel.
+ * \tparam DType The input (append) data type, fp16 or bf16.
+ * \tparam IdType The index data type of the slot mapping.
+ * \tparam FP8Type The FP8 output type.
+ */
+template <typename DType, typename IdType, typename FP8Type>
+cudaError_t FP8TokenHeadQuantizeAppendPagedKVCacheWithSlotMapping(
+    DType* append_key, DType* append_value, IdType* slot_mapping, uint32_t nnz, uint32_t num_heads,
+    uint32_t page_size, uint32_t max_num_pages, uint32_t head_dim, size_t append_k_stride_n,
+    size_t append_k_stride_h, size_t append_v_stride_n, size_t append_v_stride_h,
+    uint8_t* paged_k_cache, uint8_t* paged_v_cache, float* k_scale_cache, float* v_scale_cache,
+    size_t k_stride_page, size_t k_stride_n, size_t k_stride_h, size_t v_stride_page,
+    size_t v_stride_n, size_t v_stride_h, size_t k_sf_stride_page, size_t k_sf_stride_n,
+    size_t k_sf_stride_h, size_t v_sf_stride_page, size_t v_sf_stride_n, size_t v_sf_stride_h,
+    cudaStream_t stream = nullptr) {
+  if (nnz == 0 || num_heads == 0) {
+    return cudaSuccess;
+  }
+  DISPATCH_HEAD_DIM(head_dim, HEAD_DIM, {
+    constexpr uint32_t active = HEAD_DIM / 8;
+    constexpr uint32_t num_threads = active < 32 ? 32 : (active > 128 ? 128 : active);
+    dim3 nblks(nnz, num_heads);
+    dim3 nthrs(num_threads);
+    auto kernel = FP8TokenHeadQuantizeAppendPagedKVCacheWithSlotMappingKernel<HEAD_DIM, DType,
+                                                                              IdType, FP8Type>;
+    void* args[] = {(void*)&append_key,        (void*)&append_value,      (void*)&slot_mapping,
+                    (void*)&page_size,         (void*)&max_num_pages,     (void*)&append_k_stride_n,
+                    (void*)&append_k_stride_h, (void*)&append_v_stride_n, (void*)&append_v_stride_h,
+                    (void*)&paged_k_cache,     (void*)&paged_v_cache,     (void*)&k_scale_cache,
+                    (void*)&v_scale_cache,     (void*)&k_stride_page,     (void*)&k_stride_n,
+                    (void*)&k_stride_h,        (void*)&v_stride_page,     (void*)&v_stride_n,
+                    (void*)&v_stride_h,        (void*)&k_sf_stride_page,  (void*)&k_sf_stride_n,
+                    (void*)&k_sf_stride_h,     (void*)&v_sf_stride_page,  (void*)&v_sf_stride_n,
+                    (void*)&v_sf_stride_h};
+    FLASHINFER_CUDA_CALL(cudaLaunchKernel((void*)kernel, nblks, nthrs, args, 0, stream));
+  });
+  return cudaSuccess;
+}
+
 template <typename DType, typename IdType>
 struct paged_kv_mla_t {
   uint_fastdiv page_size;
@@ -931,6 +1129,96 @@ cudaError_t AppendPagedKVMlaCache(paged_kv_mla_t<DType, IdType> paged_kv, DType*
                   (void*)&nnz,
                   (void*)&append_ckv_stride_n,
                   (void*)&append_kpe_stride_n};
+  FLASHINFER_CUDA_CALL(cudaLaunchKernel((void*)kernel, nblks, nthrs, args, 0, stream));
+  return cudaSuccess;
+}
+
+// kpe stays FP8: rope channels are several times hotter than ckv channels in
+// DeepSeek-family latents, so quantizing them to E2M1 dominates the error.
+template <uint32_t head_dim_ckv, uint32_t head_dim_kpe, typename DType, typename IdType>
+__global__ void NVFP4QuantizeAppendPagedKVMlaCacheKernel(
+    paged_kv_mla_t<uint8_t, IdType> paged_kv_mla, const DType* __restrict__ append_ckv,
+    const DType* __restrict__ append_kpe, IdType* __restrict__ batch_indices,
+    IdType* __restrict__ positions, uint32_t nnz, size_t append_ckv_stride_n,
+    size_t append_kpe_stride_n, uint8_t* __restrict__ ckv_sf, size_t ckv_sf_stride_page,
+    size_t ckv_sf_stride_n, float ckv_scale, float kpe_scale) {
+  constexpr uint32_t SF_VEC_SIZE = 16;
+  constexpr uint32_t PACKED_PER_SF = SF_VEC_SIZE / 2;
+  constexpr uint32_t NUM_SF_BLOCKS = head_dim_ckv / SF_VEC_SIZE;
+  static_assert(head_dim_ckv % SF_VEC_SIZE == 0);
+
+  const uint32_t tx = threadIdx.x;
+  const uint32_t cta_id = blockIdx.x;
+  const uint32_t num_ctas = gridDim.x;
+  const float kpe_inv_scale = __frcp_rn(kpe_scale);
+
+  for (uint32_t i = cta_id; i < nnz; i += num_ctas) {
+    uint32_t page_iter, entry_idx;
+    paged_kv_mla.page_size.divmod(
+        paged_kv_mla.indptr[batch_indices[i]] * paged_kv_mla.page_size + positions[i], page_iter,
+        entry_idx);
+    const IdType page_idx = __ldg(paged_kv_mla.indices + page_iter);
+    if (tx < NUM_SF_BLOCKS) {
+      uint8_t* packed_out = paged_kv_mla.ckv_data + paged_kv_mla.get_elem_offset_ckv(
+                                                        page_idx, entry_idx, tx * PACKED_PER_SF);
+      uint8_t* sf_out = ckv_sf + page_idx * ckv_sf_stride_page + entry_idx * ckv_sf_stride_n + tx;
+      nvfp4_append_quantize_block<DType, /*precise_rounding=*/true>(
+          append_ckv, ckv_scale, static_cast<size_t>(i) * append_ckv_stride_n, tx * SF_VEC_SIZE,
+          packed_out, sf_out);
+    }
+    if (tx < head_dim_kpe) {
+      const float value =
+          nvfp4_append_to_float(append_kpe[static_cast<size_t>(i) * append_kpe_stride_n + tx]) *
+          kpe_inv_scale;
+      uint8_t* kpe_out =
+          paged_kv_mla.kpe_data + paged_kv_mla.get_elem_offset_kpe(page_idx, entry_idx, tx);
+      *kpe_out = __nv_fp8_e4m3(value).__x;
+    }
+  }
+}
+
+template <typename DType, typename IdType>
+cudaError_t NVFP4QuantizeAppendPagedKVMlaCache(
+    paged_kv_mla_t<uint8_t, IdType> paged_kv, DType* append_ckv, DType* append_kpe,
+    IdType* batch_indices, IdType* positions, uint32_t nnz, size_t append_ckv_stride_n,
+    size_t append_kpe_stride_n, uint8_t* ckv_sf, size_t ckv_sf_stride_page, size_t ckv_sf_stride_n,
+    float ckv_scale, float kpe_scale, cudaStream_t stream = nullptr) {
+  constexpr uint32_t HEAD_CKV_DIM = 512;
+  constexpr uint32_t HEAD_KPE_DIM = 64;
+  FLASHINFER_CHECK(paged_kv.head_dim_ckv == HEAD_CKV_DIM / 2,
+                   "packed head_dim_ckv must be equal to 256");
+  FLASHINFER_CHECK(paged_kv.head_dim_kpe == HEAD_KPE_DIM, "head_dim_kpe must be equal to 64");
+  if (nnz == 0) {
+    return cudaSuccess;
+  }
+
+  int dev_id = 0;
+  int num_sms = 0;
+  int num_blocks_per_sm = 0;
+  FLASHINFER_CUDA_CALL(cudaGetDevice(&dev_id));
+  FLASHINFER_CUDA_CALL(cudaDeviceGetAttribute(&num_sms, cudaDevAttrMultiProcessorCount, dev_id));
+
+  constexpr uint32_t num_threads = HEAD_KPE_DIM;
+  uint32_t smem_size = 0;
+  auto kernel = NVFP4QuantizeAppendPagedKVMlaCacheKernel<HEAD_CKV_DIM, HEAD_KPE_DIM, DType, IdType>;
+  FLASHINFER_CUDA_CALL(cudaOccupancyMaxActiveBlocksPerMultiprocessor(&num_blocks_per_sm, kernel,
+                                                                     num_threads, smem_size));
+  num_blocks_per_sm = min(num_blocks_per_sm, ceil_div(int(nnz), num_sms));
+  dim3 nblks(num_blocks_per_sm * num_sms);
+  dim3 nthrs(num_threads);
+  void* args[] = {(void*)&paged_kv,
+                  (void*)&append_ckv,
+                  (void*)&append_kpe,
+                  (void*)&batch_indices,
+                  (void*)&positions,
+                  (void*)&nnz,
+                  (void*)&append_ckv_stride_n,
+                  (void*)&append_kpe_stride_n,
+                  (void*)&ckv_sf,
+                  (void*)&ckv_sf_stride_page,
+                  (void*)&ckv_sf_stride_n,
+                  (void*)&ckv_scale,
+                  (void*)&kpe_scale};
   FLASHINFER_CUDA_CALL(cudaLaunchKernel((void*)kernel, nblks, nthrs, args, 0, stream));
   return cudaSuccess;
 }

@@ -158,6 +158,9 @@
   } else if (group_size == 8) {                              \
     constexpr size_t GROUP_SIZE = 8;                         \
     __VA_ARGS__                                              \
+  } else if (group_size == 16) {                             \
+    constexpr size_t GROUP_SIZE = 16;                        \
+    __VA_ARGS__                                              \
   } else {                                                   \
     std::ostringstream err_msg;                              \
     err_msg << "Unsupported group_size: " << group_size;     \
@@ -446,11 +449,12 @@ inline uint32_t FA2DetermineCtaTileQ(int64_t avg_packed_qo_len, uint32_t head_di
         // bounds max_smem_per_threadblock with. It is an approximation: FP4
         // scale-factor bytes and FP8 repack staging are not counted (both are
         // zero or small at CTA_TILE_Q=16).
-        // This fallback is reachable today: neither plan() nor the JIT path
-        // validates head dims, so within this branch (vo <= 256 -- vo in
-        // (256, 512) fails the NUM_MMA_D_VO tiling static_assert and vo >= 512
-        // / qk >= 512 return above) head_dim_qk may be any multiple of 16 up
-        // to 496 under pos_encoding_mode NONE. E.g. (qk, vo) = (448, 256) at
+        // This fallback is reachable: the Python plan() check
+        // (_check_head_dim) requires multiples of 64 but not more, so within
+        // this branch (vo <= 256 -- vo in (256, 512) fails the
+        // NUM_MMA_D_VO tiling static_assert and vo >= 512 / qk >= 512 return
+        // above) head_dim_qk may be up to 448 under pos_encoding_mode NONE.
+        // E.g. (qk, vo) = (448, 256) at
         // 2-byte KV needs 16*448*2 + (448+256)*16*4*2 = 104448 bytes, which
         // exceeds the 101376-byte opt-in limit of 99KB parts (SM86/89/120/121)
         // -- the probe fires and the cta_tile_q=64 fallback (4x1 layout, 4x
