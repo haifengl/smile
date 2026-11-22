@@ -87,6 +87,12 @@ public class AgentPanel extends JPanel {
      * intent is not the active intent, so a running turn's output never leaks into it.
      */
     private final Map<String, Intent> queuedIntents = new HashMap<>();
+    /**
+     * Queue ids of internal continuations (auto-compaction and post-compaction
+     * resume) belonging to the active turn, mapped to their status label. They run
+     * ahead of any waiting queued intents and stay hidden from queue badges and depth.
+     */
+    private final Map<String, String> continuationTurns = new HashMap<>();
     /** The id currently being re-opened for editing, so its cancel is not shown as one. */
     private String editingId;
     /**
@@ -239,11 +245,13 @@ public class AgentPanel extends JPanel {
                         }
                         return;
                     }
+                    boolean cancelled = activeTurnId != null && activeTurnId.equals(cancelledTurnId);
+                    boolean interrupted = "true".equals(agent.conversation().params().getProperty(LLM.INTERRUPTED));
                     if (activeIntent != null) {
                         activeIntent.setProgress(false);
                         // A turn the user cancelled ends in a distinct terminal state rather
                         // than reporting token counts it never finished producing.
-                        if (activeTurnId != null && activeTurnId.equals(cancelledTurnId)) {
+                        if (cancelled) {
                             activeIntent.setStatus(Intent.queuedMessage("Cancelled"));
                         } else if (outputTokens > 0) {
                             activeIntent.setStatus(outputTokens + " output tokens");
@@ -255,13 +263,17 @@ public class AgentPanel extends JPanel {
                     agent.conversation().params().remove(LLM.COMPACTED);
                     if (continueAfterCompact) {
                         continueAfterCompact = false;
-                        boolean interrupted = "true".equals(agent.conversation().params().getProperty(LLM.INTERRUPTED));
-                        if (alreadyCompacted && !interrupted && activeIntent != null) {
+                        if (alreadyCompacted && !interrupted && !cancelled && activeIntent != null) {
                             activeIntent.appendSystemStatus(null, "[Context compacted. Continuing the task.]");
                             activeIntent.setStatus("Continuing...");
-                            chat(activeIntent, CONTINUE_AFTER_COMPACT);
-                        } else if (!alreadyCompacted && activeIntent != null) {
-                            activeIntent.appendSystemStatus(null, "[Compaction did not produce a summary, so the task was not resumed.]");
+                            if (!chat(activeIntent, CONTINUE_AFTER_COMPACT, true, "Continuing...")) {
+                                compactContinuations = 0;
+                            }
+                        } else {
+                            compactContinuations = 0;
+                            if (!alreadyCompacted && !interrupted && !cancelled && activeIntent != null) {
+                                activeIntent.appendSystemStatus(null, "[Compaction did not produce a summary, so the task was not resumed.]");
+                            }
                         }
                         return;
                     }
@@ -274,7 +286,9 @@ public class AgentPanel extends JPanel {
                             compactAt = resolved.model().compactThreshold();
                         }
                     }
-                    if (!alreadyCompacted && (totalTokens > compactAt || (totalTokens > 0 && outputTokens == 0)) && activeIntent != null) {
+                    if (!alreadyCompacted && !interrupted && !cancelled
+                            && (totalTokens > compactAt || (totalTokens > 0 && outputTokens == 0))
+                            && activeIntent != null) {
                         if (compactContinuations >= 2) {
                             compactContinuations = 0;
                             activeIntent.appendSystemStatus(null, "[The conversation is still too long after compaction, so the task was not resumed.]");
@@ -283,7 +297,10 @@ public class AgentPanel extends JPanel {
                         compactContinuations++;
                         activeIntent.appendSystemStatus(null, "[The conversation session is too long, a compact command will be executed to summarize conversation.]");
                         continueAfterCompact = true;
-                        compact("", activeIntent);
+                        if (!compact("", activeIntent, true)) {
+                            continueAfterCompact = false;
+                            compactContinuations = 0;
+                        }
                     } else {
                         compactContinuations = 0;
                     }
@@ -310,6 +327,10 @@ public class AgentPanel extends JPanel {
                         activeIntent.setStatus(root.getClass().getSimpleName());
                         activeIntent.output().append("\n" + message);
                     }
+                    activeTurnId = null;
+                    cancelledTurnId = null;
+                    continueAfterCompact = false;
+                    compactContinuations = 0;
                 });
             }
         };
@@ -325,6 +346,11 @@ public class AgentPanel extends JPanel {
         String id = item.id();
         switch (event.action()) {
             case ENQUEUED, EVENT -> {
+                if (continuationTurns.containsKey(id)) {
+                    // Internal continuation of the active turn: never show a queued badge
+                    // or queue controls on the active intent or inflate the queue depth.
+                    return;
+                }
                 Intent intent = queuedIntents.get(id);
                 if (intent == null) {
                     // Not a local submit we bound already: it arrived from a peer agent.
@@ -334,10 +360,14 @@ public class AgentPanel extends JPanel {
                     queuedIntents.put(id, intent);
                 }
                 wireQueueControls(intent, id, item);
-                intent.showQueued(event.position(), event.size());
-                showQueueDepth(event.size());
+                int hidden = continuationTurns.size();
+                int position = Math.max(1, event.position() - hidden);
+                int size = Math.max(1, event.size() - hidden);
+                intent.showQueued(position, size);
+                showQueueDepth(size);
             }
             case STARTED -> {
+                String continuationStatus = continuationTurns.remove(id);
                 Intent intent = queuedIntents.remove(id);
                 if (intent != null) {
                     activeIntent = intent;
@@ -346,7 +376,7 @@ public class AgentPanel extends JPanel {
                 if (activeIntent != null) {
                     activeIntent.clearQueued();
                     activeIntent.setProgress(true);
-                    activeIntent.setStatus("Thinking...");
+                    activeIntent.setStatus(continuationStatus != null ? continuationStatus : "Thinking...");
                     // A new turn re-arms following: the user asked for this work, so its
                     // output should come into view even if they had scrolled up before.
                     followToBottom();
@@ -356,13 +386,17 @@ public class AgentPanel extends JPanel {
                         pendingOutput.setLength(0);
                     }
                 }
-                showQueueDepth(event.size());
+                refreshQueuedIntents();
             }
             case CANCELLED, SKIPPED -> {
                 boolean editing = id.equals(editingId);
                 editingId = null;
+                boolean continuation = continuationTurns.remove(id) != null;
                 Intent intent = queuedIntents.remove(id);
-                if (intent != null) {
+                if (continuation) {
+                    continueAfterCompact = false;
+                    compactContinuations = 0;
+                } else if (intent != null) {
                     intent.clearQueued();
                     intent.setProgress(false);
                     if (!editing) {
@@ -374,20 +408,37 @@ public class AgentPanel extends JPanel {
                                 : item.isEvent() ? item.event().subject() : item.request().task());
                     }
                 }
-                showQueueDepth(event.size());
+                refreshQueuedIntents();
             }
-            case REORDERED -> {
-                for (QueuedRequest waiting : agent.session().queued()) {
-                    Intent intent = queuedIntents.get(waiting.id());
-                    if (intent != null) {
-                        intent.showQueued(agent.session().queuePosition(waiting.id()),
-                                agent.session().queued().size());
-                    }
-                }
-                showQueueDepth(event.size());
-            }
+            case REORDERED -> refreshQueuedIntents();
             case NOTICE -> { /* shown via onNotice */ }
         }
+    }
+
+    /** Refreshes queue badges, reorder controls, and composer depth for visible waiting turns. */
+    private void refreshQueuedIntents() {
+        List<QueuedRequest> visible = visibleQueuedRequests();
+        int size = visible.size();
+        for (int i = 0; i < size; i++) {
+            Intent intent = queuedIntents.get(visible.get(i).id());
+            if (intent != null) {
+                int position = i + 1;
+                intent.showQueued(position, size);
+                intent.setQueueControlsEnabled(position > 1, position < size);
+            }
+        }
+        showQueueDepth(size);
+    }
+
+    /** Returns waiting requests excluding internal continuations of the active turn. */
+    private List<QueuedRequest> visibleQueuedRequests() {
+        List<QueuedRequest> visible = new ArrayList<>();
+        for (QueuedRequest waiting : agent.session().queued()) {
+            if (!continuationTurns.containsKey(waiting.id())) {
+                visible.add(waiting);
+            }
+        }
+        return visible;
     }
 
     /** Wires cancel/edit/reorder on a waiting intent. Edit is offered only for local prompts. */
@@ -395,8 +446,15 @@ public class AgentPanel extends JPanel {
         // from() is blank for an event, so an event would look "local" and be offered an
         // edit that folds it into the composer as a user prompt. Exclude it explicitly.
         boolean local = !item.isEvent() && item.from().isBlank();
-        int position = agent.session().queuePosition(id);
-        int size = agent.session().queued().size();
+        List<QueuedRequest> visible = visibleQueuedRequests();
+        int position = 0;
+        for (int i = 0; i < visible.size(); i++) {
+            if (visible.get(i).id().equals(id)) {
+                position = i + 1;
+                break;
+            }
+        }
+        int size = visible.size();
         Runnable moveUp = () -> agent.session().move(id, -1);
         Runnable moveDown = () -> agent.session().move(id, 1);
         Runnable edit = local ? () -> editQueued(id) : null;
@@ -1256,12 +1314,24 @@ public class AgentPanel extends JPanel {
 
     /** Compacts conversation session by summarization. */
     private void compact(String instructions, Intent intent) {
+        compact(instructions, intent, false);
+    }
+
+    /**
+     * Compacts conversation session by summarization.
+     * @param instructions optional extra instructions.
+     * @param intent the intent receiving the compaction output.
+     * @param immediate true when auto-compacting the active turn so compaction
+     *                  runs ahead of any waiting queued intents.
+     * @return true when the compaction turn was accepted by the session.
+     */
+    private boolean compact(String instructions, Intent intent, boolean immediate) {
         String extra = instructions == null ? "" : instructions.replaceFirst("^compact\\s*", "").trim();
         var prompt = ioa.llm.Conversation.compactPrompt();
         if (prompt.isBlank()) {
             continueAfterCompact = false;
             logger.error("No compact instructions specified.");
-            return;
+            return false;
         }
 
         if (!extra.isBlank()) {
@@ -1269,19 +1339,23 @@ public class AgentPanel extends JPanel {
         }
 
         intent.setStatus("Compacting...");
-        chat(intent, prompt);
+        return chat(intent, prompt, immediate, "Compacting...");
     }
 
     private void chat(Intent intent, String prompt) {
+        chat(intent, prompt, false, null);
+    }
+
+    private boolean chat(Intent intent, String prompt, boolean immediate, String continuationStatus) {
         if (prompt.isBlank()) {
             intent.output().setText(bundle.getString("Hello"));
-            return;
+            return false;
         }
 
         LlmServices.AvailableModel available = intent.resolveModel();
         if (agent == null || available == null || available.client() == null) {
             intent.output().setText(bundle.getString("NoAIServiceError"));
-            return;
+            return false;
         }
 
         if (LLM.DEFAULT_REASONING_EFFORT.equals(reasoningEffort)) {
@@ -1304,10 +1378,23 @@ public class AgentPanel extends JPanel {
                 available.client(),
                 available.model());
         if (result.ok()) {
+            String id = result.id();
             // Bind the id before the deferred ENQUEUED handler runs so it updates this
             // intent instead of opening a second one.
-            queuedIntents.put(result.id(), intent);
+            queuedIntents.put(id, intent);
+            if (immediate) {
+                continuationTurns.put(id, continuationStatus != null ? continuationStatus : "Thinking...");
+                int pos = agent.session().queuePosition(id);
+                if (pos > 1) {
+                    // Auto-compaction and its post-compaction continuation belong to the
+                    // active turn, so jump them ahead of waiting intents before finish()
+                    // pumps the queue.
+                    agent.session().move(id, -(pos - 1));
+                }
+            }
+            return true;
         }
+        return false;
     }
 
     /**
@@ -1327,14 +1414,18 @@ public class AgentPanel extends JPanel {
             if (turnId != null) {
                 cancelledTurnId = turnId;
             }
+            for (String continuationId : List.copyOf(continuationTurns.keySet())) {
+                agent.session().cancel(continuationId);
+            }
+            List<QueuedRequest> waiting = visibleQueuedRequests();
             boolean drop = false;
-            if (!agent.session().queued().isEmpty()) {
+            if (!waiting.isEmpty()) {
                 drop = openConfirm(bundle.getString("CancelConfirmTitle"),
-                        Intent.queuedMessage("ConfirmDropQueue", agent.session().queued().size()));
+                        Intent.queuedMessage("ConfirmDropQueue", waiting.size()));
             }
             if (drop) {
-                for (QueuedRequest waiting : List.copyOf(agent.session().queued())) {
-                    agent.session().cancel(waiting.id());
+                for (QueuedRequest item : waiting) {
+                    agent.session().cancel(item.id());
                 }
             }
         } finally {
