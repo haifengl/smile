@@ -139,16 +139,29 @@ final class InklingAttention {
         }
         Tensor k = bf16(l2Clip(f32(reshape(kc, t, kvHeads, headDim)), args.qkL2ClipThreshold()));
         Tensor v = bf16(unweightedRms(reshape(vc, t, kvHeads, headDim), args.normEps()));
-        o("aten::copy_", narrow(st.k[app], 1, start, t), contiguous(transpose(k, 0, 1)));
-        o("aten::copy_", narrow(st.v[app], 1, start, t), contiguous(transpose(v, 0, 1)));
+        int window = args.slidingWindow();
+        if (local && start + t - st.base[app] > st.cacheCapacity[app]) {
+            // slide the window: keep the last window - 1 tokens at the front of the cache
+            int keepFrom = start - (window - 1);
+            int shift = keepFrom - st.base[app];
+            long keep = start - keepFrom;
+            if (shift > 0) {
+                for (Tensor cache : new Tensor[]{st.k[app], st.v[app]}) {
+                    o("aten::copy_", narrow(cache, 1, 0, keep), contiguous(narrow(cache, 1, shift, keep)));
+                }
+                st.base[app] = keepFrom;
+            }
+        }
+        int b = st.base[app];
+        o("aten::copy_", narrow(st.k[app], 1, start - b, t), contiguous(transpose(k, 0, 1)));
+        o("aten::copy_", narrow(st.v[app], 1, start - b, t), contiguous(transpose(v, 0, 1)));
 
         // keys visible to the queries
-        int window = args.slidingWindow();
-        int s0 = local ? Math.max(0, start - window + 1) : 0;
+        int s0 = local ? Math.max(b, start - window + 1) : 0;
         long s = start + t - s0;
         int groups = heads / kvHeads;
-        Tensor keys = o("aten::repeat_interleave.self_int", narrow(st.k[app], 1, s0, s), (long) groups, 0L);
-        Tensor values = o("aten::repeat_interleave.self_int", narrow(st.v[app], 1, s0, s), (long) groups, 0L);
+        Tensor keys = o("aten::repeat_interleave.self_int", narrow(st.k[app], 1, s0 - b, s), (long) groups, 0L);
+        Tensor values = o("aten::repeat_interleave.self_int", narrow(st.v[app], 1, s0 - b, s), (long) groups, 0L);
 
         // distance from each query to each key; visibility and the extent of the relative bias
         long[] qpos = new long[(int) t];

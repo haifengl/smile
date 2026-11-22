@@ -119,6 +119,10 @@ public final class JsonToolCallParser implements ToolCallParser {
         } else if (node.has("parameters")) {
             JsonNode a = node.get("parameters");
             args = a.isString() ? a.asString() : a.toString();
+        } else if (node.has("args")) {
+            // Inkling-2: {"name":..,"args":{..}}
+            JsonNode a = node.get("args");
+            args = a.isString() ? a.asString() : a.toString();
         }
         if ((name == null || name.isBlank()) && node.has("function")) {
             JsonNode fn = node.get("function");

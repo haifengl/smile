@@ -96,8 +96,26 @@ public class InklingTokenizerTest {
         InklingTokenizer tokenizer = InklingTokenizer.of(checkpoint());
         int[] reply = tokenizer.encodeWithSpecials(
                 "<|message_model|><|content_thinking|>hmm<|end_message|><|message_model|><|content_text|>Hi!<|end_message|><|content_model_end_sampling|>");
-        assertEquals("hmmHi!", tokenizer.tryDecode(reply, true));
+        assertEquals("<think>hmm</think>Hi!", tokenizer.tryDecode(reply, true));
         assertTrue(tokenizer.tryDecode(reply, false).startsWith("<|message_model|><|content_thinking|>hmm"));
+
+        // no reasoning: a leading </think> the sanitizer drops
+        int[] plain = tokenizer.encodeWithSpecials("<|message_model|><|content_text|>Hi<|end_message|><|message_model|><|content_text|>!<|end_message|>");
+        assertEquals("</think>Hi!", tokenizer.tryDecode(plain, true));
+
+        // a tool call: the header's name is dropped, the JSON body is wrapped in <tool_call>
+        int[] call = tokenizer.encodeWithSpecials("<|message_model|><|content_thinking|>t<|end_message|><|message_model|>get_weather"
+                + "<|content_invoke_tool_json|>{\"name\":\"get_weather\",\"args\":{\"city\":\"Paris\"}}<|end_message|>"
+                + "<|content_model_end_sampling|>");
+        String rendered = tokenizer.tryDecode(call, true);
+        assertEquals("<think>t</think><tool_call>{\"name\":\"get_weather\",\"args\":{\"city\":\"Paris\"}}</tool_call>", rendered);
+        var parsed = smile.llm.tool.ToolCallPostProcessor.apply(
+                new smile.llm.ChatCompletion("m", rendered, new int[0], new int[0], smile.llm.FinishReason.stop, null),
+                new smile.llm.ChatOptions(new smile.llm.ToolDefinition[]{smile.llm.ToolDefinition.function(
+                        new smile.llm.FunctionDefinition("get_weather", "", java.util.Map.of()))}, smile.llm.ToolChoice.AUTO, true));
+        assertEquals(1, parsed.toolCalls().size());
+        assertEquals("get_weather", parsed.toolCalls().getFirst().function().name());
+        assertEquals("{\"city\":\"Paris\"}", parsed.toolCalls().getFirst().function().arguments());
     }
 
     @Test

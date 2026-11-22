@@ -454,7 +454,7 @@ public class ChatService implements OpenAiModelContributor {
             return false;
         }
         if (isQwenCheckpoint(checkpointDir) || isMiniMaxCheckpoint(checkpointDir) || isDeepSeekCheckpoint(checkpointDir)
-                || isGlmCheckpoint(checkpointDir)) {
+                || isGlmCheckpoint(checkpointDir) || isInklingCheckpoint(checkpointDir)) {
             return true;
         }
         // Llama-family: HF config.json model_type llama, or classic tokenizer layout.
@@ -474,7 +474,7 @@ public class ChatService implements OpenAiModelContributor {
      * Returns {@code true} when the HF id looks like a builtin Torch Llama/Qwen family.
      */
     static boolean isBuiltinTorchFamily(String modelSpec) {
-        if (isMiniMaxRepoId(modelSpec) || isDeepSeekRepoId(modelSpec) || isGlmRepoId(modelSpec)) {
+        if (isMiniMaxRepoId(modelSpec) || isDeepSeekRepoId(modelSpec) || isGlmRepoId(modelSpec) || isInklingRepoId(modelSpec)) {
             return true;
         }
         return GenAISupportedModels.matchRepoId(modelSpec)
@@ -537,6 +537,7 @@ public class ChatService implements OpenAiModelContributor {
         switch (model) {
             case Llama llama -> llama.setPrefixReuseEnabled(enabled);
             case MiniMax minimax -> minimax.setPrefixReuseEnabled(enabled);
+            case smile.llm.model.inkling.Inkling inkling -> inkling.setPrefixReuseEnabled(enabled);
             case Qwen qwen -> {
                 qwen.setPrefixReplayEnabled(hybridPrefixReplay);
                 qwen.setPrefixReuseEnabled(enabled);
@@ -590,6 +591,10 @@ public class ChatService implements OpenAiModelContributor {
     static void logQuantBackend(LanguageModel model, ChatServiceConfig config, KvCacheConfig kvCache) {
         if (model instanceof MiniMax minimax) {
             logger.infof("Weight quant: MiniMax-M3 weight mode %s", minimax.weightMode());
+            return;
+        }
+        if (model instanceof smile.llm.model.inkling.Inkling) {
+            logger.infof("Weight quant: Inkling-2 experts NVFP4 (layers 0-19) and MXFP8 (layers 20-23) on Marlin, attention bf16");
             return;
         }
         try {
@@ -1081,6 +1086,9 @@ public class ChatService implements OpenAiModelContributor {
         if (isGlmCheckpoint(localPath)) {
             return buildGlm(localPath.toString(), config);
         }
+        if (isInklingCheckpoint(localPath)) {
+            return buildInkling(localPath.toString(), config);
+        }
         String tokenizerPath = resolveLocalTokenizer(localPath);
         try {
             smile.llm.quant.QuantBackendOverride.set(config.quantization());
@@ -1257,6 +1265,49 @@ public class ChatService implements OpenAiModelContributor {
         logger.infof("Loading GLM-5.x from %s on %d device(s) for %d concurrent request(s)", checkpointDir, devices.length,
                 Math.max(1, config.maxBatchSize()));
         return smile.llm.model.glm.Glm.build(checkpointDir, 0, config.maxSeqLen(), devices, Math.max(1, config.maxBatchSize()));
+    }
+
+    /**
+     * Returns {@code true} when {@code config.json} identifies an Inkling-2 checkpoint ({@code model_type}
+     * {@code inkling2*} or an {@code architectures} entry {@code Inkling2*}).
+     */
+    static boolean isInklingCheckpoint(Path checkpointDir) throws IOException {
+        Path configJson = checkpointDir.resolve("config.json");
+        if (!Files.isRegularFile(configJson)) {
+            return false;
+        }
+        JsonNode root = new ObjectMapper().readTree(configJson.toFile());
+        String modelType = root.has("model_type") ? root.get("model_type").asString() : "";
+        if (modelType.startsWith("inkling2")) {
+            return true;
+        }
+        if (root.has("architectures") && root.get("architectures").isArray()) {
+            for (JsonNode n : root.get("architectures")) {
+                String arch = n.asString();
+                if (arch != null && arch.startsWith("Inkling2")) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Returns {@code true} when a Hugging Face repo id names an Inkling-2 model. */
+    static boolean isInklingRepoId(String modelSpec) {
+        return modelSpec != null && modelSpec.toLowerCase(java.util.Locale.ROOT).contains("inkling-2");
+    }
+
+    /**
+     * Loads Inkling-2-Mini on the first device of {@code smile.chat.devices}. The weights come in the checkpoint's own
+     * NVFP4/MXFP8 formats; {@code smile.chat.quantization} has no effect. Text only.
+     */
+    private LanguageModel buildInkling(String checkpointDir, ChatServiceConfig config) throws Exception {
+        byte[] devices = parallelConfig(config).devices();
+        if (devices.length > 1) {
+            throw new IllegalArgumentException("Inkling-2-Mini runs on one GPU; set smile.chat.devices to a single index");
+        }
+        logger.infof("Loading Inkling-2 from %s on device %d", checkpointDir, devices[0]);
+        return smile.llm.model.inkling.Inkling.build(checkpointDir, 0, config.maxSeqLen(), devices[0]);
     }
 
     /** Returns {@code true} when a Hugging Face repo id names a DeepSeek-V4 model. */

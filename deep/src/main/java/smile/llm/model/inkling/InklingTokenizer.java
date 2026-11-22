@@ -152,16 +152,70 @@ public class InklingTokenizer extends Tiktoken {
     }
 
     /**
-     * Decodes tokens. With {@code skipSpecial}, every added token (headers, content markers, end markers, the
-     * unused ids) is dropped; use {@link smile.llm.tool.InklingResponseParser} on the unfiltered text to split a
-     * reply into reasoning, content and tool calls.
+     * Decodes tokens. With {@code skipSpecial}, a reply is rendered in the form the server's chat pipeline reads:
+     * reasoning as {@code <think>...</think>}, tool calls as {@code <tool_call>{"name":..,"args":{..}}</tool_call>}
+     * (the {@code <|message_model|>NAME} header of a call is dropped), text as is, every other control token removed.
+     *
+     * <p>The rendering is a scan over the given tokens only (the streamer decodes chunks), so a
+     * {@code </think>} is written at the first text message of the chunk and a tool call cut by a chunk boundary
+     * loses its closing tag; decoding a whole reply is exact (a leading {@code </think>} without reasoning is
+     * dropped by the sanitizer). Use {@link smile.llm.tool.InklingResponseParser} for an exact split.
      */
     @Override
     public String tryDecode(int[] tokens, boolean skipSpecial) throws CharacterCodingException {
         if (!skipSpecial) {
             return super.tryDecode(tokens, false);
         }
-        return super.tryDecode(Arrays.stream(tokens).filter(t -> !hidden.contains(t)).toArray(), false);
+        final int header = specialToken(MESSAGE_MODEL);
+        final int thinking = specialToken(CONTENT_THINKING);
+        final int text = specialToken(CONTENT_TEXT);
+        final int invoke = specialToken(CONTENT_INVOKE_TOOL_JSON);
+        final int end = specialToken(END_MESSAGE);
+        StringBuilder out = new StringBuilder();
+        List<Integer> run = new ArrayList<>();
+        int state = 0;                 // 0 unknown / between messages, 1 reasoning, 2 text, 3 tool call
+        boolean sawText = false;
+        for (int i = 0; i < tokens.length; i++) {
+            int t = tokens[i];
+            if (!hidden.contains(t)) {
+                run.add(t);
+                continue;
+            }
+            // a run of ordinary tokens ends at a control token
+            String piece = run.isEmpty() ? "" : super.tryDecode(run.stream().mapToInt(Integer::intValue).toArray(), false);
+            run.clear();
+            if (t == invoke) {
+                piece = "";            // the text just read was the tool name of the <|message_model|> header
+            }
+            out.append(piece);
+            if (t == thinking) {
+                out.append("<think>");
+                state = 1;
+            } else if (t == text) {
+                if (state != 2 && !sawText) {
+                    out.append("</think>");
+                }
+                sawText = true;
+                state = 2;
+            } else if (t == invoke) {
+                out.append("<tool_call>");
+                state = 3;
+            } else if (t == end) {
+                if (state == 1) {
+                    out.append("</think>");
+                    sawText = true;
+                } else if (state == 3) {
+                    out.append("</tool_call>");
+                }
+                state = 0;
+            } else if (t == header) {
+                state = 0;
+            }
+        }
+        if (!run.isEmpty()) {
+            out.append(super.tryDecode(run.stream().mapToInt(Integer::intValue).toArray(), false));
+        }
+        return out.toString();
     }
 
     /**

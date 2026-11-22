@@ -44,6 +44,8 @@ public final class AssistantTextSanitizer {
             "(?m)^(?:system|user|assistant|tool)\\s*$\\n?");
     private static final Pattern ORPHAN_THINK = Pattern.compile(
             "</?think>");
+    /** Reasoning that was cut off by the token limit: an opening tag with no closing tag after it. */
+    private static final Pattern OPEN_THINK = Pattern.compile("<think>(?:(?!</think>).)*\\z", Pattern.DOTALL);
 
     private AssistantTextSanitizer() {}
 
@@ -76,6 +78,7 @@ public final class AssistantTextSanitizer {
         } else {
             out = THINK_BLOCK.matcher(out).replaceAll("");
         }
+        out = OPEN_THINK.matcher(out).replaceAll("");
         out = MINIMAX_TOOL_CALL_BLOCK.matcher(out).replaceAll("");
         out = TOOL_CALL_BLOCK.matcher(out).replaceAll("");
         out = TOOL_RESPONSE_BLOCK.matcher(out).replaceAll("");

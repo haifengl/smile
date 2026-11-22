@@ -140,7 +140,8 @@ public final class InklingModel implements AutoCloseable {
      *
      * @param st     the sequence state, extended by the tokens.
      * @param tokens the tokens at positions {@code st.length ..}.
-     * @param rows   the rows (indices into {@code tokens}) whose logits are wanted; {@code null} for the last one only.
+     * @param rows   the rows (indices into {@code tokens}) whose logits are wanted; {@code null} for the last one only,
+     *               empty for none (the result is then {@code null}).
      * @param trace  receives the output of every layer application ({@code [T, D]} bf16 on the host), or {@code null}.
      * @return float32 {@code [rows, unpadded vocab]} (soft-capped).
      */
@@ -148,6 +149,9 @@ public final class InklingModel implements AutoCloseable {
         int start = st.length;
         if (start + tokens.length > st.capacity) {
             throw new IllegalArgumentException("sequence exceeds the state capacity " + st.capacity);
+        }
+        if (tokens.length > st.maxChunk(args)) {
+            throw new IllegalArgumentException("a chunk of " + tokens.length + " tokens exceeds the limit " + st.maxChunk(args));
         }
         AutoScope scope = new AutoScope();
         Tensor.push(scope);
@@ -201,6 +205,10 @@ public final class InklingModel implements AutoCloseable {
                     blocks.add(h);
                 }
                 h = out;
+            }
+            if (rows != null && rows.length == 0) {
+                st.length = start + tokens.length;          // a prefill chunk: no logits wanted
+                return null;
             }
             Tensor last = InklingLayer.attnRes(blocks, h, outputQuery);
             Tensor x = bf16(rms(o("aten::select.int", last, 1L, 0L), finalNorm, args.normEps()));

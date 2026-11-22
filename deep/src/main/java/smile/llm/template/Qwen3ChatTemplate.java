@@ -175,7 +175,7 @@ public final class Qwen3ChatTemplate implements ChatTemplate {
         if (variant.reasoningEffort() && thinking) {
             String effort = opts.reasoningEffort() == null ? "xhigh" : opts.reasoningEffort();
             instructions = switch (effort) {
-                case "xhigh" -> XHIGH;
+                case "xhigh", "high" -> XHIGH;
                 case "low" -> LOW;
                 case "medium" -> "";
                 default -> throw new IllegalArgumentException("Unexpected reasoning effort " + effort

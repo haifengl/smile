@@ -102,4 +102,12 @@ public class AssistantTextSanitizerTest {
         assertEquals("Read", out.toolCalls().getFirst().function().name());
         assertTrue(out.content() == null || !out.content().contains("tool_call"));
     }
+
+    @Test
+    public void testGivenReasoningCutByTheTokenLimitWhenSanitizedThenNothingVisible() {
+        assertNull(AssistantTextSanitizer.sanitize("<think>The user asks something and I am still thinking"));
+        assertEquals("Answer.", AssistantTextSanitizer.sanitize("<think>done</think>Answer."));
+        assertEquals("Answer.", AssistantTextSanitizer.sanitize("</think>Answer."));
+        assertEquals("Hello", AssistantTextSanitizer.sanitize("Hello"));
+    }
 }

@@ -182,7 +182,9 @@ public class CompletionRequest {
     /**
      * Resolves {@code reasoning_effort} from the top-level field or {@code chat_template_kwargs}.
      *
-     * @return {@code xhigh}, {@code medium}, {@code low}, or {@code null} when unspecified.
+     * @return {@code none}, {@code minimal}, {@code low}, {@code medium}, {@code high}, {@code xhigh}, {@code max}, a
+     *         number in [0, 0.99] (Inkling-2 renders all of them; Qwen3.8 reads {@code high} as {@code xhigh} and rejects
+     *         the rest), or {@code null} when unspecified.
      * @throws IllegalArgumentException for any other value.
      */
     String resolveReasoningEffort() {
@@ -194,13 +196,24 @@ public class CompletionRequest {
         if (effort == null || effort.isBlank()) {
             return null;
         }
-        return switch (effort.trim().toLowerCase(java.util.Locale.ROOT)) {
-            case "xhigh", "high" -> "xhigh";
-            case "medium" -> "medium";
-            case "low" -> "low";
-            default -> throw new IllegalArgumentException(
-                    "reasoning_effort must be xhigh, medium or low, got '" + effort + "'");
-        };
+        String key = effort.trim().toLowerCase(java.util.Locale.ROOT);
+        switch (key) {
+            case "none", "minimal", "low", "medium", "high", "xhigh", "max" -> {
+                return key;
+            }
+            default -> {
+                try {
+                    double v = Double.parseDouble(key);
+                    if (v >= 0.0 && v <= 0.99) {
+                        return key;
+                    }
+                } catch (NumberFormatException ignored) {
+                    // falls through to the error
+                }
+                throw new IllegalArgumentException("reasoning_effort must be none, minimal, low, medium, high, xhigh, max "
+                        + "or a number in [0, 0.99], got '" + effort + "'");
+            }
+        }
     }
 
     /**

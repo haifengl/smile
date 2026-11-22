@@ -46,7 +46,7 @@ public class InklingGenerateTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @SuppressWarnings("unchecked")
-    private static Message message(JsonNode m) {
+    static Message message(JsonNode m) {
         List<ToolCall> calls = null;
         if (m.has("tool_calls")) {
             calls = new ArrayList<>();
