@@ -215,7 +215,6 @@ include/flashinfer/attention/hopper/kernel_traits.cuh
 include/flashinfer/attention/hopper/named_barrier.cuh
 include/flashinfer/attention/hopper/tile_scheduler.cuh
 include/flashinfer/attention/hopper/utils.cuh
-flashinfer/cute_dsl/sparse/sm100_blk64/tile_scheduler.hpp
 
 BSD 3-Clause "New" License
 --------------------------
@@ -228,3 +227,6 @@ MIT License
 
 3rdparty/spdlog
 3rdparty/spdlog/include/spdlog/fmt/bundled (fmt library)
+
+flashinfer/experimental/hc_sum_sm100/deterministic.py (MIT-derived portions;
+see licenses/LICENSE.batch-invariant-ops.txt)

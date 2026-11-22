@@ -17,30 +17,20 @@
 package smile.llm.attention;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import smile.torch.Native;
 
 /**
- * Resolves FlashInfer AOT / jit-cache directory for hybrid packaging:
- * explicit dir → env / bundled default → cache-dir → optional download.
+ * Optional FlashInfer AOT / jit-cache directory: explicit dir → bundled default → env → cache dir.
  *
- * <p>Download-only (no nvcc). Artifacts are {@code flashinfer-jit-cache} wheels,
- * not {@code flashinfer-cubin}.
+ * <p>Nothing loads these modules today: the attention kernels are compiled into {@code libsmile_torch}
+ * from the vendored FlashInfer headers, and the GPU images no longer bundle the jit-cache. The directory is
+ * only passed to the native library when someone provides one. Runtime download was removed.
  *
  * @author Haifeng Li
  */
@@ -50,9 +40,6 @@ public final class FlashInferArtifacts {
     /** Default install path inside the GPU Docker image. */
     public static final String BUNDLED_AOT_DIR = "/opt/flashinfer/aot";
 
-    /** Pinned jit-cache release used when {@code smile.chat.flashinfer-download=true}. */
-    public static final String DEFAULT_JIT_CACHE_VERSION = "0.6.18.post1";
-
     private FlashInferArtifacts() {}
 
     /**
@@ -60,7 +47,7 @@ public final class FlashInferArtifacts {
      *
      * @param aotDir        explicit config path (may be blank).
      * @param cacheDir      download / extract cache (may be blank).
-     * @param allowDownload when true, fetch jit-cache into {@code cacheDir} if missing.
+     * @param allowDownload ignored (deprecated); a warning is logged when true.
      * @param cudaTag       wheel CUDA tag such as {@code cu134}.
      * @return resolved directory, or empty when none available.
      */
@@ -102,14 +89,8 @@ public final class FlashInferArtifacts {
                 return Optional.of(extracted);
             }
             if (allowDownload) {
-                try {
-                    downloadAndExtract(cache, cudaTag == null || cudaTag.isBlank() ? "cu134" : cudaTag);
-                    if (isUsableAot(extracted)) {
-                        return Optional.of(extracted);
-                    }
-                } catch (Exception e) {
-                    logger.warn("FlashInfer jit-cache download failed: {}", e.toString());
-                }
+                logger.warn("smile.chat.flashinfer-download is ignored: runtime download of the "
+                        + "flashinfer-jit-cache was removed (the kernels are compiled into libsmile_torch)");
             }
         }
         return Optional.empty();
@@ -124,85 +105,6 @@ public final class FlashInferArtifacts {
         } catch (IOException e) {
             return false;
         }
-    }
-
-    static void downloadAndExtract(Path cacheDir, String cudaTag) throws IOException, InterruptedException {
-        Files.createDirectories(cacheDir);
-        // Prefer GitHub release assets; the flashinfer.ai index may 404 for the same file.
-        String ver = DEFAULT_JIT_CACHE_VERSION;
-        String tag = cudaTag;
-        String wheelFile = "flashinfer_jit_cache-" + ver + "+" + tag
-                + "-cp39-abi3-manylinux_2_28_x86_64.whl";
-        Path wheel = cacheDir.resolve(wheelFile);
-        if (!Files.isRegularFile(wheel)) {
-            URI gh = URI.create("https://github.com/flashinfer-ai/flashinfer/releases/download/v"
-                    + ver + "/flashinfer_jit_cache-" + ver + "%2B" + tag
-                    + "-cp39-abi3-manylinux_2_28_x86_64.whl");
-            URI index = URI.create("https://flashinfer.ai/whl/" + tag + "/"
-                    + "flashinfer_jit_cache-" + ver + "%2B" + tag
-                    + "-cp39-abi3-manylinux_2_28_x86_64.whl");
-            HttpClient client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(30))
-                    .followRedirects(HttpClient.Redirect.NORMAL)
-                    .build();
-            HttpResponse<InputStream> resp = null;
-            IOException last = null;
-            for (URI uri : List.of(gh, index)) {
-                logger.info("Downloading FlashInfer jit-cache from {}", uri);
-                try {
-                    HttpRequest req = HttpRequest.newBuilder(uri).GET()
-                            .timeout(Duration.ofMinutes(30)).build();
-                    resp = client.send(req, HttpResponse.BodyHandlers.ofInputStream());
-                    if (resp.statusCode() / 100 == 2) {
-                        break;
-                    }
-                    last = new IOException("HTTP " + resp.statusCode() + " for " + uri);
-                    resp = null;
-                } catch (IOException e) {
-                    last = e;
-                }
-            }
-            if (resp == null) {
-                throw last != null ? last : new IOException("FlashInfer jit-cache download failed");
-            }
-            Files.copy(resp.body(), wheel);
-        }
-        Path aot = cacheDir.resolve("aot");
-        if (Files.exists(aot)) {
-            try (Stream<Path> walk = Files.walk(aot)) {
-                walk.sorted(Comparator.reverseOrder()).forEach(p -> {
-                    try {
-                        Files.deleteIfExists(p);
-                    } catch (IOException ignored) {
-                    }
-                });
-            }
-        }
-        Files.createDirectories(aot);
-        try (ZipInputStream zis = new ZipInputStream(Files.newInputStream(wheel))) {
-            ZipEntry e;
-            while ((e = zis.getNextEntry()) != null) {
-                String name = e.getName();
-                // Wheels nest under flashinfer_jit_cache/.../jit_cache or similar.
-                if (e.isDirectory() || !name.endsWith(".so")) {
-                    continue;
-                }
-                int slash = name.lastIndexOf('/');
-                String leaf = slash >= 0 ? name.substring(slash + 1) : name;
-                // Preserve one parent folder (module URI) when present.
-                Path dest;
-                if (slash > 0) {
-                    String parent = name.substring(0, slash);
-                    int pslash = parent.lastIndexOf('/');
-                    String uriDir = pslash >= 0 ? parent.substring(pslash + 1) : parent;
-                    dest = aot.resolve(uriDir).resolve(leaf);
-                } else {
-                    dest = aot.resolve(leaf);
-                }
-                Files.createDirectories(dest.getParent());
-                Files.copy(zis, dest);
-            }
-        }
-        logger.info("Extracted FlashInfer AOT modules to {}", aot);
     }
 
     private static String firstNonBlank(String a, String b) {

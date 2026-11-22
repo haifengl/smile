@@ -173,26 +173,25 @@ public interface ChatServiceConfig {
     String attentionBackend();
 
     /**
-     * Explicit FlashInfer AOT / jit-cache directory. Unset means auto-resolve
-     * (bundled {@code /opt/flashinfer/aot}, env, then cache-dir).
+     * Optional FlashInfer AOT / jit-cache directory (unused by the kernels, which are compiled into
+     * libsmile_torch; the GPU images no longer bundle one). Unset means auto-resolve
+     * ({@code /opt/flashinfer/aot}, env, then cache-dir) and is fine when none exists.
      */
     Optional<String> flashinferAotDir();
 
     /**
-     * Directory for downloaded / extracted {@code flashinfer-jit-cache} modules.
-     * Unset uses {@code ~/.cache/smile/flashinfer}.
+     * Directory searched for an extracted {@code aot} jit-cache. Unset uses {@code ~/.cache/smile/flashinfer}.
      */
     Optional<String> flashinferCacheDir();
 
     /**
-     * When true and no AOT dir is present, download a pinned jit-cache wheel
-     * into {@link #flashinferCacheDir()} (download-only; no nvcc).
+     * Deprecated, ignored (a warning is logged when true): runtime download of the jit-cache was removed.
      */
     @WithDefault("false")
     boolean flashinferDownload();
 
     /**
-     * CUDA tag for jit-cache wheels (for example {@code cu134}).
+     * Deprecated, ignored: was the CUDA tag of the downloaded jit-cache wheel.
      */
     @WithDefault("cu134")
     String flashinferCudaTag();

@@ -414,7 +414,82 @@ struct vec_cast<half, __nv_fp8_e5m2> {
   }
 };
 
+// E2M1 nibble decoding helpers. These are plain integer and 16-bit bit manipulation with no
+// FP4 type in their signatures, so they sit outside the FP4 feature guard below: the tile
+// repack in attention/prefill.cuh names them from a template whose FP4 branch is discarded,
+// not removed, and would otherwise fail to compile in builds without FP4 enabled.
+// `prmt` with the msb of a selector nibble set replicates the sign (msb) of the selected byte
+// across the whole output byte, giving 0x00 or 0xFF. `__byte_perm` discards that bit, so the
+// E2M1 sign spread below has to reach for the PTX instruction directly.
+__device__ __forceinline__ uint32_t prmt_b32(uint32_t a, uint32_t b, uint32_t sel) {
+  uint32_t r;
+  asm("prmt.b32 %0, %1, %2, %3;" : "=r"(r) : "r"(a), "r"(b), "r"(sel));
+  return r;
+}
+
+// Spread the four E2M1 sign bits of `packed`'s low/high half into byte msbs.
+//
+// `packed` holds eight fp4 values as eight nibbles; byte j carries value 2j in bits[3:0] and
+// value 2j+1 in bits[7:4], so bit 3 of byte j is an even value's sign and bit 7 is an odd
+// value's sign. Byte j's msb is therefore already the odd sign, and `packed << 4` puts the even
+// sign in the same place. One sign-replicating `prmt` then gathers the four signs in value order
+// as 0x00/0xFF bytes; the caller masks to 0x80 and merges, which `lop3` folds into one
+// instruction. Selector 0xD9C8 covers values 0..3, 0xFBEA covers values 4..7.
+__device__ __forceinline__ uint32_t e2m1_sign_bytes(uint32_t packed, uint32_t sel) {
+  return prmt_b32(packed << 4, packed, sel) & 0x80808080u;
+}
+
+// Dequantize eight E2M1 values, held as the eight nibbles of `packed` in value order, into four
+// packed 16-bit pairs. Pure ALU, register-only: the magnitude table is indexed by `prmt`.
+//
+// FP16: all eight E2M1 magnitudes {0,0.5,1,1.5,2,3,4,6} encode with a zero low byte, so the whole
+// table is eight high bytes -- exactly one `prmt` source window -- and the expansion just inserts
+// zero low bytes. BF16 magnitudes have varying low bytes, so two tables are indexed and the
+// {low, high} byte pairs are interleaved instead.
+__device__ __forceinline__ void e2m1x8_to_f16x8(uint32_t packed, uint32_t* d) {
+  constexpr uint32_t kHi0 = 0x3E3C3800u;  // high bytes of +{0.0, 0.5, 1.0, 1.5}
+  constexpr uint32_t kHi1 = 0x46444240u;  // high bytes of +{2.0, 3.0, 4.0, 6.0}
+  const uint32_t mag = packed & 0x77777777u;
+  uint32_t hi_a = __byte_perm(kHi0, kHi1, mag);        // magnitudes of values 0..3
+  uint32_t hi_b = __byte_perm(kHi0, kHi1, mag >> 16);  // magnitudes of values 4..7
+  hi_a |= e2m1_sign_bytes(packed, 0xD9C8u);
+  hi_b |= e2m1_sign_bytes(packed, 0xFBEAu);
+  d[0] = __byte_perm(hi_a, 0u, 0x1404u);
+  d[1] = __byte_perm(hi_a, 0u, 0x3424u);
+  d[2] = __byte_perm(hi_b, 0u, 0x1404u);
+  d[3] = __byte_perm(hi_b, 0u, 0x3424u);
+}
+
+__device__ __forceinline__ void e2m1x8_to_bf16x8(uint32_t packed, uint32_t* d) {
+  constexpr uint32_t kHi0 = 0x3F3F3F00u;  // high bytes of +{0.0, 0.5, 1.0, 1.5}
+  constexpr uint32_t kHi1 = 0x40404040u;  // high bytes of +{2.0, 3.0, 4.0, 6.0}
+  constexpr uint32_t kLo0 = 0xC0800000u;  // low  bytes of +{0.0, 0.5, 1.0, 1.5}
+  constexpr uint32_t kLo1 = 0xC0804000u;  // low  bytes of +{2.0, 3.0, 4.0, 6.0}
+  const uint32_t mag = packed & 0x77777777u;
+  const uint32_t mag_a = mag, mag_b = mag >> 16;
+  uint32_t hi_a = __byte_perm(kHi0, kHi1, mag_a);
+  uint32_t hi_b = __byte_perm(kHi0, kHi1, mag_b);
+  const uint32_t lo_a = __byte_perm(kLo0, kLo1, mag_a);
+  const uint32_t lo_b = __byte_perm(kLo0, kLo1, mag_b);
+  hi_a |= e2m1_sign_bytes(packed, 0xD9C8u);
+  hi_b |= e2m1_sign_bytes(packed, 0xFBEAu);
+  d[0] = __byte_perm(lo_a, hi_a, 0x5140u);
+  d[1] = __byte_perm(lo_a, hi_a, 0x7362u);
+  d[2] = __byte_perm(lo_b, hi_b, 0x5140u);
+  d[3] = __byte_perm(lo_b, hi_b, 0x7362u);
+}
+
+template <typename DType16>
+__device__ __forceinline__ void e2m1x8_to_16bx8(uint32_t packed, uint32_t* d) {
+  if constexpr (std::is_same_v<DType16, half>) {
+    e2m1x8_to_f16x8(packed, d);
+  } else {
+    e2m1x8_to_bf16x8(packed, d);
+  }
+}
+
 #if defined(FLASHINFER_ENABLE_FP4_E2M1) && CUDA_VERSION >= 12080
+
 // Convert __nv_fp4x2_e2m1 (2 fp4 values per byte) to fp16.
 // vec_size counts fp16 output elements; src has stride-2 layout:
 //   src[0] holds x0,x1  src[1] is padding
@@ -442,6 +517,23 @@ struct vec_cast<half, __nv_fp4x2_e2m1> {
       reinterpret_cast<uint32_t*>(dst)[i] = y;
     }
 #else
+#if defined(__CUDA_ARCH__)
+    // Fast path for arch < SM100: pure-ALU table lookup through `prmt`.
+    // The FP16 encodings of the eight E2M1 magnitudes {0,0.5,1,1.5,2,3,4,6} all have a zero low
+    // byte, so the whole magnitude table fits in the 8 bytes a single `prmt` can index and the
+    // conversion stays in registers. The `uint16_t lut[16]` array below instead lands in local
+    // memory: one dependent LDL per element, plus a 32-byte stack frame in every kernel that
+    // inlines this.
+    if constexpr (vec_size % 8 == 0) {
+#pragma unroll
+      for (size_t i = 0; i < vec_size / 8; ++i) {
+        const uint32_t* s = reinterpret_cast<const uint32_t*>(src) + i * 2;
+        // Payload bytes sit at stride 2; gather them into eight nibbles (nibble j == value j).
+        e2m1x8_to_f16x8(__byte_perm(s[0], s[1], 0x6420u), reinterpret_cast<uint32_t*>(dst) + i * 4);
+      }
+      return;
+    }
+#endif
     // Software LUT fallback for arch < SM100.
     // e2m1 encoding: bit[3]=sign, bit[2:0]=magnitude index in {0,0.5,1,1.5,2,3,4,6}.
     // Each packed byte holds two fp4 values: bits[3:0]=first, bits[7:4]=second.
@@ -550,6 +642,21 @@ struct vec_cast<nv_bfloat16, __nv_fp4x2_e2m1> {
       reinterpret_cast<uint32_t*>(dst)[i] = y;
     }
 #else
+#if defined(__CUDA_ARCH__)
+    // Fast path for arch < SM100: pure-ALU table lookup through `prmt`. Unlike FP16, the BF16
+    // encodings of the E2M1 magnitudes have a varying low byte, so two 8-byte tables are indexed
+    // and then interleaved. Still register-only; see the FP16 specialization for why the
+    // `uint16_t lut[16]` array below is expensive.
+    if constexpr (vec_size % 8 == 0) {
+#pragma unroll
+      for (size_t i = 0; i < vec_size / 8; ++i) {
+        const uint32_t* s = reinterpret_cast<const uint32_t*>(src) + i * 2;
+        e2m1x8_to_bf16x8(__byte_perm(s[0], s[1], 0x6420u),
+                         reinterpret_cast<uint32_t*>(dst) + i * 4);
+      }
+      return;
+    }
+#endif
     // Software LUT fallback for arch < SM100.
     // e2m1 encoding: bit[3]=sign, bit[2:0]=magnitude index in {0,0.5,1,1.5,2,3,4,6}.
     // Each packed byte holds two fp4 values: bits[3:0]=first, bits[7:4]=second.

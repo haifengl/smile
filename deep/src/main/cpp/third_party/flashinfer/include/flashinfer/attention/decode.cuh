@@ -163,8 +163,10 @@ __device__ __forceinline__ void sync_state(AttentionVariant variant, state_t<vec
     auto block = cg::this_thread_block();
     st.o.store(smem + (tz * bdy + ty) * head_dim + tx * vec_size);
     if constexpr (variant.use_softmax) {
-      smem_md[(tz * bdy + ty) * 2] = st.m;
-      smem_md[(tz * bdy + ty) * 2 + 1] = st.d;
+      if (tx == 0) {
+        smem_md[(tz * bdy + ty) * 2] = st.m;
+        smem_md[(tz * bdy + ty) * 2 + 1] = st.d;
+      }
       block.sync();
       st.init();
 #pragma unroll
@@ -246,8 +248,14 @@ __global__ void SingleDecodeWithKVCacheKernel(const __grid_constant__ Params par
   DTypeKV* k_smem = (DTypeKV*)smem;
   DTypeKV* v_smem = (DTypeKV*)(smem + num_stages_smem * bdy * tile_size_per_bdx * bdz * head_dim *
                                           sizeof(DTypeKV));
-  float* smem_md = (float*)(smem + 2 * num_stages_smem * bdy * tile_size_per_bdx * bdz * head_dim *
-                                       sizeof(DTypeKV));
+  // sync_state (bdz > 1) reuses the K+V buffer as float storage for st.o, which needs
+  // bdz*bdy*head_dim*sizeof(float) bytes. When FP8+GQA shrinks the K+V buffer
+  // (tile_size_per_bdx=1) below that, smem_md would overlap st.o and st.o would run past
+  // the allocation (illegal smem write). Reserve max(K+V data, st.o float) for the region.
+  constexpr uint32_t smem_kv_region =
+      std::max(2 * num_stages_smem * bdy * tile_size_per_bdx * bdz * head_dim * sizeof(DTypeKV),
+               bdz * bdy * head_dim * sizeof(float));
+  float* smem_md = (float*)(smem + smem_kv_region);
 
   uint32_t tx = threadIdx.x, ty = threadIdx.y, tz = threadIdx.z;
   vec_t<float, vec_size> q_vec;
@@ -363,9 +371,12 @@ __global__ void SingleDecodeWithKVCacheKernel(const __grid_constant__ Params par
                                             qo_head_idx, st_local.m, st_local.d, /*scale=*/1.0f);
   }
 
-  st_local.o.cast_store(o + (kv_chunk_idx * num_qo_heads + qo_head_idx) * head_dim + tx * vec_size);
-  if (lse != nullptr) {
-    lse[kv_chunk_idx * num_qo_heads + qo_head_idx] = st_local.get_lse();
+  if (tz == 0) {
+    st_local.o.cast_store(o + (kv_chunk_idx * num_qo_heads + qo_head_idx) * head_dim +
+                          tx * vec_size);
+    if (lse != nullptr) {
+      lse[kv_chunk_idx * num_qo_heads + qo_head_idx] = st_local.get_lse();
+    }
   }
 }
 
@@ -435,10 +446,13 @@ __device__ __inline__ void BatchDecodeWithPagedKVCacheDevice(const Params& param
   DTypeKV* k_smem = (DTypeKV*)smem;
   DTypeKV* v_smem = (DTypeKV*)(smem + num_stages_smem * tile_size_per_bdx * bdy * bdz * head_dim *
                                           sizeof(DTypeKV));
-  size_t* kv_offset_smem = (size_t*)(smem + 2 * num_stages_smem * tile_size_per_bdx * bdy * bdz *
-                                                head_dim * sizeof(DTypeKV));
-  float* smem_md = (float*)(smem + 2 * num_stages_smem * tile_size_per_bdx * bdy * bdz * head_dim *
-                                       sizeof(DTypeKV));
+  // sync_state (bdz > 1) reuses the K+V buffer as float storage for st.o; reserve
+  // max(K+V data, st.o float) so kv_offset_smem/smem_md do not overlap st.o (see single decode).
+  constexpr uint32_t smem_kv_region =
+      std::max(2 * num_stages_smem * tile_size_per_bdx * bdy * bdz * head_dim * sizeof(DTypeKV),
+               bdz * bdy * head_dim * sizeof(float));
+  size_t* kv_offset_smem = (size_t*)(smem + smem_kv_region);
+  float* smem_md = (float*)(smem + smem_kv_region);
 
   vec_t<float, vec_size> q_vec;
   vec_t<float, vec_size> freq;
@@ -681,9 +695,11 @@ cudaError_t SingleDecodeWithKVCacheDispatched(Params params, typename Params::DT
     constexpr uint32_t tile_size_per_bdx =
         GROUP_SIZE == 1 ? (sizeof(DTypeKV) == 1 ? 2U : (HEAD_DIM >= 512 ? 4U : 8U)) : 1U;
     DISPATCH_COMPUTE_CAP_DECODE_NUM_STAGES_SMEM(compute_capacity, NUM_STAGES_SMEM, {
-      const uint32_t smem_size =
-          2U * NUM_STAGES_SMEM * bdy * tile_size_per_bdx * bdz * HEAD_DIM * sizeof(DTypeKV) +
-          2U * bdy * bdz * sizeof(float);
+      // K+V buffer must also hold sync_state's float st.o (see kernel comment); take the max.
+      const uint32_t smem_size = std::max(2U * NUM_STAGES_SMEM * bdy * tile_size_per_bdx * bdz *
+                                              HEAD_DIM * sizeof(DTypeKV),
+                                          bdz * bdy * HEAD_DIM * sizeof(float)) +
+                                 2U * bdy * bdz * sizeof(float);
       auto kernel =
           SingleDecodeWithKVCacheKernel<POS_ENCODING_MODE, NUM_STAGES_SMEM, tile_size_per_bdx,
                                         vec_size, bdx, bdy, bdz, AttentionVariant, Params>;
@@ -763,8 +779,10 @@ cudaError_t BatchDecodeWithPagedKVCacheDispatched(Params params, typename Params
     constexpr uint32_t bdz = num_threads / (bdx * bdy);
     constexpr uint32_t tile_size_per_bdx = GROUP_SIZE == 1 ? (sizeof(DTypeKV) == 1 ? 2U : 4U) : 1U;
     DISPATCH_COMPUTE_CAP_DECODE_NUM_STAGES_SMEM(compute_capacity, NUM_STAGES_SMEM, {
+      // K+V buffer must also hold sync_state's float st.o (see kernel comment); take the max.
       const uint32_t smem_size =
-          2 * NUM_STAGES_SMEM * tile_size_per_bdx * bdy * bdz * HEAD_DIM * sizeof(DTypeKV) +
+          std::max(2 * NUM_STAGES_SMEM * tile_size_per_bdx * bdy * bdz * HEAD_DIM * sizeof(DTypeKV),
+                   bdz * bdy * HEAD_DIM * sizeof(float)) +
           std::max(tile_size_per_bdx * num_threads * sizeof(DTypeKV*),
                    2 * bdy * bdz * sizeof(float));
       auto kernel =

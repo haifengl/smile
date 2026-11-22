@@ -27,7 +27,9 @@ namespace flashinfer {
 namespace math {
 
 // log2(e)
-constexpr float log2e = 1.44269504088896340736f;
+constexpr float log2e_f = 1.44269504088896340736f;
+constexpr double log2e_d = 1.44269504088896340736;
+constexpr float log2e = log2e_f;
 
 constexpr float loge2 = 0.693147180559945309417f;
 

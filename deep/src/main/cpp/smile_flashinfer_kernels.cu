@@ -822,6 +822,9 @@ int run_batch_prefill_capturable(
                     /*disable_split_kv=*/verify_cuda_graph_env(),
                     /*num_colocated_ctas=*/0,
                     /*uniform_q_len=*/qo_len,
+                    // FlashInfer >= 0.7: all plans of one captured graph share qo_len, so the
+                    // scheduler may skip split-KV once the tiles exceed the split budget.
+                    /*fixed_uniform_q_len=*/verify_cuda_graph_env(),
                     stream,
                     sizeof(DType));
             if (status != cudaSuccess) {
@@ -917,8 +920,11 @@ int run_batch_prefill_capturable(
     const uint32_t cta_tile_q = static_cast<uint32_t>(plan_info.cta_tile_q);
     auto dispatch_run = [&](auto cta_tile_c) {
         constexpr uint32_t CTA_TILE_Q = decltype(cta_tile_c)::value;
+        // FlashInfer >= 0.7 added SAME_KV_STRIDES (K/V share offsets; an opt-in speedup, off keeps
+        // the 0.6 behavior) and USE_TOKEN_HEAD_SF (per-token/head FP8 KV scales; unused here).
         status = BatchPrefillWithPagedKVCacheDispatched<
-                CTA_TILE_Q, HEAD_DIM_QK, HEAD_DIM_VO, POS, USE_FP16_QK_REDUCTION, MASK_MODE,
+                /*SAME_KV_STRIDES=*/false, CTA_TILE_Q, HEAD_DIM_QK, HEAD_DIM_VO, POS,
+                USE_FP16_QK_REDUCTION, MASK_MODE, /*USE_TOKEN_HEAD_SF=*/false,
                 AttentionVariant, Params>(params, tmp_v, tmp_s, /*enable_pdl=*/false, stream);
     };
 
@@ -1040,7 +1046,8 @@ int run_batch_ragged_prefill_flashinfer(
             static_cast<uint32_t>(num_qo_heads), static_cast<uint32_t>(num_kv_heads), HEAD_DIM_QK,
             HEAD_DIM_VO, /*page_size=*/1, /*enable_cuda_graph=*/false, sizeof(DType),
             /*window_left=*/-1, /*fixed_split_size=*/-1, /*disable_split_kv=*/false,
-            /*num_colocated_ctas=*/0, /*uniform_q_len=*/0, stream, sizeof(DType));
+            /*num_colocated_ctas=*/0, /*uniform_q_len=*/0, /*fixed_uniform_q_len=*/false, stream,
+            sizeof(DType));
     if (status != cudaSuccess) {
         err = std::string("PrefillPlan failed: ") + cudaGetErrorString(status);
         return -1;
@@ -1103,7 +1110,7 @@ int run_batch_ragged_prefill_flashinfer(
         constexpr uint32_t CTA_TILE_Q = decltype(cta_tile_c)::value;
         status = BatchPrefillWithRaggedKVCacheDispatched<
                 CTA_TILE_Q, HEAD_DIM_QK, HEAD_DIM_VO, POS, USE_FP16_QK_REDUCTION, MASK_MODE,
-                AttentionVariant, Params>(params, tmp_v, tmp_s, /*enable_pdl=*/false, stream);
+                /*USE_TOKEN_HEAD_SF=*/false, AttentionVariant, Params>(params, tmp_v, tmp_s, /*enable_pdl=*/false, stream);
     };
 
     if (cta_tile_q == 128) {

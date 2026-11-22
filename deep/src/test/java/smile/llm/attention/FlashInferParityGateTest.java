@@ -36,6 +36,5 @@ public class FlashInferParityGateTest {
     @Test
     public void testGivenArtifactsHelperWhenBundledConstantThenNonEmpty() {
         assertFalse(FlashInferArtifacts.BUNDLED_AOT_DIR.isBlank());
-        assertFalse(FlashInferArtifacts.DEFAULT_JIT_CACHE_VERSION.isBlank());
     }
 }

@@ -68,7 +68,7 @@ __global__ void MergeStateKernel(DTypeIn* __restrict__ v_a, float* __restrict__ 
     v_merged_vec[i] = a_scale * v_a_vec[i] + b_scale * v_b_vec[i];
   }
   v_merged_vec.cast_store(v_merged + (pos * num_heads + head_idx) * head_dim + tx * vec_size);
-  if (s_merged != nullptr) {
+  if (tx == 0 && s_merged != nullptr) {
     s_merged[pos * num_heads + head_idx] = math::ptx_log2(d_sum) + s_max;
   }
 }
@@ -116,7 +116,7 @@ __global__ void MergeStateInPlaceKernel(DType* __restrict__ v, float* __restrict
     v_vec[i] = scale * v_vec[i] + other_scale * v_other_vec[i];
   }
   v_vec.cast_store(v + (pos * num_heads + head_idx) * head_dim + tx * vec_size);
-  if (s != nullptr) {
+  if (tx == 0 && s != nullptr) {
     s[pos * num_heads + head_idx] = math::ptx_log2(d_sum) + s_max;
   }
 }
@@ -128,7 +128,9 @@ __device__ __forceinline__ void threadblock_sync_state(state_t<vec_size>& st, DT
                                                        const uint32_t ty = threadIdx.y) {
   constexpr uint32_t head_dim = vec_size * bdx;
   st.o.cast_store(v_smem + ty * head_dim + tx * vec_size);
-  s_smem[ty] = st.get_lse();
+  if (tx == 0) {
+    s_smem[ty] = st.get_lse();
+  }
   st.init();
   __syncthreads();
 
@@ -147,7 +149,9 @@ __device__ __forceinline__ void warp_sync_state(state_t<vec_size>& st, DTypeIn* 
                                                 const uint32_t ty = threadIdx.y) {
   constexpr uint32_t head_dim = vec_size * bdx;
   st.o.cast_store(v_smem + ty * head_dim + tx * vec_size);
-  s_smem[ty] = st.get_lse();
+  if (tx == 0) {
+    s_smem[ty] = st.get_lse();
+  }
   st.init();
   __syncwarp();
 
@@ -228,7 +232,7 @@ __global__ void MergeStatesKernel(DTypeIn* __restrict__ V, float* __restrict__ S
     vec_t<DTypeO, vec_size> v;
     v.fill(DTypeO(0.f));
     v.store(v_merged + (pos * num_heads + head_idx) * head_dim + tx * vec_size);
-    if (s_merged != nullptr) {
+    if (tx == 0 && s_merged != nullptr) {
       s_merged[pos * num_heads + head_idx] = -math::inf;
     }
     return;
@@ -238,7 +242,7 @@ __global__ void MergeStatesKernel(DTypeIn* __restrict__ V, float* __restrict__ S
     vec_t<DTypeO, vec_size> v;
     v.cast_load(V + (pos * num_heads + head_idx) * head_dim + tx * vec_size);
     v.store(v_merged + (pos * num_heads + head_idx) * head_dim + tx * vec_size);
-    if (s_merged != nullptr) {
+    if (tx == 0 && s_merged != nullptr) {
       s_merged[pos * num_heads + head_idx] = S[pos * num_heads + head_idx];
     }
     return;
@@ -256,7 +260,7 @@ __global__ void MergeStatesKernel(DTypeIn* __restrict__ V, float* __restrict__ S
 
   st.normalize();
   st.o.cast_store(v_merged + (pos * num_heads + head_idx) * head_dim + tx * vec_size);
-  if (s_merged != nullptr) {
+  if (tx == 0 && s_merged != nullptr) {
     s_merged[pos * num_heads + head_idx] = st.get_lse();
   }
 }
@@ -340,7 +344,7 @@ __global__ void MergeStatesLargeNumIndexSetsKernel(DTypeIn* __restrict__ V, floa
   st.normalize();
 
   st.o.cast_store(v_merged + (pos * num_heads + head_idx) * head_dim + tx * vec_size);
-  if (s_merged != nullptr) {
+  if (tx == 0 && ty == 0 && s_merged != nullptr) {
     s_merged[pos * num_heads + head_idx] = st.get_lse();
   }
 }
@@ -404,7 +408,7 @@ __global__ void PersistentVariableLengthMergeStatesKernel(
       vec_t<DTypeO, vec_size> v;
       v.fill(DTypeO(0.f));
       v.store(v_merged + (pos * num_heads + head_idx) * head_dim + tx * vec_size);
-      if (s_merged != nullptr) {
+      if (tx == 0 && ty == 0 && s_merged != nullptr) {
         s_merged[pos * num_heads + head_idx] = -math::inf;
       }
       continue;
@@ -414,7 +418,7 @@ __global__ void PersistentVariableLengthMergeStatesKernel(
       vec_t<DTypeO, vec_size> v;
       v.cast_load(V + (indptr[pos] * num_heads + head_idx) * head_dim + tx * vec_size);
       v.store(v_merged + (pos * num_heads + head_idx) * head_dim + tx * vec_size);
-      if (s_merged != nullptr) {
+      if (tx == 0 && ty == 0 && s_merged != nullptr) {
         s_merged[pos * num_heads + head_idx] = S[indptr[pos] * num_heads + head_idx];
       }
       continue;
@@ -463,7 +467,7 @@ __global__ void PersistentVariableLengthMergeStatesKernel(
     st.normalize();
 
     st.o.cast_store(v_merged + (pos * num_heads + head_idx) * head_dim + tx * vec_size);
-    if (s_merged != nullptr) {
+    if (tx == 0 && ty == 0 && s_merged != nullptr) {
       s_merged[pos * num_heads + head_idx] = st.get_lse();
     }
   }
