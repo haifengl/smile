@@ -17,22 +17,21 @@
  */
 package smile.serve;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.stream.Stream;
 import io.quarkus.arc.All;
-import io.quarkus.runtime.Startup;
 import io.vertx.core.json.JsonObject;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -43,58 +42,58 @@ import jakarta.ws.rs.InternalServerErrorException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.core.Response;
 import org.jboss.logging.Logger;
-import smile.onnx.InferenceSession;
 import smile.io.Paths;
+import smile.onnx.InferenceSession;
+import smile.serve.model.ModelDiscovery;
+import smile.serve.model.ModelLoadOptions;
+import smile.serve.model.ModelManifest;
 import smile.serve.model.ModelObject;
+import smile.serve.model.ModelRef;
+import smile.serve.model.ModelRegistry;
+import smile.serve.model.ModelSource;
 import smile.serve.model.OnnxModelDetails;
 import smile.serve.model.OpenAiModelContributor;
 import smile.serve.model.QuarantinedModel;
 
 /**
- * Application-scoped service that discovers, loads, and manages ONNX models
- * ({@code *.onnx}) at startup.
+ * Application-scoped service that loads {@code .onnx} models at startup and
+ * executes inference requests via ONNX Runtime.
  *
- * <p>The model path is configured via {@code smile.onnx.model}. It may point
- * to a single {@code .onnx} file or to a directory; in the latter case every
- * {@code .onnx} file in the directory is loaded.
- *
- * <p>If the configured path does not exist or contains no ONNX models this
- * service starts empty and all list/predict requests return 404.
+ * <p>Models are registered by structured {@link ModelRef} {@code (slug, version)}
+ * in {@link ModelRegistry}, supporting flat files, versioned directory trees
+ * ({@code <dir>/<slug>/<version>/<file>.onnx}), declarative {@code models.json}
+ * manifests, and mutable routing aliases ({@code default}, {@code latest}, and
+ * custom aliases).
  *
  * @author Haifeng Li
  */
-@Startup
 @ApplicationScoped
 public class OnnxService implements OpenAiModelContributor {
     private static final Logger logger = Logger.getLogger(OnnxService.class);
-    /** Loaded models, keyed by model ID. Sorted for stable list order. */
-    private final Map<String, OnnxModel> models = Collections.synchronizedSortedMap(new TreeMap<>());
-    private final Map<String, Path> modelPaths = Collections.synchronizedMap(new TreeMap<>());
-    /** ONNX models on disk that failed verification or session initialization. */
+
+    private final ModelRegistry<OnnxModel> registry = new ModelRegistry<>();
     private final Map<Path, QuarantinedModel> quarantined = Collections.synchronizedMap(new TreeMap<>());
-    /** Registers/removes telemetry meters as models load and unload. */
     private final List<ModelMetricsBinder> metricsBinders;
-    /** Observes inference executions and model lifecycle events. */
     private final List<InferenceListener> listeners;
-    /** Synchronous pre-deserialization model artifact verifiers. */
     private final List<ModelArtifactVerifier> verifiers;
 
     /**
-     * Loads ONNX models upon application start.
-     *
-     * @param config         the ONNX service configuration.
-     * @param metricsBinders telemetry meter binders discovered on the classpath.
+     * Loads ONNX models upon application start without external telemetry binders,
+     * inference listeners, or artifact verifiers.
+     */
+    public OnnxService(OnnxServiceConfig config) {
+        this(config, List.of(), List.of(), List.of());
+    }
+
+    /**
+     * Loads ONNX models upon application start without inference listeners or artifact verifiers.
      */
     public OnnxService(OnnxServiceConfig config, List<ModelMetricsBinder> metricsBinders) {
         this(config, metricsBinders, List.of(), List.of());
     }
 
     /**
-     * Loads ONNX models upon application start.
-     *
-     * @param config         the ONNX service configuration.
-     * @param metricsBinders telemetry meter binders discovered on the classpath.
-     * @param listeners      inference and lifecycle listeners discovered on the classpath.
+     * Loads ONNX models upon application start without artifact verifiers.
      */
     public OnnxService(OnnxServiceConfig config,
                        List<ModelMetricsBinder> metricsBinders,
@@ -118,70 +117,75 @@ public class OnnxService implements OpenAiModelContributor {
         this.metricsBinders = metricsBinders == null ? List.of() : List.copyOf(metricsBinders);
         this.listeners = listeners == null ? List.of() : List.copyOf(listeners);
         this.verifiers = verifiers == null ? List.of() : List.copyOf(verifiers);
+
         String servedId = config.servedModelId()
                 .map(String::strip)
                 .filter(s -> !s.isEmpty())
                 .orElse(null);
+        Path manifestPath = config.manifest()
+                .map(String::strip)
+                .filter(s -> !s.isEmpty())
+                .map(Path::of)
+                .orElse(null);
         var path = Path.of(config.model()).toAbsolutePath().normalize();
-        if (Files.isRegularFile(path) && path.toString().endsWith(".onnx")) {
-            loadModel(path, servedId);
-        } else if (Files.isDirectory(path)) {
-            try (Stream<Path> files = Files.list(path)) {
-                List<Path> onnxFiles = files
-                        .filter(f -> Files.isRegularFile(f) && f.toString().endsWith(".onnx"))
-                        .sorted()
-                        .toList();
-                String idOverride = null;
-                if (servedId != null) {
-                    if (onnxFiles.size() == 1) {
-                        idOverride = servedId;
-                    } else if (onnxFiles.size() > 1) {
-                        logger.warnf("Ignoring smile.onnx.served-model-id='%s' because directory '%s' contains %d .onnx files",
-                                servedId, path, onnxFiles.size());
-                    }
-                }
-                for (Path f : onnxFiles) {
-                    loadModel(f, idOverride);
-                }
-            } catch (IOException ex) {
-                logger.errorf(ex, "Failed to list ONNX model directory '%s'", path);
-                recordQuarantine(path, ex);
-            }
-        } else {
-            logger.infof("ONNX model path '%s' not found or not a .onnx file — ONNX service starting empty.", path);
+
+        if (!Files.exists(path) && manifestPath == null) {
+            logger.infof("ONNX model path '%s' not found — ONNX service starting empty.", path);
+            return;
         }
+        if (Files.isRegularFile(path) && !path.toString().endsWith(".onnx") && manifestPath == null) {
+            logger.infof("ONNX model path '%s' is not a .onnx file — ONNX service starting empty.", path);
+            return;
+        }
+
+        ModelDiscovery.Plan plan = ModelDiscovery.discover(
+                path, ModelManifest.Kind.ONNX, manifestPath, servedId, true);
+        for (ModelDiscovery.DiscoveryError err : plan.errors()) {
+            logger.errorf(err.error(), "ONNX model discovery failed for '%s'", err.path());
+            recordQuarantine(err.path(), err.error());
+        }
+
+        for (ModelDiscovery.Candidate candidate : plan.candidates()) {
+            loadStartupModel(candidate.source());
+        }
+
+        applyStartupRouting(plan);
     }
 
-    /**
-     * Loads a single ONNX model file and registers it.
-     *
-     * @param path the {@code .onnx} file path.
-     */
-    private void loadModel(Path path) {
-        loadModel(path, null);
-    }
-
-    private void loadModel(Path path, String idOverride) {
-        Path normalized = path.toAbsolutePath().normalize();
+    private void loadStartupModel(ModelSource source) {
+        Path normalized = source.path();
+        InferenceSession session = null;
         try {
             logger.infof("Loading ONNX model from '%s'", normalized);
-            String id = (idOverride != null && !idOverride.isBlank())
-                    ? idOverride.strip()
-                    : Paths.getFileName(normalized);
-            var session = verifyAndCreateSession(normalized);
-            var model = new OnnxModel(id, normalized, session);
-            models.put(id, model);
-            modelPaths.put(id, normalized);
+            session = verifyAndCreateSession(source);
+            ModelRef ref = OnnxModel.resolveRef(session.metadata(), source);
+            var inputs = session.inputNames();
+            var outputs = session.outputNames();
+            var model = new OnnxModel(ref, normalized, session);
+            session = null; // owned by model
+            try {
+                registry.register(new ModelRegistry.Entry<>(ref, model, source));
+            } catch (ModelRegistry.ConflictException ex) {
+                model.close();
+                throw ex;
+            }
             quarantined.remove(normalized);
-            metricsBinders.forEach(b -> b.register(ModelMetricsBinder.ONNX_NAMESPACE, id, model.metrics()));
+            registerMetrics(model);
             notifyListeners(InferenceEvent.lifecycle(
                     ModelMetricsBinder.ONNX_NAMESPACE,
-                    id,
+                    model.slug(),
+                    model.version(),
                     InferenceEvent.Action.MODEL_LOADED,
                     normalized.toString()));
-            logger.infof("ONNX model '%s' loaded successfully (inputs=%s, outputs=%s)",
-                    id, session.inputNames(), session.outputNames());
+            logger.infof("ONNX model '%s' (version '%s') loaded successfully (inputs=%s, outputs=%s)",
+                    model.slug(), model.version(), inputs, outputs);
         } catch (Throwable ex) {
+            if (session != null) {
+                try {
+                    session.close();
+                } catch (Exception ignored) {
+                }
+            }
             // ExceptionInInitializerError / NoClassDefFoundError are Errors, not
             // Exceptions — typically missing libonnxruntime on java.library.path.
             logger.errorf(ex,
@@ -198,14 +202,47 @@ public class OnnxService implements OpenAiModelContributor {
         }
     }
 
-    private InferenceSession verifyAndCreateSession(Path path) {
+    private void applyStartupRouting(ModelDiscovery.Plan plan) {
+        for (var e : plan.defaultVersions().entrySet()) {
+            try {
+                if (registry.contains(new ModelRef(e.getKey(), e.getValue()))) {
+                    registry.setAlias(e.getKey(), ModelRef.ALIAS_DEFAULT, e.getValue());
+                } else {
+                    logger.warnf("Skipping manifest default version '%s' for ONNX model '%s': version did not load",
+                            e.getValue(), e.getKey());
+                }
+            } catch (IllegalArgumentException ex) {
+                logger.warnf(ex, "Failed to apply default version '%s' for ONNX model '%s'", e.getValue(), e.getKey());
+            }
+        }
+        for (var slugEntry : plan.aliases().entrySet()) {
+            String slug = slugEntry.getKey();
+            for (var aliasEntry : slugEntry.getValue().entrySet()) {
+                try {
+                    if (registry.contains(new ModelRef(slug, aliasEntry.getValue()))) {
+                        registry.setAlias(slug, aliasEntry.getKey(), aliasEntry.getValue());
+                    } else {
+                        logger.warnf("Skipping manifest alias '%s' -> '%s' for ONNX model '%s': target version did not load",
+                                aliasEntry.getKey(), aliasEntry.getValue(), slug);
+                    }
+                } catch (IllegalArgumentException ex) {
+                    logger.warnf(ex, "Failed to apply alias '%s' for ONNX model '%s'", aliasEntry.getKey(), slug);
+                }
+            }
+        }
+    }
+
+    private InferenceSession verifyAndCreateSession(ModelSource source) {
+        Path path = source.path();
         long t0 = System.nanoTime();
-        String id = Paths.getFileName(path);
+        String fallbackId = source.slugOverride() != null ? source.slugOverride() : Paths.getFileName(path);
         try {
             for (ModelArtifactVerifier verifier : verifiers) {
                 verifier.verify(ModelMetricsBinder.ONNX_NAMESPACE, path);
             }
+            InferenceSession session = InferenceSession.create(path.toString());
             if (!verifiers.isEmpty() && !listeners.isEmpty()) {
+                ModelRef ref = OnnxModel.resolveRef(session.metadata(), source);
                 boolean allVerified = true;
                 String details = path.toString();
                 for (ModelArtifactVerifier verifier : verifiers) {
@@ -219,12 +256,13 @@ public class OnnxService implements OpenAiModelContributor {
                 }
                 notifyListeners(InferenceEvent.verification(
                         ModelMetricsBinder.ONNX_NAMESPACE,
-                        id,
+                        ref.slug(),
+                        ref.version(),
                         allVerified,
                         details,
                         System.nanoTime() - t0));
             }
-            return InferenceSession.create(path.toString());
+            return session;
         } catch (SecurityException ex) {
             if (!listeners.isEmpty()) {
                 String details = ex.getMessage() != null ? ex.getMessage() : path.toString();
@@ -236,7 +274,8 @@ public class OnnxService implements OpenAiModelContributor {
                 }
                 notifyListeners(InferenceEvent.verification(
                         ModelMetricsBinder.ONNX_NAMESPACE,
-                        id,
+                        fallbackId,
+                        source.versionOverride(),
                         false,
                         details,
                         System.nanoTime() - t0));
@@ -255,6 +294,16 @@ public class OnnxService implements OpenAiModelContributor {
                 Instant.now().getEpochSecond()));
     }
 
+    private void registerMetrics(OnnxModel model) {
+        metricsBinders.forEach(b -> b.register(
+                ModelMetricsBinder.ONNX_NAMESPACE, model.slug(), model.version(), model.metrics()));
+    }
+
+    private void unregisterMetrics(ModelRef ref) {
+        metricsBinders.forEach(b -> b.unregister(
+                ModelMetricsBinder.ONNX_NAMESPACE, ref.slug(), ref.version()));
+    }
+
     @Override
     public List<QuarantinedModel> listQuarantinedModels() {
         synchronized (quarantined) {
@@ -263,24 +312,22 @@ public class OnnxService implements OpenAiModelContributor {
     }
 
     /**
-     * Returns OpenAI-shaped descriptors for every loaded ONNX model.
-     *
-     * <p>{@code owned_by} uses ONNX custom metadata {@code author}/{@code owner}
-     * when present; otherwise {@link ModelObject#UNKNOWN_OWNER}.
-     *
-     * @return OpenAI model objects in id order.
+     * Returns one OpenAI-shaped descriptor per loaded ONNX model slug (representing
+     * the slug's active default version, with {@code version} and {@code versions}).
      */
     @Override
     public List<ModelObject> listOpenAiModels() {
         List<ModelObject> result = new ArrayList<>();
-        synchronized (models) {
-            for (OnnxModel model : models.values()) {
-                result.add(ModelObject.of(
-                        model.id(),
-                        ModelObject.createdFromPath(model.path()),
-                        ModelObject.ownedByFromMap(model.info().customMeta()),
-                        ModelObject.KIND_ONNX));
-            }
+        for (var entry : registry.defaultEntries()) {
+            OnnxModel model = entry.model();
+            var info = registry.versionsInfo(model.slug()).orElse(null);
+            result.add(ModelObject.of(
+                    model.slug(),
+                    ModelObject.createdFromPath(model.path()),
+                    ModelObject.ownedByFromMap(model.info().customMeta()),
+                    ModelObject.KIND_ONNX,
+                    model.version(),
+                    info != null ? info.versions() : List.of(model.version())));
         }
         return result;
     }
@@ -288,80 +335,205 @@ public class OnnxService implements OpenAiModelContributor {
     /**
      * Looks up a loaded ONNX model as an OpenAI {@link ModelObject}.
      *
-     * @param id       the model id.
-     * @param detailed when {@code true}, include {@link OnnxModelDetails}.
-     * @return the model object when loaded; otherwise empty.
+     * <p>Accepts a bare {@code {slug}}, {@code {slug}/versions/{version}}, or
+     * {@code {slug}/aliases/{alias}}.
      */
     @Override
     public Optional<ModelObject> findOpenAiModel(String id, boolean detailed) {
         if (id == null || id.isBlank()) {
             return Optional.empty();
         }
-        OnnxModel model = models.get(id);
-        if (model == null) {
+        Optional<ModelRegistry.Entry<OnnxModel>> entry = resolveOpenAiSelector(id);
+        if (entry.isEmpty()) {
             return Optional.empty();
         }
-        OnnxModelDetails onnx = detailed ? model.details() : null;
+        OnnxModel model = entry.get().model();
+        var info = registry.versionsInfo(model.slug()).orElse(null);
+        List<String> versions = info != null ? info.versions() : List.of(model.version());
+        String defaultVer = info != null ? info.defaultVersion() : model.version();
+        Map<String, String> aliases = info != null ? info.aliases() : Map.of();
+        OnnxModelDetails onnx = detailed
+                ? model.details(defaultVer, versions, aliases)
+                : null;
         return Optional.of(ModelObject.of(
-                model.id(),
+                model.slug(),
                 ModelObject.createdFromPath(model.path()),
                 ModelObject.ownedByFromMap(model.info().customMeta()),
                 ModelObject.KIND_ONNX,
+                model.version(),
+                versions,
                 null,
                 onnx,
                 null));
     }
 
+    private Optional<ModelRegistry.Entry<OnnxModel>> resolveOpenAiSelector(String id) {
+        int versionsIdx = id.indexOf("/versions/");
+        if (versionsIdx > 0) {
+            String slug = id.substring(0, versionsIdx);
+            String version = id.substring(versionsIdx + "/versions/".length());
+            return registry.resolveVersion(slug, version);
+        }
+        int aliasesIdx = id.indexOf("/aliases/");
+        if (aliasesIdx > 0) {
+            String slug = id.substring(0, aliasesIdx);
+            String alias = id.substring(aliasesIdx + "/aliases/".length());
+            return registry.resolveAlias(slug, alias);
+        }
+        return registry.resolve(id);
+    }
+
     /**
      * Looks up a loaded ONNX model as a lean OpenAI {@link ModelObject}.
-     *
-     * @param id the model id.
-     * @return the model object when loaded; otherwise empty.
      */
     public Optional<ModelObject> findOpenAiModel(String id) {
         return findOpenAiModel(id, false);
     }
 
     /**
-     * Returns the ONNX model with the given ID.
-     *
-     * @param id the model ID.
-     * @return the model instance.
-     * @throws NotFoundException if no model with that ID has been loaded.
+     * Returns whether any version of {@code slug} is currently loaded.
      */
-    public OnnxModel getModel(String id) throws NotFoundException {
-        var model = models.get(id);
-        if (model == null) throw new NotFoundException("ONNX model not found: " + id);
-        return model;
+    public boolean hasSlug(String slug) {
+        return registry.containsSlug(slug);
     }
 
     /**
-     * Returns a snapshot of the loaded ONNX models keyed by id, in id order.
-     *
-     * @return an immutable snapshot of the loaded models.
+     * Returns the active default version of the ONNX model for {@code slug}.
+     */
+    public OnnxModel getModel(String slug) throws NotFoundException {
+        return registry.resolve(slug)
+                .map(ModelRegistry.Entry::model)
+                .orElseThrow(() -> new NotFoundException("ONNX model not found: " + slug));
+    }
+
+    /**
+     * Returns a specific version of the ONNX model for {@code slug}.
+     */
+    public OnnxModel getModelVersion(String slug, String version) throws NotFoundException {
+        return registry.resolveVersion(slug, version)
+                .map(ModelRegistry.Entry::model)
+                .orElseThrow(() -> new NotFoundException(
+                        "ONNX model '" + slug + "' version '" + version + "' not found"));
+    }
+
+    /**
+     * Returns the version of {@code slug} resolved by {@code alias}.
+     */
+    public OnnxModel getModelAlias(String slug, String alias) throws NotFoundException {
+        return registry.resolveAlias(slug, alias)
+                .map(ModelRegistry.Entry::model)
+                .orElseThrow(() -> new NotFoundException(
+                        "ONNX model '" + slug + "' alias '" + alias + "' not found"));
+    }
+
+    /**
+     * Returns info for {@code model} enriched with registry version and alias summary.
+     */
+    public OnnxModelInfo infoFor(OnnxModel model) {
+        var info = registry.versionsInfo(model.slug()).orElse(null);
+        if (info == null) {
+            return model.info();
+        }
+        return model.info(info.versions(), info.aliases());
+    }
+
+    /**
+     * Returns version and alias summary for {@code slug}.
+     */
+    public ModelRegistry.SlugVersions getVersions(String slug) throws NotFoundException {
+        return registry.versionsInfo(slug)
+                .orElseThrow(() -> new NotFoundException("ONNX model not found: " + slug));
+    }
+
+    /**
+     * Assigns or updates an alias (including {@code "default"}) for {@code slug}.
+     */
+    public ModelRegistry.SlugVersions setAlias(String slug, String alias, String version)
+            throws NotFoundException, BadRequestException {
+        String validSlug;
+        String validAlias;
+        String validVersion;
+        try {
+            validSlug = ModelRef.validateSlug(slug);
+            validAlias = ModelRef.validateAlias(alias);
+            validVersion = ModelRef.validateVersion(version);
+            if (ModelRef.ALIAS_LATEST.equals(validAlias)) {
+                throw new BadRequestException("Alias 'latest' is reserved and always resolves to the highest version");
+            }
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(ex.getMessage(), ex);
+        }
+        if (!registry.containsSlug(validSlug)) {
+            throw new NotFoundException("ONNX model not found: " + validSlug);
+        }
+        if (!registry.contains(new ModelRef(validSlug, validVersion))) {
+            throw new NotFoundException("ONNX model '" + validSlug + "' version '" + validVersion + "' not found");
+        }
+        return registry.setAlias(validSlug, validAlias, validVersion);
+    }
+
+    /**
+     * Deletes a custom alias, or unpins {@code "default"} so it reverts to tracking {@code latest}.
+     */
+    public ModelRegistry.SlugVersions deleteAlias(String slug, String alias)
+            throws NotFoundException, BadRequestException {
+        String validSlug;
+        String validAlias;
+        try {
+            validSlug = ModelRef.validateSlug(slug);
+            validAlias = ModelRef.validateAlias(alias);
+            if (ModelRef.ALIAS_LATEST.equals(validAlias)) {
+                throw new BadRequestException("Alias 'latest' is reserved and cannot be deleted");
+            }
+        } catch (IllegalArgumentException ex) {
+            throw new BadRequestException(ex.getMessage(), ex);
+        }
+        if (!registry.containsSlug(validSlug)) {
+            throw new NotFoundException("ONNX model not found: " + validSlug);
+        }
+        boolean removed = registry.deleteAlias(validSlug, validAlias);
+        if (!removed && !ModelRef.ALIAS_DEFAULT.equals(validAlias)) {
+            throw new NotFoundException("Alias '" + validAlias + "' not found on ONNX model '" + validSlug + "'");
+        }
+        return getVersions(validSlug);
+    }
+
+    /**
+     * Returns a snapshot of the default loaded ONNX model per slug, in slug order.
      */
     public Map<String, OnnxModel> models() {
-        synchronized (models) {
-            return Map.copyOf(models);
+        Map<String, OnnxModel> map = new LinkedHashMap<>();
+        for (var entry : registry.defaultEntries()) {
+            map.put(entry.ref().slug(), entry.model());
         }
+        return Collections.unmodifiableMap(map);
     }
 
     /**
-     * Runs ONNX inference with JSON-encoded inputs.
-     *
-     * @param modelId the model ID.
-     * @param request JSON object mapping input names to flat numeric arrays.
-     * @return JSON object mapping output names to flat numeric arrays.
-     * @throws BadRequestException if the request is malformed.
-     * @throws NotFoundException   if the model ID is unknown.
+     * Returns every active loaded ONNX model version across all slugs.
      */
-    public JsonObject predict(String modelId, JsonObject request)
+    public List<OnnxModel> allModels() {
+        return registry.allEntries().stream().map(ModelRegistry.Entry::model).toList();
+    }
+
+    /**
+     * Runs ONNX inference with JSON-encoded inputs on the default version of {@code slug}.
+     */
+    public JsonObject predict(String slug, JsonObject request)
             throws BadRequestException, NotFoundException {
+        return predict(getModel(slug), request);
+    }
+
+    /**
+     * Runs ONNX inference against a resolved {@link OnnxModel} and emits audit events.
+     */
+    public JsonObject predict(OnnxModel model, JsonObject request) throws BadRequestException {
         long start = System.nanoTime();
-        JsonObject result = getModel(modelId).predict(request);
+        JsonObject result = model.predict(request);
         if (!listeners.isEmpty()) {
             notifyListeners(InferenceEvent.onnxPredict(
-                    modelId,
+                    model.slug(),
+                    model.version(),
                     InferenceEvent.Action.PREDICT,
                     request != null ? request.encode() : null,
                     result != null ? result.encode() : null,
@@ -370,11 +542,6 @@ public class OnnxService implements OpenAiModelContributor {
         return result;
     }
 
-    /**
-     * Notifies registered {@link InferenceListener} plugins of an event.
-     *
-     * @param event the event to publish.
-     */
     void notifyListeners(InferenceEvent event) {
         for (InferenceListener listener : listeners) {
             try {
@@ -386,165 +553,326 @@ public class OnnxService implements OpenAiModelContributor {
         }
     }
 
-    /**
-     * Returns true if at least one {@link InferenceListener} is registered.
-     *
-     * @return true when listeners are present.
-     */
     boolean hasListeners() {
         return !listeners.isEmpty();
     }
 
     /**
-     * Reloads an ONNX model from its backing file on disk.
-     * If the model was previously unloaded, it is reloaded from its known file path.
-     *
-     * @param id the model ID.
-     * @return the reloaded ONNX model.
-     * @throws NotFoundException if the model or its file does not exist.
-     * @throws InternalServerErrorException if recreating the session fails.
+     * Reloads the default (or last known) version of {@code slug} from disk.
      */
-    public OnnxModel reloadModel(String id) throws NotFoundException, InternalServerErrorException {
-        Path path = modelPaths.get(id);
-        if (path == null) {
-            OnnxModel existing = models.get(id);
-            if (existing != null) {
-                path = existing.path();
-            }
-        }
-        if (path == null || !Files.isRegularFile(path)) {
-            throw new NotFoundException("ONNX model file not found on disk: " + path);
-        }
+    public OnnxModel reloadModel(String slug)
+            throws NotFoundException, ClientErrorException, InternalServerErrorException {
+        ModelRef target = registry.reloadTargetForSlug(slug)
+                .orElseThrow(() -> new NotFoundException("ONNX model not found: " + slug));
+        return reloadModelVersion(target.slug(), target.version());
+    }
+
+    /**
+     * Reloads a specific ONNX {@code (slug, version)} from its backing file on disk.
+     * Preserves any explicit slug/version overrides configured at load time.
+     */
+    public OnnxModel reloadModelVersion(String slug, String version)
+            throws NotFoundException, ClientErrorException, InternalServerErrorException {
+        ModelRef oldRef;
         try {
-            logger.infof("Reloading ONNX model '%s' from '%s'", id, path);
-            Path normalized = path.toAbsolutePath().normalize();
-            var session = verifyAndCreateSession(normalized);
-            var reloaded = new OnnxModel(id, normalized, session);
-            OnnxModel old = models.put(id, reloaded);
-            modelPaths.put(id, normalized);
-            quarantined.remove(normalized);
-            metricsBinders.forEach(b -> {
-                b.unregister(ModelMetricsBinder.ONNX_NAMESPACE, id);
-                b.register(ModelMetricsBinder.ONNX_NAMESPACE, id, reloaded.metrics());
-            });
+            oldRef = new ModelRef(slug, version);
+        } catch (IllegalArgumentException ex) {
+            throw new NotFoundException("ONNX model '" + slug + "' version '" + version + "' not found");
+        }
+        ModelSource source = registry.knownSource(oldRef).orElse(null);
+        if (source == null || !Files.isRegularFile(source.path())) {
+            throw new NotFoundException("ONNX model file not found on disk for '" + oldRef + "'");
+        }
+
+        InferenceSession session = null;
+        try {
+            logger.infof("Reloading ONNX model '%s' from '%s'", oldRef, source.path());
+            session = verifyAndCreateSession(source);
+            ModelRef newRef = OnnxModel.resolveRef(session.metadata(), source);
+            var reloaded = new OnnxModel(newRef, source.path(), session);
+            session = null; // owned by reloaded
+
+            ModelRegistry.Entry<OnnxModel> oldEntry;
+            try {
+                oldEntry = registry.replace(oldRef, new ModelRegistry.Entry<>(newRef, reloaded, source));
+            } catch (ModelRegistry.ConflictException ex) {
+                reloaded.close();
+                throw new ClientErrorException(ex.getMessage(), Response.Status.CONFLICT);
+            }
+
+            quarantined.remove(source.path());
+            if (!oldRef.equals(newRef)) {
+                unregisterMetrics(oldRef);
+            }
+            unregisterMetrics(newRef);
+            registerMetrics(reloaded);
             notifyListeners(InferenceEvent.lifecycle(
                     ModelMetricsBinder.ONNX_NAMESPACE,
-                    id,
+                    reloaded.slug(),
+                    reloaded.version(),
                     InferenceEvent.Action.MODEL_RELOADED,
-                    normalized.toString()));
-            if (old != null) {
-                old.close();
+                    source.path().toString()));
+            if (oldEntry != null) {
+                oldEntry.model().close();
             }
-            logger.infof("ONNX model '%s' reloaded successfully", id);
+            logger.infof("ONNX model '%s' (version '%s') reloaded successfully",
+                    reloaded.slug(), reloaded.version());
             return reloaded;
+        } catch (ClientErrorException ex) {
+            throw ex;
         } catch (SecurityException ex) {
-            logger.errorf(ex, "Rejected reload of ONNX model '%s' from '%s'", id, path);
+            logger.errorf(ex, "Rejected reload of ONNX model '%s' from '%s'", oldRef, source.path());
             throw new ForbiddenException("ONNX model artifact verification failed: " + ex.getMessage(), ex);
         } catch (Exception ex) {
-            logger.errorf(ex, "Failed to reload ONNX model '%s' from '%s'", id, path);
+            if (session != null) {
+                try {
+                    session.close();
+                } catch (Exception ignored) {
+                }
+            }
+            logger.errorf(ex, "Failed to reload ONNX model '%s' from '%s'", oldRef, source.path());
             throw new InternalServerErrorException("Failed to reload ONNX model: " + ex.getMessage(), ex);
         }
     }
 
     /**
-     * Gracefully unloads an ONNX model from active memory, waiting for in-flight requests.
-     *
-     * @param id           the model ID.
-     * @param graceTimeout max duration to wait for in-flight requests.
-     * @return {@code true} if all in-flight requests completed before timeout.
-     * @throws NotFoundException if the model is not found.
+     * Gracefully unloads all active versions of {@code slug}.
      */
-    public boolean unloadModel(String id, Duration graceTimeout) throws NotFoundException {
-        OnnxModel existing = getModel(id);
+    public boolean unloadModel(String slug, Duration graceTimeout) throws NotFoundException {
+        List<ModelRegistry.Entry<OnnxModel>> removed = registry.removeSlug(slug);
+        if (removed.isEmpty()) {
+            throw new NotFoundException("ONNX model not found: " + slug);
+        }
+        boolean allDrained = true;
+        for (var entry : removed) {
+            OnnxModel existing = entry.model();
+            boolean drained = existing.unload(graceTimeout);
+            allDrained &= drained;
+            unregisterMetrics(entry.ref());
+            notifyListeners(InferenceEvent.lifecycle(
+                    ModelMetricsBinder.ONNX_NAMESPACE,
+                    existing.slug(),
+                    existing.version(),
+                    InferenceEvent.Action.MODEL_UNLOADED,
+                    "{\"drained\":" + drained + "}"));
+            logger.infof("ONNX model '%s' (version '%s') unloaded (drained in-flight: %s)",
+                    existing.slug(), existing.version(), drained);
+        }
+        return allDrained;
+    }
+
+    /**
+     * Gracefully unloads a single ONNX {@code (slug, version)}.
+     */
+    public boolean unloadModelVersion(String slug, String version, Duration graceTimeout) throws NotFoundException {
+        ModelRef ref;
+        try {
+            ref = new ModelRef(slug, version);
+        } catch (IllegalArgumentException ex) {
+            throw new NotFoundException("ONNX model '" + slug + "' version '" + version + "' not found");
+        }
+        var removed = registry.removeVersion(ref)
+                .orElseThrow(() -> new NotFoundException(
+                        "ONNX model '" + slug + "' version '" + version + "' not found"));
+        OnnxModel existing = removed.model();
         boolean drained = existing.unload(graceTimeout);
-        models.remove(id);
-        metricsBinders.forEach(b -> b.unregister(ModelMetricsBinder.ONNX_NAMESPACE, id));
+        unregisterMetrics(ref);
         notifyListeners(InferenceEvent.lifecycle(
                 ModelMetricsBinder.ONNX_NAMESPACE,
-                id,
+                existing.slug(),
+                existing.version(),
                 InferenceEvent.Action.MODEL_UNLOADED,
                 "{\"drained\":" + drained + "}"));
-        logger.infof("ONNX model '%s' unloaded (drained in-flight: %s)", id, drained);
+        logger.infof("ONNX model '%s' (version '%s') unloaded (drained in-flight: %s)",
+                existing.slug(), existing.version(), drained);
         return drained;
     }
 
     /**
      * Dynamically loads an ONNX model or directory of models from disk into active memory.
-     * Rejects with 409 Conflict if any model with the same ID is already loaded.
-     *
-     * @param path file or directory path.
-     * @return list of newly loaded ONNX models.
-     * @throws NotFoundException if path does not exist.
-     * @throws ClientErrorException if model with same ID is already loaded.
-     * @throws BadRequestException if the file is invalid.
      */
-    public List<OnnxModel> load(Path path) throws NotFoundException, ClientErrorException, BadRequestException {
+    public List<OnnxModel> load(Path path)
+            throws NotFoundException, ClientErrorException, BadRequestException {
+        return load(path, ModelLoadOptions.EMPTY);
+    }
+
+    /**
+     * Dynamically loads an ONNX model or directory of models from disk with optional
+     * slug, version, alias, and default-routing overrides.
+     */
+    public List<OnnxModel> load(Path path, ModelLoadOptions options)
+            throws NotFoundException, ClientErrorException, BadRequestException {
+        ModelLoadOptions opts = options != null ? options : ModelLoadOptions.EMPTY;
         Path absPath = path.toAbsolutePath().normalize();
         if (!Files.exists(absPath)) {
             throw new NotFoundException("Path does not exist: " + path);
         }
-        List<Path> onnxFiles = new ArrayList<>();
+
+        List<ModelSource> sources = new ArrayList<>();
+        Map<String, String> defaults = new LinkedHashMap<>();
+        Map<String, Map<String, String>> aliases = new LinkedHashMap<>();
+        Set<String> pinExistingDefaultSlugs = new HashSet<>();
+
         if (Files.isRegularFile(absPath)) {
             if (!absPath.toString().endsWith(".onnx")) {
                 throw new BadRequestException("Not a .onnx file: " + path);
             }
-            onnxFiles.add(absPath);
+            sources.add(new ModelSource(absPath, opts.slug(), opts.version()));
         } else if (Files.isDirectory(absPath)) {
-            try (Stream<Path> stream = Files.list(absPath)) {
-                stream.filter(f -> Files.isRegularFile(f) && f.toString().endsWith(".onnx"))
-                      .forEach(onnxFiles::add);
-            } catch (IOException e) {
-                throw new BadRequestException("Failed to read directory: " + path, e);
+            ModelDiscovery.Plan plan = ModelDiscovery.discover(
+                    absPath, ModelManifest.Kind.ONNX, null, null, true);
+            if (!plan.errors().isEmpty()) {
+                var first = plan.errors().getFirst();
+                throw new BadRequestException(
+                        "Failed to scan '" + first.path() + "': " + first.error().getMessage(),
+                        first.error());
             }
-        }
-        if (onnxFiles.isEmpty()) {
-            throw new BadRequestException("No .onnx models found at: " + path);
+            if (plan.candidates().isEmpty()) {
+                throw new BadRequestException("No .onnx models found at: " + path);
+            }
+            if (opts.hasSingleArtifactOverrides() && plan.candidates().size() > 1) {
+                throw new BadRequestException(
+                        "Options 'slug', 'version', 'aliases', and 'set_default' are only supported when loading a single model");
+            }
+            if (plan.candidates().size() == 1 && opts.hasSingleArtifactOverrides()) {
+                ModelSource base = plan.candidates().getFirst().source();
+                sources.add(new ModelSource(
+                        base.path(),
+                        opts.slug() != null ? opts.slug() : base.slugOverride(),
+                        opts.version() != null ? opts.version() : base.versionOverride()));
+            } else {
+                for (var c : plan.candidates()) {
+                    sources.add(c.source());
+                }
+            }
+            defaults.putAll(plan.defaultVersions());
+            aliases.putAll(plan.aliases());
+        } else {
+            throw new BadRequestException("Path is not a regular file or directory: " + path);
         }
 
-        List<OnnxModel> loaded = new ArrayList<>();
-        Set<String> batchIds = new HashSet<>();
-        for (Path file : onnxFiles) {
-            Path normalized = file.toAbsolutePath().normalize();
-            String id = Paths.getFileName(normalized);
-            if (models.containsKey(id) || !batchIds.add(id)) {
-                for (var m : loaded) {
-                    m.close();
+        List<ModelRegistry.Entry<OnnxModel>> staged = new ArrayList<>();
+        Set<ModelRef> batchRefs = new HashSet<>();
+
+        for (ModelSource source : sources) {
+            Path normalized = source.path();
+            // Fast pre-check when both slug & version are already fixed by manifest/dir/options
+            if (source.slugOverride() != null && source.versionOverride() != null) {
+                ModelRef preRef = new ModelRef(source.slugOverride(), source.versionOverride());
+                if (registry.contains(preRef) || batchRefs.contains(preRef)) {
+                    closeAll(staged);
+                    throw conflictException(preRef);
                 }
-                throw new ClientErrorException(
-                        "ONNX model '" + id + "' is already loaded. Use POST /v1/onnx/" + id + "/reload to refresh it, or unload it first.",
-                        Response.Status.CONFLICT);
             }
+
+            InferenceSession session = null;
             try {
-                var session = verifyAndCreateSession(normalized);
-                var model = new OnnxModel(id, normalized, session);
-                loaded.add(model);
+                session = verifyAndCreateSession(source);
+                ModelRef ref = OnnxModel.resolveRef(session.metadata(), source);
+                if (registry.contains(ref) || !batchRefs.add(ref)) {
+                    throw conflictException(ref);
+                }
+                var model = new OnnxModel(ref, normalized, session);
+                session = null;
+                staged.add(new ModelRegistry.Entry<>(ref, model, source));
+            } catch (ClientErrorException ex) {
+                if (session != null) {
+                    try {
+                        session.close();
+                    } catch (Exception ignored) {
+                    }
+                }
+                closeAll(staged);
+                throw ex;
             } catch (SecurityException ex) {
-                for (var m : loaded) {
-                    m.close();
+                if (session != null) {
+                    try {
+                        session.close();
+                    } catch (Exception ignored) {
+                    }
                 }
-                throw new ForbiddenException("ONNX model artifact verification failed for " + file + ": " + ex.getMessage(), ex);
+                closeAll(staged);
+                throw new ForbiddenException("ONNX model artifact verification failed for " + normalized + ": " + ex.getMessage(), ex);
             } catch (Throwable ex) {
-                // If any session failed, close already opened ones in this batch
-                for (var m : loaded) {
-                    m.close();
+                if (session != null) {
+                    try {
+                        session.close();
+                    } catch (Exception ignored) {
+                    }
                 }
-                throw new BadRequestException("Failed to load ONNX model from " + file + ": " + ex.getMessage(), ex);
+                closeAll(staged);
+                throw new BadRequestException("Failed to load ONNX model from " + normalized + ": " + ex.getMessage(), ex);
             }
         }
 
-        for (OnnxModel model : loaded) {
-            models.put(model.id(), model);
-            modelPaths.put(model.id(), model.path());
+        if (staged.size() == 1 && opts.hasSingleArtifactOverrides()) {
+            ModelRef singleRef = staged.getFirst().ref();
+            if (Boolean.TRUE.equals(opts.setDefault())) {
+                defaults.put(singleRef.slug(), singleRef.version());
+            } else if (Boolean.FALSE.equals(opts.setDefault())) {
+                pinExistingDefaultSlugs.add(singleRef.slug());
+            }
+            if (!opts.aliases().isEmpty()) {
+                Map<String, String> slugAliases = new HashMap<>(aliases.getOrDefault(singleRef.slug(), Map.of()));
+                for (String a : opts.aliases()) {
+                    if (ModelRef.ALIAS_LATEST.equals(a)) {
+                        closeAll(staged);
+                        throw new BadRequestException("Alias 'latest' is reserved and cannot be assigned");
+                    }
+                    if (ModelRef.ALIAS_DEFAULT.equals(a)) {
+                        defaults.put(singleRef.slug(), singleRef.version());
+                    } else {
+                        slugAliases.put(a, singleRef.version());
+                    }
+                }
+                if (!slugAliases.isEmpty()) {
+                    aliases.put(singleRef.slug(), slugAliases);
+                }
+            }
+        }
+
+        try {
+            registry.registerBatch(staged, defaults, aliases, pinExistingDefaultSlugs);
+        } catch (ModelRegistry.ConflictException ex) {
+            closeAll(staged);
+            throw conflictException(ex.ref());
+        } catch (IllegalArgumentException ex) {
+            closeAll(staged);
+            throw new BadRequestException(ex.getMessage(), ex);
+        }
+
+        List<OnnxModel> loaded = new ArrayList<>(staged.size());
+        for (var entry : staged) {
+            OnnxModel model = entry.model();
+            loaded.add(model);
             quarantined.remove(model.path());
-            metricsBinders.forEach(b -> b.register(ModelMetricsBinder.ONNX_NAMESPACE, model.id(), model.metrics()));
+            registerMetrics(model);
             notifyListeners(InferenceEvent.lifecycle(
                     ModelMetricsBinder.ONNX_NAMESPACE,
-                    model.id(),
+                    model.slug(),
+                    model.version(),
                     InferenceEvent.Action.MODEL_LOADED,
                     model.path().toString()));
-            logger.infof("Dynamically loaded ONNX model '%s' from '%s'", model.id(), model.path());
+            logger.infof("Dynamically loaded ONNX model '%s' (version '%s') from '%s'",
+                    model.slug(), model.version(), model.path());
         }
         return loaded;
     }
-}
 
+    private static void closeAll(List<ModelRegistry.Entry<OnnxModel>> staged) {
+        for (var entry : staged) {
+            try {
+                entry.model().close();
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    private static ClientErrorException conflictException(ModelRef ref) {
+        return new ClientErrorException(
+                "ONNX model '" + ref.slug() + "' version '" + ref.version()
+                        + "' is already loaded. Use POST /v1/onnx/" + ref.slug()
+                        + "/versions/" + ref.version() + "/reload to refresh it, or unload it first.",
+                Response.Status.CONFLICT);
+    }
+}

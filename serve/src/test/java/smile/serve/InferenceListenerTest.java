@@ -67,14 +67,15 @@ public class InferenceListenerTest {
                 .put("petalwidth", 3.5)
                 .put("sepallength", 1.4)
                 .put("sepalwidth", 0.2);
-        var pred = inferenceService.predict("iris_random_forest-1", req, true);
+        var pred = inferenceService.predict("iris_random_forest", req, true);
         assertNotNull(pred);
 
         // Then RecordingListener received the PREDICT event with explanations
         assertTrue(recordingListener.events().size() > before);
         InferenceEvent last = recordingListener.events().getLast();
         assertEquals(ModelMetricsBinder.SMILE_NAMESPACE, last.namespace());
-        assertEquals("iris_random_forest-1", last.modelId());
+        assertEquals("iris_random_forest", last.modelId());
+        assertEquals("1", last.modelVersion());
         assertEquals(InferenceEvent.Action.PREDICT, last.action());
         assertTrue(last.explain());
         assertTrue(last.success());

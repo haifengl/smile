@@ -89,6 +89,8 @@ function AppInner() {
               id: m.id,
               kind: m.kind || "Unknown",
               type: panelType(m.kind),
+              version: m.version || null,
+              versions: Array.isArray(m.versions) ? m.versions : [],
             }))
         );
       });
@@ -110,9 +112,7 @@ function AppInner() {
     const resumeId = queryModelId || sessionStorage.getItem(INFER_RESUME_MODEL_KEY);
     if (!resumeId) return;
     sessionStorage.removeItem(INFER_RESUME_MODEL_KEY);
-    const model =
-      models.find((m) => m.id === resumeId) ||
-      models.find((m) => m.id.startsWith(`${resumeId}-`));
+    const model = models.find((m) => m.id === resumeId);
     if (model) {
       selectModel(model);
     }

@@ -141,16 +141,16 @@ else
 fi
 http_status "web UI" 200 "$BASE/"
 json_check  "model list has the SMILE and ONNX models" \
-    "{'iris_random_forest-1','iris_lda-1','logreg_iris'} <= {m['id'] for m in d['data']}" "$V1/models"
+    "{'iris_random_forest','iris_lda','logreg_iris'} <= {m['id'] for m in d['data']}" "$V1/models"
 json_check  "random forest prediction with SHAP" \
     "d['prediction']==2 and len(d['probabilities'])==3 and d['explanations']['shap']" \
-    -X POST -H "$JSON" -d "$SAMPLE" "$V1/smile/iris_random_forest-1?explain=true"
+    -X POST -H "$JSON" -d "$SAMPLE" "$V1/smile/iris_random_forest?explain=true"
 json_check  "LDA prediction (native BLAS/LAPACK)" \
     "d['prediction']==2 and abs(sum(d['probabilities'])-1)<0.01" \
-    -X POST -H "$JSON" -d "$SAMPLE" "$V1/smile/iris_lda-1"
+    -X POST -H "$JSON" -d "$SAMPLE" "$V1/smile/iris_lda"
 json_check  "LDA prediction with KernelSHAP" \
     "d['prediction']==2 and d['explanations']['shap'] and len(d['explanations']['shap'])==3" \
-    -X POST -H "$JSON" -d "$SAMPLE" "$V1/smile/iris_lda-1?explain=true&samples=32&ridge=1e-6"
+    -X POST -H "$JSON" -d "$SAMPLE" "$V1/smile/iris_lda?explain=true&samples=32&ridge=1e-6"
 json_check  "ONNX model info" "d['id']=='logreg_iris' and d['inputs'][0]['name']=='float_input'" "$V1/onnx/logreg_iris"
 json_check  "ONNX inference (ONNX Runtime)" "len(d['label'])==3" \
     -X POST -H "$JSON" -d '{"float_input":[1,2,3,4,5,6]}' "$V1/onnx/logreg_iris"

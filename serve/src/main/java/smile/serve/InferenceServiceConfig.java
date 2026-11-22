@@ -33,13 +33,23 @@ public interface InferenceServiceConfig {
     String model();
 
     /**
-     * Optional public model ID override when serving a single {@code .sml} model
+     * Optional public model slug override when serving a single {@code .sml} model
      * (analogous to {@code smile.chat.served-model-name}). When set and exactly one
-     * {@code .sml} model is loaded, it is registered under this ID instead of
-     * {@code <id>-<version>}.
+     * {@code .sml} model is loaded without a {@code models.json} manifest, it is
+     * registered under this slug.
      */
     @WithName("served-model-id")
     default Optional<String> servedModelId() {
+        return Optional.empty();
+    }
+
+    /**
+     * Optional explicit path to a {@code models.json} manifest file.
+     * When unset and {@link #model()} is a directory, {@code <model>/models.json}
+     * is loaded automatically if present.
+     */
+    @WithName("manifest")
+    default Optional<String> manifest() {
         return Optional.empty();
     }
 

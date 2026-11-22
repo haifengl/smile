@@ -330,7 +330,7 @@ public class ServeManagerTest {
     public void testDriftWarningMatchesLoadedModel() {
         // Given / When / Then
         assertTrue(ServeSupport.driftWarning(List.of("phi-4-mini"), "phi-4-mini").isEmpty());
-        assertTrue(ServeSupport.driftWarning(List.of("phi-4-mini-2"), "phi-4-mini").isEmpty());
+        assertEquals(Optional.of("phi-4-mini"), ServeSupport.driftWarning(List.of("phi-4-mini-2"), "phi-4-mini"));
         assertTrue(ServeSupport.driftWarning(List.of("phi-4-mini"), "").isEmpty());
         assertTrue(ServeSupport.driftWarning(List.of("phi-4-mini"), null).isEmpty());
     }

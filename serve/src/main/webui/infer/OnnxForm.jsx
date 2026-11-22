@@ -40,7 +40,8 @@ import PredictionResults from "./PredictionResults";
 import InferActionFooter from "./InferActionFooter";
 import "./InferPanel.css";
 
-function OnnxForm({ modelId }) {
+function OnnxForm({ modelId, versions = [], defaultVersion = null }) {
+  const [selectedVersion, setSelectedVersion] = useState("");
   const [info, setInfo] = useState(null);
   const [mode, setMode] = useState("auto");
   const [rows, setRows] = useState([]);
@@ -62,6 +63,14 @@ function OnnxForm({ modelId }) {
   const pendingRef = useRef([]);
   const flushRafRef = useRef(0);
 
+  const modelBasePath = selectedVersion
+    ? `/v1/onnx/${modelId}/versions/${encodeURIComponent(selectedVersion)}`
+    : `/v1/onnx/${modelId}`;
+
+  useEffect(() => {
+    setSelectedVersion("");
+  }, [modelId]);
+
   useEffect(() => {
     if (!modelId) {
       return;
@@ -80,7 +89,7 @@ function OnnxForm({ modelId }) {
     setFinishedAt(null);
     setSubmitProgress(null);
 
-    fetch(`/v1/onnx/${modelId}`)
+    fetch(modelBasePath)
       .then((res) => {
         if (!res.ok) {
           throw new Error("Failed to fetch ONNX model info");
@@ -102,7 +111,7 @@ function OnnxForm({ modelId }) {
         cancelAnimationFrame(flushRafRef.current);
       }
     };
-  }, [modelId]);
+  }, [modelId, modelBasePath]);
 
   useEffect(() => {
     if (!imageFiles.length) {
@@ -177,7 +186,7 @@ function OnnxForm({ modelId }) {
     setSubmitError(null);
     beginRun();
     try {
-      const res = await fetch(`/v1/onnx/${modelId}`, {
+      const res = await fetch(modelBasePath, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -245,7 +254,7 @@ function OnnxForm({ modelId }) {
         setSubmitProgress({ done: i, total: imageFiles.length });
         try {
           const body = await buildImageBody(file);
-          const res = await fetch(`/v1/onnx/${modelId}`, {
+          const res = await fetch(modelBasePath, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
@@ -328,7 +337,7 @@ function OnnxForm({ modelId }) {
         throw new Error("File has no data rows");
       }
 
-      const res = await fetch(`/v1/onnx/${modelId}/stream`, {
+      const res = await fetch(`${modelBasePath}/stream`, {
         method: "POST",
         headers: { "Content-Type": contentType },
         body,
@@ -371,6 +380,10 @@ function OnnxForm({ modelId }) {
   if (!info) return null;
 
   const busy = submitting || streaming;
+  const availableVersions =
+    Array.isArray(info?.versions) && info.versions.length > 0
+      ? info.versions
+      : versions;
 
   return (
     <div className="infer-form onnx-form">
@@ -383,6 +396,25 @@ function OnnxForm({ modelId }) {
               {info.version != null ? ` · v${info.version}` : ""}
             </p>
             <div className="mode-toggle">
+              {availableVersions.length > 1 && (
+                <label>
+                  Version{" "}
+                  <select
+                    value={selectedVersion}
+                    onChange={(e) => setSelectedVersion(e.target.value)}
+                    disabled={busy}
+                  >
+                    <option value="">
+                      Default{defaultVersion ? ` (v${defaultVersion})` : ""}
+                    </option>
+                    {availableVersions.map((v) => (
+                      <option key={v} value={v}>
+                        v{v}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
               <label>
                 Input mode{" "}
                 <select

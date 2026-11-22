@@ -310,7 +310,7 @@ public class KernelExplorer extends JPanel {
     private Optional<String> findLoadedId(ModelFileItem item) {
         String base = item.baseName();
         for (String id : loadedModelIds) {
-            if (id.equals(base) || id.startsWith(base + "-")) {
+            if (id.equals(base)) {
                 return Optional.of(id);
             }
         }
@@ -345,7 +345,7 @@ public class KernelExplorer extends JPanel {
                 String baseName = Paths.getFileName(modelPath);
                 if (modelId == null) {
                     modelId = currentIds.stream()
-                            .filter(id -> id.equals(baseName) || id.startsWith(baseName + "-"))
+                            .filter(id -> id.equals(baseName))
                             .findFirst()
                             .orElse(baseName);
                 }

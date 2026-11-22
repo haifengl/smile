@@ -715,8 +715,12 @@ the corresponding profiles.
 | `quarkus.http.domain-socket-enabled` | `false` | Enable Unix domain socket listener on Linux (`quarkus.vertx.prefer-native-transport=true` is enabled by default) |
 | `quarkus.http.domain-socket` | `/var/run/smile-serve.sock` | Unix domain socket path when `quarkus.http.domain-socket-enabled=true` |
 | `quarkus.rest.path` | `/api/v1` | Global REST path prefix |
-| `smile.serve.model` | `../model` | Path to a `.sml` file or directory of `.sml` files |
-| `smile.onnx.model` | `../model` | Path to a `.onnx` file or directory of `.onnx` files |
+| `smile.serve.model` | `/model` | Path to a `.sml` file or directory of `.sml` models (flat, versioned `<slug>/<version>/`, or with `models.json`) |
+| `smile.serve.served-model-id` | _(unset)_ | Optional explicit slug override when serving a single `.sml` model without `models.json` |
+| `smile.serve.manifest` | _(unset)_ | Optional explicit path to a `models.json` manifest (auto-detected at `<model>/models.json` when unset) |
+| `smile.onnx.model` | `/model` | Path to a `.onnx` file or directory of `.onnx` models (flat, versioned `<slug>/<version>/`, or with `models.json`) |
+| `smile.onnx.served-model-id` | _(unset)_ | Optional explicit slug override when serving a single `.onnx` model without `models.json` |
+| `smile.onnx.manifest` | _(unset)_ | Optional explicit path to a `models.json` manifest (auto-detected at `<model>/models.json` when unset) |
 | `smile.chat.model` | `../model/Llama3.1-8B-Instruct` | Local HF-layout checkpoint directory, or Hugging Face repo id (`owner/name`). Tokenizer is resolved next to the checkpoint (`original/tokenizer.model`, `tokenizer.model`, or HF `tokenizer.json` for AWQ/GPTQ cards) |
 | `smile.chat.max-seq-len` | `0` (auto) | Max context (prompt+output), like vLLM `--max-model-len` / SGLang `--context-length`. `<=0` uses `max_position_embeddings` from the model config; set explicitly (e.g. `8192`) to cap large-window models such as Qwen3.5 |
 | `smile.chat.max-batch-size` | `1` | Max in-flight chat generations (`InferenceEngine` Fluid Injection cap). Values `>1` enable continuous batching. A waiting request is admitted only when free KV can reserve its full `prompt + max_tokens` window (capped by `max-seq-len`); otherwise it stays queued. |
@@ -788,12 +792,12 @@ GET /api/v1/smile/{id}
 **Example:**
 
 ```shell
-curl http://localhost:8080/api/v1/smile/iris_random_forest-1
+curl http://localhost:8080/api/v1/smile/iris_random_forest
 ```
 
 ```json
 {
-  "id": "iris_random_forest-1",
+  "id": "iris_random_forest",
   "algorithm": "random-forest",
   "schema": {
     "petallength": { "type": "float", "nullable": false },
@@ -829,7 +833,7 @@ defined in the model schema. **All non-nullable fields are required.**
 **Classification example (`ClassificationModel`):**
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1 \
+curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -850,7 +854,7 @@ curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1 \
 
 ```shell
 curl --unix-socket /var/run/smile-serve.sock \
-  -X POST http://localhost/api/v1/smile/iris_random_forest-1 \
+  -X POST http://localhost/api/v1/smile/iris_random_forest \
   -H "Content-Type: application/json" \
   -d '{"sepallength":5.1,"sepalwidth":3.5,"petallength":1.4,"petalwidth":0.2}'
 ```
@@ -930,7 +934,7 @@ curl -X POST http://localhost:8080/api/v1/smile/iris_iforest-1 \
 Explanations can be requested by passing `"enableExplanations": true` in the JSON body, or appending `?explain=true` to the URL.
 
 ```shell
-curl -X POST "http://localhost:8080/api/v1/smile/iris_random_forest-1?explain=true" \
+curl -X POST "http://localhost:8080/api/v1/smile/iris_random_forest?explain=true" \
   -H "Content-Type: application/json" \
   -d '{
     "sepallength": 5.1,
@@ -1006,7 +1010,7 @@ column order as the model schema** (alphabetical by field name, as shown by
 cat iris.csv | curl -X POST \
   -H "Content-Type: text/plain" \
   --data-binary @- \
-  http://localhost:8080/api/v1/smile/iris_random_forest-1/stream
+  http://localhost:8080/api/v1/smile/iris_random_forest/stream
 ```
 
 Where `iris.csv` might contain:
@@ -1036,7 +1040,7 @@ This is more verbose but supports named fields in any order. Each sample can als
 cat iris.jsonl | curl -X POST \
   -H "Content-Type: application/json" \
   --data-binary @- \
-  http://localhost:8080/api/v1/smile/iris_random_forest-1/stream
+  http://localhost:8080/api/v1/smile/iris_random_forest/stream
 ```
 
 Where `iris.jsonl` contains:
@@ -1125,13 +1129,64 @@ cat new_samples.csv | curl -X POST \
 }
 ```
 
-### 5.6 Model IDs
+### 5.6 Model IDs, Versions, Aliases, and `models.json`
 
-A model's ID is constructed as `<name>-<version>` from the model's embedded
-metadata tags (`smile.model.Model.ID` and `smile.model.Model.VERSION`).
-If those tags are absent, the file name stem is used as the name and `"1"` as
-the version. For example, a file named `iris_random_forest.sml` with no ID
-tag gets the ID `iris_random_forest-1`.
+Every `.sml` and `.onnx` model is identified by a structured `(slug, version)` pair:
+
+- **Slug** (`^[a-zA-Z0-9][a-zA-Z0-9._-]{0,127}$`): the public model identifier used in `/v1/models`, `/v1/smile/{slug}`, and `/v1/onnx/{slug}`.
+- **Version** (`^[a-zA-Z0-9][a-zA-Z0-9._+-]{0,63}$`): numeric or SemVer version string (default `"1"`), ordered with numeric/SemVer precedence (`2 < 10`, `1.2.0-rc1 < 1.2.0 < 1.10.0`).
+- **Resolution precedence**:
+  1. Explicit override via `POST /v1/models/load` (`slug`, `version`) or single-model `served-model-id`
+  2. Declarative `models.json` manifest
+  3. Versioned directory structure (`<dir>/<slug>/<version>/<file>.(sml|onnx)`)
+  4. Embedded metadata (`Model.ID` / `Model.VERSION` for `.sml`; custom metadata `id`/`name` & `version` or protobuf `model_version > 0` for `.onnx`)
+  5. File name stem and version `"1"` (e.g. `iris_random_forest.sml` → slug `iris_random_forest`, version `"1"`)
+
+#### Versioned directory layout & `models.json`
+
+A model directory may mix flat files, versioned subdirectories (`<slug>/<version>/<artifact>`), and an optional `models.json` manifest:
+
+```json
+{
+  "auto_discover": true,
+  "models": [
+    {
+      "slug": "fraud",
+      "kind": "sml",
+      "versions": {
+        "1": "fraud_rf.sml",
+        "2": "fraud_gb.sml"
+      },
+      "default": "1",
+      "aliases": {
+        "stable": "1",
+        "canary": "2"
+      }
+    },
+    {
+      "slug": "vision-cls",
+      "kind": "onnx",
+      "path": "squeezenet.onnx",
+      "version": "1.0"
+    }
+  ]
+}
+```
+
+Set `"auto_discover": false` to restrict loading strictly to models declared in `models.json`.
+
+#### Addressing versions and mutable aliases
+
+| Route | Behavior |
+|---|---|
+| `/v1/{smile,onnx}/{slug}` | Routes to the slug's `default` alias (pinned version, or highest loaded version `latest` when unpinned) |
+| `/v1/{smile,onnx}/{slug}/versions` | Lists loaded `versions`, `default`, `latest`, and `aliases` |
+| `/v1/{smile,onnx}/{slug}/versions/{version}` | Pins a specific version (also supports `/health`, `/stream`, `/reload`, `/unload`, and `/update`) |
+| `/v1/{smile,onnx}/{slug}/aliases/{alias}` | Routes via `default`, reserved `latest`, or a custom alias (`canary`, `stable`, …) |
+| `PUT /v1/{smile,onnx}/{slug}/aliases/{alias}` | Assigns or promotes an alias (`{"version": "2"}`), including `default` (`@LocalhostOnly`) |
+| `DELETE /v1/{smile,onnx}/{slug}/aliases/{alias}` | Removes a custom alias, or unpins `default` back to tracking `latest` (`@LocalhostOnly`) |
+
+Every inference and metadata response includes `X-Model-Id` and `X-Model-Version` headers identifying the concrete artifact served.
 
 ### 5.7 Model Health and Metrics
 
@@ -1145,12 +1200,12 @@ GET /api/v1/smile/{id}/health
 ```
 
 ```shell
-curl http://localhost:8080/api/v1/smile/iris_random_forest-1/health
+curl http://localhost:8080/api/v1/smile/iris_random_forest/health
 ```
 
 ```json
 {
-  "id": "iris_random_forest-1",
+  "id": "iris_random_forest",
   "status": "ACTIVE",
   "in_flight_requests": 0,
   "uptime_seconds": 182
@@ -1168,7 +1223,7 @@ Per-model metrics are exposed through the unified Prometheus endpoint
 per-model JSON endpoint. Every series carries a `model_id` label.
 
 ```shell
-curl http://localhost:8080/q/metrics | grep 'serve_smile_.*iris_random_forest-1'
+curl http://localhost:8080/q/metrics | grep 'serve_smile_.*iris_random_forest'
 ```
 
 | Metric | Type | Description |
@@ -1202,13 +1257,13 @@ POST /api/v1/smile/{id}/reload
 ```
 
 ```shell
-curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest-1/reload
+curl -X POST http://localhost:8080/api/v1/smile/iris_random_forest/reload
 ```
 
 ```json
 {
   "status": "reloaded",
-  "id": "iris_random_forest-1",
+  "id": "iris_random_forest",
   "path": "/model/iris_random_forest.sml",
   "algorithm": "random-forest",
   "timestamp": 1728087382
@@ -1228,13 +1283,13 @@ POST /api/v1/smile/{id}/unload?timeout=10
 - `timeout` *(optional, default `10`)*: Maximum seconds to wait for active in-flight requests to complete.
 
 ```shell
-curl -X POST "http://localhost:8080/api/v1/smile/iris_random_forest-1/unload?timeout=5"
+curl -X POST "http://localhost:8080/api/v1/smile/iris_random_forest/unload?timeout=5"
 ```
 
 ```json
 {
   "status": "unloaded",
-  "id": "iris_random_forest-1",
+  "id": "iris_random_forest",
   "drained": true,
   "timestamp": 1728087400
 }
@@ -1665,7 +1720,7 @@ curl http://localhost:8080/api/v1/models
       "kind": "LLM"
     },
     {
-      "id": "iris_random_forest-1",
+      "id": "iris_random_forest",
       "object": "model",
       "created": 1710000000,
       "owned_by": "Unknown",
@@ -1727,12 +1782,12 @@ For SMILE `.sml` models, `smile.train` reports summary metrics specific to the m
 List responses omit `smile` / `onnx` / `llm` so the catalog stays lean.
 
 ```shell
-curl http://localhost:8080/api/v1/models/iris_random_forest-1
+curl http://localhost:8080/api/v1/models/iris_random_forest
 ```
 
 ```json
 {
-  "id": "iris_random_forest-1",
+  "id": "iris_random_forest",
   "object": "model",
   "created": 1710000000,
   "owned_by": "Unknown",
@@ -1773,6 +1828,10 @@ Remote requests return **HTTP 403 Forbidden**.
 |---|---|---|---|
 | `model` | `string` | **Yes** | Local file or directory path, or Hugging Face repo ID (`owner/name`) |
 | `kind` | `string` | No (default `auto`) | Model kind: `sml` / `smile`, `onnx`, `llm` / `chat`, or `auto` |
+| `slug` (or `id`) | `string` | No | Explicit model slug override (single-artifact `.sml`/`.onnx` loads) |
+| `version` | `string` | No | Explicit model version string (single-artifact `.sml`/`.onnx` loads) |
+| `alias` / `aliases` | `string` / `string[]` | No | Optional alias(es) to bind to the loaded version |
+| `set_default` | `boolean` | No | `true` pins `default` to this version; `false` pins the existing default so this version does not hijack default traffic |
 | `config` | `object` | No | Serving configuration overrides (chat and ONNX GenAI models only) |
 
 #### Conflict handling (409 Conflict)
@@ -1782,7 +1841,7 @@ strictly rejects any model whose ID is already loaded in active memory with **HT
 
 ```json
 {
-  "error": "Model 'iris_random_forest-1' is already loaded. Use POST /api/v1/smile/iris_random_forest-1/reload to refresh it, or unload it first."
+  "error": "Model 'iris_random_forest' is already loaded. Use POST /api/v1/smile/iris_random_forest/reload to refresh it, or unload it first."
 }
 ```
 
@@ -1801,8 +1860,8 @@ curl -X POST http://localhost:8080/api/v1/models/load \
   "status": "loaded",
   "kind": "sml",
   "model": "/model/iris_random_forest.sml",
-  "ids": ["iris_random_forest-1"],
-  "id": "iris_random_forest-1",
+  "ids": ["iris_random_forest"],
+  "id": "iris_random_forest",
   "algorithm": "random-forest"
 }
 ```

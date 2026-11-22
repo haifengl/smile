@@ -62,7 +62,7 @@ public class LegacyApiCompatTest {
             .then()
                 .statusCode(200)
                 .body("object", equalTo("list"))
-                .body("data.id", hasItem("iris_random_forest-1"));
+                .body("data.id", hasItem("iris_random_forest"));
 
         // Legacy /api/v1/models transparently rerouted to /v1/models
         given()
@@ -70,13 +70,13 @@ public class LegacyApiCompatTest {
             .then()
                 .statusCode(200)
                 .body("object", equalTo("list"))
-                .body("data.id", hasItem("iris_random_forest-1"));
+                .body("data.id", hasItem("iris_random_forest"));
 
         given()
-            .when().get("/api/v1/models/iris_random_forest-1")
+            .when().get("/api/v1/models/iris_random_forest")
             .then()
                 .statusCode(200)
-                .body("id", equalTo("iris_random_forest-1"));
+                .body("id", equalTo("iris_random_forest"));
     }
 
     @Test
@@ -89,7 +89,7 @@ public class LegacyApiCompatTest {
         given()
             .contentType(ContentType.JSON)
             .body(sample)
-            .when().post("/v1/smile/iris_random_forest-1?explain=true")
+            .when().post("/v1/smile/iris_random_forest?explain=true")
             .then()
                 .statusCode(200)
                 .body("prediction", notNullValue())
@@ -99,7 +99,7 @@ public class LegacyApiCompatTest {
         given()
             .contentType(ContentType.JSON)
             .body(sample)
-            .when().post("/api/v1/smile/iris_random_forest-1?explain=true")
+            .when().post("/api/v1/smile/iris_random_forest?explain=true")
             .then()
                 .statusCode(200)
                 .body("prediction", notNullValue())

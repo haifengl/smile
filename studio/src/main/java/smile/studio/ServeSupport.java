@@ -78,7 +78,7 @@ final class ServeSupport {
             return Optional.empty();
         }
         String model = configuredLlm.trim();
-        if (loaded.stream().anyMatch(id -> id.equals(model) || id.startsWith(model + "-"))) {
+        if (loaded.stream().anyMatch(id -> id.equals(model))) {
             return Optional.empty();
         }
         return Optional.of(model);

@@ -164,7 +164,8 @@ public class ModelArtifactVerifierTest {
 
         // Then
         assertEquals(1, loaded.size());
-        assertEquals("iris-verified-2", loaded.getFirst().id());
+        assertEquals("iris-verified", loaded.getFirst().slug());
+        assertEquals("2", loaded.getFirst().version());
         assertEquals(1, preVerifyCalls.get());
         assertEquals(1, postVerifyCalls.get());
         assertTrue(service.listQuarantinedModels().isEmpty());
@@ -208,20 +209,22 @@ public class ModelArtifactVerifierTest {
 
         InferenceService service = new InferenceService(
                 configFor(smlFile), List.of(), List.of(), List.of());
-        assertTrue(service.models().containsKey("iris-reload-1"));
+        assertTrue(service.models().containsKey("iris-reload"));
+        assertEquals("1", service.getModel("iris-reload").version());
 
-        // When: the file on disk is updated to version "2" and reloadModel("iris-reload-1") is called
+        // When: the file on disk is updated to version "2" and reloadModel("iris-reload") is called
         var v2 = Model.classification("logistic", Formula.lhs("class"), iris, null, new Properties());
         v2.setTag(Model.ID, "iris-reload");
         v2.setTag(Model.VERSION, "2");
         Model.write(v2, smlFile);
 
-        InferenceModel reloaded = service.reloadModel("iris-reload-1");
+        InferenceModel reloaded = service.reloadModel("iris-reload");
 
-        // Then: the old ID is removed and the new ID is active
-        assertEquals("iris-reload-2", reloaded.id());
-        assertFalse(service.models().containsKey("iris-reload-1"));
-        assertTrue(service.models().containsKey("iris-reload-2"));
+        // Then: the old version is removed and the new version is active under the same slug
+        assertEquals("iris-reload", reloaded.slug());
+        assertEquals("2", reloaded.version());
+        assertEquals(List.of("2"), service.getVersions("iris-reload").versions());
+        assertEquals("2", service.getModel("iris-reload").version());
     }
 
     @Test

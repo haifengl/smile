@@ -27,7 +27,8 @@ import smile.model.Prediction;
  * @param timestamp    the UTC timestamp when the event was recorded.
  * @param namespace    the model namespace ({@link ModelMetricsBinder#SMILE_NAMESPACE}
  *                     or {@link ModelMetricsBinder#ONNX_NAMESPACE}).
- * @param modelId      the model identifier.
+ * @param modelId      the model slug (or file name when verification failed before identity resolution).
+ * @param modelVersion the concrete model version string, or {@code null} when unavailable.
  * @param action       the action kind.
  * @param input        the serialized input payload (JSON or CSV), or {@code null} for lifecycle events.
  * @param prediction   the SMILE {@link Prediction} result when applicable, or {@code null}.
@@ -41,6 +42,7 @@ public record InferenceEvent(
         Instant timestamp,
         String namespace,
         String modelId,
+        String modelVersion,
         Action action,
         String input,
         Prediction prediction,
@@ -72,22 +74,39 @@ public record InferenceEvent(
     }
 
     /**
-     * Creates an event for a SMILE model prediction.
-     *
-     * @param modelId      the model ID.
-     * @param action       {@link Action#PREDICT} or {@link Action#STREAM_PREDICT}.
-     * @param input        the JSON or CSV input string.
-     * @param prediction   the prediction result.
-     * @param latencyNanos the execution latency in nanoseconds.
-     * @param explain      whether explanations were computed.
-     * @return the event instance.
+     * Convenience constructor without {@code modelVersion} (defaults to {@code null}).
+     */
+    public InferenceEvent(Instant timestamp,
+                          String namespace,
+                          String modelId,
+                          Action action,
+                          String input,
+                          Prediction prediction,
+                          String output,
+                          long latencyNanos,
+                          boolean explain,
+                          boolean success) {
+        this(timestamp, namespace, modelId, null, action, input, prediction, output, latencyNanos, explain, success);
+    }
+
+    /**
+     * Creates an event for a SMILE model prediction (unversioned overload).
      */
     public static InferenceEvent smilePredict(String modelId, Action action, String input,
+                                              Prediction prediction, long latencyNanos, boolean explain) {
+        return smilePredict(modelId, null, action, input, prediction, latencyNanos, explain);
+    }
+
+    /**
+     * Creates an event for a SMILE model prediction.
+     */
+    public static InferenceEvent smilePredict(String modelId, String modelVersion, Action action, String input,
                                               Prediction prediction, long latencyNanos, boolean explain) {
         return new InferenceEvent(
                 Instant.now(),
                 ModelMetricsBinder.SMILE_NAMESPACE,
                 modelId,
+                modelVersion,
                 action,
                 input,
                 prediction,
@@ -99,21 +118,23 @@ public record InferenceEvent(
     }
 
     /**
-     * Creates an event for an ONNX model prediction.
-     *
-     * @param modelId      the model ID.
-     * @param action       {@link Action#PREDICT} or {@link Action#STREAM_PREDICT}.
-     * @param input        the JSON or CSV input string.
-     * @param output       the JSON output string.
-     * @param latencyNanos the execution latency in nanoseconds.
-     * @return the event instance.
+     * Creates an event for an ONNX model prediction (unversioned overload).
      */
     public static InferenceEvent onnxPredict(String modelId, Action action, String input,
+                                             String output, long latencyNanos) {
+        return onnxPredict(modelId, null, action, input, output, latencyNanos);
+    }
+
+    /**
+     * Creates an event for an ONNX model prediction.
+     */
+    public static InferenceEvent onnxPredict(String modelId, String modelVersion, Action action, String input,
                                              String output, long latencyNanos) {
         return new InferenceEvent(
                 Instant.now(),
                 ModelMetricsBinder.ONNX_NAMESPACE,
                 modelId,
+                modelVersion,
                 action,
                 input,
                 null,
@@ -125,19 +146,22 @@ public record InferenceEvent(
     }
 
     /**
-     * Creates an event for an online model update.
-     *
-     * @param modelId      the model ID.
-     * @param input        the JSON or CSV update payload.
-     * @param persisted    whether the model was persisted to disk.
-     * @param latencyNanos the execution latency in nanoseconds.
-     * @return the event instance.
+     * Creates an event for an online model update (unversioned overload).
      */
     public static InferenceEvent onlineUpdate(String modelId, String input, boolean persisted, long latencyNanos) {
+        return onlineUpdate(modelId, null, input, persisted, latencyNanos);
+    }
+
+    /**
+     * Creates an event for an online model update.
+     */
+    public static InferenceEvent onlineUpdate(String modelId, String modelVersion, String input,
+                                              boolean persisted, long latencyNanos) {
         return new InferenceEvent(
                 Instant.now(),
                 ModelMetricsBinder.SMILE_NAMESPACE,
                 modelId,
+                modelVersion,
                 Action.ONLINE_UPDATE,
                 input,
                 null,
@@ -149,19 +173,22 @@ public record InferenceEvent(
     }
 
     /**
-     * Creates a model lifecycle event.
-     *
-     * @param namespace the model namespace.
-     * @param modelId   the model ID.
-     * @param action    {@link Action#MODEL_LOADED}, {@link Action#MODEL_RELOADED}, or {@link Action#MODEL_UNLOADED}.
-     * @param details   optional details (such as file path or drain status).
-     * @return the event instance.
+     * Creates a model lifecycle event (unversioned overload).
      */
     public static InferenceEvent lifecycle(String namespace, String modelId, Action action, String details) {
+        return lifecycle(namespace, modelId, null, action, details);
+    }
+
+    /**
+     * Creates a model lifecycle event.
+     */
+    public static InferenceEvent lifecycle(String namespace, String modelId, String modelVersion,
+                                           Action action, String details) {
         return new InferenceEvent(
                 Instant.now(),
                 namespace,
                 modelId,
+                modelVersion,
                 action,
                 null,
                 null,
@@ -173,22 +200,24 @@ public record InferenceEvent(
     }
 
     /**
-     * Creates a model artifact verification event ({@link Action#MODEL_VERIFIED}
-     * or {@link Action#MODEL_REJECTED}).
-     *
-     * @param namespace    the model namespace.
-     * @param modelId      the model ID or file name.
-     * @param verified     {@code true} if verification succeeded; {@code false} if rejected.
-     * @param details      verification or rejection metadata (JSON or message).
-     * @param latencyNanos verification duration in nanoseconds.
-     * @return the event instance.
+     * Creates a model artifact verification event (unversioned overload).
      */
     public static InferenceEvent verification(String namespace, String modelId, boolean verified,
                                               String details, long latencyNanos) {
+        return verification(namespace, modelId, null, verified, details, latencyNanos);
+    }
+
+    /**
+     * Creates a model artifact verification event ({@link Action#MODEL_VERIFIED}
+     * or {@link Action#MODEL_REJECTED}).
+     */
+    public static InferenceEvent verification(String namespace, String modelId, String modelVersion,
+                                              boolean verified, String details, long latencyNanos) {
         return new InferenceEvent(
                 Instant.now(),
                 namespace,
                 modelId,
+                modelVersion,
                 verified ? Action.MODEL_VERIFIED : Action.MODEL_REJECTED,
                 null,
                 null,

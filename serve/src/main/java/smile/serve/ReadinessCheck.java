@@ -64,9 +64,9 @@ public class ReadinessCheck implements HealthCheck {
 
     @Override
     public HealthCheckResponse call() {
-        long activeSmile = inferenceService.models().values().stream()
+        long activeSmile = inferenceService.allModels().stream()
                 .filter(m -> m.state() == InferenceModel.State.ACTIVE).count();
-        long activeOnnx = onnxService.models().values().stream()
+        long activeOnnx = onnxService.allModels().stream()
                 .filter(m -> m.state() == OnnxModel.State.ACTIVE).count();
         long llm = catalog.list().stream()
                 .filter(m -> ModelObject.KIND_LLM.equals(m.kind())).count();

@@ -39,12 +39,22 @@ public interface OnnxServiceConfig {
     String model();
 
     /**
-     * Optional public model ID override when serving a single {@code .onnx} model.
-     * When set and exactly one {@code .onnx} model is loaded, it is registered
-     * under this ID instead of the file stem.
+     * Optional public model slug override when serving a single {@code .onnx} model.
+     * When set and exactly one {@code .onnx} model is loaded without a {@code models.json}
+     * manifest, it is registered under this slug instead of the file stem.
      */
     @WithName("served-model-id")
     default Optional<String> servedModelId() {
+        return Optional.empty();
+    }
+
+    /**
+     * Optional explicit path to a {@code models.json} manifest file.
+     * When unset and {@link #model()} is a directory, {@code <model>/models.json}
+     * is loaded automatically if present.
+     */
+    @WithName("manifest")
+    default Optional<String> manifest() {
         return Optional.empty();
     }
 }

@@ -48,7 +48,10 @@ function Sidebar({ models, onSelect, selectedModel }) {
                 className={active ? "active" : ""}
                 onClick={() => onSelect(model)}
               >
-                <span className="model-name" title={model.id}>
+                <span
+                  className="model-name"
+                  title={model.version ? `${model.id} (v${model.version})` : model.id}
+                >
                   {model.id}
                 </span>
                 <span className={`badge ${badgeClass}`} title={model.kind}>

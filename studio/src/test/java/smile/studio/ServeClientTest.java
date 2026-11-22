@@ -72,15 +72,29 @@ public class ServeClientTest {
     @Test
     public void testLoadModelReturnsId() throws Exception {
         // Given
-        respond("/v1/models/load", 200, "{\"status\":\"loaded\",\"id\":\"iris-1\"}");
+        respond("/v1/models/load", 200, "{\"status\":\"loaded\",\"id\":\"iris\",\"version\":\"1\"}");
 
         // When
         String id = client.loadModel("/models/iris.sml");
 
         // Then
-        assertEquals("iris-1", id);
+        assertEquals("iris", id);
         assertTrue(lastBody.get().contains("\"model\":\"/models/iris.sml\""));
         assertTrue(lastBody.get().contains("\"kind\":\"auto\""));
+    }
+
+    @Test
+    public void testLoadModelWithExplicitSlugAndVersion() throws Exception {
+        // Given
+        respond("/v1/models/load", 200, "{\"status\":\"loaded\",\"id\":\"fraud\",\"version\":\"2\"}");
+
+        // When
+        String id = client.loadModel("/models/iris.sml", "fraud", "2");
+
+        // Then
+        assertEquals("fraud", id);
+        assertTrue(lastBody.get().contains("\"slug\":\"fraud\""));
+        assertTrue(lastBody.get().contains("\"version\":\"2\""));
     }
 
     @Test
