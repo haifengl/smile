@@ -17,8 +17,10 @@
  */
 package smile.serve;
 
+import java.util.Optional;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithName;
 
 /**
  * Configuration for the ONNX inference service.
@@ -35,5 +37,15 @@ public interface OnnxServiceConfig {
      */
     @WithDefault("../model")
     String model();
+
+    /**
+     * Optional public model ID override when serving a single {@code .onnx} model.
+     * When set and exactly one {@code .onnx} model is loaded, it is registered
+     * under this ID instead of the file stem.
+     */
+    @WithName("served-model-id")
+    default Optional<String> servedModelId() {
+        return Optional.empty();
+    }
 }
 

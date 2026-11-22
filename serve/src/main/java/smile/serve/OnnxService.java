@@ -118,13 +118,31 @@ public class OnnxService implements OpenAiModelContributor {
         this.metricsBinders = metricsBinders == null ? List.of() : List.copyOf(metricsBinders);
         this.listeners = listeners == null ? List.of() : List.copyOf(listeners);
         this.verifiers = verifiers == null ? List.of() : List.copyOf(verifiers);
+        String servedId = config.servedModelId()
+                .map(String::strip)
+                .filter(s -> !s.isEmpty())
+                .orElse(null);
         var path = Path.of(config.model()).toAbsolutePath().normalize();
         if (Files.isRegularFile(path) && path.toString().endsWith(".onnx")) {
-            loadModel(path);
+            loadModel(path, servedId);
         } else if (Files.isDirectory(path)) {
             try (Stream<Path> files = Files.list(path)) {
-                files.filter(f -> Files.isRegularFile(f) && f.toString().endsWith(".onnx"))
-                     .forEach(this::loadModel);
+                List<Path> onnxFiles = files
+                        .filter(f -> Files.isRegularFile(f) && f.toString().endsWith(".onnx"))
+                        .sorted()
+                        .toList();
+                String idOverride = null;
+                if (servedId != null) {
+                    if (onnxFiles.size() == 1) {
+                        idOverride = servedId;
+                    } else if (onnxFiles.size() > 1) {
+                        logger.warnf("Ignoring smile.onnx.served-model-id='%s' because directory '%s' contains %d .onnx files",
+                                servedId, path, onnxFiles.size());
+                    }
+                }
+                for (Path f : onnxFiles) {
+                    loadModel(f, idOverride);
+                }
             } catch (IOException ex) {
                 logger.errorf(ex, "Failed to list ONNX model directory '%s'", path);
                 recordQuarantine(path, ex);
@@ -140,10 +158,16 @@ public class OnnxService implements OpenAiModelContributor {
      * @param path the {@code .onnx} file path.
      */
     private void loadModel(Path path) {
+        loadModel(path, null);
+    }
+
+    private void loadModel(Path path, String idOverride) {
         Path normalized = path.toAbsolutePath().normalize();
         try {
             logger.infof("Loading ONNX model from '%s'", normalized);
-            String id = Paths.getFileName(normalized);
+            String id = (idOverride != null && !idOverride.isBlank())
+                    ? idOverride.strip()
+                    : Paths.getFileName(normalized);
             var session = verifyAndCreateSession(normalized);
             var model = new OnnxModel(id, normalized, session);
             models.put(id, model);

@@ -60,8 +60,21 @@ public class InferenceModel {
 
     /** Constructor. */
     public InferenceModel(Model model, Path path) {
-        this.id = model.getTag(Model.ID, Paths.getFileName(path)) + "-"
-                + model.getTag(Model.VERSION, "1");
+        this(model, path, null);
+    }
+
+    /**
+     * Constructor with an optional explicit served model ID override.
+     *
+     * @param model      deserialized SMILE model.
+     * @param path       source {@code .sml} file path.
+     * @param idOverride optional served model ID (falls back to {@code <id>-<version>} when null/blank).
+     */
+    public InferenceModel(Model model, Path path, String idOverride) {
+        this.id = (idOverride != null && !idOverride.isBlank())
+                ? idOverride.strip()
+                : model.getTag(Model.ID, Paths.getFileName(path)) + "-"
+                        + model.getTag(Model.VERSION, "1");
         this.model = model;
         this.path = path;
         if (model instanceof ClassificationModel m) {

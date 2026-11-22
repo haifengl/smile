@@ -119,13 +119,31 @@ public class InferenceService implements OpenAiModelContributor {
         this.metricsBinders = metricsBinders == null ? List.of() : List.copyOf(metricsBinders);
         this.listeners = listeners == null ? List.of() : List.copyOf(listeners);
         this.verifiers = verifiers == null ? List.of() : List.copyOf(verifiers);
+        String servedId = config.servedModelId()
+                .map(String::strip)
+                .filter(s -> !s.isEmpty())
+                .orElse(null);
         var path = Path.of(config.model()).toAbsolutePath().normalize();
         if (Files.isRegularFile(path)) {
-            loadModel(path);
+            loadModel(path, servedId);
         } else if (Files.isDirectory(path)) {
             try (Stream<Path> files = Files.list(path)) {
-                files.filter(file -> Files.isRegularFile(file) && file.toString().endsWith(".sml"))
-                     .forEach(this::loadModel);
+                List<Path> smlFiles = files
+                        .filter(file -> Files.isRegularFile(file) && file.toString().endsWith(".sml"))
+                        .sorted()
+                        .toList();
+                String idOverride = null;
+                if (servedId != null) {
+                    if (smlFiles.size() == 1) {
+                        idOverride = servedId;
+                    } else if (smlFiles.size() > 1) {
+                        logger.warnf("Ignoring smile.serve.served-model-id='%s' because directory '%s' contains %d .sml files",
+                                servedId, path, smlFiles.size());
+                    }
+                }
+                for (Path file : smlFiles) {
+                    loadModel(file, idOverride);
+                }
             } catch (IOException ex) {
                 logger.errorf(ex, "Failed to list model directory '%s'", path);
                 recordQuarantine(path, ex);
@@ -141,11 +159,15 @@ public class InferenceService implements OpenAiModelContributor {
      * @param path the model file path.
      */
     private void loadModel(Path path) {
+        loadModel(path, null);
+    }
+
+    private void loadModel(Path path, String idOverride) {
         Path normalized = path.toAbsolutePath().normalize();
         try {
             logger.infof("Loading model from '%s'", normalized);
             Model m = verifyAndReadModel(normalized);
-            var model = new InferenceModel(m, normalized);
+            var model = new InferenceModel(m, normalized, idOverride);
             models.put(model.id(), model);
             modelPaths.put(model.id(), normalized);
             quarantined.remove(normalized);

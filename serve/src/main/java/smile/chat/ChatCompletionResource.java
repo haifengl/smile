@@ -49,6 +49,7 @@ import smile.llm.FinishReason;
 import smile.llm.Role;
 import smile.auth.AuthConfig;
 import smile.auth.AuthContext;
+import smile.auth.OidcPrincipal;
 import smile.auth.User;
 import smile.auth.UserService;
 import smile.chat.agent.ChatAgentBridge;
@@ -181,22 +182,25 @@ public class ChatCompletionResource {
     public Multi<String> completeStream(@Context HttpHeaders headers, CompletionRequest request) {
         validate(request);
         boolean internalHop = isInternalAgentHop(headers);
-        if (!internalHop && userService != null) {
-            userService.ensureAuthenticatedUser(authContext);
-        }
+        // Never run blocking JDBC (ensureOidcUser) synchronously on the Vert.x I/O event loop:
+        // capture the immutable principal and request context here and resolve inside executor.supplyAsync().
+        User initialUser = authContext.user();
+        OidcPrincipal pendingPrincipal = (!internalHop && initialUser == null && authContext.isOidcAuthenticated())
+                ? authContext.oidcPrincipal()
+                : null;
         boolean useKirin = shouldRouteToKirinAgent(headers, request);
-        User oauthUser = useKirin ? authContext.user() : null;
-        Long callerUserId = authContext.userId();
         String callerIp = ClientIdentity.resolveClientIp(
                 routingContext, headers, authConfig.trustForwardedHeaders());
+        String userAgent = headers != null ? headers.getHeaderString("User-Agent") : null;
         int localPort = useKirin ? resolveLocalPort() : configuredHttpPort;
-        Conversation conversation = internalHop ? null : newConversation(headers);
         String id = newCompletionId();
         long created = Instant.now().getEpochSecond();
         String modelName = service.modelName();
 
-        if (useKirin && oauthUser != null) {
-            return streamKirinAgent(oauthUser, conversation, headers, request, id, created, modelName, localPort);
+        if (useKirin && (initialUser != null || pendingPrincipal != null)) {
+            return streamKirinAgent(
+                    initialUser, pendingPrincipal, callerIp, userAgent,
+                    request, id, created, modelName, localPort);
         }
 
         return Multi.createFrom().emitter(emitter -> {
@@ -306,6 +310,14 @@ public class ChatCompletionResource {
 
             executor.supplyAsync(() -> {
                 try {
+                    User resolvedUser = initialUser;
+                    if (pendingPrincipal != null && userService != null) {
+                        resolvedUser = userService.ensureOidcUser(pendingPrincipal);
+                    }
+                    Long callerUserId = resolvedUser != null ? resolvedUser.id : null;
+                    Conversation conversation = internalHop
+                            ? null
+                            : newConversation(callerIp, userAgent, callerUserId);
                     var handle = service.submitCompletion(request, publisher, callerUserId, callerIp);
                     handleRef.set(handle);
                     if (emitter.isCancelled()) {
@@ -314,7 +326,7 @@ public class ChatCompletionResource {
                     var completion = handle.future().join();
                     resultFuture.complete(completion);
                     if (completion != null && !internalHop) {
-                        saveConversation(conversation, headers, request, completion);
+                        saveConversation(conversation, callerUserId, callerIp, request, completion);
                     }
                     if (!publisher.isClosed()) {
                         publisher.close();
@@ -332,9 +344,10 @@ public class ChatCompletionResource {
     }
 
     private Multi<String> streamKirinAgent(
-            User oauthUser,
-            Conversation conversation,
-            HttpHeaders headers,
+            User initialUser,
+            OidcPrincipal pendingPrincipal,
+            String callerIp,
+            String userAgent,
             CompletionRequest request,
             String id,
             long created,
@@ -345,6 +358,12 @@ public class ChatCompletionResource {
             AtomicBoolean isFirst = new AtomicBoolean(true);
             executor.supplyAsync(() -> {
                 try {
+                    User oauthUser = initialUser;
+                    if (oauthUser == null && pendingPrincipal != null && userService != null) {
+                        oauthUser = userService.ensureOidcUser(pendingPrincipal);
+                    }
+                    Long callerUserId = oauthUser != null ? oauthUser.id : null;
+                    Conversation conversation = newConversation(callerIp, userAgent, callerUserId);
                     ChatCompletion completion = agentBridge.complete(
                             oauthUser,
                             request,
@@ -365,7 +384,7 @@ public class ChatCompletionResource {
                             }
                     );
                     if (completion != null && !emitter.isCancelled()) {
-                        saveConversation(conversation, headers, request, completion);
+                        saveConversation(conversation, callerUserId, callerIp, request, completion);
                     }
                     if (!emitter.isCancelled()) {
                         FinishReason reason = completion != null && completion.reason() != null
@@ -490,6 +509,14 @@ public class ChatCompletionResource {
         return conversation;
     }
 
+    private static Conversation newConversation(String clientIp, String userAgent, Long userId) {
+        Conversation conversation = new Conversation();
+        conversation.clientIP = clientIp;
+        conversation.userAgent = userAgent;
+        conversation.userId = userId;
+        return conversation;
+    }
+
     private static String newCompletionId() {
         return "chatcmpl-" + UUID.randomUUID().toString().replace("-", "");
     }
@@ -507,16 +534,29 @@ public class ChatCompletionResource {
                                   HttpHeaders headers,
                                   CompletionRequest request,
                                   ChatCompletion completion) {
-        Long conversationId = ConversationIds.parseOptional(request.conversation);
-        Conversation conversation;
         String clientIp = ClientIdentity.resolveClientIp(
                 routingContext, headers, authConfig.trustForwardedHeaders());
+        saveConversation(scratch, authContext.userId(), clientIp, request, completion);
+    }
+
+    /**
+     * Persists the user message and assistant reply using pre-captured caller identity
+     * (safe to invoke from async streaming worker threads).
+     */
+    @Transactional
+    public void saveConversation(Conversation scratch,
+                                  Long callerUserId,
+                                  String clientIp,
+                                  CompletionRequest request,
+                                  ChatCompletion completion) {
+        Long conversationId = ConversationIds.parseOptional(request.conversation);
+        Conversation conversation;
         if (conversationId != null) {
             conversation = Conversation.findById(conversationId);
             if (conversation == null) {
                 throw new NotFoundException("Conversation not found: " + request.conversation);
             }
-            conversationService.ensureAccess(conversation, clientIp);
+            conversationService.ensureAccess(conversation, callerUserId, clientIp);
         } else {
             scratch.persist();
             ConversationService.ensureDefaultTitle(scratch);

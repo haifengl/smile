@@ -17,8 +17,10 @@
  */
 package smile.serve;
 
+import java.util.Optional;
 import io.smallrye.config.ConfigMapping;
 import io.smallrye.config.WithDefault;
+import io.smallrye.config.WithName;
 
 /**
  * The inference service configuration.
@@ -29,6 +31,17 @@ import io.smallrye.config.WithDefault;
 public interface InferenceServiceConfig {
     /** The location of pre-trained model(s) for inference. */
     String model();
+
+    /**
+     * Optional public model ID override when serving a single {@code .sml} model
+     * (analogous to {@code smile.chat.served-model-name}). When set and exactly one
+     * {@code .sml} model is loaded, it is registered under this ID instead of
+     * {@code <id>-<version>}.
+     */
+    @WithName("served-model-id")
+    default Optional<String> servedModelId() {
+        return Optional.empty();
+    }
 
     /**
      * Whether the service may start with no model loaded.

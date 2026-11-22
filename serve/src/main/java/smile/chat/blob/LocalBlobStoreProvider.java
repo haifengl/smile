@@ -45,7 +45,12 @@ public class LocalBlobStoreProvider implements BlobStoreProvider {
     @Override
     public BlobStore create() {
         long maxBytes = config.maxUploadBytes();
-        if (config.encryptionEnabled() && maxBytes > 0
+        if (maxBytes <= 0) {
+            // Uploads are disabled in MediaService when max-upload-bytes <= 0;
+            // keep a valid positive read/write bound on LocalBlobStore so startup succeeds.
+            return new LocalBlobStore(Path.of(config.localPath()));
+        }
+        if (config.encryptionEnabled()
                 && maxBytes <= Long.MAX_VALUE - EncryptingBlobStore.ENVELOPE_OVERHEAD_BYTES) {
             maxBytes += EncryptingBlobStore.ENVELOPE_OVERHEAD_BYTES;
         }
