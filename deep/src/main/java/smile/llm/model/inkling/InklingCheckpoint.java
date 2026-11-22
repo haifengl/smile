@@ -90,6 +90,27 @@ final class InklingCheckpoint {
         return out;
     }
 
+    /** Reads tensors by their full checkpoint names (for example the vision tower's {@code model.visual.*}). */
+    Map<String, Tensor> readRaw(Device device, Set<String> names) throws IOException {
+        Map<String, Set<String>> byFile = new HashMap<>();
+        for (String n : names) {
+            String file = fileOf.get(n);
+            if (file == null) {
+                throw new IOException("tensor not in the checkpoint: " + n);
+            }
+            byFile.computeIfAbsent(file, f -> new java.util.HashSet<>()).add(n);
+        }
+        Map<String, Tensor> out = new HashMap<>();
+        for (var e : byFile.entrySet()) {
+            out.putAll(SafeTensors.read(dir.resolve(e.getKey()).toString(), device, e.getValue()).tensors());
+        }
+        return out;
+    }
+
+    boolean hasRaw(String name) {
+        return fileOf.containsKey(name);
+    }
+
     Tensor get(Device device, String path) throws IOException {
         return read(device, Set.of(path)).get(path);
     }

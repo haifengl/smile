@@ -1028,7 +1028,11 @@ public class Tensor implements AutoCloseable {
             check(smile_tensor_data_ptr_bool(handle)) :
             check(smile_tensor_data_ptr_byte(handle));
         int n = lengthAsInt();
-        return data.reinterpret(n).toArray(JAVA_BYTE);
+        try {
+            return data.reinterpret(n).toArray(JAVA_BYTE);
+        } finally {
+            java.lang.ref.Reference.reachabilityFence(this);
+        }
     }
 
     /**
@@ -1039,7 +1043,11 @@ public class Tensor implements AutoCloseable {
         checkContiguous();
         int n = lengthAsInt();
         MemorySegment data = check(smile_tensor_data_ptr_short(handle));
-        return data.reinterpret(n * 2L).toArray(JAVA_SHORT);
+        try {
+            return data.reinterpret(n * 2L).toArray(JAVA_SHORT);
+        } finally {
+            java.lang.ref.Reference.reachabilityFence(this);       // the cleaner must not free the storage during the copy
+        }
     }
 
     /**
@@ -1050,7 +1058,11 @@ public class Tensor implements AutoCloseable {
         checkContiguous();
         int n = lengthAsInt();
         MemorySegment data = check(smile_tensor_data_ptr_int(handle));
-        return data.reinterpret(n * 4L).toArray(JAVA_INT);
+        try {
+            return data.reinterpret(n * 4L).toArray(JAVA_INT);
+        } finally {
+            java.lang.ref.Reference.reachabilityFence(this);       // the cleaner must not free the storage during the copy
+        }
     }
 
     /**
@@ -1061,7 +1073,11 @@ public class Tensor implements AutoCloseable {
         checkContiguous();
         int n = lengthAsInt();
         MemorySegment data = check(smile_tensor_data_ptr_long(handle));
-        return data.reinterpret(n * 8L).toArray(JAVA_LONG);
+        try {
+            return data.reinterpret(n * 8L).toArray(JAVA_LONG);
+        } finally {
+            java.lang.ref.Reference.reachabilityFence(this);       // the cleaner must not free the storage during the copy
+        }
     }
 
     /**
@@ -1072,7 +1088,11 @@ public class Tensor implements AutoCloseable {
         checkContiguous();
         int n = lengthAsInt();
         MemorySegment data = check(smile_tensor_data_ptr_float(handle));
-        return data.reinterpret(n * 4L).toArray(JAVA_FLOAT);
+        try {
+            return data.reinterpret(n * 4L).toArray(JAVA_FLOAT);
+        } finally {
+            java.lang.ref.Reference.reachabilityFence(this);       // the cleaner must not free the storage during the copy
+        }
     }
 
     /**
@@ -1083,7 +1103,11 @@ public class Tensor implements AutoCloseable {
         checkContiguous();
         int n = lengthAsInt();
         MemorySegment data = check(smile_tensor_data_ptr_double(handle));
-        return data.reinterpret(n * 8L).toArray(JAVA_DOUBLE);
+        try {
+            return data.reinterpret(n * 8L).toArray(JAVA_DOUBLE);
+        } finally {
+            java.lang.ref.Reference.reachabilityFence(this);       // the cleaner must not free the storage during the copy
+        }
     }
 
     /** Throws if the tensor is a non-contiguous view that cannot be copied directly. */

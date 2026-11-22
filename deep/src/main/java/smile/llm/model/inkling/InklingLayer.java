@@ -41,22 +41,22 @@ final class InklingLayer {
     private static final int DEBUG_LAYER = Integer.parseInt(System.getenv().getOrDefault("INKLING_DEBUG_ROUTE", "-1"));
     static final String[] GATES = {"attn", "k", "v", "mlp"};
 
-    private final InklingModelArgs args;
-    private final int index;
-    private final boolean local;
-    private final boolean looped;
+    final InklingModelArgs args;
+    final int index;
+    final boolean local;
+    final boolean looped;
     final boolean blockBoundary;
-    private final Device device;
-    private final InklingAttention attention;
-    private final InklingExperts experts;
-    private final Tensor attnQuery;        // [D] (local) or [3, D] (global); null for layer 0
-    private final Tensor mlpQuery;         // [D]
-    private final Tensor inputNorm;        // local layers
-    private final Tensor qNorm, kNorm, vNorm;   // global layers
-    private final Tensor postNorm;
-    private final Tensor attnConv, mlpConv; // [D, taps] float32
-    private final Tensor router, routerBias;
-    private final Tensor[][] gates;        // [4][down bf16, forget f32, gain f32]; null outside the loop
+    final Device device;
+    final InklingAttention attention;
+    final InklingExperts experts;
+    final Tensor attnQuery;        // [D] (local) or [3, D] (global); null for layer 0
+    final Tensor mlpQuery;         // [D]
+    final Tensor inputNorm;        // local layers
+    final Tensor qNorm, kNorm, vNorm;   // global layers
+    final Tensor postNorm;
+    final Tensor attnConv, mlpConv; // [D, taps] float32
+    final Tensor router, routerBias;
+    final Tensor[][] gates;        // [4][down bf16, forget f32, gain f32]; null outside the loop
 
     InklingLayer(InklingModelArgs args, int index, Map<String, Tensor> t, Device device) {
         this.args = args;
@@ -243,7 +243,9 @@ final class InklingLayer {
             vIn = bf16(rms(av, vNorm, eps));
         }
 
+        InklingDebug.tap("qin", app, qIn);
         Tensor attn = attention.forward(qIn, kIn, vIn, st, app, start);
+        InklingDebug.tap("attn", app, attn);
         attn = InklingConv.apply(attn, attnConv, st.conv[app][InklingState.CONV_ATTN]);
         Tensor residual;
         List<Tensor> mlpBlocks = blocks;
@@ -258,6 +260,7 @@ final class InklingLayer {
         if (messages != null) {
             m = gate(3, m, msgMlp);
         }
+        InklingDebug.tap("mlpin", app, m);
         Tensor x = bf16(rms(m, postNorm, eps));
         Tensor moe;
         if (experts.marlin()) {
@@ -267,6 +270,7 @@ final class InklingLayer {
             Object[] r = route(x);
             moe = bf16(experts.forward(x, (long[]) r[0], (float[]) r[1]));
         }
+        InklingDebug.tap("moe", app, moe);
         Tensor mlp = InklingConv.apply(moe, mlpConv, st.conv[app][InklingState.CONV_MLP]);
         return bf16(add(residual, f32(mlp)));
     }

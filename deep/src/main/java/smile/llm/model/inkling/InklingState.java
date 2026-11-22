@@ -39,8 +39,8 @@ final class InklingState implements AutoCloseable {
     final int capacity;
     /** Cache capacity (tokens) of every application. */
     final int[] cacheCapacity;
-    /** Absolute position of cache index 0 (sliding-window caches slide forward). */
-    final int[] base;
+    /** Per application and request: the pointer table row read by the decode kernels (see {@link #table()}). */
+    private long[] table;
     final Tensor[] k;
     final Tensor[] v;
     final Tensor[][] conv;
@@ -51,7 +51,6 @@ final class InklingState implements AutoCloseable {
         this.capacity = capacity;
         int apps = args.numApplications();
         cacheCapacity = new int[apps];
-        base = new int[apps];
         k = new Tensor[apps];
         v = new Tensor[apps];
         conv = new Tensor[apps][4];
@@ -69,6 +68,28 @@ final class InklingState implements AutoCloseable {
             conv[a][CONV_ATTN] = keep(zeros(device, ScalarType.Float, rows, args.dim()));
             conv[a][CONV_MLP] = keep(zeros(device, ScalarType.Float, rows, args.dim()));
         }
+    }
+
+    /**
+     * The raw addresses the decode kernels need, 8 per application: key cache, value cache, the four convolution
+     * states, the cache capacity (slots) and a pad. Constant for the life of the state.
+     *
+     * @return {@code apps * 8} values.
+     */
+    long[] table() {
+        if (table == null) {
+            long[] t = new long[k.length * 8];
+            for (int a = 0; a < k.length; a++) {
+                t[a * 8] = smile.torch.InklingNative.dataPtr(k[a]);
+                t[a * 8 + 1] = smile.torch.InklingNative.dataPtr(v[a]);
+                for (int c = 0; c < 4; c++) {
+                    t[a * 8 + 2 + c] = smile.torch.InklingNative.dataPtr(conv[a][c]);
+                }
+                t[a * 8 + 6] = cacheCapacity[a];
+            }
+            table = t;
+        }
+        return table;
     }
 
     /**
@@ -144,9 +165,8 @@ final class InklingState implements AutoCloseable {
             boolean local = args.isLocal(args.layerOfApplication(a));
             int n = local ? Math.min(length, args.slidingWindow() - 1) : length;
             start[a] = length - n;
-            int from = start[a] - base[a];
-            ks[a] = keep(contiguous(narrow(k[a], 1, from, n)).copy());
-            vs[a] = keep(contiguous(narrow(v[a], 1, from, n)).copy());
+            ks[a] = keep(read(k[a], cacheCapacity[a], start[a], n));
+            vs[a] = keep(read(v[a], cacheCapacity[a], start[a], n));
             for (int c = 0; c < 4; c++) {
                 cs[a][c] = keep(conv[a][c].copy());
             }
@@ -156,6 +176,32 @@ final class InklingState implements AutoCloseable {
             }
         }
         return new Snapshot(ks, vs, cs, start, length, bytes);
+    }
+
+    /** Copies the cache rows of positions {@code [from, from + n)} out ({@code [heads, n, dim]}); a ring when it wraps. */
+    private Tensor read(Tensor cache, int cap, int from, int n) {
+        if (from + n <= cap) {
+            return contiguous(narrow(cache, 1, from, n)).copy();
+        }
+        long[] idx = new long[n];
+        for (int i = 0; i < n; i++) {
+            idx[i] = (from + i) % cap;
+        }
+        return o("aten::index_select", cache, 1L, Tensor.of(idx, n).to(cache.device()));
+    }
+
+    /** Writes rows for positions {@code [from, from + n)} into a cache. */
+    private void write(Tensor cache, int cap, int from, Tensor rows) {
+        long n = rows.size(1);
+        if (from + n <= cap) {
+            o("aten::copy_", narrow(cache, 1, from, n), rows);
+            return;
+        }
+        long[] idx = new long[(int) n];
+        for (int i = 0; i < n; i++) {
+            idx[i] = (from + i) % cap;
+        }
+        o("aten::index_copy_", cache, 1L, Tensor.of(idx, n).to(cache.device()), rows);
     }
 
     /**
@@ -169,11 +215,8 @@ final class InklingState implements AutoCloseable {
         }
         for (int a = 0; a < k.length; a++) {
             long n = s.k[a].size(1);
-            // a sliding cache that is smaller than the snapshot keeps the newest tokens
-            long skip = Math.max(0, n - cacheCapacity[a]);
-            o("aten::copy_", narrow(k[a], 1, 0, n - skip), narrow(s.k[a], 1, skip, n - skip));
-            o("aten::copy_", narrow(v[a], 1, 0, n - skip), narrow(s.v[a], 1, skip, n - skip));
-            base[a] = s.start[a] + (int) skip;
+            write(k[a], cacheCapacity[a], s.start[a], s.k[a]);
+            write(v[a], cacheCapacity[a], s.start[a], s.v[a]);
             for (int c = 0; c < 4; c++) {
                 o("aten::copy_", conv[a][c], s.conv[a][c]);
             }

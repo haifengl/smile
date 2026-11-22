@@ -43,7 +43,7 @@ final class InklingExperts {
     private static final float[] E2M1 = {0f, 0.5f, 1f, 1.5f, 2f, 3f, 4f, 6f, -0f, -0.5f, -1f, -1.5f, -2f, -3f, -4f, -6f};
 
     private final InklingModelArgs args;
-    private final InklingModelArgs.ExpertFormat format;
+    final InklingModelArgs.ExpertFormat format;
     private final Device device;
     private final Tensor w13;
     private final Tensor w13Scale;
@@ -53,7 +53,7 @@ final class InklingExperts {
     private final float[] w2Factor;
     private final Tensor table;
     /** Marlin-packed weights and scales (null: the reference path dequantizes per expert). */
-    private Tensor q13, s13, g13, q2, s2, g2;
+    Tensor q13, s13, g13, q2, s2, g2;
     private static final boolean MARLIN = !"dequant".equals(System.getenv("INKLING_EXPERTS"));
 
     InklingExperts(InklingModelArgs args, int layer, Map<String, Tensor> t, Device device) {
@@ -180,6 +180,40 @@ final class InklingExperts {
         Tensor up = o("aten::select.int", pair, 2L, 1L);
         return contiguous(mul(mul(mul(tanh(mul(gate, 1.0 / args.gateSoftcap())), args.gateSoftcap()), sigmoid(gate)),
                 mul(tanh(mul(up, 1.0 / args.upSoftcap())), args.upSoftcap())).to(ScalarType.BFloat16));
+    }
+
+    /**
+     * The decode path of the Marlin kernels: routing results already on the device, the activation in one launch.
+     *
+     * @param x   bf16 {@code [T, D]}.
+     * @param idx int32 {@code [T, topk]}.
+     * @param w   float32 {@code [T, topk]}.
+     * @return float32 {@code [T, D]}.
+     */
+    Tensor decode(Tensor x, Tensor idx, Tensor w) {
+        int topk = args.numExpertsPerTok();
+        int tokens = (int) x.size(0);
+        int block = blockSize(tokens);
+        long numel = (long) tokens * topk;
+        long padded = (numel + (long) args.numExperts() * (block - 1) + block - 1) / block * block;
+        long blocks = padded / block;
+        Tensor align = Tensor.empty(new Tensor.Options().dtype(ScalarType.Int32).device(device), padded + blocks + 1);
+        smile.torch.InklingNative.op(13, new long[]{smile.torch.InklingNative.dataPtr(idx), smile.torch.InklingNative.dataPtr(align)},
+                new long[]{numel, args.numExperts(), block, padded, blocks}, new double[0]);
+        boolean fp4 = format == InklingModelArgs.ExpertFormat.NVFP4;
+        Tensor gateUp = fp4
+                ? smile.torch.Native.marlinMoeNvfp4Gemm(x, q13, s13, g13, align, w, block, topk, false)
+                : smile.torch.Native.marlinMoeFp8Gemm(x, q13, s13, align, w, block, topk, false);
+        long rows = (long) tokens * topk;
+        long inter = args.intermediateSize();
+        Tensor act = Tensor.empty(new Tensor.Options().dtype(ScalarType.BFloat16).device(device), rows, inter);
+        smile.torch.InklingNative.op(10, new long[]{smile.torch.InklingNative.dataPtr(gateUp), smile.torch.InklingNative.dataPtr(act)},
+                new long[]{rows, inter}, new double[]{args.gateSoftcap(), args.upSoftcap()});
+        Tensor down = fp4
+                ? smile.torch.Native.marlinMoeNvfp4Gemm(act, q2, s2, g2, align, w, block, 1, true)
+                : smile.torch.Native.marlinMoeFp8Gemm(act, q2, s2, align, w, block, 1, true);
+        Tensor sum = smile.torch.Native.moeSumTopk(down, topk, null);
+        return sum != null ? sum : o("aten::sum.dim_IntList", f32(reshape(down, tokens, topk, -1)), new long[]{1}, false);
     }
 
     /**

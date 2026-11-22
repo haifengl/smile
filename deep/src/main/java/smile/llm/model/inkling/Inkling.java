@@ -74,6 +74,21 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
     private final InklingPrefixCache prefixCache;
     private final Map<Integer, InklingPrefixCache.Entry> prefixMatches = new ConcurrentHashMap<>();
     private volatile boolean prefixReuse = true;
+    private InklingDecoder decoder;
+    private InklingVisionArgs visionArgs;
+    private InklingVisionTower vision;
+    private InklingImageProcessor imageProcessor;
+    /** Per multimodal request: the image embeddings of the whole prompt and, per position, how many placeholders precede it. */
+    private record ImageState(Tensor embeds, int[] before) { }
+    private final Map<Integer, ImageState> images = new ConcurrentHashMap<>();
+    private static final boolean GRAPHS = !"0".equals(System.getenv("SMILE_INKLING_GRAPH"));
+    private static final int MAX_GRAPH_BATCH = Integer.getInteger("smile.inkling.graph.maxbatch", 16);
+    /** Decode graphs for batches 1, 2, 4 .. this size are captured at load; larger ones when first needed. */
+    private static final int WARM_GRAPH_BATCH = Integer.getInteger("smile.inkling.graph.warm", 8);
+    private final Map<Integer, DecodeGraph> graphs = new java.util.HashMap<>();
+    private boolean graphsDisabled;
+    private InklingState padState;
+    private static final boolean FUSED = !"0".equals(System.getenv("SMILE_INKLING_FUSED"));
     /** Prefill takes a snapshot at every multiple of this many tokens (when the cache has room). */
     private static final int SNAPSHOT_EVERY = Integer.getInteger("smile.inkling.prefix.every", 1024);
     /** Shorter prefixes are not worth a snapshot. */
@@ -94,6 +109,33 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         });
         onWorker(() -> {
             this.model = InklingModel.load(dir.toString(), args, device);
+            InklingVisionArgs va = InklingVisionArgs.load(dir.toString());
+            InklingCheckpoint ck = new InklingCheckpoint(dir.toString());
+            if (va != null && !"0".equals(System.getenv("SMILE_INKLING_VISION"))
+                    && ck.hasRaw("model.visual.proj_out.weight")) {
+                this.visionArgs = va;
+                this.vision = InklingVisionTower.load(ck, va, device);
+                this.imageProcessor = new InklingImageProcessor(va);
+                logger.info("Inkling vision tower loaded ({} layers, up to {} tiles per image)", va.layers(), va.maxTokens());
+            }
+            if (FUSED && InklingDecoder.available()) {
+                this.decoder = new InklingDecoder(model);
+                logger.info("Inkling decode: fused kernels");
+                if (GRAPHS && smile.torch.Native.cudaGraphAvailable()) {
+                    int top = Math.min(MAX_GRAPH_BATCH, WARM_GRAPH_BATCH);
+                    for (int nb = 1; nb <= top && !graphsDisabled; nb <<= 1) {
+                        DecodeGraph g = capture(nb);
+                        if (g == null) {
+                            graphsDisabled = true;
+                        } else {
+                            graphs.put(nb, g);
+                        }
+                    }
+                    logger.info("Inkling decode CUDA graphs captured for batches 1..{}", top);
+                }
+            } else {
+                logger.info("Inkling decode: reference ops (fused kernels unavailable or disabled)");
+            }
             return null;
         });
     }
@@ -174,7 +216,7 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         }
         for (Message m : dialog) {
             if (m.hasMedia()) {
-                throw new IllegalArgumentException("Inkling-2-Mini images are not supported yet (text only)");
+                throw new IllegalArgumentException("images need processMultimodal (use the multimodal request path)");
             }
         }
         return tokenizer.encodeWithSpecials(template.encode(Arrays.asList(dialog), options));
@@ -263,6 +305,148 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         } catch (Exception e) {
             return tokenizer.decode(tokens);
         }
+    }
+
+    // ------------------------------------------------------------------ images
+
+    /**
+     * Whether images can be processed (the checkpoint has its vision weights).
+     *
+     * @return {@code true} when {@link #processMultimodal} may be called.
+     */
+    public boolean isMultimodal() {
+        return vision != null;
+    }
+
+    private static final String IMAGE_TOKEN = InklingTokenizer.IMAGE_TOKEN;
+
+    /**
+     * Renders a dialog with images: the chat template writes one image token per image, every one is expanded to one token
+     * per 40x40 tile (as the reference processor does), and the images are preprocessed into tiles.
+     *
+     * @param dialog  the messages (image parts only).
+     * @param options chat options.
+     * @return the expanded prompt and the tiles to encode during prefill.
+     * @throws IOException              if an image cannot be read or decoded.
+     * @throws IllegalArgumentException if the request is malformed.
+     */
+    public InklingMultimodal processMultimodal(Message[] dialog, ChatOptions options) throws IOException {
+        if (vision == null) {
+            throw new IllegalArgumentException("this Inkling checkpoint has no vision weights");
+        }
+        if (dialog == null || dialog.length == 0) {
+            throw new IllegalArgumentException("No messages provided.");
+        }
+        List<String> urls = new ArrayList<>();
+        for (Message m : dialog) {
+            for (var part : m.parts()) {
+                if (part instanceof smile.llm.ImageUrlPart image) {
+                    urls.add(image.url());
+                } else if (part instanceof smile.llm.VideoUrlPart) {
+                    throw new IllegalArgumentException("Inkling-2 video input is not supported");
+                } else if (part instanceof smile.llm.AudioUrlPart) {
+                    throw new IllegalArgumentException("Inkling-2 does not accept audio input");
+                }
+            }
+        }
+        String text = template.encode(Arrays.asList(dialog), options);
+        int markers = 0;
+        for (int i = text.indexOf(IMAGE_TOKEN); i >= 0; i = text.indexOf(IMAGE_TOKEN, i + IMAGE_TOKEN.length())) {
+            markers++;
+        }
+        if (markers != urls.size()) {
+            throw new IllegalArgumentException("the prompt contains " + markers + " image tokens for " + urls.size()
+                    + " images (do not type the placeholder token into message text)");
+        }
+        List<InklingImageProcessor.Patches> tiles = new ArrayList<>();
+        try {
+            for (String url : urls) {
+                try {
+                    tiles.add(imageProcessor.process(smile.llm.model.minimax.MiniMaxMedia.image(url)));
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("unusable image: " + e.getMessage(), e);
+                }
+            }
+            StringBuilder out = new StringBuilder(text.length() + 16 * tiles.size() * 64);
+            int at = 0;
+            for (InklingImageProcessor.Patches p : tiles) {
+                int next = text.indexOf(IMAGE_TOKEN, at);
+                out.append(text, at, next).append(IMAGE_TOKEN.repeat(p.grid()[1] * p.grid()[2]));
+                at = next + IMAGE_TOKEN.length();
+            }
+            out.append(text, at, text.length());
+            int[] ids = tokenizer.encodeWithSpecials(out.toString());
+            if (ids.length > args.maxSeqLen()) {
+                throw new IllegalArgumentException("the prompt (" + ids.length + " tokens with its images) is longer than max_seq_len");
+            }
+            Tensor pixels = tiles.isEmpty() ? null
+                    : tiles.size() == 1 ? tiles.get(0).pixels().copy()
+                    : Tensor.vstack(tiles.stream().map(InklingImageProcessor.Patches::pixels).toArray(Tensor[]::new));
+            int[][] grids = tiles.stream().map(InklingImageProcessor.Patches::grid).toArray(int[][]::new);
+            return new InklingMultimodal(ids, pixels, grids);
+        } finally {
+            for (var p : tiles) {
+                p.pixels().close();
+            }
+        }
+    }
+
+    @Override
+    public Tensor prefillMultimodal(int requestId, smile.llm.engine.MultimodalPrompt prompt, int from, int to) {
+        InklingMultimodal mm = (InklingMultimodal) prompt;
+        InklingState st = session(requestId);
+        if (st.length != from) {
+            throw new IllegalStateException("request " + requestId + " is at position " + st.length + ", not " + from);
+        }
+        int[] ids = mm.inputIds();
+        boolean last = to == ids.length;
+        return onWorker(() -> {
+            try (var guard = Tensor.noGradGuard()) {
+                ImageState is = images.get(requestId);
+                if (is == null && mm.hasVision()) {
+                    // encode every image once, at the first chunk
+                    Tensor embeds = Ix.keep(Ix.stepScoped(() -> vision.encode(mm.pixels(), mm.grids())));
+                    int[] before = new int[ids.length + 1];
+                    for (int i = 0; i < ids.length; i++) {
+                        before[i + 1] = before[i] + (ids[i] == visionArgs.imageToken() ? 1 : 0);
+                    }
+                    if (before[ids.length] != embeds.size(0)) {
+                        embeds.close();
+                        throw new IllegalArgumentException("the prompt has " + before[ids.length] + " image tokens for "
+                                + embeds.size(0) + " image embeddings");
+                    }
+                    is = new ImageState(embeds, before);
+                    images.put(requestId, is);
+                }
+                int limit = st.maxChunk(args);
+                int pos = from;
+                Tensor logits = null;
+                while (pos < to) {
+                    int end = Math.min(to, pos + limit);
+                    long[] chunk = new long[end - pos];
+                    java.util.List<Long> where = new ArrayList<>();
+                    for (int i = 0; i < chunk.length; i++) {
+                        chunk[i] = ids[pos + i];
+                        if (is != null && ids[pos + i] == visionArgs.imageToken()) {
+                            where.add((long) i);
+                        }
+                    }
+                    Tensor rows = null;
+                    long[] positions = null;
+                    if (!where.isEmpty()) {
+                        positions = where.stream().mapToLong(Long::longValue).toArray();
+                        rows = Ix.narrow(is.embeds, 0, is.before[pos], positions.length);
+                    }
+                    boolean wantLogits = last && end == to;
+                    Tensor t = model.forward(st, chunk, wantLogits ? null : new int[0], null, rows, positions);
+                    if (wantLogits) {
+                        logits = t;
+                    }
+                    pos = end;
+                }
+                return logits;
+            }
+        });
     }
 
     // ------------------------------------------------------------------ ModelExecutor
@@ -444,6 +628,13 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
                         + ", not " + positions[i]);
             }
         }
+        if (decoder != null) {
+            return onWorker(() -> {
+                try (var guard = Tensor.noGradGuard()) {
+                    return stepScoped(() -> fusedStep(states, lastTokens));
+                }
+            });
+        }
         return onWorker(() -> {
             try (var guard = Tensor.noGradGuard()) {
                 return stepScoped(() -> {
@@ -457,10 +648,124 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         });
     }
 
+    /** A captured decode step of {@code nb} rows: the fixed device inputs and the output logits. */
+    private final class DecodeGraph {
+        final int nb;
+        final Tensor ids;
+        final Tensor pos;
+        final Tensor tbl;
+        Tensor logits;
+        java.lang.foreign.MemorySegment graph;
+
+        DecodeGraph(int nb) {
+            this.nb = nb;
+            this.ids = Ix.keep(Tensor.of(new long[nb], nb).to(device));
+            this.pos = Ix.keep(Tensor.of(new int[nb], nb).to(device));
+            this.tbl = Ix.keep(Tensor.of(new long[args.numApplications() * nb * 8], args.numApplications() * nb * 8L).to(device));
+        }
+
+        /** Writes the inputs: real rows first, padding rows on the pad state. */
+        void fill(InklingState[] states, int[] lastTokens) {
+            int apps = args.numApplications();
+            long[] idv = new long[nb];
+            int[] pv = new int[nb];
+            long[] tv = new long[apps * nb * 8];
+            for (int i = 0; i < nb; i++) {
+                InklingState st = i < states.length ? states[i] : padState;
+                idv[i] = i < states.length ? lastTokens[i] : 0;
+                pv[i] = i < states.length ? st.length : 0;
+                long[] t = st.table();
+                for (int a = 0; a < apps; a++) {
+                    System.arraycopy(t, a * 8, tv, (a * nb + i) * 8, 8);
+                }
+            }
+            smile.torch.Aten.call("aten::copy_", ids, Tensor.of(idv, nb).to(device), false);
+            smile.torch.Aten.call("aten::copy_", pos, Tensor.of(pv, nb).to(device), false);
+            smile.torch.Aten.call("aten::copy_", tbl, Tensor.of(tv, tv.length).to(device), false);
+        }
+    }
+
+    /** Captures the decode step of {@code nb} rows (on the worker thread); {@code null} if capture fails. */
+    private DecodeGraph capture(int nb) {
+        if (padState == null) {
+            padState = model.newState(16);
+        }
+        DecodeGraph g = new DecodeGraph(nb);
+        try {
+            g.fill(new InklingState[0], new int[0]);
+            // eager warm-up: libraries initialise their workspaces outside the capture
+            Tensor warm = stepScoped(() -> decoder.forward(nb, g.ids, g.pos, g.tbl, null));
+            smile.torch.Aten.one("aten::sum", warm).doubleValue();
+            warm.close();
+            g.graph = smile.torch.Native.cudaGraphCreate();
+            smile.torch.Native.cudaGraphCaptureBegin(g.graph, device.index());
+            try {
+                g.logits = stepScoped(() -> decoder.forward(nb, g.ids, g.pos, g.tbl, null));
+            } finally {
+                smile.torch.Native.cudaGraphCaptureEnd(g.graph);
+            }
+            g.logits.detachFromScopes();
+            return g;
+        } catch (RuntimeException e) {
+            logger.warn("Inkling decode CUDA graph capture failed for batch {}: {}", nb, e.toString());
+            return null;
+        }
+    }
+
+    private Tensor graphStep(InklingState[] states, int[] lastTokens) {
+        int n = states.length;
+        int nb = n <= 1 ? 1 : Integer.highestOneBit(n - 1) << 1;
+        DecodeGraph g = graphs.get(nb);
+        if (g == null) {
+            g = capture(nb);
+            if (g == null) {
+                graphsDisabled = true;
+                return null;
+            }
+            graphs.put(nb, g);
+            logger.info("Inkling decode CUDA graph captured for batch {}", nb);
+        }
+        g.fill(states, lastTokens);
+        smile.torch.Native.cudaGraphReplay(g.graph);
+        for (InklingState s : states) {
+            s.length++;
+        }
+        return smile.torch.Aten.one("aten::clone", Ix.narrow(g.logits, 0, 0, n));
+    }
+
+    /** One decode step of all requests with the fused kernels (on the worker thread). */
+    private Tensor fusedStep(InklingState[] states, int[] lastTokens) {
+        if (GRAPHS && !graphsDisabled && states.length <= MAX_GRAPH_BATCH && smile.torch.Native.cudaGraphAvailable()) {
+            Tensor t = graphStep(states, lastTokens);
+            if (t != null) {
+                return t;
+            }
+        }
+        int nb = states.length;
+        int apps = args.numApplications();
+        long[] ids = new long[nb];
+        int[] pos = new int[nb];
+        long[] table = new long[apps * nb * 8];
+        for (int i = 0; i < nb; i++) {
+            ids[i] = lastTokens[i];
+            pos[i] = states[i].length;
+            long[] t = states[i].table();
+            for (int a = 0; a < apps; a++) {
+                System.arraycopy(t, a * 8, table, (a * nb + i) * 8, 8);
+            }
+        }
+        Tensor logits = decoder.forward(nb, Tensor.of(ids, nb).to(device), Tensor.of(pos, nb).to(device),
+                Tensor.of(table, table.length).to(device), null);
+        for (InklingState s : states) {
+            s.length++;
+        }
+        return logits;
+    }
+
     @Override
     public void finish(int requestId, int[] sequenceTokens) {
         InklingState st = sessions.get(requestId);
-        if (st != null && prefixCache != null && prefixReuse && sequenceTokens != null
+        if (st != null && prefixCache != null && prefixReuse && sequenceTokens != null && !images.containsKey(requestId)
                 && st.length >= SNAPSHOT_MIN && st.length <= sequenceTokens.length) {
             // the whole conversation so far is the likely prefix of the next turn
             int[] tokens = Arrays.copyOf(sequenceTokens, st.length);
@@ -481,6 +786,13 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
             synchronized (prefixCache) {
                 prefixCache.release(hit);
             }
+        }
+        ImageState is = images.remove(requestId);
+        if (is != null) {
+            onWorker(() -> {
+                is.embeds.close();
+                return null;
+            });
         }
         InklingState s = sessions.remove(requestId);
         if (s != null) {
@@ -506,14 +818,25 @@ public final class Inkling implements LanguageModel, ModelExecutor, AutoCloseabl
         for (int id : new ArrayList<>(sessions.keySet())) {
             evict(id);
         }
-        if (prefixCache != null) {
-            onWorker(() -> {
+        onWorker(() -> {
+            if (prefixCache != null) {
                 synchronized (prefixCache) {
                     prefixCache.clear();
                 }
-                return null;
-            });
-        }
+            }
+            for (DecodeGraph g : graphs.values()) {
+                if (g.graph != null) {
+                    smile.torch.Native.cudaGraphDestroy(g.graph);
+                    g.graph = null;
+                }
+            }
+            graphs.clear();
+            if (padState != null) {
+                padState.close();
+                padState = null;
+            }
+            return null;
+        });
         worker.shutdown();
     }
 }

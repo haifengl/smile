@@ -46,15 +46,15 @@ import static smile.llm.model.inkling.Ix.*;
 public final class InklingModel implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(InklingModel.class);
 
-    private final InklingModelArgs args;
-    private final Device device;
-    private final Tensor embed;
-    private final Tensor embedNorm;
-    private final Tensor unembed;
-    private final Tensor finalNorm;
-    private final Tensor outputQuery;
-    private final Tensor messageQueries;    // [loop layers, 4, D]
-    private final InklingLayer[] layers;
+    final InklingModelArgs args;
+    final Device device;
+    final Tensor embed;
+    final Tensor embedNorm;
+    final Tensor unembed;
+    final Tensor finalNorm;
+    final Tensor outputQuery;
+    final Tensor messageQueries;    // [loop layers, 4, D]
+    final InklingLayer[] layers;
 
     private InklingModel(InklingModelArgs args, Device device, Tensor embed, Tensor embedNorm, Tensor unembed,
                          Tensor finalNorm, Tensor outputQuery, Tensor messageQueries, InklingLayer[] layers) {
@@ -146,6 +146,28 @@ public final class InklingModel implements AutoCloseable {
      * @return float32 {@code [rows, unpadded vocab]} (soft-capped).
      */
     Tensor forward(InklingState st, long[] tokens, int[] rows, Consumer<Tensor> trace) {
+        return forward(st, tokens, rows, trace, null, null);
+    }
+
+    /**
+     * As {@link #forward(InklingState, long[], int[], Consumer)}, with image embeddings replacing the embeddings of some
+     * of the tokens (they enter after the embedding norm, as in the reference model).
+     *
+     * @param imageRows  bf16 {@code [K, D]} embeddings, or {@code null}.
+     * @param imagePos   the K positions within {@code tokens} they replace.
+     */
+    Tensor forward(InklingState st, long[] tokens, int[] rows, Consumer<Tensor> trace, Tensor imageRows, long[] imagePos) {
+        return forward(st, tokens, rows, trace, imageRows, imagePos, null);
+    }
+
+    /**
+     * As above, also delivering the draft's target features: bf16 {@code [T, 4, D]} on the device holding the outputs of
+     * applications 4, 22 and 40 and the final-norm output (taps of the DSpark draft), for every token of the chunk.
+     *
+     * @param tapSink receives the stacked taps (kept out of the forward's scope), or {@code null}.
+     */
+    Tensor forward(InklingState st, long[] tokens, int[] rows, Consumer<Tensor> trace, Tensor imageRows, long[] imagePos,
+                   Consumer<Tensor> tapSink) {
         int start = st.length;
         if (start + tokens.length > st.capacity) {
             throw new IllegalArgumentException("sequence exceeds the state capacity " + st.capacity);
@@ -158,6 +180,9 @@ public final class InklingModel implements AutoCloseable {
         try {
             Tensor ids = Tensor.of(tokens, tokens.length).to(device);
             Tensor h = bf16(rms(o("aten::index_select", embed, 0L, ids), embedNorm, args.normEps()));
+            if (imageRows != null && imagePos != null && imagePos.length > 0) {
+                h = o("aten::index_copy", h, 0L, Tensor.of(imagePos, imagePos.length).to(device), bf16(imageRows));
+            }
             List<Tensor> blocks = new ArrayList<>();
             Tensor preH = null;
             List<Tensor> preBlocks = null;
@@ -165,6 +190,7 @@ public final class InklingModel implements AutoCloseable {
             int core = args.coreEnd() - args.coreStart();
             List<Tensor> prevBlocks = null;
             Tensor prevH = null;
+            List<Tensor> taps = new ArrayList<>();
             for (int app = 0; app < args.numApplications(); app++) {
                 int layerIndex = args.layerOfApplication(app);
                 int pass = args.passOfApplication(app);
@@ -201,17 +227,30 @@ public final class InklingModel implements AutoCloseable {
                     host.promoteToParent();         // survives the forward's scope
                     trace.accept(host);
                 }
+                if (tapSink != null && (app == 4 || app == 22 || app == 40)) {
+                    taps.add(out);
+                }
                 if (layer.blockBoundary) {
                     blocks.add(h);
                 }
                 h = out;
             }
-            if (rows != null && rows.length == 0) {
+            if (rows != null && rows.length == 0 && tapSink == null) {
                 st.length = start + tokens.length;          // a prefill chunk: no logits wanted
                 return null;
             }
             Tensor last = InklingLayer.attnRes(blocks, h, outputQuery);
             Tensor x = bf16(rms(o("aten::select.int", last, 1L, 0L), finalNorm, args.normEps()));
+            if (tapSink != null) {
+                taps.add(x);
+                Tensor stacked = o("aten::stack", taps.toArray(new Tensor[0]), 1L);
+                stacked.promoteToParent();
+                tapSink.accept(stacked);
+                if (rows != null && rows.length == 0) {
+                    st.length = start + tokens.length;
+                    return null;
+                }
+            }
             if (rows != null) {
                 long[] idx = new long[rows.length];
                 for (int i = 0; i < idx.length; i++) {
